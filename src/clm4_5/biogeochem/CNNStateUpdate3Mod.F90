@@ -1,82 +1,58 @@
-
 module CNNStateUpdate3Mod
-#ifdef CN
-
 !-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: NStateUpdate3Mod
-!
-! !DESCRIPTION:
-! Module for nitrogen state variable update, mortality fluxes.
-! Also, sminn leaching flux.
-!
-! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varpar   , only: nlevdecomp, ndecomp_pools
-    implicit none
-    save
-    private
-! !PUBLIC MEMBER FUNCTIONS:
-    public:: NStateUpdate3
-!
-! !REVISION HISTORY:
-! 7/27/2004: Created by Peter Thornton
-! F. Li and S. Levis (11/06/12)
-!EOP
+  ! !DESCRIPTION:
+  ! Module for nitrogen state variable update, mortality fluxes.
+  ! Also, sminn leaching flux.
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varpar   , only: nlevdecomp, ndecomp_pools
+  implicit none
+  save
+  private
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public:: NStateUpdate3
+  !
+  ! !REVISION HISTORY:
+  ! 7/27/2004: Created by Peter Thornton
+  ! F. Li and S. Levis (11/06/12)
 !-----------------------------------------------------------------------
 
 contains
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: NStateUpdate3
-!
-! !INTERFACE:
-subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! On the radiation time step, update all the prognostic nitrogen state
-! variables affected by gap-phase mortality fluxes. Also the Sminn leaching flux.
-!
-! !USES:
-   use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl  , only: iulog
-   use clm_varpar   , only: i_cwd, i_met_lit, i_cel_lit, i_lig_lit
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 8/1/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   integer :: c,p,j,l,k        ! indices
-   integer :: fp,fc      ! lake filter indices
-   real(r8):: dt         ! radiation time step (seconds)
-
-!EOP
+  subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
+    !
+    ! !DESCRIPTION:
+    ! On the radiation time step, update all the prognostic nitrogen state
+    ! variables affected by gap-phase mortality fluxes. Also the Sminn leaching flux.
+    !
+    ! !USES:
+    use clmtype
+    use clm_time_manager, only: get_step_size
+    use clm_varctl      , only: iulog, use_nitrif_denitrif
+    use clm_varpar      , only: i_cwd, i_met_lit, i_cel_lit, i_lig_lit
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilc       ! number of soil columns in filter
+    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c,p,j,l,k        ! indices
+    integer :: fp,fc      ! lake filter indices
+    real(r8):: dt         ! radiation time step (seconds)
 !-----------------------------------------------------------------------
 
    associate(& 
    fire_mortality_n_to_cwdn            =>    cnf%fire_mortality_n_to_cwdn                , & ! Input:  [real(r8) (:,:)]  N fluxes associated with fire mortality to CWD pool (gN/m3/s)
-#ifndef NITRIF_DENITRIF
    sminn_leached_vr                    =>    cnf%sminn_leached_vr                        , & ! Input:  [real(r8) (:,:)]                                                  
-#else
    smin_no3_leached_vr                 =>    cnf%smin_no3_leached_vr                     , & ! Input:  [real(r8) (:,:)]                                                  
    smin_no3_runoff_vr                  =>    cnf%smin_no3_runoff_vr                      , & ! Input:  [real(r8) (:,:)]  vertically-resolved rate of mineral NO3 loss with runoff (gN/m3/s)
    smin_no3_vr                         =>    cns%smin_no3_vr                             , & ! Input:  [real(r8) (:,:)]                                                  
    smin_nh4_vr                         =>    cns%smin_nh4_vr                             , & ! Input:  [real(r8) (:,:)]                                                  
-#endif
    m_decomp_npools_to_fire_vr          =>    cnf%m_decomp_npools_to_fire_vr              , & ! Input:  [real(r8) (:,:,:)]                                                
    m_n_to_litr_met_fire                =>    cnf%m_n_to_litr_met_fire                    , & ! Input:  [real(r8) (:,:)]                                                  
    m_n_to_litr_cel_fire                =>    cnf%m_n_to_litr_cel_fire                    , & ! Input:  [real(r8) (:,:)]                                                  
@@ -152,14 +128,14 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
       do fc = 1,num_soilc
          c = filter_soilc(fc)
 
-#ifndef NITRIF_DENITRIF         
-         ! mineral N loss due to leaching
-         sminn_vr(c,j) = sminn_vr(c,j) - sminn_leached_vr(c,j) * dt
-#else
-         ! mineral N loss due to leaching and runoff
-         smin_no3_vr(c,j) = max(smin_no3_vr(c,j) - ( smin_no3_leached_vr(c,j) + smin_no3_runoff_vr(c,j) ) * dt, 0._r8)
-         sminn_vr(c,j) = smin_no3_vr(c,j) + smin_nh4_vr(c,j)
-#endif         
+         if (.not. use_nitrif_denitrif) then
+            ! mineral N loss due to leaching
+            sminn_vr(c,j) = sminn_vr(c,j) - sminn_leached_vr(c,j) * dt
+         else
+            ! mineral N loss due to leaching and runoff
+            smin_no3_vr(c,j) = max(smin_no3_vr(c,j) - ( smin_no3_leached_vr(c,j) + smin_no3_runoff_vr(c,j) ) * dt, 0._r8)
+            sminn_vr(c,j) = smin_no3_vr(c,j) + smin_nh4_vr(c,j)
+         end if
          
          ! column level nitrogen fluxes from fire
          ! pft-level wood to column-level CWD (uncombusted wood)
@@ -242,7 +218,5 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
     end associate 
  end subroutine NStateUpdate3
-!-----------------------------------------------------------------------
-#endif
 
 end module CNNStateUpdate3Mod

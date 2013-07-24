@@ -1,80 +1,53 @@
-
 module CNDVLightMod
-
-#if (defined CNDV)
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: LightMod
-!
-! !DESCRIPTION:
-! Calculate light competition
-! Update fpc for establishment routine
-! Called once per year
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculate light competition
+  ! Update fpc for establishment routine
+  ! Called once per year
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use shr_const_mod, only : SHR_CONST_PI
-!
-! !PUBLIC TYPES:
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: Light
-!
-! !REVISION HISTORY:
-! Module created by Sam Levis following DGVMLightMod by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: Light
-!
-! !INTERFACE:
-  subroutine Light(lbg, ubg, lbp, ubp, num_natvegp, filter_natvegp)
-!
-! !DESCRIPTION:
-! Calculate light competition
-! Update fpc for establishment routine
-! Called once per year
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine Light(bounds, num_natvegp, filter_natvegp)
+    !
+    ! !DESCRIPTION:
+    ! Calculate light competition
+    ! Update fpc for establishment routine
+    ! Called once per year
+    !
+    ! !USES:
     use clmtype
-!
-! !ARGUMENTS:
+    use decompMod   , only : bounds_type
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbg, ubg                  ! gridcell bounds
-    integer, intent(in) :: lbp, ubp                  ! pft bounds
-    integer, intent(in) :: num_natvegp               ! number of naturally-vegetated pfts in filter
-    integer, intent(in) :: filter_natvegp(ubp-lbp+1) ! pft filter for naturally-vegetated points
-!
-! !CALLED FROM:
-! subroutine dv in module CNDVMod
-!
-! !REVISION HISTORY:
-! Author: Sam Levis (adapted from Stephen Sitch's LPJ subroutine light)
-! 3/4/02, Peter Thornton: Migrated to new data structures.
-! 2005.10: Sam Levis updated to work with CN
-!
-! !LOCAL VARIABLES:
-!EOP
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    integer, intent(in) :: num_natvegp       ! number of naturally-vegetated pfts in filter
+    integer, intent(in) :: filter_natvegp(:) ! pft filter for naturally-vegetated points
+    !
+    ! !LOCAL VARIABLES:
     real(r8), parameter :: fpc_tree_max = 0.95_r8 !maximum total tree FPC
     integer  :: p,fp, g                           ! indices
-    real(r8) :: fpc_tree_total(lbg:ubg)
-    real(r8) :: fpc_inc_tree(lbg:ubg)
-    real(r8) :: fpc_inc(lbp:ubp)                  ! foliar projective cover increment (fraction)
-    real(r8) :: fpc_grass_total(lbg:ubg)
-    real(r8) :: fpc_shrub_total(lbg:ubg)
-    real(r8) :: fpc_grass_max(lbg:ubg)
-    real(r8) :: fpc_shrub_max(lbg:ubg)
-    integer  :: numtrees(lbg:ubg)
+    real(r8) :: fpc_tree_total(bounds%begg:bounds%endg)
+    real(r8) :: fpc_inc_tree(bounds%begg:bounds%endg)
+    real(r8) :: fpc_inc(bounds%begp:bounds%endp)                  ! foliar projective cover increment (fraction)
+    real(r8) :: fpc_grass_total(bounds%begg:bounds%endg)
+    real(r8) :: fpc_shrub_total(bounds%begg:bounds%endg)
+    real(r8) :: fpc_grass_max(bounds%begg:bounds%endg)
+    real(r8) :: fpc_shrub_max(bounds%begg:bounds%endg)
+    integer  :: numtrees(bounds%begg:bounds%endg)
     real(r8) :: excess
     real(r8) :: nind_kill
     real(r8) :: lai_ind
@@ -84,8 +57,7 @@ contains
     real(r8) :: stemdiam                          ! stem diameter
     real(r8) :: stocking                          ! #stems / ha (stocking density)
     real(r8) :: taper                             ! ratio of height:radius_breast_height (tree allometry)
-
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
    associate(& 
    ivt           =>    pft%itype                 , & ! Input:  [integer (:)]  pft vegetation type                                
@@ -109,7 +81,7 @@ contains
 
     ! Initialize gridcell-level metrics
 
-    do g = lbg, ubg
+    do g = bounds%begg, bounds%endg
        fpc_tree_total(g) = 0._r8
        fpc_inc_tree(g) = 0._r8
        fpc_grass_total(g) = 0._r8
@@ -167,7 +139,7 @@ contains
        end if
     end do
 
-    do g = lbg, ubg
+    do g = bounds%begg, bounds%endg
        fpc_grass_max(g) = 1._r8 - min(fpc_tree_total(g), fpc_tree_max)
        fpc_shrub_max(g) = max(0._r8, fpc_grass_max(g) - fpc_grass_total(g))
     end do
@@ -249,7 +221,5 @@ contains
 
     end associate 
    end subroutine Light
-
-#endif
 
 end module CNDVLightMod

@@ -1,110 +1,73 @@
 module Biogeophysics1Mod
 
-!------------------------------------------------------------------------------
-!BOP
-!
-! !MODULE: Biogeophysics1Mod
-!
-! !DESCRIPTION:
-! Performs calculation of leaf temperature and surface fluxes.
-! Biogeophysics2.F90 then determines soil/snow and ground
-! temperatures and updates the surface fluxes for the new ground
-! temperature.
-!
-! !USES:
-   use shr_kind_mod, only: r8 => shr_kind_r8
-   use clm_varctl  , only : iulog
-!
-! !PUBLIC TYPES:
-   implicit none
-   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
-   public :: Biogeophysics1   ! Calculate leaf temperature and surface fluxes
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Performs calculation of leaf temperature and surface fluxes.
+  ! Biogeophysics2.F90 then determines soil/snow and ground
+  ! temperatures and updates the surface fluxes for the new ground
+  ! temperature.
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varctl  , only : iulog
+  use decompMod   , only: bounds_type
+  !
+  ! !PUBLIC TYPES:
+  implicit none
+  save
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: Biogeophysics1   ! Calculate leaf temperature and surface fluxes
+  !------------------------------------------------------------------------------
 
 contains
 
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: Biogeophysics1
-!
-! !INTERFACE:
-  subroutine Biogeophysics1(lbg, ubg, lbc, ubc, lbp, ubp, &
-       num_nolakec, filter_nolakec, num_nolakep, filter_nolakep)
-!
-! !DESCRIPTION:
-! This is the main subroutine to execute the calculation of leaf temperature
-! and surface fluxes. Biogeophysics2.F90 then determines soil/snow and ground
-! temperatures and updates the surface fluxes for the new ground
-! temperature.
-!
-! Calling sequence is:
-! Biogeophysics1:           surface biogeophysics driver
-!  -> QSat:                 saturated vapor pressure, specific humidity, and
-!                           derivatives at ground surface and derivatives at
-!                           leaf surface using updated leaf temperature
-! Leaf temperature
-! Foliage energy conservation is given by the foliage energy budget
-! equation:
-!                Rnet - Hf - LEf = 0
-! The equation is solved by Newton-Raphson iteration, in which this
-! iteration includes the calculation of the photosynthesis and
-! stomatal resistance, and the integration of turbulent flux profiles.
-! The sensible and latent heat transfer between foliage and atmosphere
-! and ground is linked by the equations:
-!                Ha = Hf + Hg and Ea = Ef + Eg
-!
-! !USES:
+  !------------------------------------------------------------------------------
+  subroutine Biogeophysics1(bounds, num_nolakec, filter_nolakec, num_nolakep, filter_nolakep)
+    !
+    ! !DESCRIPTION:
+    ! This is the main subroutine to execute the calculation of leaf temperature
+    ! and surface fluxes. Biogeophysics2.F90 then determines soil/snow and ground
+    ! temperatures and updates the surface fluxes for the new ground
+    ! temperature.
+    !
+    ! Calling sequence is:
+    ! Biogeophysics1:           surface biogeophysics driver
+    !  -> QSat:                 saturated vapor pressure, specific humidity, and
+    !                           derivatives at ground surface and derivatives at
+    !                           leaf surface using updated leaf temperature
+    ! Leaf temperature
+    ! Foliage energy conservation is given by the foliage energy budget
+    ! equation:
+    !                Rnet - Hf - LEf = 0
+    ! The equation is solved by Newton-Raphson iteration, in which this
+    ! iteration includes the calculation of the photosynthesis and
+    ! stomatal resistance, and the integration of turbulent flux profiles.
+    ! The sensible and latent heat transfer between foliage and atmosphere
+    ! and ground is linked by the equations:
+    !                Ha = Hf + Hg and Ea = Ef + Eg
+    !
+    ! !USES:
     use clmtype
     use clm_atmlnd         , only : clm_a2l
     use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, &
-                                    istice, istice_mec, istwet, istsoil, istdlak, &
-                                    zlnd, zsno, tfrz, &
-                                    icol_roof, icol_sunwall, icol_shadewall,     &
-                                    icol_road_imperv, icol_road_perv, tfrz, spval, istdlak
+         istice, istice_mec, istwet, istsoil, istdlak, &
+         zlnd, zsno, tfrz, icol_roof, icol_sunwall, icol_shadewall,     &
+         icol_road_imperv, icol_road_perv, tfrz, spval, istdlak
     use clm_varcon         , only : istcrop
     use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, nlevsoi
     use QSatMod            , only : QSat
     use shr_const_mod      , only : SHR_CONST_PI
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbg, ubg                    ! gridcell-index bounds
-    integer, intent(in) :: lbc, ubc                    ! column-index bounds
-    integer, intent(in) :: lbp, ubp                    ! pft-index bounds
-    integer, intent(in) :: num_nolakec                 ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
-    integer, intent(in) :: num_nolakep                 ! number of column non-lake points in pft filter
-    integer, intent(in) :: filter_nolakep(ubp-lbp+1)   ! pft filter for non-lake points
-!
-! !CALLED FROM:
-! subroutine clm_driver1
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! Migrated to clm2.0 by Keith Oleson and Mariana Vertenstein
-! Migrated to clm2.1 new data structures by Peter Thornton and M. Vertenstein
-! 27 February 2008: Keith Oleson; weighted soil/snow emissivity
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-
-!
-!
-! !OTHER LOCAL VARIABLES:
-!EOP
-!
+    type(bounds_type), intent(in) :: bounds    ! bounds
+    integer, intent(in) :: num_nolakec         ! number of column non-lake points in column filter
+    integer, intent(in) :: filter_nolakec(:)   ! column filter for non-lake points
+    integer, intent(in) :: num_nolakep         ! number of column non-lake points in pft filter
+    integer, intent(in) :: filter_nolakep(:)   ! pft filter for non-lake points
+    !
+    ! !LOCAL VARIABLES:
     integer  :: g,l,c,p !indices
     integer  :: j       !soil/snow level index
     integer  :: fp      !lake filter pft index
@@ -124,9 +87,8 @@ contains
     real(r8) :: eff_porosity  ! effective porosity in layer
     real(r8) :: vol_ice       ! partial volume of ice lens in layer
     real(r8) :: vol_liq       ! partial volume of liquid water in layer
-    real(r8) :: fh2o_eff(lbc:ubc) ! effective surface water fraction (i.e. seen by atm)
-!------------------------------------------------------------------------------
-
+    real(r8) :: fh2o_eff(bounds%begc:bounds%endc) ! effective surface water fraction (i.e. seen by atm)
+    !------------------------------------------------------------------------------
 
    associate(& 
    frac_sno_eff              =>    cps%frac_sno_eff        , & ! Input:  [real(r8) (:)]  eff. fraction of ground covered by snow (0 to 1)
@@ -142,19 +104,14 @@ contains
    forc_v                    =>    clm_a2l%forc_v          , & ! Input:  [real(r8) (:)] atmospheric wind speed in north direction (m/s)
    forc_hgt_u                =>    clm_a2l%forc_hgt_u      , & ! Input:  [real(r8) (:)] observational height of wind [m]         
    forc_hgt_q                =>    clm_a2l%forc_hgt_q      , & ! Input:  [real(r8) (:)] observational height of specific humidity [m]
-
-
    ityplun                   =>    lun%itype               , & ! Input:  [integer (:)] landunit type                             
    urbpoi                    =>    lun%urbpoi              , & ! Input:  [logical (:)]  true => landunit is an urban point       
    z_0_town                  =>   lun%z_0_town             , & ! Input:  [real(r8) (:)] momentum roughness length of urban landunit (m)
    z_d_town                  =>   lun%z_d_town             , & ! Input:  [real(r8) (:)] displacement height of urban landunit (m)
-
-
    forc_pbot                 =>    cps%forc_pbot           , & ! Input:  [real(r8) (:)] atmospheric pressure (Pa)                
    forc_q                    =>    cws%forc_q              , & ! Input:  [real(r8) (:)] atmospheric specific humidity (kg/kg)    
    forc_t                    =>    ces%forc_t              , & ! Input:  [real(r8) (:)] atmospheric temperature (Kelvin)         
    forc_th                   =>    ces%forc_th             , & ! Input:  [real(r8) (:)] atmospheric potential temperature (Kelvin)
-
    cgridcell                 =>   col%gridcell             , & ! Input:  [integer (:)] column's gridcell index                   
    clandunit                 =>   col%landunit             , & ! Input:  [integer (:)] column's landunit index                   
    ctype                     =>    col%itype               , & ! Input:  [integer (:)] column type                               
@@ -189,8 +146,6 @@ contains
    watopt                    =>    cps%watopt              , & ! Input:  [real(r8) (:,:)] volumetric soil moisture corresponding to no restriction on ET from urban pervious surface
    rootfr_road_perv          =>    cps%rootfr_road_perv    , & ! Input:  [real(r8) (:,:)] fraction of roots in each soil layer for urban pervious road
    rootr_road_perv           =>    cps%rootr_road_perv     , & ! Input:  [real(r8) (:,:)] effective fraction of roots in each soil layer for urban pervious road
-
-
    pactive                   =>    pft%active              , & ! Input:  [logical (:)] true=>do computations on this pft (see reweightMod for details)
    ivt                       =>   pft%itype                , & ! Input:  [integer (:)] pft vegetation type                       
    elai                      =>    pps%elai                , & ! Input:  [real(r8) (:)] one-sided leaf area index with burying by snow
@@ -223,8 +178,6 @@ contains
    thm                       =>    pes%thm                 , & ! Output: [real(r8) (:)] intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
    pgridcell                 =>   pft%gridcell             , & ! Input:  [integer (:)] pft's gridcell index                      
    pcolumn                   =>   pft%column               , & ! Input:  [integer (:)] pft's column index                        
-
-
    z0mr                      =>    pftcon%z0mr             , & ! Input:  [real(r8) (:)] ratio of momentum roughness length to canopy top height (-)
    displar                   =>    pftcon%displar            & ! Input:  [real(r8) (:)] ratio of displacement height to canopy top height (-)
    )
@@ -402,13 +355,6 @@ contains
        htvp(c) = hvap
        if (h2osoi_liq(c,snl(c)+1) <= 0._r8 .and. h2osoi_ice(c,snl(c)+1) > 0._r8) htvp(c) = hsub
 
-       ! Switch between vaporization and sublimation causes rapid solution
-       ! separation in perturbation growth test
-
-#if (defined PERGRO)
-       htvp(c) = hvap
-#endif
-
        ! Ground roughness lengths over non-lake columns (includes bare ground, ground
        ! underneath canopy, wetlands, etc.)
 
@@ -477,7 +423,7 @@ contains
 
     ! Make forcing height a pft-level quantity that is the atmospheric forcing 
     ! height plus each pft's z0m+displa
-    do p = lbp, ubp
+    do p = bounds%begp,bounds%endp
        if (pactive(p)) then
           g = pgridcell(p)
           l = plandunit(p)

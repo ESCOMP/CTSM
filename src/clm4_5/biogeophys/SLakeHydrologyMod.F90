@@ -1,73 +1,56 @@
 module SLakeHydrologyMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: SLakeHydrologyMod
-!
-! !DESCRIPTION:
-! Calculation of Lake Hydrology. Full hydrology, aerosol deposition, etc. of snow layers is
-! done. However, there is no infiltration, and the water budget is balanced with 
-! qflx_qrgwl. Lake water mass is kept constant. The soil is simply maintained at
-! volumetric saturation if ice melting frees up pore space. Likewise, if the water
-! portion alone at some point exceeds pore capacity, it is reduced. This is consistent
-! with the possibility of initializing the soil layer with excess ice.
-! 
-! If snow layers are present over an unfrozen lake, and the top layer of the lake
-! is capable of absorbing the latent heat without going below freezing, 
-! the snow-water is runoff and the latent heat is subtracted from the lake.
-!
-! Minimum snow layer thickness for lakes has been increased to avoid instabilities with 30 min timestep.
-! Also frost / dew is prevented from being added to top snow layers that have already melted during the phase change step.
-!
-! !PUBLIC TYPES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculation of Lake Hydrology. Full hydrology, aerosol deposition, etc. of snow layers is
+  ! done. However, there is no infiltration, and the water budget is balanced with 
+  ! qflx_qrgwl. Lake water mass is kept constant. The soil is simply maintained at
+  ! volumetric saturation if ice melting frees up pore space. Likewise, if the water
+  ! portion alone at some point exceeds pore capacity, it is reduced. This is consistent
+  ! with the possibility of initializing the soil layer with excess ice.
+  ! 
+  ! If snow layers are present over an unfrozen lake, and the top layer of the lake
+  ! is capable of absorbing the latent heat without going below freezing, 
+  ! the snow-water is runoff and the latent heat is subtracted from the lake.
+  !
+  ! Minimum snow layer thickness for lakes has been increased to avoid instabilities with 30 min timestep.
+  ! Also frost / dew is prevented from being added to top snow layers that have already melted during the phase change step.
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
   private
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: SLakeHydrology        ! Calculates soil/snow hydrology
-!
-! !REVISION HISTORY:
-! Created by Zack Subin, 2009
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: SLakeHydrology
-!
-! !INTERFACE:
-  subroutine SLakeHydrology(lbc, ubc, lbp, ubp, num_lakec, filter_lakec, &
-                               num_lakep, filter_lakep &
-  ! Snow filter for lakes is not returned to driver.  That's okay, because it looks like it is only
-  ! needed for the call to SnowAge_grain, which will be done at the bottom of this module.
-                        )
-!
-! !DESCRIPTION:
-!
-! WARNING: This subroutine assumes lake columns have one and only one pft.
-!
-! Sequence is:
-!  SLakeHydrology:
-!    Do needed tasks from Hydrology1, Biogeophysics2, & top of Hydrology2.
-!    -> SnowWater:             change of snow mass and snow water onto soil
-!    -> SnowCompaction:        compaction of snow layers
-!    -> CombineSnowLayers:     combine snow layers that are thinner than minimum
-!    -> DivideSnowLayers:      subdivide snow layers that are thicker than maximum
-!    Add water to soil if melting has left it with open pore space.
-!    If snow layers are found above a lake with unfrozen top layer, whose top
-!    layer has enough heat to melt all the snow ice without freezing, do so
-!    and eliminate the snow layers.
-!    Cleanup and do water balance.
-!    Do SNICAR stuff and diagnostics.
-!    Call SnowAge_grain (it must be done here because the snow filters at the driver level are non-lakec only.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine SLakeHydrology(bounds, num_lakec, filter_lakec, num_lakep, filter_lakep)
+    ! !DESCRIPTION:
+    ! Snow filter for lakes is not returned to driver.  That's okay, because it looks like it is only
+    ! needed for the call to SnowAge_grain, which will be done at the bottom of this module.
+    !
+    ! WARNING: This subroutine assumes lake columns have one and only one pft.
+    !
+    ! Sequence is:
+    !  SLakeHydrology:
+    !    Do needed tasks from Hydrology1, Biogeophysics2, & top of Hydrology2.
+    !    -> SnowWater:             change of snow mass and snow water onto soil
+    !    -> SnowCompaction:        compaction of snow layers
+    !    -> CombineSnowLayers:     combine snow layers that are thinner than minimum
+    !    -> DivideSnowLayers:      subdivide snow layers that are thicker than maximum
+    !    Add water to soil if melting has left it with open pore space.
+    !    If snow layers are found above a lake with unfrozen top layer, whose top
+    !    layer has enough heat to melt all the snow ice without freezing, do so
+    !    and eliminate the snow layers.
+    !    Cleanup and do water balance.
+    !    Do SNICAR stuff and diagnostics.
+    !    Call SnowAge_grain (it must be done here because the snow filters at the driver level are non-lakec only.
+    !
+    ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd      , only : clm_a2l
@@ -75,55 +58,45 @@ contains
     use SLakeCon        , only : lsadz
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevsoi
     use clm_varctl      , only : iulog
-    use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, &
-                                 SnowWater, BuildSnowFilter
+    use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater, BuildSnowFilter
     use SnowHydrologyMod, only : DivideSnowLayers_Lake
     use clm_time_manager, only : get_step_size
-    use SNICARMod           , only : SnowAge_grain, snw_rds_min
-!
-! !ARGUMENTS:
+    use SNICARMod       , only : SnowAge_grain, snw_rds_min
+    use decompMod       , only: bounds_type
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbc, ubc                  ! column bounds
-    integer, intent(in) :: lbp, ubp                  ! pft bounds
-    integer, intent(in) :: num_lakec                 ! number of column lake points in column filter
-    integer, intent(in) :: filter_lakec(ubc-lbc+1)   ! column filter for lake points
-    integer, intent(in) :: num_lakep                 ! number of pft lake points in column filter
-    integer, intent(in) :: filter_lakep(ubp-lbp+1)   ! pft filter for lake points
-!
-! !CALLED FROM:
-! subroutine driver
-!
-! !REVISION HISTORY:
-! Created by Zack Subin
-!
-! !LOCAL VARIABLES:
-!
-!EOP
-!
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    integer, intent(in) :: num_lakec         ! number of column lake points in column filter
+    integer, intent(in) :: filter_lakec(:)   ! column filter for lake points
+    integer, intent(in) :: num_lakep         ! number of pft lake points in column filter
+    integer, intent(in) :: filter_lakep(:)   ! pft filter for lake points
+    !
+    ! !LOCAL VARIABLES:
     integer  :: p,fp,g,l,c,j,fc,jtop             ! indices
     integer  :: num_shlakesnowc                  ! number of column snow points
-    integer  :: filter_shlakesnowc(ubc-lbc+1)    ! column filter for snow points
+    integer  :: filter_shlakesnowc(bounds%endc-bounds%begc+1)    ! column filter for snow points
     integer  :: num_shlakenosnowc                ! number of column non-snow points
-    integer  :: filter_shlakenosnowc(ubc-lbc+1)  ! column filter for non-snow points
+    integer  :: filter_shlakenosnowc(bounds%endc-bounds%begc+1)  ! column filter for non-snow points
     real(r8) :: dtime                        ! land model time step (sec)
     integer  :: newnode                      ! flag when new snow node is set, (1=yes, 0=no)
     real(r8) :: dz_snowf                     ! layer thickness rate change due to precipitation [mm/s]
     real(r8) :: bifall                       ! bulk density of newly fallen dry snow [kg/m3]
-    real(r8) :: fracsnow(lbp:ubp)            ! frac of precipitation that is snow
-    real(r8) :: fracrain(lbp:ubp)            ! frac of precipitation that is rain
-    real(r8) :: qflx_prec_grnd_snow(lbp:ubp) ! snow precipitation incident on ground [mm/s]
-    real(r8) :: qflx_prec_grnd_rain(lbp:ubp) ! rain precipitation incident on ground [mm/s]
+    real(r8) :: fracsnow(bounds%begp:bounds%endp)            ! frac of precipitation that is snow
+    real(r8) :: fracrain(bounds%begp:bounds%endp)            ! frac of precipitation that is rain
+    real(r8) :: qflx_prec_grnd_snow(bounds%begp:bounds%endp) ! snow precipitation incident on ground [mm/s]
+    real(r8) :: qflx_prec_grnd_rain(bounds%begp:bounds%endp) ! rain precipitation incident on ground [mm/s]
     real(r8) :: qflx_evap_soi_lim            ! temporary evap_soi limited by top snow layer content [mm/s]
     real(r8) :: h2osno_temp                  ! temporary h2osno [kg/m^2]
-    real(r8) :: sumsnowice(lbc:ubc)          ! sum of snow ice if snow layers found above unfrozen lake [kg/m&2]
-    logical  :: unfrozen(lbc:ubc)            ! true if top lake layer is unfrozen with snow layers above
+    real(r8) :: sumsnowice(bounds%begc:bounds%endc)          ! sum of snow ice if snow layers found above unfrozen lake [kg/m&2]
+    logical  :: unfrozen(bounds%begc:bounds%endc)            ! true if top lake layer is unfrozen with snow layers above
     real(r8) :: heatrem                      ! used in case above [J/m^2]
-    real(r8) :: heatsum(lbc:ubc)             ! used in case above [J/m^2]
+    real(r8) :: heatsum(bounds%begc:bounds%endc)             ! used in case above [J/m^2]
     real(r8) :: snowmass                     ! liquid+ice snow mass in a layer [kg/m2]
     real(r8) :: snowcap_scl_fct              ! temporary factor used to correct for snow capping
     real(r8), parameter :: snow_bd = 250._r8 ! assumed snow bulk density (for lakes w/out resolved snow layers) [kg/m^3]
-                                             ! Should only be used for frost below.
-!-----------------------------------------------------------------------
+    ! Should only be used for frost below.
+    !-----------------------------------------------------------------------
 
 
    associate(& 
@@ -442,13 +415,7 @@ contains
              snow_depth(c) = h2osno(c)/snow_bd !Assume a constant snow bulk density = 250.
           end if
 
-#if (defined PERGRO)
-          if (abs(h2osno(c)) < 1.e-10_r8) h2osno(c) = 0._r8
-          if (h2osno(c) == 0._r8) snow_depth(c) = 0._r8
-#else
           h2osno(c) = max(h2osno(c), 0._r8)
-#endif
-
        end if
 
        qflx_snwcp_ice_col(c) = qflx_snwcp_ice(p)
@@ -478,7 +445,7 @@ contains
     ! Determine initial snow/no-snow filters (will be modified possibly by
     ! routines CombineSnowLayers and DivideSnowLayers below)
 
-    call BuildSnowFilter(lbc, ubc, num_lakec, filter_lakec, &
+    call BuildSnowFilter(bounds, num_lakec, filter_lakec, &
          num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc)
 
     ! specify snow fraction
@@ -493,7 +460,7 @@ contains
 
     ! Determine the change of snow mass and the snow water onto soil
 
-    call SnowWater(lbc, ubc, num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc)
+    call SnowWater(bounds, num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc)
 
 
     ! Determine soil hydrology
@@ -539,15 +506,15 @@ contains
 
     ! Natural compaction and metamorphosis.
     
-    call SnowCompaction(lbc, ubc, num_shlakesnowc, filter_shlakesnowc)
+    call SnowCompaction(bounds, num_shlakesnowc, filter_shlakesnowc)
     
     ! Combine thin snow elements
     
-    call CombineSnowLayers(lbc, ubc, num_shlakesnowc, filter_shlakesnowc)
+    call CombineSnowLayers(bounds, num_shlakesnowc, filter_shlakesnowc)
     
     ! Divide thick snow elements
     
-    call DivideSnowLayers_Lake(lbc, ubc, num_shlakesnowc, filter_shlakesnowc)
+    call DivideSnowLayers_Lake(bounds, num_shlakesnowc, filter_shlakesnowc)
 
     ! Check for single completely unfrozen snow layer over lake.  Modeling this ponding is unnecessary and
     ! can cause instability after the timestep when melt is completed, as the temperature after melt can be
@@ -659,7 +626,7 @@ contains
 
     ! Build new snow filter
 
-    call BuildSnowFilter(lbc, ubc, num_lakec, filter_lakec, &
+    call BuildSnowFilter(bounds, num_lakec, filter_lakec, &
          num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc)
 
     ! Vertically average t_soisno and sum of h2osoi_liq and h2osoi_ice
@@ -866,7 +833,7 @@ contains
     enddo
 
     !Must be done here because the snow filter used in Hydrology2 & the Driver are for non-lake columns.
-    call SnowAge_grain(lbc, ubc, num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc)
+    call SnowAge_grain(bounds, num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc)
 
     end associate 
    end subroutine SLakeHydrology

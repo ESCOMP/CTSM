@@ -1,63 +1,49 @@
 module SnowHydrologyMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: SnowHydrologyMod
-!
-! !DESCRIPTION:
-! Calculate snow hydrology.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculate snow hydrology.
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use clm_varpar  , only: nlevsno
   use clm_varctl  , only: iulog
-!
-! !PUBLIC TYPES:
+  use decompMod       , only: bounds_type
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: SnowWater         ! Change of snow mass and the snow water onto soil
   public :: SnowCompaction    ! Change in snow layer thickness due to compaction
   public :: CombineSnowLayers ! Combine snow layers less than a min thickness
   public :: DivideSnowLayers  ! Subdivide snow layers if they exceed maximum thickness
   public :: DivideSnowLayers_Lake ! Adjusted so that snow layer thicknesses are larger over lakes
   public :: BuildSnowFilter   ! Construct snow/no-snow filters
-!
-! !PRIVATE MEMBER FUNCTIONS:
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
   private :: Combo            ! Returns the combined variables: dz, t, wliq, wice.
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: SnowWater
-!
-! !INTERFACE:
-  subroutine SnowWater(lbc, ubc, num_snowc, filter_snowc, &
-                       num_nosnowc, filter_nosnowc)
-!
-! !DESCRIPTION:
-! Evaluate the change of snow mass and the snow water onto soil.
-! Water flow within snow is computed by an explicit and non-physical
-! based scheme, which permits a part of liquid water over the holding
-! capacity (a tentative value is used, i.e. equal to 0.033*porosity) to
-! percolate into the underlying layer.  Except for cases where the
-! porosity of one of the two neighboring layers is less than 0.05, zero
-! flow is assumed. The water flow out of the bottom of the snow pack will
-! participate as the input of the soil water and runoff.  This subroutine
-! uses a filter for columns containing snow which must be constructed prior
-! to being called.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine SnowWater(bounds, num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
+    !
+    ! !DESCRIPTION:
+    ! Evaluate the change of snow mass and the snow water onto soil.
+    ! Water flow within snow is computed by an explicit and non-physical
+    ! based scheme, which permits a part of liquid water over the holding
+    ! capacity (a tentative value is used, i.e. equal to 0.033*porosity) to
+    ! percolate into the underlying layer.  Except for cases where the
+    ! porosity of one of the two neighboring layers is less than 0.05, zero
+    ! flow is assumed. The water flow out of the bottom of the snow pack will
+    ! participate as the input of the soil water and runoff.  This subroutine
+    ! uses a filter for columns containing snow which must be constructed prior
+    ! to being called.
+    !
+    ! !USES:
     use clmtype
     use clm_varcon        , only : denh2o, denice, wimp, ssi, istsoil,istdlak
     use clm_time_manager  , only : get_step_size
@@ -66,54 +52,43 @@ contains
                                    scvng_fct_mlt_ocphi, scvng_fct_mlt_ocpho, &
                                    scvng_fct_mlt_dst1,  scvng_fct_mlt_dst2,  &
                                    scvng_fct_mlt_dst3,  scvng_fct_mlt_dst4
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbc, ubc                    ! column bounds
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer, intent(in) :: num_snowc                   ! number of snow points in column filter
-    integer, intent(in) :: filter_snowc(ubc-lbc+1)     ! column filter for snow points
+    integer, intent(in) :: filter_snowc(:)     ! column filter for snow points
     integer, intent(in) :: num_nosnowc                 ! number of non-snow points in column filter
-    integer, intent(in) :: filter_nosnowc(ubc-lbc+1)   ! column filter for non-snow points
-!
-! !CALLED FROM:
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! 15 November 2000: Mariana Vertenstein
-! 2/26/02, Peter Thornton: Migrated to new data structures.
-! 03/28/08, Mark Flanner: Added aerosol deposition and flushing with meltwater
-!
-! !LOCAL VARIABLES:
-!EOP
+    integer, intent(in) :: filter_nosnowc(:)   ! column filter for non-snow points
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: g                                 ! gridcell loop index
     integer  :: c, j, fc, l                        !do loop/array indices
     real(r8) :: dtime                              !land model time step (sec)
-    real(r8) :: qin(lbc:ubc)                       !water flow into the elmement (mm/s) 
-    real(r8) :: qout(lbc:ubc)                      !water flow out of the elmement (mm/s)
+    real(r8) :: qin(bounds%begc:bounds%endc)                       !water flow into the elmement (mm/s) 
+    real(r8) :: qout(bounds%begc:bounds%endc)                      !water flow out of the elmement (mm/s)
     real(r8) :: wgdif                              !ice mass after minus sublimation
-    real(r8) :: vol_liq(lbc:ubc,-nlevsno+1:0)      !partial volume of liquid water in layer
-    real(r8) :: vol_ice(lbc:ubc,-nlevsno+1:0)      !partial volume of ice lens in layer
-    real(r8) :: eff_porosity(lbc:ubc,-nlevsno+1:0) !effective porosity = porosity - vol_ice
-    integer  :: g                                 ! gridcell loop index
-    real(r8) :: qin_bc_phi(lbc:ubc)               ! flux of hydrophilic BC into layer [kg]
-    real(r8) :: qout_bc_phi(lbc:ubc)              ! flux of hydrophilic BC out of layer [kg]
-    real(r8) :: qin_bc_pho(lbc:ubc)               ! flux of hydrophobic BC into layer [kg]
-    real(r8) :: qout_bc_pho(lbc:ubc)              ! flux of hydrophobic BC out of layer [kg]
-    real(r8) :: qin_oc_phi(lbc:ubc)               ! flux of hydrophilic OC into layer [kg]
-    real(r8) :: qout_oc_phi(lbc:ubc)              ! flux of hydrophilic OC out of layer [kg]
-    real(r8) :: qin_oc_pho(lbc:ubc)               ! flux of hydrophobic OC into layer [kg]
-    real(r8) :: qout_oc_pho(lbc:ubc)              ! flux of hydrophobic OC out of layer [kg]
-    real(r8) :: qin_dst1(lbc:ubc)                 ! flux of dust species 1 into layer [kg]
-    real(r8) :: qout_dst1(lbc:ubc)                ! flux of dust species 1 out of layer [kg]
-    real(r8) :: qin_dst2(lbc:ubc)                 ! flux of dust species 2 into layer [kg]
-    real(r8) :: qout_dst2(lbc:ubc)                ! flux of dust species 2 out of layer [kg]
-    real(r8) :: qin_dst3(lbc:ubc)                 ! flux of dust species 3 into layer [kg]
-    real(r8) :: qout_dst3(lbc:ubc)                ! flux of dust species 3 out of layer [kg]
-    real(r8) :: qin_dst4(lbc:ubc)                 ! flux of dust species 4 into layer [kg]
-    real(r8) :: qout_dst4(lbc:ubc)                ! flux of dust species 4 out of layer [kg]
+    real(r8) :: vol_liq(bounds%begc:bounds%endc,-nlevsno+1:0)      !partial volume of liquid water in layer
+    real(r8) :: vol_ice(bounds%begc:bounds%endc,-nlevsno+1:0)      !partial volume of ice lens in layer
+    real(r8) :: eff_porosity(bounds%begc:bounds%endc,-nlevsno+1:0) !effective porosity = porosity - vol_ice
+    real(r8) :: qin_bc_phi(bounds%begc:bounds%endc)               ! flux of hydrophilic BC into layer [kg]
+    real(r8) :: qout_bc_phi(bounds%begc:bounds%endc)              ! flux of hydrophilic BC out of layer [kg]
+    real(r8) :: qin_bc_pho(bounds%begc:bounds%endc)               ! flux of hydrophobic BC into layer [kg]
+    real(r8) :: qout_bc_pho(bounds%begc:bounds%endc)              ! flux of hydrophobic BC out of layer [kg]
+    real(r8) :: qin_oc_phi(bounds%begc:bounds%endc)               ! flux of hydrophilic OC into layer [kg]
+    real(r8) :: qout_oc_phi(bounds%begc:bounds%endc)              ! flux of hydrophilic OC out of layer [kg]
+    real(r8) :: qin_oc_pho(bounds%begc:bounds%endc)               ! flux of hydrophobic OC into layer [kg]
+    real(r8) :: qout_oc_pho(bounds%begc:bounds%endc)              ! flux of hydrophobic OC out of layer [kg]
+    real(r8) :: qin_dst1(bounds%begc:bounds%endc)                 ! flux of dust species 1 into layer [kg]
+    real(r8) :: qout_dst1(bounds%begc:bounds%endc)                ! flux of dust species 1 out of layer [kg]
+    real(r8) :: qin_dst2(bounds%begc:bounds%endc)                 ! flux of dust species 2 into layer [kg]
+    real(r8) :: qout_dst2(bounds%begc:bounds%endc)                ! flux of dust species 2 out of layer [kg]
+    real(r8) :: qin_dst3(bounds%begc:bounds%endc)                 ! flux of dust species 3 into layer [kg]
+    real(r8) :: qout_dst3(bounds%begc:bounds%endc)                ! flux of dust species 3 out of layer [kg]
+    real(r8) :: qin_dst4(bounds%begc:bounds%endc)                 ! flux of dust species 4 into layer [kg]
+    real(r8) :: qout_dst4(bounds%begc:bounds%endc)                ! flux of dust species 4 out of layer [kg]
     real(r8) :: mss_liqice                        ! mass of liquid+ice in a layer
- 
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
    associate(& 
    frac_sno_eff        => cps%frac_sno_eff        , & ! Input:  [real(r8) (:)]  eff. fraction of ground covered by snow (0 to 1)
@@ -413,7 +388,7 @@ contains
     !  set aerosol deposition fluxes from forcing array
     !  The forcing array is either set from an external file 
     !  or from fluxes received from the atmosphere model
-    do c = lbc,ubc
+    do c = bounds%begc,bounds%endc
        g = cgridcell(c)
        
        flx_bc_dep_dry(c)   = forc_aer(g,1) + forc_aer(g,2)
@@ -462,72 +437,54 @@ contains
     end associate 
    end subroutine SnowWater
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: SnowCompaction
-!
-! !INTERFACE:
-  subroutine SnowCompaction(lbc, ubc, num_snowc, filter_snowc)
-!
-! !DESCRIPTION:
-! Determine the change in snow layer thickness due to compaction and
-! settling.
-! Three metamorphisms of changing snow characteristics are implemented,
-! i.e., destructive, overburden, and melt. The treatments of the former
-! two are from SNTHERM.89 and SNTHERM.99 (1991, 1999). The contribution
-! due to melt metamorphism is simply taken as a ratio of snow ice
-! fraction after the melting versus before the melting.
-!
-! !USES:
-    use clmtype
-    use clm_time_manager, only : get_step_size
-    use clm_varcon      , only : denice, denh2o, tfrz, istice_mec
-    use clm_varcon      , only : rpi, istdlak, istsoil, istcrop
-    use clm_varctl      , only : subgridflag
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in) :: lbc, ubc                ! column bounds
-    integer, intent(in) :: num_snowc               ! number of column snow points in column filter
-    integer, intent(in) :: filter_snowc(ubc-lbc+1) ! column filter for snow points
-!
-! !CALLED FROM:
-! subroutine Hydrology2 in module Hydrology2Mod
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! 2/28/02, Peter Thornton: Migrated to new data structures
-! 2/29/08, David Lawrence: Revised snow overburden to be include 0.5 weight of current layer
-!
-! !LOCAL VARIABLES:
-! !OTHER LOCAL VARIABLES:
-!EOP
-    integer :: j, l, c, fc                   ! indices
-    real(r8):: dtime                         ! land model time step (sec)
-    real(r8), parameter :: c2 = 23.e-3_r8    ! [m3/kg]
-    real(r8), parameter :: c3 = 2.777e-6_r8  ! [1/s]
-    real(r8), parameter :: c4 = 0.04_r8      ! [1/K]
-    real(r8), parameter :: c5 = 2.0_r8       !
-    real(r8), parameter :: dm = 100.0_r8     ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
-    real(r8), parameter :: eta0 = 9.e+5_r8   ! The Viscosity Coefficient Eta0 [kg-s/m2]
-    real(r8) :: burden(lbc:ubc) ! pressure of overlying snow [kg/m2]
-    real(r8) :: ddz1   ! Rate of settling of snowpack due to destructive metamorphism.
-    real(r8) :: ddz2   ! Rate of compaction of snowpack due to overburden.
-    real(r8) :: ddz3   ! Rate of compaction of snowpack due to melt [1/s]
-    real(r8) :: dexpf  ! expf=exp(-c4*(273.15-t_soisno)).
-    real(r8) :: fi     ! Fraction of ice relative to the total water content at current time step
-    real(r8) :: td     ! t_soisno - tfrz [K]
-    real(r8) :: pdzdtc ! Nodal rate of change in fractional-thickness due to compaction [fraction/s]
-    real(r8) :: void   ! void (1 - vol_ice - vol_liq)
-    real(r8) :: wx     ! water mass (ice+liquid) [kg/m2]
-    real(r8) :: bi     ! partial density of ice [kg/m3]
-    real(r8) :: wsum   ! snowpack total water mass (ice+liquid) [kg/m2]
-    real(r8) :: fsno_melt
-
-!-----------------------------------------------------------------------
-
+   !-----------------------------------------------------------------------
+   subroutine SnowCompaction(bounds, num_snowc, filter_snowc)
+     !
+     ! !DESCRIPTION:
+     ! Determine the change in snow layer thickness due to compaction and
+     ! settling.
+     ! Three metamorphisms of changing snow characteristics are implemented,
+     ! i.e., destructive, overburden, and melt. The treatments of the former
+     ! two are from SNTHERM.89 and SNTHERM.99 (1991, 1999). The contribution
+     ! due to melt metamorphism is simply taken as a ratio of snow ice
+     ! fraction after the melting versus before the melting.
+     !
+     ! !USES:
+     use clmtype
+     use clm_time_manager, only : get_step_size
+     use clm_varcon      , only : denice, denh2o, tfrz, istice_mec
+     use clm_varcon      , only : rpi, istdlak, istsoil, istcrop
+     use clm_varctl      , only : subgridflag
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(bounds_type), intent(in) :: bounds  ! bounds
+     integer, intent(in) :: num_snowc               ! number of column snow points in column filter
+     integer, intent(in) :: filter_snowc(:) ! column filter for snow points
+     !
+     ! !LOCAL VARIABLES:
+     integer :: j, l, c, fc                   ! indices
+     real(r8):: dtime                         ! land model time step (sec)
+     real(r8), parameter :: c2 = 23.e-3_r8    ! [m3/kg]
+     real(r8), parameter :: c3 = 2.777e-6_r8  ! [1/s]
+     real(r8), parameter :: c4 = 0.04_r8      ! [1/K]
+     real(r8), parameter :: c5 = 2.0_r8       !
+     real(r8), parameter :: dm = 100.0_r8     ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
+     real(r8), parameter :: eta0 = 9.e+5_r8   ! The Viscosity Coefficient Eta0 [kg-s/m2]
+     real(r8) :: burden(bounds%begc:bounds%endc) ! pressure of overlying snow [kg/m2]
+     real(r8) :: ddz1   ! Rate of settling of snowpack due to destructive metamorphism.
+     real(r8) :: ddz2   ! Rate of compaction of snowpack due to overburden.
+     real(r8) :: ddz3   ! Rate of compaction of snowpack due to melt [1/s]
+     real(r8) :: dexpf  ! expf=exp(-c4*(273.15-t_soisno)).
+     real(r8) :: fi     ! Fraction of ice relative to the total water content at current time step
+     real(r8) :: td     ! t_soisno - tfrz [K]
+     real(r8) :: pdzdtc ! Nodal rate of change in fractional-thickness due to compaction [fraction/s]
+     real(r8) :: void   ! void (1 - vol_ice - vol_liq)
+     real(r8) :: wx     ! water mass (ice+liquid) [kg/m2]
+     real(r8) :: bi     ! partial density of ice [kg/m3]
+     real(r8) :: wsum   ! snowpack total water mass (ice+liquid) [kg/m2]
+     real(r8) :: fsno_melt
+     !-----------------------------------------------------------------------
 
    associate(& 
    snow_depth   => cps%snow_depth          , & ! Input:  [real(r8) (:)]  snow height (m)                         
@@ -634,61 +591,44 @@ contains
     end associate 
    end subroutine SnowCompaction
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CombineSnowLayers
-!
-! !INTERFACE:
-  subroutine CombineSnowLayers(lbc, ubc, num_snowc, filter_snowc)
-!
-! !DESCRIPTION:
-! Combine snow layers that are less than a minimum thickness or mass
-! If the snow element thickness or mass is less than a prescribed minimum,
-! then it is combined with a neighboring element.  The subroutine
-! clm\_combo.f90 then executes the combination of mass and energy.
-!
-! !USES:
-    use clmtype
-    use clm_varcon, only : istsoil, istdlak
-    use SLakeCon  , only : lsadz
-    use clm_varcon, only : istsoil, istwet,istice, istice_mec
-    use clm_varcon, only : istcrop
-    use clm_time_manager, only : get_step_size
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in)    :: lbc, ubc                    ! column bounds
-    integer, intent(inout) :: num_snowc                   ! number of column snow points in column filter
-    integer, intent(inout) :: filter_snowc(ubc-lbc+1)     ! column filter for snow points
-!
-! !CALLED FROM:
-! subroutine Hydrology2 in module Hydrology2Mod
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! 2/28/02, Peter Thornton: Migrated to new data structures.
-! 03/28/08, Mark Flanner: Added aerosol masses and snow grain radius
-! 05/20/10, Zack Subin: Adjust minimum thickness for snow layers over lakes to be + lsadz
-!
-! !LOCAL VARIABLES:
-!EOP
-    integer :: c, fc                 ! column indices
-    integer :: i,k                   ! loop indices
-    integer :: j,l                   ! node indices
-    integer :: msn_old(lbc:ubc)      ! number of top snow layer
-    integer :: mssi(lbc:ubc)         ! node index
-    integer :: neibor                ! adjacent node selected for combination
-    real(r8):: zwice(lbc:ubc)        ! total ice mass in snow
-    real(r8):: zwliq (lbc:ubc)       ! total liquid water in snow
-    real(r8):: dzmin(5)              ! minimum of top snow layer
-    real(r8):: dzminloc(5)           ! minimum of top snow layer (local)
-    real(r8) :: dtime                !land model time step (sec)
+   !-----------------------------------------------------------------------
+   subroutine CombineSnowLayers(bounds, num_snowc, filter_snowc)
+     !
+     ! !DESCRIPTION:
+     ! Combine snow layers that are less than a minimum thickness or mass
+     ! If the snow element thickness or mass is less than a prescribed minimum,
+     ! then it is combined with a neighboring element.  The subroutine
+     ! clm\_combo.f90 then executes the combination of mass and energy.
+     !
+     ! !USES:
+     use clmtype
+     use clm_varcon, only : istsoil, istdlak
+     use SLakeCon  , only : lsadz
+     use clm_varcon, only : istsoil, istwet,istice, istice_mec
+     use clm_varcon, only : istcrop
+     use clm_time_manager, only : get_step_size
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(bounds_type), intent(in) :: bounds  ! bounds
+     integer, intent(inout) :: num_snowc                   ! number of column snow points in column filter
+     integer, intent(inout) :: filter_snowc(:)     ! column filter for snow points
+     !
+     ! !LOCAL VARIABLES:
+     integer :: c, fc                 ! column indices
+     integer :: i,k                   ! loop indices
+     integer :: j,l                   ! node indices
+     integer :: msn_old(bounds%begc:bounds%endc)      ! number of top snow layer
+     integer :: mssi(bounds%begc:bounds%endc)         ! node index
+     integer :: neibor                ! adjacent node selected for combination
+     real(r8):: zwice(bounds%begc:bounds%endc)        ! total ice mass in snow
+     real(r8):: zwliq (bounds%begc:bounds%endc)       ! total liquid water in snow
+     real(r8):: dzmin(5)              ! minimum of top snow layer
+     real(r8):: dzminloc(5)           ! minimum of top snow layer (local)
+     real(r8) :: dtime                !land model time step (sec)
 
-    data dzmin /0.010_r8, 0.015_r8, 0.025_r8, 0.055_r8, 0.115_r8/
-!-----------------------------------------------------------------------
-
+     data dzmin /0.010_r8, 0.015_r8, 0.025_r8, 0.055_r8, 0.115_r8/
+     !-----------------------------------------------------------------------
 
    associate(& 
    ltype               => lun%itype               , & ! Input:  [integer (:)] landunit type                             
@@ -1002,79 +942,54 @@ contains
     end associate 
    end subroutine CombineSnowLayers
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: DivideSnowLayers
-!
-! !INTERFACE:
-  subroutine DivideSnowLayers(lbc, ubc, num_snowc, filter_snowc)
-!
-! !DESCRIPTION:
-! Subdivides snow layers if they exceed their prescribed maximum thickness.
-!
-! !USES:
-    use clmtype
-    use clm_varcon,  only : tfrz 
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in)    :: lbc, ubc                    ! column bounds
-    integer, intent(inout) :: num_snowc                   ! number of column snow points in column filter
-    integer, intent(inout) :: filter_snowc(ubc-lbc+1)     ! column filter for snow points
-!
-! !CALLED FROM:
-! subroutine Hydrology2 in module Hydrology2Mod
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! 2/28/02, Peter Thornton: Migrated to new data structures.
-! 2/29/08, David Lawrence: Snowpack T profile maintained during layer splitting
-! 03/28/08, Mark Flanner: Added aerosol masses and snow grain radius
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-!
-! !OTHER LOCAL VARIABLES:
-!EOP
-!
-    integer  :: j, c, fc               ! indices
-    real(r8) :: drr                    ! thickness of the combined [m]
-    integer  :: msno                   ! number of snow layer 1 (top) to msno (bottom)
-    real(r8) :: dzsno(lbc:ubc,nlevsno) ! Snow layer thickness [m]
-    real(r8) :: swice(lbc:ubc,nlevsno) ! Partial volume of ice [m3/m3]
-    real(r8) :: swliq(lbc:ubc,nlevsno) ! Partial volume of liquid water [m3/m3]
-    real(r8) :: tsno(lbc:ubc ,nlevsno) ! Nodel temperature [K]
-    real(r8) :: zwice                  ! temporary
-    real(r8) :: zwliq                  ! temporary
-    real(r8) :: propor                 ! temporary
-    real(r8) :: dtdz                   ! temporary
+   !-----------------------------------------------------------------------
+   subroutine DivideSnowLayers(bounds, num_snowc, filter_snowc)
+     !
+     ! !DESCRIPTION:
+     ! Subdivides snow layers if they exceed their prescribed maximum thickness.
+     !
+     ! !USES:
+     use clmtype
+     use clm_varcon,  only : tfrz 
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(bounds_type), intent(in) :: bounds  ! bounds
+     integer, intent(inout) :: num_snowc                   ! number of column snow points in column filter
+     integer, intent(inout) :: filter_snowc(:)     ! column filter for snow points
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: j, c, fc               ! indices
+     real(r8) :: drr                    ! thickness of the combined [m]
+     integer  :: msno                   ! number of snow layer 1 (top) to msno (bottom)
+     real(r8) :: dzsno(bounds%begc:bounds%endc,nlevsno) ! Snow layer thickness [m]
+     real(r8) :: swice(bounds%begc:bounds%endc,nlevsno) ! Partial volume of ice [m3/m3]
+     real(r8) :: swliq(bounds%begc:bounds%endc,nlevsno) ! Partial volume of liquid water [m3/m3]
+     real(r8) :: tsno(bounds%begc:bounds%endc ,nlevsno) ! Nodel temperature [K]
+     real(r8) :: zwice                  ! temporary
+     real(r8) :: zwliq                  ! temporary
+     real(r8) :: propor                 ! temporary
+     real(r8) :: dtdz                   ! temporary
 
-    ! temporary variables mimicking the structure of other layer division variables
-    real(r8) :: mbc_phi(lbc:ubc,nlevsno) ! mass of BC in each snow layer
-    real(r8) :: zmbc_phi                 ! temporary
-    real(r8) :: mbc_pho(lbc:ubc,nlevsno) ! mass of BC in each snow layer
-    real(r8) :: zmbc_pho                 ! temporary
-    real(r8) :: moc_phi(lbc:ubc,nlevsno) ! mass of OC in each snow layer
-    real(r8) :: zmoc_phi                 ! temporary
-    real(r8) :: moc_pho(lbc:ubc,nlevsno) ! mass of OC in each snow layer
-    real(r8) :: zmoc_pho                 ! temporary
-    real(r8) :: mdst1(lbc:ubc,nlevsno)   ! mass of dust 1 in each snow layer
-    real(r8) :: zmdst1                   ! temporary
-    real(r8) :: mdst2(lbc:ubc,nlevsno)   ! mass of dust 2 in each snow layer
-    real(r8) :: zmdst2                   ! temporary
-    real(r8) :: mdst3(lbc:ubc,nlevsno)   ! mass of dust 3 in each snow layer
-    real(r8) :: zmdst3                   ! temporary
-    real(r8) :: mdst4(lbc:ubc,nlevsno)   ! mass of dust 4 in each snow layer
-    real(r8) :: zmdst4                   ! temporary
-    real(r8) :: rds(lbc:ubc,nlevsno)
-
-!-----------------------------------------------------------------------
+     ! temporary variables mimicking the structure of other layer division variables
+     real(r8) :: mbc_phi(bounds%begc:bounds%endc,nlevsno) ! mass of BC in each snow layer
+     real(r8) :: zmbc_phi                 ! temporary
+     real(r8) :: mbc_pho(bounds%begc:bounds%endc,nlevsno) ! mass of BC in each snow layer
+     real(r8) :: zmbc_pho                 ! temporary
+     real(r8) :: moc_phi(bounds%begc:bounds%endc,nlevsno) ! mass of OC in each snow layer
+     real(r8) :: zmoc_phi                 ! temporary
+     real(r8) :: moc_pho(bounds%begc:bounds%endc,nlevsno) ! mass of OC in each snow layer
+     real(r8) :: zmoc_pho                 ! temporary
+     real(r8) :: mdst1(bounds%begc:bounds%endc,nlevsno)   ! mass of dust 1 in each snow layer
+     real(r8) :: zmdst1                   ! temporary
+     real(r8) :: mdst2(bounds%begc:bounds%endc,nlevsno)   ! mass of dust 2 in each snow layer
+     real(r8) :: zmdst2                   ! temporary
+     real(r8) :: mdst3(bounds%begc:bounds%endc,nlevsno)   ! mass of dust 3 in each snow layer
+     real(r8) :: zmdst3                   ! temporary
+     real(r8) :: mdst4(bounds%begc:bounds%endc,nlevsno)   ! mass of dust 4 in each snow layer
+     real(r8) :: zmdst4                   ! temporary
+     real(r8) :: rds(bounds%begc:bounds%endc,nlevsno)
+     !-----------------------------------------------------------------------
 
 
    associate(& 
@@ -1497,55 +1412,39 @@ contains
     end associate 
    end subroutine DivideSnowLayers
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: Combo
-!
-! !INTERFACE:
-  subroutine Combo(dz,  wliq,  wice, t, dz2, wliq2, wice2, t2)
-!
-! !DESCRIPTION:
-! Combines two elements and returns the following combined
-! variables: dz, t, wliq, wice.
-! The combined temperature is based on the equation:
-! the sum of the enthalpies of the two elements =
-! that of the combined element.
-!
-! !USES:
-    use clm_varcon,  only : cpice, cpliq, tfrz, hfus
-!
-! !ARGUMENTS:
-    implicit none
-    real(r8), intent(in)    :: dz2   ! nodal thickness of 2 elements being combined [m]
-    real(r8), intent(in)    :: wliq2 ! liquid water of element 2 [kg/m2]
-    real(r8), intent(in)    :: wice2 ! ice of element 2 [kg/m2]
-    real(r8), intent(in)    :: t2    ! nodal temperature of element 2 [K]
-    real(r8), intent(inout) :: dz    ! nodal thickness of 1 elements being combined [m]
-    real(r8), intent(inout) :: wliq  ! liquid water of element 1
-    real(r8), intent(inout) :: wice  ! ice of element 1 [kg/m2]
-    real(r8), intent(inout) :: t     ! nodel temperature of elment 1 [K]
-!
-! !CALLED FROM:
-! subroutine CombineSnowLayers in this module
-! subroutine DivideSnowLayers in this module
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-!
-    real(r8) :: dzc   ! Total thickness of nodes 1 and 2 (dzc=dz+dz2).
-    real(r8) :: wliqc ! Combined liquid water [kg/m2]
-    real(r8) :: wicec ! Combined ice [kg/m2]
-    real(r8) :: tc    ! Combined node temperature [K]
-    real(r8) :: h     ! enthalpy of element 1 [J/m2]
-    real(r8) :: h2    ! enthalpy of element 2 [J/m2]
-    real(r8) :: hc    ! temporary
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
+   subroutine Combo(dz,  wliq,  wice, t, dz2, wliq2, wice2, t2)
+     !
+     ! !DESCRIPTION:
+     ! Combines two elements and returns the following combined
+     ! variables: dz, t, wliq, wice.
+     ! The combined temperature is based on the equation:
+     ! the sum of the enthalpies of the two elements =
+     ! that of the combined element.
+     !
+     ! !USES:
+     use clm_varcon,  only : cpice, cpliq, tfrz, hfus
+     !
+     ! !ARGUMENTS:
+     implicit none
+     real(r8), intent(in)    :: dz2   ! nodal thickness of 2 elements being combined [m]
+     real(r8), intent(in)    :: wliq2 ! liquid water of element 2 [kg/m2]
+     real(r8), intent(in)    :: wice2 ! ice of element 2 [kg/m2]
+     real(r8), intent(in)    :: t2    ! nodal temperature of element 2 [K]
+     real(r8), intent(inout) :: dz    ! nodal thickness of 1 elements being combined [m]
+     real(r8), intent(inout) :: wliq  ! liquid water of element 1
+     real(r8), intent(inout) :: wice  ! ice of element 1 [kg/m2]
+     real(r8), intent(inout) :: t     ! nodel temperature of elment 1 [K]
+     !
+     ! !LOCAL VARIABLES:
+     real(r8) :: dzc   ! Total thickness of nodes 1 and 2 (dzc=dz+dz2).
+     real(r8) :: wliqc ! Combined liquid water [kg/m2]
+     real(r8) :: wicec ! Combined ice [kg/m2]
+     real(r8) :: tc    ! Combined node temperature [K]
+     real(r8) :: h     ! enthalpy of element 1 [J/m2]
+     real(r8) :: h2    ! enthalpy of element 2 [J/m2]
+     real(r8) :: hc    ! temporary
+     !-----------------------------------------------------------------------
 
     dzc = dz+dz2
     wicec = (wice+wice2)
@@ -1563,46 +1462,29 @@ contains
 
   end subroutine Combo
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: BuildSnowFilter
-!
-! !INTERFACE:
-  subroutine BuildSnowFilter(lbc, ubc, num_nolakec, filter_nolakec, &
-                             num_snowc, filter_snowc, &
-                             num_nosnowc, filter_nosnowc)
-!
-! !DESCRIPTION:
-! Constructs snow filter for use in vectorized loops for snow hydrology.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine BuildSnowFilter(bounds, num_nolakec, filter_nolakec, &
+       num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
+    !
+    ! !DESCRIPTION:
+    ! Constructs snow filter for use in vectorized loops for snow hydrology.
+    !
+    ! !USES:
     use clmtype
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in)  :: lbc, ubc                    ! column bounds
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer, intent(in)  :: num_nolakec                 ! number of column non-lake points in column filter
-    integer, intent(in)  :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
+    integer, intent(in)  :: filter_nolakec(:)   ! column filter for non-lake points
     integer, intent(out) :: num_snowc                   ! number of column snow points in column filter
-    integer, intent(out) :: filter_snowc(ubc-lbc+1)     ! column filter for snow points
+    integer, intent(out) :: filter_snowc(:)     ! column filter for snow points
     integer, intent(out) :: num_nosnowc                 ! number of column non-snow points in column filter
-    integer, intent(out) :: filter_nosnowc(ubc-lbc+1)   ! column filter for non-snow points
-!
-! !CALLED FROM:
-! subroutine Hydrology2 in Hydrology2Mod
-! subroutine CombineSnowLayers in this module
-!
-! !REVISION HISTORY:
-! 2003 July 31: Forrest Hoffman
-!
-! !LOCAL VARIABLES:
-!
-!
-! !OTHER LOCAL VARIABLES:
-!EOP
+    integer, intent(out) :: filter_nosnowc(:)   ! column filter for non-snow points
+    !
+    ! !LOCAL VARIABLES:
     integer  :: fc, c
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! Build snow/no-snow filters for other subroutines
 
@@ -1621,86 +1503,61 @@ contains
 
    end subroutine BuildSnowFilter
 
-!!!!!!!!!!!!!!!!!!! New subroutine for lakes
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: DivideSnowLayers_Lake
-!
-! !INTERFACE:
-  subroutine DivideSnowLayers_Lake(lbc, ubc, num_snowc, filter_snowc)
-!
-! !DESCRIPTION:
-! Subdivides snow layers if they exceed their prescribed maximum thickness.
-!
-! !USES:
-    use clmtype
-    use clm_varcon,  only : tfrz
-    use SLakeCon  ,  only : lsadz
-    use clm_varctl,  only : iulog
-    use abortutils,  only : endrun
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in)    :: lbc, ubc                    ! column bounds
-    integer, intent(inout) :: num_snowc                   ! number of column snow points in column filter
-    integer, intent(inout) :: filter_snowc(ubc-lbc+1)     ! column filter for snow points
-!
-! !CALLED FROM:
-! subroutine Hydrology2 in module Hydrology2Mod
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! 2/28/02, Peter Thornton: Migrated to new data structures.
-! 2/29/08, David Lawrence: Snowpack T profile maintained during layer splitting
-! 03/28/08, Mark Flanner: Added aerosol masses and snow grain radius
-! 05/20/10, Zack Subin: Adjust all thicknesses + lsadz for lakes
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-!
-! !OTHER LOCAL VARIABLES:
-!EOP
-!
-    integer  :: j, c, fc               ! indices
-    real(r8) :: drr                    ! thickness of the combined [m]
-    integer  :: msno                   ! number of snow layer 1 (top) to msno (bottom)
-    real(r8) :: dzsno(lbc:ubc,nlevsno) ! Snow layer thickness [m]
-    real(r8) :: swice(lbc:ubc,nlevsno) ! Partial volume of ice [m3/m3]
-    real(r8) :: swliq(lbc:ubc,nlevsno) ! Partial volume of liquid water [m3/m3]
-    real(r8) :: tsno(lbc:ubc ,nlevsno) ! Nodel temperature [K]
-    real(r8) :: zwice                  ! temporary
-    real(r8) :: zwliq                  ! temporary
-    real(r8) :: propor                 ! temporary
-    real(r8) :: dtdz                   ! temporary
+   ! New subroutine for lakes
+   !-----------------------------------------------------------------------
+   subroutine DivideSnowLayers_Lake(bounds, num_snowc, filter_snowc)
+     !
+     ! !DESCRIPTION:
+     ! Subdivides snow layers if they exceed their prescribed maximum thickness.
+     !
+     ! !USES:
+     use clmtype
+     use clm_varcon,  only : tfrz
+     use SLakeCon  ,  only : lsadz
+     use clm_varctl,  only : iulog
+     use abortutils,  only : endrun
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(bounds_type), intent(in) :: bounds  ! bounds
+     integer, intent(inout) :: num_snowc           ! number of column snow points in column filter
+     integer, intent(inout) :: filter_snowc(:)     ! column filter for snow points
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: j, c, fc               ! indices
+     real(r8) :: drr                    ! thickness of the combined [m]
+     integer  :: msno                   ! number of snow layer 1 (top) to msno (bottom)
+     real(r8) :: dzsno(bounds%begc:bounds%endc,nlevsno) ! Snow layer thickness [m]
+     real(r8) :: swice(bounds%begc:bounds%endc,nlevsno) ! Partial volume of ice [m3/m3]
+     real(r8) :: swliq(bounds%begc:bounds%endc,nlevsno) ! Partial volume of liquid water [m3/m3]
+     real(r8) :: tsno(bounds%begc:bounds%endc ,nlevsno) ! Nodel temperature [K]
+     real(r8) :: zwice                  ! temporary
+     real(r8) :: zwliq                  ! temporary
+     real(r8) :: propor                 ! temporary
+     real(r8) :: dtdz                   ! temporary
 
-    ! temporary variables mimicking the structure of other layer division variables
-    real(r8) :: mbc_phi(lbc:ubc,nlevsno) ! mass of BC in each snow layer
-    real(r8) :: zmbc_phi                 ! temporary
-    real(r8) :: mbc_pho(lbc:ubc,nlevsno) ! mass of BC in each snow layer
-    real(r8) :: zmbc_pho                 ! temporary
-    real(r8) :: moc_phi(lbc:ubc,nlevsno) ! mass of OC in each snow layer
-    real(r8) :: zmoc_phi                 ! temporary
-    real(r8) :: moc_pho(lbc:ubc,nlevsno) ! mass of OC in each snow layer
-    real(r8) :: zmoc_pho                 ! temporary
-    real(r8) :: mdst1(lbc:ubc,nlevsno)   ! mass of dust 1 in each snow layer
-    real(r8) :: zmdst1                   ! temporary
-    real(r8) :: mdst2(lbc:ubc,nlevsno)   ! mass of dust 2 in each snow layer
-    real(r8) :: zmdst2                   ! temporary
-    real(r8) :: mdst3(lbc:ubc,nlevsno)   ! mass of dust 3 in each snow layer
-    real(r8) :: zmdst3                   ! temporary
-    real(r8) :: mdst4(lbc:ubc,nlevsno)   ! mass of dust 4 in each snow layer
-    real(r8) :: zmdst4                   ! temporary
-    real(r8) :: rds(lbc:ubc,nlevsno)
+     ! temporary variables mimicking the structure of other layer division variables
+     real(r8) :: mbc_phi(bounds%begc:bounds%endc,nlevsno) ! mass of BC in each snow layer
+     real(r8) :: zmbc_phi                 ! temporary
+     real(r8) :: mbc_pho(bounds%begc:bounds%endc,nlevsno) ! mass of BC in each snow layer
+     real(r8) :: zmbc_pho                 ! temporary
+     real(r8) :: moc_phi(bounds%begc:bounds%endc,nlevsno) ! mass of OC in each snow layer
+     real(r8) :: zmoc_phi                 ! temporary
+     real(r8) :: moc_pho(bounds%begc:bounds%endc,nlevsno) ! mass of OC in each snow layer
+     real(r8) :: zmoc_pho                 ! temporary
+     real(r8) :: mdst1(bounds%begc:bounds%endc,nlevsno)   ! mass of dust 1 in each snow layer
+     real(r8) :: zmdst1                   ! temporary
+     real(r8) :: mdst2(bounds%begc:bounds%endc,nlevsno)   ! mass of dust 2 in each snow layer
+     real(r8) :: zmdst2                   ! temporary
+     real(r8) :: mdst3(bounds%begc:bounds%endc,nlevsno)   ! mass of dust 3 in each snow layer
+     real(r8) :: zmdst3                   ! temporary
+     real(r8) :: mdst4(bounds%begc:bounds%endc,nlevsno)   ! mass of dust 4 in each snow layer
+     real(r8) :: zmdst4                   ! temporary
+     real(r8) :: rds(bounds%begc:bounds%endc,nlevsno)
 
-    ! Variables for consistency check
-    real(r8) :: dztot(lbc:ubc), snwicetot(lbc:ubc), snwliqtot(lbc:ubc)
-!-----------------------------------------------------------------------
+     ! Variables for consistency check
+     real(r8) :: dztot(bounds%begc:bounds%endc), snwicetot(bounds%begc:bounds%endc), snwliqtot(bounds%begc:bounds%endc)
+     !-----------------------------------------------------------------------
 
 
    associate(& 
@@ -2163,7 +2020,5 @@ contains
 
     end associate 
    end subroutine DivideSnowLayers_Lake
-!!!!!!!!!!!!!!!!!!!!! End new subroutine
-
 
 end module SnowHydrologyMod

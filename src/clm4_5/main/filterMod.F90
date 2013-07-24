@@ -1,31 +1,27 @@
 module filterMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: filterMod
-!
-! !DESCRIPTION:
-! Module of filters used for processing columns and pfts of particular
-! types, including lake, non-lake, urban, soil, snow, non-snow, and
-! naturally-vegetated patches.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Module of filters used for processing columns and pfts of particular
+  ! types, including lake, non-lake, urban, soil, snow, non-snow, and
+  ! naturally-vegetated patches.
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils, only : endrun
   use clm_varctl, only : iulog
-!
-! !PUBLIC TYPES:
+  use decompMod , only : bounds_type  
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
 
   private
 
   type clumpfilter
-#if (defined CNDV)
      integer, pointer :: natvegp(:)      ! CNDV nat-vegetated (present) filter (pfts)
      integer :: num_natvegp              ! number of pfts in nat-vegetated filter
-#endif
+
      integer, pointer :: pcropp(:)       ! prognostic crop filter (pfts)
      integer :: num_pcropp               ! number of pfts in prognostic crop filter
      integer, pointer :: soilnopcropp(:) ! soil w/o prog. crops (pfts)
@@ -93,87 +89,66 @@ module filterMod
   ! before this variable was added (i.e., when there was only a single group of filters).
   !
   type(clumpfilter), allocatable, public :: filter_inactive_and_active(:)
-!
+  !
   public allocFilters   ! allocate memory for filters
   public setFilters     ! set filters
 
   private allocFiltersOneGroup  ! allocate memory for one group of filters
   private setFiltersOneGroup    ! set one group of filters
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-! 11/13/03, Peter Thornton: Added soilp and num_soilp
-! Jan/08, S. Levis: Added crop-related filters
-! June/13, Bill Sacks: Change main filters to just work over 'active' points; add filter_inactive_and_active
-!
-!EOP
-!-----------------------------------------------------------------------
+  !
+  ! !REVISION HISTORY:
+  ! Created by Mariana Vertenstein
+  ! 11/13/03, Peter Thornton: Added soilp and num_soilp
+  ! Jan/08, S. Levis: Added crop-related filters
+  ! June/13, Bill Sacks: Change main filters to just work over 'active' points; 
+  ! add filter_inactive_and_active
+  !-----------------------------------------------------------------------
 
 contains
 
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: allocFilters
-!
-! !INTERFACE:
+  !------------------------------------------------------------------------
   subroutine allocFilters()
-!
-! !DESCRIPTION:
-! Allocate CLM filters.
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION:
+    ! Allocate CLM filters.
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !REVISION HISTORY:
-! Created by Bill Sacks
-!
-!EOP
-!------------------------------------------------------------------------
+    !
+    ! !REVISION HISTORY:
+    ! Created by Bill Sacks
+    !------------------------------------------------------------------------
 
     call allocFiltersOneGroup(filter)
     call allocFiltersOneGroup(filter_inactive_and_active)
 
   end subroutine allocFilters
 
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: allocFiltersOneGroup
-!
-! !INTERFACE:
+  !------------------------------------------------------------------------
   subroutine allocFiltersOneGroup(this_filter)
-!
-! !DESCRIPTION:
-! Allocate CLM filters, for one group of filters.
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Allocate CLM filters, for one group of filters.
+    !
+    ! !USES:
     use clmtype
     use decompMod , only : get_proc_clumps, get_clump_bounds
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
     type(clumpfilter), intent(inout), allocatable :: this_filter(:)  ! the filter to allocate
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-! 2004.04.27 DGVM naturally-vegetated filter added by Forrest Hoffman
-!
-!EOP
-!
-! LOCAL VARAIBLES:
+    !
+    ! LOCAL VARAIBLES:
     integer :: nc          ! clump index
     integer :: nclumps     ! total number of clumps on this processor
-    integer :: begp, endp  ! per-clump beginning and ending pft indices
-    integer :: begc, endc  ! per-clump beginning and ending column indices
-    integer :: begl, endl  ! per-clump beginning and ending landunit indices
-    integer :: begg, endg  ! per-clump beginning and ending gridcell indices
     integer :: ier         ! error status
-!------------------------------------------------------------------------
+    type(bounds_type) :: bounds  ! bounds
+    !------------------------------------------------------------------------
 
     ! Determine clump variables for this processor
 
     nclumps = get_proc_clumps()
+
     ier = 0
     if( .not. allocated(this_filter)) then
        allocate(this_filter(nclumps), stat=ier)
@@ -185,68 +160,57 @@ contains
 
     ! Loop over clumps on this processor
 
-!$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
+!$OMP PARALLEL DO PRIVATE (nc,bounds)
     do nc = 1, nclumps
-       call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
+       call get_clump_bounds(nc, bounds)
 
-       allocate(this_filter(nc)%lakep(endp-begp+1))
-       allocate(this_filter(nc)%nolakep(endp-begp+1))
-       allocate(this_filter(nc)%nolakeurbanp(endp-begp+1))
+       allocate(this_filter(nc)%lakep(bounds%endp-bounds%begp+1))
+       allocate(this_filter(nc)%nolakep(bounds%endp-bounds%begp+1))
+       allocate(this_filter(nc)%nolakeurbanp(bounds%endp-bounds%begp+1))
 
-       allocate(this_filter(nc)%lakec(endc-begc+1))
-       allocate(this_filter(nc)%nolakec(endc-begc+1))
+       allocate(this_filter(nc)%lakec(bounds%endc-bounds%begc+1))
+       allocate(this_filter(nc)%nolakec(bounds%endc-bounds%begc+1))
 
-       allocate(this_filter(nc)%soilc(endc-begc+1))
-       allocate(this_filter(nc)%soilp(endp-begp+1))
+       allocate(this_filter(nc)%soilc(bounds%endc-bounds%begc+1))
+       allocate(this_filter(nc)%soilp(bounds%endp-bounds%begp+1))
 
-       allocate(this_filter(nc)%snowc(endc-begc+1))
-       allocate(this_filter(nc)%nosnowc(endc-begc+1))
+       allocate(this_filter(nc)%snowc(bounds%endc-bounds%begc+1))
+       allocate(this_filter(nc)%nosnowc(bounds%endc-bounds%begc+1))
 
-#if (defined CNDV)
-       allocate(this_filter(nc)%natvegp(endp-begp+1))
-#endif
+       allocate(this_filter(nc)%natvegp(bounds%endp-bounds%begp+1))
 
-       allocate(this_filter(nc)%hydrologyc(endc-begc+1))
+       allocate(this_filter(nc)%hydrologyc(bounds%endc-bounds%begc+1))
 
-       allocate(this_filter(nc)%urbanp(endp-begp+1))
-       allocate(this_filter(nc)%nourbanp(endp-begp+1))
+       allocate(this_filter(nc)%urbanp(bounds%endp-bounds%begp+1))
+       allocate(this_filter(nc)%nourbanp(bounds%endp-bounds%begp+1))
 
-       allocate(this_filter(nc)%urbanc(endc-begc+1))
-       allocate(this_filter(nc)%nourbanc(endc-begc+1))
+       allocate(this_filter(nc)%urbanc(bounds%endc-bounds%begc+1))
+       allocate(this_filter(nc)%nourbanc(bounds%endc-bounds%begc+1))
 
-       allocate(this_filter(nc)%urbanl(endl-begl+1))
-       allocate(this_filter(nc)%nourbanl(endl-begl+1))
+       allocate(this_filter(nc)%urbanl(bounds%endl-bounds%begl+1))
+       allocate(this_filter(nc)%nourbanl(bounds%endl-bounds%begl+1))
 
-       allocate(this_filter(nc)%pcropp(endp-begp+1))
-       allocate(this_filter(nc)%soilnopcropp(endp-begp+1))
+       allocate(this_filter(nc)%pcropp(bounds%endp-bounds%begp+1))
+       allocate(this_filter(nc)%soilnopcropp(bounds%endp-bounds%begp+1))
     end do
 !$OMP END PARALLEL DO
 
   end subroutine allocFiltersOneGroup
 
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: setFilters
-!
-! !INTERFACE:
-  subroutine setFilters( nc )
-!
-! !DESCRIPTION:
-! Set CLM filters.
-!
-! !ARGUMENTS:
+  !------------------------------------------------------------------------
+  subroutine setFilters(nc, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Set CLM filters.
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: nc                          ! clump index
-!
-! !REVISION HISTORY:
-! Created by Bill Sacks
-!
-!EOP
-!------------------------------------------------------------------------
+    integer, intent(in) :: nc ! clump index
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !------------------------------------------------------------------------
 
-    call setFiltersOneGroup(filter, nc, include_inactive = .false.)
+    call setFiltersOneGroup(nc, bounds, &
+         filter, include_inactive = .false.)
 
     ! At least as of June, 2013, the 'inactive_and_active' version of the filters is
     ! static in time. Thus, we could have some logic saying whether we're in
@@ -258,70 +222,49 @@ contains
     ! filters are updated. But if this proves to be a performance problem, we could
     ! introduce an argument saying whether we're in initialization, and if so, skip this
     ! call.
-    call setFiltersOneGroup(filter_inactive_and_active, nc, include_inactive = .true.)
+    call setFiltersOneGroup(nc, bounds, &
+         filter_inactive_and_active, include_inactive = .true.)
 
   end subroutine setFilters
 
 
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: setFiltersOneGroup
-!
-! !INTERFACE:
-  subroutine setFiltersOneGroup( this_filter, nc, include_inactive )
-!
-! !DESCRIPTION:
-! Set CLM filters for one group of filters.
-!
-! "Standard" filters only include active points. However, this routine can be used to set
-! alternative filters that also apply over inactive points, by setting include_inactive =
-! .true.
-!
-! !USES:
+  !------------------------------------------------------------------------
+  subroutine setFiltersOneGroup(nc, bounds, this_filter, include_inactive )
+    !
+    ! !DESCRIPTION:
+    ! Set CLM filters for one group of filters.
+    !
+    ! "Standard" filters only include active points. However, this routine can be used to set
+    ! alternative filters that also apply over inactive points, by setting include_inactive =
+    ! .true.
+    !
+    ! !USES:
     use clmtype
     use decompMod , only : get_clump_bounds
     use pftvarcon , only : npcropmin
     use clm_varcon, only : istsoil, icol_road_perv
     use clm_varcon, only : istcrop
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
+    integer, intent(in) :: nc                ! clump index
+    type(bounds_type), intent(in) :: bounds  ! bounds
     type(clumpfilter), intent(inout) :: this_filter(:) ! the group of filters to set
-    integer, intent(in) :: nc                          ! clump index
     logical, intent(in) :: include_inactive            ! whether inactive points should be included in the filters
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-! 2004.04.27 DGVM naturally-vegetated filter added by Forrest Hoffman
-! 2005.09.12 Urban related filters added by Mariana Vertenstein
-!
-!EOP
-!
-! LOCAL VARAIBLES:
-    integer , pointer :: ctype(:) ! column type
+    !
+    ! LOCAL VARAIBLES:
     integer :: c,l,p       ! column, landunit, pft indices
     integer :: fl          ! lake filter index
     integer :: fnl,fnlu    ! non-lake filter index
     integer :: fs          ! soil filter index
     integer :: f, fn       ! general indices
-    integer :: begp, endp  ! per-clump beginning and ending pft indices
-    integer :: begc, endc  ! per-clump beginning and ending column indices
-    integer :: begl, endl  ! per-clump beginning and ending landunit indices
-    integer :: begg, endg  ! per-clump beginning and ending gridcell indices
-!------------------------------------------------------------------------
-
-    ctype => col%itype
-
-    ! Determine clump boundaries
-
-    call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
+    !------------------------------------------------------------------------
 
     ! Create lake and non-lake filters at column-level 
 
     fl = 0
     fnl = 0
-    do c = begc,endc
+    do c = bounds%begc,bounds%endc
        if (col%active(c) .or. include_inactive) then
           l =col%landunit(c)
           if (lun%lakpoi(l)) then
@@ -341,7 +284,7 @@ contains
     fl = 0
     fnl = 0
     fnlu = 0
-    do p = begp,endp
+    do p = bounds%begp,bounds%endp
        if (pft%active(p) .or. include_inactive) then
           l =pft%landunit(p)
           if (lun%lakpoi(l) ) then
@@ -364,7 +307,7 @@ contains
     ! Create soil filter at column-level
 
     fs = 0
-    do c = begc,endc
+    do c = bounds%begc,bounds%endc
        if (col%active(c) .or. include_inactive) then
           l =col%landunit(c)
           if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -378,7 +321,7 @@ contains
     ! Create soil filter at pft-level
 
     fs = 0
-    do p = begp,endp
+    do p = bounds%begp,bounds%endp
        if (pft%active(p) .or. include_inactive) then
           l =pft%landunit(p)
           if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -392,10 +335,10 @@ contains
     ! Create column-level hydrology filter (soil and Urban pervious road cols) 
 
     f = 0
-    do c = begc,endc
+    do c = bounds%begc,bounds%endc
        if (col%active(c) .or. include_inactive) then
           l =col%landunit(c)
-          if (lun%itype(l) == istsoil .or. ctype(c) == icol_road_perv .or. &
+          if (lun%itype(l) == istsoil .or. col%itype(c) == icol_road_perv .or. &
                lun%itype(l) == istcrop) then
              f = f + 1
              this_filter(nc)%hydrologyc(f) = c
@@ -409,7 +352,7 @@ contains
 
     fl  = 0
     fnl = 0
-    do p = begp,endp
+    do p = bounds%begp,bounds%endp
        if (pft%active(p) .or. include_inactive) then
           if (pft%itype(p) >= npcropmin) then !skips 2 generic crop types
              fl = fl + 1
@@ -430,7 +373,7 @@ contains
 
     f = 0
     fn = 0
-    do l = begl,endl
+    do l = bounds%begl,bounds%endl
        if (lun%active(l) .or. include_inactive) then
           if (lun%urbpoi(l)) then
              f = f + 1
@@ -448,7 +391,7 @@ contains
 
     f = 0
     fn = 0
-    do c = begc,endc
+    do c = bounds%begc,bounds%endc
        if (col%active(c) .or. include_inactive) then
           l = col%landunit(c)
           if (lun%urbpoi(l)) then
@@ -467,7 +410,7 @@ contains
 
     f = 0
     fn = 0
-    do p = begp,endp
+    do p = bounds%begp,bounds%endp
        if (pft%active(p) .or. include_inactive) then
           l = pft%landunit(p)
           if (lun%urbpoi(l)) then

@@ -1,69 +1,46 @@
 module UrbanInitMod
-
-!----------------------------------------------------------------------- 
-!BOP
-!
-! !MODULE: UrbanInitMod
-! 
-! !DESCRIPTION: 
-! Initialize urban data
-!
-! !USES:
+  !----------------------------------------------------------------------- 
+  ! !DESCRIPTION: 
+  ! Initialize urban data
+  !
+  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun  
   use shr_sys_mod , only : shr_sys_flush 
-  use clm_varctl  , only : iulog
+  use clm_varctl  , only : iulog, use_vancouver, use_mexicocity
   use UrbanMod,     only : urban_traffic, urban_hac, urban_hac_off
-!
-! !PUBLIC TYPES:
+  use decompMod   , only : bounds_type
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
 
   private
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: UrbanInitTimeVar   ! Initialize urban time varying variables
   public :: UrbanInitTimeConst ! Initialize urban time constant variables
   public :: UrbanInitAero      ! Calculate urban landunit aerodynamic constants
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: UrbanInitAero
-!
-! !INTERFACE:
-  subroutine UrbanInitAero( )
-!
-! !DESCRIPTION: 
-! Calculate urban land unit aerodynamic constants using Macdonald (1998) as used in
-! Grimmond and Oke (1999)
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine UrbanInitAero(bounds)
+    !
+    ! !DESCRIPTION: 
+    ! Calculate urban land unit aerodynamic constants using Macdonald (1998) as used in
+    ! Grimmond and Oke (1999)
+    !
+    ! !USES:
     use clmtype 
     use clm_varcon, only : vkc
-    use decompMod , only : get_proc_bounds
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-!
-!
-!
-!
-! !CALLED FROM:
-! subroutine initialize
-!
-! !REVISION HISTORY:
-! Created by Keith Oleson January 2005
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     real(r8), parameter :: alpha = 4.43_r8 ! coefficient used to calculate z_d_town
     real(r8), parameter :: beta = 1.0_r8   ! coefficient used to calculate z_d_town
     real(r8), parameter :: C_d = 1.2_r8    ! drag coefficient as used in Grimmond and Oke (1999)
@@ -71,26 +48,17 @@ contains
     real(r8) :: frontal_ai                 ! frontal area index of buildings (-)
     real(r8) :: build_lw_ratio             ! building short/long side ratio (-)
     integer  :: l,g                        ! indices
-    integer  :: begp, endp                 ! clump beginning and ending pft indices
-    integer  :: begc, endc                 ! clump beginning and ending column indices
-    integer  :: begl, endl                 ! clump beginning and ending landunit indices
-    integer  :: begg, endg                 ! clump beginning and ending gridcell indices
-!-----------------------------------------------------------------------
-
+    !-----------------------------------------------------------------------
 
    associate(& 
-   ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
    z_0_town                  =>   lun%z_0_town             , & ! Output: [real(r8) (:)]  urban landunit momentum roughness length (m)
    z_d_town                  =>   lun%z_d_town             , & ! Output: [real(r8) (:)]  urban landunit displacement height (m)  
    ht_roof                   =>   lun%ht_roof              , & ! Input:  [real(r8) (:)]  height of urban roof (m)                
-   canyon_hwr                =>   lun%canyon_hwr           , & ! Input:  [real(r8) (:)]  ratio of building height to street width (-)
-   urbpoi                    =>   lun%urbpoi                 & ! Input:  [logical (:)]  true => landunit is an urban point       
+   canyon_hwr                =>   lun%canyon_hwr             & ! Input:  [real(r8) (:)]  ratio of building height to street width (-)
    )
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-
-    do l = begl, endl 
-      if (urbpoi(l)) then
+    do l = bounds%begl, bounds%endl 
+      if (lun%urbpoi(l)) then
 
          ! Calculate plan area index 
          plan_ai = canyon_hwr(l)/(canyon_hwr(l) + 1._r8)
@@ -107,83 +75,60 @@ contains
          
          ! Calculate displacement height
          
-#if (defined VANCOUVER)
-         z_d_town(l) = 3.5_r8
-#elif (defined MEXICOCITY)
-         z_d_town(l) = 10.9_r8
-#else
-         z_d_town(l) = (1._r8 + alpha**(-plan_ai) * (plan_ai - 1._r8)) * ht_roof(l)
-#endif
+         if (use_vancouver) then
+            z_d_town(l) = 3.5_r8
+         else if (use_mexicocity) then
+            z_d_town(l) = 10.9_r8
+         else
+            z_d_town(l) = (1._r8 + alpha**(-plan_ai) * (plan_ai - 1._r8)) * ht_roof(l)
+         end if
          
          ! Calculate the roughness length
          
-#if (defined VANCOUVER)
-         z_0_town(l) = 0.35_r8
-#elif (defined MEXICOCITY)
-         z_0_town(l) = 2.2_r8
-#else
-         z_0_town(l) = ht_roof(l) * (1._r8 - z_d_town(l) / ht_roof(l)) * &
-                       exp(-1.0_r8 * (0.5_r8 * beta * C_d / vkc**2 * &
-                       (1 - z_d_town(l) / ht_roof(l)) * frontal_ai)**(-0.5_r8))
-#endif
+         if (use_vancouver) then
+            z_0_town(l) = 0.35_r8
+         else if (use_mexicocity) then
+            z_0_town(l) = 2.2_r8
+         else
+            z_0_town(l) = ht_roof(l) * (1._r8 - z_d_town(l) / ht_roof(l)) * &
+                 exp(-1.0_r8 * (0.5_r8 * beta * C_d / vkc**2 * &
+                 (1 - z_d_town(l) / ht_roof(l)) * frontal_ai)**(-0.5_r8))
+         end if
       end if
    end do
 
-    end associate 
-  end subroutine UrbanInitAero
+ end associate
+end subroutine UrbanInitAero
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: UrbanInitTimeConst
-!
-! !INTERFACE:
-  subroutine UrbanInitTimeConst()
-!
-! !DESCRIPTION: 
-! Initialize urban time-constant variables
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine UrbanInitTimeConst(bounds)
+    !
+    ! !DESCRIPTION: 
+    ! Initialize urban time-constant variables
+    !
+    ! !USES:
     use clmtype 
     use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, &
                               icol_road_perv, icol_road_imperv, spval, &
                               isturb_MIN
-    use decompMod    , only : get_proc_bounds, ldecomp
     use UrbanInputMod, only : urbinp
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-!
-! !OTHER LOCAL VARIABLES
-!EOP
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     integer  :: nc,fl,ib,l,c,p,g          ! indices
-    integer  :: ier                       ! error status
-    integer  :: begp, endp                ! clump beginning and ending pft indices
-    integer  :: begc, endc                ! clump beginning and ending column indices
-    integer  :: begl, endl                ! clump beginning and ending landunit indices
-    integer  :: begg, endg                ! clump beginning and ending gridcell indices
     integer  :: dindx                     ! urban density type index
+    !-----------------------------------------------------------------------
 
    associate(& 
-   ltype               =>   lun%itype               , & ! Input:  [integer (:)]  landunit type index                      
-   urbpoi              =>   lun%urbpoi              , & ! Input:  [logical (:)]  true => landunit is an urban point       
-   lgridcell           =>   lun%gridcell            , & ! Input:  [integer (:)]  gridcell of corresponding landunit       
-   coli                =>   lun%coli                , & ! Input:  [integer (:)]  beginning column index for landunit      
-   colf                =>   lun%colf                , & ! Input:  [integer (:)]  ending column index for landunit         
    wtroad_perv         =>   lun%wtroad_perv         , & ! Output: [real(r8) (:)]  weight of pervious column to total road 
    ht_roof             =>   lun%ht_roof             , & ! Output: [real(r8) (:)]  height of urban roof (m)                
    wtlunit_roof        =>   lun%wtlunit_roof        , & ! Output: [real(r8) (:)]  weight of roof with respect to landunit 
-   eflx_traffic_factor =>   lef%eflx_traffic_factor , & ! Output: [real(r8) (:)]  multiplicative factor for sensible heat flux from urban traffic
+   canyon_hwr          =>   lun%canyon_hwr          , & ! Output: [real(r8) (:)]  urban canyon height to width ratio      
    t_building_max      =>   lps%t_building_max      , & ! Output: [real(r8) (:)]  maximum internal building temperature (K)
    t_building_min      =>   lps%t_building_min      , & ! Output: [real(r8) (:)]  minimum internal building temperature (K)
-   canyon_hwr          =>   lun%canyon_hwr          , & ! Output: [real(r8) (:)]  urban canyon height to width ratio      
    tk_wall             =>   lps%tk_wall             , & ! Output: [real(r8) (:,:)]  thermal conductivity of urban wall (W/m/K)
    tk_roof             =>   lps%tk_roof             , & ! Output: [real(r8) (:,:)]  thermal conductivity of urban roof (W/m/K)
    tk_improad          =>   lps%tk_improad          , & ! Output: [real(r8) (:,:)]  thermal conductivity of urban impervious road (W/m/K)
@@ -193,18 +138,17 @@ contains
    thick_wall          =>   lps%thick_wall          , & ! Output: [real(r8) (:)]  thickness of urban wall (m)             
    thick_roof          =>   lps%thick_roof          , & ! Output: [real(r8) (:)]  thickness of urban roof (m)             
    nlev_improad        =>   lps%nlev_improad        , & ! Output: [integer (:)]  number of impervious road layers (-)     
-   ctype               =>   col%itype               , & ! Input:  [integer (:)]  column type                              
+   eflx_traffic_factor =>   lef%eflx_traffic_factor , & ! Output: [real(r8) (:)]  multiplicative factor for sensible heat flux from urban traffic
    emg                 =>   cps%emg                   & ! Output: [real(r8) (:)]  ground emissivity                       
    )
     
    ! Initialize time constant urban variables
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+    do l = bounds%begl, bounds%endl
+       if (lun%urbpoi(l)) then
+          g = lun%gridcell(l)
+          dindx = lun%itype(l) - isturb_MIN + 1
 
-    do l = begl, endl
-       if (urbpoi(l)) then
-          g =lun%gridcell(l)
-          dindx = ltype(l) - isturb_MIN + 1
           canyon_hwr(l)         = urbinp%canyon_hwr(g,dindx)
           wtroad_perv(l)        = urbinp%wtroad_perv(g,dindx)
           ht_roof(l)            = urbinp%ht_roof(g,dindx)
@@ -221,12 +165,12 @@ contains
           t_building_min(l)     = urbinp%t_building_min(g,dindx)
           t_building_max(l)     = urbinp%t_building_max(g,dindx)
 
-          do c = coli(l),colf(l)
-             if (ctype(c) == icol_roof       ) emg(c) = urbinp%em_roof(g,dindx)
-             if (ctype(c) == icol_sunwall    ) emg(c) = urbinp%em_wall(g,dindx)
-             if (ctype(c) == icol_shadewall  ) emg(c) = urbinp%em_wall(g,dindx)
-             if (ctype(c) == icol_road_imperv) emg(c) = urbinp%em_improad(g,dindx)
-             if (ctype(c) == icol_road_perv  ) emg(c) = urbinp%em_perroad(g,dindx)
+          do c = lun%coli(l),lun%colf(l)
+             if (col%itype(c) == icol_roof       ) emg(c) = urbinp%em_roof(g,dindx)
+             if (col%itype(c) == icol_sunwall    ) emg(c) = urbinp%em_wall(g,dindx)
+             if (col%itype(c) == icol_shadewall  ) emg(c) = urbinp%em_wall(g,dindx)
+             if (col%itype(c) == icol_road_imperv) emg(c) = urbinp%em_improad(g,dindx)
+             if (col%itype(c) == icol_road_perv  ) emg(c) = urbinp%em_perroad(g,dindx)
           end do
 
           ! Inferred from Sailor and Lu 2004
@@ -236,17 +180,17 @@ contains
              eflx_traffic_factor(l) = 0.0_r8
           end if
 
-#if (defined VANCOUVER || defined MEXICOCITY)
-          ! Freely evolving
-          t_building_max(l) = 380.00_r8
-          t_building_min(l) = 200.00_r8
-#else
-          if (urban_hac == urban_hac_off) then
-            ! Overwrite values read in from urbinp by freely evolving values
-            t_building_max(l) = 380.00_r8
-            t_building_min(l) = 200.00_r8
+          if (use_vancouver .or. use_mexicocity) then
+             ! Freely evolving
+             t_building_max(l) = 380.00_r8
+             t_building_min(l) = 200.00_r8
+          else
+             if (urban_hac == urban_hac_off) then
+                ! Overwrite values read in from urbinp by freely evolving values
+                t_building_max(l) = 380.00_r8
+                t_building_min(l) = 200.00_r8
+             end if
           end if
-#endif
        else
           eflx_traffic_factor(l) = spval
           t_building_max(l) = spval
@@ -257,71 +201,43 @@ contains
     end associate 
    end subroutine UrbanInitTimeConst
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: UrbanInitTimeVar
-!
-! !INTERFACE:
-  subroutine UrbanInitTimeVar( )
-!
-! !DESCRIPTION: 
-! Initialize urban time-varying variables
-!
-! !USES:
+   !-----------------------------------------------------------------------
+   subroutine UrbanInitTimeVar(bounds)
+    !
+    ! !DESCRIPTION: 
+    ! Initialize urban time-varying variables
+    !
+    ! !USES:
     use clmtype
     use clm_varcon, only : spval, icol_road_perv
-    use decompMod , only : get_proc_bounds
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-!
-!
-!
-!
-! !CALLED FROM:
-! subroutine initialize
-!
-! !REVISION HISTORY:
-! Created by Keith Oleson February 2005
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     integer :: l,g,c,p       ! indices
-    integer :: begp, endp    ! clump beginning and ending pft indices
-    integer :: begc, endc    ! clump beginning and ending column indices
-    integer :: begl, endl    ! clump beginning and ending landunit indices
-    integer :: begg, endg    ! clump beginning and ending gridcell indices
-!-----------------------------------------------------------------------
-
+    !-----------------------------------------------------------------------
 
    associate(& 
    taf                  =>  lps%taf                  , & ! Output: [real(r8) (:)]  urban canopy air temperature (K)        
    qaf                  =>  lps%qaf                  , & ! Output: [real(r8) (:)]  urban canopy air specific humidity (kg/kg)
-   ltype                =>  lun%itype                , & ! Input:  [integer (:)]  landunit type                            
-   urbpoi               =>  lun%urbpoi               , & ! Input:  [logical (:)]  true => landunit is an urban point       
-   lgridcell            =>  lun%gridcell             , & ! Input:  [integer (:)]  gridcell of corresponding landunit       
    t_building           =>  lps%t_building           , & ! Output: [real(r8) (:)]  internal building temperature (K)       
    eflx_traffic         =>  lef%eflx_traffic         , & ! Output: [real(r8) (:)]  traffic sensible heat flux (W/m**2)     
    eflx_wasteheat       =>  lef%eflx_wasteheat       , & ! Output: [real(r8) (:)]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
-   clandunit            =>  col%landunit             , & ! Input:  [integer (:)]  landunit index of corresponding column   
    eflx_building_heat   =>  cef%eflx_building_heat   , & ! Output: [real(r8) (:)]  heat flux from urban building interior to walls, roof (W/m**2)
    eflx_urban_ac        =>  cef%eflx_urban_ac        , & ! Output: [real(r8) (:)]  urban air conditioning flux (W/m**2)    
    eflx_urban_heat      =>  cef%eflx_urban_heat      , & ! Output: [real(r8) (:)]  urban heating flux (W/m**2)             
+   eflx_snomelt_u       =>  cef%eflx_snomelt_u       , & ! Output: [real(r8) (:)]  Urban snow melt heat flux (W/m**2)      
    fcov                 =>  cws%fcov                 , & ! Output: [real(r8) (:)]  fractional impermeable area             
    fsat                 =>  cws%fsat                 , & ! Output: [real(r8) (:)]  fractional area with water table at surface
    qcharge              =>  cws%qcharge              , & ! Output: [real(r8) (:)]  aquifer recharge rate (mm/s)            
-   ctype                =>  col%itype                , & ! Input:  [integer (:)]  column type                              
    t_grnd_u             =>  ces%t_grnd_u             , & ! Output: [real(r8) (:)]  Urban ground temperature (Kelvin)       
    qflx_runoff_u        =>  cwf%qflx_runoff_u        , & ! Output: [real(r8) (:)]  Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
-   eflx_snomelt_u       =>  cef%eflx_snomelt_u       , & ! Output: [real(r8) (:)]  Urban snow melt heat flux (W/m**2)      
    t_ref2m_u            =>  pes%t_ref2m_u            , & ! Output: [real(r8) (:)]  Urban 2 m height surface air temperature (Kelvin)
    t_ref2m_min_u        =>  pes%t_ref2m_min_u        , & ! Output: [real(r8) (:)]  Urban daily minimum of average 2 m height surface air temperature (K)
    t_ref2m_max_u        =>  pes%t_ref2m_max_u        , & ! Output: [real(r8) (:)]  Urban daily maximum of average 2 m height surface air temperature (K)
    rh_ref2m_u           =>  pes%rh_ref2m_u           , & ! Output: [real(r8) (:)]  Urban 2 m height surface relative humidity (%)
-   plandunit            =>  pft%landunit             , & ! Input:  [integer (:)]  landunit index of corresponding pft      
    eflx_wasteheat_pft   =>  pef%eflx_wasteheat_pft   , & ! Output: [real(r8) (:)]  sensible heat flux from urban heating/cooling sources of waste heat at pft level (W/m**2)
    eflx_heat_from_ac_pft=>  pef%eflx_heat_from_ac_pft, & ! Output: [real(r8) (:)]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
    eflx_traffic_pft     =>  pef%eflx_traffic_pft     , & ! Output: [real(r8) (:)]  sensible heat flux from traffic (W/m**2)
@@ -333,22 +249,20 @@ contains
    eflx_soil_grnd_u     =>  pef%eflx_soil_grnd_u       & ! Output: [real(r8) (:)]  Urban ground heat flux (W/m**2)         
    )
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-
-    do l = begl, endl 
-       g = lgridcell(l)
-       if (urbpoi(l)) then
-#if (defined VANCOUVER)
-          taf(l) = 297.56_r8
-          qaf(l) = 0.0111_r8
-#elif (defined MEXICOCITY)
-          taf(l) = 289.46_r8
-          qaf(l) = 0.00248_r8
-#else
-          taf(l) = 283._r8
-          ! Arbitrary set since forc_q is not yet available
-          qaf(l) = 1.e-4_r8
-#endif
+    do l = bounds%begl, bounds%endl 
+       g = lun%gridcell(l)
+       if (lun%urbpoi(l)) then
+          if (use_vancouver) then
+             taf(l) = 297.56_r8
+             qaf(l) = 0.0111_r8
+          else if (use_mexicocity) then
+             taf(l) = 289.46_r8
+             qaf(l) = 0.00248_r8
+          else
+             taf(l) = 283._r8
+             ! Arbitrary set since forc_q is not yet available
+             qaf(l) = 1.e-4_r8
+          end if
        else
           t_building(l)     = spval
           eflx_traffic(l)   = spval
@@ -356,16 +270,16 @@ contains
        end if
     end do
 
-    do c = begc, endc 
-       l = clandunit(c)
-       if (urbpoi(l)) then
+    do c = bounds%begc, bounds%endc 
+       l = col%landunit(c)
+       if (lun%urbpoi(l)) then
           eflx_building_heat(c) = 0._r8
           eflx_urban_ac(c) = 0._r8
           eflx_urban_heat(c) = 0._r8
           !
           ! Set hydrology variables for urban to spvalue -- as only valid for pervious road
           !
-          if (ctype(c) /= icol_road_perv  )then
+          if (col%itype(c) /= icol_road_perv  )then
              fcov(c)    = spval
              fsat(c)    = spval
              qcharge(c) = spval
@@ -380,17 +294,17 @@ contains
        end if
     end do
 
-    do p = begp, endp 
-       l = plandunit(p)
-       if (.not. urbpoi(l)) then
+    do p = bounds%begp, bounds%endp 
+       l = pft%landunit(p)
+       if (.not. lun%urbpoi(l)) then
           t_ref2m_u(p)     = spval
           t_ref2m_min_u(p) = spval
           t_ref2m_max_u(p) = spval
-          rh_ref2m_u(p)     = spval
-          eflx_wasteheat_pft(p) = spval
+          rh_ref2m_u(p)    = spval
+          eflx_wasteheat_pft(p)    = spval
           eflx_heat_from_ac_pft(p) = spval
-          eflx_traffic_pft(p) = spval
-          eflx_anthro(p)    = spval
+          eflx_traffic_pft(p)      = spval
+          eflx_anthro(p)           = spval
           fsa_u(p)            = spval 
           eflx_lwrad_net_u(p) = spval
           eflx_lh_tot_u(p)    = spval
@@ -400,6 +314,6 @@ contains
     end do
     
     end associate 
-   end subroutine UrbanInitTimeVar
+  end subroutine UrbanInitTimeVar
   
 end module UrbanInitMod

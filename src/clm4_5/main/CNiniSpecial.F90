@@ -1,89 +1,49 @@
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNiniSpecial
-!
-! !INTERFACE:
-subroutine CNiniSpecial ()
-
-#ifdef CN
-!
-! !DESCRIPTION:
-! One-time initialization of CN variables for special landunits
-!
-! !USES:
-   use shr_kind_mod, only: r8 => shr_kind_r8
-   use pftvarcon   , only: noveg
-   use decompMod   , only: get_proc_bounds
-   use clm_varcon  , only: spval, nlevdecomp_full
-   use clm_varctl  , only: iulog, use_c13, use_c14
-   use clmtype
-   use CNSetValueMod
-   use clm_varpar  , only: crop_prog
-!
-! !ARGUMENTS:
-   implicit none
-!
-! !CALLED FROM:
-! subroutine iniTimeConst in file iniTimeConst.F90
-!
-! !REVISION HISTORY:
-! 11/13/03: Created by Peter Thornton
-!F. Li and S. Levis (11/06/12)
-!
-! local pointers to implicit in arguments
-!
-  integer , pointer :: clandunit(:)    ! landunit index of corresponding column
-  integer , pointer :: plandunit(:)    ! landunit index of corresponding pft
-  logical , pointer :: ifspecial(:)    ! BOOL: true=>landunit is wetland,ice,lake, or urban
-!
-! local pointers to implicit out arguments
-!
-! !LOCAL VARIABLES:
-!EOP
-   integer :: fc,fp,l,c,p,j ! indices
-   integer :: begp, endp    ! per-clump/proc beginning and ending pft indices
-   integer :: begc, endc    ! per-clump/proc beginning and ending column indices
-   integer :: begl, endl    ! per-clump/proc beginning and ending landunit indices
-   integer :: begg, endg    ! per-clump/proc gridcell ending gridcell indices
-   integer :: num_specialc  ! number of good values in specialc filter
-   integer :: num_specialp  ! number of good values in specialp filter
-   integer, allocatable :: specialc(:) ! special landunit filter - columns
-   integer, allocatable :: specialp(:) ! special landunit filter - pfts
-!-----------------------------------------------------------------------
-   ! assign local pointers at the landunit level
-   ifspecial =>lun%ifspecial
-
-   ! assign local pointers at the column level
-   clandunit =>col%landunit
-
-   ! assign local pointers at the pft level
-   plandunit =>pft%landunit
-
-   ! Determine subgrid bounds on this processor
-   call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-
-   ! allocate special landunit filters
-   allocate(specialc(endc-begc+1))
-   allocate(specialp(endp-begp+1))
+subroutine CNiniSpecial (bounds)
+  !
+  ! !DESCRIPTION:
+  ! One-time initialization of CN variables for special landunits
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use pftvarcon   , only: noveg
+  use decompMod   , only: get_proc_bounds
+  use clm_varcon  , only: spval, nlevdecomp_full
+  use clm_varctl  , only: iulog, use_c13, use_c14
+  use clmtype
+  use CNSetValueMod
+  use clm_varpar  , only: crop_prog
+  use decompMod   , only: bounds_type
+  !
+  ! !ARGUMENTS:
+  implicit none
+  type(bounds_type), intent(in) :: bounds  ! bounds
+  !
+  ! !LOCAL VARIABLES:
+  integer :: fc,fp,l,c,p,j ! indices
+  integer :: num_specialc  ! number of good values in specialc filter
+  integer :: num_specialp  ! number of good values in specialp filter
+  integer :: specialc(bounds%endc-bounds%begc+1) ! special landunit filter - columns
+  integer :: specialp(bounds%endp-bounds%begp+1) ! special landunit filter - pfts
+  !-----------------------------------------------------------------------
 
    ! fill special landunit filters
    ! WJS (6-12-13): Unlike most other filters, which apply only over active points, these
    ! filters apply over all points. This is to be consistent with other initialization
    ! code, much of which initializes values over all points (not just active points).
    num_specialc = 0
-   do c = begc, endc
-      l = clandunit(c)
-      if (ifspecial(l)) then
+   do c = bounds%begc, bounds%endc
+      l = col%landunit(c)
+      if (lun%ifspecial(l)) then
          num_specialc = num_specialc + 1
          specialc(num_specialc) = c
       end if
    end do
 
    num_specialp = 0
-   do p = begp, endp
-      l = plandunit(p)
-      if (ifspecial(l)) then
+   do p = bounds%begp,bounds%endp
+      l = pft%landunit(p)
+      if (lun%ifspecial(l)) then
          num_specialp = num_specialp + 1
          specialp(num_specialp) = p
       end if
@@ -275,11 +235,5 @@ subroutine CNiniSpecial ()
       cnf%dwt_nloss(c) = 0._r8
       
    end do
-   
-   ! deallocate special landunit filters
-   deallocate(specialc)
-   deallocate(specialp)
-   
-#endif
    
 end subroutine CNiniSpecial

@@ -1,125 +1,82 @@
-
 module CNDVEstablishmentMod
 
-#if (defined CNDV)
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNDVEstablishmentMod
-!
-! !DESCRIPTION:
-! Calculates establishment of new pfts
-! Called once per year
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculates establishment of new pfts
+  ! Called once per year
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils  , only: endrun
-!
-! !PUBLIC TYPES:
+  use decompMod   , only : bounds_type
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: Establishment
-!
-! !REVISION HISTORY:
-! Module created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: Establishment
-!
-! !INTERFACE:
-  subroutine Establishment(lbg, ubg, lbp, ubp)
-!
-! !DESCRIPTION:
-! Calculates establishment of new pfts
-! Called once per year
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine Establishment(bounds)
+    !
+    ! !DESCRIPTION:
+    ! Calculates establishment of new pfts
+    ! Called once per year
+    !
+    ! !USES:
     use clmtype
     use clm_varpar   , only : numpft
     use clm_varcon   , only : istsoil
     use clm_varctl   , only : iulog
     use pftvarcon    , only : noveg, nc3_arctic_grass
     use shr_const_mod, only : SHR_CONST_CDAY, SHR_CONST_PI, SHR_CONST_TKFRZ
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in) :: lbg, ubg         ! gridcell bounds
-    integer , intent(in) :: lbp, ubp         ! pft bounds
-!
-! !CALLED FROM:
-! subroutine dv in module CNDVMod
-!
-! !REVISION HISTORY:
-! Author: Sam Levis (adapted from Stephen Sitch's LPJ subr. establishment)
-! 3/4/02, Peter Thornton: Migrated to new data structures.
-! 10/05 , Sam Levis: adapted to work with CN
-! 09/07 , Sam Levis: as 10/05 but with current CN
-!
-! !LOCAL VARIABLES:
-!EOP
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     integer  :: g,l,p,m                        ! indices
-    integer  :: fn, filterg(ubg-lbg+1)         ! local gridcell filter for error check
-!
-! gridcell level variables
-!
-    integer  :: ngrass(lbg:ubg)                ! counter
-    integer  :: npft_estab(lbg:ubg)            ! counter
-    real(r8) :: fpc_tree_total(lbg:ubg)        ! total fractional cover of trees in vegetated portion of gridcell
-    real(r8) :: fpc_total(lbg:ubg)             ! old-total fractional vegetated portion of gridcell (without bare ground)
-    real(r8) :: fpc_total_new(lbg:ubg)         ! new-total fractional vegetated portion of gridcell (without bare ground)
-!
-! pft level variables
-!
-    logical  :: survive(lbp:ubp)               ! true=>pft survives
-    logical  :: estab(lbp:ubp)                 ! true=>pft is established
-    real(r8) :: dstemc(lbp:ubp)                ! local copy of deadstemc
-!
-! local and temporary variables or parameters
-!
-    real(r8) :: taper ! ratio of height:radius_breast_height (tree allometry)
-    real(r8) :: estab_rate                     !establishment rate
-    real(r8) :: estab_grid                     !establishment rate on grid cell
-    real(r8) :: fpcgridtemp                    ! temporary
-    real(r8) :: stemdiam                       ! stem diameter
-    real(r8) :: stocking                       ! #stems / ha (stocking density)
-    real(r8) :: lai_ind                        ! LAI per individual
-    real(r8) :: lm_ind                         !leaf carbon (gC/ind)
-    real(r8) :: fpc_ind                        !individual foliage projective cover
-    real(r8):: bm_delta
-
+    integer  :: fn, filterg(bounds%begg-bounds%endg+1)         ! local gridcell filter for error check
+    ! gridcell level variables
+    integer  :: ngrass(bounds%begg:bounds%endg)                ! counter
+    integer  :: npft_estab(bounds%begg:bounds%endg)            ! counter
+    real(r8) :: fpc_tree_total(bounds%begg:bounds%endg)        ! total fractional cover of trees in vegetated portion of gridcell
+    real(r8) :: fpc_total(bounds%begg:bounds%endg)             ! old-total fractional vegetated portion of gridcell (without bare ground)
+    real(r8) :: fpc_total_new(bounds%begg:bounds%endg)         ! new-total fractional vegetated portion of gridcell (without bare ground)
+    ! pft level variables
+    logical  :: survive(bounds%begp:bounds%endp)               ! true=>pft survives
+    logical  :: estab(bounds%begp:bounds%endp)                 ! true=>pft is established
+    real(r8) :: dstemc(bounds%begp:bounds%endp)                ! local copy of deadstemc
+    ! local and temporary variables or parameters
+    real(r8) :: taper          ! ratio of height:radius_breast_height (tree allometry)
+    real(r8) :: estab_rate     ! establishment rate
+    real(r8) :: estab_grid     ! establishment rate on grid cell
+    real(r8) :: fpcgridtemp    ! temporary
+    real(r8) :: stemdiam       ! stem diameter
+    real(r8) :: stocking       ! #stems / ha (stocking density)
+    real(r8) :: lai_ind        ! LAI per individual
+    real(r8) :: lm_ind         ! leaf carbon (gC/ind)
+    real(r8) :: fpc_ind        ! individual foliage projective cover
+    real(r8)::  bm_delta
+    ! parameters
     real(r8), parameter :: ramp_agddtw = 300.0
-
-! minimum individual density for persistence of PFT (indiv/m2)
-!
+    ! minimum individual density for persistence of PFT (indiv/m2)
     real(r8), parameter :: nind_min = 1.0e-10_r8
-!
-! minimum precip. for establishment (mm/s)
-!
+    ! minimum precip. for establishment (mm/s)
     real(r8), parameter :: prec_min_estab = 100._r8/(365._r8*SHR_CONST_CDAY)
-!
-! maximum sapling establishment rate (indiv/m2)
-!
+    ! maximum sapling establishment rate (indiv/m2)
     real(r8), parameter :: estab_max = 0.24_r8
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
 
    associate(& 
    agdd20                              =>    gdgvs%agdd20                                , & ! Input:  [real(r8) (:)]  20-yr running mean of agdd                        
    tmomin20                            =>    gdgvs%tmomin20                              , & ! Input:  [real(r8) (:)]  20-yr running mean of tmomin                      
-   ltype                               =>    lun%itype                                   , & ! Input:  [integer (:)]  landunit type for corresponding pft                
-   ivt                                 =>   pft%itype                                    , & ! InOut:  [integer (:)]  vegetation type for this pft                       
-   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding pft                      
-   plandunit                           =>   pft%landunit                                 , & ! Input:  [integer (:)]  landunit of corresponding pft                      
    present                             =>    pdgvs%present                               , & ! InOut:  [logical (:)]  true=> PFT present in patch                        
    nind                                =>    pdgvs%nind                                  , & ! InOut:  [real(r8) (:)]  number of individuals (#/m**2)                    
    fpcgrid                             =>    pdgvs%fpcgrid                               , & ! Output: [real(r8) (:)]  foliar projective cover on gridcell (fraction)    
@@ -160,7 +117,7 @@ contains
 
     ! Initialize gridcell-level metrics
 
-    do g = lbg, ubg
+    do g = bounds%begg,bounds%endg
        ngrass(g) = 0
        npft_estab(g) = 0
        fpc_tree_total(g) = 0._r8
@@ -168,8 +125,8 @@ contains
        fpc_total_new(g) = 0._r8
     end do
 
-    do p = lbp, ubp
-       g = pgridcell(p)
+    do p = bounds%begp,bounds%endp
+       g = pft%gridcell(p)
 
        ! Set the presence of pft for this gridcell
 
@@ -190,10 +147,10 @@ contains
     ! Note - agddtw is only defined at the pft level and has now been moved
     ! to an if-statement below to determine establishment of boreal trees
 
-    do p = lbp, ubp
-       g = pgridcell(p)
-       if (tmomin20(g) >= tcmin(ivt(p)) + SHR_CONST_TKFRZ ) then
-          if (tmomin20(g) <= tcmax(ivt(p)) + SHR_CONST_TKFRZ  .and. agdd20(g) >= gddmin(ivt(p))) then
+    do p = bounds%begp,bounds%endp
+       g = pft%gridcell(p)
+       if (tmomin20(g) >= tcmin(pft%itype(p)) + SHR_CONST_TKFRZ ) then
+          if (tmomin20(g) <= tcmax(pft%itype(p)) + SHR_CONST_TKFRZ  .and. agdd20(g) >= gddmin(pft%itype(p))) then
              estab(p) = .true.
           end if
           survive(p) = .true.
@@ -207,9 +164,9 @@ contains
        end if
     end do
 
-    do p = lbp, ubp
-       g = pgridcell(p)
-       l = plandunit(p)
+    do p = bounds%begp,bounds%endp
+       g = pft%gridcell(p)
+       l = pft%landunit(p)
 
        ! Case 1 -- pft ceases to exist -kill pfts not adapted to current climate
 
@@ -221,9 +178,9 @@ contains
 
        ! Case 2 -- pft begins to exist - introduce newly "adapted" pfts
 
-       if (ltype(l) == istsoil) then
+       if (lun%itype(l) == istsoil) then
           if (.not. present(p) .and. prec365(p) >= prec_min_estab .and. estab(p)) then
-             if (twmax(ivt(p)) > 999._r8 .or. agddtw(p) == 0._r8) then
+             if (twmax(pft%itype(p)) > 999._r8 .or. agddtw(p) == 0._r8) then
 
                 present(p) = .true.
                 nind(p) = 0._r8
@@ -234,7 +191,7 @@ contains
                 ! sounds circular; also seed fpcgrid depends on sla,
                 ! so theoretically need diff value for each pft;slevis
                 fpcgrid(p) = 0.000844_r8
-                if (woody(ivt(p)) < 1._r8) then
+                if (woody(pft%itype(p)) < 1._r8) then
                    fpcgrid(p) = 0.05_r8
                 end if
 
@@ -260,13 +217,13 @@ contains
     ! Calculate total woody FPC, FPC increment and grass cover (= crown area)
     ! Calculate total woody FPC and number of woody PFTs present and able to establish
 
-    do p = lbp, ubp
-       g = pgridcell(p)
+    do p = bounds%begp,bounds%endp
+       g = pft%gridcell(p)
        if (present(p)) then
-          if (woody(ivt(p)) == 1._r8) then
+          if (woody(pft%itype(p)) == 1._r8) then
              fpc_tree_total(g) = fpc_tree_total(g) + fpcgrid(p)
              if (estab(p)) npft_estab(g) = npft_estab(g) + 1
-          else if (woody(ivt(p)) < 1._r8 .and. ivt(p) > noveg) then !grass
+          else if (woody(pft%itype(p)) < 1._r8 .and. pft%itype(p) > noveg) then !grass
              ngrass(g) = ngrass(g) + 1
           end if
        end if
@@ -274,10 +231,10 @@ contains
 
     ! Above grid-level establishment counters are required for the next steps.
 
-    do p = lbp, ubp
-       g = pgridcell(p)
+    do p = bounds%begp,bounds%endp
+       g = pft%gridcell(p)
 
-       if (present(p) .and. woody(ivt(p)) == 1._r8 .and. estab(p)) then
+       if (present(p) .and. woody(pft%itype(p)) == 1._r8 .and. estab(p)) then
 
           ! Calculate establishment rate over available space, per tree PFT
           ! Max establishment rate reduced by shading as tree FPC approaches 1
@@ -306,22 +263,22 @@ contains
              ! stemdiam derived here from cn's formula for htop found in
              ! CNVegStructUpdate and cn's assumption stemdiam=2*htop/taper
              ! this derivation neglects upper htop limit enforced elsewhere
-             stemdiam = (24._r8 * dstemc(p) / (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper))**(1._r8/3._r8)
+             stemdiam = (24._r8 * dstemc(p) / (SHR_CONST_PI * stocking * dwood(pft%itype(p)) * taper))**(1._r8/3._r8)
           else
              stemdiam = 0._r8
           end if
           ! Eqn D (now also in Light; need here for 1st yr when pfts haven't established, yet)
-          crownarea(p) = min(crownarea_max(ivt(p)), allom1(ivt(p))*stemdiam**reinickerp(ivt(p)))
+          crownarea(p) = min(crownarea_max(pft%itype(p)), allom1(pft%itype(p))*stemdiam**reinickerp(pft%itype(p)))
 
           ! Update LAI and FPC
 
           if (crownarea(p) > 0._r8) then
-             if (dsladlai(ivt(p)) > 0._r8) then
+             if (dsladlai(pft%itype(p)) > 0._r8) then
                 ! make lai_ind >= 0.001 to avoid killing plants at this stage
-                lai_ind = max(0.001_r8,((exp(lm_ind*dsladlai(ivt(p)) + log(slatop(ivt(p)))) - &
-                              slatop(ivt(p)))/dsladlai(ivt(p))) / crownarea(p))
+                lai_ind = max(0.001_r8,((exp(lm_ind*dsladlai(pft%itype(p)) + log(slatop(pft%itype(p)))) - &
+                              slatop(pft%itype(p)))/dsladlai(pft%itype(p))) / crownarea(p))
              else ! currently redundant because dsladlai=0 for grasses only
-                lai_ind = lm_ind * slatop(ivt(p)) / crownarea(p) ! lpj's formula
+                lai_ind = lm_ind * slatop(pft%itype(p)) / crownarea(p) ! lpj's formula
              end if
           else
              lai_ind = 0._r8
@@ -331,17 +288,17 @@ contains
           fpcgrid(p) = crownarea(p) * nind(p) * fpc_ind
 
        end if   ! add new saplings block
-       if (present(p) .and. woody(ivt(p)) == 1._r8) then
+       if (present(p) .and. woody(pft%itype(p)) == 1._r8) then
           fpc_total_new(g) = fpc_total_new(g) + fpcgrid(p)
        end if
     end do   ! close loop to update fpc_total_new
 
     ! Adjustments- don't allow trees to exceed 95% of vegetated landunit
 
-    do p = lbp, ubp
-       g = pgridcell(p)
+    do p = bounds%begp,bounds%endp
+       g = pft%gridcell(p)
        if (fpc_total_new(g) > 0.95_r8) then
-          if (woody(ivt(p)) == 1._r8 .and. present(p)) then
+          if (woody(pft%itype(p)) == 1._r8 .and. present(p)) then
              nind(p) = nind(p) * 0.95_r8 / fpc_total_new(g)
              fpcgrid(p) = fpcgrid(p) * 0.95_r8 / fpc_total_new(g)
           end if
@@ -354,9 +311,9 @@ contains
 
     ! Section for grasses. Grasses can establish in non-vegetated areas
 
-    do p = lbp, ubp
-       g = pgridcell(p)
-       if (present(p) .and. woody(ivt(p)) < 1._r8) then
+    do p = bounds%begp,bounds%endp
+       g = pft%gridcell(p)
+       if (present(p) .and. woody(pft%itype(p)) < 1._r8) then
           if (leafcmax(p) <= 0._r8 .or. fpcgrid(p) <= 0._r8 ) then
              present(p) = .false.
              nind(p) = 0._r8
@@ -364,11 +321,11 @@ contains
              nind(p) = 1._r8 ! in case these grasses just established
              crownarea(p) = 1._r8
              lm_ind = leafcmax(p) * fpcgrid(p) / nind(p)
-             if (dsladlai(ivt(p)) > 0._r8) then
-                lai_ind = max(0.001_r8,((exp(lm_ind*dsladlai(ivt(p)) + log(slatop(ivt(p)))) - &
-                              slatop(ivt(p)))/dsladlai(ivt(p))) / crownarea(p))
+             if (dsladlai(pft%itype(p)) > 0._r8) then
+                lai_ind = max(0.001_r8,((exp(lm_ind*dsladlai(pft%itype(p)) + log(slatop(pft%itype(p)))) - &
+                              slatop(pft%itype(p)))/dsladlai(pft%itype(p))) / crownarea(p))
              else ! 'if' is currently redundant b/c dsladlai=0 for grasses only
-                lai_ind = lm_ind * slatop(ivt(p)) / crownarea(p)
+                lai_ind = lm_ind * slatop(pft%itype(p)) / crownarea(p)
              end if
              fpc_ind = 1._r8 - exp(-0.5_r8*lai_ind)
              fpcgrid(p) = crownarea(p) * nind(p) * fpc_ind
@@ -377,13 +334,13 @@ contains
        end if
     end do   ! end of pft-loop
 
-    ! Adjustment of fpc_total > 1 due to grasses (ivt >= nc3_arctic_grass)
+    ! Adjustment of fpc_total > 1 due to grasses (pft%itype >= nc3_arctic_grass)
 
-    do p = lbp, ubp
-       g = pgridcell(p)
+    do p = bounds%begp,bounds%endp
+       g = pft%gridcell(p)
 
        if (fpc_total(g) > 1._r8) then
-          if (ivt(p) >= nc3_arctic_grass .and. fpcgrid(p) > 0._r8) then
+          if (pft%itype(p) >= nc3_arctic_grass .and. fpcgrid(p) > 0._r8) then
              fpcgridtemp = fpcgrid(p)
              fpcgrid(p) = max(0._r8, fpcgrid(p) - (fpc_total(g)-1._r8))
              fpc_total(g) = fpc_total(g) - fpcgridtemp + fpcgrid(p)
@@ -403,7 +360,7 @@ contains
        ! vegetated landunit and pft is bare ground so that everything
        ! can add up to one.
 
-       if (fpc_total(g) < 1._r8 .and. ivt(p) == noveg) then
+       if (fpc_total(g) < 1._r8 .and. pft%itype(p) == noveg) then
           fpcgrid(p) = 1._r8 - fpc_total(g)
           fpc_total(g) = fpc_total(g) + fpcgrid(p)
        end if
@@ -413,15 +370,15 @@ contains
     ! Annual calculations used hourly in GapMortality
     ! Ultimately may wish to place in separate subroutine...
 
-    do p = lbp, ubp
-       g = pgridcell(p)
+    do p = bounds%begp,bounds%endp
+       g = pft%gridcell(p)
 
        ! Stress mortality from lpj's subr Mortality
 
-       if (woody(ivt(p)) == 1._r8 .and. nind(p) > 0._r8 .and. &
+       if (woody(pft%itype(p)) == 1._r8 .and. nind(p) > 0._r8 .and. &
            leafcmax(p) > 0._r8 .and. fpcgrid(p) > 0._r8) then
 
-          if (twmax(ivt(p)) < 999._r8) then
+          if (twmax(pft%itype(p)) < 999._r8) then
              heatstress(p) = max(0._r8, min(1._r8, agddtw(p) / ramp_agddtw))
           else
              heatstress(p) = 0._r8
@@ -436,12 +393,12 @@ contains
 
           ! Growth efficiency (net biomass increment per unit leaf area)
 
-          if (dsladlai(ivt(p)) > 0._r8) then
+          if (dsladlai(pft%itype(p)) > 0._r8) then
              greffic(p) = bm_delta / (max(0.001_r8,                     &
-                 ( ( exp(lm_ind*dsladlai(ivt(p)) + log(slatop(ivt(p)))) &
-                     - slatop(ivt(p)) ) / dsladlai(ivt(p)) )))
+                 ( ( exp(lm_ind*dsladlai(pft%itype(p)) + log(slatop(pft%itype(p)))) &
+                     - slatop(pft%itype(p)) ) / dsladlai(pft%itype(p)) )))
           else ! currently redundant because dsladlai=0 for grasses only
-             greffic(p) = bm_delta / (lm_ind * slatop(ivt(p)))
+             greffic(p) = bm_delta / (lm_ind * slatop(pft%itype(p)))
           end if
        else
           greffic(p) = 0.
@@ -452,7 +409,7 @@ contains
 
     ! Check for error in establishment
     fn = 0
-    do g = lbg, ubg
+    do g = bounds%begg,bounds%endg
        if (abs(fpc_total(g) - 1._r8) > 1.e-6) then
           fn = fn + 1
           filterg(fn) = g
@@ -467,7 +424,5 @@ contains
 
     end associate 
    end subroutine Establishment
-
-#endif
 
 end module CNDVEstablishmentMod

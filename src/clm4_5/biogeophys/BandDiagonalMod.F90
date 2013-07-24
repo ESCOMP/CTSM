@@ -1,80 +1,52 @@
 module BandDiagonalMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: BandDiagonalMod
-!
-! !DESCRIPTION:
-! Band Diagonal matrix solution
-!
-! !USES:
-   use abortutils, only: endrun
-! !PUBLIC TYPES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Band Diagonal matrix solution
+  !
+  ! !USES:
+  use decompMod   , only : bounds_type
+  use abortutils  , only: endrun
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varctl  , only : iulog
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: BandDiagonal
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: BandDiagonal
-!
-! !INTERFACE:
-  subroutine BandDiagonal(lbc, ubc, lbj, ubj, jtop, jbot, numf, filter, nband, &
-                          b, r, u)
-!
-! !DESCRIPTION:
-! Tridiagonal matrix solution
-!
-! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
-!scs
-    use clm_varctl    , only : iulog
-!scs
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine BandDiagonal(bounds, lbj, ubj, jtop, jbot, numf, filter, nband, b, r, u)
+    !
+    ! !DESCRIPTION:
+    ! Tridiagonal matrix solution
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)    :: lbc, ubc                ! lbinning and ubing column indices
-    integer , intent(in)    :: lbj, ubj                ! lbinning and ubing level indices
-    integer , intent(in)    :: jtop(lbc:ubc)           ! top level for each column
-!scs:  add jbot
-    integer , intent(in)    :: jbot(lbc:ubc)           ! bottom level for each column
-!scs
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    integer , intent(in)    :: lbj, ubj      ! lbinning and ubing level indices
+    integer , intent(in)    :: jtop(bounds%begc:bounds%endc)           ! top level for each column
+    integer , intent(in)    :: jbot(bounds%begc:bounds%endc)           ! bottom level for each column
     integer , intent(in)    :: numf                    ! filter dimension
     integer , intent(in)    :: nband                   ! band width
-    integer , intent(in)    :: filter(ubc-lbc+1)       ! filter
-    real(r8), intent(in)    :: b(lbc:ubc,nband,lbj:ubj)! compact band matrix
-    real(r8), intent(in)    :: r(lbc:ubc, lbj:ubj)     ! "r" rhs of linear system
-    real(r8), intent(inout) :: u(lbc:ubc, lbj:ubj)     ! solution
-!
-! !CALLED FROM:
-! subroutine SoilTemperature in module SoilTemperatureMod
-!
-! !REVISION HISTORY:
-! 26 September 2008: S. Swenson; modified TridiagonalMod.F90
-!
-!EOP
-!
-! !OTHER LOCAL VARIABLES:
-!
+    integer , intent(in)    :: filter(:)               ! filter
+    real(r8), intent(in)    :: b(bounds%begc:bounds%endc,nband,lbj:ubj)! compact band matrix
+    real(r8), intent(in)    :: r(bounds%begc:bounds%endc, lbj:ubj)     ! "r" rhs of linear system
+    real(r8), intent(inout) :: u(bounds%begc:bounds%endc, lbj:ubj)     ! solution
+    !
+    ! ! LOCAL VARIABLES:
     integer  :: j,ci,fc,info,m,n                   !indices
     integer  :: kl,ku                      !number of sub/super diagonals
     integer, allocatable :: ipiv(:)        !temporary
     real(r8),allocatable :: ab(:,:),temp(:,:)       !compact storage array
     real(r8),allocatable :: result(:)
 
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
 
 !!$     SUBROUTINE SGBSV( N, KL, KU, NRHS, AB, LDAB, IPIV, B, LDB, INFO )

@@ -1,14 +1,10 @@
 module VOCEmissionMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: VOCEmissionMod
-!
-! !DESCRIPTION:
-! Volatile organic compound emission
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Volatile organic compound emission
+  !
+  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_varctl,   only : iulog
   use abortutils,   only : endrun
@@ -20,93 +16,75 @@ module VOCEmissionMod
                            nbrdlf_dcd_brl_tree, nbrdlf_evr_shrub,      &
                            nc3_arctic_grass,    nc3crop,               &
                            nc4_grass,           noveg
-
   use shr_megan_mod,  only : shr_megan_megcomps_n, shr_megan_megcomp_t, shr_megan_linkedlist
   use shr_megan_mod,  only : shr_megan_mechcomps_n, shr_megan_mechcomps, shr_megan_mapped_emisfctrs
   use MEGANFactorsMod,only : Agro, Amat, Anew, Aold, betaT, ct1, ct2, LDF, Ceo
-
-!
-! !PUBLIC TYPES:
+  use decompMod      ,only : bounds_type
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
 
   logical, parameter :: debug = .false.
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: VOCEmission
   public :: VOCEmission_init
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: VOCEmission
-!
-! !INTERFACE:
-  subroutine VOCEmission (lbp, ubp, num_soilp, filter_soilp )
-!
-! ! NEW DESCRIPTION
-! Volatile organic compound emission
-! This code simulates volatile organic compound emissions following
-! MEGAN (Model of Emissions of Gases and Aerosols from Nature) v2.1 
-! for 20 compound classes. The original description of this
-! algorithm (for isoprene only) can be found in Guenther et al., 2006
-! (we follow equations 2-9, 16-17, 20 for explicit canopy).
-! The model scheme came be described as:
-!    E= epsilon * gamma * rho
-! VOC flux (E) [ug m-2 h-1] is calculated from baseline emission
-! factors (epsilon) [ug m-2 h-1] which are specified for each of the 16
-! CLM PFTs (in input file) OR in the case of isoprene, from
-! mapped EFs for each PFT which reflect species divergence of emissions,
-! particularly in North America. 
-! The emission activity factor (gamma) [unitless] for includes 
-! dependence on PPFT, temperature, LAI, leaf age and soil moisture.
-! For isoprene only we also include the effect of CO2 inhibition as
-! described by Heald et al., 2009. 
-! The canopy environment constant was calculated offline for CLM+CAM at 
-! standard conditions.
-! We assume that the escape efficiency (rho) here is unity following
-! Guenther et al., 2006.
-! A manuscript describing MEGAN 2.1 and the implementation in CLM is
-! in preparation: Guenther, Heald et al., 2012
-! Subroutine written to operate at the patch level.
-!
-! Input: <filename> to be read in with EFs and some parameters.  
-!        Currently these are set in procedure init_EF_params
-! Output: vocflx(shr_megan_mechcomps_n) !VOC flux [moles/m2/sec]
-!
-!
-! !USES:
-    use shr_kind_mod , only : r8 => shr_kind_r8
+  subroutine VOCEmission (bounds, num_soilp, filter_soilp )
+    !
+    ! ! NEW DESCRIPTION
+    ! Volatile organic compound emission
+    ! This code simulates volatile organic compound emissions following
+    ! MEGAN (Model of Emissions of Gases and Aerosols from Nature) v2.1 
+    ! for 20 compound classes. The original description of this
+    ! algorithm (for isoprene only) can be found in Guenther et al., 2006
+    ! (we follow equations 2-9, 16-17, 20 for explicit canopy).
+    ! The model scheme came be described as:
+    !    E= epsilon * gamma * rho
+    ! VOC flux (E) [ug m-2 h-1] is calculated from baseline emission
+    ! factors (epsilon) [ug m-2 h-1] which are specified for each of the 16
+    ! CLM PFTs (in input file) OR in the case of isoprene, from
+    ! mapped EFs for each PFT which reflect species divergence of emissions,
+    ! particularly in North America. 
+    ! The emission activity factor (gamma) [unitless] for includes 
+    ! dependence on PPFT, temperature, LAI, leaf age and soil moisture.
+    ! For isoprene only we also include the effect of CO2 inhibition as
+    ! described by Heald et al., 2009. 
+    ! The canopy environment constant was calculated offline for CLM+CAM at 
+    ! standard conditions.
+    ! We assume that the escape efficiency (rho) here is unity following
+    ! Guenther et al., 2006.
+    ! A manuscript describing MEGAN 2.1 and the implementation in CLM is
+    ! in preparation: Guenther, Heald et al., 2012
+    ! Subroutine written to operate at the patch level.
+    !
+    ! Input: <filename> to be read in with EFs and some parameters.  
+    !        Currently these are set in procedure init_EF_params
+    ! Output: vocflx(shr_megan_mechcomps_n) !VOC flux [moles/m2/sec]
+    !
+    !
+    ! !USES:
     use clm_atmlnd   , only : clm_a2l
     use clmtype
     use domainMod,     only : ldomain 
     use clm_varcon   , only : spval
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbp, ubp                    ! pft bounds
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer, intent(in) :: num_soilp                   ! number of columns in soil pft filter
     integer, intent(in) :: filter_soilp(num_soilp)     ! pft filter for soil
-!
-! !CALLED FROM:
-!
-! !REVISION HISTORY:
-! Author: Sam Levis
-! 2/1/02: Peter Thornton: migration to new data structure
-! 4/15/06: Colette L. Heald: modify for updated MEGAN model (Guenther et al., 2006)
-! 4/29/11: Colette L. Heald: expand MEGAN to 20 compound classes
-! 7 Feb 2012: Francis Vitt: Implemented capability to specify MEGAN emissions in namelist
-!                           and read in MEGAN factors from file.
-!
-! !LOCAL VARIABLES:
+    !
+    ! !REVISION HISTORY:
+    ! 4/29/11: Colette L. Heald: expand MEGAN to 20 compound classes
+    ! 7 Feb 2012: Francis Vitt: Implemented capability to specify MEGAN emissions in namelist
+    !                           and read in MEGAN factors from file.
+    !
+    ! !LOCAL VARIABLES:
     integer  :: fp,p,g,c                ! indices
     real(r8) :: epsilon                 ! emission factor [ug m-2 h-1]
     real(r8) :: gamma                   ! activity factor (accounting for light, T, age, LAI conditions)
@@ -134,21 +112,19 @@ contains
     ! factor used convert MEGAN units [micro-grams/m2/hr] to CAM srf emis units [g/m2/sec]
     real(r8), parameter :: megemis_units_factor = 1._r8/3600._r8/1.e6_r8
 
-!    real(r8) :: root_depth(0:numpft)    ! Root depth [m]
+    ! real(r8) :: root_depth(0:numpft)    ! Root depth [m]
     character(len=32), parameter :: subname = "VOCEmission"
-!
-!-----------------------------------------------------------------------
-!
-!    ! root depth (m) (defined based on Zeng et al., 2001, cf Guenther 2006)
-!    root_depth(noveg)                                     = 0._r8   ! bare-soil
-!    root_depth(ndllf_evr_tmp_tree:ndllf_evr_brl_tree)     = 1.8_r8  ! evergreen tree
-!    root_depth(ndllf_dcd_brl_tree)                        = 2.0_r8  ! needleleaf deciduous boreal tree
-!    root_depth(nbrdlf_evr_trp_tree:nbrdlf_evr_tmp_tree)   = 3.0_r8  ! broadleaf evergreen tree
-!    root_depth(nbrdlf_dcd_trp_tree:nbrdlf_dcd_brl_tree)   = 2.0_r8  ! broadleaf deciduous tree
-!    root_depth(nbrdlf_evr_shrub:nbrdlf_dcd_brl_shrub)     = 2.5_r8  ! shrub
-!    root_depth(nc3_arctic_grass:numpft)                   = 1.5_r8  ! grass/crop
-!
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+
+    !    ! root depth (m) (defined based on Zeng et al., 2001, cf Guenther 2006)
+    !    root_depth(noveg)                                     = 0._r8   ! bare-soil
+    !    root_depth(ndllf_evr_tmp_tree:ndllf_evr_brl_tree)     = 1.8_r8  ! evergreen tree
+    !    root_depth(ndllf_dcd_brl_tree)                        = 2.0_r8  ! needleleaf deciduous boreal tree
+    !    root_depth(nbrdlf_evr_trp_tree:nbrdlf_evr_tmp_tree)   = 3.0_r8  ! broadleaf evergreen tree
+    !    root_depth(nbrdlf_dcd_trp_tree:nbrdlf_dcd_brl_tree)   = 2.0_r8  ! broadleaf deciduous tree
+    !    root_depth(nbrdlf_evr_shrub:nbrdlf_dcd_brl_shrub)     = 2.5_r8  ! shrub
+    !    root_depth(nc3_arctic_grass:numpft)                   = 1.5_r8  ! grass/crop
+    !
     if ( shr_megan_mechcomps_n < 1) return
 
     if ( nlevcan /= 1 )then
@@ -209,34 +185,34 @@ contains
    )
 
     ! initialize variables which get passed to the atmosphere
-    vocflx(lbp:ubp,:) = 0._r8
-    vocflx_tot(lbp:ubp) = 0._r8
+    vocflx(bounds%begp:bounds%endp,:) = 0._r8
+    vocflx_tot(bounds%begp:bounds%endp) = 0._r8
 
     do imeg=1,shr_megan_megcomps_n
-      meg_out(imeg)%flux_out(lbp:ubp) = 0._r8
+      meg_out(imeg)%flux_out(bounds%begp:bounds%endp) = 0._r8
     enddo
     
-    gamma_out(lbp:ubp) = spval
-    gammaP_out(lbp:ubp) = spval
-    gammaT_out(lbp:ubp) = spval
-    gammaA_out(lbp:ubp) = spval
-    gammaS_out(lbp:ubp) = spval
-    gammaL_out(lbp:ubp) = spval
-    gammaC_out(lbp:ubp) = spval
+    gamma_out(bounds%begp:bounds%endp) = spval
+    gammaP_out(bounds%begp:bounds%endp) = spval
+    gammaT_out(bounds%begp:bounds%endp) = spval
+    gammaA_out(bounds%begp:bounds%endp) = spval
+    gammaS_out(bounds%begp:bounds%endp) = spval
+    gammaL_out(bounds%begp:bounds%endp) = spval
+    gammaC_out(bounds%begp:bounds%endp) = spval
 
-    paru_out(lbp:ubp) = spval
-    par24u_out(lbp:ubp) = spval
-    par240u_out(lbp:ubp) = spval
+    paru_out(bounds%begp:bounds%endp) = spval
+    par24u_out(bounds%begp:bounds%endp) = spval
+    par240u_out(bounds%begp:bounds%endp) = spval
 
-    para_out(lbp:ubp) = spval
-    par24a_out(lbp:ubp) = spval
-    par240a_out(lbp:ubp) = spval
+    para_out(bounds%begp:bounds%endp) = spval
+    par24a_out(bounds%begp:bounds%endp) = spval
+    par240a_out(bounds%begp:bounds%endp) = spval
 
-    alpha_out(lbp:ubp) = spval
-    cp_out(lbp:ubp) = spval
+    alpha_out(bounds%begp:bounds%endp) = spval
+    cp_out(bounds%begp:bounds%endp) = spval
 
-    topt_out(lbp:ubp) = spval
-    Eopt_out(lbp:ubp) = spval
+    topt_out(bounds%begp:bounds%endp) = spval
+    Eopt_out(bounds%begp:bounds%endp) = spval
 
     ! initalize to zero since this might not alway get set
     vocflx_meg(:) = 0._r8
@@ -373,12 +349,8 @@ contains
 
   end associate
   end subroutine VOCEmission
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-! !IROUTINE: init_EF_params
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine VOCEmission_init(  )
     ! Interface to set all input parameters for 20 VOC compound classes.
     ! including EFs for 16(+1 bare ground) PFTs.
@@ -387,21 +359,10 @@ contains
 
     use shr_megan_mod,   only : shr_megan_factors_file
     use MEGANFactorsMod, only : megan_factors_init, megan_factors_get
-    
-! !CALLED FROM: VOCEmission
-!
-! !REVISION HISTORY:
-! Author: Colette L. Heald (4/27/11)
-!
-! !USES
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-
-!    character(len=*),intent(in) :: filename
-!
-! !LOCAL VARIABLES:
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     integer :: nmech, nmeg
     type(shr_megan_megcomp_t), pointer :: meg_cmp
@@ -425,37 +386,27 @@ contains
     enddo
 
   end subroutine VOCEmission_init
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-! FUNCTION: get_map_EF
-!
-! !INTERFACE:
-function get_map_EF(ivt_in,g_in)
-!
-! Get mapped EF for isoprene
-! Use gridded values for 6 PFTs specified by MEGAN following
-! Guenther et al. (2006).  Map the numpft CLM PFTs to these 6.
-! Units: [ug m-2 h-1] 
-!
-! !CALLED FROM: VOCEmission
-!
-! !REVISION HISTORY:
-! Author: Colette L. Heald (4/27/11)
-!
-
-! !USES:
-  use clmtype
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  function get_map_EF(ivt_in,g_in)
+    !
+    ! Get mapped EF for isoprene
+    ! Use gridded values for 6 PFTs specified by MEGAN following
+    ! Guenther et al. (2006).  Map the numpft CLM PFTs to these 6.
+    ! Units: [ug m-2 h-1] 
+    !
+    ! !USES:
+    use clmtype
+    !
+    ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: ivt_in
     integer, intent(in) :: g_in
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     real(r8)            :: get_map_EF
     real(r8), pointer   :: efisop(:,:)   
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! TODO the model crashes if efisop is replaced by an associate block
     efisop     => gve%efisop ! Output: [real(r8) (:,:)]  emission factors for isoprene for each pft [ug m-2 h-1]
@@ -481,36 +432,29 @@ function get_map_EF(ivt_in,g_in)
        get_map_EF =efisop(6,g_in)
     end if
 
-end function get_map_EF
-!-----------------------------------------------------------------------
+  end function get_map_EF
 
-!-----------------------------------------------------------------------
-! FUNCTION: get_gamma_P
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
+  ! FUNCTION: get_gamma_P
+  !
+  ! !INTERFACE:
   function get_gamma_P(par_sun_in, par24_sun_in, par240_sun_in, par_sha_in, par24_sha_in, par240_sha_in, &
        fsun_in, fsun240_in, forc_solad240_in,forc_solai240_in, LDF_in, cp, alpha) 
-  
-! Activity factor for PPFD (Guenther et al., 2006): all light dependent species
-!-------------------------
-! With distinction between sunlit and shaded leafs, weight scalings by
-! fsun and fshade 
-! Scale total incident par by fraction of sunlit leaves (added on 1/2002)
-    
-! fvitt -- forc_solad240, forc_solai240 can be zero when CLM finidat is specified
-!          which will cause par240 to be zero and produce NaNs via log(par240)
-! dml   -- fsun240 can be equal to or greater than one before 10 day averages are
-!           set on startup or if a new pft comes online during land cover change.
-!           Avoid this problem by only doing calculations with fsun240 when fsun240 is
-!           between 0 and 1
-!
-! !CALLED FROM: VOCEmission
-!
-! !REVISION HISTORY:
-! Author: Colette L. Heald (4/27/11)
-!
-!
-! !ARGUMENTS:
+
+    ! Activity factor for PPFD (Guenther et al., 2006): all light dependent species
+    !-------------------------
+    ! With distinction between sunlit and shaded leafs, weight scalings by
+    ! fsun and fshade 
+    ! Scale total incident par by fraction of sunlit leaves (added on 1/2002)
+
+    ! fvitt -- forc_solad240, forc_solai240 can be zero when CLM finidat is specified
+    !          which will cause par240 to be zero and produce NaNs via log(par240)
+    ! dml   -- fsun240 can be equal to or greater than one before 10 day averages are
+    !           set on startup or if a new pft comes online during land cover change.
+    !           Avoid this problem by only doing calculations with fsun240 when fsun240 is
+    !           between 0 and 1
+    !
+    ! !ARGUMENTS:
     implicit none
     real(r8),intent(in) :: par_sun_in
     real(r8),intent(in) :: par24_sun_in
@@ -525,8 +469,8 @@ end function get_map_EF
     real(r8),intent(in) :: LDF_in
     real(r8),intent(out):: cp                      ! temporary
     real(r8),intent(out):: alpha                   ! temporary
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     real(r8) :: gamma_p_LDF             ! activity factor for PPFD
     real(r8) :: get_gamma_P             ! return value
     real(r8), parameter :: ca1 = 0.004_r8        ! empirical coefficent for alpha
@@ -536,109 +480,81 @@ end function get_map_EF
     real(r8), parameter :: par0_shade = 50._r8   ! std conditions for past 24 hrs [umol/m2/s]
     real(r8), parameter :: alpha_fix = 0.001_r8  ! empirical coefficient
     real(r8), parameter :: cp_fix = 1.21_r8      ! empirical coefficient
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
-  if ( (fsun240_in > 0._r8) .and. (fsun240_in < 1._r8) .and.  (forc_solad240_in > 0._r8) &
-       .and. (forc_solai240_in > 0._r8)) then
-     ! With alpha and cp calculated based on eq 6 and 7:
-     ! Note indexing for accumulated variables is all at pft level
-     ! SUN:
-     alpha = ca1 - ca2 * log(par240_sun_in)
-     cp = ca3 * exp(ca2 * (par24_sun_in-par0_sun))*par240_sun_in**(0.6_r8)
-     gamma_p_LDF = fsun_in * ( cp * alpha * par_sun_in * (1._r8 + alpha*alpha*par_sun_in*par_sun_in)**(-0.5_r8) )
-     ! SHADE:
-     alpha = ca1 - ca2 * log(par240_sha_in)
-     cp = ca3 * exp(ca2 * (par_sha_in-par0_shade))*par240_sha_in**(0.6_r8)
-     gamma_p_LDF = gamma_p_LDF + (1._r8-fsun_in) * (cp*alpha*par_sha_in*(1._r8 + alpha*alpha*par_sha_in*par_sha_in)**(-0.5_r8))
-  else
-     ! With fixed alpha and cp (from MEGAN User's Guide):
-     ! SUN: direct + diffuse  
-     alpha = alpha_fix
-     cp = cp_fix
-     gamma_p_LDF = fsun_in * ( cp * alpha*par_sun_in * (1._r8 + alpha*alpha*par_sun_in*par_sun_in)**(-0.5_r8) )
-     ! SHADE: diffuse 
-     gamma_p_LDF = gamma_p_LDF + (1._r8-fsun_in) * (cp*alpha*par_sha_in*(1._r8 + alpha*alpha*par_sha_in*par_sha_in)**(-0.5_r8))
-  end if
-  
-  ! Calculate total activity factor for PPFD accounting for light-dependent fraction
-  get_gamma_P = (1._r8 - LDF_in) + LDF_in * gamma_p_LDF
+    if ( (fsun240_in > 0._r8) .and. (fsun240_in < 1._r8) .and.  (forc_solad240_in > 0._r8) &
+         .and. (forc_solai240_in > 0._r8)) then
+       ! With alpha and cp calculated based on eq 6 and 7:
+       ! Note indexing for accumulated variables is all at pft level
+       ! SUN:
+       alpha = ca1 - ca2 * log(par240_sun_in)
+       cp = ca3 * exp(ca2 * (par24_sun_in-par0_sun))*par240_sun_in**(0.6_r8)
+       gamma_p_LDF = fsun_in * ( cp * alpha * par_sun_in * (1._r8 + alpha*alpha*par_sun_in*par_sun_in)**(-0.5_r8) )
+       ! SHADE:
+       alpha = ca1 - ca2 * log(par240_sha_in)
+       cp = ca3 * exp(ca2 * (par_sha_in-par0_shade))*par240_sha_in**(0.6_r8)
+       gamma_p_LDF = gamma_p_LDF + (1._r8-fsun_in) * (cp*alpha*par_sha_in*(1._r8 + alpha*alpha*par_sha_in*par_sha_in)**(-0.5_r8))
+    else
+       ! With fixed alpha and cp (from MEGAN User's Guide):
+       ! SUN: direct + diffuse  
+       alpha = alpha_fix
+       cp = cp_fix
+       gamma_p_LDF = fsun_in * ( cp * alpha*par_sun_in * (1._r8 + alpha*alpha*par_sun_in*par_sun_in)**(-0.5_r8) )
+       ! SHADE: diffuse 
+       gamma_p_LDF = gamma_p_LDF + (1._r8-fsun_in) * (cp*alpha*par_sha_in*(1._r8 + alpha*alpha*par_sha_in*par_sha_in)**(-0.5_r8))
+    end if
 
-end function get_gamma_P
-!-----------------------------------------------------------------------
+    ! Calculate total activity factor for PPFD accounting for light-dependent fraction
+    get_gamma_P = (1._r8 - LDF_in) + LDF_in * gamma_p_LDF
 
-!-----------------------------------------------------------------------
-! FUNCTION: get_gamma_L
-!
-! !INTERFACE:
-function get_gamma_L(fsun240_in,elai_in)
-!
-! Activity factor for LAI (Guenther et al., 2006): all species
-! Guenther et al., 2006 eq 3
-!
-! !CALLED FROM: VOCEmission
-!
-! !REVISION HISTORY:
-! Author: Colette L. Heald (4/27/11)
-!
+  end function get_gamma_P
 
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !INTERFACE:
+  function get_gamma_L(fsun240_in,elai_in)
+    !
+    ! Activity factor for LAI (Guenther et al., 2006): all species
+    ! Guenther et al., 2006 eq 3
+    !
+    ! !USES:
     use clm_varcon   , only : denice
     use clm_varpar   , only : nlevsoi
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !LOCAL VARIABLES:
-
-    ! varibles in
     real(r8),intent(in) :: fsun240_in
     real(r8),intent(in) :: elai_in
     real(r8)            :: get_gamma_L             ! return value
- 
-
-    ! parameters
+    !
+    ! !LOCAL VARIABLES:
     real(r8), parameter :: cce = 0.30_r8                   ! factor to set emissions to unity @ std
     real(r8), parameter :: cce1 = 0.24_r8                  ! same as Cce but for non-accumulated vars
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
     if ( (fsun240_in > 0.0_r8) .and. (fsun240_in < 1.e30_r8) ) then 
        get_gamma_L = cce * elai_in
     else
        get_gamma_L = cce1 * elai_in
     end if
 
-end function get_gamma_L
-!-----------------------------------------------------------------------
+  end function get_gamma_L
 
-!-----------------------------------------------------------------------
-! FUNCTION: get_gamma_SM
-!
-! !INTERFACE:
-function get_gamma_SM(clayfrac_in, sandfrac_in, h2osoi_vol_in, h2osoi_ice_in, dz_in, &
-     bsw_in, watsat_in, sucsat_in, root_depth_in)
-!
-! Activity factor for soil moisture (Guenther et al., 2006): all species
-!----------------------------------
-! Calculate the mean scaling factor throughout the root depth.
-! wilting point potential is in units of matric potential (mm) 
-! (1 J/Kg = 0.001 MPa, approx = 0.1 m)
-! convert to volumetric soil water using equation 7.118 of the CLM4 Technical Note
-!
-! !CALLED FROM: VOCEmission
-!
-! !REVISION HISTORY:
-! Author: Colette L. Heald (4/27/11)
-!
-
-! !USES:
+  !-----------------------------------------------------------------------
+  function get_gamma_SM(clayfrac_in, sandfrac_in, h2osoi_vol_in, h2osoi_ice_in, dz_in, &
+       bsw_in, watsat_in, sucsat_in, root_depth_in)
+    !
+    ! Activity factor for soil moisture (Guenther et al., 2006): all species
+    !----------------------------------
+    ! Calculate the mean scaling factor throughout the root depth.
+    ! wilting point potential is in units of matric potential (mm) 
+    ! (1 J/Kg = 0.001 MPa, approx = 0.1 m)
+    ! convert to volumetric soil water using equation 7.118 of the CLM4 Technical Note
+    !
+    ! !USES:
     use clm_varcon   , only : denice
     use clm_varpar   , only : nlevsoi
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !LOCAL VARIABLES:
-
-    ! varibles in
     real(r8),intent(in) :: clayfrac_in
     real(r8),intent(in) :: sandfrac_in
     real(r8),intent(in) :: h2osoi_vol_in(nlevsoi)
@@ -648,19 +564,17 @@ function get_gamma_SM(clayfrac_in, sandfrac_in, h2osoi_vol_in, h2osoi_ice_in, dz
     real(r8),intent(in) :: watsat_in(nlevsoi)
     real(r8),intent(in) :: sucsat_in(nlevsoi)
     real(r8),intent(in) :: root_depth_in
- 
+    !
+    ! !LOCAL VARIABLES:
     real(r8)            :: get_gamma_SM
-
-    ! local variables
     integer  :: j
     real(r8) :: nl                      ! temporary number of soil levels
     real(r8) :: theta_ice               ! water content in ice in m3/m3
     real(r8) :: wilt                    ! wilting point in m3/m3
     real(r8) :: theta1                  ! temporary
-
-    ! parameters
     real(r8), parameter :: deltheta1=0.06_r8               ! empirical coefficient
     real(r8), parameter :: smpmax = 2.57e5_r8              ! maximum soil matrix potential
+    !-----------------------------------------------------------------------
 
     if ((clayfrac_in > 0) .and. (sandfrac_in > 0)) then 
        get_gamma_SM = 0._r8
@@ -695,34 +609,21 @@ function get_gamma_SM(clayfrac_in, sandfrac_in, h2osoi_vol_in, h2osoi_ice_in, dz
        get_gamma_SM = 1.0_r8
     end if
 
-
-end function get_gamma_SM
-!-----------------------------------------------------------------------
+  end function get_gamma_SM
   
-!-----------------------------------------------------------------------
-! FUNCTION: get_gamma_T
-!
-! !INTERFACE:
-function get_gamma_T(t_veg240_in, t_veg24_in,t_veg_in, ct1_in, ct2_in, betaT_in, LDF_in, Ceo_in, Eopt, topt)
+  
+  !-----------------------------------------------------------------------
+  function get_gamma_T(t_veg240_in, t_veg24_in,t_veg_in, ct1_in, ct2_in, betaT_in, LDF_in, Ceo_in, Eopt, topt)
 
-! Activity factor for temperature 
-!--------------------------------
-! Calculate both a light-dependent fraction as in Guenther et al., 2006 for isoprene
-! of a max saturation type form. Also caculate a light-independent fraction of the
-! form of an exponential. Final activity factor depends on light dependent fraction
-! of compound type.
-!
-! !CALLED FROM: VOCEmission
-!
-! !REVISION HISTORY:
-! Author: Colette L. Heald (4/27/11)
-!
-! !ARGUMENTS:
+    ! Activity factor for temperature 
+    !--------------------------------
+    ! Calculate both a light-dependent fraction as in Guenther et al., 2006 for isoprene
+    ! of a max saturation type form. Also caculate a light-independent fraction of the
+    ! form of an exponential. Final activity factor depends on light dependent fraction
+    ! of compound type.
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !LOCAL VARIABLES:
-
-    ! varibles in
     real(r8),intent(in) :: t_veg240_in
     real(r8),intent(in) :: t_veg24_in
     real(r8),intent(in) :: t_veg_in
@@ -733,14 +634,12 @@ function get_gamma_T(t_veg240_in, t_veg24_in,t_veg_in, ct1_in, ct2_in, betaT_in,
     real(r8),intent(in) :: Ceo_in
     real(r8),intent(out) :: Eopt                    ! temporary 
     real(r8),intent(out) :: topt                    ! temporary 
-
-    ! local variables
+    !
+    ! !LOCAL VARIABLES:
     real(r8) :: get_gamma_T
     real(r8) :: gamma_t_LDF             ! activity factor for temperature
     real(r8) :: gamma_t_LIF             ! activity factor for temperature
     real(r8) :: x                       ! temporary 
-
-    ! parameters
     real(r8), parameter :: co1 = 313._r8                   ! empirical coefficient
     real(r8), parameter :: co2 = 0.6_r8                    ! empirical coefficient
     real(r8), parameter :: co4 = 0.05_r8                   ! empirical coefficient
@@ -750,7 +649,7 @@ function get_gamma_T(t_veg240_in, t_veg24_in,t_veg_in, ct1_in, ct2_in, betaT_in,
     real(r8), parameter :: ct3 = 0.00831_r8                ! empirical coefficient (0.0083 in User's Guide)
     real(r8), parameter :: tstd = 303.15_r8                ! std temperature [K]
     real(r8), parameter :: bet = 0.09_r8                   ! beta empirical coefficient [K-1]
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! Light dependent fraction (Guenther et al., 2006)
     if ( (t_veg240_in > 0.0_r8) .and. (t_veg240_in < 1.e30_r8) ) then 
@@ -772,41 +671,29 @@ function get_gamma_T(t_veg240_in, t_veg24_in,t_veg_in, ct1_in, ct2_in, betaT_in,
     !--------------------------------
     get_gamma_T = (1-LDF_in)*gamma_T_LIF + LDF_in*gamma_T_LDF 
 
-end function get_gamma_T
-!-----------------------------------------------------------------------
+  end function get_gamma_T
 
-!-----------------------------------------------------------------------
-! FUNCTION: get_gamma_A
-!
-! !INTERFACE:
-function get_gamma_A(ivt_in, elai_p_in,elai_in,nclass_in)
 
-! Activity factor for leaf age (Guenther et al., 2006)
-!-----------------------------
-! If not CNDV elai is constant therefore gamma_a=1.0
-! gamma_a set to unity for evergreens (PFTs 1, 2, 4, 5)
-! Note that we assume here that the time step is shorter than the number of 
-!days after budbreak required to induce isoprene emissions (ti=12 days) and 
-! the number of days after budbreak to reach peak emission (tm=28 days)
-!
-! !CALLED FROM: VOCEmission
-!
-! !REVISION HISTORY:
-! Author: Colette L. Heald (4/27/11)
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  function get_gamma_A(ivt_in, elai_p_in,elai_in,nclass_in)
+
+    ! Activity factor for leaf age (Guenther et al., 2006)
+    !-----------------------------
+    ! If not CNDV elai is constant therefore gamma_a=1.0
+    ! gamma_a set to unity for evergreens (PFTs 1, 2, 4, 5)
+    ! Note that we assume here that the time step is shorter than the number of 
+    !days after budbreak required to induce isoprene emissions (ti=12 days) and 
+    ! the number of days after budbreak to reach peak emission (tm=28 days)
+    !
+    ! !ARGUMENTS:
     implicit none
-! !LOCAL VARIABLES:
-
-    ! varibles in
     integer,intent(in)  :: ivt_in
     integer,intent(in)  :: nclass_in
     real(r8),intent(in) :: elai_p_in
     real(r8),intent(in) :: elai_in
-
-    real(r8)            :: get_gamma_A
-
-    ! local variables
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: get_gamma_A
     real(r8) :: elai_prev               ! lai for previous timestep
     real(r8) :: fnew, fgro, fmat, fold  ! fractions of leaves at different phenological stages
     !-----------------------------------------------------------------------
@@ -843,47 +730,36 @@ function get_gamma_A(ivt_in, elai_p_in,elai_in,nclass_in)
     
 
   end function get_gamma_A
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-! FUNCTION: get_gamma_C
-!
-! !INTERFACE:
-function get_gamma_C(cisun_in,cisha_in,forc_pbot_in,fsun_in)
+  !-----------------------------------------------------------------------
+  function get_gamma_C(cisun_in,cisha_in,forc_pbot_in,fsun_in)
 
-! Activity factor for instantaneous CO2 changes (Heald et al., 2009)
-!-------------------------
-! With distinction between sunlit and shaded leafs, weight scalings by
-! fsun and fshade 
-!
-! !CALLED FROM: VOCEmission
-!
-! !REVISION HISTORY:
-! Author: Colette L. Heald (11/30/11)
-!
-! !USES:
+    ! Activity factor for instantaneous CO2 changes (Heald et al., 2009)
+    !-------------------------
+    ! With distinction between sunlit and shaded leafs, weight scalings by
+    ! fsun and fshade 
+    !
+    ! !REVISION HISTORY:
+    ! Author: Colette L. Heald (11/30/11)
+    !
+    ! !USES:
     use clm_varctl,    only : co2_ppmv      ! corresponds to CCSM_CO2_PPMV set in env_conf.xml
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-! !LOCAL VARIABLES:
-
-    ! varibles in
     real(r8),intent(in) :: cisun_in
     real(r8),intent(in) :: cisha_in
     real(r8),intent(in) :: forc_pbot_in
     real(r8),intent(in) :: fsun_in
-
+    !
+    ! !LOCAL VARIABLES:
     real(r8)            :: get_gamma_C
-
-    ! local variables
     real(r8)            :: IEmin            ! empirical coeff for CO2 
     real(r8)            :: IEmax            ! empirical coeff for CO2 
     real(r8)            :: ECi50            ! empirical coeff for CO2 
     real(r8)            :: Cislope          ! empirical coeff for CO2 
     real(r8)            :: fint             ! interpolation fraction for CO2
     real(r8)            :: ci               ! temporary sunlight/shade weighted cisun & cisha (umolCO2/mol)
-
     !-----------------------------------------------------------------------
 
     ! Determine long-term CO2 growth environment (ie. ambient CO2) and interpolate
@@ -940,7 +816,6 @@ function get_gamma_C(cisun_in,cisha_in,forc_pbot_in,fsun_in)
     end if
 
   end function get_gamma_C
-!-----------------------------------------------------------------------
 
 end module VOCEmissionMod
 

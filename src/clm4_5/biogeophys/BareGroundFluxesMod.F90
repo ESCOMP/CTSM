@@ -1,45 +1,31 @@
 module BareGroundFluxesMod
-
-!------------------------------------------------------------------------------
-!BOP
-!
-! !MODULE: BareGroundFluxesMod
-!
-! !DESCRIPTION:
-! Compute sensible and latent fluxes and their derivatives with respect
-! to ground temperature using ground temperatures from previous time step.
-!
-! !USES:
-   use shr_kind_mod, only: r8 => shr_kind_r8
-!
-! !PUBLIC TYPES:
-   implicit none
-   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
-   public :: BareGroundFluxes   ! Calculate sensible and latent heat fluxes
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Compute sensible and latent fluxes and their derivatives with respect
+  ! to ground temperature using ground temperatures from previous time step.
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use decompMod   , only : bounds_type
+  !
+  ! !PUBLIC TYPES:
+  implicit none
+  save
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: BareGroundFluxes   ! Calculate sensible and latent heat fluxes
+  !------------------------------------------------------------------------------
 
 contains
 
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: BareGroundFluxes
-!
-! !INTERFACE:
-  subroutine BareGroundFluxes(lbp, ubp, num_nolakep, filter_nolakep)
-!
-! !DESCRIPTION:
-! Compute sensible and latent fluxes and their derivatives with respect
-! to ground temperature using ground temperatures from previous time step.
-!
-! !USES:
+  !------------------------------------------------------------------------------
+  subroutine BareGroundFluxes(bounds, num_nolakep, filter_nolakep)
+    !
+    ! !DESCRIPTION:
+    ! Compute sensible and latent fluxes and their derivatives with respect
+    ! to ground temperature using ground temperatures from previous time step.
+    !
+    ! !USES:
     use clmtype
     use clm_atmlnd         , only : clm_a2l
     use clm_varpar         , only : nlevgrnd
@@ -48,86 +34,56 @@ contains
     use shr_const_mod      , only : SHR_CONST_RGAS
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use QSatMod            , only : QSat
-    use clm_varctl         , only : use_c13, use_c14
-
-!
-! !ARGUMENTS:
+    use clm_varctl         , only : use_c13, use_c14, use_lch4
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbp, ubp                     ! pft bounds
-    integer, intent(in) :: num_nolakep                  ! number of pft non-lake points in pft filter
-    integer, intent(in) :: filter_nolakep(ubp-lbp+1)    ! pft filter for non-lake points
-!
-! !CALLED FROM:
-! subroutine Biogeophysics1 in module Biogeophysics1Mod
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! 12/19/01, Peter Thornton
-! This routine originally had a long list of parameters, and also a reference to
-! the entire clm derived type.  For consistency, only the derived type reference
-! is passed (now pointing to the current column and pft), and the other original
-! parameters are initialized locally. Using t_grnd instead of tg (tg eliminated
-! as redundant).
-! 1/23/02, PET: Added pft reference as parameter. All outputs will be written
-! to the pft data structures, and averaged to the column level outside of
-! this routine.
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-!
-#if (defined LCH4)
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    integer, intent(in) :: num_nolakep          ! number of pft non-lake points in pft filter
+    integer, intent(in) :: filter_nolakep(:)    ! pft filter for non-lake points
+    !
+    ! !LOCAL VARIABLES:
     real(r8), pointer :: grnd_ch4_cond(:)  ! tracer conductance for boundary layer [m/s]
-#endif
-!
-!
-! !OTHER LOCAL VARIABLES:
-!EOP
-!
-    integer, parameter  :: niters = 3  ! maximum number of iterations for surface temperature
-    integer  :: p,c,g,f,j,l            ! indices
-    integer  :: filterp(ubp-lbp+1)     ! pft filter for vegetated pfts
-    integer  :: fn                     ! number of values in local pft filter
-    integer  :: fp                     ! lake filter pft index
-    integer  :: iter                   ! iteration index
-    real(r8) :: zldis(lbp:ubp)         ! reference height "minus" zero displacement height [m]
-    real(r8) :: displa(lbp:ubp)        ! displacement height [m]
-    real(r8) :: zeta                   ! dimensionless height used in Monin-Obukhov theory
-    real(r8) :: wc                     ! convective velocity [m/s]
-    real(r8) :: dth(lbp:ubp)           ! diff of virtual temp. between ref. height and surface
-    real(r8) :: dthv                   ! diff of vir. poten. temp. between ref. height and surface
-    real(r8) :: dqh(lbp:ubp)           ! diff of humidity between ref. height and surface
-    real(r8) :: obu(lbp:ubp)           ! Monin-Obukhov length (m)
-    real(r8) :: ur(lbp:ubp)            ! wind speed at reference height [m/s]
-    real(r8) :: um(lbp:ubp)            ! wind speed including the stablity effect [m/s]
-    real(r8) :: temp1(lbp:ubp)         ! relation for potential temperature profile
-    real(r8) :: temp12m(lbp:ubp)       ! relation for potential temperature profile applied at 2-m
-    real(r8) :: temp2(lbp:ubp)         ! relation for specific humidity profile
-    real(r8) :: temp22m(lbp:ubp)       ! relation for specific humidity profile applied at 2-m
-    real(r8) :: ustar(lbp:ubp)         ! friction velocity [m/s]
-    real(r8) :: tstar                  ! temperature scaling parameter
-    real(r8) :: qstar                  ! moisture scaling parameter
-    real(r8) :: thvstar                ! virtual potential temperature scaling parameter
-    real(r8) :: cf                     ! heat transfer coefficient from leaves [-]
-    real(r8) :: ram                    ! aerodynamical resistance [s/m]
-    real(r8) :: rah                    ! thermal resistance [s/m]
-    real(r8) :: raw                    ! moisture resistance [s/m]
-    real(r8) :: raih                   ! temporary variable [kg/m2/s]
-    real(r8) :: raiw                   ! temporary variable [kg/m2/s]
-    real(r8) :: fm(lbp:ubp)            ! needed for BGC only to diagnose 10m wind speed
-    real(r8) :: z0mg_pft(lbp:ubp)
-    real(r8) :: z0hg_pft(lbp:ubp)
-    real(r8) :: z0qg_pft(lbp:ubp)
+    integer, parameter  :: niters = 3      ! maximum number of iterations for surface temperature
+    integer  :: p,c,g,f,j,l                ! indices
+    integer  :: filterp(bounds%endp-bounds%begp+1) ! pft filter for vegetated pfts
+    integer  :: fn                               ! number of values in local pft filter
+    integer  :: fp                               ! lake filter pft index
+    integer  :: iter                             ! iteration index
+    real(r8) :: zldis(bounds%begp:bounds%endp)   ! reference height "minus" zero displacement height [m]
+    real(r8) :: displa(bounds%begp:bounds%endp)  ! displacement height [m]
+    real(r8) :: zeta                             ! dimensionless height used in Monin-Obukhov theory
+    real(r8) :: wc                               ! convective velocity [m/s]
+    real(r8) :: dth(bounds%begp:bounds%endp)     ! diff of virtual temp. between ref. height and surface
+    real(r8) :: dthv                             ! diff of vir. poten. temp. between ref. height and surface
+    real(r8) :: dqh(bounds%begp:bounds%endp)     ! diff of humidity between ref. height and surface
+    real(r8) :: obu(bounds%begp:bounds%endp)     ! Monin-Obukhov length (m)
+    real(r8) :: ur(bounds%begp:bounds%endp)      ! wind speed at reference height [m/s]
+    real(r8) :: um(bounds%begp:bounds%endp)      ! wind speed including the stablity effect [m/s]
+    real(r8) :: temp1(bounds%begp:bounds%endp)   ! relation for potential temperature profile
+    real(r8) :: temp12m(bounds%begp:bounds%endp) ! relation for potential temperature profile applied at 2-m
+    real(r8) :: temp2(bounds%begp:bounds%endp)   ! relation for specific humidity profile
+    real(r8) :: temp22m(bounds%begp:bounds%endp) ! relation for specific humidity profile applied at 2-m
+    real(r8) :: ustar(bounds%begp:bounds%endp)   ! friction velocity [m/s]
+    real(r8) :: tstar                            ! temperature scaling parameter
+    real(r8) :: qstar                            ! moisture scaling parameter
+    real(r8) :: thvstar                          ! virtual potential temperature scaling parameter
+    real(r8) :: cf                               ! heat transfer coefficient from leaves [-]
+    real(r8) :: ram                              ! aerodynamical resistance [s/m]
+    real(r8) :: rah                              ! thermal resistance [s/m]
+    real(r8) :: raw                              ! moisture resistance [s/m]
+    real(r8) :: raih                             ! temporary variable [kg/m2/s]
+    real(r8) :: raiw                             ! temporary variable [kg/m2/s]
+    real(r8) :: fm(bounds%begp:bounds%endp)      ! needed for BGC only to diagnose 10m wind speed
+    real(r8) :: z0mg_pft(bounds%begp:bounds%endp)
+    real(r8) :: z0hg_pft(bounds%begp:bounds%endp)
+    real(r8) :: z0qg_pft(bounds%begp:bounds%endp)
     real(r8) :: e_ref2m                ! 2 m height surface saturated vapor pressure [Pa]
     real(r8) :: de2mdT                 ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
     real(r8) :: qsat_ref2m             ! 2 m height surface saturated specific humidity [kg/kg]
     real(r8) :: dqsat2mdT              ! derivative of 2 m height surface saturated specific humidity on t_ref2m 
     real(r8) :: www                    ! surface soil wetness [-]
-!------------------------------------------------------------------------------
+    !------------------------------------------------------------------------------
 
    associate(& 
    t_soisno                       =>    ces%t_soisno                                     , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)                                           
@@ -144,14 +100,11 @@ contains
    qflx_ev_h2osfc                 =>    pwf%qflx_ev_h2osfc                               , & ! Input:  [real(r8) (:)]  evaporation flux from h2osfc (W/m**2) [+ to atm]                      
    forc_u                         =>    clm_a2l%forc_u                                   , & ! Input:  [real(r8) (:)]  atmospheric wind speed in east direction (m/s)                        
    forc_v                         =>    clm_a2l%forc_v                                   , & ! Input:  [real(r8) (:)]  atmospheric wind speed in north direction (m/s)                       
-   ltype                          =>    lun%itype                                        , & ! Input:  [integer (:)]  landunit type                                                          
    forc_th                        =>    ces%forc_th                                      , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (Kelvin)                            
    forc_t                         =>    ces%forc_t                                       , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                                      
    forc_pbot                      =>    cps%forc_pbot                                    , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                                             
    forc_rho                       =>    cps%forc_rho                                     , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                                     
    forc_q                         =>    cws%forc_q                                       , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)                                 
-   pcolumn                        =>    pft%column                                       , & ! Input:  [integer (:)]  pft's column index                                                     
-   pgridcell                      =>    pft%gridcell                                     , & ! Input:  [integer (:)]  pft's gridcell index                                                   
    frac_veg_nosno                 =>    pps%frac_veg_nosno                               , & ! Input:  [integer (:)]  fraction of vegetation not covered by snow (0 OR 1) [-]                
    dlrad                          =>    pef%dlrad                                        , & ! Output: [real(r8) (:)]  downward longwave radiation below the canopy [W/m2]                   
    ulrad                          =>    pef%ulrad                                        , & ! Output: [real(r8) (:)]  upward longwave radiation above the canopy [W/m2]                     
@@ -208,9 +161,8 @@ contains
    fpsn_wp                        =>    pcf%fpsn_wp                                      , & ! Output: [real(r8) (:)]  product-limited photosynthesis (umol CO2 /m**2 /s)                    
    forc_hgt_u_pft                 =>    pps%forc_hgt_u_pft &                          
    )
-#if (defined LCH4)
+
     grnd_ch4_cond  => pps%grnd_ch4_cond
-#endif
 
     ! Filter pfts where frac_veg_nosno is zero
 
@@ -228,8 +180,8 @@ contains
 
     do f = 1, fn
        p = filterp(f)
-       c = pcolumn(p)
-       g = pgridcell(p)
+       c = pft%column(p)
+       g = pft%gridcell(p)
 
        ! Initialization variables
 
@@ -261,15 +213,15 @@ contains
 
     do iter = 1, niters
 
-       call FrictionVelocity(lbp, ubp, fn, filterp, &
+       call FrictionVelocity(bounds%begp, bounds%endp, fn, filterp, &
                              displa, z0mg_pft, z0hg_pft, z0qg_pft, &
                              obu, iter, ur, um, ustar, &
                              temp1, temp2, temp12m, temp22m, fm)
 
        do f = 1, fn
           p = filterp(f)
-          c = pcolumn(p)
-          g = pgridcell(p)
+          c = pft%column(p)
+          g = pft%gridcell(p)
 
           tstar = temp1(p)*dth(p)
           qstar = temp2(p)*dqh(p)
@@ -301,9 +253,9 @@ contains
 
     do f = 1, fn
        p = filterp(f)
-       c = pcolumn(p)
-       g = pgridcell(p)
-       l = plandunit(p)
+       c = pft%column(p)
+       g = pft%gridcell(p)
+       l = pft%landunit(p)
 
        ! Determine aerodynamic resistances
 
@@ -311,9 +263,9 @@ contains
        rah     = 1._r8/(temp1(p)*ustar(p))
        raw     = 1._r8/(temp2(p)*ustar(p))
        raih    = forc_rho(c)*cpair/rah
-#if (defined LCH4)
-       grnd_ch4_cond(p) = 1._r8/raw
-#endif
+       if (use_lch4) then
+          grnd_ch4_cond(p) = 1._r8/raw
+       end if
 
        ! Soil evaporation resistance
        www     = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)/watsat(c,1)
@@ -368,7 +320,7 @@ contains
 
        rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
 
-       if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
          rh_ref2m_r(p) = rh_ref2m(p)
          t_ref2m_r(p) = t_ref2m(p)
        end if

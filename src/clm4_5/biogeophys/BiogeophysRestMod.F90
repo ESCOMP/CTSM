@@ -1,32 +1,24 @@
 module BiogeophysRestMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: BiogeophysRestMod
-!
-! !DESCRIPTION:
-! Reads from or biogeophysics restart/initial data
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Reads from or biogeophysics restart/initial data
+  !
+  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
   use spmdMod     , only : masterproc
-!
-! !PUBLIC TYPES:
+  use decompMod   , only : bounds_type
+  !
+  ! !PUBLIC TYPES:
   implicit none
 
   private
-! save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  ! save
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: BiogeophysRest
-!
-! !REVISION HISTORY:
-! 2005-06-12: Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
   private :: weights_exactly_the_same
   private :: weights_within_roundoff_different
@@ -34,66 +26,42 @@ module BiogeophysRestMod
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: BiogeophysRest
-!
-! !INTERFACE:
-  subroutine BiogeophysRest( ncid, flag )
-!
-! !DESCRIPTION:
-! Read/Write biogeophysics information to/from restart file.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine BiogeophysRest(bounds, ncid, flag)
+    !
+    ! !DESCRIPTION:
+    ! Read/Write biogeophysics information to/from restart file.
+    !
+    ! !USES:
     use ncdio_pio
     use clmtype
-    use decompMod       , only : get_proc_bounds
-    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevsoi, &
-                                 nlevcan
+    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevsoi, nlevcan
     use clm_varcon      , only : istcrop
     use clm_varcon      , only : denice, denh2o, istdlak, &
                                  istsoil, pondmx, watmin, spval, icol_roof, icol_sunwall, &
                                  icol_shadewall
-    use clm_varctl      , only : allocate_all_vegpfts, nsrest, fpftdyn,    &
-                                 iulog, nsrContinue, nsrStartup, nsrBranch
+    use clm_varctl      , only : nsrest, fpftdyn, iulog, nsrContinue, nsrStartup, nsrBranch, &
+                                 use_cndv, use_snicar_frc 
     use initSurfAlbMod  , only : do_initsurfalb
     use clm_time_manager, only : is_first_step
     use SNICARMod       , only : snw_rds_min
     use shr_infnan_mod  , only : shr_infnan_isnan
     use clm_time_manager, only : is_restart
     use clm_atmlnd      , only : clm_a2l
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
+    type(bounds_type), intent(in) :: bounds  ! bounds
     type(file_desc_t), intent(inout) :: ncid ! netcdf id
     character(len=*) , intent(in)    :: flag ! 'read' or 'write'
-!
-! !CALLED FROM:
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-! 12/11/2003, Peter Thornton: Added cps%coszen, pps%gdir, and pps%omega
-!   for new sunlit/shaded canopy algorithm (in SUNSHA ifdef block)
-! 4/25/2005, Peter Thornton: Removed the SUNSHA ifdefs, since this is now the
-!   default code behavior.
-! 6/12/2005, Moved to netcdf format and renamed file
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-!
-!
+    !
+    ! !LOCAL VARIABLES:
     real(r8) :: maxwatsat                 !maximum porosity    
     real(r8) :: excess                    !excess volumetric soil water
     real(r8) :: totwat                    !total soil water (mm)
     real(r8) :: maxdiff                   !maximum difference in PFT weights
     integer :: p,c,l,g,j,iv ! indices
     integer :: nlevs        ! number of layers
-    integer :: begp, endp   ! per-proc beginning and ending pft indices
-    integer :: begc, endc   ! per-proc beginning and ending column indices
-    integer :: begl, endl   ! per-proc beginning and ending landunit indices
-    integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     logical :: readvar      ! determine if variable is on initial file
     real(r8), pointer :: wtgcell(:)       ! grid cell weights for pft
     real(r8), pointer :: wtlunit(:)       ! land-unit weights for pft
@@ -104,138 +72,129 @@ contains
     character(len=7)  :: filetypes(0:3)
     character(len=32) :: fileusing
     character(len=*), parameter :: sub="BiogeophysRest"
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+
     filetypes(:)           = "missing"
     filetypes(nsrStartup)  = "finidat"
     filetypes(nsrContinue) = "restart"
     filetypes(nsrBranch)   = "nrevsn"
 
     associate(& 
-    ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
-    clandunit                 =>    col%landunit            , & ! Input:  [integer (:)]  landunit of corresponding column         
-    zi                        =>    cps%zi                  , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m) 
-    ctype                     =>    col%itype                 & ! Input:  [integer (:)]  column type                              
+    zi  =>  cps%zi  & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m) 
     )
-
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
     !
     ! Read in weights if allocating all vegetation types
     !
 
-    if (allocate_all_vegpfts) then
-
-       ! pft weight wrt gridcell 
-
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='PFT_WTGCELL', xtype=ncd_double,  &
-               dim1name='pft', &
-               long_name='pft weight relative to corresponding gridcell', units='')
-       else if (flag == 'read' .or. flag == 'write') then
-          ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
-          ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
-          if (flag == 'read' )then
-             allocate( wtgcell(begp:endp) )
-             wtgcell(:) = pft%wtgcell(:)
-          end if
-          call ncd_io(varname='PFT_WTGCELL', data=pft%wtgcell, &
-               dim1name=namep, &
-               ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun()
-          end if
-       end if
-
-       ! pft weight wrt landunit
-
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='PFT_WTLUNIT', xtype=ncd_double,  &
-               dim1name='pft', &
-               long_name='pft weight relative to corresponding landunit', units='')
-       else if (flag == 'read' .or. flag == 'write') then
-          ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
-          ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
-          if (flag == 'read' )then
-             allocate( wtlunit(begp:endp) )
-             wtlunit(:) = pft%wtlunit(:)
-          end if
-          call ncd_io(varname='PFT_WTLUNIT', data=pft%wtlunit, &
-               dim1name=namep, &
-               ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun()
-          end if
-       end if
-
-       ! pft weight wrt column
-
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='PFT_WTCOL', xtype=ncd_double,  &
-               dim1name='pft', &
-               long_name='pft weight relative to corresponding column', units='')
-       else if (flag == 'read' .or. flag == 'write') then
-          ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
-          ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
-          if (flag == 'read' )then
-             allocate( wtcol(begp:endp)   )
-             wtcol(:) = pft%wtcol(:)
-          end if
-          call ncd_io(varname='PFT_WTCOL', data=pft%wtcol, &
-               dim1name=namep, &
-               ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun()
-          end if
-       end if
-
+    ! pft weight wrt gridcell 
+    
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='PFT_WTGCELL', xtype=ncd_double,  &
+            dim1name='pft', &
+            long_name='pft weight relative to corresponding gridcell', units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
+       ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
        if (flag == 'read' )then
+          allocate( wtgcell(bounds%begp:bounds%endp) )
+          wtgcell(:) = pft%wtgcell(:)
+       end if
+       call ncd_io(varname='PFT_WTGCELL', data=pft%wtgcell, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
 
-          if ( fpftdyn /= ' ' )then
-             fileusing = "fsurdat/fpftdyn"
-          else
-             fileusing = "fsurdat"
-          end if
-          !
-          ! Note: Do not compare weights if restart or if dynamic-pft branch
-          !
-          if ( nsrest == nsrContinue .or. fpftdyn /= ' ' )then
-             ! Do NOT do any testing for restart or a pftdyn case
+    ! pft weight wrt landunit
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='PFT_WTLUNIT', xtype=ncd_double,  &
+            dim1name='pft', &
+            long_name='pft weight relative to corresponding landunit', units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
+       ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
+       if (flag == 'read' )then
+          allocate( wtlunit(bounds%begp:bounds%endp) )
+          wtlunit(:) = pft%wtlunit(:)
+       end if
+       call ncd_io(varname='PFT_WTLUNIT', data=pft%wtlunit, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! pft weight wrt column
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='PFT_WTCOL', xtype=ncd_double,  &
+            dim1name='pft', &
+            long_name='pft weight relative to corresponding column', units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
+       ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
+       if (flag == 'read' )then
+          allocate( wtcol(bounds%begp:bounds%endp)   )
+          wtcol(:) = pft%wtcol(:)
+       end if
+       call ncd_io(varname='PFT_WTCOL', data=pft%wtcol, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    if (flag == 'read' )then
+
+       if ( fpftdyn /= ' ' )then
+          fileusing = "fsurdat/fpftdyn"
+       else
+          fileusing = "fsurdat"
+       end if
+       !
+       ! Note: Do not compare weights if restart or if dynamic-pft branch
+       !
+       if ( nsrest == nsrContinue .or. fpftdyn /= ' ' )then
+          ! Do NOT do any testing for restart or a pftdyn case
           !
           ! Otherwise test and make sure weights agree to reasonable tolerence
           !
-          else if ( .not.weights_exactly_the_same(  wtgcell, wtlunit, wtcol ) )then
-#if (!defined CNDV)
-  
+       else if ( .not.weights_exactly_the_same(  wtgcell, wtlunit, wtcol ) )then
+          if (use_cndv) then
              if (      weights_within_roundoff_different(  wtgcell, wtlunit, wtcol ) )then
                 write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
-                               " file and ", trim(fileusing), " file(s) are different to roundoff -- using ", &
-                               trim(fileusing), " values."
-             else if ( weights_tooDifferent( begp, endp,  wtgcell, adiff, maxdiff ) )then
+                     " file and ", trim(fileusing), " file(s) are different to roundoff -- using ", &
+                     trim(fileusing), " values."
+             else if ( weights_tooDifferent( bounds,  wtgcell, adiff, maxdiff ) )then
                 write(iulog,*) "ERROR:: PFT weights are SIGNIFICANTLY different from the input ", &
-                               filetypes(nsrest), " file and ", trim(fileusing), " file(s)."
+                     filetypes(nsrest), " file and ", trim(fileusing), " file(s)."
                 write(iulog,*) "ERROR:: maximum difference is ", maxdiff, " max allowed = ", adiff
                 write(iulog,*) "ERROR:: Run interpinic on your initial condition file to interpolate to the new surface dataset"
                 call endrun( sub//"::ERROR:: Weights between initial condition file and surface dataset are too different" )
              else
                 write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
-                               " file and ", trim(fileusing), " file(s) are different to < ", &
-                               adiff, " -- using ", trim(fileusing), " values."
+                     " file and ", trim(fileusing), " file(s) are different to < ", &
+                     adiff, " -- using ", trim(fileusing), " values."
              end if
              write(iulog,*) sub//"::WARNING, weights different between ", filetypes(nsrest), &
-                            " file and ", trim(fileusing), " file(s), but close enough -- using ",    &
-                            trim(fileusing), " values."
+                  " file and ", trim(fileusing), " file(s), but close enough -- using ",    &
+                  trim(fileusing), " values."
              ! Copy weights from fsurdat file back in -- they are only off by roundoff to 1% or so...
              pft%wtgcell(:) = wtgcell(:)
              pft%wtlunit(:) = wtlunit(:)
              pft%wtcol(:)   = wtcol(:)
-#endif
           end if
- 
-          deallocate( wtgcell )
-          deallocate( wtlunit )
-          deallocate( wtcol   )
-
        end if
+
+       deallocate( wtgcell )
+       deallocate( wtlunit )
+       deallocate( wtcol   )
 
     end if
 
@@ -364,7 +323,7 @@ contains
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
-          do c = begc, endc
+          do c = bounds%begc, bounds%endc
              cws%frost_table(c) = zi(c,nlevsoi)
           end do
        end if
@@ -382,7 +341,7 @@ contains
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
-          do c = begc, endc
+          do c = bounds%begc, bounds%endc
              cws%zwt_perched(c) = zi(c,nlevsoi)
           end do
        end if
@@ -400,7 +359,7 @@ contains
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
-          do c = begc, endc
+          do c = bounds%begc, bounds%endc
              cps%frac_sno_eff(c) = 0.0_r8
           end do
        end if
@@ -428,9 +387,9 @@ contains
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer thickness', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       allocate(temp2d(begc:endc,-nlevsno+1:0))
+       allocate(temp2d(bounds%begc:bounds%endc,-nlevsno+1:0))
        if (flag == 'write') then 
-          temp2d(begc:endc,-nlevsno+1:0) = cps%dz(begc:endc,-nlevsno+1:0)
+          temp2d(bounds%begc:bounds%endc,-nlevsno+1:0) = cps%dz(bounds%begc:bounds%endc,-nlevsno+1:0)
        end if
        call ncd_io(varname='DZSNO', data=temp2d, &
             dim1name=namec, switchdim=.true., &
@@ -439,7 +398,7 @@ contains
           if (is_restart()) call endrun()
        end if
        if (flag == 'read') then
-          cps%dz(begc:endc,-nlevsno+1:0) = temp2d(begc:endc,-nlevsno+1:0) 
+          cps%dz(bounds%begc:bounds%endc,-nlevsno+1:0) = temp2d(bounds%begc:bounds%endc,-nlevsno+1:0) 
        end if
        deallocate(temp2d)
     end if
@@ -451,9 +410,9 @@ contains
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer depth', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       allocate(temp2d(begc:endc,-nlevsno+1:0))
+       allocate(temp2d(bounds%begc:bounds%endc,-nlevsno+1:0))
        if (flag == 'write') then 
-          temp2d(begc:endc,-nlevsno+1:0) = cps%z(begc:endc,-nlevsno+1:0)
+          temp2d(bounds%begc:bounds%endc,-nlevsno+1:0) = cps%z(bounds%begc:bounds%endc,-nlevsno+1:0)
        end if
        call ncd_io(varname='ZSNO', data=temp2d, &
             dim1name=namec, switchdim=.true., &
@@ -462,7 +421,7 @@ contains
           if (is_restart()) call endrun()
        end if
        if (flag == 'read') then
-          cps%z(begc:endc,-nlevsno+1:0) = temp2d(begc:endc,-nlevsno+1:0) 
+          cps%z(bounds%begc:bounds%endc,-nlevsno+1:0) = temp2d(bounds%begc:bounds%endc,-nlevsno+1:0) 
        end if
        deallocate(temp2d)
     end if
@@ -474,9 +433,9 @@ contains
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow interface depth', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       allocate(temp2d(begc:endc,-nlevsno:-1))
+       allocate(temp2d(bounds%begc:bounds%endc,-nlevsno:-1))
        if (flag == 'write') then 
-          temp2d(begc:endc,-nlevsno:-1) = cps%zi(begc:endc,-nlevsno:-1)
+          temp2d(bounds%begc:bounds%endc,-nlevsno:-1) = cps%zi(bounds%begc:bounds%endc,-nlevsno:-1)
        end if
        call ncd_io(varname='ZISNO', data=temp2d, &
             dim1name=namec, switchdim=.true., &
@@ -485,7 +444,7 @@ contains
           if (is_restart()) call endrun()
        end if
        if (flag == 'read') then 
-          cps%zi(begc:endc,-nlevsno:-1) = temp2d(begc:endc,-nlevsno:-1)
+          cps%zi(bounds%begc:bounds%endc,-nlevsno:-1) = temp2d(bounds%begc:bounds%endc,-nlevsno:-1)
        end if
        deallocate(temp2d)	
     end if
@@ -844,136 +803,136 @@ contains
        end if
     end if
 
-#ifdef SNICAR_FRC
-    ! column type physical state variable - albgrd_bc
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgrd_bc', xtype=ncd_double,  &
-            dim1name='column', dim2name='numrad', switchdim=.true., &
-            long_name='ground albedo without BC (direct) (0 to 1)',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='albgrd_bc', data=cps%albgrd_bc, &
-            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_bc in restart (or initial) file..."
-          if (masterproc) write(iulog,*) "Initialize albgrd_bc to albgrd"
-          do c=begc,endc
-             cps%albgrd_bc(c,:) = cps%albgrd(c,:)
-          enddo
+    if (use_snicar_frc) then
+       ! column type physical state variable - albgrd_bc
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='albgrd_bc', xtype=ncd_double,  &
+               dim1name='column', dim2name='numrad', switchdim=.true., &
+               long_name='ground albedo without BC (direct) (0 to 1)',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='albgrd_bc', data=cps%albgrd_bc, &
+               dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_bc in restart (or initial) file..."
+             if (masterproc) write(iulog,*) "Initialize albgrd_bc to albgrd"
+             do c= bounds%begc, bounds%endc
+                cps%albgrd_bc(c,:) = cps%albgrd(c,:)
+             enddo
+          end if
+       end if
+       ! column type physical state variable - albgri_bc
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='albgri_bc', xtype=ncd_double,  &
+               dim1name='column', dim2name='numrad', switchdim=.true., &
+               long_name='ground albedo without BC (diffuse) (0 to 1)',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='albgri_bc', data=cps%albgri_bc, &
+               dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (masterproc) write(iulog,*) "SNICAR: can't find albgri_bc in restart (or initial) file..."
+             if (masterproc) write(iulog,*) "Initialize albgri_bc to albgri"
+             do c= bounds%begc, bounds%endc
+                cps%albgri_bc(c,:) = cps%albgri(c,:)
+             enddo
+          end if
+       end if
+       ! column type physical state variable - albgrd_pur
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='albgrd_pur', xtype=ncd_double,  &
+               dim1name='column', dim2name='numrad', switchdim=.true., &
+               long_name='pure snow ground albedo (direct) (0 to 1)',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='albgrd_pur', data=cps%albgrd_pur, &
+               dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_pur in restart (or initial) file..."
+             if (masterproc) write(iulog,*) "Initialize albgrd_pur to albgrd"
+             do c= bounds%begc, bounds%endc
+                cps%albgrd_pur(c,:) = cps%albgrd(c,:)
+             enddo
+          end if
+       end if
+       ! column type physical state variable - albgri_pur
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='albgri_pur', xtype=ncd_double,  &
+               dim1name='column', dim2name='numrad', switchdim=.true., &
+               long_name='pure snow ground albedo (diffuse) (0 to 1)',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='albgri_pur', data=cps%albgri_pur, &
+               dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (masterproc) write(iulog,*) "SNICAR: can't find albgri_pur in restart (or initial) file..."
+             if (masterproc) write(iulog,*) "Initialize albgri_pur to albgri"
+             do c= bounds%begc, bounds%endc
+                cps%albgri_pur(c,:) = cps%albgri(c,:)
+             enddo
+          end if
+       end if
+       ! column type physical state variable - albgrd_oc
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='albgrd_oc', xtype=ncd_double,  &
+               dim1name='column', dim2name='numrad', switchdim=.true., &
+               long_name='ground albedo without OC (direct) (0 to 1)',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='albgrd_oc', data=cps%albgrd_oc, &
+               dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_oc in restart (or initial) file..."
+             if (masterproc) write(iulog,*) "Initialize albgrd_oc to albgrd"
+             do c= bounds%begc, bounds%endc
+                cps%albgrd_oc(c,:) = cps%albgrd(c,:)
+             enddo
+          end if
+       end if
+       ! column type physical state variable - albgri_oc
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='albgri_oc', xtype=ncd_double,  &
+               dim1name='column', dim2name='numrad', switchdim=.true., &
+               long_name='ground albedo without OC (diffuse) (0 to 1)',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='albgri_oc', data=cps%albgri_oc, &
+               dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (masterproc) write(iulog,*) "SNICAR: can't find albgri_oc in restart (or initial) file..."
+             if (masterproc) write(iulog,*) "Initialize albgri_oc to albgri"
+             do c= bounds%begc, bounds%endc
+                cps%albgri_oc(c,:) = cps%albgri(c,:)
+             enddo
+          end if
+       end if
+       ! column type physical state variable - albgrd_dst
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='albgrd_dst', xtype=ncd_double,  &
+               dim1name='column', dim2name='numrad', switchdim=.true., &
+               long_name='ground albedo without dust (direct) (0 to 1)',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='albgrd_dst', data=cps%albgrd_dst, &
+               dim1name=namec, switchdim=.true.,  ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_dst in restart (or initial) file..."
+             if (masterproc) write(iulog,*) "Initialize albgrd_dst to albgrd"
+             do c= bounds%begc, bounds%endc
+                cps%albgrd_dst(c,:) = cps%albgrd(c,:)
+             enddo
+          end if
+       end if
+       ! column type physical state variable - albgri_dst
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='albgri_dst', xtype=ncd_double,  &
+               dim1name='column', dim2name='numrad', switchdim=.true., &
+               long_name='ground albedo without dust (diffuse) (0 to 1)',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='albgri_dst', data=cps%albgri_dst, &
+               dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (masterproc) write(iulog,*) "SNICAR: can't find albgri_dst in restart (or initial) file..."
+             if (masterproc) write(iulog,*) "Initialize albgri_dst to albgri"
+             do c= bounds%begc, bounds%endc
+                cps%albgri_dst(c,:) = cps%albgri(c,:)
+             enddo
+          end if
        end if
     end if
-    ! column type physical state variable - albgri_bc
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgri_bc', xtype=ncd_double,  &
-            dim1name='column', dim2name='numrad', switchdim=.true., &
-            long_name='ground albedo without BC (diffuse) (0 to 1)',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='albgri_bc', data=cps%albgri_bc, &
-            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (masterproc) write(iulog,*) "SNICAR: can't find albgri_bc in restart (or initial) file..."
-          if (masterproc) write(iulog,*) "Initialize albgri_bc to albgri"
-          do c=begc,endc
-             cps%albgri_bc(c,:) = cps%albgri(c,:)
-          enddo
-       end if
-    end if
-    ! column type physical state variable - albgrd_pur
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgrd_pur', xtype=ncd_double,  &
-            dim1name='column', dim2name='numrad', switchdim=.true., &
-            long_name='pure snow ground albedo (direct) (0 to 1)',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='albgrd_pur', data=cps%albgrd_pur, &
-            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_pur in restart (or initial) file..."
-          if (masterproc) write(iulog,*) "Initialize albgrd_pur to albgrd"
-          do c=begc,endc
-             cps%albgrd_pur(c,:) = cps%albgrd(c,:)
-          enddo
-       end if
-    end if
-    ! column type physical state variable - albgri_pur
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgri_pur', xtype=ncd_double,  &
-            dim1name='column', dim2name='numrad', switchdim=.true., &
-            long_name='pure snow ground albedo (diffuse) (0 to 1)',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='albgri_pur', data=cps%albgri_pur, &
-            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (masterproc) write(iulog,*) "SNICAR: can't find albgri_pur in restart (or initial) file..."
-          if (masterproc) write(iulog,*) "Initialize albgri_pur to albgri"
-          do c=begc,endc
-             cps%albgri_pur(c,:) = cps%albgri(c,:)
-          enddo
-       end if
-    end if
-    ! column type physical state variable - albgrd_oc
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgrd_oc', xtype=ncd_double,  &
-            dim1name='column', dim2name='numrad', switchdim=.true., &
-            long_name='ground albedo without OC (direct) (0 to 1)',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='albgrd_oc', data=cps%albgrd_oc, &
-            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_oc in restart (or initial) file..."
-          if (masterproc) write(iulog,*) "Initialize albgrd_oc to albgrd"
-          do c=begc,endc
-             cps%albgrd_oc(c,:) = cps%albgrd(c,:)
-          enddo
-       end if
-    end if
-    ! column type physical state variable - albgri_oc
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgri_oc', xtype=ncd_double,  &
-            dim1name='column', dim2name='numrad', switchdim=.true., &
-            long_name='ground albedo without OC (diffuse) (0 to 1)',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='albgri_oc', data=cps%albgri_oc, &
-            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (masterproc) write(iulog,*) "SNICAR: can't find albgri_oc in restart (or initial) file..."
-          if (masterproc) write(iulog,*) "Initialize albgri_oc to albgri"
-          do c=begc,endc
-             cps%albgri_oc(c,:) = cps%albgri(c,:)
-          enddo
-       end if
-    end if
-    ! column type physical state variable - albgrd_dst
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgrd_dst', xtype=ncd_double,  &
-            dim1name='column', dim2name='numrad', switchdim=.true., &
-            long_name='ground albedo without dust (direct) (0 to 1)',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='albgrd_dst', data=cps%albgrd_dst, &
-            dim1name=namec, switchdim=.true.,  ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_dst in restart (or initial) file..."
-          if (masterproc) write(iulog,*) "Initialize albgrd_dst to albgrd"
-          do c=begc,endc
-             cps%albgrd_dst(c,:) = cps%albgrd(c,:)
-          enddo
-       end if
-    end if
-    ! column type physical state variable - albgri_dst
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgri_dst', xtype=ncd_double,  &
-            dim1name='column', dim2name='numrad', switchdim=.true., &
-            long_name='ground albedo without dust (diffuse) (0 to 1)',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='albgri_dst', data=cps%albgri_dst, &
-            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (masterproc) write(iulog,*) "SNICAR: can't find albgri_dst in restart (or initial) file..."
-          if (masterproc) write(iulog,*) "Initialize albgri_dst to albgri"
-          do c=begc,endc
-             cps%albgri_dst(c,:) = cps%albgri(c,:)
-          enddo
-       end if
-    end if
-#endif
 
     ! column water state variable - h2osfc
 
@@ -987,7 +946,7 @@ contains
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
-          cws%h2osfc(begc:endc) = 0.0_r8
+          cws%h2osfc(bounds%begc:bounds%endc) = 0.0_r8
        end if
     end if
 
@@ -1003,7 +962,7 @@ contains
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
-          cps%frac_h2osfc(begc:endc) = 0.0_r8
+          cps%frac_h2osfc(bounds%begc:bounds%endc) = 0.0_r8
        end if
     end if
 
@@ -1019,7 +978,7 @@ contains
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
-          ces%t_h2osfc(begc:endc) = 274.0_r8
+          ces%t_h2osfc(bounds%begc:bounds%endc) = 274.0_r8
        end if
     end if
 
@@ -1451,7 +1410,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find tlai_z in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize tlai_z to tlai/nlevcan" 
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              do iv=1,nlevcan
                 pps%tlai_z(p,iv) = pps%tlai(p)/nlevcan
              end do
@@ -1471,7 +1430,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find tsai_z in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize tsai_z to tsai/nlevcan" 
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              do iv=1,nlevcan
                 pps%tsai_z(p,iv) = pps%tsai(p)/nlevcan
              end do
@@ -1490,7 +1449,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find ncan in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize ncan to nlevcan" 
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              pps%ncan(p) = nlevcan
           enddo
        end if
@@ -1507,7 +1466,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find nrad in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize nrad to nlevcan" 
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              pps%nrad(p) = nlevcan
           enddo
        end if
@@ -1570,7 +1529,7 @@ contains
           if ( .not. readvar) then
              if (is_restart()) call endrun()
           else
-             do p = begp, endp
+             do p = bounds%begp,bounds%endp
                 if ( shr_infnan_isnan( pps%fsun(p) ) )then
                    pps%fsun(p) = spval
                 end if
@@ -1591,7 +1550,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find vcmaxcintsun in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize vcmaxcintsun to 1"
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              pps%vcmaxcintsun(p) = 1._r8
           enddo
        end if
@@ -1609,7 +1568,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find vcmaxcintsha in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize vcmaxcintsha to 1"
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              pps%vcmaxcintsha(p) = 1._r8
           enddo
        end if
@@ -1685,7 +1644,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find fabd_sun in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize fabd_sun to fabd/2"
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              pps%fabd_sun(p,:) = pps%fabd(p,:)/2._r8
           enddo
        end if
@@ -1703,7 +1662,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find fabd_sha in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize fabd_sha to fabd/2"
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              pps%fabd_sha(p,:) = pps%fabd(p,:)/2._r8
           enddo
        end if
@@ -1721,7 +1680,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find fabi_sun in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize fabi_sun to fabi/2"
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              pps%fabi_sun(p,:) = pps%fabi(p,:)/2._r8
           enddo
        end if
@@ -1739,7 +1698,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find fabi_sha in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize fabi_sha to fabi/2"
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              pps%fabi_sha(p,:) = pps%fabi(p,:)/2._r8
           enddo
        end if
@@ -1757,7 +1716,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find fabd_sun_z in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize fabd_sun_z to (fabd/2)/nlevcan" 
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              do iv=1,nlevcan
                 pps%fabd_sun_z(p,iv) = (pps%fabd(p,1)/2._r8)/nlevcan
              end do
@@ -1777,7 +1736,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find fabd_sha_z in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize fabd_sha_z to (fabd/2)/nlevcan" 
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              do iv=1,nlevcan
                 pps%fabd_sha_z(p,iv) = (pps%fabd(p,1)/2._r8)/nlevcan
              end do
@@ -1797,7 +1756,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find fabi_sun_z in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize fabi_sun_z to (fabi/2)/nlevcan"
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              do iv=1,nlevcan
                 pps%fabi_sun_z(p,iv) = (pps%fabi(p,1)/2._r8)/nlevcan
              end do
@@ -1817,7 +1776,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find fabi_sha_z in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize fabi_sha_z to (fabi/2)/nlevcan"
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              do iv=1,nlevcan
                 pps%fabi_sha_z(p,iv) = (pps%fabi(p,1)/2._r8)/nlevcan
              end do
@@ -1837,7 +1796,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find fsun_z in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize fsun_z to 0"
-          do p=begp,endp
+          do p= bounds%begp,bounds%endp
              do iv=1,nlevcan
                 pps%fsun_z(p,iv) = 0._r8
              end do
@@ -1914,11 +1873,7 @@ contains
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
-          if (allocate_all_vegpfts) then
-             call endrun()
-          else
-             if (is_restart()) call endrun()
-          end if
+          call endrun()
        end if
     end if
 
@@ -1974,16 +1929,16 @@ contains
     ! ------------------------------------------------------------
 
     if (flag == 'read' ) then
-       do c = begc,endc
-          l = clandunit(c)
-          if ( ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall .or. &
-               ctype(c) == icol_roof )then
+       do c = bounds%begc, bounds%endc
+          l = col%landunit(c)
+          if ( col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. &
+               col%itype(c) == icol_roof )then
              nlevs = nlevurb
           else
              nlevs = nlevgrnd
           end if
           ! NOTE: THIS IS A MEMORY INEFFICIENT COPY
-          if ( ltype(l) /= istdlak ) then ! This calculation is now done for lakes in initSLake.
+          if ( lun%itype(l) /= istdlak ) then ! This calculation is now done for lakes in initSLake.
              do j = 1,nlevs
                    cws%h2osoi_vol(c,j) = cws%h2osoi_liq(c,j)/(cps%dz(c,j)*denh2o) &
                                             + cws%h2osoi_ice(c,j)/(cps%dz(c,j)*denice)
@@ -1997,17 +1952,17 @@ contains
        ! ------------------------------------------------------------
 
        if ( is_first_step() )then
-          do c = begc,endc
-             l = clandunit(c)
-             if ( ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall .or. &
-                  ctype(c) == icol_roof )then
+          do c = bounds%begc, bounds%endc
+             l = col%landunit(c)
+             if ( col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. &
+                  col%itype(c) == icol_roof )then
                 nlevs = nlevurb
              else
                 nlevs = nlevgrnd
              end if
              do j = 1,nlevs
-                l = clandunit(c)
-                if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
+                l = col%landunit(c)
+                if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                    cws%h2osoi_liq(c,j) = max(0._r8,cws%h2osoi_liq(c,j))
                    cws%h2osoi_ice(c,j) = max(0._r8,cws%h2osoi_ice(c,j))
                    cws%h2osoi_vol(c,j) = cws%h2osoi_liq(c,j)/(cps%dz(c,j)*denh2o) &
@@ -2058,7 +2013,7 @@ contains
                                "mass data are not defined in initial condition file. Initialize snow " // &
                                "effective radius to fresh snow value, and snow/aerosol masses to zero."
              endif
-             do c=begc,endc
+             do c= bounds%begc, bounds%endc
                 if (cps%snl(c) < 0) then
                    cps%snw_rds(c,cps%snl(c)+1:0) = snw_rds_min
                    cps%snw_rds(c,-nlevsno+1:cps%snl(c)) = 0._r8
@@ -2094,7 +2049,7 @@ contains
              call endrun()
           else
              ! initial run, not restart: initialize mss_bcpho to zero
-             do c=begc,endc
+             do c= bounds%begc, bounds%endc
                 cps%mss_bcpho(c,-nlevsno+1:0) = 0._r8
              enddo
           endif
@@ -2115,7 +2070,7 @@ contains
              call endrun()
           else
              ! initial run, not restart: initialize mss_bcphi to zero
-             do c=begc,endc
+             do c= bounds%begc, bounds%endc
                 cps%mss_bcphi(c,-nlevsno+1:0) = 0._r8
              enddo
           endif
@@ -2136,7 +2091,7 @@ contains
              call endrun()
           else
              ! initial run, not restart: initialize mss_ocpho to zero
-             do c=begc,endc
+             do c= bounds%begc, bounds%endc
                 cps%mss_ocpho(c,-nlevsno+1:0) = 0._r8
              enddo
           endif
@@ -2157,7 +2112,7 @@ contains
              call endrun()
           else
              ! initial run, not restart: initialize mss_ocphi to zero
-             do c=begc,endc
+             do c= bounds%begc, bounds%endc
                 cps%mss_ocphi(c,-nlevsno+1:0) = 0._r8
              enddo
           endif
@@ -2178,7 +2133,7 @@ contains
              call endrun()
           else
              ! initial run, not restart: initialize mss_dst1 to zero
-             do c=begc,endc
+             do c= bounds%begc, bounds%endc
                 cps%mss_dst1(c,-nlevsno+1:0) = 0._r8
              enddo
           endif
@@ -2199,7 +2154,7 @@ contains
              call endrun()
           else
              ! initial run, not restart: initialize mss_dst2 to zero
-             do c=begc,endc
+             do c= bounds%begc, bounds%endc
                 cps%mss_dst2(c,-nlevsno+1:0) = 0._r8
              enddo
           endif
@@ -2220,7 +2175,7 @@ contains
              call endrun()
           else
              ! initial run, not restart: initialize mss_dst3 to zero
-             do c=begc,endc
+             do c= bounds%begc, bounds%endc
                 cps%mss_dst3(c,-nlevsno+1:0) = 0._r8
              enddo
           endif
@@ -2241,7 +2196,7 @@ contains
              call endrun()
           else
              ! initial run, not restart: initialize mss_dst4 to zero
-             do c=begc,endc
+             do c= bounds%begc, bounds%endc
                 cps%mss_dst4(c,-nlevsno+1:0) = 0._r8
              enddo
           endif
@@ -2352,7 +2307,7 @@ contains
              call endrun()
           else
              ! initial run, not restart: initialize qflx_snofrz_lyr to zero
-             do c=begc,endc
+             do c= bounds%begc, bounds%endc
                 cwf%qflx_snofrz_lyr(c,-nlevsno+1:0) = 0._r8
              enddo
           endif
@@ -2398,7 +2353,7 @@ contains
     ! place to do this, but functionally this works)
    if (flag == 'read' ) then
        do j = -nlevsno+1,0
-          do c = begc,endc
+          do c = bounds%begc, bounds%endc
              ! mass concentrations of aerosols in snow
              if (cws%h2osoi_ice(c,j)+cws%h2osoi_liq(c,j) > 0._r8) then
                 cps%mss_cnc_bcpho(c,j) = cps%mss_bcpho(c,j) / (cws%h2osoi_ice(c,j)+cws%h2osoi_liq(c,j))
@@ -2430,31 +2385,21 @@ contains
     end associate 
    end subroutine BiogeophysRest
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: weights_exactly_the_same
-!
-! !INTERFACE:
-  logical function weights_exactly_the_same(  wtgcell, wtlunit, wtcol )
-!
-! !DESCRIPTION:
-! Determine if the weights read in are exactly the same as those from surface dataset
-!
-! !USES:
-    use clmtype
-!
-! !ARGUMENTS:
-    implicit none
-    real(r8), intent(IN)    :: wtgcell(:) ! grid cell weights for each PFT
-    real(r8), intent(IN)    :: wtlunit(:) ! land-unit weights for each PFT
-    real(r8), intent(IN)    :: wtcol(:)   ! column weights for each PFT
-!
-! !REVISION HISTORY:
-! Created by Erik Kluzek
-!
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
+   logical function weights_exactly_the_same(  wtgcell, wtlunit, wtcol )
+     !
+     ! !DESCRIPTION:
+     ! Determine if the weights read in are exactly the same as those from surface dataset
+     !
+     ! !USES:
+     use clmtype
+     !
+     ! !ARGUMENTS:
+     implicit none
+     real(r8), intent(IN)    :: wtgcell(:) ! grid cell weights for each PFT
+     real(r8), intent(IN)    :: wtlunit(:) ! land-unit weights for each PFT
+     real(r8), intent(IN)    :: wtcol(:)   ! column weights for each PFT
+     !-----------------------------------------------------------------------
 
      ! Check that weights are identical for all PFT's and all weight types
      if (  all( pft%wtgcell(:) == wtgcell ) .and. all( pft%wtlunit(:) == wtlunit ) &
@@ -2466,31 +2411,21 @@ contains
 
   end function weights_exactly_the_same
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: weights_within_roundoff_different
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   logical function weights_within_roundoff_different(  wtgcell, wtlunit, wtcol )
-!
-! !DESCRIPTION:
-! Determine if the weights are within roundoff different from each other
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Determine if the weights are within roundoff different from each other
+    !
+    ! !USES:
     use clmtype
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
     real(r8), intent(IN)    :: wtgcell(:) ! grid cell weights for each PFT
     real(r8), intent(IN)    :: wtlunit(:) ! land-unit weights for each PFT
     real(r8), intent(IN)    :: wtcol(:)   ! column weights for each PFT
-!
-! !REVISION HISTORY:
-! Created by Erik Kluzek
-!
-!EOP
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
      real(r8), parameter :: rndVal  = 1.e-13_r8
 
      ! If differences between all weights for each PFT and each weight type is
@@ -2505,39 +2440,30 @@ contains
 
   end function weights_within_roundoff_different
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: weights_tooDifferent
-!
-! !INTERFACE:
-  logical function weights_tooDifferent( begp, endp,  wtgcell, adiff, maxdiff )
-!
-! !DESCRIPTION:
-! Determine if the weights read in are too different and should flag an error
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  logical function weights_tooDifferent( bounds,  wtgcell, adiff, maxdiff )
+    !
+    ! !DESCRIPTION:
+    ! Determine if the weights read in are too different and should flag an error
+    !
+    ! !USES:
     use clmtype
     implicit none
-!
-! !ARGUMENTS:
-    integer, intent(IN)     :: begp, endp         ! per-proc beginning and ending pft indices
-    real(r8), intent(IN)    :: wtgcell(begp:endp) ! grid cell weights for each PFT
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    real(r8), intent(IN)    :: wtgcell(bounds%begp:) ! grid cell weights for each PFT
     real(r8), intent(IN)    :: adiff              ! tolerance of acceptible difference
     real(r8), intent(OUT)   :: maxdiff            ! maximum difference found
-!
-! !REVISION HISTORY:
-! Created by Erik Kluzek
-!
-!EOP
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+
      integer  :: p        ! PFT index
      real(r8) :: diff     ! difference in weights
 
      ! Assume weights are NOT different and only change if find weights too different
      weights_tooDifferent = .false.
      maxdiff = 0.0_r8
-     do p = begp, endp
+     do p = bounds%begp,bounds%endp
 
         diff = abs(pft%wtgcell(p) - wtgcell(p))
         if ( diff > maxdiff ) maxdiff = diff

@@ -1,76 +1,52 @@
-
 module CNCStateUpdate3Mod
-#ifdef CN
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CStateUpdate3Mod
-!
-! !DESCRIPTION:
-! Module for carbon state variable update, mortality fluxes.
-!
-! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    implicit none
-    save
-    private
-! !PUBLIC MEMBER FUNCTIONS:
-    public:: CStateUpdate3
-!
-! !REVISION HISTORY:
-! 7/27/2004: Created by Peter Thornton
-! F. Li and S. Levis (11/06/12)
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Module for carbon state variable update, mortality fluxes.
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  implicit none
+  save
+  private
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public:: CStateUpdate3
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CStateUpdate3
-!
-! !INTERFACE:
-subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
-!
-! !DESCRIPTION:
-! On the radiation time step, update all the prognostic carbon state
-! variables affected by fire fluxes
-!
-! !USES:
-   use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varpar   , only: nlevdecomp, ndecomp_pools
-   use clm_varpar   , only: i_cwd, i_met_lit, i_cel_lit, i_lig_lit
-   use abortutils  , only: endrun
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-   character(len=*), intent(in) :: isotope         ! 'bulk', 'c13' or 'c14'
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 3/29/04: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   type(pft_cflux_type), pointer :: pcisof
-   type(pft_cstate_type), pointer :: pcisos
-   type(column_cflux_type), pointer :: ccisof
-   type(column_cstate_type), pointer :: ccisos
-   integer :: c,p,j,l,k      ! indices
-   integer :: fp,fc    ! lake filter indices
-   real(r8):: dt       ! radiation time step (seconds)
+  !-----------------------------------------------------------------------
+  subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
+    !
+    ! !DESCRIPTION:
+    ! On the radiation time step, update all the prognostic carbon state
+    ! variables affected by fire fluxes
+    !
+    ! !USES:
+    use clmtype
+    use clm_time_manager, only: get_step_size
+    use clm_varpar   , only: nlevdecomp, ndecomp_pools
+    use clm_varpar   , only: i_cwd, i_met_lit, i_cel_lit, i_lig_lit
+    use abortutils  , only: endrun
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilc       ! number of soil columns in filter
+    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+    character(len=*), intent(in) :: isotope         ! 'bulk', 'c13' or 'c14'
+    !
+    ! !LOCAL VARIABLES:
+    type(pft_cflux_type), pointer :: pcisof
+    type(pft_cstate_type), pointer :: pcisos
+    type(column_cflux_type), pointer :: ccisof
+    type(column_cstate_type), pointer :: ccisos
+    integer :: c,p,j,l,k      ! indices
+    integer :: fp,fc    ! lake filter indices
+    real(r8):: dt       ! radiation time step (seconds)
+    !-----------------------------------------------------------------------
 
-!EOP
-!-----------------------------------------------------------------------
    ! select which isotope
    select case (isotope)
    case ('bulk')
@@ -166,7 +142,6 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
     ! set time steps
     dt = real( get_step_size(), r8 )
 
-
     ! column level carbon fluxes from fire
     do j = 1, nlevdecomp
        do fc = 1,num_soilc
@@ -246,7 +221,5 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
 
     end associate 
  end subroutine CStateUpdate3
-!-----------------------------------------------------------------------
-#endif
 
 end module CNCStateUpdate3Mod

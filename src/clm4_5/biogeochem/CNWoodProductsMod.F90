@@ -1,72 +1,47 @@
 module CNWoodProductsMod
-#ifdef CN
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNWoodProductsMod
-!
-! !DESCRIPTION:
-! Calculate loss fluxes from wood products pools, and update product pool state variables
-!
-! !USES:
-    use decompMod   , only : get_proc_bounds
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varcon  , only: istsoil
-    use spmdMod     , only: masterproc
-    implicit none
-    save
-    private
-! !PUBLIC MEMBER FUNCTIONS:
-    public:: CNWoodProducts
-!
-! !REVISION HISTORY:
-! 5/20/2009: Created by Peter Thornton
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculate loss fluxes from wood products pools, and update product pool state variables
+  !
+  ! !USES:
+  use decompMod   , only : get_proc_bounds
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varcon  , only: istsoil
+  use spmdMod     , only: masterproc
+  implicit none
+  save
+  private
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public:: CNWoodProducts
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNWoodProducts
-!
-! !INTERFACE:
-subroutine CNWoodProducts(num_soilc, filter_soilc)
-!
-! !DESCRIPTION:
-! Update all loss fluxes from wood product pools, and update product pool state variables
-! for both loss and gain terms.  Gain terms are calculated in pftdyn_cnbal() for gains associated
-! with changes in landcover, and in CNHarvest(), for gains associated with wood harvest.
-!
-! !USES:
-  use clmtype
-  use clm_time_manager, only: get_step_size
-  use clm_varctl, only: use_c13, use_c14
-!
-! !ARGUMENTS:
-  implicit none
-  integer, intent(in) :: num_soilc       ! number of soil columns in filter
-  integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 5/21/09: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-
-  integer :: fc        ! lake filter indices
-  integer :: c         ! indices
-  real(r8):: dt        ! time step (seconds)
-  real(r8) :: kprod10       ! decay constant for 10-year product pool
-  real(r8) :: kprod100      ! decay constant for 100-year product pool
-
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine CNWoodProducts(num_soilc, filter_soilc)
+    !
+    ! !DESCRIPTION:
+    ! Update all loss fluxes from wood product pools, and update product pool state variables
+    ! for both loss and gain terms.  Gain terms are calculated in pftdyn_cnbal() for gains associated
+    ! with changes in landcover, and in CNHarvest(), for gains associated with wood harvest.
+    !
+    ! !USES:
+    use clmtype
+    use clm_time_manager, only: get_step_size
+    use clm_varctl, only: use_c13, use_c14
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilc       ! number of soil columns in filter
+    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc        ! lake filter indices
+    integer :: c         ! indices
+    real(r8):: dt        ! time step (seconds)
+    real(r8) :: kprod10       ! decay constant for 10-year product pool
+    real(r8) :: kprod100      ! decay constant for 100-year product pool
+    !-----------------------------------------------------------------------
 
   
   ! calculate column-level losses from product pools
@@ -160,8 +135,5 @@ subroutine CNWoodProducts(num_soilc, filter_soilc)
   end do ! end of column loop
   
 end subroutine CNWoodProducts
-!-----------------------------------------------------------------------
-
-#endif
 
 end module CNWoodProductsMod

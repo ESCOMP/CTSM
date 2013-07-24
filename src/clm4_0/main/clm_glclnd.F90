@@ -61,8 +61,7 @@ module clm_glclnd
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: init_glc2lnd_type
   public :: init_lnd2glc_type
-  public :: create_clm_s2x
-  public :: unpack_clm_x2s
+  public :: update_clm_s2x
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 
@@ -154,10 +153,10 @@ end subroutine init_lnd2glc_type
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: create_clm_s2x
+! !IROUTINE: update_clm_s2x
 !
 ! !INTERFACE:
-  subroutine create_clm_s2x(init)
+  subroutine update_clm_s2x(init)
 !
 ! !DESCRIPTION:
 ! Assign values to clm_s2x based on the appropriate derived types
@@ -236,7 +235,7 @@ end subroutine init_lnd2glc_type
     else  ! Pass PDD info (same info in each elevation class)
        ! Require maxpatch_glcmec = 1 for this case 
        if (maxpatch_glcmec .ne. 1) then
-          call endrun('create_clm_s2x error: maxpatch_glcmec must be 1 if glc_smb is false') 
+          call endrun('update_clm_s2x error: maxpatch_glcmec must be 1 if glc_smb is false') 
        end if
        n = 1
        do g = begg, endg
@@ -254,68 +253,7 @@ end subroutine init_lnd2glc_type
        enddo
     endif   ! glc_smb
 
-end subroutine create_clm_s2x
-
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: unpack_clm_x2s
-!
-! !INTERFACE:
-  subroutine unpack_clm_x2s(clm_x2s)
-!
-! !DESCRIPTION:
-! Unpack clm_x2s and update the appropriate derived types
-!
-! !USES:
-  use clm_varcon  , only : istice_mec
-  use clmtype     
-
-!
-! !ARGUMENTS:
-  implicit none
-
-  type(glc2lnd_type), intent(in) :: clm_x2s
-!
-! !REVISION HISTORY:
-! Written by William Lipscomb, Feb. 2009 
-!
-    integer :: begc, endc              ! per-proc beginning and ending column indices
-    integer :: c, l, g, n              ! indices
-    integer , pointer :: ityplun(:)    ! landunit type
-    integer , pointer :: clandunit(:)  ! column's landunit index
-    integer , pointer :: cgridcell(:)  ! column's gridcell index
-
-    logical :: update_glc2sno_fields   ! if true, update glacier_mec fields
-
-    ! Assign local pointers to derived type members
-
-    clandunit     => col%landunit
-    cgridcell     => col%gridcell
-    ityplun       => lun%itype
-
-    update_glc2sno_fields = .false.
-                                           
-    if (update_glc2sno_fields) then 
-   
-       do c = begc, endc
-          l = clandunit(c)
-          g = cgridcell(c)
-
-          if (ityplun(l) == istice_mec) then
-             n = c - lun%coli(l) + 1    ! elevation class index
-             cps%glc_frac(c) = clm_x2s%frac(g,n)
-             cps%glc_topo(c) = clm_x2s%topo(g,n)
-             cwf%glc_rofi(c) = clm_x2s%rofi(g,n)
-             cwf%glc_rofl(c) = clm_x2s%rofl(g,n)
-             cef%eflx_bot(c) = clm_x2s%hflx(g,n)
-
-          endif
-       enddo
-
-    endif   ! update fields
-
-    end subroutine unpack_clm_x2s
+end subroutine update_clm_s2x
 
 !------------------------------------------------------------------------
 

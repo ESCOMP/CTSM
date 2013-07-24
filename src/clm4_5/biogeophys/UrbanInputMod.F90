@@ -1,27 +1,22 @@
 module UrbanInputMod
 
-!----------------------------------------------------------------------- 
-!BOP
-!
-! !MODULE: UrbanInputMod
-! 
-! !DESCRIPTION: 
-! Read in input urban data - fill in data structure urbinp
-!
-! !USES:
+  !----------------------------------------------------------------------- 
+  ! !DESCRIPTION: 
+  ! Read in input urban data - fill in data structure urbinp
+  !
+  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun  
   use shr_sys_mod , only : shr_sys_flush 
-!
-! !PUBLIC TYPES:
+  use decompMod   , only : bounds_type
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-
   private
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: UrbanInput         ! Read in urban input data
-
   type urbinp_t
      real(r8), pointer :: canyon_hwr(:,:)  
      real(r8), pointer :: wtlunit_roof(:,:)  
@@ -55,52 +50,35 @@ module UrbanInputMod
   public urbinp_t
 
   type (urbinp_t)   , public :: urbinp        ! urban input derived type
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: UrbanInput
-!
-! !INTERFACE:
-  subroutine UrbanInput(mode)
-!
-! !DESCRIPTION: 
-! Allocate memory and read in urban input data
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine UrbanInput(begg, endg, mode)
+    !
+    ! !DESCRIPTION: 
+    ! Allocate memory and read in urban input data
+    !
+    ! !USES:
     use clm_varpar, only : numrad, nlevurb
     use clm_varcon, only : numurbl
-    use clm_varctl, only : iulog, fsurdat, single_column
+    use clm_varctl, only : iulog, fsurdat
     use fileutils , only : getavu, relavu, getfil, opnfil
     use spmdMod   , only : masterproc
     use clmtype   , only : grlnd
-    use decompMod , only : get_proc_bounds
     use domainMod , only : ldomain
     use ncdio_pio 
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
+    integer, intent(in) :: begg, endg
     character(len=*), intent(in) :: mode
-!
-! !CALLED FROM:
-! subroutine initialize
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein July 2004
-! Revised by Keith Oleson for netcdf input Jan 2008
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     character(len=256) :: locfn      ! local file name
     type(file_desc_t)  :: ncid       ! netcdf id
     integer :: dimid                 ! netCDF id
-    integer :: begg,endg             ! start/stop gridcells
     integer :: nw,n,k,i,j,ni,nj,ns   ! indices
     integer :: nlevurb_i             ! input grid: number of urban vertical levels
     integer :: numrad_i              ! input grid: number of solar bands (VIS/NIR)
@@ -110,11 +88,9 @@ contains
     logical :: readvar               ! true => variable is on dataset
     logical :: has_numurbl           ! true => numurbl dimension is on dataset
     character(len=32) :: subname = 'UrbanInput' ! subroutine name
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     if ( nlevurb == 0 ) return
-
-    call get_proc_bounds(begg,endg)
 
     if (mode == 'initialize') then
 
@@ -144,34 +120,34 @@ contains
        if ( nlevurb == 0 ) return
 
        ! Allocate dynamic memory
-       allocate(urbinp%canyon_hwr(begg:endg,numurbl), &  
-                urbinp%wtlunit_roof(begg:endg,numurbl), &  
-                urbinp%wtroad_perv(begg:endg,numurbl), &
-                urbinp%em_roof(begg:endg,numurbl), &     
-                urbinp%em_improad(begg:endg,numurbl), &    
-                urbinp%em_perroad(begg:endg,numurbl), &    
-                urbinp%em_wall(begg:endg,numurbl), &    
-                urbinp%alb_roof_dir(begg:endg,numurbl,numrad), &    
-                urbinp%alb_roof_dif(begg:endg,numurbl,numrad), &    
-                urbinp%alb_improad_dir(begg:endg,numurbl,numrad), &    
-                urbinp%alb_perroad_dir(begg:endg,numurbl,numrad), &    
-                urbinp%alb_improad_dif(begg:endg,numurbl,numrad), &    
-                urbinp%alb_perroad_dif(begg:endg,numurbl,numrad), &    
-                urbinp%alb_wall_dir(begg:endg,numurbl,numrad), &    
-                urbinp%alb_wall_dif(begg:endg,numurbl,numrad), &
-                urbinp%ht_roof(begg:endg,numurbl), &
-                urbinp%wind_hgt_canyon(begg:endg,numurbl), &
-                urbinp%tk_wall(begg:endg,numurbl,nlevurb), &
-                urbinp%tk_roof(begg:endg,numurbl,nlevurb), &
-                urbinp%tk_improad(begg:endg,numurbl,nlevurb), &
-                urbinp%cv_wall(begg:endg,numurbl,nlevurb), &
-                urbinp%cv_roof(begg:endg,numurbl,nlevurb), &
-                urbinp%cv_improad(begg:endg,numurbl,nlevurb), &
-                urbinp%thick_wall(begg:endg,numurbl), &
-                urbinp%thick_roof(begg:endg,numurbl), &
-                urbinp%nlev_improad(begg:endg,numurbl), &
-                urbinp%t_building_min(begg:endg,numurbl), &
-                urbinp%t_building_max(begg:endg,numurbl), &
+       allocate(urbinp%canyon_hwr(begg:endg, numurbl), &  
+                urbinp%wtlunit_roof(begg:endg, numurbl), &  
+                urbinp%wtroad_perv(begg:endg, numurbl), &
+                urbinp%em_roof(begg:endg, numurbl), &     
+                urbinp%em_improad(begg:endg, numurbl), &    
+                urbinp%em_perroad(begg:endg, numurbl), &    
+                urbinp%em_wall(begg:endg, numurbl), &    
+                urbinp%alb_roof_dir(begg:endg, numurbl, numrad), &    
+                urbinp%alb_roof_dif(begg:endg, numurbl, numrad), &    
+                urbinp%alb_improad_dir(begg:endg, numurbl, numrad), &    
+                urbinp%alb_perroad_dir(begg:endg, numurbl, numrad), &    
+                urbinp%alb_improad_dif(begg:endg, numurbl, numrad), &    
+                urbinp%alb_perroad_dif(begg:endg, numurbl, numrad), &    
+                urbinp%alb_wall_dir(begg:endg, numurbl, numrad), &    
+                urbinp%alb_wall_dif(begg:endg, numurbl, numrad), &
+                urbinp%ht_roof(begg:endg, numurbl), &
+                urbinp%wind_hgt_canyon(begg:endg, numurbl), &
+                urbinp%tk_wall(begg:endg, numurbl,nlevurb), &
+                urbinp%tk_roof(begg:endg, numurbl,nlevurb), &
+                urbinp%tk_improad(begg:endg, numurbl,nlevurb), &
+                urbinp%cv_wall(begg:endg, numurbl,nlevurb), &
+                urbinp%cv_roof(begg:endg, numurbl,nlevurb), &
+                urbinp%cv_improad(begg:endg, numurbl,nlevurb), &
+                urbinp%thick_wall(begg:endg, numurbl), &
+                urbinp%thick_roof(begg:endg, numurbl), &
+                urbinp%nlev_improad(begg:endg, numurbl), &
+                urbinp%t_building_min(begg:endg, numurbl), &
+                urbinp%t_building_max(begg:endg, numurbl), &
                 stat=ier)
        if (ier /= 0) then
           write(iulog,*)'initUrbanInput: allocation error '; call endrun()

@@ -1,85 +1,55 @@
 module CropRestMod
-
-#if (defined CN)
-!----------------------------------------------------------------------- 
-!BOP
-!
-! !MODULE: CropRestMod
-! 
-! !DESCRIPTION: 
-! Read/Write to/from Crop info to CLM restart file. 
-!
-! !USES:
+  !----------------------------------------------------------------------- 
+  ! !DESCRIPTION: 
+  ! Read/Write to/from Crop info to CLM restart file. 
+  !
+  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
-!
-! !PUBLIC TYPES:
+  !
+  ! !PUBLIC TYPES:
   implicit none
   private
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: CropRest        ! Restart prognostic crop model
   public :: CropRestYear    ! Get the number of years crop has spunup
   public :: CropRestIncYear ! Increment the crop spinup years
-!
-! !REVISION HISTORY:
-! Module created by slevis following CNRestMod by Peter Thornton
-!
-
-! !PRIVATE DATA MEMBERS:
-   integer, parameter :: unset = -999  ! Flag that restart year is not set
-   integer :: restyear = unset         ! Restart year from the initial conditions file
-
-!EOP
-!----------------------------------------------------------------------- 
+  !
+  ! !PRIVATE DATA MEMBERS:
+  integer, parameter :: unset = -999  ! Flag that restart year is not set
+  integer :: restyear = unset         ! Restart year from the initial conditions file
+  !----------------------------------------------------------------------- 
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CropRest
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine CropRest ( ncid, flag )
-!
-! !DESCRIPTION: 
-! Read/write Crop restart data
-!
-! !USES:
+    !
+    ! !DESCRIPTION: 
+    ! Read/write Crop restart data
+    !
+    ! !USES:
     use clmtype
     use clm_atmlnd      , only : clm_a2l
     use clm_varpar      , only : numrad
-    use decompMod       , only : get_proc_bounds
     use clm_time_manager, only : is_restart
     use ncdio_pio
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
     type(file_desc_t)  :: ncid             ! netcdf id
     character(len=*), intent(in) :: flag   !'read' or 'write'
-!
-! !CALLED FROM:
-! subroutine restart in module restFileMod
-!
-! !REVISION HISTORY:
-! Author: slevis
-!
-!EOP
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer :: c,p,j                      ! indices 
-    integer :: begp, endp                 ! per-proc beginning and ending pft indices
-    integer :: begc, endc                 ! per-proc beginning and ending column indices 
-    integer :: begl, endl                 ! per-proc beginning and ending landunit indices
-    integer :: begg, endg                 ! per-proc gridcell ending gridcell indices
     real(r8):: m                          ! multiplier for the exit_spinup code
     logical :: readvar                    ! determine if variable is on initial file
     character(len=128) :: varname         ! temporary
     integer :: ier                        ! error status
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! Prognostic crop restart year
     if (flag == 'define') then
@@ -97,13 +67,6 @@ contains
            end if
        end if       
     end if
-
-    ! Set pointers into derived type
-
-
-    ! Determine necessary subgrid bounds
-
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
     !--------------------------------
     ! pft physical state variables 
@@ -606,94 +569,64 @@ contains
 
   end subroutine CropRest
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CropRestYear
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
+  !BOP
+  !
+  ! !IROUTINE: CropRestYear
+  !
+  ! !INTERFACE:
   integer function CropRestYear ( )
-!
-! !DESCRIPTION: 
-! Return the restart year for prognostic crop
-!
-! !USES:
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION: 
+    ! Return the restart year for prognostic crop
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !REVISION HISTORY:
-! Author: Erik Kluzek
-!
-!EOP
-!
-! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
      CropRestYear = restyear
      if ( CropRestYear == unset )then
         CropRestYear = 0
      end if
   end function CropRestYear
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CropRestIncYear
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine CropRestIncYear ( nyrs )
-!
-! !DESCRIPTION: 
-! Increment the crop restart year
-!
-! !USES:
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION: 
+    ! Increment the crop restart year
+    !
     implicit none
     integer, intent(out) :: nyrs ! Number of years crop has run
-!
-! !REVISION HISTORY:
-! Author: Erik Kluzek
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-      if ( restyear == unset ) restyear = 0
-      restyear = restyear + 1
-      nyrs     = restyear
+    !-----------------------------------------------------------------------
+
+    if ( restyear == unset ) restyear = 0
+    restyear = restyear + 1
+    nyrs     = restyear
   end subroutine CropRestIncYear
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: checkDates
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine checkDates( )
-!
-! !DESCRIPTION: 
-! Make sure the dates are compatible. The date given to startup the model
-! and the date on the restart file must be the same although years can be
-! different. The dates need to be checked when the restart file is being
-! read in for a startup or branch case (they are NOT allowed to be different
-! for a restart case).
-!
-! For the prognostic crop model the date of planting is tracked and growing
-! degree days is tracked (with a 20 year mean) -- so shifting the start dates
-! messes up these bits of saved information.
-!
-! !USES:
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION: 
+    ! Make sure the dates are compatible. The date given to startup the model
+    ! and the date on the restart file must be the same although years can be
+    ! different. The dates need to be checked when the restart file is being
+    ! read in for a startup or branch case (they are NOT allowed to be different
+    ! for a restart case).
+    !
+    ! For the prognostic crop model the date of planting is tracked and growing
+    ! degree days is tracked (with a 20 year mean) -- so shifting the start dates
+    ! messes up these bits of saved information.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
     use clm_time_manager, only : get_driver_start_ymd, get_start_date
     use clm_varctl      , only : iulog
     use clm_varctl      , only : nsrest, nsrBranch, nsrStartup
-!
-! !REVISION HISTORY:
-! Author: Erik Kluzek
-!
-!EOP
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer :: stymd       ! Start date YYYYMMDD from driver
     integer :: styr        ! Start year from driver
     integer :: stmon_day   ! Start date MMDD from driver
@@ -704,6 +637,7 @@ contains
     integer :: tod         ! Restart time of day from restart file
     character(len=*), parameter :: formDate = '(A,i4.4,"/",i2.2,"/",i2.2)' ! log output format
     character(len=32) :: subname = 'CropRest::checkDates'
+    !-----------------------------------------------------------------------
     !
     ! If branch or startup make sure the startdate is compatible with the date
     ! on the restart file.
@@ -715,18 +649,16 @@ contains
        call get_start_date( rsyr, rsmon, rsday, tod )
        rsmon_day = rsmon*100 + rsday
        if ( masterproc ) &
-       write(iulog,formDate) 'Date on the restart file is: ', rsyr, rsmon, rsday
+            write(iulog,formDate) 'Date on the restart file is: ', rsyr, rsmon, rsday
        if ( stmon_day /= rsmon_day )then
           write(iulog,formDate) 'Start date is: ', styr, stmon_day/100, &
-                                 (stmon_day - stmon_day/100)
+               (stmon_day - stmon_day/100)
           call endrun( trim(subname)// &
-          ' ERROR: For prognostic crop to work correctly, the start date (month and day)'// &
-          ' and the date on the restart file needs to match (years can be different)' )
+               ' ERROR: For prognostic crop to work correctly, the start date (month and day)'// &
+               ' and the date on the restart file needs to match (years can be different)' )
        end if
     end if
 
   end subroutine checkDates
-
-#endif
 
 end module CropRestMod

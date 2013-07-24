@@ -1,77 +1,63 @@
 module Biogeophysics2Mod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: Biogeophysics2Mod
-!
-! !DESCRIPTION:
-! Performs the calculation of soil/snow and ground temperatures
-! and updates surface fluxes based on the new ground temperature.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Performs the calculation of soil/snow and ground temperatures
+  ! and updates surface fluxes based on the new ground temperature.
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-!
   use clm_varctl,   only: iulog
-!
-! !PUBLIC TYPES:
+  use decompMod   , only: bounds_type
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: Biogeophysics2   ! Calculate soil/snow and ground temperatures
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: Biogeophysics2
-!
-! !INTERFACE:
-  subroutine Biogeophysics2 (lbl, ubl, lbc, ubc, lbp, ubp, &
-             num_urbanl, filter_urbanl, num_nolakec, filter_nolakec, &
-             num_nolakep, filter_nolakep)
-!
-! !DESCRIPTION:
-! This is the main subroutine to execute the calculation of soil/snow and
-! ground temperatures and update surface fluxes based on the new ground
-! temperature
-!
-! Calling sequence is:
-! Biogeophysics2:             surface biogeophysics driver
-!    -> SoilTemperature:      soil/snow and ground temperatures
-!          -> SoilTermProp    thermal conductivities and heat capacities
-!          -> Tridiagonal     tridiagonal matrix solution
-!          -> PhaseChange     phase change of liquid/ice contents
-!
-! (1) Snow and soil temperatures
-!     o The volumetric heat capacity is calculated as a linear combination
-!       in terms of the volumetric fraction of the constituent phases.
-!     o The thermal conductivity of soil is computed from
-!       the algorithm of Johansen (as reported by Farouki 1981), and the
-!       conductivity of snow is from the formulation used in
-!       SNTHERM (Jordan 1991).
-!     o Boundary conditions:
-!       F = Rnet - Hg - LEg (top),  F= 0 (base of the soil column).
-!     o Soil / snow temperature is predicted from heat conduction
-!       in 10 soil layers and up to 5 snow layers.
-!       The thermal conductivities at the interfaces between two
-!       neighboring layers (j, j+1) are derived from an assumption that
-!       the flux across the interface is equal to that from the node j
-!       to the interface and the flux from the interface to the node j+1.
-!       The equation is solved using the Crank-Nicholson method and
-!       results in a tridiagonal system equation.
-!
-! (2) Phase change (see PhaseChange.F90)
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine Biogeophysics2 (bounds, &
+       num_urbanl, filter_urbanl, num_nolakec, filter_nolakec, &
+       num_nolakep, filter_nolakep)
+    !
+    ! !DESCRIPTION:
+    ! This is the main subroutine to execute the calculation of soil/snow and
+    ! ground temperatures and update surface fluxes based on the new ground
+    ! temperature
+    !
+    ! Calling sequence is:
+    ! Biogeophysics2:             surface biogeophysics driver
+    !    -> SoilTemperature:      soil/snow and ground temperatures
+    !          -> SoilTermProp    thermal conductivities and heat capacities
+    !          -> Tridiagonal     tridiagonal matrix solution
+    !          -> PhaseChange     phase change of liquid/ice contents
+    !
+    ! (1) Snow and soil temperatures
+    !     o The volumetric heat capacity is calculated as a linear combination
+    !       in terms of the volumetric fraction of the constituent phases.
+    !     o The thermal conductivity of soil is computed from
+    !       the algorithm of Johansen (as reported by Farouki 1981), and the
+    !       conductivity of snow is from the formulation used in
+    !       SNTHERM (Jordan 1991).
+    !     o Boundary conditions:
+    !       F = Rnet - Hg - LEg (top),  F= 0 (base of the soil column).
+    !     o Soil / snow temperature is predicted from heat conduction
+    !       in 10 soil layers and up to 5 snow layers.
+    !       The thermal conductivities at the interfaces between two
+    !       neighboring layers (j, j+1) are derived from an assumption that
+    !       the flux across the interface is equal to that from the node j
+    !       to the interface and the flux from the interface to the node j+1.
+    !       The equation is solved using the Crank-Nicholson method and
+    !       results in a tridiagonal system equation.
+    !
+    ! (2) Phase change (see PhaseChange.F90)
+    !
+    ! !USES:
     use clmtype
     use clm_atmlnd        , only : clm_a2l
     use clm_time_manager  , only : get_step_size
@@ -83,53 +69,40 @@ contains
     use SoilTemperatureMod, only : SoilTemperature
     use subgridAveMod     , only : p2c
     use perf_mod          , only : t_startf, t_stopf
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbp, ubp                    ! pft bounds
-    integer, intent(in) :: lbc, ubc                    ! column bounds
-    integer, intent(in) :: lbl, ubl                    ! landunit bounds
-    integer, intent(in) :: num_nolakec                 ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
-    integer, intent(in) :: num_urbanl                  ! number of urban landunits in clump
-    integer, intent(in) :: filter_urbanl(ubl-lbl+1)    ! urban landunit filter
-    integer, intent(in) :: num_nolakep                 ! number of column non-lake points in pft filter
-    integer, intent(in) :: filter_nolakep(ubp-lbp+1)   ! pft filter for non-lake points
-!
-! !CALLED FROM:
-! subroutine clm_driver1
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! Migrated to clm2.0 by Keith Oleson and Mariana Vertenstein
-! Migrated to clm2.1 new data structures by Peter Thornton and M. Vertenstein
-!
-! !LOCAL VARIABLES:
-!EOP
-!
+    type(bounds_type), intent(in) :: bounds    ! bounds
+    integer, intent(in) :: num_nolakec         ! number of column non-lake points in column filter
+    integer, intent(in) :: filter_nolakec(:)   ! column filter for non-lake points
+    integer, intent(in) :: num_urbanl          ! number of urban landunits in clump
+    integer, intent(in) :: filter_urbanl(:)    ! urban landunit filter
+    integer, intent(in) :: num_nolakep         ! number of column non-lake points in pft filter
+    integer, intent(in) :: filter_nolakep(:)   ! pft filter for non-lake points
+    !
+    ! !LOCAL VARIABLES:
     integer  :: p,c,g,j,pi,l         ! indices
     integer  :: fc,fp                ! lake filtered column and pft indices
     real(r8) :: dtime                ! land model time step (sec)
-    real(r8) :: egsmax(lbc:ubc)      ! max. evaporation which soil can provide at one time step
-    real(r8) :: egirat(lbc:ubc)      ! ratio of topsoil_evap_tot : egsmax
-    real(r8) :: tinc(lbc:ubc)        ! temperature difference of two time step
-    real(r8) :: xmf(lbc:ubc)         ! total latent heat of phase change of ground water
-    real(r8) :: sumwt(lbc:ubc)       ! temporary
-    real(r8) :: evaprat(lbp:ubp)     ! ratio of qflx_evap_soi/topsoil_evap_tot
+    real(r8) :: egsmax(bounds%begc:bounds%endc)      ! max. evaporation which soil can provide at one time step
+    real(r8) :: egirat(bounds%begc:bounds%endc)      ! ratio of topsoil_evap_tot : egsmax
+    real(r8) :: tinc(bounds%begc:bounds%endc)        ! temperature difference of two time step
+    real(r8) :: xmf(bounds%begc:bounds%endc)         ! total latent heat of phase change of ground water
+    real(r8) :: sumwt(bounds%begc:bounds%endc)       ! temporary
+    real(r8) :: evaprat(bounds%begp:bounds%endp)     ! ratio of qflx_evap_soi/topsoil_evap_tot
     real(r8) :: save_qflx_evap_soi   ! temporary storage for qflx_evap_soi
-    real(r8) :: topsoil_evap_tot(lbc:ubc)          ! column-level total evaporation from top soil layer
-    real(r8) :: fact(lbc:ubc, -nlevsno+1:nlevgrnd) ! used in computing tridiagonal matrix
-    real(r8) :: eflx_lwrad_del(lbp:ubp)            ! update due to eflx_lwrad
-    real(r8) :: t_grnd0(lbc:ubc)    !t_grnd of previous time step
-    real(r8) :: c_h2osfc(lbc:ubc)   !heat capacity of surface water
-    real(r8) :: xmf_h2osfc(lbc:ubc) !latent heat of phase change of surface water
-    real(r8) :: eflx_temp(lbc:ubc)
-    real(r8) :: xmf_temp(lbc:ubc)
-    real(r8) :: dq_temp(lbc:ubc)
+    real(r8) :: topsoil_evap_tot(bounds%begc:bounds%endc)          ! column-level total evaporation from top soil layer
+    real(r8) :: fact(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd) ! used in computing tridiagonal matrix
+    real(r8) :: eflx_lwrad_del(bounds%begp:bounds%endp)            ! update due to eflx_lwrad
+    real(r8) :: t_grnd0(bounds%begc:bounds%endc)    !t_grnd of previous time step
+    real(r8) :: c_h2osfc(bounds%begc:bounds%endc)   !heat capacity of surface water
+    real(r8) :: xmf_h2osfc(bounds%begc:bounds%endc) !latent heat of phase change of surface water
+    real(r8) :: eflx_temp(bounds%begc:bounds%endc)
+    real(r8) :: xmf_temp(bounds%begc:bounds%endc)
+    real(r8) :: dq_temp(bounds%begc:bounds%endc)
     real(r8) :: lw_grnd
     real(r8) :: fsno_eff
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
    associate(& 
    forc_lwrad                =>    clm_a2l%forc_lwrad      , & ! Input:  [real(r8) (:)]  downward infrared (longwave) radiation (W/m**2)
@@ -215,7 +188,7 @@ contains
     ! Determine soil temperatures including surface soil temperature
 
     call t_startf('soiltemperature')
-    call SoilTemperature(lbl, ubl, lbc, ubc, num_urbanl, filter_urbanl, &
+    call SoilTemperature(bounds, num_urbanl, filter_urbanl, &
                          num_nolakec, filter_nolakec, xmf , fact, c_h2osfc, xmf_h2osfc)
     call t_stopf('soiltemperature')
 
@@ -487,7 +460,7 @@ contains
     ! lake balance for errsoi is not over pft
     ! therefore obtain column-level radiative temperature
 
-    call p2c(lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, errsoi_pft, errsoi_col)
+    call p2c(bounds, num_nolakec, filter_nolakec, errsoi_pft, errsoi_col)
     call t_stopf('bgp2_loop_4')
 
     end associate 

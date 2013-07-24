@@ -1,15 +1,11 @@
 module clm_varcon
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: clm_varcon
-!
-! !DESCRIPTION:
-! Module containing various model constants. This includes physical constants, landunit
-! and column indices, and others.
-!
-! !USES:
+  ! !DESCRIPTION:
+  ! Module containing various model constants. This includes physical constants, landunit
+  ! and column indices, and others.
+  !
+  ! !USES:
   use shr_kind_mod , only: r8 => shr_kind_r8
   use shr_const_mod, only: SHR_CONST_G,SHR_CONST_STEBOL,SHR_CONST_KARMAN,     &
                            SHR_CONST_RWV,SHR_CONST_RDAIR,SHR_CONST_CPFW,      &
@@ -18,22 +14,18 @@ module clm_varcon
                            SHR_CONST_RHOICE,SHR_CONST_TKFRZ,SHR_CONST_REARTH, &
                            SHR_CONST_PDB, SHR_CONST_PI, SHR_CONST_CDAY,       &
                            SHR_CONST_RGAS
-  use clm_varpar   , only: numrad, nlevgrnd, nlevlak, nlevdecomp_full, nsompools
+  use clm_varpar   , only: numrad, nlevgrnd, nlevlak, nlevdecomp_full
   use clm_varpar   , only: ngases
-#if (defined VICHYDRO)
   use clm_varpar   , only: nlayer
-#endif
-
-!
-! !PUBLIC TYPES:
+  
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-! 27 February 2008: Keith Oleson; Add forcing height and aerodynamic parameters
-!
-!EOP
+  !
+  ! !REVISION HISTORY:
+  ! Created by Mariana Vertenstein
+  ! 27 February 2008: Keith Oleson; Add forcing height and aerodynamic parameters
 !-----------------------------------------------------------------------
 
   !------------------------------------------------------------------
@@ -121,13 +113,9 @@ module clm_varcon
                                                   ! Pritchard et al. (GRL, 35, 2008) use 0.006  
   integer, private :: i  ! loop index
 
-
-#ifdef NITRIF_DENITRIF
- !  real(r8), parameter :: nitrif_n2o_loss_frac = 0.02_r8   !fraction of N lost as N2O in nitrification (Parton et al., 2001)
+  !  real(r8), parameter :: nitrif_n2o_loss_frac = 0.02_r8   !fraction of N lost as N2O in nitrification (Parton et al., 2001)
   real(r8), parameter :: nitrif_n2o_loss_frac = 6.e-4_r8   !fraction of N lost as N2O in nitrification (Li et al., 2000)
   real(r8), parameter :: frac_minrlztn_to_no3 = 0.2_r8   !fraction of N mineralized that is dieverted to the nitrification stream (Parton et al., 2001)
-#endif
-
 
   !------------------------------------------------------------------
   ! Initialize landunit & column type constants
@@ -187,9 +175,7 @@ module clm_varcon
   real(r8), pointer :: dzsoi(:)        !soil dz (thickness)
   real(r8), pointer :: zisoi(:)        !soil zi (interfaces)
   real(r8), pointer :: dzsoi_decomp(:) !soil dz (thickness)
-#if (defined VICHYDRO)
-  integer, pointer  :: nlvic(:)        !number of CLM layers in each VIC layer (#)
-#endif
+  integer , pointer :: nlvic(:)        !number of CLM layers in each VIC layer (#)
 
   !------------------------------------------------------------------
   ! (Non-tunable) Constants for the CH4 submodel (Tuneable constants in ch4varcon)
@@ -224,49 +210,33 @@ module clm_varcon
 
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
-
-!EOP
 !-----------------------------------------------------------------------
+
 contains
 
 !------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: clm_varcon_init
-!
-! !INTERFACE:
   subroutine clm_varcon_init()
-!
-! !DESCRIPTION:
-! This subroutine initializes constants in clm_varcon. MUST be called 
-! after the clm_varpar_init.
-!
-! !USES:
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION:
+    ! This subroutine initializes constants in clm_varcon. MUST be called 
+    ! after the clm_varpar_init.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !REVISION HISTORY:
-!   Created by E. Kluzek
-!
-!
-! !LOCAL VARIABLES:
-!
-!EOP
+    !
+    ! !REVISION HISTORY:
+    !   Created by E. Kluzek
 !------------------------------------------------------------------------------
-  allocate( zlak(1:nlevlak) )
-  allocate( dzlak(1:nlevlak) )
-  allocate( zsoi(1:nlevgrnd) )
-  allocate( dzsoi(1:nlevgrnd) )
-  allocate( zisoi(0:nlevgrnd) )
-  allocate( dzsoi_decomp(1:nlevdecomp_full) )
-#if (defined VICHYDRO)
-  allocate( nlvic(1:nlayer))
-#endif
+    allocate( zlak(1:nlevlak) )
+    allocate( dzlak(1:nlevlak) )
+    allocate( zsoi(1:nlevgrnd) )
+    allocate( dzsoi(1:nlevgrnd) )
+    allocate( zisoi(0:nlevgrnd) )
+    allocate( dzsoi_decomp(1:nlevdecomp_full) )
+    allocate( nlvic(1:nlayer))
 
   end subroutine clm_varcon_init
-
-
-
 
 end module clm_varcon

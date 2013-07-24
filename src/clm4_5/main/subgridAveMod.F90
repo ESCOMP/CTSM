@@ -1,26 +1,23 @@
 module subgridAveMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: subgridAveMod
-!
-! !DESCRIPTION:
-! Utilities to perfrom subgrid averaging
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Utilities to perfrom subgrid averaging
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use clmtype
   use clm_varcon, only : spval, icol_roof, icol_sunwall, icol_shadewall, &
-                         icol_road_perv, icol_road_imperv
+       icol_road_perv, icol_road_imperv
   use clm_varctl, only : iulog
   use abortutils, only : endrun
-
-! !PUBLIC TYPES:
+ use decompMod   , only: bounds_type
+ 
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: p2c   ! Perfrom an average from pfts to columns
   public :: p2l   ! Perfrom an average from pfts to landunits
   public :: p2g   ! Perfrom an average from pfts to gridcells
@@ -54,70 +51,52 @@ module subgridAveMod
      module procedure l2g_1d
      module procedure l2g_2d
   end interface
-!
-! !PRIVATE MEMBER FUNCTIONS:
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
   private :: build_scale_l2g
   private :: create_scale_l2g_lookup
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!EOP
-
-! WJS (10-14-11): TODO:
-! 
-! - I believe that scale_p2c, scale_c2l and scale_l2g should be included in the sumwt
-! accumulations (e.g., sumwt = sumwt + wtgcell * scale_p2c * scale_c2l * scale_l2g), but
-! that requires some more thought to (1) make sure that is correct, and (2) make sure it
-! doesn't break the urban scaling. (See also my notes in create_scale_l2g_lookup.)
-!   - Once that is done, you could use a scale of 0, avoiding the need for the use of
-!   spval and the special checks that requires.
-!
-! - Currently, there is a lot of repeated code to calculate scale_c2l. This should be
-! cleaned up.
-!   - At a minimum, should collect the repeated code into a subroutine to eliminate this
-!   repitition
-!   - The best thing might be to use a lookup array, as is done for scale_l2g
-! -----------------------------------------------------------------------
+  
+  ! WJS (10-14-11): TODO:
+  ! 
+  ! - I believe that scale_p2c, scale_c2l and scale_l2g should be included in the sumwt
+  ! accumulations (e.g., sumwt = sumwt + wtgcell * scale_p2c * scale_c2l * scale_l2g), but
+  ! that requires some more thought to (1) make sure that is correct, and (2) make sure it
+  ! doesn't break the urban scaling. (See also my notes in create_scale_l2g_lookup.)
+  !   - Once that is done, you could use a scale of 0, avoiding the need for the use of
+  !   spval and the special checks that requires.
+  !
+  ! - Currently, there is a lot of repeated code to calculate scale_c2l. This should be
+  ! cleaned up.
+  !   - At a minimum, should collect the repeated code into a subroutine to eliminate this
+  !   repitition
+  !   - The best thing might be to use a lookup array, as is done for scale_l2g
+  ! -----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: p2c_1d
-!
-! !INTERFACE:
-  subroutine p2c_1d (lbp, ubp, lbc, ubc, parr, carr, p2c_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from pfts to columns.
-! Averaging is only done for points that are not equal to "spval".
-!
-! !USES:
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine p2c_1d (bounds, parr, carr, p2c_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from pfts to columns.
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbp, ubp              ! beginning and ending pft
-    integer , intent(in)  :: lbc, ubc              ! beginning and ending column
-    real(r8), intent(in)  :: parr(lbp:ubp)         ! pft array
-    real(r8), intent(out) :: carr(lbc:ubc)         ! column array
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    real(r8), intent(in)  :: parr(bounds%begp:)         ! pft array
+    real(r8), intent(out) :: carr(bounds%begc:)         ! column array
     character(len=*), intent(in) :: p2c_scale_type ! scale type
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: pi,p,c,index           ! indices
-    real(r8) :: scale_p2c(lbp:ubp)     ! scale factor for column->landunit mapping
+    real(r8) :: scale_p2c(bounds%begp:bounds%endp)     ! scale factor for column->landunit mapping
     logical  :: found                  ! temporary for error check
-    real(r8) :: sumwt(lbc:ubc)         ! sum of weights
-!------------------------------------------------------------------------
+    real(r8) :: sumwt(bounds%begc:bounds%endc)         ! sum of weights
+    !------------------------------------------------------------------------
 
     if (p2c_scale_type == 'unity') then
-       do p = lbp,ubp
+       do p = bounds%begp,bounds%endp
           scale_p2c(p) = 1.0_r8
        end do
     else
@@ -125,9 +104,9 @@ contains
        call endrun()
     end if
 
-    carr(lbc:ubc) = spval
-    sumwt(lbc:ubc) = 0._r8
-    do p = lbp,ubp
+    carr(bounds%begc:bounds%endc) = spval
+    sumwt(bounds%begc:bounds%endc) = 0._r8
+    do p = bounds%begp,bounds%endp
        if (pft%active(p) .and. pft%wtcol(p) /= 0._r8) then
           if (parr(p) /= spval) then
              c = pft%column(p)
@@ -138,7 +117,7 @@ contains
        end if
     end do
     found = .false.
-    do c = lbc,ubc
+    do c = bounds%begc,bounds%endc
        if (sumwt(c) > 1.0_r8 + 1.e-6_r8) then
           found = .true.
           index = c
@@ -153,43 +132,30 @@ contains
 
   end subroutine p2c_1d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: p2c_2d
-!
-! !INTERFACE:
-  subroutine p2c_2d (lbp, ubp, lbc, ubc, num2d, parr, carr, p2c_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from landunits to gridcells.
-! Averaging is only done for points that are not equal to "spval".
-!
-! !USES:
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine p2c_2d (bounds, num2d, parr, carr, p2c_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from landunits to gridcells.
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbp, ubp              ! beginning and ending pft
-    integer , intent(in)  :: lbc, ubc              ! beginning and ending column
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer , intent(in)  :: num2d                 ! size of second dimension
-    real(r8), intent(in)  :: parr(lbp:ubp,num2d)   ! pft array
-    real(r8), intent(out) :: carr(lbc:ubc,num2d)   ! column array
+    real(r8), intent(in)  :: parr(bounds%begp:,:)   ! pft array
+    real(r8), intent(out) :: carr(bounds%begc:,:)   ! column array
     character(len=*), intent(in) :: p2c_scale_type ! scale type
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: j,pi,p,c,index         ! indices
-    real(r8) :: scale_p2c(lbp:ubp)     ! scale factor for column->landunit mapping
+    real(r8) :: scale_p2c(bounds%begp:bounds%endp)     ! scale factor for column->landunit mapping
     logical  :: found                  ! temporary for error check
-    real(r8) :: sumwt(lbc:ubc)         ! sum of weights
-!------------------------------------------------------------------------
+    real(r8) :: sumwt(bounds%begc:bounds%endc)         ! sum of weights
+    !------------------------------------------------------------------------
 
     if (p2c_scale_type == 'unity') then
-       do p = lbp,ubp
+       do p = bounds%begp,bounds%endp
           scale_p2c(p) = 1.0_r8
        end do
     else
@@ -200,7 +166,7 @@ contains
     carr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-       do p = lbp,ubp
+       do p = bounds%begp,bounds%endp
           if (pft%active(p) .and. pft%wtcol(p) /= 0._r8) then
              if (parr(p,j) /= spval) then
                 c = pft%column(p)
@@ -211,7 +177,7 @@ contains
           end if
        end do
        found = .false.
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           if (sumwt(c) > 1.0_r8 + 1.e-6_r8) then
              found = .true.
              index = c
@@ -226,30 +192,23 @@ contains
     end do 
   end subroutine p2c_2d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: p2c_1d_filter
-!
-! !INTERFACE:
-  subroutine p2c_1d_filter (lbp, ubp, lbc, ubc, numfc, filterc,  pftarr, colarr)
-!
-! !DESCRIPTION:
-! perform pft to column averaging for single level pft arrays
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine p2c_1d_filter (bounds, numfc, filterc,  pftarr, colarr)
+    !
+    ! !DESCRIPTION:
+    ! perform pft to column averaging for single level pft arrays
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbp, ubp        
-    integer , intent(in)  :: lbc, ubc        
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer , intent(in)  :: numfc
     integer , intent(in)  :: filterc(numfc)
-    real(r8), intent(in)  :: pftarr(lbp:ubp)
-    real(r8), intent(out) :: colarr(lbc:ubc)
-!
-! !LOCAL VARIABLES:
-!EOP
+    real(r8), intent(in)  :: pftarr(bounds%begp:)
+    real(r8), intent(out) :: colarr(bounds%begc:)
+    !
+    ! !LOCAL VARIABLES:
     integer :: fc,c,p  ! indices
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     do fc = 1,numfc
        c = filterc(fc)
@@ -261,33 +220,23 @@ contains
 
   end subroutine p2c_1d_filter
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: p2c_2d_filter
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine p2c_2d_filter (lev, numfc, filterc, pftarr, colarr)
-!
-! !DESCRIPTION:
-! perform pft to column averaging for multi level pft arrays
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION:
+    ! perform pft to column averaging for multi level pft arrays
+    !
+    ! !ARGUMENTS:
     implicit none
     integer , intent(in)  :: lev
     integer , intent(in)  :: numfc
     integer , intent(in)  :: filterc(numfc)
     real(r8), pointer     :: pftarr(:,:)
     real(r8), pointer     :: colarr(:,:)
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer :: fc,c,pi,p,j    ! indices
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     do j = 1,lev
        do fc = 1,numfc
@@ -301,49 +250,35 @@ contains
 
   end subroutine p2c_2d_filter
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: p2l_1d
-!
-! !INTERFACE:
-  subroutine p2l_1d (lbp, ubp, lbc, ubc, lbl, ubl, parr, larr, &
-       p2c_scale_type, c2l_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from pfts to landunits
-! Averaging is only done for points that are not equal to "spval".
-!
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine p2l_1d (bounds, parr, larr, p2c_scale_type, c2l_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from pfts to landunits
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbp, ubp              ! beginning and ending pft indices
-    integer , intent(in)  :: lbc, ubc              ! beginning and ending column indices
-    integer , intent(in)  :: lbl, ubl              ! beginning and ending landunit indices
-    real(r8), intent(in)  :: parr(lbp:ubp)         ! input column array
-    real(r8), intent(out) :: larr(lbl:ubl)         ! output landunit array
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    real(r8), intent(in)  :: parr(bounds%begp:)         ! input column array
+    real(r8), intent(out) :: larr(bounds%begl:)         ! output landunit array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: pi,p,c,l,index         ! indices
     logical  :: found                  ! temporary for error check
-    real(r8) :: sumwt(lbl:ubl)         ! sum of weights
-    real(r8) :: scale_p2c(lbc:ubc)     ! scale factor for pft->column mapping
-    real(r8) :: scale_c2l(lbc:ubc)     ! scale factor for column->landunit mapping
-!------------------------------------------------------------------------
+    real(r8) :: sumwt(bounds%begl:bounds%endl)         ! sum of weights
+    real(r8) :: scale_p2c(bounds%begc:bounds%endc)     ! scale factor for pft->column mapping
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
+    !------------------------------------------------------------------------
 
     if (c2l_scale_type == 'unity') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           scale_c2l(c) = 1.0_r8
        end do
     else if (c2l_scale_type == 'urbanf') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -360,7 +295,7 @@ contains
           end if
        end do
     else if (c2l_scale_type == 'urbans') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -382,7 +317,7 @@ contains
     end if
 
     if (p2c_scale_type == 'unity') then
-       do p = lbp,ubp
+       do p = bounds%begp,bounds%endp
           scale_p2c(p) = 1.0_r8
        end do
     else
@@ -392,7 +327,7 @@ contains
 
     larr(:) = spval
     sumwt(:) = 0._r8
-    do p = lbp,ubp
+    do p = bounds%begp,bounds%endp
        if (pft%active(p) .and. pft%wtlunit(p) /= 0._r8) then
           c = pft%column(p)
           if (parr(p) /= spval .and. scale_c2l(c) /= spval) then
@@ -404,7 +339,7 @@ contains
        end if
     end do
     found = .false.
-    do l = lbl,ubl
+    do l = bounds%begl,bounds%endl
        if (sumwt(l) > 1.0_r8 + 1.e-6_r8) then
           found = .true.
           index = l
@@ -419,51 +354,36 @@ contains
 
   end subroutine p2l_1d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: p2l_2d
-!
-! !INTERFACE:
-  subroutine p2l_2d(lbp, ubp, lbc, ubc, lbl, ubl, num2d, parr, larr, &
-       p2c_scale_type, c2l_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from pfts to landunits
-! Averaging is only done for points that are not equal to "spval".
-!
-! !USES:
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine p2l_2d(bounds, num2d, parr, larr, p2c_scale_type, c2l_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from pfts to landunits
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbp, ubp              ! beginning and ending pft indices
-    integer , intent(in)  :: lbc, ubc              ! beginning and ending column indices
-    integer , intent(in)  :: lbl, ubl              ! beginning and ending landunit indices
+    type(bounds_type), intent(in) :: bounds        ! bounds
     integer , intent(in)  :: num2d                 ! size of second dimension
-    real(r8), intent(in)  :: parr(lbp:ubp,num2d)   ! input pft array
-    real(r8), intent(out) :: larr(lbl:ubl,num2d)   ! output gridcell array
+    real(r8), intent(in)  :: parr(bounds%begp:,:)  ! input pft array
+    real(r8), intent(out) :: larr(bounds%begl:,:)  ! output gridcell array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: j,pi,p,c,l,index       ! indices
     logical  :: found                  ! temporary for error check
-    real(r8) :: sumwt(lbl:ubl)         ! sum of weights
-    real(r8) :: scale_p2c(lbc:ubc)     ! scale factor for pft->column mapping
-    real(r8) :: scale_c2l(lbc:ubc)     ! scale factor for column->landunit mapping
-!------------------------------------------------------------------------
+    real(r8) :: sumwt(bounds%begl:bounds%endl)         ! sum of weights
+    real(r8) :: scale_p2c(bounds%begc:bounds%endc)     ! scale factor for pft->column mapping
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
+    !------------------------------------------------------------------------
 
     if (c2l_scale_type == 'unity') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           scale_c2l(c) = 1.0_r8
        end do
     else if (c2l_scale_type == 'urbanf') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -480,7 +400,7 @@ contains
           end if
        end do
     else if (c2l_scale_type == 'urbans') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -502,7 +422,7 @@ contains
     end if
 
     if (p2c_scale_type == 'unity') then
-       do p = lbp,ubp
+       do p = bounds%begp,bounds%endp
           scale_p2c(p) = 1.0_r8
        end do
     else
@@ -513,7 +433,7 @@ contains
     larr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-       do p = lbp,ubp
+       do p = bounds%begp,bounds%endp
           if (pft%active(p) .and. pft%wtlunit(p) /= 0._r8) then
              c = pft%column(p)
              if (parr(p,j) /= spval .and. scale_c2l(c) /= spval) then
@@ -525,7 +445,7 @@ contains
           end if
        end do
        found = .false.
-       do l = lbl,ubl
+       do l = bounds%begl,bounds%endl
           if (sumwt(l) > 1.0_r8 + 1.e-6_r8) then
              found = .true.
              index = l
@@ -541,54 +461,39 @@ contains
 
   end subroutine p2l_2d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: p2g_1d
-!
-! !INTERFACE:
-  subroutine p2g_1d(lbp, ubp, lbc, ubc, lbl, ubl, lbg, ubg, parr, garr, &
-       p2c_scale_type, c2l_scale_type, l2g_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from pfts to gridcells.
-! Averaging is only done for points that are not equal to "spval".
-!
-! !USES:
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine p2g_1d(bounds, parr, garr, p2c_scale_type, c2l_scale_type, l2g_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from pfts to gridcells.
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbp, ubp            ! beginning and ending pft indices
-    integer , intent(in)  :: lbc, ubc            ! beginning and ending column indices
-    integer , intent(in)  :: lbl, ubl            ! beginning and ending landunit indices
-    integer , intent(in)  :: lbg, ubg            ! beginning and ending gridcell indices
-    real(r8), intent(in)  :: parr(lbp:ubp)       ! input pft array
-    real(r8), intent(out) :: garr(lbg:ubg)       ! output gridcell array
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    real(r8), intent(in)  :: parr(bounds%begp:)       ! input pft array
+    real(r8), intent(out) :: garr(bounds%begg:)       ! output gridcell array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!  !LOCAL VARIABLES:
-!EOP
+    !
+    !  !LOCAL VARIABLES:
     integer  :: pi,p,c,l,g,index       ! indices
     logical  :: found                  ! temporary for error check
-    real(r8) :: scale_p2c(lbp:ubp)     ! scale factor
-    real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
-    real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
-    real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-!------------------------------------------------------------------------
+    real(r8) :: scale_p2c(bounds%begp:bounds%endp)     ! scale factor
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor
+    real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
+    real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
+    !------------------------------------------------------------------------
 
-    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
+    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
 
     if (c2l_scale_type == 'unity') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           scale_c2l(c) = 1.0_r8
        end do
     else if (c2l_scale_type == 'urbanf') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -605,7 +510,7 @@ contains
           end if
        end do
     else if (c2l_scale_type == 'urbans') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -627,7 +532,7 @@ contains
     end if
 
     if (p2c_scale_type == 'unity') then
-       do p = lbp,ubp
+       do p = bounds%begp,bounds%endp
           scale_p2c(p) = 1.0_r8
        end do
     else
@@ -637,7 +542,7 @@ contains
 
     garr(:) = spval
     sumwt(:) = 0._r8
-    do p = lbp,ubp
+    do p = bounds%begp,bounds%endp
        if (pft%active(p) .and. pft%wtgcell(p) /= 0._r8) then
           c = pft%column(p)
           l = pft%landunit(p)
@@ -650,7 +555,7 @@ contains
        end if
     end do
     found = .false.
-    do g = lbg, ubg
+    do g = bounds%begg, bounds%endg
        if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then
           found = .true.
           index = g
@@ -665,56 +570,42 @@ contains
 
   end subroutine p2g_1d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: p2g_2d
-!
-! !INTERFACE:
-  subroutine p2g_2d(lbp, ubp, lbc, ubc, lbl, ubl, lbg, ubg, num2d, &
-       parr, garr, p2c_scale_type, c2l_scale_type, l2g_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from pfts to gridcells.
-! Averaging is only done for points that are not equal to "spval".
-!
-! !USES:
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine p2g_2d(bounds, num2d, parr, garr, p2c_scale_type, c2l_scale_type, l2g_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from pfts to gridcells.
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbp, ubp              ! beginning and ending pft indices
-    integer , intent(in)  :: lbc, ubc              ! beginning and ending column indices
-    integer , intent(in)  :: lbl, ubl              ! beginning and ending landunit indices
-    integer , intent(in)  :: lbg, ubg              ! beginning and ending gridcell indices
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer , intent(in)  :: num2d                 ! size of second dimension
-    real(r8), intent(in)  :: parr(lbp:ubp,num2d)   ! input pft array
-    real(r8), intent(out) :: garr(lbg:ubg,num2d)   ! output gridcell array
+    real(r8), intent(in)  :: parr(bounds%begp:,:)  ! input pft array
+    real(r8), intent(out) :: garr(bounds%begg:,:)  ! output gridcell array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: j,pi,p,c,l,g,index     ! indices
     logical  :: found                  ! temporary for error check
-    real(r8) :: scale_p2c(lbp:ubp)     ! scale factor
-    real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
-    real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
-    real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-!------------------------------------------------------------------------
+    real(r8) :: scale_p2c(bounds%begp:bounds%endp)     ! scale factor
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor
+    real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
+    real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
+    !------------------------------------------------------------------------
 
-    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
+    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
 
     if (c2l_scale_type == 'unity') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           scale_c2l(c) = 1.0_r8
        end do
     else if (c2l_scale_type == 'urbanf') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -731,7 +622,7 @@ contains
           end if
        end do
     else if (c2l_scale_type == 'urbans') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -753,7 +644,7 @@ contains
     end if
 
     if (p2c_scale_type == 'unity') then
-       do p = lbp,ubp
+       do p = bounds%begp,bounds%endp
           scale_p2c(p) = 1.0_r8
        end do
     else
@@ -764,7 +655,7 @@ contains
     garr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-       do p = lbp,ubp
+       do p = bounds%begp,bounds%endp 
           if (pft%active(p) .and. pft%wtgcell(p) /= 0._r8) then
              c = pft%column(p)
              l = pft%landunit(p)
@@ -777,7 +668,7 @@ contains
           end if
        end do
        found = .false.
-       do g = lbg, ubg
+       do g = bounds%begg, bounds%endg
           if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then
              found = .true.
              index = g
@@ -794,44 +685,33 @@ contains
   end subroutine p2g_2d
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: c2l_1d
-!
-! !INTERFACE:
-  subroutine c2l_1d (lbc, ubc, lbl, ubl, carr, larr, c2l_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from columns to landunits
-! Averaging is only done for points that are not equal to "spval".
-!
-! !ARGUMENTS:
+  subroutine c2l_1d (bounds, carr, larr, c2l_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from columns to landunits
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbc, ubc      ! beginning and ending column indices
-    integer , intent(in)  :: lbl, ubl      ! beginning and ending landunit indices
-    real(r8), intent(in)  :: carr(lbc:ubc) ! input column array
-    real(r8), intent(out) :: larr(lbl:ubl) ! output landunit array
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    real(r8), intent(in)  :: carr(bounds%begc:) ! input column array
+    real(r8), intent(out) :: larr(bounds%begl:) ! output landunit array
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: ci,c,l,index           ! indices
     integer  :: max_col_per_lu         ! max columns per landunit; on the fly
     logical  :: found                  ! temporary for error check
-    real(r8) :: scale_c2l(lbc:ubc)     ! scale factor for column->landunit mapping
-    real(r8) :: sumwt(lbl:ubl)         ! sum of weights
-!------------------------------------------------------------------------
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
+    real(r8) :: sumwt(bounds%begl:bounds%endl)         ! sum of weights
+    !------------------------------------------------------------------------
 
     if (c2l_scale_type == 'unity') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           scale_c2l(c) = 1.0_r8
        end do
     else if (c2l_scale_type == 'urbanf') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -848,7 +728,7 @@ contains
           end if
        end do
     else if (c2l_scale_type == 'urbans') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -871,7 +751,7 @@ contains
 
     larr(:) = spval
     sumwt(:) = 0._r8
-    do c = lbc,ubc
+    do c = bounds%begc,bounds%endc
        if (col%active(c) .and. pft%wtlunit(c) /= 0._r8) then
           if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
              l = col%landunit(c)
@@ -882,7 +762,7 @@ contains
        end if
     end do
     found = .false.
-    do l = lbl,ubl
+    do l = bounds%begl,bounds%endl
        if (sumwt(l) > 1.0_r8 + 1.e-6_r8) then
           found = .true.
           index = l
@@ -897,46 +777,35 @@ contains
 
   end subroutine c2l_1d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: c2l_2d
-!
-! !INTERFACE:
-  subroutine c2l_2d (lbc, ubc, lbl, ubl, num2d, carr, larr, c2l_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from columns to landunits
-! Averaging is only done for points that are not equal to "spval".
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine c2l_2d (bounds, num2d, carr, larr, c2l_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from columns to landunits
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbc, ubc            ! beginning and ending column indices
-    integer , intent(in)  :: lbl, ubl            ! beginning and ending landunit indices
-    integer , intent(in)  :: num2d               ! size of second dimension
-    real(r8), intent(in)  :: carr(lbc:ubc,num2d) ! input column array
-    real(r8), intent(out) :: larr(lbl:ubl,num2d) ! output landunit array
+    type(bounds_type), intent(in) :: bounds        ! bounds
+    integer , intent(in)  :: num2d                 ! size of second dimension
+    real(r8), intent(in)  :: carr(bounds%begc:,:)  ! input column array
+    real(r8), intent(out) :: larr(bounds%begl:,:)  ! output landunit array
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: j,l,ci,c,index         ! indices
     integer  :: max_col_per_lu         ! max columns per landunit; on the fly
     logical  :: found                  ! temporary for error check
-    real(r8) :: scale_c2l(lbc:ubc)        ! scale factor for column->landunit mapping
-    real(r8) :: sumwt(lbl:ubl)         ! sum of weights
-!------------------------------------------------------------------------
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc)        ! scale factor for column->landunit mapping
+    real(r8) :: sumwt(bounds%begl:bounds%endl)         ! sum of weights
+    !------------------------------------------------------------------------
 
     if (c2l_scale_type == 'unity') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           scale_c2l(c) = 1.0_r8
        end do
     else if (c2l_scale_type == 'urbanf') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -953,7 +822,7 @@ contains
           end if
        end do
     else if (c2l_scale_type == 'urbans') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -977,7 +846,7 @@ contains
     larr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           if (col%active(c) .and. pft%wtlunit(c) /= 0._r8) then
              if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
                 l = col%landunit(c)
@@ -988,7 +857,7 @@ contains
           end if
        end do
        found = .false.
-       do l = lbl,ubl
+       do l = bounds%begl,bounds%endl
           if (sumwt(l) > 1.0_r8 + 1.e-6_r8) then
              found = .true.
              index = l
@@ -1004,51 +873,38 @@ contains
 
   end subroutine c2l_2d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: c2g_1d
-!
-! !INTERFACE:
-  subroutine c2g_1d(lbc, ubc, lbl, ubl, lbg, ubg, carr, garr, &
-       c2l_scale_type, l2g_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from columns to gridcells.
-! Averaging is only done for points that are not equal to "spval".
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine c2g_1d(bounds, carr, garr, c2l_scale_type, l2g_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from columns to gridcells.
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbc, ubc              ! beginning and ending column indices
-    integer , intent(in)  :: lbl, ubl              ! beginning and ending landunit indices
-    integer , intent(in)  :: lbg, ubg              ! beginning and ending landunit indices
-    real(r8), intent(in)  :: carr(lbc:ubc)         ! input column array
-    real(r8), intent(out) :: garr(lbg:ubg)         ! output gridcell array
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    real(r8), intent(in)  :: carr(bounds%begc:)         ! input column array
+    real(r8), intent(out) :: garr(bounds%begg:)         ! output gridcell array
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: ci,c,l,g,index         ! indices
     integer  :: max_col_per_gcell      ! max columns per gridcell; on the fly
     logical  :: found                  ! temporary for error check
-    real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
-    real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
-    real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-!------------------------------------------------------------------------
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor
+    real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
+    real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
+    !------------------------------------------------------------------------
 
-    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
+    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
 
     if (c2l_scale_type == 'unity') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           scale_c2l(c) = 1.0_r8
        end do
     else if (c2l_scale_type == 'urbanf') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -1065,7 +921,7 @@ contains
           end if
        end do
     else if (c2l_scale_type == 'urbans') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -1088,7 +944,7 @@ contains
 
     garr(:) = spval
     sumwt(:) = 0._r8
-    do c = lbc,ubc
+    do c = bounds%begc,bounds%endc
        if (col%active(c) .and. col%wtgcell(c) /= 0._r8) then
           l = col%landunit(c)
           if (carr(c) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
@@ -1100,7 +956,7 @@ contains
        end if
     end do
     found = .false.
-    do g = lbg, ubg
+    do g = bounds%begg, bounds%endg
        if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then
           found = .true.
           index = g
@@ -1115,52 +971,39 @@ contains
 
   end subroutine c2g_1d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: c2g_2d
-!
-! !INTERFACE:
-  subroutine c2g_2d(lbc, ubc, lbl, ubl, lbg, ubg, num2d, carr, garr, &
-       c2l_scale_type, l2g_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from columns to gridcells.
-! Averaging is only done for points that are not equal to "spval".
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine c2g_2d(bounds, num2d, carr, garr, c2l_scale_type, l2g_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from columns to gridcells.
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbc, ubc              ! beginning and ending column indices
-    integer , intent(in)  :: lbl, ubl              ! beginning and ending landunit indices
-    integer , intent(in)  :: lbg, ubg              ! beginning and ending gridcell indices
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer , intent(in)  :: num2d                 ! size of second dimension
-    real(r8), intent(in)  :: carr(lbc:ubc,num2d)   ! input column array
-    real(r8), intent(out) :: garr(lbg:ubg,num2d)   ! output gridcell array
+    real(r8), intent(in)  :: carr(bounds%begc:,:)  ! input column array
+    real(r8), intent(out) :: garr(bounds%begg:,:)  ! output gridcell array
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: j,ci,c,g,l,index       ! indices
     integer  :: max_col_per_gcell      ! max columns per gridcell; on the fly
     logical  :: found                  ! temporary for error check
-    real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
-    real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
-    real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-!------------------------------------------------------------------------
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor
+    real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
+    real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
+    !------------------------------------------------------------------------
 
-    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
+    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
 
     if (c2l_scale_type == 'unity') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           scale_c2l(c) = 1.0_r8
        end do
     else if (c2l_scale_type == 'urbanf') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -1177,7 +1020,7 @@ contains
           end if
        end do
     else if (c2l_scale_type == 'urbans') then
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc
           l = col%landunit(c) 
           if (lun%urbpoi(l)) then
              if (col%itype(c) == icol_sunwall) then
@@ -1201,7 +1044,7 @@ contains
     garr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-       do c = lbc,ubc
+       do c = bounds%begc,bounds%endc 
           if (col%active(c) .and. col%wtgcell(c) /= 0._r8) then
              l = col%landunit(c)
              if (carr(c,j) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
@@ -1213,7 +1056,7 @@ contains
           end if
        end do
        found = .false.
-       do g = lbg, ubg
+       do g = bounds%begg, bounds%endg
           if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then
              found = .true.
              index = g
@@ -1229,44 +1072,33 @@ contains
 
   end subroutine c2g_2d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: l2g_1d
-!
-! !INTERFACE:
-  subroutine l2g_1d(lbl, ubl, lbg, ubg, larr, garr, l2g_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from landunits to gridcells.
-! Averaging is only done for points that are not equal to "spval".
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine l2g_1d(bounds, larr, garr, l2g_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from landunits to gridcells.
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbl, ubl       ! beginning and ending sub landunit indices
-    integer , intent(in)  :: lbg, ubg       ! beginning and ending gridcell indices
-    real(r8), intent(in)  :: larr(lbl:ubl)  ! input landunit array
-    real(r8), intent(out) :: garr(lbg:ubg)  ! output gridcell array
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    real(r8), intent(in)  :: larr(bounds%begl:)  ! input landunit array
+    real(r8), intent(out) :: garr(bounds%begg:)  ! output gridcell array
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: li,l,g,index           ! indices
     integer  :: max_lu_per_gcell       ! max landunits per gridcell; on the fly
     logical  :: found                  ! temporary for error check
-    real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
-    real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-!------------------------------------------------------------------------
+    real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
+    real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
+    !------------------------------------------------------------------------
 
-    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
+    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
 
     garr(:) = spval
     sumwt(:) = 0._r8
-    do l = lbl,ubl
+    do l = bounds%begl,bounds%endl
        if (lun%active(l) .and. lun%wtgcell(l) /= 0._r8) then
           if (larr(l) /= spval .and. scale_l2g(l) /= spval) then
              g = lun%gridcell(l)
@@ -1277,7 +1109,7 @@ contains
        end if
     end do
     found = .false.
-    do g = lbg, ubg
+    do g = bounds%begg, bounds%endg
        if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then
           found = .true.
           index = g
@@ -1292,46 +1124,35 @@ contains
 
   end subroutine l2g_1d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: l2g_2d
-!
-! !INTERFACE:
-  subroutine l2g_2d(lbl, ubl, lbg, ubg, num2d, larr, garr, l2g_scale_type)
-!
-! !DESCRIPTION:
-! Perfrom subgrid-average from landunits to gridcells.
-! Averaging is only done for points that are not equal to "spval".
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine l2g_2d(bounds, num2d, larr, garr, l2g_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Perfrom subgrid-average from landunits to gridcells.
+    ! Averaging is only done for points that are not equal to "spval".
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbl, ubl             ! beginning and ending column indices
-    integer , intent(in)  :: lbg, ubg             ! beginning and ending gridcell indices
-    integer , intent(in)  :: num2d                ! size of second dimension
-    real(r8), intent(in)  :: larr(lbl:ubl,num2d)  ! input landunit array
-    real(r8), intent(out) :: garr(lbg:ubg,num2d)  ! output gridcell array
+    type(bounds_type), intent(in) :: bounds        ! bounds
+    integer , intent(in)  :: num2d                 ! size of second dimension
+    real(r8), intent(in)  :: larr(bounds%begl:,:)  ! input landunit array
+    real(r8), intent(out) :: garr(bounds%begg:,:)  ! output gridcell array
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: j,g,li,l,index         ! indices
     integer  :: max_lu_per_gcell       ! max landunits per gridcell; on the fly
     logical  :: found                  ! temporary for error check
-    real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
-    real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-!------------------------------------------------------------------------
+    real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
+    real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
+    !------------------------------------------------------------------------
 
-    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
+    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
 
     garr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-       do l = lbl,ubl
+       do l = bounds%begl,bounds%endl
           if (lun%active(l) .and. lun%wtgcell(l) /= 0._r8) then
              if (larr(l,j) /= spval .and. scale_l2g(l) /= spval) then
                 g = lun%gridcell(l)
@@ -1342,7 +1163,7 @@ contains
           end if
        end do
        found = .false.
-       do g = lbg,ubg
+       do g = bounds%begg,bounds%endg
           if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then
              found = .true.
              index= g
@@ -1358,71 +1179,51 @@ contains
 
   end subroutine l2g_2d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: build_scale_l2g
-!
-! !INTERFACE:
-  subroutine build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
-!
-! !DESCRIPTION:
-! Fill the scale_l2g(lbl:ubl) array with appropriate values for the given l2g_scale_type.
-! This array can later be used to scale each landunit in forming grid cell averages.
-!
-! !USES:
-     use clm_varcon, only : max_lunit
-!
-! !ARGUMENTS:
-     implicit none
-     character(len=*), intent(in)  :: l2g_scale_type     ! scale factor type for averaging
-     integer         , intent(in)  :: lbl, ubl           ! beginning and ending column indices
-     real(r8)        , intent(out) :: scale_l2g(lbl:ubl) ! scale factor 
-!
-! !REVISION HISTORY:
-! Created by Bill Sacks 10/11
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-     real(r8) :: scale_lookup(max_lunit) ! scale factor for each landunit type
-     integer  :: l                       ! index
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
+    !
+    ! !DESCRIPTION:
+    ! Fill the scale_l2g(bounds%begl:bounds%endl) array with appropriate values for the given l2g_scale_type.
+    ! This array can later be used to scale each landunit in forming grid cell averages.
+    !
+    ! !USES:
+    use clm_varcon, only : max_lunit
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    character(len=*), intent(in)  :: l2g_scale_type     ! scale factor type for averaging
+    real(r8)        , intent(out) :: scale_l2g(bounds%begl:) ! scale factor 
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: scale_lookup(max_lunit) ! scale factor for each landunit type
+    integer  :: l                       ! index
+    !-----------------------------------------------------------------------
      
      call create_scale_l2g_lookup(l2g_scale_type, scale_lookup)
 
-     do l = lbl,ubl
+     do l = bounds%begl,bounds%endl
         scale_l2g(l) = scale_lookup(lun%itype(l))
      end do
 
   end subroutine build_scale_l2g
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: create_scale_l2g_lookup
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine create_scale_l2g_lookup(l2g_scale_type, scale_lookup)
-! 
-! DESCRIPTION:
-! Create a lookup array, scale_lookup(1..max_lunit), which gives the scale factor for
-! each landunit type depending on l2g_scale_type
-!
-! !USES:
-     use clm_varcon, only : istsoil, istcrop, istice, istice_mec, istdlak, istwet, &
-                            isturb_MIN, isturb_MAX, max_lunit, spval
-!
-! !ARGUMENTS:
-     implicit none
-     character(len=*), intent(in)  :: l2g_scale_type           ! scale factor type for averaging
-     real(r8)        , intent(out) :: scale_lookup(max_lunit)  ! scale factor for each landunit type
-!
-! !REVISION HISTORY:
-! Created by Bill Sacks 10/11
-!
-!EOP
-!-----------------------------------------------------------------------
+    ! 
+    ! DESCRIPTION:
+    ! Create a lookup array, scale_lookup(1..max_lunit), which gives the scale factor for
+    ! each landunit type depending on l2g_scale_type
+    !
+    ! !USES:
+    use clm_varcon, only : istsoil, istcrop, istice, istice_mec, istdlak, istwet, &
+         isturb_MIN, isturb_MAX, max_lunit, spval
+    !
+    ! !ARGUMENTS:
+    implicit none
+    character(len=*), intent(in)  :: l2g_scale_type           ! scale factor type for averaging
+    real(r8)        , intent(out) :: scale_lookup(max_lunit)  ! scale factor for each landunit type
+    !-----------------------------------------------------------------------
 
      ! ------------ WJS (10-14-11): IMPORTANT GENERAL NOTES ------------
      !

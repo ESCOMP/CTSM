@@ -1,77 +1,45 @@
 module SLakeRestMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: SLakeRestMod
-!
-! !DESCRIPTION:
-! Reads from or writes restart data
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Reads from or writes restart data
+  !
+  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils,   only : endrun
-!
-! !PUBLIC TYPES:
+  !
+  ! !PUBLIC TYPES:
   implicit none
   private
-! save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  ! save
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: SLakeRest
-!
-! !REVISION HISTORY:
-! 2009, June: Created by Zack Subin
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: SLakeRest
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine SLakeRest( ncid, flag )
-!
-! !DESCRIPTION:
-! Read/Write biogeophysics information to/from restart file.
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Read/Write biogeophysics information to/from restart file.
+    !
+    ! !USES:
     use clmtype
     use ncdio_pio
-    use decompMod     , only : get_proc_bounds
     use clm_time_manager , only : is_restart
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
     type(file_desc_t), intent(inout) :: ncid ! netcdf id
     character(len=*), intent(in) :: flag     ! 'read' or 'write'
-!
-! !CALLED FROM:
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-! 12/11/2003, Peter Thornton: Added cps%coszen, pps%gdir, and pps%omega
-!   for new sunlit/shaded canopy algorithm (in SUNSHA ifdef block)
-! 4/25/2005, Peter Thornton: Removed the SUNSHA ifdefs, since this is now the
-!   default code behavior.
-! 6/12/2005, Moved to netcdf format and renamed file
-! 6/2009, Zack Subin: Adapted for S Lake physics.
-!
-!EOP
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer :: c,l,g,j      ! indices
-    integer :: begp, endp   ! per-proc beginning and ending pft indices
-    integer :: begc, endc   ! per-proc beginning and ending column indices
-    integer :: begl, endl   ! per-proc beginning and ending landunit indices
-    integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     logical :: readvar      ! determine if variable is on initial file
     character(len=128) :: varname         ! temporary
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! Note t_lake is already in BiogeophysRest.
 

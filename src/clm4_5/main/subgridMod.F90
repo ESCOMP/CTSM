@@ -1,14 +1,10 @@
 module subgridMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: subgridMod
-!
-! !DESCRIPTION:
-! sub-grid data and mapping types and modules
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! sub-grid data and mapping types and modules
+  !
+  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
@@ -18,52 +14,37 @@ module subgridMod
   private	
   save
 
-! !PUBLIC MEMBER FUNCTIONS:
+  ! !PUBLIC MEMBER FUNCTIONS:
   public subgrid_get_gcellinfo        ! Obtain gridcell properties
-
-
-! !REVISION HISTORY:
-! 2006.07.04 T Craig, rename initSubgridMod
-!
-!
-! !PRIVATE MEMBER FUNCTIONS: None
-!
-! !PRIVATE DATA MEMBERS: None
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: subgrid_get_gcellinfo
-!
-! !INTERFACE:
+  !------------------------------------------------------------------------------
   subroutine subgrid_get_gcellinfo (gi, &
-                             nlunits, ncols, npfts, &
-                             nveg, &
-                             ncrop, &
-                             nurban_tbd, &
-                             nurban_hd, &
-                             nurban_md, &
-                             nlake, &
-                             nwetland, &
-                             nglacier, &
-                             nglacier_mec,  &
-                             glcmask)
-!
-! !DESCRIPTION:
-! Obtain gridcell properties
-!
-! !USES
-  use clm_varpar  , only : natpft_size, cft_size, maxpatch_urb, maxpatch_glcmec
-  use clm_varctl  , only : allocate_all_vegpfts, create_crop_landunit
-  use clm_varsur  , only : wt_lunit, wt_glc_mec
-  use clm_varcon  , only : istsoil, istcrop, istice, istice_mec, istdlak, istwet, &
-                           isturb_tbd, isturb_hd, isturb_md
-
-! !ARGUMENTS
+       nlunits, ncols, npfts, &
+       nveg, &
+       ncrop, &
+       nurban_tbd, &
+       nurban_hd, &
+       nurban_md, &
+       nlake, &
+       nwetland, &
+       nglacier, &
+       nglacier_mec,  &
+       glcmask)
+    !
+    ! !DESCRIPTION:
+    ! Obtain gridcell properties
+    !
+    ! !USES
+    use clm_varpar  , only : natpft_size, cft_size, maxpatch_urb, maxpatch_glcmec
+    use clm_varctl  , only : create_crop_landunit
+    use clm_varsur  , only : wt_lunit, wt_glc_mec
+    use clm_varcon  , only : istsoil, istcrop, istice, istice_mec, istdlak, istwet, &
+                             isturb_tbd, isturb_hd, isturb_md
+    !
+    ! !ARGUMENTS
     implicit none
     integer , intent(in)  :: gi                   ! grid cell index
     integer , optional, intent(out) :: nlunits    ! number of landunits
@@ -79,23 +60,15 @@ contains
     integer , optional, intent(out) :: nglacier   ! number of glacier pfts (columns) in glacier landunit
     integer , optional, intent(out) :: nglacier_mec  ! number of glacier_mec pfts (columns) in glacier_mec landunit
     integer , optional, intent(in)  :: glcmask  ! = 1 if glc requires surface mass balance in this gridcell
-!
-! !CALLED FROM:
-! subroutines decomp_init, initGridCells
-!
-! !REVISION HISTORY:
-! 2002.09.11  Mariana Vertenstein  Creation.
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: m                ! loop index
     integer  :: n                ! elevation class index
     integer  :: ipfts            ! number of pfts in gridcell
     integer  :: icols            ! number of columns in gridcell
     integer  :: ilunits          ! number of landunits in gridcell
     integer  :: npfts_per_lunit  ! number of pfts in landunit
-!------------------------------------------------------------------------------
+    !------------------------------------------------------------------------------
 
     ! Initialize pfts, columns and landunits counters for gridcell
 
@@ -106,16 +79,11 @@ contains
     ! Set naturally vegetated landunit
 
     npfts_per_lunit = 0
-    if (allocate_all_vegpfts) then
-       ! WJS (5-8-13): For some reason, we allocate space for the natural veg landunit
-       ! whenever the crop landunit has area > 0, even if there is no natural veg here.
-       ! I'm not sure why this is, but I'm maintaining this behavior for now.
-       if (wt_lunit(gi, istsoil) > 0.0_r8 .or. wt_lunit(gi, istcrop) > 0.0_r8) then
-          npfts_per_lunit = natpft_size
-       end if
-    else
-       write(iulog,*) 'allocate_all_vegpfts=false is no longer supported'
-       call endrun()
+    ! WJS (5-8-13): For some reason, we allocate space for the natural veg landunit
+    ! whenever the crop landunit has area > 0, even if there is no natural veg here.
+    ! I'm not sure why this is, but I'm maintaining this behavior for now.
+    if (wt_lunit(gi, istsoil) > 0.0_r8 .or. wt_lunit(gi, istcrop) > 0.0_r8) then
+       npfts_per_lunit = natpft_size
     end if
     if (npfts_per_lunit > 0) then ! true even when only crops are present
        ! Assume that the vegetated landunit has one column
@@ -231,16 +199,11 @@ contains
 
     npfts_per_lunit = 0
     if (create_crop_landunit) then
-       if (allocate_all_vegpfts) then
-          ! WJS (5-8-13): For some reason, we allocate space for the crop landunit whenever
-          ! the natural veg landunit has area > 0, even if there is no crop here.
-          ! I'm not sure why this is, but I'm maintaining this behavior for now.
-          if (wt_lunit(gi, istsoil) > 0.0_r8 .or. wt_lunit(gi, istcrop) > 0.0_r8) then
-             npfts_per_lunit = cft_size
-          end if
-       else
-          write(iulog,*) 'allocate_all_vegpfts=false is not supported with create_crop_landunit'
-          call endrun()
+       ! WJS (5-8-13): For some reason, we allocate space for the crop landunit whenever
+       ! the natural veg landunit has area > 0, even if there is no crop here.
+       ! I'm not sure why this is, but I'm maintaining this behavior for now.
+       if (wt_lunit(gi, istsoil) > 0.0_r8 .or. wt_lunit(gi, istcrop) > 0.0_r8) then
+          npfts_per_lunit = cft_size
        end if
     end if
     if (npfts_per_lunit > 0) then ! true even if only natural veg is present
@@ -258,7 +221,5 @@ contains
     if (present(npfts))   npfts   = ipfts
 
   end subroutine subgrid_get_gcellinfo
-
-!-----------------------------------------------------------------------
 
 end module subgridMod

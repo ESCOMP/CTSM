@@ -1,10 +1,5 @@
 module FracWetMod
-
 !-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: FracWetMod
-!
 ! !DESCRIPTION:
 ! Determine fraction of vegetated surfaces which are wet and
 ! fraction of elai which is dry.
@@ -18,18 +13,11 @@ module FracWetMod
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
-!
-!EOP
 !-----------------------------------------------------------------------
 
 contains
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: FracWet
-!
-! !INTERFACE:
   subroutine FracWet(numf, filter)
 !
 ! !DESCRIPTION:
@@ -57,8 +45,6 @@ contains
 ! 03/08/29 Mariana Vertenstein : Migrated to vectorized code
 !
 ! !LOCAL VARIABLES:
-!EOP
-!
     integer  :: fp,p             ! indices
     real(r8) :: vegt             ! frac_veg_nosno*lsai
     real(r8) :: dewmxi           ! inverse of maximum allowed dew [1/mm]
@@ -89,10 +75,6 @@ contains
              fwet(p) = 0._r8
           end if
           fdry(p) = (1._r8-fwet(p))*elai(p)/(elai(p)+esai(p))
-#if (defined PERGRO)
-          fwet(p) = 0._r8
-          fdry(p) = elai(p)/(elai(p)+esai(p))
-#endif
        else
           fwet(p) = 0._r8
           fdry(p) = 0._r8

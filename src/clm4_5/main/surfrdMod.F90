@@ -1,88 +1,62 @@
 module surfrdMod
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: surfrdMod
-!
-! !DESCRIPTION:
-! Contains methods for reading in surface data file and determining
-! subgrid weights
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Contains methods for reading in surface data file and determining
+  ! subgrid weights
+  !
+  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
   use clm_varpar  , only : nlevsoifl, numpft, numcft
   use clm_varcon  , only : numurbl
   use clm_varctl  , only : iulog, scmlat, scmlon, single_column, &
-                           create_glacier_mec_landunit
-  use decompMod   , only : get_proc_bounds
+                           create_glacier_mec_landunit, use_cndv
   use clmtype
   use spmdMod                         
   use ncdio_pio
   use pio
-!
-! !PUBLIC TYPES:
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: surfrd_get_globmask  ! Reads global land mask (needed for setting domain decomp)
   public :: surfrd_get_grid      ! Read grid/ladnfrac data into domain (after domain decomp)
   public :: surfrd_get_topo      ! Read grid topography into domain (after domain decomp)
   public :: surfrd_get_data      ! Read surface dataset and determine subgrid weights
   public :: surfrd_check_sums_equal_1  ! Confirm that sum(arr(n,:)) == 1 for all n
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-! Updated by T Craig
-! Updated by Mariana Vertenstein Jan 2011
-!
-!
-! !PRIVATE MEMBER FUNCTIONS:
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
   private :: surfrd_special
   private :: surfrd_veg_all
   private :: surfrd_veg_dgvm
-!
-! !PRIVATE DATA MEMBERS:
+  !
+  ! !PRIVATE DATA MEMBERS:
   ! default multiplication factor for epsilon for error checks
   real(r8), private, parameter :: eps_fact = 2._r8
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: surfrd_get_globmask
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine surfrd_get_globmask(filename, mask, ni, nj)
-!
-! !DESCRIPTION:
-! Read the surface dataset grid related information:
-! This is the first routine called by clm_initialize 
-! NO DOMAIN DECOMPOSITION  HAS BEEN SET YET
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Read the surface dataset grid related information:
+    ! This is the first routine called by clm_initialize 
+    ! NO DOMAIN DECOMPOSITION  HAS BEEN SET YET
+    !
+    ! !USES:
     use fileutils , only : getfil
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
     character(len=*), intent(in)    :: filename  ! grid filename
     integer         , pointer       :: mask(:)   ! grid mask 
     integer         , intent(out)   :: ni, nj    ! global grid sizes
-!
-! !CALLED FROM:
-! subroutine surfrd in this module
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     logical :: isgrid2d
     integer :: dimid,varid         ! netCDF id's
     integer :: ns                  ! size of grid on file
@@ -95,7 +69,7 @@ contains
     logical :: readvar             ! read variable in or not
     integer , allocatable :: idata2d(:,:)
     character(len=32) :: subname = 'surfrd_get_globmask' ! subroutine name
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     if (filename == ' ') then
        mask(:) = 1
@@ -150,41 +124,28 @@ contains
 
   end subroutine surfrd_get_globmask
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: surfrd_get_grid
-!
-! !INTERFACE:
-  subroutine surfrd_get_grid(ldomain, filename, glcfilename)
-!
-! !DESCRIPTION:
-! THIS IS CALLED AFTER THE DOMAIN DECOMPOSITION HAS BEEN CREATED
-! Read the surface dataset grid related information:
-! o real latitude  of grid cell (degrees)
-! o real longitude of grid cell (degrees)
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine surfrd_get_grid(begg, endg, ldomain, filename, glcfilename)
+    !
+    ! !DESCRIPTION:
+    ! THIS IS CALLED AFTER THE DOMAIN DECOMPOSITION HAS BEEN CREATED
+    ! Read the surface dataset grid related information:
+    ! o real latitude  of grid cell (degrees)
+    ! o real longitude of grid cell (degrees)
+    !
+    ! !USES:
     use clm_varcon, only : spval, re
     use domainMod , only : domain_type, domain_init, domain_clean, lon1d, lat1d
-    use decompMod , only : get_proc_bounds
     use fileutils , only : getfil
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
+    integer          ,intent(in)    :: begg, endg ! bounds
     type(domain_type),intent(inout) :: ldomain   ! domain to init
     character(len=*) ,intent(in)    :: filename  ! grid filename
     character(len=*) ,optional, intent(in) :: glcfilename ! glc mask filename
-!
-! !CALLED FROM:
-! subroutine surfrd in this module
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid               ! netcdf id
     type(file_desc_t) :: ncidg              ! netCDF id for glcmask
     type(var_desc_t)  :: vardesc            ! variable descriptor
@@ -216,15 +177,12 @@ contains
     call ncd_pio_openfile (ncid, trim(locfn), 0)
 
     ! Determine dimensions
-
     call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
 
     ! Determine isgrid2d flag for domain
+    call domain_init(ldomain, isgrid2d=isgrid2d, ni=ni, nj=nj, nbeg=begg, nend=endg)
 
-    call get_proc_bounds(beg, end)
-    call domain_init(ldomain, isgrid2d=isgrid2d, ni=ni, nj=nj, nbeg=beg, nend=end)
     ! Determine type of file - old style grid file or new style domain file
-
     call check_var(ncid=ncid, varname='LONGXY', vardesc=vardesc, readvar=readvar) 
     if (readvar) istype_domain = .false.
 
@@ -331,7 +289,7 @@ contains
        if (.not. readvar) call endrun( trim(subname)//' ERROR: GLCMASK NOT in file' )
 
        ! Make sure the glc mask is a subset of the land mask
-       do n = beg,end
+       do n = begg,endg
           if (ldomain%glcmask(n)==1 .and. ldomain%mask(n)==0) then
              write(iulog,*)trim(subname),&
                   'initialize1: landmask/glcmask mismatch'
@@ -345,36 +303,23 @@ contains
 
   end subroutine surfrd_get_grid
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: surfrd_get_topo
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine surfrd_get_topo(domain,filename)
-!
-! !DESCRIPTION:
-! Read the topo dataset grid related information:
-! Assume domain has already been initialized and read
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Read the topo dataset grid related information:
+    ! Assume domain has already been initialized and read
+    !
+    ! !USES:
     use domainMod , only : domain_type
     use fileutils , only : getfil
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
     type(domain_type),intent(inout) :: domain   ! domain to init
     character(len=*) ,intent(in)    :: filename ! grid filename
-!
-! !CALLED FROM:
-! subroutine initialize
-!
-! !REVISION HISTORY:
-! Created by T Craig
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid      ! netcdf file id
     integer :: n                   ! indices
     integer :: ni,nj,ns            ! size of grid on file
@@ -440,55 +385,43 @@ contains
 
   end subroutine surfrd_get_topo
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: surfrd_get_data
-!
-! !INTERFACE:
-  subroutine surfrd_get_data (ldomain, lfsurdat)
-!
-! !DESCRIPTION:
-! Read the surface dataset and create subgrid weights.
-! The model's surface dataset recognizes 6 basic land cover types within a grid
-! cell: lake, wetland, urban, glacier, glacier_mec and vegetated. The vegetated
-! portion of the grid cell is comprised of up to [maxpatch_pft] PFTs. These
-! subgrid patches are read in explicitly for each grid cell. This is in
-! contrast to LSMv1, where the PFTs were built implicitly from biome types.
-!    o real latitude  of grid cell (degrees)
-!    o real longitude of grid cell (degrees)
-!    o integer surface type: 0 = ocean or 1 = land
-!    o integer soil color (1 to 20) for use with soil albedos
-!    o real soil texture, %sand, for thermal and hydraulic properties
-!    o real soil texture, %clay, for thermal and hydraulic properties
-!    o real % of cell covered by lake    for use as subgrid patch
-!    o real % of cell covered by wetland for use as subgrid patch
-!    o real % of cell that is urban      for use as subgrid patch
-!    o real % of cell that is glacier    for use as subgrid patch
-!    o real % of cell that is glacier_mec for use as subgrid patch
-!    o integer PFTs
-!    o real % abundance PFTs (as a percent of vegetated area)
-!
-! !USES:
-    use clm_varctl  , only : allocate_all_vegpfts, create_crop_landunit
+  !-----------------------------------------------------------------------
+  subroutine surfrd_get_data (begg, endg, ldomain, lfsurdat)
+    !
+    ! !DESCRIPTION:
+    ! Read the surface dataset and create subgrid weights.
+    ! The model's surface dataset recognizes 6 basic land cover types within a grid
+    ! cell: lake, wetland, urban, glacier, glacier_mec and vegetated. The vegetated
+    ! portion of the grid cell is comprised of up to [maxpatch_pft] PFTs. These
+    ! subgrid patches are read in explicitly for each grid cell. This is in
+    ! contrast to LSMv1, where the PFTs were built implicitly from biome types.
+    !    o real latitude  of grid cell (degrees)
+    !    o real longitude of grid cell (degrees)
+    !    o integer surface type: 0 = ocean or 1 = land
+    !    o integer soil color (1 to 20) for use with soil albedos
+    !    o real soil texture, %sand, for thermal and hydraulic properties
+    !    o real soil texture, %clay, for thermal and hydraulic properties
+    !    o real % of cell covered by lake    for use as subgrid patch
+    !    o real % of cell covered by wetland for use as subgrid patch
+    !    o real % of cell that is urban      for use as subgrid patch
+    !    o real % of cell that is glacier    for use as subgrid patch
+    !    o real % of cell that is glacier_mec for use as subgrid patch
+    !    o integer PFTs
+    !    o real % abundance PFTs (as a percent of vegetated area)
+    !
+    ! !USES:
+    use clm_varctl  , only : create_crop_landunit
     use fileutils   , only : getfil
     use domainMod   , only : domain_type, domain_init, domain_clean
     use clm_varsur  , only : pctspec, wt_lunit, topo_glc_mec
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
+    integer,          intent(in) :: begg, endg      ! bounds
     type(domain_type),intent(in) :: ldomain     ! land domain
     character(len=*), intent(in) :: lfsurdat    ! surface dataset filename
-!
-! !CALLED FROM:
-! subroutine initialize in module initializeMod
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein, Sam Levis and Gordon Bonan
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     type(var_desc_t)  :: vardesc              ! pio variable descriptor
     type(domain_type) :: surfdata_domain      ! local domain associated with surface dataset
     character(len=256):: locfn                ! local file name
@@ -498,11 +431,10 @@ contains
     logical           :: readvar              ! true => variable is on dataset
     real(r8)          :: rmaxlon,rmaxlat      ! local min/max vars
     type(file_desc_t) :: ncid                 ! netcdf id
-    integer           :: begg,endg            ! beg,end gridcell indices
     logical           :: istype_domain        ! true => input file is of type domain
     logical           :: isgrid2d             ! true => intut grid is 2d 
     character(len=32) :: subname = 'surfrd_get_data'    ! subroutine name
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read surface boundary data .....'
@@ -511,10 +443,9 @@ contains
        endif
     endif
 
-    call get_proc_bounds(begg,endg)
     allocate(pctspec(begg:endg))
+    pctspec(begg:endg) = 0._r8
 
-    pctspec(:) = 0._r8
     topo_glc_mec(:,:) = 0._r8
 
     ! Read surface data
@@ -585,19 +516,15 @@ contains
 
     ! Obtain special landunit info
 
-    call surfrd_special(ncid, ldomain%ns)
+    call surfrd_special(begg, endg, ncid, ldomain%ns)
 
     ! Obtain vegetated landunit info
 
-    if (allocate_all_vegpfts) then
-       call surfrd_veg_all(ncid, ldomain%ns)
-    else
-       call endrun (trim(subname) // 'only allocate_all_vegpfts is supported')
-    end if
+    call surfrd_veg_all(begg, endg, ncid, ldomain%ns)
 
-#if (defined CNDV)
-    call surfrd_veg_dgvm()
-#endif
+    if (use_cndv) then
+       call surfrd_veg_dgvm(begg, endg)
+    end if
 
     call ncd_pio_closefile(ncid)
 
@@ -611,39 +538,26 @@ contains
   end subroutine surfrd_get_data
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: surfrd_special 
-!
-! !INTERFACE:
-  subroutine surfrd_special(ncid, ns)
-!
-! !DESCRIPTION:
-! Determine weight with respect to gridcell of all special "pfts" as well
-! as soil color and percent sand and clay
-!
-! !USES:
+  subroutine surfrd_special(begg, endg, ncid, ns)
+    !
+    ! !DESCRIPTION:
+    ! Determine weight with respect to gridcell of all special "pfts" as well
+    ! as soil color and percent sand and clay
+    !
+    ! !USES:
     use UrbanInputMod , only : urbinp
     use clm_varpar    , only : maxpatch_glcmec, nlevurb
     use clm_varcon    , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice, istice_mec
     use clm_varsur    , only : wt_lunit, wt_glc_mec, topo_glc_mec, pctspec
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
+    integer          , intent(in)    :: begg, endg 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     integer          , intent(in)    :: ns     ! domain size
-!
-! !CALLED FROM:
-! subroutine surfrd in this module
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein, Sam Levis and Gordon Bonan
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: n,nl,nurb,g                ! indices
-    integer  :: begg,endg                  ! gcell beg/end
     integer  :: dimid,varid                ! netCDF id's
     real(r8) :: nlevsoidata(nlevsoifl)
     logical  :: found                      ! temporary for error check
@@ -661,12 +575,13 @@ contains
     integer  :: dindx                      ! temporary for error check
     character(len=32) :: subname = 'surfrd_special'  ! subroutine name
     real(r8) closelat,closelon
-!!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
-    call get_proc_bounds(begg,endg)
-
-    allocate(pctgla(begg:endg),pctlak(begg:endg))
-    allocate(pctwet(begg:endg),pcturb(begg:endg,numurbl),pcturb_tot(begg:endg))
+    allocate(pctgla(begg:endg))
+    allocate(pctlak(begg:endg))
+    allocate(pctwet(begg:endg))
+    allocate(pcturb(begg:endg,numurbl))
+    allocate(pcturb_tot(begg:endg))
     allocate(pctglc_mec_tot(begg:endg))
 
     call check_dim(ncid, 'nlevsoi', nlevsoifl)
@@ -863,18 +778,13 @@ contains
 
   end subroutine surfrd_special
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: surfrd_veg_all
-!
-! !INTERFACE:
-  subroutine surfrd_veg_all(ncid, ns)
-!
-! !DESCRIPTION:
-! Determine weight arrays for non-dynamic landuse mode
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine surfrd_veg_all(begg, endg, ncid, ns)
+    !
+    ! !DESCRIPTION:
+    ! Determine weight arrays for non-dynamic landuse mode
+    !
+    ! !USES:
     use clm_varctl  , only : irrigate
     use clm_varpar  , only : natpft_lb, natpft_ub, natpft_size, cft_lb, cft_ub, cft_size, &
                              crop_prog
@@ -883,23 +793,15 @@ contains
     use pftvarcon   , only : nc3crop, nc3irrig, npcropmin, &
                              ncorn, ncornirrig, nsoybean, nsoybeanirrig, &
                              nscereal, nscerealirrig, nwcereal, nwcerealirrig
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
+    integer, intent(in) :: begg, endg
     type(file_desc_t),intent(inout) :: ncid   ! netcdf id
     integer          ,intent(in)    :: ns     ! domain size
-!
-! !CALLED FROM:
-! subroutine surfrd in this module
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein, Sam Levis and Gordon Bonan
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: nl                             ! index
-    integer  :: begg,endg                      ! beg/end gcell index
     integer  :: dimid,varid                    ! netCDF id's
     integer  :: ier                            ! error status	
     logical  :: readvar                        ! is variable on dataset
@@ -907,8 +809,6 @@ contains
     real(r8),pointer :: arrayl(:)              ! local array
     character(len=32) :: subname = 'surfrd_veg_all'  ! subroutine name
 !-----------------------------------------------------------------------
-
-    call get_proc_bounds(begg,endg)
 
     call check_dim(ncid, 'lsmpft', numpft+1)
     call check_dim(ncid, 'natpft', natpft_size)
@@ -927,7 +827,6 @@ contains
                ' must also have a separate crop landunit, and vice versa)')
        end if
     end if
-
 
     ! This temporary array is needed because ncd_io expects a pointer, so we can't
     ! directly pass wt_lunit(begg:endg,istsoil)
@@ -1000,39 +899,23 @@ contains
 
   end subroutine surfrd_veg_all
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: surfrd_veg_dgvm
-!
-! !INTERFACE:
-  subroutine surfrd_veg_dgvm()
-!
-! !DESCRIPTION:
-! Determine weights for CNDV mode.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine surfrd_veg_dgvm(begg, endg)
+    !
+    ! !DESCRIPTION:
+    ! Determine weights for CNDV mode.
+    !
+    ! !USES:
     use pftvarcon , only : noveg
     use clm_varsur, only : wt_nat_pft
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !CALLED FROM:
-! subroutine surfrd in this module
-!
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/04
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    integer  :: begg,endg   ! beg/end gcell index
+    integer, intent(in) :: begg, endg  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'surfrd_veg_dgvm'
-!-----------------------------------------------------------------------
-
-    call get_proc_bounds(begg,endg)
+    !-----------------------------------------------------------------------
 
     ! Bare ground gets 100% weight; all other natural PFTs are zeroed out
     wt_nat_pft(begg:endg, :)     = 0._r8
@@ -1042,38 +925,25 @@ contains
 
   end subroutine surfrd_veg_dgvm
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: surfrd_check_sums_equal_1
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine surfrd_check_sums_equal_1(arr, lb, name, caller)
-!
-! !DESCRIPTION:
-! Confirm that sum(arr(n,:)) == 1 for all n. If this isn't true for any n, abort with a message.
-!
-! !USES:
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION:
+    ! Confirm that sum(arr(n,:)) == 1 for all n. If this isn't true for any n, abort with a message.
+    !
+    ! !ARGUMENTS:
     implicit none
     integer         , intent(in) :: lb           ! lower bound of the first dimension of arr
     real(r8)        , intent(in) :: arr(lb:,:)   ! array to check
     character(len=*), intent(in) :: name         ! name of array
     character(len=*), intent(in) :: caller       ! identifier of caller, for more meaningful error messages
-!
-! !REVISION HISTORY:
-! Created by Bill Sacks 4/2013
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     logical :: found
     integer :: nl
     integer :: nindx
-
     real(r8), parameter :: eps = 1.e-14_r8
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     found = .false.
 

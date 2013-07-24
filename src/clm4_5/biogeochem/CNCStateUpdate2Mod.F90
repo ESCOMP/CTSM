@@ -1,76 +1,53 @@
-
 module CNCStateUpdate2Mod
-#ifdef CN
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CStateUpdate2Mod
-!
-! !DESCRIPTION:
-! Module for carbon state variable update, mortality fluxes.
-!
-! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    use abortutils  , only: endrun
-    implicit none
-    save
-    private
-! !PUBLIC MEMBER FUNCTIONS:
-    public:: CStateUpdate2
-    public:: CStateUpdate2h
-!
-! !REVISION HISTORY:
-! 4/23/2004: Created by Peter Thornton
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Module for carbon state variable update, mortality fluxes.
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use abortutils  , only: endrun
+  implicit none
+  save
+  private
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public:: CStateUpdate2
+  public:: CStateUpdate2h
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CStateUpdate2
-!
-! !INTERFACE:
-subroutine CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
-!
-! !DESCRIPTION:
-! On the radiation time step, update all the prognostic carbon state
-! variables affected by gap-phase mortality fluxes
-!
-! !USES:
-   use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varpar   , only: nlevsoi, nlevdecomp
-   use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-   character(len=*), intent(in) :: isotope         ! 'bulk', 'c13' or 'c14'
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 3/29/04: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   type(pft_cflux_type), pointer :: pcisof
-   type(pft_cstate_type), pointer :: pcisos
-   type(column_cflux_type), pointer :: ccisof
-   type(column_cstate_type), pointer :: ccisos
-   integer :: c,p,j      ! indices
-   integer :: fp,fc    ! lake filter indices
-   real(r8):: dt       ! radiation time step (seconds)
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
+    !
+    ! !DESCRIPTION:
+    ! On the radiation time step, update all the prognostic carbon state
+    ! variables affected by gap-phase mortality fluxes
+    !
+    ! !USES:
+    use clmtype
+    use clm_time_manager, only: get_step_size
+    use clm_varpar   , only: nlevsoi, nlevdecomp
+    use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilc       ! number of soil columns in filter
+    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+    character(len=*), intent(in) :: isotope         ! 'bulk', 'c13' or 'c14'
+    !
+    ! !LOCAL VARIABLES:
+    type(pft_cflux_type), pointer :: pcisof
+    type(pft_cstate_type), pointer :: pcisos
+    type(column_cflux_type), pointer :: ccisof
+    type(column_cstate_type), pointer :: ccisos
+    integer :: c,p,j      ! indices
+    integer :: fp,fc    ! lake filter indices
+    real(r8):: dt       ! radiation time step (seconds)
+    !-----------------------------------------------------------------------
+
    ! select which isotope
    select case (isotope)
    case ('bulk')
@@ -192,47 +169,29 @@ subroutine CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
 
     end associate 
  end subroutine CStateUpdate2
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CStateUpdate2h
-!
-! !INTERFACE:
-subroutine CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
-!
-! !DESCRIPTION:
-! Update all the prognostic carbon state
-! variables affected by harvest mortality fluxes
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
+   !
+   ! !DESCRIPTION:
+   ! Update all the prognostic carbon state
+   ! variables affected by harvest mortality fluxes
+   !
+   ! !USES:
    use clmtype
    use clm_time_manager, only: get_step_size
    use clm_varpar   , only: nlevdecomp
    use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-!
-! !ARGUMENTS:
+   !
+   ! !ARGUMENTS:
    implicit none
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
    character(len=*), intent(in) :: isotope         ! 'bulk', 'c13' or 'c14'
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 5/20/09: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-! !OTHER LOCAL VARIABLES:
+   !
+   ! !LOCAL VARIABLES:
    type(pft_cflux_type), pointer :: pcisof
    type(pft_cstate_type), pointer :: pcisos
    type(column_cflux_type), pointer :: ccisof
@@ -240,9 +199,8 @@ subroutine CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, isot
    integer :: c,p,j,k,l       ! indices
    integer :: fp,fc    ! lake filter indices
    real(r8):: dt       ! radiation time step (seconds)
-!
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
+
    ! select which isotope
    select case (isotope)
    case ('bulk')
@@ -374,7 +332,5 @@ subroutine CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, isot
 
     end associate 
  end subroutine CStateUpdate2h
-!-----------------------------------------------------------------------
-#endif
 
 end module CNCStateUpdate2Mod

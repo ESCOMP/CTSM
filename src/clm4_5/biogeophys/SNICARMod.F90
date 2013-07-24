@@ -1,32 +1,28 @@
 module SNICARMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: SNICARMod
-!
-! !DESCRIPTION:
-! Calculate albedo of snow containing impurities 
-! and the evolution of snow effective radius
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculate albedo of snow containing impurities 
+  ! and the evolution of snow effective radius
+  !
+  ! !USES:
   use shr_kind_mod  , only : r8 => shr_kind_r8
   use shr_sys_mod   , only : shr_sys_flush
   use clm_varctl    , only : iulog
   use shr_const_mod , only : SHR_CONST_RHOICE
   use abortutils    , only : endrun
-
+  use decompMod   , only: bounds_type
+  !
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: SNICAR_RT        ! Snow albedo and vertically-resolved solar absorption
   public :: SnowAge_grain    ! Snow effective grain size evolution
   public :: SnowAge_init     ! Initial read in of snow-aging file
   public :: SnowOptics_init  ! Initial read in of snow-optics file
-!
-! !PUBLIC DATA MEMBERS:
-
+  !
+  ! !PUBLIC DATA MEMBERS:
   real(r8), public, parameter :: snw_rds_min = 54.526_r8  ! minimum allowed snow effective radius
                                                           ! (also "fresh snow" value) [microns]
   integer,  public, parameter :: sno_nbr_aer =   8        ! number of aerosol species in snowpack
@@ -51,11 +47,7 @@ module SNICARMod
                                                                  ! [frc]
   real(r8), public, parameter :: scvng_fct_mlt_dst4  = 0.01_r8   ! scavenging factor for dust species 4 inclusion in meltwater
                                                                  ! [frc]
-
-! !PRIVATE MEMBER FUNCTIONS:
-
-!
-! !PRIVATE DATA MEMBERS:
+  ! !PRIVATE DATA MEMBERS:
   ! Aerosol species indices:
   !  1= hydrophillic black carbon 
   !  2= hydrophobic black carbon
@@ -164,34 +156,17 @@ module SNICARMod
   real(r8), pointer :: snowage_tau(:,:,:) ! (idx_rhos_max,idx_Tgrd_max,idx_T_max)
   real(r8), pointer :: snowage_kappa(:,:,:) ! (idx_rhos_max,idx_Tgrd_max,idx_T_max)
   real(r8), pointer :: snowage_drdt0(:,:,:) ! idx_rhos_max,idx_Tgrd_max,idx_T_max)
-!
-! !REVISION HISTORY:
-! Created by Mark Flanner
-!
-!EOP
-!-----------------------------------------------------------------------
+  !
+  ! !REVISION HISTORY:
+  ! Created by Mark Flanner
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: SNICAR_RT
-!
-!
-! !CALLED FROM:
-! subroutine SurfaceAlbedo in module SurfaceAlbedoMod (CLM)
-! subroutine albice (CSIM)
-!
-! !REVISION HISTORY:
-! Author: Mark Flanner
-!
-! !INTERFACE:
-  
-  subroutine SNICAR_RT (flg_snw_ice, lbc, ubc, num_nourbanc, filter_nourbanc,  &
+  !-----------------------------------------------------------------------
+  subroutine SNICAR_RT (flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,  &
                         coszen, flg_slr_in, h2osno_liq, h2osno_ice, snw_rds,   &
                         mss_cnc_aer_in, albsfc, albout, flx_abs)
-
     !
     ! !DESCRIPTION:
     ! Determine reflectance of, and vertically-resolved solar absorption in, 
@@ -210,45 +185,30 @@ contains
     ! Flanner, M., C. Zender, J. Randerson, and P. Rasch [2007], 
     ! Present-day climate forcing and response from black carbon in snow,
     ! J. Geophys. Res., 112, D11202, doi: 10.1029/2006JD008003
-
-    
+    !
     ! !USES:
     use clmtype
     use clm_varpar       , only : nlevsno, numrad
     use clm_time_manager , only : get_nstep
     use shr_const_mod    , only : SHR_CONST_PI
-
-
     !
     ! !ARGUMENTS:
     implicit none
     integer , intent(in)  :: flg_snw_ice                          ! flag: =1 when called from CLM, =2 when called from CSIM
-    integer , intent(in)  :: lbc, ubc                             ! column index bounds [unitless]
+    type(bounds_type), intent(in) :: bounds                       ! bounds
     integer , intent(in)  :: num_nourbanc                         ! number of columns in non-urban filter
-    integer , intent(in)  :: filter_nourbanc(ubc-lbc+1)           ! column filter for non-urban points
-    real(r8), intent(in)  :: coszen(lbc:ubc)                      ! cosine of solar zenith angle for next time step (col) [unitless]
-    integer , intent(in)  :: flg_slr_in                           ! flag: =1 for direct-beam incident flux,
-                                                                  ! =2 for diffuse incident flux
-    real(r8), intent(in)  :: h2osno_liq(lbc:ubc,-nlevsno+1:0)     ! liquid water content (col,lyr) [kg/m2]
-    real(r8), intent(in)  :: h2osno_ice(lbc:ubc,-nlevsno+1:0)     ! ice content (col,lyr) [kg/m2]
-    integer,  intent(in)  :: snw_rds(lbc:ubc,-nlevsno+1:0)        ! snow effective radius (col,lyr) [microns, m^-6]
-    real(r8), intent(in)  :: mss_cnc_aer_in(lbc:ubc,-nlevsno+1:0,sno_nbr_aer)  ! mass concentration of all aerosol species
-                                                                               ! (col,lyr,aer) [kg/kg]
-    real(r8), intent(in)  :: albsfc(lbc:ubc,numrad)               ! albedo of surface underlying snow
-                                                                  ! (col,bnd) [frc]
-    real(r8), intent(out) :: albout(lbc:ubc,numrad)               ! snow albedo, averaged into 2 bands
-                                                                  ! (=0 if no sun or no snow) (col,bnd) [frc]
-    real(r8), intent(out) :: flx_abs(lbc:ubc,-nlevsno+1:1,numrad) ! absorbed flux in each layer per unit flux incident
-                                                                  ! on top of snowpack (col,lyr,bnd) [frc]
-
+    integer , intent(in)  :: filter_nourbanc(:)                   ! column filter for non-urban points
+    real(r8), intent(in)  :: coszen(bounds%begc:)                 ! cosine of solar zenith angle for next time step (col) [unitless]
+    integer , intent(in)  :: flg_slr_in                           ! flag: =1 for direct-beam incident flux,=2 for diffuse incident flux
+    real(r8), intent(in)  :: h2osno_liq(bounds%begc:bounds%endc,-nlevsno+1:0)     ! liquid water content (col,lyr) [kg/m2]
+    real(r8), intent(in)  :: h2osno_ice(bounds%begc:bounds%endc,-nlevsno+1:0)     ! ice content (col,lyr) [kg/m2]
+    integer,  intent(in)  :: snw_rds(bounds%begc:bounds%endc,-nlevsno+1:0)        ! snow effective radius (col,lyr) [microns, m^-6]
+    real(r8), intent(in)  :: mss_cnc_aer_in(bounds%begc:bounds%endc,-nlevsno+1:0,sno_nbr_aer)  ! mass concentration of all aerosol species (col,lyr,aer) [kg/kg]
+    real(r8), intent(in)  :: albsfc(bounds%begc:bounds%endc,numrad)               ! albedo of surface underlying snow (col,bnd) [frc]
+    real(r8), intent(out) :: albout(bounds%begc:bounds%endc,numrad)               ! snow albedo, averaged into 2 bands (=0 if no sun or no snow) (col,bnd) [frc]
+    real(r8), intent(out) :: flx_abs(bounds%begc:bounds%endc,-nlevsno+1:1,numrad) ! absorbed flux in each layer per unit flux incident
     !
     ! !LOCAL VARIABLES:
-    !
-    !
-!
-! !OTHER LOCAL VARIABLES:
-!EOP
-!-----------------------------------------------------------------------
     !
     ! variables for snow radiative transfer calculations
 
@@ -336,7 +296,6 @@ contains
     integer :: sfctype                            ! underlying surface type (debugging only)
     real(r8):: pi                                 ! 3.1415...
 
-
     ! intermediate variables for radiative transfer approximation:
     real(r8):: gamma1(-nlevsno+1:0)               ! two-stream coefficient from Toon et al. (lyr) [unitless]
     real(r8):: gamma2(-nlevsno+1:0)               ! two-stream coefficient from Toon et al. (lyr) [unitless]
@@ -361,15 +320,11 @@ contains
     real(r8):: DS(-2*nlevsno+1:0)                 ! tri-diag intermediate variable from Toon et al. (2*lyr)
     real(r8):: X(-2*nlevsno+1:0)                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
     real(r8):: Y(-2*nlevsno+1:0)                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
+    !-----------------------------------------------------------------------
 
    associate(& 
    snl         =>   cps%snl          , & ! Input:  [integer (:)]  negative number of snow layers (col) [nbr]
    h2osno      =>   cws%h2osno       , & ! Input:  [real(r8) (:)]  snow liquid water equivalent (col) [kg/m2]
-   clandunit   =>   col%landunit     , & ! Input:  [integer (:)]  corresponding landunit of column (col) [idx] (debugging only)
-   cgridcell   =>   col%gridcell     , & ! Input:  [integer (:)]  columns's gridcell index (col) [idx] (debugging only)
-   ltype       =>   lun%itype        , & ! Input:  [integer (:)]  landunit type (lnd) (debugging only)     
-   londeg      =>   grc%londeg       , & ! Input:  [real(r8) (:)]  longitude (degrees) (debugging only)    
-   latdeg      =>   grc%latdeg       , & ! Input:  [real(r8) (:)]  latitude (degrees) (debugging only)     
    frac_sno    =>   cps%frac_sno_eff   & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
    )
 
@@ -430,9 +385,9 @@ contains
              snl_top   = snl_lcl+1
 
              ! for debugging only
-             l_idx     = clandunit(c_idx)
-             g_idx     = cgridcell(c_idx)
-             sfctype   = ltype(l_idx)
+             l_idx     = col%landunit(c_idx)
+             g_idx     = col%gridcell(c_idx)
+             sfctype   = lun%itype(l_idx)
              lat_coord = grc%latdeg(g_idx)
              lon_coord = grc%londeg(g_idx)
 
@@ -938,9 +893,9 @@ contains
                    write(iulog,*) "SNICAR STATS: dust2(0)= ", mss_cnc_aer_lcl(0,4)
                    write(iulog,*) "SNICAR STATS: dust3(0)= ", mss_cnc_aer_lcl(0,5)
                    write(iulog,*) "SNICAR STATS: dust4(0)= ", mss_cnc_aer_lcl(0,6)
-                   l_idx     = clandunit(c_idx)
+                   l_idx     = col%landunit(c_idx)
                    write(iulog,*) "column index: ", c_idx
-                   write(iulog,*) "landunit type", ltype(l_idx)
+                   write(iulog,*) "landunit type", lun%itype(l_idx)
                    write(iulog,*) "frac_sno: ", frac_sno(c_idx)
                   
                    call endrun()
@@ -1032,13 +987,8 @@ contains
    end subroutine SNICAR_RT
 
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: SnowAge_grain
-!
-! !INTERFACE:
-  subroutine SnowAge_grain(lbc, ubc, num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
+   !-----------------------------------------------------------------------
+  subroutine SnowAge_grain(bounds, num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
     !
     ! !DESCRIPTION:
     ! Updates the snow effective grain size (radius). 
@@ -1073,7 +1023,6 @@ contains
     !   The phenomenon is observed (Grenfell), but so far unquantified, as far as 
     !   I am aware.
     !
-    !
     ! !USES:
     use clmtype
     use clm_time_manager , only : get_step_size, get_nstep
@@ -1084,24 +1033,13 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbc, ubc                  ! column bounds
-    integer, intent(in) :: num_snowc                 ! number of column snow points in column filter
-    integer, intent(in) :: filter_snowc(ubc-lbc+1)   ! column filter for snow points
-    integer, intent(in) :: num_nosnowc               ! number of column non-snow points in column filter
-    integer, intent(in) :: filter_nosnowc(ubc-lbc+1) ! column filter for non-snow points
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    integer, intent(in) :: num_snowc         ! number of column snow points in column filter
+    integer, intent(in) :: filter_snowc(:)   ! column filter for snow points
+    integer, intent(in) :: num_nosnowc       ! number of column non-snow points in column filter
+    integer, intent(in) :: filter_nosnowc(:) ! column filter for non-snow points
     !
-    !
-    ! !CALLED FROM: clm_driver1
-    !
-
     ! !LOCAL VARIABLES:
-    !
-    !
-
- 
-    !
-    ! !OTHER LOCAL VARIABLES:
-    !
     integer :: snl_top                      ! top snow layer index [idx]
     integer :: snl_btm                      ! bottom snow layer index [idx]
     integer :: i                            ! layer index [idx]
@@ -1112,7 +1050,7 @@ contains
     integer :: rhos_idx                     ! snow aging lookup table snow density index [idx]
     real(r8) :: t_snotop                    ! temperature at upper layer boundary [K]
     real(r8) :: t_snobtm                    ! temperature at lower layer boundary [K]
-    real(r8) :: dTdz(lbc:ubc,-nlevsno:0)    ! snow temperature gradient (col,lyr) [K m-1]
+    real(r8) :: dTdz(bounds%begc:bounds%endc,-nlevsno:0)    ! snow temperature gradient (col,lyr) [K m-1]
     real(r8) :: bst_tau                     ! snow aging parameter retrieved from lookup table [hour]
     real(r8) :: bst_kappa                   ! snow aging parameter retrieved from lookup table [unitless]
     real(r8) :: bst_drdt0                   ! snow aging parameter retrieved from lookup table [um hr-1]
@@ -1129,7 +1067,7 @@ contains
     real(r8) :: rhos                        ! snow density [kg m-3]
     real(r8) :: h2osno_lyr                  ! liquid + solid H2O in snow layer [kg m-2]
     real(r8) :: cdz(-nlevsno+1:0)           ! column average layer thickness [m]
-!--------------------------------------------------------------------------!
+    !--------------------------------------------------------------------------!
 
    associate(& 
    t_soisno          => ces%t_soisno            , & ! Input:  [real(r8) (:,:)]  soil and snow temperature (col,lyr) [K]
@@ -1328,9 +1266,9 @@ contains
     end associate 
    end subroutine SnowAge_grain
 
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
 
-  subroutine SnowOptics_init( )
+   subroutine SnowOptics_init( )
     use fileutils       , only : getfil
     use CLM_varctl      , only : fsnowoptics
     use spmdMod         , only : masterproc
@@ -1438,6 +1376,8 @@ contains
     end if
 
   end subroutine SnowOptics_init
+
+  !-----------------------------------------------------------------------
 
   subroutine SnowAge_init( )
    use CLM_varctl      , only : fsnowaging

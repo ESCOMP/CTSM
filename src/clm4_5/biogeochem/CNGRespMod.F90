@@ -1,72 +1,41 @@
 module CNGRespMod
-#ifdef CN
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNGRespMod
-!
-! !DESCRIPTION:
-! Module for growth respiration fluxes,
-! for coupled carbon-nitrogen code.
-!
-! !USES:
-   use shr_kind_mod, only: r8 => shr_kind_r8
-   implicit none
-   save
-   private
-! !PUBLIC MEMBER FUNCTIONS:
-   public :: CNGResp
-!
-! !REVISION HISTORY:
-! 9/12/03: Created by Peter Thornton
-! 10/27/03, Peter Thornton: migrated to vector data structures
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Module for growth respiration fluxes,
+  ! for coupled carbon-nitrogen code.
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  implicit none
+  save
+  private
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: CNGResp
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNGResp
-!
-! !INTERFACE:
-subroutine CNGResp(num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! On the radiation time step, update all the prognostic carbon state
-! variables
-!
-! !USES:
-   use clmtype
-   use pftvarcon, only : npcropmin, grperc, grpnow
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn, in module CNEcosystemDynMod.F90
-!
-! !REVISION HISTORY:
-! 8/1/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-!
-! !OTHER LOCAL VARIABLES:
-   integer :: p                ! indices
-   integer :: fp               ! lake filter pft index
-
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine CNGResp(num_soilp, filter_soilp)
+    !
+    ! !DESCRIPTION:
+    ! On the radiation time step, update all the prognostic carbon state
+    ! variables
+    !
+    ! !USES:
+    use clmtype
+    use pftvarcon, only : npcropmin, grperc, grpnow
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p                ! indices
+    integer :: fp               ! lake filter pft index
+    !-----------------------------------------------------------------------
 
    associate(& 
    ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
@@ -172,7 +141,5 @@ subroutine CNGResp(num_soilp, filter_soilp)
 
     end associate 
  end subroutine CNGResp
-
-#endif
 
 end module CNGRespMod

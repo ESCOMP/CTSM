@@ -1,84 +1,58 @@
 module CNCIsoFluxMod
-#if (defined CN)
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CIsoFluxMod
-!
-! !DESCRIPTION:
-! Module for carbon isotopic flux variable update, non-mortality fluxes.
-!
-! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varpar   , only: ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
-    use abortutils  , only: endrun
-    implicit none
-    save
-    private
-!
-! !PUBLIC MEMBER FUNCTIONS:
-    public:: CIsoFlux1
-    public:: CIsoFlux2
-    public:: CIsoFlux2h
-    public:: CIsoFlux3
-    private:: CNCIsoLitterToColumn
-    private:: CNCIsoGapPftToColumn
-    private:: CNCIsoHarvestPftToColumn
-    private:: CIsoFluxCalc
-!
-! !REVISION HISTORY:
-! 4/21/2005: Created by Peter Thornton and Neil Suits
-! 8/15/2011: Modified by C. Koven from C13Flux to CisoFlux to allow treatment of both C13 and C14 
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Module for carbon isotopic flux variable update, non-mortality fluxes.
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varpar   , only: ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
+  use abortutils  , only: endrun
+  implicit none
+  save
+  private
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public:: CIsoFlux1
+  public:: CIsoFlux2
+  public:: CIsoFlux2h
+  public:: CIsoFlux3
+  private:: CNCIsoLitterToColumn
+  private:: CNCIsoGapPftToColumn
+  private:: CNCIsoHarvestPftToColumn
+  private:: CIsoFluxCalc
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CIsoFlux1
-!
-! !INTERFACE:
-subroutine CIsoFlux1(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
-!
-! !DESCRIPTION:
-! On the radiation time step, set the carbon isotopic flux
-! variables (except for gap-phase mortality and fire fluxes)
-!
-! !USES:
-   use clmtype
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc         ! number of soil columns filter
-   integer, intent(in) :: filter_soilc(:)   ! filter for soil columns
-   integer, intent(in) :: num_soilp         ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:)   ! filter for soil pfts
-   character(len=*), intent(in) :: isotope  ! 'c13' or 'c14'
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-!
-! !LOCAL VARIABLES:
-! !OTHER LOCAL VARIABLES:
-   type(pft_type), pointer :: p
-   type(column_type), pointer :: c
-   type(pft_cflux_type), pointer :: pcisof
-   type(pft_cstate_type), pointer :: pcisos
-   type(column_cflux_type), pointer :: ccisof
-   type(column_cstate_type), pointer :: ccisos
-   integer :: fp,pi,l
-   integer :: fc,cc,j
+  !-----------------------------------------------------------------------
+  subroutine CIsoFlux1(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
+    !
+    ! !DESCRIPTION:
+    ! On the radiation time step, set the carbon isotopic flux
+    ! variables (except for gap-phase mortality and fire fluxes)
+    !
+    ! !USES:
+    use clmtype
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilc         ! number of soil columns filter
+    integer, intent(in) :: filter_soilc(:)   ! filter for soil columns
+    integer, intent(in) :: num_soilp         ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:)   ! filter for soil pfts
+    character(len=*), intent(in) :: isotope  ! 'c13' or 'c14'
+    !
+    ! !LOCAL VARIABLES:
+    type(pft_type), pointer :: p
+    type(column_type), pointer :: c
+    type(pft_cflux_type), pointer :: pcisof
+    type(pft_cstate_type), pointer :: pcisos
+    type(column_cflux_type), pointer :: ccisof
+    type(column_cstate_type), pointer :: ccisos
+    integer :: fp,pi,l
+    integer :: fc,cc,j
+    !-----------------------------------------------------------------------
 
-!
-!EOP
-!-----------------------------------------------------------------------
-	! set local pointers
    p => pft
    c => col
    select case (isotope)
@@ -372,45 +346,31 @@ subroutine CIsoFlux1(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
 
  end associate
 end subroutine CIsoFlux1
-!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CIsoFlux2
-!
-! !INTERFACE:
 subroutine CIsoFlux2(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
-!
-! !DESCRIPTION:
-! On the radiation time step, set the carbon isotopic fluxes for gap mortality
-!
-! !USES:
-   use clmtype
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc         ! number of soil columns filter
-   integer, intent(in) :: filter_soilc(:)   ! filter for soil columns
-   integer, intent(in) :: num_soilp         ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:)   ! filter for soil pfts
-   character(len=*), intent(in) :: isotope  ! 'c13' or 'c14'
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-!
-! !LOCAL VARIABLES:
-! !OTHER LOCAL VARIABLES:
-   type(pft_type), pointer :: p
-   type(pft_cflux_type), pointer :: pcisof
-   type(pft_cstate_type), pointer :: pcisos
-   integer :: fp,pi
-!
-!EOP
-!-----------------------------------------------------------------------
-	! set local pointers
+  !
+  ! !DESCRIPTION:
+  ! On the radiation time step, set the carbon isotopic fluxes for gap mortality
+  !
+  ! !USES:
+  use clmtype
+  !
+  ! !ARGUMENTS:
+  implicit none
+  integer, intent(in) :: num_soilc         ! number of soil columns filter
+  integer, intent(in) :: filter_soilc(:)   ! filter for soil columns
+  integer, intent(in) :: num_soilp         ! number of soil pfts in filter
+  integer, intent(in) :: filter_soilp(:)   ! filter for soil pfts
+  character(len=*), intent(in) :: isotope  ! 'c13' or 'c14'
+  !
+  ! !LOCAL VARIABLES:
+  type(pft_type), pointer :: p
+  type(pft_cflux_type), pointer :: pcisof
+  type(pft_cstate_type), pointer :: pcisos
+  integer :: fp,pi
+  !-----------------------------------------------------------------------
+
    p => pft
    select case (isotope)
    case ('c14')
@@ -511,45 +471,31 @@ subroutine CIsoFlux2(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
 	call CNCIsoGapPftToColumn(num_soilc, filter_soilc, isotope)
    
 end subroutine CIsoFlux2
-!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CIsoFlux2h
-!
-! !INTERFACE:
 subroutine CIsoFlux2h(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
-!
-! !DESCRIPTION:
-! set the carbon isotopic fluxes for harvest mortality
-!
-! !USES:
-   use clmtype
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc        ! number of soil columns filter
-   integer, intent(in) :: filter_soilc(:)  ! filter for soil columns
-   integer, intent(in) :: num_soilp        ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:)  ! filter for soil pfts
-   character(len=*), intent(in) :: isotope ! 'c13' or 'c14'
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-!
-! !LOCAL VARIABLES:
-! !OTHER LOCAL VARIABLES:
-   type(pft_type), pointer :: p
-   type(pft_cflux_type), pointer :: pcisof
-   type(pft_cstate_type), pointer :: pcisos
-   integer :: fp,pi
-!
-!EOP
-!-----------------------------------------------------------------------
-	! set local pointers
+  !
+  ! !DESCRIPTION:
+  ! set the carbon isotopic fluxes for harvest mortality
+  !
+  ! !USES:
+  use clmtype
+  !
+  ! !ARGUMENTS:
+  implicit none
+  integer, intent(in) :: num_soilc        ! number of soil columns filter
+  integer, intent(in) :: filter_soilc(:)  ! filter for soil columns
+  integer, intent(in) :: num_soilp        ! number of soil pfts in filter
+  integer, intent(in) :: filter_soilp(:)  ! filter for soil pfts
+  character(len=*), intent(in) :: isotope ! 'c13' or 'c14'
+  !
+  ! !LOCAL VARIABLES:
+  type(pft_type), pointer :: p
+  type(pft_cflux_type), pointer :: pcisof
+  type(pft_cstate_type), pointer :: pcisos
+  integer :: fp,pi
+  !-----------------------------------------------------------------------
+  ! set local pointers
    p => pft
    select case (isotope)
    case ('c14')
@@ -658,49 +604,36 @@ subroutine CIsoFlux2h(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    call CNCIsoHarvestPftToColumn(num_soilc, filter_soilc, isotope)
    
 end subroutine CIsoFlux2h
-!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CIsoFlux3
-!
-! !INTERFACE:
 subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
-!
-! !DESCRIPTION:
-! On the radiation time step, set the carbon isotopic fluxes for fire mortality
-!
-! !USES:
-   use clmtype
-   use clm_varpar, only : max_pft_per_col
+  !
+  ! !DESCRIPTION:
+  ! On the radiation time step, set the carbon isotopic fluxes for fire mortality
+  !
+  ! !USES:
+  use clmtype
+  use clm_varpar, only : max_pft_per_col
+  !
+  ! !ARGUMENTS:
+  implicit none
+  integer, intent(in) :: num_soilc         ! number of soil columns filter
+  integer, intent(in) :: filter_soilc(:)   ! filter for soil columns
+  integer, intent(in) :: num_soilp         ! number of soil pfts in filter
+  integer, intent(in) :: filter_soilp(:)   ! filter for soil pfts
+  character(len=*), intent(in) :: isotope  ! 'c13' or 'c14'
+  !
+  ! !LOCAL VARIABLES:
+  type(pft_type), pointer :: p
+  type(column_type), pointer :: c
+  type(pft_cflux_type), pointer :: pcisof
+  type(pft_cstate_type), pointer :: pcisos
+  type(column_cflux_type), pointer :: ccisof
+  type(column_cstate_type), pointer :: ccisos
+  integer :: fp,pi,l,pp
+  integer :: fc,cc,j
+  !-----------------------------------------------------------------------
 
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc         ! number of soil columns filter
-   integer, intent(in) :: filter_soilc(:)   ! filter for soil columns
-   integer, intent(in) :: num_soilp         ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:)   ! filter for soil pfts
-   character(len=*), intent(in) :: isotope  ! 'c13' or 'c14'
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-!
-! !LOCAL VARIABLES:
-   type(pft_type), pointer :: p
-   type(column_type), pointer :: c
-   type(pft_cflux_type), pointer :: pcisof
-   type(pft_cstate_type), pointer :: pcisos
-   type(column_cflux_type), pointer :: ccisof
-   type(column_cstate_type), pointer :: ccisos
-   integer :: fp,pi,l,pp
-   integer :: fc,cc,j
-!EOP
-!-----------------------------------------------------------------------
-	! set local pointers
    p => pft
    c => col
    select case (isotope)
@@ -852,50 +785,29 @@ subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
 
  end associate
 end subroutine CIsoFlux3
-!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNCIsoLitterToColumn
-!
-! !INTERFACE:
 subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
-!
-! !DESCRIPTION:
-! called at the end of cn_phenology to gather all pft-level litterfall fluxes
-! to the column level and assign them to the three litter pools
-!
-! !USES:
+  !
+  ! !DESCRIPTION:
+  ! called at the end of cn_phenology to gather all pft-level litterfall fluxes
+  ! to the column level and assign them to the three litter pools
+  !
+  ! !USES:
   use clmtype
   use clm_varpar, only : max_pft_per_col
-!
-! !ARGUMENTS:
+  !
+  ! !ARGUMENTS:
   implicit none
   integer, intent(in) :: num_soilc        ! number of soil columns in filter
   integer, intent(in) :: filter_soilc(:)  ! filter for soil columns
   character(len=*), intent(in) :: isotope ! 'c13' or 'c14'
-!
-! !CALLED FROM:
-! subroutine CNPhenology
-!
-! !REVISION HISTORY:
-! 9/8/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-
-!
-!
-!
-! !OTHER LOCAL VARIABLES:
-   type(pft_cflux_type), pointer :: pcisof
-   type(column_cflux_type), pointer :: ccisof
-   integer :: fc,c,pi,p,j
-!EOP
-!-----------------------------------------------------------------------
+  !
+  ! !LOCAL VARIABLES:
+  type(pft_cflux_type), pointer :: pcisof
+  type(column_cflux_type), pointer :: ccisof
+  integer :: fc,c,pi,p,j
+  !-----------------------------------------------------------------------
     ! select which isotope
     select case (isotope)
     case ('c14')
@@ -962,48 +874,29 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
     
     end associate 
    end subroutine CNCIsoLitterToColumn
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNCIsoGapPftToColumn
-!
-! !INTERFACE:
-subroutine CNCIsoGapPftToColumn (num_soilc, filter_soilc, isotope)
-!
-! !DESCRIPTION:
-! gather all pft-level gap mortality fluxes
-! to the column level and assign them to the three litter pools (+ cwd pool)
-!
-! !USES:
-  use clmtype
-  use clm_varpar, only : max_pft_per_col, maxpatch_pft
-!
-! !ARGUMENTS:
-  implicit none
-  integer, intent(in) :: num_soilc         ! number of soil columns in filter
-  integer, intent(in) :: filter_soilc(:)   ! soil column filter
-   character(len=*), intent(in) :: isotope ! 'c13' or 'c14'
-!
-! !CALLED FROM:
-! subroutine CNphenology
-!
-! !REVISION HISTORY:
-! 9/8/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-! !OTHER LOCAL VARIABLES:
-   type(pft_cflux_type), pointer :: pcisof
-   type(column_cflux_type), pointer :: ccisof
-   integer :: fc,c,pi,p,j               ! indices
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
+   subroutine CNCIsoGapPftToColumn (num_soilc, filter_soilc, isotope)
+     !
+     ! !DESCRIPTION:
+     ! gather all pft-level gap mortality fluxes
+     ! to the column level and assign them to the three litter pools (+ cwd pool)
+     !
+     ! !USES:
+     use clmtype
+     use clm_varpar, only : max_pft_per_col, maxpatch_pft
+     !
+     ! !ARGUMENTS:
+     implicit none
+     integer, intent(in) :: num_soilc         ! number of soil columns in filter
+     integer, intent(in) :: filter_soilc(:)   ! soil column filter
+     character(len=*), intent(in) :: isotope ! 'c13' or 'c14'
+     !
+     ! !LOCAL VARIABLES:
+     type(pft_cflux_type), pointer :: pcisof
+     type(column_cflux_type), pointer :: ccisof
+     integer :: fc,c,pi,p,j               ! indices
+     !-----------------------------------------------------------------------
 
     ! select which isotope
     select case (isotope)
@@ -1137,48 +1030,29 @@ subroutine CNCIsoGapPftToColumn (num_soilc, filter_soilc, isotope)
 
     end associate 
  end subroutine CNCIsoGapPftToColumn
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNCIsoHarvestPftToColumn
-!
-! !INTERFACE:
-subroutine CNCIsoHarvestPftToColumn (num_soilc, filter_soilc, isotope)
-!
-! !DESCRIPTION:
-! gather all pft-level harvest mortality fluxes
-! to the column level and assign them to the litter, cwd, and wood product pools
-!
-! !USES:
-  use clmtype
-  use clm_varpar, only : max_pft_per_col, maxpatch_pft
-!
-! !ARGUMENTS:
-  implicit none
-  integer, intent(in) :: num_soilc         ! number of soil columns in filter
-  integer, intent(in) :: filter_soilc(:)   ! soil column filter
+ !-----------------------------------------------------------------------
+ subroutine CNCIsoHarvestPftToColumn (num_soilc, filter_soilc, isotope)
+   !
+   ! !DESCRIPTION:
+   ! gather all pft-level harvest mortality fluxes
+   ! to the column level and assign them to the litter, cwd, and wood product pools
+   !
+   ! !USES:
+   use clmtype
+   use clm_varpar, only : max_pft_per_col, maxpatch_pft
+   !
+   ! !ARGUMENTS:
+   implicit none
+   integer, intent(in) :: num_soilc         ! number of soil columns in filter
+   integer, intent(in) :: filter_soilc(:)   ! soil column filter
    character(len=*), intent(in) :: isotope ! 'c13' or 'c14'
-!
-! !CALLED FROM:
-! subroutine CNphenology
-!
-! !REVISION HISTORY:
-! 9/8/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-! !OTHER LOCAL VARIABLES:
+   !
+   ! !LOCAL VARIABLES:
    type(pft_cflux_type), pointer :: pcisof
    type(column_cflux_type), pointer :: ccisof
    integer :: fc,c,pi,p,j               ! indices
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
     ! select which isotope
     select case (isotope)
     case ('c14')
@@ -1334,47 +1208,35 @@ subroutine CNCIsoHarvestPftToColumn (num_soilc, filter_soilc, isotope)
    
     end associate 
   end subroutine CNCIsoHarvestPftToColumn
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CIsoFluxCalc
-!
-! !INTERFACE, isotope:
-subroutine CIsoFluxCalc(ciso_flux, ctot_flux, ciso_state, ctot_state, &
-	                    num, filter, frax_c13, diag, isotope)
-!
-! !DESCRIPTION:
-! On the radiation time step, set the carbon isotopic flux
-! variables (except for gap-phase mortality and fire fluxes)
-!
-! !USES:
-   use clmtype
-!
-! !ARGUMENTS:
-   implicit none
-   real(r8), intent(out), pointer :: ciso_flux(:)      ! isoC flux
-   real(r8), intent(in) , pointer :: ctot_flux(:)      ! totC flux
-   real(r8), intent(in) , pointer :: ciso_state(:)     ! isoC state, upstream pool
-   real(r8), intent(in) , pointer :: ctot_state(:)     ! totC state, upstream pool
-   real(r8), intent(in) :: frax_c13          ! fractionation factor (1 = no fractionation) for C13
-   integer , intent(in) :: num               ! number of filter members
-   integer , intent(in) :: filter(:)         ! filter indices
-   integer , intent(in) :: diag              ! 0=no diagnostics, 1=print diagnostics
-   character(len=*), intent(in) :: isotope  ! 'c13' or 'c14'
-
-!
-! !CALLED FROM:
-! subroutine CIsoFlux1
-!
-! !REVISION HISTORY:
-!
-! !OTHER LOCAL VARIABLES:
-   integer :: i,f     ! indices
-   real(r8) :: temp
-   real(r8) :: frax
-!
+  !-----------------------------------------------------------------------
+  subroutine CIsoFluxCalc(ciso_flux, ctot_flux, ciso_state, ctot_state, &
+       num, filter, frax_c13, diag, isotope)
+    !
+    ! !DESCRIPTION:
+    ! On the radiation time step, set the carbon isotopic flux
+    ! variables (except for gap-phase mortality and fire fluxes)
+    !
+    ! !USES:
+    use clmtype
+    !
+    ! !ARGUMENTS:
+    implicit none
+    real(r8), intent(out), pointer :: ciso_flux(:)      ! isoC flux
+    real(r8), intent(in) , pointer :: ctot_flux(:)      ! totC flux
+    real(r8), intent(in) , pointer :: ciso_state(:)     ! isoC state, upstream pool
+    real(r8), intent(in) , pointer :: ctot_state(:)     ! totC state, upstream pool
+    real(r8), intent(in) :: frax_c13          ! fractionation factor (1 = no fractionation) for C13
+    integer , intent(in) :: num               ! number of filter members
+    integer , intent(in) :: filter(:)         ! filter indices
+    integer , intent(in) :: diag              ! 0=no diagnostics, 1=print diagnostics
+    character(len=*), intent(in) :: isotope  ! 'c13' or 'c14'
+    !
+    ! ! LOCAL VARIABLES:
+    integer :: i,f     ! indices
+    real(r8) :: temp
+    real(r8) :: frax
+    !-----------------------------------------------------------------------
 
    ! if C14, double the fractionation
    select case (isotope)
@@ -1401,8 +1263,5 @@ subroutine CIsoFluxCalc(ciso_flux, ctot_flux, ciso_state, ctot_state, &
    end do
 
 end subroutine CIsoFluxCalc
-!-----------------------------------------------------------------------
-
-#endif
 
 end module CNCIsoFluxMod

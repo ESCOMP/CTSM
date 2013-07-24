@@ -1,27 +1,23 @@
 module MEGANFactorsMod
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: MEGANFactorsMod
-!
-! !DESCRIPTION:
-! Manages input of MEGAN emissions factors from netCDF file
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Manages input of MEGAN emissions factors from netCDF file
+  !
+  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils,   only : endrun
   use clm_varctl,   only : iulog
-!
+  !
   implicit none
   private
   save
-!
-! !PUBLIC MEMBERS:
+  !
+  ! !PUBLIC MEMBERS:
   public :: megan_factors_init
   public :: megan_factors_get
   public :: comp_names
-!
-! !PUBLIC DATA:
+  !
+  ! !PUBLIC DATA:
   real(r8), public, allocatable :: LDF(:)  ! light dependent fraction
   real(r8), public, allocatable :: Agro(:) ! growing leaf age factor
   real(r8), public, allocatable :: Amat(:) ! mature leaf age factor
@@ -31,52 +27,42 @@ module MEGANFactorsMod
   real(r8), public, allocatable :: ct1(:)  ! temperature coefficient 1
   real(r8), public, allocatable :: ct2(:)  ! temperature coefficient 2
   real(r8), public, allocatable :: Ceo(:)  ! Eopt coefficient
-!
-! !PRIVATE MEMBERS:
+  !
+  ! !PRIVATE MEMBERS:
   integer :: npfts ! number of plant function types
-!
+  !
   type emis_eff_t
      real(r8) , pointer :: eff (:)  !  [real(r8) (:)]  emissions efficiency factor 
      real(r8) :: wght            ! molecular weight
      integer :: class_num        ! MEGAN class number
   endtype emis_eff_t
-!
+  !
   type(emis_eff_t) , pointer :: comp_factors_table (:)   !  [type(emis_eff_t) (:)]  hash table of MEGAN factors (points to an array of pointers) 
   integer , pointer :: hash_table_indices (:)            !  [integer (:)]  pointer to hash table indices 
   integer, parameter :: tbl_hash_sz = 2**16           ! hash table size
-!
+  !
   character(len=32), allocatable :: comp_names(:)     ! MEGAN compound names
   real(r8),          allocatable :: comp_molecwghts(:)! MEGAN compound molecular weights
-!
-! !REVISION HISTORY:
-!  28 Oct 2011: Created by Francis Vitt
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: megan_factors_get
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine megan_factors_get( comp_name, factors, class_n, molecwght )
-!
-! !DESCRIPTION:
-! Method for getting MEGAN information for a named compound 
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION:
+    ! Method for getting MEGAN information for a named compound 
+    !
+    ! !ARGUMENTS:
     character(len=*),intent(in)  :: comp_name      ! MEGAN compound name
     real(r8),        intent(out) :: factors(npfts) ! vegitation type factors for the compound of intrest
     integer,         intent(out) :: class_n        ! MEGAN class number for the compound of intrest
     real(r8),        intent(out) :: molecwght      ! molecular weight of the compound of intrest
-!
-!EOP
-!-----------------------------------------------------------------------
-! local vars:
+    !
+    ! LOCAL VARS:
     integer :: hashkey, ndx
     character(len=120) :: errmes
+    !-----------------------------------------------------------------------
 
     hashkey = gen_hashkey(comp_name)
     ndx = hash_table_indices(hashkey)
@@ -92,29 +78,22 @@ contains
     molecwght  = comp_factors_table( ndx )%wght
 
   end subroutine megan_factors_get
-!-----------------------------------------------------------------------
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: megan_factors_init
-!
-! !INTERFACE:
+
+  !-----------------------------------------------------------------------
   subroutine megan_factors_init( filename )
-!
-! !DESCRIPTION:
-! Initializes the MEGAN factors using data from input file 
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Initializes the MEGAN factors using data from input file 
+    !
+    ! !USES:
     use ncdio_pio, only : ncd_pio_openfile,ncd_inqdlen
     use pio, only : pio_inq_varid,pio_get_var,file_desc_t,pio_closefile
     use fileutils   , only : getfil
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     character(len=*),intent(in) :: filename ! MEGAN factors input file
+    !-----------------------------------------------------------------------
 
-!EOP
-!-----------------------------------------------------------------------
-!
     character(len=256) :: locfn           ! local file name
     type(file_desc_t) :: ncid             ! netcdf id
 

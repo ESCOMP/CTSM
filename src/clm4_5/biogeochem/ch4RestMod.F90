@@ -1,73 +1,45 @@
 module ch4RestMod
-#ifdef LCH4
-
 !-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: ch4RestMod
-!
-! !DESCRIPTION:
-! Reads from or writes restart data
-!
-! !USES:
+  ! !DESCRIPTION:
+  ! Reads from or writes restart data
+  !
+  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils,   only : endrun
-!
-! !PUBLIC TYPES:
+  !
+  ! !PUBLIC TYPES:
   implicit none
   private
-! save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  ! save
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: ch4Rest
-!
-! !REVISION HISTORY:
-! 2009, August: Created by Zack Subin
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: ch4Rest
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine ch4Rest( ncid, flag )
-!
-! !DESCRIPTION:
-! Read/Write biogeophysics information to/from restart file.
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Read/Write biogeophysics information to/from restart file.
+    !
+    ! !USES:
     use clmtype
     use ncdio_pio
-    use decompMod     , only : get_proc_bounds
-    use clm_varctl    , only : nsrest
+    use clm_varctl    , only : nsrest, use_cn
     use clm_time_manager , only : is_restart
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
     type(file_desc_t), intent(inout) :: ncid ! netcdf id
     character(len=*), intent(in) :: flag     ! 'read' or 'write'
-!
-! !CALLED FROM:
-!
-!EOP
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer :: c,l,g,j      ! indices
-    integer :: begp, endp   ! per-proc beginning and ending pft indices
-    integer :: begc, endc   ! per-proc beginning and ending column indices
-    integer :: begl, endl   ! per-proc beginning and ending landunit indices
-    integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     logical :: readvar      ! determine if variable is on initial file
     character(len=128) :: varname         ! temporary
-!-----------------------------------------------------------------------
-
-    ! Set pointers into derived type
-
+    !-----------------------------------------------------------------------
 
     ! column ch4 state variable - conc_ch4_sat
 
@@ -216,147 +188,147 @@ contains
        end if
     end if
 
-#ifdef CN
+    if (use_cn) then
 
-    ! column ch4 state variable - annavg_somhr
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='annavg_somhr', xtype=ncd_double,  &
-            dim1name='column',long_name='Annual Average SOMHR',units='gC/m^2/s')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annavg_somhr', data=cch4%annavg_somhr, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+       ! column ch4 state variable - annavg_somhr
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='annavg_somhr', xtype=ncd_double,  &
+               dim1name='column',long_name='Annual Average SOMHR',units='gC/m^2/s')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='annavg_somhr', data=cch4%annavg_somhr, &
+               dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
-    end if
 
-    ! column ch4 state variable - annavg_finrw
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='annavg_finrw', xtype=ncd_double,  &
-            dim1name='column',long_name='Annual Average Respiration-Weighted FINUNDATED',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annavg_finrw', data=cch4%annavg_finrw, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+       ! column ch4 state variable - annavg_finrw
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='annavg_finrw', xtype=ncd_double,  &
+               dim1name='column',long_name='Annual Average Respiration-Weighted FINUNDATED',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='annavg_finrw', data=cch4%annavg_finrw, &
+               dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
-    end if
 
-    ! column ch4 state variable - annsum_counter
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='annsum_counter_ch4', xtype=ncd_double,  &
-            dim1name='column',long_name='CH4 Ann. Sum Time Counter',units='s')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annsum_counter_ch4', data=cch4%annsum_counter, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+       ! column ch4 state variable - annsum_counter
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='annsum_counter_ch4', xtype=ncd_double,  &
+               dim1name='column',long_name='CH4 Ann. Sum Time Counter',units='s')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='annsum_counter_ch4', data=cch4%annsum_counter, &
+               dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
-    end if
 
-    ! column ch4 state variable - tempavg_somhr
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tempavg_somhr', xtype=ncd_double,  &
-            dim1name='column',long_name='Temp. Average SOMHR',units='gC/m^2/s')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempavg_somhr', data=cch4%tempavg_somhr, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+       ! column ch4 state variable - tempavg_somhr
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='tempavg_somhr', xtype=ncd_double,  &
+               dim1name='column',long_name='Temp. Average SOMHR',units='gC/m^2/s')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='tempavg_somhr', data=cch4%tempavg_somhr, &
+               dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
-    end if
 
-    ! column ch4 state variable - tempavg_finrwi
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tempavg_finrw', xtype=ncd_double,  &
-            dim1name='column',long_name='Temp. Average Respiration-Weighted FINUNDATED',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempavg_finrw', data=cch4%tempavg_finrw, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+       ! column ch4 state variable - tempavg_finrwi
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='tempavg_finrw', xtype=ncd_double,  &
+               dim1name='column',long_name='Temp. Average Respiration-Weighted FINUNDATED',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='tempavg_finrw', data=cch4%tempavg_finrw, &
+               dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
-    end if
 
-    ! pft ch4 state variable - tempavg_agnpp
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tempavg_agnpp', xtype=ncd_double,  &
-            dim1name='pft',long_name='Temp. Average AGNPP',units='gC/m^2/s')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempavg_agnpp', data=pcf%tempavg_agnpp, &
-            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+       ! pft ch4 state variable - tempavg_agnpp
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='tempavg_agnpp', xtype=ncd_double,  &
+               dim1name='pft',long_name='Temp. Average AGNPP',units='gC/m^2/s')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='tempavg_agnpp', data=pcf%tempavg_agnpp, &
+               dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
-    end if
 
-    ! pft ch4 state variable - tempavg_bgnpp
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tempavg_bgnpp', xtype=ncd_double,  &
-            dim1name='pft',long_name='Temp. Average BGNPP',units='gC/m^2/s')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempavg_bgnpp', data=pcf%tempavg_bgnpp, &
-            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+       ! pft ch4 state variable - tempavg_bgnpp
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='tempavg_bgnpp', xtype=ncd_double,  &
+               dim1name='pft',long_name='Temp. Average BGNPP',units='gC/m^2/s')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='tempavg_bgnpp', data=pcf%tempavg_bgnpp, &
+               dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
-    end if
 
-    ! pft ch4 state variable - annavg_agnpp
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='annavg_agnpp', xtype=ncd_double,  &
-            dim1name='pft',long_name='Ann. Average AGNPP',units='gC/m^2/s')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annavg_agnpp', data=pcf%annavg_agnpp, &
-            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+       ! pft ch4 state variable - annavg_agnpp
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='annavg_agnpp', xtype=ncd_double,  &
+               dim1name='pft',long_name='Ann. Average AGNPP',units='gC/m^2/s')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='annavg_agnpp', data=pcf%annavg_agnpp, &
+               dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
-    end if
 
-    ! pft ch4 state variable - annavg_bgnpp
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='annavg_bgnpp', xtype=ncd_double,  &
-            dim1name='pft',long_name='Ann. Average BGNPP',units='gC/m^2/s')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annavg_bgnpp', data=pcf%annavg_bgnpp, &
-            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+       ! pft ch4 state variable - annavg_bgnpp
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='annavg_bgnpp', xtype=ncd_double,  &
+               dim1name='pft',long_name='Ann. Average BGNPP',units='gC/m^2/s')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='annavg_bgnpp', data=pcf%annavg_bgnpp, &
+               dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
-    end if
 
-   ! column ch4 flux variable - o2_decomp_depth_sat (used in CNNitrifDenitrif)
+       ! column ch4 flux variable - o2_decomp_depth_sat (used in CNNitrifDenitrif)
 
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='O2_DECOMP_DEPTH_SAT', xtype=ncd_double, &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='O2 consumption during decomposition', units='mol/m3/s')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='O2_DECOMP_DEPTH_SAT', data=cch4%o2_decomp_depth_sat, &
-            dim1name='column', switchdim=.true., &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='O2_DECOMP_DEPTH_SAT', xtype=ncd_double, &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               long_name='O2 consumption during decomposition', units='mol/m3/s')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='O2_DECOMP_DEPTH_SAT', data=cch4%o2_decomp_depth_sat, &
+               dim1name='column', switchdim=.true., &
+               ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun()
+          end if
        end if
-    end if
 
-    ! column ch4 flux variable - o2_decomp_depth_unsat (used in CNNitrifDenitrif)
+       ! column ch4 flux variable - o2_decomp_depth_unsat (used in CNNitrifDenitrif)
 
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='O2_DECOMP_DEPTH_UNSAT', xtype=ncd_double, &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='O2 consumption during decomposition', units='mol/m3/s')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='O2_DECOMP_DEPTH_UNSAT', data=cch4%o2_decomp_depth_unsat, &
-            dim1name='column', switchdim=.true., &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='O2_DECOMP_DEPTH_UNSAT', xtype=ncd_double, &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               long_name='O2 consumption during decomposition', units='mol/m3/s')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='O2_DECOMP_DEPTH_UNSAT', data=cch4%o2_decomp_depth_unsat, &
+               dim1name='column', switchdim=.true., &
+               ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun()
+          end if
        end if
-    end if
 
-#endif
+    end if  ! end of use_cn if-block
 
     ! column ch4 state variable - lake_soilc
 
@@ -374,7 +346,5 @@ contains
     end if
 
   end subroutine ch4Rest
-
-#endif
 
 end module ch4RestMod

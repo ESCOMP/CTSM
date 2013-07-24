@@ -58,6 +58,9 @@ module clm_atmlnd
      real(r8), pointer :: forc_flood(:)   => null() ! rof flood (mm/s)
      real(r8), pointer :: volr(:)         => null() ! rof volr (m3)
      real(r8), pointer :: forc_aer(:,:)   => null() ! aerosol deposition array
+     ! Needed for backwards compatibility with lnd_comp_mct used in clm4_5
+     real(r8), pointer :: forc_pch4(:)     => null() !CH4 partial pressure (Pa)
+
   end type atm2lnd_type
 
 !----------------------------------------------------
@@ -88,6 +91,8 @@ module clm_atmlnd
      real(r8), pointer :: flxdst(:,:)     => null() !dust flux (size bins)
      real(r8), pointer :: ddvel(:,:)      => null() !dry deposition velocities
      real(r8), pointer :: flxvoc(:,:)     => null() ! VOC flux (size bins)
+     ! Needed for backwards compatibility with lnd_comp_mct used in clm4_5
+     real(r8), pointer :: flux_ch4(:)      => null() !net CH4 flux (kg C/m**2/s) [+ to atm]
   end type lnd2atm_type
   
   type(atm2lnd_type),public,target :: clm_a2l      ! a2l fields on clm grid

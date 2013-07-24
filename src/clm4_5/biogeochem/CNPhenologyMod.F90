@@ -1,56 +1,48 @@
 module CNPhenologyMod
-#ifdef CN
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNPhenologyMod
-!
-! !DESCRIPTION:
-! Module holding routines used in phenology model for coupled carbon
-! nitrogen code.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !MODULE: CNPhenologyMod
+  !
+  ! !DESCRIPTION:
+  ! Module holding routines used in phenology model for coupled carbon
+  ! nitrogen code.
+  !
+  ! !USES:
   use clmtype
   use shr_kind_mod, only: r8 => shr_kind_r8
   use clm_varcon  , only: tfrz
-  use clm_varctl  , only: iulog
+  use clm_varctl  , only: iulog, use_cndv
   use clm_varpar  , only: numpft
   use shr_sys_mod , only: shr_sys_flush
   use abortutils  , only: endrun
+  use decompMod   , only: bounds_type
   implicit none
   save
   private
-
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: CNPhenologyInit      ! Initialization
   public :: CNPhenology          ! Update
   public :: readCNPhenolConsts   ! 
-
+  !
+  ! !LOCAL VARIABLES
   type, private :: CNPnenolConstType
-      real(r8) :: crit_dayl        !critical day length for senescence
-      real(r8) :: ndays_on     	  !number of days to complete leaf onset
-      real(r8) :: ndays_off		  !number of days to complete leaf offset
-      real(r8) :: fstor2tran       !fraction of storage to move to transfer for each onset
-      real(r8) :: crit_onset_fdd   !critical number of freezing days to set gdd counter
-      real(r8) :: crit_onset_swi   !critical number of days > soilpsi_on for onset
-      real(r8) :: soilpsi_on       !critical soil water potential for leaf onset
-      real(r8) :: crit_offset_fdd  !critical number of freezing days to initiate offset
-      real(r8) :: crit_offset_swi  !critical number of water stress days to initiate offset
-      real(r8) :: soilpsi_off      !critical soil water potential for leaf offset
-      real(r8) :: lwtop   	        !live wood turnover proportion (annual fraction)
- end type CNPnenolConstType
+     real(r8) :: crit_dayl        !critical day length for senescence
+     real(r8) :: ndays_on     	  !number of days to complete leaf onset
+     real(r8) :: ndays_off		  !number of days to complete leaf offset
+     real(r8) :: fstor2tran       !fraction of storage to move to transfer for each onset
+     real(r8) :: crit_onset_fdd   !critical number of freezing days to set gdd counter
+     real(r8) :: crit_onset_swi   !critical number of days > soilpsi_on for onset
+     real(r8) :: soilpsi_on       !critical soil water potential for leaf onset
+     real(r8) :: crit_offset_fdd  !critical number of freezing days to initiate offset
+     real(r8) :: crit_offset_swi  !critical number of water stress days to initiate offset
+     real(r8) :: soilpsi_off      !critical soil water potential for leaf offset
+     real(r8) :: lwtop   	        !live wood turnover proportion (annual fraction)
+  end type CNPnenolConstType
 
-  ! CNPhenolConstInst is populated in readCNPhenolConsts which is called in 
+  ! CNPhenolConstInst is populated in readCNPhenolConsts 
   type(CNPnenolConstType) ::  CNPhenolConstInst
-!
-! !REVISION HISTORY:
-! 8/1/03: Created by Peter Thornton
-! 10/23/03, Peter Thornton: migrated all routines to vector data structures
-! 2/4/08,  slevis: adding crop phenology from AgroIBIS
 
-! !PRIVATE DATA MEMBERS:
-
+  ! !PRIVATE DATA MEMBERS:
   real(r8)           :: dt              ! radiation time step delta t (seconds)
   real(r8)           :: fracday         ! dtime as a fraction of day
   real(r8)           :: crit_dayl       ! critical daylength for offset (seconds)
@@ -60,14 +52,11 @@ module CNPhenologyMod
   real(r8)           :: crit_onset_fdd  ! critical number of freezing days
   real(r8)           :: crit_onset_swi  ! water stress days for offset trigger
   real(r8)           :: soilpsi_on      ! water potential for onset trigger (MPa)
-  real(r8)           :: crit_offset_fdd ! critical number of freezing degree days
-                                        ! to trigger offset
+  real(r8)           :: crit_offset_fdd ! critical number of freezing degree days to trigger offset
   real(r8)           :: crit_offset_swi ! water stress days for offset trigger
   real(r8)           :: soilpsi_off     ! water potential for offset trigger (MPa)
   real(r8)           :: lwtop           ! live wood turnover proportion (annual fraction)
-  !
   ! CropPhenology variables and constants
-  !
   real(r8)           :: p1d, p1v            ! photoperiod factor constants for crop vernalization
   real(r8)           :: hti                 ! cold hardening index threshold for vernalization
   real(r8)           :: tbase               ! base temperature for vernalization
@@ -75,148 +64,112 @@ module CNPhenologyMod
   integer, parameter :: NOT_Harvested = 999 ! If not harvested yet in year
   integer, parameter :: inNH       = 1      ! Northern Hemisphere
   integer, parameter :: inSH       = 2      ! Southern Hemisphere
-  integer , pointer   :: inhemi (:)            !  [integer (:)]  Hemisphere that pft is in 
-  integer            :: minplantjday(0:numpft,inSH) ! minimum planting julian day
-  integer            :: maxplantjday(0:numpft,inSH) ! maximum planting julian day
-  integer            :: jdayyrstart(inSH)           ! julian day of start of year
-
-!EOP
-!-----------------------------------------------------------------------
+  integer, pointer   :: inhemi(:)           ! Hemisphere that pft is in 
+  integer, allocatable :: minplantjday(:,:) ! minimum planting julian day
+  integer, allocatable :: maxplantjday(:,:) ! maximum planting julian day
+  integer              :: jdayyrstart(inSH) ! julian day of start of year
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: readCNPhenolConsts
-!
-! !INTERFACE:
-subroutine readCNPhenolConsts ( ncid )
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use shr_kind_mod , only: r8 => shr_kind_r8
-   use ncdio_pio , only : file_desc_t,ncd_io
-   use abortutils   , only: endrun
+  !-----------------------------------------------------------------------
+  subroutine readCNPhenolConsts ( ncid )
+    !
+    ! !DESCRIPTION:
+    !
+    ! !USES:
+    use ncdio_pio    , only: file_desc_t,ncd_io
+    use abortutils   , only: endrun
 
-! !ARGUMENTS:
-   implicit none
-   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-!
-! !CALLED FROM:   CNConstantsMod.F90::CNConstReadFile
-!
-! !REVISION HISTORY:
-!  Jan 3 2013 : Created by R. Paudel
-!
-! !LOCAL VARIABLES:
-   character(len=32)  :: subname = 'CNPhenolConstType'
-   character(len=100) :: errCode = 'Error reading in CN const file '
-   logical            :: readv ! has variable been read in or not
-   real(r8)           :: tempr ! temporary to read in constant
-   character(len=100) :: tString ! temp. var for reading
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'CNPhenolConstType'
+    character(len=100) :: errCode = 'Error reading in CN const file '
+    logical            :: readv ! has variable been read in or not
+    real(r8)           :: tempr ! temporary to read in constant
+    character(len=100) :: tString ! temp. var for reading
+    !-----------------------------------------------------------------------
 
-!EOP
-!-----------------------------------------------------------------------
+    !
+    ! read in constants
+    !   
+    tString='crit_dayl'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNPhenolConstInst%crit_dayl=tempr
 
-   !
-   ! read in constants
-   !   
-   tString='crit_dayl'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNPhenolConstInst%crit_dayl=tempr
+    tString='ndays_on'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNPhenolConstInst%ndays_on=tempr
 
-   tString='ndays_on'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNPhenolConstInst%ndays_on=tempr
+    tString='ndays_off'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNPhenolConstInst%ndays_off=tempr
 
-   tString='ndays_off'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNPhenolConstInst%ndays_off=tempr
+    tString='fstor2tran'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNPhenolConstInst%fstor2tran=tempr
 
-   tString='fstor2tran'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNPhenolConstInst%fstor2tran=tempr
+    tString='crit_onset_fdd'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNPhenolConstInst%crit_onset_fdd=tempr
 
-   tString='crit_onset_fdd'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNPhenolConstInst%crit_onset_fdd=tempr
+    tString='crit_onset_swi'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNPhenolConstInst%crit_onset_swi=tempr
 
-   tString='crit_onset_swi'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNPhenolConstInst%crit_onset_swi=tempr
+    tString='soilpsi_on'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNPhenolConstInst%soilpsi_on=tempr
 
-   tString='soilpsi_on'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNPhenolConstInst%soilpsi_on=tempr
+    tString='crit_offset_fdd'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNPhenolConstInst%crit_offset_fdd=tempr
 
-   tString='crit_offset_fdd'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNPhenolConstInst%crit_offset_fdd=tempr
+    tString='crit_offset_swi'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNPhenolConstInst%crit_offset_swi=tempr
 
-   tString='crit_offset_swi'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNPhenolConstInst%crit_offset_swi=tempr
+    tString='soilpsi_off'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNPhenolConstInst%soilpsi_off=tempr
 
-   tString='soilpsi_off'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNPhenolConstInst%soilpsi_off=tempr
+    tString='lwtop_ann'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNPhenolConstInst%lwtop=tempr   
 
-   tString='lwtop_ann'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNPhenolConstInst%lwtop=tempr   
-   
-end subroutine readCNPhenolConsts
+  end subroutine readCNPhenolConsts
 
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNPhenology
-!
-! !INTERFACE:
-subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp, &
-                        num_pcropp, filter_pcropp, doalb)
-!
-! !DESCRIPTION:
-! Dynamic phenology routine for coupled carbon-nitrogen code (CN)
-! 1. grass phenology
-!
-! !USES:
-!
-! !ARGUMENTS:
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-   integer, intent(in) :: num_pcropp      ! number of prog. crop pfts in filter
-   integer, intent(in) :: filter_pcropp(:)! filter for prognostic crop pfts
-   logical, intent(in) :: doalb           ! true if time for sfc albedo calc
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn in module CNEcosystemDynMod.F90
-!
-! !REVISION HISTORY:
-! 7/28/03: Created by Peter Thornton
-! 9/05/03, Peter Thornton: moved from call with (p) to call with (c)
-! 10/3/03, Peter Thornton: added subroutine calls for different phenology types
-! 11/7/03, Peter Thornton: moved phenology type tests into phenology type
-!    routines, and moved onset, offset, background litfall routines into
-!    main phenology call.
-! !LOCAL VARIABLES:
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       num_pcropp, filter_pcropp, doalb)
+    !
+    ! !DESCRIPTION:
+    ! Dynamic phenology routine for coupled carbon-nitrogen code (CN)
+    ! 1. grass phenology
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: num_soilc       ! number of soil columns in filter
+    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+    integer, intent(in) :: num_pcropp      ! number of prog. crop pfts in filter
+    integer, intent(in) :: filter_pcropp(:)! filter for prognostic crop pfts
+    logical, intent(in) :: doalb           ! true if time for sfc albedo calc
+    !-----------------------------------------------------------------------
 
    ! each of the following phenology type routines includes a filter
    ! to operate only on the relevant pfts
@@ -247,39 +200,24 @@ subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp, &
 
    call CNLitterToColumn(num_soilc, filter_soilc)
 
-end subroutine CNPhenology
+ end subroutine CNPhenology
 
-!-----------------------------------------------------------------------
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNPhenologyInit
-!
-! !INTERFACE:
-subroutine CNPhenologyInit( begp, endp )
-!
-! !DESCRIPTION:
-! Initialization of CNPhenology. Must be called after time-manager is
-! initialized, and after pftcon file is read in.
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine CNPhenologyInit(bounds)
+   !
+   ! !DESCRIPTION:
+   ! Initialization of CNPhenology. Must be called after time-manager is
+   ! initialized, and after pftcon file is read in.
+   !
+   ! !USES:
    use clm_time_manager, only: get_step_size
    use clm_varpar      , only: crop_prog
    use clm_varcon      , only: secspday
-!
-! !ARGUMENTS:
+   !
+   ! !ARGUMENTS:
    implicit none
-   integer, intent(IN) :: begp, endp ! Beginning and ending PFT index
-! !CALLED FROM:
-! subroutine initialize2 in module clm_initializeMod.F90
-!
-! !REVISION HISTORY:
-! 3/28/11: Created by Erik Kluzek
-!
-! !LOCAL VARIABLES:
-!EOP
-!------------------------------------------------------------------------
+   type(bounds_type), intent(in) :: bounds  ! bounds
+   !------------------------------------------------------------------------
 
     !
     ! Get time-step and what fraction of a day it is
@@ -328,65 +266,49 @@ subroutine CNPhenologyInit( begp, endp )
     ! Call any subroutine specific initialization routines
     ! -----------------------------------------
 
-    if ( crop_prog ) call CropPhenologyInit( begp, endp )
+    if ( crop_prog ) call CropPhenologyInit(bounds)
 
-end subroutine CNPhenologyInit
-!-----------------------------------------------------------------------
+  end subroutine CNPhenologyInit
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNPhenologyClimate
-!
-! !INTERFACE:
-subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcropp)
-!
-! !DESCRIPTION:
-! For coupled carbon-nitrogen code (CN).
-!
-! !USES:
-   use clm_time_manager, only: get_days_per_year
-   use clm_time_manager, only: get_curr_date
-   use CropRestMod     , only: CropRestYear, CropRestIncYear
-!
-! !ARGUMENTS:
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-   integer, intent(in) :: num_pcropp      ! number of prognostic crops in filter
-   integer, intent(in) :: filter_pcropp(:)! filter for prognostic crop pfts
-!
-! !CALLED FROM:
-! subroutine CNPhenology
-!
-! !REVISION HISTORY:
-! 3/13/07: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   integer :: p                    ! indices
-   integer :: fp                   ! lake filter pft index
-   integer, save :: nyrs = -999    ! number of years prognostic crop has run
-   real(r8):: dayspyr              ! days per year (days)
-   integer kyr                     ! current year
-   integer kmo                     !         month of year  (1, ..., 12)
-   integer kda                     !         day of month   (1, ..., 31)
-   integer mcsec                   !         seconds of day (0, ..., seconds/day)
-   real(r8), parameter :: yravg   = 20.0_r8      ! length of years to average for gdd
-   real(r8), parameter :: yravgm1 = yravg-1.0_r8 ! minus 1 of above
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcropp)
+    !
+    ! !DESCRIPTION:
+    ! For coupled carbon-nitrogen code (CN).
+    !
+    ! !USES:
+    use clm_time_manager, only: get_days_per_year
+    use clm_time_manager, only: get_curr_date
+    use CropRestMod     , only: CropRestYear, CropRestIncYear
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+    integer, intent(in) :: num_pcropp      ! number of prognostic crops in filter
+    integer, intent(in) :: filter_pcropp(:)! filter for prognostic crop pfts
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p                    ! indices
+    integer :: fp                   ! lake filter pft index
+    integer, save :: nyrs = -999    ! number of years prognostic crop has run
+    real(r8):: dayspyr              ! days per year (days)
+    integer kyr                     ! current year
+    integer kmo                     !         month of year  (1, ..., 12)
+    integer kda                     !         day of month   (1, ..., 31)
+    integer mcsec                   !         seconds of day (0, ..., seconds/day)
+    real(r8), parameter :: yravg   = 20.0_r8      ! length of years to average for gdd
+    real(r8), parameter :: yravgm1 = yravg-1.0_r8 ! minus 1 of above
+    !-----------------------------------------------------------------------
 
    associate(& 
-   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
-   t_ref2m                             =>    pes%t_ref2m                                 , & ! Input:  [real(r8) (:)]  2m air temperature (K)                            
-   tempavg_t2m                         =>    pepv%tempavg_t2m                            , & ! Input:  [real(r8) (:)]  temp. avg 2m air temperature (K)                  
-
-   gdd0                                =>    pps%gdd0                                    , & ! Input:  [real(r8) (:)]  growing deg. days base 0 deg C (ddays)            
-   gdd8                                =>    pps%gdd8                                    , & ! Input:  [real(r8) (:)]     "     "    "    "   8  "  "    "               
-   gdd10                               =>    pps%gdd10                                   , & ! Input:  [real(r8) (:)]     "     "    "    "  10  "  "    "               
-   gdd020                              =>    pps%gdd020                                  , & ! Input:  [real(r8) (:)]  20-yr mean of gdd0 (ddays)                        
-   gdd820                              =>    pps%gdd820                                  , & ! Input:  [real(r8) (:)]  20-yr mean of gdd8 (ddays)                        
-   gdd1020                             =>    pps%gdd1020                                 , & ! Input:  [real(r8) (:)]  20-yr mean of gdd10 (ddays)                       
-   pgridcell                           =>   pft%gridcell                                   & ! Input:  [integer (:)]  pft's gridcell index                               
+   t_ref2m        => pes%t_ref2m       , & ! Input:  [real(r8) (:)]  2m air temperature (K)                            
+   tempavg_t2m    => pepv%tempavg_t2m  , & ! Input:  [real(r8) (:)]  temp. avg 2m air temperature (K)                  
+   gdd0           => pps%gdd0          , & ! Input:  [real(r8) (:)]  growing deg. days base 0 deg C (ddays)            
+   gdd8           => pps%gdd8          , & ! Input:  [real(r8) (:)]     "     "    "    "   8  "  "    "               
+   gdd10          => pps%gdd10         , & ! Input:  [real(r8) (:)]     "     "    "    "  10  "  "    "               
+   gdd020         => pps%gdd020        , & ! Input:  [real(r8) (:)]  20-yr mean of gdd0 (ddays)                        
+   gdd820         => pps%gdd820        , & ! Input:  [real(r8) (:)]  20-yr mean of gdd8 (ddays)                        
+   gdd1020        => pps%gdd1020         & ! Input:  [real(r8) (:)]  20-yr mean of gdd10 (ddays)                       
    )
 
    ! set time steps
@@ -434,50 +356,38 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcrop
       end if
    end do
 
-    end associate 
+ end associate
  end subroutine CNPhenologyClimate
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNEvergreenPhenology
-!
-! !INTERFACE:
-subroutine CNEvergreenPhenology (num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! For coupled carbon-nitrogen code (CN).
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine CNEvergreenPhenology (num_soilp, filter_soilp)
+   !
+   ! !DESCRIPTION:
+   ! For coupled carbon-nitrogen code (CN).
+   !
+   ! !USES:
    use clm_varcon      , only: secspday
    use clm_time_manager, only: get_days_per_year
-!
-! !ARGUMENTS:
+   !
+   ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNPhenology
-!
-! !REVISION HISTORY:
-! 10/2/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
+   !
+   ! !LOCAL VARIABLES:
    real(r8):: dayspyr                ! Days per year
    integer :: p                      ! indices
    integer :: fp                     ! lake filter pft index
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
 
    associate(& 
-   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
-   evergreen                           =>    pftcon%evergreen                            , & ! Input:  [real(r8) (:)]  binary flag for evergreen leaf habit (0 or 1)     
-   leaf_long                           =>    pftcon%leaf_long                            , & ! Input:  [real(r8) (:)]  leaf longevity (yrs)                              
-   bglfr                               =>    pepv%bglfr                                  , & ! InOut:  [real(r8) (:)]  background litterfall rate (1/s)                  
-   bgtr                                =>    pepv%bgtr                                   , & ! InOut:  [real(r8) (:)]  background transfer growth rate (1/s)             
-   lgsf                                =>    pepv%lgsf                                     & ! InOut:  [real(r8) (:)]  long growing season factor [0-1]                  
+   ivt        => pft%itype          , & ! Input:  [integer (:)]  pft vegetation type                                
+   evergreen  => pftcon%evergreen   , & ! Input:  [real(r8) (:)]  binary flag for evergreen leaf habit (0 or 1)     
+   leaf_long  => pftcon%leaf_long   , & ! Input:  [real(r8) (:)]  leaf longevity (yrs)                              
+   bglfr      => pepv%bglfr         , & ! InOut:  [real(r8) (:)]  background litterfall rate (1/s)                  
+   bgtr       => pepv%bgtr          , & ! InOut:  [real(r8) (:)]  background transfer growth rate (1/s)             
+   lgsf       => pepv%lgsf            & ! InOut:  [real(r8) (:)]  long growing season factor [0-1]                  
    )
+
    dayspyr   = get_days_per_year()
 
    do fp = 1,num_soilp
@@ -489,39 +399,27 @@ subroutine CNEvergreenPhenology (num_soilp, filter_soilp)
       end if
    end do
 
-    end associate 
+ end associate
  end subroutine CNEvergreenPhenology
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNSeasonDecidPhenology
-!
-! !INTERFACE:
-subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! For coupled carbon-nitrogen code (CN).
-! This routine handles the seasonal deciduous phenology code (temperate
-! deciduous vegetation that has only one growing season per year).
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
+   !
+   ! !DESCRIPTION:
+   ! For coupled carbon-nitrogen code (CN).
+   ! This routine handles the seasonal deciduous phenology code (temperate
+   ! deciduous vegetation that has only one growing season per year).
+   !
+   ! !USES:
    use shr_const_mod   , only: SHR_CONST_TKFRZ, SHR_CONST_PI
    use clm_varcon      , only: secspday
-!
-! !ARGUMENTS:
+   use clm_varctl      , only: use_cndv
+   !
+   ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNPhenology
-!
-! !REVISION HISTORY:
-! 10/6/03: Created by Peter Thornton
-! 10/24/03, Peter Thornton: migrated to vector data structures
-!
-! !LOCAL VARIABLES:
+   !
+   ! !LOCAL VARIABLES:
    integer :: c,p            !indices
    integer :: fp             !lake filter pft index
    real(r8):: ws_flag        !winter-summer solstice flag (0 or 1)
@@ -529,9 +427,8 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    real(r8):: soilt
    real(r8):: lat            !latitude (radians)
    real(r8):: temp           !temporary variable for daylength calculation
+   !-----------------------------------------------------------------------
 
-!EOP
-!-----------------------------------------------------------------------
    associate(& 
    ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
    pcolumn                             =>    pft%column                                  , & ! Input:  [integer (:)]  pft's column index                                 
@@ -606,9 +503,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    livestemn_storage_to_xfer           =>    pnf%livestemn_storage_to_xfer               , & ! InOut:  [real(r8) (:)]                                                    
    deadstemn_storage_to_xfer           =>    pnf%deadstemn_storage_to_xfer               , & ! InOut:  [real(r8) (:)]                                                    
    livecrootn_storage_to_xfer          =>    pnf%livecrootn_storage_to_xfer              , & ! InOut:  [real(r8) (:)]                                                    
-#if (defined CNDV)
    pftmayexist                         =>    pdgvs%pftmayexist                           , & ! InOut:  [logical (:)]  exclude seasonal decid pfts from tropics           
-#endif
    deadcrootn_storage_to_xfer          =>    pnf%deadcrootn_storage_to_xfer                & ! InOut:  [real(r8) (:)]                                                    
    )
 
@@ -660,9 +555,9 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
                offset_counter(p) = 0._r8
                dormant_flag(p) = 1._r8
                days_active(p) = 0._r8
-#if (defined CNDV)
-               pftmayexist(p) = .true.
-#endif
+               if (use_cndv) then
+                  pftmayexist(p) = .true.
+               end if
 
                ! reset the previous timestep litterfall flux memory
                prev_leafc_to_litter(p) = 0._r8
@@ -783,15 +678,15 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 
          ! test for switching from growth period to offset period
          else if (offset_flag(p) == 0.0_r8) then
-#if (defined CNDV)
-            ! If days_active > 355, then remove pft in
-            ! CNDVEstablishment at the end of the year.
-            ! days_active > 355 is a symptom of seasonal decid. pfts occurring in
-            ! gridcells where dayl never drops below crit_dayl.
-            ! This results in TLAI>1e4 in a few gridcells.
-            days_active(p) = days_active(p) + fracday
-            if (days_active(p) > 355._r8) pftmayexist(p) = .false.
-#endif
+            if (use_cndv) then
+               ! If days_active > 355, then remove pft in
+               ! CNDVEstablishment at the end of the year.
+               ! days_active > 355 is a symptom of seasonal decid. pfts occurring in
+               ! gridcells where dayl never drops below crit_dayl.
+               ! This results in TLAI>1e4 in a few gridcells.
+               days_active(p) = days_active(p) + fracday
+               if (days_active(p) > 355._r8) pftmayexist(p) = .false.
+            end if
 
             ! only begin to test for offset daylength once past the summer sol
             if (ws_flag == 0._r8 .and. dayl(p) < crit_dayl) then
@@ -808,45 +703,31 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 
     end associate 
  end subroutine CNSeasonDecidPhenology
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNStressDecidPhenology
-!
-! !INTERFACE:
-subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! This routine handles phenology for vegetation types, such as grasses and
-! tropical drought deciduous trees, that respond to cold and drought stress
-! signals and that can have multiple growing seasons in a given year.
-! This routine allows for the possibility that leaves might persist year-round
-! in the absence of a suitable stress trigger, by switching to an essentially
-! evergreen habit, but maintaining a deciduous leaf longevity, while waiting
-! for the next stress trigger.  This is in contrast to the seasonal deciduous
-! algorithm (for temperate deciduous trees) that forces a single growing season
-! per year.
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
+   !
+   ! !DESCRIPTION:
+   ! This routine handles phenology for vegetation types, such as grasses and
+   ! tropical drought deciduous trees, that respond to cold and drought stress
+   ! signals and that can have multiple growing seasons in a given year.
+   ! This routine allows for the possibility that leaves might persist year-round
+   ! in the absence of a suitable stress trigger, by switching to an essentially
+   ! evergreen habit, but maintaining a deciduous leaf longevity, while waiting
+   ! for the next stress trigger.  This is in contrast to the seasonal deciduous
+   ! algorithm (for temperate deciduous trees) that forces a single growing season
+   ! per year.
+   !
+   ! !USES:
    use clm_time_manager, only: get_days_per_year
    use clm_varcon      , only: secspday
    use shr_const_mod   , only: SHR_CONST_TKFRZ, SHR_CONST_PI
-!
-! !ARGUMENTS:
+   !
+   ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNPhenology
-!
-! !REVISION HISTORY:
-! 10/27/03: Created by Peter Thornton
-! 01/29/04: Made onset_gdd critical sum a function of temperature, as in
-!           seasonal deciduous algorithm.
-!
-! !LOCAL VARIABLES:
+   !
+   ! !LOCAL VARIABLES:
    real(r8),parameter :: secspqtrday = secspday / 4  ! seconds per quarter day
    integer :: c,p             ! indices
    integer :: fp              ! lake filter pft index
@@ -856,8 +737,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
    real(r8):: psi             ! water stress of top soil layer
    real(r8):: lat             !latitude (radians)
    real(r8):: temp            !temporary variable for daylength calculation
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
 
    associate(& 
    ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
@@ -1235,62 +1115,45 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 
     end associate 
  end subroutine CNStressDecidPhenology
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CropPhenology
-!
-! !INTERFACE:
-subroutine CropPhenology(num_pcropp, filter_pcropp)
+ !-----------------------------------------------------------------------
+ subroutine CropPhenology(num_pcropp, filter_pcropp)
 
-! !DESCRIPTION:
-! Code from AgroIBIS to determine crop phenology and code from CN to
-! handle CN fluxes during the phenological onset & offset periods.
+   ! !DESCRIPTION:
+   ! Code from AgroIBIS to determine crop phenology and code from CN to
+   ! handle CN fluxes during the phenological onset & offset periods.
 
-! !USES:
-  use clm_time_manager, only : get_curr_date, get_curr_calday, get_days_per_year
-  use pftvarcon       , only : ncorn, nscereal, nwcereal, nsoybean, gddmin, hybgdd, &
-                               nwcerealirrig, nsoybeanirrig, ncornirrig, nscerealirrig, &
-                               lfemerg, grnfill, mxmat, minplanttemp, planttemp
-  use clm_varcon      , only : spval, secspday
-
-! !ARGUMENTS:
-  integer, intent(in) :: num_pcropp       ! number of prog crop pfts in filter
-  integer, intent(in) :: filter_pcropp(:) ! filter for prognostic crop pfts
-
-! !CALLED FROM:
-! subroutine CNPhenology
-!
-! !REVISION HISTORY:
-! 2/5/08:  slevis created according to AgroIBIS subroutines of Kucharik et al.
-! 7/14/08: slevis adapted crop cycles to southern hemisphere
-! 3/29/11: ekluzek simply logic using pftvarcon arrays
-
-!EOP
-! LOCAL VARAIBLES:
-      integer kyr       ! current year
-      integer kmo       !         month of year  (1, ..., 12)
-      integer kda       !         day of month   (1, ..., 31)
-      integer mcsec     !         seconds of day (0, ..., seconds/day)
-      integer jday      ! julian day of the year
-      integer fp,p      ! pft indices
-      integer c         ! column indices
-      integer g         ! gridcell indices
-      integer h         ! hemisphere indices
-      integer idpp      ! number of days past planting
-      real(r8) dayspyr  ! days per year
-      real(r8) crmcorn  ! comparitive relative maturity for corn
-      real(r8) ndays_on ! number of days to fertilize
-
-
-!------------------------------------------------------------------------
+   ! !USES:
+   use clm_time_manager, only : get_curr_date, get_curr_calday, get_days_per_year
+   use pftvarcon       , only : ncorn, nscereal, nwcereal, nsoybean, gddmin, hybgdd, &
+        nwcerealirrig, nsoybeanirrig, ncornirrig, nscerealirrig, &
+        lfemerg, grnfill, mxmat, minplanttemp, planttemp
+   use clm_varcon      , only : spval, secspday
+   !
+   ! !ARGUMENTS:
+   integer, intent(in) :: num_pcropp       ! number of prog crop pfts in filter
+   integer, intent(in) :: filter_pcropp(:) ! filter for prognostic crop pfts
+   !
+   ! LOCAL VARAIBLES:
+   integer kyr       ! current year
+   integer kmo       !         month of year  (1, ..., 12)
+   integer kda       !         day of month   (1, ..., 31)
+   integer mcsec     !         seconds of day (0, ..., seconds/day)
+   integer jday      ! julian day of the year
+   integer fp,p      ! pft indices
+   integer c         ! column indices
+   integer g         ! gridcell indices
+   integer h         ! hemisphere indices
+   integer idpp      ! number of days past planting
+   real(r8) dayspyr  ! days per year
+   real(r8) crmcorn  ! comparitive relative maturity for corn
+   real(r8) ndays_on ! number of days to fertilize
+   !------------------------------------------------------------------------
 
    associate(& 
    pgridcell                           =>    pft%gridcell                                , & ! Input:  [integer (:)]  pft's gridcell index                               
    pcolumn                             =>    pft%column                                  , & ! Input:  [integer (:)]  pft's column index                                 
-   ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft                                                
+   ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
    idop                                =>    pps%idop                                    , & ! Output: [integer (:)]  date of planting                                   
    harvdate                            =>    pps%harvdate                                , & ! Output: [integer (:)]  harvest date                                       
    croplive                            =>    pps%croplive                                , & ! Output: [logical (:)]  Flag, true if planted, not harvested               
@@ -1328,7 +1191,6 @@ subroutine CropPhenology(num_pcropp, filter_pcropp)
    dwt_seedc_to_leaf                   =>    ccf%dwt_seedc_to_leaf                       , & ! Output: [real(r8) (:)]  (gC/m2/s) seed source to PFT-level                
    dwt_seedn_to_leaf                   =>    cnf%dwt_seedn_to_leaf                         & ! Output: [real(r8) (:)]  (gN/m2/s) seed source to PFT-level                
    )
-! ---------------------------------------
 
       ! get time info
       dayspyr = get_days_per_year()
@@ -1688,44 +1550,32 @@ subroutine CropPhenology(num_pcropp, filter_pcropp)
 
     end associate 
  end subroutine CropPhenology
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CropPhenologyInit
-!
-! !INTERFACE:
-subroutine CropPhenologyInit( begp, endp )
-
-! !DESCRIPTION:
-! Initialization of CropPhenology. Must be called after time-manager is
-! initialized, and after pftcon file is read in.
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine CropPhenologyInit(bounds)
+   !
+   ! !DESCRIPTION:
+   ! Initialization of CropPhenology. Must be called after time-manager is
+   ! initialized, and after pftcon file is read in.
+   !
+   ! !USES:
    use pftvarcon       , only: npcropmin, npcropmax, mnNHplantdate,  &
                                mnSHplantdate, mxNHplantdate,         &
                                mxSHplantdate
    use clm_time_manager, only: get_calday
-!
-! !ARGUMENTS:
+   !
+   ! !ARGUMENTS:
    implicit none
-   integer, intent(IN) :: begp, endp ! Beginning and ending PFT index
-!
-! !REVISION HISTORY:
-! Created by Erik Kluzek
-!
-!EOP
-
-! LOCAL VARAIBLES:
+   type(bounds_type), intent(in) :: bounds  ! bounds
+   !
+   ! LOCAL VARAIBLES:
    integer           :: p,g,n,i                     ! indices
-!------------------------------------------------------------------------
-   associate(& 
-   latdeg    => grc%latdeg      , & ! Output: [real(r8) (:)]  latitude (radians)                                
-   pgridcell => pft%gridcell      & ! Output: [integer (:)]  pft's gridcell index                               
-   )
+   !------------------------------------------------------------------------
 
-   allocate( inhemi(begp:endp) )
+   allocate( inhemi(bounds%begp:bounds%endp) )
+
+   allocate( minplantjday(0:numpft,inSH)) ! minimum planting julian day
+   allocate( maxplantjday(0:numpft,inSH)) ! minimum planting julian day
 
    ! Julian day for the start of the year (mid-winter)
    jdayyrstart(inNH) =   1
@@ -1744,8 +1594,8 @@ subroutine CropPhenologyInit( begp, endp )
    end do
 
    ! Figure out what hemisphere each PFT is in
-   do p = begp, endp
-      g = pgridcell(p)
+   do p = bounds%begp, bounds%endp
+      g = pft%gridcell(p)
       ! Northern hemisphere
       if ( grc%latdeg(g) > 0.0_r8 )then
          inhemi(p) = inNH
@@ -1768,42 +1618,31 @@ subroutine CropPhenologyInit( begp, endp )
    hti   = 1._r8
    tbase = 0._r8
 
-    end associate 
  end subroutine CropPhenologyInit
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: vernalization
-!
-! !INTERFACE:
-  subroutine vernalization(p)
-!
-! !DESCRIPTION:
-!
-! * * * only call for winter temperate cereal * * *
-!
-! subroutine calculates vernalization and photoperiod effects on
-! gdd accumulation in winter temperate cereal varieties. Thermal time accumulation
-! is reduced in 1st period until plant is fully vernalized. During this
-! time of emergence to spikelet formation, photoperiod can also have a
-! drastic effect on plant development.
-!
-! !ARGUMENTS:
-      implicit none
-      integer, intent(in) :: p    ! PFT index running over
-!
-! !REVISION HISTORY:
-! Created by Sam Levis from AGROIBIS
-!
-!EOP
-
-! LOCAL VARAIBLES:
-      real(r8) tcrown                     ! ?
-      real(r8) vd, vd1, vd2               ! vernalization dependence
-      real(r8) tkil                       ! Freeze kill threshold
-      integer  c,g                        ! indices
-!------------------------------------------------------------------------
+ !-----------------------------------------------------------------------
+ subroutine vernalization(p)
+   !
+   ! !DESCRIPTION:
+   !
+   ! * * * only call for winter temperate cereal * * *
+   !
+   ! subroutine calculates vernalization and photoperiod effects on
+   ! gdd accumulation in winter temperate cereal varieties. Thermal time accumulation
+   ! is reduced in 1st period until plant is fully vernalized. During this
+   ! time of emergence to spikelet formation, photoperiod can also have a
+   ! drastic effect on plant development.
+   !
+   ! !ARGUMENTS:
+   implicit none
+   integer, intent(in) :: p    ! PFT index running over
+   !
+   ! LOCAL VARAIBLES:
+   real(r8) tcrown                     ! ?
+   real(r8) vd, vd1, vd2               ! vernalization dependence
+   real(r8) tkil                       ! Freeze kill threshold
+   integer  c,g                        ! indices
+   !------------------------------------------------------------------------
 
    associate(& 
    pcolumn     => pft%column       , & ! Input:  [integer (:)]  pft's column index                                 
@@ -1916,39 +1755,23 @@ subroutine CropPhenologyInit( begp, endp )
     end associate 
    end subroutine vernalization
 
-!-----------------------------------------------------------------------
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNOnsetGrowth
-!
-! !INTERFACE:
-subroutine CNOnsetGrowth (num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! Determines the flux of stored C and N from transfer pools to display
-! pools during the phenological onset period.
-!
-! !USES:
-!
-! !ARGUMENTS:
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNPhenology
-!
-! !REVISION HISTORY:
-! 10/27/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   integer :: p            ! indices
-   integer :: fp           ! lake filter pft index
-   real(r8):: t1           ! temporary variable
-
-!EOP
-!-----------------------------------------------------------------------
+   
+   !-----------------------------------------------------------------------
+   subroutine CNOnsetGrowth (num_soilp, filter_soilp)
+     !
+     ! !DESCRIPTION:
+     ! Determines the flux of stored C and N from transfer pools to display
+     ! pools during the phenological onset period.
+     !
+     ! !ARGUMENTS:
+     integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+     integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+     !
+     ! !LOCAL VARIABLES:
+     integer :: p            ! indices
+     integer :: fp           ! lake filter pft index
+     real(r8):: t1           ! temporary variable
+     !-----------------------------------------------------------------------
 
    associate(& 
    ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
@@ -2039,40 +1862,26 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
 
     end associate 
  end subroutine CNOnsetGrowth
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNOffsetLitterfall
-!
-! !INTERFACE:
-subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! Determines the flux of C and N from displayed pools to litter
-! pools during the phenological offset period.
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
+   !
+   ! !DESCRIPTION:
+   ! Determines the flux of C and N from displayed pools to litter
+   ! pools during the phenological offset period.
+   !
+   ! !USES:
    use pftvarcon       , only: npcropmin
-!
-! !ARGUMENTS:
+   !
+   ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNPhenology
-!
-! !REVISION HISTORY:
-! 10/27/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
+   !
+   ! !LOCAL VARIABLES:
    integer :: p, c         ! indices
    integer :: fp           ! lake filter pft index
    real(r8):: t1           ! temporary variable
-
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
 
    associate(& 
    ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
@@ -2151,39 +1960,22 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 
     end associate 
  end subroutine CNOffsetLitterfall
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNBackgroundLitterfall
-!
-! !INTERFACE:
-subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! Determines the flux of C and N from displayed pools to litter
-! pools as the result of background litter fall.
-!
-! !USES:
-!
-! !ARGUMENTS:
+ !-----------------------------------------------------------------------
+ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
+   !
+   ! !DESCRIPTION:
+   ! Determines the flux of C and N from displayed pools to litter
+   ! pools as the result of background litter fall.
+   !
+   ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNPhenology
-!
-! !REVISION HISTORY:
-! 10/2/03: Created by Peter Thornton
-! 10/24/03, Peter Thornton: migrated to vector data structures
-!
-! !LOCAL VARIABLES:
+   !
+   ! !LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
-
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
 
    associate(& 
    ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
@@ -2223,40 +2015,26 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
 
     end associate 
  end subroutine CNBackgroundLitterfall
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNLivewoodTurnover
-!
-! !INTERFACE:
-subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! Determines the flux of C and N from live wood to
-! dead wood pools, for stem and coarse root.
-!
-! !USES:
-!
-! !ARGUMENTS:
+ !-----------------------------------------------------------------------
+ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
+   !
+   ! !DESCRIPTION:
+   ! Determines the flux of C and N from live wood to
+   ! dead wood pools, for stem and coarse root.
+   !
+   ! !USES:
+   !
+   ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNPhenology
-!
-! !REVISION HISTORY:
-! 12/5/03: created by Peter Thornton
-!
-! !LOCAL VARIABLES:
+   !
+   ! !LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
    real(r8):: ctovr        ! temporary variable for carbon turnover
    real(r8):: ntovr        ! temporary variable for nitrogen turnover
-
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
 
    associate(& 
    ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
@@ -2304,38 +2082,26 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 
     end associate 
  end subroutine CNLivewoodTurnover
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNLitterToColumn
-!
-! !INTERFACE:
-subroutine CNLitterToColumn (num_soilc, filter_soilc)
-!
-! !DESCRIPTION:
-! called at the end of cn_phenology to gather all pft-level litterfall fluxes
-! to the column level and assign them to the three litter pools
-!
-! !USES:
-  use clm_varpar, only : max_pft_per_col, nlevdecomp
-  use pftvarcon , only : npcropmin
-!
-! !ARGUMENTS:
-  integer, intent(in) :: num_soilc       ! number of soil columns in filter
-  integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-!
-! !CALLED FROM:
-! subroutine CNPhenology
-!
-! !REVISION HISTORY:
-! 9/8/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-    integer :: fc,c,pi,p,j       ! indices
-!EOP
-!-----------------------------------------------------------------------
+ !-----------------------------------------------------------------------
+ subroutine CNLitterToColumn (num_soilc, filter_soilc)
+   !
+   ! !DESCRIPTION:
+   ! called at the end of cn_phenology to gather all pft-level litterfall fluxes
+   ! to the column level and assign them to the three litter pools
+   !
+   ! !USES:
+   use clm_varpar, only : max_pft_per_col, nlevdecomp
+   use pftvarcon , only : npcropmin
+   !
+   ! !ARGUMENTS:
+   integer, intent(in) :: num_soilc       ! number of soil columns in filter
+   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+   !
+   ! !LOCAL VARIABLES:
+   integer :: fc,c,pi,p,j       ! indices
+   !-----------------------------------------------------------------------
+
    associate(& 
    pactive                             =>    pft%active                      , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
    ivt                                 =>    pft%itype                       , & ! Input:  [integer (:)]  pft vegetation type                                
@@ -2350,12 +2116,12 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
    frootn_to_litter                    =>    pnf%frootn_to_litter            , & ! Input:  [real(r8) (:)]  fine root N litterfall (gN/m2/s)                  
    npfts                               =>    col%npfts                       , & ! Input:  [integer (:)]  number of pfts for each column                     
    pfti                                =>    col%pfti                        , & ! Input:  [integer (:)]  beginning pft index for each column                
-   phenology_c_to_litr_met_c           =>    ccf%phenology_c_to_litr_met_c   , & ! Input:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
-   phenology_c_to_litr_cel_c           =>    ccf%phenology_c_to_litr_cel_c   , & ! Input:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
-   phenology_c_to_litr_lig_c           =>    ccf%phenology_c_to_litr_lig_c   , & ! Input:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
-   phenology_n_to_litr_met_n           =>    cnf%phenology_n_to_litr_met_n   , & ! Input:  [real(r8) (:,:)]  N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)
-   phenology_n_to_litr_cel_n           =>    cnf%phenology_n_to_litr_cel_n   , & ! Input:  [real(r8) (:,:)]  N fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gN/m3/s)
-   phenology_n_to_litr_lig_n           =>    cnf%phenology_n_to_litr_lig_n   , & ! Input:  [real(r8) (:,:)]  N fluxes associated with phenology (litterfall and crop) to litter lignin pool (gN/m3/s)
+   phenology_c_to_litr_met_c           =>    ccf%phenology_c_to_litr_met_c   , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
+   phenology_c_to_litr_cel_c           =>    ccf%phenology_c_to_litr_cel_c   , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
+   phenology_c_to_litr_lig_c           =>    ccf%phenology_c_to_litr_lig_c   , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
+   phenology_n_to_litr_met_n           =>    cnf%phenology_n_to_litr_met_n   , & ! InOut:  [real(r8) (:,:)]  N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)
+   phenology_n_to_litr_cel_n           =>    cnf%phenology_n_to_litr_cel_n   , & ! InOut:  [real(r8) (:,:)]  N fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gN/m3/s)
+   phenology_n_to_litr_lig_n           =>    cnf%phenology_n_to_litr_lig_n   , & ! InOut:  [real(r8) (:,:)]  N fluxes associated with phenology (litterfall and crop) to litter lignin pool (gN/m3/s)
    lf_flab                             =>    pftcon%lf_flab                  , & ! Input:  [real(r8) (:)]  leaf litter labile fraction                       
    lf_fcel                             =>    pftcon%lf_fcel                  , & ! Input:  [real(r8) (:)]  leaf litter cellulose fraction                    
    lf_flig                             =>    pftcon%lf_flig                  , & ! Input:  [real(r8) (:)]  leaf litter lignin fraction                       
@@ -2373,8 +2139,7 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
              
              if ( pi <=  npfts(c) ) then
                 p = pfti(c) + pi - 1
-                if (pactive(p)) then
-                   
+                if (pft%active(p)) then
                    
                    ! leaf litter carbon fluxes
                    phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
@@ -2457,7 +2222,5 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
 
     end associate 
  end subroutine CNLitterToColumn
-!-----------------------------------------------------------------------
-#endif
 
 end module CNPhenologyMod

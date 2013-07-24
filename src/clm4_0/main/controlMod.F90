@@ -126,7 +126,7 @@ contains
     use clm_time_manager , only : set_timemgr_init, get_timemgr_defaults
     use fileutils        , only : getavu, relavu
     use shr_string_mod   , only : shr_string_getParentDir
-    use clm_varctl       , only : clmvarctl_init, set_clmvarctl, nsrBranch, nsrStartup, &
+    use clm_varctl       , only : clmvarctl_init, clm_varctl_set, nsrBranch, nsrStartup, &
                                   nsrContinue
     use clm_cpl_indices  , only : glc_nec
 
@@ -276,7 +276,7 @@ contains
               call endrun( subname//' ERROR: can ONLY override clm start-type ' // &
                            'to branch type and ONLY if driver is a startup type' )
            end if
-           call set_clmvarctl( nsrest_in=override_nsrest )
+           call clm_varctl_set( nsrest_in=override_nsrest )
        end if
        
        ! Consistency of elevation classes on namelist to what's sent by the coupler

@@ -1,93 +1,60 @@
 module CNDVMod
-
-#if (defined CNDV)
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNDVMod
-!
-! !DESCRIPTION:
-! Module containing routines to drive the annual dynamic vegetation
-! that works with CN, reset related variables,
-! and initialize/reset time invariant variables
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Module containing routines to drive the annual dynamic vegetation
+  ! that works with CN, reset related variables,
+  ! and initialize/reset time invariant variables
+  !
+  ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use abortutils          , only : endrun
   use CNVegStructUpdateMod, only : CNVegStructUpdate
-!
-! !PUBLIC TYPES:
+  use decompMod           , only : bounds_type
+  !
+  ! !PUBLIC TYPES:
   implicit none
   private
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
-  public dv                 ! Drives the annual dynamic vegetation that
-                            ! works with CN
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public dv                 ! Drives the annual dynamic vegetation that  works with CN
   public histCNDV           ! Output CNDV history file
-!
-! !REVISION HISTORY:
-! Module modified by Sam Levis from similar module DGVMMod
-! created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private set_dgvm_filename
+  private buildnatvegfilter
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: dv
-!
-! !INTERFACE:
-  subroutine dv(lbg, ubg, lbp, ubp, num_natvegp, filter_natvegp, kyr)
-!
-! !DESCRIPTION:
-! Drives the annual dynamic vegetation that works with CN
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine dv(bounds, num_natvegp, filter_natvegp, kyr)
+    !
+    ! !DESCRIPTION:
+    ! Drives the annual dynamic vegetation that works with CN
+    !
+    ! !USES:
     use clmtype
     use CNDVLightMod        , only : Light
     use CNDVEstablishmentMod, only : Establishment
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbg, ubg       ! gridcell bounds
-    integer, intent(in) :: lbp, ubp       ! pft bounds
-    integer, intent(inout) :: num_natvegp ! number of naturally-vegetated
-                                          ! pfts in filter
-    integer, intent(inout) :: filter_natvegp(ubp-lbp+1) ! filter for
-                                          ! naturally-vegetated pfts
-    integer, intent(in) :: kyr            ! used in routine climate20 below
-!
-! !CALLED FROM:
-!
-! !REVISION HISTORY:
-! Author: Sam Levis
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-!EOP
-!
-! !LOCAL VARIABLES:
+    type(bounds_type), intent(in) :: bounds     ! bounds
+    integer, intent(inout) :: num_natvegp       ! number of naturally-vegetated pfts in filter
+    integer, intent(inout) :: filter_natvegp(:) ! filter for naturally-vegetated pfts
+    integer, intent(in) :: kyr                  ! used in routine climate20 below
+    !
+    ! !LOCAL VARIABLES:
     integer  :: g,p                    ! indices
-!-----------------------------------------------------------------------
-
+    !-----------------------------------------------------------------------
 
    associate(& 
-   agdd20                              =>    gdgvs%agdd20                                , & ! Input:  [real(r8) (:)]  20-yr running mean of agdd                        
-   tmomin20                            =>    gdgvs%tmomin20                              , & ! Input:  [real(r8) (:)]  20-yr running mean of tmomin                      
-   mxy                                 =>   pft%mxy                                      , & ! Input:  [integer (:)]  pft m index (for laixy(i,j,m),etc.)                
-   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding pft                      
-   fpcgrid                             =>    pdgvs%fpcgrid                               , & ! Input:  [real(r8) (:)]  foliar projective cover on gridcell (fraction)    
-   t_mo_min                            =>    pdgvs%t_mo_min                              , & ! Input:  [real(r8) (:)]  annual min of t_mo (Kelvin)                       
-   agdd                                =>    pdgvs%agdd                                    & ! Input:  [real(r8) (:)]  accumulated growing degree days above 5           
+   agdd20      => gdgvs%agdd20   , & ! InOut: [real(r8) (:)]  20-yr running mean of agdd                        
+   tmomin20    => gdgvs%tmomin20 , & ! InOut: [real(r8) (:)]  20-yr running mean of tmomin                      
+   fpcgrid     => pdgvs%fpcgrid  , & ! Input:  [real(r8) (:)]  foliar projective cover on gridcell (fraction)    
+   t_mo_min    => pdgvs%t_mo_min , & ! Input:  [real(r8) (:)]  annual min of t_mo (Kelvin)                       
+   agdd        => pdgvs%agdd       & ! Input:  [real(r8) (:)]  accumulated growing degree days above 5           
    )
 
     ! *************************************************************************
@@ -97,8 +64,8 @@ contains
     ! use 20-yr running mean of minimum 10-day running mean
     ! *************************************************************************
 
-    do p = lbp,ubp
-       g = pgridcell(p)
+    do p = bounds%begp, bounds%endp
+       g = pft%gridcell(p)
        if (kyr == 2) then ! slevis: add ".and. start_type==arb_ic" here?
           tmomin20(g) = t_mo_min(p) ! NO, b/c want to be able to start dgvm
           agdd20(g) = agdd(p)       ! w/ clmi file from non-dgvm simulation
@@ -109,40 +76,34 @@ contains
 
     ! Rebuild filter of present natually-vegetated pfts after Kill()
 
-    call BuildNatVegFilter(lbp, ubp, num_natvegp, filter_natvegp)
+    call BuildNatVegFilter(bounds, num_natvegp, filter_natvegp)
 
     ! Returns fpcgrid and nind
 
-    call Light(lbg, ubg, lbp, ubp, num_natvegp, filter_natvegp)
+    call Light(bounds, num_natvegp, filter_natvegp)
 
     ! Returns updated fpcgrid, nind, crownarea, and present. Due to updated
     ! present, we do not use the natveg filter in this subroutine.
 
-    call Establishment(lbg, ubg, lbp, ubp)
+    call Establishment(bounds)
 
     ! Reset dgvm variables needed in next yr (too few to keep subr. dvreset)
 
-    do p = lbp,ubp
+    do p = bounds%begp,bounds%endp
        pcs%leafcmax(p) = 0._r8
        pdgvs%t_mo_min(p) = 1.0e+36_r8
     end do
     end associate 
   end subroutine dv
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: histCNDV
-!
-! !INTERFACE:
-  subroutine histCNDV()
-!
-! !DESCRIPTION:
-! Create CNDV history file
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine histCNDV(bounds)
+    !
+    ! !DESCRIPTION:
+    ! Create CNDV history file
+    !
+    ! !USES:
     use clmtype
-    use decompMod       , only : get_proc_bounds, get_proc_global
     use clm_varpar      , only : maxpatch_pft
     use domainMod       , only : ldomain
     use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, fpftcon, iulog
@@ -153,30 +114,16 @@ contains
     use spmdMod         , only : masterproc
     use shr_const_mod   , only : SHR_CONST_CDAY
     use ncdio_pio
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !CALLED FROM:
-!
-! !REVISION HISTORY:
-! Author: Sam Levis
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!EOP
-!
-! !LOCAL VARIABLES:
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     character(len=256) :: dgvm_fn      ! dgvm history filename
     type(file_desc_t)  :: ncid         ! netcdf file id
     integer :: ncprec                  ! output precision
     integer :: g,p,l                   ! indices
-    integer :: begp, endp              ! per-proc beginning and ending pft indices
-    integer :: begc, endc              ! per-proc beginning and ending column indices
-    integer :: begl, endl              ! per-proc beginning and ending landunit indices
-    integer :: begg, endg              ! per-proc gridcell ending gridcell indices
     integer :: ier                     ! error status
     integer :: mdcur, mscur, mcdate    ! outputs from get_curr_time
     integer :: yr,mon,day,mcsec        ! outputs from get_curr_date
@@ -192,26 +139,14 @@ contains
     character(len=  8) :: basesec      ! base seconds
     real(r8) , pointer :: rbuf2dg (:,:)   ! Input:  [real(r8) (:,:)]  temporary 
     character(len=32) :: subname='histCNDV'
-!-----------------------------------------------------------------------
-
-
-    ! NONE
-
+    !-----------------------------------------------------------------------
 
    associate(& 
-   ifspecial                           =>   lun%ifspecial                                , & ! Input:  [logical (:)]  true=>landunit is not vegetated (landunit-level)   
-   mxy                                 =>   pft%mxy                                      , & ! Input:  [integer (:)]  pft m index (for laixy(i,j,m),etc.)                
-   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  gridcell index of corresponding pft (pft-level)    
-   plandunit                           =>   pft%landunit                                 , & ! Input:  [integer (:)]  landunit index of corresponding pft (pft-level)    
-   fpcgrid                             =>    pdgvs%fpcgrid                               , & ! Input:  [real(r8) (:)]  foliar projective cover on gridcell (fraction)    
-   nind                                =>    pdgvs%nind                                    & ! Input:  [real(r8) (:)]  number of individuals (#/m**2)                    
+   fpcgrid => pdgvs%fpcgrid , & ! Input:  [real(r8) (:)]  foliar projective cover on gridcell (fraction)    
+   nind    => pdgvs%nind      & ! Input:  [real(r8) (:)]  number of individuals (#/m**2)                    
    )
 
-    ! Determine subgrid bounds for this processor and allocate dynamic memory
-
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-
-    allocate(rbuf2dg(begg:endg,maxpatch_pft), stat=ier)
+    allocate(rbuf2dg(bounds%begg:bounds%endg,maxpatch_pft), stat=ier)
     if (ier /= 0) call endrun('histCNDV: allocation error for rbuf2dg')
 
     ! Set output precision
@@ -415,19 +350,19 @@ contains
     ! always lie between 1 and maxpatch_pft
 
     rbuf2dg(:,:) = 0._r8
-    do p = begp,endp
-       g = pgridcell(p)
-       l = plandunit(p)
-       if (.not. ifspecial(l)) rbuf2dg(g,mxy(p)) = fpcgrid(p)*100._r8
+    do p = bounds%begp,bounds%endp
+       g = pft%gridcell(p)
+       l = pft%landunit(p)
+       if (.not. lun%ifspecial(l)) rbuf2dg(g,pft%mxy(p)) = fpcgrid(p)*100._r8
     end do
     call ncd_io(ncid=ncid, varname='FPCGRID', dim1name=grlnd, data=rbuf2dg, &
          nt=1, flag='write')
 
     rbuf2dg(:,:) = 0._r8
-    do p = begp,endp
-       g = pgridcell(p)
-       l = plandunit(p)
-       if (.not. ifspecial(l)) rbuf2dg(g,mxy(p)) = nind(p)
+    do p = bounds%begp,bounds%endp
+       g = pft%gridcell(p)
+       l = pft%landunit(p)
+       if (.not. lun%ifspecial(l)) rbuf2dg(g,pft%mxy(p)) = nind(p)
     end do
     call ncd_io(ncid=ncid, varname='NIND', dim1name=grlnd, data=rbuf2dg, &
          nt=1, flag='write')
@@ -450,38 +385,26 @@ contains
     end associate 
   end subroutine histCNDV
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: set_dgvm_filename
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   character(len=256) function set_dgvm_filename ()
-!
-! !DESCRIPTION:
-! Determine initial dataset filenames
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Determine initial dataset filenames
+    !
+    ! !USES:
     use clm_varctl       , only : caseid, inst_suffix
     use clm_time_manager , only : get_curr_date
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !CALLED FROM:
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     character(len=256) :: cdate       !date char string
     integer :: day                    !day (1 -> 31)
     integer :: mon                    !month (1 -> 12)
     integer :: yr                     !year (0 -> ...)
     integer :: sec                    !seconds into current day
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     call get_curr_date (yr, mon, day, sec)
     write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
@@ -490,54 +413,33 @@ contains
 
   end function set_dgvm_filename
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: BuildNatVegFilter
-!
-! !INTERFACE:
-  subroutine BuildNatVegFilter(lbp, ubp, num_natvegp, filter_natvegp)
-!
-! !DESCRIPTION:
-! Reconstruct a filter of naturally-vegetated PFTs for use in DGVM
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine BuildNatVegFilter(bounds, num_natvegp, filter_natvegp)
+    !
+    ! !DESCRIPTION:
+    ! Reconstruct a filter of naturally-vegetated PFTs for use in DGVM
+    !
+    ! !USES:
     use clmtype
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in)  :: lbp, ubp                   ! pft bounds
-    integer, intent(out) :: num_natvegp                ! number of pfts in naturally-vegetated filter
-    integer, intent(out) :: filter_natvegp(ubp-lbp+1)  ! pft filter for naturally-vegetated points
-!
-! !CALLED FROM:
-! subroutine lpj in this module
-!
-! !REVISION HISTORY:
-! Author: Forrest Hoffman
-!
-! !LOCAL VARIABLES:
-!EOP
-!
-! !LOCAL VARIABLES:
+    type(bounds_type), intent(in) :: bounds   ! bounds
+    integer, intent(out) :: num_natvegp       ! number of pfts in naturally-vegetated filter
+    integer, intent(out) :: filter_natvegp(:) ! pft filter for naturally-vegetated points
+    !
+    ! !LOCAL VARIABLES:
     integer :: p
-!-----------------------------------------------------------------------
-
-   associate(& 
-   present                             =>    pdgvs%present                                 & ! Input:  [logical (:)]  whether this pft present in patch                  
-   )
+    !-----------------------------------------------------------------------
 
     num_natvegp = 0
-    do p = lbp,ubp
-       if (present(p)) then
+    do p = bounds%begp,bounds%endp
+       if (pdgvs%present(p)) then
           num_natvegp = num_natvegp + 1
           filter_natvegp(num_natvegp) = p
        end if
     end do
 
-    end associate 
   end subroutine BuildNatVegFilter
-
-#endif
 
 end module CNDVMod

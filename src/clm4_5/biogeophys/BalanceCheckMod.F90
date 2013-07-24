@@ -1,87 +1,55 @@
 module BalanceCheckMod
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: BalanceCheckMod
-!
-! !DESCRIPTION:
-! Water and energy balance check.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Water and energy balance check.
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils,   only: endrun
   use clm_varctl,   only: iulog
+  use decompMod   , only: bounds_type
 
-! !PUBLIC TYPES:
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: BeginWaterBalance  ! Initialize water balance check
   public :: BalanceCheck       ! Water and energy balance check
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: BeginWaterBalance
-!
-! !INTERFACE:
-  subroutine BeginWaterBalance(lbc, ubc, lbp, ubp, &
-             num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-             num_hydrologyc, filter_hydrologyc)
-!
-! !DESCRIPTION:
-! Initialize column-level water balance at beginning of time step
-!
-! !USES:
-    use shr_kind_mod , only : r8 => shr_kind_r8
+  !-----------------------------------------------------------------------
+  subroutine BeginWaterBalance(bounds, &
+       num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
+       num_hydrologyc, filter_hydrologyc)
+    !
+    ! !DESCRIPTION:
+    ! Initialize column-level water balance at beginning of time step
+    !
+    ! !USES:
     use clmtype
     use clm_varpar   , only : nlevgrnd, nlevsoi, nlevurb
     use subgridAveMod, only : p2c
     use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, &
                               icol_road_imperv
     use clm_varcon   , only : denh2o, denice
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbc, ubc                    ! column-index bounds
-    integer, intent(in) :: lbp, ubp                    ! pft-index bounds
-    integer, intent(in) :: num_nolakec                 ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
-    integer, intent(in) :: num_lakec                   ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_lakec(ubc-lbc+1)     ! column filter for non-lake points
-    integer , intent(in)  :: num_hydrologyc               ! number of column soil points in column filter
-    integer , intent(in)  :: filter_hydrologyc(ubc-lbc+1) ! column filter for soil points
-!
-! !CALLED FROM:
-! subroutine clm_driver1
-!
-! !REVISION HISTORY:
-! Created by Peter Thornton
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-! !OTHER LOCAL VARIABLES:
-!
+    type(bounds_type), intent(in) :: bounds     ! bounds
+    integer, intent(in) :: num_nolakec          ! number of column non-lake points in column filter
+    integer, intent(in) :: filter_nolakec(:)    ! column filter for non-lake points
+    integer, intent(in) :: num_lakec            ! number of column non-lake points in column filter
+    integer, intent(in) :: filter_lakec(:)      ! column filter for non-lake points
+    integer, intent(in) :: num_hydrologyc       ! number of column soil points in column filter
+    integer, intent(in) :: filter_hydrologyc(:) ! column filter for soil points
+    !
+    ! !LOCAL VARIABLES:
     integer :: c, p, f, j, fc                  ! indices
     real(r8):: h2osoi_vol
-!-----------------------------------------------------------------------
-
+    !-----------------------------------------------------------------------
 
    associate(& 
    h2osfc                    =>    cws%h2osfc              , & ! Input:  [real(r8) (:)]  surface water (mm)                      
@@ -100,14 +68,12 @@ contains
    ctype                     =>    col%itype               , & ! Input:  [integer (:)]  column type                              
    zwt                       =>    cws%zwt                 , & ! Input:  [real(r8) (:)]  water table depth (m)                   
    zi                        =>    cps%zi                  , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m) 
-
-
    h2ocan_pft                =>    pws%h2ocan                & ! Input:  [real(r8) (:)]  canopy water (mm H2O) (pft-level)       
    )
 
     ! Determine beginning water balance for time step
     ! pft-level canopy water averaged to column
-    call p2c(lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, h2ocan_pft, h2ocan_col)
+    call p2c(bounds, num_nolakec, filter_nolakec, h2ocan_pft, h2ocan_col)
 
     do f = 1, num_hydrologyc
        c = filter_hydrologyc(f)
@@ -144,74 +110,47 @@ contains
 
     end associate 
    end subroutine BeginWaterBalance
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: BalanceCheck
-!
-! !INTERFACE:
-  subroutine BalanceCheck(lbp, ubp, lbc, ubc, lbl, ubl, lbg, ubg)
-!
-! !DESCRIPTION:
-! This subroutine accumulates the numerical truncation errors of the water
-! and energy balance calculation. It is helpful to see the performance of
-! the process of integration.
-!
-! The error for energy balance:
-!
-! error = abs(Net radiation - change of internal energy - Sensible heat
-!             - Latent heat)
-!
-! The error for water balance:
-!
-! error = abs(precipitation - change of water storage - evaporation - runoff)
-!
-! !USES:
-    use clmtype
-    use clm_atmlnd   , only : clm_a2l
-    use subgridAveMod
-    use clm_time_manager , only : get_step_size, get_nstep
-    use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, &
-                              spval, icol_road_perv, icol_road_imperv, istice_mec, &
-                              istdlak, istsoil,istcrop,istwet
-    use clm_varctl   , only : glc_dyntopo, create_glacier_mec_landunit
-!
-! !ARGUMENTS:
-    implicit none
-    integer :: lbp, ubp ! pft-index bounds
-    integer :: lbc, ubc ! column-index bounds
-    integer :: lbl, ubl ! landunit-index bounds
-    integer :: lbg, ubg ! grid-index bounds
-!
-! !CALLED FROM:
-! subroutine clm_driver
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! 10 November 2000: Mariana Vertenstein
-! Migrated to new data structures by Mariana Vertenstein and
-! Peter Thornton
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-!EOP
-!
-! !OTHER LOCAL VARIABLES:
-    integer  :: p,c,l,g                     ! indices
-    real(r8) :: dtime                       ! land model time step (sec)
-    integer  :: nstep                       ! time step number
-    logical  :: found                       ! flag in search loop
-    integer  :: indexp,indexc,indexl,indexg ! index of first found in search loop
-    real(r8) :: forc_rain_col(lbc:ubc)      ! column level rain rate [mm/s]
-    real(r8) :: forc_snow_col(lbc:ubc)      ! column level snow rate [mm/s]
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
+   subroutine BalanceCheck(bounds)
+     !
+     ! !DESCRIPTION:
+     ! This subroutine accumulates the numerical truncation errors of the water
+     ! and energy balance calculation. It is helpful to see the performance of
+     ! the process of integration.
+     !
+     ! The error for energy balance:
+     !
+     ! error = abs(Net radiation - change of internal energy - Sensible heat
+     !             - Latent heat)
+     !
+     ! The error for water balance:
+     !
+     ! error = abs(precipitation - change of water storage - evaporation - runoff)
+     !
+     ! !USES:
+     use clmtype
+     use clm_atmlnd   , only : clm_a2l
+     use subgridAveMod
+     use clm_time_manager , only : get_step_size, get_nstep
+     use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, &
+          spval, icol_road_perv, icol_road_imperv, istice_mec, &
+          istdlak, istsoil,istcrop,istwet
+     use clm_varctl   , only : glc_dyntopo, create_glacier_mec_landunit
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(bounds_type), intent(in) :: bounds  ! bounds
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: p,c,l,g                     ! indices
+     real(r8) :: dtime                       ! land model time step (sec)
+     integer  :: nstep                       ! time step number
+     logical  :: found                       ! flag in search loop
+     integer  :: indexp,indexc,indexl,indexg ! index of first found in search loop
+     real(r8) :: forc_rain_col(bounds%begc:bounds%endc)      ! column level rain rate [mm/s]
+     real(r8) :: forc_snow_col(bounds%begc:bounds%endc)      ! column level snow rate [mm/s]
+     !-----------------------------------------------------------------------
 
 
    associate(& 
@@ -239,13 +178,9 @@ contains
    forc_lwrad                =>    clm_a2l%forc_lwrad      , & ! Input:  [real(r8) (:)]  downward infrared (longwave) radiation (W/m**2)
    forc_solad                =>    clm_a2l%forc_solad      , & ! Input:  [real(r8) (:,:)]  direct beam radiation (vis=forc_sols , nir=forc_soll )
    forc_solai                =>    clm_a2l%forc_solai      , & ! Input:  [real(r8) (:,:)]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
-
-
    ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
    canyon_hwr                =>   lun%canyon_hwr           , & ! Input:  [real(r8) (:)]  ratio of building height to street width
    urbpoi                    =>   lun%urbpoi               , & ! Input:  [logical (:)]  true => landunit is an urban point       
-
-
    cactive                   =>    col%active              , & ! Input:  [logical (:)]  true=>do computations on this column (see reweightMod for details)
    ctype                     =>    col%itype               , & ! Input:  [integer (:)]  column type                              
    cgridcell                 =>   col%gridcell             , & ! Input:  [integer (:)]  column's gridcell index                  
@@ -277,8 +212,6 @@ contains
    snow_sinks                =>    cws%snow_sinks          , & ! Output: [real(r8) (:)]  snow sinks (mm H2O /s)                  
    errh2osno                 =>    cws%errh2osno           , & ! Output: [real(r8) (:)]  error in h2osno (kg m-2)                
    snl                       =>    cps%snl                 , & ! Input:  [integer (:)]  number of snow layers                    
-
-
    pactive                   =>    pft%active              , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
    pgridcell                 =>   pft%gridcell             , & ! Input:  [integer (:)]  pft's gridcell index                     
    plandunit                 =>   pft%landunit             , & ! Input:  [integer (:)]  pft's landunit index                     
@@ -298,8 +231,6 @@ contains
    eflx_wasteheat_pft        =>    pef%eflx_wasteheat_pft  , & ! Input:  [real(r8) (:)]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
    eflx_heat_from_ac_pft     =>    pef%eflx_heat_from_ac_pft  , & ! Input:  [real(r8) (:)] sensible heat flux put back into canyon due to removal by AC (W/m**2)
    eflx_traffic_pft          =>    pef%eflx_traffic_pft    , & ! Input:  [real(r8) (:)]  traffic sensible heat flux (W/m**2)     
-
-
    qflx_runoffg              =>    gwf%qflx_runoffg        , & ! Input:  [real(r8) (:)]  total runoff at gridcell level inc land cover change flux (mm H2O /s)
    qflx_liq_dynbal           =>    gwf%qflx_liq_dynbal     , & ! Input:  [real(r8) (:)]  liq runoff due to dynamic land cover change (mm H2O /s)
    qflx_snwcp_iceg           =>    gwf%qflx_snwcp_iceg     , & ! Input:  [real(r8) (:)]  excess snowfall due to snow cap inc land cover change flux (mm H20/s)
@@ -316,7 +247,7 @@ contains
     ! Determine column level incoming snow and rain
     ! Assume no incident precipitation on urban wall columns (as in Hydrology1Mod.F90).
 
-    do c = lbc,ubc
+    do c = bounds%begc,bounds%endc
        g = cgridcell(c)
        if (ctype(c) == icol_sunwall .or.  ctype(c) == icol_shadewall) then
           forc_rain_col(c) = 0.
@@ -329,7 +260,7 @@ contains
 
     ! Water balance check
 
-    do c = lbc, ubc
+    do c = bounds%begc, bounds%endc
        g = cgridcell(c)
        l = clandunit(c)
       
@@ -363,7 +294,7 @@ contains
     end do
 
     found = .false.
-    do c = lbc, ubc
+    do c = bounds%begc, bounds%endc
        if (abs(errh2o(c)) > 1e-7_r8) then
           found = .true.
           indexc = c
@@ -414,7 +345,7 @@ contains
 
     ! Snow balance check
 
-    do c = lbc, ubc
+    do c = bounds%begc,bounds%endc
        g = cgridcell(c)
        l = clandunit(c)
           ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at 
@@ -477,7 +408,7 @@ contains
     end do
 
     found = .false.
-    do c = lbc, ubc
+    do c = bounds%begc,bounds%endc
        if (cactive(c) .and. abs(errh2osno(c)) > 1.0e-7_r8) then
           found = .true.
           indexc = c
@@ -514,7 +445,7 @@ contains
 
     ! Energy balance checks
 
-    do p = lbp, ubp
+    do p = bounds%begp, bounds%endp
        if (pactive(p)) then
           l = plandunit(p)
           g = pgridcell(p)
@@ -563,7 +494,7 @@ contains
     ! Solar radiation energy balance check
 
     found = .false.
-    do p = lbp, ubp
+    do p = bounds%begp, bounds%endp
        if (pactive(p)) then
           if ( (errsol(p) /= spval) .and. (abs(errsol(p)) > .10_r8) ) then
              found = .true.
@@ -589,7 +520,7 @@ contains
     ! Longwave radiation energy balance check
 
     found = .false.
-    do p = lbp, ubp
+    do p = bounds%begp, bounds%endp
        if (pactive(p)) then
           if ( (errlon(p) /= spval) .and. (abs(errlon(p)) > .10_r8) ) then
              found = .true.
@@ -606,7 +537,7 @@ contains
     ! Surface energy balance check
 
     found = .false.
-    do p = lbp, ubp
+    do p = bounds%begp, bounds%endp
        if (pactive(p)) then
           if (abs(errseb(p)) > .10_r8 ) then
              found = .true.
@@ -632,7 +563,7 @@ contains
     ! Soil energy balance check
 
     found = .false.
-    do c = lbc, ubc
+    do c = bounds%begc,bounds%endc
        if (cactive(c)) then
           if (abs(errsoi_col(c)) > 1.0e-7_r8 ) then
              found = .true.
@@ -650,35 +581,36 @@ contains
     end if
 
     ! Update SH and RUNOFF for dynamic land cover change energy and water fluxes
-    call c2g( lbc, ubc, lbl, ubl, lbg, ubg,                &
-              qflx_runoff(lbc:ubc), qflx_runoffg(lbg:ubg), &
+    call c2g( bounds, &
+              qflx_runoff(bounds%begc:bounds%endc), qflx_runoffg(bounds%begg:bounds%endg), &
               c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-    do g = lbg, ubg
+    do g = bounds%begg, bounds%endg
        qflx_runoffg(g) = qflx_runoffg(g) - qflx_liq_dynbal(g)
     enddo
 
-    call c2g( lbc, ubc, lbl, ubl, lbg, ubg,                      &
-              qflx_snwcp_ice(lbc:ubc), qflx_snwcp_iceg(lbg:ubg), &
+    call c2g( bounds, &
+              qflx_snwcp_ice(bounds%begc:bounds%endc), qflx_snwcp_iceg(bounds%begg:bounds%endg), &
               c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-    do g = lbg, ubg
+    do g = bounds%begg, bounds%endg
        qflx_snwcp_iceg(g) = qflx_snwcp_iceg(g) - qflx_ice_dynbal(g)
     enddo
 
-    call p2g( lbp, ubp, lbc, ubc, lbl, ubl, lbg, ubg,      &
-              eflx_sh_tot(lbp:ubp), eflx_sh_totg(lbg:ubg), &
+    call p2g( bounds, &
+              eflx_sh_tot(bounds%begp:bounds%endp), eflx_sh_totg(bounds%begg:bounds%endg), &
               p2c_scale_type='unity',c2l_scale_type='urbanf',l2g_scale_type='unity')
-    do g = lbg, ubg
+    do g = bounds%begg, bounds%endg
        eflx_sh_totg(g) =  eflx_sh_totg(g) - eflx_dynbal(g)
     enddo
 
-! calculate total water storage for history files
-! first set tws to gridcell total endwb
-    call c2g( lbc, ubc, lbl, ubl, lbg, ubg,                &
-         endwb(lbc:ubc), tws(lbg:ubg), &
+    ! calculate total water storage for history files
+    ! first set tws to gridcell total endwb
+    call c2g( bounds, &
+         endwb(bounds%begc:bounds%endc), tws(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-! second add river storage as gridcell average depth
-! 1.e-3 converts [m3/km2] to [mm]
-    do g = lbg, ubg
+
+    ! second add river storage as gridcell average depth
+    ! 1.e-3 converts [m3/km2] to [mm]
+    do g = bounds%begg, bounds%endg
        tws(g) = tws(g) + volr(g) / area(g) * 1.e-3_r8
     enddo
 100 format (1x,a,' nstep =',i10,' point =',i6,' imbalance =',f12.6,' W/m2')

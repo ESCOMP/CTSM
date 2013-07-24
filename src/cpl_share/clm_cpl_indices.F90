@@ -1,29 +1,23 @@
 module clm_cpl_indices
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: clm_cpl_indices
-!
-! !DESCRIPTION:
-!    Module containing the indices for the fields passed between CLM and
-!    the driver. Includes the River Transport Model fields (RTM) and the
-!    fields needed by the land-ice component (sno).
-!
-! !USES:
-
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  !    Module containing the indices for the fields passed between CLM and
+  !    the driver. Includes the River Transport Model fields (RTM) and the
+  !    fields needed by the land-ice component (sno).
+  !
+  ! !USES:
+  
   use shr_sys_mod,    only : shr_sys_abort
   implicit none
 
   SAVE
   private                              ! By default make data private
-!
-! !PUBLIC MEMBER FUNCTIONS:
-
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: clm_cpl_indices_set        ! Set the coupler indices
-
-!
-! !PUBLIC DATA MEMBERS:
-!
+  !
+  ! !PUBLIC DATA MEMBERS:
+  !
   integer , public :: glc_nec     ! number of elevation classes for glacier_mec landunits 
                                   ! (from coupler) - must equal maxpatch_glcmec from namelist
   integer , parameter, private:: glc_nec_max = 100
@@ -60,10 +54,8 @@ module clm_cpl_indices
   integer, public ::index_l2x_Fall_flxdst4    ! dust flux size bin 4
   integer, public ::index_l2x_Fall_flxvoc     ! MEGAN fluxes
 
-#ifdef LCH4
   integer, public ::index_x2l_Sa_methane
   integer, public ::index_l2x_Fall_methane
-#endif
 
   integer, public :: nflds_l2x = 0
 
@@ -124,45 +116,25 @@ module clm_cpl_indices
   integer, public :: index_x2s_Fsgg_hflx(glc_nec_max) = 0
 
   integer, public :: nflds_x2s = 0
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-! 01/19/2011, Erik Kluzek:         Added protex headers
-! 01/20/2011, Erik Kluzek:         Set nflds
-! 12/11/2011, Mariana Vertenstein  Updated for new coupler fields spec
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
-!=======================================================================
 contains
-!=======================================================================
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: clm_cpl_indices_set
-!
-! !CALLED FROM: lnd_comp_mct or lnd_comp_esmf
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine clm_cpl_indices_set( )
-
-!
-! !DESCRIPTION: 
-! Set the coupler indices needed by the land model coupler
-! interface.
-!
-! !USES:
-  use seq_flds_mod  , only: seq_flds_x2l_fields, seq_flds_l2x_fields,     &
-                            seq_flds_x2s_fields, seq_flds_s2x_fields
-  use mct_mod       , only: mct_aVect, mct_aVect_init, mct_avect_indexra, &
-                            mct_aVect_clean, mct_avect_nRattr
-  use seq_drydep_mod, only: drydep_fields_token, lnd_drydep
-  use shr_megan_mod,  only: shr_megan_fields_token, shr_megan_mechcomps_n
+    
+    !
+    ! !DESCRIPTION: 
+    ! Set the coupler indices needed by the land model coupler
+    ! interface.
+    !
+    ! !USES:
+    use seq_flds_mod  , only: seq_flds_x2l_fields, seq_flds_l2x_fields,     &
+                              seq_flds_x2s_fields, seq_flds_s2x_fields
+    use mct_mod       , only: mct_aVect, mct_aVect_init, mct_avect_indexra, &
+                              mct_aVect_clean, mct_avect_nRattr
+    use seq_drydep_mod, only: drydep_fields_token, lnd_drydep
+    use shr_megan_mod,  only: shr_megan_fields_token, shr_megan_mechcomps_n
 
 ! !ARGUMENTS:
     implicit none
@@ -229,9 +201,7 @@ contains
 
     index_l2x_Fall_fco2_lnd = mct_avect_indexra(l2x,'Fall_fco2_lnd',perrwith='quiet')
 
-#ifdef LCH4
     index_l2x_Fall_methane  = mct_avect_indexra(l2x,'Fall_methane',perrWith='quiet')
-#endif
 
     ! MEGAN fluxes
     if (shr_megan_mechcomps_n>0) then
@@ -256,12 +226,9 @@ contains
     index_x2l_Sa_co2prog    = mct_avect_indexra(x2l,'Sa_co2prog',perrwith='quiet')
     index_x2l_Sa_co2diag    = mct_avect_indexra(x2l,'Sa_co2diag',perrwith='quiet')
 
-#ifdef LCH4
     index_x2l_Sa_methane    = mct_avect_indexra(x2l,'Sa_methane',perrWith='quiet')
-#endif
 
-
-    index_x2l_Slrr_volr       = mct_avect_indexra(x2l,'Slrr_volr')
+    index_x2l_Slrr_volr     = mct_avect_indexra(x2l,'Slrr_volr')
 
     index_x2l_Faxa_lwdn     = mct_avect_indexra(x2l,'Faxa_lwdn')
     index_x2l_Faxa_rainc    = mct_avect_indexra(x2l,'Faxa_rainc')

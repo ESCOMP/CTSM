@@ -1,73 +1,47 @@
-
 module CNBalanceCheckMod
-#ifdef CN
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNBalanceCheckMod
-!
-! !DESCRIPTION:
-! Module for carbon mass balance checking.
-!
-! !USES:
-    use abortutils  , only: endrun
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varctl  , only: iulog
-    implicit none
-    save
-    private
-! !PUBLIC MEMBER FUNCTIONS:
-    public :: BeginCBalance
-    public :: BeginNBalance
-    public :: CBalanceCheck
-    public :: NBalanceCheck
-!
-! !REVISION HISTORY:
-! 4/23/2004: Created by Peter Thornton
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Module for carbon mass balance checking.
+  !
+  ! !USES:
+  use abortutils  , only: endrun
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varctl  , only: iulog, use_nitrif_denitrif
+  use decompMod   , only: bounds_type
+  implicit none
+  save
+  private
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: BeginCBalance
+  public :: BeginNBalance
+  public :: CBalanceCheck
+  public :: NBalanceCheck
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: BeginCBalance
-!
-! !INTERFACE:
-subroutine BeginCBalance(lbc, ubc, num_soilc, filter_soilc)
-!
-! !DESCRIPTION:
-! On the radiation time step, calculate the beginning carbon balance for mass
-! conservation checks.
-!
-! !USES:
-   use clmtype
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: lbc, ubc        ! column bounds
-   integer, intent(in) :: num_soilc       ! number of soil columns filter
-   integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
-!
-! !CALLED FROM:
-! subroutine clm_driver1
-!
-! !REVISION HISTORY:
-! 2/4/05: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-!
+  !-----------------------------------------------------------------------
+  subroutine BeginCBalance(bounds, num_soilc, filter_soilc)
+    !
+    ! !DESCRIPTION:
+    ! On the radiation time step, calculate the beginning carbon balance for mass
+    ! conservation checks.
+    !
+    ! !USES:
+    use clmtype
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    integer, intent(in) :: num_soilc         ! number of soil columns filter
+    integer, intent(in) :: filter_soilc(:)   ! filter for soil columns
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c     ! indices
+    integer :: fc   ! lake filter indices
+    !-----------------------------------------------------------------------
 
-!
-! !OTHER LOCAL VARIABLES:
-   integer :: c     ! indices
-   integer :: fc   ! lake filter indices
-!
-!EOP
-!-----------------------------------------------------------------------
    associate(& 
    col_begcb                      =>    ccbal%begcb                  , & ! Output: [real(r8) (:)]  carbon mass, beginning of time step (gC/m**2)
    totcolc                        =>    ccs%totcolc                    & ! Input:  [real(r8) (:)]  (gC/m2) total column carbon, incl veg and cpool
@@ -85,47 +59,29 @@ subroutine BeginCBalance(lbc, ubc, num_soilc, filter_soilc)
    end do ! end of columns loop
  
 
-    end associate 
+ end associate
  end subroutine BeginCBalance
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: BeginNBalance
-!
-! !INTERFACE:
-subroutine BeginNBalance(lbc, ubc, num_soilc, filter_soilc)
-!
-! !DESCRIPTION:
-! On the radiation time step, calculate the beginning nitrogen balance for mass
-! conservation checks.
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine BeginNBalance(bounds, num_soilc, filter_soilc)
+   !
+   ! !DESCRIPTION:
+   ! On the radiation time step, calculate the beginning nitrogen balance for mass
+   ! conservation checks.
+   !
+   ! !USES:
    use clmtype
-!
-! !ARGUMENTS:
+   !
+   ! !ARGUMENTS:
    implicit none
-   integer, intent(in) :: lbc, ubc        ! column bounds
-   integer, intent(in) :: num_soilc       ! number of soil columns filter
-   integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
-!
-! !CALLED FROM:
-! subroutine clm_driver1
-!
-! !REVISION HISTORY:
-! 2/4/05: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-!
-!
-
-! !OTHER LOCAL VARIABLES:
+   type(bounds_type), intent(in) :: bounds ! bounds
+   integer, intent(in) :: num_soilc        ! number of soil columns filter
+   integer, intent(in) :: filter_soilc(:)   ! filter for soil columns
+   !
+   ! !LOCAL VARIABLES:
    integer :: c     ! indices
    integer :: fc   ! lake filter indices
-!
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
    associate(& 
    col_begnb                      =>    cnbal%begnb                  , & ! Output: [real(r8) (:)]  nitrogen mass, beginning of time step (gN/m**2)
    totcoln                        =>    cns%totcoln                    & ! Input:  [real(r8) (:)]  (gN/m2) total column nitrogen, incl veg 
@@ -142,48 +98,31 @@ subroutine BeginNBalance(lbc, ubc, num_soilc, filter_soilc)
 
    end do ! end of columns loop
  
-    end associate 
+ end associate
  end subroutine BeginNBalance
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CBalanceCheck
-!
-! !INTERFACE:
-subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
-!
-! !DESCRIPTION:
-! On the radiation time step, perform carbon mass conservation check for column and pft
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine CBalanceCheck(bounds, num_soilc, filter_soilc)
+   !
+   ! !DESCRIPTION:
+   ! On the radiation time step, perform carbon mass conservation check for column and pft
+   !
+   ! !USES:
    use clmtype
    use clm_time_manager, only: get_step_size
-!
-! !ARGUMENTS:
+   !
+   ! !ARGUMENTS:
    implicit none
-   integer, intent(in) :: lbc, ubc        ! column bounds
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
-!
-! !CALLED FROM:
-! subroutine clm_driver1
-!
-! !REVISION HISTORY:
-! 12/9/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-! !OTHER LOCAL VARIABLES:
-   integer :: c,err_index  ! indices
-   integer :: fc          ! lake filter indices
+   type(bounds_type), intent(in) :: bounds  ! bounds
+   integer, intent(in) :: num_soilc         ! number of soil columns in filter
+   integer, intent(in) :: filter_soilc(:)   ! filter for soil columns
+   !
+   ! !LOCAL VARIABLES:
+   integer :: c,err_index    ! indices
+   integer :: fc             ! lake filter indices
    logical :: err_found      ! error flag
    real(r8):: dt             ! radiation time step (seconds)
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
 
    associate(& 
    totcolc                        =>    ccs%totcolc                  , & ! Input:  [real(r8) (:)]  (gC/m2) total column carbon, incl veg and cpool
@@ -248,48 +187,34 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
       
       call endrun
    end if
-   
 
-    end associate 
+ end associate
  end subroutine CBalanceCheck
-!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: NBalanceCheck
-!
-! !INTERFACE:
-subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
-!
-! !DESCRIPTION:
-! On the radiation time step, perform nitrogen mass conservation check
-! for column and pft
-!
-! !USES:
+ subroutine NBalanceCheck(bounds, num_soilc, filter_soilc)
+   !
+   ! !DESCRIPTION:
+   ! On the radiation time step, perform nitrogen mass conservation check
+   ! for column and pft
+   !
+   ! !USES:
    use clmtype
    use clm_time_manager, only: get_step_size
    use clm_varpar      , only: crop_prog
-!
-! !ARGUMENTS:
+   !
+   ! !ARGUMENTS:
    implicit none
-   integer, intent(in) :: lbc, ubc        ! column bounds
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
-!
-! !CALLED FROM:
-! subroutine clm_driver1
-!
-! !REVISION HISTORY:
-! 12/9/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
+   type(bounds_type), intent(in) :: bounds  ! bounds
+   integer, intent(in) :: num_soilc         ! number of soil columns in filter
+   integer, intent(in) :: filter_soilc(:)   ! filter for soil columns
+   !
+   ! !LOCAL VARIABLES:
    integer :: c,err_index,j    ! indices
    integer :: fc             ! lake filter indices
    logical :: err_found      ! error flag
    real(r8):: dt             ! radiation time step (seconds)
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
    
    associate(& 
    totcoln                        =>    cns%totcoln                  , & ! Input:  [real(r8) (:)]  (gN/m2) total column nitrogen, incl veg 
@@ -299,13 +224,10 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
    soyfixn_to_sminn               =>    cnf%soyfixn_to_sminn         , & ! Input:  [real(r8) (:)]                                          
    supplement_to_sminn            =>    cnf%supplement_to_sminn      , & ! Input:  [real(r8) (:)]  supplemental N supply (gN/m2/s)         
    denit                          =>    cnf%denit                    , & ! Input:  [real(r8) (:)]  total rate of denitrification (gN/m2/s) 
-#ifndef NITRIF_DENITRIF
    sminn_leached                  =>    cnf%sminn_leached            , & ! Input:  [real(r8) (:)]  soil mineral N pool loss to leaching (gN/m2/s)
-#else
    smin_no3_leached               =>    cnf%smin_no3_leached         , & ! Input:  [real(r8) (:)]  soil mineral NO3 pool loss to leaching (gN/m2/s)
    smin_no3_runoff                =>    cnf%smin_no3_runoff          , & ! Input:  [real(r8) (:)]  soil mineral NO3 pool loss to runoff (gN/m2/s)
    f_n2o_nit                      =>    cnf%f_n2o_nit                , & ! Input:  [real(r8) (:)]  flux of N2o from nitrification [gN/m^2/s]
-#endif
    col_fire_nloss                 =>    cnf%col_fire_nloss           , & ! Input:  [real(r8) (:)]  total column-level fire N loss (gN/m2/s)
    dwt_nloss                      =>    cnf%dwt_nloss                , & ! Input:  [real(r8) (:)]  (gN/m2/s) total nitrogen loss from product pools and conversion
    product_nloss                  =>    cnf%product_nloss            , & ! Input:  [real(r8) (:)]  (gN/m2/s) total wood product nitrogen loss
@@ -339,13 +261,13 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
       
       col_noutputs(c) = denit(c) + col_fire_nloss(c) + dwt_nloss(c) + product_nloss(c)
       
-#ifndef NITRIF_DENITRIF
-      col_noutputs(c) = col_noutputs(c) + sminn_leached(c)
-#else
-      col_noutputs(c) = col_noutputs(c) + f_n2o_nit(c)
+      if (.not. use_nitrif_denitrif) then
+         col_noutputs(c) = col_noutputs(c) + sminn_leached(c)
+      else
+         col_noutputs(c) = col_noutputs(c) + f_n2o_nit(c)
       
-      col_noutputs(c) = col_noutputs(c) + smin_no3_leached(c) + smin_no3_runoff(c)
-#endif
+         col_noutputs(c) = col_noutputs(c) + smin_no3_leached(c) + smin_no3_runoff(c)
+      end if
       
       col_noutputs(c) = col_noutputs(c) - som_n_leached(c)
       
@@ -375,9 +297,7 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
       call endrun
    end if
    
-    end associate 
-  end subroutine NBalanceCheck
- !-----------------------------------------------------------------------
-#endif
+ end associate
+end subroutine NBalanceCheck
  
 end module CNBalanceCheckMod

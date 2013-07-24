@@ -1,94 +1,65 @@
-
 module clm_driverInitMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: clm_driverInitMod
-!
-! !DESCRIPTION:
-! Initialization of clm driver variables needed from previous timestep
-!
-! !PUBLIC TYPES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Initialization of clm driver variables needed from previous timestep
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: clm_driverInit
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: clm_driverInit
-!
-! !INTERFACE:
-  subroutine clm_driverInit(lbc, ubc, lbp, ubp, &
-             num_nolakec, filter_nolakec, num_lakec, filter_lakec)
-!
-! !DESCRIPTION:
-! Initialization of clm driver variables needed from previous timestep
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine clm_driverInit(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec)
+    !
+    ! !DESCRIPTION:
+    ! Initialization of clm driver variables needed from previous timestep
+    !
+    ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use clm_varpar   , only : nlevsno
     use subgridAveMod, only : p2c
-    use clm_varcon, only    : h2osno_max, rair, cpair, grav, istice_mec, lapse_glcmec
-    use clm_atmlnd, only    : clm_a2l
-    use domainMod, only     : ldomain
+    use clm_varcon   , only : h2osno_max, rair, cpair, grav, istice_mec, lapse_glcmec
+    use clm_atmlnd   , only : clm_a2l
+    use domainMod    , only : ldomain
     use clmtype
-    use QsatMod,    only    : Qsat
-
-!
-! !ARGUMENTS:
+    use QsatMod      , only : Qsat
+    use decompMod    , only : bounds_type
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbc, ubc                    ! column-index bounds
-    integer, intent(in) :: lbp, ubp                    ! pft-index bounds
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer, intent(in) :: num_nolakec                 ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
+    integer, intent(in) :: filter_nolakec(:)   ! column filter for non-lake points
     integer, intent(in) :: num_lakec                   ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_lakec(ubc-lbc+1)     ! column filter for non-lake points
-!
-! !CALLED FROM:
-! subroutine driver1
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-!
+    integer, intent(in) :: filter_lakec(:)     ! column filter for non-lake points
+    !
+    ! !LOCAL VARIABLES:
     integer :: g, l, c, p, f, j, fc         ! indices
-
     ! temporaries for topo downscaling
     real(r8) :: hsurf_g,hsurf_c,Hbot
     real(r8) :: zbot_g, tbot_g, pbot_g, thbot_g, qbot_g, qs_g, es_g
     real(r8) :: zbot_c, tbot_c, pbot_c, thbot_c, qbot_c, qs_c, es_c
     real(r8) :: egcm_c, rhos_c
     real(r8) :: dum1,   dum2
-
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
    associate(& 
-   ityplun            => lun%itype               , & ! Output: [integer (:)]  landunit type                            
    snl                => cps%snl                 , & ! Input:  [integer (:)]  number of snow layers                    
    h2osno             => cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
-   h2osno_old         => cws%h2osno_old          , & ! Output: [real(r8) (:)]  snow water (mm H2O) at previous time step
-   do_capsnow         => cps%do_capsnow          , & ! Output: [logical (:)]  true => do snow capping                  
-   frac_iceold        => cps%frac_iceold         , & ! Output: [real(r8) (:,:)]  fraction of ice relative to the tot water
    h2osoi_ice         => cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                      
    h2osoi_liq         => cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                  
    frac_veg_nosno_alb => pps%frac_veg_nosno_alb  , & ! Input:  [integer (:)]  fraction of vegetation not covered by snow (0 OR 1) [-]
    frac_veg_nosno     => pps%frac_veg_nosno      , & ! Input:  [integer (:)]  fraction of vegetation not covered by snow (0 OR 1 now) [-] (pft-level)
+   h2osno_old         => cws%h2osno_old          , & ! Output: [real(r8) (:)]  snow water (mm H2O) at previous time step
+   do_capsnow         => cps%do_capsnow          , & ! Output: [logical (:)]  true => do snow capping                  
+   frac_iceold        => cps%frac_iceold         , & ! Output: [real(r8) (:,:)]  fraction of ice relative to the tot water
    qflx_glcice        => cwf%qflx_glcice         , & ! Output: [real(r8) (:)]  flux of new glacier ice (mm H2O/s) [+ = ice grows]
    eflx_bot           => cef%eflx_bot            , & ! Output: [real(r8) (:)]  heat flux from beneath soil/ice column (W/m**2)
    glc_topo           => cps%glc_topo            , & ! Output: [real(r8) (:)]  sfc elevation for glacier_mec column (m)
@@ -96,17 +67,13 @@ contains
    forc_th            => ces%forc_th             , & ! Output: [real(r8) (:)]  atmospheric potential temperature (Kelvin)
    forc_q             => cws%forc_q              , & ! Output: [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
    forc_pbot          => cps%forc_pbot           , & ! Output: [real(r8) (:)]  atmospheric pressure (Pa)               
-   forc_rho           => cps%forc_rho            , & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
-   clandunit          => col%landunit            , & ! Output: [integer (:)]  column's landunit                        
-   cgridcell          => col%gridcell            , & ! Output: [integer (:)]  column's gridcell                        
-   pactive            => pft%active              , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
-   plandunit          => pft%landunit              & ! Output: [integer (:)]  pft's landunit                           
+   forc_rho           => cps%forc_rho              & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
    )
 
-    do c = lbc, ubc
+    do c = bounds%begc,bounds%endc
 
-      l = clandunit(c)
-      g = cgridcell(c)
+      l = col%landunit(c)
+      g = col%gridcell(c)
 
       ! Initialize column forcing
 
@@ -128,7 +95,7 @@ contains
       eflx_bot(c)    = 0._r8
       
       ! Initialize qflx_glcice, but only over ice_mec landunits (elsewhere, it is spval)
-      if (ityplun(l) == istice_mec) then
+      if (lun%itype(l) == istice_mec) then
          qflx_glcice(c) = 0._r8
       end if
 
@@ -136,8 +103,8 @@ contains
 
     ! Initialize fraction of vegetation not covered by snow (pft-level)
 
-    do p = lbp,ubp
-       if (pactive(p)) then
+    do p = bounds%begp,bounds%endp
+       if (pft%active(p)) then
           frac_veg_nosno(p) = frac_veg_nosno_alb(p)
        else
           frac_veg_nosno(p) = 0._r8
@@ -162,12 +129,12 @@ contains
 
     do f = 1, num_nolakec
        c = filter_nolakec(f)
-       l = clandunit(c)
-       g = cgridcell(c)
+       l = col%landunit(c)
+       g = col%gridcell(c)
 
-       if (ityplun(l) == istice_mec) then   ! downscale to elevation classes
+       if (lun%itype(l) == istice_mec) then   ! downscale to elevation classes
 
-          ! This is a simple downscaling procedure taken from subroutine clm_mapa2l.
+          ! This is a simple downscaling procedure 
           ! Note that forc_hgt, forc_u, and forc_v are not downscaled.
 
           hsurf_g      = ldomain%topo(g)          ! gridcell sfc elevation
@@ -200,7 +167,6 @@ contains
           forc_rho(c)  = rhos_c
 
        endif
-
     enddo    ! num_nolakec
 
     end associate 

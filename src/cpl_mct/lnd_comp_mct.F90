@@ -1,92 +1,67 @@
 module lnd_comp_mct
   
-!---------------------------------------------------------------------------
-!BOP
-!
-! !MODULE: lnd_comp_mct
-!
-!  Interface of the active land model component of CESM the CLM (Community Land Model)
-!  with the main CESM driver. This is a thin interface taking CESM driver information
-!  in MCT (Model Coupling Toolkit) format and converting it to use by CLM.
-!
-! !DESCRIPTION:
-!
-! !USES:
+  !---------------------------------------------------------------------------
+  ! !DESCRIPTION:
+  !  Interface of the active land model component of CESM the CLM (Community Land Model)
+  !  with the main CESM driver. This is a thin interface taking CESM driver information
+  !  in MCT (Model Coupling Toolkit) format and converting it to use by CLM.
+  !
+  ! !USES:
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use shr_sys_mod      , only : shr_sys_flush
   use mct_mod          , only : mct_aVect, mct_gsmap
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  use decompMod        , only : bounds_type, ldecomp
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   SAVE
   private                              ! By default make data private
-!
-! !PUBLIC MEMBER FUNCTIONS:
-!
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: lnd_init_mct               ! clm initialization
   public :: lnd_run_mct                ! clm run phase
   public :: lnd_final_mct              ! clm finalization/cleanup
-!
-! !PUBLIC DATA MEMBERS: None
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-! Dec/18/2009 Make sure subroutines have documentation. Erik Kluzek
-!
-! !PRIVATE MEMBER FUNCTIONS:
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
   private :: lnd_SetgsMap_mct         ! Set the land model MCT GS map
   private :: lnd_domain_mct           ! Set the land model domain information
   private :: lnd_export_mct           ! export land data to CESM coupler
   private :: lnd_import_mct           ! import data from the CESM coupler to the land model
   private :: sno_export_mct
   private :: sno_import_mct
-!
-! !PRIVATE DATA MEMBERS:
-!
-! Time averaged flux fields
-!  
+  !
+  ! !PRIVATE DATA MEMBERS:
+  ! Time averaged flux fields
   type(mct_aVect)   :: l2x_l_SNAP     ! Snapshot of land to coupler data on the land grid
   type(mct_aVect)   :: l2x_l_SUM      ! Summation of land to coupler data on the land grid
-
   type(mct_aVect)   :: s2x_s_SNAP     ! Snapshot of sno to coupler data on the land grid
   type(mct_aVect)   :: s2x_s_SUM      ! Summation of sno to coupler data on the land grid 
-!
-! Time averaged counter for flux fields
-!
+  ! Time averaged counter for flux fields
   integer :: avg_count                ! Number of times snapshots of above flux data summed together
   integer :: avg_count_sno
-!
-! Atmospheric mode  
-!
+  ! Atmospheric mode  
   logical :: atm_prognostic           ! Flag if active atmosphere component or not
+  !---------------------------------------------------------------------------
 
-!EOP
-!===============================================================
 contains
-!===============================================================
 
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: lnd_init_mct
-!
-! !INTERFACE:
+  !---------------------------------------------------------------------------
   subroutine lnd_init_mct( EClock, cdata_l, x2l_l, l2x_l, &
                                    cdata_s, x2s_s, s2x_s, &
                                    NLFilename )
-!
-! !DESCRIPTION:
-! Initialize land surface model and obtain relevant atmospheric model arrays
-! back from (i.e. albedos, surface temperature and snow cover over land).
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Initialize land surface model and obtain relevant atmospheric model arrays
+    ! back from (i.e. albedos, surface temperature and snow cover over land).
+    !
+    ! !USES:
     use abortutils       , only : endrun
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, &
                                   set_nextsw_cday
     use clm_atmlnd       , only : clm_l2a
     use clm_glclnd       , only : clm_s2x
     use clm_initializeMod, only : initialize1, initialize2
-    use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
+    use clm_varctl       , only : finidat,single_column, clm_varctl_set, iulog, noland, &
                                   inst_index, inst_suffix, inst_name, &
                                   create_glacier_mec_landunit 
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
@@ -109,17 +84,17 @@ contains
     use seq_flds_mod
     use mct_mod
     use ESMF
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !ARGUMENTS:
     type(ESMF_Clock),           intent(in)    :: EClock           ! Input synchronization clock
     type(seq_cdata),            intent(inout) :: cdata_l          ! Input land-model driver data
     type(mct_aVect),            intent(inout) :: x2l_l, l2x_l     ! land model import and export states
     type(seq_cdata),            intent(inout) :: cdata_s          ! Input snow-model (land-ice) driver data
     type(mct_aVect),            intent(inout) :: x2s_s, s2x_s     ! Snow-model import and export states
     character(len=*), optional, intent(in)    :: NLFilename       ! Namelist filename to read
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer                          :: LNDID	     ! Land identifyer
     integer                          :: mpicom_lnd   ! MPI communicator
     type(mct_gsMap),         pointer :: GSMap_lnd    ! Land model MCT GS map
@@ -145,7 +120,6 @@ contains
     character(len=SHR_KIND_CL) :: version            ! Model version
     character(len=SHR_KIND_CL) :: username           ! user running the model
     integer :: nsrest                                ! clm restart type
-    integer :: perpetual_ymd                         ! perpetual date
     integer :: ref_ymd                               ! reference date (YYYYMMDD)
     integer :: ref_tod                               ! reference time of day (sec)
     integer :: start_ymd                             ! start date (YYYYMMDD)
@@ -153,18 +127,12 @@ contains
     integer :: stop_ymd                              ! stop date (YYYYMMDD)
     integer :: stop_tod                              ! stop time of day (sec)
     logical :: brnch_retain_casename                 ! flag if should retain the case name on a branch start type
-    logical :: perpetual_run                         ! flag if should cycle over a perpetual date or not
     integer :: lbnum                                 ! input to memory diagnostic
     integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
-    integer :: begg, endg
+    type(bounds_type) :: bounds       ! bounds
     character(len=32), parameter :: sub = 'lnd_init_mct'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! Set cdata data
 
@@ -226,8 +194,7 @@ contains
                                    ref_tod=ref_tod, stop_ymd=stop_ymd,   &
                                    stop_tod=stop_tod,                    &
                                    calendar=calendar )
-    call seq_infodata_GetData(infodata, perpetual=perpetual_run,                &
-                              perpetual_ymd=perpetual_ymd, case_name=caseid,    &
+    call seq_infodata_GetData(infodata, case_name=caseid,    &
                               case_desc=ctitle, single_column=single_column,    &
                               scmlat=scmlat, scmlon=scmlon,                     &
                               brnch_retain_casename=brnch_retain_casename,      &
@@ -237,8 +204,7 @@ contains
                                 )
     call set_timemgr_init( calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
                            ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd,         &
-                           stop_tod_in=stop_tod,  perpetual_run_in=perpetual_run,                &
-                           perpetual_ymd_in=perpetual_ymd )
+                           stop_tod_in=stop_tod)
     if (     trim(starttype) == trim(seq_infodata_start_type_start)) then
        nsrest = nsrStartup
     else if (trim(starttype) == trim(seq_infodata_start_type_cont) ) then
@@ -249,11 +215,11 @@ contains
        call endrun( sub//' ERROR: unknown starttype' )
     end if
 
-    call set_clmvarctl(    caseid_in=caseid, ctitle_in=ctitle,                     &
-                           brnch_retain_casename_in=brnch_retain_casename,         &
-                           single_column_in=single_column, scmlat_in=scmlat,       &
-                           scmlon_in=scmlon, nsrest_in=nsrest, version_in=version, &
-                           hostname_in=hostname, username_in=username)
+    call clm_varctl_set(caseid_in=caseid, ctitle_in=ctitle,                     &
+                        brnch_retain_casename_in=brnch_retain_casename,         &
+                        single_column_in=single_column, scmlat_in=scmlat,       &
+                        scmlon_in=scmlon, nsrest_in=nsrest, version_in=version, &
+                        hostname_in=hostname, username_in=username)
 
     ! Read namelist, grid and surface data
 
@@ -262,9 +228,9 @@ contains
     ! If no land then exit out of initialization
 
     if ( noland ) then
-           call seq_infodata_PutData( infodata, sno_present   =.false.)
-           call seq_infodata_PutData( infodata, lnd_present   =.false.)
-           call seq_infodata_PutData( infodata, lnd_prognostic=.false.)
+       call seq_infodata_PutData( infodata, sno_present   =.false.)
+       call seq_infodata_PutData( infodata, lnd_present   =.false.)
+       call seq_infodata_PutData( infodata, lnd_prognostic=.false.)
        return
     end if
 
@@ -275,11 +241,15 @@ contains
        call endrun( sub//' ERROR: atmosphere model MUST send aerosols to CLM' )
     end if
 
+    ! Determine processor bounds
+
+    call get_proc_bounds( bounds )
+
     ! Initialize lnd gsMap and domain
 
-    call lnd_SetgsMap_mct( mpicom_lnd, LNDID, gsMap_lnd ) 	
+    call lnd_SetgsMap_mct( bounds, mpicom_lnd, LNDID, gsMap_lnd ) 	
     lsize = mct_gsMap_lsize(gsMap_lnd, mpicom_lnd)
-    call lnd_domain_mct( lsize, gsMap_lnd, dom_l )
+    call lnd_domain_mct( bounds, lsize, gsMap_lnd, dom_l )
 
     ! Initialize lnd attribute vectors coming from driver
 
@@ -318,18 +288,17 @@ contains
 
     ! Create land export state 
 
-    call get_proc_bounds(begg, endg) 
-    call lnd_export_mct( clm_l2a, l2x_l, begg, endg )
+    call lnd_export_mct( bounds, clm_l2a, l2x_l)
 
     if (create_glacier_mec_landunit) then
        call seq_cdata_setptrs(cdata_s, gsMap=gsMap_sno, dom=dom_s)
 
        ! Initialize sno gsMap (same as gsMap_lnd)
-       call lnd_SetgsMap_mct( mpicom_lnd, LNDID, gsMap_sno )
+       call lnd_SetgsMap_mct(bounds, mpicom_lnd, LNDID, gsMap_sno)
        lsize = mct_gsMap_lsize(gsMap_sno, mpicom_lnd)
 
        ! Initialize sno domain (same as lnd domain)
-       call lnd_domain_mct( lsize, gsMap_sno, dom_s )
+       call lnd_domain_mct(bounds, lsize, gsMap_sno, dom_s)
 
        ! Initialize sno attribute vectors
        call mct_aVect_init(x2s_s, rList=seq_flds_x2s_fields, lsize=lsize)
@@ -349,7 +318,7 @@ contains
        call mct_aVect_zero(s2x_s_SNAP )
 
        ! Create mct sno export state
-       call sno_export_mct(clm_s2x, s2x_s)
+       call sno_export_mct(bounds, clm_s2x, s2x_s)
     endif   ! create_glacier_mec_landunit
 
     ! Initialize averaging counter
@@ -400,22 +369,18 @@ contains
 
   end subroutine lnd_init_mct
 
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: lnd_run_mct
-!
-! !INTERFACE:
+  !---------------------------------------------------------------------------
   subroutine lnd_run_mct( EClock, cdata_l, x2l_l, l2x_l, &
                                   cdata_s, x2s_s, s2x_s)
-!
-! !DESCRIPTION:
-! Run clm model
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Run clm model
+    !
+    ! !USES:
     use shr_kind_mod    ,only : r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd      ,only : clm_l2a, clm_a2l
+    use clm_glclnd      ,only : clm_s2x, clm_x2s
     use clm_driver      ,only : clm_drv
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
@@ -431,15 +396,14 @@ contains
     use seq_infodata_mod,only : seq_infodata_type, seq_infodata_GetData
     use spmdMod         ,only : masterproc, mpicom
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
-    use clm_glclnd      ,only : clm_s2x, clm_x2s, unpack_clm_x2s
     use shr_orb_mod     ,only : shr_orb_decl
     use clm_varorb      ,only : eccen, mvelpp, lambm0, obliqr
     use clm_cpl_indices ,only : nflds_l2x, nflds_x2l
     use mct_mod
     use ESMF
     implicit none
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     type(ESMF_Clock) , intent(in)    :: EClock    ! Input synchronization clock from driver
     type(seq_cdata)  , intent(inout) :: cdata_l   ! Input driver data for land model
     type(mct_aVect)  , intent(inout) :: x2l_l     ! Import state to land model
@@ -447,8 +411,8 @@ contains
     type(seq_cdata)  , intent(in)    :: cdata_s   ! Input driver data for snow model (land-ice)
     type(mct_aVect)  , intent(inout) :: x2s_s     ! Import state for snow model
     type(mct_aVect)  , intent(inout) :: s2x_s     ! Export state for snow model
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer :: ymd_sync                   ! Sync date (YYYYMMDD)
     integer :: yr_sync                    ! Sync current year
     integer :: mon_sync                   ! Sync current month
@@ -483,14 +447,14 @@ contains
     real(r8) :: declinp1              ! solar declination angle in radians for nstep+1
     real(r8) :: eccf                  ! earth orbit eccentricity factor
     real(r8) :: recip                 ! reciprical
+    type(bounds_type) :: bounds       ! bounds
     character(len=32)            :: rdate       ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
+
+    ! Determine processor bounds
+
+    call get_proc_bounds(bounds)
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -518,13 +482,11 @@ contains
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
     rstwr_sync = seq_timemgr_RestartAlarmIsOn( EClock )
 
-    call get_proc_bounds(begg, endg)
-
     ! Map MCT to land data type
     ! Perform downscaling if appropriate
 
     call t_startf ('lc_lnd_import')
-    call lnd_import_mct( x2l_l, clm_a2l, begg, endg )
+    call lnd_import_mct( bounds, x2l_l, clm_a2l)
     
     ! Map to clm (only when state and/or fluxes need to be updated)
 
@@ -532,8 +494,7 @@ contains
        update_glc2sno_fields  = .false.
        call seq_infodata_GetData(infodata, glc_g2supdate = update_glc2sno_fields)
        if (update_glc2sno_fields) then
-          call sno_import_mct( x2s_s, clm_x2s )
-          call unpack_clm_x2s(clm_x2s)
+          call sno_import_mct( bounds, x2s_s, clm_x2s )
        endif ! update_glc2sno
     endif ! create_glacier_mec_landunit
     call t_stopf ('lc_lnd_import')
@@ -592,7 +553,7 @@ contains
        ! Create l2x_l export state - add river runoff input to l2x_l if appropriate
        
        call t_startf ('lc_lnd_export')
-       call lnd_export_mct( clm_l2a, l2x_l, begg, endg )
+       call lnd_export_mct( bounds, clm_l2a, l2x_l)
        call t_stopf ('lc_lnd_export')
 
        ! Do not accumulate on first coupling freq - consistency with ccsm3
@@ -610,7 +571,7 @@ contains
        ! Map sno data type to MCT
 
        if (create_glacier_mec_landunit) then
-          call sno_export_mct(clm_s2x, s2x_s)
+          call sno_export_mct(bounds, clm_s2x, s2x_s)
           if (nstep <= 1) then
              call mct_aVect_copy( s2x_s, s2x_s_SUM )
              avg_count_sno = 1
@@ -681,27 +642,20 @@ contains
 
   end subroutine lnd_run_mct
 
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: lnd_final_mct
-!
-! !INTERFACE:
-  subroutine lnd_final_mct( EClock, cdata_l, x2l_l, l2x_l, &
-                                    cdata_s, x2s_s, s2x_s )
-!
-! !DESCRIPTION:
-! Finalize land surface model
-!
-!------------------------------------------------------------------------------
-!
+  !---------------------------------------------------------------------------
+  subroutine lnd_final_mct( EClock, cdata_l, x2l_l, l2x_l, cdata_s, x2s_s, s2x_s )
+    !
+    ! !DESCRIPTION:
+    ! Finalize land surface model
+
     use seq_cdata_mod   ,only : seq_cdata, seq_cdata_setptrs
     use seq_timemgr_mod ,only : seq_timemgr_EClockGetData, seq_timemgr_StopAlarmIsOn, &
                                 seq_timemgr_RestartAlarmIsOn, seq_timemgr_EClockDateInSync
     use mct_mod
     use esmf
-   implicit none
-! !ARGUMENTS:
+    implicit none
+    !
+    ! !ARGUMENTS:
     type(ESMF_Clock) , intent(in)    :: EClock    ! Input synchronization clock from driver
     type(seq_cdata)  , intent(in)    :: cdata_l   ! Input driver data for land model
     type(mct_aVect)  , intent(inout) :: x2l_l     ! Import state to land model
@@ -709,70 +663,48 @@ contains
     type(seq_cdata)  , intent(in)    :: cdata_s   ! Input driver data for snow model (land-ice)
     type(mct_aVect)  , intent(inout) :: x2s_s     ! Import state for snow model
     type(mct_aVect)  , intent(inout) :: s2x_s     ! Export state for snow model
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
-   ! fill this in
+    ! fill this in
   end subroutine lnd_final_mct
 
-!=================================================================================
-
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: lnd_SetgsMap_mct
-!
-! !INTERFACE:
-  subroutine lnd_SetgsMap_mct( mpicom_lnd, LNDID, gsMap_lnd )
-!-------------------------------------------------------------------
-!
-! !DESCRIPTION:
-!
-! Set the MCT GS map for the land model
-!
-!-------------------------------------------------------------------
-! !USES:
+  !---------------------------------------------------------------------------
+  subroutine lnd_SetgsMap_mct( bounds, mpicom_lnd, LNDID, gsMap_lnd )
+    !
+    ! !DESCRIPTION:
+    ! Set the MCT GS map for the land model
+    !
+    ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
-    use decompMod    , only : get_proc_bounds, ldecomp
     use domainMod    , only : ldomain
     use mct_mod      , only : mct_gsMap, mct_gsMap_init
     implicit none
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds       ! bounds
     integer        , intent(in)  :: mpicom_lnd    ! MPI communicator for the clm land model
     integer        , intent(in)  :: LNDID         ! Land model identifyer number
     type(mct_gsMap), intent(out) :: gsMap_lnd     ! Resulting MCT GS map for the land model
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer,allocatable :: gindex(:)  ! Number the local grid points
     integer :: i, j, n, gi            ! Indices
     integer :: lsize,gsize            ! GS Map size
     integer :: ier                    ! Error code
-    integer :: begg, endg             ! Beginning/Ending grid cell index
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
     ! Build the land grid numbering for MCT
     ! NOTE:  Numbering scheme is: West to East and South to North
     ! starting at south pole.  Should be the same as what's used in SCRIP
     
-    call get_proc_bounds(begg, endg)
-
-    allocate(gindex(begg:endg),stat=ier)
+    allocate(gindex(bounds%begg:bounds%endg),stat=ier)
 
     ! number the local grid
 
-    do n = begg, endg
+    do n = bounds%begg, bounds%endg
        gindex(n) = ldecomp%gdc2glo(n)
     end do
-    lsize = endg-begg+1
+    lsize = bounds%endg - bounds%begg + 1
     gsize = ldomain%ni * ldomain%nj
 
     call mct_gsMap_init( gsMap_lnd, gindex, mpicom_lnd, LNDID, lsize, gsize )
@@ -781,23 +713,15 @@ contains
 
   end subroutine lnd_SetgsMap_mct
 
-!=================================================================================
 
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: lnd_export_mct
-!
-! !INTERFACE:
-  subroutine lnd_export_mct( clm_l2a, l2x_l, begg, endg )   
-!
-! !DESCRIPTION:
-!
-! Convert the data to be sent from the clm model to the coupler from clm data types
-! to MCT data types.
-! 
-!---------------------------------------------------------------------------
-! !USES:
+  !---------------------------------------------------------------------------
+  subroutine lnd_export_mct( bounds, clm_l2a, l2x_l)
+    !
+    ! !DESCRIPTION:
+    ! Convert the data to be sent from the clm model to the coupler from clm data types
+    ! to MCT data types.
+    ! 
+    ! !USES:
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use clm_varctl         , only : iulog
     use clm_time_manager   , only : get_nstep, get_step_size  
@@ -806,31 +730,26 @@ contains
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     use clm_cpl_indices
     use clmtype
+    !
+    ! !ARGUMENTS:
     implicit none
-! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds  ! bounds
     type(lnd2atm_type), intent(inout) :: clm_l2a    ! clm land to atmosphere exchange data type
     type(mct_aVect)   , intent(inout) :: l2x_l      ! Land to coupler export state on land grid
-    integer           , intent(in)    :: begg       ! beginning grid cell index
-    integer           , intent(in)    :: endg       ! ending grid cell index
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer  :: g,i                           ! indices
     integer  :: ier                           ! error status
     integer  :: nstep                         ! time step index
     integer  :: dtime                         ! time step   
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     
     ! cesm sign convention is that fluxes are positive downward
 
     l2x_l%rAttr(:,:) = 0.0_r8
 
-    do g = begg,endg
-       i = 1 + (g-begg)
+    do g = bounds%begg,bounds%endg
+       i = 1 + (g-bounds%begg)
        l2x_l%rAttr(index_l2x_Sl_t,i)        =  clm_l2a%t_rad(g)
        l2x_l%rAttr(index_l2x_Sl_snowh,i)    =  clm_l2a%h2osno(g)
        l2x_l%rAttr(index_l2x_Sl_avsdr,i)    =  clm_l2a%albd(g,1)
@@ -874,11 +793,9 @@ contains
                -clm_l2a%flxvoc(g,:shr_megan_mechcomps_n)
        end if
 
-#ifdef LCH4
        if (index_l2x_Fall_methane /= 0) then
           l2x_l%rAttr(index_l2x_Fall_methane,i) = -clm_l2a%flux_ch4(g) 
        endif
-#endif
 
        ! sign convention is positive downward with 
        ! hierarchy of atm/glc/lnd/rof/ice/ocn.  so water sent from land to rof is positive
@@ -890,23 +807,14 @@ contains
 
   end subroutine lnd_export_mct
 
-!====================================================================================
-
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: lnd_import_mct
-!
-! !INTERFACE:
-  subroutine lnd_import_mct( x2l_l, a2l, begg, endg )
-!
-! !DESCRIPTION:
-!
-! Convert the input data from the coupler to the land model from MCT import state
-! into internal clm data types.
-!
-!---------------------------------------------------------------------------
-! !USES:
+  !---------------------------------------------------------------------------
+  subroutine lnd_import_mct( bounds, x2l_l, a2l)
+    !
+    ! !DESCRIPTION:
+    ! Convert the input data from the coupler to the land model from MCT import state
+    ! into internal clm data types.
+    !
+    ! !USES:
     use shr_kind_mod    , only: r8 => shr_kind_r8
     use clm_atmlnd      , only: atm2lnd_type
     use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
@@ -919,13 +827,13 @@ contains
     use clmtype
     use domainMod        , only : ldomain
     implicit none
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
+    type(bounds_type) , intent(in) :: bounds  ! bounds
     type(mct_aVect)   , intent(inout) :: x2l_l   ! Driver MCT import state to land model
     type(atm2lnd_type), intent(inout) :: a2l     ! clm internal input data type
-    integer           , intent(in)    :: begg	
-    integer           , intent(in)    :: endg
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer  :: g,i,nstep,ier        ! indices, number of steps, and error code
     real(r8) :: forc_rainc           ! rainxy Atm flux mm/s
     real(r8) :: e                    ! vapor pressure (Pa)
@@ -960,13 +868,7 @@ contains
     tdc(t) = min( 50._r8, max(-50._r8,(t-SHR_CONST_TKFRZ)) )
     esatw(t) = 100._r8*(a0+t*(a1+t*(a2+t*(a3+t*(a4+t*(a5+t*a6))))))
     esati(t) = 100._r8*(b0+t*(b1+t*(b2+t*(b3+t*(b4+t*(b5+t*b6))))))
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-! 27 February 2008: Keith Oleson; Forcing height change
-!
-!EOP
-!---------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
     co2_type_idx = 0
     if (co2_type == 'prognostic') then
@@ -987,8 +889,8 @@ contains
     ! Below the units are therefore given in mm/s.
     
 
-    do g = begg,endg
-        i = 1 + (g - begg)
+    do g = bounds%begg,bounds%endg
+        i = 1 + (g - bounds%begg)
        
         ! Determine flooding input, sign convention is positive downward and
         ! hierarchy is atm/glc/lnd/rof/ice/ocn.  so water sent from rof to land is negative,
@@ -1048,11 +950,9 @@ contains
            co2_ppmv_diag = co2_ppmv
         end if
 
-#ifdef LCH4
         if (index_x2l_Sa_methane /= 0) then
            a2l%forc_pch4(g) = x2l_l%rAttr(index_x2l_Sa_methane,i)
         endif
-#endif
 
         ! Determine derived quantities for required fields
         a2l%forc_hgt_u(g) = a2l%forc_hgt(g)    !observational height of wind [m]
@@ -1098,52 +998,36 @@ contains
         end if
      end do
 
-   end subroutine lnd_import_mct
+  end subroutine lnd_import_mct
 
-!===============================================================================
-
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: lnd_domain_mct
-!
-! !INTERFACE:
-  subroutine lnd_domain_mct( lsize, gsMap_l, dom_l )
-!
-! !DESCRIPTION:
-!
-! Send the land model domain information to the coupler
-!
-!---------------------------------------------------------------------------
-! !USES:
+  !---------------------------------------------------------------------------
+  subroutine lnd_domain_mct( bounds, lsize, gsMap_l, dom_l )
+    !
+    ! !DESCRIPTION:
+    ! Send the land model domain information to the coupler
+    !
+    ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_varcon  , only : re
     use domainMod   , only : ldomain
-    use decompMod   , only : get_proc_bounds
     use spmdMod     , only : iam
     use mct_mod     , only : mct_gsMap, mct_gGrid, mct_gGrid_importIAttr, &
                              mct_gGrid_importRAttr, mct_gGrid_init,       &
                              mct_gsMap_orderedPoints
     use seq_flds_mod
+    !
+    ! !ARGUMENTS: 
     implicit none
-! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer        , intent(in)    :: lsize     ! land model domain data size
     type(mct_gsMap), intent(inout) :: gsMap_l   ! Output land model MCT GS map
     type(mct_ggrid), intent(out)   :: dom_l     ! Output domain information for land model
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
     !
     ! Local Variables
-    !
     integer :: g,i,j              ! index
-    integer :: begg, endg         ! beginning and ending gridcell indices
     real(r8), pointer :: data(:)  ! temporary
     integer , pointer :: idata(:) ! temporary
-    !-------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     !
     ! Initialize mct domain type
     ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
@@ -1172,39 +1056,35 @@ contains
     data(:) = 0.0_R8     
     call mct_gGrid_importRAttr(dom_l,"mask" ,data,lsize) 
     !
-    ! Determine bounds
-    !
-    call get_proc_bounds(begg, endg)
-    !
     ! Fill in correct values for domain components
     ! Note aream will be filled in in the atm-lnd mapper
     !
-    do g = begg,endg
-       i = 1 + (g - begg)
+    do g = bounds%begg,bounds%endg
+       i = 1 + (g - bounds%begg)
        data(i) = ldomain%lonc(g)
     end do
     call mct_gGrid_importRattr(dom_l,"lon",data,lsize) 
 
-    do g = begg,endg
-       i = 1 + (g - begg)
+    do g = bounds%begg,bounds%endg
+       i = 1 + (g - bounds%begg)
        data(i) = ldomain%latc(g)
     end do
     call mct_gGrid_importRattr(dom_l,"lat",data,lsize) 
 
-    do g = begg,endg
-       i = 1 + (g - begg)
+    do g = bounds%begg,bounds%endg
+       i = 1 + (g - bounds%begg)
        data(i) = ldomain%area(g)/(re*re)
     end do
     call mct_gGrid_importRattr(dom_l,"area",data,lsize) 
 
-    do g = begg,endg
-       i = 1 + (g - begg)
+    do g = bounds%begg,bounds%endg
+       i = 1 + (g - bounds%begg)
        data(i) = real(ldomain%mask(g), r8)
     end do
     call mct_gGrid_importRattr(dom_l,"mask",data,lsize) 
 
-    do g = begg,endg
-       i = 1 + (g - begg)
+    do g = bounds%begg,bounds%endg
+       i = 1 + (g - bounds%begg)
        data(i) = real(ldomain%frac(g), r8)
     end do
     call mct_gGrid_importRattr(dom_l,"frac",data,lsize) 
@@ -1214,29 +1094,28 @@ contains
 
   end subroutine lnd_domain_mct
     
-!===============================================================================
+  !===============================================================================
 
-  subroutine sno_export_mct( s2x, s2x_s )   
+  subroutine sno_export_mct( bounds, s2x, s2x_s )   
 
-    use clm_glclnd      , only : lnd2glc_type
-    use decompMod       , only : get_proc_bounds
+    use clm_glclnd       , only : lnd2glc_type
     use clm_cpl_indices 
     use clm_varctl       , only : iulog
-
+    !
+    ! Arguments
+    type(bounds_type), intent(in) :: bounds  ! bounds
     type(lnd2glc_type), intent(inout) :: s2x
     type(mct_aVect)   , intent(inout) :: s2x_s
-
+    !
+    ! Local Variables
     integer :: g,i,num
-    integer :: begg, endg    ! beginning and ending gridcell indices
     !-----------------------------------------------------
-
-    call get_proc_bounds(begg, endg)
 
     ! qice is positive if ice is growing, negative if melting
 
     s2x_s%rAttr(:,:) = 0.0_r8
-    do g = begg,endg
-       i = 1 + (g-begg)
+    do g = bounds%begg,bounds%endg
+       i = 1 + (g-bounds%begg)
        do num = 1,glc_nec
           s2x_s%rAttr(index_s2x_Ss_tsrf(num),i)   = s2x%tsrf(g,num)
           s2x_s%rAttr(index_s2x_Ss_topo(num),i)   = s2x%topo(g,num)
@@ -1246,38 +1125,52 @@ contains
 
   end subroutine sno_export_mct
 
-!====================================================================================
+  !====================================================================================
 
-  subroutine sno_import_mct( x2s_s, x2s )
+  subroutine sno_import_mct( bounds, x2s, clm_x2s )
 
+    use clmtype
     use clm_glclnd      , only: glc2lnd_type
-    use decompMod       , only: get_proc_bounds
-    use mct_mod         , only: mct_aVect
+    use clm_varcon      , only: istice_mec
     use clm_cpl_indices
+    use mct_mod         , only: mct_aVect
     !
     ! Arguments
-    !
-    type(mct_aVect)   , intent(inout) :: x2s_s
-    type(glc2lnd_type), intent(inout) :: x2s
+    type(bounds_type) , intent(in)    :: bounds  ! bounds
+    type(mct_aVect)   , intent(inout) :: x2s
+    type(glc2lnd_type), intent(inout) :: clm_x2s
     !
     ! Local Variables
-    !
-    integer  :: g,i,num
-    integer  :: begg, endg   ! beginning and ending gridcell indices
+    integer :: g,l,c,n,i,num           ! indices
+    logical :: update_glc2sno_fields   ! if true, update glacier_mec fields
     !-----------------------------------------------------
 
-    call get_proc_bounds(begg, endg)
-
-    do g = begg,endg
-       i = 1 + (g - begg)
+    do g = bounds%begg,bounds%endg
+       i = 1 + (g - bounds%begg)
        do num = 1,glc_nec
-          x2s%frac(g,num)  = x2s_s%rAttr(index_x2s_Sg_frac(num),i)
-          x2s%topo(g,num)  = x2s_s%rAttr(index_x2s_Sg_topo(num),i)
-          x2s%hflx(g,num)  = x2s_s%rAttr(index_x2s_Fsgg_hflx(num),i)
-          x2s%rofi(g,num)  = x2s_s%rAttr(index_x2s_Fsgg_rofi(num),i)
-          x2s%rofl(g,num)  = x2s_s%rAttr(index_x2s_Fsgg_rofl(num),i)
+          clm_x2s%frac(g,num)  = x2s%rAttr(index_x2s_Sg_frac(num),i)
+          clm_x2s%topo(g,num)  = x2s%rAttr(index_x2s_Sg_topo(num),i)
+          clm_x2s%hflx(g,num)  = x2s%rAttr(index_x2s_Fsgg_hflx(num),i)
+          clm_x2s%rofi(g,num)  = x2s%rAttr(index_x2s_Fsgg_rofi(num),i)
+          clm_x2s%rofl(g,num)  = x2s%rAttr(index_x2s_Fsgg_rofl(num),i)
        end do
-     end do  
+    end do
+
+    update_glc2sno_fields = .false.
+    if (update_glc2sno_fields) then 
+       do c = bounds%begc, bounds%endc
+          l = col%landunit(c)
+          g = col%gridcell(c)
+          if (lun%itype(l) == istice_mec) then
+             n = c -lun%coli(l) + 1    ! elevation class index
+             cps%glc_frac(c) = clm_x2s%frac(g,n)
+             cps%glc_topo(c) = clm_x2s%topo(g,n)
+             cwf%glc_rofi(c) = clm_x2s%rofi(g,n)
+             cwf%glc_rofl(c) = clm_x2s%rofl(g,n)
+             cef%eflx_bot(c) = clm_x2s%hflx(g,n)
+          endif
+       enddo
+    endif   ! update fields
 
    end subroutine sno_import_mct
 

@@ -1,98 +1,80 @@
 module CNVegStructUpdateMod
-
-#ifdef CN
 !-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNVegStructUpdateMod
-!
-! !DESCRIPTION:
-! Module for vegetation structure updates (LAI, SAI, htop, hbot)
-!
-! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    implicit none
-    save
-    private
-! !PUBLIC MEMBER FUNCTIONS:
-    public :: CNVegStructUpdate
-!
-! !REVISION HISTORY:
-! 4/23/2004: Created by Peter Thornton
-!  F. Li and S. Levis (11/06/12)
-!EOP
+  ! Module for vegetation structure updates (LAI, SAI, htop, hbot)
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  implicit none
+  save
+  private
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: CNVegStructUpdate
+  !
+  ! !REVISION HISTORY:
+  ! 4/23/2004: Created by Peter Thornton
+  !  F. Li and S. Levis (11/06/12)
+  !EOP
 !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNVegStructUpdate
-!
-! !INTERFACE:
-subroutine CNVegStructUpdate(num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! On the radiation time step, use C state variables and epc to diagnose
-! vegetation structure (LAI, SAI, height)
-!
-! !USES:
-   use clmtype
-   use clm_atmlnd   , only: clm_a2l
-   use pftvarcon    , only: noveg, nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
-   use pftvarcon    , only: ncorn, ncornirrig, npcropmin, ztopmx, laimx
-   use clm_varctl   , only: iulog
-   use shr_sys_mod  , only: shr_sys_flush
-   use shr_const_mod, only: SHR_CONST_PI
-   use clm_time_manager , only : get_rad_step_size
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilp                 ! number of column soil points in pft filter
-   integer, intent(in) :: filter_soilp(:)   ! pft filter for soil points
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 10/28/03: Created by Peter Thornton
-! 2/29/08, David Lawrence: revised snow burial fraction for short vegetation
-!
-! !LOCAL VARIABLES:
-   integer :: p,c,g        !indices
-   integer :: fp           !lake filter indices
-   real(r8):: taper        ! ratio of height:radius_breast_height (tree allometry)
-   real(r8):: stocking     ! #stems / ha (stocking density)
-   real(r8):: ol           ! thickness of canopy layer covered by snow (m)
-   real(r8):: fb           ! fraction of canopy layer covered by snow
-   real(r8) :: tlai_old    ! for use in Zeng tsai formula
-   real(r8) :: tsai_old    ! for use in Zeng tsai formula
-   real(r8) :: tsai_min    ! PFT derived minimum tsai
-   real(r8) :: tsai_alpha  ! monthly decay rate of tsai
-   real(r8) dt             ! radiation time step (sec)
+  !-----------------------------------------------------------------------
+  subroutine CNVegStructUpdate(num_soilp, filter_soilp)
+    !
+    ! !DESCRIPTION:
+    ! On the radiation time step, use C state variables and epc to diagnose
+    ! vegetation structure (LAI, SAI, height)
+    !
+    ! !USES:
+    use clmtype
+    use clm_atmlnd   , only: clm_a2l
+    use pftvarcon    , only: noveg, nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
+    use pftvarcon    , only: ncorn, ncornirrig, npcropmin, ztopmx, laimx
+    use clm_varctl   , only: iulog, use_cndv
+    use shr_sys_mod  , only: shr_sys_flush
+    use shr_const_mod, only: SHR_CONST_PI
+    use clm_time_manager , only : get_rad_step_size
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilp                 ! number of column soil points in pft filter
+    integer, intent(in) :: filter_soilp(:)   ! pft filter for soil points
+    !
+    ! !REVISION HISTORY:
+    ! 10/28/03: Created by Peter Thornton
+    ! 2/29/08, David Lawrence: revised snow burial fraction for short vegetation
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p,c,g        !indices
+    integer :: fp           !lake filter indices
+    real(r8):: taper        ! ratio of height:radius_breast_height (tree allometry)
+    real(r8):: stocking     ! #stems / ha (stocking density)
+    real(r8):: ol           ! thickness of canopy layer covered by snow (m)
+    real(r8):: fb           ! fraction of canopy layer covered by snow
+    real(r8) :: tlai_old    ! for use in Zeng tsai formula
+    real(r8) :: tsai_old    ! for use in Zeng tsai formula
+    real(r8) :: tsai_min    ! PFT derived minimum tsai
+    real(r8) :: tsai_alpha  ! monthly decay rate of tsai
+    real(r8) dt             ! radiation time step (sec)
 
-   real(r8), parameter :: dtsmonth = 2592000._r8 ! number of seconds in a 30 day month (60x60x24x30)
-!EOP
-!-----------------------------------------------------------------------
-! tsai formula from Zeng et. al. 2002, Journal of Climate, p1835
-!
-! tsai(p) = max( tsai_alpha(ivt(p))*tsai_old + max(tlai_old-tlai(p),0_r8), tsai_min(ivt(p)) )
-! notes:
-! * RHS tsai & tlai are from previous timestep
-! * should create tsai_alpha(ivt(p)) & tsai_min(ivt(p)) in pftvarcon.F90 - slevis
-! * all non-crop pfts use same values:
-!   crop    tsai_alpha,tsai_min = 0.0,0.1
-!   noncrop tsai_alpha,tsai_min = 0.5,1.0  (includes bare soil and urban)
-!-------------------------------------------------------------------------------
-
+    real(r8), parameter :: dtsmonth = 2592000._r8 ! number of seconds in a 30 day month (60x60x24x30)
+    !-----------------------------------------------------------------------
+    ! tsai formula from Zeng et. al. 2002, Journal of Climate, p1835
+    !
+    ! tsai(p) = max( tsai_alpha(ivt(p))*tsai_old + max(tlai_old-tlai(p),0_r8), tsai_min(ivt(p)) )
+    ! notes:
+    ! * RHS tsai & tlai are from previous timestep
+    ! * should create tsai_alpha(ivt(p)) & tsai_min(ivt(p)) in pftvarcon.F90 - slevis
+    ! * all non-crop pfts use same values:
+    !   crop    tsai_alpha,tsai_min = 0.0,0.1
+    !   noncrop tsai_alpha,tsai_min = 0.5,1.0  (includes bare soil and urban)
+    !-------------------------------------------------------------------------------
+    
    associate(& 
-#if (defined CNDV)
    allom2              =>  dgv_pftcon%allom2        , & ! Input:  [real(r8) (:)]  ecophys const                                     
    allom3              =>  dgv_pftcon%allom3        , & ! Input:  [real(r8) (:)]  ecophys const                                     
    nind                =>  pdgvs%nind               , & ! Input:  [real(r8) (:)]  number of individuals (#/m**2)                    
    fpcgrid             =>  pdgvs%fpcgrid            , & ! Input:  [real(r8) (:)]  fractional area of pft (pft area/nat veg area)    
-#endif
    ivt                 =>  pft%itype                , & ! Input:  [integer (:)]  pft vegetation type                                
    pcolumn             =>  pft%column               , & ! Input:  [integer (:)]  column index associated with each pft              
    pgridcell           =>  pft%gridcell             , & ! Input:  [integer (:)]  pft's gridcell index                               
@@ -181,18 +163,18 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
              ! trees and shrubs for now have a very simple allometry, with hard-wired
              ! stem taper (height:radius) and hard-wired stocking density (#individuals/area)
-#if (defined CNDV)
-             if (fpcgrid(p) > 0._r8 .and. nind(p) > 0._r8) then
-                stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 pft area
-                htop(p) = allom2(ivt(p)) * ( (24._r8 * deadstemc(p) / &
-                  (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
+             if (use_cndv) then
+                if (fpcgrid(p) > 0._r8 .and. nind(p) > 0._r8) then
+                   stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 pft area
+                   htop(p) = allom2(ivt(p)) * ( (24._r8 * deadstemc(p) / &
+                        (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
+                else
+                   htop(p) = 0._r8
+                end if
              else
-                htop(p) = 0._r8
-             end if
-#else
                 htop(p) = ((3._r8 * deadstemc(p) * taper * taper)/ &
-                  (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
-#endif
+                     (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
+             endif
 
              ! Peter Thornton, 5/3/2004
              ! Adding test to keep htop from getting too close to forcing height for windspeed
@@ -278,7 +260,5 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
     end associate 
  end subroutine CNVegStructUpdate
-!-----------------------------------------------------------------------
-#endif
 
 end module CNVegStructUpdateMod

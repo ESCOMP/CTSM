@@ -1,16 +1,12 @@
 module STATICEcosysdynMOD
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: STATICEcosysDynMod
-!
-! !DESCRIPTION:
-! Static Ecosystem dynamics: phenology, vegetation. This is for the CLM Satelitte Phenology 
-! model (CLMSP). Allow some subroutines to be used by the CLM Carbon Nitrogen model (CLMCN) 
-! so that DryDeposition code can get estimates of LAI differences between months.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Static Ecosystem dynamics: phenology, vegetation. This is for the CLM Satelitte Phenology 
+  ! model (CLMSP). Allow some subroutines to be used by the CLM Carbon Nitrogen model (CLMCN) 
+  ! so that DryDeposition code can get estimates of LAI differences between months.
+  !
+  ! !USES:
   use shr_kind_mod,    only : r8 => shr_kind_r8
   use abortutils,      only : endrun
   use clm_varctl,      only : scmlat,scmlon,single_column
@@ -18,73 +14,58 @@ module STATICEcosysdynMOD
   use perf_mod,        only : t_startf, t_stopf
   use spmdMod,         only : masterproc
   use ncdio_pio   
-!
-! !PUBLIC TYPES:
+  use decompMod   , only : bounds_type
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
-#if (!defined CN) && (!defined CNDV)
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: EcosystemDyn         ! CLMSP Ecosystem dynamics: phenology, vegetation
-#endif
   public :: EcosystemDynini      ! Dynamically allocate memory
   public :: interpMonthlyVeg     ! interpolate monthly vegetation data
   public :: readAnnualVegetation ! Read in annual vegetation (needed for Dry-deposition)
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !PRIVATE MEMBER FUNCTIONS:
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
   private :: readMonthlyVegetation   ! read monthly vegetation data for two months
-!
-! !PRIVATE TYPES:
+  !
+  ! !PRIVATE TYPES:
   integer , private :: InterpMonths1            ! saved month index
   real(r8), private :: timwt(2)                 ! time weights for month 1 and month 2
   real(r8), private, allocatable :: mlai2t(:,:) ! lai for interpolation (2 months)
   real(r8), private, allocatable :: msai2t(:,:) ! sai for interpolation (2 months)
   real(r8), private, allocatable :: mhvt2t(:,:) ! top vegetation height for interpolation (2 months)
   real(r8), private, allocatable :: mhvb2t(:,:) ! bottom vegetation height for interpolation(2 months)
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: EcosystemDynini
-!
-! !INTERFACE:
-  subroutine EcosystemDynini ()
-!
-! !DESCRIPTION:
-! Dynamically allocate memory and set to signaling NaN.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine EcosystemDynini (bounds)
+    !
+    ! !DESCRIPTION:
+    ! Dynamically allocate memory and set to signaling NaN.
+    !
+    ! !USES:
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
-    use decompMod, only : get_proc_bounds
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !REVISION HISTORY:
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     integer :: ier    ! error code
-    integer :: begp,endp  ! local beg and end p index
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     InterpMonths1 = -999  ! saved month index
-    call get_proc_bounds(begp=begp,endp=endp)
 
     ier = 0
-    if(.not.allocated(mlai2t))allocate (mlai2t(begp:endp,2), &
-              msai2t(begp:endp,2), &
-              mhvt2t(begp:endp,2), &
-              mhvb2t(begp:endp,2), stat=ier)
+    if(.not.allocated(mlai2t)) then
+       allocate (mlai2t(bounds%begp:bounds%endp,2), &
+            msai2t(bounds%begp:bounds%endp,2), &
+            mhvt2t(bounds%begp:bounds%endp,2), &
+            mhvb2t(bounds%begp:bounds%endp,2), stat=ier)
+    end if
     if (ier /= 0) then
        write(iulog,*) 'EcosystemDynini allocation error'
        call endrun
@@ -97,49 +78,32 @@ contains
 
   end subroutine EcosystemDynini
 
-#if (!defined CN) && (!defined CNDV)
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: EcosystemDyn
-!
-! !INTERFACE:
-  subroutine EcosystemDyn(lbp, ubp, num_nolakep, filter_nolakep, doalb)
-!
-! !DESCRIPTION:
-! Ecosystem dynamics: phenology, vegetation
-! Calculates leaf areas (tlai, elai),  stem areas (tsai, esai) and
-! height (htop).
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine EcosystemDyn(bounds, num_nolakep, filter_nolakep, doalb)
+    !
+    ! !DESCRIPTION:
+    ! Ecosystem dynamics: phenology, vegetation
+    ! Calculates leaf areas (tlai, elai),  stem areas (tsai, esai) and
+    ! height (htop).
+    !
+    ! !USES:
     use clmtype
     use pftvarcon, only : noveg, nc3crop, nbrdlf_dcd_brl_shrub
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbp, ubp                    ! pft bounds
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer, intent(in) :: num_nolakep                 ! number of column non-lake points in pft filter
-    integer, intent(in) :: filter_nolakep(ubp-lbp+1)   ! pft filter for non-lake points
+    integer, intent(in) :: filter_nolakep(bounds%endp-bounds%begp+1)   ! pft filter for non-lake points
     logical, intent(in) :: doalb                       ! true = surface albedo calculation time step
-!
-! !CALLED FROM:
-!
-! !REVISION HISTORY:
-! Author: Gordon Bonan
-! 2/1/02, Peter Thornton: Migrated to new data structure.
-! 2/29/08, David Lawrence: revised snow burial fraction for short vegetation   
-!
-! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
+    !
+    ! !LOCAL VARIABLES:
+    ! local pointers to implicit in arguments
     real(r8), pointer :: frac_sno(:) ! fraction of ground covered by snow (0 to 1)
     integer , pointer :: pcolumn(:)  ! column index associated with each pft
     real(r8), pointer :: snow_depth(:)   ! snow height (m)
     integer , pointer :: ivt(:)      ! pft vegetation type
-!
-! local pointers to implicit out arguments
-!
+    ! local pointers to implicit out arguments
     real(r8), pointer :: tlai(:)     ! one-sided leaf area index, no burying by snow
     real(r8), pointer :: tsai(:)     ! one-sided stem area index, no burying by snow
     real(r8), pointer :: htop(:)     ! canopy top (m)
@@ -147,15 +111,11 @@ contains
     real(r8), pointer :: elai(:)     ! one-sided leaf area index with burying by snow
     real(r8), pointer :: esai(:)     ! one-sided stem area index with burying by snow
     integer , pointer :: frac_veg_nosno_alb(:) ! frac of vegetation not covered by snow [-]
-!
-!
-! !OTHER LOCAL VARIABLES:
-!EOP
-!
+    !    
     integer  :: fp,p,c   ! indices
     real(r8) :: ol       ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb       ! fraction of canopy layer covered by snow
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     if (doalb) then
 
@@ -238,32 +198,21 @@ contains
 
   end subroutine EcosystemDyn
 
-#endif
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: interpMonthlyVeg
-!
-! !INTERFACE:
-  subroutine interpMonthlyVeg ()
-!
-! !DESCRIPTION:
-! Determine if 2 new months of data are to be read.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine interpMonthlyVeg (bounds)
+    !
+    ! !DESCRIPTION:
+    ! Determine if 2 new months of data are to be read.
+    !
+    ! !USES:
     use clm_varctl      , only : fsurdat
     use clm_time_manager, only : get_curr_date, get_step_size, get_nstep
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     integer :: kyr         ! year (0, ...) for nstep+1
     integer :: kmo         ! month (1, ..., 12)
     integer :: kda         ! day of month (1, ..., 31)
@@ -274,7 +223,7 @@ contains
     integer :: months(2)   ! months to be interpolated (1 to 12)
     integer, dimension(12) :: ndaypm= &
          (/31,28,31,30,31,30,31,31,30,31,30,31/) !days per month
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     dtime = get_step_size()
 
@@ -296,29 +245,29 @@ contains
           write(iulog,*) 'nstep = ',get_nstep(),' month = ',kmo,' day = ',kda
        end if
        call t_startf('readMonthlyVeg')
-       call readMonthlyVegetation (fsurdat, months)
+       call readMonthlyVegetation (bounds, fsurdat, months)
        InterpMonths1 = months(1)
        call t_stopf('readMonthlyVeg')
     end if
 
   end subroutine interpMonthlyVeg
 
-!-----------------------------------------------------------------------
-! read 12 months of veg data for dry deposition
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  ! read 12 months of veg data for dry deposition
+  !-----------------------------------------------------------------------
 
-  subroutine readAnnualVegetation ( )
+  subroutine readAnnualVegetation (bounds)
 
     use clmtype
     use clm_varpar  , only : numpft
     use pftvarcon   , only : noveg
-    use decompMod   , only : get_proc_bounds
     use domainMod   , only : ldomain
     use fileutils   , only : getfil
     use clm_varctl  , only : fsurdat
     use shr_scam_mod, only : shr_scam_getCloseLatLon
 
     implicit none
+    type(bounds_type), intent(in) :: bounds  ! bounds
 
     ! local vars
 
@@ -334,8 +283,6 @@ contains
     integer :: nlon_i                     ! number of input data longitudes
     integer :: nlat_i                     ! number of input data latitudes
     integer :: npft_i                     ! number of input data pft types
-    integer :: begp,endp                  ! beg and end local p index
-    integer :: begg,endg                  ! beg and end local g index
     integer :: closelatidx,closelonidx    ! single column vars
     real(r8):: closelat,closelon          ! single column vars
     logical :: isgrid2d                   ! true => file is 2d
@@ -345,9 +292,7 @@ contains
 
     ! Determine necessary indices
 
-    call get_proc_bounds(begg=begg,endg=endg,begp=begp,endp=endp)
-
-    allocate(mlai(begg:endg,0:numpft), stat=ier)
+    allocate(mlai(bounds%begg:bounds%endg,0:numpft), stat=ier)
     if (ier /= 0) then
        write(iulog,*)subname, 'allocation error '; call endrun()
     end if
@@ -384,7 +329,7 @@ contains
        !! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] pfts
        !! as determined in subroutine surfrd
 
-       do p = begp,endp
+       do p = bounds%begp,bounds%endp
           g =pft%gridcell(p)
           ivt =pft%itype(p)
           if (ivt /= noveg) then     !! vegetated pft
@@ -406,20 +351,14 @@ contains
 
   endsubroutine readAnnualVegetation
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: readMonthlyVegetation
-!
-! !INTERFACE:
-  subroutine readMonthlyVegetation (fveg, months)
-!
-! !DESCRIPTION:
-! Read monthly vegetation data for two consec. months.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine readMonthlyVegetation (bounds, fveg, months)
+    !
+    ! !DESCRIPTION:
+    ! Read monthly vegetation data for two consec. months.
+    !
+    ! !USES:
     use clmtype
-    use decompMod   , only : get_proc_bounds
     use clm_varpar  , only : numpft
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
@@ -427,19 +366,14 @@ contains
     use shr_scam_mod, only : shr_scam_getCloseLatLon
     use clm_time_manager, only : get_nstep
     use netcdf
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-
+    type(bounds_type), intent(in) :: bounds  ! bounds
     character(len=*), intent(in) :: fveg  ! file with monthly vegetation data
     integer, intent(in) :: months(2)      ! months to be interpolated (1 to 12)
-!
-! !REVISION HISTORY:
-! Created by Sam Levis
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     character(len=256) :: locfn           ! local file name
     type(file_desc_t)  :: ncid            ! netcdf id
     integer :: g,n,k,l,m,p,ivt,ni,nj,ns   ! indices
@@ -448,8 +382,6 @@ contains
     integer :: nlon_i                     ! number of input data longitudes
     integer :: nlat_i                     ! number of input data latitudes
     integer :: npft_i                     ! number of input data pft types
-    integer :: begp,endp                  ! beg and end local p index
-    integer :: begg,endg                  ! beg and end local g index
     integer :: ier                        ! error code
     integer :: closelatidx,closelonidx
     real(r8):: closelat,closelon
@@ -460,17 +392,16 @@ contains
     real(r8), pointer :: mhgtb(:,:)       ! bottom vegetation height
     real(r8), pointer :: mlaidiff(:)      ! difference between lai month one and month two
     character(len=32) :: subname = 'readMonthlyVegetation'
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! Determine necessary indices
 
-    call get_proc_bounds(begg=begg,endg=endg,begp=begp,endp=endp)
-
-    allocate(mlai(begg:endg,0:numpft), &
-             msai(begg:endg,0:numpft), &
-             mhgtt(begg:endg,0:numpft), &
-             mhgtb(begg:endg,0:numpft), &
-             stat=ier)
+    allocate(&
+         mlai(bounds%begg:bounds%endg,0:numpft), &
+         msai(bounds%begg:bounds%endg,0:numpft), &
+         mhgtt(bounds%begg:bounds%endg,0:numpft), &
+         mhgtb(bounds%begg:bounds%endg,0:numpft), &
+         stat=ier)
     if (ier /= 0) then
        write(iulog,*)subname, 'allocation big error '; call endrun()
     end if
@@ -511,7 +442,7 @@ contains
        ! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] pfts
        ! as determined in subroutine surfrd
 
-       do p = begp,endp
+       do p = bounds%begp,bounds%endp
           g =pft%gridcell(p)
           ivt =pft%itype(p)
           if (ivt /= noveg) then     ! vegetated pft
@@ -545,8 +476,8 @@ contains
     deallocate(mlai, msai, mhgtt, mhgtb)
 
     mlaidiff => pps%mlaidiff
-    do p = begp,endp
-       mlaidiff(p)=mlai2t(p,1)-mlai2t(p,2)
+    do p = bounds%begp,bounds%endp
+       mlaidiff(p) = mlai2t(p,1)-mlai2t(p,2)
     enddo
 
   end subroutine readMonthlyVegetation

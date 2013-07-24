@@ -1,278 +1,242 @@
-
 module CNDecompCascadeBGCMod
-#ifdef CN
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Sets the coeffiecients used in the decomposition cascade submodel.  
+  ! This uses the CENTURY/BGC parameters
+  !
+  ! !USES:
+  use shr_kind_mod       , only: r8 => shr_kind_r8
+  use shr_const_mod      , only: SHR_CONST_TKFRZ
+  use clm_varpar         , only: nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools, &
+                                 i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use clm_varctl         , only: iulog, spinup_state, anoxia, use_lch4, use_vertsoilc
+  use clm_varcon         , only: zsoi
+  use ch4varcon          , only: mino2lim
+  use decompMod          , only: bounds_type
+  use abortutils         , only: endrun
+  use CNSharedConstsMod  , only: CNConstShareInst, anoxia_wtsat, nlev_soildecomp_standard 
+  !
+  implicit none
+  save
+  private
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: init_decompcascade_bgc
+  public :: decomp_rate_constants_bgc
+  public :: readCNDecompBgcConsts
+  !
+  ! !PUBLIC DATA MEMBERS 
+  logical , public :: normalize_q10_to_century_tfunc = .true.! do we normalize the century decomp. rates so that they match the CLM Q10 at a given tep?
+  logical , public :: use_century_tfunc = .false.
+  real(r8), public :: normalization_tref = 15._r8            ! reference temperature for normalizaion (degrees C)
+  !
+  ! !PRIVATE DATA MEMBERS 
+  type, private :: CNDecompBgcConstType
+     real(r8):: cn_s1_bgc        !C:N for SOM 1
+     real(r8):: cn_s2_bgc        !C:N for SOM 2
+     real(r8):: cn_s3_bgc        !C:N for SOM 3
 
-#ifdef CENTURY_DECOMP
+     real(r8):: rf_l1s1_bgc      !respiration fraction litter 1 -> SOM 1
+     real(r8):: rf_l2s1_bgc
+     real(r8):: rf_l3s2_bgc
 
+     real(r8):: rf_s2s1_bgc    
+     real(r8):: rf_s2s3_bgc    
+     real(r8):: rf_s3s1_bgc    
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNDecompCascadeBGCMod
-!
-! !DESCRIPTION:
-! Module that sets the coeffiecients used in the decomposition cascade submodel.  This uses the CENTURY/BGC parameters
-!
-! !USES:
-   use shr_kind_mod , only: r8 => shr_kind_r8
-   use shr_const_mod, only: SHR_CONST_TKFRZ
-   use clm_varpar   , only: nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools, nsompools 
-   use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-   use clm_varctl   , only: iulog, spinup_state
-   use clm_varcon   , only: zsoi
-   use CNSharedConstsMod, only:CNConstShareInst
-#ifdef LCH4
-   use clm_varctl   , only: anoxia
-   use ch4varcon    , only: mino2lim
-#endif
-   use abortutils,   only: endrun
+     real(r8):: rf_cwdl2_bgc 
+     real(r8):: rf_cwdl3_bgc
 
+     real(r8):: tau_l1_bgc                ! turnover time of  litter 1 (yr)
+     real(r8):: tau_l2_l3_bgc             ! turnover time of  litter 2 and litter 3 (yr)
+     real(r8):: tau_s1_bgc                ! turnover time of  SOM 1 (yr)
+     real(r8):: tau_s2_bgc                ! turnover time of  SOM 2 (yr)
+     real(r8):: tau_s3_bgc                ! turnover time of  SOM 3 (yr)
+     real(r8):: tau_cwd_bgc               ! corrected fragmentation rate constant CWD
 
-   implicit none
-   save
-   private
-! !PUBLIC MEMBER FUNCTIONS:
-   public:: init_decompcascade, decomp_rate_constants
-   public :: readCNDecompBgcConsts
+     real(r8) :: cwd_fcel_bgc    !cellulose fraction for CWD
+     real(r8) :: cwd_flig_bgc    !
 
-      type, private :: CNDecompBgcConstType
-      real(r8):: cn_s1_bgc        !C:N for SOM 1
-      real(r8):: cn_s2_bgc        !C:N for SOM 2
-      real(r8):: cn_s3_bgc        !C:N for SOM 3
+     real(r8) :: k_frag_bgc      !fragmentation rate for CWD
+     real(r8) :: minpsi_bgc      !minimum soil water potential for heterotrophic resp
 
-      real(r8):: rf_l1s1_bgc      !respiration fraction litter 1 -> SOM 1
-      real(r8):: rf_l2s1_bgc
-      real(r8):: rf_l3s2_bgc
+     integer  :: nsompools = 3
+     real(r8),allocatable :: spinup_vector(:) ! multipliers for soil decomp during accelerated spinup
 
-      real(r8):: rf_s2s1_bgc    
-      real(r8):: rf_s2s3_bgc    
-      real(r8):: rf_s3s1_bgc    
+  end type CNDecompBgcConstType
 
-      real(r8):: rf_cwdl2_bgc 
-      real(r8):: rf_cwdl3_bgc
+  type(CNDecompBgcConstType),private ::  CNDecompBgcConstInst
 
-      real(r8):: tau_l1_bgc                ! turnover time of  litter 1 (yr)
-      real(r8):: tau_l2_l3_bgc             ! turnover time of  litter 2 and litter 3 (yr)
-      real(r8):: tau_s1_bgc                ! turnover time of  SOM 1 (yr)
-      real(r8):: tau_s2_bgc                ! turnover time of  SOM 2 (yr)
-      real(r8):: tau_s3_bgc                ! turnover time of  SOM 3 (yr)
-      real(r8):: tau_cwd_bgc               ! corrected fragmentation rate constant CWD
-
-      real(r8) :: cwd_fcel_bgc    !cellulose fraction for CWD
-      real(r8) :: cwd_flig_bgc    !
-
-      real(r8) :: k_frag_bgc      !fragmentation rate for CWD
-      real(r8) :: minpsi_bgc      !minimum soil water potential for heterotrophic resp
-   end type CNDecompBgcConstType
-
-   type(CNDecompBgcConstType),private ::  CNDecompBgcConstInst
-
-!
-! !PUBLIC DATA MEMBERS:
-   real(r8), public :: decomp_depth_efolding                  ! (meters) e-folding depth for reduction in decomposition [set to large number for depth-independance]
-   logical , public :: normalize_q10_to_century_tfunc = .true.! do we normalize the century decomp. rates so that they match the CLM Q10 at a given tep?
-   real(r8), public :: normalization_tref = 15._r8            ! reference temperature for normalizaion (degrees C)
-   logical , public :: use_century_tfunc = .false.
-   logical , public :: anoxia_wtsat = .false.                 ! true ==> weight anoxia by inundated fraction
-   real(r8), public :: froz_q10                               ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
-   integer , public :: nlev_soildecomp_standard               ! used here and in ch4Mod
-
-   !! parameters for AD spinup
-   real(r8), public, parameter :: spinup_vector(nsompools) = (/ 1.0_r8, 15.0_r8, 675.0_r8 /) ! multipliers for soil decomp during accelerated spinup
-
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-! !IROUTINE: readCNDecompBgcConsts
-!
-! !INTERFACE:
-subroutine readCNDecompBgcConsts ( ncid )
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use shr_kind_mod , only: r8 => shr_kind_r8
-   use ncdio_pio , only : file_desc_t,ncd_io
-   use abortutils   , only: endrun
+  !-----------------------------------------------------------------------
+  subroutine readCNDecompBgcConsts ( ncid )
+    !
+    ! !DESCRIPTION:
+    !
+    ! !USES:
+    use ncdio_pio    , only: file_desc_t,ncd_io
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'CNDecompCenturyConstType'
+    character(len=100) :: errCode = 'Error reading in CN const file '
+    logical            :: readv   ! has variable been read in or not
+    real(r8)           :: tempr   ! temporary to read in constant
+    character(len=100) :: tString ! temp. var for reading
+    !-----------------------------------------------------------------------
 
-! !ARGUMENTS:
-   implicit none
-   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-!
-! !CALLED FROM:   readConstantsMod.F90::CNConstReadFile
-!
-! !REVISION HISTORY:
-!  Dec 3 2012 : Created by S. Muszala
-!
-! !LOCAL VARIABLES:
-   character(len=32)  :: subname = 'CNDecompCenturyConstType'
-   character(len=100) :: errCode = 'Error reading in CN const file '
-   logical            :: readv   ! has variable been read in or not
-   real(r8)           :: tempr   ! temporary to read in constant
-   character(len=100) :: tString ! temp. var for reading
+    ! These are not read off of netcdf file
+    allocate(CNDecompBGCConstInst%spinup_vector(CNDecompBGCConstInst%nsompools))
+    CNDecompBGCConstInst%spinup_vector(:) = (/ 1.0_r8, 15.0_r8, 675.0_r8 /)
 
-!EOP
-!-----------------------------------------------------------------------
-   tString='tau_l1'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%tau_l1_bgc=tempr
+    ! Read off of netcdf file
+    tString='tau_l1'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%tau_l1_bgc=tempr
 
-   tString='tau_l2_l3'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%tau_l2_l3_bgc=tempr
+    tString='tau_l2_l3'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%tau_l2_l3_bgc=tempr
 
-   tString='tau_s1'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%tau_s1_bgc=tempr
+    tString='tau_s1'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%tau_s1_bgc=tempr
 
-   tString='tau_s2'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%tau_s2_bgc=tempr
+    tString='tau_s2'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%tau_s2_bgc=tempr
 
-   tString='tau_s3'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%tau_s3_bgc=tempr
+    tString='tau_s3'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%tau_s3_bgc=tempr
 
-   tString='tau_cwd'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%tau_cwd_bgc=tempr
+    tString='tau_cwd'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%tau_cwd_bgc=tempr
 
-   tString='cn_s1_bgc'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%cn_s1_bgc=tempr
+    tString='cn_s1_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%cn_s1_bgc=tempr
 
-   tString='cn_s2_bgc'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%cn_s2_bgc=tempr
+    tString='cn_s2_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%cn_s2_bgc=tempr
 
-   tString='cn_s3_bgc'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%cn_s3_bgc=tempr
+    tString='cn_s3_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%cn_s3_bgc=tempr
 
-   tString='rf_l1s1_bgc'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%rf_l1s1_bgc=tempr
+    tString='rf_l1s1_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%rf_l1s1_bgc=tempr
 
-   tString='rf_l2s1_bgc'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%rf_l2s1_bgc=tempr
+    tString='rf_l2s1_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%rf_l2s1_bgc=tempr
 
-   tString='rf_l3s2_bgc'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%rf_l3s2_bgc=tempr   
+    tString='rf_l3s2_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%rf_l3s2_bgc=tempr   
 
-   tString='rf_s2s1_bgc'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%rf_s2s1_bgc=tempr
+    tString='rf_s2s1_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%rf_s2s1_bgc=tempr
 
-   tString='rf_s2s3_bgc'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%rf_s2s3_bgc=tempr
+    tString='rf_s2s3_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%rf_s2s3_bgc=tempr
 
-   tString='rf_s3s1_bgc'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%rf_s3s1_bgc=tempr
+    tString='rf_s3s1_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%rf_s3s1_bgc=tempr
 
-   tString='rf_cwdl2_bgc'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%rf_cwdl2_bgc=tempr
+    tString='rf_cwdl2_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%rf_cwdl2_bgc=tempr
 
-   tString='rf_cwdl3_bgc'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%rf_cwdl3_bgc=tempr
+    tString='rf_cwdl3_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%rf_cwdl3_bgc=tempr
 
-   tString='cwd_fcel'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%cwd_fcel_bgc=tempr
-   
-   tString='k_frag'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%k_frag_bgc=tempr
+    tString='cwd_fcel'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%cwd_fcel_bgc=tempr
 
-   tString='minpsi_hr'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%minpsi_bgc=tempr 
+    tString='k_frag'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%k_frag_bgc=tempr
 
-   tString='cwd_flig'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompBgcConstInst%cwd_flig_bgc=tempr 
+    tString='minpsi_hr'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%minpsi_bgc=tempr 
 
-end subroutine readCNDecompBgcConsts
+    tString='cwd_flig'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompBgcConstInst%cwd_flig_bgc=tempr 
 
+ end subroutine readCNDecompBgcConsts
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: init_decompcascade
-!
-! !INTERFACE:
-subroutine init_decompcascade(begc, endc)
-
-! !DESCRIPTION:
-!
-!  initialize rate constants and decomposition pathways following the decomposition cascade of the BGC model.
-!  written by C. Koven 
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine init_decompcascade_bgc(bounds)
+   !
+   ! !DESCRIPTION:
+   !  initialize rate constants and decomposition pathways following the decomposition cascade of the BGC model.
+   !  written by C. Koven 
+   !
+   ! !USES:
    use clmtype
    use clm_time_manager    , only : get_step_size
-
-! !ARGUMENTS:
+   !
+   ! !ARGUMENTS:
    implicit none
-!
-! !CALLED FROM:
-! 
-!
-! !REVISION HISTORY:
-!
-   ! column level
-   integer  :: begc, endc       ! per-proc beginning and ending column indices
-
-   !-- properties of each pathway along decomposition cascade 
-   real(r8) , pointer :: rf_decomp_cascade (:,:,:)            !  [real(r8) (:,:,:)]  respired fraction in decomposition step (frac) 
-   integer ,  pointer :: cascade_donor_pool (:)               !  [integer (:)]  which pool is C taken from for a given decomposition step 
-   real(r8) , pointer :: pathfrac_decomp_cascade (:,:,:)      !  [real(r8) (:,:,:)]  what fraction of C leaving a given pool passes through a given transition (frac) 
+   type(bounds_type), intent(in) :: bounds  ! bounds
+   !
+   ! !LOCAL VARIABLES
    !-- properties of each decomposing pool
    real(r8) :: rf_l1s1
    real(r8) :: rf_l2s1
    real(r8) :: rf_l3s2
-   real(r8) :: rf_s1s2(begc:endc,1:nlevdecomp)
-   real(r8) :: rf_s1s3(begc:endc,1:nlevdecomp)
+   real(r8) :: rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
+   real(r8) :: rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
    real(r8) :: rf_s2s1
    real(r8) :: rf_s2s3
    real(r8) :: rf_s3s1
    real(r8) :: rf_cwdl2
    real(r8) :: rf_cwdl3
-   real(r8):: cwd_fcel
-   real(r8):: cwd_flig
+   real(r8) :: cwd_fcel
+   real(r8) :: cwd_flig
    real(r8) :: cn_s1
    real(r8) :: cn_s2
    real(r8) :: cn_s3
-   real(r8) :: f_s1s2(begc:endc,1:nlevdecomp)
-   real(r8) :: f_s1s3(begc:endc,1:nlevdecomp)
+   real(r8) :: f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
+   real(r8) :: f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
    real(r8) :: f_s2s1
    real(r8) :: f_s2s3
 
@@ -295,6 +259,7 @@ subroutine init_decompcascade(begc, endc)
 
    integer :: c, j     ! indices
    real(r8) :: t       ! temporary variable
+   !-----------------------------------------------------------------------
 
    associate(&
    cascade_step_name                   =>    decomp_cascade_con%cascade_step_name        , & !  [character(len=8) (:)]  name of transition                               
@@ -303,8 +268,8 @@ subroutine init_decompcascade(begc, endc)
    cascade_receiver_pool               =>    decomp_cascade_con%cascade_receiver_pool    , & !  [integer (:)]  which pool is C added to for a given decomposition step   
    pathfrac_decomp_cascade             =>    cps%pathfrac_decomp_cascade                 , & !  [real(r8) (:,:,:)]  what fraction of C leaving a given pool passes through a given transition (frac)
    floating_cn_ratio_decomp_pools      =>    decomp_cascade_con%floating_cn_ratio_decomp_pools  , & !  [logical (:)]  TRUE => pool has fixed C:N ratio                          
-   decomp_pool_name_restart            =>    decomp_cascade_con%decomp_pool_name_restart  , & !  [character(len=8) (:)]  name of pool for restart files                   
-   decomp_pool_name_history            =>    decomp_cascade_con%decomp_pool_name_history  , & !  [character(len=8) (:)]  name of pool for history files                   
+   decomp_pool_name_restart            =>    decomp_cascade_con%decomp_pool_name_restart , & !  [character(len=8) (:)]  name of pool for restart files                   
+   decomp_pool_name_history            =>    decomp_cascade_con%decomp_pool_name_history , & !  [character(len=8) (:)]  name of pool for history files                   
    decomp_pool_name_long               =>    decomp_cascade_con%decomp_pool_name_long    , & !  [character(len=20) (:)]  name of pool for netcdf long names              
    decomp_pool_name_short              =>    decomp_cascade_con%decomp_pool_name_short   , & !  [character(len=8) (:)]  name of pool for netcdf short names              
    is_litter                           =>    decomp_cascade_con%is_litter                , & !  [logical (:)]  TRUE => pool is a litter pool                             
@@ -346,7 +311,7 @@ subroutine init_decompcascade(begc, endc)
    f_s2s3 = 0.03_r8/(0.45_r8)
 
    ! some of these are dependent on the soil texture properties
-   do c = begc, endc
+   do c = bounds%begc, bounds%endc
       do j = 1, nlevdecomp
          t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - cellsand(c,j))
          f_s1s2(c,j) = 1._r8 - .004_r8 / (1._r8 - t)
@@ -356,9 +321,7 @@ subroutine init_decompcascade(begc, endc)
       end do
    end do
 
-
    !-------------------  list of pools and their attributes  ------------
-
    i_litr1 = i_met_lit
    floating_cn_ratio_decomp_pools(i_litr1) = .true.
    decomp_pool_name_restart(i_litr1) = 'litr1'
@@ -468,125 +431,109 @@ subroutine init_decompcascade(begc, endc)
    spinup_factor(i_litr2) = 1._r8
    spinup_factor(i_litr3) = 1._r8
    spinup_factor(i_cwd) = 1._r8
-   spinup_factor(i_soil1) = spinup_vector(1)
-   spinup_factor(i_soil2) = spinup_vector(2)
-   spinup_factor(i_soil3) = spinup_vector(3)
+   spinup_factor(i_soil1) = CNDecompBgcConstInst%spinup_vector(1)
+   spinup_factor(i_soil2) = CNDecompBgcConstInst%spinup_vector(2)
+   spinup_factor(i_soil3) = CNDecompBgcConstInst%spinup_vector(3)
 
    !----------------  list of transitions and their time-independent coefficients  ---------------!
    i_l1s1 = 1
    cascade_step_name(i_l1s1) = 'L1S1'
-   rf_decomp_cascade(begc:endc,1:nlevdecomp,i_l1s1) = rf_l1s1
+   rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = rf_l1s1
    cascade_donor_pool(i_l1s1) = i_litr1
    cascade_receiver_pool(i_l1s1) = i_soil1
-   pathfrac_decomp_cascade(begc:endc,1:nlevdecomp,i_l1s1) = 1.0_r8
+   pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
 
    i_l2s1 = 2
    cascade_step_name(i_l2s1) = 'L2S1'
-   rf_decomp_cascade(begc:endc,1:nlevdecomp,i_l2s1) = rf_l2s1
+   rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = rf_l2s1
    cascade_donor_pool(i_l2s1) = i_litr2
    cascade_receiver_pool(i_l2s1) = i_soil1
-   pathfrac_decomp_cascade(begc:endc,1:nlevdecomp,i_l2s1)= 1.0_r8
+   pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1)= 1.0_r8
 
    i_l3s2 = 3
    cascade_step_name(i_l3s2) = 'L3S2'
-   rf_decomp_cascade(begc:endc,1:nlevdecomp,i_l3s2) = rf_l3s2
+   rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = rf_l3s2
    cascade_donor_pool(i_l3s2) = i_litr3
    cascade_receiver_pool(i_l3s2) = i_soil2
-   pathfrac_decomp_cascade(begc:endc,1:nlevdecomp,i_l3s2) = 1.0_r8
+   pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = 1.0_r8
 
    i_s1s2 = 4
    cascade_step_name(i_s1s2) = 'S1S2'
-   rf_decomp_cascade(begc:endc,1:nlevdecomp,i_s1s2) = rf_s1s2(begc:endc,1:nlevdecomp)
+   rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
    cascade_donor_pool(i_s1s2) = i_soil1
    cascade_receiver_pool(i_s1s2) = i_soil2
-   pathfrac_decomp_cascade(begc:endc,1:nlevdecomp,i_s1s2) = f_s1s2(begc:endc,1:nlevdecomp)
+   pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
 
    i_s1s3 = 5
    cascade_step_name(i_s1s3) = 'S1S3'
-   rf_decomp_cascade(begc:endc,1:nlevdecomp,i_s1s3) = rf_s1s3(begc:endc,1:nlevdecomp)
+   rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
    cascade_donor_pool(i_s1s3) = i_soil1
    cascade_receiver_pool(i_s1s3) = i_soil3
-   pathfrac_decomp_cascade(begc:endc,1:nlevdecomp,i_s1s3) = f_s1s3(begc:endc,1:nlevdecomp)
+   pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
 
    i_s2s1 = 6
    cascade_step_name(i_s2s1) = 'S2S1'
-   rf_decomp_cascade(begc:endc,1:nlevdecomp,i_s2s1) = rf_s2s1
+   rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = rf_s2s1
    cascade_donor_pool(i_s2s1) = i_soil2
    cascade_receiver_pool(i_s2s1) = i_soil1
-   pathfrac_decomp_cascade(begc:endc,1:nlevdecomp,i_s2s1) = f_s2s1
+   pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = f_s2s1
 
    i_s2s3 = 7 
    cascade_step_name(i_s2s3) = 'S2S3'
-   rf_decomp_cascade(begc:endc,1:nlevdecomp,i_s2s3) = rf_s2s3
+   rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
    cascade_donor_pool(i_s2s3) = i_soil2
    cascade_receiver_pool(i_s2s3) = i_soil3
-   pathfrac_decomp_cascade(begc:endc,1:nlevdecomp,i_s2s3) = f_s2s3
+   pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = f_s2s3
 
    i_s3s1 = 8
    cascade_step_name(i_s3s1) = 'S3S1'
-   rf_decomp_cascade(begc:endc,1:nlevdecomp,i_s3s1) = rf_s3s1
+   rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = rf_s3s1
    cascade_donor_pool(i_s3s1) = i_soil3
    cascade_receiver_pool(i_s3s1) = i_soil1
-   pathfrac_decomp_cascade(begc:endc,1:nlevdecomp,i_s3s1) = 1.0_r8
+   pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
 
    i_cwdl2 = 9
    cascade_step_name(i_cwdl2) = 'CWDL2'
-   rf_decomp_cascade(begc:endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
+   rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
    cascade_donor_pool(i_cwdl2) = i_cwd
    cascade_receiver_pool(i_cwdl2) = i_litr2
-   pathfrac_decomp_cascade(begc:endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
+   pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
 
    i_cwdl3 = 10
    cascade_step_name(i_cwdl3) = 'CWDL3'
-   rf_decomp_cascade(begc:endc,1:nlevdecomp,i_cwdl3) = rf_cwdl3
+   rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = rf_cwdl3
    cascade_donor_pool(i_cwdl3) = i_cwd
    cascade_receiver_pool(i_cwdl3) = i_litr3
-   pathfrac_decomp_cascade(begc:endc,1:nlevdecomp,i_cwdl3) = cwd_flig
+   pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
 
 
- end associate
-end subroutine init_decompcascade
+   end associate
+ end subroutine init_decompcascade_bgc
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: decomp_rate_constants
-!
-! !INTERFACE:
-subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
- !
-! !DESCRIPTION:
-!
-!  calculate rate constants and decomposition pathways for teh CENTURY decomposition cascade model
-!  written by C. Koven based on original CLM4 decomposition cascade
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc)
+   !
+   ! !DESCRIPTION:
+   !  calculate rate constants and decomposition pathways for teh CENTURY decomposition cascade model
+   !  written by C. Koven based on original CLM4 decomposition cascade
+   !
+   ! !USES:
    use clmtype
-   use shr_const_mod, only : SHR_CONST_PI
-   use clm_varcon, only: secspday
+   use shr_const_mod   , only : SHR_CONST_PI
+   use clm_varcon      , only : secspday
    use clm_time_manager, only : get_days_per_year
    !
-! !ARGUMENTS:
+   ! !ARGUMENTS:
    implicit none
-   integer, intent(in) :: lbc, ubc        ! column bounds
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-!
-! !CALLED FROM:
-! 
-!
-! !REVISION HISTORY:
-!
-   ! column level
-   real(r8) , pointer :: o_scalar (:,:)      !  [real(r8) (:,:)]  fraction by which decomposition is limited by anoxia 
-   real(r8) , pointer :: finundated (:)      !  [real(r8) (:)]  fractional inundated area 
-!
-! !LOCAL VARIABLES:
-!
-   real(r8):: frw(lbc:ubc)          ! rooting fraction weight
+   type(bounds_type), intent(in) :: bounds          ! bounds
+   integer          , intent(in) :: num_soilc       ! number of soil columns in filter
+   integer          , intent(in) :: filter_soilc(:) ! filter for soil columns
+   !
+   ! !LOCAL VARIABLES:
+   real(r8):: frw(bounds%begc:bounds%endc) ! rooting fraction weight
+   real(r8), allocatable:: fr(:,:)         ! column-level rooting fraction by soil depth
    real(r8):: minpsi, maxpsi        ! limits for soil water scalar for decomp
    real(r8):: psi                   ! temporary soilpsi for water scalar
-   !   real(r8):: w_scalar(lbc:ubc,1:nlevdecomp)     !soil water scalar for decomp
    real(r8):: rate_scalar           ! combined rate scalar for decomp
    real(r8):: k_l1                  ! decomposition rate constant litter 1 (1/sec)
    real(r8):: k_l2_l3               ! decomposition rate constant litter 2 and litter 3 (1/sec)
@@ -603,7 +550,9 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    real(r8):: tau_cwd               ! corrected fragmentation rate constant CWD
    real(r8):: cwdc_loss             ! fragmentation rate for CWD carbon (gC/m2/s)
    real(r8):: cwdn_loss             ! fragmentation rate for CWD nitrogen (gN/m2/s)
-   real(r8):: Q10
+   real(r8):: Q10                   ! temperature dependence
+   real(r8):: froz_q10              ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
+   real(r8):: decomp_depth_efolding ! (meters) e-folding depth for reduction in decomposition [
    integer :: i_litr1
    integer :: i_litr2
    integer :: i_litr3
@@ -611,31 +560,30 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    integer :: i_soil2
    integer :: i_soil3
    integer :: c, fc, j, k, l
-   real(r8) :: catanf    ! hyperbolic temperature function from CENTURY
-   real(r8) :: catanf_30 ! reference rate at 30C
-   real(r8) :: t1        ! temperature argument
-
-   real(r8) :: normalization_factor ! factor by which to offset the decomposition rates frm century to a q10 formulation
-   real(r8):: days_per_year         ! days per year
-   real(r8) , pointer:: fr (:,:)    ! column-level rooting fraction by soil depth 
-   real(r8) :: depth_scalar(lbc:ubc,1:nlevdecomp) 
+   real(r8):: catanf    ! hyperbolic temperature function from CENTURY
+   real(r8):: catanf_30 ! reference rate at 30C
+   real(r8):: t1        ! temperature argument
+   real(r8):: normalization_factor ! factor by which to offset the decomposition rates frm century to a q10 formulation
+   real(r8):: days_per_year        ! days per year
+   real(r8):: depth_scalar(bounds%begc:bounds%endc,1:nlevdecomp) 
+   !-----------------------------------------------------------------------
 
    !----- CENTURY T response function
    catanf(t1) = 11.75_r8 +(29.7_r8 / SHR_CONST_PI) * atan( SHR_CONST_PI * 0.031_r8  * ( t1 - 15.4_r8 ))
 
    associate(&
-   t_soisno                            =>    ces%t_soisno                                , & !  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)       
-   sucsat                              =>    cps%sucsat                                  , & !  [real(r8) (:,:)]  minimum soil suction (mm)                              
-   soilpsi                             =>    cps%soilpsi                                 , & !  [real(r8) (:,:)]  soil water potential in each soil layer (MPa)          
-   dz                                  =>    cps%dz                                      , & !  [real(r8) (:,:)]  soil layer thickness (m)                               
-   t_scalar                            =>    ccf%t_scalar                                , & !  [real(r8) (:,:)]  soil temperature scalar for decomp                     
-   w_scalar                            =>    ccf%w_scalar                                , & !  [real(r8) (:,:)]  soil water scalar for decomp                           
-   o_scalar                            =>    ccf%o_scalar                                , & !  [real(r8) (:,:)]  fraction by which decomposition is limited by anoxia   
-   decomp_k                            =>    ccf%decomp_k                                , & !  [real(r8) (:,:,:)]  rate constant for decomposition (1./sec)             
-   o2stress_sat                        =>    cch4%o2stress_sat                           , & !  [real(r8) (:,:)]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
-   o2stress_unsat                      =>    cch4%o2stress_unsat                         , & !  [real(r8) (:,:)]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
-   finundated                          =>    cws%finundated                              , & !  [real(r8) (:)]  fractional inundated area                                
-   alt_indx                            =>    cps%alt_indx                                  & !  [integer (:)]  current depth of thaw                                     
+   t_soisno       => ces%t_soisno            , & !  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)       
+   sucsat         => cps%sucsat              , & !  [real(r8) (:,:)]  minimum soil suction (mm)                              
+   soilpsi        => cps%soilpsi             , & !  [real(r8) (:,:)]  soil water potential in each soil layer (MPa)          
+   dz             => cps%dz                  , & !  [real(r8) (:,:)]  soil layer thickness (m)                               
+   t_scalar       => ccf%t_scalar            , & !  [real(r8) (:,:)]  soil temperature scalar for decomp                     
+   w_scalar       => ccf%w_scalar            , & !  [real(r8) (:,:)]  soil water scalar for decomp                           
+   o_scalar       => ccf%o_scalar            , & !  [real(r8) (:,:)]  fraction by which decomposition is limited by anoxia   
+   decomp_k       => ccf%decomp_k            , & !  [real(r8) (:,:,:)]  rate constant for decomposition (1./sec)             
+   o2stress_sat   => cch4%o2stress_sat       , & !  [real(r8) (:,:)]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
+   o2stress_unsat => cch4%o2stress_unsat     , & !  [real(r8) (:,:)]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
+   finundated     => cws%finundated          , & !  [real(r8) (:)]  fractional inundated area                                
+   alt_indx       => cps%alt_indx              & !  [integer (:)]  current depth of thaw                                     
    )
 
    if ( use_century_tfunc .and. normalize_q10_to_century_tfunc ) then
@@ -668,7 +616,7 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    Q10 = CNConstShareInst%Q10
 
    ! set "froz_q10" parameter
-	froz_q10  = CNConstShareInst%froz_q10 
+   froz_q10  = CNConstShareInst%froz_q10 
 
    ! Set "decomp_depth_efolding" parameter
    decomp_depth_efolding = CNConstShareInst%decomp_depth_efolding
@@ -685,11 +633,11 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    catanf_30 = catanf(30._r8)
    ! The following code implements the acceleration part of the AD spinup algorithm
 
-if ( spinup_state .eq. 1 ) then
-   k_s1 = k_s1 * spinup_vector(1)
-   k_s2 = k_s2 * spinup_vector(2)
-   k_s3 = k_s3 * spinup_vector(3)
-endif
+   if ( spinup_state .eq. 1 ) then
+      k_s1 = k_s1 * CNDecompBgcConstInst%spinup_vector(1)
+      k_s2 = k_s2 * CNDecompBgcConstInst%spinup_vector(2)
+      k_s3 = k_s3 * CNDecompBgcConstInst%spinup_vector(3)
+   endif
 
    i_litr1 = 1
    i_litr2 = 2
@@ -708,9 +656,9 @@ endif
       
       ! the following normalizes values in fr so that they
       ! sum to 1.0 across top nlevdecomp levels on a column
-      frw(lbc:ubc) = 0._r8
+      frw(bounds%begc:bounds%endc) = 0._r8
       nlev_soildecomp_standard=5
-      allocate(fr(lbc:ubc,nlev_soildecomp_standard))
+      allocate(fr(bounds%begc:bounds%endc,nlev_soildecomp_standard))
       do j=1,nlev_soildecomp_standard
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -781,43 +729,43 @@ endif
          end do
       end do
 
-#ifdef LCH4
-      if (anoxia_wtsat) then ! Adjust for saturated fraction if unfrozen
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            if (alt_indx(c) >= nlev_soildecomp_standard .and. t_soisno(c,1) > SHR_CONST_TKFRZ) then
-               w_scalar(c,1) = w_scalar(c,1)*(1._r8 - finundated(c)) + finundated(c)
-            end if
-         end do
-      end if
-#endif 
-
-#ifdef LCH4
-      ! Calculate ANOXIA
-      if (anoxia) then
-      ! Check for anoxia w/o LCH4 now done in controlMod.
-
-         do j = 1,nlev_soildecomp_standard
+      if (use_lch4) then
+         if (anoxia_wtsat) then ! Adjust for saturated fraction if unfrozen
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-
-               if (j==1) o_scalar(c,:) = 0._r8
-
-               if (.not. anoxia_wtsat) then
-                  o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * max(o2stress_unsat(c,j), mino2lim)
-               else
-                  o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * &
-                       (max(o2stress_unsat(c,j), mino2lim)*(1._r8 - finundated(c)) + &
-                       max(o2stress_sat(c,j), mino2lim)*finundated(c) )
+               if (alt_indx(c) >= nlev_soildecomp_standard .and. t_soisno(c,1) > SHR_CONST_TKFRZ) then
+                  w_scalar(c,1) = w_scalar(c,1)*(1._r8 - finundated(c)) + finundated(c)
                end if
             end do
-         end do
-      else
-         o_scalar(lbc:ubc,1:nlevdecomp) = 1._r8
+         end if
       end if
-#else
-      o_scalar(lbc:ubc,1:nlevdecomp) = 1._r8
-#endif 
+
+      if (use_lch4) then
+         ! Calculate ANOXIA
+         if (anoxia) then
+            ! Check for anoxia w/o LCH4 now done in controlMod.
+            
+            do j = 1,nlev_soildecomp_standard
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  
+                  if (j==1) o_scalar(c,:) = 0._r8
+                  
+                  if (.not. anoxia_wtsat) then
+                     o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * max(o2stress_unsat(c,j), mino2lim)
+                  else
+                     o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * &
+                          (max(o2stress_unsat(c,j), mino2lim)*(1._r8 - finundated(c)) + &
+                          max(o2stress_sat(c,j), mino2lim)*finundated(c) )
+                  end if
+               end do
+            end do
+         else
+            o_scalar(bounds%begc:bounds%endc,1:nlevdecomp) = 1._r8
+         end if
+      else
+         o_scalar(bounds%begc:bounds%endc,1:nlevdecomp) = 1._r8
+      end if
 
       deallocate(fr)
 
@@ -875,37 +823,37 @@ endif
             else
                w_scalar(c,j) = 0._r8
             end if
-#ifdef LCH4
-            if (anoxia_wtsat .and. t_soisno(c,j) > SHR_CONST_TKFRZ) then ! wet area will have w_scalar of 1 if unfrozen
-               w_scalar(c,j) = w_scalar(c,j)*(1._r8 - finundated(c)) + finundated(c)
+            if (use_lch4) then
+               if (anoxia_wtsat .and. t_soisno(c,j) > SHR_CONST_TKFRZ) then ! wet area will have w_scalar of 1 if unfrozen
+                  w_scalar(c,j) = w_scalar(c,j)*(1._r8 - finundated(c)) + finundated(c)
+               end if
             end if
-#endif
          end do
       end do
 
-#ifdef LCH4
-      ! Calculate ANOXIA
-      ! Check for anoxia w/o LCH4 now done in controlMod.
-
-      if (anoxia) then
-         do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-
-               if (.not. anoxia_wtsat) then
-                  o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
-               else
-                  o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim) * (1._r8 - finundated(c)) + &
-                       max(o2stress_sat(c,j), mino2lim) * finundated(c)
-               end if
+      if (use_lch4) then
+         ! Calculate ANOXIA
+         ! Check for anoxia w/o LCH4 now done in controlMod.
+         
+         if (anoxia) then
+            do j = 1,nlevdecomp
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  
+                  if (.not. anoxia_wtsat) then
+                     o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
+                  else
+                     o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim) * (1._r8 - finundated(c)) + &
+                          max(o2stress_sat(c,j), mino2lim) * finundated(c)
+                  end if
+               end do
             end do
-         end do
+         else
+            o_scalar(bounds%begc:bounds%endc,1:nlevdecomp) = 1._r8
+         end if
       else
-         o_scalar(lbc:ubc,1:nlevdecomp) = 1._r8
+         o_scalar(bounds%begc:bounds%endc,1:nlevdecomp) = 1._r8
       end if
-#else
-      o_scalar(lbc:ubc,1:nlevdecomp) = 1._r8
-#endif
 
    end if
 
@@ -920,51 +868,46 @@ endif
       end do
    endif
    
-#if (defined VERTSOILC)
-   ! add a term to reduce decomposition rate at depth
-   ! for now used a fixed e-folding depth
-   do j = 1, nlevdecomp
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         depth_scalar(c,j) = exp(-zsoi(j)/decomp_depth_efolding)
+   if (use_vertsoilc) then
+      ! add a term to reduce decomposition rate at depth
+      ! for now used a fixed e-folding depth
+      do j = 1, nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            depth_scalar(c,j) = exp(-zsoi(j)/decomp_depth_efolding)
+         end do
       end do
-   end do
-#endif
+   end if
    
-#if (defined VERTSOILC)
-   do j = 1,nlevdecomp
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         decomp_k(c,j,i_litr1) = k_l1 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_soil1) = k_s1 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_soil2) = k_s2 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_soil3) = k_s3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
+   if (use_vertsoilc) then
+      do j = 1,nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            decomp_k(c,j,i_litr1) = k_l1 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_soil1) = k_s1 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_soil2) = k_s2 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_soil3) = k_s3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
+         end do
       end do
-   end do
-#else
-   do j = 1,nlevdecomp
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         decomp_k(c,j,i_litr1) = k_l1 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_soil1) = k_s1 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_soil2) = k_s2 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-         decomp_k(c,j,i_soil3) = k_s3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+   else
+      do j = 1,nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            decomp_k(c,j,i_litr1) = k_l1 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_soil1) = k_s1 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_soil2) = k_s2 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+            decomp_k(c,j,i_soil3) = k_s3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+         end do
       end do
-   end do
-#endif
+   end if
 
-
-    end associate 
- end subroutine decomp_rate_constants
-
-#endif
-
-#endif
+ end associate
+ end subroutine decomp_rate_constants_bgc
 
 end module CNDecompCascadeBGCMod

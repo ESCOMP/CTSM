@@ -1,70 +1,48 @@
-
 module CNNStateUpdate2Mod
-#ifdef CN
-
 !-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: NStateUpdate2Mod
-!
-! !DESCRIPTION:
-! Module for nitrogen state variable update, mortality fluxes.
-!
-! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varpar   , only: nlevsoi, nlevdecomp
-    implicit none
-    save
-    private
-! !PUBLIC MEMBER FUNCTIONS:
-    public:: NStateUpdate2
-    public:: NStateUpdate2h
-!
-! !REVISION HISTORY:
-! 4/23/2004: Created by Peter Thornton
-!
-!EOP
+  ! !DESCRIPTION:
+  ! Module for nitrogen state variable update, mortality fluxes.
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varpar   , only: nlevsoi, nlevdecomp
+  implicit none
+  save
+  private
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public:: NStateUpdate2
+  public:: NStateUpdate2h
+  !
+  ! !REVISION HISTORY:
+  ! 4/23/2004: Created by Peter Thornton
 !-----------------------------------------------------------------------
 
 contains
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: NStateUpdate2
-!
-! !INTERFACE:
 subroutine NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! On the radiation time step, update all the prognostic nitrogen state
-! variables affected by gap-phase mortality fluxes
-!
-! !USES:
-   use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl  , only: iulog
-   use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 8/1/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   integer :: c,p,j,l         ! indices
-   integer :: fp,fc       ! lake filter indices
-   real(r8):: dt          ! radiation time step (seconds)
-
-!EOP
+  !
+  ! !DESCRIPTION:
+  ! On the radiation time step, update all the prognostic nitrogen state
+  ! variables affected by gap-phase mortality fluxes
+  !
+  ! !USES:
+  use clmtype
+  use clm_time_manager, only: get_step_size
+  use clm_varctl  , only: iulog
+  use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  !
+  ! !ARGUMENTS:
+  implicit none
+  integer, intent(in) :: num_soilc       ! number of soil columns in filter
+  integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+  integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+  integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+  !
+  ! !LOCAL VARIABLES:
+  integer :: c,p,j,l         ! indices
+  integer :: fp,fc       ! lake filter indices
+  real(r8):: dt          ! radiation time step (seconds)
 !-----------------------------------------------------------------------
 
    associate(& 
@@ -167,41 +145,28 @@ subroutine NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: NStateUpdate2h
-!
-! !INTERFACE:
 subroutine NStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! Update all the prognostic nitrogen state
-! variables affected by harvest mortality fluxes
-!
-! !USES:
-   use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 8/1/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   integer :: c,p,j,l         ! indices
-   integer :: fp,fc       ! lake filter indices
-   real(r8):: dt          ! radiation time step (seconds)
-
-!EOP
+  !
+  ! !DESCRIPTION:
+  ! Update all the prognostic nitrogen state
+  ! variables affected by harvest mortality fluxes
+  !
+  ! !USES:
+  use clmtype
+  use clm_time_manager, only: get_step_size
+  use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  !
+  ! !ARGUMENTS:
+  implicit none
+  integer, intent(in) :: num_soilc       ! number of soil columns in filter
+  integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+  integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+  integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+  !
+  ! !LOCAL VARIABLES:
+  integer :: c,p,j,l         ! indices
+  integer :: fp,fc       ! lake filter indices
+  real(r8):: dt          ! radiation time step (seconds)
 !-----------------------------------------------------------------------
 
    associate(& 
@@ -304,8 +269,5 @@ subroutine NStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
     end associate 
  end subroutine NStateUpdate2h
-!-----------------------------------------------------------------------
-
-#endif
 
 end module CNNStateUpdate2Mod

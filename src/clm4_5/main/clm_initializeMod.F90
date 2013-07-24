@@ -1,120 +1,91 @@
 module clm_initializeMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: clm_initializeMod
-!
-! !DESCRIPTION:
-! Performs land model initialization
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Performs land model initialization
+  !
+  ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use spmdMod         , only : masterproc
-  use shr_sys_mod     , only : shr_sys_flush
+  use shr_sys_mod     , only : shr_sys_flush, shr_sys_abort
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, &
-                               create_glacier_mec_landunit, iulog
+                               create_glacier_mec_landunit, iulog, use_lch4, use_cn, &
+                               use_cndv
   use clm_varsur      , only : wt_lunit, wt_nat_pft, wt_cft, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
+  use readConstantsMod, only : readConstants
   use ncdio_pio
   use mct_mod
 
-! !PUBLIC TYPES:
+  ! !PUBLIC TYPES:
   implicit none
   save
-
   private    ! By default everything is private
 
-! !PUBLIC MEMBER FUNCTIONS:
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: initialize1  ! Phase one initialization
   public :: initialize2  ! Phase two initialization
-!
-! !REVISION HISTORY:
-! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
-!
-!
-! !PRIVATE MEMBER FUNCTIONS:
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
   private header         ! echo version numbers
   private do_restread    ! read a restart file
-!-----------------------------------------------------------------------
-! !PRIVATE DATA MEMBERS: None
+  !-----------------------------------------------------------------------
 
-!EOP
-!-----------------------------------------------------------------------
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: initialize1
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine initialize1( )
-!
-! !DESCRIPTION:
-! Land model initialization.
-! o Initializes run control variables via the [clm_inparm] namelist.
-! o Reads surface data on model grid.
-! o Defines the multiple plant types and fraction areas for each surface type.
-! o Builds the appropriate subgrid <-> grid mapping indices and weights.
-! o Set up parallel processing.
-! o Initializes time constant variables.
-! o Reads restart data for a restart or branch run.
-! o Reads initial data and initializes the time variant variables for an initial run.
-! o Initializes history file output.
-! o Initializes river routing model.
-! o Initializes accumulation variables.
-!
-! !USES:
-    use clmtypeInitMod   , only : initClmtype
-    use clm_varpar       , only : clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, &
-                                  maxpatch_glcmec
-    use initParametersMod, only : initParameters
-    use clm_varcon       , only : clm_varcon_init, max_lunit
-    use clm_varctl       , only : fsurdat, fatmlndfrc, flndtopo, fglcmask, noland 
-    use pftvarcon        , only : pftconrd
-    use decompInitMod    , only : decompInit_lnd, decompInit_glcp
-    use decompMod        , only : get_proc_bounds
-    use domainMod        , only : domain_check, ldomain, domain_init
-    use surfrdMod        , only : surfrd_get_globmask, surfrd_get_grid, surfrd_get_topo, &
-                                  surfrd_get_data 
-    use controlMod       , only : control_init, control_print, nlfilename
-    use UrbanInputMod    , only : UrbanInput
-    use ncdio_pio        , only : ncd_pio_init
-    use clm_atmlnd       , only : init_atm2lnd_type, init_lnd2atm_type, clm_a2l, clm_l2a
-    use clm_glclnd       , only : init_glc2lnd_type, init_lnd2glc_type, clm_x2s, clm_s2x
-    use initGridCellsMod , only : initGridCells
-#if (defined LCH4)
-    use ch4varcon        , only : ch4conrd
-#endif
-    use readConstantsMod, only : readConstants
-!
-! !ARGUMENTS:
-!
-! !REVISION HISTORY:
-! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !DESCRIPTION:
+    ! Land model initialization.
+    ! o Initializes run control variables via the [clm_inparm] namelist.
+    ! o Reads surface data on model grid.
+    ! o Defines the multiple plant types and fraction areas for each surface type.
+    ! o Builds the appropriate subgrid <-> grid mapping indices and weights.
+    ! o Set up parallel processing.
+    ! o Initializes time constant variables.
+    ! o Reads restart data for a restart or branch run.
+    ! o Reads initial data and initializes the time variant variables for an initial run.
+    ! o Initializes history file output.
+    ! o Initializes river routing model.
+    ! o Initializes accumulation variables.
+    !
+    ! !USES:
+    use clmtypeInitMod   ,only: initClmtype
+    use clm_varpar       ,only: clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
+    use clm_varcon       ,only: clm_varcon_init, max_lunit
+    use clm_varctl       ,only: fsurdat, fatmlndfrc, flndtopo, fglcmask, noland 
+    use pftvarcon        ,only: pftconrd
+    use decompInitMod    ,only: decompInit_lnd, decompInit_clumps, decompInit_glcp
+    use decompMod        ,only: bounds_type, get_proc_bounds 
+    use domainMod        ,only: domain_check, ldomain, domain_init
+    use surfrdMod        ,only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_topo, surfrd_get_data 
+    use controlMod       ,only: control_init, control_print, nlfilename
+    use UrbanInputMod    ,only: UrbanInput
+    use ncdio_pio        ,only: ncd_pio_init
+    use clm_atmlnd       ,only: init_atm2lnd_type, init_lnd2atm_type, clm_a2l, clm_l2a
+    use clm_glclnd       ,only: init_glc2lnd_type, init_lnd2glc_type, clm_x2s, clm_s2x
+    use initGridCellsMod ,only: initGridCells
+    use ch4varcon        ,only: ch4conrd
+    !
+    ! !LOCAL VARIABLES:
     integer  :: ier                   ! error status
     integer  :: i,j,n,k               ! loop indices
     integer  :: nl                    ! gdc and glo lnd indices
     integer  :: ns, ni, nj            ! global grid sizes
-    logical  :: isgrid2d              ! true => global grid is regular lat/lon
-    integer  :: begp, endp            ! clump beg and ending pft indices
-    integer  :: begc, endc            ! clump beg and ending column indices
-    integer  :: begl, endl            ! clump beg and ending landunit indices
-    integer  :: begg, endg            ! clump beg and ending gridcell indices
+    integer  :: begg, endg            ! processor bounds
+    type(bounds_type) :: bounds       ! bounds
     integer ,pointer  :: amask(:)     ! global land mask
     character(len=32) :: subname = 'initialize1' ! subroutine name
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     call t_startf('clm_init1')
 
 #if (defined _OPENMP)
-    call endrun( 'ERROR: OpenMP does NOT work on the CLM4.5 science branch. Set the number of threads for LND to 1 and rerun.' )
+    call shr_sys_abort( &
+         'ERROR: OpenMP does NOT work on the CLM4.5 science branch. &
+         Set the number of threads for LND to 1 and rerun.' )
 #endif
 
     ! ------------------------------------------------------------------------
@@ -130,7 +101,6 @@ contains
     endif
 
     call control_init()
-    call initParameters()
     call clm_varpar_init()
     call clm_varcon_init()
     call ncd_pio_init()
@@ -161,21 +131,32 @@ contains
        return
     end if
 
-    ! Determine clm decomposition
+    ! ------------------------------------------------------------------------
+    ! Determine clm gridcell decomposition and processor bounds for gridcells
+    ! ------------------------------------------------------------------------
 
     call decompInit_lnd(ni, nj, amask)
     deallocate(amask)
 
+    ! *** Get JUST gridcell processor bounds ***
+    ! Remaining bounds (landunits, columns, pfts) will be determined 
+    ! after the call to decompInit_glcp - so get_proc_bounds is called
+    ! twice and the gridcell information is just filled in twice
+
+    call get_proc_bounds(begg, endg)
+
+    ! ------------------------------------------------------------------------
     ! Get grid and land fraction (set ldomain)
+    ! ------------------------------------------------------------------------
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read ldomain from ',trim(fatmlndfrc)
        call shr_sys_flush(iulog)
     endif
     if (create_glacier_mec_landunit) then
-       call surfrd_get_grid(ldomain, fatmlndfrc, fglcmask)
+       call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc, fglcmask)
     else
-       call surfrd_get_grid(ldomain, fatmlndfrc)
+       call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc)
     endif
     if (masterproc) then
        call domain_check(ldomain)
@@ -194,23 +175,19 @@ contains
 
     ! Initialize urban model input (initialize urbinp data structure)
 
-    call UrbanInput(mode='initialize')
+    call UrbanInput(begg, endg, mode='initialize')
 
-    ! Allocate surface grid dynamic memory
+    ! Allocate surface grid dynamic memory (just gridcell bounds dependent)
 
-    call get_proc_bounds(begg, endg)
-    allocate (wt_lunit(begg:endg,max_lunit), stat=ier)
-    allocate (wt_nat_pft(begg:endg,natpft_lb:natpft_ub), stat=ier)
-    allocate (wt_cft(begg:endg,cft_lb:cft_ub), stat=ier)
+    allocate (wt_lunit  (begg:endg, max_lunit))
+    allocate (wt_nat_pft(begg:endg, natpft_lb:natpft_ub))
+    allocate (wt_cft    (begg:endg, cft_lb:cft_ub))
     if (create_glacier_mec_landunit) then
-       allocate (wt_glc_mec(begg:endg,maxpatch_glcmec), stat=ier)
-       allocate (topo_glc_mec(begg:endg,maxpatch_glcmec), stat=ier)
+       allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
+       allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
     else
-       allocate (wt_glc_mec(1,1), stat=ier)
-       allocate (topo_glc_mec(1,1), stat=ier)
-    endif
-    if (ier /= 0) then
-       write(iulog,*)'initialize allocation error'; call endrun()
+       allocate (wt_glc_mec  (1,1))
+       allocate (topo_glc_mec(1,1))
     endif
 
     ! Read list of PFTs and their corresponding parameter values
@@ -220,39 +197,60 @@ contains
 
     ! Read surface dataset and set up subgrid weight arrays
     
-    call surfrd_get_data(ldomain, fsurdat)
+    call surfrd_get_data(begg, endg, ldomain, fsurdat)
 
+    ! ------------------------------------------------------------------------
     ! Determine decomposition of subgrid scale landunits, columns, pfts
+    ! ------------------------------------------------------------------------
 
     if (create_glacier_mec_landunit) then
-       call decompInit_glcp (ns, ni, nj, ldomain%glcmask)
+       call decompInit_clumps(ns, ni, nj, ldomain%glcmask)
     else
-       call decompInit_glcp (ns, ni, nj)
+       call decompInit_clumps(ns, ni, nj)
     endif
 
-#if (defined LCH4)
-    ! Set CH4 Model Parameters from namelist.
-    call ch4conrd()
-    ! Need to do before iniTimeConst so that it knows whether to look for several optional parameters on surfdata file.
-#endif
+    ! *** Get ALL processor bounds - for gridcells, landunit, columns and pfts ***
 
-    call t_stopf('init_surdat')
+    call get_proc_bounds(bounds)
+    
     ! Allocate memory and initialize values of clmtype data structures
+    ! This is needed here for the following call to initGridcells
 
-    call initClmtype()
+    call initClmtype(bounds)
+
+    ! Build hierarchy and topological info for derived types
+    ! This is needed here for the following call to decompInit_glcp
+
+    call initGridCells(bounds)
+
+    ! Set global seg maps for gridcells, landlunits, columns and pfts
+
+    if (create_glacier_mec_landunit) then
+       call decompInit_glcp(ns, ni, nj, ldomain%glcmask)
+    else
+       call decompInit_glcp(ns, ni, nj)
+    endif
 
     ! Initialize atm->lnd, lnd->atm, glc->lnd and lnd->glc data structures
 
-    call init_atm2lnd_type(begg, endg, clm_a2l)
-    call init_lnd2atm_type(begg, endg, clm_l2a)
+    call init_atm2lnd_type(bounds, clm_a2l)
+    call init_lnd2atm_type(bounds, clm_l2a)
     if (create_glacier_mec_landunit) then
-       call init_glc2lnd_type(begg, endg, clm_x2s)
-       call init_lnd2glc_type(begg, endg, clm_s2x)
+       call init_glc2lnd_type(bounds, clm_x2s)
+       call init_lnd2glc_type(bounds, clm_s2x)
     endif
 
-    ! Build hierarchy and topological info for derived types
+    ! ------------------------------------------------------------------------
+    ! Remainder of initialization1
+    ! ------------------------------------------------------------------------
 
-    call initGridCells()
+    ! Set CH4 Model Parameters from namelist.
+    ! Need to do before iniTimeConst so that it knows whether to 
+    ! look for several optional parameters on surfdata file.
+
+    if (use_lch4) then
+       call ch4conrd()
+    end if
 
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere
     ! Note that wt_lunit is kept until the end of initialize2 so we can do some
@@ -264,82 +262,64 @@ contains
 
   end subroutine initialize1
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: initialize2
-!
-! !INTERFACE:
+
+  !-----------------------------------------------------------------------
   subroutine initialize2( )
-!
-! !DESCRIPTION:
-! Land model initialization.
-! o Initializes run control variables via the [clm_inparm] namelist.
-! o Reads surface data on model grid.
-! o Defines the multiple plant types and fraction areas for each surface type.
-! o Builds the appropriate subgrid <-> grid mapping indices and weights.
-! o Set up parallel processing.
-! o Initializes time constant variables.
-! o Reads restart data for a restart or branch run.
-! o Reads initial data and initializes the time variant variables for an initial run.
-! o Initializes history file output.
-! o Initializes river routing model.
-! o Initializes accumulation variables.
-!
-! !USES:
-    use clm_atmlnd      , only : clm_map2gcell
-    use clm_glclnd      , only : create_clm_s2x
-    use clm_varctl      , only : finidat, fpftdyn
-    use decompMod       , only : get_proc_clumps, get_proc_bounds
-    use filterMod       , only : allocFilters
-    use reweightMod     , only : reweightWrapup
-    use histFldsMod     , only : hist_initFlds
-    use histFileMod     , only : hist_htapes_build, htapes_fieldlist
-    use restFileMod     , only : restFile_getfile, &
-                                 restFile_open, restFile_close, restFile_read 
-    use accFldsMod      , only : initAccFlds, initAccClmtype
-    use mkarbinitMod    , only : mkarbinit
-    use pftdynMod       , only : pftdyn_init, pftdyn_interp
-#ifdef CN
-    use ndepStreamMod    , only : ndep_init, ndep_interp
-    use CNEcosystemDynMod, only : CNEcosystemDynInit
-#endif
-#if (defined CNDV)
+    !
+    ! !DESCRIPTION:
+    ! Land model initialization.
+    ! o Initializes run control variables via the [clm_inparm] namelist.
+    ! o Reads surface data on model grid.
+    ! o Defines the multiple plant types and fraction areas for each surface type.
+    ! o Builds the appropriate subgrid <-> grid mapping indices and weights.
+    ! o Set up parallel processing.
+    ! o Initializes time constant variables.
+    ! o Reads restart data for a restart or branch run.
+    ! o Reads initial data and initializes the time variant variables for an initial run.
+    ! o Initializes history file output.
+    ! o Initializes river routing model.
+    ! o Initializes accumulation variables.
+    !
+    ! !USES:
+    use clm_atmlnd            , only : clm_map2gcell
+    use clm_glclnd            , only : update_clm_s2x
+    use clm_varctl            , only : finidat, fpftdyn
+    use decompMod             , only : get_proc_clumps, get_proc_bounds, bounds_type
+    use filterMod             , only : allocFilters
+    use reweightMod           , only : reweightWrapup
+    use histFldsMod           , only : hist_initFlds
+    use histFileMod           , only : hist_htapes_build, htapes_fieldlist
+    use restFileMod           , only : restFile_getfile, restFile_open, restFile_close, restFile_read 
+    use accFldsMod            , only : initAccFlds, initAccClmtype
+    use mkarbinitMod          , only : mkarbinit
+    use pftdynMod             , only : pftdyn_init, pftdyn_interp
+    use ndepStreamMod         , only : ndep_init, ndep_interp
+    use CNEcosystemDynMod     , only : CNEcosystemDynInit
     use pftdynMod             , only : pftwt_init
     use CNDVEcosystemDyniniMod, only : CNDVEcosystemDynini
-#endif
-    use STATICEcosysDynMod , only : EcosystemDynini, readAnnualVegetation
-    use STATICEcosysDynMod , only : interpMonthlyVeg
-    use DustMod         , only : Dustini
-    use clm_time_manager, only : get_curr_date, get_nstep, advance_timestep, &
-                                 timemgr_init, timemgr_restart_io, timemgr_restart
-    use clm_time_manager, only : get_step_size, get_curr_calday
-    use fileutils       , only : getfil
-    use UrbanMod        , only : UrbanParamInit
-    use UrbanInitMod    , only : UrbanInitTimeConst, UrbanInitTimeVar, UrbanInitAero 
-    use UrbanInputMod   , only : UrbanInput
-    use initSLakeMod    , only : initSLake
-#if (defined LCH4)
-    use initch4Mod      , only : initch4
-#endif
-    use clm_glclnd      , only : init_glc2lnd_type, init_lnd2glc_type, &
-                                 clm_x2s, clm_s2x
-    use seq_drydep_mod  , only : n_drydep, drydep_method, DD_XLND
-    use shr_orb_mod        , only : shr_orb_decl
-    use initSurfAlbMod     , only : initSurfAlb, do_initsurfalb 
-    use clm_varorb         , only : eccen, mvelpp, lambm0, obliqr
-    use VOCEmissionMod  , only : VOCEmission_init
 
-
-! !Arguments    
+    use STATICEcosysDynMod    , only : EcosystemDynini, readAnnualVegetation, interpMonthlyVeg
+    use DustMod               , only : Dustini
+    use clm_time_manager      , only : get_step_size, get_curr_calday
+    use fileutils             , only : getfil
+    use UrbanMod              , only : UrbanParamInit
+    use UrbanInitMod          , only : UrbanInitTimeConst, UrbanInitTimeVar, UrbanInitAero 
+    use UrbanInputMod         , only : UrbanInput
+    use initSLakeMod          , only : initSLake
+    use initch4Mod            , only : initch4
+    use clm_glclnd            , only : init_glc2lnd_type, init_lnd2glc_type, clm_x2s, clm_s2x
+    use seq_drydep_mod        , only : n_drydep, drydep_method, DD_XLND
+    use shr_orb_mod           , only : shr_orb_decl
+    use initSurfAlbMod        , only : initSurfAlb, do_initsurfalb 
+    use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
+    use VOCEmissionMod        , only : VOCEmission_init
+    use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep, &
+                                       timemgr_init, timemgr_restart_io, timemgr_restart
+    !
+    ! !ARGUMENTS    
     implicit none
-!
-! !REVISION HISTORY:
-! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer  :: nl,na,nag             ! indices
     integer  :: i,j,k                 ! indices
     integer  :: yr                    ! current year (0, ...)
@@ -348,10 +328,6 @@ contains
     integer  :: ncsec                 ! current time of day [seconds]
     integer  :: nc                    ! clump index
     integer  :: nclumps               ! number of clumps on this processor
-    integer  :: begp, endp            ! clump beg and ending pft indices
-    integer  :: begc, endc            ! clump beg and ending column indices
-    integer  :: begl, endl            ! clump beg and ending landunit indices
-    integer  :: begg, endg            ! clump beg and ending gridcell indices
     character(len=256) :: fnamer      ! name of netcdf restart file 
     character(len=256) :: pnamer      ! full pathname of netcdf restart file
     type(file_desc_t)  :: ncid        ! netcdf id
@@ -362,9 +338,17 @@ contains
     real(r8) :: declin                ! solar declination angle in radians for nstep
     real(r8) :: declinm1              ! solar declination angle in radians for nstep-1
     real(r8) :: eccf                  ! earth orbit eccentricity factor
+    type(bounds_type) :: bounds       ! bounds
     character(len=32) :: subname = 'initialize2' ! subroutine name
     logical           :: arbinit            ! Make arb init in initSLake
-!----------------------------------------------------------------------
+    !----------------------------------------------------------------------
+
+    ! ------------------------------------------------------------------------
+    ! Determine processor bounds and clumps for this processor
+    ! ------------------------------------------------------------------------
+
+    call get_proc_bounds(bounds)
+    nclumps = get_proc_clumps()
 
     call t_startf('clm_init2')
 
@@ -372,53 +356,46 @@ contains
     ! Initialize time constant variables 
     ! ------------------------------------------------------------------------
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp )
-
     ! Initialize Ecosystem Dynamics 
 
     call t_startf('init_ecosys')
-#if (defined CNDV)
-    call CNDVEcosystemDynini()
-#elif (!defined CN)
-    call EcosystemDynini()
-#endif
-#if (defined CN) || (defined CNDV)
+    if (use_cndv) then
+       call CNDVEcosystemDynini(bounds)
+    else if (.not. use_cn) then
+       call EcosystemDynini(bounds)
+    end if
 
-    ! --------------------------------------------------------------
     ! Initialize CLMSP ecosystem dynamics when drydeposition is used
     ! so that estimates of monthly differences in LAI can be computed
-    ! --------------------------------------------------------------
-
-    if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
-       call EcosystemDynini()
+    if (use_cn .or. use_cndv) then
+       if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
+          call EcosystemDynini(bounds)
+       end if
     end if
-#endif
     call t_stopf('init_ecosys')
 
     ! Initialize dust emissions model 
 
     call t_startf('init_dust')
-    call Dustini()
+    call Dustini(bounds)
     call t_stopf('init_dust')
     
     ! Initialize MEGAN emissions model 
 
-    call VOCEmission_init( )
+    call VOCEmission_init()
 
-    ! ------------------------------------------------------------------------
     ! Initialize time constant urban variables
-    ! ------------------------------------------------------------------------
 
     call t_startf('init_io1')
-    call UrbanInitTimeConst()
-    call iniTimeConst()
+    call UrbanInitTimeConst(bounds)
+    call iniTimeConst(bounds)
 
     ! ------------------------------------------------------------------------
     ! Obtain restart file if appropriate
     ! ------------------------------------------------------------------------
 
     if (do_restread()) then
-       call restFile_getfile( file=fnamer, path=pnamer )
+       call restFile_getfile(file=fnamer, path=pnamer)
     end if
 
     ! ------------------------------------------------------------------------
@@ -433,6 +410,7 @@ contains
     if (nsrest == nsrContinue ) call htapes_fieldlist()
 
     call t_stopf('hist_initFlds')
+
     ! ------------------------------------------------------------------------
     ! Initialize time manager
     ! ------------------------------------------------------------------------
@@ -450,9 +428,10 @@ contains
     ! ------------------------------------------------------------------------
     ! Initialize CN Ecosystem Dynamics (must be after time-manager initialization)
     ! ------------------------------------------------------------------------
-#if (defined CN) || (defined CNDV)
-    call CNEcosystemDynInit( begg, endg, begc, endc, begp, endp )
-#endif
+    if (use_cn .or. use_cndv) then 
+       call get_proc_bounds(bounds)
+       call CNEcosystemDynInit(bounds)
+    end if
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields
@@ -463,7 +442,7 @@ contains
     ! the step size is needed.
 
     call t_startf('init_accflds')
-    call initAccFlds()
+    call initAccFlds(bounds)
     call t_stopf('init_accflds')
 
     ! ------------------------------------------------------------------------
@@ -471,13 +450,13 @@ contains
     ! used in coupled carbon-nitrogen code
     ! ------------------------------------------------------------------------
     
-#if (defined CN)
-    call t_startf('init_cninitim')
-    if (nsrest == nsrStartup) then
-       call CNiniTimeVar()
+    if (use_cn) then
+       call t_startf('init_cninitim')
+       if (nsrest == nsrStartup) then
+          call CNiniTimeVar(bounds)
+       end if
+       call t_stopf('init_cninitim')
     end if
-    call t_stopf('init_cninitim')
-#endif
 
     ! ------------------------------------------------------------------------
     ! Initialization of dynamic pft weights
@@ -486,16 +465,16 @@ contains
     ! Determine correct pft weights (interpolate pftdyn dataset if initial run)
     ! Otherwise these are read in for a restart run
 
-#if (defined CNDV)
-    call pftwt_init()
-#else
-    if (fpftdyn /= ' ') then
-       call t_startf('init_pftdyn')
-       call pftdyn_init()
-       call pftdyn_interp( )
-       call t_stopf('init_pftdyn')
+    if (use_cndv) then
+       call pftwt_init(bounds)
+    else
+       if (fpftdyn /= ' ') then
+          call t_startf('init_pftdyn')
+          call pftdyn_init(bounds)
+          call pftdyn_interp(bounds)
+          call t_stopf('init_pftdyn')
+       end if
     end if
-#endif
 
     ! ------------------------------------------------------------------------
     ! Read restart/initial info
@@ -507,25 +486,25 @@ contains
     call t_startf('init_io2')
     if (do_restread()) then
        if (masterproc) write(iulog,*)'reading restart file ',fnamer
-       call restFile_read( fnamer )
+       call restFile_read(bounds, fnamer)
 
        arbinit = .false.
-       call initSLake(arbinit)
-#if (defined LCH4)
-       arbinit = .false.
-       call initch4(arbinit)
-#endif
+       call initSLake(bounds, arbinit)
+       if (use_lch4) then
+          arbinit = .false.
+          call initch4(bounds, arbinit)
+       end if
     else if (nsrest == nsrStartup .and. finidat == ' ') then
-       call mkarbinit()
-       call UrbanInitTimeVar( )
+       call mkarbinit(bounds)
+       call UrbanInitTimeVar(bounds)
 
        arbinit = .true.
-       call initSLake(arbinit)
-#if (defined LCH4)
-       arbinit = .true.
-       call initch4(arbinit)
-#endif
-!!!!! Attn EK: The calls to initch4 and initSLake combine both setting of state vars, and constant + flux & diagnostic
+       call initSLake(bounds, arbinit)
+       if (use_lch4) then
+          arbinit = .true.
+          call initch4(bounds, arbinit)
+       end if
+    !!!!! Attn EK: The calls to initch4 and initSLake combine both setting of state vars, and constant + flux & diagnostic
     !          vars.  This is set up so that the submodels would be back-compatible with old restart files.
     !          It is intended to work and allow bfb restarts as is, but may not be consistent style.
     !          See these two routines for structure.  Feel free to modify this but be careful.
@@ -540,20 +519,16 @@ contains
     ! Initialize nitrogen deposition
     ! ------------------------------------------------------------------------
 
-#ifdef CN
-    call t_startf('init_ndep')
-    call ndep_init()
-    call ndep_interp()
-    call t_stopf('init_ndep')
-#endif
+    if (use_cn) then
+       call t_startf('init_ndep')
+       call ndep_init(bounds)
+       call ndep_interp(bounds)
+       call t_stopf('init_ndep')
+    end if
     
     ! ------------------------------------------------------------------------
     ! Initialization of model parameterizations that are needed after
     ! restart file is read in
-    ! ------------------------------------------------------------------------
-
-    ! ------------------------------------------------------------------------
-    ! Initialize history and accumator buffers
     ! ------------------------------------------------------------------------
 
     ! Initialize active history fields. This is only done if not a restart run. 
@@ -568,7 +543,7 @@ contains
     ! This routine is also always called for a restart run and must 
     ! therefore be called after the restart file is read in
 
-    call initAccClmtype()
+    call initAccClmtype(bounds)
 
     call t_stopf('init_hist1')
 
@@ -581,33 +556,32 @@ contains
     call t_startf('init_filters')
 
     call allocFilters()
-    nclumps = get_proc_clumps()
-!$OMP PARALLEL DO PRIVATE (nc)
+
+    !$OMP PARALLEL DO PRIVATE (nc)
     do nc = 1, nclumps
-       call reweightWrapup(nc)
+       call reweightWrapup(nc, bounds)
     end do
-!$OMP END PARALLEL DO
+    !$OMP END PARALLEL DO
 
     call t_stopf('init_filters')
 
     ! Calculate urban "town" roughness length and displacement 
     ! height for urban landunits
 
-    call UrbanInitAero()
+    call UrbanInitAero(bounds)
 
     ! Initialize urban radiation model - this uses urbinp data structure
 
-    call UrbanParamInit(begl, endl)
+    call UrbanParamInit(bounds)
 
     ! Finalize urban model initialization
     
-    call UrbanInput(mode='finalize')
+    call UrbanInput(bounds%begg, bounds%endg, mode='finalize')
 
-    !
     ! Even if CN is on, and dry-deposition is active, read CLMSP annual vegetation to get estimates of monthly LAI
-    !
+
     if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
-       call readAnnualVegetation()
+       call readAnnualVegetation(bounds)
     end if
 
     ! End initialization
@@ -652,13 +626,13 @@ contains
        else if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
           ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
           ! This needs to be done even if CN or CNDV is on!
-          call interpMonthlyVeg()
+          call interpMonthlyVeg(bounds)
        end if
 
        ! Determine gridcell averaged properties to send to atm
 
        call t_startf('init_map2gc')
-       call clm_map2gcell(init=.true.)
+       call clm_map2gcell(bounds, init=.true.)
        call t_stopf('init_map2gc')
 
     end if
@@ -666,7 +640,7 @@ contains
     ! Initialize sno export state
     if (create_glacier_mec_landunit) then
        call t_startf('init_create_s2x')
-       call create_clm_s2x(init=.true.)
+       call update_clm_s2x(bounds, init=.true.)
        call t_stopf('init_create_s2x')
     end if
 
@@ -678,31 +652,18 @@ contains
 
   end subroutine initialize2
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: header
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine header()
-!
-! !DESCRIPTION:
-! Echo and save model version number
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Echo and save model version number
+    !
+    ! !USES:
     use clm_varctl  , only : version
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !CALLED FROM:
-! subroutine initialize in this module
-!
-! !REVISION HISTORY:
-! Created by Gordon Bonan
-!
-!EOP
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     if ( masterproc )then
       write(iulog,*) trim(version)
@@ -711,31 +672,18 @@ contains
 
   end subroutine header
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: do_restread
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   logical function do_restread( )
-!
-! !DESCRIPTION:
-! Determine if restart file will be read
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Determine if restart file will be read
+    !
+    ! !USES:
     use clm_varctl, only : finidat
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !CALLED FROM:
-! subroutine initialize in this module
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     do_restread = .false.
     if (nsrest == nsrStartup .and. finidat /= ' ') then

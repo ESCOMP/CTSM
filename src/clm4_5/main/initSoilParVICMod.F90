@@ -1,90 +1,70 @@
 module initSoilParVICMod
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: initSoilParVICMod
-!
-! !DESCRIPTION:
-! Performs mapping between VIC and CLM layers 
-!
-! !USES:
-#if (defined VICHYDRO)
+  ! !DESCRIPTION:
+  ! Performs mapping between VIC and CLM layers 
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-!
-! !PUBLIC TYPES:
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: initSoilParVIC      ! map clm soil parameters to vic parameters
-!
-! !REVISION HISTORY:
-! Created by Maoyi Huang
-!
-!EOP
+  !
+  ! !REVISION HISTORY:
+  ! Created by Maoyi Huang
 !-----------------------------------------------------------------------
 
 contains
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: initSoilParVIC
-!
-! !INTERFACE:
-
-
-!----------------------------------------------------------------
  subroutine initSoilParVIC(c, claycol, sandcol, om_fraccol)
-
-! !DESCRIPTION:
-! This subroutine converts default CLM soil properties to VIC parameters to be used for runoff simulations
-! added by M. Huang
-!
-! !USES:
+   !
+   ! !DESCRIPTION:
+   ! This subroutine converts default CLM soil properties to VIC parameters to be used for runoff simulations
+   ! added by M. Huang
+   !
+   ! !USES:
    use clmtype
    use clm_varcon  , only : denh2o, denice, pondmx
    use clm_varpar  , only : nlevsoi, nlayer, nlayert, nlevgrnd 
-   use shr_kind_mod, only: r8 => shr_kind_r8
 
    ! !ARGUMENTS:
-    implicit none
-    integer , intent(in)  :: c ! column bounds
-    real(r8),pointer :: sandcol(:,:)    ! read in - soil texture: percent sand
-    real(r8),pointer :: claycol(:,:)    ! read in - soil texture: percent clay
-    real(r8),pointer :: om_fraccol(:,:) ! read in - organic matter: kg/m3
-    real(r8) :: om_watsat    = 0.9_r8  ! porosity of organic soil
-    real(r8) :: om_hksat     = 0.1_r8  ! saturated hydraulic conductivity of organic soil [mm/s]
-    real(r8) :: om_tkm       = 0.25_r8 ! thermal conductivity of organic soil (Farouki, 1986) [W/m/K]
-    real(r8) :: om_sucsat    = 10.3_r8 ! saturated suction for organic matter (Letts, 2000)
-    real(r8) :: om_csol      = 2.5_r8  ! heat capacity of peat soil *10^6 (J/K m3) (Farouki, 1986)
-    real(r8) :: om_tkd       = 0.05_r8 ! thermal conductivity of dry organic soil (Farouki, 1981)
-    real(r8) :: om_b         = 2.7_r8  ! Clapp Hornberger paramater for oragnic soil (Letts, 2000)
-    real(r8) :: om_expt      = 3._r8+2._r8*2.7_r8   !soil expt for VIC        
-    real(r8) :: organic_max  = 130._r8 ! organic matter (kg/m3) where soil is assumed to act like peat 
-    real(r8) :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
-    real(r8) :: pc           = 0.5_r8   ! percolation threshold
-    real(r8) :: pcbeta       = 0.139_r8 ! percolation exponent
-    real(r8) :: xksat            ! maximum hydraulic conductivity of soil [mm/s]
-    real(r8) :: perc_frac               ! "percolating" fraction of organic soil
-    real(r8) :: perc_norm               ! normalize to 1 when 100% organic soil
-    real(r8) :: uncon_hksat             ! series conductivity of mineral/organic soil
-    real(r8) :: uncon_frac              ! fraction of "unconnected" soil
-!
-!local pointers to original implicit in arrays
+   implicit none
+   integer , intent(in)  :: c ! column bounds
+   real(r8),pointer :: sandcol(:,:)    ! read in - soil texture: percent sand
+   real(r8),pointer :: claycol(:,:)    ! read in - soil texture: percent clay
+   real(r8),pointer :: om_fraccol(:,:) ! read in - organic matter: kg/m3
 
-    real(r8), pointer :: dz(:,:)                   !layer depth (m)
-    real(r8), pointer :: zi(:,:)                   !interface level below a "z" level (m)
-    real(r8), pointer :: z(:,:)                    !layer thickness (m)
-    real(r8), pointer :: vic_clm_fract(:,:,:)      !fraction of VIC layers in CLM layers
-    real(r8) :: temp_sum_frac                      !sum of node fractions in each VIC layer
-    real(r8) :: sandvic(1:nlayert)                 !temporary, weighted averaged sand% for VIC layers
-    real(r8) :: clayvic(1:nlayert)                 !temporary, weighted averaged clay% for VIC layers
-    real(r8) :: om_fracvic(1:nlayert)              !temporary, weighted averaged organic matter fract for VIC layers
+   ! !LOCAL VARIABLES:
+   real(r8) :: om_watsat    = 0.9_r8  ! porosity of organic soil
+   real(r8) :: om_hksat     = 0.1_r8  ! saturated hydraulic conductivity of organic soil [mm/s]
+   real(r8) :: om_tkm       = 0.25_r8 ! thermal conductivity of organic soil (Farouki, 1986) [W/m/K]
+   real(r8) :: om_sucsat    = 10.3_r8 ! saturated suction for organic matter (Letts, 2000)
+   real(r8) :: om_csol      = 2.5_r8  ! heat capacity of peat soil *10^6 (J/K m3) (Farouki, 1986)
+   real(r8) :: om_tkd       = 0.05_r8 ! thermal conductivity of dry organic soil (Farouki, 1981)
+   real(r8) :: om_b         = 2.7_r8  ! Clapp Hornberger paramater for oragnic soil (Letts, 2000)
+   real(r8) :: om_expt      = 3._r8+2._r8*2.7_r8   !soil expt for VIC        
+   real(r8) :: organic_max  = 130._r8 ! organic matter (kg/m3) where soil is assumed to act like peat 
+   real(r8) :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
+   real(r8) :: pc           = 0.5_r8   ! percolation threshold
+   real(r8) :: pcbeta       = 0.139_r8 ! percolation exponent
+   real(r8) :: xksat            ! maximum hydraulic conductivity of soil [mm/s]
+   real(r8) :: perc_frac        ! "percolating" fraction of organic soil
+   real(r8) :: perc_norm        ! normalize to 1 when 100% organic soil
+   real(r8) :: uncon_hksat      ! series conductivity of mineral/organic soil
+   real(r8) :: uncon_frac       ! fraction of "unconnected" soil
 
-!----------------------------------------------------------------------------------
-! VIC soil parameters
+   real(r8) :: temp_sum_frac                      !sum of node fractions in each VIC layer
+   real(r8) :: sandvic(1:nlayert)                 !temporary, weighted averaged sand% for VIC layers
+   real(r8) :: clayvic(1:nlayert)                 !temporary, weighted averaged clay% for VIC layers
+   real(r8) :: om_fracvic(1:nlayert)              !temporary, weighted averaged organic matter fract for VIC layers
+
+   real(r8), pointer :: depth(:,:)          !layer depth of upper layer(m) 
+   real(r8), pointer :: vic_clm_fract(:,:,:)      !fraction of VIC layers in CLM layers
    real(r8), pointer :: b_infil(:)          !b infiltration parameter
    real(r8), pointer :: ds(:)               !fracton of Dsmax where non-linear baseflow begins
    real(r8), pointer :: dsmax(:)            !max. velocity of baseflow (mm/day)
@@ -93,34 +73,24 @@ contains
    real(r8), pointer :: expt(:,:)           !pore-size distribution related paramter(Q12)
    real(r8), pointer :: ksat(:,:)           !Saturated hydrologic conductivity (mm/s)
    real(r8), pointer :: phi_s(:,:)          !soil moisture dissusion parameter
-   real(r8), pointer :: depth(:,:)          !layer depth of upper layer(m) 
    real(r8), pointer :: porosity(:,:)       !soil porosity
    real(r8), pointer :: max_moist(:,:)      !maximum soil moisture (ice + liq)
+
+   integer :: i, j
 !-------------------------------------------------------------------------------------------
 
- ! other local variables
-    
-   integer :: i, j
-
- ! Assign local pointers to derived subtypes components (column-level)
-
-    dz         => cps%dz
-    zi         => cps%zi
-    z          => cps%z
-    depth      => cps%depth
-    vic_clm_fract => cps%vic_clm_fract
- !------------------------------------------------------------------
- !   VIC soil parameters
-    b_infil        => cps%b_infil
-    dsmax          => cps%dsmax
-    ds             => cps%ds
-    Wsvic          => cps%Wsvic
-    c_param        => cps%c_param
-    expt           => cps%expt
-    ksat           => cps%ksat
-    phi_s          => cps%phi_s
-    porosity       => cps%porosity
-    max_moist      => cps%max_moist
+   depth          => cps%depth
+   vic_clm_fract  => cps%vic_clm_fract
+   b_infil        => cps%b_infil
+   dsmax          => cps%dsmax
+   ds             => cps%ds
+   Wsvic          => cps%Wsvic
+   c_param        => cps%c_param
+   expt           => cps%expt
+   ksat           => cps%ksat
+   phi_s          => cps%phi_s
+   porosity       => cps%porosity
+   max_moist      => cps%max_moist
 
 !************************************************************************  
 !  map parameters between VIC layers and CLM layers
@@ -182,6 +152,5 @@ contains
      end do
 
   end subroutine initSoilParVIC
-#endif 
 
 end module initSoilParVICMod

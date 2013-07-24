@@ -1,84 +1,58 @@
-
 module CNC14DecayMod
-#if (defined CN)
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: C14FluxMod
-!
-! !DESCRIPTION:
-! Module for 14-carbon flux variable update, non-mortality fluxes.
-!
-! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varpar   , only: ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
-    implicit none
-    save
-    private
-!
-! !PUBLIC MEMBER FUNCTIONS:
-    public:: C14Decay
-    public:: C14BombSpike
-    public:: C14_init_BombSpike
+  !-----------------------------------------------------------------------
+  ! Module for 14-carbon flux variable update, non-mortality fluxes.
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varpar   , only: ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
+  implicit none
+  save
+  private
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public:: C14Decay
+  public:: C14BombSpike
+  public:: C14_init_BombSpike
 
-! !PUBLIC TYPES:
-    logical, public :: use_c14_bombspike = .false.         ! do we use time-varying atmospheric C14?
-    character(len=256), public :: atm_c14_filename = ' '   ! file name of C14 input data
-    
-! !PRIVATE TYPES:
-    real(r8), allocatable, private :: atm_c14file_time(:)
-    real(r8), allocatable, private :: atm_delta_c14(:)
+  ! !PUBLIC TYPES:
+  logical, public :: use_c14_bombspike = .false.         ! do we use time-varying atmospheric C14?
+  character(len=256), public :: atm_c14_filename = ' '   ! file name of C14 input data
 
-! !REVISION HISTORY:
-! 2/15/2011 by C. Koven
-!
-!EOP
-!-----------------------------------------------------------------------
+  ! !PRIVATE TYPES:
+  real(r8), allocatable, private :: atm_c14file_time(:)
+  real(r8), allocatable, private :: atm_delta_c14(:)
+  !-----------------------------------------------------------------------
 
 contains
 
-
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: C14Decay
-!
-! !INTERFACE:
-subroutine C14Decay(num_soilc, filter_soilc, num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! On the radiation time step, calculate the radioactive decay of C14
-!
-! !USES:
-   use clmtype
-   use clm_time_manager, only: get_step_size, get_days_per_year
-   use clm_varcon, only: secspday
-   use clm_varctl, only : spinup_state
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc       ! number of soil columns filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-!
-! !LOCAL VARIABLES:
-
-
-! !OTHER LOCAL VARIABLES:
-   integer :: fp,j,l,p,fc,c,i
-   real(r8) :: dt                             ! radiation time step (seconds)
-   real(r8) :: half_life
-   real(r8) :: decay_const
-   real(r8) :: days_per_year                  ! days per year
-   real(r8) :: spinup_term               ! spinup accelerated decomposition factor, used to accelerate transport as well
+  !-----------------------------------------------------------------------
+  subroutine C14Decay(num_soilc, filter_soilc, num_soilp, filter_soilp)
+    !
+    ! !DESCRIPTION:
+    ! On the radiation time step, calculate the radioactive decay of C14
+    !
+    ! !USES:
+    use clmtype
+    use clm_time_manager, only: get_step_size, get_days_per_year
+    use clm_varcon, only: secspday
+    use clm_varctl, only : spinup_state
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilc       ! number of soil columns filter
+    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fp,j,l,p,fc,c,i
+    real(r8) :: dt                             ! radiation time step (seconds)
+    real(r8) :: half_life
+    real(r8) :: decay_const
+    real(r8) :: days_per_year                  ! days per year
+    real(r8) :: spinup_term               ! spinup accelerated decomposition factor, used to accelerate transport as well
+    !-----------------------------------------------------------------------
 
    associate(& 
    decomp_cpools_vr               =>    cc14s%decomp_cpools_vr       , & ! InOut:  [real(r8) (:,:,:)]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
@@ -172,43 +146,37 @@ subroutine C14Decay(num_soilc, filter_soilc, num_soilp, filter_soilp)
     end associate 
   end subroutine C14Decay
 
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: C14BombSpike
-!
-! !INTERFACE:
-subroutine C14BombSpike(num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! for transient pulse simulation, impose a simplified bomb spike
-!
-! !USES:
-   use clmtype
-   use clm_time_manager, only: get_curr_date,get_days_per_year
-   use clm_varcon  , only : c14ratio,secspday
-   use ncdio_pio
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-
-
-! !OTHER LOCAL VARIABLES:
-   integer :: yr, mon, day, tod, offset
-   real(r8) :: dateyear
-   real(r8) :: delc14o2_atm 
-   real(r8) :: days_per_year                    ! days per year
-   integer :: fp, p, nt
-   integer :: ind_below
-   integer :: ntim_atm_ts
-   real(r8) :: twt_1, twt_2                     ! weighting fractions for interpolating
-   real(r8) :: min, max
+  !-----------------------------------------------------------------------
+  subroutine C14BombSpike(num_soilp, filter_soilp)
+    !
+    ! !DESCRIPTION:
+    ! for transient pulse simulation, impose a simplified bomb spike
+    !
+    ! !USES:
+    use clmtype
+    use clm_time_manager, only: get_curr_date,get_days_per_year
+    use clm_varcon  , only : c14ratio,secspday
+    use ncdio_pio
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+    !
+    ! !LOCAL VARIABLES:
+    integer :: yr, mon, day, tod, offset
+    real(r8) :: dateyear
+    real(r8) :: delc14o2_atm 
+    real(r8) :: days_per_year                    ! days per year
+    integer :: fp, p, nt
+    integer :: ind_below
+    integer :: ntim_atm_ts
+    real(r8) :: twt_1, twt_2                     ! weighting fractions for interpolating
+    real(r8) :: min, max
+    !-----------------------------------------------------------------------
 
    associate(& 
-   rc14_atm                       =>    pepv%rc14_atm                  & ! InOut:  [real(r8) (:)] C14O2/C12O2 in atmosphere                
+   rc14_atm  =>  pepv%rc14_atm                  & ! InOut:  [real(r8) (:)] C14O2/C12O2 in atmosphere                
    )
 
    if ( use_c14_bombspike ) then
@@ -257,34 +225,29 @@ subroutine C14BombSpike(num_soilp, filter_soilp)
     end associate 
  end subroutine C14BombSpike
 
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: C14_init_BombSpike
-!
-! !INTERFACE:
-subroutine C14_init_BombSpike()
-!
-! !DESCRIPTION:
-! read netcdf file containing a timeseries of atmospheric delta C14 values; save in module-level array 
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine C14_init_BombSpike()
+   !
+   ! !DESCRIPTION:
+   ! read netcdf file containing a timeseries of atmospheric delta C14 values; save in module-level array 
+   !
+   ! !USES:
    use ncdio_pio
    use fileutils   , only : getfil
    use abortutils,      only : endrun
    use clm_varctl,      only : iulog
    use spmdMod      , only : masterproc
-!
-! !ARGUMENTS:
+   !
+   ! !ARGUMENTS:
    implicit none
-
-! !OTHER LOCAL VARIABLES:
+   !
+   ! !LOCAL VARIABLES:
    character(len=256) :: locfn           ! local file name
    type(file_desc_t)  :: ncid            ! netcdf id
    integer :: dimid,varid                ! input netCDF id's
    integer :: ntim                       ! number of input data time samples
    integer :: t
+   !-----------------------------------------------------------------------
    
    if ( use_c14_bombspike ) then
       
@@ -319,7 +282,5 @@ subroutine C14_init_BombSpike()
    endif
    
 end subroutine C14_init_BombSpike
-
-#endif
 
 end module CNC14DecayMod

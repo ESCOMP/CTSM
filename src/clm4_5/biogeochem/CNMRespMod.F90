@@ -1,152 +1,119 @@
 module CNMRespMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNMRespMod
-!
-! !DESCRIPTION:
-! Module holding maintenance respiration routines for coupled carbon
-! nitrogen code.
-!
-! !USES:
-   use shr_kind_mod , only: r8 => shr_kind_r8
-   use clm_varpar   , only: nlevgrnd
-   use shr_const_mod, only: SHR_CONST_TKFRZ
-   use CNSharedConstsMod, only: CNConstShareInst	
-
-   implicit none
-   save
-   private
-
-! !PUBLIC MEMBER FUNCTIONS:
-   public :: CNMResp
-   public :: readCNMRespConsts
-
-   type, private :: CNMRespConstType
-      real(r8):: br        !base rate for maintenance respiration(gC/gN/s)
-   end type CNMRespConstType
-
-   type(CNMRespConstType),private ::  CNMRespConstInst
-
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Module holding maintenance respiration routines for coupled carbon
+  ! nitrogen code.
+  !
+  ! !USES:
+  use shr_kind_mod , only: r8 => shr_kind_r8
+  use clm_varpar   , only: nlevgrnd
+  use shr_const_mod, only: SHR_CONST_TKFRZ
+  use decompMod    , only: bounds_type
+  use abortutils   , only: endrun
+  use CNSharedConstsMod  , only: CNConstShareInst
+  !
+  implicit none
+  save
+  private
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: CNMResp
+  public :: readCNMRespConsts
+  
+  type, private :: CNMRespConstType
+     real(r8):: br        !base rate for maintenance respiration(gC/gN/s)
+  end type CNMRespConstType
+  
+  type(CNMRespConstType),private ::  CNMRespConstInst
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: readCNMRespConsts
-!
-! !INTERFACE:
-subroutine readCNMRespConsts ( ncid )
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use shr_kind_mod , only: r8 => shr_kind_r8
-   use ncdio_pio , only : file_desc_t,ncd_io
-   use abortutils   , only: endrun
+  !-----------------------------------------------------------------------
+  subroutine readCNMRespConsts ( ncid )
+    !
+    ! !DESCRIPTION:
+    ! Read constants
+    !
+    ! !USES:
+    use ncdio_pio , only : file_desc_t,ncd_io
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'CNMRespConstType'
+    character(len=100) :: errCode = 'Error reading in CN const file '
+    logical            :: readv ! has variable been read in or not
+    real(r8)           :: tempr ! temporary to read in constant
+    character(len=100) :: tString ! temp. var for reading
+    !-----------------------------------------------------------------------
 
-! !ARGUMENTS:
-   implicit none
-   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-!
-! !CALLED FROM:   readConstantsMod.F90::CNConstReadFile
-!
-! !REVISION HISTORY:
-!  Jan 10 2013 : Created by R. Paudel
-!
-! !LOCAL VARIABLES:
-   character(len=32)  :: subname = 'CNMRespConstType'
-   character(len=100) :: errCode = 'Error reading in CN const file '
-   logical            :: readv ! has variable been read in or not
-   real(r8)           :: tempr ! temporary to read in constant
-   character(len=100) :: tString ! temp. var for reading
+    tString='br_mr'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNMRespConstInst%br=tempr
+    
+  end subroutine readCNMRespConsts
 
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine CNMResp(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
+    !
+    ! !DESCRIPTION:
+    !
+    ! !USES:
+    use clmtype
+    use pftvarcon    , only : npcropmin
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    integer, intent(in) :: num_soilc                 ! number of soil points in column filter
+    integer, intent(in) :: filter_soilc(:)   ! column filter for soil points
+    integer, intent(in) :: num_soilp                 ! number of soil points in pft filter
+    integer, intent(in) :: filter_soilp(:)   ! pft filter for soil points
+    !
+    ! !LOCAL VARIABLES:
+    real(r8), pointer :: grainn(:)     ! (kgN/m2) grain N
+    integer :: c,p,j          ! indices
+    integer :: fp             ! soil filter pft index
+    integer :: fc             ! soil filter column index
+    real(r8):: mr             ! maintenance respiration (gC/m2/s)
+    real(r8):: br             ! base rate (gC/gN/s)
+    real(r8):: q10            ! temperature dependence
+    real(r8):: tc             ! temperature correction, 2m air temp (unitless)
+    real(r8):: tcsoi(bounds%begc:bounds%endc,nlevgrnd) ! temperature correction by soil layer (unitless)
+    !-----------------------------------------------------------------------
 
-   !
-   ! read in constants
-   !   
-   tString='br_mr'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNMRespConstInst%br=tempr
-   
-end subroutine readCNMRespConsts
-!
-! !REVISION HISTORY:
-! 8/14/03: Created by Peter Thornton
-! 10/23/03, Peter Thornton: Migrated all subroutines to vector data structures.
-!-------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNMResp
-!
-! !INTERFACE:
-subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use clmtype
-   use pftvarcon    , only : npcropmin
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: lbc, ubc                    ! column-index bounds
-   integer, intent(in) :: num_soilc                 ! number of soil points in column filter
-   integer, intent(in) :: filter_soilc(:)   ! column filter for soil points
-   integer, intent(in) :: num_soilp                 ! number of soil points in pft filter
-   integer, intent(in) :: filter_soilp(:)   ! pft filter for soil points
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn in module CNEcosystemDynMod.F90
-!
-! !REVISION HISTORY:
-! 8/14/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   real(r8), pointer :: grainn(:)     ! (kgN/m2) grain N
-   integer :: c,p,j          ! indices
-   integer :: fp             ! soil filter pft index
-   integer :: fc             ! soil filter column index
-   real(r8):: Q10            ! temperature dependence
-   real(r8):: mr             ! maintenance respiration (gC/m2/s)
-   real(r8):: br             ! base rate (gC/gN/s)
-   real(r8):: tc             ! temperature correction, 2m air temp (unitless)
-   real(r8):: tcsoi(lbc:ubc,nlevgrnd) ! temperature correction by soil layer (unitless)
-!EOP
-!-----------------------------------------------------------------------
+    associate(&    
+    t_soisno       =>    ces%t_soisno         , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
+    t_ref2m        =>    pes%t_ref2m          , & ! Input:  [real(r8) (:)]  2 m height surface air temperature (Kelvin)       
+    leafn          =>    pns%leafn            , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N                                    
+    frootn         =>    pns%frootn           , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N                               
+    livestemn      =>    pns%livestemn        , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N                               
+    livecrootn     =>    pns%livecrootn       , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N                        
+    rootfr         =>    pps%rootfr           , & ! Input:  [real(r8) (:,:)]  fraction of roots in each soil layer  (nlevgrnd)
+    leaf_mr        =>    pcf%leaf_mr          , & ! InOut:  [real(r8) (:)]                                                    
+    froot_mr       =>    pcf%froot_mr         , & ! InOut:  [real(r8) (:)]                                                    
+    livestem_mr    =>    pcf%livestem_mr      , & ! InOut:  [real(r8) (:)]                                                    
+    livecroot_mr   =>    pcf%livecroot_mr     , & ! InOut:  [real(r8) (:)]                                                    
+    grain_mr       =>    pcf%grain_mr         , & ! InOut:  [real(r8) (:)]                                                    
+    lmrsun         =>    pcf%lmrsun           , & ! InOut:  [real(r8) (:)]  sunlit leaf maintenance respiration rate (umol CO2/m**2/s)
+    lmrsha         =>    pcf%lmrsha           , & ! InOut:  [real(r8) (:)]  shaded leaf maintenance respiration rate (umol CO2/m**2/s)
+    laisun         =>    pps%laisun           , & ! InOut:  [real(r8) (:)]  sunlit projected leaf area index                  
+    laisha         =>    pps%laisha           , & ! InOut:  [real(r8) (:)]  shaded projected leaf area index                  
+    frac_veg_nosno =>    pps%frac_veg_nosno   , & ! InOut:  [integer (:)]  fraction of vegetation not covered by snow (0 OR 1) [-]
+    ivt            =>    pft%itype            , & ! Input:  [integer (:)]  pft vegetation type                                
+    pcolumn        =>    pft%column           , & ! Input:  [integer (:)]  index into column level quantities                 
+    plandunit      =>    pft%landunit         , & ! Input:  [integer (:)]  index into landunit level quantities               
+    clandunit      =>    col%landunit         , & ! Input:  [integer (:)]  index into landunit level quantities               
+    itypelun       =>    lun%itype            , & ! Input:  [integer (:)]  landunit type                                      
+    woody          =>    pftcon%woody           & ! Input:  [real(r8) (:)]  binary flag for woody lifeform (1=woody, 0=not woody)
+    )
 
-   associate(&    
-   t_soisno       =>    ces%t_soisno         , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-   t_ref2m        =>    pes%t_ref2m          , & ! Input:  [real(r8) (:)]  2 m height surface air temperature (Kelvin)       
-   leafn          =>    pns%leafn            , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N                                    
-   frootn         =>    pns%frootn           , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N                               
-   livestemn      =>    pns%livestemn        , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N                               
-   livecrootn     =>    pns%livecrootn       , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N                        
-   rootfr         =>    pps%rootfr           , & ! Input:  [real(r8) (:,:)]  fraction of roots in each soil layer  (nlevgrnd)
-   leaf_mr        =>    pcf%leaf_mr          , & ! InOut:  [real(r8) (:)]                                                    
-   froot_mr       =>    pcf%froot_mr         , & ! InOut:  [real(r8) (:)]                                                    
-   livestem_mr    =>    pcf%livestem_mr      , & ! InOut:  [real(r8) (:)]                                                    
-   livecroot_mr   =>    pcf%livecroot_mr     , & ! InOut:  [real(r8) (:)]                                                    
-   grain_mr       =>    pcf%grain_mr         , & ! InOut:  [real(r8) (:)]                                                    
-   lmrsun         =>    pcf%lmrsun           , & ! InOut:  [real(r8) (:)]  sunlit leaf maintenance respiration rate (umol CO2/m**2/s)
-   lmrsha         =>    pcf%lmrsha           , & ! InOut:  [real(r8) (:)]  shaded leaf maintenance respiration rate (umol CO2/m**2/s)
-   laisun         =>    pps%laisun           , & ! InOut:  [real(r8) (:)]  sunlit projected leaf area index                  
-   laisha         =>    pps%laisha           , & ! InOut:  [real(r8) (:)]  shaded projected leaf area index                  
-   frac_veg_nosno =>    pps%frac_veg_nosno   , & ! InOut:  [integer (:)]  fraction of vegetation not covered by snow (0 OR 1) [-]
-   ivt            =>    pft%itype            , & ! Input:  [integer (:)]  pft vegetation type                                
-   pcolumn        =>    pft%column           , & ! Input:  [integer (:)]  index into column level quantities                 
-   plandunit      =>    pft%landunit         , & ! Input:  [integer (:)]  index into landunit level quantities               
-   clandunit      =>    col%landunit         , & ! Input:  [integer (:)]  index into landunit level quantities               
-   itypelun       =>    lun%itype            , & ! Input:  [integer (:)]  landunit type                                      
-   woody          =>    pftcon%woody           & ! Input:  [real(r8) (:)]  binary flag for woody lifeform (1=woody, 0=not woody)
-   )
-   grainn         => pns%grainn
+    grainn         => pns%grainn
 
    ! base rate for maintenance respiration is from:
    ! M. Ryan, 1991. Effects of climate change on plant respiration.
@@ -215,7 +182,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
       end do
    end do
 
-    end associate 
+ end associate
  end subroutine CNMResp
-!------------------------------------------------------------------
+
 end module CNMRespMod

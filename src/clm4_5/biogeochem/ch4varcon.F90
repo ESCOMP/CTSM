@@ -1,27 +1,21 @@
 module ch4varcon
 
-#ifdef LCH4
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: ch4varcon
-!
-! !DESCRIPTION:
-! Module containing CH4 parameters and logical switches and routine to read constants from CLM namelist.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! Module containing CH4 parameters and logical switches and routine to read constants from CLM namelist.
+  !
+  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
   use clm_varctl  , only : iulog
   use clm_varctl  , only : NLFileName_in
-!
-! !PUBLIC TYPES:
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
 
-!
-! Methane Model Parameters
-!
+  !
+  ! Methane Model Parameters
+  !
   real(r8) :: q10ch4base = 295._r8  ! Rough estimate from comparison between Walter and previous CLM-CH4 data
   ! Uses Michigan bog data from Shannon & White
   ! This is the temperature at which the effective f_ch4 actually equals the constant f_ch4.
@@ -167,55 +161,33 @@ module ch4varcon
 
   real(r8) :: atmch4 = 1.7e-6_r8    ! Atmospheric CH4 mixing ratio to prescribe if not provided by the atmospheric model
                                     ! (mol/mol)
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: ch4conrd ! Read and initialize CH4 constants
-!
-! !REVISION HISTORY:
-! Created by Zack Subin
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: ch4conrd
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine ch4conrd ()
-!
-! !DESCRIPTION:
-! Read and initialize CH4 constants
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Read and initialize CH4 constants
+    !
+    ! !USES:
     use fileutils   , only : relavu, getavu
     use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_LOGICAL
     use shr_nl_mod  , only : shr_nl_find_group_name
-    !use controlMod  , only: NLFilename
-
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !CALLED FROM:
-! routine initch4
-!
-! !REVISION HISTORY:
-! Created by Zack Subin
-! Modified 6/12/2011 to use namelist rather than ASCII file.
-!
-!EOP
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer :: i,j,n                ! loop indices
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
     character(len=32) :: subname = 'ch4conrd'  ! subroutine name
-
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! ----------------------------------------------------------------------
     ! Namelist Variables
@@ -362,7 +334,5 @@ contains
 
   end subroutine ch4conrd
 
-#endif
-! defined LCH4
 end module ch4varcon
 

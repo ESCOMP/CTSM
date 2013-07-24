@@ -1,78 +1,61 @@
 module CNPrecisionControlMod
-
-#ifdef CN
-
-!----------------------------------------------------------------------- 
-!BOP
-!
-! !MODULE: CNPrecisionControlMod
-! 
-! !DESCRIPTION:
-! controls on very low values in critical state variables 
-! 
-! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varpar  , only: ndecomp_pools
-    implicit none
-    save
-    private
-! !PUBLIC MEMBER FUNCTIONS:
-    public:: CNPrecisionControl
-!
-! !REVISION HISTORY:
-! 4/23/2004: Created by Peter Thornton
-!
-!EOP
-!----------------------------------------------------------------------- 
+  !----------------------------------------------------------------------- 
+  ! !MODULE: CNPrecisionControlMod
+  ! 
+  ! !DESCRIPTION:
+  ! controls on very low values in critical state variables 
+  ! 
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varpar  , only: ndecomp_pools
+  implicit none
+  save
+  private
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public:: CNPrecisionControl
+  !
+  ! !REVISION HISTORY:
+  ! 4/23/2004: Created by Peter Thornton
+  !----------------------------------------------------------------------- 
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNPrecisionControl
-!
-! !INTERFACE:
-subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
-!
-! !DESCRIPTION: 
-! On the radiation time step, force leaf and deadstem c and n to 0 if
-! they get too small.
-!
-! !USES:
-   use clmtype
-   use abortutils,   only: endrun
-   use clm_varctl,   only: iulog, use_c13, use_c14
-   use clm_varpar,   only: nlevdecomp, crop_prog
-   use pftvarcon,    only: nc3crop
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 8/1/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   integer :: c,p,j,k  ! indices
-   integer :: fp,fc    ! lake filter indices
-   real(r8):: pc,pn    ! truncation terms for pft-level corrections
-   real(r8):: cc,cn    ! truncation terms for column-level corrections
-   real(r8):: pc13     ! truncation terms for pft-level corrections
-   real(r8):: cc13     ! truncation terms for column-level corrections
-   real(r8):: pc14     ! truncation terms for pft-level corrections
-   real(r8):: cc14     ! truncation terms for column-level corrections
-   real(r8):: ccrit    ! critical carbon state value for truncation
-   real(r8):: ncrit    ! critical nitrogen state value for truncation
-    
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
+    !
+    ! !DESCRIPTION: 
+    ! On the radiation time step, force leaf and deadstem c and n to 0 if
+    ! they get too small.
+    !
+    ! !USES:
+    use clmtype
+    use abortutils,   only: endrun
+    use clm_varctl,   only: iulog, use_c13, use_c14, use_nitrif_denitrif
+    use clm_varpar,   only: nlevdecomp, crop_prog
+    use pftvarcon,    only: nc3crop
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilc       ! number of soil columns in filter
+    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+    !
+    ! !REVISION HISTORY:
+    ! 8/1/03: Created by Peter Thornton
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c,p,j,k  ! indices
+    integer :: fp,fc    ! lake filter indices
+    real(r8):: pc,pn    ! truncation terms for pft-level corrections
+    real(r8):: cc,cn    ! truncation terms for column-level corrections
+    real(r8):: pc13     ! truncation terms for pft-level corrections
+    real(r8):: cc13     ! truncation terms for column-level corrections
+    real(r8):: pc14     ! truncation terms for pft-level corrections
+    real(r8):: cc14     ! truncation terms for column-level corrections
+    real(r8):: ccrit    ! critical carbon state value for truncation
+    real(r8):: ncrit    ! critical nitrogen state value for truncation
+    !-----------------------------------------------------------------------
 
    associate(& 
    col_ctrunc_vr               =>  ccs%col_ctrunc_vr                   , & ! Input:  [real(r8) (:,:)]  (gC/m3) column-level sink for C truncation      
@@ -177,10 +160,8 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
    livestemn_xfer              =>  pns%livestemn_xfer                  , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N transfer                      
    npool                       =>  pns%npool                           , & ! Input:  [real(r8) (:)]  (gN/m2) temporary plant N pool                    
    pft_ntrunc                  =>  pns%pft_ntrunc                      , & ! Input:  [real(r8) (:)]  (gN/m2) pft-level sink for N truncation           
-#ifdef NITRIF_DENITRIF
    smin_nh4_vr                 =>  cns%smin_nh4_vr                     , & ! Input:  [real(r8) (:,:)]  (gN/m3) soil mineral NH4                        
    smin_no3_vr                 =>  cns%smin_no3_vr                     , & ! Input:  [real(r8) (:,:)]  (gN/m3) soil mineral NO3                        
-#endif
    retransn                    =>  pns%retransn                          & ! Input:  [real(r8) (:)]  (gN/m2) plant pool of retranslocated N            
    )
 
@@ -672,8 +653,8 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
    end do   ! end of column loop
 
-#ifdef NITRIF_DENITRIF
-! remove small negative perturbations for stability purposes, if any should arise.
+   if (use_nitrif_denitrif) then
+      ! remove small negative perturbations for stability purposes, if any should arise.
       
       do fc = 1,num_soilc
          c = filter_soilc(fc)
@@ -694,11 +675,9 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
             end if
          end do
       end do
-#endif
+   endif
    
     end associate 
  end subroutine CNPrecisionControl
-!-----------------------------------------------------------------------
-#endif
 
 end module CNPrecisionControlMod

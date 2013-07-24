@@ -126,7 +126,7 @@ module clm_driver
   use UrbanMod            , only : UrbanAlbedo, UrbanRadiation, UrbanFluxes 
   use SNICARMod           , only : SnowAge_grain
   use clm_atmlnd          , only : clm_map2gcell
-  use clm_glclnd          , only : create_clm_s2x
+  use clm_glclnd          , only : update_clm_s2x
   use perf_mod
 !
 ! !PUBLIC TYPES:
@@ -692,10 +692,9 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   
   if (create_glacier_mec_landunit) then
      call t_startf('create_s2x')
-     call create_clm_s2x(init=.false.)
+     call update_clm_s2x(init=.false.)
      call t_stopf('create_s2x')
   end if
-  
 
   ! ============================================================================
   ! Write global average diagnostics to standard output

@@ -1,134 +1,99 @@
 module Hydrology2Mod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: Hydrology2Mod
-!
-! !DESCRIPTION:
-! Calculation of soil/snow hydrology.
-!
-! !USES:
-   use shr_kind_mod, only : r8 => shr_kind_r8
-   use clm_varctl,   only : iulog
-   use abortutils,   only : endrun
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculation of soil/snow hydrology.
+  !
+  ! !USES:
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use clm_varctl,   only : iulog, use_vichydro, use_cn
+  use abortutils,   only : endrun
+  use decompMod   , only: bounds_type
 
-! !PUBLIC TYPES:
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: Hydrology2NoDrainage        ! Calculates soil/snow hydrology without drainage
   public :: Hydrology2Drainage        ! Calculates soil/snow hydrolog: drainage
-  
-!
-! !REVISION HISTORY:
-! 2/28/02 Peter Thornton: Migrated to new data structures.
-! 7/12/03 Forrest Hoffman ,Mariana Vertenstein : Migrated to vector code
-! 11/05/03 Peter Thornton: Added calculation of soil water potential
-!   for use in CN phenology code.
-! 04/25/07 Keith Oleson: CLM3.5 Hydrology
-!F. Li and S. Levis (11/06/12) for wf2 and tsoi17
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: Hydrology2NoDrainage
-!
-! !INTERFACE:
-  subroutine Hydrology2NoDrainage(lbc, ubc, lbp, ubp, &
-                        num_nolakec, filter_nolakec, &
-                        num_hydrologyc, filter_hydrologyc, &
-                        num_urbanc, filter_urbanc, &
-                        num_snowc, filter_snowc, &
-                        num_nosnowc, filter_nosnowc)
-!
-! !DESCRIPTION:
-! This is the main subroutine to execute the calculation of soil/snow
-! hydrology
-! Calling sequence is:
-!  Hydrology2:                 surface hydrology driver
-!    -> SnowWater:             change of snow mass and snow water onto soil
-!    -> SurfaceRunoff:         surface runoff
-!    -> Infiltration:          infiltration into surface soil layer
-!    -> SoilWater:             soil water movement between layers
-!          -> Tridiagonal      tridiagonal matrix solution
-!    -> Drainage:              subsurface runoff
-!    -> SnowCompaction:        compaction of snow layers
-!    -> CombineSnowLayers:     combine snow layers that are thinner than minimum
-!    -> DivideSnowLayers:      subdivide snow layers that are thicker than maximum
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine Hydrology2NoDrainage(bounds, &
+       num_nolakec, filter_nolakec, &
+       num_hydrologyc, filter_hydrologyc, &
+       num_urbanc, filter_urbanc, &
+       num_snowc, filter_snowc, &
+       num_nosnowc, filter_nosnowc)
+    !
+    ! !DESCRIPTION:
+    ! This is the main subroutine to execute the calculation of soil/snow
+    ! hydrology
+    ! Calling sequence is:
+    !  Hydrology2:                 surface hydrology driver
+    !    -> SnowWater:             change of snow mass and snow water onto soil
+    !    -> SurfaceRunoff:         surface runoff
+    !    -> Infiltration:          infiltration into surface soil layer
+    !    -> SoilWater:             soil water movement between layers
+    !          -> Tridiagonal      tridiagonal matrix solution
+    !    -> Drainage:              subsurface runoff
+    !    -> SnowCompaction:        compaction of snow layers
+    !    -> CombineSnowLayers:     combine snow layers that are thinner than minimum
+    !    -> DivideSnowLayers:      subdivide snow layers that are thicker than maximum
+    !
+    ! !USES:
     use clmtype
     use clm_atmlnd      , only : clm_a2l
     use clm_varcon      , only : denh2o, denice, istice, istwet, istsoil, istice_mec, spval, &
-                                 icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
-                                 icol_shadewall, istdlak, &
-                                 tfrz, hfus, grav
+         icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
+         icol_shadewall, istdlak, tfrz, hfus, grav
     use clm_varcon      , only : istcrop
     use clm_varctl      , only : glc_dyntopo
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
-                                 SnowWater, BuildSnowFilter
+         SnowWater, BuildSnowFilter
     use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff, WaterTable
     use clm_time_manager, only : get_step_size, get_nstep
-#if (defined VICHYDRO)
     use CLMVICMapMod    , only : CLMVICMap
-#endif
-
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbc, ubc                    ! column bounds
-    integer, intent(in) :: lbp, ubp                    ! pft bounds
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer, intent(in) :: num_nolakec                 ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
+    integer, intent(in) :: filter_nolakec(:)   ! column filter for non-lake points
     integer, intent(in) :: num_hydrologyc              ! number of column soil points in column filter
-    integer, intent(in) :: filter_hydrologyc(ubc-lbc+1)! column filter for soil points
+    integer, intent(in) :: filter_hydrologyc(:)! column filter for soil points
     integer, intent(in) :: num_urbanc                  ! number of column urban points in column filter
-    integer, intent(in) :: filter_urbanc(ubc-lbc+1)    ! column filter for urban points
+    integer, intent(in) :: filter_urbanc(:)    ! column filter for urban points
     integer  :: num_snowc                  ! number of column snow points
-    integer  :: filter_snowc(ubc-lbc+1)    ! column filter for snow points
+    integer  :: filter_snowc(:)    ! column filter for snow points
     integer  :: num_nosnowc                ! number of column non-snow points
-    integer  :: filter_nosnowc(ubc-lbc+1)  ! column filter for non-snow points
-!
-! !CALLED FROM:
-! subroutine clm_driver1
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-! !LOCAL VARIABLES:
-!EOP
-!
+    integer  :: filter_nosnowc(:)  ! column filter for non-snow points
+    !
+    ! !LOCAL VARIABLES:
     integer  :: g,l,c,j,fc                 ! indices
     integer  :: nstep                      ! time step number
     real(r8) :: dtime                      ! land model time step (sec)
-    real(r8) :: vol_liq(lbc:ubc,1:nlevgrnd)! partial volume of liquid water in layer
-    real(r8) :: dwat(lbc:ubc,1:nlevgrnd)   ! change in soil water
-    real(r8) :: hk(lbc:ubc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
-    real(r8) :: dhkdw(lbc:ubc,1:nlevgrnd)  ! d(hk)/d(vol_liq)
+    real(r8) :: vol_liq(bounds%begc:bounds%endc,1:nlevgrnd)! partial volume of liquid water in layer
+    real(r8) :: dwat(bounds%begc:bounds%endc,1:nlevgrnd)   ! change in soil water
+    real(r8) :: hk(bounds%begc:bounds%endc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
+    real(r8) :: dhkdw(bounds%begc:bounds%endc,1:nlevgrnd)  ! d(hk)/d(vol_liq)
     real(r8) :: psi,vwc,fsattmp,psifrz     ! temporary variables for soilpsi calculation
-#if (defined CN) 
     real(r8) :: watdry                     ! temporary
-    real(r8) :: rwat(lbc:ubc)              ! soil water wgted by depth to maximum depth of 0.5 m
-    real(r8) :: swat(lbc:ubc)              ! same as rwat but at saturation
-    real(r8) :: rz(lbc:ubc)                ! thickness of soil layers contributing to rwat (m)
+    real(r8) :: rwat(bounds%begc:bounds%endc)              ! soil water wgted by depth to maximum depth of 0.5 m
+    real(r8) :: swat(bounds%begc:bounds%endc)              ! same as rwat but at saturation
+    real(r8) :: rz(bounds%begc:bounds%endc)                ! thickness of soil layers contributing to rwat (m)
     real(r8) :: tsw                        ! volumetric soil water to 0.5 m
     real(r8) :: stsw                       ! volumetric soil water to 0.5 m at saturation
-#endif
     real(r8) :: snowmass                   ! liquid+ice snow mass in a layer [kg/m2]
     real(r8) :: snowcap_scl_fct            ! temporary factor used to correct for snow capping
     real(r8) :: fracl                      ! fraction of soil layer contributing to 10cm total soil water
     real(r8) :: s_node                     ! soil wetness (-)
-    real(r8) :: icefrac(lbc:ubc,1:nlevsoi)
-
-!-----------------------------------------------------------------------
-
+    real(r8) :: icefrac(bounds%begc:bounds%endc,1:nlevsoi)
+    !-----------------------------------------------------------------------
 
    associate(& 
    forc_rain            => clm_a2l%forc_rain       , & ! Input:  [real(r8) (:)]  rain rate [mm/s]                        
@@ -239,50 +204,48 @@ contains
     ! Determine initial snow/no-snow filters (will be modified possibly by
     ! routines CombineSnowLayers and DivideSnowLayers below
 
-    call BuildSnowFilter(lbc, ubc, num_nolakec, filter_nolakec, &
+    call BuildSnowFilter(bounds, num_nolakec, filter_nolakec, &
          num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
 
     ! Determine the change of snow mass and the snow water onto soil
 
-    call SnowWater(lbc, ubc, num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
+    call SnowWater(bounds, num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
 
     ! Determine soil hydrology
-#if (defined VICHYDRO)
-    ! mapping soilmoist from CLM to VIC layers for runoff calculations
-    call CLMVICMap(lbc, ubc, num_hydrologyc, filter_hydrologyc)
-#endif
+    if (use_vichydro) then
+       ! mapping soilmoist from CLM to VIC layers for runoff calculations
+       call CLMVICMap(bounds, num_hydrologyc, filter_hydrologyc)
+    end if
 
     ! moved vol_liq from SurfaceRunoff to Infiltration
-    call SurfaceRunoff(lbc, ubc, lbp, ubp, num_hydrologyc, filter_hydrologyc, &
+    call SurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
                        num_urbanc, filter_urbanc)
 
-    call Infiltration(lbc, ubc,  num_hydrologyc, filter_hydrologyc, &
+    call Infiltration(bounds,  num_hydrologyc, filter_hydrologyc, &
                       num_urbanc, filter_urbanc, vol_liq)
 
-    call SoilWater(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
+    call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, &
                    num_urbanc, filter_urbanc, dwat, hk, dhkdw)
 
-#if (defined VICHYDRO)
-    ! mapping soilmoist from CLM to VIC layers for runoff calculations
-    call CLMVICMap(lbc, ubc, num_hydrologyc, filter_hydrologyc)
-#endif
+    if (use_vichydro) then
+       ! mapping soilmoist from CLM to VIC layers for runoff calculations
+       call CLMVICMap(bounds, num_hydrologyc, filter_hydrologyc)
+    end if
 
-    call WaterTable(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
+    call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
                   num_urbanc, filter_urbanc)
                   
-                  
-
     ! Natural compaction and metamorphosis.
 
-    call SnowCompaction(lbc, ubc, num_snowc, filter_snowc)
+    call SnowCompaction(bounds, num_snowc, filter_snowc)
     
     ! Combine thin snow elements
     
-    call CombineSnowLayers(lbc, ubc, num_snowc, filter_snowc)
+    call CombineSnowLayers(bounds, num_snowc, filter_snowc)
     
     ! Divide thick snow elements
     
-    call DivideSnowLayers(lbc, ubc, num_snowc, filter_snowc)
+    call DivideSnowLayers(bounds, num_snowc, filter_snowc)
 
     ! Set empty snow layers to zero
 
@@ -302,7 +265,7 @@ contains
 
     ! Build new snow filter
 
-    call BuildSnowFilter(lbc, ubc, num_nolakec, filter_nolakec, &
+    call BuildSnowFilter(bounds, num_nolakec, filter_nolakec, &
          num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
 
     ! Vertically average t_soisno and sum of h2osoi_liq and h2osoi_ice
@@ -324,12 +287,12 @@ contains
        end do
     end do
 
-! Calculate column average snow depth
-    do c = lbc,ubc
+    ! Calculate column average snow depth
+    do c = bounds%begc,bounds%endc
        snowdp(c) = snow_depth(c) * frac_sno_eff(c)
     end do
 
-   ! Determine ground temperature, ending water balance and volumetric soil water
+    ! Determine ground temperature, ending water balance and volumetric soil water
     ! Calculate soil temperature and total water (liq+ice) in top 10cm of soil
     ! Calculate soil temperature and total water (liq+ice) in top 17cm of soil
     do fc = 1, num_nolakec
@@ -346,7 +309,7 @@ contains
           c = filter_nolakec(fc)
           l = clandunit(c)
           if (.not. urbpoi(l)) then
-    ! soil T at top 17 cm added by F. Li and S. Levis
+             ! soil T at top 17 cm added by F. Li and S. Levis
             if (zi(c,j) <= 0.17_r8) then
               fracl = 1._r8
               tsoi17(c) = tsoi17(c) + t_soisno(c,j)*dz(c,j)*fracl
@@ -413,31 +376,31 @@ contains
        end do
     end do
 
-#if (defined CN) 
-    ! Update soilpsi.
-    ! ZMS: Note this could be merged with the following loop updating smp_l in the future.
-    do j = 1, nlevgrnd
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          
-          if (h2osoi_liq(c,j) > 0._r8) then
+    if (use_cn) then
+       ! Update soilpsi.
+       ! ZMS: Note this could be merged with the following loop updating smp_l in the future.
+       do j = 1, nlevgrnd
+          do fc = 1, num_hydrologyc
+             c = filter_hydrologyc(fc)
 
-             vwc = h2osoi_liq(c,j)/(dz(c,j)*denh2o)
-             
-             ! the following limit set to catch very small values of 
-             ! fractional saturation that can crash the calculation of psi
+             if (h2osoi_liq(c,j) > 0._r8) then
 
-             ! use the same contants used in the supercool so that psi for frozen soils is consistent
-             fsattmp = max(vwc/watsat(c,j), 0.001_r8)
-             psi = sucsat(c,j) * (-9.8e-6_r8) * (fsattmp)**(-bsw(c,j))  ! Mpa
-             soilpsi(c,j) = min(max(psi,-15.0_r8),0._r8)
-             
-          else 
-             soilpsi(c,j) = -15.0_r8
-          end if
+                vwc = h2osoi_liq(c,j)/(dz(c,j)*denh2o)
+
+                ! the following limit set to catch very small values of 
+                ! fractional saturation that can crash the calculation of psi
+
+                ! use the same contants used in the supercool so that psi for frozen soils is consistent
+                fsattmp = max(vwc/watsat(c,j), 0.001_r8)
+                psi = sucsat(c,j) * (-9.8e-6_r8) * (fsattmp)**(-bsw(c,j))  ! Mpa
+                soilpsi(c,j) = min(max(psi,-15.0_r8),0._r8)
+
+             else 
+                soilpsi(c,j) = -15.0_r8
+             end if
+          end do
        end do
-    end do
-#endif
+    end if
 
     ! Update smp_l for history and for ch4Mod.
     ! ZMS: Note, this form, which seems to be the same as used in SoilWater, DOES NOT distinguish between
@@ -455,69 +418,69 @@ contains
        end do
     end do
 
-#if (defined CN)
-    ! Available soil water up to a depth of 0.05 m.
-    ! Potentially available soil water (=whc) up to a depth of 0.05 m.
-    ! Water content as fraction of whc up to a depth of 0.05 m.
-
-    do fc = 1, num_hydrologyc
-       c = filter_hydrologyc(fc)
-       rwat(c) = 0._r8
-       swat(c) = 0._r8
-       rz(c)   = 0._r8
-    end do
-
-    do j = 1, nlevgrnd
+    if (use_cn) then
+       ! Available soil water up to a depth of 0.05 m.
+       ! Potentially available soil water (=whc) up to a depth of 0.05 m.
+       ! Water content as fraction of whc up to a depth of 0.05 m.
+       
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
-          !if (z(c,j)+0.5_r8*dz(c,j) <= 0.5_r8) then
-          if (z(c,j)+0.5_r8*dz(c,j) <= 0.05_r8) then
-             watdry = watsat(c,j) * (316230._r8/sucsat(c,j)) ** (-1._r8/bsw(c,j))
-             rwat(c) = rwat(c) + (h2osoi_vol(c,j)-watdry) * dz(c,j)
-             swat(c) = swat(c) + (watsat(c,j)    -watdry) * dz(c,j)
-             rz(c) = rz(c) + dz(c,j)
-          end if
+          rwat(c) = 0._r8
+          swat(c) = 0._r8
+          rz(c)   = 0._r8
        end do
-    end do
 
-    do fc = 1, num_hydrologyc
-       c = filter_hydrologyc(fc)
-       if (rz(c) /= 0._r8) then
-          tsw  = rwat(c)/rz(c)
-          stsw = swat(c)/rz(c)
-       else
-          watdry = watsat(c,1) * (316230._r8/sucsat(c,1)) ** (-1._r8/bsw(c,1))
-          tsw = h2osoi_vol(c,1) - watdry
-          stsw = watsat(c,1) - watdry
-       end if
-       wf(c) = tsw/stsw
-    end do
-    
-      do j = 1, nlevgrnd
+       do j = 1, nlevgrnd
+          do fc = 1, num_hydrologyc
+             c = filter_hydrologyc(fc)
+             !if (z(c,j)+0.5_r8*dz(c,j) <= 0.5_r8) then
+             if (z(c,j)+0.5_r8*dz(c,j) <= 0.05_r8) then
+                watdry = watsat(c,j) * (316230._r8/sucsat(c,j)) ** (-1._r8/bsw(c,j))
+                rwat(c) = rwat(c) + (h2osoi_vol(c,j)-watdry) * dz(c,j)
+                swat(c) = swat(c) + (watsat(c,j)    -watdry) * dz(c,j)
+                rz(c) = rz(c) + dz(c,j)
+             end if
+          end do
+       end do
+
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
-          if (z(c,j)+0.5_r8*dz(c,j) <= 0.17_r8) then
-             watdry = watsat(c,j) * (316230._r8/sucsat(c,j)) ** (-1._r8/bsw(c,j))
-             rwat(c) = rwat(c) + (h2osoi_vol(c,j)-watdry) * dz(c,j)
-             swat(c) = swat(c) + (watsat(c,j)    -watdry) * dz(c,j)
-             rz(c) = rz(c) + dz(c,j)
+          if (rz(c) /= 0._r8) then
+             tsw  = rwat(c)/rz(c)
+             stsw = swat(c)/rz(c)
+          else
+             watdry = watsat(c,1) * (316230._r8/sucsat(c,1)) ** (-1._r8/bsw(c,1))
+             tsw = h2osoi_vol(c,1) - watdry
+             stsw = watsat(c,1) - watdry
           end if
+          wf(c) = tsw/stsw
        end do
-    end do
- 
-    do fc = 1, num_hydrologyc
-       c = filter_hydrologyc(fc)
-       if (rz(c) /= 0._r8) then
-          tsw  = rwat(c)/rz(c)
-          stsw = swat(c)/rz(c)
-       else
-          watdry = watsat(c,1) * (316230._r8/sucsat(c,1)) ** (-1._r8/bsw(c,1))
-          tsw = h2osoi_vol(c,1) - watdry
-          stsw = watsat(c,1) - watdry
-       end if
-       wf2(c) = tsw/stsw
-    end do
-#endif
+
+       do j = 1, nlevgrnd
+          do fc = 1, num_hydrologyc
+             c = filter_hydrologyc(fc)
+             if (z(c,j)+0.5_r8*dz(c,j) <= 0.17_r8) then
+                watdry = watsat(c,j) * (316230._r8/sucsat(c,j)) ** (-1._r8/bsw(c,j))
+                rwat(c) = rwat(c) + (h2osoi_vol(c,j)-watdry) * dz(c,j)
+                swat(c) = swat(c) + (watsat(c,j)    -watdry) * dz(c,j)
+                rz(c) = rz(c) + dz(c,j)
+             end if
+          end do
+       end do
+
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          if (rz(c) /= 0._r8) then
+             tsw  = rwat(c)/rz(c)
+             stsw = swat(c)/rz(c)
+          else
+             watdry = watsat(c,1) * (316230._r8/sucsat(c,1)) ** (-1._r8/bsw(c,1))
+             tsw = h2osoi_vol(c,1) - watdry
+             stsw = watsat(c,1) - watdry
+          end if
+          wf2(c) = tsw/stsw
+       end do
+    end if
 
     !  Calculate column-integrated aerosol masses, and
     !  mass concentrations for radiative calculations and output
@@ -657,65 +620,50 @@ contains
 
   end subroutine Hydrology2NoDrainage
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: Hydrology2Drainage
-!
-! !INTERFACE:
-  subroutine Hydrology2Drainage(lbc, ubc, lbp, ubp, &
-                        num_nolakec, filter_nolakec, &
-                        num_hydrologyc, filter_hydrologyc, &
-                        num_urbanc, filter_urbanc)
-!
-! !DESCRIPTION:
-! This is the main subroutine to execute the calculation of soil/snow
-! hydrology
-! muszala March 7 2013 - description needs updating after Jinyun mods.
-! Calling sequence is:
-!  Hydrology2:                 surface hydrology driver
-!    -> Drainage:              subsurface runoff
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine Hydrology2Drainage(bounds, &
+       num_nolakec, filter_nolakec, &
+       num_hydrologyc, filter_hydrologyc, &
+       num_urbanc, filter_urbanc)
+    !
+    ! !DESCRIPTION:
+    ! This is the main subroutine to execute the calculation of soil/snow
+    ! hydrology
+    ! muszala March 7 2013 - description needs updating after Jinyun mods.
+    ! Calling sequence is:
+    !  Hydrology2:                 surface hydrology driver
+    !    -> Drainage:              subsurface runoff
+    !
+    ! !USES:
     use clmtype
     use clm_atmlnd      , only : clm_a2l
     use clm_varcon      , only : istice, istwet, istsoil, istice_mec, spval, &
-                                 icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
-                                 icol_shadewall, denh2o, denice
+         icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
+         icol_shadewall, denh2o, denice
     use clm_varcon      , only : istcrop
     use clm_varctl      , only : glc_dyntopo
     use clm_varpar      , only : nlevgrnd, nlevurb
     use SoilHydrologyMod, only : Drainage
     use clm_time_manager, only : get_step_size, get_nstep
 
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbc, ubc                    ! column bounds
-    integer, intent(in) :: lbp, ubp                    ! pft bounds
-    integer, intent(in) :: num_nolakec                 ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
-    integer, intent(in) :: num_hydrologyc              ! number of column soil points in column filter
-    integer, intent(in) :: filter_hydrologyc(ubc-lbc+1)! column filter for soil points
-    integer, intent(in) :: num_urbanc                  ! number of column urban points in column filter
-    integer, intent(in) :: filter_urbanc(ubc-lbc+1)    ! column filter for urban points
-!
-! !CALLED FROM:
-! subroutine clm_driver1
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-! !LOCAL VARIABLES:
-!EOP
-!
+    type(bounds_type), intent(in) :: bounds    ! bounds
+    integer, intent(in) :: num_nolakec         ! number of column non-lake points in column filter
+    integer, intent(in) :: filter_nolakec(:)   ! column filter for non-lake points
+    integer, intent(in) :: num_hydrologyc      ! number of column soil points in column filter
+    integer, intent(in) :: filter_hydrologyc(:)! column filter for soil points
+    integer, intent(in) :: num_urbanc          ! number of column urban points in column filter
+    integer, intent(in) :: filter_urbanc(:)    ! column filter for urban points
+    !
+    ! !LOCAL VARIABLES:
     integer  :: g,l,c,j,fc                 ! indices
     integer  :: nstep                      ! time step number
     real(r8) :: dtime                      ! land model time step (sec)
-    real(r8) :: vol_liq(lbc:ubc,1:nlevgrnd)! partial volume of liquid water in layer
-    real(r8) :: hk(lbc:ubc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
-
-!-----------------------------------------------------------------------
+    real(r8) :: vol_liq(bounds%begc:bounds%endc,1:nlevgrnd)! partial volume of liquid water in layer
+    real(r8) :: hk(bounds%begc:bounds%endc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
+    !-----------------------------------------------------------------------
 
    associate(&    
    forc_rain                           =>    clm_a2l%forc_rain                           , & ! Input:  [real(r8) (:)]  rain rate [mm/s]                                  
@@ -762,7 +710,7 @@ contains
     nstep = get_nstep()
     dtime = get_step_size()
     
-    call Drainage(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
+    call Drainage(bounds, num_hydrologyc, filter_hydrologyc, &
                   num_urbanc, filter_urbanc)
 
 

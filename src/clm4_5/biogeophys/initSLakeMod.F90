@@ -1,151 +1,101 @@
 module initSLakeMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: initSLakeMod
-!
-! !DESCRIPTION:
-! Contains time constant and time-varying initialization code for S Lake scheme.
-! Note that this is called after the restart file is read to facilitate using existing spin-up files that lack the new
-! lake fields.  A check is done to see whether mkarbinit was called and/or state variable values are missing (spval).
-! Once this version is officialized, this is no longer necessary.
-! 
-!
-! !PUBLIC TYPES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Contains time constant and time-varying initialization code for S Lake scheme.
+  ! Note that this is called after the restart file is read to 
+  ! facilitate using existing spin-up files that lack the new
+  ! lake fields.  A check is done to see whether mkarbinit was 
+  ! called and/or state variable values are missing (spval).
+  ! Once this version is officialized, this is no longer necessary.
+  !
+  ! !USES
+  use decompMod, only : bounds_type
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
   private
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: initSLake ! driver
-!
-! !PRIVATE MEMBER FUNCTIONS:
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
   private :: initTimeConst        ! Set constant parameters (and h2osoi_vol).
   private :: makearbinit          ! Set time-variable parameters for spin up.
   private :: snow_depth2levLake       ! Reset snow layers over S lakes if necessary.
-!
-! !REVISION HISTORY:
-! Created by Zack Subin, 2009.
-!
-!EOP
-!-----------------------------------------------------------------------
+  !
+  ! !REVISION HISTORY:
+  ! Created by Zack Subin, 2009.
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: initSLake
-!
-! !INTERFACE:
-  subroutine initSLake( arbinit )
-!
-! !DESCRIPTION:
-! Calls initTimeConst.
-! Calls makearbinit with logical arbinit. If arbinit == .true. OR if initial conditions file
-! does not contain SLake soil and snow state, then initializes time varying values. This
-! allows back-compatibility with initial condition files that have not been spun up with the new
-! lake code. In future versions, this could be phased out.
-!
-! !USES:
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine initSLake( bounds, arbinit )
+    !
+    ! !DESCRIPTION:
+    ! Calls initTimeConst.
+    ! Calls makearbinit with logical arbinit. If arbinit == .true. OR if initial conditions file
+    ! does not contain SLake soil and snow state, then initializes time varying values. This
+    ! allows back-compatibility with initial condition files that have not been spun up with the new
+    ! lake code. In future versions, this could be phased out.
+    !
+    ! !ARGUMENTS:
     implicit none
-!
+    type(bounds_type), intent(in) :: bounds  ! bounds
     logical, intent(in) ::  arbinit ! Whether mkarbinit has been called.
-!
-! !CALLED FROM:
-! subroutine initialize2 in module initializeMod
-!
-! !REVISION HISTORY:
-! Created by Zack Subin, 2009.
-!
-! !LOCAL VARIABLES:
-!
-!
-!EOP
-!
-    call initTimeConst()
-! Attn EK
-! For now
-    call makearbinit(arbinit)
-! For future versions always using initial condition files spun up with the new lake code:
-!    if (arbinit) call makearbinit(arbinit)
+    !-----------------------------------------------------------------------
+
+    call initTimeConst(bounds)
+
+    ! For now
+    call makearbinit(bounds, arbinit)
+    ! For future versions always using initial condition files spun up with the new lake code:
+    ! if (arbinit) call makearbinit(arbinit)
 
   end subroutine initSLake
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: makearbinit
-!
-! !INTERFACE:
-  subroutine makearbinit( arbinit )
-!
-! !DESCRIPTION:
-! If arbinit == .true., or if soil and snow have not been initialized, then sets time
-! varying values.
-! Initializes the following time varying variables:
-! water      : h2osoi_liq, h2osoi_ice, h2osoi_vol
-! snow       : snl, dz, z, zi
-! temperature: t_soisno
-!              h2osno, snow_depth, can water var, t_lake, & t_grnd should have been initialized already
-!              from regular mkarbinit.
-!
-! !USES:
-    use shr_kind_mod , only : r8 => shr_kind_r8
+  !-----------------------------------------------------------------------
+  subroutine makearbinit(bounds, arbinit)
+    !
+    ! !DESCRIPTION:
+    ! If arbinit == .true., or if soil and snow have not been initialized, then sets time
+    ! varying values.
+    ! Initializes the following time varying variables:
+    ! water      : h2osoi_liq, h2osoi_ice, h2osoi_vol
+    ! snow       : snl, dz, z, zi
+    ! temperature: t_soisno
+    ! h2osno, snow_depth, can water var, t_lake, & t_grnd should have been initialized already
+    ! from regular mkarbinit.
+    !
+    ! !USES:
     use clmtype
     use clm_varpar   , only : nlevsno, nlevlak, nlevgrnd, nlevsoi
     use clm_varcon   , only : bdsno, denice, denh2o, spval, tfrz, tkwat
     use spmdMod      , only : masterproc
-    use decompMod    , only : get_proc_bounds
     use clm_varctl   , only : iulog
     use SNICARMod    , only : snw_rds_min
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
+    type(bounds_type), intent(in) :: bounds  ! bounds
     logical, intent(in) :: arbinit ! Whether mkarbinit has been called.
-!
-! !CALLED FROM:
-! subroutine initialize in module initializeMod
-!
-! !REVISION HISTORY:
-! Created by Zack Subin, 2009.
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-
-    ! New SNICAR variables
-
-!
-!EOP
-!
-! !OTHER LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer :: j,l,c,p      ! indices
-    integer :: begp, endp   ! per-proc beginning and ending pft indices
-    integer :: begc, endc   ! per-proc beginning and ending column indices
-    integer :: begl, endl   ! per-proc beginning and ending landunit indices
-    integer :: begg, endg   ! per-proc gridcell ending gridcell indices
-
     logical :: localarbinit
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     localarbinit = arbinit
 
     if ( masterproc ) write (iulog,*) 'Setting initial data to non-spun up values for lake points,', &
-                                  'if no inicFile or no valid values for icefrac and soil layers,', &
-                                  'for CLM4-LISSS Lake Model.'
-
+         'if no inicFile or no valid values for icefrac and soil layers,', &
+         'for CLM4-LISSS Lake Model.'
 
    associate(& 
-   ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
    lakpoi                    =>   lun%lakpoi               , & ! Input:  [logical (:)]  true => landunit is a lake point         
-
-
    clandunit                 =>   col%landunit             , & ! Input:  [integer (:)]  landunit index associated with each column
    snl                       =>    cps%snl                 , & ! Output: [integer (:)]  number of snow layers                    
    dz                        =>    cps%dz                  , & ! Input:  [real(r8) (:,:)]  layer thickness depth (m)             
@@ -161,15 +111,12 @@ contains
    savedtke1                 =>    cps%savedtke1           , & ! Output: [real(r8) (:)]  top level eddy conductivity (W/mK)      
    ust_lake                  =>    cps%ust_lake            , & ! Output: [real(r8) (:)]  friction velocity (m/s)                 
    z0mg                      =>    cps%z0mg                , & ! Output: [real(r8) (:)] roughness length over ground, momentum [m]
-    ! New SNICAR variables
+   ! New SNICAR variables
    snw_rds                   =>    cps%snw_rds             , & ! Output: [real(r8) (:,:)]  effective snow grain radius (col,lyr) [microns, m^-6]
    snw_rds_top               =>    cps%snw_rds_top         , & ! Output: [real(r8) (:)]  snow grain size, top (col) [microns]    
    sno_liq_top               =>    cps%sno_liq_top           & ! Output: [real(r8) (:)]  liquid water fraction (mass) in top snow layer (col) [frc]
    )
 
-    ! Determine subgrid bounds on this processor
-
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
     ! NOTE: h2ocan, h2osno, snow_depth and snowage has valid values everywhere
     ! canopy water (pft level)
@@ -179,7 +126,7 @@ contains
 
     ! Set snow layer number, depth and thickness
 
-    call snow_depth2levLake(begc, endc, arbinit) ! Reset snow layers over lakes for S lake code.
+    call snow_depth2levLake(bounds, arbinit) ! Reset snow layers over lakes for S lake code.
     ! This will now ONLY run if arbinit, or initial condition file appears to be coming from old lake model,
     ! to preserve bit-for-bit results during restarts.
 
@@ -189,7 +136,7 @@ contains
     ! t_grnd has valid values over all land
     ! t_veg  has valid values over all land
 
-    do c = begc,endc
+    do c = bounds%begc, bounds%endc
 
        l = clandunit(c)
 
@@ -225,7 +172,7 @@ contains
     end do
 
     do j = 1,nlevgrnd
-       do c = begc,endc
+       do c = bounds%begc, bounds%endc
           l = clandunit(c)
           if (lakpoi(l)) then
              if (arbinit .or. h2osoi_vol(c,j) == spval) then
@@ -260,7 +207,7 @@ contains
     ! If localarbinit only!
 
     do j = -nlevsno+1, 0
-       do c = begc,endc
+       do c = bounds%begc, bounds%endc
           l = clandunit(c)
           if (lakpoi(l)) then
              if (j > snl(c)) then
@@ -271,7 +218,7 @@ contains
        end do
     end do
 
-    do c = begc,endc
+    do c = bounds%begc, bounds%endc
        l = clandunit(c)
        if (lakpoi(l) .and. snl(c) < 0 .and. localarbinit) then
        ! SNICAR fields not initialized in regular mkarbinit b/c there lakes have snl==0
@@ -287,53 +234,29 @@ contains
     end associate 
    end subroutine makearbinit
 
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: snow_depth2levLake
-!
-! !INTERFACE:
-subroutine snow_depth2levLake(lbc, ubc, arbinit)
-!
-! !DESCRIPTION:
-! Create snow layers and interfaces given snow depth for lakes.
-! Note that cps%zi(0) is set in routine iniTimeConst.
-!
-! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use clmtype
-  use clm_varpar  , only : nlevsno
-  use clm_varcon  , only : spval
-  use SLakeCon , only : lsadz
-!
-! !ARGUMENTS:
-  implicit none
-  integer, intent(in) :: lbc, ubc                    ! column bounds
-  logical, intent(in) :: arbinit
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-! Edited for lakes by Zack Subin
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-!EOP
-!
-! LOCAL VARIABLES:
-  integer :: c,l,j      !indices
-!-----------------------------------------------------------------------
-
+   !-----------------------------------------------------------------------
+   subroutine snow_depth2levLake(bounds, arbinit)
+     !
+     ! !DESCRIPTION:
+     ! Create snow layers and interfaces given snow depth for lakes.
+     ! Note that cps%zi(0) is set in routine iniTimeConst.
+     !
+     ! !USES:
+     use clmtype
+     use clm_varpar  , only : nlevsno
+     use clm_varcon  , only : spval
+     use SLakeCon , only : lsadz
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(bounds_type), intent(in) :: bounds  ! bounds
+     logical, intent(in) :: arbinit
+     !
+     ! !LOCAL VARIABLES:
+     integer :: c,l,j      !indices
+     !-----------------------------------------------------------------------
 
    associate(& 
-   lakpoi                    =>   lun%lakpoi               , & ! Input:  [logical (:)]  true => landunit is a lake point         
-
-
-   clandunit                 =>   col%landunit             , & ! Input:  [integer (:)]  landunit index associated with each column
    snow_depth                =>    cps%snow_depth          , & ! Input:  [real(r8) (:)]  snow height (m)                         
    snl                       =>    cps%snl                 , & ! Output: [integer (:)]  number of snow layers                    
    zi                        =>    cps%zi                  , & ! Output: [real(r8) (:,:)]  interface depth (m) over snow only    
@@ -342,13 +265,12 @@ subroutine snow_depth2levLake(lbc, ubc, arbinit)
    lake_icefrac              =>    cws%lake_icefrac          & ! Input:  [real(r8) (:,:)]  mass fraction of lake layer that is frozen
    )
 
-
   ! Determine snow levels and interfaces for lake points
   ! lsadz (default 0.03m) is added to min & max thicknesses to not stress lake numerics at 30 min. timestep.
 
-  do c = lbc,ubc
-     l = clandunit(c)
-     if (lakpoi(l) .and. (arbinit .or. lake_icefrac(c,1) == spval)) then
+  do c = bounds%begc,bounds%endc
+     l = col%landunit(c)
+     if (lun%lakpoi(l) .and. (arbinit .or. lake_icefrac(c,1) == spval)) then
         if (snow_depth(c) < 0.01_r8 + lsadz) then
            snl(c) = 0
            dz(c,-nlevsno+1:0) = 0._r8
@@ -409,9 +331,9 @@ subroutine snow_depth2levLake(lbc, ubc, arbinit)
 
   ! The following loop is currently not vectorized
 
-  do c = lbc,ubc
-     l = clandunit(c)
-     if (lakpoi(l) .and. (arbinit .or. lake_icefrac(c,1) == spval)) then
+  do c = bounds%begc,bounds%endc
+     l = col%landunit(c)
+     if (lun%lakpoi(l) .and. (arbinit .or. lake_icefrac(c,1) == spval)) then
         do j = 0, snl(c)+1, -1
            z(c,j)    = zi(c,j) - 0.5_r8*dz(c,j)
            zi(c,j-1) = zi(c,j) - dz(c,j)
@@ -422,110 +344,70 @@ subroutine snow_depth2levLake(lbc, ubc, arbinit)
     end associate 
  end subroutine snow_depth2levLake
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: initTimeConst
-!
-! !INTERFACE:
-subroutine initTimeConst
-!
-! !DESCRIPTION:
-! Initialize time invariant clm variables for S Lake code (and h2osoi_vol).
-!
-! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use clmtype
-  use decompMod   , only : get_proc_bounds, get_proc_global
-  use clm_atmlnd  , only : clm_a2l
-  use clm_varpar  , only : nlevsoi, nlevlak, nlevgrnd
-  use clm_varcon  , only : istdlak, &
-                           zlak, dzlak, zsoi, dzsoi, zisoi, spval
-  use clm_varcon  , only : secspday
-  use clm_varctl  , only : nsrest, iulog
-  use abortutils  , only : endrun
-  use spmdMod     , only : masterproc
-  use clm_varcon  , only : denh2o, denice
-  use SLakeCon  , only : fcrit, minz0lake, depthcrit, mixfact, pudz, lsadz
-  use SLakeCon  , only : lakepuddling, lake_puddle_thick, deepmixing_depthcrit, deepmixing_mixfact, &
-                         lake_use_old_fcrit_minz0, lake_melt_icealb, alblakwi
-  use clm_time_manager , only : get_step_size
-!
-! !ARGUMENTS:
-  implicit none
-!
-! !CALLED FROM:
-!
-! !REVISION HISTORY:
-! 6/09, Zack Subin: Adapted for S lake requirements.
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
-!
-!EOP
-!
-! !OTHER LOCAL VARIABLES:
-  integer  :: n,i,j,ib,lev,bottom      ! indices
-  integer  :: g,l,c,p          ! indices
-  real(r8) :: bd               ! bulk density of dry soil material [kg/m^3]
-  real(r8) :: tkm              ! mineral conductivity
-  real(r8) :: xksat            ! maximum hydraulic conductivity of soil [mm/s]
-  real(r8) :: scalez = 0.025_r8   ! Soil layer thickness discretization (m)
-  integer  :: begp, endp       ! per-proc beginning and ending pft indices
-  integer  :: begc, endc       ! per-proc beginning and ending column indices
-  integer  :: begl, endl       ! per-proc beginning and ending landunit indices
-  integer  :: begg, endg       ! per-proc gridcell ending gridcell indices
-  integer  :: numg             ! total number of gridcells across all processors
-  integer  :: numl             ! total number of landunits across all processors
-  integer  :: numc             ! total number of columns across all processors
-  integer  :: nump             ! total number of pfts across all processors
-  real(r8) :: depthratio       ! ratio of lake depth to standard deep lake depth 
-  real(r8) :: clay             ! temporary
-  real(r8) :: sand             ! temporary
-  ! New CLM 4 variables
-  real(r8) :: om_frac                ! organic matter fraction
-  real(r8) :: om_watsat    = 0.9_r8  ! porosity of organic soil
-  real(r8) :: om_hksat     = 0.1_r8  ! saturated hydraulic conductivity of organic soil [mm/s]
-  real(r8) :: om_tkm       = 0.25_r8 ! thermal conductivity of organic soil (Farouki, 1986) [W/m/K]
-  real(r8) :: om_sucsat    = 10.3_r8 ! saturated suction for organic matter (Letts, 2000)
-  real(r8) :: om_csol      = 2.5_r8  ! heat capacity of peat soil *10^6 (J/K m3) (Farouki, 1986)
-  real(r8) :: om_tkd       = 0.05_r8 ! thermal conductivity of dry organic soil (Farouki, 1981)
-  real(r8) :: om_b         = 2.7_r8  ! Clapp Hornberger paramater for oragnic soil (Letts, 2000)
-  real(r8) :: organic_max  = 130._r8 ! organic matter (kg/m3) where soil is assumed to act like peat
-  real(r8) :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
-  real(r8) :: pc           = 0.5_r8   ! percolation threshold
-  real(r8) :: pcbeta       = 0.139_r8 ! percolation exponent
-  ! Note: These constants should be shared with iniTimeConst.
+ !-----------------------------------------------------------------------
+ subroutine initTimeConst(bounds)
+   !
+   ! !DESCRIPTION:
+   ! Initialize time invariant clm variables for S Lake code (and h2osoi_vol).
+   !
+   ! !USES:
+   use clmtype
+   use decompMod   , only : get_proc_bounds, get_proc_global
+   use clm_atmlnd  , only : clm_a2l
+   use clm_varpar  , only : nlevsoi, nlevlak, nlevgrnd
+   use clm_varcon  , only : istdlak, &
+        zlak, dzlak, zsoi, dzsoi, zisoi, spval
+   use clm_varcon  , only : secspday
+   use clm_varctl  , only : nsrest, iulog, use_extralakelayers
+   use abortutils  , only : endrun
+   use spmdMod     , only : masterproc
+   use clm_varcon  , only : denh2o, denice
+   use SLakeCon  , only : fcrit, minz0lake, depthcrit, mixfact, pudz, lsadz
+   use SLakeCon  , only : lakepuddling, lake_puddle_thick, deepmixing_depthcrit, deepmixing_mixfact, &
+        lake_use_old_fcrit_minz0, lake_melt_icealb, alblakwi
+   use clm_time_manager , only : get_step_size
+   !
+   ! !ARGUMENTS:
+   implicit none
+   type(bounds_type), intent(in) :: bounds  ! bounds
+   !
+   ! !LOCAL VARIABLES:
+   integer  :: n,i,j,ib,lev,bottom      ! indices
+   integer  :: g,l,c,p          ! indices
+   real(r8) :: bd               ! bulk density of dry soil material [kg/m^3]
+   real(r8) :: tkm              ! mineral conductivity
+   real(r8) :: xksat            ! maximum hydraulic conductivity of soil [mm/s]
+   real(r8) :: scalez = 0.025_r8   ! Soil layer thickness discretization (m)
+   real(r8) :: depthratio       ! ratio of lake depth to standard deep lake depth 
+   real(r8) :: clay             ! temporary
+   real(r8) :: sand             ! temporary
+   ! New CLM 4 variables
+   real(r8) :: om_frac                ! organic matter fraction
+   real(r8) :: om_watsat    = 0.9_r8  ! porosity of organic soil
+   real(r8) :: om_hksat     = 0.1_r8  ! saturated hydraulic conductivity of organic soil [mm/s]
+   real(r8) :: om_tkm       = 0.25_r8 ! thermal conductivity of organic soil (Farouki, 1986) [W/m/K]
+   real(r8) :: om_sucsat    = 10.3_r8 ! saturated suction for organic matter (Letts, 2000)
+   real(r8) :: om_csol      = 2.5_r8  ! heat capacity of peat soil *10^6 (J/K m3) (Farouki, 1986)
+   real(r8) :: om_tkd       = 0.05_r8 ! thermal conductivity of dry organic soil (Farouki, 1981)
+   real(r8) :: om_b         = 2.7_r8  ! Clapp Hornberger paramater for oragnic soil (Letts, 2000)
+   real(r8) :: organic_max  = 130._r8 ! organic matter (kg/m3) where soil is assumed to act like peat
+   real(r8) :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
+   real(r8) :: pc           = 0.5_r8   ! percolation threshold
+   real(r8) :: pcbeta       = 0.139_r8 ! percolation exponent
+   ! Note: These constants should be shared with iniTimeConst.
+   real(r8) :: perc_frac               ! "percolating" fraction of organic soil
+   real(r8) :: perc_norm               ! normalize to 1 when 100% organic soil
+   real(r8) :: uncon_hksat             ! series conductivity of mineral/organic soil
+   real(r8) :: uncon_frac              ! fraction of "unconnected" soil
+   real(r8) :: dtime                   ! land model timestep (s)
+   real(r8), parameter :: dtime_lsadz = 1800._r8 ! timestep used for nominal lsadz
+   real(r8), parameter :: snodzmin = 0.01_r8 ! nominal minimum snow layer thickness
+   ! used in SnowHydrology, etc. This should be a global constant.
+   !------------------------------------------------------------------------
 
-  real(r8) :: perc_frac               ! "percolating" fraction of organic soil
-  real(r8) :: perc_norm               ! normalize to 1 when 100% organic soil
-  real(r8) :: uncon_hksat             ! series conductivity of mineral/organic soil
-  real(r8) :: uncon_frac              ! fraction of "unconnected" soil
-
-  real(r8) :: dtime                   ! land model timestep (s)
-  real(r8), parameter :: dtime_lsadz = 1800._r8 ! timestep used for nominal lsadz
-  real(r8), parameter :: snodzmin = 0.01_r8 ! nominal minimum snow layer thickness
-                                            ! used in SnowHydrology, etc.
-                                            ! This should be a global constant.
-
-!------------------------------------------------------------------------
-
-  if (masterproc) write (iulog,*) 'Attempting to initialize time invariant variables for lakes'
-
-  call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-  call get_proc_global(numg, numl, numc, nump)
-
+   if (masterproc) write (iulog,*) 'Attempting to initialize time invariant variables for lakes'
 
    associate(& 
-   ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type index                      
-
-
-   clandunit                 =>   col%landunit             , & ! Input:  [integer (:)]  landunit index of column                 
-   cgridcell                 =>   col%gridcell             , & ! Input:  [integer (:)]  gridcell index of column                 
    z                         =>    cps%z                   , & ! Output: [real(r8) (:,:)]  layer depth (m)                       
    dz                        =>    cps%dz                  , & ! Output: [real(r8) (:,:)]  layer thickness depth (m)             
    zi                        =>    cps%zi                  , & ! Output: [real(r8) (:,:)]  interface level below a "z" level (m) 
@@ -550,7 +432,6 @@ subroutine initTimeConst
    h2osoi_ice                =>    cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2) (-nlevsno+1:nlevgrnd)
    h2osoi_vol                =>    cws%h2osoi_vol            & ! Output: [real(r8) (:,:)] volumetric soil water [m3/m3]  (nlevgrnd)
    )
-
 
    ! Set SLakeCon constants according to namelist fields
    if (lake_use_old_fcrit_minz0) then
@@ -589,63 +470,62 @@ subroutine initTimeConst
    alblakwi(:) = lake_melt_icealb(:)
 
 
-#ifndef EXTRALAKELAYERS
+   if (.not. use_extralakelayers) then
+      ! Lake layers
+      
+      dzlak(1) = 0.1_r8
+      dzlak(2) = 1._r8
+      dzlak(3) = 2._r8
+      dzlak(4) = 3._r8
+      dzlak(5) = 4._r8
+      dzlak(6) = 5._r8
+      dzlak(7) = 7._r8
+      dzlak(8) = 7._r8
+      dzlak(9) = 10.45_r8
+      dzlak(10)= 10.45_r8
 
-   ! Lake layers
+      zlak(1) =  0.05_r8
+      zlak(2) =  0.6_r8
+      zlak(3) =  2.1_r8
+      zlak(4) =  4.6_r8
+      zlak(5) =  8.1_r8
+      zlak(6) = 12.6_r8
+      zlak(7) = 18.6_r8
+      zlak(8) = 25.6_r8
+      zlak(9) = 34.325_r8
+      zlak(10)= 44.775_r8
+   else
+      dzlak(1) =0.1_r8
+      dzlak(2) =0.25_r8
+      dzlak(3) =0.25_r8
+      dzlak(4) =0.25_r8
+      dzlak(5) =0.25_r8
+      dzlak(6) =0.5_r8
+      dzlak(7) =0.5_r8
+      dzlak(8) =0.5_r8
+      dzlak(9) =0.5_r8
+      dzlak(10) =0.75_r8
+      dzlak(11) =0.75_r8
+      dzlak(12) =0.75_r8
+      dzlak(13) =0.75_r8
+      dzlak(14) =2_r8
+      dzlak(15) =2_r8
+      dzlak(16) =2.5_r8
+      dzlak(17) =2.5_r8
+      dzlak(18) =3.5_r8
+      dzlak(19) =3.5_r8
+      dzlak(20) =3.5_r8
+      dzlak(21) =3.5_r8
+      dzlak(22) =5.225_r8
+      dzlak(23) =5.225_r8
+      dzlak(24) =5.225_r8
+      dzlak(25) =5.225_r8
 
-   dzlak(1) = 0.1_r8
-   dzlak(2) = 1._r8
-   dzlak(3) = 2._r8
-   dzlak(4) = 3._r8
-   dzlak(5) = 4._r8
-   dzlak(6) = 5._r8
-   dzlak(7) = 7._r8
-   dzlak(8) = 7._r8
-   dzlak(9) = 10.45_r8
-   dzlak(10)= 10.45_r8
-
-   zlak(1) =  0.05_r8
-   zlak(2) =  0.6_r8
-   zlak(3) =  2.1_r8
-   zlak(4) =  4.6_r8
-   zlak(5) =  8.1_r8
-   zlak(6) = 12.6_r8
-   zlak(7) = 18.6_r8
-   zlak(8) = 25.6_r8
-   zlak(9) = 34.325_r8
-   zlak(10)= 44.775_r8
-#else
-   dzlak(1) =0.1_r8
-   dzlak(2) =0.25_r8
-   dzlak(3) =0.25_r8
-   dzlak(4) =0.25_r8
-   dzlak(5) =0.25_r8
-   dzlak(6) =0.5_r8
-   dzlak(7) =0.5_r8
-   dzlak(8) =0.5_r8
-   dzlak(9) =0.5_r8
-   dzlak(10) =0.75_r8
-   dzlak(11) =0.75_r8
-   dzlak(12) =0.75_r8
-   dzlak(13) =0.75_r8
-   dzlak(14) =2_r8
-   dzlak(15) =2_r8
-   dzlak(16) =2.5_r8
-   dzlak(17) =2.5_r8
-   dzlak(18) =3.5_r8
-   dzlak(19) =3.5_r8
-   dzlak(20) =3.5_r8
-   dzlak(21) =3.5_r8
-   dzlak(22) =5.225_r8
-   dzlak(23) =5.225_r8
-   dzlak(24) =5.225_r8
-   dzlak(25) =5.225_r8
-
-   zlak(1) = dzlak(1)/2._r8
-   do i=2,nlevlak
-      zlak(i) = zlak(i-1) + (dzlak(i-1)+dzlak(i))/2._r8
-   end do
-#endif
+      zlak(1) = dzlak(1)/2._r8
+      do i=2,nlevlak
+         zlak(i) = zlak(i-1) + (dzlak(i-1)+dzlak(i))/2._r8
+      end do
+   end if
 
 
    ! --------------------------------------------------------------------
@@ -654,14 +534,14 @@ subroutine initTimeConst
    ! --------------------------------------------------------------------
 
    ! Column level initialization
-   do c = begc, endc
+   do c = bounds%begc, bounds%endc
 
       ! Set gridcell and landunit indices
-      g = cgridcell(c)
-      l = clandunit(c)
+      g = col%gridcell(c)
+      l = col%landunit(c)
 
       ! Soil hydraulic and thermal properties
-      if (ltype(l)==istdlak) then
+      if (lun%itype(l)==istdlak) then
          do lev = 1,nlevgrnd
             if ( lev <= nlevsoi )then
                clay    = cellclay(c,lev)
@@ -719,7 +599,7 @@ subroutine initTimeConst
       endif
 
       ! Define levels
-      if (ltype(l) == istdlak) then
+      if (lun%itype(l) == istdlak) then
          if (lakedepth(c) == spval) then
             lakedepth(c) = zlak(nlevlak) + 0.5_r8*dzlak(nlevlak)
             z_lake(c,1:nlevlak) = zlak(1:nlevlak)
@@ -753,7 +633,7 @@ subroutine initTimeConst
       ! there, and to avoid adding dz to the restart file.
       ! Note (Attn EK): if this subroutine is ever called before SLakeRest, then this code should be moved there.
 
-      if (ltype(l) == istdlak .and. h2osoi_liq(c,1) /= spval) then
+      if (lun%itype(l) == istdlak .and. h2osoi_liq(c,1) /= spval) then
          ! If not spval then this was available on the restart file and it was not an old restart file.
          ! Otherwise it will be set in makearbinit.
          do lev = 1,nlevgrnd

@@ -1,73 +1,49 @@
 module CNNStateUpdate1Mod
-#ifdef CN
-
 !-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: NStateUpdate1Mod
-!
-! !DESCRIPTION:
-! Module for nitrogen state variable updates, non-mortality fluxes.
-!
-! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    implicit none
-    save
-    private
-! !PUBLIC MEMBER FUNCTIONS:
-    public:: NStateUpdate1
-!
-! !REVISION HISTORY:
-! 4/23/2004: Created by Peter Thornton
-!
-!EOP
+  ! !DESCRIPTION:
+  ! Module for nitrogen state variable updates, non-mortality fluxes.
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  implicit none
+  save
+  private
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public:: NStateUpdate1
+  !
+  ! !REVISION HISTORY:
+  ! 4/23/2004: Created by Peter Thornton
 !-----------------------------------------------------------------------
 
 contains
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: NStateUpdate1
-!
-! !INTERFACE:
 subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! On the radiation time step, update all the prognostic nitrogen state
-! variables (except for gap-phase mortality and fire fluxes)
-!
-! !USES:
-   use clmtype
-   use clm_time_manager, only: get_step_size
-    use clm_varpar   , only: nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions, &
-                             crop_prog
-   use clm_varctl  , only: iulog
-   use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-#ifdef NITRIF_DENITRIF
-   use clm_varcon, only: nitrif_n2o_loss_frac
-#endif
-   use pftvarcon       , only: npcropmin, nc3crop
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 8/1/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   integer :: c,p,j,l,k      ! indices
-   integer :: fp,fc    ! lake filter indices
-   real(r8):: dt       ! radiation time step (seconds)
-
-!EOP
+  !
+  ! !DESCRIPTION:
+  ! On the radiation time step, update all the prognostic nitrogen state
+  ! variables (except for gap-phase mortality and fire fluxes)
+  !
+  ! !USES:
+  use clmtype
+  use clm_time_manager, only: get_step_size
+  use clm_varpar      , only: nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions, &
+                              crop_prog, i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use clm_varctl      , only: iulog, use_nitrif_denitrif
+  use clm_varcon      , only: nitrif_n2o_loss_frac
+  use pftvarcon       , only: npcropmin, nc3crop
+  !
+  ! !ARGUMENTS:
+  implicit none
+  integer, intent(in) :: num_soilc       ! number of soil columns in filter
+  integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+  integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+  integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+  !
+  ! !LOCAL VARIABLES:
+  integer :: c,p,j,l,k      ! indices
+  integer :: fp,fc    ! lake filter indices
+  real(r8):: dt       ! radiation time step (seconds)
 !-----------------------------------------------------------------------
 
    associate(& 
@@ -76,10 +52,8 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    nfix_to_sminn                       =>    cnf%nfix_to_sminn                           , & ! Input:  [real(r8) (:)]  symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s)
    fert_to_sminn                       =>    cnf%fert_to_sminn                           , & ! Input:  [real(r8) (:)]                                                    
    soyfixn_to_sminn                    =>    cnf%soyfixn_to_sminn                        , & ! Input:  [real(r8) (:)]                                                    
-#ifndef NITRIF_DENITRIF
    sminn_to_denit_excess_vr            =>    cnf%sminn_to_denit_excess_vr                , & ! Input:  [real(r8) (:,:)]                                                  
    sminn_to_denit_decomp_cascade_vr    =>    cnf%sminn_to_denit_decomp_cascade_vr        , & ! Input:  [real(r8) (:,:,:)]  vertically-resolved denitrification along decomp cascade (gN/m3/s)
-#else
    smin_no3_vr                         =>    cns%smin_no3_vr                             , & ! InOut:  [real(r8) (:,:)]  (gN/m3) soil NO3                                
    smin_nh4_vr                         =>    cns%smin_nh4_vr                             , & ! InOut:  [real(r8) (:,:)]  (gN/m3) soil NH4                                
    f_nit_vr                            =>    cnf%f_nit_vr                                , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s) soil nitrification flux               
@@ -89,7 +63,6 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    smin_no3_to_plant_vr                =>    cnf%smin_no3_to_plant_vr                    , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s)                                       
    smin_nh4_to_plant_vr                =>    cnf%smin_nh4_to_plant_vr                    , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s)                                       
    gross_nmin_vr                       =>    cnf%gross_nmin_vr                           , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s)                                       
-#endif
    sminn_to_plant_vr                   =>    cnf%sminn_to_plant_vr                       , & ! Input:  [real(r8) (:,:)]                                                  
    decomp_cascade_sminn_flux_vr        =>    cnf%decomp_cascade_sminn_flux_vr            , & ! InOut:  [real(r8) (:,:,:)]  vert-res mineral N flux for transition along decomposition cascade (gN/m3/s)
    decomp_cascade_ntransfer_vr         =>    cnf%decomp_cascade_ntransfer_vr             , & ! InOut:  [real(r8) (:,:,:)]  vert-res transfer of N from donor to receiver pool along decomp. cascade (gN/m3/s)
@@ -195,15 +168,15 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
       do fc = 1,num_soilc
          c = filter_soilc(fc)
          
-#ifndef NITRIF_DENITRIF
-         ! N deposition and fixation
-         sminn_vr(c,j) = sminn_vr(c,j) + ndep_to_sminn(c)*dt * ndep_prof(c,j)
-         sminn_vr(c,j) = sminn_vr(c,j) + nfix_to_sminn(c)*dt * nfixation_prof(c,j)
-#else
-         ! N deposition and fixation (put all into NH4 pool)
-         smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + ndep_to_sminn(c)*dt * ndep_prof(c,j)
-         smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + nfix_to_sminn(c)*dt * nfixation_prof(c,j)
-#endif
+         if (.not. use_nitrif_denitrif) then
+            ! N deposition and fixation
+            sminn_vr(c,j) = sminn_vr(c,j) + ndep_to_sminn(c)*dt * ndep_prof(c,j)
+            sminn_vr(c,j) = sminn_vr(c,j) + nfix_to_sminn(c)*dt * nfixation_prof(c,j)
+         else
+            ! N deposition and fixation (put all into NH4 pool)
+            smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + ndep_to_sminn(c)*dt * ndep_prof(c,j)
+            smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + nfix_to_sminn(c)*dt * nfixation_prof(c,j)
+         end if
 
          ! plant to litter fluxes
          ! phenology and dynamic landcover fluxes
@@ -221,15 +194,15 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
          ! column loop
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-#ifndef NITRIF_DENITRIF
-            ! N deposition and fixation
-            sminn_vr(c,j) = sminn_vr(c,j) + fert_to_sminn(c)*dt * ndep_prof(c,j)
-            sminn_vr(c,j) = sminn_vr(c,j) + soyfixn_to_sminn(c)*dt * nfixation_prof(c,j)
-#else
-            ! N deposition and fixation (put all into NH4 pool)
-            smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + fert_to_sminn(c)*dt * ndep_prof(c,j)
-            smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + soyfixn_to_sminn(c)*dt * nfixation_prof(c,j)
-#endif
+            if (.not. use_nitrif_denitrif) then
+               ! N deposition and fixation
+               sminn_vr(c,j) = sminn_vr(c,j) + fert_to_sminn(c)*dt * ndep_prof(c,j)
+               sminn_vr(c,j) = sminn_vr(c,j) + soyfixn_to_sminn(c)*dt * nfixation_prof(c,j)
+            else
+               ! N deposition and fixation (put all into NH4 pool)
+               smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + fert_to_sminn(c)*dt * ndep_prof(c,j)
+               smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + soyfixn_to_sminn(c)*dt * nfixation_prof(c,j)
+            end if
          end do
       end do
    end if
@@ -267,79 +240,79 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
       end if
    end do
    
-#ifndef NITRIF_DENITRIF         
-   ! immobilization/mineralization in litter-to-SOM and SOM-to-SOM fluxes and denitrification fluxes
-   do k = 1, ndecomp_cascade_transitions
-      if ( cascade_receiver_pool(k) .ne. 0 ) then  ! skip terminal transitions
-         do j = 1, nlevdecomp
-            ! column loop
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               sminn_vr(c,j)  = sminn_vr(c,j) - &
-                    (sminn_to_denit_decomp_cascade_vr(c,j,k) + decomp_cascade_sminn_flux_vr(c,j,k))* dt
+   if (.not. use_nitrif_denitrif) then
+      ! immobilization/mineralization in litter-to-SOM and SOM-to-SOM fluxes and denitrification fluxes
+      do k = 1, ndecomp_cascade_transitions
+         if ( cascade_receiver_pool(k) .ne. 0 ) then  ! skip terminal transitions
+            do j = 1, nlevdecomp
+               ! column loop
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  sminn_vr(c,j)  = sminn_vr(c,j) - &
+                       (sminn_to_denit_decomp_cascade_vr(c,j,k) + decomp_cascade_sminn_flux_vr(c,j,k))* dt
+               end do
             end do
-         end do
-      else
-         do j = 1, nlevdecomp
-            ! column loop
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               sminn_vr(c,j)  = sminn_vr(c,j) - sminn_to_denit_decomp_cascade_vr(c,j,k)* dt
-               sminn_vr(c,j)  = sminn_vr(c,j) + decomp_cascade_sminn_flux_vr(c,j,k)* dt
-               
-            end do
-         end do
-      endif
-   end do
+         else
+            do j = 1, nlevdecomp
+               ! column loop
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  sminn_vr(c,j)  = sminn_vr(c,j) - sminn_to_denit_decomp_cascade_vr(c,j,k)* dt
+                  sminn_vr(c,j)  = sminn_vr(c,j) + decomp_cascade_sminn_flux_vr(c,j,k)* dt
 
-   do j = 1, nlevdecomp
-      ! column loop
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         ! "bulk denitrification"
-         sminn_vr(c,j) = sminn_vr(c,j) - sminn_to_denit_excess_vr(c,j) * dt
-         
-         ! total plant uptake from mineral N
-         sminn_vr(c,j) = sminn_vr(c,j) - sminn_to_plant_vr(c,j)*dt
-         
-         ! flux that prevents N limitation (when Carbon_only is set)
-         sminn_vr(c,j) = sminn_vr(c,j) + supplement_to_sminn_vr(c,j)*dt
+               end do
+            end do
+         endif
       end do
-   end do
 
-#else   !-------------    NITRIF_DENITRIF --------------------
+      do j = 1, nlevdecomp
+         ! column loop
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            ! "bulk denitrification"
+            sminn_vr(c,j) = sminn_vr(c,j) - sminn_to_denit_excess_vr(c,j) * dt
 
-   do j = 1, nlevdecomp
-      ! column loop
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         
-         ! mineralization fluxes (divert a fraction of this stream to nitrification flux, add the rest to NH4 pool)
-         smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + gross_nmin_vr(c,j)*dt
-         
-         ! immobilization fluxes
-         smin_nh4_vr(c,j) = smin_nh4_vr(c,j) - actual_immob_nh4_vr(c,j)*dt
-         smin_no3_vr(c,j) = smin_no3_vr(c,j) - actual_immob_no3_vr(c,j)*dt
-         
-         ! plant uptake fluxes
-         smin_nh4_vr(c,j) = smin_nh4_vr(c,j) - smin_nh4_to_plant_vr(c,j)*dt
-         smin_no3_vr(c,j) = smin_no3_vr(c,j) - smin_no3_to_plant_vr(c,j)*dt
-         
-         ! Account for nitrification fluxes
-         smin_nh4_vr(c,j) = smin_nh4_vr(c,j) - f_nit_vr(c,j) * dt
-         smin_no3_vr(c,j) = smin_no3_vr(c,j) + f_nit_vr(c,j) * dt * (1._r8 - nitrif_n2o_loss_frac)
-         ! Account for denitrification fluxes
-         smin_no3_vr(c,j) = smin_no3_vr(c,j) - f_denit_vr(c,j) * dt
-         
-         ! flux that prevents N limitation (when Carbon_only is set; put all into NH4)
-         smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + supplement_to_sminn_vr(c,j)*dt
-         
-         ! update diagnostic total
-         sminn_vr(c,j) = smin_nh4_vr(c,j) + smin_no3_vr(c,j)
-         
-      end do ! end of column loop
-   end do
-#endif
+            ! total plant uptake from mineral N
+            sminn_vr(c,j) = sminn_vr(c,j) - sminn_to_plant_vr(c,j)*dt
+
+            ! flux that prevents N limitation (when Carbon_only is set)
+            sminn_vr(c,j) = sminn_vr(c,j) + supplement_to_sminn_vr(c,j)*dt
+         end do
+      end do
+
+   else   !-------------    NITRIF_DENITRIF --------------------
+
+      do j = 1, nlevdecomp
+         ! column loop
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+
+            ! mineralization fluxes (divert a fraction of this stream to nitrification flux, add the rest to NH4 pool)
+            smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + gross_nmin_vr(c,j)*dt
+
+            ! immobilization fluxes
+            smin_nh4_vr(c,j) = smin_nh4_vr(c,j) - actual_immob_nh4_vr(c,j)*dt
+            smin_no3_vr(c,j) = smin_no3_vr(c,j) - actual_immob_no3_vr(c,j)*dt
+
+            ! plant uptake fluxes
+            smin_nh4_vr(c,j) = smin_nh4_vr(c,j) - smin_nh4_to_plant_vr(c,j)*dt
+            smin_no3_vr(c,j) = smin_no3_vr(c,j) - smin_no3_to_plant_vr(c,j)*dt
+
+            ! Account for nitrification fluxes
+            smin_nh4_vr(c,j) = smin_nh4_vr(c,j) - f_nit_vr(c,j) * dt
+            smin_no3_vr(c,j) = smin_no3_vr(c,j) + f_nit_vr(c,j) * dt * (1._r8 - nitrif_n2o_loss_frac)
+            ! Account for denitrification fluxes
+            smin_no3_vr(c,j) = smin_no3_vr(c,j) - f_denit_vr(c,j) * dt
+
+            ! flux that prevents N limitation (when Carbon_only is set; put all into NH4)
+            smin_nh4_vr(c,j) = smin_nh4_vr(c,j) + supplement_to_sminn_vr(c,j)*dt
+
+            ! update diagnostic total
+            sminn_vr(c,j) = smin_nh4_vr(c,j) + smin_no3_vr(c,j)
+
+         end do ! end of column loop
+      end do
+   end if
 
    ! pft loop
    do fp = 1,num_soilp
@@ -464,10 +437,7 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
    end do
 
-    end associate 
- end subroutine NStateUpdate1
-!-----------------------------------------------------------------------
-
-#endif
+ end associate
+end subroutine NStateUpdate1
 
 end module CNNStateUpdate1Mod

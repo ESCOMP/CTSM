@@ -1,4 +1,207 @@
 ===============================================================
+Tag name:  clm4_5_21
+Originator(s):  muszala (Stefan Muszala)
+Date: Wed Jul 24 14:23:19 MDT 2013
+One-line Summary: ifdef and bounds refactor
+
+Purpose of changes:  
+- Almost all implementation by Mvertens
+- Refactor ifdef use so that a majority are now in controlMod.F90.  This is the 
+first step to removing them competely.
+- Introduction of bounds_type and clump_type
+- Refactor interfaces to support bounds_type and clump_type
+- Bug fix from Sacks
+
+Requirements for tag: N/A
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: mvertens, sacks, self
+
+List any svn externals directories updated (csm_share, mct, etc.): N/A
+
+List all files eliminated:
+
+D       models/lnd/clm/src/util_share/decompInitMod.F90
+D       models/lnd/clm/src/util_share/ndepStreamMod.F90
+D       models/lnd/clm/src/util_share/decompMod.F90
+D       models/lnd/clm/src/clm4_5/main/initParametersMod.F90
+
+List all files added and what they do:
+
+A  +    models/lnd/clm/src/clm4_5/main/decompInitMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/ndepStreamMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/decompMod.F90
+A  +    models/lnd/clm/src/clm4_0/main/decompInitMod.F90
+A  +    models/lnd/clm/src/clm4_0/main/ndepStreamMod.F90
+A  +    models/lnd/clm/src/clm4_0/main/decompMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/doc/ChangeLog
+M       models/lnd/clm/doc/ChangeSum
+M       models/lnd/clm/src/cpl_share/clm_cpl_indices.F90
+M       models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNGapMortalityMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNitrifDenitrifMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNGRespMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CropRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/initch4Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNBalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate3Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNMRespMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/MEGANFactorsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNVerticalProfileMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4RestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNWoodProductsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCIsoFluxMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPrecisionControlMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSummaryMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DUSTMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVLightMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPhenologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4varcon.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/STATICEcosysDynMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate3Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/VOCEmissionMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNrestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVEcosystemDynIniMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAnnualUpdateMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNDynamicsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAllocationMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DryDepVelocity.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNEcosystemDynMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeBGCMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSetValueMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNVegStructUpdateMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSoilLittVertTranspMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVEstablishmentMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeCNMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNC14DecayMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSharedConstsMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_varcon.F90
+M       models/lnd/clm/src/clm4_5/main/clm_varpar.F90
+M       models/lnd/clm/src/clm4_5/main/CNiniTimeVar.F90
+M       models/lnd/clm/src/clm4_5/main/dynlandMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+M       models/lnd/clm/src/clm4_5/main/subgridRestMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_glclnd.F90
+M       models/lnd/clm/src/clm4_5/main/accFldsMod.F90
+M       models/lnd/clm/src/clm4_5/main/subgridMod.F90
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+M       models/lnd/clm/src/clm4_5/main/pftdynMod.F90
+M       models/lnd/clm/src/clm4_5/main/iniTimeConst.F90
+M       models/lnd/clm/src/clm4_5/main/histFileMod.F90
+M       models/lnd/clm/src/clm4_5/main/pft2colMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_atmlnd.F90
+M       models/lnd/clm/src/clm4_5/main/clm_varsur.F90
+M       models/lnd/clm/src/clm4_5/main/restFileMod.F90
+M       models/lnd/clm/src/clm4_5/main/controlMod.F90
+M       models/lnd/clm/src/clm4_5/main/initSurfAlbMod.F90
+M       models/lnd/clm/src/clm4_5/main/filterMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_varctl.F90
+M       models/lnd/clm/src/clm4_5/main/clm_driver.F90
+M       models/lnd/clm/src/clm4_5/main/subgridAveMod.F90
+M       models/lnd/clm/src/clm4_5/main/initGridCellsMod.F90
+M       models/lnd/clm/src/clm4_5/main/initSoilParVICMod.F90
+M       models/lnd/clm/src/clm4_5/main/CNiniSpecial.F90
+M       models/lnd/clm/src/clm4_5/main/pftvarcon.F90
+M       models/lnd/clm/src/clm4_5/main/surfrdMod.F90
+M       models/lnd/clm/src/clm4_5/main/readConstantsMod.F90
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+M       models/lnd/clm/src/clm4_5/main/reweightMod.F90
+M       models/lnd/clm/src/clm4_5/main/mkarbinitMod.F90
+M       models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilTemperatureMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInputMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SnowHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/FrictionVelocityMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/TridiagonalMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/ActiveLayerMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/QSatMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/clm_driverInitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/CLMVICMapMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeTemperatureMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SNICARMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BareGroundFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/initSLakeMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SurfaceRadiationMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/H2OSfcMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/FracWetMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SurfaceAlbedoMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BandDiagonalMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+M       models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90
+M       models/lnd/clm/src/clm4_0/main/clm_initializeMod.F90
+M       models/lnd/clm/src/clm4_0/main/clm_glclnd.F90
+M       models/lnd/clm/src/clm4_0/main/clm_atmlnd.F90
+M       models/lnd/clm/src/clm4_0/main/controlMod.F90
+M       models/lnd/clm/src/clm4_0/main/clm_varctl.F90
+M       models/lnd/clm/src/clm4_0/main/clm_driver.F90
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   Not run
+
+  CESM test lists:
+
+    yellowstone/aux_clm     intel       BFB
+    yellowstone/aux_clm     pgi         BFB 
+    frankfurt/aux_clm       intel       BFB 
+    frankfurt/aux_clm       pgi         BFB 
+    frankfurt/aux_clm       nag         BFB 
+
+  CESM history file comparison:
+
+    yellowstone/aux_clm     intel       BFB
+
+CLM tag used for the baseline comparison tests if applicable: clm4_5_20
+
+Changes answers relative to baseline: No
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_20
 Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
 Date: Sat Jul 20 10:54:43 MDT 2013

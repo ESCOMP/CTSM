@@ -1,120 +1,61 @@
 module SurfaceRadiationMod
 
-!------------------------------------------------------------------------------
-!BOP
-!
-! !MODULE: SurfaceRadiationMod
-!
-! !DESCRIPTION:
-! Calculate solar fluxes absorbed by vegetation and ground surface
-!
-! !USES:
-   use shr_kind_mod, only: r8 => shr_kind_r8
-   use clm_varctl  , only: iulog
-
-! !PUBLIC TYPES:
+  !------------------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculate solar fluxes absorbed by vegetation and ground surface
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: SurfaceRadiation ! Solar fluxes absorbed by veg and ground surface
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-! 11/26/03, Peter Thornton: Added new routine for improved treatment of
-!    sunlit/shaded canopy radiation.
-! 4/26/05, Peter Thornton: Adopted the sun/shade algorithm as the default,
-!    removed the old SurfaceRadiation(), and renamed SurfaceRadiationSunShade()
-!    as SurfaceRadiation().
-!
-!EOP
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
 
 contains
 
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: SurfaceRadiation
-!
-! !INTERFACE:
-   subroutine SurfaceRadiation(lbp, ubp, num_nourbanp, filter_nourbanp)
-!
-! !DESCRIPTION: 
-! Solar fluxes absorbed by vegetation and ground surface
-! Note possible problem when land is on different grid than atmosphere.
-! Land may have sun above the horizon (coszen > 0) but atmosphere may
-! have sun below the horizon (forc_solad = 0 and forc_solai = 0). This is okay
-! because all fluxes (absorbed, reflected, transmitted) are multiplied
-! by the incoming flux and all will equal zero.
-! Atmosphere may have sun above horizon (forc_solad > 0 and forc_solai > 0) but
-! land may have sun below horizon. This is okay because fabd, fabi,
-! ftdd, ftid, and ftii all equal zero so that sabv=sabg=fsa=0. Also,
-! albd and albi equal one so that fsr=forc_solad+forc_solai. In other words, all
-! the radiation is reflected. NDVI should equal zero in this case.
-! However, the way the code is currently implemented this is only true
-! if (forc_solad+forc_solai)|vis = (forc_solad+forc_solai)|nir.
-! Output variables are parsun,parsha,sabv,sabg,fsa,fsr,ndvi
-!
-! !USES:
+  !------------------------------------------------------------------------------
+   subroutine SurfaceRadiation(bounds, num_nourbanp, filter_nourbanp)
+     !
+     ! !DESCRIPTION: 
+     ! Solar fluxes absorbed by vegetation and ground surface
+     ! Note possible problem when land is on different grid than atmosphere.
+     ! Land may have sun above the horizon (coszen > 0) but atmosphere may
+     ! have sun below the horizon (forc_solad = 0 and forc_solai = 0). This is okay
+     ! because all fluxes (absorbed, reflected, transmitted) are multiplied
+     ! by the incoming flux and all will equal zero.
+     ! Atmosphere may have sun above horizon (forc_solad > 0 and forc_solai > 0) but
+     ! land may have sun below horizon. This is okay because fabd, fabi,
+     ! ftdd, ftid, and ftii all equal zero so that sabv=sabg=fsa=0. Also,
+     ! albd and albi equal one so that fsr=forc_solad+forc_solai. In other words, all
+     ! the radiation is reflected. NDVI should equal zero in this case.
+     ! However, the way the code is currently implemented this is only true
+     ! if (forc_solad+forc_solai)|vis = (forc_solad+forc_solai)|nir.
+     ! Output variables are parsun,parsha,sabv,sabg,fsa,fsr,ndvi
+     !
+     ! !USES:
      use clmtype
      use clm_atmlnd      , only : clm_a2l
      use clm_varpar      , only : numrad
      use clm_varcon      , only : spval, istsoil, degpsec, isecspday
      use clm_varcon      , only : istcrop
-     use clm_varctl      , only : subgridflag
+     use clm_varctl      , only : subgridflag, use_snicar_frc, iulog
      use clm_time_manager, only : get_curr_date, get_step_size
      use clm_varpar      , only : nlevsno
      use SNICARMod       , only : DO_SNO_OC
      use abortutils      , only : endrun
-!
-! !ARGUMENTS:
+     use decompMod       , only : bounds_type
+     !
+     ! !ARGUMENTS:
      implicit none
-     integer, intent(in) :: lbp, ubp                   ! pft upper and lower bounds
-     integer, intent(in) :: num_nourbanp               ! number of pfts in non-urban points in pft filter
-     integer, intent(in) :: filter_nourbanp(ubp-lbp+1) ! pft filter for non-urban points
-!
-! !CALLED FROM:
-! subroutine Biogeophysics1 in module Biogeophysics1Mod
-! subroutine BiogeophysicsLake in module BiogeophysicsLakeMod
-!
-! !REVISION HISTORY:
-! Author: Gordon Bonan
-! 2/18/02, Peter Thornton: Migrated to new data structures. Added a pft loop.
-! 6/05/03, Peter Thornton: Modified sunlit/shaded canopy treatment. Original code
-! had all radiation being absorbed in the sunlit canopy, and now the sunlit and shaded
-! canopies are each given the appropriate fluxes.  There was also an inconsistency in
-! the original code, where parsun was not being scaled by leaf area, and so represented
-! the entire canopy flux.  This goes into Stomata (in CanopyFluxes) where it is assumed
-! to be a flux per unit leaf area. In addition, the fpsn flux coming out of Stomata was
-! being scaled back up to the canopy by multiplying by lai, but the input radiation flux was
-! for the entire canopy to begin with.  Corrected this inconsistency in this version, so that
-! the parsun and parsha fluxes going into canopy fluxes are per unit lai in the sunlit and
-! shaded canopies.
-! 6/9/03, Peter Thornton: Moved coszen from gps tocol%cps to avoid problem
-! with OpenMP threading over columns, where different columns hit the radiation
-! time step at different times during execution.
-! 6/10/03, Peter Thornton: Added constraint on negative tot_aid, instead of
-! exiting with error. Appears to be happening only at roundoff level.
-! 6/11/03, Peter Thornton: Moved calculation of ext inside if (coszen),
-! and added check on laisun = 0 and laisha = 0 in calculation of sun_aperlai
-! and sha_aperlai.
-! 11/26/03, Peter Thornton: During migration to new vector code, created 
-!   this as a new routine to handle sunlit/shaded canopy calculations.
-! 03/28/08, Mark Flanner: Incorporated SNICAR, including absorbed solar radiation
-!   in each snow layer and top soil layer, and optional radiative forcing calculation
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-
-!
-!
-! !OTHER LOCAL VARIABLES:
-!EOP
-!
+     type(bounds_type), intent(in) :: bounds   ! bounds
+     integer, intent(in) :: num_nourbanp       ! number of pfts in non-urban points in pft filter
+     integer, intent(in) :: filter_nourbanp(:) ! pft filter for non-urban points
+     !
+     ! !LOCAL VARIABLES:
      integer , parameter :: nband = numrad    ! number of solar radiation waveband classes
      real(r8), parameter :: mpe = 1.e-06_r8   ! prevents overflow for division by zero
      integer  :: fp                  ! non-urban filter pft index
@@ -127,10 +68,10 @@ contains
      real(r8) :: absrad              ! absorbed solar radiation (W/m**2)
      real(r8) :: rnir                ! reflected solar radiation [nir] (W/m**2)
      real(r8) :: rvis                ! reflected solar radiation [vis] (W/m**2)
-     real(r8) :: trd(lbp:ubp,numrad) ! transmitted solar radiation: direct (W/m**2)
-     real(r8) :: tri(lbp:ubp,numrad) ! transmitted solar radiation: diffuse (W/m**2)
-     real(r8) :: cad(lbp:ubp,numrad) ! direct beam absorbed by canopy (W/m**2)
-     real(r8) :: cai(lbp:ubp,numrad) ! diffuse radiation absorbed by canopy (W/m**2)
+     real(r8) :: trd(bounds%begp:bounds%endp,numrad) ! transmitted solar radiation: direct (W/m**2)
+     real(r8) :: tri(bounds%begp:bounds%endp,numrad) ! transmitted solar radiation: diffuse (W/m**2)
+     real(r8) :: cad(bounds%begp:bounds%endp,numrad) ! direct beam absorbed by canopy (W/m**2)
+     real(r8) :: cai(bounds%begp:bounds%endp,numrad) ! diffuse radiation absorbed by canopy (W/m**2)
      integer  :: local_secp1         ! seconds into current date in local time
      real(r8) :: dtime               ! land model time step (sec)
      integer  :: year,month,day,secs !  calendar info for current time step
@@ -140,21 +81,17 @@ contains
      real(r8) :: absrad_bc           ! temp: absorbed solar radiation without BC [W/m2]
      real(r8) :: absrad_oc           ! temp: absorbed solar radiation without OC [W/m2]
      real(r8) :: absrad_dst          ! temp: absorbed solar radiation without dust [W/m2]
-     real(r8) :: sabg_pur(lbp:ubp)   ! solar radiation absorbed by ground with pure snow [W/m2]
-     real(r8) :: sabg_bc(lbp:ubp)    ! solar radiation absorbed by ground without BC [W/m2]
-     real(r8) :: sabg_oc(lbp:ubp)    ! solar radiation absorbed by ground without OC [W/m2]
-     real(r8) :: sabg_dst(lbp:ubp)   ! solar radiation absorbed by ground without dust [W/m2]
-     real(r8) :: parveg(lbp:ubp)     ! absorbed par by vegetation (W/m**2)
+     real(r8) :: sabg_pur(bounds%begp:bounds%endp)   ! solar radiation absorbed by ground with pure snow [W/m2]
+     real(r8) :: sabg_bc(bounds%begp:bounds%endp)    ! solar radiation absorbed by ground without BC [W/m2]
+     real(r8) :: sabg_oc(bounds%begp:bounds%endp)    ! solar radiation absorbed by ground without OC [W/m2]
+     real(r8) :: sabg_dst(bounds%begp:bounds%endp)   ! solar radiation absorbed by ground without dust [W/m2]
+     real(r8) :: parveg(bounds%begp:bounds%endp)     ! absorbed par by vegetation (W/m**2)
      integer  :: nstep               ! time step number
-!------------------------------------------------------------------------------
-
+     !------------------------------------------------------------------------------
 
    associate(& 
-   londeg                    =>     grc%londeg             , & ! Input:  [real(r8) (:)]  longitude (degrees)                     
-   latdeg                    =>     grc%latdeg             , & ! Input:  [real(r8) (:)]  latitude (degrees)                      
    forc_solad                =>    clm_a2l%forc_solad      , & ! Input:  [real(r8) (:,:)]  direct beam radiation (W/m**2)        
    forc_solai                =>    clm_a2l%forc_solai      , & ! Input:  [real(r8) (:,:)]  diffuse radiation (W/m**2)            
-   ityplun                   =>    lun%itype               , & ! Output: [integer (:)]  landunit type                            
    albgrd                    =>    cps%albgrd              , & ! Input:  [real(r8) (:,:)]  ground albedo (direct)                
    albgri                    =>    cps%albgri              , & ! Input:  [real(r8) (:,:)]  ground albedo (diffuse)               
    coszen                    =>    cps%coszen              , & ! Input:  [real(r8) (:)]  cosine of solar zenith angle            
@@ -162,16 +99,8 @@ contains
    albsoi                    =>    cps%albsoi              , & ! Input:  [real(r8) (:,:)]  diffuse soil albedo (col,bnd) [frc]   
    sabg_soil                 =>    pef%sabg_soil           , & ! Input:  [real(r8) (:)]  solar radiation absorbed by soil (W/m**2)
    sabg_snow                 =>    pef%sabg_snow           , & ! Input:  [real(r8) (:)]  solar radiation absorbed by snow (W/m**2)
-   plandunit                 =>   pft%landunit             , & ! Output: [integer (:)]  index into landunit level quantities     
-   ivt                       =>   pft%itype                , & ! Input:  [integer (:)]  pft vegetation type                      
-   pcolumn                   =>   pft%column               , & ! Input:  [integer (:)]  pft's column index                       
-   pgridcell                 =>   pft%gridcell             , & ! Input:  [integer (:)]  pft's gridcell index                     
    elai                      =>    pps%elai                , & ! Input:  [real(r8) (:)]  one-sided leaf area index with burying by snow
    esai                      =>    pps%esai                , & ! Input:  [real(r8) (:)]  one-sided stem area index with burying by snow
-   laisun                    =>    pps%laisun              , & ! Output: [real(r8) (:)]  sunlit leaf area                        
-   laisha                    =>    pps%laisha              , & ! Output: [real(r8) (:)]  shaded leaf area                        
-   laisun_z                  =>    pps%laisun_z            , & ! Output: [real(r8) (:,:)]  sunlit leaf area for canopy layer     
-   laisha_z                  =>    pps%laisha_z            , & ! Output: [real(r8) (:,:)]  shaded leaf area for canopy layer     
    albd                      =>    pps%albd                , & ! Input:  [real(r8) (:,:)]  surface albedo (direct)               
    albi                      =>    pps%albi                , & ! Input:  [real(r8) (:,:)]  surface albedo (diffuse)              
    fabd                      =>    pps%fabd                , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit direct flux
@@ -191,6 +120,10 @@ contains
    fsun_z                    =>    pps%fsun_z              , & ! Input:  [real(r8) (:,:)]  sunlit fraction of canopy layer       
    tlai_z                    =>    pps%tlai_z              , & ! Input:  [real(r8) (:,:)]  tlai increment for canopy layer       
    tsai_z                    =>    pps%tsai_z              , & ! Input:  [real(r8) (:,:)]  tsai increment for canopy layer       
+   laisun                    =>    pps%laisun              , & ! Output: [real(r8) (:)]  sunlit leaf area                        
+   laisha                    =>    pps%laisha              , & ! Output: [real(r8) (:)]  shaded leaf area                        
+   laisun_z                  =>    pps%laisun_z            , & ! Output: [real(r8) (:,:)]  sunlit leaf area for canopy layer     
+   laisha_z                  =>    pps%laisha_z            , & ! Output: [real(r8) (:,:)]  shaded leaf area for canopy layer     
    fsun                      =>    pps%fsun                , & ! Output: [real(r8) (:)]  sunlit fraction of canopy               
    sabg                      =>    pef%sabg                , & ! Output: [real(r8) (:)]  solar radiation absorbed by ground (W/m**2)
    sabv                      =>    pef%sabv                , & ! Output: [real(r8) (:)]  solar radiation absorbed by vegetation (W/m**2)
@@ -264,8 +197,8 @@ contains
         sabg(p)       = 0._r8
         sabv(p)       = 0._r8
         fsa(p)        = 0._r8
-        l = plandunit(p)
-        if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
+        l = pft%landunit(p)
+        if (lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) then
            fsa_r(p)      = 0._r8
         end if
         sabg_lyr(p,:) = 0._r8
@@ -307,9 +240,9 @@ contains
      do ib = 1, nband
         do fp = 1,num_nourbanp
            p = filter_nourbanp(fp)
-           c = pcolumn(p)
-           l = plandunit(p)
-           g = pgridcell(p)
+           c = pft%column(p)
+           l = pft%landunit(p)
+           g = pft%gridcell(p)
 
            ! Absorbed by canopy
 
@@ -320,7 +253,7 @@ contains
            if (ib == 1) then
               parveg(p) = cad(p,ib) + cai(p,ib)
            end if
-           if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
+           if (lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) then
               fsa_r(p)  = fsa_r(p)  + cad(p,ib) + cai(p,ib)
            end if
 
@@ -350,7 +283,7 @@ contains
            absrad  = trd(p,ib)*(1._r8-albgrd(c,ib)) + tri(p,ib)*(1._r8-albgri(c,ib))
            sabg(p) = sabg(p) + absrad
            fsa(p)  = fsa(p)  + absrad
-           if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
+           if (lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) then
               fsa_r(p)  = fsa_r(p)  + absrad
            end if
            if (snl(c) == 0) then
@@ -363,23 +296,23 @@ contains
               sabg_soil(p) = sabg(p)
            endif
 
-#if (defined SNICAR_FRC)
-           ! Solar radiation absorbed by ground surface without BC
-           absrad_bc = trd(p,ib)*(1._r8-albgrd_bc(c,ib)) + tri(p,ib)*(1._r8-albgri_bc(c,ib))
-           sabg_bc(p) = sabg_bc(p) + absrad_bc
+           if (use_snicar_frc) then
+              ! Solar radiation absorbed by ground surface without BC
+              absrad_bc = trd(p,ib)*(1._r8-albgrd_bc(c,ib)) + tri(p,ib)*(1._r8-albgri_bc(c,ib))
+              sabg_bc(p) = sabg_bc(p) + absrad_bc
 
-           ! Solar radiation absorbed by ground surface without OC
-           absrad_oc = trd(p,ib)*(1._r8-albgrd_oc(c,ib)) + tri(p,ib)*(1._r8-albgri_oc(c,ib))
-           sabg_oc(p) = sabg_oc(p) + absrad_oc
+              ! Solar radiation absorbed by ground surface without OC
+              absrad_oc = trd(p,ib)*(1._r8-albgrd_oc(c,ib)) + tri(p,ib)*(1._r8-albgri_oc(c,ib))
+              sabg_oc(p) = sabg_oc(p) + absrad_oc
 
-           ! Solar radiation absorbed by ground surface without dust
-           absrad_dst = trd(p,ib)*(1._r8-albgrd_dst(c,ib)) + tri(p,ib)*(1._r8-albgri_dst(c,ib))
-           sabg_dst(p) = sabg_dst(p) + absrad_dst
+              ! Solar radiation absorbed by ground surface without dust
+              absrad_dst = trd(p,ib)*(1._r8-albgrd_dst(c,ib)) + tri(p,ib)*(1._r8-albgri_dst(c,ib))
+              sabg_dst(p) = sabg_dst(p) + absrad_dst
 
-           ! Solar radiation absorbed by ground surface without any aerosols
-           absrad_pur = trd(p,ib)*(1._r8-albgrd_pur(c,ib)) + tri(p,ib)*(1._r8-albgri_pur(c,ib))
-           sabg_pur(p) = sabg_pur(p) + absrad_pur
-#endif
+              ! Solar radiation absorbed by ground surface without any aerosols
+              absrad_pur = trd(p,ib)*(1._r8-albgrd_pur(c,ib)) + tri(p,ib)*(1._r8-albgri_pur(c,ib))
+              sabg_pur(p) = sabg_pur(p) + absrad_pur
+           end if
 
         end do ! end of pft loop
      end do ! end nbands loop   
@@ -389,8 +322,8 @@ contains
 
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        c = pcolumn(p)
-        l = plandunit(p)
+        c = pft%column(p)
+        l = pft%landunit(p)
         sabg_snl_sum = 0._r8
 
         ! CASE1: No snow layers: all energy is absorbed in top soil layer
@@ -472,49 +405,48 @@ contains
         endif
 
         ! Diagnostic: shortwave penetrating ground (e.g. top layer)
-        if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then
+        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
            sabg_pen(p) = sabg(p) - sabg_lyr(p, snl(c)+1)
         end if
 
-#if (defined SNICAR_FRC)
+        if (use_snicar_frc) then
+           
+           ! BC aerosol forcing (pft-level):
+           sfc_frc_bc(p) = sabg(p) - sabg_bc(p)
 
-        ! BC aerosol forcing (pft-level):
-        sfc_frc_bc(p) = sabg(p) - sabg_bc(p)
+           ! OC aerosol forcing (pft-level):
+           if (DO_SNO_OC) then
+              sfc_frc_oc(p) = sabg(p) - sabg_oc(p)
+           else
+              sfc_frc_oc(p) = 0._r8
+           endif
 
-        ! OC aerosol forcing (pft-level):
-        if (DO_SNO_OC) then
-           sfc_frc_oc(p) = sabg(p) - sabg_oc(p)
-        else
-           sfc_frc_oc(p) = 0._r8
-        endif
+           ! dust aerosol forcing (pft-level):
+           sfc_frc_dst(p) = sabg(p) - sabg_dst(p)
 
-        ! dust aerosol forcing (pft-level):
-        sfc_frc_dst(p) = sabg(p) - sabg_dst(p)
+           ! all-aerosol forcing (pft-level):
+           sfc_frc_aer(p) = sabg(p) - sabg_pur(p)        
 
-        ! all-aerosol forcing (pft-level):
-        sfc_frc_aer(p) = sabg(p) - sabg_pur(p)        
-
-        ! forcings averaged only over snow:
-        if (frac_sno(c) > 0._r8) then
-           sfc_frc_bc_sno(p)  = sfc_frc_bc(p)/frac_sno(c)
-           sfc_frc_oc_sno(p)  = sfc_frc_oc(p)/frac_sno(c)
-           sfc_frc_dst_sno(p) = sfc_frc_dst(p)/frac_sno(c)
-           sfc_frc_aer_sno(p) = sfc_frc_aer(p)/frac_sno(c)
-        else
-           sfc_frc_bc_sno(p)  = spval
-           sfc_frc_oc_sno(p)  = spval
-           sfc_frc_dst_sno(p) = spval
-           sfc_frc_aer_sno(p) = spval
-        endif
-
-#endif
+           ! forcings averaged only over snow:
+           if (frac_sno(c) > 0._r8) then
+              sfc_frc_bc_sno(p)  = sfc_frc_bc(p)/frac_sno(c)
+              sfc_frc_oc_sno(p)  = sfc_frc_oc(p)/frac_sno(c)
+              sfc_frc_dst_sno(p) = sfc_frc_dst(p)/frac_sno(c)
+              sfc_frc_aer_sno(p) = sfc_frc_aer(p)/frac_sno(c)
+           else
+              sfc_frc_bc_sno(p)  = spval
+              sfc_frc_oc_sno(p)  = spval
+              sfc_frc_dst_sno(p) = spval
+              sfc_frc_aer_sno(p) = spval
+           endif
+        end if
      enddo
 
      ! Radiation diagnostics
 
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        g = pgridcell(p)
+        g = pft%gridcell(p)
 
         ! NDVI and reflected solar radiation
 
@@ -551,7 +483,7 @@ contains
 
         ! diagnostic variables (downwelling and absorbed radiation partitioning) for history files
         ! (OPTIONAL)
-        c = pcolumn(p)
+        c = pft%column(p)
         if (snl(c) < 0) then
            fsds_sno_vd(p) = forc_solad(g,1)
            fsds_sno_nd(p) = forc_solad(g,2)

@@ -1,109 +1,84 @@
 module FrictionVelocityMod
 
-!------------------------------------------------------------------------------
-!BOP
-!
-! !MODULE: FrictionVelocityMod
-!
-! !DESCRIPTION:
-! Calculation of the friction velocity, relation for potential
-! temperature and humidity profiles of surface boundary layer.
-!
-! !USES:
+  !------------------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculation of the friction velocity, relation for potential
+  ! temperature and humidity profiles of surface boundary layer.
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-!
-! !PUBLIC TYPES:
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: FrictionVelocity       ! Calculate friction velocity
   public :: MoninObukIni           ! Initialization of the Monin-Obukhov length
-!
-! !PRIVATE MEMBER FUNCTIONS:
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
   private :: StabilityFunc1        ! Stability function for rib < 0.
   private :: StabilityFunc2        ! Stability function for rib < 0.
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
 
 contains
 
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: FrictionVelocity
-!
-! !INTERFACE:
+  !------------------------------------------------------------------------------
   subroutine FrictionVelocity(lbn, ubn, fn, filtern, &
-                              displa, z0m, z0h, z0q, &
-                              obu, iter, ur, um, ustar, &
-                              temp1, temp2, temp12m, temp22m, fm, landunit_index)
-!
-! !DESCRIPTION:
-! Calculation of the friction velocity, relation for potential
-! temperature and humidity profiles of surface boundary layer.
-! The scheme is based on the work of Zeng et al. (1998):
-! Intercomparison of bulk aerodynamic algorithms for the computation
-! of sea surface fluxes using TOGA CORE and TAO data. J. Climate,
-! Vol. 11, 2628-2644.
-!
-! !USES:
-   use clmtype
-   use clm_atmlnd, only : clm_a2l
-   use clm_varcon, only : vkc
-   use clm_varctl, only : iulog
-!
-! !ARGUMENTS:
-   implicit none
-   integer , intent(in)  :: lbn, ubn         ! pft/landunit array bounds
-   integer , intent(in)  :: fn               ! number of filtered pft/landunit elements
-   integer , intent(in)  :: filtern(fn)      ! pft/landunit filter
-   real(r8), intent(in)  :: displa(lbn:ubn)  ! displacement height (m)
-   real(r8), intent(in)  :: z0m(lbn:ubn)     ! roughness length over vegetation, momentum [m]
-   real(r8), intent(in)  :: z0h(lbn:ubn)     ! roughness length over vegetation, sensible heat [m]
-   real(r8), intent(in)  :: z0q(lbn:ubn)     ! roughness length over vegetation, latent heat [m]
-   real(r8), intent(in)  :: obu(lbn:ubn)     ! monin-obukhov length (m)
-   integer,  intent(in)  :: iter             ! iteration number
-   real(r8), intent(in)  :: ur(lbn:ubn)      ! wind speed at reference height [m/s]
-   real(r8), intent(in)  :: um(lbn:ubn)      ! wind speed including the stablity effect [m/s]
-   logical,  optional, intent(in)  :: landunit_index  ! optional argument that defines landunit or pft level
-   real(r8), intent(out) :: ustar(lbn:ubn)   ! friction velocity [m/s]
-   real(r8), intent(out) :: temp1(lbn:ubn)   ! relation for potential temperature profile
-   real(r8), intent(out) :: temp12m(lbn:ubn) ! relation for potential temperature profile applied at 2-m
-   real(r8), intent(out) :: temp2(lbn:ubn)   ! relation for specific humidity profile
-   real(r8), intent(out) :: temp22m(lbn:ubn) ! relation for specific humidity profile applied at 2-m
-   real(r8), intent(inout) :: fm(lbn:ubn)    ! diagnose 10m wind (DUST only)
-!
-! !CALLED FROM:
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! 12/19/01, Peter Thornton
-! Added arguments to eliminate passing clm derived type into this function.
-! Created by Mariana Vertenstein
-!
-! !LOCAL VARIABLES:
-!EOP
-!
-   real(r8), parameter :: zetam = 1.574_r8 ! transition point of flux-gradient relation (wind profile)
-   real(r8), parameter :: zetat = 0.465_r8 ! transition point of flux-gradient relation (temp. profile)
-   integer :: f                            ! pft/landunit filter index
-   integer :: n                            ! pft/landunit index
-   integer :: g                            ! gridcell index
-   integer :: pp                           ! pfti,pftf index
-   real(r8):: zldis(lbn:ubn)               ! reference height "minus" zero displacement heght [m]
-   real(r8):: zeta(lbn:ubn)                ! dimensionless height used in Monin-Obukhov theory
-   real(r8) :: tmp1,tmp2,tmp3,tmp4         ! Used to diagnose the 10 meter wind
-   real(r8) :: fmnew                       ! Used to diagnose the 10 meter wind
-   real(r8) :: fm10                        ! Used to diagnose the 10 meter wind
-   real(r8) :: zeta10                      ! Used to diagnose the 10 meter wind
-   real(r8) :: vds_tmp                     ! Temporary for dry deposition velocity
-!------------------------------------------------------------------------------
+       displa, z0m, z0h, z0q, &
+       obu, iter, ur, um, ustar, &
+       temp1, temp2, temp12m, temp22m, fm, landunit_index)
+    !
+    ! !DESCRIPTION:
+    ! Calculation of the friction velocity, relation for potential
+    ! temperature and humidity profiles of surface boundary layer.
+    ! The scheme is based on the work of Zeng et al. (1998):
+    ! Intercomparison of bulk aerodynamic algorithms for the computation
+    ! of sea surface fluxes using TOGA CORE and TAO data. J. Climate,
+    ! Vol. 11, 2628-2644.
+    !
+    ! !USES:
+    use clmtype
+    use clm_atmlnd, only : clm_a2l
+    use clm_varcon, only : vkc
+    use clm_varctl, only : iulog
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer , intent(in)  :: lbn, ubn         ! pft/landunit array bounds
+    integer , intent(in)  :: fn               ! number of filtered pft/landunit elements
+    integer , intent(in)  :: filtern(fn)      ! pft/landunit filter
+    real(r8), intent(in)  :: displa(lbn:ubn)  ! displacement height (m)
+    real(r8), intent(in)  :: z0m(lbn:ubn)     ! roughness length over vegetation, momentum [m]
+    real(r8), intent(in)  :: z0h(lbn:ubn)     ! roughness length over vegetation, sensible heat [m]
+    real(r8), intent(in)  :: z0q(lbn:ubn)     ! roughness length over vegetation, latent heat [m]
+    real(r8), intent(in)  :: obu(lbn:ubn)     ! monin-obukhov length (m)
+    integer,  intent(in)  :: iter             ! iteration number
+    real(r8), intent(in)  :: ur(lbn:ubn)      ! wind speed at reference height [m/s]
+    real(r8), intent(in)  :: um(lbn:ubn)      ! wind speed including the stablity effect [m/s]
+    logical,  optional, intent(in)  :: landunit_index  ! optional argument that defines landunit or pft level
+    real(r8), intent(out) :: ustar(lbn:ubn)   ! friction velocity [m/s]
+    real(r8), intent(out) :: temp1(lbn:ubn)   ! relation for potential temperature profile
+    real(r8), intent(out) :: temp12m(lbn:ubn) ! relation for potential temperature profile applied at 2-m
+    real(r8), intent(out) :: temp2(lbn:ubn)   ! relation for specific humidity profile
+    real(r8), intent(out) :: temp22m(lbn:ubn) ! relation for specific humidity profile applied at 2-m
+    real(r8), intent(inout) :: fm(lbn:ubn)    ! diagnose 10m wind (DUST only)
+    !
+    ! !LOCAL VARIABLES:
+    real(r8), parameter :: zetam = 1.574_r8 ! transition point of flux-gradient relation (wind profile)
+    real(r8), parameter :: zetat = 0.465_r8 ! transition point of flux-gradient relation (temp. profile)
+    integer :: f                            ! pft/landunit filter index
+    integer :: n                            ! pft/landunit index
+    integer :: g                            ! gridcell index
+    integer :: pp                           ! pfti,pftf index
+    real(r8):: zldis(lbn:ubn)               ! reference height "minus" zero displacement heght [m]
+    real(r8):: zeta(lbn:ubn)                ! dimensionless height used in Monin-Obukhov theory
+    real(r8) :: tmp1,tmp2,tmp3,tmp4         ! Used to diagnose the 10 meter wind
+    real(r8) :: fmnew                       ! Used to diagnose the 10 meter wind
+    real(r8) :: fm10                        ! Used to diagnose the 10 meter wind
+    real(r8) :: zeta10                      ! Used to diagnose the 10 meter wind
+    real(r8) :: vds_tmp                     ! Temporary for dry deposition velocity
+    !------------------------------------------------------------------------------
 
    associate(& 
    vds             => pps%vds            , & ! Output: [real(r8) (:)]  dry deposition velocity term (m/s) (for SO4 NH4NO3)
@@ -398,125 +373,80 @@ contains
 end subroutine FrictionVelocity
 
 !------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: StabilityFunc
-!
-! !INTERFACE:
-   real(r8) function StabilityFunc1(zeta)
-!
-! !DESCRIPTION:
-! Stability function for rib < 0.
-!
-! !USES:
-      use shr_const_mod, only: SHR_CONST_PI
-!
-! !ARGUMENTS:
-      implicit none
-      real(r8), intent(in) :: zeta  ! dimensionless height used in Monin-Obukhov theory
-!
-! !CALLED FROM:
-! subroutine FrictionVelocity in this module
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-      real(r8) :: chik, chik2
-!------------------------------------------------------------------------------
+real(r8) function StabilityFunc1(zeta)
+  !
+  ! !DESCRIPTION:
+  ! Stability function for rib < 0.
+  !
+  ! !USES:
+  use shr_const_mod, only: SHR_CONST_PI
+  !
+  ! !ARGUMENTS:
+  implicit none
+  real(r8), intent(in) :: zeta  ! dimensionless height used in Monin-Obukhov theory
+  !
+  ! !LOCAL VARIABLES:
+  real(r8) :: chik, chik2
+  !------------------------------------------------------------------------------
 
-      chik2 = sqrt(1._r8-16._r8*zeta)
-      chik = sqrt(chik2)
-      StabilityFunc1 = 2._r8*log((1._r8+chik)*0.5_r8) &
-           + log((1._r8+chik2)*0.5_r8)-2._r8*atan(chik)+SHR_CONST_PI*0.5_r8
-
-    end function StabilityFunc1
+  chik2 = sqrt(1._r8-16._r8*zeta)
+  chik = sqrt(chik2)
+  StabilityFunc1 = 2._r8*log((1._r8+chik)*0.5_r8) &
+       + log((1._r8+chik2)*0.5_r8)-2._r8*atan(chik)+SHR_CONST_PI*0.5_r8
+  
+end function StabilityFunc1
 
 !------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: StabilityFunc2
-!
-! !INTERFACE:
-   real(r8) function StabilityFunc2(zeta)
-!
-! !DESCRIPTION:
-! Stability function for rib < 0.
-!
-! !USES:
-     use shr_const_mod, only: SHR_CONST_PI
-!
-! !ARGUMENTS:
-     implicit none
-     real(r8), intent(in) :: zeta  ! dimensionless height used in Monin-Obukhov theory
-!
-! !CALLED FROM:
-! subroutine FrictionVelocity in this module
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-     real(r8) :: chik2
-!------------------------------------------------------------------------------
+real(r8) function StabilityFunc2(zeta)
+  !
+  ! !DESCRIPTION:
+  ! Stability function for rib < 0.
+  !
+  ! !USES:
+  use shr_const_mod, only: SHR_CONST_PI
+  !
+  ! !ARGUMENTS:
+  implicit none
+  real(r8), intent(in) :: zeta  ! dimensionless height used in Monin-Obukhov theory
+  !
+  ! !LOCAL VARIABLES:
+  real(r8) :: chik2
+  !------------------------------------------------------------------------------
 
-     chik2 = sqrt(1._r8-16._r8*zeta)
-     StabilityFunc2 = 2._r8*log((1._r8+chik2)*0.5_r8)
+  chik2 = sqrt(1._r8-16._r8*zeta)
+  StabilityFunc2 = 2._r8*log((1._r8+chik2)*0.5_r8)
 
-   end function StabilityFunc2
+end function StabilityFunc2
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: MoninObukIni
-!
-! !INTERFACE:
-  subroutine MoninObukIni (ur, thv, dthv, zldis, z0m, um, obu)
-!
-! !DESCRIPTION:
-! Initialization of the Monin-Obukhov length.
-! The scheme is based on the work of Zeng et al. (1998):
-! Intercomparison of bulk aerodynamic algorithms for the computation
-! of sea surface fluxes using TOGA CORE and TAO data. J. Climate,
-! Vol. 11, 2628-2644.
-!
-! !USES:
-    use clm_varcon, only : grav
-!
-! !ARGUMENTS:
-    implicit none
-    real(r8), intent(in)  :: ur    ! wind speed at reference height [m/s]
-    real(r8), intent(in)  :: thv   ! virtual potential temperature (kelvin)
-    real(r8), intent(in)  :: dthv  ! diff of vir. poten. temp. between ref. height and surface
-    real(r8), intent(in)  :: zldis ! reference height "minus" zero displacement heght [m]
-    real(r8), intent(in)  :: z0m   ! roughness length, momentum [m]
-    real(r8), intent(out) :: um    ! wind speed including the stability effect [m/s]
-    real(r8), intent(out) :: obu   ! monin-obukhov length (m)
-!
-! !CALLED FROM:
-! subroutine BareGroundFluxes in module BareGroundFluxesMod.F90
-! subroutine BiogeophysicsLake in module BiogeophysicsLakeMod.F90
-! subroutine CanopyFluxes in module CanopyFluxesMod.F90
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-!
-    real(r8) :: wc    ! convective velocity [m/s]
-    real(r8) :: rib   ! bulk Richardson number
-    real(r8) :: zeta  ! dimensionless height used in Monin-Obukhov theory
-    real(r8) :: ustar ! friction velocity [m/s]
-!-----------------------------------------------------------------------
+subroutine MoninObukIni (ur, thv, dthv, zldis, z0m, um, obu)
+  !
+  ! !DESCRIPTION:
+  ! Initialization of the Monin-Obukhov length.
+  ! The scheme is based on the work of Zeng et al. (1998):
+  ! Intercomparison of bulk aerodynamic algorithms for the computation
+  ! of sea surface fluxes using TOGA CORE and TAO data. J. Climate,
+  ! Vol. 11, 2628-2644.
+  !
+  ! !USES:
+  use clm_varcon, only : grav
+  !
+  ! !ARGUMENTS:
+  implicit none
+  real(r8), intent(in)  :: ur    ! wind speed at reference height [m/s]
+  real(r8), intent(in)  :: thv   ! virtual potential temperature (kelvin)
+  real(r8), intent(in)  :: dthv  ! diff of vir. poten. temp. between ref. height and surface
+  real(r8), intent(in)  :: zldis ! reference height "minus" zero displacement heght [m]
+  real(r8), intent(in)  :: z0m   ! roughness length, momentum [m]
+  real(r8), intent(out) :: um    ! wind speed including the stability effect [m/s]
+  real(r8), intent(out) :: obu   ! monin-obukhov length (m)
+  !
+  ! !LOCAL VARIABLES:
+  real(r8) :: wc    ! convective velocity [m/s]
+  real(r8) :: rib   ! bulk Richardson number
+  real(r8) :: zeta  ! dimensionless height used in Monin-Obukhov theory
+  real(r8) :: ustar ! friction velocity [m/s]
+  !-----------------------------------------------------------------------
 
     ! Initial values of u* and convective velocity
 

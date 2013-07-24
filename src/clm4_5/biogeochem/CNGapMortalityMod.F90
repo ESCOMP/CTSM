@@ -1,131 +1,98 @@
 module CNGapMortalityMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNGapMortalityMod
-!
-! !DESCRIPTION:
-! Module holding routines used in gap mortality for coupled carbon
-! nitrogen code.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Module holding routines used in gap mortality for coupled carbon
+  ! nitrogen code.
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
+  use abortutils  , only: endrun
+  use CNSharedConstsMod  , only: CNConstShareInst
   implicit none
   save
   private
-! 
- !PUBLIC MEMBER FUNCTIONS:
+
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: CNGapMortality
   public :: readCNGapMortConsts
 
   type, private :: CNGapMortConstType
-      real(r8):: am  !mortality rate based on annual rate, 
-                     !fractional mortality (1/yr)
-      real(r8):: k_mort    !coeff. of growth efficiency in mortality equation
+      real(r8):: am     ! mortality rate based on annual rate, fractional mortality (1/yr)
+      real(r8):: k_mort ! coeff. of growth efficiency in mortality equation
   end type CNGapMortConstType
 
   type(CNGapMortConstType),private ::  CNGapMortConstInst
-
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: readCNMRespConsts
-!
-! !INTERFACE:
-subroutine readCNGapMortConsts ( ncid )
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use shr_kind_mod , only: r8 => shr_kind_r8
-   use ncdio_pio , only : file_desc_t,ncd_io
-   use abortutils   , only: endrun
+  !-----------------------------------------------------------------------
+  subroutine readCNGapMortConsts ( ncid )
+    !
+    ! !DESCRIPTION:
+    ! Read in constants
+    !
+    ! !USES:
+    use ncdio_pio  , only : file_desc_t,ncd_io
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'CNGapMortConstType'
+    character(len=100) :: errCode = 'Error reading in CN const file '
+    logical            :: readv ! has variable been read in or not
+    real(r8)           :: tempr ! temporary to read in constant
+    character(len=100) :: tString ! temp. var for reading
+    !-----------------------------------------------------------------------
 
-! !ARGUMENTS:
-   implicit none
-   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-!
-! !CALLED FROM:   readConstantsMod.F90::CNConstReadFile
-!
-! !REVISION HISTORY:
-!  Jan 10 2013 : Created by R. Paudel
-!
-! !LOCAL VARIABLES:
-   character(len=32)  :: subname = 'CNGapMortConstType'
-   character(len=100) :: errCode = 'Error reading in CN const file '
-   logical            :: readv ! has variable been read in or not
-   real(r8)           :: tempr ! temporary to read in constant
-   character(len=100) :: tString ! temp. var for reading
+    tString='r_mort'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNGapMortConstInst%am=tempr
 
-!EOP
-!-----------------------------------------------------------------------
+    tString='k_mort'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNGapMortConstInst%k_mort=tempr   
+    
+  end subroutine readCNGapMortConsts
 
-   !
-   ! read in constants
-   !   
-   tString='r_mort'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNGapMortConstInst%am=tempr
-
-   tString='k_mort'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNGapMortConstInst%k_mort=tempr   
-
-end subroutine readCNGapMortConsts
-
-!REVISION HISTORY:
-! 3/29/04: Created by Peter Thornton
-!
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNGapMortality
-!
-! !INTERFACE:
-subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! Gap-phase mortality routine for coupled carbon-nitrogen code (CN)
-!
-! !USES:
-   use clmtype
-   use clm_time_manager, only: get_days_per_year
-   use clm_varcon      , only: secspday
-   use pftvarcon       , only: npcropmin
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! column filter for soil points
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! pft filter for soil points
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 3/29/04: Created by Peter Thornton
-! F. Li and S. Levis (11/06/12)
-!
-! !LOCAL VARIABLES:
-   integer :: p                         ! pft index
-   integer :: fp                        ! pft filter index
-   real(r8):: am                        ! rate for fractional mortality (1/yr)
-   real(r8):: m                         ! rate for fractional mortality (1/s)
-   real(r8):: mort_max                  ! asymptotic max mortality rate (/yr)
-   real(r8):: k_mort                    !coeff of growth efficiency in mortality equation
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
+    !
+    ! !DESCRIPTION:
+    ! Gap-phase mortality routine for coupled carbon-nitrogen code (CN)
+    !
+    ! !USES:
+    use clmtype
+    use clm_time_manager, only: get_days_per_year
+    use clm_varcon      , only: secspday
+    use pftvarcon       , only: npcropmin
+    use clm_varctl      , only: use_cndv
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilc       ! number of soil columns in filter
+    integer, intent(in) :: filter_soilc(:) ! column filter for soil points
+    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:) ! pft filter for soil points
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p             ! pft index
+    integer :: fp            ! pft filter index
+    real(r8):: am            ! rate for fractional mortality (1/yr)
+    real(r8):: m             ! rate for fractional mortality (1/s)
+    real(r8):: mort_max      ! asymptotic max mortality rate (/yr)
+    real(r8):: k_mort = 0.3  ! coeff of growth efficiency in mortality equation
+    !-----------------------------------------------------------------------
 
    associate(& 
    woody                               =>    pftcon%woody                                , & ! Input:  [real(r8) (:)]  binary flag for woody lifeform                    
-   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
+   ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
    leafc                               =>    pcs%leafc                                   , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C                                    
    frootc                              =>    pcs%frootc                                  , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C                               
    livestemc                           =>    pcs%livestemc                               , & ! Input:  [real(r8) (:)]  (gC/m2) live stem C                               
@@ -203,11 +170,9 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
    m_livestemn_xfer_to_litter          =>    pnf%m_livestemn_xfer_to_litter              , & ! Output: [real(r8) (:)]                                                    
    m_deadstemn_xfer_to_litter          =>    pnf%m_deadstemn_xfer_to_litter              , & ! Output: [real(r8) (:)]                                                    
    m_livecrootn_xfer_to_litter         =>    pnf%m_livecrootn_xfer_to_litter             , & ! Output: [real(r8) (:)]                                                    
-#if (defined CNDV)
    greffic                             =>    pdgvs%greffic                               , & ! Input:  [real(r8) (:)]                                                    
    heatstress                          =>    pdgvs%heatstress                            , & ! Input:  [real(r8) (:)]                                                    
    nind                                =>    pdgvs%nind                                  , & ! Input:  [real(r8) (:)]  number of individuals (#/m2) added by F. Li and S. Levis
-#endif
    m_deadcrootn_xfer_to_litter         =>    pnf%m_deadcrootn_xfer_to_litter               & ! Output: [real(r8) (:)]                                                    
    )
 
@@ -220,29 +185,34 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 
-#if (defined CNDV)
-   ! Stress mortality from lpj's subr Mortality.
+      if (use_cndv) then
+         ! Stress mortality from lpj's subr Mortality.
+         
+         if (woody(ivt(p)) == 1._r8) then
 
-      if (woody(ivt(p)) == 1._r8) then
+            if (ivt(p) == 8) then
+               mort_max = 0.03_r8 ! BDT boreal
+            else
+               mort_max = 0.01_r8 ! original value for all pfts
+            end if
 
-         if (ivt(p) == 8) then
-            mort_max = 0.03_r8 ! BDT boreal
-         else
-            mort_max = 0.01_r8 ! original value for all pfts
+            ! heatstress and greffic calculated in Establishment once/yr
+
+            ! Mortality rate inversely related to growth efficiency
+            ! (Prentice et al 1993)
+            am = mort_max / (1._r8 + k_mort * greffic(p))
+
+            ! Mortality rate inversely related to growth efficiency
+            ! (Prentice et al 1993)
+            am = mort_max / (1._r8 + k_mort * greffic(p))
+            
+            am = min(1._r8, am + heatstress(p))
+         else ! lpj didn't set this for grasses; cn does
+            ! set the mortality rate based on annual rate
+            am = CNGapMortConstInst%am
          end if
 
-         ! heatstress and greffic calculated in Establishment once/yr
-
-         ! Mortality rate inversely related to growth efficiency
-         ! (Prentice et al 1993)
-         am = mort_max / (1._r8 + k_mort * greffic(p))
-
-         am = min(1._r8, am + heatstress(p))
-      else ! lpj didn't set this for grasses; cn does
-         ! set the mortality rate based on annual rate
-         am = CNGapMortConstInst%am
       end if
-#endif
 
       m  = am/(get_days_per_year() * secspday)
 
@@ -299,16 +269,16 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
       m_livecrootn_xfer_to_litter(p)     = livecrootn_xfer(p)     * m
       m_deadcrootn_xfer_to_litter(p)     = deadcrootn_xfer(p)     * m
 
-! added by F. Li and S. Levis
-#if (defined CNDV)
-    if (woody(ivt(p)) == 1._r8)then
-     if (livestemc(p)+deadstemc(p)> 0._r8)then
-         nind(p)=nind(p)*(1._r8-m)
-     else
-         nind(p) = 0._r8 
-     end if
-    end if
-#endif
+      ! added by F. Li and S. Levis
+      if (use_cndv) then
+         if (woody(ivt(p)) == 1._r8)then
+            if (livestemc(p)+deadstemc(p)> 0._r8)then
+               nind(p)=nind(p)*(1._r8-m)
+            else
+               nind(p) = 0._r8 
+            end if
+         end if
+      end if
 
    end do ! end of pft loop
 
@@ -319,38 +289,26 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
 
    end associate
 end subroutine CNGapMortality
-!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNGapPftToColumn
-!
-! !INTERFACE:
 subroutine CNGapPftToColumn (num_soilc, filter_soilc)
-!
-! !DESCRIPTION:
-! called in the middle of CNGapMoratlity to gather all pft-level gap mortality fluxes
-! to the column level and assign them to the three litter pools
-!
-! !USES:
+  !
+  ! !DESCRIPTION:
+  ! called in the middle of CNGapMoratlity to gather all pft-level gap mortality fluxes
+  ! to the column level and assign them to the three litter pools
+  !
+  ! !USES:
   use clmtype
   use clm_varpar, only : maxpatch_pft, nlevdecomp
-!
-! !ARGUMENTS:
+  !
+  ! !ARGUMENTS:
   implicit none
   integer, intent(in) :: num_soilc       ! number of soil columns in filter
   integer, intent(in) :: filter_soilc(:) ! soil column filter
-!
-! !CALLED FROM:
-! subroutine CNphenology
-!
-! !REVISION HISTORY:
-! 9/8/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   integer :: fc,c,pi,p,j               ! indices
-!-----------------------------------------------------------------------
+  !
+  ! !LOCAL VARIABLES:
+  integer :: fc,c,pi,p,j               ! indices
+  !-----------------------------------------------------------------------
 
    associate(& 
    lf_flab                             =>    pftcon%lf_flab                              , & ! Input:  [real(r8) (:)]  leaf litter labile fraction                       
@@ -359,11 +317,11 @@ subroutine CNGapPftToColumn (num_soilc, filter_soilc)
    fr_flab                             =>    pftcon%fr_flab                              , & ! Input:  [real(r8) (:)]  fine root litter labile fraction                  
    fr_fcel                             =>    pftcon%fr_fcel                              , & ! Input:  [real(r8) (:)]  fine root litter cellulose fraction               
    fr_flig                             =>    pftcon%fr_flig                              , & ! Input:  [real(r8) (:)]  fine root litter lignin fraction                  
-   npfts                               =>   col%npfts                                    , & ! Input:  [integer (:)]  number of pfts for each column                     
-   pfti                                =>   col%pfti                                     , & ! Input:  [integer (:)]  beginning pft index for each column                
+   npfts                               =>    col%npfts                                   , & ! Input:  [integer (:)]  number of pfts for each column                     
+   pfti                                =>    col%pfti                                    , & ! Input:  [integer (:)]  beginning pft index for each column                
    pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
-   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
-   wtcol                               =>   pft%wtcol                                    , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
+   ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
+   wtcol                               =>    pft%wtcol                                   , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
    m_leafc_to_litter                   =>    pcf%m_leafc_to_litter                       , & ! Input:  [real(r8) (:)]                                                    
    m_frootc_to_litter                  =>    pcf%m_frootc_to_litter                      , & ! Input:  [real(r8) (:)]                                                    
    m_livestemc_to_litter               =>    pcf%m_livestemc_to_litter                   , & ! Input:  [real(r8) (:)]                                                    
@@ -525,8 +483,7 @@ subroutine CNGapPftToColumn (num_soilc, filter_soilc)
       end do
    end do
 
-    end associate 
+ end associate
 end subroutine CNGapPftToColumn
-!-----------------------------------------------------------------------
 
 end module CNGapMortalityMod

@@ -1,129 +1,91 @@
 module initch4Mod
-#ifdef LCH4
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: initch4Mod
-!
-! !DESCRIPTION:
-! Contains time constant (and flux / diagnostic vars) and time-varying (state vars) initialization code for CH4 scheme.
-! 
-!
-! !PUBLIC TYPES:
+  !-----------------------------------------------------------------------
+  ! !MODULE: initch4Mod
+  !
+  ! !DESCRIPTION:
+  ! Contains time constant (and flux / diagnostic vars) and time-varying (state vars) initialization code for CH4 scheme.
+  ! 
+  use decompMod   , only : bounds_type
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
   private
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: initch4 ! driver
-!
-! !PRIVATE MEMBER FUNCTIONS:
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
   private :: initTimeConst_ch4        ! Set constant parameters.
   private :: makearbinit_ch4          ! Set time-variable parameters for spin up.
-!
-! !REVISION HISTORY:
-! Created by Zack Subin, 2009.
-!
-!EOP
-!-----------------------------------------------------------------------
+  !
+  ! !REVISION HISTORY:
+  ! Created by Zack Subin, 2009.
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: initch4
-!
-! !INTERFACE:
-  subroutine initch4( arbinit )
-!
-! !DESCRIPTION:
-! Calls initTimeConst_ch4.
-! Calls makearbinit_ch4 with logical arbinit. If arbinit == .true. OR if initial conditions file
-! does not contain methane and oxygen concentrations, then initializes time varying values. This
-! allows back-compatibility with initial condition files that have not been spun up with the new
-! lake code. In future versions, this could be phased out.
-!
-! !USES:
-  !use ch4varcon, only : ch4conrd
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine initch4( bounds, arbinit )
+    !
+    ! !DESCRIPTION:
+    ! Calls initTimeConst_ch4.
+    ! Calls makearbinit_ch4 with logical arbinit. If arbinit == .true. OR if initial conditions file
+    ! does not contain methane and oxygen concentrations, then initializes time varying values. This
+    ! allows back-compatibility with initial condition files that have not been spun up with the new
+    ! lake code. In future versions, this could be phased out.
+    !
+    ! !USES:
+    !use ch4varcon, only : ch4conrd
+    !
+    ! !ARGUMENTS:
     implicit none
-!
+    type(bounds_type), intent(in) :: bounds  ! bounds
     logical, intent(in) ::  arbinit ! Whether mkarbinit has been called.
-!
-! !CALLED FROM:
-! subroutine initialize2 in module initializeMod
-!
-! !REVISION HISTORY:
-! Created by Zack Subin, 2009.
-!
-! !LOCAL VARIABLES:
-!
-!
-!EOP
-!
+    !-----------------------------------------------------------------------
 
-    call initTimeConst_ch4()
-! Attn EK
-! For now
-    call makearbinit_ch4(arbinit)
-! For future versions always using initial condition files spun up with the new ch4 code:
-!    if (arbinit) call makearbinit_ch4(arbinit)
+    call initTimeConst_ch4(bounds)
+
+    ! For now
+    call makearbinit_ch4(bounds, arbinit)
+    ! For future versions always using initial condition files spun up with the new ch4 code:
+    !    if (arbinit) call makearbinit_ch4(arbinit)
 
   end subroutine initch4
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: makearbinit_ch4
-!
-! !INTERFACE:
-  subroutine makearbinit_ch4( arbinit )
-!
-! !DESCRIPTION:
-! If arbinit == .true., or if methane & oxygen concentrations (or lake soil org matter) 
-! have not been initialized, then sets time
-! varying values.
-! Initializes the following time varying variables:
-! 
-! conc_ch4_sat, conc_ch4_unsat, conc_o2_sat, conc_o2_unsat, lake_soilc, o2stress, finunduated
-!
-! !USES:
-    use shr_kind_mod , only : r8 => shr_kind_r8
+  !-----------------------------------------------------------------------
+  subroutine makearbinit_ch4( bounds, arbinit )
+    !
+    ! !DESCRIPTION:
+    ! If arbinit == .true., or if methane & oxygen concentrations (or lake soil org matter) 
+    ! have not been initialized, then sets time
+    ! varying values.
+    ! Initializes the following time varying variables:
+    ! 
+    ! conc_ch4_sat, conc_ch4_unsat, conc_o2_sat, conc_o2_unsat, lake_soilc, o2stress, finunduated
+    !
+    ! !USES:
     use clmtype
     use clm_varpar   , only : nlevsoi, nlevgrnd
     use clm_varcon   , only : istsoil, istdlak, spval, istcrop
     use spmdMod      , only : masterproc
-    use decompMod    , only : get_proc_bounds
     use clm_varctl   , only : iulog
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
+    type(bounds_type), intent(in) :: bounds  ! bounds
     logical, intent(in) :: arbinit ! Whether mkarbinit has been called.
-!
-! !CALLED FROM:
-! subroutine initialize in module initializeMod
-!
-! !REVISION HISTORY:
-! Created by Zack Subin, 2009.
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer :: j,l,c,p      ! indices
-    integer :: begp, endp   ! per-proc beginning and ending pft indices
-    integer :: begc, endc   ! per-proc beginning and ending column indices
-    integer :: begl, endl   ! per-proc beginning and ending landunit indices
-    integer :: begg, endg   ! per-proc gridcell ending gridcell indices
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     if ( masterproc ) write (iulog,*) 'Setting initial data to non-spun up values for CH4 Mod,', &
-                                  'if no inicFile or no valid values for concentrations,', &
-                                  'for CH4 Model.'
+         'if no inicFile or no valid values for concentrations,', &
+         'for CH4 Model.'
+
    associate(& 
-   ltype                               =>    lun%itype                                   , & ! Input:  [integer (:)]  landunit type                                      
-   clandunit                           =>   col%landunit                                 , & ! Input:  [integer (:)]  landunit index associated with each column         
    conc_ch4_sat                        =>    cch4%conc_ch4_sat                           , & ! Output: [real(r8) (:,:)]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
    conc_ch4_unsat                      =>    cch4%conc_ch4_unsat                         , & ! Output: [real(r8) (:,:)]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
    conc_o2_sat                         =>    cch4%conc_o2_sat                            , & ! Output: [real(r8) (:,:)]  O2 conc in each soil layer (mol/m3) (nlevsoi)   
@@ -139,16 +101,11 @@ contains
    layer_sat_lag                       =>    cch4%layer_sat_lag                            & ! Output: [real(r8) (:,:)]  Lagged saturation status of soil layer in the unsaturated zone (1 = sat)
    )
 
+    do c = bounds%begc,bounds%endc
 
-    ! Determine subgrid bounds on this processor
+       l = col%landunit(c)
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-
-    do c = begc,endc
-
-       l = clandunit(c)
-
-       if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           do j=1,nlevsoi
              if (conc_ch4_sat(c,j) == spval .or. arbinit)   conc_ch4_sat(c,j)   = 0._r8
              if (conc_ch4_unsat(c,j) == spval .or. arbinit) conc_ch4_unsat(c,j) = 0._r8
@@ -166,7 +123,7 @@ contains
           else
              finundated(c) = fsat_bef(c)
           end if
-       else if (ltype(l) == istdlak) then
+       else if (lun%itype(l) == istdlak) then
           do j=1,nlevsoi
              if (conc_ch4_sat(c,j) == spval .or. arbinit)   conc_ch4_sat(c,j)   = 0._r8
              if (conc_o2_sat(c,j) == spval .or. arbinit)    conc_o2_sat(c,j)    = 0._r8
@@ -193,45 +150,28 @@ contains
     end associate 
    end subroutine makearbinit_ch4
 
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: initTimeConst_ch4
-!
-! !INTERFACE:
-subroutine initTimeConst_ch4
-!
-! !DESCRIPTION:
-! Initialize variables for ch4 code that will not be input from restart/inic file. Also set values for
-! inactive CH4 columns to spval so that they will not be averaged in history file.
-!
-! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use clmtype
-  use decompMod   , only : get_proc_bounds, get_proc_global
-  use clm_varpar  , only : nlevsoi, ngases, nlevgrnd, nlevdecomp
-  use clm_varcon  , only : istsoil, istdlak, spval, istcrop
-  use clm_varctl  , only : iulog
-  use spmdMod ,     only : masterproc
-  use ch4varcon   , only : allowlakeprod
-!
-! !ARGUMENTS:
-  implicit none
-!
-! !CALLED FROM:
-! subroutine initialize2 in module initializeMod.
-!
-! !REVISION HISTORY:
-! 9/09, Zack Subin
-!
-! !LOCAL VARIABLES:
-!EOP
-  integer  :: g,l,c,p,j        ! indices
-  integer  :: begp, endp       ! per-proc beginning and ending pft indices
-  integer  :: begc, endc       ! per-proc beginning and ending column indices
-  integer  :: begl, endl       ! per-proc beginning and ending landunit indices
-  integer  :: begg, endg       ! per-proc gridcell ending gridcell indices
+   !-----------------------------------------------------------------------
+   subroutine initTimeConst_ch4(bounds)
+     !
+     ! !DESCRIPTION:
+     ! Initialize variables for ch4 code that will not be input from restart/inic file. Also set values for
+     ! inactive CH4 columns to spval so that they will not be averaged in history file.
+     !
+     ! !USES:
+     use clmtype
+     use clm_varpar  , only : nlevsoi, ngases, nlevgrnd, nlevdecomp
+     use clm_varcon  , only : istsoil, istdlak, spval, istcrop
+     use clm_varctl  , only : iulog
+     use spmdMod ,     only : masterproc
+     use ch4varcon   , only : allowlakeprod
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(bounds_type), intent(in) :: bounds  ! bounds
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: g,l,c,p,j        ! indices
+     !-----------------------------------------------------------------------
 
    associate(& 
    watsat                              =>    cps%watsat                                  , & ! Input:  [real(r8) (:,:)]  volumetric soil water at saturation (porosity)  
@@ -286,18 +226,13 @@ subroutine initTimeConst_ch4
    conc_ch4_sat                        =>    cch4%conc_ch4_sat                           , & ! Output: [real(r8) (:,:)]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
    conc_o2_sat                         =>    cch4%conc_o2_sat                            , & ! Output: [real(r8) (:,:)]  O2 conc in each soil layer (mol/m3) (nlevsoi)   
    lake_soilc                          =>    cch4%lake_soilc                             , & ! Output: [real(r8) (:,:)]  total soil organic matter found in level (g C / m^3) (nlevsoi)
-   cellorg                             =>    cps%cellorg                                 , & ! Input:  [real(r8) (:,:)]  column 3D organic matter (kg/m^3, 58% by mass carbon) (nlevsoi)
-   ltype                               =>    lun%itype                                   , & ! Input:  [integer (:)]  landunit type index                                
-   clandunit                           =>    col%landunit                                , & ! Input:  [integer (:)]  landunit index of column                           
-   cgridcell                           =>    col%gridcell                                  & ! Input:  [integer (:)]  gridcell index of column                           
+   cellorg                             =>    cps%cellorg                                   & ! Input:  [real(r8) (:,:)]  column 3D organic matter (kg/m^3, 58% by mass carbon) (nlevsoi)
    )
 
   if (masterproc) write (iulog,*) 'Attempting to initialize non-state variables for CH4 Mod'
 
-  call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-
-  do c = begc,endc
-     l = clandunit(c)
+  do c = bounds%begc,bounds%endc
+     l = col%landunit(c)
 
      ! First set levels from nlevsoi+1 to nlevgrnd = 0
 
@@ -333,7 +268,7 @@ subroutine initTimeConst_ch4
      fphr(c,nlevdecomp+1:nlevgrnd) = 0._r8
 
 
-     if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
+     if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
         conc_ch4_lake(c,:) = spval
         conc_o2_lake(c,:) = spval
@@ -342,7 +277,7 @@ subroutine initTimeConst_ch4
         ch4_prod_depth_lake(c,:) = spval
         ch4_oxid_depth_lake(c,:) = spval
 
-     else if (ltype(l) == istdlak .and. allowlakeprod) then
+     else if (lun%itype(l) == istdlak .and. allowlakeprod) then
 
         ch4_prod_depth_unsat(c,:) = spval
         ch4_oxid_depth_unsat(c,:) = spval
@@ -424,7 +359,7 @@ subroutine initTimeConst_ch4
 
      end if
 
-     if (ltype(l) == istdlak .and. .not. allowlakeprod) then
+     if (lun%itype(l) == istdlak .and. .not. allowlakeprod) then
      ! To avoid rare pathologies with allowlakeprod switching between restarts
         conc_ch4_sat(c,:) = 0._r8
         conc_o2_sat(c,:) = 0._r8
@@ -440,6 +375,4 @@ subroutine initTimeConst_ch4
     end associate 
  end subroutine initTimeConst_ch4
 
-#endif
-! Defined LCH4
 end module initch4Mod

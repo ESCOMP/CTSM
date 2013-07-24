@@ -1,145 +1,98 @@
 module CNDecompMod
-#ifdef CN
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNDecompMod
-!
-! !DESCRIPTION:
-! Module holding routines used in litter and soil decomposition model
-! for coupled carbon-nitrogen code.
-!
-! !USES:
-   use shr_kind_mod , only: r8 => shr_kind_r8
-   use shr_const_mod, only: SHR_CONST_TKFRZ
-    use clm_varcon, only: dzsoi_decomp
-#ifdef CENTURY_DECOMP
-    use CNDecompCascadeBGCMod, only : decomp_rate_constants
-#else
-    use CNDecompCascadeCNMod, only : decomp_rate_constants
-#endif
-#ifdef NITRIF_DENITRIF
-    use CNNitrifDenitrifMod, only: nitrif_denitrif
-#endif
-    use CNVerticalProfileMod, only: decomp_vertprofiles
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Module holding routines used in litter and soil decomposition model
+  ! for coupled carbon-nitrogen code.
+  !
+  ! !USES:
+  use shr_kind_mod         , only: r8 => shr_kind_r8
+  use shr_const_mod        , only: SHR_CONST_TKFRZ
+  use clm_varctl           , only: iulog, use_nitrif_denitrif, use_lch4, use_century_decomp
+  use clm_varcon           , only: dzsoi_decomp
+  use CNDecompCascadeCNMod , only: decomp_rate_constants_cn
+  use CNDecompCascadeBGCMod, only: decomp_rate_constants_bgc
+  use CNNitrifDenitrifMod  , only: nitrif_denitrif
+  use CNVerticalProfileMod , only: decomp_vertprofiles
+  use CNSharedConstsMod    , only:CNConstShareInst
+  !
+  implicit none
+  save
+  private
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: CNDecompAlloc
+  public :: readCNDecompConsts
+  !
+  type, private :: CNDecompConstType
+     real(r8) :: dnp         !denitrification proportion
+  end type CNDecompConstType
 
-   use CNSharedConstsMod, only:CNConstShareInst
-   implicit none
-   save
-   private
-! !PUBLIC MEMBER FUNCTIONS:
-   public :: CNDecompAlloc
-   public :: readCNDecompConsts
-
-   type, private :: CNDecompConstType
-      real(r8) :: dnp         !denitrification proportion
-   end type CNDecompConstType
-
-   type(CNDecompConstType),private ::  CNDecompConstInst
-
-   
-!
-! !REVISION HISTORY:
-! 8/15/03: Created by Peter Thornton
-! 10/23/03, Peter Thornton: migrated to vector data structures
-!
-!EOP
-!-----------------------------------------------------------------------
+  type(CNDecompConstType),private ::  CNDecompConstInst
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: readCNDecompConsts
-!
-! !INTERFACE:
-subroutine readCNDecompConsts ( ncid )
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use shr_kind_mod , only: r8 => shr_kind_r8
-   use ncdio_pio , only : file_desc_t,ncd_io
-   use abortutils   , only: endrun
+  !-----------------------------------------------------------------------
+  subroutine readCNDecompConsts ( ncid )
+    !
+    ! !DESCRIPTION:
+    ! Read constants
+    !
+    ! !USES:
+    use ncdio_pio    , only : file_desc_t,ncd_io
+    use abortutils   , only: endrun
 
-! !ARGUMENTS:
-   implicit none
-   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-!
-! !CALLED FROM:   readConstantsMod.F90::CNConstReadFile
-!
-! !REVISION HISTORY:
-!  Dec 3 2012 : Created by S. Muszala
-!
-! !LOCAL VARIABLES:
-   character(len=32)  :: subname = 'CNDecompConstType'
-   character(len=100) :: errCode = 'Error reading in CN const file '
-   logical            :: readv ! has variable been read in or not
-   real(r8)           :: tempr ! temporary to read in constant
-   character(len=100) :: tString ! temp. var for reading
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'CNDecompConstType'
+    character(len=100) :: errCode = 'Error reading in CN const file '
+    logical            :: readv ! has variable been read in or not
+    real(r8)           :: tempr ! temporary to read in constant
+    character(len=100) :: tString ! temp. var for reading
+    !-----------------------------------------------------------------------
 
-!EOP
-!-----------------------------------------------------------------------
+    tString='dnp'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNDecompConstInst%dnp=tempr 
 
-   tString='dnp'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNDecompConstInst%dnp=tempr 
- 
-end subroutine readCNDecompConsts
+  end subroutine readCNDecompConsts
 
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNDecompAlloc
-!
-! !INTERFACE:
-subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
-   num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-!
-! !USES:
-   use clmtype
-   use CNAllocationMod , only: CNAllocation
-   use clm_time_manager, only: get_step_size
-   use clm_varpar   , only: nlevsoi,nlevgrnd,nlevdecomp,ndecomp_cascade_transitions,ndecomp_pools
-   use pft2colMod      , only: p2c
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: lbp, ubp        ! pft-index bounds
-   integer, intent(in) :: lbc, ubc        ! column-index bounds
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(ubp-lbp+1) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn in module CNEcosystemDynMod.F90
-!
-! !REVISION HISTORY:
-! 8/15/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-   integer :: c,j,k,l,m          !indices
-   integer :: fc           !lake filter column index
-   real(r8):: p_decomp_cpool_loss(lbc:ubc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential C loss from one pool to another
-   real(r8):: pmnf_decomp_cascade(lbc:ubc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
-   real(r8):: immob(lbc:ubc,1:nlevdecomp)        !potential N immobilization
-   real(r8):: ratio        !temporary variable
-   real(r8):: cn_decomp_pools(lbc:ubc,1:nlevdecomp,1:ndecomp_pools)
-   integer, parameter :: i_atm = 0
-
-   ! For methane code
-   real(r8):: phr_vr(lbc:ubc,1:nlevdecomp)       !potential HR (gC/m3/s)
-   real(r8):: hrsum(lbc:ubc,1:nlevdecomp)        !sum of HR (gC/m2/s)
-   
-   !EOP
-   !-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine CNDecompAlloc (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
+    !
+    ! !USES:
+    use clmtype
+    use CNAllocationMod , only: CNAllocation
+    use clm_varpar, only: nlevdecomp,ndecomp_cascade_transitions,ndecomp_pools
+    use decompMod , only: bounds_type
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type), intent(in) :: bounds   ! bounds
+    integer, intent(in) :: num_soilc          ! number of soil columns in filter
+    integer, intent(in) :: filter_soilc(:)    ! filter for soil columns
+    integer, intent(in) :: num_soilp          ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:)    ! filter for soil pfts
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c,j,k,l,m          !indices
+    integer :: fc           !lake filter column index
+    real(r8):: p_decomp_cpool_loss(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential C loss from one pool to another
+    real(r8):: pmnf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
+    real(r8):: immob(bounds%begc:bounds%endc,1:nlevdecomp)        !potential N immobilization
+    real(r8):: ratio        !temporary variable
+    real(r8):: dnp          !denitrification proportion
+    real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
+    integer, parameter :: i_atm = 0
+    ! For methane code
+    real(r8):: phr_vr(bounds%begc:bounds%endc,1:nlevdecomp)       !potential HR (gC/m3/s)
+    real(r8):: hrsum(bounds%begc:bounds%endc,1:nlevdecomp)        !sum of HR (gC/m2/s)
+    !-----------------------------------------------------------------------
    
    associate(& 
    decomp_cpools_vr                    =>    ccs%decomp_cpools_vr                        , & ! Input:  [real(r8) (:,:,:)]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
@@ -159,25 +112,24 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    initial_cn_ratio                    =>    decomp_cascade_con%initial_cn_ratio         , & ! Output: [real(r8) (:)]  c:n ratio for initialization of pools             
    altmax_indx                         =>    cps%altmax_indx                             , & ! Output: [integer (:)]  maximum annual depth of thaw                       
    altmax_lastyear_indx                =>    cps%altmax_lastyear_indx                    , & ! Output: [integer (:)]  prior year maximum annual depth of thaw            
-#ifndef NITRIF_DENITRIF
    sminn_to_denit_decomp_cascade_vr    =>    cnf%sminn_to_denit_decomp_cascade_vr        , & ! InOut:  [real(r8) (:,:,:)] 
-#else
    phr_vr                              =>    ccf%phr_vr                                  , & ! Output: [real(r8) (:,:)] potential HR (gC/m3/s)                           
-#endif
    gross_nmin_vr                       =>    cnf%gross_nmin_vr                           , & ! InOut:  [real(r8) (:,:)]                                                  
    net_nmin_vr                         =>    cnf%net_nmin_vr                             , & ! InOut:  [real(r8) (:,:)]                                                  
    gross_nmin                          =>    cnf%gross_nmin                              , & ! InOut:  [real(r8) (:)]  gross rate of N mineralization (gN/m2/s)          
    net_nmin                            =>    cnf%net_nmin                                , & ! InOut:  [real(r8) (:)]  net rate of N mineralization (gN/m2/s)            
-#ifdef LCH4
    fphr                                =>    cch4%fphr                                   , & ! InOut:  [real(r8) (:,:)]  fraction of potential SOM + LITTER heterotrophic respiration
    w_scalar                            =>    ccf%w_scalar                                , & ! InOut:  [real(r8) (:,:)]  fraction by which decomposition is limited by moisture availability
-#endif
    rootfr                              =>    pps%rootfr                                  , & ! Input:  [real(r8) (:,:)]  fraction of roots in each soil layer  (nlevgrnd)
    clandunit                           =>   col%landunit                                 , & ! Input:  [integer (:)]  index into landunit level quantities               
    itypelun                            =>    lun%itype                                     & ! Input:  [integer (:)]  landunit type                                      
    )
    
-   call decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
+   if (use_century_decomp) then
+      call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc)
+   else
+      call decomp_rate_constants_cn(bounds, num_soilc, filter_soilc)
+   end if
    
    ! set initial values for potential C and N fluxes
    p_decomp_cpool_loss(:,:,:) = 0._r8
@@ -187,7 +139,7 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    ! demand.
    
    
-!!! calculate c:n ratios of applicable pools
+   !! calculate c:n ratios of applicable pools
    do l = 1, ndecomp_pools
       if ( floating_cn_ratio_decomp_pools(l) ) then
          do j = 1,nlevdecomp
@@ -207,7 +159,6 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
          end do
       end if
    end do
-   
    
    ! calculate the non-nitrogen-limited fluxes
    ! these fluxes include the  "/ dt" term to put them on a
@@ -293,20 +244,18 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
       end do
    end do
    
-   call decomp_vertprofiles(lbp, ubp, lbc,ubc,num_soilc,filter_soilc,num_soilp,filter_soilp)
+   call decomp_vertprofiles(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
    
-#ifdef NITRIF_DENITRIF
-   ! calculate nitrification and denitrification rates
-   call nitrif_denitrif(lbc, ubc, num_soilc, filter_soilc)
-#endif
-   
+   if (use_nitrif_denitrif) then
+      ! calculate nitrification and denitrification rates
+      call nitrif_denitrif(bounds, num_soilc, filter_soilc)
+   end if
    
    ! now that potential N immobilization is known, call allocation
    ! to resolve the competition between plants and soil heterotrophs
    ! for available soil mineral N resource.
    
-   call CNAllocation(lbp, ubp, lbc,ubc,num_soilc,filter_soilc,num_soilp, &
-        filter_soilp)
+   call CNAllocation(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
    
    ! column loop to calculate actual immobilization and decomp rates, following
    ! resolution of plant/heterotroph  competition for mineral N
@@ -348,11 +297,13 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
                if ( pmnf_decomp_cascade(c,j,k) .gt. 0._r8 ) then
                   p_decomp_cpool_loss(c,j,k) = p_decomp_cpool_loss(c,j,k) * fpi_vr(c,j)
                   pmnf_decomp_cascade(c,j,k) = pmnf_decomp_cascade(c,j,k) * fpi_vr(c,j)
-#ifndef NITRIF_DENITRIF
-                  sminn_to_denit_decomp_cascade_vr(c,j,k) = 0._r8
+                  if (.not. use_nitrif_denitrif) then
+                     sminn_to_denit_decomp_cascade_vr(c,j,k) = 0._r8
+                  end if
                else
-                  sminn_to_denit_decomp_cascade_vr(c,j,k) = -CNDecompConstInst%dnp * pmnf_decomp_cascade(c,j,k)
-#endif
+                  if (.not. use_nitrif_denitrif) then
+                     sminn_to_denit_decomp_cascade_vr(c,j,k) = -CNDecompConstInst%dnp * pmnf_decomp_cascade(c,j,k)
+                  end if
                end if
                decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
                decomp_cascade_ctransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k)) * p_decomp_cpool_loss(c,j,k)
@@ -369,9 +320,9 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
                net_nmin_vr(c,j) = net_nmin_vr(c,j) - pmnf_decomp_cascade(c,j,k)
             else
                decomp_cascade_ntransfer_vr(c,j,k) = 0._r8
-#ifndef NITRIF_DENITRIF
-               sminn_to_denit_decomp_cascade_vr(c,j,k) = 0._r8
-#endif
+               if (.not. use_nitrif_denitrif) then
+                  sminn_to_denit_decomp_cascade_vr(c,j,k) = 0._r8
+               end if
                decomp_cascade_sminn_flux_vr(c,j,k) = 0._r8
             end if
             
@@ -379,36 +330,36 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
       end do
    end do
    
-#ifdef LCH4
-   ! Calculate total fraction of potential HR, for methane code
-   do j = 1,nlevdecomp
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         hrsum(c,j) = 0._r8
-      end do
-   end do
-   do k = 1, ndecomp_cascade_transitions
+   if (use_lch4) then
+      ! Calculate total fraction of potential HR, for methane code
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-            hrsum(c,j) = hrsum(c,j) + rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
+            hrsum(c,j) = 0._r8
          end do
       end do
-   end do
-   
-   ! Nitrogen limitation / (low)-moisture limitation
-   do j = 1,nlevdecomp
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         if (phr_vr(c,j) > 0._r8) then
-            fphr(c,j) = hrsum(c,j) / phr_vr(c,j) * w_scalar(c,j)
-            fphr(c,j) = max(fphr(c,j), 0.01_r8) ! Prevent overflow errors for 0 respiration
-         else
-            fphr(c,j) = 1._r8
-         end if
+      do k = 1, ndecomp_cascade_transitions
+         do j = 1,nlevdecomp
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               hrsum(c,j) = hrsum(c,j) + rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
+            end do
+         end do
       end do
-   end do
-#endif
+
+      ! Nitrogen limitation / (low)-moisture limitation
+      do j = 1,nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            if (phr_vr(c,j) > 0._r8) then
+               fphr(c,j) = hrsum(c,j) / phr_vr(c,j) * w_scalar(c,j)
+               fphr(c,j) = max(fphr(c,j), 0.01_r8) ! Prevent overflow errors for 0 respiration
+            else
+               fphr(c,j) = 1._r8
+            end if
+         end do
+      end do
+   end if
    
    ! vertically integrate net and gross mineralization fluxes for diagnostic output
    do j = 1,nlevdecomp
@@ -419,10 +370,7 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
       end do
    end do
    
-    end associate 
-  end subroutine CNDecompAlloc
- 
- 
-#endif
+ end associate
+ end subroutine CNDecompAlloc
  
 end module CNDecompMod

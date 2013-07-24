@@ -1,78 +1,56 @@
 module H2OSfcMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: H2OSfcMod
-!
-! !DESCRIPTION:
-! Calculate surface water hydrology
-!
-! !PUBLIC TYPES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculate surface water hydrology
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: FracH2oSfc     ! Calculate fraction of land surface that is wet
-!
-! !REVISION HISTORY:
-! Created by 09/15/07 Sean Swenson
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: FracH2oSfc
-!
-! !INTERFACE:
-  subroutine FracH2oSfc(lbc, ubc, num_h2osfc, filter_h2osfc,frac_h2osfc,no_update)
-!
-! !DESCRIPTION:
-! Determine fraction of land surfaces which are submerged  
-! based on surface microtopography and surface water storage.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine FracH2oSfc(bounds, num_h2osfc, filter_h2osfc, frac_h2osfc, no_update)
+    !
+    ! !DESCRIPTION:
+    ! Determine fraction of land surfaces which are submerged  
+    ! based on surface microtopography and surface water storage.
+    !
+    ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
-    use shr_const_mod       , only : shr_const_pi
-    use shr_spfn_mod        , only : erf => shr_spfn_erf
-    use clm_varcon          , only : istsoil, istcrop
-    use clm_varctl,   only: iulog
-!
-! !ARGUMENTS:
+    use shr_const_mod, only : shr_const_pi
+    use shr_spfn_mod , only : erf => shr_spfn_erf
+    use clm_varcon   , only : istsoil, istcrop
+    use decompMod    , only : bounds_type
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in) :: lbc, ubc                  ! column bounds
-    integer , intent(in) :: num_h2osfc                ! number of column points in column filter
-    integer , intent(in) :: filter_h2osfc(ubc-lbc+1)  ! column filter 
-    real(r8), intent(inout) :: frac_h2osfc(lbc:ubc)   ! fractional surface water (mm)
-    integer , intent(in), optional :: no_update       ! flag to make calculation w/o updating variables
-!
-! !CALLED FROM:
-! subroutine Hydrology1 in module Hydrology1Mod
-!
-! !REVISION HISTORY:
-! 09/24/07 Created by S. Swenson 
-!
-! !LOCAL VARIABLES:
-!EOP
+    type(bounds_type), intent(in)  :: bounds            ! bounds
+    integer , intent(in)           :: num_h2osfc        ! number of column points in column filter
+    integer , intent(in)           :: filter_h2osfc(:)  ! column filter 
+    real(r8), intent(inout)        :: frac_h2osfc(bounds%begc:)   ! fractional surface water (mm)
+    integer , intent(in), optional :: no_update         ! flag to make calculation w/o updating variables
+    !
+    ! !LOCAL VARIABLES:
     integer :: c,f,l          ! indices
     real(r8):: d,fd,dfdd      ! temporary variable for frac_h2oscs iteration
     real(r8):: sigma          ! microtopography pdf sigma in mm
     real(r8):: min_h2osfc
-
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
    associate(& 
-   h2osfc                              =>    cws%h2osfc                                  , & ! Input:  [real(r8) (:)]  surface water (mm)                                
-   h2osno                              =>    cws%h2osno                                  , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                               
-   micro_sigma                         =>    cps%micro_sigma                             , & ! Input:  [real(r8) (:)]  microtopography pdf sigma (m)                     
-   h2osoi_liq                          =>    cws%h2osoi_liq                              , & ! Output: [real(r8) (:,:)]  liquid water (col,lyr) [kg/m2]                  
-   frac_sno                            =>    cps%frac_sno                                , & ! Output: [real(r8) (:)]  fraction of ground covered by snow (0 to 1)       
-   frac_sno_eff                        =>    cps%frac_sno_eff                              & ! Output: [real(r8) (:)]  eff. fraction of ground covered by snow (0 to 1)  
+   h2osfc        =>  cws%h2osfc        , & ! Input:  [real(r8) (:)]  surface water (mm)                                
+   h2osno        =>  cws%h2osno        , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                               
+   micro_sigma   =>  cps%micro_sigma   , & ! Input:  [real(r8) (:)]  microtopography pdf sigma (m)                     
+   h2osoi_liq    =>  cws%h2osoi_liq    , & ! Output: [real(r8) (:,:)]  liquid water (col,lyr) [kg/m2]                  
+   frac_sno      =>  cps%frac_sno      , & ! Output: [real(r8) (:)]  fraction of ground covered by snow (0 to 1)       
+   frac_sno_eff  =>  cps%frac_sno_eff    & ! Output: [real(r8) (:)]  eff. fraction of ground covered by snow (0 to 1)  
    )
  
     ! arbitrary lower limit on h2osfc for safer numerics...

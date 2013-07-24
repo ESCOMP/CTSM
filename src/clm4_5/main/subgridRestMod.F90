@@ -2,42 +2,30 @@ module subgridRestMod
 
 contains
 
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: subgridRest
-!
-! !INTERFACE:
-  subroutine subgridRest( ncid, flag )
+  !------------------------------------------------------------------------
+  subroutine subgridRest( bounds, ncid, flag )
 
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use ncdio_pio           
-    use decompMod        , only : get_proc_bounds, ldecomp
+    use decompMod        , only : bounds_type, ldecomp
     use domainMod        , only : ldomain
     use clm_time_manager , only : get_curr_date
     use abortutils       , only : endrun
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
+    type(bounds_type), intent(in) :: bounds  ! bounds
     type(file_desc_t), intent(inout) :: ncid  ! netCDF dataset id
     character(len=*) , intent(in)    :: flag  ! flag to determine if define, write or read data
-!
-! !REVISION HISTORY:
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer :: g,l,c,p,j,i         ! indices
     integer :: yr                  ! current year (0 -> ...)
     integer :: mon                 ! current month (1 -> 12)
     integer :: day                 ! current day (1 -> 31)
     integer :: mcsec               ! seconds of current date
     integer :: mcdate              ! current date
-    integer :: begp, endp          ! per-proc beg/end pft indices
-    integer :: begc, endc          ! per-proc beg/end column indices
-    integer :: begl, endl          ! per-proc beg/end landunit indices
-    integer :: begg, endg          ! per-proc beg/end gridcell indices
     integer :: ier                 ! error status
     real(r8),pointer :: rgarr(:)   ! temporary
     real(r8),pointer :: rlarr(:)   ! temporary
@@ -48,22 +36,21 @@ contains
     integer ,pointer :: icarr(:)   ! temporary
     integer ,pointer :: iparr(:)   ! temporary
     character(len=32) :: subname='SubgridRest' ! subroutine name
-!------------------------------------------------------------------------
-
-    ! Set pointers into derived type
-
-
-    ! Get relevant sizes
-
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+    !------------------------------------------------------------------------
 
     ! Allocate dynamic memory
 
     if (flag == 'write') then
-       allocate(rgarr(begg:endg),rlarr(begl:endl),rcarr(begc:endc),rparr(begp:endp),stat=ier)
-       if (ier /= 0) call endrun('allocation error from inicfile_fields rarrs')
-       allocate(igarr(begg:endg),ilarr(begl:endl),icarr(begc:endc),iparr(begp:endp),stat=ier)
-       if (ier /= 0) call endrun('allocation error from inicfile_fields iarrs')
+       allocate(&
+            rgarr(bounds%begg:bounds%endg),&
+            rlarr(bounds%begl:bounds%endl),&
+            rcarr(bounds%begc:bounds%endc),&
+            rparr(bounds%begp:bounds%endp),&
+            igarr(bounds%begg:bounds%endg),&
+            ilarr(bounds%begl:bounds%endl),&
+            icarr(bounds%begc:bounds%endc),&
+            iparr(bounds%begp:bounds%endp),stat=ier)
+       if (ier /= 0) call endrun('allocation error from inicfile_fields rarrs and iarrs')
     end if
 
     ! Write output data (first write current date and seconds of current date)
@@ -77,8 +64,8 @@ contains
        call get_curr_date (yr, mon, day, mcsec)
        mcdate = yr*10000 + mon*100 + day
        !TODO - add this to the file - get this to work
-!DEBUG  call ncd_io(varname='mcdate', data=mcdate, ncid=ncid, flag=flag)
-!DEBUG  call ncd_io(varname='mcsec' , data=mcsec , ncid=ncid, flag=flag)
+       !DEBUG  call ncd_io(varname='mcdate', data=mcdate, ncid=ncid, flag=flag)
+       !DEBUG  call ncd_io(varname='mcsec' , data=mcsec , ncid=ncid, flag=flag)
     end if
 
     ! Write gridcell info
@@ -93,11 +80,11 @@ contains
        call ncd_defvar(ncid=ncid, varname='grid1d_jxy', xtype=ncd_int,  &
             dim1name='gridcell', long_name='2d latitude index of corresponding gridcell')
     else if (flag == 'write') then
-       do g=begg,endg
+       do g=bounds%begg,bounds%endg
           igarr(g)= mod(ldecomp%gdc2glo(g)-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='grid1d_ixy', data=igarr      , dim1name=nameg, ncid=ncid, flag=flag)
-       do g=begg,endg
+       do g=bounds%begg,bounds%endg
           igarr(g)= (ldecomp%gdc2glo(g) - 1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='grid1d_jxy', data=igarr      , dim1name=nameg, ncid=ncid, flag=flag)
@@ -125,19 +112,19 @@ contains
        call ncd_defvar(ncid=ncid, varname='land1d_ityplun', xtype=ncd_int,  &
             dim1name='landunit', long_name='landunit type (vegetated,urban,lake,wetland or glacier)')
     else if (flag == 'write') then
-       do l=begl,endl
+       do l=bounds%begl,bounds%endl
           rlarr(l) = grc%londeg(lun%gridcell(l))
        enddo
        call ncd_io(varname='land1d_lon'    , data=rlarr        , dim1name=namel, ncid=ncid, flag=flag)
-       do l=begl,endl
+       do l=bounds%begl,bounds%endl
           rlarr(l) = grc%latdeg(lun%gridcell(l))
        enddo
        call ncd_io(varname='land1d_lat'    , data=rlarr        , dim1name=namel, ncid=ncid, flag=flag)
-       do l=begl,endl
+       do l=bounds%begl,bounds%endl
           ilarr(l) = mod(ldecomp%gdc2glo(lun%gridcell(l))-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='land1d_ixy'    , data=ilarr        , dim1name=namel, ncid=ncid, flag=flag)
-       do l=begl,endl
+       do l=bounds%begl,bounds%endl
           ilarr(l) = (ldecomp%gdc2glo(lun%gridcell(l))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='land1d_jxy'    , data=ilarr        , dim1name=namel, ncid=ncid, flag=flag)
@@ -175,19 +162,19 @@ contains
             dim1name='column', long_name=&
            'column type (71-roof,72-sunwall,73-shadewall,74-impervious road,75-pervious road,1-all other columns)')
     else if (flag == 'write') then
-       do c=begc,endc
+       do c= bounds%begc, bounds%endc
           rcarr(c) = grc%londeg(col%gridcell(c))
        enddo
        call ncd_io(varname='cols1d_lon'  , data=rcarr        , dim1name=namec, ncid=ncid, flag=flag)
-       do c=begc,endc
+       do c= bounds%begc, bounds%endc
           rcarr(c) = grc%latdeg(col%gridcell(c))
        enddo
        call ncd_io(varname='cols1d_lat'  , data=rcarr        , dim1name=namec, ncid=ncid, flag=flag)
-       do c=begc,endc
+       do c= bounds%begc, bounds%endc
           icarr(c) = mod(ldecomp%gdc2glo(col%gridcell(c))-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='cols1d_ixy'  , data=icarr        , dim1name=namec, ncid=ncid, flag=flag)
-       do c=begc,endc
+       do c= bounds%begc, bounds%endc
           icarr(c) = (ldecomp%gdc2glo(col%gridcell(c))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='cols1d_jxy'  , data=icarr        , dim1name=namec, ncid=ncid, flag=flag)
@@ -197,11 +184,11 @@ contains
        !call ncd_io(varname='cols1d_gi'   , data=col%gridcell, dim1name=namec, ncid=ncid, flag=flag)
        !call ncd_io(varname='cols1d_li'   , data=col%landunit, dim1name=namec, ncid=ncid, flag=flag)
        ! ----------------------------------------------------------------
-       do c=begc,endc
+       do c= bounds%begc, bounds%endc
           icarr(c) = lun%itype(col%landunit(c))
        enddo
        call ncd_io(varname='cols1d_ityplun', data=icarr      , dim1name=namec, ncid=ncid, flag=flag)
-       do c=begc,endc
+       do c= bounds%begc, bounds%endc
           icarr(c) = col%itype((c))
        enddo
        call ncd_io(varname='cols1d_ityp', data=icarr      , dim1name=namec, ncid=ncid, flag=flag)
@@ -237,19 +224,19 @@ contains
        call ncd_defvar(ncid=ncid, varname='pfts1d_ityplun', xtype=ncd_int,  &
             dim1name='pft', long_name='pft landunit type (vegetated,urban,lake,wetland or glacier)')
     else if (flag == 'write') then
-       do p=begp,endp
+       do p=bounds%begp,bounds%endp
           rparr(p) = grc%londeg(pft%gridcell(p))
        enddo
        call ncd_io(varname='pfts1d_lon'    , data=rparr        , dim1name=namep, ncid=ncid, flag=flag)
-       do p=begp,endp
+       do p=bounds%begp,bounds%endp
           rparr(p) = grc%latdeg(pft%gridcell(p))
        enddo
        call ncd_io(varname='pfts1d_lat'    , data=rparr        , dim1name=namep, ncid=ncid, flag=flag)
-       do p=begp,endp
+       do p=bounds%begp,bounds%endp
           iparr(p) = mod(ldecomp%gdc2glo(pft%gridcell(p))-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='pfts1d_ixy'    , data=iparr        , dim1name=namep, ncid=ncid, flag=flag)
-       do p=begp,endp
+       do p=bounds%begp,bounds%endp
           iparr(p) = (ldecomp%gdc2glo(pft%gridcell(p))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='pfts1d_jxy'    , data=iparr        , dim1name=namep, ncid=ncid, flag=flag)
@@ -262,7 +249,7 @@ contains
        !call ncd_io(varname='pfts1d_li'     , data=pft%landunit, dim1name=namep, ncid=ncid, flag=flag)
        !call ncd_io(varname='pfts1d_ci'     , data=pft%column  , dim1name=namep, ncid=ncid, flag=flag)
        ! ----------------------------------------------------------------
-       do p=begp,endp
+       do p=bounds%begp,bounds%endp
           iparr(p) = lun%itype(pft%landunit(p))
        enddo
        call ncd_io(varname='pfts1d_ityplun', data=iparr      , dim1name=namep, ncid=ncid, flag=flag)

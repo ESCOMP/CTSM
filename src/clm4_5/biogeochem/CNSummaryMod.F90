@@ -1,99 +1,73 @@
 module CNSummaryMod
 
-#ifdef CN
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: CNSummaryMod
-!
-! !DESCRIPTION:
-! Module for carbon and nitrogen summary calculations
-!
-! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varcon, only: dzsoi_decomp, zisoi
-    use pftvarcon   , only: npcropmin
-    use clm_varpar  , only: crop_prog
-    use abortutils  , only: endrun
-    implicit none
-    save
-    private
-! !PUBLIC MEMBER FUNCTIONS:
-    public :: CSummary
-    public :: NSummary
-!
-! !REVISION HISTORY:
-! 4/23/2004: Created by Peter Thornton
-! F. Li and S. Levis (11/06/12)
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Module for carbon and nitrogen summary calculations
+  !
+  ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varcon, only: dzsoi_decomp, zisoi
+  use pftvarcon   , only: npcropmin
+  use clm_varpar  , only: crop_prog
+  use abortutils  , only: endrun
+  use decompMod   , only: bounds_type
+  implicit none
+  save
+  private
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: CSummary
+  public :: NSummary
+  !-----------------------------------------------------------------------
 
 contains
 
+  !-----------------------------------------------------------------------
+  subroutine CSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
+  !
+  ! !DESCRIPTION:
+  ! On the radiation time step, perform pft and column-level carbon
+  ! summary calculations
+  !
+  ! !USES:
+  use clmtype
+  use pft2colMod, only: p2c
+  use clm_varctl, only: iulog, use_cndv
+  use shr_sys_mod, only: shr_sys_flush
+  use clm_varpar  , only: nlevdecomp,ndecomp_pools,ndecomp_cascade_transitions
+  use CNNDynamicsMod, only: nfix_timeconst
+  use clm_time_manager    , only : get_step_size
+  use clm_varcon      , only: secspday, spval
+  !
+  ! !ARGUMENTS:
+  implicit none
+  type(bounds_type), intent(in) :: bounds  ! bounds
+  integer, intent(in) :: num_soilc       ! number of soil columns in filter
+  integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+  integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+  integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+  character(len=*), intent(in) :: isotope         ! 'bulk', 'c13' or 'c14'
+  !
+  ! !LOCAL VARIABLES:
+  real(r8), pointer :: woodc(:)               ! wood C (gC/m2)
+  real(r8), pointer :: tempsum_npp(:)         ! temporary annual sum of NPP (gC/m2/yr)
+  real(r8), pointer :: tempsum_litfall(:)    ! temporary annual sum of litfall (gC/m2/yr)
+  real(r8), pointer :: col_lag_npp(:)        ! (gC/m2/s) lagged net primary production
+  real(r8), pointer :: som_c_leached(:)                           ! total SOM C loss from vertical transport (gC/m^2/s)
+  real(r8), pointer :: decomp_cpools_leached(:,:)                 ! C loss from vertical transport from each decomposing C pool (gC/m^2/s)
+  real(r8), pointer :: decomp_cpools_transport_tendency(:,:,:)    ! C tendency due to vertical transport in decomposing C pools (gC/m^3/s)
+  real(r8) :: nfixlags, dtime                ! temp variables for making lagged npp
+  integer :: c,p,j,k,l        ! indices
+  integer :: fp,fc        ! lake filter indices
+  real(r8) :: maxdepth    ! depth to integrate soil variables
+  type(pft_cflux_type)    , pointer :: pcisof
+  type(pft_cstate_type)   , pointer :: pcisos
+  type(column_cflux_type) , pointer :: ccisof
+  type(column_cstate_type), pointer :: ccisos
+  type(pft_cflux_type)    , pointer :: pcisof_a
+  type(pft_cstate_type)   , pointer :: pcisos_a
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CSummary
-!
-! !INTERFACE:
-subroutine CSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
-!
-! !DESCRIPTION:
-! On the radiation time step, perform pft and column-level carbon
-! summary calculations
-!
-! !USES:
-   use clmtype
-   use pft2colMod, only: p2c
-   use clm_varctl, only: iulog
-   use shr_sys_mod, only: shr_sys_flush
-   use clm_varpar  , only: nlevdecomp,ndecomp_pools,ndecomp_cascade_transitions
-   use CNNDynamicsMod, only: nfix_timeconst
-   use clm_time_manager    , only : get_step_size
-   use clm_varcon      , only: secspday, spval
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: lbp, ubp        ! pft bounds
-   integer, intent(in) :: lbc, ubc        ! column bounds
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-   character(len=*), intent(in) :: isotope         ! 'bulk', 'c13' or 'c14'
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 12/9/03: Created by Peter Thornton
-! 11/6/12: revised by F. Li and S. Levis
-!
-! !LOCAL VARIABLES:
-!
-   real(r8), pointer :: woodc(:)               ! wood C (gC/m2)
-   real(r8), pointer :: tempsum_npp(:)         ! temporary annual sum of NPP (gC/m2/yr)
-#if (defined CNDV)
-   real(r8), pointer :: tempsum_litfall(:)    ! temporary annual sum of litfall (gC/m2/yr)
-#endif
-   real(r8), pointer :: col_lag_npp(:)        ! (gC/m2/s) lagged net primary production
-   real(r8), pointer :: som_c_leached(:)                           ! total SOM C loss from vertical transport (gC/m^2/s)
-   real(r8), pointer :: decomp_cpools_leached(:,:)                 ! C loss from vertical transport from each decomposing C pool (gC/m^2/s)
-   real(r8), pointer :: decomp_cpools_transport_tendency(:,:,:)    ! C tendency due to vertical transport in decomposing C pools (gC/m^3/s)
-   real(r8) :: nfixlags, dtime                ! temp variables for making lagged npp
-   integer :: c,p,j,k,l        ! indices
-   integer :: fp,fc        ! lake filter indices
-   real(r8) :: maxdepth    ! depth to integrate soil variables
-   type(pft_cflux_type)    , pointer :: pcisof
-   type(pft_cstate_type)   , pointer :: pcisos
-   type(column_cflux_type) , pointer :: ccisof
-   type(column_cstate_type), pointer :: ccisos
-   type(pft_cflux_type)    , pointer :: pcisof_a
-   type(pft_cstate_type)   , pointer :: pcisos_a
 
-!EOP
-!-----------------------------------------------------------------------
    ! select which isotope
    select case (isotope)
    case ('bulk')
@@ -381,9 +355,7 @@ subroutine CSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filt
 
    woodc                           =>    pcisos%woodc                                 ! Input:  [real(r8) (:)]  wood C (gC/m2)                                    
    tempsum_npp                     =>    pepv%tempsum_npp                             ! Input:  [real(r8) (:)]  temporary annual sum of NPP (gC/m2/yr)            
-#if (defined CNDV)
    tempsum_litfall                 =>    pepv%tempsum_litfall                         ! Input:  [real(r8) (:)] temporary annual sum of litfall (gC/m2/yr)         
-#endif
    col_lag_npp                     =>    cps%col_lag_npp                              ! Input:  [real(r8) (:)]  (gC/m2/s) lagged net primary production           
    som_c_leached                   =>    ccisof%som_c_leached                         ! Input:  [real(r8) (:)]  total SOM C loss from vertical transport (gC/m^2/s)
    decomp_cpools_leached           =>    ccisof%decomp_cpools_leached                 ! Input:  [real(r8) (:,:)]  C loss from vertical transport from each decomposing C pool (gC/m^2/s)
@@ -577,10 +549,10 @@ subroutine CSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filt
          hrv_gresp_storage_to_litter(p)     + &
          hrv_gresp_xfer_to_litter(p)
                  
-#if (defined CNDV)
-      ! update the annual litfall accumulator, for use in mortality code
-      tempsum_litfall(p) = tempsum_litfall(p) + leafc_to_litter(p) + frootc_to_litter(p)
-#endif
+      if (use_cndv) then
+         ! update the annual litfall accumulator, for use in mortality code
+         tempsum_litfall(p) = tempsum_litfall(p) + leafc_to_litter(p) + frootc_to_litter(p)
+      end if
 
       ! pft-level fire losses (VEGFIRE)
       vegfire(p) = 0._r8
@@ -733,17 +705,17 @@ subroutine CSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filt
    end do  ! end of pfts loop
 
    ! use p2c routine to get selected column-average pft-level fluxes and states
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, gpp, col_gpp)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, ar, col_ar)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, rr, col_rr)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, npp, col_npp)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, vegfire, col_vegfire)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, wood_harvestc, col_wood_harvestc)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, totvegc, col_totvegc)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, totpftc, col_totpftc)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, pft_fire_closs, col_pft_fire_closs)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, litfall, col_litfall)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, hrv_xsmrpool_to_atm, col_hrv_xsmrpool_to_atm)
+   call p2c(bounds, num_soilc, filter_soilc, gpp, col_gpp)
+   call p2c(bounds, num_soilc, filter_soilc, ar, col_ar)
+   call p2c(bounds, num_soilc, filter_soilc, rr, col_rr)
+   call p2c(bounds, num_soilc, filter_soilc, npp, col_npp)
+   call p2c(bounds, num_soilc, filter_soilc, vegfire, col_vegfire)
+   call p2c(bounds, num_soilc, filter_soilc, wood_harvestc, col_wood_harvestc)
+   call p2c(bounds, num_soilc, filter_soilc, totvegc, col_totvegc)
+   call p2c(bounds, num_soilc, filter_soilc, totpftc, col_totpftc)
+   call p2c(bounds, num_soilc, filter_soilc, pft_fire_closs, col_pft_fire_closs)
+   call p2c(bounds, num_soilc, filter_soilc, litfall, col_litfall)
+   call p2c(bounds, num_soilc, filter_soilc, hrv_xsmrpool_to_atm, col_hrv_xsmrpool_to_atm)
 
    if ( isotope .eq. 'bulk') then
       if (nfix_timeconst .gt. 0._r8 .and. nfix_timeconst .lt. 500._r8 ) then
@@ -1103,48 +1075,34 @@ subroutine CSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filt
 
     end associate 
  end subroutine CSummary
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: NSummary
-!
-! !INTERFACE:
-subroutine NSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! On the radiation time step, perform pft and column-level nitrogen
-! summary calculations
-!
-! !USES:
+ !-----------------------------------------------------------------------
+ subroutine NSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
+   !
+   ! !DESCRIPTION:
+   ! On the radiation time step, perform pft and column-level nitrogen
+   ! summary calculations
+   !
+   ! !USES:
    use clmtype
    use pft2colMod, only: p2c
-   use clm_varpar  , only: nlevdecomp,ndecomp_cascade_transitions,ndecomp_pools
-!
-! !ARGUMENTS:
+   use clm_varpar, only: nlevdecomp,ndecomp_cascade_transitions,ndecomp_pools
+   use clm_varctl, only: use_nitrif_denitrif
+   !
+   ! !ARGUMENTS:
    implicit none
-   integer, intent(in) :: lbp, ubp        ! pft bounds
-   integer, intent(in) :: lbc, ubc        ! column bounds
+   type(bounds_type), intent(in) :: bounds  ! bounds
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 6/28/04: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-
+   !
+   ! !LOCAL VARIABLES:
    integer :: c,p,j,k,l       ! indices
    integer :: fp,fc       ! lake filter indices
    real(r8) :: maxdepth    ! depth to integrate soil variables
+   !-----------------------------------------------------------------------
 
-!EOP
-!-----------------------------------------------------------------------
    associate(& 
    ivt                             =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
    col_fire_nloss                  =>    cnf%col_fire_nloss                          , & ! Input:  [real(r8) (:)]  (gN/m2/s) total column-level fire N loss          
@@ -1158,14 +1116,12 @@ subroutine NSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filt
    is_litter                       =>    decomp_cascade_con%is_litter                , & ! Input:  [logical (:)]  TRUE => pool is a litter pool                      
    is_soil                         =>    decomp_cascade_con%is_soil                  , & ! Input:  [logical (:)]  TRUE => pool is a soil pool                        
    is_cwd                          =>    decomp_cascade_con%is_cwd                   , & ! Input:  [logical (:)]  TRUE => pool is a cwd pool                         
-#ifndef NITRIF_DENITRIF
    sminn_to_denit_excess_vr        =>    cnf%sminn_to_denit_excess_vr                , & ! Input:  [real(r8) (:,:)]                                                  
    sminn_to_denit_excess           =>    cnf%sminn_to_denit_excess                   , & ! Input:  [real(r8) (:)]                                                    
    sminn_to_denit_decomp_cascade_vr=>    cnf%sminn_to_denit_decomp_cascade_vr        , & ! Input:  [real(r8) (:,:,:)]  vertically-resolved denitrification along decomp cascade (gN/m3/s)
    sminn_to_denit_decomp_cascade   =>    cnf%sminn_to_denit_decomp_cascade           , & ! Input:  [real(r8) (:,:)]  vertically-integrated denitrification along decomp cascade (gN/m2/s)
    sminn_leached_vr                =>    cnf%sminn_leached_vr                        , & ! Input:  [real(r8) (:,:)]                                                  
    sminn_leached                   =>    cnf%sminn_leached                           , & ! Input:  [real(r8) (:)]                                                    
-#else
    smin_no3                        =>    cns%smin_no3                                , & ! Input:  [real(r8) (:)]                                                    
    smin_nh4                        =>    cns%smin_nh4                                , & ! Input:  [real(r8) (:)]                                                    
    smin_no3_vr                     =>    cns%smin_no3_vr                             , & ! Input:  [real(r8) (:,:)]                                                  
@@ -1186,7 +1142,6 @@ subroutine NSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filt
    smin_no3_leached                =>    cnf%smin_no3_leached                        , & ! Input:  [real(r8) (:)]                                                    
    smin_no3_runoff_vr              =>    cnf%smin_no3_runoff_vr                      , & ! Input:  [real(r8) (:,:)]                                                  
    smin_no3_runoff                 =>    cnf%smin_no3_runoff                         , & ! Input:  [real(r8) (:)]                                                    
-#endif
    decomp_npools                   =>    cns%decomp_npools                           , & ! Input:  [real(r8) (:,:)]  (gN/m2)  decomposing (litter, cwd, soil) N pools
    decomp_npools_vr                =>    cns%decomp_npools_vr                        , & ! Input:  [real(r8) (:,:,:)]  (gN/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
    decomp_npools_1m                =>    cns%decomp_npools_1m                        , & ! Input:  [real(r8) (:,:)]  (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 1 meter
@@ -1359,10 +1314,10 @@ subroutine NSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filt
    end do  ! end of pfts loop
 
    ! use p2c routine to get selected column-average pft-level fluxes and states
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, pft_fire_nloss, col_pft_fire_nloss)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, wood_harvestn, col_wood_harvestn)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, totvegn, col_totvegn)
-   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, totpftn, col_totpftn)
+   call p2c(bounds, num_soilc, filter_soilc, pft_fire_nloss, col_pft_fire_nloss)
+   call p2c(bounds, num_soilc, filter_soilc, wood_harvestn, col_wood_harvestn)
+   call p2c(bounds, num_soilc, filter_soilc, totvegn, col_totvegn)
+   call p2c(bounds, num_soilc, filter_soilc, totpftn, col_totpftn)
 
    ! column loops
    do fc = 1,num_soilc
@@ -1370,10 +1325,10 @@ subroutine NSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filt
 
       ! some zeroing
       denit(c) = 0._r8
-#ifdef NITRIF_DENITRIF
-      smin_no3(c) = 0._r8
-      smin_nh4(c) = 0._r8
-#endif
+      if (use_nitrif_denitrif) then
+         smin_no3(c) = 0._r8
+         smin_nh4(c) = 0._r8
+      end if
       totlitn(c) = 0._r8
       totsomn(c) = 0._r8
       cwdn(c) = 0._r8
@@ -1398,70 +1353,70 @@ subroutine NSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filt
       end do
    end do
    
-#ifndef NITRIF_DENITRIF
-   ! vertically integrate each denitrification flux
-   do l = 1, ndecomp_cascade_transitions
+   if (.not. use_nitrif_denitrif) then
+      ! vertically integrate each denitrification flux
+      do l = 1, ndecomp_cascade_transitions
+         do j = 1, nlevdecomp
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               sminn_to_denit_decomp_cascade(c,l) = sminn_to_denit_decomp_cascade(c,l) + &
+                    sminn_to_denit_decomp_cascade_vr(c,j,l) * dzsoi_decomp(j)
+            end do
+         end do
+      end do
+      
+      ! vertically integrate bulk denitrification and  leaching flux
       do j = 1, nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-            sminn_to_denit_decomp_cascade(c,l) = sminn_to_denit_decomp_cascade(c,l) + &
-                 sminn_to_denit_decomp_cascade_vr(c,j,l) * dzsoi_decomp(j)
+            sminn_to_denit_excess(c) = sminn_to_denit_excess(c) + sminn_to_denit_excess_vr(c,j) * dzsoi_decomp(j)
+            sminn_leached(c) = sminn_leached(c) + sminn_leached_vr(c,j) * dzsoi_decomp(j)
          end do
       end do
-   end do
 
-   ! vertically integrate bulk denitrification and  leaching flux
-   do j = 1, nlevdecomp
+      ! total N denitrification (DENIT)
+      do l = 1, ndecomp_cascade_transitions
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            denit(c) = denit(c) + sminn_to_denit_decomp_cascade(c,l)
+         end do
+      end do
+
       do fc = 1,num_soilc
          c = filter_soilc(fc)
-         sminn_to_denit_excess(c) = sminn_to_denit_excess(c) + sminn_to_denit_excess_vr(c,j) * dzsoi_decomp(j)
-         sminn_leached(c) = sminn_leached(c) + sminn_leached_vr(c,j) * dzsoi_decomp(j)
+         denit(c) =  denit(c) + sminn_to_denit_excess(c)
       end do
-   end do
 
-   ! total N denitrification (DENIT)
-   do l = 1, ndecomp_cascade_transitions
+   else
+
+      ! vertically integrate NO3 NH4 N2O fluxes and pools
+      do j = 1, nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            ! nitrification and denitrification fluxes
+            f_nit(c) = f_nit(c) + f_nit_vr(c,j) * dzsoi_decomp(j)
+            f_denit(c) = f_denit(c) + f_denit_vr(c,j) * dzsoi_decomp(j)
+            pot_f_nit(c) = pot_f_nit(c) + pot_f_nit_vr(c,j) * dzsoi_decomp(j)
+            pot_f_denit(c) = pot_f_denit(c) + pot_f_denit_vr(c,j) * dzsoi_decomp(j)
+            f_n2o_nit(c) = f_n2o_nit(c) + f_n2o_nit_vr(c,j) * dzsoi_decomp(j)
+            f_n2o_denit(c) = f_n2o_denit(c) + f_n2o_denit_vr(c,j) * dzsoi_decomp(j)
+
+            ! leaching/runoff flux
+            smin_no3_leached(c) = smin_no3_leached(c) + smin_no3_leached_vr(c,j) * dzsoi_decomp(j)
+            smin_no3_runoff(c) = smin_no3_runoff(c) + smin_no3_runoff_vr(c,j) * dzsoi_decomp(j)
+
+            ! mineral N pools (must set to zero first since they are state rather than flux variables)
+            smin_no3(c) = smin_no3(c) + smin_no3_vr(c,j) * dzsoi_decomp(j)
+            smin_nh4(c) = smin_nh4(c) + smin_nh4_vr(c,j) * dzsoi_decomp(j)
+         end do
+      end do
+
       do fc = 1,num_soilc
          c = filter_soilc(fc)
-         denit(c) = denit(c) + sminn_to_denit_decomp_cascade(c,l)
+         denit(c) = f_denit(c)
       end do
-   end do
 
-   do fc = 1,num_soilc
-      c = filter_soilc(fc)
-      denit(c) =  denit(c) + sminn_to_denit_excess(c)
-   end do
-
-#else
-
-   ! vertically integrate NO3 NH4 N2O fluxes and pools
-   do j = 1, nlevdecomp
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         ! nitrification and denitrification fluxes
-         f_nit(c) = f_nit(c) + f_nit_vr(c,j) * dzsoi_decomp(j)
-         f_denit(c) = f_denit(c) + f_denit_vr(c,j) * dzsoi_decomp(j)
-         pot_f_nit(c) = pot_f_nit(c) + pot_f_nit_vr(c,j) * dzsoi_decomp(j)
-         pot_f_denit(c) = pot_f_denit(c) + pot_f_denit_vr(c,j) * dzsoi_decomp(j)
-         f_n2o_nit(c) = f_n2o_nit(c) + f_n2o_nit_vr(c,j) * dzsoi_decomp(j)
-         f_n2o_denit(c) = f_n2o_denit(c) + f_n2o_denit_vr(c,j) * dzsoi_decomp(j)
-         
-         ! leaching/runoff flux
-         smin_no3_leached(c) = smin_no3_leached(c) + smin_no3_leached_vr(c,j) * dzsoi_decomp(j)
-         smin_no3_runoff(c) = smin_no3_runoff(c) + smin_no3_runoff_vr(c,j) * dzsoi_decomp(j)
-         
-         ! mineral N pools (must set to zero first since they are state rather than flux variables)
-         smin_no3(c) = smin_no3(c) + smin_no3_vr(c,j) * dzsoi_decomp(j)
-         smin_nh4(c) = smin_nh4(c) + smin_nh4_vr(c,j) * dzsoi_decomp(j)
-      end do
-   end do
-
-   do fc = 1,num_soilc
-      c = filter_soilc(fc)
-      denit(c) = f_denit(c)
-   end do
-
-#endif
+   end if
 
    ! vertically integrate column-level fire N losses
    do k = 1, ndecomp_pools
@@ -1674,12 +1629,7 @@ subroutine NSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filt
       end do
    end do
 
-
-
     end associate 
  end subroutine NSummary
-!-----------------------------------------------------------------------
-
-#endif
 
 end module CNSummaryMod

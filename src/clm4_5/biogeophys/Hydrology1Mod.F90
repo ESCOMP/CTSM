@@ -1,67 +1,57 @@
 module Hydrology1Mod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE:  Hydrology1Mod
-!
-! !DESCRIPTION:
-! Calculation of
-! (1) water storage of intercepted precipitation
-! (2) direct throughfall and canopy drainage of precipitation
-! (3) the fraction of foliage covered by water and the fraction
-!     of foliage that is dry and transpiring.
-! (4) snow layer initialization if the snow accumulation exceeds 10 mm.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculation of
+  ! (1) water storage of intercepted precipitation
+  ! (2) direct throughfall and canopy drainage of precipitation
+  ! (3) the fraction of foliage covered by water and the fraction
+  !     of foliage that is dry and transpiring.
+  ! (4) snow layer initialization if the snow accumulation exceeds 10 mm.
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use clm_varctl,   only: iulog
   use abortutils,   only: endrun
   use shr_sys_mod,  only: shr_sys_flush
-
-! !PUBLIC TYPES:
-   implicit none
-   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
-   public :: Hydrology1_readnl ! Read namelist
-   public :: Hydrology1        ! Run
-!-----------------------------------------------------------------------
-! !PRIVATE DATA MEMBERS:
-!
-   integer :: oldfflag=0                 ! use old fsno parameterization (N&Y07) 
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  use decompMod   , only : bounds_type
+  !
+  ! !PUBLIC TYPES:
+  implicit none
+  save
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: Hydrology1_readnl ! Read namelist
+  public :: Hydrology1        ! Run
+  !
+  ! !PRIVATE DATA MEMBERS:
+  !
+  integer :: oldfflag=0                 ! use old fsno parameterization (N&Y07) 
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: Hydrology1_readnl
-!
-! !INTERFACE:
-   subroutine Hydrology1_readnl( NLFilename )
-!
-! !DESCRIPTION:
-! Read the namelist for Hydrology1
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine Hydrology1_readnl( NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for Hydrology1
+    !
+    ! !USES:
     use spmdMod       , only : masterproc, mpicom
     use fileutils     , only : getavu, relavu, opnfil
     use shr_nl_mod    , only : shr_nl_find_group_name
     use shr_mpi_mod   , only : shr_mpi_bcast
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     character(len=*), intent(IN) :: NLFilename ! Namelist filename
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
     character(len=32) :: subname = 'Hydrology1_readnl'  ! subroutine name
-!EOP
-!-----------------------------------------------------------------------
+
+    !-----------------------------------------------------------------------
     namelist / clm_hydrology1_inparm / oldfflag
 
     ! ----------------------------------------------------------------------
@@ -88,99 +78,75 @@ contains
 
    end subroutine Hydrology1_readnl
 
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: Hydrology1
-!
-! !INTERFACE:
-   subroutine Hydrology1(lbc, ubc, lbp, ubp, num_nolakec, filter_nolakec, &
-                         num_nolakep, filter_nolakep)
-!
-! !DESCRIPTION:
-! Calculation of
-! (1) water storage of intercepted precipitation
-! (2) direct throughfall and canopy drainage of precipitation
-! (3) the fraction of foliage covered by water and the fraction
-!     of foliage that is dry and transpiring.
-! (4) snow layer initialization if the snow accumulation exceeds 10 mm.
-! Note:  The evaporation loss is taken off after the calculation of leaf
-! temperature in the subroutine clm\_leaftem.f90, not in this subroutine.
-!
-! !USES:
-    use shr_kind_mod , only : r8 => shr_kind_r8
-    use clmtype
-    use clm_atmlnd   , only : clm_a2l
-    use clm_varcon   , only : tfrz, istice, istwet, istsoil, istice_mec, &
-                              istcrop, icol_roof, icol_sunwall, icol_shadewall,&
-                              hfus,denice, &
-                              zlnd,rpi,spval
-    use clm_varctl   , only : subgridflag
-    use clm_varpar   , only : nlevsoi,nlevsno
-    use H2OSfcMod    , only : FracH2oSfc
-    use FracWetMod   , only : FracWet
-    use clm_time_manager , only : get_step_size
-    use subgridAveMod, only : p2c
-    use SNICARMod    , only : snw_rds_min
-
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in) :: lbp, ubp                     ! pft bounds
-    integer, intent(in) :: lbc, ubc                     ! column bounds
-    integer, intent(in) :: num_nolakec                  ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_nolakec(ubc-lbc+1)    ! column filter for non-lake points
-    integer, intent(in) :: num_nolakep                  ! number of pft non-lake points in pft filter
-    integer, intent(in) :: filter_nolakep(ubp-lbp+1)    ! pft filter for non-lake points
-!
-! !CALLED FROM:
-! subroutine clm_driver
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! 2/15/02, Peter Thornton: Migrated to new data structures. Required
-! adding a PFT loop.
-! 4/26/05, Peter Thornton: Made the canopy interception factor fpi max=0.25
-!   the default behavior
-!
-! !LOCAL VARIABLES:
-!EOP
-!
-    integer  :: f                            ! filter index
-    integer  :: pi                           ! pft index
-    integer  :: p                            ! pft index
-    integer  :: c                            ! column index
-    integer  :: l                            ! landunit index
-    integer  :: g                            ! gridcell index
-    integer  :: newnode                      ! flag when new snow node is set, (1=yes, 0=no)
-    real(r8) :: dtime                        ! land model time step (sec)
-    real(r8) :: h2ocanmx                     ! maximum allowed water on canopy [mm]
-    real(r8) :: fpi                          ! coefficient of interception
-    real(r8) :: xrun                         ! excess water that exceeds the leaf capacity [mm/s]
-    real(r8) :: dz_snowf                     ! layer thickness rate change due to precipitation [mm/s]
-    real(r8) :: bifall                       ! bulk density of newly fallen dry snow [kg/m3]
-    real(r8) :: fracsnow(lbp:ubp)            ! frac of precipitation that is snow
-    real(r8) :: fracrain(lbp:ubp)            ! frac of precipitation that is rain
-    real(r8) :: qflx_candrip(lbp:ubp)        ! rate of canopy runoff and snow falling off canopy [mm/s]
-    real(r8) :: qflx_through_rain(lbp:ubp)   ! direct rain throughfall [mm/s]
-    real(r8) :: qflx_through_snow(lbp:ubp)   ! direct snow throughfall [mm/s]
-    real(r8) :: qflx_prec_grnd_snow(lbp:ubp) ! snow precipitation incident on ground [mm/s]
-    real(r8) :: qflx_prec_grnd_rain(lbp:ubp) ! rain precipitation incident on ground [mm/s]
-    real(r8) :: z_avg                        ! grid cell average snow depth
-    real(r8) :: rho_avg                      ! avg density of snow column
-    real(r8) :: temp_snow_depth,temp_intsnow     ! temporary variables
-    real(r8) :: fmelt
-    real(r8) :: smr
-    real(r8) :: delf_melt
-    real(r8) :: fsno_new
-    real(r8) :: accum_factor
-    real(r8) :: newsnow(lbc:ubc)
-    real(r8) :: snowmelt(lbc:ubc)
-    integer  :: j
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
+   subroutine Hydrology1(bounds, num_nolakec, filter_nolakec, num_nolakep, filter_nolakep)
+     !
+     ! !DESCRIPTION:
+     ! Calculation of
+     ! (1) water storage of intercepted precipitation
+     ! (2) direct throughfall and canopy drainage of precipitation
+     ! (3) the fraction of foliage covered by water and the fraction
+     !     of foliage that is dry and transpiring.
+     ! (4) snow layer initialization if the snow accumulation exceeds 10 mm.
+     ! Note:  The evaporation loss is taken off after the calculation of leaf
+     ! temperature in the subroutine clm\_leaftem.f90, not in this subroutine.
+     !
+     ! !USES:
+     use clmtype
+     use clm_atmlnd   , only : clm_a2l
+     use clm_varcon   , only : tfrz, istice, istwet, istsoil, istice_mec, &
+          istcrop, icol_roof, icol_sunwall, icol_shadewall,&
+          hfus,denice, zlnd,rpi,spval
+     use clm_varctl   , only : subgridflag
+     use clm_varpar   , only : nlevsoi,nlevsno
+     use H2OSfcMod    , only : FracH2oSfc
+     use FracWetMod   , only : FracWet
+     use clm_time_manager , only : get_step_size
+     use subgridAveMod, only : p2c
+     use SNICARMod    , only : snw_rds_min
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(bounds_type), intent(in) :: bounds     ! bounds
+     integer, intent(in) :: num_nolakec          ! number of column non-lake points in column filter
+     integer, intent(in) :: filter_nolakec(:)    ! column filter for non-lake points
+     integer, intent(in) :: num_nolakep          ! number of pft non-lake points in pft filter
+     integer, intent(in) :: filter_nolakep(:)    ! pft filter for non-lake points
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: f                            ! filter index
+     integer  :: pi                           ! pft index
+     integer  :: p                            ! pft index
+     integer  :: c                            ! column index
+     integer  :: l                            ! landunit index
+     integer  :: g                            ! gridcell index
+     integer  :: newnode                      ! flag when new snow node is set, (1=yes, 0=no)
+     real(r8) :: dtime                        ! land model time step (sec)
+     real(r8) :: h2ocanmx                     ! maximum allowed water on canopy [mm]
+     real(r8) :: fpi                          ! coefficient of interception
+     real(r8) :: xrun                         ! excess water that exceeds the leaf capacity [mm/s]
+     real(r8) :: dz_snowf                     ! layer thickness rate change due to precipitation [mm/s]
+     real(r8) :: bifall                       ! bulk density of newly fallen dry snow [kg/m3]
+     real(r8) :: fracsnow(bounds%begp:bounds%endp)            ! frac of precipitation that is snow
+     real(r8) :: fracrain(bounds%begp:bounds%endp)            ! frac of precipitation that is rain
+     real(r8) :: qflx_candrip(bounds%begp:bounds%endp)        ! rate of canopy runoff and snow falling off canopy [mm/s]
+     real(r8) :: qflx_through_rain(bounds%begp:bounds%endp)   ! direct rain throughfall [mm/s]
+     real(r8) :: qflx_through_snow(bounds%begp:bounds%endp)   ! direct snow throughfall [mm/s]
+     real(r8) :: qflx_prec_grnd_snow(bounds%begp:bounds%endp) ! snow precipitation incident on ground [mm/s]
+     real(r8) :: qflx_prec_grnd_rain(bounds%begp:bounds%endp) ! rain precipitation incident on ground [mm/s]
+     real(r8) :: z_avg                        ! grid cell average snow depth
+     real(r8) :: rho_avg                      ! avg density of snow column
+     real(r8) :: temp_snow_depth,temp_intsnow     ! temporary variables
+     real(r8) :: fmelt
+     real(r8) :: smr
+     real(r8) :: delf_melt
+     real(r8) :: fsno_new
+     real(r8) :: accum_factor
+     real(r8) :: newsnow(bounds%begc:bounds%endc)
+     real(r8) :: snowmelt(bounds%begc:bounds%endc)
+     integer  :: j
+     !-----------------------------------------------------------------------
 
 
    associate(& 
@@ -398,7 +364,8 @@ contains
 
     ! Update column level state variables for snow.
 
-    call p2c(lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, qflx_snow_grnd_pft, qflx_snow_grnd_col)
+    call p2c(bounds, &
+         num_nolakec, filter_nolakec, qflx_snow_grnd_pft, qflx_snow_grnd_col)
 
     ! apply gridcell flood water flux to non-lake columns
     do f = 1, num_nolakec
@@ -625,7 +592,7 @@ contains
     end do
 
     ! update surface water fraction (this may modify frac_sno)
-    call FracH2oSfc(lbc, ubc, num_nolakec, filter_nolakec,frac_h2osfc)
+    call FracH2oSfc(bounds, num_nolakec, filter_nolakec,frac_h2osfc)
 
     end associate 
    end subroutine Hydrology1

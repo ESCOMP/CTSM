@@ -1,70 +1,50 @@
-
 module pft2colMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: pft2colMod
-!
-! !DESCRIPTION:
-! Contains calls to methods to perfom averages over from pfts to columns
-! for model variables.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Contains calls to methods to perfom averages over from pfts to columns
+  ! for model variables.
+  !
+  ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use subgridAveMod
   use clmtype
-!
-! !PUBLIC TYPES:
+  use decompMod, only: bounds_type
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: p2c  ! obtain column properties from average over column pfts
-!
-! !REVISION HISTORY:
-! 03/09/08: Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: pft2col
-!
-! !INTERFACE:
-  subroutine pft2col (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec)
-!
-! !DESCRIPTION:
-! Averages over all pfts for variables defined over both soil and lake
-! to provide the column-level averages of state and flux variables
-! defined at the pft level.
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine pft2col (bounds, num_nolakec, filter_nolakec)
+    !
+    ! !DESCRIPTION:
+    ! Averages over all pfts for variables defined over both soil and lake
+    ! to provide the column-level averages of state and flux variables
+    ! defined at the pft level.
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbp, ubp                    ! pft bounds
-    integer, intent(in) :: lbc, ubc                    ! column bounds
-    integer, intent(in) :: num_nolakec                 ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
-!
-! !REVISION HISTORY:
-! 03/09/08: Created by Mariana Vertenstein
-!
-!
-! !OTHER LOCAL VARIABLES:
-!EOP
-    integer :: c,fc                      ! indices
-    integer :: num_allc                  ! number of active column points
-    integer :: filter_allc(ubc-lbc+1)    ! filter for all active column points
-! -----------------------------------------------------------------
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    integer, intent(in) :: num_nolakec       ! number of column non-lake points in column filter
+    integer, intent(in) :: filter_nolakec(:) ! column filter for non-lake points
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c,fc              ! indices
+    integer :: num_allc          ! number of active column points
+    integer :: filter_allc(bounds%endp-bounds%begp+1)    ! filter for all active column points
+    ! -----------------------------------------------------------------
 
     ! Set up a filter for all active column points
 
     fc = 0
-    do c = lbc,ubc
+    do c = bounds%begc,bounds%endc
        if (col%active(c)) then
           fc = fc + 1
           filter_allc(fc) = c
@@ -81,45 +61,45 @@ contains
 
     ! Averaging for pft water state variables
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pws%h2ocan, pws_a%h2ocan)
+    call p2c (bounds, num_nolakec, filter_nolakec, pws%h2ocan, pws_a%h2ocan)
 
     ! Averaging for pft water flux variables
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_ev_snow, pwf_a%qflx_ev_snow)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_ev_snow, pwf_a%qflx_ev_snow)
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_ev_soil, pwf_a%qflx_ev_soil)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_ev_soil, pwf_a%qflx_ev_soil)
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_ev_h2osfc, pwf_a%qflx_ev_h2osfc)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_ev_h2osfc, pwf_a%qflx_ev_h2osfc)
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_evap_soi, pwf_a%qflx_evap_soi)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_evap_soi, pwf_a%qflx_evap_soi)
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_evap_tot, pwf_a%qflx_evap_tot)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_evap_tot, pwf_a%qflx_evap_tot)
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_rain_grnd, pwf_a%qflx_rain_grnd)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_rain_grnd, pwf_a%qflx_rain_grnd)
     
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_snow_grnd, pwf_a%qflx_snow_grnd)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_snow_grnd, pwf_a%qflx_snow_grnd)
     
-    call p2c (lbp, ubp, lbc, ubc, num_allc, filter_allc, pwf%qflx_snwcp_liq, pwf_a%qflx_snwcp_liq)
+    call p2c (bounds, num_allc, filter_allc, pwf%qflx_snwcp_liq, pwf_a%qflx_snwcp_liq)
 
     ! For lakes, this field is initially set in SLakeFluxesMod (which is called before this routine; 
     ! hence it is appropriate to include lake columns in this p2c call.
     ! However, it is later overwritten in SLakeHydrologyMod, both on the pft and the column level.
 
-    call p2c (lbp, ubp, lbc, ubc, num_allc, filter_allc, pwf%qflx_snwcp_ice, pwf_a%qflx_snwcp_ice)
+    call p2c (bounds, num_allc, filter_allc, pwf%qflx_snwcp_ice, pwf_a%qflx_snwcp_ice)
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_tran_veg, pwf_a%qflx_tran_veg)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_tran_veg, pwf_a%qflx_tran_veg)
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_evap_grnd, pwf_a%qflx_evap_grnd)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_evap_grnd, pwf_a%qflx_evap_grnd)
 
-    call p2c (lbp, ubp, lbc, ubc, num_allc, filter_allc, pwf%qflx_evap_soi, pwf_a%qflx_evap_soi)
+    call p2c (bounds, num_allc, filter_allc, pwf%qflx_evap_soi, pwf_a%qflx_evap_soi)
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_prec_grnd, pwf_a%qflx_prec_grnd)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_prec_grnd, pwf_a%qflx_prec_grnd)
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_dew_grnd, pwf_a%qflx_dew_grnd)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_dew_grnd, pwf_a%qflx_dew_grnd)
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_sub_snow, pwf_a%qflx_sub_snow)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_sub_snow, pwf_a%qflx_sub_snow)
 
-    call p2c (lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, pwf%qflx_dew_snow, pwf_a%qflx_dew_snow)
+    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_dew_snow, pwf_a%qflx_dew_snow)
 
   end subroutine pft2col
 

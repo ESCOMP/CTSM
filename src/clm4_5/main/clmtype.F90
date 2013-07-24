@@ -1,10 +1,6 @@
 module clmtype
 
 !----------------------------------------------------------------------- 
-!BOP
-!
-! !MODULE: clmtype
-!
 ! !DESCRIPTION: 
 ! Define derived type hierarchy. Includes declaration of
 ! the clm derived type and 1d mapping arrays. 

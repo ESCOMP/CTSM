@@ -1,76 +1,50 @@
 module TridiagonalMod
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: TridiagonalMod
-!
-! !DESCRIPTION:
-! Tridiagonal matrix solution
-!
-! !PUBLIC TYPES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Tridiagonal matrix solution
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: Tridiagonal
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: Tridiagonal
-!
-! !INTERFACE:
-  subroutine Tridiagonal (lbc, ubc, lbj, ubj, jtop, numf, filter, &
-                          a, b, c, r, u)
-!
-! !DESCRIPTION:
-! Tridiagonal matrix solution
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine Tridiagonal (bounds, lbj, ubj, jtop, numf, filter, a, b, c, r, u)
+    !
+    ! !DESCRIPTION:
+    ! Tridiagonal matrix solution
+    !
+    ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
-    use clm_varpar    , only : nlevurb
-    use clm_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varctl    , only : iulog
-!
-! !ARGUMENTS:
+    use clm_varpar, only : nlevurb
+    use clm_varcon, only : icol_roof, icol_sunwall, icol_shadewall
+    use clm_varctl, only : iulog
+    use decompMod , only : bounds_type
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer , intent(in)    :: lbc, ubc               ! lbinning and ubing column indices
+    type(bounds_type), intent(in) :: bounds           ! bounds
     integer , intent(in)    :: lbj, ubj               ! lbinning and ubing level indices
-    integer , intent(in)    :: jtop(lbc:ubc)          ! top level for each column
+    integer , intent(in)    :: jtop(bounds%begc:)     ! top level for each column
     integer , intent(in)    :: numf                   ! filter dimension
-    integer , intent(in)    :: filter(1:numf)         ! filter
-    real(r8), intent(in)    :: a(lbc:ubc, lbj:ubj)    ! "a" left off diagonal of tridiagonal matrix
-    real(r8), intent(in)    :: b(lbc:ubc, lbj:ubj)    ! "b" diagonal column for tridiagonal matrix
-    real(r8), intent(in)    :: c(lbc:ubc, lbj:ubj)    ! "c" right off diagonal tridiagonal matrix
-    real(r8), intent(in)    :: r(lbc:ubc, lbj:ubj)    ! "r" forcing term of tridiagonal matrix
-    real(r8), intent(inout) :: u(lbc:ubc, lbj:ubj)    ! solution
-!
-! !CALLED FROM:
-! subroutine BiogeophysicsLake in module BiogeophysicsLakeMod
-! subroutine SoilTemperature in module SoilTemperatureMod
-! subroutine SoilWater in module HydrologyMod
-!
-! !REVISION HISTORY:
-! 15 September 1999: Yongjiu Dai; Initial code
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-!  1 July 2003: Mariana Vertenstein; modified for vectorization
-!
-!EOP
-!
+    integer , intent(in)    :: filter(:)              ! filter
+    real(r8), intent(in)    :: a(bounds%begc:bounds%endc, lbj:ubj)    ! "a" left off diagonal of tridiagonal matrix
+    real(r8), intent(in)    :: b(bounds%begc:bounds%endc, lbj:ubj)    ! "b" diagonal column for tridiagonal matrix
+    real(r8), intent(in)    :: c(bounds%begc:bounds%endc, lbj:ubj)    ! "c" right off diagonal tridiagonal matrix
+    real(r8), intent(in)    :: r(bounds%begc:bounds%endc, lbj:ubj)    ! "r" forcing term of tridiagonal matrix
+    real(r8), intent(inout) :: u(bounds%begc:bounds%endc, lbj:ubj)    ! solution
+    !
     integer  :: j,ci,fc                   !indices
-    real(r8) :: gam(lbc:ubc,lbj:ubj)      !temporary
-    real(r8) :: bet(lbc:ubc)              !temporary
-!-----------------------------------------------------------------------
+    real(r8) :: gam(bounds%begc:bounds%endc,lbj:ubj)      !temporary
+    real(r8) :: bet(bounds%begc:bounds%endc)              !temporary
+    !-----------------------------------------------------------------------
 
     ! Solve the matrix
 

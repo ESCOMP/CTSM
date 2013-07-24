@@ -1,27 +1,22 @@
 module pftdynMod
 
-!---------------------------------------------------------------------------
-!BOP
-!
-! !MODULE: pftdynMod
-!
-! !USES:
+  !---------------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Determine pft weights at current time using dynamic landuse datasets.
+  ! ASSUMES that only have one dynamic landuse dataset.
+  !
+  ! !USES:
   use spmdMod
   use clmtype
-  use decompMod   , only : get_proc_bounds
+  use decompMod   , only : bounds_type
   use clm_varsur  , only : pctspec
   use clm_varpar  , only : max_pft_per_col
-  use clm_varctl  , only : iulog, use_c13, use_c14
+  use clm_varctl  , only : iulog, use_c13, use_c14, use_cn
   use shr_sys_mod , only : shr_sys_flush
-  use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
   use ncdio_pio
-!
-! !DESCRIPTION:
-! Determine pft weights at current time using dynamic landuse datasets.
-! ASSUMES that only have one dynamic landuse dataset.
-!
-! !PUBLIC TYPES:
+  !
+  ! !PUBLIC TYPES:
   implicit none
   private
   save
@@ -29,30 +24,18 @@ module pftdynMod
   public :: pftdyn_interp
   public :: pftdyn_wbal_init
   public :: pftdyn_wbal
-#ifdef CN
   public :: pftdyn_cnbal
-#ifdef CNDV
   public :: pftwt_init
   public :: pftwt_interp
-#endif
   public :: CNHarvest
   public :: CNHarvestPftToColumn
-#endif
-!
-! !REVISION HISTORY:
-! Created by Peter Thornton
-! slevis modified to handle CNDV and crop model
-! 19 May 2009: PET - modified to handle harvest fluxes
-! F. Li and S. Levis (11/06/12)
-
-!EOP
-!
-! ! PRIVATE TYPES
-  integer  , allocatable   :: yearspft (:) !  [integer (:)] 
-  real(r8) , allocatable   :: wtpft1 (:,:)       !  [real(r8) (:,:)]  weight of each pft relative to the natural veg landunit, time 1 
-  real(r8) , allocatable   :: wtpft2 (:,:)       !  [real(r8) (:,:)]  weight of each pft relative to the natural veg landunit, time 2 
-  real(r8) , allocatable   :: harvest (:) !  [real(r8) (:)]    
-  real(r8) , allocatable   :: wtcol_old (:) !  [real(r8) (:)] 
+  !
+  ! ! PRIVATE TYPES
+  integer  , allocatable   :: yearspft (:) ! 
+  real(r8) , allocatable   :: wtpft1 (:,:) ! weight of each pft relative to the natural veg landunit, time 1 
+  real(r8) , allocatable   :: wtpft2 (:,:) ! weight of each pft relative to the natural veg landunit, time 2 
+  real(r8) , allocatable   :: harvest (:)  ! 
+  real(r8) , allocatable   :: wtcol_old (:)! 
   integer :: nt1
   integer :: nt2
   integer :: ntimes
@@ -60,36 +43,30 @@ module pftdynMod
   type(file_desc_t)  :: ncid   ! netcdf id
   ! default multiplication factor for epsilon for error checks
   real(r8), private, parameter :: eps_fact = 2._r8
-!---------------------------------------------------------------------------
+  !---------------------------------------------------------------------------
 
 contains
   
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: pftdyn_init
-!
-! !INTERFACE:
-  subroutine pftdyn_init()
-!
-! !DESCRIPTION:
-! Initialize dynamic landuse dataset (position it to the right time samples
-! that bound the initial model date)
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine pftdyn_init(bounds)
+    !
+    ! !DESCRIPTION:
+    ! Initialize dynamic landuse dataset (position it to the right time samples
+    ! that bound the initial model date)
+    !
+    ! !USES:
     use clm_time_manager, only : get_curr_date
     use clm_varctl  , only : fpftdyn
     use clm_varpar  , only : numpft, maxpatch_pft, natpft_lb, natpft_ub, natpft_size
     use clm_varcon  , only : numurbl, istsoil, istcrop
     use clm_varsur  , only : wt_lunit
     use fileutils   , only : getfil
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     integer  :: i,j,m,n,g,nl                    ! indices
     real(r8) :: sumpct                          ! sum for error check
     integer  :: varid                           ! netcdf ids
@@ -100,23 +77,18 @@ contains
     integer  :: ier, ret                        ! error status
     logical  :: found                           ! true => input dataset bounding dates found
     logical  :: readvar	                        ! true => variable is on input dataset
-    integer  :: begg,endg                       ! beg/end indices for land gridcells
-    integer  :: begl,endl                       ! beg/end indices for land landunits
-    integer  :: begc,endc                       ! beg/end indices for land columns
-    integer  :: begp,endp                       ! beg/end indices for land pfts
     ! leave the following as pointers instead of changing to allocatable since the ncd_io
     ! interface expects a pointer type
-    real(r8) , pointer :: pctnatveg (:)        !  [real(r8) (:)]  percent of gcell is natural vegetation landunit 
-    real(r8) , pointer :: pctcrop (:)          !  [real(r8) (:)]  percent of gcell is crop landunit 
-    real(r8) , pointer :: pctgla (:)           !  [real(r8) (:)]  percent of gcell is glacier 
-    real(r8) , pointer :: pctlak (:)           !  [real(r8) (:)]  percent of gcell is lake 
-    real(r8) , pointer :: pctwet (:)           !  [real(r8) (:)]  percent of gcell is wetland 
-    real(r8) , pointer :: pcturb (:,:)         !  [real(r8) (:,:)]  percent of gcell is urbanized 
-    real(r8) , pointer :: pcturb_tot (:)       !  [real(r8) (:)]  percent of grid cell is urban (sum over density classes) 
-    character(len=256) :: locfn                 ! local file name
-    character(len= 32) :: subname='pftdyn_init' ! subroutine name
- !-----------------------------------------------------------------------
-    call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
+    real(r8) , pointer :: pctnatveg (:)        ! percent of gcell is natural vegetation landunit 
+    real(r8) , pointer :: pctcrop (:)          ! percent of gcell is crop landunit 
+    real(r8) , pointer :: pctgla (:)           ! percent of gcell is glacier 
+    real(r8) , pointer :: pctlak (:)           ! percent of gcell is lake 
+    real(r8) , pointer :: pctwet (:)           ! percent of gcell is wetland 
+    real(r8) , pointer :: pcturb (:,:)         ! percent of gcell is urbanized 
+    real(r8) , pointer :: pcturb_tot (:)       ! percent of grid cell is urban (sum over density classes) 
+    character(len=256) :: locfn                ! local file name
+    character(len= 32) :: subname='pftdyn_init'! subroutine name
+    !-----------------------------------------------------------------------
 
     ! Error check
 
@@ -124,12 +96,13 @@ contains
        call endrun( subname//' maxpatch_pft does NOT equal numpft+1 -- this is invalid for dynamic PFT case' )
     end if
 
-    allocate(pctnatveg(begg:endg),pctcrop(begg:endg))
-    allocate(pctgla(begg:endg),pctlak(begg:endg))
-    allocate(pctwet(begg:endg),pcturb(begg:endg,numurbl),pcturb_tot(begg:endg))
-
-    ! Set pointers into derived type
-
+    allocate(pctnatveg(bounds%begg:bounds%endg))
+    allocate(pctcrop(bounds%begg:bounds%endg))
+    allocate(pctgla(bounds%begg:bounds%endg))
+    allocate(pctlak(bounds%begg:bounds%endg))
+    allocate(pctwet(bounds%begg:bounds%endg))
+    allocate(pcturb(bounds%begg:bounds%endg,numurbl))
+    allocate(pcturb_tot(bounds%begg:bounds%endg))
 
     ! pctspec must be saved between time samples
     ! position to first time sample - assume that first time sample must match starting date
@@ -138,19 +111,19 @@ contains
 
     ! read data PCT_NAT_PFT corresponding to correct year
 
-    allocate(wtpft1(begg:endg,natpft_lb:natpft_ub), &
-             wtpft2(begg:endg,natpft_lb:natpft_ub), &
+    allocate(wtpft1(bounds%begg:bounds%endg,natpft_lb:natpft_ub), &
+             wtpft2(bounds%begg:bounds%endg,natpft_lb:natpft_ub), &
              stat=ier)
     if (ier /= 0) then
        call endrun( subname//' allocation error for wtpft1, wtpft2' )
     end if
     
-    allocate(harvest(begg:endg),stat=ier)
+    allocate(harvest(bounds%begg:bounds%endg),stat=ier)
     if (ier /= 0) then
        call endrun( subname//' allocation error for harvest')
     end if
 
-    allocate(wtcol_old(begp:endp),stat=ier)
+    allocate(wtcol_old(bounds%begp:bounds%endp),stat=ier)
     if (ier /= 0) then
        call endrun( subname//' allocation error for wtcol_old' )
     end if
@@ -204,13 +177,13 @@ contains
     if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on pftdyn file' )
     pcturb_tot(:) = 0._r8
     do n = 1, numurbl
-       do nl = begg,endg
+       do nl = bounds%begg,bounds%endg
           pcturb_tot(nl) = pcturb_tot(nl) + pcturb(nl,n)
        enddo
     enddo
 
     ! Consistency check
-    do g = begg,endg
+    do g = bounds%begg,bounds%endg
        ! WJS (5-9-13): I am adding these pctnatveg and pctcrop consistency checks for now,
        ! although both these and the following pctspec consistency check (which was
        ! already here) may not be necessary now that pctpft is specified as % of landunit
@@ -290,52 +263,41 @@ contains
 
     ! Get pctpft time samples bracketing the current time
 
-    call pftdyn_getdata(nt1, wtpft1, begg,endg, natpft_lb,natpft_ub)
-    call pftdyn_getdata(nt2, wtpft2, begg,endg, natpft_lb,natpft_ub)
+    call pftdyn_getdata(bounds, nt1, wtpft1, natpft_lb,natpft_ub)
+    call pftdyn_getdata(bounds, nt2, wtpft2, natpft_lb,natpft_ub)
     
-#ifdef CN
-    ! Get harvest rate at the nt1 time
-    call pftdyn_getharvest(nt1,begg,endg)
-#endif
+    if (use_cn) then
+       ! Get harvest rate at the nt1 time
+       call pftdyn_getharvest(bounds, nt1)
+    end if
 
     deallocate(pctnatveg, pctcrop, pctgla,pctlak,pctwet,pcturb,pcturb_tot)
 
   end subroutine pftdyn_init
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: pftdyn_interp
-!
-! !INTERFACE:
-  subroutine pftdyn_interp()
-!
-! !DESCRIPTION:
-! Time interpolate dynamic landuse data to get pft weights for model time
-! Note that harvest data are stored as rates (not weights) and so time interpolation is 
-! not necessary - the harvest rate is held constant through the year.  This is consistent with
-! the treatment of changing PFT weights, where interpolation of the annual endpoint weights leads to 
-! a constant rate of change in PFT weight through the year, with abrupt changes in the rate at
-! annual boundaries. This routine is still used to get the next harvest time slice, when needed.
-! This routine is also used to turn off the harvest switch when the model year runs past the end of
-! the dynpft time series.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine pftdyn_interp(bounds)
+    !
+    ! !DESCRIPTION:
+    ! Time interpolate dynamic landuse data to get pft weights for model time
+    ! Note that harvest data are stored as rates (not weights) and so time interpolation is 
+    ! not necessary - the harvest rate is held constant through the year.  This is consistent with
+    ! the treatment of changing PFT weights, where interpolation of the annual endpoint weights leads to 
+    ! a constant rate of change in PFT weight through the year, with abrupt changes in the rate at
+    ! annual boundaries. This routine is still used to get the next harvest time slice, when needed.
+    ! This routine is also used to turn off the harvest switch when the model year runs past the end of
+    ! the dynpft time series.
+    !
+    ! !USES:
     use clm_time_manager, only : get_curr_date, get_curr_calday, &
                                  get_days_per_year
     use clm_varcon      , only : istsoil
     use clm_varpar      , only : natpft_lb, natpft_ub
     implicit none
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-!
-! !ARGUMENTS:
-    integer  :: begg,endg        ! beg/end indices for land gridcells
-    integer  :: begl,endl        ! beg/end indices for land landunits
-    integer  :: begc,endc        ! beg/end indices for land columns
-    integer  :: begp,endp        ! beg/end indices for land pfts
+    !
+    !
+    ! !LOCAL VARIABLES:
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer  :: i,j,m,p,l,g,c    ! indices
     integer  :: year             ! year (0, ...) for nstep+1
     integer  :: mon              ! month (1, ..., 12) for nstep+1
@@ -346,11 +308,7 @@ contains
     integer  :: ier              ! error status
     real(r8) :: wt1              ! time interpolation weights
     character(len=32) :: subname='pftdyn_interp' ! subroutine name
-!-----------------------------------------------------------------------
-
-    call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
-
-    ! Set pointers into derived type
+    !-----------------------------------------------------------------------
 
     ! Interpolate pctpft to current time step - output in pctpft_intp
     ! Map interpolated pctpft to subgrid weights
@@ -389,16 +347,16 @@ contains
        end if
        
        do m = natpft_lb,natpft_ub
-          do g = begg,endg
+          do g = bounds%begg,bounds%endg
              wtpft1(g,m) = wtpft2(g,m)
           end do
        end do
 
-       call pftdyn_getdata(nt2, wtpft2, begg,endg, natpft_lb,natpft_ub)
+       call pftdyn_getdata(bounds, nt2, wtpft2, natpft_lb,natpft_ub)
 
-#ifdef CN
-       call pftdyn_getharvest(nt1,begg,endg)
-#endif
+       if (use_cn) then
+          call pftdyn_getharvest(bounds, nt1)
+       end if
 
     end if  ! end of need new data if-block 
 
@@ -409,7 +367,7 @@ contains
 
     wt1 = ((days_per_year + 1._r8) - cday)/days_per_year
 
-    do p = begp,endp
+    do p = bounds%begp,bounds%endp
        c = pft%column(p)
        g = pft%gridcell(p)
        l = pft%landunit(p)
@@ -435,177 +393,135 @@ contains
 
   end subroutine pftdyn_interp
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: pftdyn_getdata
-!
-! !INTERFACE:
-  subroutine pftdyn_getdata(ntime, wtpft, begg, endg, pft0, maxpft)
-!
-! !DESCRIPTION:
-! Obtain dynamic landuse data (wtpft) and make sure that
-! percentage of PFTs sum to 100% cover for vegetated landunit
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine pftdyn_getdata(bounds, ntime, wtpft, pft0, maxpft)
+    !
+    ! !DESCRIPTION:
+    ! Obtain dynamic landuse data (wtpft) and make sure that
+    ! percentage of PFTs sum to 100% cover for vegetated landunit
+    !
+    ! !USES:
     use surfrdMod   , only : surfrd_check_sums_equal_1
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer , intent(in)  :: ntime
-    integer , intent(in)  :: begg,endg,pft0,maxpft
-    real(r8), intent(out) :: wtpft(begg:endg,pft0:maxpft)  ! pft weights (sum to 1.0)
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    integer , intent(in)  :: pft0, maxpft
+    real(r8), intent(out) :: wtpft(bounds%begg:bounds%endg,pft0:maxpft)  ! pft weights (sum to 1.0)
+    !
+    !
+    ! !LOCAL VARIABLES:
     integer  :: i,j,m,n
     integer  :: err, ierr, ret
     real(r8) :: sumpct,sumerr                     ! temporary
-    real(r8) , pointer :: arrayl (:,:)               !  [real(r8) (:,:)]  temporary array 
+    real(r8) , pointer :: arrayl (:,:)            ! temporary array 
     logical  :: readvar
-   
     character(len=32) :: subname='pftdyn_getdata' ! subroutine name
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
     
-    allocate(arrayl(begg:endg,pft0:maxpft))	
+    allocate(arrayl(bounds%begg:bounds%endg,pft0:maxpft))	
     call ncd_io(ncid=ncid, varname= 'PCT_NAT_PFT', flag='read', data=arrayl, &
          dim1name=grlnd, nt=ntime, readvar=readvar)
-    wtpft(begg:endg,pft0:maxpft) = arrayl(begg:endg,pft0:maxpft) / 100._r8
+    wtpft(bounds%begg:bounds%endg,pft0:maxpft) = arrayl(bounds%begg:bounds%endg,pft0:maxpft) / 100._r8
     deallocate(arrayl)		
     if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_NAT_PFT NOT on pftdyn file' )
     
-    call surfrd_check_sums_equal_1(wtpft, begg, 'PCT_NAT_PFT', subname)
+    call surfrd_check_sums_equal_1(wtpft, bounds%begg, 'PCT_NAT_PFT', subname)
     
   end subroutine pftdyn_getdata
 
-#ifdef CN
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: pftdyn_getharvest
-!
-! !INTERFACE:
-  subroutine pftdyn_getharvest(ntime, begg, endg)
-!
-! !DESCRIPTION:
-! Obtain harvest data 
-!
-! !USES:
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine pftdyn_getharvest(bounds, ntime)
+    !
+    ! !DESCRIPTION:
+    ! Obtain harvest data 
+    !
+    ! !ARGUMENTS:
     implicit none
+    type(bounds_type), intent(in) :: bounds  ! bounds
     integer , intent(in)  :: ntime
-    integer , intent(IN)  :: begg     ! beg indices for land gridcells
-    integer , intent(IN)  :: endg     ! end indices for land gridcells
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     real(r8) , pointer :: arrayl (:)                    !  [real(r8) (:)]  temporary array 
     logical :: readvar 
     character(len=32) :: subname='pftdyn_getharvest' ! subroutine name
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
     
-    allocate(arrayl(begg:endg))
+    allocate(arrayl(bounds%begg:bounds%endg))
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_VH1', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_VH1 not on pftdyn file' )
-    harvest(begg:endg) = arrayl(begg:endg)
+    harvest(bounds%begg:bounds%endg) = arrayl(bounds%begg:bounds%endg)
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_VH2', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_VH2 not on pftdyn file' )
-    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    harvest(bounds%begg:bounds%endg) = harvest(bounds%begg:bounds%endg) + arrayl(bounds%begg:bounds%endg)
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_SH1', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH1 not on pftdyn file' )
-    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    harvest(bounds%begg:bounds%endg) = harvest(bounds%begg:bounds%endg) + arrayl(bounds%begg:bounds%endg)
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_SH2', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH2 not on pftdyn file' )
-    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    harvest(bounds%begg:bounds%endg) = harvest(bounds%begg:bounds%endg) + arrayl(bounds%begg:bounds%endg)
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_SH3', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH3 not on pftdyn file' )
-    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    harvest(bounds%begg:bounds%endg) = harvest(bounds%begg:bounds%endg) + arrayl(bounds%begg:bounds%endg)
 
     deallocate(arrayl)
 
   end subroutine pftdyn_getharvest
-#endif
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: pftdyn_wbal_init
-!
-! !INTERFACE:
-  subroutine pftdyn_wbal_init( begc, endc )
-!
-! !DESCRIPTION:
-! initialize the column-level mass-balance correction term.
-! Called in every timestep.
-!
-! !USES:
-!
-! !ARGUMENTS:
+  !-----------------------------------------------------------------------
+  subroutine pftdyn_wbal_init(bounds)
+    !
+    ! !DESCRIPTION:
+    ! initialize the column-level mass-balance correction term.
+    ! Called in every timestep.
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(IN)  :: begc, endc    ! proc beginning and ending column indices
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     integer  :: c             ! indices
-!-----------------------------------------------------------------------
-
-    ! Set pointers into derived type
-
+    !-----------------------------------------------------------------------
 
     ! set column-level canopy water mass balance correction flux
     ! term to 0 at the beginning of every timestep
     
-    do c = begc,endc
+    do c = bounds%begc,bounds%endc
        cwf%h2ocan_loss(c) = 0._r8
     end do
     
   end subroutine pftdyn_wbal_init
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: pftdyn_wbal
-!
-! !INTERFACE:
-  subroutine pftdyn_wbal( begg, endg, begc, endc, begp, endp )
-!
-! !DESCRIPTION:
-! modify pft-level state and flux variables to maintain water balance with
-! dynamic pft-weights.
-! Canopy water balance does not need to consider harvest fluxes, since pft weights are
-! not affected by harvest.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine pftdyn_wbal(bounds)
+    !
+    ! !DESCRIPTION:
+    ! modify pft-level state and flux variables to maintain water balance with
+    ! dynamic pft-weights.
+    ! Canopy water balance does not need to consider harvest fluxes, since pft weights are
+    ! not affected by harvest.
+    !
+    ! !USES:
     use clm_varcon  , only : istsoil
     use clm_varcon  , only : istcrop
     use clm_time_manager, only : get_step_size
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(IN)  :: begg     ! beg indices for land gridcells
-    integer, intent(IN)  :: endg     ! end indices for land gridcells
-    integer, intent(IN)  :: begc     ! beg indices for land columns
-    integer, intent(IN)  :: endc     ! end indices for land columns
-    integer, intent(IN)  :: begp     ! beg indices for land plant function types
-    integer, intent(IN)  :: endp     ! end indices for land plant function types
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     integer  :: pi,p,c,l,g    ! indices
     integer  :: ier           ! error code
     real(r8) :: dtime         ! land model time step (sec)
@@ -614,13 +530,10 @@ contains
     real(r8) :: new_h2ocan    ! canopy water mass after weight shift
     real(r8), allocatable :: loss_h2ocan(:) ! canopy water mass loss due to weight shift
     character(len=32) :: subname='pftdyn_wbal' ! subroutine name
-!-----------------------------------------------------------------------
-
-    ! Set pointers into derived type
-
+    !-----------------------------------------------------------------------
 
     ! Allocate loss_h2ocan
-    allocate(loss_h2ocan(begp:endp), stat=ier)
+    allocate(loss_h2ocan(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for loss_h2ocan'; call endrun()
     end if
@@ -632,11 +545,11 @@ contains
     ! set column-level canopy water mass balance correction flux
     ! term to 0 at the beginning of every weight-shifting timestep
 
-    do c = begc,endc
+    do c = bounds%begc,bounds%endc
        cwf%h2ocan_loss(c) = 0._r8 ! is this OR pftdyn_wbal_init redundant?
     end do
 
-    do p = begp,endp
+    do p = bounds%begp,bounds%endp
        l = pft%landunit(p)
        loss_h2ocan(p) = 0._r8
 
@@ -681,7 +594,7 @@ contains
     end do
 
     do pi = 1,max_pft_per_col
-       do c = begc,endc
+       do c = bounds%begc,bounds%endc
           if (pi <= col%npfts(c)) then
              p = col%pfti(c) + pi - 1
              cwf%h2ocan_loss(c) = cwf%h2ocan_loss(c) + loss_h2ocan(p)/dtime
@@ -694,38 +607,27 @@ contains
     
   end subroutine pftdyn_wbal
   
-#ifdef CN
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: pftdyn_cnbal
-!
-! !INTERFACE:
-  subroutine pftdyn_cnbal( begc, endc, begp, endp )
-!
-! !DESCRIPTION:
-! modify pft-level state and flux variables to maintain carbon and nitrogen balance with
-! dynamic pft-weights.
-!
-! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
+  !-----------------------------------------------------------------------
+  subroutine pftdyn_cnbal(bounds)
+    !
+    ! !DESCRIPTION:
+    ! modify pft-level state and flux variables to maintain carbon and nitrogen balance with
+    ! dynamic pft-weights.
+    !
+    ! !USES:
     use shr_const_mod,only : SHR_CONST_PDB
-    use decompMod   , only : get_proc_bounds
     use clm_varcon  , only : istsoil
     use clm_varpar  , only : numveg, nlevdecomp
     use clm_varcon  , only : istcrop
     use pftvarcon   , only : pconv, pprod10, pprod100
     use clm_varcon  , only : c13ratio, c14ratio
     use clm_time_manager, only : get_step_size
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(IN)  :: begp, endp    ! proc beginning and ending pft indices
-    integer, intent(IN)  :: begc, endc    ! proc beginning and ending column indices
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     integer  :: pi,p,c,l,g,j    ! indices
     integer  :: ier           ! error code
     real(r8) :: dwt           ! change in pft weight (relative to column)
@@ -755,7 +657,7 @@ contains
     real(r8) :: deadstemc_seed, deadstemn_seed
     real(r8), pointer :: dwt_ptr0, dwt_ptr1, dwt_ptr2, dwt_ptr3, ptr
     character(len=32) :: subname='pftdyn_cbal' ! subroutine name
-    !!! C13
+    !! C13
     real(r8), allocatable :: dwt_leafc13_seed(:)     ! pft-level mass gain due to seeding of new area
     real(r8), allocatable :: dwt_deadstemc13_seed(:)     ! pft-level mass gain due to seeding of new area
     real(r8), allocatable, target :: dwt_frootc13_to_litter(:)     ! pft-level mass loss due to weight shift
@@ -771,7 +673,7 @@ contains
     real(r8) :: c3_r2_c13         ! isotope ratio (13c/[12c+13c]) for C3 photosynthesis
     real(r8) :: c4_r2_c13         ! isotope ratio (13c/[12c+13c]) for C4 photosynthesis
     real(r8) :: leafc13_seed, deadstemc13_seed
-    !!! C14
+    !! C14
     real(r8), allocatable :: dwt_leafc14_seed(:)     ! pft-level mass gain due to seeding of new area
     real(r8), allocatable :: dwt_deadstemc14_seed(:)     ! pft-level mass gain due to seeding of new area
     real(r8), allocatable, target :: dwt_frootc14_to_litter(:)     ! pft-level mass loss due to weight shift
@@ -787,147 +689,142 @@ contains
     real(r8) :: c3_r2_c14         ! isotope ratio (14c/[12c+14c]) for C3 photosynthesis
     real(r8) :: c4_r2_c14         ! isotope ratio (14c/[12c+14c]) for C4 photosynthesis
     real(r8) :: leafc14_seed, deadstemc14_seed
-   
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
     
-    ! Set pointers into derived type
-
    associate(& 
-   pcolumn                             =>    pft%column              , & !  [integer (:)]  column of corresponding pft                               
-   lfpftd                              =>    pps%lfpftd              , & !  [real(r8) (:)] F. Li and S. Levis                                        
-   ivt                                 =>   pft%itype                  & !  [integer (:)]  pft vegetation type added by F. Li and S. Levis           
+   lfpftd  =>  pps%lfpftd  & ! Output:  [real(r8) (:)] F. Li and S. Levis                                        
    )
 
     ! Allocate pft-level mass loss arrays
-    allocate(dwt_leafc_seed(begp:endp), stat=ier)
+    allocate(dwt_leafc_seed(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_leafc_seed'; call endrun()
     end if
-    allocate(dwt_leafn_seed(begp:endp), stat=ier)
+    allocate(dwt_leafn_seed(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_leafn_seed'; call endrun()
     end if
-    allocate(dwt_deadstemc_seed(begp:endp), stat=ier)
+    allocate(dwt_deadstemc_seed(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_deadstemc_seed'; call endrun()
     end if
-    allocate(dwt_deadstemn_seed(begp:endp), stat=ier)
+    allocate(dwt_deadstemn_seed(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_deadstemn_seed'; call endrun()
     end if
-    allocate(dwt_frootc_to_litter(begp:endp), stat=ier)
+    allocate(dwt_frootc_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_frootc_to_litter'; call endrun()
     end if
-    allocate(dwt_livecrootc_to_litter(begp:endp), stat=ier)
+    allocate(dwt_livecrootc_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_livecrootc_to_litter'; call endrun()
     end if
-    allocate(dwt_deadcrootc_to_litter(begp:endp), stat=ier)
+    allocate(dwt_deadcrootc_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_deadcrootc_to_litter'; call endrun()
     end if
-    allocate(dwt_frootn_to_litter(begp:endp), stat=ier)
+    allocate(dwt_frootn_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_frootn_to_litter'; call endrun()
     end if
-    allocate(dwt_livecrootn_to_litter(begp:endp), stat=ier)
+    allocate(dwt_livecrootn_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_livecrootn_to_litter'; call endrun()
     end if
-    allocate(dwt_deadcrootn_to_litter(begp:endp), stat=ier)
+    allocate(dwt_deadcrootn_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_deadcrootn_to_litter'; call endrun()
     end if
-    allocate(conv_cflux(begp:endp), stat=ier)
+    allocate(conv_cflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for conv_cflux'; call endrun()
     end if
-    allocate(prod10_cflux(begp:endp), stat=ier)
+    allocate(prod10_cflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for prod10_cflux'; call endrun()
     end if
-    allocate(prod100_cflux(begp:endp), stat=ier)
+    allocate(prod100_cflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for prod100_cflux'; call endrun()
     end if
-    allocate(conv_nflux(begp:endp), stat=ier)
+    allocate(conv_nflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for conv_nflux'; call endrun()
     end if
-    allocate(prod10_nflux(begp:endp), stat=ier)
+    allocate(prod10_nflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for prod10_nflux'; call endrun()
     end if
-    allocate(prod100_nflux(begp:endp), stat=ier)
+    allocate(prod100_nflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
           write(iulog,*)subname,' allocation error for prod100_nflux'; call endrun()
     end if
 
     if ( use_c13 ) then
-       allocate(dwt_leafc13_seed(begp:endp), stat=ier)
+       allocate(dwt_leafc13_seed(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_leafc13_seed'; call endrun()
        end if
-       allocate(dwt_deadstemc13_seed(begp:endp), stat=ier)
+       allocate(dwt_deadstemc13_seed(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_deadstemc13_seed'; call endrun()
        end if
-       allocate(dwt_frootc13_to_litter(begp:endp), stat=ier)
+       allocate(dwt_frootc13_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_frootc13_to_litter'; call endrun()
        end if
-       allocate(dwt_livecrootc13_to_litter(begp:endp), stat=ier)
+       allocate(dwt_livecrootc13_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_livecrootc13_to_litter'; call endrun()
        end if
-       allocate(dwt_deadcrootc13_to_litter(begp:endp), stat=ier)
+       allocate(dwt_deadcrootc13_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_deadcrootc13_to_litter'; call endrun()
        end if
-       allocate(conv_c13flux(begp:endp), stat=ier)
+       allocate(conv_c13flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for conv_c13flux'; call endrun()
        end if
-       allocate(prod10_c13flux(begp:endp), stat=ier)
+       allocate(prod10_c13flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for prod10_c13flux'; call endrun()
        end if
-       allocate(prod100_c13flux(begp:endp), stat=ier)
+       allocate(prod100_c13flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for prod100_c13flux'; call endrun()
        end if
     endif
     if ( use_c14 ) then
-       allocate(dwt_leafc14_seed(begp:endp), stat=ier)
+       allocate(dwt_leafc14_seed(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_leafc14_seed'; call endrun()
        end if
-       allocate(dwt_deadstemc14_seed(begp:endp), stat=ier)
+       allocate(dwt_deadstemc14_seed(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_deadstemc14_seed'; call endrun()
        end if
-       allocate(dwt_frootc14_to_litter(begp:endp), stat=ier)
+       allocate(dwt_frootc14_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_frootc14_to_litter'; call endrun()
        end if
-       allocate(dwt_livecrootc14_to_litter(begp:endp), stat=ier)
+       allocate(dwt_livecrootc14_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_livecrootc14_to_litter'; call endrun()
        end if
-       allocate(dwt_deadcrootc14_to_litter(begp:endp), stat=ier)
+       allocate(dwt_deadcrootc14_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for dwt_deadcrootc14_to_litter'; call endrun()
        end if
-       allocate(conv_c14flux(begp:endp), stat=ier)
+       allocate(conv_c14flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for conv_c14flux'; call endrun()
        end if
-       allocate(prod10_c14flux(begp:endp), stat=ier)
+       allocate(prod10_c14flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for prod10_c14flux'; call endrun()
        end if
-       allocate(prod100_c14flux(begp:endp), stat=ier)
+       allocate(prod100_c14flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
           write(iulog,*)subname,' allocation error for prod100_c14flux'; call endrun()
        end if
@@ -936,8 +833,8 @@ contains
     ! Get time step
     dt = real( get_step_size(), r8 )
     
-    do p = begp,endp
-       c = pcolumn(p)
+    do p = bounds%begp,bounds%endp
+       c = pft%column(p)
        ! initialize all the pft-level local flux arrays
        dwt_leafc_seed(p) = 0._r8
        dwt_leafn_seed(p) = 0._r8
@@ -2676,7 +2573,7 @@ contains
     
     ! calculate column-level seeding fluxes
     do pi = 1,max_pft_per_col
-       do c = begc, endc
+       do c = bounds%begc, bounds%endc
           if ( pi <=  col%npfts(c) ) then
              p = col%pfti(c) + pi - 1
              
@@ -2709,7 +2606,7 @@ contains
     ! calculate pft-to-column for fluxes into litter and CWD pools
     do j = 1, nlevdecomp
        do pi = 1,max_pft_per_col
-          do c = begc, endc
+          do c = bounds%begc, bounds%endc
              if ( pi <=  col%npfts(c) ) then
                 p = col%pfti(c) + pi - 1
                 
@@ -2781,7 +2678,7 @@ contains
     end do
     ! calculate pft-to-column for fluxes into product pools and conversion flux
     do pi = 1,max_pft_per_col
-       do c = begc,endc
+       do c = bounds%begc,bounds%endc
           if (pi <= col%npfts(c)) then
              p = col%pfti(c) + pi - 1
              
@@ -2792,7 +2689,7 @@ contains
              ccf%dwt_prod100c_gain(c) = ccf%dwt_prod100c_gain(c) - prod100_cflux(p)/dt
 
              ! These magic constants should be replaced with: nbrdlf_evr_trp_tree and nbrdlf_dcd_trp_tree
-             if(ivt(p)==4.or.ivt(p)==6)then
+             if(pft%itype(p)==4.or.pft%itype(p)==6)then
                 ccf%lf_conv_cflux(c) = ccf%lf_conv_cflux(c) - conv_cflux(p)/dt
              end if
              
@@ -2861,81 +2758,61 @@ contains
     
     end associate 
    end subroutine pftdyn_cnbal
-#endif
 
-#if (defined CNDV)
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: pftwt_init
-!
-! !INTERFACE:
-  subroutine pftwt_init()
-!
-! !DESCRIPTION:
-! Initialize time interpolation of cndv pft weights from annual to time step
-!
-! !USES:
-  use clm_varctl, only : nsrest, nsrStartup
-!
-! !ARGUMENTS:
-    implicit none
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-    integer  :: ier, p                        ! error status, do-loop index
-    integer  :: begp,endp                     ! beg/end indices for land pfts
-    character(len=32) :: subname='pftwt_init' ! subroutine name
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
+   subroutine pftwt_init(bounds)
+     !
+     ! !DESCRIPTION:
+     ! Initialize time interpolation of cndv pft weights from annual to time step
+     !
+     ! !USES:
+     use clm_varctl, only : nsrest, nsrStartup
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(bounds_type), intent(in) :: bounds  ! bounds
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: ier, p                        ! error status, do-loop index
+     character(len=32) :: subname='pftwt_init' ! subroutine name
+     !-----------------------------------------------------------------------
 
+     allocate(wtcol_old(bounds%begp:bounds%endp),stat=ier)
+     if (ier /= 0) then
+        call endrun( subname//'::ERROR: pftwt_init allocation error for wtcol_old')
+     end if
 
-    call get_proc_bounds(begp=begp,endp=endp)
-
-    allocate(wtcol_old(begp:endp),stat=ier)
-    if (ier /= 0) then
-       call endrun( subname//'::ERROR: pftwt_init allocation error for wtcol_old')
-    end if
-
-    if (nsrest == nsrStartup) then
-       do p = begp,endp
-          pdgvs%fpcgrid(p) = pft%wtcol(p)
-          pdgvs%fpcgridold(p) = pft%wtcol(p)
-          wtcol_old(p) = pft%wtcol(p)
-       end do
-    else
-       do p = begp,endp
-          wtcol_old(p) = pft%wtcol(p)
-       end do
-    end if
+     if (nsrest == nsrStartup) then
+        do p = bounds%begp,bounds%endp
+           pdgvs%fpcgrid(p) = pft%wtcol(p)
+           pdgvs%fpcgridold(p) = pft%wtcol(p)
+           wtcol_old(p) = pft%wtcol(p)
+        end do
+     else
+        do p = bounds%begp,bounds%endp
+           wtcol_old(p) = pft%wtcol(p)
+        end do
+     end if
 
   end subroutine pftwt_init
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: pftwt_interp
-!
-! !INTERFACE:
-  subroutine pftwt_interp( begp, endp )
-!
-! !DESCRIPTION:
-! Time interpolate cndv pft weights from annual to time step
-!
-! !USES:
-    use clm_time_manager, only : get_curr_calday, get_curr_date, &
-                                 get_days_per_year
+  !-----------------------------------------------------------------------
+  subroutine pftwt_interp( bounds )
+    !
+    ! !DESCRIPTION:
+    ! Time interpolate cndv pft weights from annual to time step
+    !
+    ! !USES:
+    use clm_time_manager, only : get_curr_calday, get_curr_date, get_days_per_year
     use clm_time_manager, only : get_step_size, get_nstep
     use clm_varcon      , only : istsoil ! CNDV incompatible with dynLU
     use clm_varctl      , only : finidat
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(IN)  :: begp,endp                ! beg/end indices for land pfts
-!
-!EOP
-!
-! !LOCAL VARIABLES:
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    !
+    ! !LOCAL VARIABLES:
     integer  :: c,g,l,p            ! indices
     real(r8) :: cday               ! current calendar day (1.0 = 0Z on Jan 1)
     real(r8) :: wt1                ! time interpolation weights
@@ -2947,13 +2824,7 @@ contains
     integer  :: day                ! day of month (1, ..., 31) at nstep + 1
     integer  :: sec                ! seconds into current date at nstep + 1
     character(len=32) :: subname='pftwt_interp' ! subroutine name
-
-! !CALLED FROM:
-!  subr. driver
-!-----------------------------------------------------------------------
-
-    ! Set pointers into derived type
-
+    !-----------------------------------------------------------------------
 
     ! Interpolate pft weight to current time step
     ! Map interpolated pctpft to subgrid weights
@@ -2969,7 +2840,7 @@ contains
 
     call get_curr_date(year, mon, day, sec, offset=int(dtime))
 
-    do p = begp,endp
+    do p = bounds%begp,bounds%endp
        g = pft%gridcell(p)
        l = pft%landunit(p)
 
@@ -2987,53 +2858,34 @@ contains
     end do
 
   end subroutine pftwt_interp
-#endif
 
-#ifdef CN
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNHarvest
-!
-! !INTERFACE:
-subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
-!
-! !DESCRIPTION:
-! Harvest mortality routine for coupled carbon-nitrogen code (CN)
-!
-! !USES:
-   use clmtype
-   use pftvarcon       , only : noveg, nbrdlf_evr_shrub, pprodharv10
-   use clm_varcon      , only : secspday
-   use clm_time_manager, only : get_days_per_year
-!
-! !ARGUMENTS:
-   implicit none
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! column filter for soil points
-   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! pft filter for soil points
-!
-! !CALLED FROM:
-! subroutine CNEcosystemDyn
-!
-! !REVISION HISTORY:
-! 3/29/04: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-!
-
-!
-!
-!
-   integer :: p                         ! pft index
-   integer :: g                         ! gridcell index
-   integer :: fp                        ! pft filter index
-   real(r8):: am                        ! rate for fractional harvest mortality (1/yr)
-   real(r8):: m                         ! rate for fractional harvest mortality (1/s)
-   real(r8):: days_per_year             ! days per year
-!EOP
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
+    !
+    ! !DESCRIPTION:
+    ! Harvest mortality routine for coupled carbon-nitrogen code (CN)
+    !
+    ! !USES:
+    use clmtype
+    use pftvarcon       , only : noveg, nbrdlf_evr_shrub, pprodharv10
+    use clm_varcon      , only : secspday
+    use clm_time_manager, only : get_days_per_year
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: num_soilc       ! number of soil columns in filter
+    integer, intent(in) :: filter_soilc(:) ! column filter for soil points
+    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+    integer, intent(in) :: filter_soilp(:) ! pft filter for soil points
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p                         ! pft index
+    integer :: g                         ! gridcell index
+    integer :: fp                        ! pft filter index
+    real(r8):: am                        ! rate for fractional harvest mortality (1/yr)
+    real(r8):: m                         ! rate for fractional harvest mortality (1/s)
+    real(r8):: days_per_year             ! days per year
+    !-----------------------------------------------------------------------
 
    associate(& 
    pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  pft-level index into gridcell-level quantities     
@@ -3213,44 +3065,26 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
 
     end associate 
  end subroutine CNHarvest
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: CNHarvestPftToColumn
-!
-! !INTERFACE:
-subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
-!
-! !DESCRIPTION:
-! called at the end of CNHarvest to gather all pft-level harvest litterfall fluxes
-! to the column level and assign them to the three litter pools
-!
-! !USES:
-  use clmtype
-  use clm_varpar, only : max_pft_per_col, maxpatch_pft, nlevdecomp
-!
-! !ARGUMENTS:
-  implicit none
-  integer, intent(in) :: num_soilc       ! number of soil columns in filter
-  integer, intent(in) :: filter_soilc(:) ! soil column filter
-!
-! !CALLED FROM:
-! subroutine CNphenology
-!
-! !REVISION HISTORY:
-! 9/8/03: Created by Peter Thornton
-!
-! !LOCAL VARIABLES:
-!
-!
-!
-!
-!
+ !-----------------------------------------------------------------------
+ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
+   !
+   ! !DESCRIPTION:
+   ! called at the end of CNHarvest to gather all pft-level harvest litterfall fluxes
+   ! to the column level and assign them to the three litter pools
+   !
+   ! !USES:
+   use clmtype
+   use clm_varpar, only : max_pft_per_col, maxpatch_pft, nlevdecomp
+   !
+   ! !ARGUMENTS:
+   implicit none
+   integer, intent(in) :: num_soilc       ! number of soil columns in filter
+   integer, intent(in) :: filter_soilc(:) ! soil column filter
+   !
+   ! !LOCAL VARIABLES:
    integer :: fc,c,pi,p,j               ! indices
-!EOP
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
 
    associate(& 
    lf_flab                             =>    pftcon%lf_flab                              , & ! Input:  [real(r8) (:)]  leaf litter labile fraction                       
@@ -3485,7 +3319,5 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
    
     end associate 
   end subroutine CNHarvestPftToColumn
-!-----------------------------------------------------------------------
-#endif
 
 end module pftdynMod

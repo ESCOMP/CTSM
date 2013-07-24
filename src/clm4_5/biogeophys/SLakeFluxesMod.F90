@@ -1,48 +1,32 @@
 module SLakeFluxesMod
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !MODULE: SLakeFluxesMod
-!
-! !DESCRIPTION:
-! Calculates surface fluxes for lakes.
-!
-! !PUBLIC TYPES:
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Calculates surface fluxes for lakes.
+  !
+  ! !PUBLIC TYPES:
   implicit none
   save
   private
-!
-! !PUBLIC MEMBER FUNCTIONS:
+  !
+  ! !PUBLIC MEMBER FUNCTIONS:
   public :: SLakeFluxes
 
-! !REVISION HISTORY:
-! Created by Zack Subin, 2009
-!
-!EOP
-!-----------------------------------------------------------------------
+  ! !REVISION HISTORY:
+  ! Created by Zack Subin, 2009
+  !-----------------------------------------------------------------------
 
 contains
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: SLakeFluxes
-!
-! !INTERFACE:
-  subroutine SLakeFluxes(lbc, ubc, lbp, ubp, num_lakec, filter_lakec, &
-                               num_lakep, filter_lakep)
-!
-! !DESCRIPTION:
-! Calculates lake temperatures and surface fluxes.
-!
-! Lakes have variable depth, possible snow layers above, freezing & thawing of lake water,
-! and soil layers with active temperature and gas diffusion below.
-!
-!
-! WARNING: This subroutine assumes lake columns have one and only one pft.
-!
-! !USES:
+  !-----------------------------------------------------------------------
+  subroutine SLakeFluxes(bounds, num_lakec, filter_lakec, num_lakep, filter_lakep)
+    !
+    ! !DESCRIPTION:
+    ! Calculates lake temperatures and surface fluxes.
+    ! Lakes have variable depth, possible snow layers above, freezing & thawing of lake water,
+    ! and soil layers with active temperature and gas diffusion below.
+    ! WARNING: This subroutine assumes lake columns have one and only one pft.
+    !
+    ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd         , only : clm_a2l
@@ -54,28 +38,21 @@ contains
     use QSatMod            , only : QSat
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use SLakeCon           , only : lake_use_old_fcrit_minz0
-!
-! !ARGUMENTS:
+    use clm_varctl         , only : use_lch4
+    use decompMod          , only : bounds_type
+    !
+    ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbc, ubc                ! column-index bounds
-    integer, intent(in) :: lbp, ubp                ! pft-index bounds
-    integer, intent(in) :: num_lakec               ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_lakec(ubc-lbc+1) ! column filter for non-lake points
-    integer, intent(in) :: num_lakep               ! number of column non-lake points in pft filter
-    integer, intent(in) :: filter_lakep(ubp-lbp+1) ! pft filter for non-lake points
-!
-! !CALLED FROM:
-! subroutine driver
-!
-! !REVISION HISTORY:
-! Author: Zack Subin, 2009
-!
-! !LOCAL VARIABLES:
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    integer, intent(in) :: num_lakec         ! number of column non-lake points in column filter
+    integer, intent(in) :: filter_lakec(:)   ! column filter for non-lake points
+    integer, intent(in) :: num_lakep         ! number of column non-lake points in pft filter
+    integer, intent(in) :: filter_lakep(:)   ! pft filter for non-lake points
+    !
+    ! !LOCAL VARIABLES:
     real(r8), pointer :: z0mg_col(:)        ! roughness length over ground, momentum [m]
     real(r8), pointer :: z0hg_col(:)        ! roughness length over ground, sensible heat [m]
     real(r8), pointer :: z0qg_col(:)        ! roughness length over ground, latent heat [m]
-!
-!EOP
     integer , parameter  :: niters = 4    ! maximum number of iterations for surface temperature
     real(r8), parameter :: beta1 = 1._r8  ! coefficient of convective velocity (in computing W_*) [-]
     real(r8), parameter :: zii = 1000._r8 ! convective boundary height [m]
@@ -84,52 +61,52 @@ contains
     integer  :: fnold                   ! previous number of pft filter values
     integer  :: fpcopy(num_lakep)       ! pft filter copy for iteration loop
     integer  :: iter                    ! iteration index
-    integer  :: nmozsgn(lbp:ubp)        ! number of times moz changes sign
-    integer  :: jtop(lbc:ubc)           ! top level for each column (no longer all 1)
+    integer  :: nmozsgn(bounds%begp:bounds%endp)        ! number of times moz changes sign
+    integer  :: jtop(bounds%begc:bounds%endc)           ! top level for each column (no longer all 1)
     real(r8) :: ax                      ! used in iteration loop for calculating t_grnd (numerator of NR solution)
     real(r8) :: bx                      ! used in iteration loop for calculating t_grnd (denomin. of NR solution)
     real(r8) :: degdT                   ! d(eg)/dT
-    real(r8) :: dqh(lbp:ubp)            ! diff of humidity between ref. height and surface
-    real(r8) :: dth(lbp:ubp)            ! diff of virtual temp. between ref. height and surface
+    real(r8) :: dqh(bounds%begp:bounds%endp)            ! diff of humidity between ref. height and surface
+    real(r8) :: dth(bounds%begp:bounds%endp)            ! diff of virtual temp. between ref. height and surface
     real(r8) :: dthv                    ! diff of vir. poten. temp. between ref. height and surface
-    real(r8) :: dzsur(lbc:ubc)          ! 1/2 the top layer thickness (m)
+    real(r8) :: dzsur(bounds%begc:bounds%endc)          ! 1/2 the top layer thickness (m)
     real(r8) :: eg                      ! water vapor pressure at temperature T [pa]
-    real(r8) :: htvp(lbc:ubc)           ! latent heat of vapor of water (or sublimation) [j/kg]
-    real(r8) :: obu(lbp:ubp)            ! monin-obukhov length (m)
-    real(r8) :: obuold(lbp:ubp)         ! monin-obukhov length of previous iteration
-    real(r8) :: qsatg(lbc:ubc)          ! saturated humidity [kg/kg]
-    real(r8) :: qsatgdT(lbc:ubc)        ! d(qsatg)/dT
+    real(r8) :: htvp(bounds%begc:bounds%endc)           ! latent heat of vapor of water (or sublimation) [j/kg]
+    real(r8) :: obu(bounds%begp:bounds%endp)            ! monin-obukhov length (m)
+    real(r8) :: obuold(bounds%begp:bounds%endp)         ! monin-obukhov length of previous iteration
+    real(r8) :: qsatg(bounds%begc:bounds%endc)          ! saturated humidity [kg/kg]
+    real(r8) :: qsatgdT(bounds%begc:bounds%endc)        ! d(qsatg)/dT
     real(r8) :: qstar                   ! moisture scaling parameter
-    real(r8) :: ram(lbp:ubp)            ! aerodynamical resistance [s/m]
-    real(r8) :: rah(lbp:ubp)            ! thermal resistance [s/m]
-    real(r8) :: raw(lbp:ubp)            ! moisture resistance [s/m]
-    real(r8) :: stftg3(lbp:ubp)         ! derivative of fluxes w.r.t ground temperature
-    real(r8) :: temp1(lbp:ubp)          ! relation for potential temperature profile
-    real(r8) :: temp12m(lbp:ubp)        ! relation for potential temperature profile applied at 2-m
-    real(r8) :: temp2(lbp:ubp)          ! relation for specific humidity profile
-    real(r8) :: temp22m(lbp:ubp)        ! relation for specific humidity profile applied at 2-m
-    real(r8) :: tgbef(lbc:ubc)          ! initial ground temperature
-    real(r8) :: thm(lbp:ubp)            ! intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
-    real(r8) :: thv(lbc:ubc)            ! virtual potential temperature (kelvin)
+    real(r8) :: ram(bounds%begp:bounds%endp)            ! aerodynamical resistance [s/m]
+    real(r8) :: rah(bounds%begp:bounds%endp)            ! thermal resistance [s/m]
+    real(r8) :: raw(bounds%begp:bounds%endp)            ! moisture resistance [s/m]
+    real(r8) :: stftg3(bounds%begp:bounds%endp)         ! derivative of fluxes w.r.t ground temperature
+    real(r8) :: temp1(bounds%begp:bounds%endp)          ! relation for potential temperature profile
+    real(r8) :: temp12m(bounds%begp:bounds%endp)        ! relation for potential temperature profile applied at 2-m
+    real(r8) :: temp2(bounds%begp:bounds%endp)          ! relation for specific humidity profile
+    real(r8) :: temp22m(bounds%begp:bounds%endp)        ! relation for specific humidity profile applied at 2-m
+    real(r8) :: tgbef(bounds%begc:bounds%endc)          ! initial ground temperature
+    real(r8) :: thm(bounds%begp:bounds%endp)            ! intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
+    real(r8) :: thv(bounds%begc:bounds%endc)            ! virtual potential temperature (kelvin)
     real(r8) :: thvstar                 ! virtual potential temperature scaling parameter
-    real(r8) :: tksur(lbc:ubc)          ! thermal conductivity of snow/soil (w/m/kelvin)
-    real(r8) :: tsur(lbc:ubc)           ! top layer temperature
+    real(r8) :: tksur(bounds%begc:bounds%endc)          ! thermal conductivity of snow/soil (w/m/kelvin)
+    real(r8) :: tsur(bounds%begc:bounds%endc)           ! top layer temperature
     real(r8) :: tstar                   ! temperature scaling parameter
-    real(r8) :: um(lbp:ubp)             ! wind speed including the stablity effect [m/s]
-    real(r8) :: ur(lbp:ubp)             ! wind speed at reference height [m/s]
-    real(r8) :: ustar(lbp:ubp)          ! friction velocity [m/s]
+    real(r8) :: um(bounds%begp:bounds%endp)             ! wind speed including the stablity effect [m/s]
+    real(r8) :: ur(bounds%begp:bounds%endp)             ! wind speed at reference height [m/s]
+    real(r8) :: ustar(bounds%begp:bounds%endp)          ! friction velocity [m/s]
     real(r8) :: wc                      ! convective velocity [m/s]
     real(r8) :: zeta                    ! dimensionless height used in Monin-Obukhov theory
-    real(r8) :: zldis(lbp:ubp)          ! reference height "minus" zero displacement height [m]
-    real(r8) :: displa(lbp:ubp)         ! displacement (always zero) [m]
-    real(r8) :: z0mg(lbp:ubp)           ! roughness length over ground, momentum [m]
-    real(r8) :: z0hg(lbp:ubp)           ! roughness length over ground, sensible heat [m]
-    real(r8) :: z0qg(lbp:ubp)           ! roughness length over ground, latent heat [m]
+    real(r8) :: zldis(bounds%begp:bounds%endp)          ! reference height "minus" zero displacement height [m]
+    real(r8) :: displa(bounds%begp:bounds%endp)         ! displacement (always zero) [m]
+    real(r8) :: z0mg(bounds%begp:bounds%endp)           ! roughness length over ground, momentum [m]
+    real(r8) :: z0hg(bounds%begp:bounds%endp)           ! roughness length over ground, sensible heat [m]
+    real(r8) :: z0qg(bounds%begp:bounds%endp)           ! roughness length over ground, latent heat [m]
     real(r8) :: u2m                     ! 2 m wind speed (m/s)
-    real(r8) :: fm(lbp:ubp)             ! needed for BGC only to diagnose 10m wind speed
+    real(r8) :: fm(bounds%begp:bounds%endp)             ! needed for BGC only to diagnose 10m wind speed
     real(r8) :: bw                      ! partial density of water (ice + liquid)
     real(r8) :: t_grnd_temp             ! Used in surface flux correction over frozen ground
-    real(r8) :: betaprime(lbc:ubc)      ! Effective beta: sabg_lyr(p,jtop) for snow layers, beta otherwise
+    real(r8) :: betaprime(bounds%begc:bounds%endc)      ! Effective beta: sabg_lyr(p,jtop) for snow layers, beta otherwise
     real(r8) :: e_ref2m                 ! 2 m height surface saturated vapor pressure [Pa]
     real(r8) :: de2mdT                  ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
     real(r8) :: qsat_ref2m              ! 2 m height surface saturated specific humidity [kg/kg]
@@ -138,7 +115,7 @@ contains
 
     ! For calculating roughness lengths
     real(r8) :: cur                     ! Charnock parameter (-)
-    real(r8) :: fetch(lbc:ubc)          ! Fetch (m)
+    real(r8) :: fetch(bounds%begc:bounds%endc)          ! Fetch (m)
     real(r8) :: sqre0                   ! root of roughness Reynolds number
     real(r8), parameter :: kva0 = 1.51e-5_r8   ! kinematic viscosity of air (m^2/s) at 20C and 1.013e5 Pa
     real(r8) :: kva0temp                ! (K) temperature for kva0; will be set below
@@ -146,8 +123,7 @@ contains
     real(r8) :: kva                     ! kinematic viscosity of air at ground temperature and forcing pressure
     real(r8), parameter :: prn = 0.713  ! Prandtl # for air at neutral stability
     real(r8), parameter :: sch = 0.66   ! Schmidt # for water in air at neutral stability
-
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
    associate(& 
    snl                                 =>    cps%snl                                     , & ! Input:  [integer (:)]  number of snow layers                              
@@ -176,9 +152,7 @@ contains
    savedtke1                           =>    cps%savedtke1                               , & ! Input:  [real(r8) (:)]  top level eddy conductivity from previous timestep (W/mK)
    lakedepth                           =>    cps%lakedepth                               , & ! Input:  [real(r8) (:)]  variable lake depth (m)                           
    lakefetch                           =>    cps%lakefetch                               , & ! Input:  [real(r8) (:)]  lake fetch from surface data (m)                  
-#ifdef LCH4
    lake_raw                            =>    cch4%lake_raw                               , & ! Output: [real(r8) (:)]  aerodynamic resistance for moisture (s/m)         
-#endif
    qflx_prec_grnd                      =>    pwf%qflx_prec_grnd                          , & ! Output: [real(r8) (:)]  water onto ground including canopy runoff [kg/(m2 s)]
    qflx_evap_soi                       =>    pwf%qflx_evap_soi                           , & ! Output: [real(r8) (:)]  soil evaporation (mm H2O/s) (+ = to atm)          
    qflx_evap_tot                       =>    pwf%qflx_evap_tot                           , & ! Output: [real(r8) (:)]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
@@ -317,25 +291,17 @@ contains
 
        ! Latent heat
 
-! Attn EK: This PERGRO code was commented on the basis of Gordon Bonan's suggestion, but this may deserve more look.
-!#if (defined PERGRO)
-!       htvp(c) = hvap
-!#else
        if (t_grnd(c) > tfrz) then
           htvp(c) = hvap
        else
           htvp(c) = hsub
        end if
-!#endif
        ! Zack Subin, 3/26/09: Changed to ground temperature rather than the air temperature above.
 
        ! Initialize stability variables
 
        ur(p)    = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
        dth(p)   = thm(p)-t_grnd(c)
-!#if (defined PERGRO)
-!       dth(p)   = 0.0_r8
-!#endif
        dqh(p)   = forc_q(g)-qsatg(c)
        dthv     = dth(p)*(1._r8+0.61_r8*forc_q(g))+0.61_r8*forc_th(g)*dqh(p)
        zldis(p) = forc_hgt_u_pft(p) - 0._r8
@@ -357,12 +323,10 @@ contains
        ! Determine friction velocity, and potential temperature and humidity
        ! profiles of the surface boundary layer
 
-       call FrictionVelocity(lbp, ubp, fncopy, fpcopy, &
+       call FrictionVelocity(bounds%begp, bounds%endp, fncopy, fpcopy, &
                              displa, z0mg, z0hg, z0qg, &
                              obu, iter, ur, um, ustar, &
                              temp1, temp2, temp12m, temp22m, fm)
-
-
 
        do fp = 1, fncopy
           p = fpcopy(fp)
@@ -392,9 +356,9 @@ contains
           ram(p)  = 1._r8/(ustar(p)*ustar(p)/um(p))
           rah(p)  = 1._r8/(temp1(p)*ustar(p))
           raw(p)  = 1._r8/(temp2(p)*ustar(p))
-#if (defined LCH4)
-          lake_raw(c) = raw(p) ! Pass out for calculating ground ch4 conductance
-#endif
+          if (use_lch4) then
+             lake_raw(c) = raw(p) ! Pass out for calculating ground ch4 conductance
+          end if
           ram1(p) = ram(p)   !pass value to global variable
           ram1_lake(p) = ram1(p) ! for history
 
@@ -416,13 +380,11 @@ contains
           t_grnd(c) = ax/bx
 
           ! Update htvp
-!#ifndef PERGRO
-       if (t_grnd(c) > tfrz) then
-          htvp(c) = hvap
-       else
-          htvp(c) = hsub
-       end if
-!#endif
+          if (t_grnd(c) > tfrz) then
+             htvp(c) = hvap
+          else
+             htvp(c) = hsub
+          end if
 
           ! Surface fluxes of momentum, sensible and latent heat
           ! using ground temperatures from previous time step
@@ -436,9 +398,6 @@ contains
           call QSat(t_grnd(c), forc_pbot(g), eg, degdT, qsatg(c), qsatgdT(c))
 
           dth(p)=thm(p)-t_grnd(c)
-!#if (defined PERGRO)
-!          dth(p)   = 0.0_r8
-!#endif
           dqh(p)=forc_q(g)-qsatg(c)
 
           tstar = temp1(p)*dth(p)
@@ -548,14 +507,12 @@ contains
           qflx_evap_soi(p) = forc_rho(g)*(qsatg(c)+qsatgdT(c)*(t_grnd(c)-t_grnd_temp) - forc_q(g))/raw(p)
        end if
 
-          ! Update htvp
-!#ifndef PERGRO
+       ! Update htvp
        if (t_grnd(c) > tfrz) then
           htvp(c) = hvap
        else
           htvp(c) = hsub
        end if
-!#endif
 
        ! Net longwave from ground to atmosphere
 
