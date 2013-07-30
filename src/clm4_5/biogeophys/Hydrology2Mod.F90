@@ -641,10 +641,11 @@ contains
          icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
          icol_shadewall, denh2o, denice
     use clm_varcon      , only : istcrop
-    use clm_varctl      , only : glc_dyntopo
+    use clm_varctl      , only : glc_dyntopo, use_vichydro
     use clm_varpar      , only : nlevgrnd, nlevurb
     use SoilHydrologyMod, only : Drainage
     use clm_time_manager, only : get_step_size, get_nstep
+    use CLMVICMapMod    , only : CLMVICMap
 
     !
     ! !ARGUMENTS:
@@ -710,6 +711,9 @@ contains
     nstep = get_nstep()
     dtime = get_step_size()
     
+    if (use_vichydro) then
+       call CLMVICMap(bounds, num_hydrologyc, filter_hydrologyc)
+    endif
     call Drainage(bounds, num_hydrologyc, filter_hydrologyc, &
                   num_urbanc, filter_urbanc)
 

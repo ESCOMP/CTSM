@@ -2878,7 +2878,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type) :: bounds                  ! bounds
+    type(bounds_type), intent(in)    :: bounds  ! bounds
     type(file_desc_t), intent(inout) :: ncid     ! netcdf file
     character(len=*) , intent(in)    :: flag     !'read' or 'write'
     character(len=*) , intent(in), optional :: rdate    ! restart file time stamp for name
@@ -2940,7 +2940,6 @@ contains
     character(len=*),parameter :: subname = 'hist_restart_ncd'
 !------------------------------------------------------------------------
 
-    call get_proc_bounds(bounds)
     call get_proc_global(numg, numl, numc, nump)
 
     ! If branch run, initialize file times and return

@@ -176,6 +176,7 @@ module clm_varcon
   real(r8), pointer :: zisoi(:)        !soil zi (interfaces)
   real(r8), pointer :: dzsoi_decomp(:) !soil dz (thickness)
   integer , pointer :: nlvic(:)        !number of CLM layers in each VIC layer (#)
+  real(r8), pointer :: dzvic(:)        !soil dz (thickness) of each VIC layer
 
   !------------------------------------------------------------------
   ! (Non-tunable) Constants for the CH4 submodel (Tuneable constants in ch4varcon)
@@ -236,6 +237,7 @@ contains
     allocate( zisoi(0:nlevgrnd) )
     allocate( dzsoi_decomp(1:nlevdecomp_full) )
     allocate( nlvic(1:nlayer))
+    allocate( dzvic(1:nlayer))
 
   end subroutine clm_varcon_init
 

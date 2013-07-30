@@ -8,7 +8,7 @@ Purpose of changes:
 
 Requirements for tag:
 
-Test level of tag: doc, critical, standard, std-test, reg-test
+Test level of tag: regular, short, tools, build_namelist, doc
 
 Bugs fixed (include bugzilla ID):
 
@@ -41,37 +41,57 @@ List all files added and what they do:
 
 List all existing files that have been modified, and describe the changes:
 
-Machines testing ran on:  (Tests in priority order)
-  Standard Tag Pretag ***                    Standard Tag Posttag **
+CLM testing:
 
-  build-namelist unit tester:   yes/no ***
+[... Remove before making trunk_tag.  Available test levels:
 
-  CESM test lists:
+    a) regular (must be run before handing off a tag to SEs and must be run
+     before committing a tag)
+    b) build_namelist (if namelists and/or build_system changed))
+    c) tools (only if tools are modified and no CLM source is modified)
+    d) short (for use during development and in rare cases where only a small
+          change with known behavior is added ... eg. a minor bug fix)
+    e) doc (no source testing required)
 
-    yellowstone/aux_clm     intel       yes ***
-    yellowstone/aux_clm     pgi         yes **
-    frankfurt/aux_clm       intel       yes **
-    frankfurt/aux_clm       pgi         yes
-    frankfurt/aux_clm       nag         yes
+... ]
 
-  CESM history file comparison:
-  (ccsm_utils/Tools/component_gen_comp -compare $oldtag -generate $newtag -testid $testid -baselineroot $CESMDATAROOT/ccsm_baselines/ -model clm2)
+  build-namelist tests:
 
-    yellowstone/aux_clm     intel       yes **
+    yellowstone
+    frankfurt
 
-  test_driver.sh tools testing:
+  regular tests (aux_clm):
 
-    yellowstone interactive:    yes/no
-    frankfurt interactive:      yes/no
+    yellowstone_intel       
+    yellowstone_pgi         
+    frankfurt_intel      
+    frankfurt_pgi        
+    frankfurt_nag        
 
-  yellowstone/PTCLM:            yes/no
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
 
-CLM tag used for the baseline comparison tests if applicable:
+    yellowstone_intel      
+    yellowstone_pgi
+
+  short tests (aux_clm_short):
+
+    yellowstone_intel       
+    yellowstone_pgi         
+    frankfurt_intel      
+    frankfurt_pgi        
+    frankfurt_nag        
+
+  tools testing:
+
+    yellowstone interactive
+    frankfurt interactive
+
+CLM tag used for the baseline comparisons: 
 
 Changes answers relative to baseline:
 
-IF tag changes answers relative to baseline comparison the
-following should be filled in (otherwise remove this section):
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
 
   Summarize any changes to answers, i.e.,
     - what code configurations:

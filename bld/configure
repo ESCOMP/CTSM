@@ -103,7 +103,8 @@ OPTIONS
                               no-vert     Turn vertical soil Carbon profile off
                               no-cent     Turn CENTURY off
                               no-nitrif   Turn the Nitrification/denitrification off
-                            [no-vert,no-cent,no-nitrif,no-vert:no-cent]
+                              no-vert:no-nitrif Turn Nitrification/denitrification off with no vertical soil profile
+                            [no-vert,no-cent,no-nitrif,no-vert:no-cent,no-vert:no-nitrif]
 
 EOF
 }

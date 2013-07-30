@@ -12,7 +12,8 @@ module clm_varpar
   use clm_varctl  , only: &
        use_extralakelayers, use_vertsoilc, use_crop, &
        use_century_decomp, use_c13, use_c14, &
-       iulog, create_crop_landunit, irrigate, fpftdyn
+       iulog, create_crop_landunit, irrigate, fpftdyn, &
+       use_vichydro
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -47,7 +48,7 @@ module clm_varpar
   integer, parameter :: mxpft       =  24     ! maximum number of PFT's for any mode; might we set some of these automatically from reading pft-physiology?
   integer, parameter :: numveg      =  16     ! number of veg types (without specific crop)
   integer, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
-  integer, parameter :: nlayert     =   8     ! number of VIC soil layer + 3 lower thermal layers
+  integer            :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
 
   integer :: numpft      = mxpft   ! actual # of pfts (without bare)
   integer :: numcft      =  10     ! actual # of crops
@@ -148,6 +149,10 @@ contains
        nlevsoi     =  8  + nlev_equalspace
        nlevgrnd    =  15 + nlev_equalspace
     end if
+
+    if (use_vichydro) then
+       nlayert     =  nlayer + (nlevgrnd -nlevsoi)
+    endif
 
     ! here is a switch to set the number of soil levels for the biogeochemistry calculations.
     ! currently it works on either a single level or on nlevsoi and nlevgrnd levels

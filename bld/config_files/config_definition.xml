@@ -47,7 +47,7 @@ Standard part of CLM45BGC model.
 </entry>
 
 <entry id="vsoilc_centbgc" 
-       valid_values="on,no-vert,no-cent,no-nitrif,no-vert:no-cent,off" 
+       valid_values="on,no-vert,no-cent,no-nitrif,no-vert:no-cent,no-vert:no-nitrif,off" 
        value="off" 
        category="bgc">
 Turn on the following features important for permafrost Carbon:

@@ -2360,12 +2360,10 @@ contains
     pnf%grainn_xfer_to_grainn(:)= nanr
     allocate(pnf%grainn_storage_to_xfer(beg:end))
     pnf%grainn_storage_to_xfer(:)= nanr
-    if ( crop_prog )then
-       allocate(pnf%fert(beg:end))
-       pnf%fert(:)= nanr
-       allocate(pnf%soyfixn(beg:end))
-       pnf%soyfixn(:)= nanr     
-    end if
+    allocate(pnf%fert(beg:end))
+    pnf%fert(:)= nanr
+    allocate(pnf%soyfixn(beg:end))
+    pnf%soyfixn(:)= nanr     
 
   end subroutine init_pft_nflux_type
 

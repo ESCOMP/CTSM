@@ -1222,10 +1222,10 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
     !
     ! !ARGUMENTS:
     implicit none
-    real(r8), intent(out), pointer :: ciso_flux(:)      ! isoC flux
-    real(r8), intent(in) , pointer :: ctot_flux(:)      ! totC flux
-    real(r8), intent(in) , pointer :: ciso_state(:)     ! isoC state, upstream pool
-    real(r8), intent(in) , pointer :: ctot_state(:)     ! totC state, upstream pool
+    real(r8), intent(inout), pointer :: ciso_flux(:)      ! isoC flux
+    real(r8), intent(in)   , pointer :: ctot_flux(:)      ! totC flux
+    real(r8), intent(in)   , pointer :: ciso_state(:)     ! isoC state, upstream pool
+    real(r8), intent(in)   , pointer :: ctot_state(:)     ! totC state, upstream pool
     real(r8), intent(in) :: frax_c13          ! fractionation factor (1 = no fractionation) for C13
     integer , intent(in) :: num               ! number of filter members
     integer , intent(in) :: filter(:)         ! filter indices
