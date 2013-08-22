@@ -106,7 +106,7 @@ contains
     use clmtype
     use clm_varpar      , only : maxpatch_pft
     use domainMod       , only : ldomain
-    use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, fpftcon, iulog
+    use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, paramfile, iulog
     use clm_varcon      , only : spval
     use clm_time_manager, only : get_ref_date, get_nstep, get_curr_date, get_curr_time
     use fileutils       , only : get_filename
@@ -201,7 +201,7 @@ contains
     if (finidat /= ' ') str = get_filename(finidat)
     call ncd_putatt(ncid, ncd_global, 'Initial_conditions_dataset',  trim(str))
 
-    str = get_filename(fpftcon)
+    str = get_filename(paramfile)
     call ncd_putatt(ncid, ncd_global, 'PFT_physiological_constants_dataset', trim(str))
 
     ! -----------------------------------------------------------------------

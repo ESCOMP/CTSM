@@ -145,14 +145,10 @@ Full pathname of topography data file. Only required when
 land-ice model is active.
 </entry>
 
-<entry id="fpftcon" type="char*256" category="datasets"
+<entry id="paramfile" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname datafile with plant function type (PFT) constants
-</entry>
-
-<entry id="fconsts" type="char*256" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname datafile with constants for biogeochem modules
+Full pathname datafile with plant function type (PFT) constants combined with
+constants for biogeochem modules
 </entry>
 
 <entry id="fpftdyn" type="char*256" category="datasets"
@@ -931,24 +927,9 @@ Entering and exiting spinup mode occurs automatically by comparing the namelist 
 </entry>
 
 <!-- vertical mixing switches    -->
-<entry id="som_diffus" type="real" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
-Base diffusivity of SOM associated with bioturbation mixing.
-</entry>
-
 <entry id="som_adv_flux" type="real" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 Base advective flux (downwards) for SOM.
-</entry>
-
-<entry id="cryoturb_diffusion_k" type="real" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
-Diffusion constant for SOM in frozen soils by cryoturbation.
-</entry>
-
-<entry id="max_altdepth_cryoturbation" type="real" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
-Maximum ALT depth at which soil mixing is assumed to be cryoturbation rather than bioturbation.
 </entry>
 
 <entry id="max_depth_cryoturb" type="real" category="clm_vertcn"
@@ -1109,101 +1090,12 @@ Use original CLM4 soil hydraulic properties
 <!-- namelist elements associated with the CH4 Model                                           -->
 <!-- ========================================================================================  -->
 
-<entry id="q10ch4base" type="real" category="clm_methane"
+<entry id="use_aereoxid_prog" type="logical" category="clm_methane"
        group="ch4par_in" valid_values="" >
-Base temperature (K) for application of Q10 factor to methane production.
-</entry>
-
-<entry id="q10ch4" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Q10 factor forming the temperature-dependence of methane production relative to q10ch4base. This is the additional
-temperature dependence applied after heterotrophic respiration. (e.g., if soil decomposition has a Q10 of 1.5,
-and q10ch4 = 1.333, then the overall Q10 for methane production will be 1.5*1.333 = 2.)
-</entry>
-
-<entry id="vmax_ch4_oxid" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Michaelis-Mentin maximum methane oxidation rate (mol/m^3-water/s).
-</entry>
-
-<entry id="k_m" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Michaelis-Mentin half-saturation coefficient for methane for methane oxidation (mol/m^3-water)
-</entry>
-
-<entry id="q10_ch4oxid" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Q10 factor forming the temperature-dependence of methane oxidation.
-</entry>
-
-<entry id="smp_crit" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Critical soil moisture potential where oxidation is reduced to 1/e of the potential rate due to moisture-stress
-faced by methanotrophs (above the water table only) (mm).
-</entry>
-
-<entry id="aereoxid" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Prescribed fraction of methane molecules predicted to be transported by aerenchyma to the surface that are instead oxidized.
-By default, this is set to -1 to indicate that this ratio is calculated prognostically within the model. Set to a value >= 0
-in order to prescribe a fixed ratio. It is useful to compare a run with aereoxid = 0. to one with aereoxid = -1., to
-calculate an effective aerenchyma oxidation fraction predicted by the model.
-</entry>
-
-<entry id="mino2lim" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Minimum limitation factor applied to heterotrophic respiration due to anoxia. i.e., even if no oxygen is available,
-the heterotrophic respiration will proceed at the ratio mino2lim of the potential oxygen-unlimited rate.
-Also, if anoxia = FALSE, this will be used in ch4Mod to calculate a seasonal inundation factor (SIF).
-</entry>
-
-<entry id="rootlitfrac" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Fraction of heterotrophic respiration assumed to be associated with the root profile rather than the top 5 layers for
-calculating methane production.  Used only if the vertical soil CN model is not used.
-</entry>
-
-<entry id="scale_factor_aere" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Overall scale factor on aerenchyma transport for sensitivity tests. Setting to zero turns off all methane and oxygen
-transport in aerenchyma.
-</entry>
-
-<entry id="vgc_max" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Ratio of methane partial pressure to atmospheric pressure triggering ebullition.
-</entry>
-
-<entry id="organic_max" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Organic matter content (kg/m^3) where soil is assumed to act entirely like peat rather than mineral soil
-for calculating gas diffusivity. Very large values --> all soil acts like mineral; 0 --> all soil acts like peat.
-</entry>
-
-<entry id="satpow" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Exponent on saturated porosity (watsat) for calculating aqueous solute diffusivity in soil, for methane and oxygen transport.
-4/3 is the Millington-Quirk expression value; 2 is the Buckingham expression value.
-</entry>
-
-<entry id="cnscalefactor" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Overall scale factor on heterotrophic respiration for sensitivity tests for calculating methane production.
-</entry>
-
-<entry id="f_ch4" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Base ratio (adjusted for temperature, etc.) of assumed methane production to total C mineralization rate.
-</entry>
-
-<entry id="k_m_o2" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Michaelis-Mentin half-saturation coefficient for oxygen for methane oxidation (mol/m^3-water)
-</entry>
-
-<entry id="nongrassporosratio" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Ratio of aerenchyma porosity of non-grass (i.e., woody) PFTs compared to grass PFTs.
+Allows user to tune the value of aereoxid.  If set to FALSE, then use the value of aereoxid from 
+the parameter file (set to 0.0, but may be tuned with values in the range {0.0,1.0}.  If set to TRUE,
+then don't fix aere (see ch4Mod.F90).
+<default>Default: .true.</default>
 </entry>
 
 <entry id="allowlakeprod" type="logical" category="clm_methane"
@@ -1212,20 +1104,9 @@ If TRUE, turn on methane biogeochemistry model for lake columns, using a simplif
 (EXPERIMENTAL)
 </entry>
 
-<entry id="lake_decomp_fact" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Base lake soil carbon decomposition rate (1/s) applying at 25 C.  Used if allowlakeprod = TRUE.
-(EXPERIMENTAL)
-</entry>
-
 <entry id="usephfact" type="logical" category="clm_methane"
        group="ch4par_in" valid_values="" >
 If TRUE, apply a limitation to methane production based on the soil pH dataset.
-</entry>
-
-<entry id="k_m_unsat" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Michaelis-Mentin half-saturation coefficient for oxygen for methane oxidation, in the unsaturated zone (mol/m^3-water).
 </entry>
 
 <entry id="vmax_oxid_unsat" type="real" category="clm_methane"
@@ -1242,36 +1123,12 @@ so the coupled system will NOT conserve carbon in this mode if the methane model
 (EXPERIMENTAL and NOT tested)
 </entry>
 
-<entry id="scale_factor_gasdiff" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Scale factor applied to gas diffusivity in soil, for sensitivity tests (i.e. to simulate convection dominating
-molecular diffusion).
-</entry>
-
-<entry id="scale_factor_liqdiff" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Scale factor applied to aqueous solute diffusivity in soil, for sensitivity tests (i.e. to simulate convection
-dominating molecular diffusion).
-</entry>
-
-<entry id="redoxlag" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Lag time (days) used for inhibiting methane production in newly saturated area, to simulate the transient oxidation
-of alternative electron acceptors. A value of 0 indicates no inhibition.
-</entry>
-
 <entry id="fin_use_fsat" type="logical" category="clm_methane"
        group="ch4par_in" valid_values="" >
 If TRUE, use the saturated fraction (fsat) calculated in Soil Hydrology to diagnose the inundated fraction (finundated)
 for the CH4 submodel (possibly affecting soil heterotrophic respiration and denitrification depending on the configuration),
 rather than using the inversion to satellite-observed inundated fraction, which requires additional surface data.
 (EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="unsat_aere_ratio" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Ratio of aerenchyma porosity in the unsaturated zone to the saturated zone. Porosity will still be kept above a minimum
-value defined in ch4Mod.
 </entry>
 
 <entry id="usefrootc" type="logical" category="clm_methane"
@@ -1287,17 +1144,6 @@ If TRUE, run the methane submodel decoupled from the atmosphere. The atmospheric
 atmch4, the methane flux is not passed to the atmosphere, and the CO2 flux to the atmosphere is not adjusted for
 net methane production. NOTE: Currently this must be TRUE.
 (EXPERIMENTAL and NOT functional)
-</entry>
-
-<entry id="redoxlag_vertical" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Lag time (days) used for inhibiting methane production vertically in newly saturated soil levels, to simulate the
-transient oxidation of alternative electron acceptors in the unsaturated zone. A value of 0 indicates no inhibition.
-</entry>
-
-<entry id="atmch4" type="real" category="clm_methane"
-       group="ch4par_in" valid_values="" >
-Prescribed atmospheric methane mixing ratio (mol/mol) 
 </entry>
 
 <!-- ========================================================================================  -->

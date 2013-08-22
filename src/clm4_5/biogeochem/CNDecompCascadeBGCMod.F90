@@ -11,10 +11,9 @@ module CNDecompCascadeBGCMod
                                  i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use clm_varctl         , only: iulog, spinup_state, anoxia, use_lch4, use_vertsoilc
   use clm_varcon         , only: zsoi
-  use ch4varcon          , only: mino2lim
   use decompMod          , only: bounds_type
   use abortutils         , only: endrun
-  use CNSharedConstsMod  , only: CNConstShareInst, anoxia_wtsat, nlev_soildecomp_standard 
+  use CNSharedParamsMod  , only: CNParamsShareInst, anoxia_wtsat, nlev_soildecomp_standard 
   !
   implicit none
   save
@@ -23,7 +22,7 @@ module CNDecompCascadeBGCMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: init_decompcascade_bgc
   public :: decomp_rate_constants_bgc
-  public :: readCNDecompBgcConsts
+  public :: readCNDecompBgcParams
   !
   ! !PUBLIC DATA MEMBERS 
   logical , public :: normalize_q10_to_century_tfunc = .true.! do we normalize the century decomp. rates so that they match the CLM Q10 at a given tep?
@@ -31,7 +30,7 @@ module CNDecompCascadeBGCMod
   real(r8), public :: normalization_tref = 15._r8            ! reference temperature for normalizaion (degrees C)
   !
   ! !PRIVATE DATA MEMBERS 
-  type, private :: CNDecompBgcConstType
+  type, private :: CNDecompBgcParamsType
      real(r8):: cn_s1_bgc        !C:N for SOM 1
      real(r8):: cn_s2_bgc        !C:N for SOM 2
      real(r8):: cn_s3_bgc        !C:N for SOM 3
@@ -63,16 +62,16 @@ module CNDecompCascadeBGCMod
      integer  :: nsompools = 3
      real(r8),allocatable :: spinup_vector(:) ! multipliers for soil decomp during accelerated spinup
 
-  end type CNDecompBgcConstType
+  end type CNDecompBgcParamsType
 
-  type(CNDecompBgcConstType),private ::  CNDecompBgcConstInst
+  type(CNDecompBgcParamsType),private ::  CNDecompBgcParamsInst
 
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine readCNDecompBgcConsts ( ncid )
+  subroutine readCNDecompBgcParams ( ncid )
     !
     ! !DESCRIPTION:
     !
@@ -84,7 +83,7 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNDecompCenturyConstType'
+    character(len=32)  :: subname = 'CNDecompBgcParamsType'
     character(len=100) :: errCode = 'Error reading in CN const file '
     logical            :: readv   ! has variable been read in or not
     real(r8)           :: tempr   ! temporary to read in constant
@@ -92,116 +91,116 @@ contains
     !-----------------------------------------------------------------------
 
     ! These are not read off of netcdf file
-    allocate(CNDecompBGCConstInst%spinup_vector(CNDecompBGCConstInst%nsompools))
-    CNDecompBGCConstInst%spinup_vector(:) = (/ 1.0_r8, 15.0_r8, 675.0_r8 /)
+    allocate(CNDecompBgcParamsInst%spinup_vector(CNDecompBgcParamsInst%nsompools))
+    CNDecompBgcParamsInst%spinup_vector(:) = (/ 1.0_r8, 15.0_r8, 675.0_r8 /)
 
     ! Read off of netcdf file
     tString='tau_l1'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%tau_l1_bgc=tempr
+    CNDecompBgcParamsInst%tau_l1_bgc=tempr
 
     tString='tau_l2_l3'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%tau_l2_l3_bgc=tempr
+    CNDecompBgcParamsInst%tau_l2_l3_bgc=tempr
 
     tString='tau_s1'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%tau_s1_bgc=tempr
+    CNDecompBgcParamsInst%tau_s1_bgc=tempr
 
     tString='tau_s2'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%tau_s2_bgc=tempr
+    CNDecompBgcParamsInst%tau_s2_bgc=tempr
 
     tString='tau_s3'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%tau_s3_bgc=tempr
+    CNDecompBgcParamsInst%tau_s3_bgc=tempr
 
     tString='tau_cwd'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%tau_cwd_bgc=tempr
+    CNDecompBgcParamsInst%tau_cwd_bgc=tempr
 
     tString='cn_s1_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%cn_s1_bgc=tempr
+    CNDecompBgcParamsInst%cn_s1_bgc=tempr
 
     tString='cn_s2_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%cn_s2_bgc=tempr
+    CNDecompBgcParamsInst%cn_s2_bgc=tempr
 
     tString='cn_s3_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%cn_s3_bgc=tempr
+    CNDecompBgcParamsInst%cn_s3_bgc=tempr
 
     tString='rf_l1s1_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%rf_l1s1_bgc=tempr
+    CNDecompBgcParamsInst%rf_l1s1_bgc=tempr
 
     tString='rf_l2s1_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%rf_l2s1_bgc=tempr
+    CNDecompBgcParamsInst%rf_l2s1_bgc=tempr
 
     tString='rf_l3s2_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%rf_l3s2_bgc=tempr   
+    CNDecompBgcParamsInst%rf_l3s2_bgc=tempr   
 
     tString='rf_s2s1_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%rf_s2s1_bgc=tempr
+    CNDecompBgcParamsInst%rf_s2s1_bgc=tempr
 
     tString='rf_s2s3_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%rf_s2s3_bgc=tempr
+    CNDecompBgcParamsInst%rf_s2s3_bgc=tempr
 
     tString='rf_s3s1_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%rf_s3s1_bgc=tempr
+    CNDecompBgcParamsInst%rf_s3s1_bgc=tempr
 
     tString='rf_cwdl2_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%rf_cwdl2_bgc=tempr
+    CNDecompBgcParamsInst%rf_cwdl2_bgc=tempr
 
     tString='rf_cwdl3_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%rf_cwdl3_bgc=tempr
+    CNDecompBgcParamsInst%rf_cwdl3_bgc=tempr
 
     tString='cwd_fcel'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%cwd_fcel_bgc=tempr
+    CNDecompBgcParamsInst%cwd_fcel_bgc=tempr
 
     tString='k_frag'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%k_frag_bgc=tempr
+    CNDecompBgcParamsInst%k_frag_bgc=tempr
 
     tString='minpsi_hr'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%minpsi_bgc=tempr 
+    CNDecompBgcParamsInst%minpsi_bgc=tempr 
 
     tString='cwd_flig'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompBgcConstInst%cwd_flig_bgc=tempr 
+    CNDecompBgcParamsInst%cwd_flig_bgc=tempr 
 
- end subroutine readCNDecompBgcConsts
+ end subroutine readCNDecompBgcParams
 
  !-----------------------------------------------------------------------
  subroutine init_decompcascade_bgc(bounds)
@@ -287,24 +286,24 @@ contains
 
    !------- time-constant coefficients ---------- !
    ! set soil organic matter compartment C:N ratios
-   cn_s1 = CNDecompBgcConstInst%cn_s1_bgc
-   cn_s2 = CNDecompBgcConstInst%cn_s2_bgc
-   cn_s3 = CNDecompBgcConstInst%cn_s3_bgc
+   cn_s1 = CNDecompBgcParamsInst%cn_s1_bgc
+   cn_s2 = CNDecompBgcParamsInst%cn_s2_bgc
+   cn_s3 = CNDecompBgcParamsInst%cn_s3_bgc
 
    ! set respiration fractions for fluxes between compartments
-   rf_l1s1 = CNDecompBgcConstInst%rf_l1s1_bgc
-   rf_l2s1 = CNDecompBgcConstInst%rf_l2s1_bgc
-   rf_l3s2 = CNDecompBgcConstInst%rf_l3s2_bgc
-   rf_s2s1 = CNDecompBgcConstInst%rf_s2s1_bgc
-   rf_s2s3 = CNDecompBgcConstInst%rf_s2s3_bgc
-   rf_s3s1 = CNDecompBgcConstInst%rf_s3s1_bgc
+   rf_l1s1 = CNDecompBgcParamsInst%rf_l1s1_bgc
+   rf_l2s1 = CNDecompBgcParamsInst%rf_l2s1_bgc
+   rf_l3s2 = CNDecompBgcParamsInst%rf_l3s2_bgc
+   rf_s2s1 = CNDecompBgcParamsInst%rf_s2s1_bgc
+   rf_s2s3 = CNDecompBgcParamsInst%rf_s2s3_bgc
+   rf_s3s1 = CNDecompBgcParamsInst%rf_s3s1_bgc
 
-   rf_cwdl2 =   CNDecompBgcConstInst%rf_cwdl2_bgc
-   rf_cwdl3 =   CNDecompBgcConstInst%rf_cwdl3_bgc
+   rf_cwdl2 = CNDecompBgcParamsInst%rf_cwdl2_bgc
+   rf_cwdl3 = CNDecompBgcParamsInst%rf_cwdl3_bgc
 
    ! set the cellulose and lignin fractions for coarse woody debris
-   cwd_fcel = CNDecompBgcConstInst%cwd_fcel_bgc
-   cwd_flig = CNDecompBgcConstInst%cwd_flig_bgc
+   cwd_fcel = CNDecompBgcParamsInst%cwd_fcel_bgc
+   cwd_flig = CNDecompBgcParamsInst%cwd_flig_bgc
 
    ! set path fractions
    f_s2s1 = 0.42_r8/(0.45_r8)
@@ -431,9 +430,9 @@ contains
    spinup_factor(i_litr2) = 1._r8
    spinup_factor(i_litr3) = 1._r8
    spinup_factor(i_cwd) = 1._r8
-   spinup_factor(i_soil1) = CNDecompBgcConstInst%spinup_vector(1)
-   spinup_factor(i_soil2) = CNDecompBgcConstInst%spinup_vector(2)
-   spinup_factor(i_soil3) = CNDecompBgcConstInst%spinup_vector(3)
+   spinup_factor(i_soil1) = CNDecompBgcParamsInst%spinup_vector(1)
+   spinup_factor(i_soil2) = CNDecompBgcParamsInst%spinup_vector(2)
+   spinup_factor(i_soil3) = CNDecompBgcParamsInst%spinup_vector(3)
 
    !----------------  list of transitions and their time-independent coefficients  ---------------!
    i_l1s1 = 1
@@ -566,6 +565,7 @@ contains
    real(r8):: normalization_factor ! factor by which to offset the decomposition rates frm century to a q10 formulation
    real(r8):: days_per_year        ! days per year
    real(r8):: depth_scalar(bounds%begc:bounds%endc,1:nlevdecomp) 
+   real(r8):: mino2lim           !minimum anaerobic decomposition rate
    !-----------------------------------------------------------------------
 
    !----- CENTURY T response function
@@ -586,6 +586,8 @@ contains
    alt_indx       => cps%alt_indx              & !  [integer (:)]  current depth of thaw                                     
    )
 
+   mino2lim = CNParamsShareInst%mino2lim
+
    if ( use_century_tfunc .and. normalize_q10_to_century_tfunc ) then
       call endrun( 'ERROR: cannot have both use_century_tfunc and normalize_q10_to_century_tfunc set as true' )
    endif
@@ -604,22 +606,22 @@ contains
 ! Todo:  SPM - the explicit divide gives different results than when that
 ! value is placed in the parameters netcdf file.  To get bfb, keep the 
 ! divide in source.
-   !tau_l1 = CNDecompBgcConstInst%tau_l1_bgc
-   !tau_l2_l3 = CNDecompBgcConstInst%tau_l2_l3_bgc
-   !tau_s1 = CNDecompBgcConstInst%tau_s1_bgc
-   !tau_s2 = CNDecompBgcConstInst%tau_s2_bgc
-   !tau_s3 = CNDecompBgcConstInst%tau_s3_bgc
+   !tau_l1 = CNDecompBgcParamsInst%tau_l1_bgc
+   !tau_l2_l3 = CNDecompBgcParamsInst%tau_l2_l3_bgc
+   !tau_s1 = CNDecompBgcParamsInst%tau_s1_bgc
+   !tau_s2 = CNDecompBgcParamsInst%tau_s2_bgc
+   !tau_s3 = CNDecompBgcParamsInst%tau_s3_bgc
 !set turnover rate of coarse woody debris
-   !tau_cwd = CNDecompBgcConstInst%tau_cwd_bgc
+   !tau_cwd = CNDecompBgcParamsInst%tau_cwd_bgc
 
    ! set "Q10" parameter
-   Q10 = CNConstShareInst%Q10
+   Q10 = CNParamsShareInst%Q10
 
    ! set "froz_q10" parameter
-   froz_q10  = CNConstShareInst%froz_q10 
+   froz_q10  = CNParamsShareInst%froz_q10 
 
    ! Set "decomp_depth_efolding" parameter
-   decomp_depth_efolding = CNConstShareInst%decomp_depth_efolding
+   decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
 
    ! translate to per-second time constant
    k_l1 = 1._r8    / (secspday * days_per_year * tau_l1)
@@ -634,9 +636,9 @@ contains
    ! The following code implements the acceleration part of the AD spinup algorithm
 
    if ( spinup_state .eq. 1 ) then
-      k_s1 = k_s1 * CNDecompBgcConstInst%spinup_vector(1)
-      k_s2 = k_s2 * CNDecompBgcConstInst%spinup_vector(2)
-      k_s3 = k_s3 * CNDecompBgcConstInst%spinup_vector(3)
+      k_s1 = k_s1 * CNDecompBgcParamsInst%spinup_vector(1)
+      k_s2 = k_s2 * CNDecompBgcParamsInst%spinup_vector(2)
+      k_s3 = k_s3 * CNDecompBgcParamsInst%spinup_vector(3)
    endif
 
    i_litr1 = 1

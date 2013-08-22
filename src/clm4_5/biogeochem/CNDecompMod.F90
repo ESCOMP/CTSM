@@ -14,7 +14,6 @@ module CNDecompMod
   use CNDecompCascadeBGCMod, only: decomp_rate_constants_bgc
   use CNNitrifDenitrifMod  , only: nitrif_denitrif
   use CNVerticalProfileMod , only: decomp_vertprofiles
-  use CNSharedConstsMod    , only:CNConstShareInst
   !
   implicit none
   save
@@ -22,22 +21,22 @@ module CNDecompMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CNDecompAlloc
-  public :: readCNDecompConsts
+  public :: readCNDecompParams
   !
-  type, private :: CNDecompConstType
+  type, private :: CNDecompParamsType
      real(r8) :: dnp         !denitrification proportion
-  end type CNDecompConstType
+  end type CNDecompParamsType
 
-  type(CNDecompConstType),private ::  CNDecompConstInst
+  type(CNDecompParamsType),private ::  CNDecompParamsInst
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine readCNDecompConsts ( ncid )
+  subroutine readCNDecompParams ( ncid )
     !
     ! !DESCRIPTION:
-    ! Read constants
+    ! Read parameters
     !
     ! !USES:
     use ncdio_pio    , only : file_desc_t,ncd_io
@@ -48,8 +47,8 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNDecompConstType'
-    character(len=100) :: errCode = 'Error reading in CN const file '
+    character(len=32)  :: subname = 'CNDecompParamsType'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
     real(r8)           :: tempr ! temporary to read in constant
     character(len=100) :: tString ! temp. var for reading
@@ -58,9 +57,9 @@ contains
     tString='dnp'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNDecompConstInst%dnp=tempr 
+    CNDecompParamsInst%dnp=tempr 
 
-  end subroutine readCNDecompConsts
+  end subroutine readCNDecompParams
 
   !-----------------------------------------------------------------------
   subroutine CNDecompAlloc (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
@@ -302,7 +301,7 @@ contains
                   end if
                else
                   if (.not. use_nitrif_denitrif) then
-                     sminn_to_denit_decomp_cascade_vr(c,j,k) = -CNDecompConstInst%dnp * pmnf_decomp_cascade(c,j,k)
+                     sminn_to_denit_decomp_cascade_vr(c,j,k) = -CNDecompParamsInst%dnp * pmnf_decomp_cascade(c,j,k)
                   end if
                end if
                decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)

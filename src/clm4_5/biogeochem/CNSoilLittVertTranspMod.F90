@@ -1,80 +1,77 @@
 module CNSoilLittVertTranspMod
 
   !-----------------------------------------------------------------------
-  ! !DESCRIPTION:
   ! calculate vertical mixing of all decomposing C and N pools
   !
-  ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_varctl  , only : iulog, use_c13, use_c14, spinup_state, use_vertsoilc
   use clm_varcon  , only : secspday
   use decompMod   , only : bounds_type
   !
-  ! !PUBLIC TYPES:
   implicit none
   save
   !
-  ! !PUBLIC MEMBER FUNCTIONS:
-
   public :: CNSoilLittVertTransp
-  public :: readCNSoilLittVertTranspConsts
+  public :: readCNSoilLittVertTranspParams
 
-  type, private :: CNSoilLittVertTranspType
-     real(r8) :: som_diffus   		       ! Soil organic matter diffusion
-     real(r8) :: cryoturb_diffusion_k   	       ! The cryoturbation diffusive constant
+  type, private :: CNSoilLittVertTranspParamsType
+     real(r8) :: som_diffus                 ! Soil organic matter diffusion
+     real(r8) :: cryoturb_diffusion_k       ! The cryoturbation diffusive constant
+                                            ! cryoturbation to the active layer thickness
+     real(r8) :: max_altdepth_cryoturbation ! (m) maximum active layer thickness for cryoturbation to occur
+  end type CNSoilLittVertTranspParamsType
 
-  end type CNSoilLittVertTranspType
-
-  type(CNSoilLittVertTranspType),     private ::  CNSoilLittVertTranspConstInst
+  type(CNSoilLittVertTranspParamsType),     private ::  CNSoilLittVertTranspParamsInst
 
   !
-  ! !PUBLIC DATA MEMBERS:
-  real(r8), public :: som_diffus   ! = 1e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 1 cm^2 / yr
   real(r8), public :: som_adv_flux =  0._r8
-  real(r8), public :: cryoturb_diffusion_k   ! = 5e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 5 cm^2 / yr = 1m^2 / 200 yr
-  real(r8), public :: max_depth_cryoturb = 3._r8          ! (m) this is the maximum depth of cryoturbation
-  real(r8), public :: max_altdepth_cryoturbation = 2._r8  ! (m) maximum active layer thickness for cryoturbation to occur
+  real(r8), public :: max_depth_cryoturb = 3._r8   ! (m) this is the maximum depth of cryoturbation
+  real(r8) :: som_diffus                   ! [m^2/sec] = 1 cm^2 / yr
+  real(r8) :: cryoturb_diffusion_k         ! [m^2/sec] = 5 cm^2 / yr = 1m^2 / 200 yr
+  real(r8) :: max_altdepth_cryoturbation   ! (m) maximum active layer thickness for cryoturbation to occur
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------  
-  subroutine readCNSoilLittVertTranspConsts ( ncid )
+  subroutine readCNSoilLittVertTranspParams ( ncid )
     !
-    ! !USES:
     use ncdio_pio , only : file_desc_t,ncd_io
     use abortutils   , only: endrun
     !
-    ! !ARGUMENTS:
     implicit none
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
-    ! !LOCAL VARIABLES:
     character(len=32)  :: subname = 'CNSoilLittVertTranspType'
-    character(len=100) :: errCode = 'Error reading in CN const file '
+    character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
     real(r8)           :: tempr ! temporary to read in constant
     character(len=100) :: tString ! temp. var for reading
     !-----------------------------------------------------------------------
     !
-    ! read in constants
+    ! read in parameters
     !
+     tString='som_diffus'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     !CNSoilLittVertTranspParamsInst%som_diffus=tempr
+     ! SPM - can't be pulled out since division makes things not bfb
+     CNSoilLittVertTranspParamsInst%som_diffus = 1e-4_r8 / (secspday * 365._r8)  
+
+     tString='cryoturb_diffusion_k'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     !CNSoilLittVertTranspParamsInst%cryoturb_diffusion_k=tempr
+     !SPM Todo.  This constant cannot be on file since the divide makes things
+     !not bfb
+     CNSoilLittVertTranspParamsInst%cryoturb_diffusion_k = 5e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 5 cm^2 / yr = 1m^2 / 200 yr
+
+     tString='max_altdepth_cryoturbation'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CNSoilLittVertTranspParamsInst%max_altdepth_cryoturbation=tempr
     
-    tString='som_diffus'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    !CNSoilLittVertTranspConstInst%som_diffus=tempr
-    !SPM Todo.  This constant cannot be on file since 
-    CNSoilLittVertTranspConstInst%som_diffus=1e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 1 cm^2 / yr
-
-    tString='cryoturb_diffusion_k'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    !CNSoilLittVertTranspConstInst%cryoturb_diffusion_k=tempr
-    !SPM Todo.  This constant cannot be on file since 
-    CNSoilLittVertTranspConstInst%cryoturb_diffusion_k = 5e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 5 cm^2 / yr = 1m^2 / 200 yr
-
-  end subroutine readCNSoilLittVertTranspConsts
+  end subroutine readCNSoilLittVertTranspParams
 
   !-----------------------------------------------------------------------
   subroutine CNSoilLittVertTransp(bounds, num_soilc, filter_soilc)
@@ -145,13 +142,14 @@ contains
    som_adv_coef     => cps%som_adv_coef                 , & !  [real(r8) (:,:)]  SOM advective flux (m/s)                               
    som_diffus_coef  => cps%som_diffus_coef                & !  [real(r8) (:,:)]  SOM diffusivity due to bio/cryo-turbation (m2/s)       
    )
+
+   !Set parameters of vertical mixing of SOM
+   som_diffus                 = CNSoilLittVertTranspParamsInst%som_diffus 
+   cryoturb_diffusion_k       = CNSoilLittVertTranspParamsInst%cryoturb_diffusion_k 
+   max_altdepth_cryoturbation = CNSoilLittVertTranspParamsInst%max_altdepth_cryoturbation 
    
    dtime = get_step_size()
 
-   !Set parameters of vertical mixing of SOM
-   som_diffus = CNSoilLittVertTranspConstInst%som_diffus 
-   cryoturb_diffusion_k = CNSoilLittVertTranspConstInst%cryoturb_diffusion_k 
-   
    ntype = 2
    if ( use_c13 ) then
       ntype = ntype+1

@@ -19,15 +19,21 @@ module CNAllocationMod
   public :: CNAllocationInit         ! Initialization
   public :: CNAllocation             ! run method
   public :: CNAllocation_Carbon_only ! Return Carbon_only status
-  public :: readCNAllocConsts
+  public :: readCNAllocParams
 
-  type :: CNAllocConstType
+  type :: CNAllocParamsType
      real(r8) :: bdnr           !bulk denitrification rate (1/s)
      real(r8) :: dayscrecover   !number of days to recover negative cpool
-  end type CNAllocConstType
+     real(r8) :: compet_plant_no3    ! (unitless) relative compettiveness of plants for NO3
+     real(r8) :: compet_plant_nh4    ! (unitless) relative compettiveness of plants for NH4
+     real(r8) :: compet_decomp_no3   ! (unitless) relative competitiveness of immobilizers for NO3
+     real(r8) :: compet_decomp_nh4   ! (unitless) relative competitiveness of immobilizers for NH4
+     real(r8) :: compet_denit        ! (unitless) relative competitiveness of denitrifiers for NO3
+     real(r8) :: compet_nit          ! (unitless) relative competitiveness of nitrifiers for NH4
+  end type CNAllocParamsType
   !
-  ! CNAllocConstInst is populated in readCNAllocConsts which is called in 
-  type(CNAllocConstType),protected ::  CNAllocConstInst
+  ! CNAllocParamsInst is populated in readCNAllocParams which is called in 
+  type(CNAllocParamsType),protected ::  CNAllocParamsInst
   !
   ! !PUBLIC DATA MEMBERS:
   character(len=*), parameter, public :: suplnAll='ALL'  ! Supplemental Nitrogen for all PFT's
@@ -55,7 +61,7 @@ contains
   end function CNAllocation_Carbon_only
 
   !-----------------------------------------------------------------------
-  subroutine readCNAllocConsts ( ncid )
+  subroutine readCNAllocParams ( ncid )
     !
     ! !USES:
     use ncdio_pio , only : file_desc_t,ncd_io
@@ -65,26 +71,56 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNAllocConstType'
-    character(len=100) :: errCode = 'Error reading in CN const file '
+    character(len=32)  :: subname = 'CNAllocParamsType'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
-    real(r8)           :: tempr ! temporary to read in constant
+    real(r8)           :: tempr ! temporary to read in parameter
     character(len=100) :: tString ! temp. var for reading
     !-----------------------------------------------------------------------
 
-    ! read in constants
+    ! read in parameters
 
     tString='bdnr'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNAllocConstInst%bdnr=tempr
+    CNAllocParamsInst%bdnr=tempr
 
     tString='dayscrecover'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNAllocConstInst%dayscrecover=tempr
+    CNAllocParamsInst%dayscrecover=tempr
 
-  end subroutine readCNAllocConsts
+    tString='compet_plant_no3'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNAllocParamsInst%compet_plant_no3=tempr
+
+    tString='compet_plant_nh4'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNAllocParamsInst%compet_plant_nh4=tempr
+   
+    tString='compet_decomp_no3'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNAllocParamsInst%compet_decomp_no3=tempr
+
+    tString='compet_decomp_nh4'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNAllocParamsInst%compet_decomp_nh4=tempr
+   
+    tString='compet_denit'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNAllocParamsInst%compet_denit=tempr
+
+    tString='compet_nit'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    CNAllocParamsInst%compet_nit=tempr   
+
+  end subroutine readCNAllocParams
 
   !-----------------------------------------------------------------------
   subroutine CNAllocationInit ( bounds)
@@ -117,9 +153,9 @@ contains
     ! set time steps
     dt = real( get_step_size(), r8 )
 
-    ! set space-and-time constant parameters from CN constant file
-    bdnr         = CNAllocConstInst%bdnr * (dt/secspday)
-    dayscrecover = CNAllocConstInst%dayscrecover
+    ! set space-and-time parameters from parameter file
+    bdnr         = CNAllocParamsInst%bdnr * (dt/secspday)
+    dayscrecover = CNAllocParamsInst%dayscrecover
 
     ! Change namelist settings into private logical variables
     select case(suplnitro)
@@ -172,12 +208,12 @@ contains
 
     real(r8), pointer :: c14_psnsun_to_cpool(:)
     real(r8), pointer :: c14_psnshade_to_cpool(:)
-    real(r8), parameter :: compet_plant_no3   = 1.0 ! (unitless) relative compettiveness of plants for NO3
-    real(r8), parameter :: compet_plant_nh4   = 1.0 ! (unitless) relative compettiveness of plants for NH4
-    real(r8), parameter :: compet_decomp_no3  = 1.0 ! (unitless) relative competitiveness of immobilizers for NO3
-    real(r8), parameter :: compet_decomp_nh4  = 1.0 ! (unitless) relative competitiveness of immobilizers for NH4
-    real(r8), parameter :: compet_denit       = 1.0 ! (unitless) relative competitiveness of denitrifiers for NO3
-    real(r8), parameter :: compet_nit         = 1.0 ! (unitless) relative competitiveness of nitrifiers for NH4
+    real(r8) :: compet_plant_no3    ! (unitless) relative compettiveness of plants for NO3
+    real(r8) :: compet_plant_nh4    ! (unitless) relative compettiveness of plants for NH4
+    real(r8) :: compet_decomp_no3   ! (unitless) relative competitiveness of immobilizers for NO3
+    real(r8) :: compet_decomp_nh4   ! (unitless) relative competitiveness of immobilizers for NH4
+    real(r8) :: compet_denit        ! (unitless) relative competitiveness of denitrifiers for NO3
+    real(r8) :: compet_nit          ! (unitless) relative competitiveness of nitrifiers for NH4
     real(r8) :: fpi_no3_vr(bounds%begc:bounds%endc,1:nlevdecomp) ! fraction of potential immobilization supplied by no3(no units)
     real(r8) :: fpi_nh4_vr(bounds%begc:bounds%endc,1:nlevdecomp) ! fraction of potential immobilization supplied by nh4 (no units)
     real(r8) :: sum_nh4_demand(bounds%begc:bounds%endc,1:nlevdecomp)
@@ -838,6 +874,13 @@ contains
 
    else  !----------NITRIF_DENITRIF-------------!
       ! column loops to resolve plant/heterotroph/nitrifier/denitrifier competition for mineral N
+      !read constants from external netcdf file
+      compet_plant_no3 = CNAllocParamsInst%compet_plant_no3
+      compet_plant_nh4 = CNAllocParamsInst%compet_plant_nh4
+      compet_decomp_no3 = CNAllocParamsInst%compet_decomp_no3
+      compet_decomp_nh4 = CNAllocParamsInst%compet_decomp_nh4
+      compet_denit = CNAllocParamsInst%compet_denit
+      compet_nit = CNAllocParamsInst%compet_nit
       
       ! init total mineral N pools
       do fc=1,num_soilc

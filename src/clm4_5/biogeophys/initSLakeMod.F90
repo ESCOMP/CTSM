@@ -10,8 +10,9 @@ module initSLakeMod
   ! Once this version is officialized, this is no longer necessary.
   !
   ! !USES
-  use decompMod, only : bounds_type
-  use shr_kind_mod , only : r8 => shr_kind_r8
+  use decompMod         , only : bounds_type
+  use shr_kind_mod      , only : r8 => shr_kind_r8
+  use CNSharedParamsMod , only : CNParamsShareInst
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -390,7 +391,7 @@ contains
    real(r8) :: om_csol      = 2.5_r8  ! heat capacity of peat soil *10^6 (J/K m3) (Farouki, 1986)
    real(r8) :: om_tkd       = 0.05_r8 ! thermal conductivity of dry organic soil (Farouki, 1981)
    real(r8) :: om_b         = 2.7_r8  ! Clapp Hornberger paramater for oragnic soil (Letts, 2000)
-   real(r8) :: organic_max  = 130._r8 ! organic matter (kg/m3) where soil is assumed to act like peat
+   real(r8) :: organic_max            ! organic matter (kg/m3) where soil is assumed to act like peat
    real(r8) :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
    real(r8) :: pc           = 0.5_r8   ! percolation threshold
    real(r8) :: pcbeta       = 0.139_r8 ! percolation exponent
@@ -432,6 +433,8 @@ contains
    h2osoi_ice                =>    cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2) (-nlevsno+1:nlevgrnd)
    h2osoi_vol                =>    cws%h2osoi_vol            & ! Output: [real(r8) (:,:)] volumetric soil water [m3/m3]  (nlevgrnd)
    )
+
+   organic_max = CNParamsShareInst%organic_max
 
    ! Set SLakeCon constants according to namelist fields
    if (lake_use_old_fcrit_minz0) then

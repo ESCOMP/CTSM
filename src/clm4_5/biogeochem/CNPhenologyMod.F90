@@ -22,10 +22,10 @@ module CNPhenologyMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CNPhenologyInit      ! Initialization
   public :: CNPhenology          ! Update
-  public :: readCNPhenolConsts   ! 
+  public :: readCNPhenolParams   ! 
   !
   ! !LOCAL VARIABLES
-  type, private :: CNPnenolConstType
+  type, private :: CNPnenolParamsType
      real(r8) :: crit_dayl        !critical day length for senescence
      real(r8) :: ndays_on     	  !number of days to complete leaf onset
      real(r8) :: ndays_off		  !number of days to complete leaf offset
@@ -37,10 +37,10 @@ module CNPhenologyMod
      real(r8) :: crit_offset_swi  !critical number of water stress days to initiate offset
      real(r8) :: soilpsi_off      !critical soil water potential for leaf offset
      real(r8) :: lwtop   	        !live wood turnover proportion (annual fraction)
-  end type CNPnenolConstType
+  end type CNPnenolParamsType
 
-  ! CNPhenolConstInst is populated in readCNPhenolConsts 
-  type(CNPnenolConstType) ::  CNPhenolConstInst
+  ! CNPhenolParamsInst is populated in readCNPhenolParams 
+  type(CNPnenolParamsType) ::  CNPhenolParamsInst
 
   ! !PRIVATE DATA MEMBERS:
   real(r8)           :: dt              ! radiation time step delta t (seconds)
@@ -73,7 +73,7 @@ module CNPhenologyMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine readCNPhenolConsts ( ncid )
+  subroutine readCNPhenolParams ( ncid )
     !
     ! !DESCRIPTION:
     !
@@ -86,72 +86,72 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNPhenolConstType'
-    character(len=100) :: errCode = 'Error reading in CN const file '
+    character(len=32)  :: subname = 'CNPhenolParamsType'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
-    real(r8)           :: tempr ! temporary to read in constant
+    real(r8)           :: tempr ! temporary to read in parameter
     character(len=100) :: tString ! temp. var for reading
     !-----------------------------------------------------------------------
 
     !
-    ! read in constants
+    ! read in parameters
     !   
     tString='crit_dayl'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNPhenolConstInst%crit_dayl=tempr
+    CNPhenolParamsInst%crit_dayl=tempr
 
     tString='ndays_on'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNPhenolConstInst%ndays_on=tempr
+    CNPhenolParamsInst%ndays_on=tempr
 
     tString='ndays_off'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNPhenolConstInst%ndays_off=tempr
+    CNPhenolParamsInst%ndays_off=tempr
 
     tString='fstor2tran'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNPhenolConstInst%fstor2tran=tempr
+    CNPhenolParamsInst%fstor2tran=tempr
 
     tString='crit_onset_fdd'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNPhenolConstInst%crit_onset_fdd=tempr
+    CNPhenolParamsInst%crit_onset_fdd=tempr
 
     tString='crit_onset_swi'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNPhenolConstInst%crit_onset_swi=tempr
+    CNPhenolParamsInst%crit_onset_swi=tempr
 
     tString='soilpsi_on'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNPhenolConstInst%soilpsi_on=tempr
+    CNPhenolParamsInst%soilpsi_on=tempr
 
     tString='crit_offset_fdd'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNPhenolConstInst%crit_offset_fdd=tempr
+    CNPhenolParamsInst%crit_offset_fdd=tempr
 
     tString='crit_offset_swi'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNPhenolConstInst%crit_offset_swi=tempr
+    CNPhenolParamsInst%crit_offset_swi=tempr
 
     tString='soilpsi_off'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNPhenolConstInst%soilpsi_off=tempr
+    CNPhenolParamsInst%soilpsi_off=tempr
 
     tString='lwtop_ann'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNPhenolConstInst%lwtop=tempr   
+    CNPhenolParamsInst%lwtop=tempr   
 
-  end subroutine readCNPhenolConsts
+  end subroutine readCNPhenolParams
 
   !-----------------------------------------------------------------------
   subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -228,31 +228,31 @@ contains
 
     ! set constants for CNSeasonDecidPhenology 
     ! (critical daylength from Biome-BGC, v4.1.2)
-    crit_dayl=CNPhenolConstInst%crit_dayl
+    crit_dayl=CNPhenolParamsInst%crit_dayl
 
     ! Set constants for CNSeasonDecidPhenology and CNStressDecidPhenology
-    ndays_on=CNPhenolConstInst%ndays_on
-    ndays_off=CNPhenolConstInst%ndays_off
+    ndays_on=CNPhenolParamsInst%ndays_on
+    ndays_off=CNPhenolParamsInst%ndays_off
 
     ! set transfer parameters
-    fstor2tran=CNPhenolConstInst%fstor2tran
+    fstor2tran=CNPhenolParamsInst%fstor2tran
     ! -----------------------------------------
     ! Constants for CNStressDecidPhenology
     ! -----------------------------------------
 
     ! onset parameters
-    crit_onset_fdd=CNPhenolConstInst%crit_onset_fdd
+    crit_onset_fdd=CNPhenolParamsInst%crit_onset_fdd
     ! critical onset gdd now being calculated as a function of annual
     ! average 2m temp.
     ! crit_onset_gdd = 150.0 ! c3 grass value
     ! crit_onset_gdd = 1000.0   ! c4 grass value
-    crit_onset_swi=CNPhenolConstInst%crit_onset_swi
-    soilpsi_on=CNPhenolConstInst%soilpsi_on
+    crit_onset_swi=CNPhenolParamsInst%crit_onset_swi
+    soilpsi_on=CNPhenolParamsInst%soilpsi_on
 
     ! offset parameters
-    crit_offset_fdd=CNPhenolConstInst%crit_offset_fdd
-    crit_offset_swi=CNPhenolConstInst%crit_offset_swi
-    soilpsi_off=CNPhenolConstInst%soilpsi_off    
+    crit_offset_fdd=CNPhenolParamsInst%crit_offset_fdd
+    crit_offset_swi=CNPhenolParamsInst%crit_offset_swi
+    soilpsi_off=CNPhenolParamsInst%soilpsi_off    
 
     ! -----------------------------------------
     ! Constants for CNLivewoodTurnover
@@ -260,7 +260,7 @@ contains
 
     ! set the global parameter for livewood turnover rate
     ! define as an annual fraction (0.7), and convert to fraction per second
-    lwtop=CNPhenolConstInst%lwtop/31536000.0_r8 !annual fraction converted to per second
+    lwtop=CNPhenolParamsInst%lwtop/31536000.0_r8 !annual fraction converted to per second
 
     ! -----------------------------------------
     ! Call any subroutine specific initialization routines

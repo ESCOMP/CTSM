@@ -6,12 +6,12 @@ module CNMRespMod
   ! nitrogen code.
   !
   ! !USES:
-  use shr_kind_mod , only: r8 => shr_kind_r8
-  use clm_varpar   , only: nlevgrnd
-  use shr_const_mod, only: SHR_CONST_TKFRZ
-  use decompMod    , only: bounds_type
-  use abortutils   , only: endrun
-  use CNSharedConstsMod  , only: CNConstShareInst
+  use shr_kind_mod       , only: r8 => shr_kind_r8
+  use clm_varpar         , only: nlevgrnd
+  use shr_const_mod      , only: SHR_CONST_TKFRZ
+  use decompMod          , only: bounds_type
+  use abortutils         , only: endrun
+  use CNSharedParamsMod  , only: CNParamsShareInst
   !
   implicit none
   save
@@ -19,22 +19,22 @@ module CNMRespMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CNMResp
-  public :: readCNMRespConsts
+  public :: readCNMRespParams
   
-  type, private :: CNMRespConstType
+  type, private :: CNMRespParamsType
      real(r8):: br        !base rate for maintenance respiration(gC/gN/s)
-  end type CNMRespConstType
+  end type CNMRespParamsType
   
-  type(CNMRespConstType),private ::  CNMRespConstInst
+  type(CNMRespParamsType),private ::  CNMRespParamsInst
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine readCNMRespConsts ( ncid )
+  subroutine readCNMRespParams ( ncid )
     !
     ! !DESCRIPTION:
-    ! Read constants
+    ! Read parameters
     !
     ! !USES:
     use ncdio_pio , only : file_desc_t,ncd_io
@@ -44,8 +44,8 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNMRespConstType'
-    character(len=100) :: errCode = 'Error reading in CN const file '
+    character(len=32)  :: subname = 'CNMRespParamsType'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
     real(r8)           :: tempr ! temporary to read in constant
     character(len=100) :: tString ! temp. var for reading
@@ -54,9 +54,9 @@ contains
     tString='br_mr'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNMRespConstInst%br=tempr
+    CNMRespParamsInst%br=tempr
     
-  end subroutine readCNMRespConsts
+  end subroutine readCNMRespParams
 
   !-----------------------------------------------------------------------
   subroutine CNMResp(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
@@ -121,13 +121,13 @@ contains
    ! Original expression is br = 0.0106 molC/(molN h)
    ! Conversion by molecular weights of C and N gives 2.525e-6 gC/(gN s)
    ! set constants
-   br = CNMRespConstInst%br
+   br = CNMRespParamsInst%br
    ! Peter Thornton: 3/13/09 
    ! Q10 was originally set to 2.0, an arbitrary choice, but reduced to 1.5 as part of the tuning
    ! to improve seasonal cycle of atmospheric CO2 concentration in global
    ! simulatoins
-   !Set Q10 from CNSharedConstsMod
-   Q10 = CNConstShareInst%Q10
+   !Set Q10 from CNSharedParamsMod
+   Q10 = CNParamsShareInst%Q10
    ! column loop to calculate temperature factors in each soil layer
    do j=1,nlevgrnd
       do fc = 1, num_soilc

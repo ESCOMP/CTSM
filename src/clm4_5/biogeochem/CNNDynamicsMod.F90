@@ -28,23 +28,24 @@ module CNNDynamicsMod
   real(r8), public :: nfix_timeconst = 10._r8 ! (days) time over which to exponentially relax the npp flux for N fixation term (if .le. 0. or .ge. 365; use old annual method)
 #endif
 
-  public :: readCNNDynamicsConsts
+  public :: readCNNDynamicsParams
 
-  type, private :: CNNDynamicsConstType
-     real(r8):: sf        !soluble fraction of mineral N (unitless)
-  end type CNNDynamicsConstType
+  type, private :: CNNDynamicsParamsType
+     real(r8):: sf        ! soluble fraction of mineral N (unitless)
+     real(r8):: sf_no3    ! soluble fraction of NO3 (unitless)
+  end type CNNDynamicsParamsType
   
-  type(CNNDynamicsConstType),private ::  CNNDynamicsConstInst
+  type(CNNDynamicsParamsType),private ::  CNNDynamicsParamsInst
   
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine readCNNDynamicsConsts ( ncid )
+  subroutine readCNNDynamicsParams ( ncid )
     !
     ! !DESCRIPTION:
-    ! Read in constants
+    ! Read in parameters
     !
     ! !USES:
     use ncdio_pio , only : file_desc_t,ncd_io
@@ -55,8 +56,8 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNNDynamicsConstType'
-    character(len=100) :: errCode = 'Error reading in CN const file '
+    character(len=32)  :: subname = 'CNNDynamicsParamsType'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
     real(r8)           :: tempr ! temporary to read in constant
     character(len=100) :: tString ! temp. var for reading
@@ -67,11 +68,14 @@ contains
     tString='sf_minn'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNNDynamicsConstInst%sf=tempr
-   
-    !CNNDynamicsConstInst%sf=0.1_r8
+    CNNDynamicsParamsInst%sf=tempr
 
-  end subroutine readCNNDynamicsConsts
+     tString='sf_no3'
+     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CNNDynamicsParamsInst%sf_no3=tempr
+   
+  end subroutine readCNNDynamicsParams
 
   !-----------------------------------------------------------------------
   subroutine CNNDeposition( bounds )
@@ -160,15 +164,8 @@ contains
       do fc = 1,num_soilc
          c = filter_soilc(fc)
          
-         ! the value 0.001666 is set to give 100 TgN/yr when global
-         ! NPP = 60 PgC/yr.  (Cleveland et al., 1999)
-         ! Convert from gN/m2/yr -> gN/m2/s
-         !t = cannsum_npp(c) * 0.001666_r8 / (secspday * dayspyr)
          t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * cannsum_npp(c))))/(secspday * dayspyr)
          nfix_to_sminn(c) = max(0._r8,t)
-         ! PET 2/14/05: commenting out the dependence on NPP, and
-         ! forcing Nfix to global constant = 0.4 gN/m2/yr
-         !nfix_to_sminn(c) = 0.4 / (secspday*dayspyr)
 
       end do
    endif
@@ -223,10 +220,10 @@ contains
 
    if (.not. use_nitrif_denitrif) then
       ! set constant sf 
-      sf = CNNDynamicsConstInst%sf
+      sf = CNNDynamicsParamsInst%sf
    else
       ! Assume that 100% of the soil NO3 is in a soluble form
-      sf_no3 = 1.0_r8
+      sf_no3 =  CNNDynamicsParamsInst%sf_no3 
    end if
 
    ! calculate the total soil water
@@ -254,11 +251,6 @@ contains
       endif
    end do
 
-   !!! awaiting_new_frozen_hydrolgy ! Loop through columns
-   !!! awaiting_new_frozen_hydrolgy do fc = 1,num_soilc
-   !!! awaiting_new_frozen_hydrolgy c = filter_soilc(fc)
-   !!! awaiting_new_frozen_hydrolgy drain_tot(c) = qflx_drain(c) + qflx_drain_perched(c)
-   !!! awaiting_new_frozen_hydrolgy end do
    ! Loop through columns
    do fc = 1,num_soilc
       c = filter_soilc(fc)

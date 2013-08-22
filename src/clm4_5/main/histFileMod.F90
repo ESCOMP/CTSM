@@ -1523,7 +1523,7 @@ contains
     use clmtype
     use clm_varpar  , only : nlevgrnd, nlevlak, nlevurb, numrad, &
                              maxpatch_glcmec, nlevdecomp_full
-    use clm_varctl  , only : caseid, ctitle, fsurdat, finidat, fpftcon, &
+    use clm_varctl  , only : caseid, ctitle, fsurdat, finidat, paramfile, &
                              version, hostname, username, conventions, source
     use domainMod   , only : ldomain
     use fileutils   , only : get_filename
@@ -1626,7 +1626,7 @@ contains
        str = get_filename(finidat)
     endif
     call ncd_putatt(lnfid, ncd_global, 'Initial_conditions_dataset', trim(str))
-    str = get_filename(fpftcon)
+    str = get_filename(paramfile)
     call ncd_putatt(lnfid, ncd_global, 'PFT_physiological_constants_dataset', trim(str))
 
     ! Define dimensions.

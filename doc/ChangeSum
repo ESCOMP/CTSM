@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_23      muszala 08/22/2013 refactor to allow CH4 params. to be read from netcdf file and clean up clm4_5_20
    clm4_5_22      muszala 07/30/2013 aux_clm testlist reorganization
    clm4_5_21      muszala 07/24/2013 ifdef and bounds refactor
    clm4_5_20      muszala 07/20/2013 refactor to allow CN and BGC params. to be read from netcdf file

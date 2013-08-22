@@ -57,10 +57,10 @@ module controlMod
   use SoilHydrologyMod, only: &
        SoilHydrology_readnl
   use CNSoilLittVertTranspMod, only: &
-       som_diffus, som_adv_flux, cryoturb_diffusion_k, max_altdepth_cryoturbation, max_depth_cryoturb
+       som_adv_flux, max_depth_cryoturb
   use CNVerticalProfileMod, only: &
        exponential_rooting_profile, rootprof_exp, surfprof_exp, pftspecific_rootingprofile
-  use CNSharedConstsMod , only : anoxia_wtsat
+  use CNSharedParamsMod , only : anoxia_wtsat
 
   !
   ! !PUBLIC TYPES:
@@ -154,7 +154,7 @@ contains
 
     namelist /clm_inparm/  &
          fsurdat, fatmtopo, flndtopo, &
-         fpftcon, fconsts, fpftdyn,  fsnowoptics, fsnowaging
+         paramfile, fpftdyn,  fsnowoptics, fsnowaging
 
     ! History, restart options
 
@@ -203,7 +203,7 @@ contains
 
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
-         som_diffus, som_adv_flux, cryoturb_diffusion_k, max_altdepth_cryoturbation, max_depth_cryoturb
+         som_adv_flux, max_depth_cryoturb
 
     ! C and N input vertical profiles
     namelist /clm_inparm/  & 
@@ -475,8 +475,7 @@ contains
     call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmtopo, len(fatmtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (fpftcon , len(fpftcon) , MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (fconsts , len(fconsts) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (paramfile, len(paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowoptics,  len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
@@ -502,10 +501,7 @@ contains
 
     if (use_cn .and. use_vertsoilc) then
        ! vertical soil mixing variables
-       call mpi_bcast (som_diffus, 1, MPI_REAL8,  0, mpicom, ier)
        call mpi_bcast (som_adv_flux, 1, MPI_REAL8,  0, mpicom, ier)
-       call mpi_bcast (cryoturb_diffusion_k, 1, MPI_REAL8,  0, mpicom, ier)
-       call mpi_bcast (max_altdepth_cryoturbation, 1, MPI_REAL8,  0, mpicom, ier)
        call mpi_bcast (max_depth_cryoturb, 1, MPI_REAL8,  0, mpicom, ier)
 
        ! C and N input vertical profiles
@@ -618,16 +614,11 @@ contains
     write(iulog,*) '   username              = ',trim(username)
     write(iulog,*) '   hostname              = ',trim(hostname)
     write(iulog,*) 'input data files:'
-    write(iulog,*) '   PFT physiology = ',trim(fpftcon)
+    write(iulog,*) '   PFT physiology and parameters file = ',trim(paramfile)
     if (fsurdat == ' ') then
        write(iulog,*) '   fsurdat, surface dataset not set'
     else
        write(iulog,*) '   surface data   = ',trim(fsurdat)
-    end if
-    if (fconsts == ' ') then
-       write(iulog,*) '   fconsts, constant dataset not set'
-    else
-       write(iulog,*) '   constant data   = ',trim(fconsts)
     end if
     if (fatmlndfrc == ' ') then
        write(iulog,*) '   fatmlndfrc not set, setting frac/mask to 1'
@@ -670,9 +661,6 @@ contains
 
     if (use_cn .and. use_vertsoilc) then
        write(iulog, *) '   som_adv_flux, the advection term in soil mixing (m/s) : ', som_adv_flux
-       write(iulog, *) '   som_diffus, the diffusion term in soil mixing (m/s^2) : ', som_diffus
-       write(iulog, *) '   cryoturb_diffusion_k  (m/s^2)                         : ', cryoturb_diffusion_k
-       write(iulog, *) '   max_altdepth_cryoturbation (m)                        : ', max_altdepth_cryoturbation
        write(iulog, *) '   max_depth_cryoturb (m)                                : ', max_depth_cryoturb
        
        write(iulog, *) '   exponential_rooting_profile                           : ', exponential_rooting_profile

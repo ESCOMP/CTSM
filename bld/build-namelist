@@ -1005,13 +1005,16 @@ if ( $glc_nec > 0 ) {
   }
 }
 
-add_default($nl, 'fpftcon');
 add_default($nl, 'albice', 'glc_nec'=>$glc_nec);
+
 if ($phys eq "clm4_5") {
   #
-  #get constant data.  
+  # get param data for 45.  this is where the old pft-physiology was used.  It 
+  # now includes CN and BGC century parameters also
   #
-  add_default($nl, 'fconsts');
+  add_default($nl, 'paramfile');
+} else {
+  add_default($nl, 'fpftcon');
 }
 
 # Create crop land unit
@@ -1173,12 +1176,23 @@ if ( $clm4me  eq "on" ) {
    # namelist group: ch4par_in   #
    ###############################
    add_default($nl, 'fin_use_fsat' );
+   add_default($nl, 'use_aereoxid_prog' );
+   #
+   # Check if use_aereoxid_prog is set.  If no, then read value of aereoxid from 
+   # parameters file
+   #
+   my $use_aereoxid_prog = $nl->get_value('use_aereoxid_prog');
+   if ( defined($use_aereoxid_prog) && $use_aereoxid_prog =~ /$FALSE/i ) {
+      print "WARNING: Using aereoxid value from parameters file.\n";
+   } 
 } else {
    my @vars = $nl->get_variable_names('ch4par_in');
    if ( $#vars >= 0 ) {
       die "$ProgName ERROR: ch4par_in namelist variables were set, but clm4me Methane model NOT defined in the configuration\n";
    }
 }
+
+
 #
 # Error checking for C-isotope options
 #

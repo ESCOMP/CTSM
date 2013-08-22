@@ -59,10 +59,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<fpftcon           >lnd/clm2/pftdata/pft-physiology.c130503.nc</fpftcon>
-
-<!-- Constant file for biogeochem modules (relative to {csmdata}) -->
-<fconsts           >lnd/clm2/constdata/cnConstOrnl.c130708.nc</fconsts>
+<paramfile       >lnd/clm2/paramdata/clm_params.c130821.nc</paramfile>
 
 <!--
 
@@ -1557,5 +1554,8 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130524.nc</fsurdat>
 
 <fin_use_fsat bgc="cn">.true.</fin_use_fsat>
 <fin_use_fsat bgc="cndv">.true.</fin_use_fsat>
+
+<use_aereoxid_prog bgc="cn">.true.</use_aereoxid_prog>
+<use_aereoxid_prog bgc="cndv">.true.</use_aereoxid_prog>
 
 </namelist_defaults>

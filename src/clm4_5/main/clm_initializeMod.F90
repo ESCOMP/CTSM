@@ -1,10 +1,8 @@
 module clm_initializeMod
 
   !-----------------------------------------------------------------------
-  ! !DESCRIPTION:
   ! Performs land model initialization
   !
-  ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use spmdMod         , only : masterproc
   use shr_sys_mod     , only : shr_sys_flush, shr_sys_abort
@@ -14,20 +12,17 @@ module clm_initializeMod
                                use_cndv
   use clm_varsur      , only : wt_lunit, wt_nat_pft, wt_cft, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
-  use readConstantsMod, only : readConstants
+  use readParamsMod   , only : readParameters
   use ncdio_pio
   use mct_mod
 
-  ! !PUBLIC TYPES:
   implicit none
   save
   private    ! By default everything is private
 
-  ! !PUBLIC MEMBER FUNCTIONS:
   public :: initialize1  ! Phase one initialization
   public :: initialize2  ! Phase two initialization
   !
-  ! !PRIVATE MEMBER FUNCTIONS:
   private header         ! echo version numbers
   private do_restread    ! read a restart file
   !-----------------------------------------------------------------------
@@ -105,10 +100,6 @@ contains
     call clm_varcon_init()
     call ncd_pio_init()
 
-    ! ------------------------------------------------------------------------
-    ! Read in constants files
-    ! ------------------------------------------------------------------------
-    call readConstants()
 
     if (masterproc) call control_print()
 
@@ -387,6 +378,12 @@ contains
     ! Initialize time constant urban variables
 
     call t_startf('init_io1')
+
+    ! ------------------------------------------------------------------------
+    ! Read in constants files
+    ! ------------------------------------------------------------------------
+    call readParameters()
+
     call UrbanInitTimeConst(bounds)
     call iniTimeConst(bounds)
 

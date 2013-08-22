@@ -8,7 +8,6 @@ module CNGapMortalityMod
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils  , only: endrun
-  use CNSharedConstsMod  , only: CNConstShareInst
   implicit none
   save
   private
@@ -16,23 +15,23 @@ module CNGapMortalityMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CNGapMortality
-  public :: readCNGapMortConsts
+  public :: readCNGapMortParams
 
-  type, private :: CNGapMortConstType
+  type, private :: CNGapMortParamsType
       real(r8):: am     ! mortality rate based on annual rate, fractional mortality (1/yr)
       real(r8):: k_mort ! coeff. of growth efficiency in mortality equation
-  end type CNGapMortConstType
+  end type CNGapMortParamsType
 
-  type(CNGapMortConstType),private ::  CNGapMortConstInst
+  type(CNGapMortParamsType),private ::  CNGapMortParamsInst
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine readCNGapMortConsts ( ncid )
+  subroutine readCNGapMortParams ( ncid )
     !
     ! !DESCRIPTION:
-    ! Read in constants
+    ! Read in parameters
     !
     ! !USES:
     use ncdio_pio  , only : file_desc_t,ncd_io
@@ -42,8 +41,8 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNGapMortConstType'
-    character(len=100) :: errCode = 'Error reading in CN const file '
+    character(len=32)  :: subname = 'CNGapMortParamsType'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
     real(r8)           :: tempr ! temporary to read in constant
     character(len=100) :: tString ! temp. var for reading
@@ -52,14 +51,14 @@ contains
     tString='r_mort'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNGapMortConstInst%am=tempr
+    CNGapMortParamsInst%am=tempr
 
     tString='k_mort'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-    CNGapMortConstInst%k_mort=tempr   
+    CNGapMortParamsInst%k_mort=tempr   
     
-  end subroutine readCNGapMortConsts
+  end subroutine readCNGapMortParams
 
   !-----------------------------------------------------------------------
   subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
@@ -177,9 +176,9 @@ contains
    )
 
    ! set the mortality rate based on annual rate
-   am = CNGapMortConstInst%am
+   am = CNGapMortParamsInst%am
    ! set coeff of growth efficiency in mortality equation 
-   k_mort = CNGapMortConstInst%k_mort
+   k_mort = CNGapMortParamsInst%k_mort
 
    ! pft loop
    do fp = 1,num_soilp
@@ -209,7 +208,7 @@ contains
             am = min(1._r8, am + heatstress(p))
          else ! lpj didn't set this for grasses; cn does
             ! set the mortality rate based on annual rate
-            am = CNGapMortConstInst%am
+            am = CNGapMortParamsInst%am
          end if
 
       end if

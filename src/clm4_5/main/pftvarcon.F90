@@ -181,7 +181,7 @@ contains
     use fileutils , only : getfil
     use ncdio_pio , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t, &
                            ncd_inqdid, ncd_inqdlen
-    use clm_varctl, only : fpftcon
+    use clm_varctl, only : paramfile
     use clm_varcon, only : tfrz
     use spmdMod   , only : masterproc
     !
@@ -202,7 +202,7 @@ contains
     logical :: readv            ! read variable in or not
     character(len=32) :: subname = 'pftconrd'              ! subroutine name
     !
-    ! Expected PFT names: The names expected on the fpftcon file and the order they are expected to be in.
+    ! Expected PFT names: The names expected on the paramfile file and the order they are expected to be in.
     ! NOTE: similar types are assumed to be together, first trees (ending with broadleaf_deciduous_boreal_tree
     !       then shrubs, ending with broadleaf_deciduous_boreal_shrub, then grasses starting with c3_arctic_grass
     !       and finally crops, ending with soybean
@@ -339,7 +339,7 @@ contains
     if (masterproc) then
        write(iulog,*) 'Attempting to read PFT physiological data .....'
     end if
-    call getfil (fpftcon, locfn, 0)
+    call getfil (paramfile, locfn, 0)
     call ncd_pio_openfile (ncid, trim(locfn), 0)
     call ncd_inqdid(ncid,'pft',dimid)
     call ncd_inqdlen(ncid,dimid,npft)
@@ -552,7 +552,7 @@ contains
        if ( trim(adjustl(pftname(i))) /= trim(expected_pftnames(i)) )then
           write(iulog,*)'pftconrd: pftname is NOT what is expected, name = ', &
                         trim(pftname(i)), ', expected name = ', trim(expected_pftnames(i))
-          call endrun( 'pftconrd: bad name for pft on fpftcon dataset' )
+          call endrun( 'pftconrd: bad name for pft on paramfile dataset' )
        end if
 
        if ( trim(pftname(i)) == 'not_vegetated'                       ) noveg                = i

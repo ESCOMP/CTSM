@@ -6,20 +6,21 @@ module ch4Mod
   ! Sources, sinks, "competition" for CH4 & O2, & transport are resolved in ch4_tran.
   !
   ! !USES:
-  use shr_kind_mod , only: r8 => shr_kind_r8
-  use clm_varpar   , only: nlevsoi, ngases, nlevsno
-  use clm_varcon   , only: denh2o, denice, tfrz, grav, spval, rgas
-  use clm_varcon   , only: catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
-  use clm_atmlnd   , only : clm_a2l, clm_l2a
-  use clm_time_manager, only : get_step_size, get_nstep
-  use clm_varctl   , only : iulog, use_cn, use_nitrif_denitrif
-  use abortutils   , only : endrun
-  use decompMod    , only: bounds_type
+  use shr_kind_mod      , only : r8 => shr_kind_r8
+  use shr_infnan_mod    , only : nan => shr_infnan_nan, assignment(=)
+  use clm_varpar        , only : nlevsoi, ngases, nlevsno
+  use clm_varcon        , only : denh2o, denice, tfrz, grav, spval, rgas
+  use clm_varcon        , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
+  use clm_atmlnd        , only : clm_a2l, clm_l2a
+  use clm_time_manager  , only : get_step_size, get_nstep
+  use clm_varctl        , only : iulog, use_cn, use_nitrif_denitrif
+  use abortutils        , only : endrun
+  use decompMod         , only : bounds_type
+  use CNSharedParamsMod , only : CNParamsShareInst
 
   implicit none
   save
   private
-  real(r8) :: f_sat = 0.95_r8 ! volumetric soil water defining top of water table or where production is allowed
 
   ! Non-tunable constants
   real(r8) :: rgasm  ! J/mol.K; rgas / 1000; will be set below
@@ -34,9 +35,262 @@ module ch4Mod
   private :: ch4_tran
   private :: ch4annualupdate
   private :: get_jwt
+  public  :: readCH4Params
+
+  type, private :: CH4ParamsType
+     ! ch4 production constants
+     real(r8) :: q10ch4               ! additional Q10 for methane production ABOVE the soil decomposition temperature relationship
+     real(r8) :: q10ch4base           ! temperature at which the effective f_ch4 actually equals the constant f_ch4
+     real(r8) :: f_ch4                ! ratio of CH4 production to total C mineralization
+     real(r8) :: rootlitfrac          ! Fraction of soil organic matter associated with roots
+     real(r8) :: cnscalefactor        ! scale factor on CN decomposition for assigning methane flux
+     real(r8) :: redoxlag             ! Number of days to lag in the calculation of finundated_lag
+     real(r8) :: lake_decomp_fact     ! Base decomposition rate (1/s) at 25C
+     real(r8) :: redoxlag_vertical    ! time lag (days) to inhibit production for newly unsaturated layers
+     real(r8) :: pHmax                ! maximum pH for methane production(= 9._r8)
+     real(r8) :: pHmin                ! minimum pH for methane production(= 2.2_r8)
+     real(r8) :: oxinhib              ! inhibition of methane production by oxygen (m^3/mol)
+     ! ch4 oxidation constants
+     real(r8) :: vmax_ch4_oxid     ! oxidation rate constant (= 45.e-6_r8 * 1000._r8 / 3600._r8) [mol/m3-w/s];
+     real(r8) :: k_m               ! Michaelis-Menten oxidation rate constant for CH4 concentration 
+     real(r8) :: q10_ch4oxid       ! Q10 oxidation constant
+     real(r8) :: smp_crit          ! Critical soil moisture potential
+     real(r8) :: k_m_o2            ! Michaelis-Menten oxidation rate constant for O2 concentration
+     real(r8) :: k_m_unsat         ! Michaelis-Menten oxidation rate constant for CH4 concentration
+     real(r8) :: vmax_oxid_unsat   ! (= 45.e-6_r8 * 1000._r8 / 3600._r8 / 10._r8) [mol/m3-w/s]
+     ! ch4 aerenchyma constants
+     real(r8) :: aereoxid          ! fraction of methane flux entering aerenchyma rhizosphere that will be
+                                   ! oxidized rather than emitted
+     real(r8) :: scale_factor_aere ! scale factor on the aerenchyma area for sensitivity tests
+     real(r8) :: nongrassporosratio! Ratio of root porosity in non-grass to grass, used for aerenchyma transport
+     real(r8) :: unsat_aere_ratio  ! Ratio to multiply upland vegetation aerenchyma porosity by compared to inundated systems (= 0.05_r8 / 0.3_r8)
+     real(r8) :: porosmin          ! minimum aerenchyma porosity (unitless)(= 0.05_r8) 
+     ! ch4 ebbulition constants
+     real(r8) :: vgc_max           ! ratio of saturation pressure triggering ebullition
+     ! ch4 transport constants
+     real(r8) :: satpow                ! exponent on watsat for saturated soil solute diffusion
+     real(r8) :: scale_factor_gasdiff  ! For sensitivity tests; convection would allow this to be > 1
+     real(r8) :: scale_factor_liqdiff  ! For sensitivity tests; convection would allow this to be > 1
+     real(r8) :: capthick              ! min thickness before assuming h2osfc is impermeable (mm) (= 100._r8)
+     ! additional constants
+     real(r8) :: f_sat            ! volumetric soil water defining top of water table or where production is allowed (=0.95)
+     real(r8) :: qflxlagd         ! days to lag qflx_surf_lag in the tropics (days) ( = 30._r8)
+     real(r8) :: highlatfact      ! multiple of qflxlagd for high latitudes	(= 2._r8)	
+     real(r8) :: q10lakebase      ! (K) base temperature for lake CH4 production (= 298._r8)
+     real(r8) :: atmch4           ! Atmospheric CH4 mixing ratio to prescribe if not provided by the atmospheric model (= 1.7e-6_r8) (mol/mol)
+     real(r8) :: rob              ! ratio of root length to vertical depth ("root obliquity") (= 3._r8)
+  end type CH4ParamsType
+
+  type(CH4ParamsType),private ::  CH4ParamsInst
   !-----------------------------------------------------------------------
 
 contains
+
+!-----------------------------------------------------------------------
+  subroutine readCH4Params ( ncid )
+
+     use shr_kind_mod , only : r8 => shr_kind_r8
+     use ncdio_pio    , only : file_desc_t,ncd_io
+     use abortutils   , only : endrun
+     use ch4varcon    , only : use_aereoxid_prog
+
+     implicit none
+     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+     character(len=32)  :: subname = 'CH4ParamsType'
+     character(len=100) :: errCode = '-Error reading in parameters file:'
+     logical            :: readv ! has variable been read in or not
+     real(r8)           :: tempr ! temporary to read in constant
+     character(len=100) :: tString ! temp. var for reading
+     !-----------------------------------------------------------------------
+
+     if ( .not. use_aereoxid_prog ) then
+        tString='aereoxid'
+        call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+        if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+        CH4ParamsInst%aereoxid=tempr
+     else
+        ! value should never be used.  
+        CH4ParamsInst%aereoxid=nan
+     endif
+
+     tString='q10ch4'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%q10ch4=tempr
+
+     tString='q10ch4base'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%q10ch4base=tempr
+
+     tString='f_ch4'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%f_ch4=tempr
+
+     tString='rootlitfrac'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%rootlitfrac=tempr
+
+     tString='cnscalefactor'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%cnscalefactor=tempr
+
+     tString='redoxlag'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%redoxlag=tempr
+
+     tString='lake_decomp_fact'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%lake_decomp_fact=tempr
+
+     tString='redoxlag_vertical'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%redoxlag_vertical=tempr
+
+     tString='pHmax'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%pHmax=tempr
+   
+     tString='pHmin'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%pHmin=tempr
+
+     tString='vmax_ch4_oxid'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%vmax_ch4_oxid=45.e-6_r8 * 1000._r8 / 3600._r8
+     ! SPM can't be read off of param file.  not bfb since it is a divide
+     !CH4ParamsInst%vmax_ch4_oxid=tempr
+
+     tString='oxinhib'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%oxinhib=tempr
+
+     tString='k_m'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%k_m= 5.e-6_r8 * 1000._r8
+     ! SPM can't be read off of param file.  not bfb since it is a divide
+     !CH4ParamsInst%k_m=tempr
+   
+     tString='q10_ch4oxid'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%q10_ch4oxid=tempr
+   
+     tString='smp_crit'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%smp_crit=tempr
+ 
+     tString='k_m_o2'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%k_m_o2  = 20.e-6_r8 * 1000._r8 
+     ! SPM can't be read off of param file.  not bfb since it is a divide
+     !CH4ParamsInst%k_m_o2=tempr
+
+     tString='k_m_unsat'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%k_m_unsat= 5.e-6_r8 * 1000._r8 / 10._r8
+     ! SPM can't be read off of param file.  not bfb since it is a divide
+     !CH4ParamsInst%k_m_unsat=tempr
+
+     tString='vmax_oxid_unsat'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%vmax_oxid_unsat = 45.e-6_r8 * 1000._r8 / 3600._r8 / 10._r8
+     ! SPM can't be read off of param file.  not bfb since it is a divide
+     !CH4ParamsInst%vmax_oxid_unsat=tempr
+
+     tString='scale_factor_aere'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%scale_factor_aere=tempr 
+   
+     tString='nongrassporosratio'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%nongrassporosratio=tempr 
+
+     tString='unsat_aere_ratio'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%unsat_aere_ratio= 0.05_r8 / 0.3_r8 
+     ! SPM can't be read off of param file.  not bfb since it is a divide
+     !CH4ParamsInst%unsat_aere_ratio=tempr
+
+     tString='porosmin'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%porosmin=tempr
+   
+     tString='vgc_max'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%vgc_max=tempr
+ 
+     tString='satpow'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%satpow=tempr
+
+     tString='scale_factor_gasdiff'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%scale_factor_gasdiff=tempr   
+
+     tString='scale_factor_liqdiff'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%scale_factor_liqdiff=tempr
+
+     tString='f_sat'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%f_sat=tempr
+   
+     tString='qflxlagd'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%qflxlagd=tempr
+
+     tString='highlatfact'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%highlatfact=tempr
+   
+     tString='q10lakebase'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%q10lakebase=tempr
+   
+     tString='atmch4'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%atmch4=tempr
+   
+     tString='rob'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%rob=tempr   
+
+     tString='capthick'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     CH4ParamsInst%capthick=tempr
+   
+  end subroutine readCH4Params
 
   !-----------------------------------------------------------------------
   subroutine ch4 (bounds, num_soilc, filter_soilc, num_lakec, filter_lakec, &
@@ -50,10 +304,9 @@ contains
     use subgridAveMod , only : p2c, c2g
     use clm_varpar, only : nlevgrnd, nlevdecomp
     use pftvarcon,  only : noveg
-    use ch4varcon,  only : replenishlakec, redoxlag, allowlakeprod, redoxlag_vertical
+    use ch4varcon,  only : replenishlakec, allowlakeprod, &
+                           ch4offline, fin_use_fsat
     use clm_varcon, only : secspday
-    use ch4varcon,  only : ch4offline, fin_use_fsat, atmch4
-    use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     implicit none
@@ -85,10 +338,14 @@ contains
     real(r8) :: errch4                 ! g C / m^2
     real(r8) :: zwt_actual
     real(r8) :: qflxlags               ! Time to lag qflx_surf_lag (s)
+    real(r8) :: redoxlag               ! Redox time lag 
+    real(r8) :: redoxlag_vertical      ! Vertical redox lag time 
+    real(r8) :: atmch4          ! Atmospheric CH4 mixing ratio to
+                                ! prescribe if not provided by the atmospheric model (= 1.7e-6_r8) (mol/mol)
     real(r8) :: redoxlags              ! Redox time lag in s
     real(r8) :: redoxlags_vertical     ! Vertical redox lag time in s
-    real(r8), parameter :: qflxlagd = 30._r8    !   days to lag qflx_surf_lag in the tropics (days)
-    real(r8), parameter :: highlatfact = 2._r8  ! multiple of qflxlagd for high latitudes
+    real(r8) :: qflxlagd               !   days to lag qflx_surf_lag in the tropics (days)
+    real(r8) :: highlatfact            ! multiple of qflxlagd for high latitudes
     integer  :: dummyfilter(1)                  ! empty filter
     character(len=32) :: subname='ch4'          ! subroutine name
     !-----------------------------------------------------------------------
@@ -153,6 +410,12 @@ contains
    ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
    pcolumn                             =>   pft%column                                     & ! Input:  [integer (:)]  index into column level quantities                 
    )
+
+   redoxlag          = CH4ParamsInst%redoxlag
+   redoxlag_vertical = CH4ParamsInst%redoxlag_vertical
+   atmch4            = CH4ParamsInst%atmch4
+   qflxlagd          = CH4ParamsInst%qflxlagd
+   highlatfact       = CH4ParamsInst%highlatfact
 
    dtime = get_step_size()
    nstep = get_nstep()
@@ -568,13 +831,11 @@ subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
   !
   ! !USES:
   use clmtype
-  use ch4varcon          , only: q10ch4base, q10ch4, rootlitfrac, cnscalefactor, mino2lim, & 
-                                 f_ch4, lake_decomp_fact, usephfact, anoxicmicrosites, ch4rmcnlim
+  use ch4varcon          , only: usephfact, anoxicmicrosites, ch4rmcnlim
   use clm_varctl         , only: anoxia
   use clm_varpar         , only: nlevdecomp, nlevdecomp_full
-  use CNSharedConstsMod  , only: nlev_soildecomp_standard
+  use CNSharedParamsMod  , only: nlev_soildecomp_standard
   use pftvarcon          , only: noveg
-  use shr_infnan_mod     , only: nan => shr_infnan_nan, assignment(=)
   !
   ! !ARGUMENTS:
   implicit none
@@ -594,21 +855,27 @@ subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
   real(r8) :: dtime
   real(r8):: base_decomp        ! base rate (mol/m2/s)
   real(r8) :: q10lake           ! For now, take to be the same as q10ch4 * 1.5.
-  real(r8), parameter :: q10lakebase = 298._r8 ! (K) base temperature for lake CH4 production
+  real(r8) :: q10lakebase ! (K) base temperature for lake CH4 production
   real(r8) :: partition_z
+  real(r8) :: mino2lim           !minimum anaerobic decomposition rate as a fraction of potential aerobic rate
+  real(r8) :: q10ch4             !additional Q10 for methane production ABOVE the soil decomposition temperature relationship  
+  real(r8) :: q10ch4base 		     ! temperature at which the effective f_ch4 actually equals the constant f_ch4
+  real(r8) :: f_ch4  			     ! ratio of CH4 production to total C mineralization
+  real(r8) :: rootlitfrac  	     ! Fraction of soil organic matter associated with roots
+  real(r8) :: cnscalefactor  	     ! scale factor on CN decomposition for assigning methane flux
+  real(r8) :: lake_decomp_fact      ! Base decomposition rate (1/s) at 25C
 
   ! added by Lei Meng to account for pH influence of CH4 production 
-  real(r8), parameter :: pHmax = 9_r8
-  real(r8), parameter :: pHmin = 2.2_r8    !
-  real(r8), parameter :: pHopt = 6.5_r8    ! optimal pH for methane production
-  real(r8)            :: pH_fact_ch4       ! pH factor in methane production
+  real(r8) :: pHmax 
+  real(r8) :: pHmin 
+  real(r8) :: pH_fact_ch4       ! pH factor in methane production
 
   ! Factors for methanogen temperature dependence being greater than soil aerobes
   real(r8)            :: f_ch4_adj             ! Adjusted f_ch4
   real(r8)            :: t_fact_ch4            ! Temperature factor calculated using additional Q10
   ! O2 limitation on decomposition and methanogenesis
   real(r8)            :: seasonalfin           ! finundated in excess of respiration-weighted annual average
-  real(r8)            :: oxinhib = 400._r8     ! inhibition of methane production by oxygen (m^3/mol)
+  real(r8)            :: oxinhib      ! inhibition of methane production by oxygen (m^3/mol)
 
   ! For calculating column average (rootfrac(p,j)*rr(p,j))
   real(r8) :: rr_vr(bounds%begc:bounds%endc, 1:nlevsoi) ! vertically resolved column-mean root respiration (g C/m^2/s)
@@ -664,6 +931,21 @@ subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
    endif
 
    dtime = get_step_size()
+
+   q10ch4           = CH4ParamsInst%q10ch4
+   q10ch4base       = CH4ParamsInst%q10ch4base
+   f_ch4            = CH4ParamsInst%f_ch4
+   rootlitfrac      = CH4ParamsInst%rootlitfrac
+   cnscalefactor    = CH4ParamsInst%cnscalefactor
+   lake_decomp_fact = CH4ParamsInst%lake_decomp_fact
+   pHmax            = CH4ParamsInst%pHmax
+   pHmin            = CH4ParamsInst%pHmin
+   oxinhib          = CH4ParamsInst%oxinhib
+   q10lakebase      = CH4ParamsInst%q10lakebase
+
+   ! Shared constant with other modules
+   mino2lim = CNParamsShareInst%mino2lim
+
    q10lake = q10ch4 * 1.5_r8
 
    ! PFT loop to calculate vertically resolved column-averaged root respiration
@@ -872,8 +1154,6 @@ subroutine ch4_oxid (bounds, num_methc, filter_methc, jwt, sat, lake)
   ! !USES:
   use clmtype
   use clm_time_manager, only : get_step_size
-  use ch4varcon       , only : vmax_ch4_oxid, k_m, k_m_o2, q10_ch4oxid, smp_crit, &
-                               k_m_unsat, vmax_oxid_unsat
   !
   ! !ARGUMENTS:
   implicit none
@@ -899,12 +1179,22 @@ subroutine ch4_oxid (bounds, num_methc, filter_methc, jwt, sat, lake)
   real(r8):: k_h_cc, k_h_inv ! see functions below for description
   real(r8):: k_m_eff         ! effective k_m
   real(r8):: vmax_eff        ! effective vmax
+  ! ch4 oxidation parameters
+  real(r8) :: vmax_ch4_oxid 		 ! oxidation rate constant (= 45.e-6_r8 * 1000._r8 / 3600._r8) [mol/m3-w/s];
+  real(r8) :: k_m 					 ! Michaelis-Menten oxidation rate constant for CH4 concentration 
+  real(r8) :: q10_ch4oxid         ! Q10 oxidation constant
+  real(r8) :: smp_crit  		    ! Critical soil moisture potential
+  real(r8) :: k_m_o2              ! Michaelis-Menten oxidation rate constant for O2 concentration
+  real(r8) :: k_m_unsat           ! Michaelis-Menten oxidation rate constant for CH4 concentration
+  real(r8) :: vmax_oxid_unsat     ! (= 45.e-6_r8 * 1000._r8 / 3600._r8 / 10._r8) [mol/m3-w/s]   
+  ! pointers for backwards compatibility
   real(r8), pointer :: ch4_oxid_depth(:,:) ! backwards compatibility
   real(r8), pointer :: o2_oxid_depth(:,:)  ! backwards compatibility
   real(r8), pointer :: co2_oxid_depth(:,:) ! backwards compatibility
   real(r8), pointer :: o2_decomp_depth(:,:)! backwards compatibility
   real(r8), pointer :: conc_o2(:,:)        ! backwards compatibility
   real(r8), pointer :: conc_ch4(:,:)       ! backwards compatibility
+
   !-----------------------------------------------------------------------
 
    associate(& 
@@ -931,6 +1221,15 @@ subroutine ch4_oxid (bounds, num_methc, filter_methc, jwt, sat, lake)
 
    ! Get land model time step
    dtime = get_step_size()
+
+   ! Set oxidation parameters
+   vmax_ch4_oxid   = CH4ParamsInst%vmax_ch4_oxid
+   k_m             = CH4ParamsInst%k_m
+   q10_ch4oxid     = CH4ParamsInst%q10_ch4oxid
+   smp_crit        = CH4ParamsInst%smp_crit
+   k_m_o2          = CH4ParamsInst%k_m_o2
+   k_m_unsat       = CH4ParamsInst%k_m_unsat
+   vmax_oxid_unsat = CH4ParamsInst%vmax_oxid_unsat
 
    t0 = tfrz + 12._r8 ! Walter, for Michigan site where the 45 M/h comes from
 
@@ -1004,8 +1303,7 @@ subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, &
   use clm_varcon      , only : spval, rpi
   use clm_time_manager, only : get_step_size
   use pftvarcon,        only : nc3_arctic_grass, crop, nc3_nonarctic_grass, nc4_grass, noveg
-  use ch4varcon,        only : scale_factor_aere, transpirationloss, nongrassporosratio, unsat_aere_ratio, &
-       usefrootc, aereoxid
+  use ch4varcon,        only : transpirationloss, usefrootc, use_aereoxid_prog
   !
   ! !ARGUMENTS:
   implicit none
@@ -1033,8 +1331,14 @@ subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, &
   real(r8):: aere, aeretran, oxaere ! (mol / m3 /s)
   real(r8):: k_h_cc, k_h_inv, dtime, oxdiffus, anpp, nppratio, h2osoi_vol_min, conc_ch4_wat
   real(r8):: aerecond      ! aerenchyma conductance (m/s)
+  ! ch4 aerenchyma parameters
+  real(r8) :: aereoxid            ! fraction of methane flux entering aerenchyma rhizosphere 
+  real(r8) :: scale_factor_aere   ! scale factor on the aerenchyma area for sensitivity tests
+  real(r8) :: nongrassporosratio  ! Ratio of root porosity in non-grass to grass, used for aerenchyma transport
+  real(r8) :: unsat_aere_ratio    ! Ratio to multiply upland vegetation aerenchyma porosity by compared to inundated systems (= 0.05_r8 / 0.3_r8)
+  real(r8) :: porosmin            ! minimum aerenchyma porosity (unitless)(= 0.05_r8)
+
   real(r8), parameter :: smallnumber = 1.e-12_r8
-  real(r8), parameter :: porosmin = 0.05_r8 ! minimum aerenchyma porosity (unitless)
 
   real(r8), pointer :: ch4_aere_depth(:,:) ! backwards compatibility
   real(r8), pointer :: ch4_tran_depth(:,:) ! backwards compatibility
@@ -1091,6 +1395,14 @@ subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, &
 
    dtime = get_step_size()
 
+   ! Set aerenchyma parameters
+   aereoxid           = CH4ParamsInst%aereoxid
+   scale_factor_aere  = CH4ParamsInst%scale_factor_aere
+   nongrassporosratio = CH4ParamsInst%nongrassporosratio
+   unsat_aere_ratio   = CH4ParamsInst%unsat_aere_ratio
+   porosmin           = CH4ParamsInst%porosmin	
+   rob                = CH4ParamsInst%rob
+
    ! Initialize ch4_aere_depth
    do j=1,nlevsoi
       do fc = 1, num_methc
@@ -1102,7 +1414,6 @@ subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, &
    end do
 
    diffus_aere = d_con_g(1,1)*1.e-4_r8  ! for CH4: m^2/s
-   rob = 3._r8 ! ratio of root length to vertical depth ("obliquity")
    ! This parameter is poorly constrained and should be done on a PFT-specific basis...
 
    ! point loop to partition aerenchyma flux into each soil layer
@@ -1194,7 +1505,7 @@ subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, &
                oxaere = -aerecond *(conc_o2(c,j)/watsat(c,j)/k_h_cc - c_atm(g,2)) / dz(c,j) ![mol/m3-total/s]
                oxaere = max(oxaere, 0._r8)
                ! Diffusion in is positive; prevent backwards diffusion
-               if (aereoxid >= 0._r8) then ! fixed aere oxid proportion; will be done in ch4_tran
+               if ( .not. use_aereoxid_prog ) then ! fixed aere oxid proportion; will be done in ch4_tran
                   oxaere = 0._r8
                end if
             else
@@ -1227,7 +1538,6 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
   ! !USES:
   use clmtype
   use clm_time_manager, only : get_step_size
-  use ch4varcon       , only : vgc_max
   !
   ! !ARGUMENTS:
   implicit none
@@ -1251,6 +1561,7 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
   real(r8) :: pressure! sum atmospheric and hydrostatic pressure
   real(r8) :: bubble_f! CH4 content in gas bubbles (Kellner et al. 2006)
   real(r8) :: ebul_timescale
+  real(r8) :: vgc_max   ! ratio of saturation pressure triggering ebullition
   real(r8), pointer :: ch4_ebul_depth(:,:) ! backwards compatibility
   real(r8), pointer :: ch4_ebul_total(:)   ! backwards compatibility
   real(r8), pointer :: conc_ch4(:,:)       ! backwards compatibility
@@ -1289,6 +1600,7 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
 
    ! Get land model time step
    dtime = get_step_size()
+   vgc_max = CH4ParamsInst%vgc_max
 
    bubble_f = 0.57_r8 ! CH4 content in gas bubbles (Kellner et al. 2006)
    vgc_min = vgc_max
@@ -1356,7 +1668,7 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
   use clmtype
   use clm_time_manager, only : get_step_size, get_nstep
   use TridiagonalMod  , only : Tridiagonal
-  use ch4varcon,        only : organic_max, satpow, aereoxid, scale_factor_gasdiff, scale_factor_liqdiff, ch4frzout
+  use ch4varcon,        only : ch4frzout, use_aereoxid_prog
   !
   ! !ARGUMENTS:
   implicit none
@@ -1413,7 +1725,12 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
   real(r8) :: om_frac                             ! organic matter fraction
   real(r8) :: o2demand, ch4demand                 ! mol/m^3/s
   real(r8) :: liqfrac(bounds%begc:bounds%endc, 1:nlevsoi)
-  real(r8) :: capthick = 100._r8                  ! (mm) min thickness before assuming h2osfc is impermeable
+  real(r8) :: capthick                            ! (mm) min thickness before assuming h2osfc is impermeable
+  real(r8) :: satpow  			     ! exponent on watsat for saturated soil solute diffusion
+  real(r8) :: scale_factor_gasdiff ! For sensitivity tests; convection would allow this to be > 1
+  real(r8) :: scale_factor_liqdiff ! For sensitivity tests; convection would allow this to be > 1
+  real(r8) :: organic_max          ! organic matter content (kg/m3) where soil is assumed to act like peat
+  real(r8) :: aereoxid             ! fraction of methane flux entering aerenchyma rhizosphere 
 
   real(r8), pointer :: ch4_prod_depth(:,:)  ! backwards compatibility 
   real(r8), pointer :: ch4_oxid_depth(:,:)  ! backwards compatibility 
@@ -1500,6 +1817,15 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
    ! Get land model time step
    dtime = get_step_size()
    nstep = get_nstep()
+
+   ! Set transport parameters
+   satpow               = CH4ParamsInst%satpow
+   scale_factor_gasdiff = CH4ParamsInst%scale_factor_gasdiff
+   scale_factor_liqdiff = CH4ParamsInst%scale_factor_liqdiff
+   capthick             = CH4ParamsInst%capthick 
+   aereoxid             = CH4ParamsInst%aereoxid
+   ! Set shared constant
+   organic_max = CNParamsShareInst%organic_max
 
    ! Perform competition for oxygen and methane in each soil layer if demands over the course of the timestep
    ! exceed that available. Assign to each process in proportion to the quantity demanded in the absense of
@@ -1603,7 +1929,7 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
       do fc = 1, num_methc
          c = filter_methc (fc)
 
-         if (aereoxid >= 0._r8) then
+         if ( .not. use_aereoxid_prog ) then
          ! First remove the CH4 oxidation that occurs at the base of root tissues (aere), and add to oxidation
             ch4_oxid_depth(c,j) = ch4_oxid_depth(c,j) + aereoxid * ch4_aere_depth(c,j)
             ch4_aere_depth(c,j) = ch4_aere_depth(c,j) - aereoxid * ch4_aere_depth(c,j)
@@ -2118,8 +2444,9 @@ subroutine get_jwt (bounds, num_methc, filter_methc, jwt)
   integer, intent(out):: jwt(bounds%begc:) ! index of the soil layer right above the water table (-)
   !
   ! !LOCAL VARIABLES:
-  integer :: c,j,perch! indices
-  integer :: fc       ! filter column index
+  real(r8) :: f_sat    ! volumetric soil water defining top of water table or where production is allowed
+  integer  :: c,j,perch! indices
+  integer  :: fc       ! filter column index
   !-----------------------------------------------------------------------
 
    associate(& 
@@ -2127,6 +2454,8 @@ subroutine get_jwt (bounds, num_methc, filter_methc, jwt)
    watsat     => cps%watsat     , & ! Input:  [real(r8) (:,:)] volumetric soil water at saturation (porosity)   
    t_soisno   => ces%t_soisno     & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
    )
+
+   f_sat = CH4ParamsInst%f_sat
 
    ! The layer index of the first unsaturated layer, i.e., the layer right above
    ! the water table.

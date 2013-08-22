@@ -56,6 +56,7 @@ subroutine iniTimeConst(bounds)
   use SoilHydrologyMod     , only : h2osfcflag
   use CNDecompCascadeCNMod , only : init_decompcascade_cn
   use CNDecompCascadeBGCMod, only : init_decompcascade_bgc
+  use CNSharedParamsMod    , only : CNParamsShareInst
   !
   ! !ARGUMENTS:
   implicit none
@@ -118,7 +119,7 @@ subroutine iniTimeConst(bounds)
   real(r8) :: om_sucsat                 ! saturated suction for organic matter (mm)(Letts, 2000)
   real(r8) :: om_b                      ! Clapp Hornberger paramater for oragnic soil (Letts, 2000)
   real(r8) :: zsapric      = 0.5_r8     ! depth (m) that organic matter takes on characteristics of sapric peat
-  real(r8) :: organic_max  = 130._r8    ! organic matter (kg/m3) where soil is assumed to act like peat 
+  real(r8) :: organic_max               ! organic matter (kg/m3) where soil is assumed to act like peat 
   real(r8) :: csol_bedrock = 2.0e6_r8   ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
   real(r8) :: pcalpha      = 0.5_r8     ! percolation threshold
   real(r8) :: pcbeta       = 0.139_r8   ! percolation exponent
@@ -238,6 +239,8 @@ subroutine iniTimeConst(bounds)
    sandfrac                            =>    pps%sandfrac                                , & ! Output: [real(r8) (:)]                                                    
    clayfrac                            =>    pps%clayfrac                                  & ! Output: [real(r8) (:)]                                                    
    )
+
+   organic_max = CNParamsShareInst%organic_max
 
   if (nlevurb > 0) then
     allocate(zurb_wall(bounds%begl:bounds%endl,nlevurb),    &
