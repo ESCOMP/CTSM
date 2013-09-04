@@ -1,4 +1,114 @@
 ===============================================================
+Tag name:  clm4_5_24
+Originator(s):  sacks (sacks)
+Date:  Tue Sep  3 21:36:13 MDT 2013
+One-line Summary: update externals to cesm1_3_beta02 or later
+
+Purpose of changes:
+
+Requirements for tag:
+
+Test level of tag: regular, short, tools, build_namelist, doc
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+
+Describe any changes made to the namelist:
+
+List any changes to the defaults for the boundary datasets:
+
+Describe any substantial timing or memory changes:
+
+Code reviewed by:
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+List all files eliminated:
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+CLM testing:
+
+[... Remove before making trunk_tag.  Available test levels:
+
+    a) regular (must be run before handing off a tag to SEs and must be run
+     before committing a tag)
+    b) build_namelist (if namelists and/or build_system changed))
+    c) tools (only if tools are modified and no CLM source is modified)
+    d) short (for use during development and in rare cases where only a small
+          change with known behavior is added ... eg. a minor bug fix)
+    e) doc (no source testing required)
+
+... ]
+
+  build-namelist tests:
+
+    yellowstone
+    frankfurt
+
+  regular tests (aux_clm):
+
+    yellowstone_intel       
+    yellowstone_pgi         
+    frankfurt_intel      
+    frankfurt_pgi        
+    frankfurt_nag        
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel      
+    yellowstone_pgi
+
+  short tests (aux_clm_short):
+
+    yellowstone_intel       
+    yellowstone_pgi         
+    frankfurt_intel      
+    frankfurt_pgi        
+    frankfurt_nag        
+
+  tools testing:
+
+    yellowstone interactive
+    frankfurt interactive
+
+CLM tag used for the baseline comparisons: 
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: 
+
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_23
 Originator(s):  muszala (Stefan Muszala)
 Date: Thu Aug 22 09:42:43 MDT 2013

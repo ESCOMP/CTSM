@@ -62,24 +62,24 @@ CLM testing:
 
   regular tests (aux_clm):
 
-    yellowstone_intel       
-    yellowstone_pgi         
-    frankfurt_intel      
-    frankfurt_pgi        
-    frankfurt_nag        
+    yellowstone_intel
+    yellowstone_pgi
+    frankfurt_intel
+    frankfurt_pgi
+    frankfurt_nag
 
   history file comparison with component_gen_comp and summarize_cprnc_diffs:
 
-    yellowstone_intel      
+    yellowstone_intel
     yellowstone_pgi
 
   short tests (aux_clm_short):
 
-    yellowstone_intel       
-    yellowstone_pgi         
-    frankfurt_intel      
-    frankfurt_pgi        
-    frankfurt_nag        
+    yellowstone_intel
+    yellowstone_pgi
+    frankfurt_intel
+    frankfurt_pgi
+    frankfurt_nag
 
   tools testing:
 
