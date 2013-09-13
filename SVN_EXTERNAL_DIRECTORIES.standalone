@@ -1,19 +1,19 @@
 # CESM scripts, machines and driver
-scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_130830a
+scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_130912
 scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_130830
-models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq4_2_35
+models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq4_3_03
 
 # Model components: Data atmosphere, and stub components as well as land-ice model
-models/atm/datm                 https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_130424
-models/ocn/socn                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_02/socn
-models/ice/sice                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_02/sice
-models/glc/sglc                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_02/sglc
-models/wav/swav                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_02/swav
-models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_29
-models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_130624
+models/atm/datm                 https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_130905
+models/ocn/socn                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_03/socn
+models/ice/sice                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_03/sice
+models/glc/sglc                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_03/sglc
+models/wav/swav                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_03/swav
+models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_31
+models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_130905
 
 # Utilities: csm_share, esmf, timing, MCT, PIO
-models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_130723
+models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_130906
 models/utils/esmf_wrf_timemgr   https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_130213
 models/utils/timing             https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_130506
 models/utils/mct                https://github.com/quantheory/MCT/tags/compiler_fixes_n03_MCT_2.8.3

@@ -24,8 +24,8 @@ module clm_cpl_indices
 
   ! lnd -> drv (required)
 
-  integer, public ::index_l2x_Flrl_rofliq     ! lnd->rtm input fluxes
-  integer, public ::index_l2x_Flrl_rofice     ! lnd->rtm input fluxes
+  integer, public ::index_l2x_Flrl_rofl       ! lnd->rtm input fluxes
+  integer, public ::index_l2x_Flrl_rofi       ! lnd->rtm input fluxes
 
   integer, public ::index_l2x_Sl_t            ! temperature
   integer, public ::index_l2x_Sl_tref         ! 2m reference temperature
@@ -53,6 +53,10 @@ module clm_cpl_indices
   integer, public ::index_l2x_Fall_flxdst3    ! dust flux size bin 3    
   integer, public ::index_l2x_Fall_flxdst4    ! dust flux size bin 4
   integer, public ::index_l2x_Fall_flxvoc     ! MEGAN fluxes
+
+  integer, public ::index_l2x_Sl_tsrf(glc_nec_max)   = 0 ! glc MEC temperature
+  integer, public ::index_l2x_Sl_topo(glc_nec_max)   = 0 ! glc MEC topo height
+  integer, public ::index_l2x_Flgl_qice(glc_nec_max) = 0 ! glc MEC ice flux
 
   integer, public ::index_x2l_Sa_methane
   integer, public ::index_l2x_Fall_methane
@@ -95,27 +99,16 @@ module clm_cpl_indices
   integer, public ::index_x2l_Faxa_dstdry4    ! flux: Size 4 dust -- dry deposition
  
   integer, public ::index_x2l_Flrr_flood      ! rtm->lnd rof (flood) flux
+  integer, public ::index_x2l_Flrr_volr      ! rtm->lnd rof volr
 
-  integer, public ::index_x2l_Slrr_volr      ! rtm->lnd rof volr
+  integer, public ::index_x2l_Sg_frac(glc_nec_max)   = 0   ! Fraction of glacier in glc MEC class 1
+  integer, public ::index_x2l_Sg_topo(glc_nec_max)   = 0   ! Topo height in glc MEC class 1
+  integer, public ::index_x2l_Flgg_rofi(glc_nec_max) = 0   ! Ice runoff from glc model
+  integer, public ::index_x2l_Flgg_rofl(glc_nec_max) = 0   ! Liquid runoff from glc model
+  integer, public ::index_x2l_Flgg_hflx(glc_nec_max) = 0
+
   integer, public :: nflds_x2l = 0
 
-  ! sno -> drv (only if land-ice model is NOT a stub model)
-
-  integer, public :: index_s2x_Ss_tsrf(glc_nec_max)   = 0 ! glc MEC temperature
-  integer, public :: index_s2x_Ss_topo(glc_nec_max)   = 0 ! glc MEC topo height
-  integer, public :: index_s2x_Fgss_qice(glc_nec_max) = 0 ! glc MEC ice flux
-
-  integer, public :: nflds_s2x = 0
-
-  ! drv -> sno (only if land-ice model is NOT a stub model)
-
-  integer, public :: index_x2s_Sg_frac(glc_nec_max)   = 0   ! Fraction of glacier in glc MEC class 1
-  integer, public :: index_x2s_Sg_topo(glc_nec_max)   = 0   ! Topo height in glc MEC class 1
-  integer, public :: index_x2s_Fsgg_rofi(glc_nec_max) = 0   ! Ice runoff from glc model
-  integer, public :: index_x2s_Fsgg_rofl(glc_nec_max) = 0   ! Liquid runoff from glc model
-  integer, public :: index_x2s_Fsgg_hflx(glc_nec_max) = 0
-
-  integer, public :: nflds_x2s = 0
   !-----------------------------------------------------------------------
 
 contains
@@ -129,8 +122,7 @@ contains
     ! interface.
     !
     ! !USES:
-    use seq_flds_mod  , only: seq_flds_x2l_fields, seq_flds_l2x_fields,     &
-                              seq_flds_x2s_fields, seq_flds_s2x_fields
+    use seq_flds_mod  , only: seq_flds_x2l_fields, seq_flds_l2x_fields
     use mct_mod       , only: mct_aVect, mct_aVect_init, mct_avect_indexra, &
                               mct_aVect_clean, mct_avect_nRattr
     use seq_drydep_mod, only: drydep_fields_token, lnd_drydep
@@ -146,8 +138,6 @@ contains
 ! !LOCAL VARIABLES:
     type(mct_aVect)   :: l2x      ! temporary, land to coupler
     type(mct_aVect)   :: x2l      ! temporary, coupler to land
-    type(mct_aVect)   :: s2x      ! temporary, glacier to coupler
-    type(mct_aVect)   :: x2s      ! temporary, coupler to glacier
     integer           :: num 
     character(len= 2) :: cnum
     character(len=64) :: name
@@ -160,14 +150,17 @@ contains
 
     ! create temporary attribute vectors
     call mct_aVect_init(x2l, rList=seq_flds_x2l_fields, lsize=1)
+    nflds_x2l = mct_avect_nRattr(x2l)
+
     call mct_aVect_init(l2x, rList=seq_flds_l2x_fields, lsize=1)
+    nflds_l2x = mct_avect_nRattr(l2x)
 
     !-------------------------------------------------------------
     ! clm -> drv 
     !-------------------------------------------------------------
 
-    index_l2x_Flrl_rofliq   = mct_avect_indexra(l2x,'Flrl_rofliq')
-    index_l2x_Flrl_rofice   = mct_avect_indexra(l2x,'Flrl_rofice')
+    index_l2x_Flrl_rofl     = mct_avect_indexra(l2x,'Flrl_rofl')
+    index_l2x_Flrl_rofi     = mct_avect_indexra(l2x,'Flrl_rofi')
 
     index_l2x_Sl_t          = mct_avect_indexra(l2x,'Sl_t')
     index_l2x_Sl_snowh      = mct_avect_indexra(l2x,'Sl_snowh')
@@ -210,8 +203,6 @@ contains
        index_l2x_Fall_flxvoc = 0
     endif
 
-    nflds_l2x = mct_avect_nRattr(l2x)
-
     !-------------------------------------------------------------
     ! drv -> clm
     !-------------------------------------------------------------
@@ -228,7 +219,7 @@ contains
 
     index_x2l_Sa_methane    = mct_avect_indexra(x2l,'Sa_methane',perrWith='quiet')
 
-    index_x2l_Slrr_volr     = mct_avect_indexra(x2l,'Slrr_volr')
+    index_x2l_Flrr_volr     = mct_avect_indexra(x2l,'Flrr_volr')
 
     index_x2l_Faxa_lwdn     = mct_avect_indexra(x2l,'Faxa_lwdn')
     index_x2l_Faxa_rainc    = mct_avect_indexra(x2l,'Faxa_rainc')
@@ -256,70 +247,50 @@ contains
 
     index_x2l_Flrr_flood    = mct_avect_indexra(x2l,'Flrr_flood')
 
-    nflds_x2l = mct_avect_nRattr(x2l)
-
-    call mct_aVect_clean(x2l)
-    call mct_aVect_clean(l2x)
-
     !-------------------------------------------------------------
-    ! drv->sno (for cism coupling)
+    ! glc coupling
     !-------------------------------------------------------------
 
     glc_nec = 0
 
-    if (seq_flds_x2s_fields /= ' ') then
-       call mct_aVect_init(x2s, rList=seq_flds_x2s_fields, lsize=1)
-
-       do num = 1,glc_nec_max
-          write(cnum,'(i2.2)') num
-          name = 'Sg_frac' // cnum
-          index_x2s_Sg_frac(num)   = mct_avect_indexra(x2s,trim(name),perrwith='quiet') 
-          name = 'Sg_topo' // cnum
-          index_x2s_Sg_topo(num)   = mct_avect_indexra(x2s,trim(name),perrwith='quiet')
-          name = 'Fsgg_rofi' // cnum
-          index_x2s_Fsgg_rofi(num) = mct_avect_indexra(x2s,trim(name),perrwith='quiet')
-          name = 'Fsgg_rofl' // cnum
-          index_x2s_Fsgg_rofl(num) = mct_avect_indexra(x2s,trim(name),perrwith='quiet')
-          name = 'Fsgg_hflx' // cnum
-          index_x2s_Fsgg_hflx(num) = mct_avect_indexra(x2s,trim(name),perrwith='quiet')
-          if ( index_x2s_Sg_frac(num)   == 0 .and. &
-               index_x2s_Sg_topo(num)   == 0 .and. &
-               index_x2s_Fsgg_rofi(num) == 0 .and. &
-               index_x2s_fsgg_rofl(num) == 0 .and. &
-               index_x2s_Fsgg_hflx(num) == 0 ) then
-             exit
-          end if
-          glc_nec = num
-       end do
-       if (glc_nec == glc_nec_max) then
-          call shr_sys_abort (subname // 'error: glc_nec_cpl cannot equal glc_nec_max')
+    do num = 1,glc_nec_max
+       write(cnum,'(i2.2)') num
+       name = 'Sg_frac' // cnum
+       index_x2l_Sg_frac(num)   = mct_avect_indexra(x2l,trim(name),perrwith='quiet') 
+       name = 'Sg_topo' // cnum
+       index_x2l_Sg_topo(num)   = mct_avect_indexra(x2l,trim(name),perrwith='quiet')
+       name = 'Flgg_rofi' // cnum
+       index_x2l_Flgg_rofi(num) = mct_avect_indexra(x2l,trim(name),perrwith='quiet')
+       name = 'Flgg_rofl' // cnum
+       index_x2l_Flgg_rofl(num) = mct_avect_indexra(x2l,trim(name),perrwith='quiet')
+       name = 'Flgg_hflx' // cnum
+       index_x2l_Flgg_hflx(num) = mct_avect_indexra(x2l,trim(name),perrwith='quiet')
+       if ( index_x2l_Sg_frac(num)   == 0 .and. &
+            index_x2l_Sg_topo(num)   == 0 .and. &
+            index_x2l_Flgg_rofi(num) == 0 .and. &
+            index_x2l_Flgg_rofl(num) == 0 .and. &
+            index_x2l_Flgg_hflx(num) == 0 ) then
+          exit
        end if
-
-       nflds_x2s = mct_avect_nRattr(x2s)
-       call mct_aVect_clean(x2s)
+       glc_nec = num
+    end do
+    if (glc_nec == glc_nec_max) then
+       call shr_sys_abort (subname // 'error: glc_nec_cpl cannot equal glc_nec_max')
     end if
 
-    !-------------------------------------------------------------
-    ! sno -> drv (for cism coupling)
-    !-------------------------------------------------------------
+    do num = 1,glc_nec
+       write(cnum,'(i2.2)') num
 
-    if (seq_flds_s2x_fields /= ' ') then
-       call mct_aVect_init(s2x, rList=seq_flds_s2x_fields, lsize=1)
+       name = 'Sl_tsrf' // cnum
+       index_l2x_Sl_tsrf(num)   = mct_avect_indexra(l2x,trim(name))
+       name = 'Sl_topo' // cnum
+       index_l2x_Sl_topo(num)   = mct_avect_indexra(l2x,trim(name))
+       name = 'Flgl_qice' // cnum
+       index_l2x_Flgl_qice(num) = mct_avect_indexra(l2x,trim(name))
+    end do
 
-       do num = 1,glc_nec
-          write(cnum,'(i2.2)') num
-
-          name = 'Ss_tsrf' // cnum
-          index_s2x_Ss_tsrf(num)   = mct_avect_indexra(s2x,trim(name))
-          name = 'Ss_topo' // cnum
-          index_s2x_Ss_topo(num)   = mct_avect_indexra(s2x,trim(name))
-          name = 'Fgss_qice' // cnum
-          index_s2x_Fgss_qice(num) = mct_avect_indexra(s2x,trim(name))
-       end do
-
-       nflds_s2x = mct_avect_nRattr(s2x)
-       call mct_aVect_clean(s2x)
-    end if
+    call mct_aVect_clean(x2l)
+    call mct_aVect_clean(l2x)
 
   end subroutine clm_cpl_indices_set
 

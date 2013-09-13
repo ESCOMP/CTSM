@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_25         erik 09/13/2013 Bring in Tony's changes to kick sno all the way up to the coupler layer, makes all 
+                                     CESM components more similar to each other
    clm4_5_24        sacks 09/03/2013 update externals to cesm1_3_beta02 or later
    clm4_5_23      muszala 08/22/2013 refactor to allow CH4 params. to be read from netcdf file and clean up clm4_5_20
    clm4_5_22      muszala 07/30/2013 aux_clm testlist reorganization
@@ -39,7 +41,8 @@ Tag                   Who      Date  Summary
    clm4_0_71      muszala 04/10/2013 compsets refactoring by mvertens
    clm4_0_70      muszala 04/01/2013 bring in vic hydrology
    clm4_0_69      muszala 03/26/2013 remove hydro reorder, volr and esmf mods
-   clm4_0_68         erik 03/16/2013  Fix some issues in mksurfdata_map for generation of ne120np surface data file. Put error back in CLM if weights don't sum to 100. Add in Keith's photosynthesis change for  CLM45.
+   clm4_0_68         erik 03/16/2013 Fix some issues in mksurfdata_map for generation of ne120np surface data file. 
+                                     Put error back in CLM if weights don't sum to 100. Add in Keith's photosynthesis change for  CLM45.
    clm4_0_67      muszala 03/12/2013 Jinyun photosynthesis and hydrology reorder
    clm4_0_66        sacks 03/07/2013 turn off subgrid topography snow parameterization for glc_mec landunits
    clm4_0_65        sacks 03/07/2013 back out Machines external to get more tests to pass, especially IG

@@ -54,24 +54,22 @@
                <entry testId="PET.f10_f10.ICLM45BGC.yellowstone_intel"                    failType="TFAIL">once threading fixed, this should pass</entry>
                <entry testId="PET_PT.f10_f10.ICLM45BGC.yellowstone_intel"                 failType="TFAIL">once threading fixed, this should pass</entry>
                <entry testId="SSP.f19_g16.I1850CLM45BGC.yellowstone_intel.clm-default"    failType="BFAIL" bugz="1728" >starting in clm4_5_07--The cpl.hi.nc file is not being copied on a generate like it should.</entry>
-               <entry testId="ERS_D.f10_f10.ICLM45BGC.yellowstone_intel.clm-rootlit"      failType="SFAIL" >Cannot turn clm4me mode on -- without clm4_5 physics! problem in scripts4_130809b </entry>
             </INTEL>
             <PGI>
-               <entry testId="ERB.ne30_g16.I4804.yellowstone_pgi"                         failType="FAIL" >Problem with scripts and testId string length.  This passes with a long testId</entry>
                <entry testId="ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default"     failType="FAIL" >Restart not BFB.  Runs as ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi</entry>
                <entry testId="PET.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-default"      failType="TFAIL" >once threading fixed, this should pass</entry>
                <entry testId="PET_PT_D.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-ciso"    failType="TFAIL" >once threading fixed, this should pass</entry>
                <entry testId="PET_PT_D.f19_g16.ICLM45BGCDVCROP.yellowstone_pgi.clm-crop"  failType="TFAIL" >once threading fixed, this should pass</entry>
-               <entry testId="SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PTCLM45.yellowstone_pgi" failType="SFAIL" >CLM build-namelist:: setting clm_usr_name -- but did NOT find any user datasets: UNSET.</entry>
             </PGI>
          </yellowstone>
          <frankfurt>
             <INTEL>
-               <entry testId="ERS_D.f10_f10.ICLM45BGC.frankfurt_intel.clm-NoVSNoNI"       failType="SFAIL" >Cannot turn clm4me mode on -- without clm4_5 physics! problem in scripts4_130809b </entry>
             </INTEL>
             <NAG>
+               <entry testId="ERI_Mmpich.f19_g16.ICLM45BGC.frankfurt_nag"  failType="RUN"   >runs out of wallclock time</entry>
                <entry testId="ERI_D.f19_g16.ICLM45BGC.frankfurt_nag"       failType="RUN"   >Sometimes passes, sometimes runs out of wallclock time</entry>
                <entry testId="ERS_Lm3.f19_g16.IGRCP60CN.frankfurt_nag"     failType="CFAIL" >cism needs full NAG port</entry>
+               <!-- Following test just seems to run out of wallclock for me sometimes (clm4_5_25), my final version actually passed -->
                <entry testId="SMS_Ly1.f19_g16.ICLM45BGCCROP.frankfurt_nag" failType="RUN"   >Water balance errors followed by "negative conc. in ch4tran", then tries "-10^-12 < smin_nh4 < 0. resetting to zero.", then it exits at approximately 9 months.  This same test passes with yellowstone_intel and frankfurt_intel</entry>
             </NAG>
             <PGI>

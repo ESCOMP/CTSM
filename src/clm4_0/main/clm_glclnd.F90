@@ -41,8 +41,6 @@ module clm_glclnd
   type, public :: glc2lnd_type
      real(r8), pointer :: frac(:,:) => null()
      real(r8), pointer :: topo(:,:) => null()
-     real(r8), pointer :: rofi(:,:) => null()
-     real(r8), pointer :: rofl(:,:) => null()
      real(r8), pointer :: hflx(:,:) => null()
   end type glc2lnd_type
 
@@ -97,8 +95,6 @@ contains
 
   allocate(x2s%frac(beg:end,maxpatch_glcmec))
   allocate(x2s%topo(beg:end,maxpatch_glcmec))
-  allocate(x2s%rofi(beg:end,maxpatch_glcmec))
-  allocate(x2s%rofl(beg:end,maxpatch_glcmec))
   allocate(x2s%hflx(beg:end,maxpatch_glcmec))
 
 ! ival = nan      ! causes core dump in map_maparray, tcx fix
@@ -106,8 +102,6 @@ contains
 
   x2s%frac(beg:end,:) = ival
   x2s%topo(beg:end,:) = ival
-  x2s%rofi(beg:end,:) = ival
-  x2s%rofl(beg:end,:) = ival
   x2s%hflx(beg:end,:) = ival
 
 end subroutine init_glc2lnd_type

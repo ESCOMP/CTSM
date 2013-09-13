@@ -88,9 +88,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 277;
+my $ntests = 274;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 167;
+   $ntests += 165;
 }
 plan( tests=>$ntests );
 
@@ -477,7 +477,7 @@ foreach my $res ( @glc_res ) {
 # Transient 20th Century simulations
 my $mode = "standard";
 system( "../configure -s" );
-my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne16np4", "ne60np4", "ne120np4", "10x15", "1x1_tropicAtl" );
+my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne60np4", "ne120np4", "10x15", "1x1_tropicAtl" );
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 0;
 foreach my $res ( @tran_res ) {

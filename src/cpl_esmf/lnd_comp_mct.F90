@@ -70,7 +70,7 @@ end subroutine
 
 !===============================================================================
 
-  subroutine lnd_init_mct( EClock, cdata_l, x2l, l2x, cdata_s, x2s, s2x, NLFilename )
+  subroutine lnd_init_mct( EClock, cdata_l, x2l, l2x, NLFilename )
 
    !----------------------------------------------------------
    
@@ -81,9 +81,6 @@ end subroutine
    type(seq_cdata), intent(inout)              :: cdata_l
    type(mct_aVect), intent(inout)              :: x2l
    type(mct_aVect), intent(inout)              :: l2x   
-   type(seq_cdata), intent(inout)              :: cdata_s
-   type(mct_aVect), intent(inout)              :: x2s
-   type(mct_aVect), intent(inout)              :: s2x   
    character(len=*), optional,   intent(in)    :: NLFilename ! Namelist filename
    
    !----- local -----
@@ -91,15 +88,12 @@ end subroutine
    integer(IN)                           :: mpicom
    type(mct_gsMap)             , pointer :: gsmap_l
    type(mct_gGrid)             , pointer :: dom_l
-   type(mct_gsMap)             , pointer :: gsmap_s
-   type(mct_gGrid)             , pointer :: dom_s
    type(seq_infodata_type), pointer      :: infodata
-   integer(IN)                           :: gsize_l, gsize_s
+   integer(IN)                           :: gsize_l
    integer                               :: rc, urc
    integer(IN)                           :: phase
 
    type(ESMF_Array)                      :: x2la, l2xa, domla
-   type(ESMF_Array)                      :: x2sa, s2xa, domsa
    type(ESMF_State)                      :: import_state, export_state
    type(ESMF_GridComp)                   :: lnd_comp
 
@@ -110,7 +104,6 @@ end subroutine
 
    call seq_cdata_setptrs(cdata_l, ID=LNDID, mpicom=mpicom, &
         gsMap=gsmap_l, dom=dom_l, infodata=infodata)
-   call seq_cdata_setptrs(cdata_s, gsMap=gsmap_s, dom=dom_s)
    call seq_comm_getcompstates(LNDID, lnd_comp, import_state, export_state)
    call seq_infodata_GetData(infodata,lnd_phase=phase)
 
@@ -124,12 +117,6 @@ end subroutine
       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
       call mct2esmf_copy(x2l, x2la, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-      call ESMF_StateGet(import_state, itemName="x2s", array=x2sa, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-      call mct2esmf_copy(x2s, x2sa, rc=rc)
       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
    endif
 
@@ -153,25 +140,10 @@ end subroutine
       call ESMF_StateGet(import_state, itemName="x2l", array=x2la, rc=rc)
       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-      call ESMF_StateGet(export_state, itemName="domain_s", array=domsa, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-      call ESMF_StateGet(export_state, itemName="s2x", array=s2xa, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-      call ESMF_StateGet(import_state, itemName="x2s", array=x2sa, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
       call ESMF_AttributeGet(export_state, name="gsize_lnd", value=gsize_l, rc=rc)
       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-      call ESMF_AttributeGet(export_state, name="gsize_sno", value=gsize_s, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
       call esmf2mct_init(l2xa, LNDID, gsmap_l, mpicom, gsize=gsize_l, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-      call esmf2mct_init(s2xa, LNDID, gsmap_s, mpicom, gsize=gsize_s, rc=rc)
       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
       call esmf2mct_init(domla, dom_l, rc=rc)
@@ -179,45 +151,28 @@ end subroutine
       call esmf2mct_copy(domla, dom_l%data, rc=rc)
       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-      call esmf2mct_init(domsa, dom_s, rc=rc)
-      if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-      call esmf2mct_copy(domsa, dom_s%data, rc=rc)
-      if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
       call esmf2mct_init(l2xa, l2x, rc=rc)
       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
       call esmf2mct_copy(l2xa, l2x, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-      call esmf2mct_init(s2xa, s2x, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-      call esmf2mct_copy(s2xa, s2x, rc=rc)
       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
       call esmf2mct_init(x2la, x2l, rc=rc)
       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
       call mct_aVect_zero(x2l)
 
-      call esmf2mct_init(x2sa, x2s, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-      call mct_aVect_zero(x2s)
    else
       call ESMF_StateGet(export_state, itemName="l2x", array=l2xa, rc=rc)
       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
       call esmf2mct_copy(l2xa, l2x, rc=rc)
       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-      call ESMF_StateGet(export_state, itemName="s2x", array=s2xa, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-      call esmf2mct_copy(s2xa, s2x, rc=rc)
-      if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
    endif
 
 end subroutine lnd_init_mct
 
 !===============================================================================
 
-subroutine lnd_run_mct( EClock, cdata_l, x2l, l2x, cdata_s, x2s, s2x)
+subroutine lnd_run_mct( EClock, cdata_l, x2l, l2x)
 
    implicit none
 
@@ -226,14 +181,10 @@ subroutine lnd_run_mct( EClock, cdata_l, x2l, l2x, cdata_s, x2s, s2x)
    type(seq_cdata)             ,intent(inout) :: cdata_l
    type(mct_aVect)             ,intent(inout) :: x2l
    type(mct_aVect)             ,intent(inout) :: l2x
-   type(seq_cdata)             ,intent(inout) :: cdata_s
-   type(mct_aVect)             ,intent(inout) :: x2s
-   type(mct_aVect)             ,intent(inout) :: s2x
 
    !----- local -----
    type(seq_infodata_type), pointer :: infodata
    type(ESMF_Array)                 :: l2xa,x2la
-   type(ESMF_Array)                 :: s2xa,x2sa
    integer(IN)                      :: LNDID
    integer(IN)                      :: rc, urc
    type(ESMF_State)                 :: import_state, export_state
@@ -252,12 +203,6 @@ subroutine lnd_run_mct( EClock, cdata_l, x2l, l2x, cdata_s, x2s, s2x)
    call ESMF_StateGet(import_state, itemName="x2l", array=x2la, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
    call mct2esmf_copy(x2l, x2la, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-   ! copy values to x2s
-   call ESMF_StateGet(import_state, itemName="x2s", array=x2sa, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-   call mct2esmf_copy(x2s, x2sa, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
    call t_stopf('lcm_run1')
@@ -282,19 +227,13 @@ subroutine lnd_run_mct( EClock, cdata_l, x2l, l2x, cdata_s, x2s, s2x)
    call esmf2mct_copy(l2xa, l2x, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-   ! copy values back to s2x
-   call ESMF_StateGet(export_state, itemName="s2x", array=s2xa, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-   call esmf2mct_copy(s2xa, s2x, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
    call t_stopf('lcm_run2')
 
 end subroutine lnd_run_mct
 
 !===============================================================================
 
-subroutine lnd_final_mct( EClock, cdata, x2d, d2x, cdata_s, x2s, s2x)
+subroutine lnd_final_mct( EClock, cdata, x2d, d2x)
 
     implicit none
 
@@ -304,9 +243,6 @@ subroutine lnd_final_mct( EClock, cdata, x2d, d2x, cdata_s, x2s, s2x)
     type(seq_cdata)             ,intent(inout) :: cdata
     type(mct_aVect)             ,intent(inout) :: x2d        
     type(mct_aVect)             ,intent(inout) :: d2x        
-    type(seq_cdata)             ,intent(inout) :: cdata_s
-    type(mct_aVect)             ,intent(inout) :: x2s
-    type(mct_aVect)             ,intent(inout) :: s2x
 
     !----- local -----
     integer                                    :: rc, urc, COMPID

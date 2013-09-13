@@ -27,18 +27,13 @@ module lnd_comp_mct
   private :: lnd_domain_mct           ! Set the land model domain information
   private :: lnd_export_mct           ! export land data to CESM coupler
   private :: lnd_import_mct           ! import data from the CESM coupler to the land model
-  private :: sno_export_mct
-  private :: sno_import_mct
   !
   ! !PRIVATE DATA MEMBERS:
   ! Time averaged flux fields
   type(mct_aVect)   :: l2x_l_SNAP     ! Snapshot of land to coupler data on the land grid
   type(mct_aVect)   :: l2x_l_SUM      ! Summation of land to coupler data on the land grid
-  type(mct_aVect)   :: s2x_s_SNAP     ! Snapshot of sno to coupler data on the land grid
-  type(mct_aVect)   :: s2x_s_SUM      ! Summation of sno to coupler data on the land grid 
   ! Time averaged counter for flux fields
   integer :: avg_count                ! Number of times snapshots of above flux data summed together
-  integer :: avg_count_sno
   ! Atmospheric mode  
   logical :: atm_prognostic           ! Flag if active atmosphere component or not
   !---------------------------------------------------------------------------
@@ -46,9 +41,7 @@ module lnd_comp_mct
 contains
 
   !---------------------------------------------------------------------------
-  subroutine lnd_init_mct( EClock, cdata_l, x2l_l, l2x_l, &
-                                   cdata_s, x2s_s, s2x_s, &
-                                   NLFilename )
+  subroutine lnd_init_mct( EClock, cdata_l, x2l_l, l2x_l, NLFilename )
     !
     ! !DESCRIPTION:
     ! Initialize land surface model and obtain relevant atmospheric model arrays
@@ -62,8 +55,7 @@ contains
     use clm_glclnd       , only : clm_s2x
     use clm_initializeMod, only : initialize1, initialize2
     use clm_varctl       , only : finidat,single_column, clm_varctl_set, iulog, noland, &
-                                  inst_index, inst_suffix, inst_name, &
-                                  create_glacier_mec_landunit 
+                                  inst_index, inst_suffix, inst_name
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
     use controlMod       , only : control_setNL
     use decompMod        , only : get_proc_bounds
@@ -87,11 +79,9 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(ESMF_Clock),           intent(in)    :: EClock           ! Input synchronization clock
+    type(ESMF_Clock),           intent(inout) :: EClock           ! Input synchronization clock
     type(seq_cdata),            intent(inout) :: cdata_l          ! Input land-model driver data
     type(mct_aVect),            intent(inout) :: x2l_l, l2x_l     ! land model import and export states
-    type(seq_cdata),            intent(inout) :: cdata_s          ! Input snow-model (land-ice) driver data
-    type(mct_aVect),            intent(inout) :: x2s_s, s2x_s     ! Snow-model import and export states
     character(len=*), optional, intent(in)    :: NLFilename       ! Namelist filename to read
     !
     ! !LOCAL VARIABLES:
@@ -99,8 +89,6 @@ contains
     integer                          :: mpicom_lnd   ! MPI communicator
     type(mct_gsMap),         pointer :: GSMap_lnd    ! Land model MCT GS map
     type(mct_gGrid),         pointer :: dom_l        ! Land model domain
-    type(mct_gsMap),         pointer :: GSMap_sno
-    type(mct_gGrid),         pointer :: dom_s
     type(seq_infodata_type), pointer :: infodata     ! CESM driver level info data
     integer  :: lsize                                ! size of attribute vector
     integer  :: g,i,j                                ! indices
@@ -108,7 +96,6 @@ contains
     integer  :: dtime_clm                            ! clm time-step
     logical  :: exists                               ! true if file exists
     logical  :: atm_aero                             ! Flag if aerosol data sent from atm model
-    logical  :: samegrid_al                          ! true if atmosphere and land are on the same grid
     real(r8) :: scmlat                               ! single-column latitude
     real(r8) :: scmlon                               ! single-column longitude
     real(r8) :: nextsw_cday                          ! calday from clock of next radiation computation
@@ -199,9 +186,7 @@ contains
                               scmlat=scmlat, scmlon=scmlon,                     &
                               brnch_retain_casename=brnch_retain_casename,      &
                               start_type=starttype, model_version=version,      &
-                              hostname=hostname, username=username,             &
-                              samegrid_al=samegrid_al                           &
-                                )
+                              hostname=hostname, username=username )
     call set_timemgr_init( calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
                            ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd,         &
                            stop_tod_in=stop_tod)
@@ -228,7 +213,6 @@ contains
     ! If no land then exit out of initialization
 
     if ( noland ) then
-       call seq_infodata_PutData( infodata, sno_present   =.false.)
        call seq_infodata_PutData( infodata, lnd_present   =.false.)
        call seq_infodata_PutData( infodata, lnd_prognostic=.false.)
        return
@@ -288,38 +272,7 @@ contains
 
     ! Create land export state 
 
-    call lnd_export_mct( bounds, clm_l2a, l2x_l)
-
-    if (create_glacier_mec_landunit) then
-       call seq_cdata_setptrs(cdata_s, gsMap=gsMap_sno, dom=dom_s)
-
-       ! Initialize sno gsMap (same as gsMap_lnd)
-       call lnd_SetgsMap_mct(bounds, mpicom_lnd, LNDID, gsMap_sno)
-       lsize = mct_gsMap_lsize(gsMap_sno, mpicom_lnd)
-
-       ! Initialize sno domain (same as lnd domain)
-       call lnd_domain_mct(bounds, lsize, gsMap_sno, dom_s)
-
-       ! Initialize sno attribute vectors
-       call mct_aVect_init(x2s_s, rList=seq_flds_x2s_fields, lsize=lsize)
-       call mct_aVect_zero(x2s_s)
-
-       call mct_aVect_init(s2x_s, rList=seq_flds_s2x_fields, lsize=lsize)
-       call mct_aVect_zero(s2x_s)
-
-       ! In contrast to l2x_l_SNAP / l2x_l_SUM, for s2x we accumulate/average all fields,
-       ! not just fluxes. This is because glc wants the time-averaged tsrf field (and the
-       ! other state field, topo, is not time-varying, so it doesn't matter what we do
-       ! with that field)
-       call mct_aVect_init(s2x_s_SUM , rList=seq_flds_s2x_fields, lsize=lsize)
-       call mct_aVect_zero(s2x_s_SUM )
-
-       call mct_aVect_init(s2x_s_SNAP , rList=seq_flds_s2x_fields, lsize=lsize)
-       call mct_aVect_zero(s2x_s_SNAP )
-
-       ! Create mct sno export state
-       call sno_export_mct(bounds, clm_s2x, s2x_s)
-    endif   ! create_glacier_mec_landunit
+    call lnd_export_mct( bounds, clm_l2a, clm_s2x, l2x_l)
 
     ! Initialize averaging counter
 
@@ -329,14 +282,6 @@ contains
 
     call seq_infodata_PutData( infodata, lnd_prognostic=.true.)
     call seq_infodata_PutData( infodata, lnd_nx=ldomain%ni, lnd_ny=ldomain%nj)
-    if (create_glacier_mec_landunit) then
-       call seq_infodata_PutData( infodata, sno_present=.true.)
-       call seq_infodata_PutData( infodata, sno_prognostic=.false.)
-       call seq_infodata_PutData( infodata, sno_nx=ldomain%ni, sno_ny=ldomain%nj)
-    else
-       call seq_infodata_PutData( infodata, sno_present=.false.)
-       call seq_infodata_PutData( infodata, sno_prognostic=.false.)
-    endif
 
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
 
@@ -370,8 +315,7 @@ contains
   end subroutine lnd_init_mct
 
   !---------------------------------------------------------------------------
-  subroutine lnd_run_mct( EClock, cdata_l, x2l_l, l2x_l, &
-                                  cdata_s, x2s_s, s2x_s)
+  subroutine lnd_run_mct( EClock, cdata_l, x2l_l, l2x_l)
     !
     ! !DESCRIPTION:
     ! Run clm model
@@ -386,7 +330,7 @@ contains
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
     use decompMod       ,only : get_proc_bounds
     use abortutils      ,only : endrun
-    use clm_varctl      ,only : iulog, create_glacier_mec_landunit 
+    use clm_varctl      ,only : iulog
     use clm_varorb      ,only : eccen, obliqr, lambm0, mvelpp
     use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                 shr_file_getLogUnit, shr_file_getLogLevel
@@ -404,13 +348,10 @@ contains
     implicit none
     !
     ! !ARGUMENTS:
-    type(ESMF_Clock) , intent(in)    :: EClock    ! Input synchronization clock from driver
+    type(ESMF_Clock) , intent(inout) :: EClock    ! Input synchronization clock from driver
     type(seq_cdata)  , intent(inout) :: cdata_l   ! Input driver data for land model
     type(mct_aVect)  , intent(inout) :: x2l_l     ! Import state to land model
     type(mct_aVect)  , intent(inout) :: l2x_l     ! Export state from land model
-    type(seq_cdata)  , intent(in)    :: cdata_s   ! Input driver data for snow model (land-ice)
-    type(mct_aVect)  , intent(inout) :: x2s_s     ! Import state for snow model
-    type(mct_aVect)  , intent(inout) :: s2x_s     ! Export state for snow model
     !
     ! !LOCAL VARIABLES:
     integer :: ymd_sync                   ! Sync date (YYYYMMDD)
@@ -440,8 +381,6 @@ contains
     type(mct_gGrid),        pointer :: dom_l    ! Land model domain data
     integer  :: g,i,lsize                       ! counters
     logical,save :: first_call = .true.         ! first call work
-    logical  :: glcrun_alarm          ! if true, sno data is averaged and sent to glc this step
-    logical  :: update_glc2sno_fields ! if true, update glacier_mec fields
     real(r8) :: calday                ! calendar day for nstep
     real(r8) :: declin                ! solar declination angle in radians for nstep
     real(r8) :: declinp1              ! solar declination angle in radians for nstep+1
@@ -485,19 +424,11 @@ contains
     ! Map MCT to land data type
     ! Perform downscaling if appropriate
 
-    call t_startf ('lc_lnd_import')
-    call lnd_import_mct( bounds, x2l_l, clm_a2l)
     
     ! Map to clm (only when state and/or fluxes need to be updated)
 
-    if (create_glacier_mec_landunit) then
-       update_glc2sno_fields  = .false.
-       call seq_infodata_GetData(infodata, glc_g2supdate = update_glc2sno_fields)
-       if (update_glc2sno_fields) then
-          call sno_import_mct( bounds, x2s_s, clm_x2s )
-       endif ! update_glc2sno
-    endif ! create_glacier_mec_landunit
-    call t_stopf ('lc_lnd_import')
+    call t_startf ('lc_lnd_import')
+    call lnd_import_mct( bounds, x2l_l, clm_a2l, clm_x2s)
 
     ! Use infodata to set orbital values if updated mid-run
 
@@ -553,7 +484,7 @@ contains
        ! Create l2x_l export state - add river runoff input to l2x_l if appropriate
        
        call t_startf ('lc_lnd_export')
-       call lnd_export_mct( bounds, clm_l2a, l2x_l)
+       call lnd_export_mct( bounds, clm_l2a, clm_s2x, l2x_l)
        call t_stopf ('lc_lnd_export')
 
        ! Do not accumulate on first coupling freq - consistency with ccsm3
@@ -568,20 +499,6 @@ contains
           avg_count = avg_count + 1
        endif
        
-       ! Map sno data type to MCT
-
-       if (create_glacier_mec_landunit) then
-          call sno_export_mct(bounds, clm_s2x, s2x_s)
-          if (nstep <= 1) then
-             call mct_aVect_copy( s2x_s, s2x_s_SUM )
-             avg_count_sno = 1
-          else
-             call mct_aVect_copy( s2x_s, s2x_s_SNAP )
-             call mct_aVect_accum( aVin=s2x_s_SNAP, aVout=s2x_s_SUM )
-             avg_count_sno = avg_count_sno + 1
-          endif
-       endif    ! create_glacier_mec_landunit
-
        ! Advance clm time step
        
        call t_startf ('lc_clm2_adv_timestep')
@@ -599,19 +516,6 @@ contains
     call mct_aVect_copy( l2x_l_SUM, l2x_l )
     call mct_aVect_zero( l2x_l_SUM) 
     avg_count = 0                   
-
-    if (create_glacier_mec_landunit) then
-       call seq_infodata_GetData(infodata, glcrun_alarm = glcrun_alarm )
-       if (glcrun_alarm) then
-          if (avg_count_sno /= 0) then
-             recip = 1.0_r8/(real(avg_count_sno,r8))
-             s2x_s_SUM%rAttr(:,:) = s2x_s_SUM%rAttr(:,:) * recip
-          endif
-          call mct_aVect_copy( s2x_s_SUM, s2x_s )
-          call mct_aVect_zero( s2x_s_SUM)
-          avg_count_sno = 0
-       endif
-    endif
 
     ! Check that internal clock is in sync with master clock
 
@@ -643,7 +547,7 @@ contains
   end subroutine lnd_run_mct
 
   !---------------------------------------------------------------------------
-  subroutine lnd_final_mct( EClock, cdata_l, x2l_l, l2x_l, cdata_s, x2s_s, s2x_s )
+  subroutine lnd_final_mct( EClock, cdata_l, x2l_l, l2x_l)
     !
     ! !DESCRIPTION:
     ! Finalize land surface model
@@ -656,13 +560,10 @@ contains
     implicit none
     !
     ! !ARGUMENTS:
-    type(ESMF_Clock) , intent(in)    :: EClock    ! Input synchronization clock from driver
-    type(seq_cdata)  , intent(in)    :: cdata_l   ! Input driver data for land model
+    type(ESMF_Clock) , intent(inout) :: EClock    ! Input synchronization clock from driver
+    type(seq_cdata)  , intent(inout) :: cdata_l   ! Input driver data for land model
     type(mct_aVect)  , intent(inout) :: x2l_l     ! Import state to land model
     type(mct_aVect)  , intent(inout) :: l2x_l     ! Export state from land model
-    type(seq_cdata)  , intent(in)    :: cdata_s   ! Input driver data for snow model (land-ice)
-    type(mct_aVect)  , intent(inout) :: x2s_s     ! Import state for snow model
-    type(mct_aVect)  , intent(inout) :: s2x_s     ! Export state for snow model
     !---------------------------------------------------------------------------
 
     ! fill this in
@@ -715,7 +616,7 @@ contains
 
 
   !---------------------------------------------------------------------------
-  subroutine lnd_export_mct( bounds, clm_l2a, l2x_l)
+  subroutine lnd_export_mct( bounds, clm_l2a, clm_s2x, l2x_l)
     !
     ! !DESCRIPTION:
     ! Convert the data to be sent from the clm model to the coupler from clm data types
@@ -726,6 +627,7 @@ contains
     use clm_varctl         , only : iulog
     use clm_time_manager   , only : get_nstep, get_step_size  
     use clm_atmlnd         , only : lnd2atm_type
+    use clm_glclnd         , only : lnd2glc_type
     use seq_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     use clm_cpl_indices
@@ -735,6 +637,7 @@ contains
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
     type(lnd2atm_type), intent(inout) :: clm_l2a    ! clm land to atmosphere exchange data type
+    type(lnd2glc_type), intent(inout) :: clm_s2x    ! clm land to atmosphere exchange data type
     type(mct_aVect)   , intent(inout) :: l2x_l      ! Land to coupler export state on land grid
     !
     ! !LOCAL VARIABLES:
@@ -742,6 +645,7 @@ contains
     integer  :: ier                           ! error status
     integer  :: nstep                         ! time step index
     integer  :: dtime                         ! time step   
+    integer  :: num                           ! counter
     !---------------------------------------------------------------------------
     
     ! cesm sign convention is that fluxes are positive downward
@@ -800,15 +704,23 @@ contains
        ! sign convention is positive downward with 
        ! hierarchy of atm/glc/lnd/rof/ice/ocn.  so water sent from land to rof is positive
 
-       l2x_l%rattr(index_l2x_Flrl_rofliq,i) = clm_l2a%rofliq(g)
-       l2x_l%rattr(index_l2x_Flrl_rofice,i) = clm_l2a%rofice(g)
+       l2x_l%rattr(index_l2x_Flrl_rofl,i) = clm_l2a%rofliq(g)
+       l2x_l%rattr(index_l2x_Flrl_rofi,i) = clm_l2a%rofice(g)
+
+       ! glc coupling
+
+       do num = 1,glc_nec
+          l2x_l%rAttr(index_l2x_Sl_tsrf(num),i)   = clm_s2x%tsrf(g,num)
+          l2x_l%rAttr(index_l2x_Sl_topo(num),i)   = clm_s2x%topo(g,num)
+          l2x_l%rAttr(index_l2x_Flgl_qice(num),i) = clm_s2x%qice(g,num)
+       end do
 
     end do
 
   end subroutine lnd_export_mct
 
   !---------------------------------------------------------------------------
-  subroutine lnd_import_mct( bounds, x2l_l, a2l)
+  subroutine lnd_import_mct( bounds, x2l_l, a2l, x2s)
     !
     ! !DESCRIPTION:
     ! Convert the input data from the coupler to the land model from MCT import state
@@ -817,6 +729,7 @@ contains
     ! !USES:
     use shr_kind_mod    , only: r8 => shr_kind_r8
     use clm_atmlnd      , only: atm2lnd_type
+    use clm_glclnd      , only: glc2lnd_type
     use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
     use clm_varcon      , only: rair, o2_molar_const
     use clm_varcon      , only: c13ratio
@@ -832,6 +745,7 @@ contains
     type(bounds_type) , intent(in) :: bounds  ! bounds
     type(mct_aVect)   , intent(inout) :: x2l_l   ! Driver MCT import state to land model
     type(atm2lnd_type), intent(inout) :: a2l     ! clm internal input data type
+    type(glc2lnd_type), intent(inout) :: x2s     ! clm internal input data type
     !
     ! !LOCAL VARIABLES:
     integer  :: g,i,nstep,ier        ! indices, number of steps, and error code
@@ -850,6 +764,7 @@ contains
     real(r8) :: a0,a1,a2,a3,a4,a5,a6 ! coefficients for esat over water
     real(r8) :: b0,b1,b2,b3,b4,b5,b6 ! coefficients for esat over ice
     real(r8) :: tdc, t               ! Kelvins to Celcius function and its input
+    integer  :: num                  ! counter
     character(len=32), parameter :: sub = 'lnd_import_mct'
 
     ! Constants to compute vapor pressure
@@ -898,7 +813,7 @@ contains
 
         a2l%forc_flood(g)   = -x2l_l%rattr(index_x2l_Flrr_flood,i)  
 
-        a2l%volr(g)   = x2l_l%rattr(index_x2l_Slrr_volr,i) &
+        a2l%volr(g)   = x2l_l%rattr(index_x2l_Flrr_volr,i) &
                       * (ldomain%area(g) * 1.e6_r8)
 
         ! Determine required receive fields
@@ -996,6 +911,15 @@ contains
         if (use_c13) then
            a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
         end if
+
+        ! glc coupling 
+
+        do num = 1,glc_nec
+           x2s%frac(g,num)  = x2l_l%rAttr(index_x2l_Sg_frac(num),i)
+           x2s%topo(g,num)  = x2l_l%rAttr(index_x2l_Sg_topo(num),i)
+           x2s%hflx(g,num)  = x2l_l%rAttr(index_x2l_Flgg_hflx(num),i)
+        end do
+
      end do
 
   end subroutine lnd_import_mct
@@ -1094,86 +1018,6 @@ contains
 
   end subroutine lnd_domain_mct
     
-  !===============================================================================
-
-  subroutine sno_export_mct( bounds, s2x, s2x_s )   
-
-    use clm_glclnd       , only : lnd2glc_type
-    use clm_cpl_indices 
-    use clm_varctl       , only : iulog
-    !
-    ! Arguments
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    type(lnd2glc_type), intent(inout) :: s2x
-    type(mct_aVect)   , intent(inout) :: s2x_s
-    !
-    ! Local Variables
-    integer :: g,i,num
-    !-----------------------------------------------------
-
-    ! qice is positive if ice is growing, negative if melting
-
-    s2x_s%rAttr(:,:) = 0.0_r8
-    do g = bounds%begg,bounds%endg
-       i = 1 + (g-bounds%begg)
-       do num = 1,glc_nec
-          s2x_s%rAttr(index_s2x_Ss_tsrf(num),i)   = s2x%tsrf(g,num)
-          s2x_s%rAttr(index_s2x_Ss_topo(num),i)   = s2x%topo(g,num)
-          s2x_s%rAttr(index_s2x_Fgss_qice(num),i) = s2x%qice(g,num)
-       end do
-    end do  
-
-  end subroutine sno_export_mct
-
-  !====================================================================================
-
-  subroutine sno_import_mct( bounds, x2s, clm_x2s )
-
-    use clmtype
-    use clm_glclnd      , only: glc2lnd_type
-    use clm_varcon      , only: istice_mec
-    use clm_cpl_indices
-    use mct_mod         , only: mct_aVect
-    !
-    ! Arguments
-    type(bounds_type) , intent(in)    :: bounds  ! bounds
-    type(mct_aVect)   , intent(inout) :: x2s
-    type(glc2lnd_type), intent(inout) :: clm_x2s
-    !
-    ! Local Variables
-    integer :: g,l,c,n,i,num           ! indices
-    logical :: update_glc2sno_fields   ! if true, update glacier_mec fields
-    !-----------------------------------------------------
-
-    do g = bounds%begg,bounds%endg
-       i = 1 + (g - bounds%begg)
-       do num = 1,glc_nec
-          clm_x2s%frac(g,num)  = x2s%rAttr(index_x2s_Sg_frac(num),i)
-          clm_x2s%topo(g,num)  = x2s%rAttr(index_x2s_Sg_topo(num),i)
-          clm_x2s%hflx(g,num)  = x2s%rAttr(index_x2s_Fsgg_hflx(num),i)
-          clm_x2s%rofi(g,num)  = x2s%rAttr(index_x2s_Fsgg_rofi(num),i)
-          clm_x2s%rofl(g,num)  = x2s%rAttr(index_x2s_Fsgg_rofl(num),i)
-       end do
-    end do
-
-    update_glc2sno_fields = .false.
-    if (update_glc2sno_fields) then 
-       do c = bounds%begc, bounds%endc
-          l = col%landunit(c)
-          g = col%gridcell(c)
-          if (lun%itype(l) == istice_mec) then
-             n = c -lun%coli(l) + 1    ! elevation class index
-             cps%glc_frac(c) = clm_x2s%frac(g,n)
-             cps%glc_topo(c) = clm_x2s%topo(g,n)
-             cwf%glc_rofi(c) = clm_x2s%rofi(g,n)
-             cwf%glc_rofl(c) = clm_x2s%rofl(g,n)
-             cef%eflx_bot(c) = clm_x2s%hflx(g,n)
-          endif
-       enddo
-    endif   ! update fields
-
-   end subroutine sno_import_mct
-
 !====================================================================================
 
 end module lnd_comp_mct

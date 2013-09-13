@@ -1,16 +1,23 @@
 ===============================================================
-Tag name:  clm4_5_24
-Originator(s):  sacks (sacks)
-Date:  Tue Sep  3 21:36:13 MDT 2013
-One-line Summary: update externals to cesm1_3_beta02 or later
+Tag name:  clm4_5_25
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Sep 13 13:49:45 MDT 2013
+One-line Summary: Bring in Tony's changes to kick sno all the way up to the coupler layer, makes all 
+                  CESM components more similar to each other
 
 Purpose of changes:
+   Bring in Tony's cplupa branch (cplupa_n06_clm4_5_24) to trunk. This branch moves sno
+   fields all the way to the top coupler layer rather than being inside of CLM. This makes all
+   CESM components more similar to each other.
 
-Requirements for tag:
+   There was also some small fixes on the side that allow some more tests to work.
 
-Test level of tag: regular, short, tools, build_namelist, doc
+Test level of tag: regular
 
-Bugs fixed (include bugzilla ID):
+Bugs fixed (include bugzilla ID): 1789 (fix NoVSNoNI test)
+                                  1788 (fix US-UMB test)
+                                  1779 (fix RTM multi-instance)
+                                  1777 (fix RTM branch cases)
 
 Known bugs (include bugzilla ID):
     http://bugs.cgd.ucar.edu/
@@ -23,72 +30,203 @@ Known Limitations:
                                   701 (svn keyword)
                                   452 (Problem with support of soil-colors != 8 or 20)
 
-Describe any changes made to build system:
+Describe any changes made to build system: Add new CPP token to CLM USE_ESMF_METADATA (with no direct machanism to use)
+   We hate CPP tokens (but had to let this go, only needed by ESMF development folks)
 
-Describe any changes made to the namelist:
+Describe any changes made to the namelist: drv namelist changes, no changes to CLM namelist
 
-List any changes to the defaults for the boundary datasets:
+List any changes to the defaults for the boundary datasets: CLM_USRDAT fsurdat files different directory for clm4_0 than clm4_5
+     remove missing ne16np4 fpftdyn file
 
-Describe any substantial timing or memory changes:
+Describe any substantial timing or memory changes: 
 
-Code reviewed by:
+Code reviewed by: self, tcraig
 
-List any svn externals directories updated (csm_share, mct, etc.):
+List any svn externals directories updated (csm_share, mct, etc.):, scripts, drv, cism, rtm, csm_share, data and stub models
 
-List all files eliminated:
+    scripts             to scripts4_130912
+    drv                 to drvseq4_3_03
+    datm                to datm8_130424
+    socn/sice/sglc/swav to stubs1_4_02
+    rtm                 to rtm1_0_31
+    cism                to cism1_130905
+    csm_share           to share3_130906
 
-List all files added and what they do:
+List all files eliminated: None
+
+List all files added and what they do: None
 
 List all existing files that have been modified, and describe the changes:
 
-CLM testing:
+  M    models/lnd/clm/bld/unit_testers/build-namelist_test.pl ------------ Remove ne16 20thC test
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml ---- Remove missing ne16 fpftdyn file
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_usr_files.xml - Different directory for
+            clm4_0/clm4_5 surface datasets
 
-[... Remove before making trunk_tag.  Available test levels:
+  M    models/lnd/clm/src/cpl_share/clm_cpl_indices.F90 - Field names change
+  M    models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90 ------ Remove "sno" and "s" fields
+  M    models/lnd/clm/src/clm4_5/main/clm_glclnd.F90 ---- Remove rofi/rofl
+  M    models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90 ---- Remove "sno" and "s" fields, add USE_ESMF_METADATA #ifdef
+  M    models/lnd/clm/src/cpl_esmf/lnd_comp_mct.F90 ----- Remove "sno" and "s" fields, add USE_ESMF_METADATA #ifdef
+  M    models/lnd/clm/src/clm4_0/main/clm_glclnd.F90 ---- Remove rofi/rofl
 
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CLM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
-
-... ]
+CLM testing: regular
 
   build-namelist tests:
 
-    yellowstone
-    frankfurt
+    bluefire  yes
+    frankfurt yes
 
   regular tests (aux_clm):
 
-    yellowstone_intel       
-    yellowstone_pgi         
-    frankfurt_intel      
-    frankfurt_pgi        
-    frankfurt_nag        
+    yellowstone_intel yes
+    yellowstone_pgi   yes
+    frankfurt_intel   yes
+    frankfurt_pgi     yes
+    frankfurt_nag     yes
 
   history file comparison with component_gen_comp and summarize_cprnc_diffs:
 
-    yellowstone_intel      
-    yellowstone_pgi
+    yellowstone_intel partial (not completed before tag made)
+    yellowstone_pgi   partial (not completed before tag made)
 
-  short tests (aux_clm_short):
+CLM tag used for the baseline comparisons:  clm4_5_24
 
-    yellowstone_intel       
-    yellowstone_pgi         
-    frankfurt_intel      
-    frankfurt_pgi        
-    frankfurt_nag        
+Changes answers relative to baseline: None (bit-for-bit)
 
-  tools testing:
+    Although my "I compset" testing showed no changes, fully coupled changes
+    do show differences. Coupler namelists also change.
 
-    yellowstone interactive
-    frankfurt interactive
+===============================================================
+===============================================================
+Tag name:  clm4_5_24
+Originator(s):  sacks (sacks)
+Date:  Tue Sep  3 21:36:13 MDT 2013
+One-line Summary: update externals to cesm1_3_beta02 or later
 
-CLM tag used for the baseline comparisons: 
+Purpose of changes:
 
-Changes answers relative to baseline:
+Update externals to cesm1_3_beta02 or later
+
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 1722 (Test failure with VIC and more_vertlayers)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: Not investigated
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   scripts    : scripts4_130816 -> scripts4_130830a
+   Machines   : Machines_130529 -> Machines_130830
+   drv        : drvseq4_2_33 -> drvseq4_2_35
+   cism       : cism1_130502 -> cism1_130624
+   csm_share  : share3_130528 -> share3_130723
+   timing     : timing_130417 -> timing_130506
+   mct        : compiler_fixes_n01_MCT_2.8.3 -> compiler_fixes_n03_MCT_2.8.3
+   mapping    : mapping_130509 -> mapping_130716
+   gen_domain : mapping_130509/gen_domain_files -> mapping_130716/gen_domain_files
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+========= Remove trailing whitespace
+M       .ChangeLog_template
+
+
+Index: models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+===================================================================
+--- models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml	(revision 50759)
++++ models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml	(working copy)
+@@ -51,17 +51,14 @@
+          <yellowstone>
+             <INTEL>
+                <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                         failType="FAIL"  bugz="1696" >use before define in history.  runs with frankfurt_pgi, yellowstone_intel and yellowstone_pgi</entry>
+-               <entry testId="ERS_D.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay"       failType="RUN"   bugz="1722" >floating point exception.  problem with VIC combined with vertical layers</entry>
+                <entry testId="PET.f10_f10.ICLM45BGC.yellowstone_intel"                    failType="TFAIL">once threading fixed, this should pass</entry>
+                <entry testId="PET_PT.f10_f10.ICLM45BGC.yellowstone_intel"                 failType="TFAIL">once threading fixed, this should pass</entry>
+-               <entry testId="ERI_D.ne30_g16.ICLM45BGC.yellowstone_intel.clm-vrtlay"      failType="FAIL" >core dumps in ref1.  Problems with vertical layers.  Run without clm-vrtlay and clm-default and it runs</entry>
+                <entry testId="SSP.f19_g16.I1850CLM45BGC.yellowstone_intel.clm-default"    failType="BFAIL" bugz="1728" >starting in clm4_5_07--The cpl.hi.nc file is not being copied on a generate like it should.</entry>
+                <entry testId="ERS_D.f10_f10.ICLM45BGC.yellowstone_intel.clm-rootlit"      failType="SFAIL" >Cannot turn clm4me mode on -- without clm4_5 physics! problem in scripts4_130809b </entry>
+             </INTEL>
+             <PGI>
+-               <entry testId="ERB.ne30_g16.I_1948-2004.yellowstone_pgi"                   failType="FAIL" >Problem with scripts and testId string length.  This passes with a long testId</entry>
++               <entry testId="ERB.ne30_g16.I4804.yellowstone_pgi"                         failType="FAIL" >Problem with scripts and testId string length.  This passes with a long testId</entry>
+                <entry testId="ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default"     failType="FAIL" >Restart not BFB.  Runs as ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi</entry>
+-               <entry testId="ERS.f09_g16.ICLM45VIC.yellowstone_pgi.clm-vrtlay"           failType="RUN" bugz="1722" >floating point exception.  problem with VIC combined with vertical layers</entry>
+                <entry testId="PET.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-default"      failType="TFAIL" >once threading fixed, this should pass</entry>
+                <entry testId="PET_PT_D.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-ciso"    failType="TFAIL" >once threading fixed, this should pass</entry>
+                <entry testId="PET_PT_D.f19_g16.ICLM45BGCDVCROP.yellowstone_pgi.clm-crop"  failType="TFAIL" >once threading fixed, this should pass</entry>
+@@ -78,7 +75,7 @@
+                <entry testId="SMS_Ly1.f19_g16.ICLM45BGCCROP.frankfurt_nag" failType="RUN"   >Water balance errors followed by "negative conc. in ch4tran", then tries "-10^-12 < smin_nh4 < 0. resetting to zero.", then it exits at approximately 9 months.  This same test passes with yellowstone_intel and frankfurt_intel</entry>
+             </NAG>
+             <PGI>
+-               <entry testId="ERS_D.f19_g16.IGRCP26CN.frankfurt_pgi"                     failType="CFAIL" >CMake 2.8.6 or higher is required.  You are running version 2.6.4</entry>
++               <entry testId="ERS_D.f19_g16.IGRCP26CN.frankfurt_pgi"                     failType="CFAIL" >Problem with cism build</entry>
+                <entry testId="ERI_D.f19_g16.ICLM45BGC.frankfurt_pgi"                     failType="FAIL"  >Fails after reading clmforc.Li_2012_hdm_0.5x0.5_AVHRR_simyr1850-2010_c130401.nc.  This same test passes with yellowstone_intel, yellowstone_pgi, frankfurt_intel and frankfurt_nag</entry>
+                <entry testId="ERI.f19_g16.ICLM45BGC.frankfurt_pgi"                       failType="FAIL"  >Fails after reading clmforc.Li_2012_hdm_0.5x0.5_AVHRR_simyr1850-2010_c130401.nc.  This same test passes with yellowstone_intel, yellowstone_pgi, frankfurt_intel and frankfurt_nag</entry>
+                <entry testId="SMS_Ld5.f19_g16.IRCP45CLM45BGC.frankfurt_pgi.clm-decStart" failType="FAIL"  >Fails after reading clmforc.Li_2012_hdm_0.5x0.5_AVHRR_simyr1850-2010_c130401.nc.  This same test passes with yellowstone_intel</entry>
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: YES
+       All PASS or xFAIL
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: YES
+    yellowstone_pgi: YES
+    frankfurt_intel: YES
+    frankfurt_pgi: YES
+    frankfurt_nag: YES
+
+    All PASS or xFAIL        
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: YES      
+       All PASS except for the following newly-passing tests (for
+       which these failures are unsurprising):
+
+       BFAIL2 ERI_D.ne30_g16.ICLM45BGC.yellowstone_intel.clm-vrtlay.compare_hist.clm4_5_23.clm2.h0 (baseline history file does not exist)
+       BFAIL2 ERI_D.ne30_g16.ICLM45BGC.yellowstone_intel.clm-vrtlay.compare_hist.clm4_5_23.clm2.h1 (baseline history file does not exist)
+       FAIL   ERS_D.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay.compare_hist.clm4_5_23.clm2.h0 
+       FAIL   ERS_D.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay.compare_hist.clm4_5_23.clm2.h1 
+
+    yellowstone_pgi: YES
+       Some answer changes (presumably due to compiler change)
+
+CLM tag used for the baseline comparisons: clm4_5_23
+   Note: renamed baselines for frankfurt nag because test names have changed
+
+Changes answers relative to baseline: YES
 
   If a tag changes answers relative to baseline comparison the
   following should be filled in (otherwise remove this section):
@@ -98,14 +236,22 @@ Changes answers relative to baseline:
     - what platforms/compilers:
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
 
+        compsets using cism change answers for g2x gields
+
+        many tests change answers with pgi, both on yellowstone &
+        frankfurt, presumably due to new compiler
+
+        nature of change not investigated
+
+
    If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
+   than roundoff? N/A
 
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)
-       - casename: 
+       - casename: N/A
 
-   URL for LMWG diagnostics output used to validate new climate:
+   URL for LMWG diagnostics output used to validate new climate: N/A
 	
 ===============================================================
 ===============================================================

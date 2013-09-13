@@ -36,8 +36,6 @@ module clm_glclnd
   type, public :: glc2lnd_type
      real(r8), pointer :: frac(:,:) => null()
      real(r8), pointer :: topo(:,:) => null()
-     real(r8), pointer :: rofi(:,:) => null()
-     real(r8), pointer :: rofl(:,:) => null()
      real(r8), pointer :: hflx(:,:) => null()
   end type glc2lnd_type
 
@@ -75,10 +73,6 @@ contains
     x2s%frac(bounds%begg:bounds%endg,maxpatch_glcmec)=0.0_r8
     allocate(x2s%topo(bounds%begg:bounds%endg,maxpatch_glcmec))
     x2s%topo(bounds%begg:bounds%endg,maxpatch_glcmec)=0.0_r8
-    allocate(x2s%rofi(bounds%begg:bounds%endg,maxpatch_glcmec))
-    x2s%rofi(bounds%begg:bounds%endg,maxpatch_glcmec)=0.0_r8
-    allocate(x2s%rofl(bounds%begg:bounds%endg,maxpatch_glcmec))
-    x2s%rofl(bounds%begg:bounds%endg,maxpatch_glcmec)=0.0_r8
     allocate(x2s%hflx(bounds%begg:bounds%endg,maxpatch_glcmec))
     x2s%hflx(bounds%begg:bounds%endg,maxpatch_glcmec)=0.0_r8
 

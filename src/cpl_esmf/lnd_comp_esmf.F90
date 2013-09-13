@@ -34,19 +34,14 @@ module lnd_comp_esmf
   private :: lnd_domain_esmf          ! Set the land model domain information
   private :: lnd_export_esmf          ! export land data to CESM coupler
   private :: lnd_import_esmf          ! import data from the CESM coupler to the land model
-  private :: sno_export_esmf
-  private :: sno_import_esmf
   !
   ! !PRIVATE DATA MEMBERS:
   ! Time averaged flux fields
   type(ESMF_Array)  :: l2x_l_SNAP     ! Snapshot of land to coupler data on the land grid
   type(ESMF_Array)  :: l2x_l_SUM      ! Summation of land to coupler data on the land grid
-  type(ESMF_Array)  :: s2x_s_SNAP     ! Snapshot of sno to coupler data on the land grid
-  type(ESMF_Array)  :: s2x_s_SUM      ! Summation of sno to coupler data on the land grid
   !
   ! Time averaged counter for flux fields
   integer :: avg_count                ! Number of times snapshots of above flux data summed together
-  integer :: avg_count_sno
   !---------------------------------------------------------------------------
 
 contains
@@ -93,8 +88,7 @@ contains
     use clm_initializeMod, only : initialize1, initialize2
     use clm_varctl       , only : finidat,single_column, clm_varctl_set, noland, &
                                   inst_index, inst_suffix, inst_name, &
-                                  nsrStartup, nsrContinue, nsrBranch, &
-                                  create_glacier_mec_landunit 
+                                  nsrStartup, nsrContinue, nsrBranch
     use controlMod       , only : control_setNL
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
     use shr_file_mod     , only : shr_file_setLogUnit, shr_file_setLogLevel, &
@@ -118,8 +112,8 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer              :: mpicom_lnd, mpicom_vm, gsize
-    type(ESMF_DistGrid)  :: distgrid_l, distgrid_s
-    type(ESMF_Array)     :: dom_l, dom_s, l2x, x2l, s2x, x2s
+    type(ESMF_DistGrid)  :: distgrid_l
+    type(ESMF_Array)     :: dom_l, l2x, x2l
     type(ESMF_VM)        :: vm
     integer, allocatable :: gindex(:)
     integer  :: lsize                                ! size of attribute vector
@@ -145,7 +139,6 @@ contains
     integer :: stop_ymd                              ! stop date (YYYYMMDD)
     integer :: stop_tod                              ! stop time of day (sec)
     logical :: brnch_retain_casename                 ! flag if should retain the case name on a branch start type
-    logical :: samegrid_al                           ! true if atmosphere and land are on the same grid
     logical :: atm_aero                              ! Flag if aerosol data sent from atm model
     integer :: lbnum                                 ! input to memory diagnostic
     integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
@@ -250,8 +243,6 @@ contains
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_AttributeGet(export_state, name="username", value=username, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call ESMF_AttributeGet(export_state, name="samegrid_al", value=samegrid_al, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     
     call set_timemgr_init( &
          calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
@@ -282,8 +273,6 @@ contains
     ! If no land then exit out of initialization
 
     if ( noland) then
-       call ESMF_AttributeSet(export_state, name="sno_present", value=.false., rc=rc)
-       if( rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
        call ESMF_AttributeSet(export_state, name="lnd_present", value=.false., rc=rc)
        if( rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
        call ESMF_AttributeSet(export_state, name="lnd_prognostic", value=.false., rc=rc)
@@ -319,45 +308,21 @@ contains
     call lnd_domain_esmf( bounds, dom_l, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    ! Initialize sno distgrid and domain (currently same as lnd - ask Jon)
-
-    distgrid_s = lnd_DistGrid_esmf(bounds, gsize, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    call ESMF_AttributeSet(export_state, name="gsize_sno", value=gsize, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    dom_s = mct2esmf_init(distgrid_s, attname=seq_flds_dom_fields, name="domain_s", rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    call lnd_domain_esmf( bounds, dom_s, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
- 
     ! Initialize lnd import and export states
 
     l2x = mct2esmf_init(distgrid_l, attname=seq_flds_l2x_fields, name="l2x", rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    s2x = mct2esmf_init(distgrid_s, attname=seq_flds_s2x_fields, name="s2x", rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     x2l = mct2esmf_init(distgrid_l, attname=seq_flds_x2l_fields, name="x2l", rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    x2s = mct2esmf_init(distgrid_s, attname=seq_flds_x2s_fields, name="x2s", rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ESMF_StateAdd(export_state, (/dom_l/), rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call ESMF_StateAdd(export_state, (/dom_s/), rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ESMF_StateAdd(export_state, (/l2x/), rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call ESMF_StateAdd(export_state, (/s2x/), rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ESMF_StateAdd(import_state, (/x2l/), rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call ESMF_StateAdd(import_state, (/x2s/), rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     l2x_l_SNAP = mct2esmf_init(distgrid_l, attname=seq_flds_l2x_fluxes, &
@@ -395,23 +360,8 @@ contains
 
     ! Create land export state 
 
-    call lnd_export_esmf(bounds, clm_l2a, fptr)
+    call lnd_export_esmf(bounds, clm_l2a, clm_s2x, fptr)
     
-    ! Export sno for cism
-
-    if (create_glacier_mec_landunit) then
-       s2x_s_SNAP = mct2esmf_init(distgrid_l, attname=seq_flds_s2x_fields, &
-           name="s2x_s_SNAP", rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       s2x_s_SUM = mct2esmf_init(distgrid_l, attname=seq_flds_s2x_fields, &
-           name="s2x_s_SUM", rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-       call sno_export_esmf( bounds, clm_s2x, s2x, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    endif   
-
     ! Initialize averaging counter
 
     avg_count = 0
@@ -424,22 +374,6 @@ contains
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_AttributeSet(export_state, name="lnd_ny", value=ldomain%nj, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    if (create_glacier_mec_landunit) then
-       call ESMF_AttributeSet(export_state, name="sno_present", value=.true., rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_AttributeSet(export_state, name="sno_prognostic", value=.false., rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_AttributeSet(export_state, name="sno_nx", value=ldomain%ni, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_AttributeSet(export_state, name="sno_ny", value=ldomain%nj, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    else
-       call ESMF_AttributeSet(export_state, name="sno_present", value=.false., rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_AttributeSet(export_state, name="sno_prognostic", value=.false., rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    endif
 
     call ESMF_AttributeGet(export_state, name="nextsw_cday", value=nextsw_cday, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
@@ -471,6 +405,7 @@ contains
     endif
 #endif
 
+#ifdef USE_ESMF_METADATA
     convCIM  = "CIM"
     purpComp = "Model Component Simulation Description"
 
@@ -493,6 +428,7 @@ contains
                            convention=convCIM, purpose=purpComp, rc=rc)
     call ESMF_AttributeSet(comp, "ModelType", "Land", &
                            convention=convCIM, purpose=purpComp, rc=rc)
+#endif
 
   end subroutine lnd_init_esmf
 
@@ -509,7 +445,6 @@ contains
     use clm_varorb      ,only : eccen, obliqr, lambm0, mvelpp
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
-    use clm_varctl      ,only : create_glacier_mec_landunit 
     use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                 shr_file_getLogUnit, shr_file_getLogLevel
     use seq_timemgr_mod ,only : seq_timemgr_EClockGetData, seq_timemgr_StopAlarmIsOn, &
@@ -528,7 +463,7 @@ contains
     integer, intent(out)         :: rc              ! Return code
     !
     ! !LOCAL VARIABLES:
-    type(ESMF_Array)  :: l2x, s2x, x2l, x2s, dom_l
+    type(ESMF_Array)  :: l2x, x2l, dom_l
     real(R8), pointer :: fptr(:, :)
     integer :: ymd_sync                   ! Sync date (YYYYMMDD)
     integer :: yr_sync                    ! Sync current year
@@ -559,7 +494,6 @@ contains
     integer :: g,i,ka                     ! counters
     real(r8):: recip                      ! recip
     logical :: glcrun_alarm               ! if true, sno data is averaged and sent to glc this step
-    logical :: update_glc2sno_fields      ! if true, update glacier_mec fields
     type(bounds_type) :: bounds           ! bounds
     logical,save :: first_call = .true.   ! first call work
     character(len=32)            :: rdate ! date char string for restart file names
@@ -611,20 +545,8 @@ contains
     call ESMF_ArrayGet(x2l, localDe=0, farrayPtr=fptr, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call lnd_import_esmf( bounds, fptr, clm_a2l )
+    call lnd_import_esmf( bounds, fptr, clm_a2l, clm_x2s )
     
-    if (create_glacier_mec_landunit) then
-       call ESMF_AttributeGet(export_state, name="glc_g2supdate", value=update_glc2sno_fields, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       update_glc2sno_fields  = .false.
-       if (update_glc2sno_fields) then
-          call ESMF_StateGet(import_state, itemName="x2s", array=x2s, rc=rc)
-          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          call sno_import_esmf( bounds, x2s, clm_x2s, rc=rc )
-          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       endif   
-    endif   
-
     call t_stopf ('lc_lnd_import')
 
     ! Use infodata to set orbital values if it was updated at run time
@@ -693,7 +615,7 @@ contains
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
        call ESMF_ArrayGet(l2x, localDe=0, farrayPtr=fptr, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call lnd_export_esmf( bounds, clm_l2a, fptr )
+       call lnd_export_esmf( bounds, clm_l2a, clm_s2x, fptr )
        call t_stopf ('lc_lnd_export')
        
        ! Compute snapshot attribute vector for accumulation
@@ -713,26 +635,6 @@ contains
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
           avg_count = avg_count + 1
        endif
-
-       ! Map sno data type to MCT
-
-       if (create_glacier_mec_landunit) then
-          call ESMF_StateGet(export_state, itemName="s2x", array=s2x, rc=rc)
-          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          call sno_export_esmf( bounds, clm_s2x, s2x, rc=rc )
-          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          if (nstep <= 1) then
-             call esmfshr_util_ArrayCopy(s2x, s2x_s_SUM, rc=rc)
-             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-             avg_count_sno = 1
-          else
-             call esmfshr_util_ArrayCopy(s2x, s2x_s_SNAP, rc=rc)
-             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-             call esmfshr_util_ArraySum(s2x_s_SNAP, s2x_s_SUM, rc=rc)
-             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-             avg_count_sno = avg_count_sno + 1
-          endif
-       endif    ! create_glacier_mec_landunit
 
        ! Advance clm time step
        
@@ -757,26 +659,6 @@ contains
     call esmfshr_util_ArrayZero(l2x_l_SUM, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     avg_count = 0                   
-
-    if (create_glacier_mec_landunit) then
-       call ESMF_AttributeGet(export_state, name="glcrun_alarm", value=glcrun_alarm, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       if (glcrun_alarm) then
-          if (avg_count_sno /= 0) then
-             recip = 1.0_r8/(real(avg_count_sno,r8))
-             call ESMF_ArrayGet(s2x_s_SUM, localDe=0, farrayPtr=fptr, rc=rc)
-             if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-             fptr(:, :) = fptr(:, :) * recip
-          endif
-          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          call esmfshr_util_ArrayCopy(s2x_s_SUM, s2x, rc=rc)
-          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          call esmfshr_util_ArrayZero(s2x_s_SUM, rc=rc)
-          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          avg_count_sno = 0
-
-       endif
-    endif
 
     ! Check that internal clock is in sync with master clock
 
@@ -829,19 +711,10 @@ contains
     call esmfshr_util_StateArrayDestroy(export_state,'domain_l',rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call esmfshr_util_StateArrayDestroy(export_state,'domain_s',rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
     call esmfshr_util_StateArrayDestroy(export_state,'l2x',rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call esmfshr_util_StateArrayDestroy(export_state,'s2x',rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
     call esmfshr_util_StateArrayDestroy(import_state,'x2l',rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    call esmfshr_util_StateArrayDestroy(import_state,'x2s',rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
   end subroutine lnd_final_esmf
@@ -888,7 +761,7 @@ contains
   end function lnd_DistGrid_esmf
 
   !---------------------------------------------------------------------------
-  subroutine lnd_export_esmf( bounds, l2a, fptr )
+  subroutine lnd_export_esmf( bounds, l2a, s2x, fptr )
     !
     ! !DESCRIPTION:
     ! Convert the data to be sent from the clm model to the coupler from 
@@ -898,6 +771,7 @@ contains
     use shr_kind_mod    , only : r8 => shr_kind_r8
     use clm_time_manager, only : get_nstep  
     use clm_atmlnd      , only : lnd2atm_type
+    use clm_glclnd      , only : lnd2glc_type
     use seq_drydep_mod  , only : n_drydep
     use shr_megan_mod,    only : shr_megan_mechcomps_n
     implicit none
@@ -905,10 +779,12 @@ contains
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds  ! bounds
     type(lnd2atm_type), intent(inout) :: l2a   
+    type(lnd2glc_type), intent(inout) :: s2x    ! clm land to glc exchange data type
     real(R8)          , pointer       :: fptr(:, :)
     !
     ! !LOCAL VARIABLES:
     integer :: g,i           ! indices
+    integer :: num           ! counter
     !---------------------------------------------------------------------------
 
     ! cesm sign convention is that fluxes are positive downward
@@ -961,14 +837,23 @@ contains
 
        ! sign convention is positive downwared with 
        ! hierarchy of atm/glc/lnd/rof/ice/ocn.  so water sent from land to rof is positive
-       fptr(index_l2x_Flrl_rofliq,i) = l2a%rofliq(g)
-       fptr(index_l2x_Flrl_rofice,i) = l2a%rofice(g)
+       fptr(index_l2x_Flrl_rofl,i) = l2a%rofliq(g)
+       fptr(index_l2x_Flrl_rofi,i) = l2a%rofice(g)
+
+       ! glc coupling
+
+       do num = 1,glc_nec
+          fptr(index_l2x_Sl_tsrf(num),i)   = s2x%tsrf(g,num)
+          fptr(index_l2x_Sl_topo(num),i)   = s2x%topo(g,num)
+          fptr(index_l2x_Flgl_qice(num),i) = s2x%qice(g,num)
+       end do
+
     end do
 
   end subroutine lnd_export_esmf
 
   !---------------------------------------------------------------------------
-  subroutine lnd_import_esmf( bounds, fptr, a2l)
+  subroutine lnd_import_esmf( bounds, fptr, a2l, x2s)
     !
     ! !DESCRIPTION:
     ! Convert the input data from the coupler to the land model from ESMF import state
@@ -976,6 +861,8 @@ contains
     !
     ! !USES:
     use shr_const_mod   , only: SHR_CONST_TKFRZ
+    use clm_atmlnd      , only: atm2lnd_type
+    use clm_glclnd      , only: glc2lnd_type
     use clm_varctl      , only: co2_type, co2_ppmv, use_c13
     use clm_varcon      , only: rair, o2_molar_const
     use clm_varcon      , only: c13ratio
@@ -985,6 +872,7 @@ contains
     type(bounds_type) , intent(in)    :: bounds       ! bounds
     real(r8)          , pointer       :: fptr(:,:)
     type(atm2lnd_type), intent(inout) :: a2l          ! clm internal input data type
+    type(glc2lnd_type), intent(inout) :: x2s          ! clm internal input data type
     !
     ! !LOCAL VARIABLES:
     integer  :: g,i,nstep,ier        ! indices, number of steps, and error code
@@ -1003,6 +891,7 @@ contains
     real(r8) :: a0,a1,a2,a3,a4,a5,a6 ! coefficients for esat over water
     real(r8) :: b0,b1,b2,b3,b4,b5,b6 ! coefficients for esat over ice
     real(r8) :: tdc, t               ! Kelvins to Celcius function and its input
+    integer  :: num                  ! counter
     character(len=32), parameter :: sub = 'lnd_import_esmf'
 
     ! Constants to compute vapor pressure
@@ -1050,7 +939,7 @@ contains
 
         a2l%forc_flood(g) = -fptr(index_x2l_Flrr_flood,i)  
 
-        a2l%volr(g) = fptr(index_x2l_Slrr_volr,i) &
+        a2l%volr(g) = fptr(index_x2l_Flrr_volr,i) &
                     * (ldomain%area(g) * 1.e6_r8)
 
         ! Determine required receive fields
@@ -1147,6 +1036,14 @@ contains
            a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
         endif
 
+        ! glc coupling
+
+        do num = 1,glc_nec
+           x2s%frac(g,num)  = fptr(index_x2l_Sg_frac(num),i)
+           x2s%topo(g,num)  = fptr(index_x2l_Sg_topo(num),i)
+           x2s%hflx(g,num)  = fptr(index_x2l_Flgg_hflx(num),i)
+        end do
+
      end do
 
    end subroutine lnd_import_esmf
@@ -1209,95 +1106,6 @@ contains
 
   end subroutine lnd_domain_esmf
     
-
   !---------------------------------------------------------------------------
-  subroutine sno_export_esmf( bounds, s2x, s2x_array, rc )
-    !
-    ! !ARGUMENTS: 
-    implicit none
-    type(bounds_type) , intent(in)    :: bounds  ! bounds
-    type(lnd2glc_type), intent(inout) :: s2x
-    type(ESMF_Array)  , intent(inout) :: s2x_array
-    integer, intent(out)              :: rc
-    !
-    ! !LOCAL VARIABLES:
-    integer :: g,i,num
-    real(r8), pointer :: fptr(:, :)
-    !-----------------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    call ESMF_ArrayGet(s2x_array, localDe=0, farrayPtr=fptr, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-   
-    fptr(:,:) = 0.0_r8
-
-    ! qice is positive if ice is growing, negative if melting
-
-    do g = bounds%begg,bounds%endg
-       i = 1 + (g - bounds%begg)
-       do num = 1,glc_nec
-          fptr(index_s2x_Ss_tsrf(num),i)   = s2x%tsrf(g,num)
-          fptr(index_s2x_Ss_topo(num),i)   = s2x%topo(g,num)
-          fptr(index_s2x_Fgss_qice(num),i) = s2x%qice(g,num)
-       end do
-    end do   
-
-  end subroutine sno_export_esmf
-
-  !---------------------------------------------------------------------------
-  subroutine sno_import_esmf( bounds, x2s_array, clm_x2s, rc )
-    !
-    ! !USES
-    use clmtype
-    use clm_varcon      , only: istice_mec
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(bounds_type) , intent(in)    :: bounds     ! bounds
-    type(ESMF_Array)  , intent(inout) :: x2s_array
-    type(glc2lnd_type), intent(inout) :: clm_x2s
-    integer, intent(out)              :: rc
-    !
-    ! !LOCAL VARIABLES
-    integer :: g,l,c,n,i,num           ! indices
-    logical :: update_glc2sno_fields   ! if true, update glacier_mec fields
-    real(r8), pointer :: fptr(:, :)
-    character(len=32), parameter :: sub = 'sno_import_esmf'
-    !-----------------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    call ESMF_ArrayGet(x2s_array, localDe=0, farrayPtr=fptr, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    do g = bounds%begg,bounds%endg
-       i = 1 + (g - bounds%begg)
-       do num = 1,glc_nec
-          clm_x2s%frac(g,num)  = fptr(index_x2s_Sg_frac(num),i)
-          clm_x2s%topo(g,num)  = fptr(index_x2s_Sg_topo(num),i)
-          clm_x2s%rofi(g,num)  = fptr(index_x2s_Fsgg_rofi(num),i)
-          clm_x2s%rofl(g,num)  = fptr(index_x2s_Fsgg_rofl(num),i)
-          clm_x2s%hflx(g,num)  = fptr(index_x2s_Fsgg_hflx(num),i)
-       end do
-     end do    
-
-    update_glc2sno_fields = .false.
-    if (update_glc2sno_fields) then 
-       do c = bounds%begc, bounds%endc
-          l = col%landunit(c)
-          g = col%gridcell(c)
-          if (lun%itype(l) == istice_mec) then
-             n = c -lun%coli(l) + 1    ! elevation class index
-             cps%glc_frac(c) = clm_x2s%frac(g,n)
-             cps%glc_topo(c) = clm_x2s%topo(g,n)
-             cwf%glc_rofi(c) = clm_x2s%rofi(g,n)
-             cwf%glc_rofl(c) = clm_x2s%rofl(g,n)
-             cef%eflx_bot(c) = clm_x2s%hflx(g,n)
-          endif
-       enddo
-    endif   ! update fields
-
-   end subroutine sno_import_esmf
 
 end module lnd_comp_esmf
