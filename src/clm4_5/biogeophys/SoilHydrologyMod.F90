@@ -1110,15 +1110,8 @@ contains
        do j = 1, nlevsoi
           if(h2osoi_liq(c,j)<0._r8)then
              qflx_deficit(c) = qflx_deficit(c) - h2osoi_liq(c,j)
-             h2osoi_liq(c,j) = 0._r8
           endif
        enddo
-       !reduce qcharge if necessary
-       !ideally, I can set qflx_deficit as a local variable, but it is helpful
-       !to diagnose the problem associated with the solver for the richards' equation.
-       if(qflx_deficit(c)>0._r8)then
-          qcharge(c) = qcharge(c) - qflx_deficit(c)/dtime
-       endif
     enddo
 
     end associate 
@@ -1892,8 +1885,11 @@ contains
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
-       xs1(c)          = max(max(h2osoi_liq(c,1),0._r8)-max(0._r8,(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1))),0._r8)
-       h2osoi_liq(c,1) = min(max(0._r8,pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1)), h2osoi_liq(c,1))
+
+       !scs: watmin addition to fix water balance errors
+       xs1(c)          = max(max(h2osoi_liq(c,1)-watmin,0._r8)- &
+          max(0._r8,(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1)-watmin)),0._r8)
+       h2osoi_liq(c,1) = h2osoi_liq(c,1) - xs1(c)
 
        if (urbpoi(clandunit(c))) then
           qflx_rsub_sat(c)     = xs1(c) / dtime

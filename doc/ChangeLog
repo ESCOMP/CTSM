@@ -1,4 +1,151 @@
 ===============================================================
+Tag name:  clm4_5_26
+Originator(s):  muszala (Stefan Muszala)
+Date: Thu Sep 19 17:07:11 MDT 2013
+One-line Summary: water balance and SMS_Ly1.f19_g16.ICLM45BGCCROP fix
+
+Purpose of changes: 1) Fix water balance error in f09_g16 I1850CRUCLM45BGC simulation
+                    2) Get all machine/compiler combinations of 
+                          SMS_Ly1.f19_g16.ICLM45BGCCROP working
+                       - this fix required (1) and a fix to fthresh in RtmFloodInit 
+                         - new RTM tag rtm1_0_32 to go along with this
+                       - PGI+frankfurt version of this test only work with 16 MPI processes
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):1808 
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: S. Swenson, D. Lawrence
+
+List any svn externals directories updated (csm_share, mct, etc.): rtm1_0_32 
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+
+Index: models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+===================================================================
+--- models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90   (revision 51190)
++++ models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90   (working copy)
+@@ -1110,15 +1110,8 @@
+        do j = 1, nlevsoi
+           if(h2osoi_liq(c,j)<0._r8)then
+              qflx_deficit(c) = qflx_deficit(c) - h2osoi_liq(c,j)
+-             h2osoi_liq(c,j) = 0._r8
+           endif
+        enddo
+-       !reduce qcharge if necessary
+-       !ideally, I can set qflx_deficit as a local variable, but it is helpful
+-       !to diagnose the problem associated with the solver for the richards' equation.
+-       if(qflx_deficit(c)>0._r8)then
+-          qcharge(c) = qcharge(c) - qflx_deficit(c)/dtime
+-       endif
+     enddo
+ 
+     end associate 
+@@ -1892,9 +1885,12 @@
+ 
+     do fc = 1, num_hydrologyc
+        c = filter_hydrologyc(fc)
+-       xs1(c)          = max(max(h2osoi_liq(c,1),0._r8)-max(0._r8,(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1))),0._r8)
+-       h2osoi_liq(c,1) = min(max(0._r8,pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1)), h2osoi_liq(c,1))
+ 
++       !scs: watmin addition to fix water balance errors
++       xs1(c)          = max(max(h2osoi_liq(c,1)-watmin,0._r8)- &
++          max(0._r8,(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1)-watmin)),0._r8)
++       h2osoi_liq(c,1) = h2osoi_liq(c,1) - xs1(c)
++
+        if (urbpoi(clandunit(c))) then
+           qflx_rsub_sat(c)     = xs1(c) / dtime
+        else
+
+CLM testing:
+
+- general note: for clm45 compsets-both clm and cpl history files change
+
+- specfic testing for these bug fixes:
+
+1) Water balance fix-ran a clone of run from Dave Lawrence:
+   -- create_newcase -compset I1850CRUCLM45BGC -res f09_g16 -mach yellowstone -case /glade/u/home/dlawren/expts/clm4.5/clm45bgc_1deg4519_1850spin_bd
+   -- this ran for over 25 years with no water balance errors.
+
+2) SMS_Ly1.f19_g16.ICLM45BGCCROP
+
+PASS  SMS_Ly1.f19_g16.ICLM45BGCCROP.yellowstone_intel.clm-reduceOutput.115612
+PASS  SMS_Ly1.f19_g16.ICLM45BGCCROP.yellowstone_pgi.clm-reduceOutput.115522
+
+PASS  SMS_Ly1.f19_g16.ICLM45BGCCROP.frankfurt_intel.clm-reduceOutput.115217
+PASS  SMS_Ly1_Mmpich.f19_g16.ICLM45BGCCROP.frankfurt_nag.clm-reduceOutput.120824
+PASS  SMS_Ly1.f19_g16.ICLM45BGCCROP.frankfurt_pgi.clm-reduceOutput.016  -- only with 16 MPI tasks
+
+3) To make sure the RTM refactor did not create any BFB changes, I ran SMS_D.f19_g16.ICLM45BGCCROP.yellowstone_intel 
+   with rtm1_0_31 and rivrtm/branch_tags/bcf_tags/bcf_02_rtm1_0_31.
+     - With flood_mode='NULL'   - Coupler and land history files were BFB.
+     - With flood_mode='ACTIVE' - Coupler, rtm and land history files were BFB.
+
+  build-namelist tests: N/A
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK - changes in cpl. hist files expected
+    yellowstone_pgi - OK - changes in cpl. hist files expected
+    frankfurt_intel - OK - changes in cpl. hist files expected
+    frankfurt_pgi - OK - changes in cpl. hist files expected
+    frankfurt_nag - OK - changes in cpl. hist files expected
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel - OK - changes in clm fields expected.
+
+CLM tag used for the baseline comparisons:  clm4_5_25
+
+Changes answers relative to baseline: Yes.  For CLM45 compsets.  All changes are from the SoilHydrology mods
+as the RTM refactor and fthresh fix are BFB.
+
+Coupler history fields that change:
+
+l2x_Sl_avsdr, l2x_Sl_anidr, l2x_Sl_avsdf, l2x_Sl_anidf, l2x_Sl_tref, l2x_Sl_qref, 
+l2x_Sl_t, l2x_Sl_fv, l2x_Sl_ram1, l2x_Sl_snowh, l2x_Sl_u10, l2x_Fall_swnet, 
+l2x_Fall_taux, l2x_Fall_tauy, l2x_Fall_lat, l2x_Fall_sen, l2x_Fall_lwup, 
+l2x_Fall_evap, l2x_Fall_flxdst1, l2x_Fall_flxdst2, l2x_Fall_flxdst3, l2x_Fall_flxdst4, 
+l2x_Flrl_rofl, l2x_Fall_voc001, l2x_Fall_voc002, l2x_Fall_voc003, l2x_Fall_voc004, 
+l2x_Fall_voc005, l2x_Fall_voc006, l2x_Fall_voc007, l2x_Fall_voc008, x2l_Flrr_volr, 
+r2x_Forr_rofl, r2x_Forr_rofi, r2x_Flrr_volr, x2r_Flrl_rofl
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45 compsets
+    - what platforms/compilers: All
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_25
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Sep 13 13:49:45 MDT 2013

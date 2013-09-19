@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_26      muszala 09/19/2013 water balance and SMS_Ly1.f19_g16.ICLM45BGCCROP fix
    clm4_5_25         erik 09/13/2013 Bring in Tony's changes to kick sno all the way up to the coupler layer, makes all 
                                      CESM components more similar to each other
    clm4_5_24        sacks 09/03/2013 update externals to cesm1_3_beta02 or later
