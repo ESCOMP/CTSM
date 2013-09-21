@@ -2860,8 +2860,6 @@ contains
     cps%micro_sigma(:)= nanr
     allocate(cps%h2osfc_thresh(beg:end))
     cps%h2osfc_thresh(:)= nanr
-    allocate(cps%frac_h2osfc_temp(beg:end))
-    cps%frac_h2osfc_temp(:)= 0.0_r8
     allocate(cps%n_melt(beg:end))
     cps%n_melt(:)= nanr 
 

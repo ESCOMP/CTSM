@@ -353,7 +353,6 @@ contains
    qflx_evap_soi      =>    pwf_a%qflx_evap_soi   , & ! Input:  [real(r8) (:)]  ground surface evaporation rate (mm H2O/s) [+]    
    qflx_h2osfc_surf   =>    cwf%qflx_h2osfc_surf  , & ! Input:  [real(r8) (:)]  surface water runoff (mm/s)                       
    frac_h2osfc        =>    cps%frac_h2osfc       , & ! Input:  [real(r8) (:)]  fraction of ground covered by surface water (0 to 1)
-   frac_h2osfc_temp   =>    cps%frac_h2osfc_temp  , & ! Input:  [real(r8) (:)]  fraction of ground covered by surface water (0 to 1)
    h2osfc             =>    cws%h2osfc            , & ! Input:  [real(r8) (:)]  surface water (mm)                                
    h2osoi_ice         =>    cws%h2osoi_ice        , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                                
    h2osoi_liq         =>    cws%h2osoi_liq        , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                            
@@ -467,12 +466,6 @@ contains
              ! calculate runoff from h2osfc  -------------------------------------
              if (frac_h2osfc(c) <= pc) then 
                 frac_infclust=0.0_r8
-                ! there is a potential conflict between frac_sno and frac_h2osfc 
-                ! calculate temporary surface water fraction to enable runoff when frac_sno is large
-                if(h2osfc(c) >= h2osfc_thresh(c)) then
-                   call FracH2oSfc(bounds, num_hydrologyc, filter_hydrologyc,frac_h2osfc_temp,1)
-                   frac_infclust=(frac_h2osfc_temp(c)-pc)**mu
-                endif
              else
                 frac_infclust=(frac_h2osfc(c)-pc)**mu
              endif

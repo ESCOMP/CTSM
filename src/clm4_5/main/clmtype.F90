@@ -1259,7 +1259,6 @@ type, public :: column_pstate_type
    real(r8), pointer :: frac_sno(:)           !fraction of ground covered by snow (0 to 1)
    real(r8), pointer :: frac_sno_eff(:)       !fraction of ground covered by snow (0 to 1)
    real(r8), pointer :: frac_h2osfc(:)        !fractional area with surface water greater than zero
-   real(r8), pointer :: frac_h2osfc_temp(:)   !temporay fractional area with surface water greater than zero
    real(r8), pointer :: topo_std(:)           !gridcell topographic standard deviation (m)
    real(r8), pointer :: topo_ndx(:)           !gridcell topographic index
    real(r8), pointer :: topo_slope(:)         !gridcell topographic slope
