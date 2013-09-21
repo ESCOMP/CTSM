@@ -1,4 +1,115 @@
 ===============================================================
+Tag name:  clm4_5_27
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Fri Sep 20 20:43:16 MDT 2013
+One-line Summary: fix crop nyrs bug
+
+Purpose of changes: Fix bug 1815 (nyrs is incorrect at the start of a crop run,
+leading to incorrect GDD values for the first 20 years or so of a crop
+simulation)
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 
+- 1815 (nyrs is incorrect at the start of a crop run, leading to incorrect GDD
+values for the first 20 years or so of a crop simulation)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None (but see changes to boundary
+datasets below)
+
+List any changes to the defaults for the boundary datasets: 
+
+   New crop initial conditions for CLM4.5 BGCCROP @ f19 - same as old dataset,
+   but with restyear changed from 1 to 0
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: slevis
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+========= Don't increment nyrs on the first timestep of a startup run, so that
+          nyrs is correctly 0 rather than 1 for the first year
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPhenologyMod.F90
+M       models/lnd/clm/src/clm4_0/biogeochem/CNPhenologyMod.F90
+
+========= New crop initial conditions for CLM4.5 BGCCROP @ f19 - same as old dataset,
+          but with restyear changed from 1 to 0
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+========= add test that sometimes runs out of time, move test from
+          yellowstone_intel to yellowstone_pgi
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: OK
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: OK
+       - expected diffs in SMS_Ly1.f19_g16.ICLM45BGCCROP.yellowstone_intel
+       - baselines messed up for
+         ERS_Ly5.f10_f10.I20TRCRUCLM45BGC.yellowstone_intel, so comparison not
+         done for that test
+    yellowstone_pgi: NO BASELINES, SO COMPARISONS NOT RUN
+
+CLM tag used for the baseline comparisons: clm4_5_27
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All crop cases (clm4.0 or clm4.5) that either
+      use arbitrary initial conditions or use the clm4.5 out-of-the-box initial
+      conditions for BGCCROP @ f19
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new
+  climate): new climate
+
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+
+     Sam Levis examined a 3-year run with arbitrary initial conditions, and
+     verified that crop LAI is much more realistic in the new simulation
+     (previously, crop LAI was near-zero for the first few years)
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_26
 Originator(s):  muszala (Stefan Muszala)
 Date: Thu Sep 19 17:07:11 MDT 2013

@@ -246,7 +246,7 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcrop
 !
 ! !USES:
    use clm_time_manager, only: get_days_per_year
-   use clm_time_manager, only: get_curr_date
+   use clm_time_manager, only: get_curr_date, is_first_step
    use CropRestMod     , only: CropRestYear, CropRestIncYear
 !
 ! !ARGUMENTS:
@@ -330,7 +330,11 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcrop
       if ( nyrs == -999 ) then
          nyrs = CropRestYear()
       else
-         if (kmo == 1 .and. kda == 1 .and. mcsec == 0) call CropRestIncYear( nyrs )
+         ! increment the year if it's midnight on January first - but don't do that at the
+         ! very start of the run
+         if ((kmo == 1 .and. kda == 1 .and. mcsec == 0) .and. .not. is_first_step()) then
+            call CropRestIncYear( nyrs )
+         end if
       end if
    end if
 

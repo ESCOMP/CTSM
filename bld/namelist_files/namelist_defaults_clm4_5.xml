@@ -169,11 +169,11 @@ ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1
 <!-- 2 degree resolution -->
 
 <finidat hgrid="1.9x2.5"    maxpft="25"  mask="gx1v6" bgc="cn"   ic_ymd="00010101" more_vertlayers=".false." vsoilc_centbgc="on"
-ic_tod="0" sim_year="2000" glc_nec="0" crop="on"  >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24.0241-01-01.1.9x2.5_g1v6_simyr2000_c130606.nc
+ic_tod="0" sim_year="2000" glc_nec="0" crop="on"  >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24.0241-01-01.1.9x2.5_g1v6_simyr2000_c130909.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"    maxpft="25"  mask="gx1v6" bgc="cn"   ic_ymd="00010101" more_vertlayers=".false." vsoilc_centbgc="no-cent"
-ic_tod="0" sim_year="2000" glc_nec="0" crop="on"  >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24.0241-01-01.1.9x2.5_g1v6_simyr2000_c130606.nc
+ic_tod="0" sim_year="2000" glc_nec="0" crop="on"  >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24.0241-01-01.1.9x2.5_g1v6_simyr2000_c130909.nc
 </finidat>
 
 

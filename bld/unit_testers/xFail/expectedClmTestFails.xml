@@ -41,6 +41,7 @@
             </INTEL>
             <NAG>
                <entry testId="SMS_Ly1.f19_g16.ICLM45BGCCROP.frankfurt_nag" failType="RUN" >Water balance errors followed by "negative conc. in ch4tran", then tries "-10^-12 < smin_nh4 < 0. resetting to zero.", then it exits at approximately 9 months.  This same test passes with yellowstone_intel and frankfurt_intel</entry>
+               <entry testID="ERI_D_Mmpich.f19_g16.ICLM45BGC.frankfurt_nag" failType="RUN" >Sometimes runs out of wallclock time</entry>
             </NAG>
             <PGI>
                <entry testId="SMS_Ly1.f19_g16.ICLM45BGCCROP.frankfurt_pgi" failType="FAIL" >Water balance errors followed by "negative conc. in ch4tran", then tries "-10^-12 < smin_nh4 < 0. resetting to zero.", then it exits at approximately 9 months.  This same test passes with yellowstone_intel and frankfurt_intel</entry>
@@ -53,13 +54,13 @@
                <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                         failType="FAIL"  bugz="1696" >use before define in history.  runs with frankfurt_pgi, yellowstone_intel and yellowstone_pgi</entry>
                <entry testId="PET.f10_f10.ICLM45BGC.yellowstone_intel"                    failType="TFAIL">once threading fixed, this should pass</entry>
                <entry testId="PET_PT.f10_f10.ICLM45BGC.yellowstone_intel"                 failType="TFAIL">once threading fixed, this should pass</entry>
-               <entry testId="SSP.f19_g16.I1850CLM45BGC.yellowstone_intel.clm-default"    failType="BFAIL" bugz="1728" >starting in clm4_5_07--The cpl.hi.nc file is not being copied on a generate like it should.</entry>
             </INTEL>
             <PGI>
                <entry testId="ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default"     failType="FAIL" >Restart not BFB.  Runs as ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi</entry>
                <entry testId="PET.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-default"      failType="TFAIL" >once threading fixed, this should pass</entry>
                <entry testId="PET_PT_D.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-ciso"    failType="TFAIL" >once threading fixed, this should pass</entry>
                <entry testId="PET_PT_D.f19_g16.ICLM45BGCDVCROP.yellowstone_pgi.clm-crop"  failType="TFAIL" >once threading fixed, this should pass</entry>
+               <entry testId="SSP.f19_g16.I1850CLM45BGC.yellowstone_pgi.clm-default"    failType="BFAIL" bugz="1728" >starting in clm4_5_07--The cpl.hi.nc file is not being copied on a generate like it should.</entry>
             </PGI>
          </yellowstone>
          <frankfurt>
