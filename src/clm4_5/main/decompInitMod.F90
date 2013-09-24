@@ -58,6 +58,7 @@ contains
     integer :: ier                    ! error code
     integer :: beg,end,lsize,gsize    ! used for gsmap init
     integer, pointer :: gindex(:)     ! global index for gsmap init
+    integer, pointer :: clumpcnt(:)   ! clump index counter
     !------------------------------------------------------------------------------
 
     lns = lni * lnj
@@ -225,24 +226,44 @@ contains
        write(iulog,*) 'decompInit_lnd(): allocation error1 for ldecomp, etc'
        call endrun()
     end if
+    allocate(clumpcnt(nclumps),stat=ier)
+    if (ier /= 0) then
+       write(iulog,*) 'decompInit_lnd(): allocation error1 for clumpcnt'
+       call endrun()
+    end if
 
     ldecomp%gdc2glo(:) = 0
     ag = 0
+
+    ! clumpcnt is the start gdc index of each clump
+
+    clumpcnt = 0
+    ag = 1
     do pid = 0,npes-1
     do cid = 1,nclumps
        if (clumps(cid)%owner == pid) then
-          do aj = 1,lnj
-          do ai = 1,lni
-             an = (aj-1)*lni + ai
-             if (lcid(an) == cid) then
-                ag = ag + 1
-                ldecomp%gdc2glo(ag) = an
-             end if
-          end do
-          end do
+         clumpcnt(cid) = ag
+         ag = ag + clumps(cid)%ncells
+       endif
+    enddo
+    enddo
+
+    ! now go through gridcells one at a time and increment clumpcnt
+    ! in order to set gdc2glo
+
+    do aj = 1,lnj
+    do ai = 1,lni
+       an = (aj-1)*lni + ai
+       cid = lcid(an)
+       if (cid > 0) then
+          ag = clumpcnt(cid)
+          ldecomp%gdc2glo(ag) = an
+          clumpcnt(cid) = clumpcnt(cid) + 1
        end if
     end do
     end do
+
+    deallocate(clumpcnt)
 
     ! Set gsMap_lnd_gdc2glo (the global index here includes mask=0 or ocean points)
 

@@ -1,4 +1,75 @@
 ===============================================================
+Tag name:  clm4_5_30
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Tue Sep 24 13:08:01 MDT 2013
+One-line Summary: fix performance bug in decomposition initialization
+
+Purpose of changes:
+
+Fix performance bug in decomposition initialization (bug 1771). Code mods from
+Tony Craig.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 1771 ( Fix for an initialization performance bug)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes:
+
+   Improves timing of initialization for high resolution casse
+
+Code reviewed by: tcraig
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/clm4_5/main/decompInitMod.F90
+M       models/lnd/clm/src/clm4_0/main/decompInitMod.F90
+
+CLM testing:
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+
+CLM tag used for the baseline comparisons: clm4_5_29
+
+Changes answers relative to baseline: NO
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_29
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date: Tue Sep 24 10:55:42 MDT 2013
