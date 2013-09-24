@@ -81,6 +81,7 @@ module clm_driver
   use dynlandMod          , only : dynland_hwcontent
   use clm_varcon          , only : zlnd
   use clm_time_manager    , only : get_step_size,get_curr_date,get_ref_date,get_nstep
+  use CropRestMod         , only : CropRestIncYear
   use histFileMod         , only : hist_update_hbuf, hist_htapes_wrapup
   use restFileMod         , only : restFile_write, restFile_filename
   use accFldsMod          , only : updateAccFlds
@@ -180,6 +181,10 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 
   call get_proc_bounds(bounds_proc)
   nclumps = get_proc_clumps()
+
+  ! Update time-related info
+
+  call CropRestIncYear()
 
   ! ============================================================================
   ! Specified phenology
@@ -285,7 +290,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
             
             ! do stuff that needs to be done after changing weights
             ! This call should be made as soon as possible after pftdyn_interp
-            call reweightWrapup(nc, bounds_clump)
+            call reweightWrapup(bounds_clump)
             
             !--- get new heat,water content: (new-old)/dt = flux into lnd model ---
             call dynland_hwcontent( bounds_clump, &
@@ -344,7 +349,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
         ! NOTE: Currently CNDV and fpftdyn /= ' ' are incompatible
         call CNZeroFluxes_dwt(bounds_clump)
         call pftwt_interp(bounds_clump)
-        call reweightWrapup(nc, bounds_clump)
+        call reweightWrapup(bounds_clump)
         call pftdyn_wbal(bounds_clump)
         call pftdyn_cnbal(bounds_clump)
      else

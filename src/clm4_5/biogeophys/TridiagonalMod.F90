@@ -21,30 +21,40 @@ contains
     ! Tridiagonal matrix solution
     !
     ! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
+    use shr_kind_mod   , only: r8 => shr_kind_r8
     use clmtype
-    use clm_varpar, only : nlevurb
-    use clm_varcon, only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varctl, only : iulog
-    use decompMod , only : bounds_type
+    use clm_varpar     , only : nlevurb
+    use clm_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
+    use clm_varctl     , only : iulog
+    use decompMod      , only : bounds_type
+    use shr_assert_mod , only : shr_assert
+    use shr_log_mod    , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds           ! bounds
-    integer , intent(in)    :: lbj, ubj               ! lbinning and ubing level indices
-    integer , intent(in)    :: jtop(bounds%begc:)     ! top level for each column
-    integer , intent(in)    :: numf                   ! filter dimension
-    integer , intent(in)    :: filter(:)              ! filter
-    real(r8), intent(in)    :: a(bounds%begc:bounds%endc, lbj:ubj)    ! "a" left off diagonal of tridiagonal matrix
-    real(r8), intent(in)    :: b(bounds%begc:bounds%endc, lbj:ubj)    ! "b" diagonal column for tridiagonal matrix
-    real(r8), intent(in)    :: c(bounds%begc:bounds%endc, lbj:ubj)    ! "c" right off diagonal tridiagonal matrix
-    real(r8), intent(in)    :: r(bounds%begc:bounds%endc, lbj:ubj)    ! "r" forcing term of tridiagonal matrix
-    real(r8), intent(inout) :: u(bounds%begc:bounds%endc, lbj:ubj)    ! solution
+    type(bounds_type), intent(in) :: bounds             ! bounds
+    integer , intent(in)    :: lbj, ubj                 ! lbinning and ubing level indices
+    integer , intent(in)    :: jtop( bounds%begc: )     ! top level for each column [col]
+    integer , intent(in)    :: numf                     ! filter dimension
+    integer , intent(in)    :: filter(:)                ! filter
+    real(r8), intent(in)    :: a( bounds%begc: , lbj: ) ! "a" left off diagonal of tridiagonal matrix [col, j]
+    real(r8), intent(in)    :: b( bounds%begc: , lbj: ) ! "b" diagonal column for tridiagonal matrix [col, j]
+    real(r8), intent(in)    :: c( bounds%begc: , lbj: ) ! "c" right off diagonal tridiagonal matrix [col, j]
+    real(r8), intent(in)    :: r( bounds%begc: , lbj: ) ! "r" forcing term of tridiagonal matrix [col, j]
+    real(r8), intent(inout) :: u( bounds%begc: , lbj: ) ! solution [col, j]
     !
     integer  :: j,ci,fc                   !indices
     real(r8) :: gam(bounds%begc:bounds%endc,lbj:ubj)      !temporary
     real(r8) :: bet(bounds%begc:bounds%endc)              !temporary
     !-----------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(jtop) == (/bounds%endc/)),      errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(a)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(b)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(c)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(r)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(u)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
 
     ! Solve the matrix
 

@@ -16,6 +16,10 @@ module decompMod
   ! !PUBLIC TYPES:
   implicit none
   integer, public :: clump_pproc ! number of clumps per MPI process
+
+  ! Define possible bounds levels
+  integer, parameter, public :: BOUNDS_LEVEL_PROC  = 1
+  integer, parameter, public :: BOUNDS_LEVEL_CLUMP = 2
   !
   ! !PUBLIC MEMBER FUNCTIONS:
 
@@ -36,7 +40,8 @@ module decompMod
      module procedure get_proc_bounds_new
   end interface
   public get_proc_bounds    ! this processor beg and end gridcell,landunit,column,pft
-     
+
+  ! !PRIVATE MEMBER FUNCTIONS:
   !
   ! !PRIVATE TYPES:
   private  ! (now mostly public for decompinitmod)
@@ -52,6 +57,9 @@ module decompMod
      integer :: begl, endl       ! beginning and ending landunit index
      integer :: begc, endc       ! beginning and ending column index
      integer :: begp, endp       ! beginning and ending pft index
+
+     integer :: level            ! whether defined on the proc or clump level
+     integer :: clump_index      ! if defined on the clump level, this gives the clump index
   end type bounds_type
   public bounds_type
 
@@ -139,6 +147,10 @@ contains
      bounds%endl = clumps(cid)%endl
      bounds%begg = clumps(cid)%begg
      bounds%endg = clumps(cid)%endg
+     
+     bounds%level = BOUNDS_LEVEL_CLUMP
+     bounds%clump_index = n
+
    end subroutine get_clump_bounds_new
 
    !------------------------------------------------------------------------------
@@ -194,6 +206,9 @@ contains
      bounds%endl = procinfo%endl
      bounds%begg = procinfo%begg
      bounds%endg = procinfo%endg
+
+     bounds%level = BOUNDS_LEVEL_PROC
+     bounds%clump_index = -1           ! irrelevant for proc, so assigned a bogus value
 
    end subroutine get_proc_bounds_new
 

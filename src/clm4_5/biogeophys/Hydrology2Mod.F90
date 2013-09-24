@@ -77,10 +77,6 @@ contains
     integer  :: g,l,c,j,fc                 ! indices
     integer  :: nstep                      ! time step number
     real(r8) :: dtime                      ! land model time step (sec)
-    real(r8) :: vol_liq(bounds%begc:bounds%endc,1:nlevgrnd)! partial volume of liquid water in layer
-    real(r8) :: dwat(bounds%begc:bounds%endc,1:nlevgrnd)   ! change in soil water
-    real(r8) :: hk(bounds%begc:bounds%endc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
-    real(r8) :: dhkdw(bounds%begc:bounds%endc,1:nlevgrnd)  ! d(hk)/d(vol_liq)
     real(r8) :: psi,vwc,fsattmp,psifrz     ! temporary variables for soilpsi calculation
     real(r8) :: watdry                     ! temporary
     real(r8) :: rwat(bounds%begc:bounds%endc)              ! soil water wgted by depth to maximum depth of 0.5 m
@@ -217,15 +213,14 @@ contains
        call CLMVICMap(bounds, num_hydrologyc, filter_hydrologyc)
     end if
 
-    ! moved vol_liq from SurfaceRunoff to Infiltration
     call SurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, &
                        num_urbanc, filter_urbanc)
 
     call Infiltration(bounds,  num_hydrologyc, filter_hydrologyc, &
-                      num_urbanc, filter_urbanc, vol_liq)
+                      num_urbanc, filter_urbanc)
 
     call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, &
-                   num_urbanc, filter_urbanc, dwat, hk, dhkdw)
+                   num_urbanc, filter_urbanc)
 
     if (use_vichydro) then
        ! mapping soilmoist from CLM to VIC layers for runoff calculations

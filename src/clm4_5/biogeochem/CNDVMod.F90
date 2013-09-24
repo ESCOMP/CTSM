@@ -349,7 +349,7 @@ contains
     ! The if .not. ifspecial statment below guarantees that the m index will
     ! always lie between 1 and maxpatch_pft
 
-    rbuf2dg(:,:) = 0._r8
+    rbuf2dg(bounds%begg : bounds%endg, :) = 0._r8
     do p = bounds%begp,bounds%endp
        g = pft%gridcell(p)
        l = pft%landunit(p)
@@ -358,7 +358,7 @@ contains
     call ncd_io(ncid=ncid, varname='FPCGRID', dim1name=grlnd, data=rbuf2dg, &
          nt=1, flag='write')
 
-    rbuf2dg(:,:) = 0._r8
+    rbuf2dg(bounds%begg : bounds%endg, :) = 0._r8
     do p = bounds%begp,bounds%endp
        g = pft%gridcell(p)
        l = pft%landunit(p)

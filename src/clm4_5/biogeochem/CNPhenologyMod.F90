@@ -57,17 +57,17 @@ module CNPhenologyMod
   real(r8)           :: soilpsi_off     ! water potential for offset trigger (MPa)
   real(r8)           :: lwtop           ! live wood turnover proportion (annual fraction)
   ! CropPhenology variables and constants
-  real(r8)           :: p1d, p1v            ! photoperiod factor constants for crop vernalization
-  real(r8)           :: hti                 ! cold hardening index threshold for vernalization
-  real(r8)           :: tbase               ! base temperature for vernalization
-  integer, parameter :: NOT_Planted   = 999 ! If not planted   yet in year
-  integer, parameter :: NOT_Harvested = 999 ! If not harvested yet in year
-  integer, parameter :: inNH       = 1      ! Northern Hemisphere
-  integer, parameter :: inSH       = 2      ! Southern Hemisphere
-  integer, pointer   :: inhemi(:)           ! Hemisphere that pft is in 
-  integer, allocatable :: minplantjday(:,:) ! minimum planting julian day
-  integer, allocatable :: maxplantjday(:,:) ! maximum planting julian day
-  integer              :: jdayyrstart(inSH) ! julian day of start of year
+  real(r8)           :: p1d, p1v             ! photoperiod factor constants for crop vernalization
+  real(r8)           :: hti                  ! cold hardening index threshold for vernalization
+  real(r8)           :: tbase                ! base temperature for vernalization
+  integer, parameter :: NOT_Planted   = 999  ! If not planted   yet in year
+  integer, parameter :: NOT_Harvested = 999  ! If not harvested yet in year
+  integer, parameter :: inNH       = 1       ! Northern Hemisphere
+  integer, parameter :: inSH       = 2       ! Southern Hemisphere
+  integer, pointer   :: inhemi(:)            ! Hemisphere that pft is in 
+  integer, allocatable :: minplantjday(:,:)  ! minimum planting julian day
+  integer, allocatable :: maxplantjday(:,:)  ! maximum planting julian day
+  integer              :: jdayyrstart(inSH)  ! julian day of start of year
   !-----------------------------------------------------------------------
 
 contains
@@ -279,7 +279,7 @@ contains
     ! !USES:
     use clm_time_manager, only: get_days_per_year
     use clm_time_manager, only: get_curr_date, is_first_step
-    use CropRestMod     , only: CropRestYear, CropRestIncYear
+    use CropRestMod     , only: CropRestYear
     !
     ! !ARGUMENTS:
     integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -290,7 +290,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: p                    ! indices
     integer :: fp                   ! lake filter pft index
-    integer, save :: nyrs = -999    ! number of years prognostic crop has run
+    integer :: nyrs                 ! number of years prognostic crop has run
     real(r8):: dayspyr              ! days per year (days)
     integer kyr                     ! current year
     integer kmo                     !         month of year  (1, ..., 12)
@@ -327,18 +327,10 @@ contains
    ! The following lines come from ibis's climate.f + stats.f
    ! gdd SUMMATIONS ARE RELATIVE TO THE PLANTING DATE (see subr. updateAccFlds)
 
-   if ( num_pcropp > 0 )then
+   if (num_pcropp > 0) then
       ! get time-related info
-      call get_curr_date (   kyr, kmo, kda, mcsec)
-      if ( nyrs == -999 ) then
-         nyrs = CropRestYear()
-      else
-         ! increment the year if it's midnight on January first - but don't do that at the
-         ! very start of the run
-         if ((kmo == 1 .and. kda == 1 .and. mcsec == 0) .and. .not. is_first_step()) then
-            call CropRestIncYear( nyrs )
-         end if
-      end if
+      call get_curr_date(kyr, kmo, kda, mcsec)
+      nyrs = CropRestYear()
    end if
 
    do fp = 1,num_pcropp

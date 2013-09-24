@@ -1,4 +1,231 @@
 ===============================================================
+Tag name:  clm4_5_29
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Tue Sep 24 10:55:42 MDT 2013
+One-line Summary: fix threading in CLM4.5, and other misc fixes
+
+Purpose of changes:
+ 
+(Mostly) fix threading in CLM4.5. This consisted of:
+
+(1) Rework initGridCellsMod to keep all points in a clump contiguous
+
+(2) Add info in bounds derived type (not necessary, but this allows
+for more error checking and simplifies some code)
+
+(3) Fix which bounds are passed to reweightWrapup in initialization
+
+(4) Get rid of syntax like foo(:) = 0, instead using explicit bounds
+
+(5) Rework bounds declarations for subroutine array arguments, both in
+caller (explicitly subset argument by bounds) and callee (use
+assumed-shape array arguments rather than declaring upper bounds), and
+add assertions on array sizes.
+
+See https://wiki.ucar.edu/display/ccsm/Community+Land+Model+Developers+Guide
+("Guidelines for passing array arguments to subroutines") for the new
+conventions that are implemented here.
+
+(6) Fix crop threading bug, related to nyrs (bug 1598), both in clm4.5 and clm4.0
+
+However, note that there is still a crop threading bug (bug 1820), which will
+need to be fixed in a separate tag.
+
+
+Also, some unrelated changes:
+
+(1) Fix size of a megan variable, both in clm4.5 and clm4.0.
+
+(2) Remove some unused variables from Hydrology2Mod / SoilHydrologyMod
+
+(3) Fix some bugs in histFileMod / histFldsMod
+
+(4) Reorder a loop in SurfaceAlbedo to get better performance (especially with
+expanded memory allocation for dynamic landunits, in an upcoming tag)
+
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+   1598 (crop threading in clm4.0 and clm4.5)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: 
+
+   Added f10 initial file for CLM4.5 BGCCROP, for testing purposes
+
+Describe any substantial timing or memory changes:
+
+   Timing is currently 5-10% worse, due to calls to shr_log_errMsg, within
+   shr_assert calls. This should return to previous timings in non-debug runs
+   once shr_assert calls are ifdef'ed out in non-debug runs (this requires a
+   csm_share update that Sean Santos is working on).
+
+Code reviewed by: portions reviewed by erik
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   scripts4_130912 -> scripts4_130916
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+========= Significant rework to work with multiple clumps per proc
+M       models/lnd/clm/src/clm4_5/main/initGridCellsMod.F90
+
+========= Add info in bounds derived type
+M       models/lnd/clm/src/clm4_5/main/decompMod.F90
+M       models/lnd/clm/src/clm4_5/main/filterMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_driver.F90
+          - also fix crop threading bug (1598)
+M       models/lnd/clm/src/clm4_5/main/reweightMod.F90
+          - also use explicit bounds instead of things like foo(:)
+
+========= Remove some unused variables
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+          - also other bounds-related changes as above
+
+========= Change 'bounds' to 'bounds_proc', use clump bounds for call to
+          reweightWrapup, get rid of abort if running with openMP
+M       models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+
+========= Get rid of syntax like foo(:), instead using explicit bounds
+M       models/lnd/clm/src/clm4_5/biogeochem/CNVerticalProfileMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DUSTMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/STATICEcosysDynMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_glclnd.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SnowHydrologyMod.F90
+
+========= Rework bounds declarations for subroutine array arguments, both in
+          caller (explicitly subset argument by bounds) and callee (use
+          assumed-shape array arguments rather than declaring upper bounds), and
+          add assertions on array sizes
+M       models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4Mod.F90
+          - also use explicit bounds instead of things like foo(:)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSummaryMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAnnualUpdateMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNDynamicsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAllocationMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSoilLittVertTranspMod.F90
+M       models/lnd/clm/src/clm4_5/main/dynlandMod.F90
+M       models/lnd/clm/src/clm4_5/main/pftdynMod.F90
+          - also use explicit bounds instead of things like foo(:)
+M       models/lnd/clm/src/clm4_5/main/pft2colMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_atmlnd.F90
+M       models/lnd/clm/src/clm4_5/main/subgridAveMod.F90
+          - also use explicit bounds instead of things like foo(:)
+M       models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilTemperatureMod.F90
+          - also use explicit bounds instead of things like foo(:)
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/FrictionVelocityMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/TridiagonalMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanMod.F90
+          - also use explicit bounds instead of things like foo(:)
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeTemperatureMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BareGroundFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SNICARMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90
+          - also remove some now-unneeded temporary arrays
+          - also use explicit bounds instead of things like foo(:)
+M       models/lnd/clm/src/clm4_5/biogeophys/H2OSfcMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SurfaceAlbedoMod.F90
+          - also reorder a loop to get better performance
+M       models/lnd/clm/src/clm4_5/biogeophys/BandDiagonalMod.F90
+
+========= Fix crop threading bug (1598), in both clm4.5 and clm4.0, by reworking
+          where nyrs is updated
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPhenologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CropRestMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_driver.F90
+M       models/lnd/clm/src/clm4_0/biogeochem/CNPhenologyMod.F90
+M       models/lnd/clm/src/clm4_0/biogeochem/CropRestMod.F90
+M       models/lnd/clm/src/clm4_0/main/clm_driver.F90
+
+========= Add comments
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCIsoFluxMod.F90
+
+========= Fix size of a megan variable
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+          - also initialize rootr, as it was in clm4_5_20 and prior
+M       models/lnd/clm/src/clm4_0/main/clmtypeInitMod.F90
+
+========= Fix some hist file bugs:
+            - increase max number of characters allowed for hist field names
+            - when adding a field, make it work to say default='active' --
+              previously, explicitly setting default='active' did the same thing
+              as setting default='inactive'
+            - change ptr_pft to ptr_col for a few column-level history variables
+            - remove two duplicate hist_addfld calls
+M       models/lnd/clm/src/clm4_5/main/histFileMod.F90
+          - also add some bounds to array arguments
+M       models/lnd/clm/src/clm4_5/main/histFileMod.F90
+
+========= Add f10 initial file for CLM45 BGCCROP, for testing
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+========= Remove some PET tests from the xFail list; note that some PET tests
+          still fail due to bug 1820
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: OK
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK   
+    frankfurt_intel: OK  
+    frankfurt_pgi: OK  
+    frankfurt_nag: OK    
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+
+CLM tag used for the baseline comparisons: clm4_5_28
+
+Changes answers relative to baseline: NO, with the following minor exceptions:
+
+  In general, no answer changes for non-threaded runs (changes answers for
+  threaded runs due to significant bug fixes!)
+
+  Changes answers for CLM45 BGC CROP at f10 due to new initial conditions
+  (instead of cold start)
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_28
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date: Fri Sep 20 21:29:39 MDT 2013
@@ -876,6 +1103,18 @@ first step to removing them competely.
 - Introduction of bounds_type and clump_type
 - Refactor interfaces to support bounds_type and clump_type
 - Bug fix from Sacks
+
+Also: Changed layout of landunit, column and pft-level arrays: Previously, all
+points for a given grid cell were grouped together. Now, all points for a given
+landunit type are grouped together. This improves performance of loops over
+filters, because it leads to more memory locality – this will be especially true
+when we add more 0-weight points to arrays for the purpose of dynamic
+landunits. For example, if a processor has 2 grid cells and there are 3 landunit
+types:
+
+Old layout in memory: (G1L1, G1L2, G1L3, G2L1, G2L2, G2L3)
+New layout in memory: (G1L1, G2L1, G1L2, G2L2, G1L3, G2L3)
+
 
 Requirements for tag: N/A
 

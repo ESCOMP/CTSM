@@ -4,6 +4,10 @@ module H2OSfcMod
   ! !DESCRIPTION:
   ! Calculate surface water hydrology
   !
+  ! !USES:
+  use shr_assert_mod, only : shr_assert
+  use shr_log_mod   , only : errMsg => shr_log_errMsg
+  !
   ! !PUBLIC TYPES:
   implicit none
   save
@@ -31,11 +35,11 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in)  :: bounds            ! bounds
-    integer , intent(in)           :: num_h2osfc        ! number of column points in column filter
-    integer , intent(in)           :: filter_h2osfc(:)  ! column filter 
-    real(r8), intent(inout)        :: frac_h2osfc(bounds%begc:)   ! fractional surface water (mm)
-    integer , intent(in), optional :: no_update         ! flag to make calculation w/o updating variables
+    type(bounds_type), intent(in)  :: bounds                      ! bounds
+    integer , intent(in)           :: num_h2osfc                  ! number of column points in column filter
+    integer , intent(in)           :: filter_h2osfc(:)            ! column filter 
+    real(r8), intent(inout)        :: frac_h2osfc( bounds%begc: ) ! fractional surface water (mm) [col]
+    integer , intent(in), optional :: no_update                   ! flag to make calculation w/o updating variables
     !
     ! !LOCAL VARIABLES:
     integer :: c,f,l          ! indices
@@ -43,6 +47,8 @@ contains
     real(r8):: sigma          ! microtopography pdf sigma in mm
     real(r8):: min_h2osfc
     !-----------------------------------------------------------------------
+
+   call shr_assert((ubound(frac_h2osfc) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    h2osfc        =>  cws%h2osfc        , & ! Input:  [real(r8) (:)]  surface water (mm)                                

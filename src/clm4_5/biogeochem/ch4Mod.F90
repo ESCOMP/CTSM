@@ -17,6 +17,8 @@ module ch4Mod
   use abortutils        , only : endrun
   use decompMod         , only : bounds_type
   use CNSharedParamsMod , only : CNParamsShareInst
+  use shr_assert_mod, only : shr_assert
+  use shr_log_mod  , only : errMsg => shr_log_errMsg
 
   implicit none
   save
@@ -408,7 +410,13 @@ contains
    grnd_ch4_cond                       =>    pps%grnd_ch4_cond                           , & ! Input:  [real(r8) (:)]  tracer conductance for boundary layer [m/s]       
    pwtc                                =>   pft%wtcol                                    , & ! Input:  [real(r8) (:)]  weight (relative to column)                       
    ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
-   pcolumn                             =>   pft%column                                     & ! Input:  [integer (:)]  index into column level quantities                 
+   pcolumn                             =>   pft%column                                   , & ! Input:  [integer (:)]  index into column level quantities                 
+   begg                                =>   bounds%begg                                  , &
+   endg                                =>   bounds%endg                                  , &
+   begc                                =>   bounds%begc                                  , &
+   endc                                =>   bounds%endc                                  , &
+   begp                                =>   bounds%begp                                  , &
+   endp                                =>   bounds%endp                                    &
    )
 
    redoxlag          = CH4ParamsInst%redoxlag
@@ -424,18 +432,18 @@ contains
    redoxlags_vertical = redoxlag_vertical*secspday ! days --> s
    rgasm = rgas / 1000._r8
 
-   jwt(:)            = huge(1)
-   totcolch4_bef(:)  = nan
+   jwt(begc:endc)            = huge(1)
+   totcolch4_bef(begc:endc)  = nan
 
    ! Initialize local fluxes to zero: necessary for columns outside the filters because averaging up to gridcell will be done
-   ch4_surf_flux_tot(:) = 0._r8
-   ch4_prod_tot(:)      = 0._r8
-   ch4_oxid_tot(:)      = 0._r8
-   rootfraction(:,:)    = spval
+   ch4_surf_flux_tot(begc:endc) = 0._r8
+   ch4_prod_tot(begc:endc)      = 0._r8
+   ch4_oxid_tot(begc:endc)      = 0._r8
+   rootfraction(begp:endp,:)    = spval
    ! Adjustment to NEE for methane production - oxidation
-   nem_col(:)           = 0._r8
+   nem_col(begc:endc)           = 0._r8
 
-   do g= bounds%begg,bounds%endg
+   do g= begg, endg
 
       if (ch4offline) then
          forc_pch4(g) = atmch4*forc_pbot(g)
@@ -552,10 +560,17 @@ contains
    end if
 
    ! Call pft2col for rootfr & grnd_ch4_cond.
-   if (nlevdecomp == 1) call p2c (bounds, nlevgrnd, rootfraction, rootfr_col, 'unity')
+   if (nlevdecomp == 1) then
+      call p2c (bounds, nlevgrnd, &
+           rootfraction(bounds%begp:bounds%endp, :), &
+           rootfr_col(bounds%begc:bounds%endc, :), &
+           'unity')
+   end if
 
    ! Needed to use non-filter form above so that spval would be treated properly.
-   call p2c (bounds, num_soilc, filter_soilc, grnd_ch4_cond, grnd_ch4_cond_col)
+   call p2c (bounds, num_soilc, filter_soilc, &
+        grnd_ch4_cond(bounds%begp:bounds%endp), &
+        grnd_ch4_cond_col(bounds%begc:bounds%endc))
 
    if (nlevdecomp == 1) then
       ! Check for inactive columns
@@ -582,7 +597,7 @@ contains
 
       ! Get index of water table
       if (sat == 0) then ! unsaturated
-         call get_jwt (bounds, num_soilc, filter_soilc, jwt)
+         call get_jwt (bounds, num_soilc, filter_soilc, jwt(begc:endc))
          do fc = 1, num_soilc
             c = filter_soilc(fc)
             zwt_ch4_unsat(c) = zi(c,jwt(c))
@@ -615,19 +630,19 @@ contains
       endif
 
       ! calculate CH4 production in each soil layer
-      call ch4_prod (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, jwt, sat, lake)
+      call ch4_prod (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, jwt(begc:endc), sat, lake)
 
       ! calculate CH4 oxidation in each soil layer
-      call ch4_oxid (bounds, num_soilc, filter_soilc, jwt, sat, lake)
+      call ch4_oxid (bounds, num_soilc, filter_soilc, jwt(begc:endc), sat, lake)
 
       ! calculate CH4 aerenchyma losses in each soil layer
-      call ch4_aere (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, jwt, sat, lake)
+      call ch4_aere (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, jwt(begc:endc), sat, lake)
 
       ! calculate CH4 ebullition losses in each soil layer
-      call ch4_ebul (bounds, num_soilc, filter_soilc, jwt, sat, lake)
+      call ch4_ebul (bounds, num_soilc, filter_soilc, jwt(begc:endc), sat, lake)
 
       ! Solve CH4 reaction/diffusion equation 
-      call ch4_tran (bounds, num_soilc, filter_soilc, jwt, dtime_ch4, sat, lake)
+      call ch4_tran (bounds, num_soilc, filter_soilc, jwt(begc:endc), dtime_ch4, sat, lake)
       ! Competition for oxygen will occur here.
 
    enddo ! sat/unsat
@@ -642,20 +657,20 @@ contains
       end do
 
       ! calculate CH4 production in each lake layer
-      call ch4_prod (bounds, num_lakec, filter_lakec, 0, dummyfilter, jwt, sat, lake)
+      call ch4_prod (bounds, num_lakec, filter_lakec, 0, dummyfilter, jwt(begc:endc), sat, lake)
 
       ! calculate CH4 oxidation in each lake layer
-      call ch4_oxid (bounds, num_lakec, filter_lakec, jwt, sat, lake)
+      call ch4_oxid (bounds, num_lakec, filter_lakec, jwt(begc:endc), sat, lake)
 
       ! calculate CH4 aerenchyma losses in each lake layer
-      call ch4_aere (bounds, num_lakec, filter_lakec, 0, dummyfilter, jwt, sat, lake)
+      call ch4_aere (bounds, num_lakec, filter_lakec, 0, dummyfilter, jwt(begc:endc), sat, lake)
       ! The p filter will not be used here; the relevant column vars will just be set to 0.
 
       ! calculate CH4 ebullition losses in each lake layer
-      call ch4_ebul (bounds, num_lakec, filter_lakec, jwt, sat, lake)
+      call ch4_ebul (bounds, num_lakec, filter_lakec, jwt(begc:endc), sat, lake)
 
       ! Solve CH4 reaction/diffusion equation 
-      call ch4_tran (bounds, num_lakec, filter_lakec, jwt, dtime_ch4, sat, lake)
+      call ch4_tran (bounds, num_lakec, filter_lakec, jwt(begc:endc), dtime_ch4, sat, lake)
       ! Competition for oxygen will occur here.
 
    end if
@@ -801,19 +816,19 @@ contains
 
    ! Now average up to gridcell for fluxes
    call c2g( bounds,     &
-        ch4_surf_flux_tot(bounds%begc:bounds%endc), flux_ch4(bounds%begg:bounds%endg), &
+        ch4_surf_flux_tot(begc:endc), flux_ch4(begg:endg), &
         c2l_scale_type= 'unity', l2g_scale_type='unity' )
 
    call c2g( bounds, &
-        ch4_oxid_tot(bounds%begc:bounds%endc), ch4co2f(bounds%begg:bounds%endg),        &
+        ch4_oxid_tot(begc:endc), ch4co2f(begg:endg),        &
         c2l_scale_type= 'unity', l2g_scale_type='unity' )
 
    call c2g( bounds, &
-        ch4_prod_tot(bounds%begc:bounds%endc), ch4prodg(bounds%begg:bounds%endg),       &
+        ch4_prod_tot(begc:endc), ch4prodg(begg:endg),       &
         c2l_scale_type= 'unity', l2g_scale_type='unity' )
 
    call c2g( bounds, &
-        nem_col(bounds%begc:bounds%endc), nem(bounds%begg:bounds%endg),       &
+        nem_col(begc:endc), nem(begg:endg),       &
         c2l_scale_type= 'unity', l2g_scale_type='unity' )
 
  end associate
@@ -839,14 +854,14 @@ subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
   !
   ! !ARGUMENTS:
   implicit none
-  type(bounds_type), intent(in) :: bounds  ! bounds
-  integer, intent(in) :: num_methc         ! number of column soil points in column filter
-  integer, intent(in) :: filter_methc(:)   ! column filter for soil points
-  integer, intent(in) :: num_methp         ! number of soil points in pft filter
-  integer, intent(in) :: filter_methp(:)   ! pft filter for soil points
-  integer, intent(in) :: jwt(bounds%begc:) ! index of the soil layer right above the water table (-)
-  integer, intent(in) :: sat               ! 0 = unsaturated; 1 = saturated
-  logical, intent(in) :: lake              ! function called with lake filter
+  type(bounds_type), intent(in) :: bounds    ! bounds
+  integer, intent(in) :: num_methc           ! number of column soil points in column filter
+  integer, intent(in) :: filter_methc(:)     ! column filter for soil points
+  integer, intent(in) :: num_methp           ! number of soil points in pft filter
+  integer, intent(in) :: filter_methp(:)     ! pft filter for soil points
+  integer, intent(in) :: jwt( bounds%begc: ) ! index of the soil layer right above the water table (-) [col]
+  integer, intent(in) :: sat                 ! 0 = unsaturated; 1 = saturated
+  logical, intent(in) :: lake                ! function called with lake filter
   !
   ! !LOCAL VARIABLES:
   integer :: p,c,j,g            ! indices
@@ -886,6 +901,9 @@ subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
 
   character(len=32) :: subname='ch4_prod' ! subroutine name
   !-----------------------------------------------------------------------
+
+   ! Enforce expected array sizes
+   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    latdeg                              =>     grc%latdeg                                 , & ! Input:  [real(r8) (:)]  latitude (degrees)                                
@@ -950,7 +968,7 @@ subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
 
    ! PFT loop to calculate vertically resolved column-averaged root respiration
    if (.not. lake) then
-      rr_vr(:,:) = nan
+      rr_vr(bounds%begc:bounds%endc,:) = nan
 
       do fp = 1, num_methc
          c = filter_methc(fp)
@@ -1157,12 +1175,12 @@ subroutine ch4_oxid (bounds, num_methc, filter_methc, jwt, sat, lake)
   !
   ! !ARGUMENTS:
   implicit none
-  type(bounds_type), intent(in) :: bounds  ! bounds
-  integer, intent(in) :: num_methc         ! number of column soil points in column filter
-  integer, intent(in) :: filter_methc(:)   ! column filter for soil points
-  integer, intent(in) :: jwt(bounds%begc:) ! index of the soil layer right above the water table (-)
-  integer, intent(in) :: sat               ! 0 = unsaturated; 1 = saturated
-  logical, intent(in) :: lake              ! function called with lake filter
+  type(bounds_type), intent(in) :: bounds    ! bounds
+  integer, intent(in) :: num_methc           ! number of column soil points in column filter
+  integer, intent(in) :: filter_methc(:)     ! column filter for soil points
+  integer, intent(in) :: jwt( bounds%begc: ) ! index of the soil layer right above the water table (-) [col]
+  integer, intent(in) :: sat                 ! 0 = unsaturated; 1 = saturated
+  logical, intent(in) :: lake                ! function called with lake filter
   !
   ! !LOCAL VARIABLES:
   integer :: c,j             ! indices
@@ -1197,12 +1215,16 @@ subroutine ch4_oxid (bounds, num_methc, filter_methc, jwt, sat, lake)
 
   !-----------------------------------------------------------------------
 
+   ! Enforce expected array sizes
+   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+
    associate(& 
    h2osoi_vol => cws%h2osoi_vol , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
    watsat     => cps%watsat     , & ! Input:  [real(r8) (:,:)]  volumetric soil water at saturation (porosity)  
    t_soisno   => ces%t_soisno   , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
    smp_l      => cws%smp_l        & ! Input:  [real(r8) (:,:)]  soil matrix potential [mm]                      
    )
+
    if (sat == 0) then ! unsaturated
       ch4_oxid_depth   => cch4%ch4_oxid_depth_unsat  ! InOut:  [real(r8) (:,:)]  CH4 consumption rate via oxidation in each soil layer (mol/m3/s) (nlevsoi)
       o2_oxid_depth    => cch4%o2_oxid_depth_unsat   ! InOut:  [real(r8) (:,:)]  O2 consumption rate via oxidation in each soil layer (mol/m3/s) (nlevsoi)
@@ -1307,14 +1329,14 @@ subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, &
   !
   ! !ARGUMENTS:
   implicit none
-  type(bounds_type), intent(in) :: bounds  ! bounds
-  integer, intent(in) :: num_methc         ! number of column soil points in column filter
-  integer, intent(in) :: filter_methc(:)   ! column filter for soil points
-  integer, intent(in) :: num_methp         ! number of soil points in pft filter
-  integer, intent(in) :: filter_methp(:)   ! pft filter for soil points
-  integer, intent(in) :: jwt(bounds%begc:) ! index of the soil layer right above the water table (-)
-  integer, intent(in) :: sat               ! 0 = unsaturated; 1 = saturated
-  logical, intent(in) :: lake              ! function called with lake filter
+  type(bounds_type), intent(in) :: bounds    ! bounds
+  integer, intent(in) :: num_methc           ! number of column soil points in column filter
+  integer, intent(in) :: filter_methc(:)     ! column filter for soil points
+  integer, intent(in) :: num_methp           ! number of soil points in pft filter
+  integer, intent(in) :: filter_methp(:)     ! pft filter for soil points
+  integer, intent(in) :: jwt( bounds%begc: ) ! index of the soil layer right above the water table (-) [col]
+  integer, intent(in) :: sat                 ! 0 = unsaturated; 1 = saturated
+  logical, intent(in) :: lake                ! function called with lake filter
   !
   ! !LOCAL VARIABLES:
   integer :: p,c,g,j       ! indices
@@ -1349,6 +1371,9 @@ subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, &
   real(r8), pointer :: conc_o2(:,:)        ! backwards compatibility
   real(r8), pointer :: conc_ch4(:,:)       ! backwards compatibility
   !-----------------------------------------------------------------------
+
+   ! Enforce expected array sizes
+   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    c_atm                               =>    gch4%c_atm                                  , & ! Input:  [real(r8) (:,:)]  CH4, O2, CO2 atmospheric conc  (mol/m3)         
@@ -1541,12 +1566,12 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
   !
   ! !ARGUMENTS:
   implicit none
-  type(bounds_type), intent(in) :: bounds  ! bounds
-  integer, intent(in) :: num_methc         ! number of column soil points in column filter
-  integer, intent(in) :: filter_methc(:)   ! column filter for soil points
-  integer, intent(in) :: jwt(bounds%begc:) ! index of the soil layer right above the water table (-)
-  integer, intent(in) :: sat               ! 0 = unsaturated; 1 = saturated
-  logical, intent(in) :: lake              ! function called with lake filter
+  type(bounds_type), intent(in) :: bounds    ! bounds
+  integer, intent(in) :: num_methc           ! number of column soil points in column filter
+  integer, intent(in) :: filter_methc(:)     ! column filter for soil points
+  integer, intent(in) :: jwt( bounds%begc: ) ! index of the soil layer right above the water table (-) [col]
+  integer, intent(in) :: sat                 ! 0 = unsaturated; 1 = saturated
+  logical, intent(in) :: lake                ! function called with lake filter
   !
   ! !LOCAL VARIABLES:
   integer :: c,j,g    ! indices
@@ -1568,6 +1593,9 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
   real(r8), pointer :: ch4_aere_depth(:,:) ! backwards compatibility
   real(r8), pointer :: ch4_oxid_depth(:,:) ! backwards compatibility
   !-----------------------------------------------------------------------
+
+   ! Enforce expected array sizes
+   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    forc_pbot      =>    clm_a2l%forc_pbot , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
@@ -1672,13 +1700,13 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
   !
   ! !ARGUMENTS:
   implicit none
-  type(bounds_type), intent(in) :: bounds  ! bounds
-  integer, intent(in) :: num_methc         ! number of column soil points in column filter
-  integer, intent(in) :: filter_methc(:)   ! column filter for soil points
-  integer, intent(in) :: jwt(bounds%begc:) ! index of the soil layer right above the water table (-)
-  integer, intent(in) :: sat               ! 0 = unsaturated; 1 = saturated
-  logical, intent(in) :: lake              ! function called with lake filter
-  real(r8), intent(in):: dtime_ch4         ! time step for ch4 calculations
+  type(bounds_type), intent(in) :: bounds    ! bounds
+  integer, intent(in) :: num_methc           ! number of column soil points in column filter
+  integer, intent(in) :: filter_methc(:)     ! column filter for soil points
+  integer, intent(in) :: jwt( bounds%begc: ) ! index of the soil layer right above the water table (-) [col]
+  integer, intent(in) :: sat                 ! 0 = unsaturated; 1 = saturated
+  logical, intent(in) :: lake                ! function called with lake filter
+  real(r8), intent(in):: dtime_ch4           ! time step for ch4 calculations
   !
   ! !LOCAL VARIABLES:
   integer :: c,j,g,p,s,i,ll ! indices
@@ -1752,6 +1780,8 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
   integer  :: nstep                       ! time step number
   character(len=32) :: subname='ch4_tran' ! subroutine name
   !-----------------------------------------------------------------------
+
+   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    z                                   =>    cps%z                                       , & ! Input:  [real(r8) (:,:)]  soil layer depth (m)                            
@@ -2267,8 +2297,14 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
             enddo ! fc; column
          enddo ! j; nlevsoi
 
-         call Tridiagonal(bounds, 0, nlevsoi, jtop, num_methc, filter_methc, &
-              at, bt, ct, rt, conc_ch4_rel(bounds%begc:bounds%endc,0:nlevsoi))
+         call Tridiagonal(bounds, 0, nlevsoi, &
+              jtop(bounds%begc:bounds%endc), &
+              num_methc, filter_methc, &
+              at(bounds%begc:bounds%endc, :), &
+              bt(bounds%begc:bounds%endc, :), &
+              ct(bounds%begc:bounds%endc, :), &
+              rt(bounds%begc:bounds%endc, :), &
+              conc_ch4_rel(bounds%begc:bounds%endc, 0:nlevsoi))
 
          ! Calculate net ch4 flux to the atmosphere from the surface (+ to atm)
          do fc = 1, num_methc
@@ -2362,8 +2398,13 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
             enddo ! fc; column
          enddo ! j; nlevsoi
 
-         call Tridiagonal(bounds, 0, nlevsoi, jtop, num_methc, filter_methc, &
-              at, bt, ct, rt, conc_o2_rel(bounds%begc:bounds%endc,0:nlevsoi))
+         call Tridiagonal(bounds, 0, nlevsoi, jtop(bounds%begc:bounds%endc), &
+              num_methc, filter_methc, &
+              at(bounds%begc:bounds%endc, :), &
+              bt(bounds%begc:bounds%endc, :), &
+              ct(bounds%begc:bounds%endc, :), &
+              rt(bounds%begc:bounds%endc, :), &
+              conc_o2_rel(bounds%begc:bounds%endc,0:nlevsoi))
 
          ! Ensure that concentrations stay above 0
          do j = 1,nlevsoi
@@ -2438,16 +2479,18 @@ subroutine get_jwt (bounds, num_methc, filter_methc, jwt)
   !
   ! !ARGUMENTS:
   implicit none
-  type(bounds_type), intent(in) :: bounds  ! bounds
-  integer, intent(in) :: num_methc         ! number of column soil points in column filter
-  integer, intent(in) :: filter_methc(:)   ! column filter for soil points
-  integer, intent(out):: jwt(bounds%begc:) ! index of the soil layer right above the water table (-)
+  type(bounds_type), intent(in) :: bounds    ! bounds
+  integer, intent(in) :: num_methc           ! number of column soil points in column filter
+  integer, intent(in) :: filter_methc(:)     ! column filter for soil points
+  integer, intent(out):: jwt( bounds%begc: ) ! index of the soil layer right above the water table (-) [col]
   !
   ! !LOCAL VARIABLES:
   real(r8) :: f_sat    ! volumetric soil water defining top of water table or where production is allowed
   integer  :: c,j,perch! indices
   integer  :: fc       ! filter column index
   !-----------------------------------------------------------------------
+
+   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    h2osoi_vol => cws%h2osoi_vol , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]

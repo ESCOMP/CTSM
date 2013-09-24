@@ -4,10 +4,12 @@ module SoilTemperatureMod
   ! !DESCRIPTION:
   ! Calculates snow and soil temperatures including phase change
   !
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use abortutils,  only: endrun
-  use perf_mod  ,  only: t_startf, t_stopf
-  use decompMod ,  only: bounds_type
+  use shr_kind_mod   , only : r8 => shr_kind_r8
+  use abortutils     ,  only: endrun
+  use perf_mod       ,  only: t_startf, t_stopf
+  use decompMod      ,  only: bounds_type
+  use shr_assert_mod , only : shr_assert
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -63,15 +65,15 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds                          ! bounds
-    integer , intent(in)  :: num_nolakec                             ! number of column non-lake points in column filter
-    integer , intent(in)  :: filter_nolakec(:)                       ! column filter for non-lake points
-    integer , intent(in)  :: num_urbanl                              ! number of urban landunits in clump
-    integer , intent(in)  :: filter_urbanl(:)                        ! urban landunit filter
-    real(r8), intent(out) :: xmf(bounds%begc:)                       ! total latent heat of phase change of ground water
-    real(r8), intent(out) :: fact(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd) ! used in computing tridiagonal matrix
-    real(r8), intent(out) :: xmf_h2osfc(bounds%begc:)                ! latent heat of phase change of surface water
-    real(r8), intent(out) :: c_h2osfc(bounds%begc:)                  ! heat capacity of surface water
+    type(bounds_type), intent(in) :: bounds                     ! bounds
+    integer , intent(in)  :: num_nolakec                        ! number of column non-lake points in column filter
+    integer , intent(in)  :: filter_nolakec(:)                  ! column filter for non-lake points
+    integer , intent(in)  :: num_urbanl                         ! number of urban landunits in clump
+    integer , intent(in)  :: filter_urbanl(:)                   ! urban landunit filter
+    real(r8), intent(out) :: xmf( bounds%begc: )                ! total latent heat of phase change of ground water [col]
+    real(r8), intent(out) :: fact( bounds%begc: , -nlevsno+1: ) ! used in computing tridiagonal matrix [col, lev]
+    real(r8), intent(out) :: xmf_h2osfc( bounds%begc: )         ! latent heat of phase change of surface water [col]
+    real(r8), intent(out) :: c_h2osfc( bounds%begc: )           ! heat capacity of surface water [col]
     !
     ! !LOCAL VARIABLES:
     integer  :: j,c,p,l,g,pi                                       !  indices
@@ -120,6 +122,12 @@ contains
     real(r8) :: eflx_gnet_h2osfc
     integer  :: jbot(bounds%begc:bounds%endc)                      ! bottom level at each column
     !-----------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(xmf)        == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(fact)       == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(xmf_h2osfc) == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(c_h2osfc)   == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
 
 
    associate(& 
@@ -192,7 +200,9 @@ contains
    sabg_lyr                  =>    pef%sabg_lyr            , & ! Output: [real(r8) (:,:)]  absorbed solar radiation (pft,lyr) [W/m2]
    h2osno                    =>    cws%h2osno              , & ! Output: [real(r8) (:)]  total snow water (col) [kg/m2]          
    h2osoi_liq                =>    cws%h2osoi_liq          , & ! Output: [real(r8) (:,:)]  liquid water (col,lyr) [kg/m2]        
-   h2osoi_ice                =>    cws%h2osoi_ice            & ! Output: [real(r8) (:,:)]  ice content (col,lyr) [kg/m2]         
+   h2osoi_ice                =>    cws%h2osoi_ice          , & ! Output: [real(r8) (:,:)]  ice content (col,lyr) [kg/m2]         
+   begc                      =>    bounds%begc             , &
+   endc                      =>    bounds%endc               &
    )
 
     ! Get step size
@@ -203,8 +213,11 @@ contains
 
     ! Thermal conductivity and Heat capacity
 
-    tk_h2osfc(bounds%begc:bounds%endc) = nan
-    call SoilThermProp(bounds, num_nolakec, filter_nolakec, tk, cv, tk_h2osfc)
+    tk_h2osfc(begc:endc) = nan
+    call SoilThermProp(bounds, num_nolakec, filter_nolakec, &
+         tk(begc:endc, :), &
+         cv(begc:endc, :), &
+         tk_h2osfc(begc:endc))
 
     ! Net ground heat flux into the surface and its temperature derivative
     ! Added a pfts loop here to get the average of hs and dhsdT over 
@@ -221,11 +234,11 @@ contains
        lwrad_emit_h2osfc(c)  =    emg(c) * sb * t_h2osfc(c)**4 
     end do
 
-    hs_snow(bounds%begc:bounds%endc)   = 0._r8
-    hs_soil(bounds%begc:bounds%endc)   = 0._r8
-    hs_h2osfc(bounds%begc:bounds%endc) = 0._r8
-    hs(bounds%begc:bounds%endc)        = 0._r8
-    dhsdT(bounds%begc:bounds%endc)     = 0._r8
+    hs_snow(begc:endc)   = 0._r8
+    hs_soil(begc:endc)   = 0._r8
+    hs_h2osfc(begc:endc) = 0._r8
+    hs(begc:endc)        = 0._r8
+    dhsdT(begc:endc)     = 0._r8
     do pi = 1,max_pft_per_col
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
@@ -301,10 +314,10 @@ contains
     !       to each layer
 
     ! Initialize:
-    sabg_lyr_col(bounds%begc:bounds%endc,-nlevsno+1:1) = 0._r8
-    hs_top(bounds%begc:bounds%endc)      = 0._r8
-    hs_top_snow(bounds%begc:bounds%endc) = 0._r8
-    hs_top_soil(bounds%begc:bounds%endc) = 0._r8
+    sabg_lyr_col(begc:endc,-nlevsno+1:1) = 0._r8
+    hs_top(begc:endc)      = 0._r8
+    hs_top_snow(begc:endc) = 0._r8
+    hs_top_soil(begc:endc) = 0._r8
 
     do pi = 1,max_pft_per_col
        do fc = 1,num_nolakec
@@ -542,9 +555,9 @@ contains
     end do
 
     ! initialize matrices for BandDiagonal
-    bmatrix(:,:,:)=0.0
-    tvector(:,:) = nan
-    rvector(:,:) = nan
+    bmatrix(begc:endc, :, :)=0.0
+    tvector(begc:endc, :) = nan
+    rvector(begc:endc, :) = nan
 
     call t_startf( 'SoilTempBandDiag')
 
@@ -610,8 +623,9 @@ contains
 
     enddo
 
-    call BandDiagonal(bounds, -nlevsno, nlevgrnd, jtop, jbot, num_nolakec, &
-         filter_nolakec, nband, bmatrix, rvector, tvector)
+    call BandDiagonal(bounds, -nlevsno, nlevgrnd, jtop(begc:endc), jbot(begc:endc), &
+         num_nolakec, filter_nolakec, nband, bmatrix(begc:endc, :, :), &
+         rvector(begc:endc, :), tvector(begc:endc, :))
  
     ! return temperatures to original array
     do fc = 1,num_nolakec
@@ -690,9 +704,16 @@ contains
 
     xmf_h2osfc=0.
     ! compute phase change of h2osfc
-    call PhaseChangeH2osfc (bounds, num_nolakec, filter_nolakec, fact, dhsdT, c_h2osfc, xmf_h2osfc)
+    call PhaseChangeH2osfc (bounds, num_nolakec, filter_nolakec, &
+         fact(bounds%begc:bounds%endc, :), &
+         dhsdT(bounds%begc:bounds%endc), &
+         c_h2osfc(bounds%begc:bounds%endc), &
+         xmf_h2osfc(bounds%begc:bounds%endc))
 
-    call Phasechange_beta (bounds, num_nolakec, filter_nolakec, fact, dhsdT, xmf)
+    call Phasechange_beta (bounds, num_nolakec, filter_nolakec, &
+         fact(bounds%begc:bounds%endc, :), &
+         dhsdT(bounds%begc:bounds%endc), &
+         xmf(bounds%begc:bounds%endc))
 
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
@@ -785,12 +806,12 @@ contains
      !
      ! !ARGUMENTS:
      implicit none
-     type(bounds_type), intent(in) :: bounds                      ! bounds
-     integer , intent(in)  :: num_nolakec                         ! number of column non-lake points in column filter
-     integer , intent(in)  :: filter_nolakec(:)                   ! column filter for non-lake points
-     real(r8), intent(out) :: cv(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)! heat capacity [J/(m2 K)]
-     real(r8), intent(out) :: tk(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)! thermal conductivity [W/(m K)]
-     real(r8), intent(out) :: tk_h2osfc(bounds%begc:)             ! thermal conductivity of h2osfc [W/(m K)]
+     type(bounds_type), intent(in) :: bounds                   ! bounds
+     integer , intent(in)  :: num_nolakec                      ! number of column non-lake points in column filter
+     integer , intent(in)  :: filter_nolakec(:)                ! column filter for non-lake points
+     real(r8), intent(out) :: cv( bounds%begc: , -nlevsno+1: ) ! heat capacity [J/(m2 K)] [col, lev]
+     real(r8), intent(out) :: tk( bounds%begc: , -nlevsno+1: ) ! thermal conductivity [W/(m K)] [col, lev]
+     real(r8), intent(out) :: tk_h2osfc( bounds%begc: )        ! thermal conductivity of h2osfc [W/(m K)] [col]
      !
      ! !LOCAL VARIABLES:
      integer  :: l,c,j                     ! indices
@@ -805,6 +826,11 @@ contains
      !-----------------------------------------------------------------------
 
     call t_startf( 'SoilThermProp' )
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(cv)        == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(tk)        == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(tk_h2osfc) == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
 
    associate(& 
    ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
@@ -996,13 +1022,13 @@ contains
      !
      ! !ARGUMENTS:
      implicit none
-     type(bounds_type), intent(in) :: bounds                 ! bounds
-     integer , intent(in)    :: num_nolakec                  ! number of column non-lake points in column filter
-     integer , intent(in)    :: filter_nolakec(:)            ! column filter for non-lake points
-     real(r8), intent(inout) :: fact  (bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd) ! temporary
-     real(r8), intent(in)    :: dhsdT (bounds%begc:)         ! temperature derivative of "hs"
-     real(r8), intent(in)    :: c_h2osfc(bounds%begc:)       ! heat capacity of surface water
-     real(r8), intent(out)   :: xmf_h2osfc(bounds%begc:)     ! latent heat of phase change of surface water
+     type(bounds_type), intent(in) :: bounds                         ! bounds
+     integer , intent(in)    :: num_nolakec                          ! number of column non-lake points in column filter
+     integer , intent(in)    :: filter_nolakec(:)                    ! column filter for non-lake points
+     real(r8), intent(inout) :: fact  ( bounds%begc: , -nlevsno+1: ) ! temporary [col, lev]
+     real(r8), intent(in)    :: dhsdT ( bounds%begc: )               ! temperature derivative of "hs" [col]
+     real(r8), intent(in)    :: c_h2osfc( bounds%begc: )             ! heat capacity of surface water [col]
+     real(r8), intent(out)   :: xmf_h2osfc( bounds%begc: )           ! latent heat of phase change of surface water [col]
      !
      ! !LOCAL VARIABLES:
      integer  :: j,c,g                              !do loop index
@@ -1025,6 +1051,12 @@ contains
      !-----------------------------------------------------------------------
 
     call t_startf( 'PhaseChangeH2osfc' )
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(fact)       == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(dhsdT)      == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(c_h2osfc)   == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(xmf_h2osfc) == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
 
    associate(& 
    frac_sno                  =>    cps%frac_sno_eff        , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
@@ -1194,9 +1226,9 @@ contains
      type(bounds_type), intent(in) :: bounds                      ! bounds
      integer , intent(in) :: num_nolakec                          ! number of column non-lake points in column filter
      integer , intent(in) :: filter_nolakec(:)                    ! column filter for non-lake points
-     real(r8), intent(in) :: fact  (bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd) ! temporary
-     real(r8), intent(in) :: dhsdT (bounds%begc:)                      ! temperature derivative of "hs"
-     real(r8), intent(out):: xmf   (bounds%begc:)                      ! total latent heat of phase change
+     real(r8), intent(in) :: fact  ( bounds%begc: , -nlevsno+1: ) ! temporary [col, lev]
+     real(r8), intent(in) :: dhsdT ( bounds%begc: )               ! temperature derivative of "hs" [col]
+     real(r8), intent(out):: xmf   ( bounds%begc: )               ! total latent heat of phase change [col]
      !
      ! !LOCAL VARIABLES:
      integer  :: j,c,g,l                            !do loop index
@@ -1216,6 +1248,11 @@ contains
      !-----------------------------------------------------------------------
 
     call t_startf( 'PhaseChangebeta' )
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(fact)  == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(dhsdT) == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(xmf)   == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
 
    associate(& 
    qflx_snow_melt            =>    cwf%qflx_snow_melt      , & ! Input:  [real(r8) (:)]  net snow melt                           

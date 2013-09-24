@@ -117,15 +117,15 @@ contains
    wtlunit               =>    pft%wtlunit               & ! Output: [real(r8) (:)]  weight of pft relative to landunit                
    )
 
-    ttlai(:) = 0._r8
+    ttlai(bounds%begp : bounds%endp) = 0._r8
     ! make lai average at landunit level
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        ttlai(p) = tlai(p)+tsai(p)
     enddo
 
-    tlai_lu(:) = spval
-    sumwt(:) = 0._r8
+    tlai_lu(bounds%begl : bounds%endl) = spval
+    sumwt(bounds%begl : bounds%endl) = 0._r8
     do p = bounds%begp,bounds%endp
        if (ttlai(p) /= spval .and. pactive(p) .and. wtlunit(p) /= 0._r8) then
           c = pcolumn(p)

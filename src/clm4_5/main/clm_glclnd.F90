@@ -114,29 +114,26 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
+    type(bounds_type), intent(in) :: bounds  ! bounds
     logical, intent(in)   :: init    ! if true=>only set a subset of fields
-    type(bounds_type), optional, intent(in) :: bounds  ! bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: begg, endg              ! per-proc beginning and ending gridcell indices
-    integer :: begc, endc              ! per-proc beginning and ending column indices
     integer :: c, l, g, n              ! indices
+    
+    ! workaround for internal compiler error with intel compiler on yellowstone, 7-23-13
+    integer :: dummy_to_make_intel_happy
     !------------------------------------------------------------------------------
-
-    if (.not. present(bounds)) then 
-       call get_proc_bounds(begg=begg, endg=endg, begc=begc, endc=endc)
-    end if
 
     ! Initialize qice because otherwise it will remain unset if init=true and
     ! glc_smb=true; note that the value here is the value qice will keep if these
     ! conditions hold
 
-    clm_s2x%qice(:,:) = 0._r8
+    clm_s2x%qice(bounds%begg : bounds%endg, :) = 0._r8
 
     ! and initialize the other variables just to be safe
 
-    clm_s2x%tsrf(:,:) = 0._r8
-    clm_s2x%topo(:,:) = 0._r8
+    clm_s2x%tsrf(bounds%begg : bounds%endg, :) = 0._r8
+    clm_s2x%topo(bounds%begg : bounds%endg, :) = 0._r8
 
     ! Fill the clm_s2x vector on the clm grid
 

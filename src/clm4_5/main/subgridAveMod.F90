@@ -5,13 +5,15 @@ module subgridAveMod
   ! Utilities to perfrom subgrid averaging
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8
+  use shr_kind_mod    , only: r8 => shr_kind_r8
   use clmtype
-  use clm_varcon, only : spval, icol_roof, icol_sunwall, icol_shadewall, &
-       icol_road_perv, icol_road_imperv
-  use clm_varctl, only : iulog
-  use abortutils, only : endrun
- use decompMod   , only: bounds_type
+  use clm_varcon      , only : spval, icol_roof, icol_sunwall, icol_shadewall, &
+       icol_road_perv , icol_road_imperv
+  use clm_varctl      , only : iulog
+  use abortutils      , only : endrun
+  use decompMod       , only: bounds_type
+  use shr_assert_mod  , only : shr_assert
+  use shr_log_mod     , only : errMsg => shr_log_errMsg
  
   ! !PUBLIC TYPES:
   implicit none
@@ -84,8 +86,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
-    real(r8), intent(in)  :: parr(bounds%begp:)         ! pft array
-    real(r8), intent(out) :: carr(bounds%begc:)         ! column array
+    real(r8), intent(in)  :: parr( bounds%begp: )         ! pft array
+    real(r8), intent(out) :: carr( bounds%begc: )         ! column array
     character(len=*), intent(in) :: p2c_scale_type ! scale type
     !
     ! !LOCAL VARIABLES:
@@ -94,6 +96,10 @@ contains
     logical  :: found                  ! temporary for error check
     real(r8) :: sumwt(bounds%begc:bounds%endc)         ! sum of weights
     !------------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
     if (p2c_scale_type == 'unity') then
        do p = bounds%begp,bounds%endp
@@ -143,8 +149,8 @@ contains
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
     integer , intent(in)  :: num2d                 ! size of second dimension
-    real(r8), intent(in)  :: parr(bounds%begp:,:)   ! pft array
-    real(r8), intent(out) :: carr(bounds%begc:,:)   ! column array
+    real(r8), intent(in)  :: parr( bounds%begp: , 1: )   ! pft array
+    real(r8), intent(out) :: carr( bounds%begc: , 1: )   ! column array
     character(len=*), intent(in) :: p2c_scale_type ! scale type
     !
     ! !LOCAL VARIABLES:
@@ -153,6 +159,10 @@ contains
     logical  :: found                  ! temporary for error check
     real(r8) :: sumwt(bounds%begc:bounds%endc)         ! sum of weights
     !------------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
 
     if (p2c_scale_type == 'unity') then
        do p = bounds%begp,bounds%endp
@@ -163,9 +173,9 @@ contains
        call endrun()
     end if
 
-    carr(:,:) = spval
+    carr(bounds%begc : bounds%endc, :) = spval
     do j = 1,num2d
-       sumwt(:) = 0._r8
+       sumwt(bounds%begc : bounds%endc) = 0._r8
        do p = bounds%begp,bounds%endp
           if (pft%active(p) .and. pft%wtcol(p) /= 0._r8) then
              if (parr(p,j) /= spval) then
@@ -203,12 +213,16 @@ contains
     type(bounds_type), intent(in) :: bounds  ! bounds
     integer , intent(in)  :: numfc
     integer , intent(in)  :: filterc(numfc)
-    real(r8), intent(in)  :: pftarr(bounds%begp:)
-    real(r8), intent(out) :: colarr(bounds%begc:)
+    real(r8), intent(in)  :: pftarr( bounds%begp: )
+    real(r8), intent(out) :: colarr( bounds%begc: )
     !
     ! !LOCAL VARIABLES:
     integer :: fc,c,p  ! indices
     !-----------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(pftarr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(colarr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
     do fc = 1,numfc
        c = filterc(fc)
@@ -260,8 +274,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
-    real(r8), intent(in)  :: parr(bounds%begp:)         ! input column array
-    real(r8), intent(out) :: larr(bounds%begl:)         ! output landunit array
+    real(r8), intent(in)  :: parr( bounds%begp: )         ! input column array
+    real(r8), intent(out) :: larr( bounds%begl: )         ! output landunit array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     !
@@ -272,6 +286,10 @@ contains
     real(r8) :: scale_p2c(bounds%begc:bounds%endc)     ! scale factor for pft->column mapping
     real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
     !------------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -325,8 +343,8 @@ contains
        call endrun()
     end if
 
-    larr(:) = spval
-    sumwt(:) = 0._r8
+    larr(bounds%begl : bounds%endl) = spval
+    sumwt(bounds%begl : bounds%endl) = 0._r8
     do p = bounds%begp,bounds%endp
        if (pft%active(p) .and. pft%wtlunit(p) /= 0._r8) then
           c = pft%column(p)
@@ -365,8 +383,8 @@ contains
     implicit none
     type(bounds_type), intent(in) :: bounds        ! bounds
     integer , intent(in)  :: num2d                 ! size of second dimension
-    real(r8), intent(in)  :: parr(bounds%begp:,:)  ! input pft array
-    real(r8), intent(out) :: larr(bounds%begl:,:)  ! output gridcell array
+    real(r8), intent(in)  :: parr( bounds%begp: , 1: )  ! input pft array
+    real(r8), intent(out) :: larr( bounds%begl: , 1: )  ! output gridcell array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     !
@@ -377,6 +395,10 @@ contains
     real(r8) :: scale_p2c(bounds%begc:bounds%endc)     ! scale factor for pft->column mapping
     real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
     !------------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -430,9 +452,9 @@ contains
        call endrun()
     end if
 
-    larr(:,:) = spval
+    larr(bounds%begl : bounds%endl, :) = spval
     do j = 1,num2d
-       sumwt(:) = 0._r8
+       sumwt(bounds%begl : bounds%endl) = 0._r8
        do p = bounds%begp,bounds%endp
           if (pft%active(p) .and. pft%wtlunit(p) /= 0._r8) then
              c = pft%column(p)
@@ -471,8 +493,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
-    real(r8), intent(in)  :: parr(bounds%begp:)       ! input pft array
-    real(r8), intent(out) :: garr(bounds%begg:)       ! output gridcell array
+    real(r8), intent(in)  :: parr( bounds%begp: )       ! input pft array
+    real(r8), intent(out) :: garr( bounds%begg: )       ! output gridcell array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
@@ -486,7 +508,12 @@ contains
     real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
     !------------------------------------------------------------------------
 
-    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
+    ! Enforce expected array sizes
+    call shr_assert((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+
+    call build_scale_l2g(bounds, l2g_scale_type, &
+         scale_l2g(bounds%begl:bounds%endl))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -540,8 +567,8 @@ contains
        call endrun()
     end if
 
-    garr(:) = spval
-    sumwt(:) = 0._r8
+    garr(bounds%begg : bounds%endg) = spval
+    sumwt(bounds%begg : bounds%endg) = 0._r8
     do p = bounds%begp,bounds%endp
        if (pft%active(p) .and. pft%wtgcell(p) /= 0._r8) then
           c = pft%column(p)
@@ -581,13 +608,13 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    integer , intent(in)  :: num2d                 ! size of second dimension
-    real(r8), intent(in)  :: parr(bounds%begp:,:)  ! input pft array
-    real(r8), intent(out) :: garr(bounds%begg:,:)  ! output gridcell array
-    character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
-    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
-    character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
+    type(bounds_type), intent(in) :: bounds            ! bounds
+    integer , intent(in)  :: num2d                     ! size of second dimension
+    real(r8), intent(in)  :: parr( bounds%begp: , 1: ) ! input pft array
+    real(r8), intent(out) :: garr( bounds%begg: , 1: ) ! output gridcell array
+    character(len=*), intent(in) :: p2c_scale_type     ! scale factor type for averaging
+    character(len=*), intent(in) :: c2l_scale_type     ! scale factor type for averaging
+    character(len=*), intent(in) :: l2g_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
     integer  :: j,pi,p,c,l,g,index     ! indices
@@ -598,7 +625,12 @@ contains
     real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
     !------------------------------------------------------------------------
 
-    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
+    ! Enforce expected array sizes
+    call shr_assert((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
+
+    call build_scale_l2g(bounds, l2g_scale_type, &
+         scale_l2g(bounds%begl:bounds%endl))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -652,9 +684,9 @@ contains
        call endrun()
     end if
 
-    garr(:,:) = spval
+    garr(bounds%begg : bounds%endg, :) = spval
     do j = 1,num2d
-       sumwt(:) = 0._r8
+       sumwt(bounds%begg : bounds%endg) = 0._r8
        do p = bounds%begp,bounds%endp 
           if (pft%active(p) .and. pft%wtgcell(p) /= 0._r8) then
              c = pft%column(p)
@@ -694,8 +726,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
-    real(r8), intent(in)  :: carr(bounds%begc:) ! input column array
-    real(r8), intent(out) :: larr(bounds%begl:) ! output landunit array
+    real(r8), intent(in)  :: carr( bounds%begc: ) ! input column array
+    real(r8), intent(out) :: larr( bounds%begl: ) ! output landunit array
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
@@ -705,6 +737,10 @@ contains
     real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
     real(r8) :: sumwt(bounds%begl:bounds%endl)         ! sum of weights
     !------------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -749,8 +785,8 @@ contains
        call endrun()
     end if
 
-    larr(:) = spval
-    sumwt(:) = 0._r8
+    larr(bounds%begl : bounds%endl) = spval
+    sumwt(bounds%begl : bounds%endl) = 0._r8
     do c = bounds%begc,bounds%endc
        if (col%active(c) .and. pft%wtlunit(c) /= 0._r8) then
           if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
@@ -786,11 +822,11 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds        ! bounds
-    integer , intent(in)  :: num2d                 ! size of second dimension
-    real(r8), intent(in)  :: carr(bounds%begc:,:)  ! input column array
-    real(r8), intent(out) :: larr(bounds%begl:,:)  ! output landunit array
-    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
+    type(bounds_type), intent(in) :: bounds            ! bounds
+    integer , intent(in)  :: num2d                     ! size of second dimension
+    real(r8), intent(in)  :: carr( bounds%begc: , 1: ) ! input column array
+    real(r8), intent(out) :: larr( bounds%begl: , 1: ) ! output landunit array
+    character(len=*), intent(in) :: c2l_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
     integer  :: j,l,ci,c,index         ! indices
@@ -799,6 +835,10 @@ contains
     real(r8) :: scale_c2l(bounds%begc:bounds%endc)        ! scale factor for column->landunit mapping
     real(r8) :: sumwt(bounds%begl:bounds%endl)         ! sum of weights
     !------------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -843,9 +883,9 @@ contains
        call endrun()
     end if
 
-    larr(:,:) = spval
+    larr(bounds%begl : bounds%endl, :) = spval
     do j = 1,num2d
-       sumwt(:) = 0._r8
+       sumwt(bounds%begl : bounds%endl) = 0._r8
        do c = bounds%begc,bounds%endc
           if (col%active(c) .and. pft%wtlunit(c) /= 0._r8) then
              if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
@@ -883,8 +923,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
-    real(r8), intent(in)  :: carr(bounds%begc:)         ! input column array
-    real(r8), intent(out) :: garr(bounds%begg:)         ! output gridcell array
+    real(r8), intent(in)  :: carr( bounds%begc: )         ! input column array
+    real(r8), intent(out) :: garr( bounds%begg: )         ! output gridcell array
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
     !
@@ -897,7 +937,12 @@ contains
     real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
     !------------------------------------------------------------------------
 
-    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
+    ! Enforce expected array sizes
+    call shr_assert((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+
+    call build_scale_l2g(bounds, l2g_scale_type, &
+         scale_l2g(bounds%begl:bounds%endl))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -942,8 +987,8 @@ contains
        call endrun()
     end if
 
-    garr(:) = spval
-    sumwt(:) = 0._r8
+    garr(bounds%begg : bounds%endg) = spval
+    sumwt(bounds%begg : bounds%endg) = 0._r8
     do c = bounds%begc,bounds%endc
        if (col%active(c) .and. col%wtgcell(c) /= 0._r8) then
           l = col%landunit(c)
@@ -980,12 +1025,12 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    integer , intent(in)  :: num2d                 ! size of second dimension
-    real(r8), intent(in)  :: carr(bounds%begc:,:)  ! input column array
-    real(r8), intent(out) :: garr(bounds%begg:,:)  ! output gridcell array
-    character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
-    character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
+    type(bounds_type), intent(in) :: bounds            ! bounds
+    integer , intent(in)  :: num2d                     ! size of second dimension
+    real(r8), intent(in)  :: carr( bounds%begc: , 1: ) ! input column array
+    real(r8), intent(out) :: garr( bounds%begg: , 1: ) ! output gridcell array
+    character(len=*), intent(in) :: c2l_scale_type     ! scale factor type for averaging
+    character(len=*), intent(in) :: l2g_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
     integer  :: j,ci,c,g,l,index       ! indices
@@ -996,7 +1041,12 @@ contains
     real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
     !------------------------------------------------------------------------
 
-    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
+    ! Enforce expected array sizes
+    call shr_assert((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
+
+    call build_scale_l2g(bounds, l2g_scale_type, &
+         scale_l2g(bounds%begl:bounds%endl))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -1041,9 +1091,9 @@ contains
        call endrun()
     end if
 
-    garr(:,:) = spval
+    garr(bounds%begg : bounds%endg,:) = spval
     do j = 1,num2d
-       sumwt(:) = 0._r8
+       sumwt(bounds%begg : bounds%endg) = 0._r8
        do c = bounds%begc,bounds%endc 
           if (col%active(c) .and. col%wtgcell(c) /= 0._r8) then
              l = col%landunit(c)
@@ -1082,8 +1132,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
-    real(r8), intent(in)  :: larr(bounds%begl:)  ! input landunit array
-    real(r8), intent(out) :: garr(bounds%begg:)  ! output gridcell array
+    real(r8), intent(in)  :: larr( bounds%begl: )  ! input landunit array
+    real(r8), intent(out) :: garr( bounds%begg: )  ! output gridcell array
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
@@ -1094,10 +1144,15 @@ contains
     real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
     !------------------------------------------------------------------------
 
-    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
+    ! Enforce expected array sizes
+    call shr_assert((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
 
-    garr(:) = spval
-    sumwt(:) = 0._r8
+    call build_scale_l2g(bounds, l2g_scale_type, &
+         scale_l2g(bounds%begl:bounds%endl))
+
+    garr(bounds%begg : bounds%endg) = spval
+    sumwt(bounds%begg : bounds%endg) = 0._r8
     do l = bounds%begl,bounds%endl
        if (lun%active(l) .and. lun%wtgcell(l) /= 0._r8) then
           if (larr(l) /= spval .and. scale_l2g(l) /= spval) then
@@ -1133,11 +1188,11 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds        ! bounds
-    integer , intent(in)  :: num2d                 ! size of second dimension
-    real(r8), intent(in)  :: larr(bounds%begl:,:)  ! input landunit array
-    real(r8), intent(out) :: garr(bounds%begg:,:)  ! output gridcell array
-    character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
+    type(bounds_type), intent(in) :: bounds            ! bounds
+    integer , intent(in)  :: num2d                     ! size of second dimension
+    real(r8), intent(in)  :: larr( bounds%begl: , 1: ) ! input landunit array
+    real(r8), intent(out) :: garr( bounds%begg: , 1: ) ! output gridcell array
+    character(len=*), intent(in) :: l2g_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
     integer  :: j,g,li,l,index         ! indices
@@ -1147,11 +1202,16 @@ contains
     real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
     !------------------------------------------------------------------------
 
-    call build_scale_l2g(bounds, l2g_scale_type, scale_l2g)
+    ! Enforce expected array sizes
+    call shr_assert((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
 
-    garr(:,:) = spval
+    call build_scale_l2g(bounds, l2g_scale_type, &
+         scale_l2g(bounds%begl:bounds%endl))
+
+    garr(bounds%begg : bounds%endg, :) = spval
     do j = 1,num2d
-       sumwt(:) = 0._r8
+       sumwt(bounds%begg : bounds%endg) = 0._r8
        do l = bounds%begl,bounds%endl
           if (lun%active(l) .and. lun%wtgcell(l) /= 0._r8) then
              if (larr(l,j) /= spval .and. scale_l2g(l) /= spval) then
@@ -1191,15 +1251,17 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    character(len=*), intent(in)  :: l2g_scale_type     ! scale factor type for averaging
-    real(r8)        , intent(out) :: scale_l2g(bounds%begl:) ! scale factor 
+    type(bounds_type), intent(in) :: bounds                    ! bounds
+    character(len=*), intent(in)  :: l2g_scale_type            ! scale factor type for averaging
+    real(r8)        , intent(out) :: scale_l2g( bounds%begl: ) ! scale factor 
     !
     ! !LOCAL VARIABLES:
     real(r8) :: scale_lookup(max_lunit) ! scale factor for each landunit type
     integer  :: l                       ! index
     !-----------------------------------------------------------------------
      
+    call shr_assert((ubound(scale_l2g) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+
      call create_scale_l2g_lookup(l2g_scale_type, scale_lookup)
 
      do l = bounds%begl,bounds%endl

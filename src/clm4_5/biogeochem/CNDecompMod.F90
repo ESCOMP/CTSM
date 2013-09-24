@@ -131,8 +131,8 @@ contains
    end if
    
    ! set initial values for potential C and N fluxes
-   p_decomp_cpool_loss(:,:,:) = 0._r8
-   pmnf_decomp_cascade(:,:,:) = 0._r8
+   p_decomp_cpool_loss(bounds%begc : bounds%endc, :, :) = 0._r8
+   pmnf_decomp_cascade(bounds%begc : bounds%endc, :, :) = 0._r8
    
    ! column loop to calculate potential decomp rates and total immobilization
    ! demand.

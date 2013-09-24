@@ -3,8 +3,10 @@ module SLakeTemperatureMod
   ! !DESCRIPTION:
   ! Calculates lake temperatures.
   !
-  use decompMod ,  only: bounds_type
-  use shr_kind_mod, only: r8 => shr_kind_r8
+  use decompMod      , only : bounds_type
+  use shr_kind_mod   , only : r8 => shr_kind_r8
+  use shr_assert_mod , only : shr_assert
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   !    
   ! !PUBLIC TYPES:
   implicit none
@@ -462,7 +464,10 @@ contains
     end do
 
     ! For snow / soil
-    call SoilThermProp_Lake(bounds, num_lakec, filter_lakec, tk, cv, tktopsoillay)
+    call SoilThermProp_Lake(bounds, num_lakec, filter_lakec, &
+         tk(bounds%begc:bounds%endc, :), &
+         cv(bounds%begc:bounds%endc, :), &
+         tktopsoillay(bounds%begc:bounds%endc))
 
     ! Sum cv*t_lake for energy check
     ! Include latent heat term, and use tfrz as reference temperature
@@ -636,8 +641,14 @@ contains
 
     ! 7!) Solve for tdsolution
 
-    call Tridiagonal(bounds, -nlevsno + 1, nlevlak + nlevgrnd, jtop, num_lakec, filter_lakec, &
-                     a, b, c1, r, tx)
+    call Tridiagonal(bounds, -nlevsno + 1, nlevlak + nlevgrnd, &
+         jtop(bounds%begc:bounds%endc), &
+         num_lakec, filter_lakec, &
+         a(bounds%begc:bounds%endc, :), &
+         b(bounds%begc:bounds%endc, :), &
+         c1(bounds%begc:bounds%endc, :), &
+         r(bounds%begc:bounds%endc, :), &
+         tx(bounds%begc:bounds%endc, :))
  
     ! Set t_soisno and t_lake
     do j = -nlevsno+1, nlevlak + nlevgrnd
@@ -668,7 +679,10 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!
 
     ! 9!) Phase change
-    call PhaseChange_Lake(bounds, num_lakec, filter_lakec, cv, cv_lake, lhabs)
+    call PhaseChange_Lake(bounds, num_lakec, filter_lakec, &
+         cv(bounds%begc:bounds%endc, :), &
+         cv_lake(bounds%begc:bounds%endc, :), &
+         lhabs(bounds%begc:bounds%endc))
 
 !!!!!!!!!!!!!!!!!!!!!!!
 
@@ -937,7 +951,10 @@ contains
        end do
     end do
     ! For snow / soil
-    call SoilThermProp_Lake(bounds, num_lakec, filter_lakec, tk, cv, tktopsoillay)
+    call SoilThermProp_Lake(bounds, num_lakec, filter_lakec, &
+         tk(bounds%begc:bounds%endc, :), &
+         cv(bounds%begc:bounds%endc, :), &
+         tktopsoillay(bounds%begc:bounds%endc))
 
 
     ! Do as above to sum energy content
@@ -1038,9 +1055,9 @@ contains
      type(bounds_type), intent(in) :: bounds  ! bounds
      integer , intent(in)  :: num_lakec                           ! number of column lake points in column filter
      integer , intent(in)  :: filter_lakec(:)                     ! column filter for lake points
-     real(r8), intent(out) :: cv(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)! heat capacity [J/(m2 K)]
-     real(r8), intent(out) :: tk(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd)! thermal conductivity [W/(m K)]
-     real(r8), intent(out) :: tktopsoillay(bounds%begc:)          ! thermal conductivity [W/(m K)]
+     real(r8), intent(out) :: cv( bounds%begc: , -nlevsno+1: )! heat capacity [J/(m2 K)] [col, lev]
+     real(r8), intent(out) :: tk( bounds%begc: , -nlevsno+1: )! thermal conductivity [W/(m K)] [col, lev]
+     real(r8), intent(out) :: tktopsoillay( bounds%begc: )    ! thermal conductivity [W/(m K)] [col]
      !
      ! !LOCAL VARIABLES:
      integer  :: l,c,j                     ! indices
@@ -1053,6 +1070,11 @@ contains
      real(r8) :: thk(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd) ! thermal conductivity of layer
      real(r8) :: xicevol                   ! (virtual excess ice volume per nominal soil volume)
      !-----------------------------------------------------------------------
+
+     ! Enforce expected array sizes
+     call shr_assert((ubound(cv)           == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+     call shr_assert((ubound(tk)           == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+     call shr_assert((ubound(tktopsoillay) == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
 
    associate(& 
    snl         => cps%snl        , & ! Input:  [integer (:)]  number of snow layers                    
@@ -1204,12 +1226,12 @@ contains
      !
      ! !ARGUMENTS:
      implicit none
-     type(bounds_type), intent(in) :: bounds                         ! bounds
-     integer , intent(in)    :: num_lakec                            ! number of lake columns
-     integer , intent(in)    :: filter_lakec(:)                      ! column filter for lake points
-     real(r8), intent(inout) :: cv(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd) ! heat capacity [J/(m2 K)]
-     real(r8), intent(inout) :: cv_lake (bounds%begc:,:)             ! heat capacity [J/(m2 K)]
-     real(r8), intent(out)   :: lhabs(bounds%begc:)                  ! total per-column latent heat abs. (J/m^2)
+     type(bounds_type), intent(in) :: bounds                     ! bounds
+     integer , intent(in)    :: num_lakec                        ! number of lake columns
+     integer , intent(in)    :: filter_lakec(:)                  ! column filter for lake points
+     real(r8), intent(inout) :: cv( bounds%begc: , -nlevsno+1: ) ! heat capacity [J/(m2 K)] [col, lev]
+     real(r8), intent(inout) :: cv_lake( bounds%begc: , 1: )     ! heat capacity [J/(m2 K)] [col, levlak]
+     real(r8), intent(out)   :: lhabs( bounds%begc: )            ! total per-column latent heat abs. (J/m^2) [col]
      !
      ! !LOCAL VARIABLES:
      integer  :: j,c,g                              ! do loop index
@@ -1223,6 +1245,12 @@ contains
      ! when the bottom lake layer started freezing in a 50m Arctic lake
      logical  :: dophasechangeflag
      !-----------------------------------------------------------------------
+
+     ! Enforce expected array sizes
+     call shr_assert((ubound(cv)      == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+     call shr_assert((ubound(cv_lake) == (/bounds%endc, nlevlak/)),  errMsg(__FILE__, __LINE__))
+     call shr_assert((ubound(lhabs)   == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
+
 
    associate(& 
    qflx_snow_melt  => cwf%qflx_snow_melt      , & ! Output: [real(r8) (:)]  net snow melt                           

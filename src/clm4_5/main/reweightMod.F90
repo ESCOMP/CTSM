@@ -91,6 +91,8 @@ module reweightMod
   use abortutils, only : endrun
   use clm_varctl, only : iulog
   use decompMod , only: bounds_type
+  use shr_assert_mod , only : shr_assert
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
   ! PUBLIC TYPES:
   implicit none
@@ -117,7 +119,7 @@ module reweightMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine reweightWrapup(nc, bounds)
+  subroutine reweightWrapup(bounds)
     !
     ! !DESCRIPTION:
     ! Do additional modifications and error-checks that should be done after modifying subgrid
@@ -128,17 +130,19 @@ contains
     !
     ! !USES:
     use filterMod, only : setFilters
+    use decompMod, only : BOUNDS_LEVEL_CLUMP
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    integer, intent(in) :: nc ! clump index
+    type(bounds_type), intent(in) :: bounds  ! clump bounds
     !------------------------------------------------------------------------
+
+    call shr_assert(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
 
     call setActive(bounds)
     call checkWeights(bounds, active_only=.false.)
     call checkWeights(bounds, active_only=.true.)
-    call setFilters(nc, bounds)
+    call setFilters(bounds)
 
   end subroutine reweightWrapup
 
@@ -334,9 +338,9 @@ contains
     error_found = .false.
 
     ! Check PFT-level weights
-    sumwtcol(:) = 0._r8
-    sumwtlunit(:) = 0._r8
-    sumwtgcell(:) = 0._r8
+    sumwtcol(bounds%begc : bounds%endc) = 0._r8
+    sumwtlunit(bounds%begl : bounds%endl) = 0._r8
+    sumwtgcell(bounds%begg : bounds%endg) = 0._r8
 
     do p = bounds%begp,bounds%endp
        c = pft%column(p)
@@ -375,8 +379,8 @@ contains
     end do
 
     ! Check col-level weights
-    sumwtlunit(:) = 0._r8
-    sumwtgcell(:) = 0._r8
+    sumwtlunit(bounds%begl : bounds%endl) = 0._r8
+    sumwtgcell(bounds%begg : bounds%endg) = 0._r8
 
     do c = bounds%begc,bounds%endc
        l = col%landunit(c)
@@ -405,7 +409,7 @@ contains
     end do
 
     ! Check landunit-level weights
-    sumwtgcell(:) = 0._r8
+    sumwtgcell(bounds%begg : bounds%endg) = 0._r8
 
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)

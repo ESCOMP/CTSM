@@ -18,7 +18,7 @@ module clmtypeInitMod
        ndecomp_cascade_transitions, ndecomp_pools, nlevcan, &
        nlayer, nlayert, crop_prog, ngases
   use shr_megan_mod, &
-       only: shr_megan_megcomps_n
+       only: shr_megan_megcomps_n, shr_megan_mechcomps_n
   use seq_drydep_mod, &
        only:  n_drydep, drydep_method, DD_XLND
   use decompMod, &
@@ -740,6 +740,7 @@ contains
     allocate(pps%rootfr(beg:end,1:nlevgrnd))
     pps%rootfr(:,:)= spval
     allocate(pps%rootr(beg:end,1:nlevgrnd))
+    pps%rootr(:,:)= spval
     allocate(pps%rresis(beg:end,1:nlevgrnd))
     pps%rresis(:,:)= spval
     allocate(pps%dewmx(beg:end))
@@ -2381,11 +2382,11 @@ contains
     integer :: i
     !------------------------------------------------------------------------
 
-    if (shr_megan_megcomps_n<1) return
+    if (shr_megan_mechcomps_n<1) return
 
     allocate(pvf%vocflx_tot(beg:end))
     pvf%vocflx_tot(:)= nanr
-    allocate(pvf%vocflx(beg:end,1:shr_megan_megcomps_n))
+    allocate(pvf%vocflx(beg:end,1:shr_megan_mechcomps_n))
     pvf%vocflx(:,:)= nanr
     allocate(pvf%Eopt_out(beg:end))
     pvf%Eopt_out(:)= nanr

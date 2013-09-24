@@ -12,6 +12,8 @@ module CanopyFluxesMod
   use shr_sys_mod , only: shr_sys_flush
   use decompMod   , only: bounds_type
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_assert_mod, only : shr_assert
+  use shr_log_mod , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -220,10 +222,6 @@ contains
     integer  :: f                     ! filter index
     integer  :: filterp(bounds%endp-bounds%begp+1)    ! temporary filter
     integer  :: fporig(bounds%endp-bounds%begp+1)     ! temporary filter
-    real(r8) :: displa_loc(bounds%begp:bounds%endp)   ! temporary copy
-    real(r8) :: z0mv_loc(bounds%begp:bounds%endp)     ! temporary copy
-    real(r8) :: z0hv_loc(bounds%begp:bounds%endp)     ! temporary copy
-    real(r8) :: z0qv_loc(bounds%begp:bounds%endp)     ! temporary copy
     logical  :: found                 ! error flag for canopy above forcing hgt
     integer  :: index                 ! pft index for error
     real(r8) :: egvf                  ! effective green vegetation fraction
@@ -391,7 +389,9 @@ contains
    fpsn                  => pcf%fpsn                   , & ! Output: [real(r8) (:)]  photosynthesis (umol CO2 /m**2 /s)                                    
    fpsn_wc               => pcf%fpsn_wc                , & ! Output: [real(r8) (:)]  Rubisco-limited photosynthesis (umol CO2 /m**2 /s)                    
    fpsn_wj               => pcf%fpsn_wj                , & ! Output: [real(r8) (:)]  RuBP-limited photosynthesis (umol CO2 /m**2 /s)                       
-   fpsn_wp               => pcf%fpsn_wp                  & ! Output: [real(r8) (:)]  product-limited photosynthesis (umol CO2 /m**2 /s)                    
+   fpsn_wp               => pcf%fpsn_wp                , & ! Output: [real(r8) (:)]  product-limited photosynthesis (umol CO2 /m**2 /s)                    
+   begp                  => bounds%begp                , &
+   endp                  => bounds%endp                  &
    )
 
    ! Determine step size
@@ -439,7 +439,7 @@ contains
       dayl_factor(p)=min(1._r8,max(0.01_r8,(dayl*dayl)/(max_dayl(c)*max_dayl(c))))
    end do
 
-   rb1(bounds%begp:bounds%endp) = 0._r8
+   rb1(begp:endp) = 0._r8
 
    ! Define rootfraction for unfrozen soil only
    if (perchroot .or. perchroot_alt) then
@@ -576,7 +576,7 @@ contains
 
 
    ! Now 'measure' soil water for the grid cells identified above and see if the soil is dry enough to warrant irrigation
-   frozen_soil(:) = .false.
+   frozen_soil(bounds%begc : bounds%endc) = .false.
    do j = 1,nlevgrnd
       do f = 1, fn
          p = filterp(f)
@@ -691,16 +691,6 @@ contains
    fnorig = fn
    fporig(1:fn) = filterp(1:fn)
 
-   ! Make copies so that array sections are not passed in function calls to friction velocity
-   
-   do f = 1, fn
-      p = filterp(f)
-      displa_loc(p) = displa(p)
-      z0mv_loc(p) = z0mv(p)
-      z0hv_loc(p) = z0hv(p)
-      z0qv_loc(p) = z0qv(p)
-   end do
-
    ! Begin stability iteration
 
    call t_startf('can_iter')
@@ -709,10 +699,10 @@ contains
       ! Determine friction velocity, and potential temperature and humidity
       ! profiles of the surface boundary layer
 
-      call FrictionVelocity (bounds%begp, bounds%endp, fn, filterp, &
-                             displa_loc, z0mv_loc, z0hv_loc, z0qv_loc, &
-                             obu, itlef+1, ur, um, ustar, &
-                             temp1, temp2, temp12m, temp22m, fm)
+      call FrictionVelocity (begp, endp, fn, filterp, &
+                             displa(begp:endp), z0mv(begp:endp), z0hv(begp:endp), z0qv(begp:endp), &
+                             obu(begp:endp), itlef+1, ur(begp:endp), um(begp:endp), ustar(begp:endp), &
+                             temp1(begp:endp), temp2(begp:endp), temp12m(begp:endp), temp22m(begp:endp), fm(begp:endp))
 
       do f = 1, fn
          p = filterp(f)
@@ -778,11 +768,15 @@ contains
          vpdal(p) = svpts(p) - eah(p)
       end do
 
-      call Photosynthesis (bounds, fn, filterp, svpts, eah, o2, co2, rb, dayl_factor, phase='sun')
+      call Photosynthesis (bounds, fn, filterp, svpts(begp:endp), eah(begp:endp), &
+           o2(begp:endp), co2(begp:endp), rb(begp:endp), dayl_factor(begp:endp), &
+           phase='sun')
       if ( use_c13 ) then
          call Fractionation (bounds, fn, filterp, phase='sun')
       endif
-      call Photosynthesis (bounds, fn, filterp, svpts, eah, o2, co2, rb, dayl_factor, phase='sha')
+      call Photosynthesis (bounds, fn, filterp, svpts(begp:endp), eah(begp:endp), &
+           o2(begp:endp), co2(begp:endp), rb(begp:endp), dayl_factor(begp:endp), &
+           phase='sha')
       if ( use_c13 ) then
          call Fractionation (bounds, fn, filterp, phase='sha')
       end if
@@ -1146,16 +1140,16 @@ subroutine Photosynthesis (bounds, fn, filterp, esat_tv, eair, oair, cair, &
   implicit none
 
   ! !ARGUMENTS:
-  type(bounds_type), intent(in) :: bounds  ! bounds
-  integer , intent(in)    :: fn                   ! size of pft filter
-  integer , intent(in)    :: filterp(fn)          ! pft filter
-  real(r8), intent(in)    :: esat_tv(bounds%begp:)     ! saturation vapor pressure at t_veg (Pa)
-  real(r8), intent(in)    :: eair(bounds%begp:)        ! vapor pressure of canopy air (Pa)
-  real(r8), intent(in)    :: oair(bounds%begp:)        ! Atmospheric O2 partial pressure (Pa)
-  real(r8), intent(in)    :: cair(bounds%begp:)        ! Atmospheric CO2 partial pressure (Pa)
-  real(r8), intent(inout) :: rb(bounds%begp:)          ! boundary layer resistance (s/m)
-  real(r8), intent(in)    :: dayl_factor(bounds%begp:) ! scalar (0-1) for daylength
-  character(len=*), intent(in) :: phase           ! 'sun' or 'sha'
+  type(bounds_type), intent(in) :: bounds                ! bounds
+  integer , intent(in)    :: fn                          ! size of pft filter
+  integer , intent(in)    :: filterp(fn)                 ! pft filter
+  real(r8), intent(in)    :: esat_tv( bounds%begp: )     ! saturation vapor pressure at t_veg (Pa) [pft]
+  real(r8), intent(in)    :: eair( bounds%begp: )        ! vapor pressure of canopy air (Pa) [pft]
+  real(r8), intent(in)    :: oair( bounds%begp: )        ! Atmospheric O2 partial pressure (Pa) [pft]
+  real(r8), intent(in)    :: cair( bounds%begp: )        ! Atmospheric CO2 partial pressure (Pa) [pft]
+  real(r8), intent(inout) :: rb( bounds%begp: )          ! boundary layer resistance (s/m) [pft]
+  real(r8), intent(in)    :: dayl_factor( bounds%begp: ) ! scalar (0-1) for daylength
+  character(len=*), intent(in) :: phase                  ! 'sun' or 'sha'
 
   ! !LOCAL VARIABLES:
   !
@@ -1279,6 +1273,15 @@ subroutine Photosynthesis (bounds, fn, filterp, esat_tv, eair, oair, cair, &
    ft(tl,ha) = exp( ha / (rgas*1.e-3_r8*(tfrz+25._r8)) * (1._r8 - (tfrz+25._r8)/tl) )
    fth(tl,hd,se,cc) = cc / ( 1._r8 + exp( (-hd+se*tl) / (rgas*1.e-3_r8*tl) ) )
    fth25(hd,se) = 1._r8 + exp( (-hd+se*(tfrz+25._r8)) / (rgas*1.e-3_r8*(tfrz+25._r8)) )
+
+   ! Enforce expected array sizes
+   
+   call shr_assert((ubound(esat_tv)     == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(eair)        == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(oair)        == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(cair)        == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(rb)          == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(dayl_factor) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
 
    if (phase == 'sun') then
       lai_z     =>    pps%laisun_z        ! Input:  [real(r8) (:,:)]  leaf area index for canopy layer, sunlit or shaded                  

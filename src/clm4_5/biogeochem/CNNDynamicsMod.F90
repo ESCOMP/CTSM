@@ -395,7 +395,9 @@ contains
    fert_to_sminn =>    cnf%fert_to_sminn   & ! Output: [real(r8) (:)]                                                    
    )
 
-   call p2c(bounds, num_soilc, filter_soilc, fert, fert_to_sminn)
+   call p2c(bounds, num_soilc, filter_soilc, &
+        fert(bounds%begp:bounds%endp), &
+        fert_to_sminn(bounds%begc:bounds%endc))
 
  end associate
  end subroutine CNNFert
@@ -521,7 +523,9 @@ contains
       end if
    end do
    
-   call p2c(bounds, num_soilc,filter_soilc,soyfixn,soyfixn_to_sminn)
+   call p2c(bounds, num_soilc, filter_soilc, &
+        soyfixn(bounds%begp:bounds%endp), &
+        soyfixn_to_sminn(bounds%begc:bounds%endc))
    
  end associate
  end subroutine CNSoyfix

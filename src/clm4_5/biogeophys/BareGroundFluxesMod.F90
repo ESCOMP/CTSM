@@ -159,7 +159,9 @@ contains
    fpsn_wc                        =>    pcf%fpsn_wc                                      , & ! Output: [real(r8) (:)]  Rubisco-limited photosynthesis (umol CO2 /m**2 /s)                    
    fpsn_wj                        =>    pcf%fpsn_wj                                      , & ! Output: [real(r8) (:)]  RuBP-limited photosynthesis (umol CO2 /m**2 /s)                       
    fpsn_wp                        =>    pcf%fpsn_wp                                      , & ! Output: [real(r8) (:)]  product-limited photosynthesis (umol CO2 /m**2 /s)                    
-   forc_hgt_u_pft                 =>    pps%forc_hgt_u_pft &                          
+   forc_hgt_u_pft                 =>    pps%forc_hgt_u_pft                               , &
+   begp                           =>    bounds%begp                                      , &
+   endp                           =>    bounds%endp                                        &
    )
 
     grnd_ch4_cond  => pps%grnd_ch4_cond
@@ -213,10 +215,10 @@ contains
 
     do iter = 1, niters
 
-       call FrictionVelocity(bounds%begp, bounds%endp, fn, filterp, &
-                             displa, z0mg_pft, z0hg_pft, z0qg_pft, &
-                             obu, iter, ur, um, ustar, &
-                             temp1, temp2, temp12m, temp22m, fm)
+       call FrictionVelocity(begp, endp, fn, filterp, &
+                             displa(begp:endp), z0mg_pft(begp:endp), z0hg_pft(begp:endp), z0qg_pft(begp:endp), &
+                             obu(begp:endp), iter, ur(begp:endp), um(begp:endp), ustar(begp:endp), &
+                             temp1(begp:endp), temp2(begp:endp), temp12m(begp:endp), temp22m(begp:endp), fm(begp:endp))
 
        do f = 1, fn
           p = filterp(f)

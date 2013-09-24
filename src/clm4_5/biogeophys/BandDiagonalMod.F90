@@ -9,6 +9,8 @@ module BandDiagonalMod
   use abortutils  , only: endrun
   use shr_kind_mod, only: r8 => shr_kind_r8
   use clm_varctl  , only : iulog
+  use shr_assert_mod, only : shr_assert
+  use shr_log_mod , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -28,25 +30,32 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    integer , intent(in)    :: lbj, ubj      ! lbinning and ubing level indices
-    integer , intent(in)    :: jtop(bounds%begc:bounds%endc)           ! top level for each column
-    integer , intent(in)    :: jbot(bounds%begc:bounds%endc)           ! bottom level for each column
-    integer , intent(in)    :: numf                    ! filter dimension
-    integer , intent(in)    :: nband                   ! band width
-    integer , intent(in)    :: filter(:)               ! filter
-    real(r8), intent(in)    :: b(bounds%begc:bounds%endc,nband,lbj:ubj)! compact band matrix
-    real(r8), intent(in)    :: r(bounds%begc:bounds%endc, lbj:ubj)     ! "r" rhs of linear system
-    real(r8), intent(inout) :: u(bounds%begc:bounds%endc, lbj:ubj)     ! solution
+    type(bounds_type), intent(in) :: bounds                    ! bounds
+    integer , intent(in)    :: lbj, ubj                        ! lbinning and ubing level indices
+    integer , intent(in)    :: jtop( bounds%begc: )            ! top level for each column [col]
+    integer , intent(in)    :: jbot( bounds%begc: )            ! bottom level for each column [col]
+    integer , intent(in)    :: numf                            ! filter dimension
+    integer , intent(in)    :: nband                           ! band width
+    integer , intent(in)    :: filter(:)                       ! filter
+    real(r8), intent(in)    :: b( bounds%begc: , 1:   , lbj: ) ! compact band matrix [col, nband, j]
+    real(r8), intent(in)    :: r( bounds%begc: , lbj: )        ! "r" rhs of linear system [col, j]
+    real(r8), intent(inout) :: u( bounds%begc: , lbj: )        ! solution [col, j]
     !
     ! ! LOCAL VARIABLES:
-    integer  :: j,ci,fc,info,m,n                   !indices
-    integer  :: kl,ku                      !number of sub/super diagonals
-    integer, allocatable :: ipiv(:)        !temporary
-    real(r8),allocatable :: ab(:,:),temp(:,:)       !compact storage array
+    integer  :: j,ci,fc,info,m,n              !indices
+    integer  :: kl,ku                         !number of sub/super diagonals
+    integer, allocatable :: ipiv(:)           !temporary
+    real(r8),allocatable :: ab(:,:),temp(:,:) !compact storage array
     real(r8),allocatable :: result(:)
 
     !-----------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(jtop) == (/bounds%endc/)),             errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(jbot) == (/bounds%endc/)),             errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(b)    == (/bounds%endc, nband, ubj/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(r)    == (/bounds%endc, ubj/)),        errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(u)    == (/bounds%endc, ubj/)),        errMsg(__FILE__, __LINE__))
 
 
 !!$     SUBROUTINE SGBSV( N, KL, KU, NRHS, AB, LDAB, IPIV, B, LDB, INFO )

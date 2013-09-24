@@ -705,17 +705,39 @@ contains
    end do  ! end of pfts loop
 
    ! use p2c routine to get selected column-average pft-level fluxes and states
-   call p2c(bounds, num_soilc, filter_soilc, gpp, col_gpp)
-   call p2c(bounds, num_soilc, filter_soilc, ar, col_ar)
-   call p2c(bounds, num_soilc, filter_soilc, rr, col_rr)
-   call p2c(bounds, num_soilc, filter_soilc, npp, col_npp)
-   call p2c(bounds, num_soilc, filter_soilc, vegfire, col_vegfire)
-   call p2c(bounds, num_soilc, filter_soilc, wood_harvestc, col_wood_harvestc)
-   call p2c(bounds, num_soilc, filter_soilc, totvegc, col_totvegc)
-   call p2c(bounds, num_soilc, filter_soilc, totpftc, col_totpftc)
-   call p2c(bounds, num_soilc, filter_soilc, pft_fire_closs, col_pft_fire_closs)
-   call p2c(bounds, num_soilc, filter_soilc, litfall, col_litfall)
-   call p2c(bounds, num_soilc, filter_soilc, hrv_xsmrpool_to_atm, col_hrv_xsmrpool_to_atm)
+   call p2c(bounds, num_soilc, filter_soilc, &
+        gpp(bounds%begp:bounds%endp), &
+        col_gpp(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        ar(bounds%begp:bounds%endp), &
+        col_ar(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        rr(bounds%begp:bounds%endp), &
+        col_rr(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        npp(bounds%begp:bounds%endp), &
+        col_npp(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        vegfire(bounds%begp:bounds%endp), &
+        col_vegfire(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        wood_harvestc(bounds%begp:bounds%endp), &
+        col_wood_harvestc(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        totvegc(bounds%begp:bounds%endp), &
+        col_totvegc(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        totpftc(bounds%begp:bounds%endp), &
+        col_totpftc(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        pft_fire_closs(bounds%begp:bounds%endp), &
+        col_pft_fire_closs(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        litfall(bounds%begp:bounds%endp), &
+        col_litfall(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        hrv_xsmrpool_to_atm(bounds%begp:bounds%endp), &
+        col_hrv_xsmrpool_to_atm(bounds%begc:bounds%endc))
 
    if ( isotope .eq. 'bulk') then
       if (nfix_timeconst .gt. 0._r8 .and. nfix_timeconst .lt. 500._r8 ) then
@@ -1314,10 +1336,18 @@ contains
    end do  ! end of pfts loop
 
    ! use p2c routine to get selected column-average pft-level fluxes and states
-   call p2c(bounds, num_soilc, filter_soilc, pft_fire_nloss, col_pft_fire_nloss)
-   call p2c(bounds, num_soilc, filter_soilc, wood_harvestn, col_wood_harvestn)
-   call p2c(bounds, num_soilc, filter_soilc, totvegn, col_totvegn)
-   call p2c(bounds, num_soilc, filter_soilc, totpftn, col_totpftn)
+   call p2c(bounds, num_soilc, filter_soilc, &
+        pft_fire_nloss(bounds%begp:bounds%endp), &
+        col_pft_fire_nloss(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        wood_harvestn(bounds%begp:bounds%endp), &
+        col_wood_harvestn(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        totvegn(bounds%begp:bounds%endp), &
+        col_totvegn(bounds%begc:bounds%endc))
+   call p2c(bounds, num_soilc, filter_soilc, &
+        totpftn(bounds%begp:bounds%endp), &
+        col_totpftn(bounds%begc:bounds%endc))
 
    ! column loops
    do fc = 1,num_soilc

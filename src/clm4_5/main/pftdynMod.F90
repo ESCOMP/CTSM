@@ -8,13 +8,15 @@ module pftdynMod
   ! !USES:
   use spmdMod
   use clmtype
-  use decompMod   , only : bounds_type
-  use clm_varsur  , only : pctspec
-  use clm_varpar  , only : max_pft_per_col
-  use clm_varctl  , only : iulog, use_c13, use_c14, use_cn
-  use shr_sys_mod , only : shr_sys_flush
-  use abortutils  , only : endrun
+  use decompMod      , only : bounds_type
+  use clm_varsur     , only : pctspec
+  use clm_varpar     , only : max_pft_per_col
+  use clm_varctl     , only : iulog, use_c13, use_c14, use_cn
+  use shr_sys_mod    , only : shr_sys_flush
+  use abortutils     , only : endrun
   use ncdio_pio
+  use shr_assert_mod , only : shr_assert
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -175,7 +177,7 @@ contains
     call ncd_io(ncid=ncid, varname= 'PCT_URBAN'  , flag='read', data=pcturb, &
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on pftdyn file' )
-    pcturb_tot(:) = 0._r8
+    pcturb_tot(bounds%begg : bounds%endg) = 0._r8
     do n = 1, numurbl
        do nl = bounds%begg,bounds%endg
           pcturb_tot(nl) = pcturb_tot(nl) + pcturb(nl,n)
@@ -263,8 +265,12 @@ contains
 
     ! Get pctpft time samples bracketing the current time
 
-    call pftdyn_getdata(bounds, nt1, wtpft1, natpft_lb,natpft_ub)
-    call pftdyn_getdata(bounds, nt2, wtpft2, natpft_lb,natpft_ub)
+    call pftdyn_getdata(bounds, nt1, &
+         wtpft1(bounds%begg:bounds%endg, natpft_lb:natpft_ub), &
+         natpft_lb,natpft_ub)
+    call pftdyn_getdata(bounds, nt2, &
+         wtpft2(bounds%begg:bounds%endg, natpft_lb:natpft_ub), &
+         natpft_lb,natpft_ub)
     
     if (use_cn) then
        ! Get harvest rate at the nt1 time
@@ -352,7 +358,9 @@ contains
           end do
        end do
 
-       call pftdyn_getdata(bounds, nt2, wtpft2, natpft_lb,natpft_ub)
+       call pftdyn_getdata(bounds, nt2, &
+            wtpft2(bounds%begg:bounds%endg, natpft_lb:natpft_ub), &
+            natpft_lb,natpft_ub)
 
        if (use_cn) then
           call pftdyn_getharvest(bounds, nt1)
@@ -408,7 +416,7 @@ contains
     type(bounds_type), intent(in) :: bounds  ! bounds
     integer , intent(in)  :: ntime
     integer , intent(in)  :: pft0, maxpft
-    real(r8), intent(out) :: wtpft(bounds%begg:bounds%endg,pft0:maxpft)  ! pft weights (sum to 1.0)
+    real(r8), intent(out) :: wtpft( bounds%begg: , pft0: )  ! pft weights (sum to 1.0) [gridcell, pft]
     !
     !
     ! !LOCAL VARIABLES:
@@ -420,6 +428,9 @@ contains
     character(len=32) :: subname='pftdyn_getdata' ! subroutine name
     !-----------------------------------------------------------------------
     
+    ! Enforce expected array sizes
+    call shr_assert((ubound(wtpft) == (/bounds%endg, maxpft/)), errMsg(__FILE__, __LINE__))
+
     allocate(arrayl(bounds%begg:bounds%endg,pft0:maxpft))	
     call ncd_io(ncid=ncid, varname= 'PCT_NAT_PFT', flag='read', data=arrayl, &
          dim1name=grlnd, nt=ntime, readvar=readvar)

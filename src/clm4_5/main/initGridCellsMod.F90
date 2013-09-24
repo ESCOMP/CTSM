@@ -5,11 +5,13 @@ module initGridCellsMod
   ! Initializes sub-grid mapping for each land grid cell
   !
   ! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use spmdMod     , only : masterproc,iam,mpicom
-  use abortutils  , only : endrun
-  use clm_varctl  , only : iulog
-  use decompMod   , only : bounds_type, ldecomp
+  use shr_kind_mod   , only : r8 => shr_kind_r8
+  use spmdMod        , only : masterproc,iam,mpicom
+  use abortutils     , only : endrun
+  use clm_varctl     , only : iulog
+  use decompMod      , only : bounds_type, ldecomp
+  use shr_assert_mod , only : shr_assert
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -31,7 +33,7 @@ module initGridCellsMod
 contains
 
   !------------------------------------------------------------------------
-  subroutine initGridcells (bounds) 
+  subroutine initGridcells
     !
     ! !DESCRIPTION: 
     ! Initialize sub-grid mapping and allocates space for derived type hierarchy.
@@ -40,6 +42,7 @@ contains
     ! !USES
     use clmtype 
     use domainMod   , only : ldomain
+    use decompMod   , only : get_proc_bounds, get_clump_bounds, get_proc_clumps
     use clm_varcon  , only : istsoil, istice, istwet, istdlak, istice_mec, &
                              isturb_tbd, isturb_hd, isturb_md, istcrop
     use clm_varctl  , only : create_glacier_mec_landunit
@@ -47,122 +50,180 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: li,ci,pi,m,gdc    ! indices
+    integer :: nc,li,ci,pi,gdc      ! indices
+    integer :: nclumps              ! number of clumps on this processor
+    type(bounds_type) :: bounds_proc
+    type(bounds_type) :: bounds_clump
     !------------------------------------------------------------------------
 
-    ! For each land gridcell on global grid determine landunit, column and pft properties
+    ! Notes about how this routine is arranged, and its implications for the arrangement
+    ! of 1-d vectors in memory: 
+    ! 
+    ! (1) There is an outer loop over clumps; this results in all of a clump's points (at
+    !     the gridcell, landunit, column & pft level) being contiguous. This is important
+    !     for the use of begg:endg, etc., and also for performance.
+    !
+    ! (2) Next, there is a section for each landunit, with the loop over grid cells
+    !     happening separately for each landunit. This means that, within a given clump,
+    !     points with the same landunit are grouped together (this is true at the
+    !     landunit, column and pft levels). Thus, different landunits for a given grid
+    !     cell are separated in memory. This improves performance in the many parts of
+    !     the code that operate over a single landunit, or two similar landunits. 
+    !
+    ! Example: landunit-level array: For a processor with 2 clumps, each of which has 2
+    ! grid cells, each of which has 3 landunits, the layout of a landunit-level array
+    ! looks like the following:
+    !
+    ! Array index:   1   2   3   4   5   6   7   8   9  10  11  12
+    ! ------------------------------------------------------------
+    ! Clump index:   1   1   1   1   1   1   2   2   2   2   2   2
+    ! Gridcell:      1   2   1   2   1   2   3   4   3   4   3   4
+    ! Landunit type: 1   1   2   2   3   3   1   1   2   2   3   3
+    !
+    ! Example: pft-level array: For a processor with 1 clump, which has 2 grid cells, each
+    ! of which has 2 landunits, each of which has 3 pfts, the layout of a pft-level array
+    ! looks like the following:
+    !
+    ! Array index:   1   2   3   4   5   6   7   8   9  10  11  12
+    ! ------------------------------------------------------------
+    ! Gridcell:      1   1   1   2   2   2   1   1   1   2   2   2
+    ! Landunit type: 1   1   1   1   1   1   2   2   2   2   2   2
+    ! PFT type:      1   2   3   1   2   3   1   2   3   1   2   3
+    !
+    ! So note that clump index is most slowly varying, followed by landunit type,
+    ! followed by gridcell, followed by column and pft type.
 
-    li = bounds%begl-1
-    ci = bounds%begc-1
-    pi = bounds%begp-1
 
-    ! Determine naturally vegetated landunit
-    do gdc = bounds%begg,bounds%endg
-       call set_landunit_veg_compete(               &
-            ltype=istsoil, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
-    end do
+    nclumps = get_proc_clumps()
 
-    ! Determine crop landunit
-    do gdc = bounds%begg,bounds%endg
-       call set_landunit_crop_noncompete(           &
-            ltype=istcrop, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
-    end do
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, li, ci, pi, gdc)
+    do nc = 1, nclumps
 
-    ! Determine urban tall building district landunit
-    do gdc = bounds%begg,bounds%endg
-       call set_landunit_urban( &
-            ltype=isturb_tbd, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+       call get_clump_bounds(nc, bounds_clump)
 
-    end do
+       ! For each land gridcell on global grid determine landunit, column and pft properties
+       
+       li = bounds_clump%begl-1
+       ci = bounds_clump%begc-1
+       pi = bounds_clump%begp-1
 
-    ! Determine urban high density landunit
-    do gdc = bounds%begg,bounds%endg
-       call set_landunit_urban( &
-            ltype=isturb_hd, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
-    end do
-
-    ! Determine urban medium density landunit
-    do gdc = bounds%begg,bounds%endg
-       call set_landunit_urban( &
-            ltype=isturb_md, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
-    end do
-
-    ! Determine lake, wetland and glacier landunits 
-    do gdc = bounds%begg,bounds%endg
-       call set_landunit_wet_ice_lake(              &
-            ltype=istdlak, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
-    end do
-
-    do gdc = bounds%begg,bounds%endg
-       call set_landunit_wet_ice_lake(              &
-            ltype=istwet, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
-    end do
-
-    do gdc = bounds%begg,bounds%endg
-       call set_landunit_wet_ice_lake(              &
-            ltype=istice, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
-    end do
-
-    if (create_glacier_mec_landunit) then
-       do gdc = bounds%begg,bounds%endg
-          call set_landunit_wet_ice_lake(              &
-               ltype=istice_mec, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true., &
-               glcmask = ldomain%glcmask(gdc))
+       ! Determine naturally vegetated landunit
+       do gdc = bounds_clump%begg,bounds_clump%endg
+          call set_landunit_veg_compete(               &
+               ltype=istsoil, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
        end do
-    endif
 
-    ! Set some other gridcell-level variables
+       ! Determine crop landunit
+       do gdc = bounds_clump%begg,bounds_clump%endg
+          call set_landunit_crop_noncompete(           &
+               ltype=istcrop, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+       end do
 
-    do gdc = bounds%begg,bounds%endg
+       ! Determine urban tall building district landunit
+       do gdc = bounds_clump%begg,bounds_clump%endg
+          call set_landunit_urban( &
+               ltype=isturb_tbd, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
 
-       ! Make ice sheet masks
+       end do
 
-       grc%gris_mask(gdc) = 0._r8
-       grc%gris_area(gdc) = 0._r8
-       grc%aais_mask(gdc) = 0._r8
-       grc%aais_area(gdc) = 0._r8
-      
-       ! Greenland mask
-       if ( (ldomain%latc(gdc) >  58. .and. ldomain%latc(gdc) <= 67.  .and.   &
-             ldomain%lonc(gdc) > 302. .and. ldomain%lonc(gdc) < 330.)         &
-                                      .or.                                 &
-            (ldomain%latc(gdc) >  67. .and. ldomain%latc(gdc) <= 70. .and.    &
-             ldomain%lonc(gdc) > 300. .and. ldomain%lonc(gdc) < 345.)         &
-                                      .or.                                 &
-            (ldomain%latc(gdc) >  70. .and. ldomain%latc(gdc) <= 75. .and.    &
-             ldomain%lonc(gdc) > 295. .and. ldomain%lonc(gdc) < 350.)         &
-                                      .or.                                 &
-            (ldomain%latc(gdc) >  75. .and. ldomain%latc(gdc) <= 79. .and.    &
-             ldomain%lonc(gdc) > 285. .and. ldomain%lonc(gdc) < 350.)         &
-                                      .or.                                 &
-            (ldomain%latc(gdc) >  79. .and. ldomain%latc(gdc) <  85. .and.    &
-             ldomain%lonc(gdc) > 290. .and. ldomain%lonc(gdc) < 355.) ) then
- 
-            grc%gris_mask(gdc) = 1.0_r8
+       ! Determine urban high density landunit
+       do gdc = bounds_clump%begg,bounds_clump%endg
+          call set_landunit_urban( &
+               ltype=isturb_hd, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+       end do
 
-      elseif (ldomain%latc(gdc) < -60.) then
+       ! Determine urban medium density landunit
+       do gdc = bounds_clump%begg,bounds_clump%endg
+          call set_landunit_urban( &
+               ltype=isturb_md, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+       end do
 
-            grc%aais_mask(gdc) = 1.0_r8
+       ! Determine lake, wetland and glacier landunits 
+       do gdc = bounds_clump%begg,bounds_clump%endg
+          call set_landunit_wet_ice_lake(              &
+               ltype=istdlak, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+       end do
 
-       endif  ! Greenland or Antarctic grid cell
+       do gdc = bounds_clump%begg,bounds_clump%endg
+          call set_landunit_wet_ice_lake(              &
+               ltype=istwet, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+       end do
 
-       grc%gindex(gdc) = ldecomp%gdc2glo(gdc)
-       grc%latdeg(gdc) = ldomain%latc(gdc) 
-       grc%londeg(gdc) = ldomain%lonc(gdc) 
-       grc%lat(gdc)    = grc%latdeg(gdc) * SHR_CONST_PI/180._r8  
-       grc%lon(gdc)    = grc%londeg(gdc) * SHR_CONST_PI/180._r8
-       grc%area(gdc)   = ldomain%area(gdc)
+       do gdc = bounds_clump%begg,bounds_clump%endg
+          call set_landunit_wet_ice_lake(              &
+               ltype=istice, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+       end do
 
-    enddo
+       if (create_glacier_mec_landunit) then
+          do gdc = bounds_clump%begg,bounds_clump%endg
+             call set_landunit_wet_ice_lake(              &
+                  ltype=istice_mec, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true., &
+                  glcmask = ldomain%glcmask(gdc))
+          end do
+       endif
 
-    ! Fill in subgrid datatypes
+       ! Ensure that we have set the expected number of pfts, cols and landunits for this clump
+       call shr_assert(li == bounds_clump%endl, errMsg(__FILE__, __LINE__))
+       call shr_assert(ci == bounds_clump%endc, errMsg(__FILE__, __LINE__))
+       call shr_assert(pi == bounds_clump%endp, errMsg(__FILE__, __LINE__))
 
-    call clm_ptrs_compdown(bounds)
+       ! Set some other gridcell-level variables
 
-    call clm_ptrs_check()
+       do gdc = bounds_clump%begg,bounds_clump%endg
+
+          ! Make ice sheet masks
+
+          grc%gris_mask(gdc) = 0._r8
+          grc%gris_area(gdc) = 0._r8
+          grc%aais_mask(gdc) = 0._r8
+          grc%aais_area(gdc) = 0._r8
+
+          ! Greenland mask
+          if ( (ldomain%latc(gdc) >  58. .and. ldomain%latc(gdc) <= 67.  .and.   &
+               ldomain%lonc(gdc) > 302. .and. ldomain%lonc(gdc) < 330.)         &
+               .or.                                 &
+               (ldomain%latc(gdc) >  67. .and. ldomain%latc(gdc) <= 70. .and.    &
+               ldomain%lonc(gdc) > 300. .and. ldomain%lonc(gdc) < 345.)         &
+               .or.                                 &
+               (ldomain%latc(gdc) >  70. .and. ldomain%latc(gdc) <= 75. .and.    &
+               ldomain%lonc(gdc) > 295. .and. ldomain%lonc(gdc) < 350.)         &
+               .or.                                 &
+               (ldomain%latc(gdc) >  75. .and. ldomain%latc(gdc) <= 79. .and.    &
+               ldomain%lonc(gdc) > 285. .and. ldomain%lonc(gdc) < 350.)         &
+               .or.                                 &
+               (ldomain%latc(gdc) >  79. .and. ldomain%latc(gdc) <  85. .and.    &
+               ldomain%lonc(gdc) > 290. .and. ldomain%lonc(gdc) < 355.) ) then
+
+             grc%gris_mask(gdc) = 1.0_r8
+
+          elseif (ldomain%latc(gdc) < -60.) then
+
+             grc%aais_mask(gdc) = 1.0_r8
+
+          endif  ! Greenland or Antarctic grid cell
+
+          grc%gindex(gdc) = ldecomp%gdc2glo(gdc)
+          grc%latdeg(gdc) = ldomain%latc(gdc) 
+          grc%londeg(gdc) = ldomain%lonc(gdc) 
+          grc%lat(gdc)    = grc%latdeg(gdc) * SHR_CONST_PI/180._r8  
+          grc%lon(gdc)    = grc%londeg(gdc) * SHR_CONST_PI/180._r8
+          grc%area(gdc)   = ldomain%area(gdc)
+
+       enddo
+
+       ! Fill in subgrid datatypes
+
+       call clm_ptrs_compdown(bounds_clump)
+
+       ! By putting this check within the loop over clumps, we ensure that (for example)
+       ! if a clump is responsible for landunit L, then that same clump is also
+       ! responsible for all columns and pfts in L.
+       call clm_ptrs_check(bounds_clump)
+
+    end do
+    !$OMP END PARALLEL DO
 
   end subroutine initGridcells
 
@@ -173,7 +234,10 @@ contains
     ! Assumes the part of the subgrid pointing up has been set.  Fills 
     ! in the data pointing down.  Up is p_c, p_l, p_g, c_l, c_g, and l_g.
     !
-    ! This algorithm assumes all indices are monotonically increasing.
+    ! This algorithm assumes all indices besides grid cell are monotonically
+    ! increasing.  (Note that grid cell index is NOT monotonically increasing,
+    ! hence we cannot set initial & final indices at the grid cell level - 
+    ! grc%luni, grc%lunf, etc.)
     !
     ! Algorithm works as follows.  The p, c, and l loops march through
     ! the full arrays (nump, numc, and numl) checking the "up" indexes.
@@ -252,37 +316,45 @@ contains
   end subroutine clm_ptrs_compdown
 
   !------------------------------------------------------------------------------
-  subroutine clm_ptrs_check()
+  subroutine clm_ptrs_check(bounds)
     !
     ! !DESCRIPTION:
     ! Checks and writes out a summary of subgrid data
     !
     ! !USES
     use clmtype
-    use decompMod , only : get_proc_bounds
     !
     ! !ARGUMENTS
     implicit none
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: begg,endg,begl,endl,begc,endc,begp,endp   ! beg/end indices
     integer :: g,l,c,p       ! loop counters
     integer :: l_prev        ! l value of previous point
     logical :: error         ! error flag
     !------------------------------------------------------------------------------
 
+    associate( &
+         begg => bounds%begg, &
+         endg => bounds%endg, &
+         begl => bounds%begl, &
+         endl => bounds%endl, &
+         begc => bounds%begc, &
+         endc => bounds%endc, &
+         begp => bounds%begp, &
+         endp => bounds%endp  &
+         )
     
     if (masterproc) write(iulog,*) ' '
     if (masterproc) write(iulog,*) '---clm_ptrs_check:'
-    call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
     !--- check index ranges ---
     error = .false.
-    if (minval(lun%gridcell) < begg .or. maxval(lun%gridcell) > endg) error=.true.
-    if (minval(lun%coli) < begc .or. maxval(lun%coli) > endc) error=.true.
-    if (minval(lun%colf) < begc .or. maxval(lun%colf) > endc) error=.true.
-    if (minval(lun%pfti) < begp .or. maxval(lun%pfti) > endp) error=.true.
-    if (minval(lun%pftf) < begp .or. maxval(lun%pftf) > endp) error=.true.
+    if (minval(lun%gridcell(begl:endl)) < begg .or. maxval(lun%gridcell(begl:endl)) > endg) error=.true.
+    if (minval(lun%coli(begl:endl)) < begc .or. maxval(lun%coli(begl:endl)) > endc) error=.true.
+    if (minval(lun%colf(begl:endl)) < begc .or. maxval(lun%colf(begl:endl)) > endc) error=.true.
+    if (minval(lun%pfti(begl:endl)) < begp .or. maxval(lun%pfti(begl:endl)) > endp) error=.true.
+    if (minval(lun%pftf(begl:endl)) < begp .or. maxval(lun%pftf(begl:endl)) > endp) error=.true.
     if (error) then
        write(iulog,*) '   clm_ptrs_check: l index ranges - ERROR'
        call endrun()
@@ -290,10 +362,10 @@ contains
     if (masterproc) write(iulog,*) '   clm_ptrs_check: l index ranges - OK'
 
     error = .false.
-    if (minval(col%gridcell) < begg .or. maxval(col%gridcell) > endg) error=.true.
-    if (minval(col%landunit) < begl .or. maxval(col%landunit) > endl) error=.true.
-    if (minval(col%pfti) < begp .or. maxval(col%pfti) > endp) error=.true.
-    if (minval(col%pftf) < begp .or. maxval(col%pftf) > endp) error=.true.
+    if (minval(col%gridcell(begc:endc)) < begg .or. maxval(col%gridcell(begc:endc)) > endg) error=.true.
+    if (minval(col%landunit(begc:endc)) < begl .or. maxval(col%landunit(begc:endc)) > endl) error=.true.
+    if (minval(col%pfti(begc:endc)) < begp .or. maxval(col%pfti(begc:endc)) > endp) error=.true.
+    if (minval(col%pftf(begc:endc)) < begp .or. maxval(col%pftf(begc:endc)) > endp) error=.true.
     if (error) then
        write(iulog,*) '   clm_ptrs_check: c index ranges - ERROR'
        call endrun()
@@ -301,9 +373,9 @@ contains
     if (masterproc) write(iulog,*) '   clm_ptrs_check: c index ranges - OK'
 
     error = .false.
-    if (minval(pft%gridcell) < begg .or. maxval(pft%gridcell) > endg) error=.true.
-    if (minval(pft%landunit) < begl .or. maxval(pft%landunit) > endl) error=.true.
-    if (minval(pft%column) < begc .or. maxval(pft%column) > endc) error=.true.
+    if (minval(pft%gridcell(begp:endp)) < begg .or. maxval(pft%gridcell(begp:endp)) > endg) error=.true.
+    if (minval(pft%landunit(begp:endp)) < begl .or. maxval(pft%landunit(begp:endp)) > endl) error=.true.
+    if (minval(pft%column(begp:endp)) < begc .or. maxval(pft%column(begp:endp)) > endc) error=.true.
     if (error) then
        write(iulog,*) '   clm_ptrs_check: p index ranges - ERROR'
        call endrun()
@@ -387,6 +459,8 @@ contains
     if (masterproc) write(iulog,*) '   clm_ptrs_check: tree consistent - OK'
     if (masterproc) write(iulog,*) ' '
 
+    end associate
+    
   end subroutine clm_ptrs_check
 
   !------------------------------------------------------------------------

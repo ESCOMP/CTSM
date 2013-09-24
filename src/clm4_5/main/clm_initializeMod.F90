@@ -70,18 +70,12 @@ contains
     integer  :: nl                    ! gdc and glo lnd indices
     integer  :: ns, ni, nj            ! global grid sizes
     integer  :: begg, endg            ! processor bounds
-    type(bounds_type) :: bounds       ! bounds
+    type(bounds_type) :: bounds_proc       ! bounds
     integer ,pointer  :: amask(:)     ! global land mask
     character(len=32) :: subname = 'initialize1' ! subroutine name
     !-----------------------------------------------------------------------
 
     call t_startf('clm_init1')
-
-#if (defined _OPENMP)
-    call shr_sys_abort( &
-         'ERROR: OpenMP does NOT work on the CLM4.5 science branch. &
-         Set the number of threads for LND to 1 and rerun.' )
-#endif
 
     ! ------------------------------------------------------------------------
     ! Initialize run control variables, timestep
@@ -202,17 +196,17 @@ contains
 
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and pfts ***
 
-    call get_proc_bounds(bounds)
+    call get_proc_bounds(bounds_proc)
     
     ! Allocate memory and initialize values of clmtype data structures
     ! This is needed here for the following call to initGridcells
 
-    call initClmtype(bounds)
+    call initClmtype(bounds_proc)
 
     ! Build hierarchy and topological info for derived types
     ! This is needed here for the following call to decompInit_glcp
 
-    call initGridCells(bounds)
+    call initGridCells()
 
     ! Set global seg maps for gridcells, landlunits, columns and pfts
 
@@ -224,11 +218,11 @@ contains
 
     ! Initialize atm->lnd, lnd->atm, glc->lnd and lnd->glc data structures
 
-    call init_atm2lnd_type(bounds, clm_a2l)
-    call init_lnd2atm_type(bounds, clm_l2a)
+    call init_atm2lnd_type(bounds_proc, clm_a2l)
+    call init_lnd2atm_type(bounds_proc, clm_l2a)
     if (create_glacier_mec_landunit) then
-       call init_glc2lnd_type(bounds, clm_x2s)
-       call init_lnd2glc_type(bounds, clm_s2x)
+       call init_glc2lnd_type(bounds_proc, clm_x2s)
+       call init_lnd2glc_type(bounds_proc, clm_s2x)
     endif
 
     ! ------------------------------------------------------------------------
@@ -275,7 +269,8 @@ contains
     use clm_atmlnd            , only : clm_map2gcell
     use clm_glclnd            , only : update_clm_s2x
     use clm_varctl            , only : finidat, fpftdyn
-    use decompMod             , only : get_proc_clumps, get_proc_bounds, bounds_type
+    use decompMod             , only : get_proc_clumps, get_proc_bounds, get_clump_bounds,&
+         bounds_type
     use filterMod             , only : allocFilters
     use reweightMod           , only : reweightWrapup
     use histFldsMod           , only : hist_initFlds
@@ -329,7 +324,8 @@ contains
     real(r8) :: declin                ! solar declination angle in radians for nstep
     real(r8) :: declinm1              ! solar declination angle in radians for nstep-1
     real(r8) :: eccf                  ! earth orbit eccentricity factor
-    type(bounds_type) :: bounds       ! bounds
+    type(bounds_type) :: bounds_proc  ! processor bounds
+    type(bounds_type) :: bounds_clump ! clump bounds
     character(len=32) :: subname = 'initialize2' ! subroutine name
     logical           :: arbinit            ! Make arb init in initSLake
     !----------------------------------------------------------------------
@@ -338,7 +334,7 @@ contains
     ! Determine processor bounds and clumps for this processor
     ! ------------------------------------------------------------------------
 
-    call get_proc_bounds(bounds)
+    call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
     call t_startf('clm_init2')
@@ -351,16 +347,16 @@ contains
 
     call t_startf('init_ecosys')
     if (use_cndv) then
-       call CNDVEcosystemDynini(bounds)
+       call CNDVEcosystemDynini(bounds_proc)
     else if (.not. use_cn) then
-       call EcosystemDynini(bounds)
+       call EcosystemDynini(bounds_proc)
     end if
 
     ! Initialize CLMSP ecosystem dynamics when drydeposition is used
     ! so that estimates of monthly differences in LAI can be computed
     if (use_cn .or. use_cndv) then
        if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
-          call EcosystemDynini(bounds)
+          call EcosystemDynini(bounds_proc)
        end if
     end if
     call t_stopf('init_ecosys')
@@ -368,7 +364,7 @@ contains
     ! Initialize dust emissions model 
 
     call t_startf('init_dust')
-    call Dustini(bounds)
+    call Dustini(bounds_proc)
     call t_stopf('init_dust')
     
     ! Initialize MEGAN emissions model 
@@ -384,8 +380,8 @@ contains
     ! ------------------------------------------------------------------------
     call readParameters()
 
-    call UrbanInitTimeConst(bounds)
-    call iniTimeConst(bounds)
+    call UrbanInitTimeConst(bounds_proc)
+    call iniTimeConst(bounds_proc)
 
     ! ------------------------------------------------------------------------
     ! Obtain restart file if appropriate
@@ -426,8 +422,8 @@ contains
     ! Initialize CN Ecosystem Dynamics (must be after time-manager initialization)
     ! ------------------------------------------------------------------------
     if (use_cn .or. use_cndv) then 
-       call get_proc_bounds(bounds)
-       call CNEcosystemDynInit(bounds)
+       call get_proc_bounds(bounds_proc)
+       call CNEcosystemDynInit(bounds_proc)
     end if
 
     ! ------------------------------------------------------------------------
@@ -439,7 +435,7 @@ contains
     ! the step size is needed.
 
     call t_startf('init_accflds')
-    call initAccFlds(bounds)
+    call initAccFlds(bounds_proc)
     call t_stopf('init_accflds')
 
     ! ------------------------------------------------------------------------
@@ -450,7 +446,7 @@ contains
     if (use_cn) then
        call t_startf('init_cninitim')
        if (nsrest == nsrStartup) then
-          call CNiniTimeVar(bounds)
+          call CNiniTimeVar(bounds_proc)
        end if
        call t_stopf('init_cninitim')
     end if
@@ -463,12 +459,12 @@ contains
     ! Otherwise these are read in for a restart run
 
     if (use_cndv) then
-       call pftwt_init(bounds)
+       call pftwt_init(bounds_proc)
     else
        if (fpftdyn /= ' ') then
           call t_startf('init_pftdyn')
-          call pftdyn_init(bounds)
-          call pftdyn_interp(bounds)
+          call pftdyn_init(bounds_proc)
+          call pftdyn_interp(bounds_proc)
           call t_stopf('init_pftdyn')
        end if
     end if
@@ -483,23 +479,23 @@ contains
     call t_startf('init_io2')
     if (do_restread()) then
        if (masterproc) write(iulog,*)'reading restart file ',fnamer
-       call restFile_read(bounds, fnamer)
+       call restFile_read(bounds_proc, fnamer)
 
        arbinit = .false.
-       call initSLake(bounds, arbinit)
+       call initSLake(bounds_proc, arbinit)
        if (use_lch4) then
           arbinit = .false.
-          call initch4(bounds, arbinit)
+          call initch4(bounds_proc, arbinit)
        end if
     else if (nsrest == nsrStartup .and. finidat == ' ') then
-       call mkarbinit(bounds)
-       call UrbanInitTimeVar(bounds)
+       call mkarbinit(bounds_proc)
+       call UrbanInitTimeVar(bounds_proc)
 
        arbinit = .true.
-       call initSLake(bounds, arbinit)
+       call initSLake(bounds_proc, arbinit)
        if (use_lch4) then
           arbinit = .true.
-          call initch4(bounds, arbinit)
+          call initch4(bounds_proc, arbinit)
        end if
     !!!!! Attn EK: The calls to initch4 and initSLake combine both setting of state vars, and constant + flux & diagnostic
     !          vars.  This is set up so that the submodels would be back-compatible with old restart files.
@@ -518,8 +514,8 @@ contains
 
     if (use_cn) then
        call t_startf('init_ndep')
-       call ndep_init(bounds)
-       call ndep_interp(bounds)
+       call ndep_init(bounds_proc)
+       call ndep_interp(bounds_proc)
        call t_stopf('init_ndep')
     end if
     
@@ -540,7 +536,7 @@ contains
     ! This routine is also always called for a restart run and must 
     ! therefore be called after the restart file is read in
 
-    call initAccClmtype(bounds)
+    call initAccClmtype(bounds_proc)
 
     call t_stopf('init_hist1')
 
@@ -554,9 +550,10 @@ contains
 
     call allocFilters()
 
-    !$OMP PARALLEL DO PRIVATE (nc)
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1, nclumps
-       call reweightWrapup(nc, bounds)
+       call get_clump_bounds(nc, bounds_clump)
+       call reweightWrapup(bounds_clump)
     end do
     !$OMP END PARALLEL DO
 
@@ -565,20 +562,20 @@ contains
     ! Calculate urban "town" roughness length and displacement 
     ! height for urban landunits
 
-    call UrbanInitAero(bounds)
+    call UrbanInitAero(bounds_proc)
 
     ! Initialize urban radiation model - this uses urbinp data structure
 
-    call UrbanParamInit(bounds)
+    call UrbanParamInit(bounds_proc)
 
     ! Finalize urban model initialization
     
-    call UrbanInput(bounds%begg, bounds%endg, mode='finalize')
+    call UrbanInput(bounds_proc%begg, bounds_proc%endg, mode='finalize')
 
     ! Even if CN is on, and dry-deposition is active, read CLMSP annual vegetation to get estimates of monthly LAI
 
     if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
-       call readAnnualVegetation(bounds)
+       call readAnnualVegetation(bounds_proc)
     end if
 
     ! End initialization
@@ -623,13 +620,13 @@ contains
        else if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
           ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
           ! This needs to be done even if CN or CNDV is on!
-          call interpMonthlyVeg(bounds)
+          call interpMonthlyVeg(bounds_proc)
        end if
 
        ! Determine gridcell averaged properties to send to atm
 
        call t_startf('init_map2gc')
-       call clm_map2gcell(bounds, init=.true.)
+       call clm_map2gcell(bounds_proc, init=.true.)
        call t_stopf('init_map2gc')
 
     end if
@@ -637,7 +634,7 @@ contains
     ! Initialize sno export state
     if (create_glacier_mec_landunit) then
        call t_startf('init_create_s2x')
-       call update_clm_s2x(bounds, init=.true.)
+       call update_clm_s2x(bounds_proc, init=.true.)
        call t_stopf('init_create_s2x')
     end if
 

@@ -6,12 +6,14 @@ module SNICARMod
   ! and the evolution of snow effective radius
   !
   ! !USES:
-  use shr_kind_mod  , only : r8 => shr_kind_r8
-  use shr_sys_mod   , only : shr_sys_flush
-  use clm_varctl    , only : iulog
-  use shr_const_mod , only : SHR_CONST_RHOICE
-  use abortutils    , only : endrun
-  use decompMod   , only: bounds_type
+  use shr_kind_mod   , only : r8 => shr_kind_r8
+  use shr_sys_mod    , only : shr_sys_flush
+  use clm_varctl     , only : iulog
+  use shr_const_mod  , only : SHR_CONST_RHOICE
+  use abortutils     , only : endrun
+  use decompMod      , only : bounds_type
+  use shr_assert_mod , only : shr_assert
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
   implicit none
   save
@@ -198,15 +200,15 @@ contains
     type(bounds_type), intent(in) :: bounds                       ! bounds
     integer , intent(in)  :: num_nourbanc                         ! number of columns in non-urban filter
     integer , intent(in)  :: filter_nourbanc(:)                   ! column filter for non-urban points
-    real(r8), intent(in)  :: coszen(bounds%begc:)                 ! cosine of solar zenith angle for next time step (col) [unitless]
+    real(r8), intent(in)  :: coszen( bounds%begc: )                 ! cosine of solar zenith angle for next time step (col) [unitless]
     integer , intent(in)  :: flg_slr_in                           ! flag: =1 for direct-beam incident flux,=2 for diffuse incident flux
-    real(r8), intent(in)  :: h2osno_liq(bounds%begc:bounds%endc,-nlevsno+1:0)     ! liquid water content (col,lyr) [kg/m2]
-    real(r8), intent(in)  :: h2osno_ice(bounds%begc:bounds%endc,-nlevsno+1:0)     ! ice content (col,lyr) [kg/m2]
-    integer,  intent(in)  :: snw_rds(bounds%begc:bounds%endc,-nlevsno+1:0)        ! snow effective radius (col,lyr) [microns, m^-6]
-    real(r8), intent(in)  :: mss_cnc_aer_in(bounds%begc:bounds%endc,-nlevsno+1:0,sno_nbr_aer)  ! mass concentration of all aerosol species (col,lyr,aer) [kg/kg]
-    real(r8), intent(in)  :: albsfc(bounds%begc:bounds%endc,numrad)               ! albedo of surface underlying snow (col,bnd) [frc]
-    real(r8), intent(out) :: albout(bounds%begc:bounds%endc,numrad)               ! snow albedo, averaged into 2 bands (=0 if no sun or no snow) (col,bnd) [frc]
-    real(r8), intent(out) :: flx_abs(bounds%begc:bounds%endc,-nlevsno+1:1,numrad) ! absorbed flux in each layer per unit flux incident
+    real(r8), intent(in)  :: h2osno_liq( bounds%begc: , -nlevsno+1: )     ! liquid water content (col,lyr) [kg/m2]
+    real(r8), intent(in)  :: h2osno_ice( bounds%begc: , -nlevsno+1: )     ! ice content (col,lyr) [kg/m2]
+    integer,  intent(in)  :: snw_rds( bounds%begc: , -nlevsno+1: )        ! snow effective radius (col,lyr) [microns, m^-6]
+    real(r8), intent(in)  :: mss_cnc_aer_in( bounds%begc: , -nlevsno+1: , 1: )  ! mass concentration of all aerosol species (col,lyr,aer) [kg/kg]
+    real(r8), intent(in)  :: albsfc( bounds%begc: , 1: )               ! albedo of surface underlying snow (col,bnd) [frc]
+    real(r8), intent(out) :: albout( bounds%begc: , 1: )               ! snow albedo, averaged into 2 bands (=0 if no sun or no snow) (col,bnd) [frc]
+    real(r8), intent(out) :: flx_abs( bounds%begc: , -nlevsno+1: , 1: ) ! absorbed flux in each layer per unit flux incident (col, lyr, bnd)
     !
     ! !LOCAL VARIABLES:
     !
@@ -321,6 +323,16 @@ contains
     real(r8):: X(-2*nlevsno+1:0)                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
     real(r8):: Y(-2*nlevsno+1:0)                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
     !-----------------------------------------------------------------------
+
+    ! Enforce expected array sizes
+    call shr_assert((ubound(coszen)         == (/bounds%endc/)),                 errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(h2osno_liq)     == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(h2osno_ice)     == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(snw_rds)        == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(mss_cnc_aer_in) == (/bounds%endc, 0, sno_nbr_aer/)), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(albsfc)         == (/bounds%endc, numrad/)),         errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(albout)         == (/bounds%endc, numrad/)),         errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(flx_abs)        == (/bounds%endc, 1, numrad/)),      errMsg(__FILE__, __LINE__))
 
    associate(& 
    snl         =>   cps%snl          , & ! Input:  [integer (:)]  negative number of snow layers (col) [nbr]

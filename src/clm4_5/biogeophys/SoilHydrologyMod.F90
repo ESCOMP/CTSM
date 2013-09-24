@@ -100,7 +100,6 @@ contains
     integer , intent(in)  :: filter_hydrologyc(:) ! column filter for soil points
     integer , intent(in)  :: num_urbanc                   ! number of column urban points in column filter
     integer , intent(in)  :: filter_urbanc(:)     ! column filter for urban points
-    !    real(r8), intent(out) :: icefrac(bounds%begc:,1:nlevsoi)   ! fraction of ice in layer (-)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,j,fc,g,l,i               !indices
@@ -283,7 +282,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine Infiltration(bounds, num_hydrologyc, filter_hydrologyc, &
-        num_urbanc, filter_urbanc, vol_liq)
+        num_urbanc, filter_urbanc)
      !
      ! !DESCRIPTION:
      ! Calculate infiltration into surface soil layer (minus the evaporation)
@@ -302,12 +301,11 @@ contains
      !
      ! !ARGUMENTS:
      implicit none
-     type(bounds_type), intent(in) :: bounds          ! bounds
-     integer, intent(in) :: num_hydrologyc            ! number of column soil points in column filter
-     integer, intent(in) :: filter_hydrologyc(:)      ! column filter for soil points
-     integer, intent(in) :: num_urbanc                ! number of column urban points in column filter
-     integer, intent(in) :: filter_urbanc(:)          ! column filter for urban points
-     real(r8), intent(out) :: vol_liq(bounds%begc:,:) ! partial volume of liquid water in layer
+     type(bounds_type), intent(in) :: bounds               ! bounds
+     integer, intent(in) :: num_hydrologyc                 ! number of column soil points in column filter
+     integer, intent(in) :: filter_hydrologyc(:)           ! column filter for soil points
+     integer, intent(in) :: num_urbanc                     ! number of column urban points in column filter
+     integer, intent(in) :: filter_urbanc(:)               ! column filter for urban points
      !
      ! !LOCAL VARIABLES:
      integer :: c,j,l, fc                   ! indices
@@ -400,7 +398,6 @@ contains
           ! Porosity of soil, partial volume of ice and liquid
           vol_ice(c,j) = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
           eff_porosity(c,j) = max(0.01_r8,watsat(c,j)-vol_ice(c,j))
-          vol_liq(c,j) = min(eff_porosity(c,j), h2osoi_liq(c,j)/(dz(c,j)*denh2o))
           icefrac(c,j) = min(1._r8,vol_ice(c,j)/watsat(c,j))
        end do
     end do
@@ -543,8 +540,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine SoilWater(bounds, num_hydrologyc, filter_hydrologyc, &
-        num_urbanc, filter_urbanc, &
-        dwat, hk, dhkdw)
+        num_urbanc, filter_urbanc)
      !
      ! !DESCRIPTION:
      ! Soil hydrology
@@ -618,19 +614,18 @@ contains
      !
      ! !ARGUMENTS:
      implicit none
-     type(bounds_type), intent(in) :: bounds            ! bounds
-     integer , intent(in)  :: num_hydrologyc            ! number of column soil points in column filter
-     integer , intent(in)  :: filter_hydrologyc(:)      ! column filter for soil points
-     integer , intent(in)  :: num_urbanc                ! number of column urban points in column filter
-     integer , intent(in)  :: filter_urbanc(:)          ! column filter for urban points
-     real(r8), intent(out) :: dwat(bounds%begc:,:)      ! change of soil water [m3/m3]
-     real(r8), intent(out) :: hk(bounds%begc:,:)        ! hydraulic conductivity [mm h2o/s]
-     real(r8), intent(out) :: dhkdw(bounds%begc:,:)     ! d(hk)/d(vol_liq)
+     type(bounds_type), intent(in) :: bounds             ! bounds
+     integer , intent(in)  :: num_hydrologyc             ! number of column soil points in column filter
+     integer , intent(in)  :: filter_hydrologyc(:)       ! column filter for soil points
+     integer , intent(in)  :: num_urbanc                 ! number of column urban points in column filter
+     integer , intent(in)  :: filter_urbanc(:)           ! column filter for urban points
      !
      ! !LOCAL VARIABLES:
      integer  :: p,c,fc,j                  ! do loop indices
      integer  :: jtop(bounds%begc:bounds%endc)             ! top level at each column
      real(r8) :: dtime                     ! land model time step (sec)
+     real(r8) :: hk(bounds%begc:bounds%endc,1:nlevsoi)     ! hydraulic conductivity [mm h2o/s]
+     real(r8) :: dhkdw(bounds%begc:bounds%endc,1:nlevsoi)  ! d(hk)/d(vol_liq)
      real(r8) :: amx(bounds%begc:bounds%endc,1:nlevsoi+1)  ! "a" left off diagonal of tridiagonal matrix
      real(r8) :: bmx(bounds%begc:bounds%endc,1:nlevsoi+1)  ! "b" diagonal column for tridiagonal matrix
      real(r8) :: cmx(bounds%begc:bounds%endc,1:nlevsoi+1)  ! "c" right off diagonal tridiagonal matrix
@@ -739,7 +734,7 @@ contains
     ! weighting depends on both the per-unit-area transpiration
     ! of the PFT and the PFTs area relative to all PFTs.
 
-    temp(:) = 0._r8
+    temp(bounds%begc : bounds%endc) = 0._r8
 
     do j = 1, nlevsoi
        do fc = 1, num_hydrologyc
@@ -1040,16 +1035,15 @@ contains
 
     ! Solve for dwat
 
-    jtop(:) = 1
-    call Tridiagonal(bounds, 1, nlevsoi+1, jtop, num_hydrologyc, filter_hydrologyc, &
-                     amx, bmx, cmx, rmx, dwat2 )
-    ! set dwat
-    do fc = 1,num_hydrologyc
-       c = filter_hydrologyc(fc)
-       do j = 1, nlevsoi
-          dwat(c,j)=dwat2(c,j)
-       end do
-    end do
+    jtop(bounds%begc : bounds%endc) = 1
+    call Tridiagonal(bounds, 1, nlevsoi+1, &
+         jtop(bounds%begc:bounds%endc), &
+         num_hydrologyc, filter_hydrologyc, &
+         amx(bounds%begc:bounds%endc, :), &
+         bmx(bounds%begc:bounds%endc, :), &
+         cmx(bounds%begc:bounds%endc, :), &
+         rmx(bounds%begc:bounds%endc, :), &
+         dwat2(bounds%begc:bounds%endc, :) )
 
     ! Renew the mass of liquid water
     ! also compute qcharge from dwat in aquifer layer
@@ -1433,8 +1427,6 @@ contains
       integer , intent(in) :: num_urbanc                   ! number of column urban points in column filter
       integer , intent(in) :: filter_urbanc(:)     ! column filter for urban points
       integer , intent(in) :: filter_hydrologyc(:) ! column filter for soil points
-      !    real(r8), intent(in) :: vol_liq(bounds%begc:,1:nlevsoi)   ! partial volume of liquid water in layer
-      !    real(r8), intent(in) :: icefrac(bounds%begc:,1:nlevsoi)   ! fraction of ice in layer
       !
       ! !LOCAL VARIABLES:
       character(len=32) :: subname = 'Drainage'  ! subroutine name

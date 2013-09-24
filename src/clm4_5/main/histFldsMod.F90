@@ -2530,14 +2530,6 @@ contains
             avgflag='A', long_name='dead root C transfer fire mortality to litter', &
             ptr_pft=pcf%m_deadcrootc_xfer_to_litter_fire, default='inactive')
 
-       call hist_addfld1d (fname='M_LIVESTEMC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
-            avgflag='A', long_name='live stem C storage fire mortality to litter', &
-            ptr_pft=pcf%m_livestemc_storage_to_litter_fire, default='inactive')
-
-       call hist_addfld1d (fname='M_DEADSTEMC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
-            avgflag='A', long_name='dead stem C storage fire mortality to litter', &
-            ptr_pft=pcf%m_deadstemc_storage_to_litter_fire, default='inactive')
-
        call hist_addfld1d (fname='M_LIVECROOTC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
             avgflag='A', long_name='live coarse root C fire mortality to litter', &
             ptr_pft=pcf%m_livecrootc_storage_to_litter_fire, default='inactive')
@@ -4949,15 +4941,15 @@ contains
 
           call hist_addfld2d (fname='watfc', units='m^3/m^3', type2d='levgrnd', &
                avgflag='A', long_name='water field capacity', &
-               ptr_pft=cps%watfc, default='inactive')
+               ptr_col=cps%watfc, default='inactive')
 
           call hist_addfld2d (fname='watsat', units='m^3/m^3', type2d='levgrnd', &
                avgflag='A', long_name='water saturated', &
-               ptr_pft=cps%watsat, default='inactive')
+               ptr_col=cps%watsat, default='inactive')
 
           call hist_addfld2d (fname='bsw', units='unitless', type2d='levgrnd', &
                avgflag='A', long_name='clapp and hornberger B', &
-               ptr_pft=cps%bsw, default='inactive')
+               ptr_col=cps%bsw, default='inactive')
 
           call hist_addfld_decomp (fname='SMIN_NO3_MASSDENS', units='ugN/cm^3 soil', type2d='levdcmp', &
                avgflag='A', long_name='SMIN_NO3_MASSDENS', &

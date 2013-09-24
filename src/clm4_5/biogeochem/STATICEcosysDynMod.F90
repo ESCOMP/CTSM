@@ -71,10 +71,10 @@ contains
        call endrun
     end if
 
-    mlai2t(:,:) = nan
-    msai2t(:,:) = nan
-    mhvt2t(:,:) = nan
-    mhvb2t(:,:) = nan
+    mlai2t(bounds%begp : bounds%endp, :) = nan
+    msai2t(bounds%begp : bounds%endp, :) = nan
+    mhvt2t(bounds%begp : bounds%endp, :) = nan
+    mhvb2t(bounds%begp : bounds%endp, :) = nan
 
   end subroutine EcosystemDynini
 

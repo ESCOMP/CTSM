@@ -94,6 +94,7 @@ module clm_driver
   use dynlandMod          , only : dynland_hwcontent
   use clm_varcon          , only : zlnd, isturb
   use clm_time_manager    , only : get_step_size,get_curr_date,get_ref_date,get_nstep
+  use CropRestMod         , only : CropRestIncYear
   use histFileMod         , only : hist_update_hbuf, hist_htapes_wrapup
   use restFileMod         , only : restFile_write, restFile_filename
   use accFldsMod          , only : updateAccFlds
@@ -230,6 +231,11 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   ! Set pointers into derived type
 
   cptr => col
+
+  ! Update time-related info
+
+  call CropRestIncYear()
+
 
   if (use_cn) then
      ! For dry-deposition need to call CLMSP so that mlaidiff is obtained

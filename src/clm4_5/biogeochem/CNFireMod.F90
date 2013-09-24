@@ -210,10 +210,19 @@ contains
    )
  
      !pft to column average 
-     call p2c(bounds, num_soilc, filter_soilc, prec10,  prec10_col)
-     call p2c(bounds, num_soilc, filter_soilc, prec60,  prec60_col)
-     call p2c(bounds, num_soilc, filter_soilc,totvegc, totvegc_col)
-     call p2c(bounds, num_soilc, filter_soilc,leafc, leafc_col)
+     call p2c(bounds, num_soilc, filter_soilc, &
+          prec10(bounds%begp:bounds%endp), &
+          prec10_col(bounds%begc:bounds%endc))
+     call p2c(bounds, num_soilc, filter_soilc, &
+          prec60(bounds%begp:bounds%endp), &
+          prec60_col(bounds%begc:bounds%endc))
+     call p2c(bounds, num_soilc, filter_soilc, &
+          totvegc(bounds%begp:bounds%endp), &
+          totvegc_col(bounds%begc:bounds%endc))
+     call p2c(bounds, num_soilc, filter_soilc, &
+          leafc(bounds%begp:bounds%endp), &
+          leafc_col(bounds%begc:bounds%endc))
+
      call get_curr_date (kyr, kmo, kda, mcsec)
      dayspyr = get_days_per_year()
      ! Get model step size

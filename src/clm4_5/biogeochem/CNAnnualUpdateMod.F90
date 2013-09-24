@@ -98,8 +98,12 @@ contains
       end do
 
       ! use p2c routine to get selected column-average pft-level fluxes and states
-      call p2c(bounds, num_soilc, filter_soilc, annsum_npp, cannsum_npp)
-      call p2c(bounds, num_soilc, filter_soilc, annavg_t2m, cannavg_t2m)
+      call p2c(bounds, num_soilc, filter_soilc, &
+           annsum_npp(bounds%begp:bounds%endp), &
+           cannsum_npp(bounds%begc:bounds%endc))
+      call p2c(bounds, num_soilc, filter_soilc, &
+           annavg_t2m(bounds%begp:bounds%endp), &
+           cannavg_t2m(bounds%begc:bounds%endc))
    end if
 
    end if

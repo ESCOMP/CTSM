@@ -76,6 +76,12 @@ contains
 
    ! pft-level non-mortality fluxes
    
+   ! Note: if the variables which are arguments to CIsoFluxCalc are ever changed to NOT be
+   ! pointers, then the CIsoFluxCalc routine will need to be changed to declare the bounds
+   ! of each argument, these bounds will need to be passed in, and - importantly for
+   ! threading to work properly - the subroutine calls will need to be changed so that
+   ! instead of 'call CIsoFluxCalc(foo, ...)' we have 'call CIsoFluxCalc(foo(begp:endp), ...)'.
+
    call CIsoFluxCalc(pcisof%leafc_xfer_to_leafc, pcf%leafc_xfer_to_leafc, &
                     pcisos%leafc_xfer, pcs%leafc_xfer, &
                     num_soilp, filter_soilp, 1._r8, 0, isotope)

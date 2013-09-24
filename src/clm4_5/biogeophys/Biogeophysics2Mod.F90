@@ -189,7 +189,11 @@ contains
 
     call t_startf('soiltemperature')
     call SoilTemperature(bounds, num_urbanl, filter_urbanl, &
-                         num_nolakec, filter_nolakec, xmf , fact, c_h2osfc, xmf_h2osfc)
+                         num_nolakec, filter_nolakec, &
+                         xmf(bounds%begc:bounds%endc), &
+                         fact(bounds%begc:bounds%endc, :), &
+                         c_h2osfc(bounds%begc:bounds%endc), &
+                         xmf_h2osfc(bounds%begc:bounds%endc))
     call t_stopf('soiltemperature')
 
     call t_startf('bgp2_loop_1')
@@ -460,7 +464,9 @@ contains
     ! lake balance for errsoi is not over pft
     ! therefore obtain column-level radiative temperature
 
-    call p2c(bounds, num_nolakec, filter_nolakec, errsoi_pft, errsoi_col)
+    call p2c(bounds, num_nolakec, filter_nolakec, &
+         errsoi_pft(bounds%begp:bounds%endp), &
+         errsoi_col(bounds%begc:bounds%endc))
     call t_stopf('bgp2_loop_4')
 
     end associate 

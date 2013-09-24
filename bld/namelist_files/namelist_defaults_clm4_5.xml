@@ -176,6 +176,17 @@ ic_tod="0" sim_year="2000" glc_nec="0" crop="on"  >lnd/clm2/initdata_map/clmi.IC
 ic_tod="0" sim_year="2000" glc_nec="0" crop="on"  >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24.0241-01-01.1.9x2.5_g1v6_simyr2000_c130909.nc
 </finidat>
 
+<!-- f10 resolution -->
+
+<finidat hgrid="10x15"    maxpft="25"  mask="USGS" bgc="cn"   ic_ymd="00010101" more_vertlayers=".false." vsoilc_centbgc="on"
+ic_tod="0" sim_year="2000" glc_nec="0" crop="on"  >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24.0241-01-01.10x15_USGS_simyr2000_c130909.nc
+</finidat>
+
+<finidat hgrid="10x15"    maxpft="25"  mask="USGS" bgc="cn"   ic_ymd="00010101" more_vertlayers=".false." vsoilc_centbgc="no-cent"
+ic_tod="0" sim_year="2000" glc_nec="0" crop="on"  >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24.0241-01-01.10x15_USGS_simyr2000_c130909.nc
+</finidat>
+
+
 
 <!-- for present day simulations - year 2000 -->
 <fsurdat hgrid="360x720cru"   sim_year="2000" crop="off"                           >

@@ -144,11 +144,11 @@ contains
     if ( crop_prog )then
        allocate(arepr(bounds%begp:bounds%endp))
        allocate(aroot(bounds%begp:bounds%endp))
-       arepr(:) = nan
-       aroot(:) = nan
+       arepr(bounds%begp : bounds%endp) = nan
+       aroot(bounds%begp : bounds%endp) = nan
     end if
     allocate(col_plant_ndemand(bounds%begc:bounds%endc))
-    col_plant_ndemand(:) = nan
+    col_plant_ndemand(bounds%begc : bounds%endc) = nan
 
     ! set time steps
     dt = real( get_step_size(), r8 )
@@ -693,7 +693,9 @@ contains
    end do ! end pft loop
 
    ! now use the p2c routine to get the column-averaged plant_ndemand
-   call p2c(bounds, num_soilc, filter_soilc, plant_ndemand, col_plant_ndemand)
+   call p2c(bounds, num_soilc, filter_soilc, &
+        plant_ndemand(bounds%begp:bounds%endp), &
+        col_plant_ndemand(bounds%begc:bounds%endc))
 
    if (.not. use_nitrif_denitrif) then
       ! column loops to resolve plant/heterotroph competition for mineral N

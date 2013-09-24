@@ -61,45 +61,79 @@ contains
 
     ! Averaging for pft water state variables
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pws%h2ocan, pws_a%h2ocan)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pws%h2ocan(bounds%begp:bounds%endp), &
+         pws_a%h2ocan(bounds%begc:bounds%endc))
 
     ! Averaging for pft water flux variables
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_ev_snow, pwf_a%qflx_ev_snow)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_ev_snow(bounds%begp:bounds%endp), &
+         pwf_a%qflx_ev_snow(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_ev_soil, pwf_a%qflx_ev_soil)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_ev_soil(bounds%begp:bounds%endp), &
+         pwf_a%qflx_ev_soil(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_ev_h2osfc, pwf_a%qflx_ev_h2osfc)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_ev_h2osfc(bounds%begp:bounds%endp), &
+         pwf_a%qflx_ev_h2osfc(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_evap_soi, pwf_a%qflx_evap_soi)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_evap_soi(bounds%begp:bounds%endp), &
+         pwf_a%qflx_evap_soi(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_evap_tot, pwf_a%qflx_evap_tot)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_evap_tot(bounds%begp:bounds%endp), &
+         pwf_a%qflx_evap_tot(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_rain_grnd, pwf_a%qflx_rain_grnd)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_rain_grnd(bounds%begp:bounds%endp), &
+         pwf_a%qflx_rain_grnd(bounds%begc:bounds%endc))
     
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_snow_grnd, pwf_a%qflx_snow_grnd)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_snow_grnd(bounds%begp:bounds%endp), &
+         pwf_a%qflx_snow_grnd(bounds%begc:bounds%endc))
     
-    call p2c (bounds, num_allc, filter_allc, pwf%qflx_snwcp_liq, pwf_a%qflx_snwcp_liq)
+    call p2c (bounds, num_allc, filter_allc, &
+         pwf%qflx_snwcp_liq(bounds%begp:bounds%endp), &
+         pwf_a%qflx_snwcp_liq(bounds%begc:bounds%endc))
 
     ! For lakes, this field is initially set in SLakeFluxesMod (which is called before this routine; 
     ! hence it is appropriate to include lake columns in this p2c call.
     ! However, it is later overwritten in SLakeHydrologyMod, both on the pft and the column level.
 
-    call p2c (bounds, num_allc, filter_allc, pwf%qflx_snwcp_ice, pwf_a%qflx_snwcp_ice)
+    call p2c (bounds, num_allc, filter_allc, &
+         pwf%qflx_snwcp_ice(bounds%begp:bounds%endp), &
+         pwf_a%qflx_snwcp_ice(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_tran_veg, pwf_a%qflx_tran_veg)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_tran_veg(bounds%begp:bounds%endp), &
+         pwf_a%qflx_tran_veg(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_evap_grnd, pwf_a%qflx_evap_grnd)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_evap_grnd(bounds%begp:bounds%endp), &
+         pwf_a%qflx_evap_grnd(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_allc, filter_allc, pwf%qflx_evap_soi, pwf_a%qflx_evap_soi)
+    call p2c (bounds, num_allc, filter_allc, &
+         pwf%qflx_evap_soi(bounds%begp:bounds%endp), &
+         pwf_a%qflx_evap_soi(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_prec_grnd, pwf_a%qflx_prec_grnd)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_prec_grnd(bounds%begp:bounds%endp), &
+         pwf_a%qflx_prec_grnd(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_dew_grnd, pwf_a%qflx_dew_grnd)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_dew_grnd(bounds%begp:bounds%endp), &
+         pwf_a%qflx_dew_grnd(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_sub_snow, pwf_a%qflx_sub_snow)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_sub_snow(bounds%begp:bounds%endp), &
+         pwf_a%qflx_sub_snow(bounds%begc:bounds%endc))
 
-    call p2c (bounds, num_nolakec, filter_nolakec, pwf%qflx_dew_snow, pwf_a%qflx_dew_snow)
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_dew_snow(bounds%begp:bounds%endp), &
+         pwf_a%qflx_dew_snow(bounds%begc:bounds%endc))
 
   end subroutine pft2col
 

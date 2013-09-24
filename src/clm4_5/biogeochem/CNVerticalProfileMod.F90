@@ -90,7 +90,11 @@ contains
    pcolumn               => pft%column                , & ! Input:  [integer (:)]  pft's column index                                 
    rootfr                => pps%rootfr                , & ! Input:  [real(r8) (:,:)]  fraction of roots in each soil layer  (nlevgrnd)
    wtcol                 => pft%wtcol                 , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
-   pactive               => pft%active                  & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive               => pft%active                , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   begp                  => bounds%begp               , &
+   endp                  => bounds%endp               , &
+   begc                  => bounds%begc               , &
+   endc                  => bounds%endc                 &
    )
 
      if (use_vertsoilc) then
@@ -101,15 +105,15 @@ contains
         end do
         
         ! initialize profiles to zero
-        leaf_prof(:,:) = 0._r8
-        froot_prof(:,:) = 0._r8
-        croot_prof(:,:) = 0._r8
-        stem_prof(:,:) = 0._r8
-        nfixation_prof(:,:) = 0._r8
-        ndep_prof(:,:) = 0._r8
+        leaf_prof(begp:endp, :) = 0._r8
+        froot_prof(begp:endp, :) = 0._r8
+        croot_prof(begp:endp, :) = 0._r8
+        stem_prof(begp:endp, :) = 0._r8
+        nfixation_prof(begc:endc, :) = 0._r8
+        ndep_prof(begc:endc, :) = 0._r8
 
-        cinput_rootfr(:,:) = 0._r8
-        col_cinput_rootfr(:,:) = 0._r8
+        cinput_rootfr(begp:endp, :) = 0._r8
+        col_cinput_rootfr(begc:endc, :) = 0._r8
 
         if ( exponential_rooting_profile ) then
            if ( .not. pftspecific_rootingprofile ) then
@@ -176,7 +180,10 @@ contains
         end do
 
         !! aggregate root profile to column
-        ! call p2c (decomp, nlevdecomp_full, cinput_rootfr, col_cinput_rootfr, 'unity')
+        ! call p2c (decomp, nlevdecomp_full, &
+        !      cinput_rootfr(bounds%begp:bounds%endp, :), &
+        !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
+        !      'unity')
         do pi = 1,maxpatch_pft
            do fc = 1,num_soilc
               c = filter_soilc(fc)
@@ -213,12 +220,12 @@ contains
      else
     
         ! for one layer decomposition model, set profiles to unity
-        leaf_prof(:,:) = 1._r8
-        froot_prof(:,:) = 1._r8
-        croot_prof(:,:) = 1._r8
-        stem_prof(:,:) = 1._r8
-        nfixation_prof(:,:) = 1._r8
-        ndep_prof(:,:) = 1._r8
+        leaf_prof(begp:endp, :) = 1._r8
+        froot_prof(begp:endp, :) = 1._r8
+        croot_prof(begp:endp, :) = 1._r8
+        stem_prof(begp:endp, :) = 1._r8
+        nfixation_prof(begc:endc, :) = 1._r8
+        ndep_prof(begc:endc, :) = 1._r8
 
      end if
     

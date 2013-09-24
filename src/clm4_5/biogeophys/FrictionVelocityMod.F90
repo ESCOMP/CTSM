@@ -7,6 +7,8 @@ module FrictionVelocityMod
   !
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
+  use shr_assert_mod, only : shr_assert
+  use shr_log_mod , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -45,24 +47,24 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbn, ubn         ! pft/landunit array bounds
-    integer , intent(in)  :: fn               ! number of filtered pft/landunit elements
-    integer , intent(in)  :: filtern(fn)      ! pft/landunit filter
-    real(r8), intent(in)  :: displa(lbn:ubn)  ! displacement height (m)
-    real(r8), intent(in)  :: z0m(lbn:ubn)     ! roughness length over vegetation, momentum [m]
-    real(r8), intent(in)  :: z0h(lbn:ubn)     ! roughness length over vegetation, sensible heat [m]
-    real(r8), intent(in)  :: z0q(lbn:ubn)     ! roughness length over vegetation, latent heat [m]
-    real(r8), intent(in)  :: obu(lbn:ubn)     ! monin-obukhov length (m)
-    integer,  intent(in)  :: iter             ! iteration number
-    real(r8), intent(in)  :: ur(lbn:ubn)      ! wind speed at reference height [m/s]
-    real(r8), intent(in)  :: um(lbn:ubn)      ! wind speed including the stablity effect [m/s]
+    integer , intent(in)  :: lbn, ubn       ! pft/landunit array bounds
+    integer , intent(in)  :: fn             ! number of filtered pft/landunit elements
+    integer , intent(in)  :: filtern(fn)    ! pft/landunit filter
+    real(r8), intent(in)  :: displa( lbn: ) ! displacement height (m) [lbn:ubn]
+    real(r8), intent(in)  :: z0m( lbn: )    ! roughness length over vegetation, momentum [m] [lbn:ubn]
+    real(r8), intent(in)  :: z0h( lbn: )    ! roughness length over vegetation, sensible heat [m] [lbn:ubn]
+    real(r8), intent(in)  :: z0q( lbn: )    ! roughness length over vegetation, latent heat [m] [lbn:ubn]
+    real(r8), intent(in)  :: obu( lbn: )    ! monin-obukhov length (m) [lbn:ubn]
+    integer,  intent(in)  :: iter           ! iteration number
+    real(r8), intent(in)  :: ur( lbn: )     ! wind speed at reference height [m/s] [lbn:ubn]
+    real(r8), intent(in)  :: um( lbn: )     ! wind speed including the stablity effect [m/s] [lbn:ubn]
     logical,  optional, intent(in)  :: landunit_index  ! optional argument that defines landunit or pft level
-    real(r8), intent(out) :: ustar(lbn:ubn)   ! friction velocity [m/s]
-    real(r8), intent(out) :: temp1(lbn:ubn)   ! relation for potential temperature profile
-    real(r8), intent(out) :: temp12m(lbn:ubn) ! relation for potential temperature profile applied at 2-m
-    real(r8), intent(out) :: temp2(lbn:ubn)   ! relation for specific humidity profile
-    real(r8), intent(out) :: temp22m(lbn:ubn) ! relation for specific humidity profile applied at 2-m
-    real(r8), intent(inout) :: fm(lbn:ubn)    ! diagnose 10m wind (DUST only)
+    real(r8), intent(out) :: ustar( lbn: )   ! friction velocity [m/s] [lbn:ubn]
+    real(r8), intent(out) :: temp1( lbn: )   ! relation for potential temperature profile [lbn:ubn]
+    real(r8), intent(out) :: temp12m( lbn: ) ! relation for potential temperature profile applied at 2-m [lbn:ubn]
+    real(r8), intent(out) :: temp2( lbn: )   ! relation for specific humidity profile [lbn:ubn]
+    real(r8), intent(out) :: temp22m( lbn: ) ! relation for specific humidity profile applied at 2-m [lbn:ubn]
+    real(r8), intent(inout) :: fm( lbn: )    ! diagnose 10m wind (DUST only) [lbn:ubn]
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: zetam = 1.574_r8 ! transition point of flux-gradient relation (wind profile)
@@ -79,6 +81,21 @@ contains
     real(r8) :: zeta10                      ! Used to diagnose the 10 meter wind
     real(r8) :: vds_tmp                     ! Temporary for dry deposition velocity
     !------------------------------------------------------------------------------
+
+   ! Enforce expected array sizes
+   call shr_assert((ubound(displa)  == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(z0m)     == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(z0h)     == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(z0q)     == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(obu)     == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(ur)      == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(um)      == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(ustar)   == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(temp1)   == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(temp12m) == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(temp2)   == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(temp22m) == (/ubn/)), errMsg(__FILE__, __LINE__))
+   call shr_assert((ubound(fm)      == (/ubn/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    vds             => pps%vds            , & ! Output: [real(r8) (:)]  dry deposition velocity term (m/s) (for SO4 NH4NO3)

@@ -4,13 +4,15 @@ module SurfaceAlbedoMod
   ! Performs surface albedo calculations
   !
   ! !PUBLIC TYPES:
-  use clm_varcon  , only : istsoil
-  use clm_varpar  , only : numrad, nlevcan
-  use clm_varcon  , only : istcrop
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use clm_varpar  , only : nlevsno
-  use SNICARMod   , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
-  use decompMod   , only: bounds_type
+  use clm_varcon     , only : istsoil
+  use clm_varpar     , only : numrad, nlevcan
+  use clm_varcon     , only : istcrop
+  use shr_kind_mod   , only : r8 => shr_kind_r8
+  use clm_varpar     , only : nlevsno
+  use SNICARMod      , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
+  use decompMod      , only : bounds_type
+  use shr_assert_mod , only : shr_assert
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
 
   implicit none
   save
@@ -113,6 +115,7 @@ contains
     real(r8) :: albsnd_dst(bounds%begc:bounds%endc,numrad) ! direct snow albedo without dust (radiative forcing)
     real(r8) :: albsni_dst(bounds%begc:bounds%endc,numrad) ! diffuse snow albedo without dust (radiative forcing)
     integer  :: i                          ! index for layers [idx]
+    integer  :: aer                        ! index for sno_nbr_aer
     real(r8) :: flx_absd_snw(bounds%begc:bounds%endc,-nlevsno+1:1,numrad)   ! flux absorption factor for just snow (direct) [frc]
     real(r8) :: flx_absi_snw(bounds%begc:bounds%endc,-nlevsno+1:1,numrad)   ! flux absorption factor for just snow (diffuse) [frc]
     real(r8) :: foo_snw(bounds%begc:bounds%endc,-nlevsno+1:1,numrad)        ! dummy array for forcing calls
@@ -284,7 +287,10 @@ contains
     ! Note that ground albedo routine will only compute nonzero snow albedos
     ! where coszen > 0
 
-    call SoilAlbedo(bounds, num_nourbanc, filter_nourbanc, coszen_col, albsnd, albsni) 
+    call SoilAlbedo(bounds, num_nourbanc, filter_nourbanc, &
+         coszen_col(bounds%begc:bounds%endc), &
+         albsnd(bounds%begc:bounds%endc, :), &
+         albsni(bounds%begc:bounds%endc, :)) 
 
     ! set variables to pass to SNICAR.
     
@@ -294,13 +300,19 @@ contains
        h2osno_liq(c,:) = h2osoi_liq(c,-nlevsno+1:0)
        h2osno_ice(c,:) = h2osoi_ice(c,-nlevsno+1:0)
        snw_rds_in(c,:) = nint(snw_rds(c,:))
+    end do
 
-       ! zero aerosol input arrays
-       mss_cnc_aer_in_frc_pur(c,:,:) = 0._r8
-       mss_cnc_aer_in_frc_bc(c,:,:)  = 0._r8
-       mss_cnc_aer_in_frc_oc(c,:,:)  = 0._r8
-       mss_cnc_aer_in_frc_dst(c,:,:) = 0._r8
-       mss_cnc_aer_in_fdb(c,:,:)     = 0._r8
+    ! zero aerosol input arrays
+    do aer = 1, sno_nbr_aer
+       do i = -nlevsno+1, 0
+          do c = bounds%begc, bounds%endc
+             mss_cnc_aer_in_frc_pur(c,i,aer) = 0._r8
+             mss_cnc_aer_in_frc_bc(c,i,aer)  = 0._r8
+             mss_cnc_aer_in_frc_oc(c,i,aer)  = 0._r8
+             mss_cnc_aer_in_frc_dst(c,i,aer) = 0._r8
+             mss_cnc_aer_in_fdb(c,i,aer)     = 0._r8
+          end do
+       end do
     end do
 
     ! Set aerosol input arrays
@@ -342,13 +354,27 @@ contains
        ! BC FORCING CALCULATIONS
        flg_slr = 1; ! direct-beam
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
-                      coszen_col, flg_slr, h2osno_liq, h2osno_ice, snw_rds_in, &
-                      mss_cnc_aer_in_frc_bc, albsfc, albsnd_bc, foo_snw)
+                      coszen_col(bounds%begc:bounds%endc), &
+                      flg_slr, &
+                      h2osno_liq(bounds%begc:bounds%endc, :), &
+                      h2osno_ice(bounds%begc:bounds%endc, :), &
+                      snw_rds_in(bounds%begc:bounds%endc, :), &
+                      mss_cnc_aer_in_frc_bc(bounds%begc:bounds%endc, :, :), &
+                      albsfc(bounds%begc:bounds%endc, :), &
+                      albsnd_bc(bounds%begc:bounds%endc, :), &
+                      foo_snw(bounds%begc:bounds%endc, :, :))
     
        flg_slr = 2; ! diffuse
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
-                      coszen_col, flg_slr, h2osno_liq, h2osno_ice, snw_rds_in, &
-                      mss_cnc_aer_in_frc_bc, albsfc, albsni_bc, foo_snw)
+                      coszen_col(bounds%begc:bounds%endc), &
+                      flg_slr, &
+                      h2osno_liq(bounds%begc:bounds%endc, :), &
+                      h2osno_ice(bounds%begc:bounds%endc, :), &
+                      snw_rds_in(bounds%begc:bounds%endc, :), &
+                      mss_cnc_aer_in_frc_bc(bounds%begc:bounds%endc, :, :), &
+                      albsfc(bounds%begc:bounds%endc, :), &
+                      albsni_bc(bounds%begc:bounds%endc, :), &
+                      foo_snw(bounds%begc:bounds%endc, :, :))
 
        ! 2. OC input array:
        !  set BC and dust concentrations, so OC_FRC=[(BC+OC+dust)-(BC+dust)]
@@ -363,13 +389,27 @@ contains
           ! OC FORCING CALCULATIONS
           flg_slr = 1; ! direct-beam
           call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
-                         coszen_col, flg_slr, h2osno_liq, h2osno_ice, snw_rds_in, &
-                         mss_cnc_aer_in_frc_oc, albsfc, albsnd_oc, foo_snw)
+                         coszen_col(bounds%begc:bounds%endc), &
+                         flg_slr, &
+                         h2osno_liq(bounds%begc:bounds%endc, :), &
+                         h2osno_ice(bounds%begc:bounds%endc, :), &
+                         snw_rds_in(bounds%begc:bounds%endc, :), &
+                         mss_cnc_aer_in_frc_oc(bounds%begc:bounds%endc, :, :), &
+                         albsfc(bounds%begc:bounds%endc, :), &
+                         albsnd_oc(bounds%begc:bounds%endc, :), &
+                         foo_snw(bounds%begc:bounds%endc, :, :))
           
           flg_slr = 2; ! diffuse
           call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
-                         coszen_col, flg_slr, h2osno_liq, h2osno_ice, snw_rds_in, &
-                         mss_cnc_aer_in_frc_oc, albsfc, albsni_oc, foo_snw)
+                         coszen_col(bounds%begc:bounds%endc), &
+                         flg_slr, &
+                         h2osno_liq(bounds%begc:bounds%endc, :), &
+                         h2osno_ice(bounds%begc:bounds%endc, :), &
+                         snw_rds_in(bounds%begc:bounds%endc, :), &
+                         mss_cnc_aer_in_frc_oc(bounds%begc:bounds%endc, :, :), &
+                         albsfc(bounds%begc:bounds%endc, :), &
+                         albsni_oc(bounds%begc:bounds%endc, :), &
+                         foo_snw(bounds%begc:bounds%endc, :, :))
        endif
        
        ! 3. DUST input array:
@@ -384,37 +424,79 @@ contains
        ! DUST FORCING CALCULATIONS
        flg_slr = 1; ! direct-beam
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
-                      coszen_col, flg_slr, h2osno_liq, h2osno_ice, snw_rds_in, &
-                      mss_cnc_aer_in_frc_dst, albsfc, albsnd_dst, foo_snw)
+                      coszen_col(bounds%begc:bounds%endc), &
+                      flg_slr, &
+                      h2osno_liq(bounds%begc:bounds%endc, :), &
+                      h2osno_ice(bounds%begc:bounds%endc, :), &
+                      snw_rds_in(bounds%begc:bounds%endc, :), &
+                      mss_cnc_aer_in_frc_dst(bounds%begc:bounds%endc, :, :), &
+                      albsfc(bounds%begc:bounds%endc, :), &
+                      albsnd_dst(bounds%begc:bounds%endc, :), &
+                      foo_snw(bounds%begc:bounds%endc, :, :))
        
        flg_slr = 2; ! diffuse
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
-                      coszen_col, flg_slr, h2osno_liq, h2osno_ice, snw_rds_in, &
-                      mss_cnc_aer_in_frc_dst, albsfc, albsni_dst, foo_snw)
+                      coszen_col(bounds%begc:bounds%endc), &
+                      flg_slr, &
+                      h2osno_liq(bounds%begc:bounds%endc, :), &
+                      h2osno_ice(bounds%begc:bounds%endc, :), &
+                      snw_rds_in(bounds%begc:bounds%endc, :), &
+                      mss_cnc_aer_in_frc_dst(bounds%begc:bounds%endc, :, :), &
+                      albsfc(bounds%begc:bounds%endc, :), &
+                      albsni_dst(bounds%begc:bounds%endc, :), &
+                      foo_snw(bounds%begc:bounds%endc, :, :))
 
        ! 4. ALL AEROSOL FORCING CALCULATION
        ! (pure snow albedo)
        flg_slr = 1; ! direct-beam
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
-                      coszen_col, flg_slr, h2osno_liq, h2osno_ice, snw_rds_in, &
-                      mss_cnc_aer_in_frc_pur, albsfc, albsnd_pur, foo_snw)
+                      coszen_col(bounds%begc:bounds%endc), &
+                      flg_slr, &
+                      h2osno_liq(bounds%begc:bounds%endc, :), &
+                      h2osno_ice(bounds%begc:bounds%endc, :), &
+                      snw_rds_in(bounds%begc:bounds%endc, :), &
+                      mss_cnc_aer_in_frc_pur(bounds%begc:bounds%endc, :, :), &
+                      albsfc(bounds%begc:bounds%endc, :), &
+                      albsnd_pur(bounds%begc:bounds%endc, :), &
+                      foo_snw(bounds%begc:bounds%endc, :, :))
     
        flg_slr = 2; ! diffuse
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
-                      coszen_col, flg_slr, h2osno_liq, h2osno_ice, snw_rds_in, &
-                      mss_cnc_aer_in_frc_pur, albsfc, albsni_pur, foo_snw)
+                      coszen_col(bounds%begc:bounds%endc), &
+                      flg_slr, &
+                      h2osno_liq(bounds%begc:bounds%endc, :), &
+                      h2osno_ice(bounds%begc:bounds%endc, :), &
+                      snw_rds_in(bounds%begc:bounds%endc, :), &
+                      mss_cnc_aer_in_frc_pur(bounds%begc:bounds%endc, :, :), &
+                      albsfc(bounds%begc:bounds%endc, :), &
+                      albsni_pur(bounds%begc:bounds%endc, :), &
+                      foo_snw(bounds%begc:bounds%endc, :, :))
     end if
 
     ! CLIMATE FEEDBACK CALCULATIONS, ALL AEROSOLS:
     flg_slr = 1; ! direct-beam
     call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
-                   coszen_col, flg_slr, h2osno_liq, h2osno_ice, snw_rds_in, &
-                   mss_cnc_aer_in_fdb, albsfc, albsnd, flx_absd_snw)
+                   coszen_col(bounds%begc:bounds%endc), &
+                   flg_slr, &
+                   h2osno_liq(bounds%begc:bounds%endc, :), &
+                   h2osno_ice(bounds%begc:bounds%endc, :), &
+                   snw_rds_in(bounds%begc:bounds%endc, :), &
+                   mss_cnc_aer_in_fdb(bounds%begc:bounds%endc, :, :), &
+                   albsfc(bounds%begc:bounds%endc, :), &
+                   albsnd(bounds%begc:bounds%endc, :), &
+                   flx_absd_snw(bounds%begc:bounds%endc, :, :))
 
     flg_slr = 2; ! diffuse
     call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
-                   coszen_col, flg_slr, h2osno_liq, h2osno_ice, snw_rds_in, &
-                   mss_cnc_aer_in_fdb, albsfc, albsni, flx_absi_snw)
+                   coszen_col(bounds%begc:bounds%endc), &
+                   flg_slr, &
+                   h2osno_liq(bounds%begc:bounds%endc, :), &
+                   h2osno_ice(bounds%begc:bounds%endc, :), &
+                   snw_rds_in(bounds%begc:bounds%endc, :), &
+                   mss_cnc_aer_in_fdb(bounds%begc:bounds%endc, :, :), &
+                   albsfc(bounds%begc:bounds%endc, :), &
+                   albsni(bounds%begc:bounds%endc, :), &
+                   flx_absi_snw(bounds%begc:bounds%endc, :, :))
 
     ! ground albedos and snow-fraction weighting of snow absorption factors
     do ib = 1, nband
@@ -690,7 +772,10 @@ contains
     ! Calculate surface albedos and fluxes 
     ! Only perform on vegetated pfts where coszen > 0
 
-    call TwoStream (bounds, filter_vegsol, num_vegsol, coszen_pft, rho, tau)
+    call TwoStream (bounds, filter_vegsol, num_vegsol, &
+         coszen_pft(bounds%begp:bounds%endp), &
+         rho(bounds%begp:bounds%endp, :), &
+         tau(bounds%begp:bounds%endp, :))
        
     ! Determine values for non-vegetated pfts where coszen > 0
 
@@ -741,12 +826,12 @@ contains
      !
      ! !ARGUMENTS:
      implicit none
-     type(bounds_type), intent(in) :: bounds            ! bounds
-     integer , intent(in) :: num_nourbanc               ! number of columns in non-urban points in column filter
-     integer , intent(in) :: filter_nourbanc(:)         ! column filter for non-urban points
-     real(r8), intent(in) :: coszen(bounds%begc:)       ! cos solar zenith angle next time step (column-level)
-     real(r8), intent(in) :: albsnd(bounds%begc:,:)     ! snow albedo (direct)
-     real(r8), intent(in) :: albsni(bounds%begc:,:)     ! snow albedo (diffuse)
+     type(bounds_type), intent(in) :: bounds             ! bounds
+     integer , intent(in) :: num_nourbanc                ! number of columns in non-urban points in column filter
+     integer , intent(in) :: filter_nourbanc(:)          ! column filter for non-urban points
+     real(r8), intent(in) :: coszen( bounds%begc: )      ! cos solar zenith angle next time step [col]
+     real(r8), intent(in) :: albsnd( bounds%begc: , 1: ) ! snow albedo (direct) [col, numrad]
+     real(r8), intent(in) :: albsni( bounds%begc: , 1: ) ! snow albedo (diffuse) [col, numrad]
      !
      ! !LOCAL VARIABLES:
      !
@@ -761,6 +846,11 @@ contains
      integer  :: soilcol       ! soilcolor
      real(r8) :: sicefr        ! Lake surface ice fraction (based on D. Mironov 2010)
      !-----------------------------------------------------------------------
+
+     ! Enforce expected array sizes
+     call shr_assert((ubound(coszen) == (/bounds%endc/)),         errMsg(__FILE__, __LINE__))
+     call shr_assert((ubound(albsnd) == (/bounds%endc, numrad/)), errMsg(__FILE__, __LINE__))
+     call shr_assert((ubound(albsni) == (/bounds%endc, numrad/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    isoicol       => cps%isoicol      , & ! Input:  [integer (:)]  soil color class                         
@@ -872,9 +962,9 @@ contains
      type(bounds_type), intent(in) :: bounds           ! bounds
      integer , intent(in)  :: filter_vegsol(:)         ! filter for vegetated pfts with coszen>0
      integer , intent(in)  :: num_vegsol               ! number of vegetated pfts where coszen>0
-     real(r8), intent(in)  :: coszen(bounds%begp:)     ! cosine solar zenith angle for next time step
-     real(r8), intent(in)  :: rho(bounds%begp:,:)      ! leaf/stem refl weighted by fraction LAI and SAI
-     real(r8), intent(in)  :: tau(bounds%begp:,:)      ! leaf/stem tran weighted by fraction LAI and SAI
+     real(r8), intent(in)  :: coszen( bounds%begp: )   ! cosine solar zenith angle for next time step [pft]
+     real(r8), intent(in)  :: rho( bounds%begp: , 1: ) ! leaf/stem refl weighted by fraction LAI and SAI [pft, numrad]
+     real(r8), intent(in)  :: tau( bounds%begp: , 1: ) ! leaf/stem tran weighted by fraction LAI and SAI [pft, numrad]
      !
      ! !LOCAL VARIABLES:
      integer  :: fp,p,c,iv        ! array indices
@@ -911,6 +1001,10 @@ contains
      real(r8) :: extkn                                             ! nitrogen allocation coefficient
      !-----------------------------------------------------------------------
 
+     ! Enforce expected array sizes
+     call shr_assert((ubound(coszen) == (/bounds%endp/)),         errMsg(__FILE__, __LINE__))
+     call shr_assert((ubound(rho)    == (/bounds%endp, numrad/)), errMsg(__FILE__, __LINE__))
+     call shr_assert((ubound(tau)    == (/bounds%endp, numrad/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    albgrd                    =>    cps%albgrd              , & ! Input:  [real(r8) (:,:)]  ground albedo (direct) (column-level) 

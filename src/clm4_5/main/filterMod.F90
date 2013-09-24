@@ -11,6 +11,8 @@ module filterMod
   use abortutils, only : endrun
   use clm_varctl, only : iulog
   use decompMod , only : bounds_type  
+  use shr_assert_mod , only : shr_assert
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -198,18 +200,20 @@ contains
   end subroutine allocFiltersOneGroup
 
   !------------------------------------------------------------------------
-  subroutine setFilters(nc, bounds)
+  subroutine setFilters(bounds)
     !
     ! !DESCRIPTION:
     ! Set CLM filters.
+    use decompMod , only : BOUNDS_LEVEL_CLUMP
     !
     ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: nc ! clump index
     type(bounds_type), intent(in) :: bounds  ! bounds
     !------------------------------------------------------------------------
 
-    call setFiltersOneGroup(nc, bounds, &
+    call shr_assert(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
+
+    call setFiltersOneGroup(bounds, &
          filter, include_inactive = .false.)
 
     ! At least as of June, 2013, the 'inactive_and_active' version of the filters is
@@ -222,14 +226,14 @@ contains
     ! filters are updated. But if this proves to be a performance problem, we could
     ! introduce an argument saying whether we're in initialization, and if so, skip this
     ! call.
-    call setFiltersOneGroup(nc, bounds, &
+    call setFiltersOneGroup(bounds, &
          filter_inactive_and_active, include_inactive = .true.)
 
   end subroutine setFilters
 
 
   !------------------------------------------------------------------------
-  subroutine setFiltersOneGroup(nc, bounds, this_filter, include_inactive )
+  subroutine setFiltersOneGroup(bounds, this_filter, include_inactive )
     !
     ! !DESCRIPTION:
     ! Set CLM filters for one group of filters.
@@ -240,25 +244,29 @@ contains
     !
     ! !USES:
     use clmtype
-    use decompMod , only : get_clump_bounds
+    use decompMod , only : BOUNDS_LEVEL_CLUMP
     use pftvarcon , only : npcropmin
     use clm_varcon, only : istsoil, icol_road_perv
     use clm_varcon, only : istcrop
     !
     ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: nc                ! clump index
     type(bounds_type), intent(in) :: bounds  ! bounds
     type(clumpfilter), intent(inout) :: this_filter(:) ! the group of filters to set
     logical, intent(in) :: include_inactive            ! whether inactive points should be included in the filters
     !
     ! LOCAL VARAIBLES:
+    integer :: nc          ! clump index
     integer :: c,l,p       ! column, landunit, pft indices
     integer :: fl          ! lake filter index
     integer :: fnl,fnlu    ! non-lake filter index
     integer :: fs          ! soil filter index
     integer :: f, fn       ! general indices
     !------------------------------------------------------------------------
+
+    call shr_assert(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
+
+    nc = bounds%clump_index
 
     ! Create lake and non-lake filters at column-level 
 

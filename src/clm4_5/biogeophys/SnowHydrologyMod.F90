@@ -219,15 +219,15 @@ contains
     ! 4) update mass of aerosol in top layer, accordingly
     ! 5) update mass concentration of aerosol accordingly
 
-    qin(:) = 0._r8
-    qin_bc_phi(:) = 0._r8
-    qin_bc_pho(:) = 0._r8
-    qin_oc_phi(:) = 0._r8
-    qin_oc_pho(:) = 0._r8
-    qin_dst1(:)   = 0._r8
-    qin_dst2(:)   = 0._r8
-    qin_dst3(:)   = 0._r8
-    qin_dst4(:)   = 0._r8
+    qin(bounds%begc : bounds%endc) = 0._r8
+    qin_bc_phi(bounds%begc : bounds%endc) = 0._r8
+    qin_bc_pho(bounds%begc : bounds%endc) = 0._r8
+    qin_oc_phi(bounds%begc : bounds%endc) = 0._r8
+    qin_oc_pho(bounds%begc : bounds%endc) = 0._r8
+    qin_dst1(bounds%begc : bounds%endc)   = 0._r8
+    qin_dst2(bounds%begc : bounds%endc)   = 0._r8
+    qin_dst3(bounds%begc : bounds%endc)   = 0._r8
+    qin_dst4(bounds%begc : bounds%endc)   = 0._r8
 
     do j = -nlevsno+1, 0
        do fc = 1, num_snowc
@@ -509,7 +509,7 @@ contains
 
     ! Begin calculation - note that the following column loops are only invoked if snl(c) < 0
 
-    burden(:) = 0._r8
+    burden(bounds%begc : bounds%endc) = 0._r8
 
     do j = -nlevsno+1, 0
        do fc = 1, num_snowc

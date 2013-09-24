@@ -73,7 +73,9 @@ contains
 
     ! Determine beginning water balance for time step
     ! pft-level canopy water averaged to column
-    call p2c(bounds, num_nolakec, filter_nolakec, h2ocan_pft, h2ocan_col)
+    call p2c(bounds, num_nolakec, filter_nolakec, &
+         h2ocan_pft(bounds%begp:bounds%endp), &
+         h2ocan_col(bounds%begc:bounds%endc))
 
     do f = 1, num_hydrologyc
        c = filter_hydrologyc(f)

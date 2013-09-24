@@ -15,6 +15,8 @@ module histFileMod
   use decompMod   , only : get_proc_bounds, get_proc_global, bounds_type
   use clm_varcon  , only : dzsoi_decomp
   use ncdio_pio
+  use shr_assert_mod , only : shr_assert
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   implicit none
   save
   private
@@ -25,7 +27,7 @@ module histFileMod
   !
   integer , public, parameter :: max_tapes = 6          ! max number of history tapes
   integer , public, parameter :: max_flds = 2500        ! max number of history fields
-  integer , public, parameter :: max_namlen = 32        ! maximum number of characters for field name
+  integer , public, parameter :: max_namlen = 64        ! maximum number of characters for field name
   !
   ! Counters
   !
@@ -988,10 +990,14 @@ contains
     ! Accumulate (or take min, max, etc. as appropriate) input field
     ! into its history buffer for appropriate tapes.
     !
+    ! This canNOT be called from within a threaded region (see comment below regarding the
+    ! call to p2g, and the lack of explicit bounds on its arguments; see also bug 1786)
+    !
     ! !USES:
     use clmtype
     use subgridAveMod, only : p2g, c2g, l2g
     use clm_varcon   , only : istice_mec
+    use decompMod    , only : BOUNDS_LEVEL_PROC
     !
     ! !ARGUMENTS:
     implicit none
@@ -1022,6 +1028,8 @@ contains
     integer k_offset                    ! offset for mapping sliced subarray pointers when outputting variables in PFT/col vector form
     !-----------------------------------------------------------------------
 
+    call shr_assert(bounds%level == BOUNDS_LEVEL_PROC, errMsg(__FILE__, __LINE__))
+
     avgflag        =  tape(t)%hlist(f)%avgflag
     nacs           => tape(t)%hlist(f)%nacs
     hbuf           => tape(t)%hlist(f)%hbuf
@@ -1040,13 +1048,27 @@ contains
     map2gcell = .false.
     if (type1d_out == nameg .or. type1d_out == grlnd) then
        if (type1d == namep) then
-          call p2g(bounds, field, field_gcell, p2c_scale_type, c2l_scale_type, l2g_scale_type)
+          ! In this and the following calls, we do NOT explicitly subset field using
+          ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
+          ! for some fields, the lower bound has been reset to 1 due to taking a pointer
+          ! to an array slice. Thus, this code will NOT work properly if done within a
+          ! threaded region! (See also bug 1786)
+          call p2g(bounds, &
+               field, &
+               field_gcell(bounds%begg:bounds%endg), &
+               p2c_scale_type, c2l_scale_type, l2g_scale_type)
           map2gcell = .true.
        else if (type1d == namec) then
-          call c2g(bounds, field, field_gcell, c2l_scale_type, l2g_scale_type)
+          call c2g(bounds, &
+               field, &
+               field_gcell(bounds%begg:bounds%endg), &
+               c2l_scale_type, l2g_scale_type)
           map2gcell = .true.
        else if (type1d == namel) then
-          call l2g(bounds, field, field_gcell, l2g_scale_type)
+          call l2g(bounds, &
+               field, &
+               field_gcell(bounds%begg:bounds%endg), &
+               l2g_scale_type)
           map2gcell = .true.
        end if
     end if
@@ -1209,10 +1231,14 @@ contains
     ! Accumulate (or take min, max, etc. as appropriate) input field
     ! into its history buffer for appropriate tapes.
     !
+    ! This canNOT be called from within a threaded region (see comment below regarding the
+    ! call to p2g, and the lack of explicit bounds on its arguments; see also bug 1786)
+    !
     ! !USES:
     use clmtype
     use subgridAveMod, only : p2g, c2g, l2g
     use clm_varcon   , only : istice_mec
+    use decompMod    , only : BOUNDS_LEVEL_PROC
     !
     ! !ARGUMENTS:
     implicit none
@@ -1243,6 +1269,8 @@ contains
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
     !-----------------------------------------------------------------------
 
+    call shr_assert(bounds%level == BOUNDS_LEVEL_PROC, errMsg(__FILE__, __LINE__))
+
     avgflag        =  tape(t)%hlist(f)%avgflag
     nacs           => tape(t)%hlist(f)%nacs
     hbuf           => tape(t)%hlist(f)%hbuf
@@ -1261,13 +1289,27 @@ contains
     map2gcell = .false.
     if (type1d_out == nameg .or. type1d_out == grlnd) then
        if (type1d == namep) then
-          call p2g(bounds, num2d, field, field_gcell, p2c_scale_type, c2l_scale_type, l2g_scale_type)
+          ! In this and the following calls, we do NOT explicitly subset field using
+          ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
+          ! for some fields, the lower bound has been reset to 1 due to taking a pointer
+          ! to an array slice. Thus, this code will NOT work properly if done within a
+          ! threaded region! (See also bug 1786)
+          call p2g(bounds, num2d, &
+               field, &
+               field_gcell(bounds%begg:bounds%endg, :), &
+               p2c_scale_type, c2l_scale_type, l2g_scale_type)
           map2gcell = .true.
        else if (type1d == namec) then
-          call c2g(bounds, num2d, field, field_gcell, c2l_scale_type, l2g_scale_type)
+          call c2g(bounds, num2d, &
+               field, &
+               field_gcell(bounds%begg:bounds%endg, :), &
+               c2l_scale_type, l2g_scale_type)
           map2gcell = .true.
        else if (type1d == namel) then
-          call l2g(bounds, num2d, field, field_gcell, l2g_scale_type)
+          call l2g(bounds, num2d, &
+               field, &
+               field_gcell(bounds%begg:bounds%endg, :), &
+               l2g_scale_type)
           map2gcell = .true.
        end if
     end if
@@ -1837,8 +1879,10 @@ contains
           if (tape(t)%dov2xy) then
              histo(:,:) = spval
 
-             call c2g(bounds, nlevgrnd, histi, histo, c2l_scale_type='unity', &
-                  l2g_scale_type=l2g_scale_type)
+             call c2g(bounds, nlevgrnd, &
+                  histi(bounds%begc:bounds%endc, :), &
+                  histo(bounds%begg:bounds%endg, :), &
+                  c2l_scale_type='unity', l2g_scale_type=l2g_scale_type)
 
              if (ldomain%isgrid2d) then
                 call ncd_io(varname=trim(varnames(ifld)), dim1name=grlnd, &
@@ -1916,8 +1960,10 @@ contains
           end do
           if (tape(t)%dov2xy) then
              histol(:,:) = spval
-             call c2g(bounds, nlevlak, histil, histol, c2l_scale_type='unity', &
-                  l2g_scale_type='lake')
+             call c2g(bounds, nlevlak, &
+                  histil(bounds%begc:bounds%endc, :), &
+                  histol(bounds%begg:bounds%endg, :), &
+                  c2l_scale_type='unity', l2g_scale_type='lake')
              if (ldomain%isgrid2d) then
                 call ncd_io(varname=trim(varnamesl(ifld)), dim1name=grlnd, &
                      data=histol, ncid=nfid(t), flag='write')
@@ -3784,6 +3830,7 @@ contains
     character(len=8) :: scale_type_c2l ! scale type for subgrid averaging of columns to landunits
     character(len=8) :: scale_type_l2g ! scale type for subgrid averaging of landunits to gridcells
     type(bounds_type):: bounds         ! boudns 
+    character(len=16):: l_default      ! local version of 'default'
     character(len=*),parameter :: subname = 'hist_addfld1d'
 !------------------------------------------------------------------------
 
@@ -3941,8 +3988,12 @@ contains
          units=units, avgflag=avgflag, long_name=long_name, hpindex=hpindex, &
          p2c_scale_type=scale_type_p2c, c2l_scale_type=scale_type_c2l, l2g_scale_type=scale_type_l2g)
 
+    l_default = 'active'
     if (present(default)) then
-       if (trim(default) == 'inactive') return
+       l_default = default
+    end if
+    if (trim(l_default) == 'inactive') then
+       return
     else
        call masterlist_make_active (name=trim(fname), tape_index=1)
     end if
@@ -4004,6 +4055,7 @@ contains
     character(len=8) :: scale_type_c2l ! scale type for subgrid averaging of columns to landunits
     character(len=8) :: scale_type_l2g ! scale type for subgrid averaging of landunits to gridcells
     type(bounds_type):: bounds         ! bounds 
+    character(len=16):: l_default      ! local version of 'default'
     character(len=*),parameter :: subname = 'hist_addfld2d'
 !------------------------------------------------------------------------
 
@@ -4173,8 +4225,12 @@ contains
          units=units, avgflag=avgflag, long_name=long_name, hpindex=hpindex, &
          p2c_scale_type=scale_type_p2c, c2l_scale_type=scale_type_c2l, l2g_scale_type=scale_type_l2g)
 
+    l_default = 'active'
     if (present(default)) then
-       if (trim(default) == 'inactive') return
+       l_default = default
+    end if
+    if (trim(l_default) == 'inactive') then
+       return
     else
        call masterlist_make_active (name=trim(fname), tape_index=1)
     end if

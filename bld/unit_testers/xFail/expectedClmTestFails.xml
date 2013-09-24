@@ -28,7 +28,6 @@
 
    <cesm> 
       <auxShortTests>
-         <entry testID="PET.f10_f10.ICLM45BGC." failType="TFAIL">All compilers/platforms.  Once threading fixed, this should pass</entry>
          <yellowstone>
             <INTEL>
             </INTEL>
@@ -51,14 +50,11 @@
          <yellowstone>
             <INTEL>
                <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                         failType="FAIL"  bugz="1696" >use before define in history.  runs with frankfurt_pgi, yellowstone_intel and yellowstone_pgi</entry>
-               <entry testId="PET.f10_f10.ICLM45BGC.yellowstone_intel"                    failType="TFAIL">once threading fixed, this should pass</entry>
-               <entry testId="PET_PT.f10_f10.ICLM45BGC.yellowstone_intel"                 failType="TFAIL">once threading fixed, this should pass</entry>
+               <entry testId="PET_P15x2_Lm25.f10_f10.ICLM45BGCDVCROP.yellowstone_intel"   failType="FAIL"  bugz="1820" >should pass once bug 1820 is fixed</entry>
+               <entry testId="PET_P15x2_Ly3.f10_f10.ICLM45BGCCROP.yellowstone_intel"      failType="FAIL"  bugz="1820" >should pass once bug 1820 is fixed</entry>
             </INTEL>
             <PGI>
                <entry testId="ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default"     failType="FAIL" >Restart not BFB.  Runs as ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi</entry>
-               <entry testId="PET.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-default"      failType="TFAIL" >once threading fixed, this should pass</entry>
-               <entry testId="PET_PT_D.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-ciso"    failType="TFAIL" >once threading fixed, this should pass</entry>
-               <entry testId="PET_PT_D.f19_g16.ICLM45BGCDVCROP.yellowstone_pgi.clm-crop"  failType="TFAIL" >once threading fixed, this should pass</entry>
                <entry testId="SSP.f19_g16.I1850CLM45BGC.yellowstone_pgi.clm-default"    failType="BFAIL" bugz="1728" >starting in clm4_5_07--The cpl.hi.nc file is not being copied on a generate like it should.</entry>
             </PGI>
          </yellowstone>

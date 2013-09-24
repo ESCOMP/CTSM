@@ -181,7 +181,9 @@ contains
    rh_ref2m                            =>    pes%rh_ref2m                                , & ! Output: [real(r8) (:)]  2 m height surface relative humidity (%)          
    ws                                  =>    cps%ws                                      , & ! Output: [real(r8) (:)]  surface friction velocity (m/s)                   
    ks                                  =>    cps%ks                                      , & ! Output: [real(r8) (:)]  coefficient passed to SLakeTemperature            
-   ust_lake                            =>    cps%ust_lake                                  & ! Output: [real(r8) (:)]  friction velocity (m/s)                           
+   ust_lake                            =>    cps%ust_lake                                , & ! Output: [real(r8) (:)]  friction velocity (m/s)                           
+   begp                                =>    bounds%begp                                 , &
+   endp                                =>    bounds%endp                                   &
    )
 
     ! TODO 
@@ -323,10 +325,10 @@ contains
        ! Determine friction velocity, and potential temperature and humidity
        ! profiles of the surface boundary layer
 
-       call FrictionVelocity(bounds%begp, bounds%endp, fncopy, fpcopy, &
-                             displa, z0mg, z0hg, z0qg, &
-                             obu, iter, ur, um, ustar, &
-                             temp1, temp2, temp12m, temp22m, fm)
+       call FrictionVelocity(begp, endp, fncopy, fpcopy, &
+                             displa(begp:endp), z0mg(begp:endp), z0hg(begp:endp), z0qg(begp:endp), &
+                             obu(begp:endp), iter, ur(begp:endp), um(begp:endp), ustar(begp:endp), &
+                             temp1(begp:endp), temp2(begp:endp), temp12m(begp:endp), temp22m(begp:endp), fm(begp:endp))
 
        do fp = 1, fncopy
           p = fpcopy(fp)

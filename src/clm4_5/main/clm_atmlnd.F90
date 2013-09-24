@@ -281,23 +281,33 @@ contains
 
     if (present(init)) then
 
-       call c2g(bounds, cws%h2osno, clm_l2a%h2osno, &
+       call c2g(bounds, &
+            cws%h2osno(bounds%begc:bounds%endc), &
+            clm_l2a%h2osno(bounds%begg:bounds%endg), &
             c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
        do g = bounds%begg,bounds%endg
           clm_l2a%h2osno(g) = clm_l2a%h2osno(g)/1000._r8
        end do
 
-       call c2g(bounds, nlevgrnd, cws%h2osoi_vol, clm_l2a%h2osoi_vol, &
+       call c2g(bounds, nlevgrnd, &
+            cws%h2osoi_vol(bounds%begc:bounds%endc, :), &
+            clm_l2a%h2osoi_vol(bounds%begg:bounds%endg, :), &
             c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-       call p2g(bounds, numrad, pps%albd, clm_l2a%albd,&
+       call p2g(bounds, numrad, &
+            pps%albd(bounds%begp:bounds%endp, :), &
+            clm_l2a%albd(bounds%begg:bounds%endg, :), &
             p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-       call p2g(bounds, numrad, pps%albi, clm_l2a%albi,&
+       call p2g(bounds, numrad, &
+            pps%albi(bounds%begp:bounds%endp, :), &
+            clm_l2a%albi(bounds%begg:bounds%endg, :), &
             p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-       call p2g(bounds, pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out,&
+       call p2g(bounds, &
+            pef%eflx_lwrad_out(bounds%begp:bounds%endp), &
+            clm_l2a%eflx_lwrad_out(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
        do g = bounds%begg,bounds%endg
@@ -306,55 +316,83 @@ contains
 
     else
 
-       call c2g(bounds, cws%h2osno, clm_l2a%h2osno,&
+       call c2g(bounds, &
+            cws%h2osno(bounds%begc:bounds%endc), &
+            clm_l2a%h2osno(bounds%begg:bounds%endg), &
             c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
        do g = bounds%begg,bounds%endg
           clm_l2a%h2osno(g) = clm_l2a%h2osno(g)/1000._r8
        end do
 
-       call p2g(bounds, numrad, pps%albd, clm_l2a%albd, &
+       call p2g(bounds, numrad, &
+            pps%albd(bounds%begp:bounds%endp, :), &
+            clm_l2a%albd(bounds%begg:bounds%endg, :), &
             p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-       call p2g(bounds, numrad, pps%albi, clm_l2a%albi, &
+       call p2g(bounds, numrad, &
+            pps%albi(bounds%begp:bounds%endp, :), &
+            clm_l2a%albi(bounds%begg:bounds%endg, :), &
             p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-       call p2g(bounds, pes%t_ref2m, clm_l2a%t_ref2m, & 
+       call p2g(bounds, &
+            pes%t_ref2m(bounds%begp:bounds%endp), &
+            clm_l2a%t_ref2m(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-       call p2g(bounds, pes%q_ref2m, clm_l2a%q_ref2m, & 
+       call p2g(bounds, &
+            pes%q_ref2m(bounds%begp:bounds%endp), &
+            clm_l2a%q_ref2m(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-       call p2g(bounds, pps%u10_clm, clm_l2a%u_ref10m, & 
+       call p2g(bounds, &
+            pps%u10_clm(bounds%begp:bounds%endp), &
+            clm_l2a%u_ref10m(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-       call p2g(bounds, pmf%taux, clm_l2a%taux, & 
+       call p2g(bounds, &
+            pmf%taux(bounds%begp:bounds%endp), &
+            clm_l2a%taux(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-       call p2g(bounds, pmf%tauy, clm_l2a%tauy, & 
+       call p2g(bounds, &
+            pmf%tauy(bounds%begp:bounds%endp), &
+            clm_l2a%tauy(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-       call p2g(bounds, pef%eflx_lh_tot, clm_l2a%eflx_lh_tot, &
+       call p2g(bounds, &
+            pef%eflx_lh_tot(bounds%begp:bounds%endp), &
+            clm_l2a%eflx_lh_tot(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
        do g = bounds%begg,bounds%endg
           clm_l2a%eflx_sh_tot(g) = gef%eflx_sh_totg(g)
        end do
 
-       call p2g(bounds, pwf%qflx_evap_tot, clm_l2a%qflx_evap_tot, & 
+       call p2g(bounds, &
+            pwf%qflx_evap_tot(bounds%begp:bounds%endp), &
+            clm_l2a%qflx_evap_tot(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-       call p2g(bounds, pef%fsa, clm_l2a%fsa, &
+       call p2g(bounds, &
+            pef%fsa(bounds%begp:bounds%endp), &
+            clm_l2a%fsa(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-       call p2g(bounds, pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out, &
+       call p2g(bounds, &
+            pef%eflx_lwrad_out(bounds%begp:bounds%endp), &
+            clm_l2a%eflx_lwrad_out(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
        if (use_cn) then
-          call c2g(bounds, ccf%nee, clm_l2a%nee, &
+          call c2g(bounds, &
+               ccf%nee(bounds%begc:bounds%endc), &
+               clm_l2a%nee(bounds%begg:bounds%endg), &
                c2l_scale_type= 'unity', l2g_scale_type='unity')
        else
-          call p2g(bounds, pcf%fco2, clm_l2a%nee, &
+          call p2g(bounds, &
+               pcf%fco2(bounds%begp:bounds%endp), &
+               clm_l2a%nee(bounds%begg:bounds%endg), &
                p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
           ! Note that fco2 in is umolC/m2/sec so units need to be changed to gC/m2/sec
           do g = bounds%begg,bounds%endg
@@ -373,10 +411,14 @@ contains
           end if
        end if
 
-       call p2g(bounds, pps%fv, clm_l2a%fv, &
+       call p2g(bounds, &
+            pps%fv(bounds%begp:bounds%endp), &
+            clm_l2a%fv(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-       call p2g(bounds, pps%ram1, clm_l2a%ram1, &
+       call p2g(bounds, &
+            pps%ram1(bounds%begp:bounds%endp), &
+            clm_l2a%ram1(bounds%begg:bounds%endg), &
             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
        do g = bounds%begg,bounds%endg
@@ -385,16 +427,21 @@ contains
        end do
 
        call p2g(bounds, ndst, &
-            pdf%flx_mss_vrt_dst, clm_l2a%flxdst, &
+            pdf%flx_mss_vrt_dst(bounds%begp:bounds%endp, :), &
+            clm_l2a%flxdst(bounds%begg:bounds%endg, :), &
             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
        if (shr_megan_mechcomps_n>0) then
-          call p2g(bounds, shr_megan_mechcomps_n, pvf%vocflx, clm_l2a%flxvoc, &
+          call p2g(bounds, shr_megan_mechcomps_n, &
+               pvf%vocflx(bounds%begp:bounds%endp, :), &
+               clm_l2a%flxvoc(bounds%begg:bounds%endg, :), &
                p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
        endif
 
        if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
-          call p2g(bounds, n_drydep, pdd%drydepvel, clm_l2a%ddvel, &
+          call p2g(bounds, n_drydep, &
+               pdd%drydepvel(bounds%begp:bounds%endp, :), &
+               clm_l2a%ddvel(bounds%begg:bounds%endg, :), &
                p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
        endif
 
