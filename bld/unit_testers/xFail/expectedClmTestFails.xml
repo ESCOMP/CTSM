@@ -50,8 +50,6 @@
          <yellowstone>
             <INTEL>
                <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                         failType="FAIL"  bugz="1696" >use before define in history.  runs with frankfurt_pgi, yellowstone_intel and yellowstone_pgi</entry>
-               <entry testId="PET_P15x2_Lm25.f10_f10.ICLM45BGCDVCROP.yellowstone_intel"   failType="FAIL"  bugz="1820" >should pass once bug 1820 is fixed</entry>
-               <entry testId="PET_P15x2_Ly3.f10_f10.ICLM45BGCCROP.yellowstone_intel"      failType="FAIL"  bugz="1820" >should pass once bug 1820 is fixed</entry>
             </INTEL>
             <PGI>
                <entry testId="ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default"     failType="FAIL" >Restart not BFB.  Runs as ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi</entry>

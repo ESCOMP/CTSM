@@ -1,4 +1,102 @@
 ===============================================================
+Tag name:  clm4_5_31
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Wed Sep 25 10:12:47 MDT 2013
+One-line Summary: fix bug 1820: incomplete conditional in CNSoyfix leads to buggy results and decomposition dependence
+
+Purpose of changes:
+
+   Fix bug 1820: incomplete conditional in CNSoyfix leads to buggy results and
+   decomposition dependence. Fix for this is based on analysis of the original
+   Agro-IBIS code.
+
+Requirements for tag: fix bug 1820, the following tests should now pass:
+             PET_P15x2_Lm25.f10_f10.ICLM45BGCDVCROP.yellowstone_intel
+             PET_P15x2_Ly3.f10_f10.ICLM45BGCCROP.yellowstone_intel
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 
+     1820: incomplete conditional in CNSoyfix leads to buggy results and decomposition dependence
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Beth Drewniak, Sam Levis
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated: none 
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNDynamicsMod.F90
+
+========= Remove now-passing PET tests
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+CLM testing:
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+
+CLM tag used for the baseline comparisons: clm4_5_30
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45 with CROP
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+       larger than roundoff, but not investigated in detail
+
+       Note that no changes were observed in the test suite, but this is due to
+       a limitation of the test suite (there are very few multi-year crop tests;
+       the only global multi-year tests are the newly-passing PET tests, which
+       don't have baselines)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_30
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date: Tue Sep 24 13:08:01 MDT 2013

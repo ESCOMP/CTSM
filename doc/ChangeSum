@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_31        sacks 09/25/2013 fix bug 1820: incomplete conditional in CNSoyfix leads to buggy results and decomposition dependence
    clm4_5_30        sacks 09/24/2013 fix performance bug in decomposition initialization
    clm4_5_29        sacks 09/24/2013 fix threading in CLM4.5, and other misc fixes
    clm4_5_28        sacks 09/20/2013 fix FracH2oSfc bug
