@@ -540,7 +540,13 @@ contains
        write(iulog,*)'Large file support for output files is ON'
     end if
     write(iulog,*) 'model physics parameters:'
-    write(iulog,*) '   CO2 volume mixing ratio   (umol/mol)   = ', co2_ppmv
+
+    if ( trim(co2_type) == 'constant' )then
+       write(iulog,*) '   CO2 volume mixing ratio   (umol/mol)   = ', co2_ppmv
+    else
+       write(iulog,*) '   CO2 volume mixing ratio                = ', co2_type
+    end if
+
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
     write(iulog,*) '   urban traffic flux   = ', urban_traffic

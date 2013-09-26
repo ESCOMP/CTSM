@@ -1,4 +1,75 @@
 ===============================================================
+Tag name:  clm4_5_32
+Originator(s):  muszala (Stefan Muszala,UCAR/TSS,303-497-1320)
+Date: Thu Sep 26 10:10:08 MDT 2013
+One-line Summary: bug fix tag - 1798, 1810
+
+Purpose of changes: fix bug 1798 and 1810.
+
+http://bugs.cgd.ucar.edu/show_bug.cgi?id=1798
+http://bugs.cgd.ucar.edu/show_bug.cgi?id=1810
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 1798 and 1810
+
+Known bugs (include bugzilla ID): N/A
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): N/A
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+
+- for bug 1798
+M       models/lnd/clm/src/clm4_5/main/pftdynMod.F90
+- for bug 1810
+M       models/lnd/clm/src/clm4_5/main/controlMod.F90
+M       models/lnd/clm/src/clm4_0/main/controlMod.F90
+
+CLM testing:
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    frankfurt_intel - OK
+    frankfurt_pgi - OK
+    frankfurt_nag - OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_31
+
+Changes answers relative to baseline: no
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_31
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date: Wed Sep 25 10:12:47 MDT 2013

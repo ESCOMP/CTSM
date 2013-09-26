@@ -333,40 +333,44 @@ contains
     ! the case of the first entry into the dynpft timeseries range from
     ! an earlier period of constant weights.
 
-    if (year > yearspft(nt1) .or. (nt1 == 1 .and. nt2 == 1 .and. year == yearspft(1))) then
+    if (year <= yearspft(ntimes)) then
 
-       if (year >= yearspft(ntimes)) then
-          nt1 = ntimes
-          nt2 = ntimes
-       else
-          nt1        = nt2
-          nt2        = nt2 + 1
-          do_harvest = .true.
-       end if
+       if (year > yearspft(nt1) .or. (nt1 == 1 .and. nt2 == 1 .and. year == yearspft(1))) then
+
+          if (year >= yearspft(ntimes)) then
+             nt1 = ntimes
+             nt2 = ntimes
+          else
+             nt1        = nt2
+             nt2        = nt2 + 1
+             do_harvest = .true.
+          end if
        
-       if (year > yearspft(ntimes)) then
-          do_harvest = .false.
-       endif
+          if (year > yearspft(ntimes)) then
+             do_harvest = .false.
+          endif
        
-       if (nt2 > ntimes .and. masterproc) then
-          write(iulog,*)subname,' error - current year is past input data boundary'
-       end if
+          if (nt2 > ntimes .and. masterproc) then
+             write(iulog,*)subname,' error - current year is past input data boundary'
+          end if
        
-       do m = natpft_lb,natpft_ub
-          do g = bounds%begg,bounds%endg
-             wtpft1(g,m) = wtpft2(g,m)
+          do m = natpft_lb,natpft_ub
+             do g = bounds%begg,bounds%endg
+                wtpft1(g,m) = wtpft2(g,m)
+             end do
           end do
-       end do
 
-       call pftdyn_getdata(bounds, nt2, &
-            wtpft2(bounds%begg:bounds%endg, natpft_lb:natpft_ub), &
-            natpft_lb,natpft_ub)
+          call pftdyn_getdata(bounds, nt2, &
+               wtpft2(bounds%begg:bounds%endg, natpft_lb:natpft_ub), &
+               natpft_lb,natpft_ub)
 
-       if (use_cn) then
-          call pftdyn_getharvest(bounds, nt1)
-       end if
+          if (use_cn) then
+             call pftdyn_getharvest(bounds, nt1)
+          end if
 
-    end if  ! end of need new data if-block 
+       end if  ! end of need new data if-block 
+
+    end if  ! end of year <= yearspft(ntimes)
 
     ! Interpolate pft weight to current time
 
