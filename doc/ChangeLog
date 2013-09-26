@@ -1,7 +1,57 @@
 ===============================================================
+Tag name:  clm4_5_33
+Originator(s):  muszala (Stefan Muszala,UCAR/TSS,303-497-1320)
+Date: Thu Sep 26 10:42:56 MDT 2013
+One-line Summary: clean up from mistakes in previous tag
+
+Purpose of changes: clean up time-stamps and a mistake in clm4_5_32
+
+Requirements for tag: N/A
+
+Test level of tag: N/A
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID): N/A
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: N/A
+
+List any svn externals directories updated (csm_share, mct, etc.): N/A
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes: N/A
+
+CLM testing: N/A
+
+CLM tag used for the baseline comparisons: N/A
+
+Changes answers relative to baseline: N/A
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_32
 Originator(s):  muszala (Stefan Muszala,UCAR/TSS,303-497-1320)
-Date: Thu Sep 26 10:10:08 MDT 2013
+Date: Thu Sep 26 10:07:14 MDT 2013
 One-line Summary: bug fix tag - 1798, 1810
 
 Purpose of changes: fix bug 1798 and 1810.
