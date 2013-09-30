@@ -410,11 +410,6 @@ contains
     allocate(grc%lon(beg:end))
     allocate(grc%latdeg(beg:end))
     allocate(grc%londeg(beg:end))
-    allocate(grc%gindex_a(beg:end))
-    allocate(grc%lat_a(beg:end))
-    allocate(grc%lon_a(beg:end))
-    allocate(grc%latdeg_a(beg:end))
-    allocate(grc%londeg_a(beg:end))
 
     allocate(grc%gris_mask(beg:end))
     grc%gris_mask(:)=nanr

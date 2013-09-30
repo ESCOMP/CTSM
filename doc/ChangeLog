@@ -1,4 +1,115 @@
 ===============================================================
+Tag name:  clm4_5_34
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Sep 30 01:30:25 MDT 2013
+One-line Summary: Get PTCLM working, fix a few small bugs
+
+Purpose of changes:
+
+Get PTCLM fully working. Allow PTCLM to work with ALL I compsets including clm4_0 compsets.
+Add a new option to PTCLM from Keith Oleson --cycle_forcing to set it up to cycle over the forcing.
+Another option is to build datasets in the "-mydatafiles" directory (by default under PTCLM
+directory). The datasets now have creation time-stamps in them as well. Rename QIAN_tower_yrs
+to -use_tower_yrs and remove QIANforcing (now chosen by compset).
+scripts now has four different I1PT compsets two new ones for CLM40CN and CLM45BGC. datm
+CLM_USRDAT domain file for CLM1PT forcing points to the ATM_DOMAIN_FILE/PATH. Add some new
+datasets to the siteDIR from Keith Oleson. Update documenation, remove unused template dir.
+Add a script to rename creation dates for map files, so you don't have to regenerate them
+each day.
+
+Fix a few small bugs. Allow clm4_5 to have suplnitro and bgc_spinup to only give a warning
+rather than die. Fix a corrupted rawdata PFT file. Fix mkscripgrid.ncl for regional SCRIP
+grid creation. Remove some leftover fine-mesh variables that aren't needed anymore. Remove
+reference to scaled_harvest in CLM build-namelist which was removed a long time ago.
+
+Remove a mapping file that didn't seem to be needed for clm4_0 mkmapdata (a default
+didn't exist for it either). Add -usr_mapdir option to clm4_0 mksurfdata.pl which is needed
+for PTCLM for clm4_0 compsets.
+
+Requirements for tag: Update scripts and get PTCLM working
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+                                 1826 (allow clm4_5 and suplnitro to be ALL for bgc_spinup)
+                                 1818 (two new options to PTCLM)
+                                 1762 (Fix corrupted rawdata PFT file)
+                                 1757 (Bug in mkscripgrid.ncl for regional/global SCRIP grid creation)
+                                 1623 (Remove some leftover fine-mesh variables _a arrays)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Allow two options to go without dying
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, Machines, datm, and csm_share
+     scripts   to scripts4_130929
+     Machines  to Machines_130927
+     datm      to datm8_130919
+     csm_share to share3_130918
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M models/lnd/clm/tools/shared/mkmapdata/mkmapdata.sh ------- Remove 10x10min_IGBPmergeICESatGIS for clm4_0
+   M models/lnd/clm/tools/shared/mkmapgrids/mkscripgrid.ncl --- Fix bug 1757 for regional grid creation
+   M models/lnd/clm/tools/clm4_0/mksurfdata_map/mksurfdata.pl - Add usr_mapdir option
+
+   M models/lnd/clm/bld/build-namelist - Allow missing clm_usrdat files to continue, remove scaled_harvest (long gone)
+                                         allow bgc_spinup and suplnitro to coexist with warning
+
+   M models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0_tools.xml - Fix corrupted 856 raw PFT file
+   M models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - Fix corrupted 856 raw PFT file, remove 1000-1004 testyrs
+
+   M models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90 - Remove finemesh _a variables
+   M models/lnd/clm/src/clm4_5/main/clmtype.F90 -------- Remove finemesh _a variables
+   M models/lnd/clm/src/clm4_0/main/clmtypeInitMod.F90 - Remove finemesh _a variables
+   M models/lnd/clm/src/clm4_0/main/clmtype.F90 -------- Remove finemesh _a variables
+
+CLM testing: regular, build_namelist, tools
+
+  build-namelist tests:
+
+    yellowstone   yes
+    frankfurt     yes
+
+  regular tests (aux_clm):
+
+    yellowstone_intel       yes
+    yellowstone_pgi         yes
+    frankfurt_intel         yes
+    frankfurt_pgi           yes
+    frankfurt_nag           yes
+
+  tools testing:
+
+    yellowstone interactive yes
+
+CLM tag used for the baseline comparisons:  clm4_5_33
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_33
 Originator(s):  muszala (Stefan Muszala,UCAR/TSS,303-497-1320)
 Date: Thu Sep 26 10:42:56 MDT 2013

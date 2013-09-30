@@ -419,12 +419,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- mksrf_fvegtyp -->
 
 <!-- test years -->
-<mksrf_fvegtyp hgrid="1x1_tropicAtl" sim_year="1000" crop="off" >lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_1x1_tropicAtl_testyr1000_c090722.nc</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="1x1_tropicAtl" sim_year="1001" crop="off" >lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_1x1_tropicAtl_testyr1001_c090722.nc</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="1x1_tropicAtl" sim_year="1002" crop="off" >lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_1x1_tropicAtl_testyr1002_c090722.nc</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="1x1_tropicAtl" sim_year="1003" crop="off" >lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_1x1_tropicAtl_testyr1003_c090722.nc</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="1x1_tropicAtl" sim_year="1004" crop="off" >lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_1x1_tropicAtl_testyr1004_c090722.nc</mksrf_fvegtyp>
-
 <mksrf_fvegtyp hgrid="10x15"         sim_year="1000" crop="off" >lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_10x15_testyr1000_c100614.nc</mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="10x15"         sim_year="1001" crop="off" >lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_10x15_testyr1001_c100614.nc</mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="10x15"         sim_year="1002" crop="off" >lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_10x15_testyr1002_c100614.nc</mksrf_fvegtyp>
@@ -762,7 +756,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="855" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.lastm.simyr0850-1850.c100522/mksrf_landuse_lastm0855_c100519.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="856" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.lastm.simyr0850-1850.c100522/mksrf_landuse_lastm0856_c100519.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="856" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.lastm.simyr0850-1850.c100522/mksrf_landuse_lastm0856_c100519.v2.nc
 </mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="857" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.lastm.simyr0850-1850.c100522/mksrf_landuse_lastm0857_c100519.nc
 </mksrf_fvegtyp>

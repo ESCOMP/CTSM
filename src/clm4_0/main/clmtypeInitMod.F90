@@ -485,11 +485,6 @@ contains
             grc%lon(beg:end),       &
             grc%latdeg(beg:end),    &
             grc%londeg(beg:end),    &
-            grc%gindex_a(beg:end),  &
-            grc%lat_a(beg:end),     &
-            grc%lon_a(beg:end),     &
-            grc%latdeg_a(beg:end),  &
-            grc%londeg_a(beg:end),  &
             grc%gris_mask(beg:end), &
             grc%gris_area(beg:end), &
             grc%aais_mask(beg:end), &

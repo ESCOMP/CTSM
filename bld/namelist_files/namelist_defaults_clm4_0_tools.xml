@@ -757,7 +757,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="855" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.lastm.simyr0850-1850.c100522/mksrf_landuse_lastm0855_c100519.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="856" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.lastm.simyr0850-1850.c100522/mksrf_landuse_lastm0856_c100519.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="856" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.lastm.simyr0850-1850.c100522/mksrf_landuse_lastm0856_c100519.v2.nc
 </mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="857" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.lastm.simyr0850-1850.c100522/mksrf_landuse_lastm0857_c100519.nc
 </mksrf_fvegtyp>

@@ -98,27 +98,27 @@ begin
 
   lonCenters = fspan( (lonW + delX/2.d0), (lonE - delX/2.d0), nx)
   latCenters = fspan( (latS + delY/2.d0), (latN - delY/2.d0), ny)
-  lon = new( (/nx, ny/), "double" );
-  lat = new( (/nx, ny/), "double" );
-  lonCorners = new( (/nx, ny, 4/), "double" );
-  latCorners = new( (/nx, ny, 4/), "double" );
+  lon = new( (/ny, nx/), "double" );
+  lat = new( (/ny, nx/), "double" );
+  lonCorners = new( (/ny, nx, 4/), "double" );
+  latCorners = new( (/ny, nx, 4/), "double" );
   do i = 0, nx-1
-    lat(i,:)          =  latCenters;
-    latCorners(i,:,0) =  latCenters - delY/2.d0;
-    latCorners(i,:,1) =  latCenters + delY/2.d0;
-    latCorners(i,:,2) =  latCenters + delY/2.d0;
-    latCorners(i,:,3) =  latCenters - delY/2.d0;
+    lat(:,i)          =  latCenters;
+    latCorners(:,i,0) =  latCenters - delY/2.d0;
+    latCorners(:,i,1) =  latCenters + delY/2.d0;
+    latCorners(:,i,2) =  latCenters + delY/2.d0;
+    latCorners(:,i,3) =  latCenters - delY/2.d0;
   end do
   do j = 0, ny-1
-    lon(:,j)          =  lonCenters;
-    lonCorners(:,j,0) =  lonCenters - delX/2.d0;
-    lonCorners(:,j,1) =  lonCenters - delX/2.d0;
-    lonCorners(:,j,2) =  lonCenters + delX/2.d0;
-    lonCorners(:,j,3) =  lonCenters + delX/2.d0;
+    lon(j,:)          =  lonCenters;
+    lonCorners(j,:,0) =  lonCenters - delX/2.d0;
+    lonCorners(j,:,1) =  lonCenters - delX/2.d0;
+    lonCorners(j,:,2) =  lonCenters + delX/2.d0;
+    lonCorners(j,:,3) =  lonCenters + delX/2.d0;
   end do
 
   ; for some reason, "No_FillValue" isn't working in the case where imask=1
-  Mask2D = new( (/nx,ny/), "integer", "No_FillValue" )
+  Mask2D = new( (/ny,nx/), "integer", "No_FillValue" )
   Mask2D(:,:) = imask
   gridSize = delX+"x"+delY
 

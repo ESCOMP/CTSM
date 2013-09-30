@@ -769,7 +769,7 @@ if (defined $opts{'clm_usr_name'}) {
 	}
     }
     if ( $nvars == 0 ) {
-         die "$nm setting clm_usr_name -- but did NOT find any user datasets: $opts{'clm_usr_name'}\n";
+         print "WARNING: $nm setting clm_usr_name -- but did NOT find any user datasets: $opts{'clm_usr_name'}\n";
     }
     # Merge input values into namelist.  Previously specified values have higher precedence
     # and are not overwritten.
@@ -1318,9 +1318,6 @@ if ( $bgc =~ /^cn/ ) {
           " can be set!\n";
   }
 }
-if ( ($bgc ne "cn") && ($bgc ne "cndv") && defined $nl->get_value('scaled_harvest') ) {
-   die "$ProgName ERROR: scaled_harvest is set, but neither CN nor CNDV is active!\n";
-}
 # 
 # Error checking for suplnitro
 #
@@ -1339,8 +1336,7 @@ if ( defined($suplnitro) ) {
         die "$ProgName ERROR: when spinup != normal you can NOT set supplemental Nitrogen (suplnitro) to ALL\n";
       }
       if ( $phys eq "clm4_5" && $bgc_spinup ne "off" ) {
-        print "There is no need to use a bgc_spinup mode when supplemental Nitrogen is on for all PFT's, as these modes bgc_spinup Nitrogen\n";
-        die "$ProgName ERROR:: when bgc_spinup is 'on' you can NOT set supplemental Nitrogen (suplnitro) to ALL\n";
+        print "$ProgName: WARNING:: There is no need to use a bgc_spinup mode when supplemental Nitrogen is on for all PFT's, as these modes bgc_spinup Nitrogen\n";
       }
    }
 }
