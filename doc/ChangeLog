@@ -1,4 +1,98 @@
 ===============================================================
+Tag name:  clm4_5_35
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Oct  1 09:47:45 PDT 2013
+One-line Summary: get CLM running on edison
+
+Purpose of changes:
+
+   Update scripts and Machines externals to get the CLM test suite running on
+   edison; this will be our replacement for yellowstone while yellowstone is
+   down.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: N/A
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+-scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_130929
+-scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_130927
++scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_131001
++scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_130930b
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes: 
+
+========= Remove PEM test that should pass now; add xFails for edison
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+
+CLM testing:
+
+  NOTE: Testing was done on tag port_to_edison_02_clm4_5_34. Since then, scripts
+  has been updated from scripts4_130930a to scripts4_131001. However, the only
+  difference is the removal of some duplicated tests from the test list.
+
+  regular tests (aux_clm):
+
+    edison_intel (aux_clm_ys_intel & aux_clm_ys_pgi lists): OK
+       All pass except:
+
+               <entry testID="ERH_D.f19_g16.I1850CLM45CN.edison_intel.clm-default"               failType="FAIL" >See "ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default</entry>
+               <entry testID="SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PTCLM45.edison_intel.clm-USUMB" failType="SFAIL" >Can't find user datasets</entry>
+               <entry testID="ERI_D.ne30_g16.ICLM45BGC.edison_intel.clm-vrtlay"                  failType="FAIL" >Seg fault while writing h1 file</entry>
+               <entry testID="ERS_Ld211_D_P144x1.f10_f10.ICNCROP.edison_intel.clm-crop"          failType="FAIL" bugz="1696" >See ERS_Ld211_D_P112x1.f10_f10.ICNCROP in yellowstone intel list</entry>
+
+       #1 and #4 have been failing on yellowstone, #2 and #3 are new failures on edison
+
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    NOTE: only generate done here, because no baselines existed
+
+    edison_intel: aux_clm_ys_intel list: OK
+    edison_intel: aux_clm_ys_pgi list: OK
+
+CLM tag used for the baseline comparisons: clm4_5_34
+
+   NOTE: Baseline comparisons only done for frankfurt tests; no baseline
+   comparisons done with component_gen_comp, because no baselines existed on
+   edison.
+
+Changes answers relative to baseline: NO
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_34
 Originator(s):  erik (Erik Kluzek)
 Date: Mon Sep 30 01:30:25 MDT 2013

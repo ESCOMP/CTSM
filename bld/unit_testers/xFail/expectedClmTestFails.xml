@@ -47,6 +47,14 @@
          </frankfurt>
       </auxShortTests>
       <auxTests>
+         <edison>
+            <INTEL>
+               <entry testID="ERH_D.f19_g16.I1850CLM45CN.edison_intel.clm-default"               failType="FAIL" >See "ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default</entry>
+               <entry testID="SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PTCLM45.edison_intel.clm-USUMB" failType="SFAIL" >Can't find user datasets</entry>
+               <entry testID="ERI_D.ne30_g16.ICLM45BGC.edison_intel.clm-vrtlay"                  failType="FAIL" >Seg fault while writing h1 file</entry>
+               <entry testID="ERS_Ld211_D_P144x1.f10_f10.ICNCROP.edison_intel.clm-crop"          failType="FAIL" bugz="1696" >See ERS_Ld211_D_P112x1.f10_f10.ICNCROP in yellowstone intel list</entry>
+            </INTEL>
+         </edison>
          <yellowstone>
             <INTEL>
                <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                         failType="FAIL"  bugz="1696" >use before define in history.  runs with frankfurt_pgi, yellowstone_intel and yellowstone_pgi</entry>
@@ -54,7 +62,6 @@
             <PGI>
                <entry testId="ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default"     failType="FAIL" >Restart not BFB.  Runs as ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi</entry>
                <entry testId="SSP.f19_g16.I1850CLM45BGC.yellowstone_pgi.clm-default"    failType="BFAIL" bugz="1728" >starting in clm4_5_07--The cpl.hi.nc file is not being copied on a generate like it should.</entry>
-               <entry testId="PEM_D.f19_g16.IG1850CLM45.yellowstone_pgi"    failType="FAIL" >threading problem.  initial run fails</entry>
             </PGI>
          </yellowstone>
          <frankfurt>
