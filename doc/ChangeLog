@@ -1,4 +1,140 @@
 ===============================================================
+Tag name:  clm4_5_36
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Oct  4 09:40:54 PDT 2013
+One-line Summary: new surface datasets, and other minor fixes
+
+Purpose of changes:
+
+(1) New surface datasets for CLM4.5 at all resolutions, generated with a version
+    of mksurfdata_map that doesn't zero out soil properties under points
+    believed to be 100% glacier (note that this can change answers, because some
+    of these points ended up not being 100% glacier, and so this can affect soil
+    properties under lakes)
+
+(2) For CLM4.5, distinguish between irrigate=.true. and irrigate=.false. when
+    determining finidat with crop=on. Also add an initial conditions file for
+    irrigate=.true. at f10 resolution.
+
+(3) Update scripts to get a slightly reworked test list, in particular fixing
+    the clm-default testmods directory for multi-instance tests, and adding a
+    long test with irrigate=.true. (because irrigation likely never took effect
+    in the old test).
+
+Requirements for tag:
+
+Test level of tag: regular & build_namelist
+
+Bugs fixed (include bugzilla ID):
+   - 1827 / 1830: testmods don't work right for multi-instance tests (fix via
+     scripts update)
+   - 1829: PCT_SAND, PCT_CLAY and SOIL_COLOR are incorrect for some grid cells
+     (fix via new surface datasets)
+   - 1831: turning on irrigation leads to death in initialization (fix via a new
+     initial conditions file)
+
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: see changes in boundary datasets
+
+List any changes to the defaults for the boundary datasets:
+  
+   - new surface datasets for all resolutions for CLM4.5: same as before except
+     for PCT_SAND, PCT_CLAY and SOIL_COLOR: these are no longer zeroed out under
+     points that are believed to be 100% glacier ("believed to be" because this
+     previously zeroed out some points that ended up having some other special
+     landunits, such as lake)
+
+   - new initial conditions file for CLM4.5, irrigate=.true., f10
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   scripts: scripts4_131001 -> scripts4_131003
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= new logic for irrigation for finidat
+M       models/lnd/clm/bld/build-namelist
+
+========= new surface datasets; distinguish finidat based on value of 'irriagte'
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+CLM testing:
+
+  build-namelist tests:
+
+    caldera: OK
+       The following failures were expected due to new surface datasets:
+          413/439 < FAIL> <Test Id: 413> <Desc: lnd_in file the same as expected for phys45>  
+          418/439 < FAIL> <Test Id: 418> <Desc: lnd_in file the same as expected for phys45>  
+          423/439 < FAIL> <Test Id: 423> <Desc: lnd_in file the same as expected for phys45>  
+          428/439 < FAIL> <Test Id: 428> <Desc: lnd_in file the same as expected for phys45>  
+          433/439 < FAIL> <Test Id: 433> <Desc: lnd_in file the same as expected for phys45>  
+          438/439 < FAIL> <Test Id: 438> <Desc: lnd_in file the same as expected for phys45-crop>  
+
+
+  regular tests (aux_clm):
+
+    edison_intel (aux_clm_ys_intel & aux_clm_ys_pgi lists): OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    edison_intel: aux_clm_ys_intel list: OK
+    edison_intel: aux_clm_ys_pgi list: OK
+
+CLM tag used for the baseline comparisons: clm4_5_35
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM45
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+        Not investigated carefully, but probably larger than roundoff/same climate.
+
+        Answer changes are due to new surface datasets. This is due to fixing
+        bug 1829 (PCT_SAND, PCT_CLAY and SOIL_COLOR are incorrect for some grid
+        cells); it looks like this just affects answers over a small number of
+        lake points (e.g., 9 lake points in an f19 run).
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_35
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Oct  1 09:47:45 PDT 2013

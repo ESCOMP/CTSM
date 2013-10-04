@@ -863,6 +863,7 @@ if ( defined($opts{$var}) ) {
     }
 }
 
+my $irrigate;
 if ($phys eq "clm4_5") {
     if ( $crop eq "on" ) {
 	add_default($nl, 'irrigate', 'val'=>$opts{'irrig'});
@@ -870,6 +871,7 @@ if ($phys eq "clm4_5") {
     elsif ( $nl->get_value('irrigate') =~ /$TRUE/i ) {
 	die "$ProgName ERROR: irrigate TRUE needs crop TRUE but it is not\n";
     }
+    $irrigate = lc($nl->get_value('irrigate'));
 }
 
 $var = "start_type";
@@ -1115,7 +1117,7 @@ if (not defined $nl->get_value('finidat')) {
 	       add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
 			   'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn,   'vsoilc_centbgc'=>$vsoilc,
 			   'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
-			   'glc_nec'=>$glc_nec, 'crop'=>$crop );
+			   'glc_nec'=>$glc_nec, 'crop'=>$crop, 'irrigate'=>$irrigate );
 	   }
     } elsif ($opts{'ignore_ic_year'}) {
 	if ($phys eq "clm4_0") {
@@ -1127,7 +1129,7 @@ if (not defined $nl->get_value('finidat')) {
 	    add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
 			'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'vsoilc_centbgc'=>$vsoilc,
 			'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
-			'glc_nec'=>$glc_nec, 'crop'=>$crop );
+			'glc_nec'=>$glc_nec, 'crop'=>$crop, 'irrigate'=>$irrigate );
 	}
     } else {
 	if ($phys eq "clm4_0") {
@@ -1139,7 +1141,7 @@ if (not defined $nl->get_value('finidat')) {
 	   add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
 		       'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'vsoilc_centbgc'=>$vsoilc,
 		       'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
-		       'glc_nec'=>$glc_nec, 'crop'=>$crop );
+		       'glc_nec'=>$glc_nec, 'crop'=>$crop, 'irrigate'=>$irrigate );
 	}
     }
     my $finidat = $nl->get_value($var);
