@@ -70,6 +70,7 @@
             <NAG>
                <!-- Following test just seems to run out of wallclock for me sometimes (clm4_5_25), my final version actually passed -->
                <entry testID="ERI_D_Mmpich.f19_g16.ICLM45BGC.frankfurt_nag" failType="RUN" >Sometimes runs out of wallclock time</entry>
+               <entry testID="SMS_RLA_Mmpich.f45_f45.ICLM45.frankfurt_nag.clm-default" failType="FAIL" >MPI error with > 1 pe.  works with mpi-serial which is the normal use case for this setup.</entry>
             </NAG>
             <PGI>
                <entry testId="ERS_D.f19_g16.IGRCP26CN.frankfurt_pgi"                     failType="CFAIL" >Problem with cism build</entry>

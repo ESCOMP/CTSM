@@ -712,7 +712,6 @@ sub write_filepath_cesmbld
     # configuration parameters used to determine paths
     my $usr_src       = $cfg_ref->get('usr_src');
     my $clm_root      = $cfg_ref->get('clm_root');
-    my $comp_intf     = $cfg_ref->get('comp_intf');
     my $phys          = $cfg_ref->get('phys'); 
 
     # Source root
@@ -729,14 +728,7 @@ sub write_filepath_cesmbld
          print $fh "../SourceMods/src.clm\n";
     }
 
-    my @dirs = ( "cpl_share", "util_share", "$phys/main", "$phys/biogeophys", "$phys/biogeochem");
-    if ( $comp_intf eq "MCT" ) { 
-	push( @dirs, "cpl_mct" );
-    } elsif ( $comp_intf eq "ESMF" ) { 
-	push( @dirs, "cpl_esmf" );
-    } else {
-	die "** Invalid comp_intf: $comp_intf\n";
-    }
+    my @dirs = ( "cpl", "util_share", "$phys/main", "$phys/biogeophys", "$phys/biogeochem");
     foreach my $dir ( @dirs ) {
        if ( &is_valid_directory( "$srcdir/$dir", %opts )  ) {
           print $fh "$srcdir/$dir\n";
