@@ -924,6 +924,11 @@ contains
     allocate(pps%annlai(12,beg:end))
     pps%annlai(:,:)= nanr
 
+    allocate(pps%irrig_rate(beg:end))
+    pps%irrig_rate(:)= nanr
+    allocate(pps%n_irrig_steps_left(beg:end))
+    pps%n_irrig_steps_left(:)= 0
+
     allocate(pps%grnd_ch4_cond(beg:end))
     pps%grnd_ch4_cond(:)= nanr
     allocate(pps%canopy_cond(beg:end))
@@ -1652,6 +1657,8 @@ contains
     pwf%qflx_ev_soil(:)= nanr
     allocate(pwf%qflx_ev_h2osfc(beg:end))
     pwf%qflx_ev_h2osfc(:)= nanr
+    allocate(pwf%qflx_irrig(beg:end))
+    pwf%qflx_irrig(:)= nanr
 
   end subroutine init_pft_wflux_type
 
@@ -2804,10 +2811,6 @@ contains
     allocate(cps%pH(beg:end))
     cps%pH(:)= nanr
 
-    allocate(cps%irrig_rate(beg:end))
-    cps%irrig_rate(:)= nanr
-    allocate(cps%n_irrig_steps_left(beg:end))
-    cps%n_irrig_steps_left(:)= 0
     allocate(cps%forc_pbot(beg:end))
     cps%forc_pbot(:)= nanr
     allocate(cps%forc_rho(beg:end))
@@ -3244,8 +3247,6 @@ contains
     cwf%qflx_snofrz_lyr(:,:)=  spval
     allocate(cwf%qflx_snofrz_col(beg:end))
     cwf%qflx_snofrz_col(:)= nanr
-    allocate(cwf%qflx_irrig(beg:end))
-    cwf%qflx_irrig(:)= spval
     allocate(cwf%qflx_glcice(beg:end))
     cwf%qflx_glcice(:)= nanr
     allocate(cwf%qflx_glcice_frz(beg:end))

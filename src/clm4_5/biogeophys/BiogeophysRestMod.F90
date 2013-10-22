@@ -8,7 +8,7 @@ module BiogeophysRestMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
   use spmdMod     , only : masterproc
-  use decompMod   , only : bounds_type
+  use decompMod   , only : bounds_type, get_proc_global
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -61,8 +61,15 @@ contains
     real(r8) :: totwat                    !total soil water (mm)
     real(r8) :: maxdiff                   !maximum difference in PFT weights
     integer :: p,c,l,g,j,iv ! indices
+    integer :: numg_global  ! total number of grid cells, globally
+    integer :: numl_global  ! total number of landunits, globally
+    integer :: numc_global  ! total number of columns, globally
+    integer :: nump_global  ! total number of pfts, globally
     integer :: nlevs        ! number of layers
     logical :: readvar      ! determine if variable is on initial file
+    logical :: do_io        ! whether to do i/o for the given variable
+    integer :: dimlen       ! dimension length
+    integer :: err_code     ! error code
     real(r8), pointer :: wtgcell(:)       ! grid cell weights for pft
     real(r8), pointer :: wtlunit(:)       ! land-unit weights for pft
     real(r8), pointer :: wtcol(:)         ! column weights for pft
@@ -82,6 +89,9 @@ contains
     associate(& 
     zi  =>  cps%zi  & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m) 
     )
+
+    ! Get expected total number of points, for later error checks
+    call get_proc_global(numg_global, numl_global, numc_global, nump_global)
 
     !
     ! Read in weights if allocating all vegetation types
@@ -1892,35 +1902,69 @@ contains
        end if
     end if
 
-   ! column irrigation variable - n_irrig_steps_left
+   ! pft irrigation variable - n_irrig_steps_left
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='n_irrig_steps_left', xtype=ncd_int,  &
-            dim1name='column', &
+            dim1name='pft', &
             long_name='number of irrigation time steps left', units='#')
+
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='n_irrig_steps_left', data=cps%n_irrig_steps_left, &
-            dim1name=namec, &
-            ncid=ncid, flag=flag, readvar=readvar)
+
+       ! On a read, confirm that this variable has the expected size; if not, don't read
+       ! it (instead give it a default value). This is needed to support older initial
+       ! conditions for which this variable had a different size.
+       do_io = .true.
+       if (flag == 'read') then
+          call ncd_inqvdlen(ncid, 'n_irrig_steps_left', 1, dimlen, err_code)
+          if (dimlen /= nump_global) then
+             do_io = .false.
+             readvar = .false.
+          end if
+       end if
+       
+       if (do_io) then
+          call ncd_io(varname='n_irrig_steps_left', data=pps%n_irrig_steps_left, &
+               dim1name=namep, &
+               ncid=ncid, flag=flag, readvar=readvar)
+       end if
+
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
-          cps%n_irrig_steps_left = 0
+          pps%n_irrig_steps_left = 0
        end if
     end if
 
-   ! column irrigation variable - irrig_rate
+   ! pft irrigation variable - irrig_rate
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='irrig_rate', xtype=ncd_double,  &
-            dim1name='column', &
+            dim1name='pft', &
             long_name='irrigation rate', units='mm/s')
+
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='irrig_rate', data=cps%irrig_rate, &
-            dim1name=namec, &
-            ncid=ncid, flag=flag, readvar=readvar)
+
+       ! On a read, confirm that this variable has the expected size; if not, don't read
+       ! it (instead give it a default value). This is needed to support older initial
+       ! conditions for which this variable had a different size.
+       do_io = .true.
+       if (flag == 'read') then
+          call ncd_inqvdlen(ncid, 'irrig_rate', 1, dimlen, err_code)
+          if (dimlen /= nump_global) then
+             do_io = .false.
+             readvar = .false.
+          end if
+       end if
+       
+       if (do_io) then
+          call ncd_io(varname='irrig_rate', data=pps%irrig_rate, &
+               dim1name=namep, &
+               ncid=ncid, flag=flag, readvar=readvar)
+       end if
+
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
-          cps%irrig_rate = 0.0_r8
+          pps%irrig_rate = 0.0_r8
        end if
     end if
 

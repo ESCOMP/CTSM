@@ -51,6 +51,7 @@ module ncdio_pio
   public :: ncd_inqvname       ! inquire variable name
   public :: ncd_inqvdims       ! inquire variable ndims
   public :: ncd_inqvdids       ! inquire variable dimids
+  public :: ncd_inqvdlen       ! inquire variable dimension size
   public :: ncd_io             ! write local data
 
   integer,parameter,public :: ncd_int       = pio_int
@@ -110,6 +111,11 @@ module ncdio_pio
      module procedure ncd_io_real_var3
      module procedure ncd_io_real_var3_nf
   end interface
+
+  interface ncd_inqvdlen
+     module procedure ncd_inqvdlen_byDesc
+     module procedure ncd_inqvdlen_byName
+  end interface ncd_inqvdlen
 
   private :: ncd_getiodesc      ! obtain iodesc
   private :: scam_field_offsets ! get offset to proper lat/lon gridcell for SCAM
@@ -695,6 +701,114 @@ contains
     status = PIO_inq_vardimid(ncid,vardesc,dids)
 
   end subroutine ncd_inqvdids
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_inqvdlen_byDesc
+!
+! !INTERFACE:
+  subroutine ncd_inqvdlen_byDesc(ncid,vardesc,dimnum,dlen,err_code)
+!
+! !DESCRIPTION:
+! inquire size of one of a variable's dimensions, given a vardesc
+!
+! If the variable has n dimensions, then dimnum should be between 1 and n; this routine
+! returns the size of the dimnum'th dimension.
+!
+! If there is an error condition, dlen will be -1, and err_code will hold the error
+! code; possible error codes are:
+! 0: no error
+! 1: dimnum out of range
+!
+! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    type(Var_desc_t) ,intent(inout) :: vardesc   ! variable descriptor
+    integer          ,intent(in)    :: dimnum    ! dimension number to query
+    integer          ,intent(out)   :: dlen      ! length of the dimension
+    integer          ,intent(out)   :: err_code  ! error code (0 means no error)
+!
+! !REVISION HISTORY:
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    integer              :: ndims      ! number of dimensions
+    integer, allocatable :: dimids(:)  ! dimension IDs
+
+    integer, parameter   :: dlen_invalid = -1
+    integer, parameter   :: error_none = 0
+    integer, parameter   :: error_dimnum_out_of_range = 1
+!-----------------------------------------------------------------------
+
+    err_code = error_none
+    
+    call ncd_inqvdims(ncid, ndims, vardesc)
+    
+    if (dimnum > 0 .and. dimnum <= ndims) then
+       allocate(dimids(ndims))
+       call ncd_inqvdids(ncid, dimids, vardesc)
+       call ncd_inqdlen(ncid, dimids(dimnum), dlen)
+       deallocate(dimids)
+    else
+       dlen = dlen_invalid
+       err_code = error_dimnum_out_of_range
+    end if
+
+  end subroutine ncd_inqvdlen_byDesc
+
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_inqvdlen_byName
+!
+! !INTERFACE:
+  subroutine ncd_inqvdlen_byName(ncid,varname,dimnum,dlen,err_code)
+!
+! !DESCRIPTION:
+! inquire size of one of a variable's dimensions, given a variable name
+!
+! If the variable has n dimensions, then dimnum should be between 1 and n; this routine
+! returns the size of the dimnum'th dimension.
+!
+! If there is an error condition, dlen will be -1, and err_code will hold the error
+! code; possible error codes are:
+! 0: no error
+! 1: dimnum out of range
+! 11: variable not found
+!
+! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    character(len=*) ,intent(in)    :: varname   ! variable name
+    integer          ,intent(in)    :: dimnum    ! dimension number to query
+    integer          ,intent(out)   :: dlen      ! length of the dimension
+    integer          ,intent(out)   :: err_code  ! error code (0 means no error)
+!
+! !REVISION HISTORY:
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    type(Var_desc_t) :: vardesc        ! variable descriptor
+    logical          :: readvar        ! whether the variable was found
+
+    integer, parameter :: dlen_invalid = -1
+    integer, parameter :: error_variable_not_found = 11
+!-----------------------------------------------------------------------
+    
+    call check_var(ncid, varname, vardesc, readvar)
+    if (readvar) then
+       call ncd_inqvdlen_byDesc(ncid, vardesc, dimnum, dlen, err_code)
+    else
+       dlen = dlen_invalid
+       err_code = error_variable_not_found
+    end if
+
+  end subroutine ncd_inqvdlen_byName
+
 
 !-----------------------------------------------------------------------
 !BOP

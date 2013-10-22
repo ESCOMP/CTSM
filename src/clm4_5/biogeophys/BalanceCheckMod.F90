@@ -189,7 +189,7 @@ contains
    clandunit                 =>   col%landunit             , & ! Input:  [integer (:)]  column's landunit index                  
    endwb                     =>    cwbal%endwb             , & ! Input:  [real(r8) (:)]  water mass end of the time step         
    begwb                     =>    cwbal%begwb             , & ! Input:  [real(r8) (:)]  water mass begining of the time step    
-   qflx_irrig                =>    cwf%qflx_irrig          , & ! Input:  [real(r8) (:)]  irrigation flux (mm H2O /s)             
+   qflx_irrig                =>    pwf_a%qflx_irrig        , & ! Input:  [real(r8) (:)]  irrigation flux (mm H2O /s)             
    qflx_surf                 =>    cwf%qflx_surf           , & ! Input:  [real(r8) (:)]  surface runoff (mm H2O /s)              
    qflx_qrgwl                =>    cwf%qflx_qrgwl          , & ! Input:  [real(r8) (:)]  qflx_surf at glaciers, wetlands, lakes  
    qflx_drain                =>    cwf%qflx_drain          , & ! Input:  [real(r8) (:)]  sub-surface runoff (mm H2O /s)          

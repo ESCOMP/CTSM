@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_38        sacks 10/18/2013 change irrigation variables to be pft-level
    clm4_5_37      muszala 10/10/2013 Modifications to bring clm up to date with major driver refactoring in drvseq5_0_01
    clm4_5_36        sacks 10/04/2013 new surface datasets, and other minor fixes
    clm4_5_35        sacks 10/01/2013 get CLM running on edison

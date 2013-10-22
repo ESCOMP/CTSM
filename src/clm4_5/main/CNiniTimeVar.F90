@@ -47,7 +47,6 @@ subroutine CNiniTimeVar(bounds)
    decomp_npools_1m                    =>    cns%decomp_npools_1m                        , & ! Output: [real(r8) (:,:)]  (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 1 meter
    nfixation_prof                      =>    cps%nfixation_prof                          , & ! Output: [real(r8) (:,:)]  (1/m) profile for N fixation additions          
    ndep_prof                           =>    cps%ndep_prof                               , & ! Output: [real(r8) (:,:)]  (1/m) profile for N fixation additions          
-   qflx_irrig                          =>    cwf%qflx_irrig                              , & ! Output: [real(r8) (:)] irrigation flux (mm H2O/s)                         
    seedc                               =>    ccs%seedc                                   , & ! Output: [real(r8) (:)]  (gC/m2) column-level pool for seeding new PFTs    
    prod10c                             =>    ccs%prod10c                                 , & ! Output: [real(r8) (:)]  (gC/m2) wood product C pool, 10-year lifespan     
    prod100c                            =>    ccs%prod100c                                , & ! Output: [real(r8) (:)]  (gC/m2) wood product C pool, 100-year lifespan    
@@ -315,7 +314,6 @@ subroutine CNiniTimeVar(bounds)
          ! needed for CNNLeaching
          qflx_drain(c) = 0._r8
          qflx_surf(c) = 0._r8
-         qflx_irrig(c) = 0._r8
 
          ! column carbon state variable initialization
          do j = 1, nlevdecomp

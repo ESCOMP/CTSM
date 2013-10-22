@@ -241,6 +241,9 @@ type, public :: pft_pstate_type
    real(r8), pointer :: alphapsnsha(:) !shaded 13c fractionation ([])
    real(r8), pointer :: sandfrac(:)    ! sand fraction
    real(r8), pointer :: clayfrac(:)    ! clay fraction
+   ! for irrigation
+   real(r8), pointer :: irrig_rate(:)         ! current irrigation rate [mm/s]
+   integer , pointer :: n_irrig_steps_left(:) ! number of time steps for which we still need to irrigate today (if 0, ignore irrig_rate)
    ! for dry deposition of chemical tracers
    real(r8), pointer :: mlaidiff(:)    ! difference between lai month one and month two
    real(r8), pointer :: rb1(:)         ! aerodynamical resistance (s/m)
@@ -755,6 +758,7 @@ type, public :: pft_wflux_type
    real(r8), pointer :: qflx_ev_snow(:)   !snow evaporation (mm H2O/s) (+ = to atm)
    real(r8), pointer :: qflx_ev_soil(:)   !soil evaporation (mm H2O/s) (+ = to atm)
    real(r8), pointer :: qflx_ev_h2osfc(:) !h2osfc evaporation (mm H2O/s) (+ = to atm)
+   real(r8), pointer :: qflx_irrig(:)     !irrigation flux (mm H2O/s)
 end type pft_wflux_type
 
 type(pft_wflux_type)  :: pwf         !pft water flux
@@ -1287,7 +1291,6 @@ type, public :: column_pstate_type
    real(r8), pointer :: wf(:)                 !soil water as frac. of whc for top 0.05 m (0-1) (only comment changed by F. Li and S. Levis)
    real(r8), pointer :: wf2(:)                !soil water as frac. of whc for top 0.17 m (0-1) added by F. Li and S. Levis
 
-!  real(r8), pointer :: xirrig(:)             !irrigation rate
    real(r8), pointer :: max_dayl(:)           !maximum daylength for this column (s)
    ! VICHYRDRO
    real(r8), pointer :: b_infil(:)          !b infiltration parameter
@@ -1425,8 +1428,6 @@ type, public :: column_pstate_type
    ! added by Lei Meng for pH effects of methane production
    real(r8), pointer :: pH(:)               ! pH values
    ! End New variables for methane code
-   real(r8), pointer :: irrig_rate(:)         ! current irrigation rate [mm/s]
-   integer, pointer  :: n_irrig_steps_left(:) ! number of time steps for which we still need to irrigate today (if 0, ignore irrig_rate)
    real(r8), pointer :: forc_pbot(:)          ! surface atm pressure, downscaled to column (Pa)
    real(r8), pointer :: forc_rho(:)           ! surface air density, downscaled to column (kg/m^3)
    real(r8), pointer :: glc_frac(:)           ! ice fractional area
@@ -1752,7 +1753,6 @@ type, public :: column_wflux_type
    real(r8), pointer :: flx_dst_dep(:)      ! total (dry+wet) dust deposition on ground (positive definite) (col) [kg/s]
    real(r8), pointer :: qflx_snofrz_lyr(:,:)! snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
    real(r8), pointer :: qflx_snofrz_col(:)  ! column-integrated snow freezing rate (positive definite) (col) [kg m-2 s-1]
-   real(r8), pointer :: qflx_irrig(:)     !irrigation flux (mm H2O/s)
    real(r8), pointer :: qflx_glcice(:)      ! net flux of new glacial ice (growth - melt) (mm H2O/s), passed to GLC
    real(r8), pointer :: qflx_glcice_frz(:)  ! ice growth (positive definite) (mm H2O/s)
    real(r8), pointer :: qflx_glcice_melt(:) ! ice melt (positive definite) (mm H2O/s)

@@ -141,7 +141,6 @@ contains
    qflx_surf            => cwf%qflx_surf           , & ! Output: [real(r8) (:)]  surface runoff (mm H2O /s)              
    qflx_infl            => cwf%qflx_infl           , & ! Output: [real(r8) (:)]  infiltration (mm H2O /s)                
    qflx_qrgwl           => cwf%qflx_qrgwl          , & ! Output: [real(r8) (:)]  qflx_surf at glaciers, wetlands, lakes  
-   qflx_irrig           => cwf%qflx_irrig          , & ! Output: [real(r8) (:)]  irrigation flux (mm H2O /s)             
    endwb                => cwbal%endwb             , & ! Output: [real(r8) (:)]  water mass end of the time step         
    begwb                => cwbal%begwb             , & ! Input:  [real(r8) (:)]  water mass begining of the time step    
    soilpsi              => cps%soilpsi             , & ! Output: [real(r8) (:,:)]  soil water potential in each soil layer (MPa)
@@ -689,7 +688,7 @@ contains
    qflx_surf                           =>    cwf%qflx_surf                               , & ! Output: [real(r8) (:)]  surface runoff (mm H2O /s)                        
    qflx_infl                           =>    cwf%qflx_infl                               , & ! Output: [real(r8) (:)]  infiltration (mm H2O /s)                          
    qflx_qrgwl                          =>    cwf%qflx_qrgwl                              , & ! Output: [real(r8) (:)]  qflx_surf at glaciers, wetlands, lakes            
-   qflx_irrig                          =>    cwf%qflx_irrig                              , & ! Output: [real(r8) (:)]  irrigation flux (mm H2O /s)                       
+   qflx_irrig                          =>    pwf_a%qflx_irrig                            , & ! Input:  [real(r8) (:)]  irrigation flux (mm H2O /s)                       
    endwb                               =>    cwbal%endwb                                 , & ! Output: [real(r8) (:)]  water mass end of the time step                   
    begwb                               =>    cwbal%begwb                                 , & ! Input:  [real(r8) (:)]  water mass begining of the time step              
    qflx_rsub_sat                       =>    cwf%qflx_rsub_sat                           , & ! Input:  [real(r8) (:)]  soil saturation excess [mm h2o/s]                 
@@ -765,7 +764,6 @@ contains
           qflx_drain(c)         = 0._r8
           qflx_drain_perched(c) = 0._r8
           qflx_h2osfc_surf(c)   = 0._r8
-          qflx_irrig(c)         = 0._r8
           qflx_surf(c)          = 0._r8
           qflx_infl(c)          = 0._r8
           ! add flood water flux to runoff for wetlands/glaciers

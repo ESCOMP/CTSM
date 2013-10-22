@@ -73,7 +73,6 @@ contains
    h2osoi_liq                          =>    cws%h2osoi_liq                              , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                            
    h2osoi_vol                          =>    cws%h2osoi_vol                              , & ! Output: [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
    h2ocan_col                          =>    pws_a%h2ocan                                , & ! Output: [real(r8) (:)]  canopy water (mm H2O) (column-level)              
-   qflx_irrig                          =>    cwf%qflx_irrig                              , & ! Output: [real(r8) (:)]  irrigation flux (mm H2O/s)                        
    snow_depth                          =>    cps%snow_depth                              , & ! Output: [real(r8) (:)]  snow height (m)                                   
    h2osno                              =>    cws%h2osno                                  , & ! Output: [real(r8) (:)]  snow water (mm H2O)                               
    t_soisno                            =>    ces%t_soisno                                , & ! Output: [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
@@ -112,8 +111,8 @@ contains
    mss_cnc_dst2                        =>    cps%mss_cnc_dst2                            , & ! Output: [real(r8) (:,:)]  mass concentration of dust species 2 (col,lyr) [kg/kg]
    mss_cnc_dst3                        =>    cps%mss_cnc_dst3                            , & ! Output: [real(r8) (:,:)]  mass concentration of dust species 3 (col,lyr) [kg/kg]
    mss_cnc_dst4                        =>    cps%mss_cnc_dst4                            , & ! Output: [real(r8) (:,:)]  mass concentration of dust species 4 (col,lyr) [kg/kg]
-   n_irrig_steps_left                  =>    cps%n_irrig_steps_left                      , & ! Output: [integer (:)]  number of time steps for which we still need to irrigate today (if 0, ignore irrig_rate)
-   irrig_rate                          =>    cps%irrig_rate                              , & ! Output: [real(r8) (:)]  current irrigation rate [mm/s]                    
+   n_irrig_steps_left                  =>    pps%n_irrig_steps_left                      , & ! Output: [integer (:)]  number of time steps for which we still need to irrigate today (if 0, ignore irrig_rate)
+   irrig_rate                          =>    pps%irrig_rate                              , & ! Output: [real(r8) (:)]  current irrigation rate [mm/s]                    
    h2ocan_pft                          =>    pws%h2ocan                                  , & ! Output: [real(r8) (:)]  canopy water (mm H2O) (pft-level)                 
    t_veg                               =>    pes%t_veg                                   , & ! Output: [real(r8) (:)]  vegetation temperature (Kelvin)                   
    t_ref2m                             =>    pes%t_ref2m                                 , & ! Output: [real(r8) (:)]  2 m height surface air temperature (Kelvin)       
@@ -166,12 +165,6 @@ contains
        ! snow depth
 
        snow_depth(c)  = h2osno(c) / bdsno
-
-       ! Initialize Irrigation to zero
-       if (lun%itype(l)==istsoil) then
-          n_irrig_steps_left(c) = 0
-          irrig_rate(c)         = 0.0_r8
-       end if
 
     end do
 
@@ -276,7 +269,8 @@ contains
 
        ! Initialize Irrigation to zero
        if (lun%itype(l)==istsoil) then
-          qflx_irrig(c)      = 0.0_r8
+          n_irrig_steps_left(p) = 0
+          irrig_rate(p)         = 0.0_r8
        end if
 
        if (use_vancouver) then

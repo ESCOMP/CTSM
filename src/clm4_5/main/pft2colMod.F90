@@ -135,6 +135,10 @@ contains
          pwf%qflx_dew_snow(bounds%begp:bounds%endp), &
          pwf_a%qflx_dew_snow(bounds%begc:bounds%endc))
 
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         pwf%qflx_irrig(bounds%begp:bounds%endp), &
+         pwf_a%qflx_irrig(bounds%begc:bounds%endc))
+
   end subroutine pft2col
 
 end module pft2colMod

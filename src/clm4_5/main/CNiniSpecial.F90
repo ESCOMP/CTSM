@@ -125,7 +125,6 @@ subroutine CNiniSpecial (bounds)
 
    do fc = 1,num_specialc
       c = specialc(fc)
-      cwf%qflx_irrig(c) = 0._r8
       pcf_a%psnsun(c) = 0._r8
       pcf_a%psnsha(c) = 0._r8
       

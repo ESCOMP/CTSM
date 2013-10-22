@@ -1514,7 +1514,6 @@ contains
    qflx_dew_snow                       =>    pwf_a%qflx_dew_snow                         , & ! Input:  [real(r8) (:)]  surface dew added to snow pack (mm H2O /s) [+]    
    qflx_sub_snow                       =>    pwf_a%qflx_sub_snow                         , & ! Input:  [real(r8) (:)]  sublimation rate from snow pack (mm H2O /s) [+]   
    qflx_drain                          =>    cwf%qflx_drain                              , & ! Output: [real(r8) (:)]  sub-surface runoff (mm H2O /s)                    
-   qflx_irrig                          =>    cwf%qflx_irrig                              , & ! Output: [real(r8) (:)]  irrigation flux (mm H2O /s)                       
    qflx_qrgwl                          =>    cwf%qflx_qrgwl                              , & ! Output: [real(r8) (:)]  qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
    qflx_rsub_sat                       =>    cwf%qflx_rsub_sat                           , & ! Output: [real(r8) (:)]  soil saturation excess [mm h2o/s]                 
    eflx_impsoil                        =>    cef%eflx_impsoil                            , & ! Output: [real(r8) (:)]  implicit evaporation for soil temperature equation
@@ -1970,7 +1969,6 @@ contains
        c = filter_urbanc(fc)
        if (ctype(c) /= icol_road_perv) then
          qflx_drain(c) = 0._r8
-         qflx_irrig(c) = 0._r8
          ! This must be done for roofs and impervious road (walls will be zero)
          qflx_qrgwl(c) = qflx_snwcp_liq(c)
          eflx_impsoil(c) = 0._r8

@@ -253,7 +253,7 @@ contains
     integer  :: local_time               ! local time at start of time step (seconds after solar midnight)
     integer  :: irrig_nsteps_per_day     ! number of time steps per day in which we irrigate
     logical  :: check_for_irrig(bounds%begp:bounds%endp) ! where do we need to check soil moisture to see if we need to irrigate?
-    logical  :: frozen_soil(bounds%begc:bounds%endc)     ! set to true if we have encountered a frozen soil layer
+    logical  :: frozen_soil(bounds%begp:bounds%endp)     ! set to true if we have encountered a frozen soil layer
     real(r8) :: vol_liq_so               ! partial volume of liquid water in layer for which smp_node = smpso
     real(r8) :: h2osoi_liq_so            ! liquid water corresponding to vol_liq_so for this layer [kg/m2]
     real(r8) :: h2osoi_liq_sat           ! liquid water corresponding to eff_porosity for this layer [kg/m2]
@@ -383,8 +383,8 @@ contains
    psnsha_wp             => pcf%psnsha_wp              , & ! Output: [real(r8) (:)]  product-limited shaded leaf photosynthesis (umol CO2 /m**2/ s)        
    grnd_ch4_cond         => pps%grnd_ch4_cond          , & ! Output: [real(r8) (:)]  tracer conductance for boundary layer [m/s] 
    altmax_indx           => cps%altmax_indx            , & ! Output: [integer (:)]  maximum annual depth of thaw                                           
-   irrig_rate            => cps%irrig_rate             , & ! Output: [real(r8) (:)]  current irrigation rate [mm/s]                                        
-   n_irrig_steps_left    => cps%n_irrig_steps_left     , & ! Output: [integer (:)]  number of time steps for which we still need to irrigate today              
+   irrig_rate            => pps%irrig_rate             , & ! Output: [real(r8) (:)]  current irrigation rate [mm/s]                                        
+   n_irrig_steps_left    => pps%n_irrig_steps_left     , & ! Output: [integer (:)]  number of time steps for which we still need to irrigate today              
    altmax_lastyear_indx  => cps%altmax_lastyear_indx   , & ! Output: [integer (:)]  prior year maximum annual depth of thaw                                
    fpsn                  => pcf%fpsn                   , & ! Output: [real(r8) (:)]  photosynthesis (umol CO2 /m**2 /s)                                    
    fpsn_wc               => pcf%fpsn_wc                , & ! Output: [real(r8) (:)]  Rubisco-limited photosynthesis (umol CO2 /m**2 /s)                    
@@ -563,8 +563,8 @@ contains
          if (modulo(local_time - irrig_start_time, isecspday) < dtime) then
             ! it's time to start irrigating
             check_for_irrig(p)    = .true.
-            n_irrig_steps_left(c) = irrig_nsteps_per_day
-            irrig_rate(c)         = 0._r8  ! reset; we'll add to this later
+            n_irrig_steps_left(p) = irrig_nsteps_per_day
+            irrig_rate(p)         = 0._r8  ! reset; we'll add to this later
          else
             check_for_irrig(p)    = .false.
          end if
@@ -576,15 +576,17 @@ contains
 
 
    ! Now 'measure' soil water for the grid cells identified above and see if the soil is dry enough to warrant irrigation
-   frozen_soil(bounds%begc : bounds%endc) = .false.
+   ! (Note: frozen_soil could probably be a column-level variable, but that would be
+   ! slightly less robust to potential future modifications)
+   frozen_soil(bounds%begp : bounds%endp) = .false.
    do j = 1,nlevgrnd
       do f = 1, fn
          p = filterp(f)
          c = pcolumn(p)
-         if (check_for_irrig(p) .and. .not. frozen_soil(c)) then
+         if (check_for_irrig(p) .and. .not. frozen_soil(p)) then
             ! if level L was frozen, then we don't look at any levels below L
             if (t_soisno(c,j) <= SHR_CONST_TKFRZ) then
-               frozen_soil(c) = .true.
+               frozen_soil(p) = .true.
             else if (rootfr(p,j) > 0._r8) then
                ! determine soil water deficit in this layer:
 
@@ -600,10 +602,10 @@ contains
                deficit        = max((h2osoi_liq_so + irrig_factor*(h2osoi_liq_sat - h2osoi_liq_so)) - h2osoi_liq(c,j), 0._r8)
 
                ! Add deficit to irrig_rate, converting units from mm to mm/sec
-               irrig_rate(c)  = irrig_rate(c) + deficit/(dtime*irrig_nsteps_per_day)
+               irrig_rate(p)  = irrig_rate(p) + deficit/(dtime*irrig_nsteps_per_day)
 
             end if  ! else if (rootfr(p,j) .gt. 0)
-         end if     ! if (check_for_irrig(p) .and. .not. frozen_soil(c))
+         end if     ! if (check_for_irrig(p) .and. .not. frozen_soil(p))
       end do        ! do f
    end do           ! do j
 

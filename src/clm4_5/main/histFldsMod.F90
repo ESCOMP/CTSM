@@ -991,7 +991,7 @@ contains
 
     call hist_addfld1d (fname='QIRRIG', units='mm/s', &
          avgflag='A', long_name='water added through irrigation', &
-         ptr_col=cwf%qflx_irrig, set_lake=0._r8)
+         ptr_pft=pwf%qflx_irrig)
 
     if (create_glacier_mec_landunit) then
 

@@ -135,7 +135,8 @@ contains
    qflx_infl            =>  cwf%qflx_infl           , & ! Output: [real(r8) (:)]  infiltration (mm H2O /s)                
    qflx_qrgwl           =>  cwf%qflx_qrgwl          , & ! Output: [real(r8) (:)]  qflx_surf at glaciers, wetlands, lakes  
    qflx_runoff          =>  cwf%qflx_runoff         , & ! Output: [real(r8) (:)]  total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-   qflx_irrig           =>   cwf%qflx_irrig         , & ! Output: [real(r8) (:)]  irrigation flux (mm H2O /s)             
+   qflx_irrig           =>  pwf%qflx_irrig          , & ! Output: [real(r8) (:)]  irrigation flux (mm H2O /s)             
+   qflx_irrig_col       =>  pwf_a%qflx_irrig        , & ! Output: [real(r8) (:)]  irrigation flux (mm H2O /s)             
    endwb                =>  cwbal%endwb             , & ! Output: [real(r8) (:)]  water mass end of the time step         
    begwb                =>  cwbal%begwb             , & ! Input:  [real(r8) (:)]  water mass begining of the time step    
    dz_lake              =>  cps%dz_lake             , & ! Input:  [real(r8) (:,:)]  layer thickness for lake (m)          
@@ -679,7 +680,8 @@ contains
        qflx_infl(c)      = 0._r8
        qflx_surf(c)      = 0._r8
        qflx_drain(c)     = 0._r8
-       qflx_irrig(c)     = 0._r8
+       qflx_irrig(p)     = 0._r8
+       qflx_irrig_col(c) = 0._r8
        rootr_column(c,:) = spval
        soilalpha(c)      = spval
        zwt(c)            = spval

@@ -219,9 +219,9 @@ contains
    qflx_rain_grnd      => pwf%qflx_rain_grnd      , & ! Output: [real(r8) (:)]  rain on ground after interception (mm H2O/s) [+]
    fwet                => pps%fwet                , & ! Output: [real(r8) (:)]  fraction of canopy that is wet (0 to 1) 
    fdry                => pps%fdry                , & ! Output: [real(r8) (:)]  fraction of foliage that is green and dry [-] (new)
-   irrig_rate          => cps%irrig_rate          , & ! Input:  [real(r8) (:)]  current irrigation rate (applied if n_irrig_steps_left > 0) [mm/s]
-   n_irrig_steps_left  => cps%n_irrig_steps_left  , & ! Input:  [integer (:)]  number of time steps for which we still need to irrigate today
-   qflx_irrig          => cwf%qflx_irrig            & ! Input:  [real(r8) (:)]  irrigation amount (mm/s)                
+   irrig_rate          => pps%irrig_rate          , & ! Input:  [real(r8) (:)]  current irrigation rate (applied if n_irrig_steps_left > 0) [mm/s]
+   n_irrig_steps_left  => pps%n_irrig_steps_left  , & ! Input:  [integer (:)]  number of time steps for which we still need to irrigate today
+   qflx_irrig          => pwf%qflx_irrig            & ! Output: [real(r8) (:)]  irrigation amount (mm/s)                
    )
 
     ! Compute time step
@@ -327,16 +327,16 @@ contains
        end if
 
        ! Determine whether we're irrigating here; set qflx_irrig appropriately
-       if (n_irrig_steps_left(c) > 0) then
-          qflx_irrig(c)         = irrig_rate(c)
-          n_irrig_steps_left(c) = n_irrig_steps_left(c) - 1
+       if (n_irrig_steps_left(p) > 0) then
+          qflx_irrig(p)         = irrig_rate(p)
+          n_irrig_steps_left(p) = n_irrig_steps_left(p) - 1
        else
-          qflx_irrig(c) = 0._r8
+          qflx_irrig(p) = 0._r8
        end if
 
        ! Add irrigation water directly onto ground (bypassing canopy interception)
        ! Note that it's still possible that (some of) this irrigation water will runoff (as runoff is computed later)
-       qflx_prec_grnd_rain(p) = qflx_prec_grnd_rain(p) + qflx_irrig(c)
+       qflx_prec_grnd_rain(p) = qflx_prec_grnd_rain(p) + qflx_irrig(p)
 
        ! Done irrigation
 
