@@ -1,4 +1,83 @@
 ===============================================================
+Tag name:  clm4_5_39
+Originator(s):  muszala (Stefan Muszala,UCAR/TSS,303-497-1320)
+Date: Wed Oct 23 08:24:47 MDT 2013
+One-line Summary: bug fix from santos - h2osoi_vol not passed to atmosphere model on restart
+
+Purpose of changes:
+
+Update soilw for atmosphere at every timestep.
+
+- Fix bug where soilw was only being set from h2osoi_vol on the first
+timestep. This field is used by some CARMA dust models.
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 1787
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self, santos
+
+List any svn externals directories updated (csm_share, mct, etc.): N/A
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+
+M        models/lnd/clm/src/clm4_0/main/clm_atmlnd.F90
+M        models/lnd/clm/src/clm4_0/main/clm_initializeMod.F90
+M        models/lnd/clm/src/clm4_5/main/clm_atmlnd.F90
+M        models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+   - Create a new subroutine, clm_map2gcell_minimal, which updates
+     only the fields needed at initialization.
+   - Have the regular clm_map2cell call clm_map2gcell_minimal, thus
+     guaranteeing that fields updated on the first time step will
+     always be a subset of the fields updated on every time step.
+
+CLM testing:
+
+  build-namelist tests: N/A
+
+  regular tests (aux_clm):
+
+    yellowstone_intel-OK
+    yellowstone_pgi-OK
+    frankfurt_intel-OK
+    frankfurt_pgi-OK
+    frankfurt_nag-OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_38
+
+Changes answers relative to baseline: No.  Tag is BFB.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_38
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date:  Fri Oct 18 12:36:03 MDT 2013
@@ -6,9 +85,28 @@ One-line Summary: change irrigation variables to be pft-level
 
 Purpose of changes:
 
+   Irrigation variables were previously defined on the column-level. That is
+   fine with the current operation of the code (for which there is only one pft
+   per column), but is not robust to changes that might put multiple irrigated
+   pfts (or some irrigated & some unirrigated pfts) on the same column. This
+   changes these variables to be pft-level, so that the code is robust to these
+   types of changes.
+
+   Also, remove some unnecessary setting of qflx_irrig to 0.
+
+   WARNING: USE CAUTION WHEN USING THIS TAG WITH AN OLDER RESTART FILE IN WHICH
+   IRRIGATION WAS TURNED ON (this is not the case for any out-of-the-box initial
+   conditions files, but could apply if you have your own initial file from a
+   run that included irrigation): Using this tag with old initial conditions
+   files will give incorrect irrigation results for the first day, if the old
+   initial conditions files had non-zero irrigation. Similarly, if you use
+   interpinic on an old initial conditions file that had non-zero irrigation,
+   the irrigation in the new file will cause incorrect behavior for the first
+   day.
+
 Requirements for tag:
 
-Test level of tag: regular, short, tools, build_namelist, doc
+Test level of tag: regular
 
 Bugs fixed (include bugzilla ID):
 
@@ -23,90 +121,78 @@ Known Limitations:
                                   701 (svn keyword)
                                   452 (Problem with support of soil-colors != 8 or 20)
 
-Describe any changes made to build system:
+Describe any changes made to build system: none
 
-Describe any changes made to the namelist:
+Describe any changes made to the namelist: none
 
-List any changes to the defaults for the boundary datasets:
+List any changes to the defaults for the boundary datasets: none
 
-Describe any substantial timing or memory changes:
+Describe any substantial timing or memory changes: none
 
-Code reviewed by:
+Code reviewed by: ncdio_pio design review by erik; other changes just reviewed
+by self
 
 List any svn externals directories updated (csm_share, mct, etc.):
 
-List all files eliminated:
+   scripts: Update to scripts4_131018 to get new test
 
-List all files added and what they do:
+List all files eliminated: none
+
+List all files added and what they do: none
 
 List all existing files that have been modified, and describe the changes:
 
+========= Change irrigation variables to pft-level, and add column-level qflx_irrig in pwf_a
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+M       models/lnd/clm/src/clm4_5/main/pft2colMod.F90
+M       models/lnd/clm/src/clm4_5/main/mkarbinitMod.F90
+          - also remove unnecessary initialization of qflx_irrig to 0
+M       models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+          - also remove unnecessary set_lake
+M       models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+          - also remove unnecessary setting of qflx_irrig to 0
+
+========= Remove unnecessary setting of qflx_irrig to 0
+M       models/lnd/clm/src/clm4_5/main/CNiniTimeVar.F90
+M       models/lnd/clm/src/clm4_5/main/CNiniSpecial.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+
+========= Add a routine to get the dimension length of a given dimension of a variable
+M       models/lnd/clm/src/util_share/ncdio_pio.F90
+
+========= Add the new 5-year ERS test and one other to the xFail list
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+
 CLM testing:
-
-[... Remove before making trunk_tag.  Available test levels:
-
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CLM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
-
-... ]
-
-  build-namelist tests:
-
-    yellowstone
-    frankfurt
 
   regular tests (aux_clm):
 
-    yellowstone_intel
-    yellowstone_pgi
-    frankfurt_intel
-    frankfurt_pgi
-    frankfurt_nag
+    yellowstone_intel: OK
+
+       Note: added the following to the xFail list:
+               <entry testID="ERI_D.ne30_g16.ICLM45BGC.yellowstone_intel.clm-vrtlay"      failType="FAIL" >Seg fault while writing h1 file. This used to pass on yellowstone, but it failed on edison; now it is failing on yellowstone, too (it fails in clm4_5_37, too).</entry>
+
+    yellowstone_pgi: OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
 
   history file comparison with component_gen_comp and summarize_cprnc_diffs:
 
-    yellowstone_intel
-    yellowstone_pgi
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
 
-  short tests (aux_clm_short):
+CLM tag used for the baseline comparisons: clm4_5_37
 
-    yellowstone_intel
-    yellowstone_pgi
-    frankfurt_intel
-    frankfurt_pgi
-    frankfurt_nag
+Changes answers relative to baseline: NO
 
-  tools testing:
-
-    yellowstone interactive
-    frankfurt interactive
-
-CLM tag used for the baseline comparisons: 
-
-Changes answers relative to baseline:
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: 
-
-   URL for LMWG diagnostics output used to validate new climate:
-	
 ===============================================================
 ===============================================================
 Tag name:  clm4_5_37

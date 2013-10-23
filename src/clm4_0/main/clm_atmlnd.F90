@@ -32,7 +32,7 @@ module clm_atmlnd
      real(r8), pointer :: forc_t(:)       => null() !atmospheric temperature (Kelvin)
      real(r8), pointer :: forc_u(:)       => null() !atm wind speed, east direction (m/s)
      real(r8), pointer :: forc_v(:)       => null() !atm wind speed, north direction (m/s)
-     real(r8), pointer :: forc_wind(:)    => null() !atmospheric wind speed   
+     real(r8), pointer :: forc_wind(:)    => null() !atmospheric wind speed
      real(r8), pointer :: forc_q(:)       => null() !atmospheric specific humidity (kg/kg)
      real(r8), pointer :: forc_hgt(:)     => null() !atmospheric reference height (m)
      real(r8), pointer :: forc_hgt_u(:)   => null() !obs height of wind [m] (new)
@@ -40,7 +40,7 @@ module clm_atmlnd
      real(r8), pointer :: forc_hgt_q(:)   => null() !obs height of humidity [m] (new)
      real(r8), pointer :: forc_pbot(:)    => null() !atmospheric pressure (Pa)
      real(r8), pointer :: forc_th(:)      => null() !atm potential temperature (Kelvin)
-     real(r8), pointer :: forc_vp(:)      => null() !atmospheric vapor pressure (Pa) 
+     real(r8), pointer :: forc_vp(:)      => null() !atmospheric vapor pressure (Pa)
      real(r8), pointer :: forc_rho(:)     => null() !density (kg/m**3)
      real(r8), pointer :: forc_rh(:)      => null() !atmospheric relative humidity (%)
      real(r8), pointer :: forc_psrf(:)    => null() !surface pressure (Pa)
@@ -94,13 +94,14 @@ module clm_atmlnd
      ! Needed for backwards compatibility with lnd_comp_mct used in clm4_5
      real(r8), pointer :: flux_ch4(:)      => null() !net CH4 flux (kg C/m**2/s) [+ to atm]
   end type lnd2atm_type
-  
+
   type(atm2lnd_type),public,target :: clm_a2l      ! a2l fields on clm grid
   type(lnd2atm_type),public,target :: clm_l2a      ! l2a fields on clm grid
 
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: init_atm2lnd_type
   public :: init_lnd2atm_type
+  public :: clm_map2gcell_minimal
   public :: clm_map2gcell
 !
 ! !REVISION HISTORY:
@@ -292,12 +293,84 @@ end subroutine init_atm2lnd_type
 end subroutine init_lnd2atm_type
 
 !------------------------------------------------------------------------
-!BOP
+!
+! !IROUTINE: clm_map2gcell_minimal
+!
+! !INTERFACE: subroutine clm_map2gcell_minimal(init)
+subroutine clm_map2gcell_minimal()
+!
+! !DESCRIPTION:
+! Compute l2a component of gridcell derived type. This routine computes the
+! bare minimum of components necessary to get the first step of a run
+! started.
+!
+! !USES:
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use clmtype
+  use subgridAveMod
+  use clm_varcon  , only : sb
+  use clm_varpar  , only : numrad
+!
+! !REVISION HISTORY:
+! Sean Santos: Extracted from clm_map2gcell 2013/08/27
+!
+!
+! !LOCAL VARIABLES:
+  integer :: begp, endp      ! per-proc beginning and ending pft indices
+  integer :: begc, endc      ! per-proc beginning and ending column indices
+  integer :: begl, endl      ! per-proc beginning and ending landunit indices
+  integer :: begg, endg      ! per-proc gridcell ending gridcell indices
+
+  integer :: g                           ! indices
+  real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
+  real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
+  real(r8), parameter :: amCO2 = amC + 2.0_r8*amO ! Atomic mass number for CO2
+  ! The following converts g of C to kg of CO2
+  real(r8), parameter :: convertgC2kgCO2 = 1.0e-3_r8 * (amCO2/amC)
+
+!------------------------------------------------------------------------
+
+  ! Determine processor bounds
+
+  call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+
+  ! Compute gridcell averages.
+
+  call c2g(begc, endc, begl, endl, begg, endg, &
+       cws%h2osno, clm_l2a%h2osno, &
+       c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+  do g = begg,endg
+     clm_l2a%h2osno(g) = clm_l2a%h2osno(g)/1000._r8
+  end do
+
+  call c2g(begc, endc, begl, endl, begg, endg, nlevgrnd, &
+       cws%h2osoi_vol, clm_l2a%h2osoi_vol, &
+       c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
+       pps%albd, clm_l2a%albd,&
+       p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
+       pps%albi, clm_l2a%albi,&
+       p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+       pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out,&
+       p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+
+  do g = begg,endg
+     clm_l2a%t_rad(g) = sqrt(sqrt(clm_l2a%eflx_lwrad_out(g)/sb))
+  end do
+
+end subroutine clm_map2gcell_minimal
+
+!------------------------------------------------------------------------
 !
 ! !IROUTINE: clm_map2gcell
 !
-! !INTERFACE: subroutine clm_map2gcell(init)
-subroutine clm_map2gcell(init)
+! !INTERFACE: subroutine clm_map2gcell()
+subroutine clm_map2gcell()
 !
 ! !DESCRIPTION:
 ! Compute l2a component of gridcell derived type
@@ -309,13 +382,10 @@ subroutine clm_map2gcell(init)
   use clm_varcon  , only : sb
   use clm_varpar  , only : numrad
 !
-! !ARGUMENTS:
-  implicit none
-  save
-  logical, optional, intent(in) :: init  ! if true=>only set a subset of arguments
-!
 ! !REVISION HISTORY:
 ! Mariana Vertenstein: created 03/10-25
+! 03-04-27 : Created by Mariana Vertenstein
+! 03-08-25 : Updated to vector data structure (Mariana Vertenstein)
 !
 !
 ! !LOCAL VARIABLES:
@@ -323,22 +393,8 @@ subroutine clm_map2gcell(init)
   integer :: begc, endc      ! per-proc beginning and ending column indices
   integer :: begl, endl      ! per-proc beginning and ending landunit indices
   integer :: begg, endg      ! per-proc gridcell ending gridcell indices
-!
-! !USES:
-!
-! !REVISION HISTORY:
-! 03-04-27 : Created by Mariana Vertenstein
-! 03-08-25 : Updated to vector data structure (Mariana Vertenstein)
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+
   integer :: g                           ! indices
-  type(gridcell_type), pointer :: gptr   ! pointer to gridcell derived subtype
-  type(landunit_type), pointer :: lptr   ! pointer to landunit derived subtype
-  type(column_type)  , pointer :: cptr   ! pointer to column derived subtype
-  type(pft_type)     , pointer :: pptr   ! pointer to pft derived subtype
-  integer             :: n               ! Loop index over nmap
   real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
   real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
   real(r8), parameter :: amCO2 = amC + 2.0_r8*amO ! Atomic mass number for CO2
@@ -347,161 +403,103 @@ subroutine clm_map2gcell(init)
 
 !------------------------------------------------------------------------
 
-  ! Set pointers into derived type
-
-  gptr => grc
-  lptr => lun
-  cptr => col
-  pptr => pft
+  ! First, compute the "minimal" set of fields.
+  call clm_map2gcell_minimal()
 
   ! Determine processor bounds
 
   call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
-  ! Compute gridcell averages. 
+  ! Compute remaining gridcell averages.
 
-  if (present(init)) then
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+       pes%t_ref2m, clm_l2a%t_ref2m, &
+       p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-     call c2g(begc, endc, begl, endl, begg, endg, &
-          cws%h2osno, clm_l2a%h2osno, &
-          c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-     do g = begg,endg
-        clm_l2a%h2osno(g) = clm_l2a%h2osno(g)/1000._r8
-     end do
-     
-      call c2g(begc, endc, begl, endl, begg, endg, nlevgrnd, &
-          cws%h2osoi_vol, clm_l2a%h2osoi_vol, &
-          c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+       pes%q_ref2m, clm_l2a%q_ref2m, &
+       p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
-          pps%albd, clm_l2a%albd,&
-          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-      
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
-          pps%albi, clm_l2a%albi,&
-          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-      
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out,&
-          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-     do g = begg,endg
-        clm_l2a%t_rad(g) = sqrt(sqrt(clm_l2a%eflx_lwrad_out(g)/sb))
-     end do
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+       pps%u10_clm, clm_l2a%u_ref10m, &
+       p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-  else
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+       pmf%taux, clm_l2a%taux, &
+       p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-     call c2g(begc, endc, begl, endl, begg, endg, cws%h2osno, clm_l2a%h2osno,&
-          c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-     do g = begg,endg
-        clm_l2a%h2osno(g) = clm_l2a%h2osno(g)/1000._r8
-     end do
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+       pmf%tauy, clm_l2a%tauy, &
+       p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
-          pps%albd, clm_l2a%albd, &
-          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
-          pps%albi, clm_l2a%albi, &
-          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pes%t_ref2m, clm_l2a%t_ref2m, & 
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pes%q_ref2m, clm_l2a%q_ref2m, & 
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pps%u10_clm, clm_l2a%u_ref10m, & 
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pmf%taux, clm_l2a%taux, & 
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pmf%tauy, clm_l2a%tauy, & 
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pef%eflx_lh_tot, clm_l2a%eflx_lh_tot, &
-          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+       pef%eflx_lh_tot, clm_l2a%eflx_lh_tot, &
+       p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
 !DML note: use new array: gef%eflx_sh_totg
 !     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
 !          pef%eflx_sh_tot, clm_l2a%eflx_sh_tot, &
 !          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-     do g = begg,endg
-        clm_l2a%eflx_sh_tot(g) = gef%eflx_sh_totg(g)
-     end do
+  do g = begg,endg
+     clm_l2a%eflx_sh_tot(g) = gef%eflx_sh_totg(g)
+  end do
 
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pwf%qflx_evap_tot, clm_l2a%qflx_evap_tot, & 
-          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+       pwf%qflx_evap_tot, clm_l2a%qflx_evap_tot, &
+       p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pef%fsa, clm_l2a%fsa, &
-          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-                  
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out, &
-          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-                  
-     if (use_cn) then
-        call c2g(begc, endc, begl, endl, begg, endg, &
-             ccf%nee, clm_l2a%nee, &
-             c2l_scale_type= 'unity', l2g_scale_type='unity')
-     else
-        call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-             pcf%fco2, clm_l2a%nee, &
-             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-        ! Note that fco2 in is umolC/m2/sec so units need to be changed to gC/m2/sec
-        do g = begg,endg
-           clm_l2a%nee(g) = clm_l2a%nee(g)*12.011e-6_r8
-        end do
-     end if
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+       pef%fsa, clm_l2a%fsa, &
+       p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
+  if (use_cn) then
+     call c2g(begc, endc, begl, endl, begg, endg, &
+          ccf%nee, clm_l2a%nee, &
+          c2l_scale_type= 'unity', l2g_scale_type='unity')
+  else
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pps%fv, clm_l2a%fv, &
+          pcf%fco2, clm_l2a%nee, &
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pps%ram1, clm_l2a%ram1, &
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-
+     ! Note that fco2 in is umolC/m2/sec so units need to be changed to gC/m2/sec
      do g = begg,endg
-        clm_l2a%rofliq(g) = gwf%qflx_runoffg(g)
-        clm_l2a%rofice(g) = gwf%qflx_snwcp_iceg(g)
+        clm_l2a%nee(g) = clm_l2a%nee(g)*12.011e-6_r8
      end do
-
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, ndst, &
-          pdf%flx_mss_vrt_dst, clm_l2a%flxdst, &
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-
-     if (shr_megan_mechcomps_n>0) then
-        call p2g(begp, endp, begc, endc, begl, endl, begg, endg, shr_megan_mechcomps_n, &
-             pvf%vocflx, clm_l2a%flxvoc, &
-             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-     endif
-
-     if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
-        call p2g(begp, endp, begc, endc, begl, endl, begg, endg, n_drydep, &
-             pdd%drydepvel, clm_l2a%ddvel, &
-             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-     endif
-
-     ! Convert from gC/m2/s to kgCO2/m2/s
-     do g = begg,endg
-        clm_l2a%nee(g) = clm_l2a%nee(g)*convertgC2kgCO2
-     end do
-
-     do g = begg,endg
-        clm_l2a%t_rad(g) = sqrt(sqrt(clm_l2a%eflx_lwrad_out(g)/sb))
-     end do
-
   end if
+
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+       pps%fv, clm_l2a%fv, &
+       p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+       pps%ram1, clm_l2a%ram1, &
+       p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+
+  do g = begg,endg
+     clm_l2a%rofliq(g) = gwf%qflx_runoffg(g)
+     clm_l2a%rofice(g) = gwf%qflx_snwcp_iceg(g)
+  end do
+
+  call p2g(begp, endp, begc, endc, begl, endl, begg, endg, ndst, &
+       pdf%flx_mss_vrt_dst, clm_l2a%flxdst, &
+       p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+
+  if (shr_megan_mechcomps_n>0) then
+     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, shr_megan_mechcomps_n, &
+          pvf%vocflx, clm_l2a%flxvoc, &
+          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+  endif
+
+  if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
+     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, n_drydep, &
+          pdd%drydepvel, clm_l2a%ddvel, &
+          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+  endif
+
+  ! Convert from gC/m2/s to kgCO2/m2/s
+  do g = begg,endg
+     clm_l2a%nee(g) = clm_l2a%nee(g)*convertgC2kgCO2
+  end do
 
 end subroutine clm_map2gcell
 

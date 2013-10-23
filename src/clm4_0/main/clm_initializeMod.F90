@@ -259,7 +259,7 @@ contains
 ! o Initializes accumulation variables.
 !
 ! !USES:
-    use clm_atmlnd      , only : clm_map2gcell
+    use clm_atmlnd      , only : clm_map2gcell_minimal
     use clm_glclnd      , only : update_clm_s2x
     use clm_varctl      , only : finidat, fpftdyn
     use decompMod       , only : get_proc_clumps, get_proc_bounds
@@ -597,7 +597,7 @@ contains
        ! Determine gridcell averaged properties to send to atm
 
        call t_startf('init_map2gc')
-       call clm_map2gcell(init=.true.)
+       call clm_map2gcell_minimal()
        call t_stopf('init_map2gc')
 
     end if
