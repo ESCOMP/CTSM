@@ -244,6 +244,7 @@ end subroutine UrbanInitAero
    eflx_anthro          =>  pef%eflx_anthro          , & ! Output: [real(r8) (:)]  total anthropogenic heat flux (W/m**2)  
    fsa_u                =>  pef%fsa_u                , & ! Output: [real(r8) (:)]  Urban absorbed solar radiation (W/m**2) 
    eflx_lwrad_net_u     =>  pef%eflx_lwrad_net_u     , & ! Output: [real(r8) (:)]  Urban net longwave radiation (W/m**2)   
+   eflx_lwrad_out_u     =>  pef%eflx_lwrad_out_u     , & ! Output: [real(r8) (:)]  Urban emitted longwave radiation (W/m**2)
    eflx_lh_tot_u        =>  pef%eflx_lh_tot_u        , & ! Output: [real(r8) (:)]  Urban latent heat flux (W/m**2)         
    eflx_sh_tot_u        =>  pef%eflx_sh_tot_u        , & ! Output: [real(r8) (:)]  Urban sensible heat flux (W/m**2)       
    eflx_soil_grnd_u     =>  pef%eflx_soil_grnd_u       & ! Output: [real(r8) (:)]  Urban ground heat flux (W/m**2)         
@@ -285,9 +286,9 @@ end subroutine UrbanInitAero
              qcharge(c) = spval
           end if
        else
-          eflx_building_heat(c) = spval
-          eflx_urban_ac(c) = spval
-          eflx_urban_heat(c) = spval
+          eflx_building_heat(c) = 0._r8
+          eflx_urban_ac(c)      = 0._r8
+          eflx_urban_heat(c)    = 0._r8
           t_grnd_u(c) = spval
           qflx_runoff_u(c) = spval
           eflx_snomelt_u(c) = spval
@@ -301,12 +302,13 @@ end subroutine UrbanInitAero
           t_ref2m_min_u(p) = spval
           t_ref2m_max_u(p) = spval
           rh_ref2m_u(p)    = spval
-          eflx_wasteheat_pft(p)    = spval
-          eflx_heat_from_ac_pft(p) = spval
-          eflx_traffic_pft(p)      = spval
-          eflx_anthro(p)           = spval
+          eflx_wasteheat_pft(p)    = 0._r8
+          eflx_heat_from_ac_pft(p) = 0._r8
+          eflx_traffic_pft(p)      = 0._r8
+          eflx_anthro(p)           = 0._r8
           fsa_u(p)            = spval 
           eflx_lwrad_net_u(p) = spval
+          eflx_lwrad_out_u(p) = spval
           eflx_lh_tot_u(p)    = spval
           eflx_sh_tot_u(p)    = spval
           eflx_soil_grnd_u(p) = spval

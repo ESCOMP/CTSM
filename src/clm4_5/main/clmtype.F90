@@ -689,6 +689,8 @@ type, public :: pft_eflux_type
    real(r8), pointer :: eflx_lwrad_net(:)    !net infrared (longwave) rad (W/m**2) [+ = to atm]
    real(r8), pointer :: eflx_lwrad_net_u(:)  !urban net infrared (longwave) rad (W/m**2) [+ = to atm]
    real(r8), pointer :: eflx_lwrad_net_r(:)  !rural net infrared (longwave) rad (W/m**2) [+ = to atm]
+   real(r8), pointer :: eflx_lwrad_out_u(:)  !urban emitted infrared (longwave) rad (W/m**2)
+   real(r8), pointer :: eflx_lwrad_out_r(:)  !rural emitted infrared (longwave) rad (W/m**2)
    real(r8), pointer :: netrad(:)            !net radiation (W/m**2) [+ = to sfc]
    real(r8), pointer :: fsds_vis_d(:)        !incident direct beam vis solar radiation (W/m**2)
    real(r8), pointer :: fsds_nir_d(:)        !incident direct beam nir solar radiation (W/m**2)

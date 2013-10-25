@@ -1508,6 +1508,10 @@ contains
     pef%eflx_lwrad_net_u(:)= nanr
     allocate(pef%eflx_lwrad_net_r(beg:end))
     pef%eflx_lwrad_net_r(:)= nanr
+    allocate(pef%eflx_lwrad_out_u(beg:end))
+    pef%eflx_lwrad_out_u(beg:end) = nanr
+    allocate(pef%eflx_lwrad_out_r(beg:end))
+    pef%eflx_lwrad_out_r(beg:end) = nanr
     allocate(pef%netrad(beg:end))
     pef%netrad(:)= nanr
     allocate(pef%fsds_vis_d(beg:end))

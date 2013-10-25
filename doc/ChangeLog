@@ -1,4 +1,112 @@
 ===============================================================
+Tag name:  clm4_5_40
+Originator(s):  muszala (Stefan Muszala,UCAR/TSS,303-497-1320)
+Date:  Thu Oct 24 07:54:46 MDT 2013
+One-line Summary: fix Bug 1752 - urban conductances depend on weights in an undesirable way
+
+Purpose of changes: 
+
+Three parts to this tag.  Description from Oleson:
+
+1) 
+ fix Bug 1752 - modified UrbanMod.F90 to calculate
+2) 
+ add 2 new diagnostic history fields (FIRE_U, FIRE_R)
+ the conductances correctly.  I created new variables to more clearly
+ distinguish between scaled and unscaled conductances.
+3)
+ fix small bug in which the history field output of some of the
+ anthropogenic heat flux variables are not bfb on restart when finidat is blank.
+ I found this when verifying bfb for the original bug fix.  The cause of this
+ is initialization which sets non-urban to special value, instead of zero, which
+ is what is desired. On restart, this initialization is not done and the history
+ file set_nourb=0 has precedent.  A related issue is that eflx_building_heat is
+ not zero for pervious/impervious road when nlevurb /= nlevgrnd.
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 1752
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: oleson, sacks, self
+
+List any svn externals directories updated (csm_share, mct, etc.): N/A
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+M       models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilTemperatureMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInitMod.F90
+
+CLM testing:
+
+  regular tests (aux_clm):
+
+Note: compare_hist fails for all clm4_5 compsets, but this is expected.
+
+    yellowstone_intel - OK
+    yellowstone_pgi  - OK
+    frankfurt_intel - OK
+    frankfurt_pgi - OK
+    frankfurt_nag - OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel
+
+CLM tag used for the baseline comparisons:  clm4_5_39
+
+Changes answers relative to baseline: Yes.  
+
+These modifications have been verified in a single simulation
+(clm4_5_20_wsth_deriv_spin).  All of these affect urban areas only and typical
+changes in TSA_U are less than 0.1 K.  Gridcell average (e.g., TSA) differences
+are much smaller due to small urban fractions.
+
+Fields that changed are:
+
+BUILDHEAT, EFLX_LH_TOT, EFLX_LH_TOT_U, ERRH2O, ERRH2OSNO, ERRSEB, ERRSOI, FCTR, 
+FGEV, FGR, FGR12, FGR_U, FIRA, FIRA_U, FIRE, FSA, FSA_U, FSH, FSH_G, FSH_NODYNLNDUSE, 
+FSH_U, FSM, FSM_U, FSNO, FSNO_EFF, FSR, FSRND, FSRNDLN, FSRNI, FSRVD, FSRVDLN, FSRVI, 
+GC_HEAT1, GC_ICE1, GC_LIQ1, H2OSNO, H2OSNO_TOP, H2OSOI, HEAT_FROM_AC, LWup, Q2M, 
+Qanth, QDRAI, QDRAI_PERCH, QDRAI_XS, QFLX_LIQ_DYNBAL, QINFL, QOVER, QRUNOFF, 
+QRUNOFF_NODYNLND, QSNOMELT, QSNWCPICE, QSOIL, QVEGT, RH2M, RH2M_U, SABG, SNOBCMCL, 
+SNOBCMSL, SNODSTMCL, SNODSTMSL, SNOOCMCL, SNOOCMSL, SNOW_DEPTH, SNOWDP, SNOWICE, 
+SNOWLIQ, SNOW_SINKS, SNOW_SOURCES, SoilAlpha_U, SOILICE, SOILLIQ, SOILPSI, SWup, 
+T10, TAUX, TAUY, TBUILD, TG, TG_U, TH2OSFC, TRAFFICFLUX, TREFMNAV, TREFMNAV_U, 
+TREFMXAV, TREFMXAV_U, TSA, TSA_U, TSOI, TWS, U10, URBAN_AC, URBAN_HEAT, VOLR, 
+WASTEHEAT, WF
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_39
 Originator(s):  muszala (Stefan Muszala,UCAR/TSS,303-497-1320)
 Date: Wed Oct 23 08:24:47 MDT 2013

@@ -2304,24 +2304,34 @@ contains
 
     real(r8) :: fm(bounds%begl:bounds%endl)        ! needed for BGC only to diagnose 10m wind speed
 
-    real(r8) :: wtus(bounds%begc:bounds%endc)      ! sensible heat conductance for urban columns (m/s)
-    real(r8) :: wtuq(bounds%begc:bounds%endc)      ! latent heat conductance for urban columns (m/s)
+    real(r8) :: wtus(bounds%begc:bounds%endc)      ! sensible heat conductance for urban columns (scaled) (m/s)
+    real(r8) :: wtuq(bounds%begc:bounds%endc)      ! latent heat conductance for urban columns (scaled) (m/s)
 
     integer  :: iter               ! iteration index
     real(r8) :: dthv               ! diff of vir. poten. temp. between ref. height and surface
     real(r8) :: tstar              ! temperature scaling parameter
     real(r8) :: qstar              ! moisture scaling parameter
     real(r8) :: thvstar            ! virtual potential temperature scaling parameter
-    real(r8) :: wtus_roof(bounds%begl:bounds%endl)                ! sensible heat conductance for roof (not scaled) (m/s)
-    real(r8) :: wtuq_roof(bounds%begl:bounds%endl)                ! latent heat conductance for roof (not scaled) (m/s)
-    real(r8) :: wtus_road_perv(bounds%begl:bounds%endl)           ! sensible heat conductance for pervious road (not scaled) (m/s)
-    real(r8) :: wtuq_road_perv(bounds%begl:bounds%endl)           ! latent heat conductance for pervious road (not scaled) (m/s)
-    real(r8) :: wtus_road_imperv(bounds%begl:bounds%endl)         ! sensible heat conductance for impervious road (not scaled) (m/s)
-    real(r8) :: wtuq_road_imperv(bounds%begl:bounds%endl)         ! latent heat conductance for impervious road (not scaled) (m/s)
-    real(r8) :: wtus_sunwall(bounds%begl:bounds%endl)             ! sensible heat conductance for sunwall (not scaled) (m/s)
-    real(r8) :: wtuq_sunwall(bounds%begl:bounds%endl)             ! latent heat conductance for sunwall (not scaled) (m/s)
-    real(r8) :: wtus_shadewall(bounds%begl:bounds%endl)           ! sensible heat conductance for shadewall (not scaled) (m/s)
-    real(r8) :: wtuq_shadewall(bounds%begl:bounds%endl)           ! latent heat conductance for shadewall (not scaled) (m/s)
+    real(r8) :: wtus_roof(bounds%begl:bounds%endl)                ! sensible heat conductance for roof (scaled) (m/s)
+    real(r8) :: wtuq_roof(bounds%begl:bounds%endl)                ! latent heat conductance for roof (scaled) (m/s)
+    real(r8) :: wtus_road_perv(bounds%begl:bounds%endl)           ! sensible heat conductance for pervious road (scaled) (m/s)
+    real(r8) :: wtuq_road_perv(bounds%begl:bounds%endl)           ! latent heat conductance for pervious road (scaled) (m/s)
+    real(r8) :: wtus_road_imperv(bounds%begl:bounds%endl)         ! sensible heat conductance for impervious road (scaled) (m/s)
+    real(r8) :: wtuq_road_imperv(bounds%begl:bounds%endl)         ! latent heat conductance for impervious road (scaled) (m/s)
+    real(r8) :: wtus_sunwall(bounds%begl:bounds%endl)             ! sensible heat conductance for sunwall (scaled) (m/s)
+    real(r8) :: wtuq_sunwall(bounds%begl:bounds%endl)             ! latent heat conductance for sunwall (scaled) (m/s)
+    real(r8) :: wtus_shadewall(bounds%begl:bounds%endl)           ! sensible heat conductance for shadewall (scaled) (m/s)
+    real(r8) :: wtuq_shadewall(bounds%begl:bounds%endl)           ! latent heat conductance for shadewall (scaled) (m/s)
+    real(r8) :: wtus_roof_unscl(bounds%begl:bounds%endl)          ! sensible heat conductance for roof (not scaled) (m/s)
+    real(r8) :: wtuq_roof_unscl(bounds%begl:bounds%endl)          ! latent heat conductance for roof (not scaled) (m/s)
+    real(r8) :: wtus_road_perv_unscl(bounds%begl:bounds%endl)     ! sensible heat conductance for pervious road (not scaled) (m/s)
+    real(r8) :: wtuq_road_perv_unscl(bounds%begl:bounds%endl)     ! latent heat conductance for pervious road (not scaled) (m/s)
+    real(r8) :: wtus_road_imperv_unscl(bounds%begl:bounds%endl)   ! sensible heat conductance for impervious road (not scaled) (m/s)
+    real(r8) :: wtuq_road_imperv_unscl(bounds%begl:bounds%endl)   ! latent heat conductance for impervious road (not scaled) (m/s)
+    real(r8) :: wtus_sunwall_unscl(bounds%begl:bounds%endl)       ! sensible heat conductance for sunwall (not scaled) (m/s)
+    real(r8) :: wtuq_sunwall_unscl(bounds%begl:bounds%endl)       ! latent heat conductance for sunwall (not scaled) (m/s)
+    real(r8) :: wtus_shadewall_unscl(bounds%begl:bounds%endl)     ! sensible heat conductance for shadewall (not scaled) (m/s)
+    real(r8) :: wtuq_shadewall_unscl(bounds%begl:bounds%endl)     ! latent heat conductance for shadewall (not scaled) (m/s)
     real(r8) :: t_sunwall_innerl(bounds%begl:bounds%endl)         ! temperature of inner layer of sunwall (K)
     real(r8) :: t_shadewall_innerl(bounds%begl:bounds%endl)       ! temperature of inner layer of shadewall (K)
     real(r8) :: t_roof_innerl(bounds%begl:bounds%endl)            ! temperature of inner layer of roof (K)
@@ -2543,6 +2553,16 @@ contains
     wtuq_road_imperv(begl:endl) = 0._r8
     wtuq_sunwall(begl:endl)     = 0._r8
     wtuq_shadewall(begl:endl)   = 0._r8
+    wtus_roof_unscl(begl:endl)        = 0._r8
+    wtus_road_perv_unscl(begl:endl)   = 0._r8
+    wtus_road_imperv_unscl(begl:endl) = 0._r8
+    wtus_sunwall_unscl(begl:endl)     = 0._r8
+    wtus_shadewall_unscl(begl:endl)   = 0._r8
+    wtuq_roof_unscl(begl:endl)        = 0._r8
+    wtuq_road_perv_unscl(begl:endl)   = 0._r8
+    wtuq_road_imperv_unscl(begl:endl) = 0._r8
+    wtuq_sunwall_unscl(begl:endl)     = 0._r8
+    wtuq_shadewall_unscl(begl:endl)   = 0._r8
 
     ! Start stability iteration
 
@@ -2614,8 +2634,9 @@ contains
 
             ! scaled sensible heat conductance
             wtus(c) = wtlunit_roof(l)/canyon_resistance(l)
+            wtus_roof(l) = wtus(c)
             ! unscaled sensible heat conductance
-            wtus_roof(l) = 1._r8/canyon_resistance(l)
+            wtus_roof_unscl(l) = 1._r8/canyon_resistance(l)
 
             if (snow_depth(c) > 0._r8) then
                fwet_roof = min(snow_depth(c)/0.05_r8, 1._r8)
@@ -2627,9 +2648,10 @@ contains
                fwet_roof = 1._r8
             end if
             ! scaled latent heat conductance
-            wtuq(c)      = fwet_roof*(wtlunit_roof(l)/canyon_resistance(l))
+            wtuq(c) = fwet_roof*(wtlunit_roof(l)/canyon_resistance(l))
+            wtuq_roof(l) = wtuq(c)
             ! unscaled latent heat conductance
-            wtuq_roof(l) = fwet_roof*(1._r8/canyon_resistance(l))
+            wtuq_roof_unscl(l) = fwet_roof*(1._r8/canyon_resistance(l))
 
             ! wasteheat from heating/cooling
             if (trim(urban_hac) == urban_wasteheat_on) then
@@ -2650,32 +2672,23 @@ contains
 
             ! scaled sensible heat conductance
             wtus(c) = wtroad_perv(l)*(1._r8-wtlunit_roof(l))/canyon_resistance(l)
+            wtus_road_perv(l) = wtus(c)
             ! unscaled sensible heat conductance
-            if (wtroad_perv(l) > 0._r8) then
-               wtus_road_perv(l) = 1._r8/canyon_resistance(l)
-            else
-               wtus_road_perv(l) = 0._r8
-            end if
+            wtus_road_perv_unscl(l) = 1._r8/canyon_resistance(l)
 
             ! scaled latent heat conductance
             wtuq(c) = wtroad_perv(l)*(1._r8-wtlunit_roof(l))/canyon_resistance(l)
+            wtuq_road_perv(l) = wtuq(c)
             ! unscaled latent heat conductance
-            if (wtroad_perv(l) > 0._r8) then
-               wtuq_road_perv(l) = 1._r8/canyon_resistance(l)
-            else
-               wtuq_road_perv(l) = 0._r8
-            end if
+            wtuq_road_perv_unscl(l) = 1._r8/canyon_resistance(l)
 
          else if (ctype(c) == icol_road_imperv) then
 
             ! scaled sensible heat conductance
             wtus(c) = (1._r8-wtroad_perv(l))*(1._r8-wtlunit_roof(l))/canyon_resistance(l)
+            wtus_road_imperv(l) = wtus(c)
             ! unscaled sensible heat conductance
-            if ((1._r8-wtroad_perv(l)) > 0._r8) then
-               wtus_road_imperv(l) = 1._r8/canyon_resistance(l)
-            else
-               wtus_road_imperv(l) = 0._r8
-            end if
+            wtus_road_imperv_unscl(l) = 1._r8/canyon_resistance(l)
 
             if (snow_depth(c) > 0._r8) then
                fwet_road_imperv = min(snow_depth(c)/0.05_r8, 1._r8)
@@ -2688,24 +2701,23 @@ contains
             end if
             ! scaled latent heat conductance
             wtuq(c) = fwet_road_imperv*(1._r8-wtroad_perv(l))*(1._r8-wtlunit_roof(l))/canyon_resistance(l)
+            wtuq_road_imperv(l) = wtuq(c)
             ! unscaled latent heat conductance
-            if ((1._r8-wtroad_perv(l)) > 0._r8) then
-               wtuq_road_imperv(l) = fwet_road_imperv*(1._r8/canyon_resistance(l))
-            else
-               wtuq_road_imperv(l) = 0._r8
-            end if
+            wtuq_road_imperv_unscl(l) = fwet_road_imperv*(1._r8/canyon_resistance(l))
 
          else if (ctype(c) == icol_sunwall) then
 
             ! scaled sensible heat conductance
-            wtus(c)         = canyon_hwr(l)*(1._r8-wtlunit_roof(l))/canyon_resistance(l)
+            wtus(c) = canyon_hwr(l)*(1._r8-wtlunit_roof(l))/canyon_resistance(l)
+            wtus_sunwall(l) = wtus(c)
             ! unscaled sensible heat conductance
-            wtus_sunwall(l) = 1._r8/canyon_resistance(l)
+            wtus_sunwall_unscl(l) = 1._r8/canyon_resistance(l)
 
             ! scaled latent heat conductance
-            wtuq(c)         = 0._r8
+            wtuq(c) = 0._r8
+            wtuq_sunwall(l) = wtuq(c)
             ! unscaled latent heat conductance
-            wtuq_sunwall(l) = 0._r8
+            wtuq_sunwall_unscl(l) = 0._r8
 
             ! wasteheat from heating/cooling
             if (trim(urban_hac) == urban_wasteheat_on) then
@@ -2726,13 +2738,15 @@ contains
 
             ! scaled sensible heat conductance
             wtus(c) = canyon_hwr(l)*(1._r8-wtlunit_roof(l))/canyon_resistance(l)
+            wtus_shadewall(l) = wtus(c)
             ! unscaled sensible heat conductance
-            wtus_shadewall(l) = 1._r8/canyon_resistance(l)
+            wtus_shadewall_unscl(l) = 1._r8/canyon_resistance(l)
 
             ! scaled latent heat conductance
-            wtuq(c)           = 0._r8
+            wtuq(c) = 0._r8
+            wtuq_shadewall(l) = wtuq(c)
             ! unscaled latent heat conductance
-            wtuq_shadewall(l) = 0._r8
+            wtuq_shadewall_unscl(l) = 0._r8
 
             ! wasteheat from heating/cooling
             if (trim(urban_hac) == urban_wasteheat_on) then
@@ -2853,33 +2867,33 @@ contains
        if (ctype(c) == icol_roof) then
          cgrnds(p) = forc_rho(g) * cpair * (wtas(l) + wtus_road_perv(l) +  &
                      wtus_road_imperv(l) + wtus_sunwall(l) + wtus_shadewall(l)) * &
-                     (wtus_roof(l)/wts_sum(l))
+                     (wtus_roof_unscl(l)/wts_sum(l))
          cgrndl(p) = forc_rho(g) * (wtaq(l) + wtuq_road_perv(l) +  &
                      wtuq_road_imperv(l) + wtuq_sunwall(l) + wtuq_shadewall(l)) * &
-                     (wtuq_roof(l)/wtq_sum(l))*dqgdT(c)
+                     (wtuq_roof_unscl(l)/wtq_sum(l))*dqgdT(c)
        else if (ctype(c) == icol_road_perv) then
          cgrnds(p) = forc_rho(g) * cpair * (wtas(l) + wtus_roof(l) +  &
                      wtus_road_imperv(l) + wtus_sunwall(l) + wtus_shadewall(l)) * &
-                     (wtus_road_perv(l)/wts_sum(l))
+                     (wtus_road_perv_unscl(l)/wts_sum(l))
          cgrndl(p) = forc_rho(g) * (wtaq(l) + wtuq_roof(l) +  &
                      wtuq_road_imperv(l) + wtuq_sunwall(l) + wtuq_shadewall(l)) * &
-                     (wtuq_road_perv(l)/wtq_sum(l))*dqgdT(c)
+                     (wtuq_road_perv_unscl(l)/wtq_sum(l))*dqgdT(c)
        else if (ctype(c) == icol_road_imperv) then
          cgrnds(p) = forc_rho(g) * cpair * (wtas(l) + wtus_roof(l) +  &
                      wtus_road_perv(l) + wtus_sunwall(l) + wtus_shadewall(l)) * &
-                     (wtus_road_imperv(l)/wts_sum(l))
+                     (wtus_road_imperv_unscl(l)/wts_sum(l))
          cgrndl(p) = forc_rho(g) * (wtaq(l) + wtuq_roof(l) +  &
                      wtuq_road_perv(l) + wtuq_sunwall(l) + wtuq_shadewall(l)) * &
-                     (wtuq_road_imperv(l)/wtq_sum(l))*dqgdT(c)
+                     (wtuq_road_imperv_unscl(l)/wtq_sum(l))*dqgdT(c)
        else if (ctype(c) == icol_sunwall) then
          cgrnds(p) = forc_rho(g) * cpair * (wtas(l) + wtus_roof(l) +  &
                      wtus_road_perv(l) + wtus_road_imperv(l) + wtus_shadewall(l)) * &
-                     (wtus_sunwall(l)/wts_sum(l))
+                     (wtus_sunwall_unscl(l)/wts_sum(l))
          cgrndl(p) = 0._r8
        else if (ctype(c) == icol_shadewall) then
          cgrnds(p) = forc_rho(g) * cpair * (wtas(l) + wtus_roof(l) +  &
                      wtus_road_perv(l) + wtus_road_imperv(l) + wtus_sunwall(l)) * &
-                     (wtus_shadewall(l)/wts_sum(l))
+                     (wtus_shadewall_unscl(l)/wts_sum(l))
          cgrndl(p) = 0._r8
        end if
        cgrnd(p)  = cgrnds(p) + cgrndl(p)*htvp(c)
@@ -2893,27 +2907,27 @@ contains
        dth(l) = taf(l) - t_grnd(c)
 
        if (ctype(c) == icol_roof) then
-         eflx_sh_grnd(p)  = -forc_rho(g)*cpair*wtus_roof(l)*dth(l)
+         eflx_sh_grnd(p)  = -forc_rho(g)*cpair*wtus_roof_unscl(l)*dth(l)
          eflx_sh_snow(p)  = 0._r8
          eflx_sh_soil(p)  = 0._r8
          eflx_sh_h2osfc(p)= 0._r8
        else if (ctype(c) == icol_road_perv) then
-         eflx_sh_grnd(p)  = -forc_rho(g)*cpair*wtus_road_perv(l)*dth(l)
+         eflx_sh_grnd(p)  = -forc_rho(g)*cpair*wtus_road_perv_unscl(l)*dth(l)
          eflx_sh_snow(p)  = 0._r8
          eflx_sh_soil(p)  = 0._r8
          eflx_sh_h2osfc(p)= 0._r8
        else if (ctype(c) == icol_road_imperv) then
-         eflx_sh_grnd(p)  = -forc_rho(g)*cpair*wtus_road_imperv(l)*dth(l)
+         eflx_sh_grnd(p)  = -forc_rho(g)*cpair*wtus_road_imperv_unscl(l)*dth(l)
          eflx_sh_snow(p)  = 0._r8
          eflx_sh_soil(p)  = 0._r8
          eflx_sh_h2osfc(p)= 0._r8
        else if (ctype(c) == icol_sunwall) then
-         eflx_sh_grnd(p)  = -forc_rho(g)*cpair*wtus_sunwall(l)*dth(l)
+         eflx_sh_grnd(p)  = -forc_rho(g)*cpair*wtus_sunwall_unscl(l)*dth(l)
          eflx_sh_snow(p)  = 0._r8
          eflx_sh_soil(p)  = 0._r8
          eflx_sh_h2osfc(p)= 0._r8
        else if (ctype(c) == icol_shadewall) then
-         eflx_sh_grnd(p)  = -forc_rho(g)*cpair*wtus_shadewall(l)*dth(l)
+         eflx_sh_grnd(p)  = -forc_rho(g)*cpair*wtus_shadewall_unscl(l)*dth(l)
          eflx_sh_snow(p)  = 0._r8
          eflx_sh_soil(p)  = 0._r8
          eflx_sh_h2osfc(p)= 0._r8
@@ -2925,21 +2939,21 @@ contains
        dqh(l) = qaf(l) - qg(c)
 
        if (ctype(c) == icol_roof) then
-         qflx_evap_soi(p) = -forc_rho(g)*wtuq_roof(l)*dqh(l)
+         qflx_evap_soi(p) = -forc_rho(g)*wtuq_roof_unscl(l)*dqh(l)
        else if (ctype(c) == icol_road_perv) then
          ! Evaporation assigned to soil term if dew or snow
          ! or if no liquid water available in soil column
          if (dqh(l) > 0._r8 .or. frac_sno(c) > 0._r8 .or. soilalpha_u(c) .le. 0._r8) then
-            qflx_evap_soi(p) = -forc_rho(g)*wtuq_road_perv(l)*dqh(l)
+            qflx_evap_soi(p) = -forc_rho(g)*wtuq_road_perv_unscl(l)*dqh(l)
             qflx_tran_veg(p) = 0._r8
          ! Otherwise, evaporation assigned to transpiration term
          else
             qflx_evap_soi(p) = 0._r8
-            qflx_tran_veg(p) = -forc_rho(g)*wtuq_road_perv(l)*dqh(l)
+            qflx_tran_veg(p) = -forc_rho(g)*wtuq_road_perv_unscl(l)*dqh(l)
          end if
          qflx_evap_veg(p) = qflx_tran_veg(p)
        else if (ctype(c) == icol_road_imperv) then
-         qflx_evap_soi(p) = -forc_rho(g)*wtuq_road_imperv(l)*dqh(l)
+         qflx_evap_soi(p) = -forc_rho(g)*wtuq_road_imperv_unscl(l)*dqh(l)
        else if (ctype(c) == icol_sunwall) then
          qflx_evap_soi(p) = 0._r8
        else if (ctype(c) == icol_shadewall) then

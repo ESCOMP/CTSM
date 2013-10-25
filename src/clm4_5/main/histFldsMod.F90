@@ -410,6 +410,14 @@ contains
          avgflag='A', long_name='emitted infrared (longwave) radiation', &
          ptr_pft=pef%eflx_lwrad_out, c2l_scale_type='urbanf')
 
+    call hist_addfld1d (fname='FIRE_U', units='W/m^2',  &
+         avgflag='A', long_name='Urban emitted infrared (longwave) radiation', &
+         ptr_pft=pef%eflx_lwrad_out_u, c2l_scale_type='urbanf', set_nourb=spval)
+
+    call hist_addfld1d (fname='FIRE_R', units='W/m^2',  &
+         avgflag='A', long_name='Rural emitted infrared (longwave) radiation', &
+         ptr_pft=pef%eflx_lwrad_out_r, set_spec=spval)
+
     ! Rename of FIRE for Urban intercomparision project
     call hist_addfld1d (fname='LWup', units='W/m^2',  &
          avgflag='A', long_name='upwelling longwave radiation', &

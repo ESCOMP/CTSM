@@ -169,6 +169,8 @@ contains
    eflx_lwrad_net            =>    pef%eflx_lwrad_net      , & ! Output: [real(r8) (:)]  net infrared (longwave) rad (W/m**2) [+ = to atm]
    eflx_lwrad_net_u          =>    pef%eflx_lwrad_net_u    , & ! Output: [real(r8) (:)]  urban net infrared (longwave) rad (W/m**2) [+ = to atm]
    eflx_lwrad_net_r          =>    pef%eflx_lwrad_net_r    , & ! Output: [real(r8) (:)]  rural net infrared (longwave) rad (W/m**2) [+ = to atm]
+   eflx_lwrad_out_u          =>    pef%eflx_lwrad_out_u    , & ! Output: [real(r8) (:)]  urban emitted infrared (longwave) rad (W/m**2)
+   eflx_lwrad_out_r          =>    pef%eflx_lwrad_out_r    , & ! Output: [real(r8) (:)]  rural emitted infrared (longwave) rad (W/m**2)
    eflx_lh_vege              =>    pef%eflx_lh_vege        , & ! Output: [real(r8) (:)]  veg evaporation heat flux (W/m**2) [+ to atm]
    eflx_lh_vegt              =>    pef%eflx_lh_vegt        , & ! Output: [real(r8) (:)]  veg transpiration heat flux (W/m**2) [+ to atm]
    eflx_lh_grnd              =>    pef%eflx_lh_grnd        , & ! Output: [real(r8) (:)]  ground evaporation heat flux (W/m**2) [+ to atm]
@@ -453,11 +455,13 @@ contains
           eflx_lwrad_net(p) = eflx_lwrad_out(p) - forc_lwrad(g)
           if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
             eflx_lwrad_net_r(p) = eflx_lwrad_out(p) - forc_lwrad(g)
+            eflx_lwrad_out_r(p) = eflx_lwrad_out(p)
           end if
        else
           eflx_lwrad_out(p) = eflx_lwrad_out(p) + eflx_lwrad_del(p)
           eflx_lwrad_net(p) = eflx_lwrad_net(p) + eflx_lwrad_del(p)
           eflx_lwrad_net_u(p) = eflx_lwrad_net_u(p) + eflx_lwrad_del(p)
+          eflx_lwrad_out_u(p) = eflx_lwrad_out(p)
        end if
     end do
 

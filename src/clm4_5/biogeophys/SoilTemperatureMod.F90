@@ -681,7 +681,11 @@ contains
        c = filter_nolakec(fc)
        l = clandunit(c)
        if (urbpoi(l)) then
-         eflx_building_heat(c) = cnfac*fn(c,nlevurb) + (1-cnfac)*fn1(c,nlevurb)
+         if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall .or. ctype(c) == icol_roof) then
+           eflx_building_heat(c) = cnfac*fn(c,nlevurb) + (1-cnfac)*fn1(c,nlevurb)
+         else
+           eflx_building_heat(c) = 0._r8
+         end if
          if (cool_on(l)) then
            eflx_urban_ac(c) = abs(eflx_building_heat(c))
            eflx_urban_heat(c) = 0._r8
