@@ -30,39 +30,6 @@ Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) r
 (SNICAR_FRC .true.is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
-<entry id="exlaklayers" 
-       valid_values="on,off" 
-       value="off" 
-       category="physics">
-Toggle to use 25 lake layers instead of 10
-(exlaklayers="on" is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
-</entry>
-
-<entry id="clm4me" 
-       valid_values="on,off" 
-       value="off" 
-       category="physics">
-Toggle to activate the CLM4 Methane model (requires bgc=cn/cndv Carbon Nitrogen model)
-Standard part of CLM45BGC model.
-</entry>
-
-<entry id="vsoilc_centbgc" 
-       valid_values="on,no-vert,no-cent,no-nitrif,no-vert:no-cent,no-vert:no-nitrif,off" 
-       value="off" 
-       category="bgc">
-Turn on the following features important for permafrost Carbon:
-* Turn on vertical soil carbon 
-* Use parameters for decomposition from the CENTURY Carbon model
-* Nitrification/denitrification splits the prognostic mineral N pool into two 
-   mineral N pools: NO3 and NH4, and includes the transformations between them.
-* Elimination of inconsistent duplicate soil hydraulic parameters used in soil biogeochem.
-Requires the CN model to work (either CN or CNDV).
-This turns on the CPP tokens: VERTSOILC, CENTURY_DECOMP, and NITRIF_DENITRIF
-(the "no" options turn one or more of the above features OFF. They are neither
-Scientifically validated or supported and NOT recommended for use)
-(Setting this to "on" with clm4me "on" constitutes the CLM45BGC model.)
-</entry>
-
 <entry id="sitespf_pt" 
        valid_values="none,1x1_brazil,1x1_tropicAtl,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,us20,wus12" 
        value="none" 
@@ -82,10 +49,6 @@ CLM Biogeochemistry mode
           (or CLM45BGC if phys=clm4_5, vsoilc_centbgc='on', and clm4me='on')
    cndv = Carbon Nitrogen with Dynamic Global Vegetation Model (CNDV)
           (or CLM45BGCDV if phys=clm4_5, vsoilc_centbgc='on', and clm4me='on')
-</entry>
-<entry id="vichydro" valid_values="on,off" value="off">
-Toggle to turn on the VIC hydrologic parameterizations
-(vichydro="on" is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 <entry id="crop" 
        valid_values="on,off" 

@@ -64,13 +64,8 @@ module clm_varpar
   integer :: i_lig_lit 
   integer :: i_cwd 
 
-#ifndef CENTURY_DECOMP
-  integer, parameter :: ndecomp_pools = 8
-  integer, parameter :: ndecomp_cascade_transitions = 9
-#else
-  integer, parameter :: ndecomp_pools = 7
-  integer, parameter :: ndecomp_cascade_transitions = 10
-#endif
+  integer :: ndecomp_pools
+  integer :: ndecomp_cascade_transitions
 
   ! Indices used in surface file read and set in clm_varpar_init
 
@@ -171,11 +166,15 @@ contains
     end if
 
     if (use_century_decomp) then
+       ndecomp_pools = 7
+       ndecomp_cascade_transitions = 10
        i_met_lit = 1
        i_cel_lit = 2
        i_lig_lit = 3
        i_cwd = 4
     else
+       ndecomp_pools = 8
+       ndecomp_cascade_transitions = 9
        i_met_lit = 1
        i_cel_lit = 2
        i_lig_lit = 3

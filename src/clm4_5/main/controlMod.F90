@@ -216,61 +216,16 @@ contains
     namelist /clm_inparm/  &
          use_c14_bombspike, atm_c14_filename
 
-!TODO: BEG ====================================================
-    ! All old cpp-ifdefs are below and need to be transferred to namelist variables 
-    ! The following are all the compile time settings that are left - and should be moved to namelists
+    ! All old cpp-ifdefs are below and have been converted to namelist variables 
 
-    maxpatch_pft= MAXPATCH_PFT ! max number of plant functional types in naturally vegetated landunit
-#if (defined NOFIRE) 
-     use_nofire = .true.
-#endif
-#if (defined LCH4)
-     use_lch4 = .true.
-#endif
-#if (defined NITRIF_DENITRIF)
-     use_nitrif_denitrif = .true.
-#endif
-#if (defined VERTSOILC)
-     use_vertsoilc = .true.
-#endif
-#if (defined EXTRALAKELAYERS)
-     use_extralakelayers = .true.
-#endif
-#if (defined VICHYDRO)
-     use_vichydro = .true.
-#endif
-#if (defined CENTURY_DECOMP)
-     use_century_decomp = .true.
-#endif
-#if (defined CN)
-     use_cn = .true.
-#endif
-#if (defined CNDV)
-     use_cndv = .true.
-#endif
-#if (defined CROP)
-     use_crop = .true.
-#endif
-#if (defined SNICAR_FRC)
-     use_snicar_frc = .true.
-#endif
-#if (defined VANCOUVER)
-     use_vancouver = .true.
-#endif
-#if (defined MEXICOCITY)
-     use_mexicocity = .true.
-#endif
-#if (defined NOIO)
-     use_noio = .true.
-#endif
+    ! max number of plant functional types in naturally vegetated landunit
+    namelist /clm_inparm/ maxpatch_pft
 
-     if (use_lch4 .and. use_vertsoilc) then 
-        anoxia = .true.
-     else
-        anoxia = .false.
-     end if
+    namelist /clm_inparm/ &
+         use_nofire, use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
+         use_vichydro, use_century_decomp, use_cn, use_cndv, use_crop, use_snicar_frc, &
+         use_vancouver, use_mexicocity, use_noio
 
-!TODO: END ====================================================
 
     ! ----------------------------------------------------------------------
     ! Default values
@@ -372,6 +327,12 @@ contains
                ' ERROR: irrigate = .true. requires CROP model active.' )
        end if
        
+       if (use_lch4 .and. use_vertsoilc) then 
+          anoxia = .true.
+       else
+          anoxia = .false.
+       end if
+
     endif   ! end of if-masterproc if-block
 
     ! ----------------------------------------------------------------------
@@ -468,6 +429,21 @@ contains
     call mpi_bcast (username, len(username), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (nsrest, 1, MPI_INTEGER, 0, mpicom, ier)
 
+    call mpi_bcast (use_nofire, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_lch4, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_nitrif_denitrif, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_vertsoilc, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_extralakelayers, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_vichydro, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_century_decomp, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_cn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_cndv, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_snicar_frc, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_mexicocity, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_noio, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     ! initial file variables
     call mpi_bcast (nrevsn, len(nrevsn), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (finidat, len(finidat), MPI_CHARACTER, 0, mpicom, ier)
@@ -485,6 +461,9 @@ contains
 
     ! Landunit generation
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    ! max number of plant functional types in naturally vegetated landunit
+    call mpi_bcast(maxpatch_pft, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! BGC
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
@@ -613,6 +592,22 @@ contains
     write(iulog,*) '   case title            = ',trim(ctitle)
     write(iulog,*) '   username              = ',trim(username)
     write(iulog,*) '   hostname              = ',trim(hostname)
+    write(iulog,*) 'process control parameters:'
+    write(iulog,*) '    use_nofire = ', use_nofire
+    write(iulog,*) '    use_lch4 = ', use_lch4
+    write(iulog,*) '    use_nitrif_denitrif = ', use_nitrif_denitrif
+    write(iulog,*) '    use_vertsoilc = ', use_vertsoilc
+    write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
+    write(iulog,*) '    use_vichydro = ', use_vichydro
+    write(iulog,*) '    use_century_decomp = ', use_century_decomp
+    write(iulog,*) '    use_cn = ', use_cn
+    write(iulog,*) '    use_cndv = ', use_cndv
+    write(iulog,*) '    use_crop = ', use_crop
+    write(iulog,*) '    use_snicar_frc = ', use_snicar_frc
+    write(iulog,*) '    use_vancouver = ', use_vancouver
+    write(iulog,*) '    use_mexicocity = ', use_mexicocity
+    write(iulog,*) '    use_noio = ', use_noio
+
     write(iulog,*) 'input data files:'
     write(iulog,*) '   PFT physiology and parameters file = ',trim(paramfile)
     if (fsurdat == ' ') then

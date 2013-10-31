@@ -324,6 +324,94 @@ If TRUE, write diagnostic of global radiative temperature written to CLM log fil
 Subgrid fluxes for snow
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- Former CPP tokens -->
+<!-- ========================================================================================  -->
+<entry id="use_nofire" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to make wild-fires inactive for biogeochemistry=CN mode
+</entry>
+
+<entry id="use_lch4" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Turn on methane model. Standard part of CLM45BGC model.
+</entry>
+
+<entry id="use_cn" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+CLM Biogeochemistry mode : Carbon Nitrogen model (CN) 
+(or CLM45BGC if phys=clm4_5, vsoilc_centbgc='on', and clm4me='on')
+</entry>
+
+<entry id="use_cndv" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+CLM Biogeochemistry mode : Carbon Nitrogen with Dynamic Global Vegetation Model (CNDV)
+(or CLM45BGCDV if phys=clm4_5, vsoilc_centbgc='on', and clm4me='on')
+</entry>
+
+<entry id="use_nitrif_denitrif" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Nitrification/denitrification splits the prognostic mineral N pool into two 
+   mineral N pools: NO3 and NH4, and includes the transformations between them.
+Requires the CN model to work (either CN or CNDV).
+</entry>
+
+<entry id="use_vertsoilc" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Turn on vertical soil carbon.
+Requires the CN model to work (either CN or CNDV).
+</entry>
+
+<entry id="use_century_decomp" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Use parameters for decomposition from the CENTURY Carbon model
+Requires the CN model to work (either CN or CNDV).
+</entry>
+
+<entry id="use_extralakelayers" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to use 25 lake layers instead of 10
+(extralaklayers=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+</entry>
+
+<entry id="use_vichydro" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the VIC hydrologic parameterizations
+(vichydro=".true." is EXPERIMENTAL NOT SUPPORTED!)
+</entry>
+
+<entry id="use_crop" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the prognostic crop model
+</entry>
+
+<entry id="use_snicar_frc" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) radiative forcing
+(snicar_frc=".true." is EXPERIMENTAL NOT SUPPORTED!)
+</entry>
+
+<entry id="use_noio" type="logical" category="default_settings"
+       group="clm_inparm" valid_values="" value=".false." >
+Toggle to turn all history output completely OFF (possibly used for testing)
+</entry>
+
+<entry id="use_vancouver" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle for vancouver specific logic.
+</entry>
+
+<entry id="use_mexicocity" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle for mexico city specific logic.
+</entry>
+
+<entry id="maxpatch_pft" type="integer" category="physics"
+       group="clm_inparm" valid_values="" value="17">
+Max number of plant functional types in naturally vegetated landunit.
+</entry>
+
+
 <!--                                                   -->
 <!-- mkmapdata  namelist                               -->
 <!--                                                   -->

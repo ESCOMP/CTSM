@@ -100,7 +100,7 @@ OPTIONS
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
                               file specified.
      -irrig "value"           If .true. turn irrigation on with namelist logical irrigate (for CLM4.5 physics)
-                              (requires crop to be on in the clm configuration) 
+                              (requires use_crop to be true in the clm configuration) 
                               Seek surface datasets with irrigation turned on.  (for CLM4.0 physics)
                               Default: .false.
      -l_ncpl "LND_NCPL"       Number of CLM coupling time-steps in a day.
@@ -157,7 +157,67 @@ OPTIONS
      -verbose [or -v]         Turn on verbose echoing of informational messages.
      -use_case "case"         Specify a use case which will provide default values.
                               "-use_case list" to list valid use-cases.
-     -version                 Echo the SVN tag name used to check out this CLM distribution.
+
+     -bgc "value"           Build CLM with BGC package [ sp | cn | bgc ]
+                              (default is sp).
+                              CLM Biogeochemistry mode
+                              sp = Satellite Phenology (SP)
+                              cn   = Carbon Nitrogen model (CN)
+                                     (or CLM45CN if phys=clm4_5, use_cn=true)
+                              bgc = Carbon Nitrogen with methane, nitrification, vertical soilc,
+                                    century decomposition
+                                    (or CLM45BGC if phys=clm4_5, use_cn=true, vsoilc_centbgc='on',
+                                    and clm4me=true)
+                            This toggles on the namelist variables:
+                              use_cn, use_lch4, use_nitrif_denitrif, use_vertsoilc, use_century_decomp
+
+     -crop                  Toggle for prognostic crop model. (default is off)
+                            (can ONLY be turned on when BGC type is CN or BGC)
+                            This turns on the namelist variable: use_crop
+
+     -clm4me                Toggle to turn on Methane model: (default is off)
+                            Requires bgc=cn/cndv (Carbon Nitrogen model)
+                            This turns on the namelist variable: use_lch4
+
+     -dynamic_vegetation    Toggle for dynamic vegetation model. (default is off)
+                            (can ONLY be turned on when BGC type is 'cn' or 'bgc')
+                            This turns on the namelist variable: use_cndv
+
+     -exlaklayers           Toggle to turn on extra lake layers (25 layers instead of 10)
+                              (default is off)
+                            This turns on the namelist variable: use_extralakelayers
+
+     -vsoilc <name>         Turn on vertical soil Carbon profile, CENTURY model decomposition,
+                            split Nitrification/de-Nitrification into two mineral 
+                            pools for NO3 and NH4 (requires clm4me Methane model), and
+                            eliminate inconsistent duplicate soil hydraulic 
+                            parameters used in soil biogeochem.
+                            (requires either CN or CNDV)
+                            (ONLY valid for CLM4.5!)
+                            [on,off or colon delimited list of no options] (default off)
+                              no-vert     Turn vertical soil Carbon profile off
+                              no-cent     Turn CENTURY off
+                              no-nitrif   Turn the Nitrification/denitrification off
+                              no-vert:no-nitrif Turn Nitrification/denitrification off with no vertical soil profile
+                            [no-vert,no-cent,no-nitrif,no-vert:no-cent,no-vert:no-nitrif]
+                            This turns on the namelist variables:
+                                use_vertsoilc, use_century_decomp, and use_nitrif_denitrif
+
+     -vichydro              Toggle to turn on VIC hydrologic parameterizations (default is off)
+                              This turns on the namelist variable: use_vichydro
+
+     -noio                  Toggle to turn history output completely off (typically for testing).
+                              (default is off)
+                              This turns on the namelist variable: use_noio
+
+     -nofire                Toggle to make wild-fires inactive for biogeochemistry=CN mode
+                              (default is off)
+                              This turns on the namelist variable: use_nofire
+
+     -snicar_frc            Toggle to turn on SNICAR radiative forcing calculation.
+                              (default is off)
+                              This turns on the namelist variable: use_snicar_frc
+     -version               Echo the SVN tag name used to check out this CLM distribution.
 
 
 
@@ -229,6 +289,17 @@ my %opts = ( config                => $cfg_cache,
 	     silent                => 0,
              mask                  => "default",
 	     test                  => 0,
+             bgc                   => "sp",
+             crop                  => 0,
+             clm4me                => 0,
+             dynamic_vegetation    => 0,
+             exlaklayers           => 0,
+             vsoilc                => undef,
+             vichydro              => 0,
+             noio                  => 0,
+             nofire                => 0,
+             snicar_frc            => 0,
+             maxpft                => "default",
 	    );
 
 GetOptions(
@@ -265,6 +336,17 @@ GetOptions(
     "clm_start_type=s"          => \$opts{'clm_start_type'},
     "test"                      => \$opts{'test'},
     "use_case=s"                => \$opts{'use_case'},
+    "bgc=s"                     => \$opts{'bgc'},
+    "crop"                      => \$opts{'crop'},
+    "clm4me"                    => \$opts{'clm4me'},
+    "dynamic_vegetation"        => \$opts{'dynamic_vegetation'},
+    "exlaklayers"               => \$opts{'exlaklayers'},
+    "vsoilc=s"                  => \$opts{'vsoilc'},
+    "vichydro"                  => \$opts{'vichydro'},
+    "noio"                      => \$opts{'noio'},
+    "nofire"                    => \$opts{'nofire'},
+    "snicar_frc"                => \$opts{'snicar_frc'},
+    "maxpft=i"                  => \$opts{'maxpft'},
     "v|verbose"                 => \$opts{'verbose'},
     "version"                   => \$opts{'version'},
 )  or usage();
@@ -464,21 +546,6 @@ if ($print>=2) { print "CESM inputdata root directory: $inputdata_rootdir$eol"; 
 my $TRUE  = '\.true\.';
 my $FALSE = '\.false\.';
 
-# Get BGC mode
-my $bgc = $cfg->get('bgc');
-
-# Get methane mode
-my $clm4me = $cfg->get('clm4me');
-
-# Get max number of Plant function types
-my $maxpft = $cfg->get('maxpft');
-
-# Get crop mode
-my $crop = $cfg->get('crop');
-
-# Get vsoilc  mode
-my $vsoilc = $cfg->get('vsoilc_centbgc');
-
 #-----------------------------------------------------------------------------------------------
 
 # Process the user input in order of precedence.  At each point we'll only add new
@@ -544,6 +611,303 @@ if ( $opts{'chk_res'} ) {
 }
 if ($print>=2) { print "CLM land mask is $mask $eol"; }
 
+#-----------------------------------------------------------------------------------------------
+# BGC - alias for group of biogeochemistry related use_XXX namelists
+my $bgc_mode;
+my $use_cn = ".false.";
+my $use_lch4 = ".false.";
+my $use_nitrif_denitrif = ".false.";
+my $use_vertsoilc = ".false.";
+my $use_century_decomp = ".false.";
+$var = "bgc";
+if ($phys eq "clm4_0") {
+  $bgc_mode = $cfg->get($var);
+} else {
+  $val = $opts{$var};
+  $bgc_mode = $val;
+  if ( $bgc_mode ne "sp" && $bgc_mode ne "cn" && $bgc_mode ne "bgc") {
+    die "$nm $var has a value ($val) that is NOT valid. Valid values are: sp, cn, bgc\n";
+  }
+  if ($print>=2) {
+    print "Using $bgc_mode for bgc.$eol";
+  }
+
+  # now set the actual name list variables based on the bgc alias
+  # if ($bgc_mode eq "sp") --> do nothing
+  if ($bgc_mode eq "cn") {
+    $use_cn = ".true.";
+  }
+  if ($bgc_mode eq "bgc") {
+    $use_cn = ".true.";
+    $use_lch4 = ".true.";
+    $use_nitrif_denitrif = ".true.";
+    $use_vertsoilc = ".true.";
+    $use_century_decomp = ".true.";
+  }
+  $var = "use_cn";
+  $val = $use_cn;
+  $group = $definition->get_group_name($var);
+  $nl->set_variable_value($group, $var, $val);
+  if (  ! $definition->is_valid_value( $var, $val ) ) {
+    my @valid_values   = $definition->get_valid_values( $var );
+    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+  }
+  $var = "use_lch4";
+  $val = $use_lch4;
+  $group = $definition->get_group_name($var);
+  $nl->set_variable_value($group, $var, $val);
+  if (  ! $definition->is_valid_value( $var, $val ) ) {
+    my @valid_values   = $definition->get_valid_values( $var );
+    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+  }
+  $var = "use_nitrif_denitrif";
+  $val = $use_nitrif_denitrif;
+  $group = $definition->get_group_name($var);
+  $nl->set_variable_value($group, $var, $val);
+  if (  ! $definition->is_valid_value( $var, $val ) ) {
+    my @valid_values   = $definition->get_valid_values( $var );
+    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+  }
+  $var = "use_vertsoilc";
+  $val = $use_vertsoilc;
+  $group = $definition->get_group_name($var);
+  $nl->set_variable_value($group, $var, $val);
+  if (  ! $definition->is_valid_value( $var, $val ) ) {
+    my @valid_values   = $definition->get_valid_values( $var );
+    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+  }
+  $var = "use_century_decomp";
+  $val = $use_century_decomp;
+  $group = $definition->get_group_name($var);
+  $nl->set_variable_value($group, $var, $val);
+  if (  ! $definition->is_valid_value( $var, $val ) ) {
+    my @valid_values   = $definition->get_valid_values( $var );
+    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+  }
+}
+
+#-----------------------------------------------------------------------------------------------
+# CLM4 Methane model
+if ($phys eq "clm4_0") {
+  # not relevant in clm4_0
+} else {
+  my $clm4me;
+  $var = "clm4me";
+  $val = $opts{$var};
+  $clm4me = $val;
+  if ( ($clm4me eq 1) && ($bgc_mode eq "sp") ) {
+    die <<"EOF";
+** Cannot turn clm4me mode on -- without cn or bgc for bgc mode** 
+EOF
+  }
+  if ($print>=2) { 
+    if ( $clm4me eq 1 ) { 
+      print "Activate CLM4 Methane model: .$eol"; 
+    }
+  }
+
+  if ($clm4me eq 1) {
+    # this must be in the if block to avoid overriding defaults specified by bgc mode
+    $var = "use_lch4";
+    $val = ".true.";
+    $use_lch4 = $val;
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+    if (  ! $definition->is_valid_value( $var, $val ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+    }
+  }
+}
+
+#-----------------------------------------------------------------------------------------------
+# CROP option
+my $crop;
+my $use_crop = ".false.";
+$var = "crop";
+if ($phys eq "clm4_0") {
+  $crop = $cfg->get($var);
+  if ( $crop eq "on" ) {
+    $use_crop = ".true.";
+  }
+} else {
+  $val = $opts{$var};
+  $crop = $val;
+  if ( $crop eq 1 ) {
+    $use_crop = ".true.";
+  }
+  if ( ($crop eq 1 ) && ($bgc_mode eq "sp") ) {
+    die <<"EOF";
+** Cannot turn crop mode on mode bgc=sp
+** 
+** Set the bgc mode to 'cn' or 'bgc' by the following means from highest to lowest precedence:
+** * by the command-line options -bgc cn
+** * by a default configuration file, specified by -defaults 
+EOF
+  }
+
+  $var = "use_crop";
+  $val = ".false.";
+  if ($crop eq 1) {
+    $val = ".true.";
+  }
+  $group = $definition->get_group_name($var);
+  $nl->set_variable_value($group, $var, $val);
+  if (  ! $definition->is_valid_value( $var, $val ) ) {
+    my @valid_values   = $definition->get_valid_values( $var );
+    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+  }
+}
+
+#-----------------------------------------------------------------------------------------------
+# MAXPFT option
+
+my $maxpft;
+$var = "maxpft";
+if ($phys eq "clm4_0") {
+  $maxpft = $cfg->get($var);
+  # NOTE: maxpatchpft sizes already checked for clm4_0 by configure.
+} else {
+  my %maxpatchpft;
+  $maxpatchpft{'.true.'}   = 25;
+  $maxpatchpft{'.false.'} = 17;
+  if ( $opts{$var} ne "default") {
+    $val = $opts{$var};
+  } else {
+    $val = $maxpatchpft{$use_crop};
+  }
+  $maxpft = $val;
+
+  if ( ($bgc_mode ne "sp") && ($maxpft != $maxpatchpft{$use_crop}) ) {
+    die <<"EOF";
+** For CN or BGC mode you MUST set max patch PFT's to $maxpatchpft{$use_crop}
+** 
+** When the crop model is on then it must be set to $maxpatchpft{'crop'} otherwise to $maxpatchpft{'nocrop'}
+** Set the bgc mode, crop and maxpft by the following means from highest to lowest precedence:
+** * by the command-line options -bgc, -crop and -maxpft
+** * by a default configuration file, specified by -defaults 
+**
+EOF
+  }
+  if ( $maxpft > $maxpatchpft{$use_crop} ) {
+    die <<"EOF";
+** Max patch PFT's can NOT exceed $maxpatchpft{$use_crop}
+** 
+** Set maxpft by the following means from highest to lowest precedence:
+** * by the command-line options -maxpft
+** * by a default configuration file, specified by -defaults 
+**
+EOF
+  }
+  if ( $maxpft != $maxpatchpft{$use_crop} ) {
+    print "Warning:: running with maxpft NOT equal to $maxpatchpft{$use_crop} is " .
+      "NOT validated / scientifically supported.$eol";
+  }
+  if ($print>=2) {
+    print "Using $maxpft for maxpft.$eol";
+  }
+
+  $var = "maxpatch_pft";
+  $val = $maxpft;
+  $group = $definition->get_group_name($var);
+  $nl->set_variable_value($group, $var, $val);
+  if (  ! $definition->is_valid_value( $var, $val ) ) {
+    my @valid_values   = $definition->get_valid_values( $var );
+    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+  }
+}
+
+# Get vsoilc  mode
+#-----------------------------------------------------------------------------------------------
+# Vertical soil-Carbon, CENTURY-BGC, split prognostic mineral pool option 
+# and elimination of inconsistent duplicate soil hydraulic parameters
+#    -- currently only in bgc=cn or bgc=bgc
+my $vsoilc;
+$var = "vsoilc";
+if ($phys eq "clm4_0") {
+  # not relevant in clm4_0
+  $vsoilc = "off";
+} else {
+  $val = $opts{$var};
+  $vsoilc = $val;
+  my @valid_values   = (undef, "off", "on", "no-vert", "no-cent", "no-nitrif", "no-vert:no-cent", "no-vert:no-nitrif");
+  my %val_values = map { $_ => 1 } @valid_values;
+  if (!exists($val_values{$val})) {
+    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+  }
+  if ( ($vsoilc ne "off" && $vsoilc ne undef) && ($use_cn eq ".false.") ) {
+    die <<"EOF";
+** Cannot turn vsoilc_centbgc mode on -- without cn or bgc for bgc mode**
+EOF
+  }
+  if ( ($vsoilc ne "off") && ($vsoilc ne undef) && ($vsoilc !~ /no-nitrif/) && ($use_lch4 eq ".false.") ) {
+    #   die <<"EOF";
+    #** Cannot turn vsoilc_centbgc mode on -- without clm4me Methane model active** 
+    #EOF
+    print <<"EOF";
+    Warning:: The vsoilc_centbgc package (explicitly Nitrification/de-Nitrification) requires the clm4me Methane model to be active.
+              It is recommended that you re-configure with both vsoilc_centbgc AND clm4me.
+EOF
+  }
+  if ( $vsoilc eq "on") { 
+    if ($print>=2) { 
+      print "vsoilc_centbgc package: $eol";
+      print "  Vertical soil Carbon.$eol";
+      print "  CENTURY BGC$eol";
+      print "  Split of Nitrogen mineral pools that are active.$eol"; 
+      print "  Elimination of inconsistent duplicate soil hydraulic parameters.$eol"; 
+    }
+  } elsif ( $vsoilc eq "off") { 
+    print "vsoilc_centbgc package is off.$eol";
+  } elsif ( $vsoilc eq undef) {
+    if ($print >= 2) {
+      print "vsoilc_centbgc package is undefined. Using default for bgc_mode=$bgc_mode.$eol";
+    }
+  } else {
+    print "Warning:: running with OUT the vsoilc_centbgc package fully on or off is NOT validated / " . 
+      "scientifically supported.$eol";
+  }
+
+  if ($vsoilc =~ /no-nitrif/) {
+    $var = "use_nitrif_denitrif";
+    $val = ".false.";
+
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+    if (  ! $definition->is_valid_value( $var, $val ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+    }
+  }
+
+  if ($vsoilc =~ /no-vert/) {
+    $var = "use_vertsoilc";
+    $val = ".false.";
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+    if (  ! $definition->is_valid_value( $var, $val ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+    }
+    if ($nl->get_variable_value($group, $var) ne $val) {
+      die "$nm $var has not been set to the correct value!"
+    }
+  }
+
+  if ($vsoilc =~ /no-cent/) {
+    $var = "use_century_decomp";
+    $val = ".false.";
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+    if (  ! $definition->is_valid_value( $var, $val ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+    }
+  }
+
+}
+
+#-----------------------------------------------------------------------------------------------
 # glc_nec
 $var = "glc_nec";
 if ( $opts{$var} ne "default" ) {
@@ -575,7 +939,7 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
 }
 if ($print>=2) { print "Irrigation $irrig $eol"; }
 if ($phys eq "clm4_0") {
-    if ( $irrig =~ /$TRUE/i && $crop eq "on" ) {
+    if ( $irrig =~ /$TRUE/i && $use_crop eq ".true." ) {
 	print "You've turned on both irrigation and crop. \n
                Irrigation is only applied to generic crop currently,\ 
                which negates it's practical usage.\n. 
@@ -621,9 +985,9 @@ if ($phys eq "clm4_0") {
     my @valid_values   = $definition->get_valid_values( $var );
     die "$nm $var has an invalid value ($val). Valid values are: @valid_values\n";
   }
-}
-if ( $bgc !~ /^cn/ && $bgc_spinup eq "on" ) {
-  die "$nm $var can not be on if CN is turned off.";
+  if ( $bgc_spinup eq "on" && $use_cn ne ".true.") {
+    die "$nm $var can not be '$bgc_spinup' if CN is turned off (use_cn=$use_cn).";
+  }
 }
 if ($print>=2) { print "CLM CN bgc_spinup mode is $bgc_spinup $eol"; }
 
@@ -679,6 +1043,184 @@ if (defined $opts{$var}) {
    add_default($nl, $var );
 }
 $clm_start_type = $nl->get_value($var);
+
+#-----------------------------------------------------------------------------------------------
+# NOIO option
+$var = "noio";
+my $noio;
+if ($phys eq "clm4_0") {
+  # set by configure
+  $val = 0;
+} else {
+  $val = $opts{$var};
+  $noio = $val;
+  if ($print>=2) { 
+    if ( $noio eq 1) { print "ALL history output is turned OFF.$eol";       }
+  }
+
+  if ($noio eq 1) {
+    $var = "use_noio";
+    $val = ".true.";
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+    if ( ! $definition->is_valid_value( $var, $val ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+    }
+  }
+}
+#-----------------------------------------------------------------------------------------------
+# NOFIRE option -- currently only in bgc=CN
+$var = "nofire";
+my $nofire;
+if ($phys eq "clm4_0") {
+  # set by configure
+  $val = 0;
+} else {
+  $val = $opts{$var};
+  my $nofire = $val;
+  if ( ($nofire eq 1) && ($bgc_mode eq "sp") ) {
+    die <<"EOF";
+** Cannot turn nofire mode on with bgc=sp. Must turn on cn or bgc** 
+EOF
+  }
+  if ($print>=2 && $bgc_mode ne "sp" ) {
+    if ( $nofire eq 0) { print "Wildfires are active as normal.$eol"; }
+    else               { print "Wildfires are turned off.$eol";       }
+  }
+
+  if ($nofire eq 1) {
+    $var = "use_nofire";
+    $val = ".true.";
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+    if ( ! $definition->is_valid_value( $var, $val ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+    }
+  }
+}
+
+#-----------------------------------------------------------------------------------------------
+# dynamic vegetation option
+my $dynamic_vegetation;
+$var = "dynamic_vegetation";
+my $use_cndv;
+if ($phys eq "clm4_0") {
+  # not applicable
+  $dynamic_vegetation = 0;
+} else {
+  $val = $opts{$var};
+  $dynamic_vegetation = $val;
+  if ( ($dynamic_vegetation eq 1 ) && ($bgc_mode eq "sp") ) {
+    die <<"EOF";
+** Cannot turn dynamic vegetation mode on with bgc=sp.
+** 
+** Set the bgc mode to 'cn' or 'bgc' by the following means from highest to lowest precedence:
+** * by the command-line options -bgc cn
+** * by a default configuration file, specified by -defaults 
+EOF
+  }
+
+  $use_cndv = ".false.";
+  if ($dynamic_vegetation eq 1) {
+    $var = "use_cndv";
+    $val = ".true.";
+    $use_cndv = $val;
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+    if (  ! $definition->is_valid_value( $var, $val ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+    }
+  }
+}
+
+#-----------------------------------------------------------------------------------------------
+# extra lake layers
+
+$var = "exlaklayers";
+my $exlaklayers;
+if ($phys eq "clm4_0") {
+  # not relevant in clm4_0
+  $exlaklayers = 0;
+} else {
+  $val = $opts{$var};
+  $exlaklayers = $val;
+  if ( ($exlaklayers eq 1) && ($phys !~ /clm4_5/) ) {
+    die <<"EOF";
+** Cannot turn use_exlaklayers mode on -- without clm4_5 physics!** 
+EOF
+  }
+  if ($print>=2) {
+    if ( $exlaklayers eq 1 ) { print "Use 25 lake layers instead of 10.$eol"; }
+  }
+
+  if ($exlaklayers eq 1) {
+    $var = "use_extralakelayers";
+    $val = ".true.";
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+    if ( ! $definition->is_valid_value($var, $val) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+    }
+  }
+}
+
+#-----------------------------------------------------------------------------------------------
+# vichydro
+
+$var = "vichydro";
+my $vichydro;
+if ($phys eq "clm4_0") {
+  # not relevant in clm4_0
+  $vichydro = 0;
+} else {
+  $val = $opts{$var};
+  $vichydro = $val;
+  if ($vichydro eq 1) {
+    print "Using VIC hydrology for runoff calculations.$eol";
+  }
+
+  if ($vichydro eq 1) {
+    $var = "use_vichydro";
+    $val = ".true.";
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+    if ( ! $definition->is_valid_value($var, $val) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+    }
+  }
+}
+
+#-----------------------------------------------------------------------------------------------
+# snicar_frc
+
+$var = "snicar_frc";
+my $snicar_frc;
+if ($phys eq "clm4_0") {
+  # set by configure
+  $snicar_frc = 0;
+} else {
+  $val = $opts{$var};
+  $snicar_frc = $val;
+  if ($snicar_frc eq 1) {
+    print "Using snicar_frc.$eol";
+  }
+
+  if ($snicar_frc eq 1) {
+    $var = "use_snicar_frc";
+    $val = ".true.";
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+    if ( ! $definition->is_valid_value($var, $val) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+    }
+  }
+}
 
 #-----------------------------------------------------------------------------------------------
 
@@ -751,6 +1293,7 @@ if (defined $opts{'clm_usr_name'}) {
     $settings{'sim_year_range'} = $sim_year_range;
     $settings{'bgc_spinup'}     = $bgc_spinup;
     $settings{'clm_usr_name'}   = $opts{'clm_usr_name'};
+
     if ( $inputdata_rootdir eq "\$DIN_LOC_ROOT" ) {
        $settings{'csmdata'}     = $ENV{'DIN_LOC_ROOT'};
     } else {
@@ -790,6 +1333,12 @@ if (defined $opts{'use_case'}) {
     $settings{'mask'}           = $mask;
     $settings{'sim_year'}       = $sim_year;
     $settings{'sim_year_range'} = $sim_year_range;
+    $settings{'phys'}           = $phys;
+    if ($phys eq "clm4_5") {
+      $settings{'use_cn'}         = $use_cn;
+    } else {
+      $settings{'bgc'}         = $bgc_mode;
+    }
     # Loop over the variables specified in the use case.
     # Add each one to the namelist.
     my @vars = $uc_defaults->get_variable_names();
@@ -798,7 +1347,7 @@ if (defined $opts{'use_case'}) {
 	my $val = $uc_defaults->get_value($var, \%settings );
 
 	if ( defined($val) ) {
-            print "CLM adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
+            print "CLM adding use_case $opts{'use_case'} defaults for var '$var' with val '$val' \n";
 
 	    add_default($nl_usecase, $var, 'val'=>$val);
 	}
@@ -825,6 +1374,41 @@ if ($clm_start_type eq "'cold'" || $clm_start_type eq "'arb_ic'") {
 ##############################
 # namelist group: clm_inparm #
 ##############################
+
+# site specific requirements
+if ($phys eq "clm4_5") {
+  # res check prevents polluting the namelist with an unnecessary
+  # false variable for every run
+  if ($res eq "1x1_vancouverCAN") {
+    $var = "use_vancouver";
+    $val = ".true.";
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+  }
+}
+
+if ($phys eq "clm4_5") {
+  # res check prevents polluting the namelist with an unnecessary
+  # false variable for every run
+  if ($res eq "1x1_mexicocityMEX") {
+    $var = "use_mexicocity";
+    $val = ".true.";
+    $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $val);
+  }
+}
+
+if ($phys eq "clm4_5" && $res eq "1x1_smallvilleIA") {
+  if ($use_cn ne ".true." || $use_crop ne ".true.") {
+    die "ERROR: 1x1_smallvilleIA grids must use a compset with CN and CROP turned on."
+  }
+}
+
+if ($phys eq "clm4_5" && $res eq "1x1_numaIA") {
+  if ($use_cn ne ".true." || $use_crop ne ".true.") {
+    die "ERROR: 1x1_numaIA grids must use a compset with CN and CROP turned on."
+  }
+}
 
 $var = "clm_startfile";
 if ( defined($opts{$var}) ) {
@@ -865,7 +1449,7 @@ if ( defined($opts{$var}) ) {
 
 my $irrigate;
 if ($phys eq "clm4_5") {
-    if ( $crop eq "on" ) {
+    if ( $use_crop eq ".true." ) {
 	add_default($nl, 'irrigate', 'val'=>$opts{'irrig'});
     }
     elsif ( $nl->get_value('irrigate') =~ /$TRUE/i ) {
@@ -1026,7 +1610,7 @@ if ($phys eq "clm4_0") {
     } 
     add_default($nl, 'create_crop_landunit', 'irrig'=>$irrig );
 } else {
-    add_default($nl, 'create_crop_landunit');
+    add_default($nl, 'create_crop_landunit', 'use_crop'=>$use_crop);
 }
    
 # co2_type
@@ -1064,6 +1648,18 @@ $settings{'crop'}           = $crop;
 $settings{'irrig'}          = $irrig;
 $settings{'rcp'}            = $rcp;
 $settings{'glc_nec'}        = $glc_nec;
+if ($phys eq "clm4_5") {
+  # necessary for demand to be set correctly (fpftdyn requires
+  # use_crop, maybe other options require other flags?)!
+  $settings{'use_cn'} = $use_cn;
+  $settings{'use_cndv'} = $use_cndv;
+  $settings{'use_lch4'} = $use_lch4;
+  $settings{'use_nitrif_denitrif'} = $use_nitrif_denitrif;
+  $settings{'use_vertsoilc'} = $use_vertsoilc;
+  $settings{'use_century_decomp'} = $use_century_decomp;
+  $settings{'use_crop'} = $use_crop;
+}
+
 my $demand           = $nl->get_value('clm_demand');
 $demand              =~ s/\'//g;   # Remove quotes
 if ( $demand =~ /.+/ ) { $opts{'clm_demand'} .= ",$demand"; }
@@ -1083,8 +1679,13 @@ $fpftdyn =~ s!(.*)/!!;
 $fpftdyn =~ s/\'//;
 $fpftdyn =~ s/\"//;
 if ( $fpftdyn eq "" ) { $fpftdyn = "null"; }
-add_default($nl, 'fsurdat', 'hgrid'=>$res, 'sim_year'=>$sim_year, 
-            'irrig'=>$irrig,   'crop'=>$crop, 'glc_nec'=>$glc_nec );
+if ($phys eq "clm4_0") {
+  add_default($nl, 'fsurdat', 'hgrid'=>$res, 'sim_year'=>$sim_year,
+              'irrig'=>$irrig,   'crop'=>$crop, 'glc_nec'=>$glc_nec);
+} else{
+  add_default($nl, 'fsurdat', 'hgrid'=>$res, 'sim_year'=>$sim_year,
+              'irrig'=>$irrig,   'use_crop'=>$use_crop, 'glc_nec'=>$glc_nec);
+}
 my $fsurdat = $nl->get_value( 'fsurdat' );
 
 # Initial conditions
@@ -1105,7 +1706,7 @@ if (not defined $nl->get_value('finidat')) {
     my $var = "finidat";
     if ( $clm_start_type =~ /startup/  ) { $nofail = 0; }
     if ($opts{'ignore_ic_date'}) {
-           if ( $crop eq "on" ) {
+           if ( $use_crop eq ".true." ) {
               die "$ProgName ERROR: using ignore_ic_date is incompatable with crop!\n";
            }
 	   if ($phys eq "clm4_0") {
@@ -1115,9 +1716,12 @@ if (not defined $nl->get_value('finidat')) {
 			   'irrig'=>$irrig, 'glc_nec'=>$glc_nec, 'crop'=>$crop );
 	   } else {
 	       add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
-			   'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn,   'vsoilc_centbgc'=>$vsoilc,
+			   'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
+                           'use_cn'=>$use_cn, 'use_cndv'=>$use_cndv,
+                           'use_nitrif_denitrif'=>$use_nitrif_denitrif,
+                           'use_vertsoilc'=>$use_vertsoilc, 'use_century_decomp'=>$use_century_decomp,
 			   'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
-			   'glc_nec'=>$glc_nec, 'crop'=>$crop, 'irrigate'=>$irrigate );
+			   'glc_nec'=>$glc_nec, 'use_crop'=>$use_crop, 'irrigate'=>$irrigate );
 	   }
     } elsif ($opts{'ignore_ic_year'}) {
 	if ($phys eq "clm4_0") {
@@ -1127,9 +1731,12 @@ if (not defined $nl->get_value('finidat')) {
 			'irrig'=>$irrig, 'glc_nec'=>$glc_nec, 'crop'=>$crop );
 	} else {
 	    add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
-			'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'vsoilc_centbgc'=>$vsoilc,
+			'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn,
+                        'use_cn'=>$use_cn, 'use_cndv'=>$use_cndv,
+                        'use_nitrif_denitrif'=>$use_nitrif_denitrif,
+                        'use_vertsoilc'=>$use_vertsoilc, 'use_century_decomp'=>$use_century_decomp,
 			'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
-			'glc_nec'=>$glc_nec, 'crop'=>$crop, 'irrigate'=>$irrigate );
+			'glc_nec'=>$glc_nec, 'use_crop'=>$use_crop, 'irrigate'=>$irrigate );
 	}
     } else {
 	if ($phys eq "clm4_0") {
@@ -1139,9 +1746,12 @@ if (not defined $nl->get_value('finidat')) {
 			'irrig'=>$irrig, 'glc_nec'=>$glc_nec, 'crop'=>$crop );
 	} else {
 	   add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
-		       'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'vsoilc_centbgc'=>$vsoilc,
+		       'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn,
+                       'use_cn'=>$use_cn, 'use_cndv'=>$use_cndv,
+                       'use_nitrif_denitrif'=>$use_nitrif_denitrif,
+                       'use_vertsoilc'=>$use_vertsoilc, 'use_century_decomp'=>$use_century_decomp,
 		       'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
-		       'glc_nec'=>$glc_nec, 'crop'=>$crop, 'irrigate'=>$irrigate );
+		       'glc_nec'=>$glc_nec, 'use_crop'=>$use_crop, 'irrigate'=>$irrigate );
 	}
     }
     my $finidat = $nl->get_value($var);
@@ -1154,8 +1764,8 @@ if (not defined $nl->get_value('finidat')) {
 #
 # Supplemental Nitrogen for prognostic crop cases
 #
-if ( $bgc =~ /^cn/ && $crop eq "on" ) {
-   add_default($nl, 'suplnitro' );
+if ( $bgc_mode ne "sp" && $use_crop eq ".true." ) {
+   add_default($nl, 'suplnitro', 'use_cn'=>$use_cn, 'use_crop'=>$use_crop);
 }
 #
 # Check on Switches for hydrology
@@ -1173,7 +1783,7 @@ if ( $h2osfcflag == 1 && $subgrid == 0 ) {
 #
 # CH4 model if bgc=CN or CNDV
 #
-if ( $clm4me  eq "on" ) {
+if ( $use_lch4  eq '.true.' ) {
    ###############################
    # namelist group: ch4par_in   #
    ###############################
@@ -1200,8 +1810,8 @@ if ( $clm4me  eq "on" ) {
 #
 my $use_c13 = $nl->get_value('use_c13');
 my $use_c14 = $nl->get_value('use_c14');
-if ( $bgc =~ /^cn/ ) {
-  if ( $crop eq "on" ) {
+if ( $bgc_mode ne "sp" ) {
+  if ( $use_crop eq ".true." ) {
      if ( defined($use_c13) ||
           defined($use_c14) ||
           defined($nl->get_value('use_c14_bombspike')) ||
@@ -1240,7 +1850,7 @@ if ( $bgc =~ /^cn/ ) {
 #
 # Ch4 namelist checking
 #
-if ( $clm4me  eq "on" ) {
+if ( $use_lch4  eq ".true." ) {
    my $allowlakeprod = $nl->get_value('allowlakeprod');
    if ( ! defined($allowlakeprod) || 
          (defined($allowlakeprod) && $allowlakeprod =~ /$FALSE/i) ) {
@@ -1278,12 +1888,12 @@ if ( $clm4me  eq "on" ) {
 # bgc_spinup
 #
 if ($phys eq "clm4_5") {
-  if ( $bgc =~ /^cn/ ) {
+  if ( $bgc_mode ne "sp" ) {
     # only set bgc_spinup state if CN is on.
     add_default($nl, 'spinup_state', 'bgc_spinup'=>$bgc_spinup );
   }
 
-  if ( $bgc !~ /^cn/ && defined($nl->get_value('override_bgc_restart_mismatch_dump'))) {
+  if ( $bgc_mode eq "sp" && defined($nl->get_value('override_bgc_restart_mismatch_dump'))) {
     die "$ProgName ERROR: CN must be on if override_bgc_restart_mismatch_dump is set."
   }
 }
@@ -1291,21 +1901,39 @@ if ($phys eq "clm4_5") {
 #
 # Nitrogen deposition for bgc=CN
 #
-if ( $bgc =~ /^cn/ ) {
+if ($phys eq "clm4_0" && $bgc_mode ne "none") {
    ###############################
    # namelist group: ndepdyn_nml #
    ###############################
-   add_default($nl, 'ndepmapalgo', 'hgrid'=>$res );
-   add_default($nl, 'stream_year_first_ndep',   'sim_year'=>$sim_year,
+   add_default($nl, 'ndepmapalgo', 'phys'=>$phys, 'bgc'=>$bgc_mode, 'hgrid'=>$res );
+   add_default($nl, 'stream_year_first_ndep', 'phys'=>$phys, 'bgc'=>$bgc_mode, 'sim_year'=>$sim_year,
                'sim_year_range'=>$sim_year_range);
-   add_default($nl, 'stream_year_last_ndep',    'sim_year'=>$sim_year,
+   add_default($nl, 'stream_year_last_ndep', 'phys'=>$phys, 'bgc'=>$bgc_mode, 'sim_year'=>$sim_year,
                'sim_year_range'=>$sim_year_range);
    # Set align year, if first and last years are different
    if ( $nl->get_value('stream_year_first_ndep') != $nl->get_value('stream_year_last_ndep') ) {
       add_default($nl, 'model_year_align_ndep',    'sim_year'=>$sim_year,
                   'sim_year_range'=>$sim_year_range);
    }
-   add_default($nl, 'stream_fldfilename_ndep',  'rcp'=>$rcp, 'hgrid'=>"1.9x2.5" );
+   add_default($nl, 'stream_fldfilename_ndep', 'phys'=>$phys, 'bgc'=>$bgc_mode, 'rcp'=>$rcp, 'hgrid'=>"1.9x2.5" );
+#
+# If bgc is NOT CN/CNDV then make sure none of the ndep settings are set
+#
+} elsif ($phys eq "clm4_5" && $bgc_mode ne "sp") {
+   ###############################
+   # namelist group: ndepdyn_nml #
+   ###############################
+   add_default($nl, 'ndepmapalgo', 'phys'=>$phys, 'use_cn'=>$use_cn, 'hgrid'=>$res );
+   add_default($nl, 'stream_year_first_ndep', 'phys'=>$phys, 'use_cn'=>$use_cn, 'sim_year'=>$sim_year,
+               'sim_year_range'=>$sim_year_range);
+   add_default($nl, 'stream_year_last_ndep', 'phys'=>$phys, 'use_cn'=>$use_cn, 'sim_year'=>$sim_year,
+               'sim_year_range'=>$sim_year_range);
+   # Set align year, if first and last years are different
+   if ( $nl->get_value('stream_year_first_ndep') != $nl->get_value('stream_year_last_ndep') ) {
+      add_default($nl, 'model_year_align_ndep',    'sim_year'=>$sim_year,
+                  'sim_year_range'=>$sim_year_range);
+   }
+   add_default($nl, 'stream_fldfilename_ndep', 'phys'=>$phys, 'use_cn'=>$use_cn, 'rcp'=>$rcp, 'hgrid'=>"1.9x2.5" );
 #
 # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set
 #
@@ -1325,10 +1953,10 @@ if ( $bgc =~ /^cn/ ) {
 #
 my $suplnitro = $nl->get_value('suplnitro');
 if ( defined($suplnitro) ) {
-   if ( $bgc !~ /^cn/ ) {
+   if ( $bgc_mode eq "sp" ) {
       die "$ProgName ERROR: supplemental Nitrogen (suplnitro) is set, but neither CN nor CNDV is active!\n";
    }
-   if ( $crop ne "on" && $suplnitro =~ /PROG_CROP_ONLY/i ) {
+   if ( $use_crop ne ".true." && $suplnitro =~ /PROG_CROP_ONLY/i ) {
       die "$ProgName ERROR: supplemental Nitrogen is set to run over prognostic crops, but prognostic crop is NOT active!\n";
    }
 
@@ -1346,32 +1974,32 @@ if ( defined($suplnitro) ) {
 # Other streams data needed when CN is on and it's CLM4_5
 #
 if ( $phys eq "clm4_5" ) {
-   if ( $bgc =~ /^cn/ ) {
+   if ( $bgc_mode ne "sp" ) {
       #################################
       # namelist group: popd_streams  #
       #################################
       # Population density
       add_default($nl, 'popdensmapalgo', 'hgrid'=>$res );
-      add_default($nl, 'stream_year_first_popdens',   'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
-      add_default($nl, 'stream_year_last_popdens',    'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
+      add_default($nl, 'stream_year_first_popdens', 'phys'=>$phys, 'use_cn'=>$use_cn, 'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
+      add_default($nl, 'stream_year_last_popdens', 'phys'=>$phys, 'use_cn'=>$use_cn, 'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
       # Set align year, if first and last years are different
       if ( $nl->get_value('stream_year_first_popdens') != $nl->get_value('stream_year_last_popdens') ) {
          add_default($nl, 'model_year_align_popdens',    'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
       }
-      add_default($nl, 'stream_fldfilename_popdens', 'hgrid'=>"0.5x0.5" );
+      add_default($nl, 'stream_fldfilename_popdens', 'phys'=>$phys, 'use_cn'=>$use_cn, 'hgrid'=>"0.5x0.5" );
    
       ##################################
       # namelist group: light_streams  #
       ##################################
       # Lightning
-      add_default($nl, 'lightngmapalgo', 'hgrid'=>$res );
-      add_default($nl, 'stream_year_first_lightng',   'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
-      add_default($nl, 'stream_year_last_lightng',    'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
+      add_default($nl, 'lightngmapalgo', 'use_cn'=>$use_cn, 'hgrid'=>$res );
+      add_default($nl, 'stream_year_first_lightng', 'use_cn'=>$use_cn, 'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
+      add_default($nl, 'stream_year_last_lightng', 'use_cn'=>$use_cn, 'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
       # Set align year, if first and last years are different
       if ( $nl->get_value('stream_year_first_lightng') != $nl->get_value('stream_year_last_lightng') ) {
          add_default($nl, 'model_year_align_lightng',    'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
       }
-      add_default($nl, 'stream_fldfilename_lightng', 'hgrid'=>"94x192" );
+      add_default($nl, 'stream_fldfilename_lightng', 'use_cn'=>$use_cn, 'hgrid'=>"94x192" );
    #
    # If bgc is NOT CN/CNDV then make sure none of the popdens or Lightng settings are set
    #
@@ -1381,7 +2009,7 @@ if ( $phys eq "clm4_5" ) {
           defined($nl->get_value('model_year_align_popdens'))  ||
           defined($nl->get_value('stream_fldfilename_popdens'))
      ) {
-        die "$ProgName ERROR:: When bgc is NOT CN or CNDV none of: stream_year_first_popdens," .
+        die "$ProgName ERROR:: When bgc is SP (NOT CN or BGC) none of: stream_year_first_popdens," .
              "stream_year_last_popdens, model_year_align_popdens, nor stream_fldfilename_popdens" . 
              " can be set!\n";
      }
@@ -1390,7 +2018,7 @@ if ( $phys eq "clm4_5" ) {
           defined($nl->get_value('model_year_align_lightng'))  ||
           defined($nl->get_value('stream_fldfilename_lightng'))
      ) {
-        die "$ProgName ERROR:: When bgc is NOT CN or CNDV none of: stream_year_first_lightng," .
+        die "$ProgName ERROR:: When bgc is SP (NOT CN or BGC) none of: stream_year_first_lightng," .
              "stream_year_last_lightng, model_year_align_lightng, nor stream_fldfilename_lightng" . 
              " can be set!\n";
      }
@@ -1453,7 +2081,7 @@ if ($phys eq "clm4_0") {
     @groups = qw(clm_inparm ndepdyn_nml);
 } else {
     @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams clm_hydrology1_inparm clm_soilhydrology_inparm);
-    if ( $clm4me  eq "on" ) {
+    if ( $use_lch4  eq ".true." ) {
 	push @groups, "ch4par_in";
     }
 }

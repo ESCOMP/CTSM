@@ -16,17 +16,22 @@ module CNNDynamicsMod
   save
   private
   ! !PUBLIC MEMBER FUNCTIONS:
+  public :: CNNDynamicsInit
   public :: CNNDeposition
   public :: CNNFixation
   public :: CNNLeaching
   public :: CNNFert
   public :: CNSoyfix
 
-#ifndef NITRIF_DENITRIF
-  real(r8), public :: nfix_timeconst = 0._r8  ! (days) time over which to exponentially relax the npp flux for N fixation term (if .le. 0. or .ge. 365; use old annual method)
-#else
-  real(r8), public :: nfix_timeconst = 10._r8 ! (days) time over which to exponentially relax the npp flux for N fixation term (if .le. 0. or .ge. 365; use old annual method)
-#endif
+  real(r8), public :: nfix_timeconst = -1.2345_r8 ! (days) time over
+  ! which to exponentially relax the npp flux for N fixation term
+
+  ! NOTE(bandre, 2013-10) according to Charlie Koven, nfix_timeconst
+  ! is currently used as a flag and rate constant. Rate constant: time
+  ! over which to exponentially relax the npp flux for N fixation term
+  ! flag: (if .le. 0. or .ge. 365; use old annual method). Default value is
+  ! junk that should always be overwritten by the namelist or init
+  ! function!
 
   public :: readCNNDynamicsParams
 
@@ -40,6 +45,39 @@ module CNNDynamicsMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine CNNDynamicsInit ( )
+    !
+    ! !DESCRIPTION:
+    ! Initialize module variables
+    !
+    ! !USES:
+
+    ! !ARGUMENTS:
+
+    implicit none
+
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+    
+    !
+    !   
+
+    if (nfix_timeconst .eq. -1.2345_r8) then
+       ! If nfix_timeconst is equal to the junk default value, then it
+       ! wasn't specified by the user namelist and we need to assign
+       ! it the correct default value. If the user specified it in the
+       ! name list, we leave it alone.
+       if (use_nitrif_denitrif) then
+          nfix_timeconst = 10._r8
+       else
+          nfix_timeconst = 0._r8
+       end if
+    end if
+   
+  end subroutine CNNDynamicsInit
 
   !-----------------------------------------------------------------------
   subroutine readCNNDynamicsParams ( ncid )
@@ -64,7 +102,9 @@ contains
     !-----------------------------------------------------------------------
     
     !
-    !   
+    !
+    call CNNDynamicsInit()
+
     tString='sf_minn'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))

@@ -394,7 +394,7 @@ EOF
 	  $queryopts = "-res $res -csmdata $CSMDATA -silent -justvalue";
       }
       $queryfilopts = "$queryopts -onlyfiles -phys clm4_5 ";
-      my $mkcrop = "";
+      my $mkcrop = ",crop='off'";
       my $setnumpft = "";
       if ( defined($opts{'crop'}) ) {
          $mkcrop    = ",crop='on'";
