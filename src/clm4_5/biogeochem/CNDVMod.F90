@@ -46,12 +46,12 @@ contains
     integer, intent(in) :: kyr                  ! used in routine climate20 below
     !
     ! !LOCAL VARIABLES:
-    integer  :: g,p                    ! indices
+    integer  :: p                    ! pft index
     !-----------------------------------------------------------------------
 
    associate(& 
-   agdd20      => gdgvs%agdd20   , & ! InOut: [real(r8) (:)]  20-yr running mean of agdd                        
-   tmomin20    => gdgvs%tmomin20 , & ! InOut: [real(r8) (:)]  20-yr running mean of tmomin                      
+   agdd20      => pdgvs%agdd20   , & ! InOut: [real(r8) (:)]  20-yr running mean of agdd                        
+   tmomin20    => pdgvs%tmomin20 , & ! InOut: [real(r8) (:)]  20-yr running mean of tmomin                      
    fpcgrid     => pdgvs%fpcgrid  , & ! Input:  [real(r8) (:)]  foliar projective cover on gridcell (fraction)    
    t_mo_min    => pdgvs%t_mo_min , & ! Input:  [real(r8) (:)]  annual min of t_mo (Kelvin)                       
    agdd        => pdgvs%agdd       & ! Input:  [real(r8) (:)]  accumulated growing degree days above 5           
@@ -65,13 +65,12 @@ contains
     ! *************************************************************************
 
     do p = bounds%begp, bounds%endp
-       g = pft%gridcell(p)
        if (kyr == 2) then ! slevis: add ".and. start_type==arb_ic" here?
-          tmomin20(g) = t_mo_min(p) ! NO, b/c want to be able to start dgvm
-          agdd20(g) = agdd(p)       ! w/ clmi file from non-dgvm simulation
+          tmomin20(p) = t_mo_min(p) ! NO, b/c want to be able to start dgvm
+          agdd20(p) = agdd(p)       ! w/ clmi file from non-dgvm simulation
        end if
-       tmomin20(g) = (19._r8 * tmomin20(g) + t_mo_min(p)) / 20._r8
-       agdd20(g)   = (19._r8 * agdd20(g)   + agdd(p)    ) / 20._r8
+       tmomin20(p) = (19._r8 * tmomin20(p) + t_mo_min(p)) / 20._r8
+       agdd20(p)   = (19._r8 * agdd20(p)   + agdd(p)    ) / 20._r8
     end do
 
     ! Rebuild filter of present natually-vegetated pfts after Kill()

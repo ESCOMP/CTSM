@@ -1,4 +1,136 @@
 ===============================================================
+Tag name:  clm4_5_42
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Mon Nov  4 09:45:36 MST 2013
+One-line Summary: fix bug 1857 for CLM4.5 - CNDV running temperature means are incorrect
+
+Purpose of changes:
+
+   Fix bug 1857 for CLM4.5 (not yet fixed for CLM4.0!). From the bugzilla entry:
+
+   In this code in CNDVMod:
+
+       do p = bounds%begp, bounds%endp
+          g = pft%gridcell(p)
+          if (kyr == 2) then ! slevis: add ".and. start_type==arb_ic" here?
+             tmomin20(g) = t_mo_min(p) ! NO, b/c want to be able to start dgvm
+             agdd20(g) = agdd(p)       ! w/ clmi file from non-dgvm simulation
+          end if
+          tmomin20(g) = (19._r8 * tmomin20(g) + t_mo_min(p)) / 20._r8
+          agdd20(g)   = (19._r8 * agdd20(g)   + agdd(p)    ) / 20._r8
+       end do
+
+   Notice that this is a loop over p, but it's updating gridcell-level variables.
+   This means that the running temperature means aren't at all what they purport
+   to be. e.g., in a grid cell with the 17 natural PFTs and nothing else, the grid
+   cell-level values will get the 17 pft values averaged in each year, rather than
+   getting a single pft value per year. This means that these temperature
+   variables are closer to a single year's value than to a running mean.
+
+   The fix here should be simple: just change tmomin20 & agdd20 to pft-level
+   variables.
+
+   
+   WARNING: USE CAUTION WHEN USING THIS TAG WITH AN OLDER RESTART FILE FROM A
+   CLM4.5 DV CASE (this is not a problem for any out-of-the-box initial
+   conditions files, but could apply if you have your own initial file from a DV
+   run): In this case, the two DV-related variables AGDD20 and TMOMIN20 will be
+   reset to their arbitrary initial conditions.
+
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 
+   1857 - partial fix (still open for clm4.5)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNrestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVEcosystemDynIniMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVEstablishmentMod.F90
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+
+========= Remove SSP compare_hist BFAIL from xFAIL list (Ben fixed this in the last tag)
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+CLM testing:
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+    All baseline comparisons pass except the following expected failure:
+	FAIL  PET_P15x2_Lm25.f10_f10.ICLM45BGCDVCROP.yellowstone_intel.clm-reduceOutput.GC.104252.compare_hist.clm4_5_41 
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+
+    All baseline comparisons pass except the following expected failure:
+       FAIL   PET_P15x2_Lm25.f10_f10.ICLM45BGCDVCROP.yellowstone_intel.clm-reduceOutput.compare_hist.clm4_5_41.clm2.h0 
+
+CLM tag used for the baseline comparisons: clm4_5_41
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM4.5 with DV
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      
+      Definitely larger than roundoff, but not investigated as to whether it's
+      same climate or new climate.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_41
 Originator(s):  andre (Benjamin Andre,LAWRENCE BERKELEY NATIONAL LABORATORY,510-486-4617)
 Date: Wed Oct 30 17:33:16 MDT 2013

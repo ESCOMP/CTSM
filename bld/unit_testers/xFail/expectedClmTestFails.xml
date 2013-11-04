@@ -233,7 +233,6 @@
             </INTEL>
             <PGI>
                <entry testId="ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default"     failType="FAIL" >Restart not BFB.  Runs as ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi</entry>
-               <entry testId="SSP.f19_g16.I1850CLM45BGC.yellowstone_pgi.clm-default"    failType="BFAIL" bugz="1728" >starting in clm4_5_07--The cpl.hi.nc file is not being copied on a generate like it should.</entry>
             </PGI>
          </yellowstone>
          <frankfurt>

@@ -8,7 +8,7 @@ module CNrestMod
   use spmdMod     , only : masterproc
   use clm_varctl  , only : iulog, override_bgc_restart_mismatch_dump
   use abortutils  , only : endrun
-  use decompMod   , only : bounds_type
+  use decompMod   , only : bounds_type, get_proc_global
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -53,8 +53,15 @@ contains
     real(r8) :: c3_r2         ! isotope ratio (13c/[12c+13c]) for C3 photosynthesis
     real(r8) :: c4_r2         ! isotope ratio (13c/[12c+13c]) for C4 photosynthesis
     integer :: c,p,j,k,i,l           ! indices 
+    integer :: numg_global  ! total number of grid cells, globally
+    integer :: numl_global  ! total number of landunits, globally
+    integer :: numc_global  ! total number of columns, globally
+    integer :: nump_global  ! total number of pfts, globally
     real(r8):: m            ! multiplier for the exit_spinup code
     logical :: readvar      ! determine if variable is on initial file
+    logical :: do_io        ! whether to do i/o for the given variable
+    integer :: dimlen       ! dimension length
+    integer :: err_code     ! error code
     character(len=128) :: varname         ! temporary
     type(pft_cstate_type), pointer :: pcisos
     type(pft_cstate_type), pointer :: pcbulks
@@ -72,6 +79,9 @@ contains
        pcisos =>  pc13s
        pcbulks =>pcs
     endif
+
+    ! Get expected total number of points, for later error checks
+    call get_proc_global(numg_global, numl_global, numc_global, nump_global)
 
     ! Determine necessary subgrid bounds
 
@@ -3024,25 +3034,57 @@ contains
           end if
        end if
 
-       ! gridcell type dgvm physical state - tmomin20
+       ! pft type dgvm physical state - tmomin20
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname='TMOMIN20', xtype=ncd_double,  &
-               dim1name='gridcell',long_name='',units='')
+               dim1name='pft',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='TMOMIN20', data=gdgvs%tmomin20, &
-               dim1name=nameg, ncid=ncid, flag=flag, readvar=readvar)
+
+          ! On a read, confirm that this variable has the expected size; if not, don't
+          ! read it (instead leave it at its arbitrary initial value). This is needed to
+          ! support older initial conditions for which this variable had a different size.
+          do_io = .true.
+          if (flag == 'read') then
+             call ncd_inqvdlen(ncid, 'TMOMIN20', 1, dimlen, err_code)
+             if (dimlen /= nump_global) then
+                do_io = .false.
+                readvar = .false.
+             end if
+          end if
+
+          if (do_io) then
+             call ncd_io(varname='TMOMIN20', data=pdgvs%tmomin20, &
+                  dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+          end if
+
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) call endrun
           end if
        end if
 
-       ! gridcell type dgvm physical state - agdd20
+       ! pft type dgvm physical state - agdd20
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname='AGDD20', xtype=ncd_double,  &
-               dim1name='gridcell',long_name='',units='')
+               dim1name='pft',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='AGDD20', data=gdgvs%agdd20, &
-               dim1name=nameg, ncid=ncid, flag=flag, readvar=readvar)
+
+          ! On a read, confirm that this variable has the expected size; if not, don't
+          ! read it (instead leave it at its arbitrary initial value). This is needed to
+          ! support older initial conditions for which this variable had a different size.
+          do_io = .true.
+          if (flag == 'read') then
+             call ncd_inqvdlen(ncid, 'AGDD20', 1, dimlen, err_code)
+             if (dimlen /= nump_global) then
+                do_io = .false.
+                readvar = .false.
+             end if
+          end if
+
+          if (do_io) then
+             call ncd_io(varname='AGDD20', data=pdgvs%agdd20, &
+                  dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+          end if
+
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) call endrun
           end if

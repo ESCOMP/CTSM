@@ -33,7 +33,7 @@ contains
     type(bounds_type), intent(in) :: bounds  ! bounds
     !
     ! !LOCAL VARIABLES:
-    integer  :: g,p,n           ! indices
+    integer  :: p           ! pft index
     !-----------------------------------------------------------------------
 
     ! Some of the following came from LPJ subroutine initgrid
@@ -44,11 +44,8 @@ contains
        pdgvs%nind(p)      = 0._r8
        pcs%leafcmax(p)    = 0._r8
        pdgvs%t_mo_min(p)  = 1.0e+36_r8
-    end do
-
-    do g = bounds%begg,bounds%endg
-       gdgvs%agdd20(g)   = 0._r8
-       gdgvs%tmomin20(g) = SHR_CONST_TKFRZ - 5._r8 !initialize this way for Phenology code
+       pdgvs%agdd20(p)   = 0._r8
+       pdgvs%tmomin20(p) = SHR_CONST_TKFRZ - 5._r8 !initialize this way for Phenology code
     end do
 
   end subroutine CNDVEcosystemDynini

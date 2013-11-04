@@ -624,6 +624,8 @@ type, public :: pft_dgvstate_type
    real(r8), pointer :: agdd(:)                !accumulated growing degree days above 5
    real(r8), pointer :: t_mo(:)                !30-day average temperature (Kelvin)
    real(r8), pointer :: t_mo_min(:)            !annual min of t_mo (Kelvin)
+   real(r8), pointer :: agdd20(:)              !20-yr running mean of agdd
+   real(r8), pointer :: tmomin20(:)            !20-yr running mean of tmomin
    real(r8), pointer :: prec365(:)             !365-day running mean of tot. precipitation
    logical , pointer :: present(:)             !whether PFT present in patch
    logical , pointer :: pftmayexist(:)         !if .false. then exclude seasonal decid pfts from tropics
@@ -2162,17 +2164,6 @@ type(gridcell_efstate_type):: gve	!gridcell VOC emission factors
 type, public :: gridcell_dstate_type
    real(r8), pointer :: dummy_entry(:)
 end type gridcell_dstate_type
-
-!----------------------------------------------------
-! gridcell DGVM state variables structure
-!----------------------------------------------------
-type, public :: gridcell_dgvstate_type
-   real(r8), pointer :: agdd20(:)      !20-yr running mean of agdd
-   real(r8), pointer :: tmomin20(:)    !20-yr running mean of tmomin
-   real(r8), pointer :: t10min(:)      !ann minimum of 10-day running mean (K)
-end type gridcell_dgvstate_type
-
-type(gridcell_dgvstate_type):: gdgvs !gridcell DGVM structure
 
 !----------------------------------------------------
 ! gridcell energy flux variables structure

@@ -75,8 +75,8 @@ contains
 
 
    associate(& 
-   agdd20                              =>    gdgvs%agdd20                                , & ! Input:  [real(r8) (:)]  20-yr running mean of agdd                        
-   tmomin20                            =>    gdgvs%tmomin20                              , & ! Input:  [real(r8) (:)]  20-yr running mean of tmomin                      
+   agdd20                              =>    pdgvs%agdd20                                , & ! Input:  [real(r8) (:)]  20-yr running mean of agdd                        
+   tmomin20                            =>    pdgvs%tmomin20                              , & ! Input:  [real(r8) (:)]  20-yr running mean of tmomin                      
    present                             =>    pdgvs%present                               , & ! InOut:  [logical (:)]  true=> PFT present in patch                        
    nind                                =>    pdgvs%nind                                  , & ! InOut:  [real(r8) (:)]  number of individuals (#/m**2)                    
    fpcgrid                             =>    pdgvs%fpcgrid                               , & ! Output: [real(r8) (:)]  foliar projective cover on gridcell (fraction)    
@@ -126,8 +126,6 @@ contains
     end do
 
     do p = bounds%begp,bounds%endp
-       g = pft%gridcell(p)
-
        ! Set the presence of pft for this gridcell
 
        if (nind(p) == 0._r8) present(p) = .false.
@@ -148,9 +146,8 @@ contains
     ! to an if-statement below to determine establishment of boreal trees
 
     do p = bounds%begp,bounds%endp
-       g = pft%gridcell(p)
-       if (tmomin20(g) >= tcmin(pft%itype(p)) + SHR_CONST_TKFRZ ) then
-          if (tmomin20(g) <= tcmax(pft%itype(p)) + SHR_CONST_TKFRZ  .and. agdd20(g) >= gddmin(pft%itype(p))) then
+       if (tmomin20(p) >= tcmin(pft%itype(p)) + SHR_CONST_TKFRZ ) then
+          if (tmomin20(p) <= tcmax(pft%itype(p)) + SHR_CONST_TKFRZ  .and. agdd20(p) >= gddmin(pft%itype(p))) then
              estab(p) = .true.
           end if
           survive(p) = .true.
@@ -165,7 +162,6 @@ contains
     end do
 
     do p = bounds%begp,bounds%endp
-       g = pft%gridcell(p)
        l = pft%landunit(p)
 
        ! Case 1 -- pft ceases to exist -kill pfts not adapted to current climate
