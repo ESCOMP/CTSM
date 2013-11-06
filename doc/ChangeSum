@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_43        sacks 11/06/2013 allocate memory for most landunits in every grid cell (needed for dynamic landunits)
    clm4_5_42        sacks 11/04/2013 fix bug 1857 for CLM4.5 - CNDV running temperature means are incorrect
    clm4_5_41        andre 10/30/2013 update scripts to convert clm4_5 CPP flags to namelist variables.
    clm4_5_40      muszala 10/24/2013 fix Bug 1752 - urban conductances depend on weights in an undesirable way

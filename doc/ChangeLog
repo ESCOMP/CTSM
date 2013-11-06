@@ -1,4 +1,207 @@
 ===============================================================
+Tag name:  clm4_5_43
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Wed Nov  6 09:21:25 MST 2013
+One-line Summary: allocate memory for most landunits in every grid cell (needed for dynamic landunits)
+
+Purpose of changes:
+
+   Main change is to allocate memory for most landunits in every grid cell, to
+   support dynamic landunits. Note that we ALWAYS do this extra memory
+   allocation, so that the user isn't required to do interpinic between a
+   non-dynamic run and a dynamic landunit run. (If we eventually change the
+   restart file format / processing so that you can add / remove 0-weight points
+   at will, then we could potentially add some logic to only do this extra
+   allocation if we're using dynamic landunits.)
+
+   Supporting changes are (1) determining which grid cells have enough parameter
+   data to support urban landunits, (2) new initial conditions files, (3) in
+   mksurfdata_map, don't set soil parameters to 0 under glacier, and set urban
+   parameters even if urban cover is 0%
+
+   Other changes are:
+
+   (1) only do snow balance check over active columns
+
+   (2) fix interpinic bug (bug 1839)
+
+   (3) newer files for testing interpinic
+
+
+   NOTE: All CLM4.5 initial conditions will need to be interpinic'ed to be
+   usable in this tag (this has been done for all out-of-the-box initial
+   conditions)
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+   - 1839 (interpinic uses wrong column when there are 0-weight columns in the
+     input file)
+
+   - 1840 (snow balance check is executed over inactive columns)
+
+   - 1825 (surface datasets need urban parameters even when pcturb is 0
+     everywhere): partial fix - still waiting on new USUMB dataset
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: new initial conditions for CLM4.5
+
+List any changes to the defaults for the boundary datasets: new initial
+conditions for CLM4.5
+
+Describe any substantial timing or memory changes:
+
+   Significant memory increases for all CLM4.5 configurations - memory is now
+   allocated for all natural veg landunits, all crop landunits (if using
+   create_crop_landunit), and most urban landunits.
+
+   Also, significant performance decrease (~ 10%) associated with the above
+   change, which I believe is mainly due to decreased cache friendliness.
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated:
+
+========= Change files used for testing interpinic, in order to use files that
+          are up-to-date with the current version of CLM, for a more accurate test
+D       models/lnd/clm/tools/clm4_5/interpinic/clmi.I2000CLM45BGC.2000-01-01.10x15_simyr2000_c130607.nc
+
+List all files added and what they do:
+
+========= Change files used for testing interpinic, in order to use files that
+          are up-to-date with the current version of CLM, for a more accurate test
+A       models/lnd/clm/tools/clm4_5/interpinic/clmi.I2000CLM45BGC.2000-01-01.10x15_simyr2000_c131104.nc
+
+List all existing files that have been modified, and describe the changes:
+
+========= Determine which grid cells should have urban landunits
+M       models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_varsur.F90
+M       models/lnd/clm/src/clm4_5/main/surfrdMod.F90
+
+========= Create a natural veg landunit and crop landunit in all grid cells;
+          create an urban landunit in all grid cells for which we have
+          determined that urban is "valid"
+M       models/lnd/clm/src/clm4_5/main/subgridMod.F90
+
+========= Change a comment
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+
+========= Only do snow balance check over active columns (fixes bug 1840)
+M       models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+
+========= Use new initial conditions files that are consistent with the expanded
+          1-d memory structures
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+========= Don't set soil parameters to 0 under glacier; set urban parameters
+          even if urban cover is 0%
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mksoilMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mksurfdat.F90
+
+========= Fix interpinic bug (bug 1839)
+M       models/lnd/clm/tools/clm4_5/interpinic/src/interpinic.F90
+
+========= Change files used for testing interpinic, in order to use files that
+          are up-to-date with the current version of CLM, for a more accurate test
+M       models/lnd/clm/tools/clm4_5/interpinic/interpinic.runoptions
+
+
+========= Add two tests to the xFail list
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
++               <entry testId="CME_Ly5.f10_f10.I1850CLM45BGC.yellowstone_intel.clm-default" failType="RUN">Runs out of time. CME_Ly4.f10_f10.I1850CLM45BGC.yellowstone_intel.clm-monthly passes</entry>
++               <entry testId="SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PTCLM45.yellowstone_pgi.clm-USUMB" failType="FAIL" bugz="1825"> Needs new surface dataset</entry>
+
+
+CLM testing:
+
+NOTE: main tests were done with
+dynlu_allocate_memory_n11_fix_cndv_time_averages_n01_clm4_5_41; tools tests with
+dynlu_allocate_memory_n12_clm4_5_42; build-namelist tests with a slightly older
+tag
+
+  build-namelist tests:
+
+    yellowstone: OK. However, the "correct" comparisons are spurious, because I
+    think the build-namelist test is broken
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+
+  tools testing:
+
+    yellowstone interactive: OK
+
+   *** Expected failures
+   027 smiS4 TSMscript_tools.sh shared ncl_scripts getregional_datasets.pl getregional .............\c
+    rc=6 FAIL
+   028 bliS4 TBLscript_tools.sh shared ncl_scripts getregional_datasets.pl getregional .............\c
+    rc=4 FAIL
+
+
+   *** Expected baseline failure (uses new input & output file, and there is a non-bfb change in interpinic)
+   016 blh54 TBLtools.sh clm4_5 interpinic tools__ds runoptions ....................................\c
+    rc=7 FAIL
+
+   *** Expected diffs in PCT_SAND, PCT_CLAY, SOIL_COLOR
+   012 blg54 TBLtools.sh clm4_5 mksurfdata_map tools__s namelist ...................................\c
+    rc=7 FAIL
+   020 bli24 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds \c
+    rc=7 FAIL
+   022 bli53 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__o ....\c
+    rc=7 FAIL
+   024 bli54 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__ds ...\c
+    rc=7 FAIL
+   026 bli57 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__do ...\c
+    rc=7 FAIL
+
+   *** Expected diffs in urban fields
+   030 bli74 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools_\c
+    rc=7 FAIL
+   032 bliT4 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp24_2000^tools_\c
+    rc=7 FAIL
+
+
+CLM tag used for the baseline comparisons: clm4_5_42
+
+Changes answers relative to baseline: NO - but see note below:
+
+   NOTE: This tag has the potential to change answers for cases using initial
+   conditions that were interpinic'ed using the out-of-the-box interpinic,
+   because of bugs in interpinic. This applies to CLM4.5 cases @ ne30 and hcru
+   resolutions, as well as CLM4.5 cases using DV @ f09. However, no diffs showed
+   up in the test suite, so it's possible that this isn't a problem.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_42
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date: Mon Nov  4 09:45:36 MST 2013

@@ -10,7 +10,7 @@ module clm_initializeMod
   use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, &
                                create_glacier_mec_landunit, iulog, use_lch4, use_cn, &
                                use_cndv
-  use clm_varsur      , only : wt_lunit, wt_nat_pft, wt_cft, wt_glc_mec, topo_glc_mec
+  use clm_varsur      , only : wt_lunit, urban_valid, wt_nat_pft, wt_cft, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
   use ncdio_pio
@@ -164,9 +164,10 @@ contains
 
     ! Allocate surface grid dynamic memory (just gridcell bounds dependent)
 
-    allocate (wt_lunit  (begg:endg, max_lunit))
-    allocate (wt_nat_pft(begg:endg, natpft_lb:natpft_ub))
-    allocate (wt_cft    (begg:endg, cft_lb:cft_ub))
+    allocate (wt_lunit   (begg:endg, max_lunit))
+    allocate (urban_valid(begg:endg))
+    allocate (wt_nat_pft (begg:endg, natpft_lb:natpft_ub))
+    allocate (wt_cft     (begg:endg, cft_lb:cft_ub))
     if (create_glacier_mec_landunit) then
        allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
        allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
@@ -239,7 +240,7 @@ contains
 
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere
     ! Note that wt_lunit is kept until the end of initialize2 so we can do some
-    ! consistency checking. 
+    ! consistency checking; urban_valid is kept through the end of the run for error checking. 
 
     deallocate (wt_nat_pft, wt_cft, wt_glc_mec, topo_glc_mec)
 

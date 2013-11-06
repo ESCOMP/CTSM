@@ -528,11 +528,11 @@ program mksurfdat
     ! Make soil texture [pctsand, pctclay]  [fsoitex]
 
     call mksoiltex (ldomain, mapfname=map_fsoitex, datfname=mksrf_fsoitex, &
-         ndiag=ndiag, pctglac_o=pctgla, sand_o=pctsand, clay_o=pctclay)
+         ndiag=ndiag, sand_o=pctsand, clay_o=pctclay)
     ! Make soil color classes [soicol] [fsoicol]
 
     call mksoilcol (ldomain, mapfname=map_fsoicol, datfname=mksrf_fsoicol, &
-         ndiag=ndiag, pctglac_o=pctgla, soil_color_o=soicol, nsoicol=nsoicol)
+         ndiag=ndiag, soil_color_o=soicol, nsoicol=nsoicol)
 
     ! Make fmax [fmax] from [fmax] dataset
 
@@ -965,18 +965,11 @@ program mksurfdat
     ! ----------------------------------------------------------------------
     ! Make Urban Parameters from raw input data and write to surface dataset 
     ! Write to netcdf file is done inside mkurbanpar routine
-    ! Only call this routine if pcturb is greater than zero somewhere.  Raw urban
-    ! datasets will have no associated parameter fields if there is no urban 
-    ! (e.g., mksrf_urban.060929.nc).
     ! ----------------------------------------------------------------------
 
     write(6,*)'calling mkurbanpar'
-    if (any(pcturb > 0._r8)) then
-       call mkurbanpar(datfname=mksrf_furban, ncido=ncid, region_o=urban_region, &
-                       urbn_classes_gcell_o=urbn_classes_g)
-    else
-       write(6,*) 'PCT_URBAN is zero everywhere, no urban parameter fields will be created'
-    end if
+    call mkurbanpar(datfname=mksrf_furban, ncido=ncid, region_o=urban_region, &
+         urbn_classes_gcell_o=urbn_classes_g)
 
     ! ----------------------------------------------------------------------
     ! Make LAI and SAI from 1/2 degree data and write to surface dataset 
@@ -1261,9 +1254,6 @@ subroutine change_landuse( ldomain, dynpft )
              ef1_shr(n)     = 0._r8
              ef1_grs(n)     = 0._r8
              ef1_crp(n)     = 0._r8
-             soicol(n)      = 0
-             pctsand(n,:)   = 0._r8
-             pctclay(n,:)   = 0._r8
           end if
        end if
 

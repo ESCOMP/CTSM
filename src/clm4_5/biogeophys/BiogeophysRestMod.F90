@@ -94,7 +94,7 @@ contains
     call get_proc_global(numg_global, numl_global, numc_global, nump_global)
 
     !
-    ! Read in weights if allocating all vegetation types
+    ! Read in weights
     !
 
     ! pft weight wrt gridcell 

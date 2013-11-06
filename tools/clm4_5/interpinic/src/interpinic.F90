@@ -850,8 +850,8 @@ contains
           nmin    = 0
 
           do n = 1, numcols
+             calcmin = .false.
              if (wti(n) > 0.0_r8) then
-                calcmin = .false.
                 if (typei_urb(n) == nonurbcol) then
                    if (typei(n) == typeo(no)) calcmin = .true.
                 else

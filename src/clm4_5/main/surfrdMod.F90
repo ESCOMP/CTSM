@@ -26,6 +26,7 @@ module surfrdMod
   public :: surfrd_get_topo      ! Read grid topography into domain (after domain decomp)
   public :: surfrd_get_data      ! Read surface dataset and determine subgrid weights
   public :: surfrd_check_sums_equal_1  ! Confirm that sum(arr(n,:)) == 1 for all n
+  public :: surfrd_check_urban   ! Check validity of urban points
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: surfrd_special
@@ -545,10 +546,9 @@ contains
     ! as soil color and percent sand and clay
     !
     ! !USES:
-    use UrbanInputMod , only : urbinp
     use clm_varpar    , only : maxpatch_glcmec, nlevurb
     use clm_varcon    , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice, istice_mec
-    use clm_varsur    , only : wt_lunit, wt_glc_mec, topo_glc_mec, pctspec
+    use clm_varsur    , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec, pctspec
     !
     ! !ARGUMENTS:
     implicit none
@@ -563,18 +563,18 @@ contains
     logical  :: found                      ! temporary for error check
     integer  :: nindx                      ! temporary for error check
     integer  :: ier                        ! error status
-    integer  :: nlev                       ! level
     logical  :: readvar
     real(r8),pointer :: pctgla(:)      ! percent of grid cell is glacier
     real(r8),pointer :: pctlak(:)      ! percent of grid cell is lake
     real(r8),pointer :: pctwet(:)      ! percent of grid cell is wetland
-    real(r8),pointer :: pcturb(:,:)      ! percent of grid cell is urbanized
+    real(r8),pointer :: pcturb(:,:)    ! percent of grid cell is urbanized
+    integer ,pointer :: urban_region_id(:)
     real(r8),pointer :: pctglc_mec_tot(:) ! percent of grid cell is glacier (sum over classes)
     real(r8),pointer :: pcturb_tot(:)  ! percent of grid cell is urban (sum over density classes)
     integer  :: dens_index             ! urban density index
-    integer  :: dindx                      ! temporary for error check
     character(len=32) :: subname = 'surfrd_special'  ! subroutine name
     real(r8) closelat,closelon
+    integer, parameter :: urban_invalid_region = 0   ! urban_region_id indicating invalid point
 !-----------------------------------------------------------------------
 
     allocate(pctgla(begg:endg))
@@ -582,6 +582,7 @@ contains
     allocate(pctwet(begg:endg))
     allocate(pcturb(begg:endg,numurbl))
     allocate(pcturb_tot(begg:endg))
+    allocate(urban_region_id(begg:endg))
     allocate(pctglc_mec_tot(begg:endg))
 
     call check_dim(ncid, 'nlevsoi', nlevsoifl)
@@ -600,14 +601,25 @@ contains
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_GLACIER NOT on surfdata file' )
 
-    ! If PCT_URBAN is not multi-density then set pcturb and nlevurb to zero 
+    ! Read urban info
     if (nlevurb == 0) then
+      ! If PCT_URBAN is not multi-density then set pcturb to zero 
       pcturb = 0._r8
+      urban_valid(begg:endg) = .false.
       write(iulog,*)'PCT_URBAN is not multi-density, pcturb set to 0'
     else
       call ncd_io(ncid=ncid, varname='PCT_URBAN'  , flag='read', data=pcturb, &
            dim1name=grlnd, readvar=readvar)
       if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on surfdata file' )
+
+      call ncd_io(ncid=ncid, varname='URBAN_REGION_ID', flag='read', data=urban_region_id, &
+           dim1name=grlnd, readvar=readvar)
+      if (.not. readvar) call endrun( trim(subname)// ' ERROR: URBAN_REGION_ID NOT on surfdata file' )
+      where (urban_region_id == urban_invalid_region)
+         urban_valid = .false.
+      elsewhere
+         urban_valid = .true.
+      end where
     end if
     if ( nlevurb == 0 )then
        if ( any(pcturb > 0.0_r8) ) call endrun( trim(subname)//' ERROR: PCT_URBAN MUST be zero when nlevurb=0' )
@@ -687,94 +699,9 @@ contains
 
     end do
 
-    ! Check to make sure we have valid urban data for each urban patch
+    call surfrd_check_urban(begg, endg, pcturb(begg:endg,:), subname)
 
-    found = .false.
-    do nl = begg,endg
-      do n = 1, numurbl
-        if ( pcturb(nl,n) > 0.0_r8 ) then
-          if (urbinp%canyon_hwr(nl,n)            .le. 0._r8 .or. &
-              urbinp%em_improad(nl,n)            .le. 0._r8 .or. &
-              urbinp%em_perroad(nl,n)            .le. 0._r8 .or. &
-              urbinp%em_roof(nl,n)               .le. 0._r8 .or. &
-              urbinp%em_wall(nl,n)               .le. 0._r8 .or. &
-              urbinp%ht_roof(nl,n)               .le. 0._r8 .or. &
-              urbinp%thick_roof(nl,n)            .le. 0._r8 .or. &
-              urbinp%thick_wall(nl,n)            .le. 0._r8 .or. &
-              urbinp%t_building_max(nl,n)        .le. 0._r8 .or. &
-              urbinp%t_building_min(nl,n)        .le. 0._r8 .or. &
-              urbinp%wind_hgt_canyon(nl,n)       .le. 0._r8 .or. &
-              urbinp%wtlunit_roof(nl,n)          .le. 0._r8 .or. &
-              urbinp%wtroad_perv(nl,n)           .le. 0._r8 .or. &
-              any(urbinp%alb_improad_dir(nl,n,:) .le. 0._r8) .or. &
-              any(urbinp%alb_improad_dif(nl,n,:) .le. 0._r8) .or. &
-              any(urbinp%alb_perroad_dir(nl,n,:) .le. 0._r8) .or. &
-              any(urbinp%alb_perroad_dif(nl,n,:) .le. 0._r8) .or. &
-              any(urbinp%alb_roof_dir(nl,n,:)    .le. 0._r8) .or. &
-              any(urbinp%alb_roof_dif(nl,n,:)    .le. 0._r8) .or. &
-              any(urbinp%alb_wall_dir(nl,n,:)    .le. 0._r8) .or. &
-              any(urbinp%alb_wall_dif(nl,n,:)    .le. 0._r8) .or. &
-              any(urbinp%tk_roof(nl,n,:)         .le. 0._r8) .or. &
-              any(urbinp%tk_wall(nl,n,:)         .le. 0._r8) .or. &
-              any(urbinp%cv_roof(nl,n,:)         .le. 0._r8) .or. &
-              any(urbinp%cv_wall(nl,n,:)         .le. 0._r8)) then
-            found = .true.
-            nindx = nl
-            dindx = n
-            exit
-          else
-            if (urbinp%nlev_improad(nl,n) .gt. 0) then
-               nlev = urbinp%nlev_improad(nl,n)
-               if (any(urbinp%tk_improad(nl,n,1:nlev) .le. 0._r8) .or. &
-                   any(urbinp%cv_improad(nl,n,1:nlev) .le. 0._r8)) then
-                  found = .true.
-                  nindx = nl
-                  dindx = n
-                  exit
-               end if
-            end if
-          end if
-          if (found) exit
-        end if
-      end do
-    end do
-    if ( found ) then
-       write(iulog,*)'surfrd error: no valid urban data for nl=',nindx
-       write(iulog,*)'density type:    ',dindx
-       write(iulog,*)'canyon_hwr:      ',urbinp%canyon_hwr(nindx,dindx)
-       write(iulog,*)'em_improad:      ',urbinp%em_improad(nindx,dindx)
-       write(iulog,*)'em_perroad:      ',urbinp%em_perroad(nindx,dindx)
-       write(iulog,*)'em_roof:         ',urbinp%em_roof(nindx,dindx)
-       write(iulog,*)'em_wall:         ',urbinp%em_wall(nindx,dindx)
-       write(iulog,*)'ht_roof:         ',urbinp%ht_roof(nindx,dindx)
-       write(iulog,*)'thick_roof:      ',urbinp%thick_roof(nindx,dindx)
-       write(iulog,*)'thick_wall:      ',urbinp%thick_wall(nindx,dindx)
-       write(iulog,*)'t_building_max:  ',urbinp%t_building_max(nindx,dindx)
-       write(iulog,*)'t_building_min:  ',urbinp%t_building_min(nindx,dindx)
-       write(iulog,*)'wind_hgt_canyon: ',urbinp%wind_hgt_canyon(nindx,dindx)
-       write(iulog,*)'wtlunit_roof:    ',urbinp%wtlunit_roof(nindx,dindx)
-       write(iulog,*)'wtroad_perv:     ',urbinp%wtroad_perv(nindx,dindx)
-       write(iulog,*)'alb_improad_dir: ',urbinp%alb_improad_dir(nindx,dindx,:)
-       write(iulog,*)'alb_improad_dif: ',urbinp%alb_improad_dif(nindx,dindx,:)
-       write(iulog,*)'alb_perroad_dir: ',urbinp%alb_perroad_dir(nindx,dindx,:)
-       write(iulog,*)'alb_perroad_dif: ',urbinp%alb_perroad_dif(nindx,dindx,:)
-       write(iulog,*)'alb_roof_dir:    ',urbinp%alb_roof_dir(nindx,dindx,:)
-       write(iulog,*)'alb_roof_dif:    ',urbinp%alb_roof_dif(nindx,dindx,:)
-       write(iulog,*)'alb_wall_dir:    ',urbinp%alb_wall_dir(nindx,dindx,:)
-       write(iulog,*)'alb_wall_dif:    ',urbinp%alb_wall_dif(nindx,dindx,:)
-       write(iulog,*)'tk_roof:         ',urbinp%tk_roof(nindx,dindx,:)
-       write(iulog,*)'tk_wall:         ',urbinp%tk_wall(nindx,dindx,:)
-       write(iulog,*)'cv_roof:         ',urbinp%cv_roof(nindx,dindx,:)
-       write(iulog,*)'cv_wall:         ',urbinp%cv_wall(nindx,dindx,:)
-       if (urbinp%nlev_improad(nindx,dindx) .gt. 0) then
-          nlev = urbinp%nlev_improad(nindx,dindx)
-          write(iulog,*)'tk_improad: ',urbinp%tk_improad(nindx,dindx,1:nlev)
-          write(iulog,*)'cv_improad: ',urbinp%cv_improad(nindx,dindx,1:nlev)
-       end if
-       call endrun()
-    end if
-
-    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,pctglc_mec_tot)
+    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,urban_region_id,pctglc_mec_tot)
 
   end subroutine surfrd_special
 
@@ -962,5 +889,130 @@ contains
     end if
 
   end subroutine surfrd_check_sums_equal_1
+
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: surfrd_check_urban
+!
+! !INTERFACE:
+  subroutine surfrd_check_urban(begg, endg, pcturb, caller)
+!
+! !DESCRIPTION:
+! Confirm that we have valid urban data for all points with pct urban > 0. If this isn't
+! true, abort with a message.
+!
+! !USES:
+    use clm_varsur, only : urban_valid
+    use UrbanInputMod , only : urbinp
+!
+! !ARGUMENTS:
+    implicit none
+    integer         , intent(in) :: begg, endg           ! beg & end grid cell indices
+    real(r8)        , intent(in) :: pcturb(begg:,:)      ! % urban
+    character(len=*), intent(in) :: caller               ! identifier of caller, for more meaningful error messages
+!
+! !REVISION HISTORY:
+! Created by Bill Sacks 7/2013, mostly by moving code from surfrd_special
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    logical :: found
+    integer :: nl, n
+    integer :: nindx, dindx
+    integer :: nlev
+!-----------------------------------------------------------------------
+
+
+    found = .false.
+    do nl = begg,endg
+       do n = 1, numurbl
+          if ( pcturb(nl,n) > 0.0_r8 ) then
+             if ( .not. urban_valid(nl) .or. &
+                  urbinp%canyon_hwr(nl,n)            .le. 0._r8 .or. &
+                  urbinp%em_improad(nl,n)            .le. 0._r8 .or. &
+                  urbinp%em_perroad(nl,n)            .le. 0._r8 .or. &
+                  urbinp%em_roof(nl,n)               .le. 0._r8 .or. &
+                  urbinp%em_wall(nl,n)               .le. 0._r8 .or. &
+                  urbinp%ht_roof(nl,n)               .le. 0._r8 .or. &
+                  urbinp%thick_roof(nl,n)            .le. 0._r8 .or. &
+                  urbinp%thick_wall(nl,n)            .le. 0._r8 .or. &
+                  urbinp%t_building_max(nl,n)        .le. 0._r8 .or. &
+                  urbinp%t_building_min(nl,n)        .le. 0._r8 .or. &
+                  urbinp%wind_hgt_canyon(nl,n)       .le. 0._r8 .or. &
+                  urbinp%wtlunit_roof(nl,n)          .le. 0._r8 .or. &
+                  urbinp%wtroad_perv(nl,n)           .le. 0._r8 .or. &
+                  any(urbinp%alb_improad_dir(nl,n,:) .le. 0._r8) .or. &
+                  any(urbinp%alb_improad_dif(nl,n,:) .le. 0._r8) .or. &
+                  any(urbinp%alb_perroad_dir(nl,n,:) .le. 0._r8) .or. &
+                  any(urbinp%alb_perroad_dif(nl,n,:) .le. 0._r8) .or. &
+                  any(urbinp%alb_roof_dir(nl,n,:)    .le. 0._r8) .or. &
+                  any(urbinp%alb_roof_dif(nl,n,:)    .le. 0._r8) .or. &
+                  any(urbinp%alb_wall_dir(nl,n,:)    .le. 0._r8) .or. &
+                  any(urbinp%alb_wall_dif(nl,n,:)    .le. 0._r8) .or. &
+                  any(urbinp%tk_roof(nl,n,:)         .le. 0._r8) .or. &
+                  any(urbinp%tk_wall(nl,n,:)         .le. 0._r8) .or. &
+                  any(urbinp%cv_roof(nl,n,:)         .le. 0._r8) .or. &
+                  any(urbinp%cv_wall(nl,n,:)         .le. 0._r8)) then
+                found = .true.
+                nindx = nl
+                dindx = n
+                exit
+             else
+                if (urbinp%nlev_improad(nl,n) .gt. 0) then
+                   nlev = urbinp%nlev_improad(nl,n)
+                   if ( any(urbinp%tk_improad(nl,n,1:nlev) .le. 0._r8) .or. &
+                        any(urbinp%cv_improad(nl,n,1:nlev) .le. 0._r8)) then
+                      found = .true.
+                      nindx = nl
+                      dindx = n
+                      exit
+                   end if
+                end if
+             end if
+             if (found) exit
+          end if
+       end do
+    end do
+    if ( found ) then
+       write(iulog,*) trim(caller), ' ERROR: no valid urban data for nl=',nindx
+       write(iulog,*)'density type:    ',dindx
+       write(iulog,*)'urban_valid:     ',urban_valid(nindx)
+       write(iulog,*)'canyon_hwr:      ',urbinp%canyon_hwr(nindx,dindx)
+       write(iulog,*)'em_improad:      ',urbinp%em_improad(nindx,dindx)
+       write(iulog,*)'em_perroad:      ',urbinp%em_perroad(nindx,dindx)
+       write(iulog,*)'em_roof:         ',urbinp%em_roof(nindx,dindx)
+       write(iulog,*)'em_wall:         ',urbinp%em_wall(nindx,dindx)
+       write(iulog,*)'ht_roof:         ',urbinp%ht_roof(nindx,dindx)
+       write(iulog,*)'thick_roof:      ',urbinp%thick_roof(nindx,dindx)
+       write(iulog,*)'thick_wall:      ',urbinp%thick_wall(nindx,dindx)
+       write(iulog,*)'t_building_max:  ',urbinp%t_building_max(nindx,dindx)
+       write(iulog,*)'t_building_min:  ',urbinp%t_building_min(nindx,dindx)
+       write(iulog,*)'wind_hgt_canyon: ',urbinp%wind_hgt_canyon(nindx,dindx)
+       write(iulog,*)'wtlunit_roof:    ',urbinp%wtlunit_roof(nindx,dindx)
+       write(iulog,*)'wtroad_perv:     ',urbinp%wtroad_perv(nindx,dindx)
+       write(iulog,*)'alb_improad_dir: ',urbinp%alb_improad_dir(nindx,dindx,:)
+       write(iulog,*)'alb_improad_dif: ',urbinp%alb_improad_dif(nindx,dindx,:)
+       write(iulog,*)'alb_perroad_dir: ',urbinp%alb_perroad_dir(nindx,dindx,:)
+       write(iulog,*)'alb_perroad_dif: ',urbinp%alb_perroad_dif(nindx,dindx,:)
+       write(iulog,*)'alb_roof_dir:    ',urbinp%alb_roof_dir(nindx,dindx,:)
+       write(iulog,*)'alb_roof_dif:    ',urbinp%alb_roof_dif(nindx,dindx,:)
+       write(iulog,*)'alb_wall_dir:    ',urbinp%alb_wall_dir(nindx,dindx,:)
+       write(iulog,*)'alb_wall_dif:    ',urbinp%alb_wall_dif(nindx,dindx,:)
+       write(iulog,*)'tk_roof:         ',urbinp%tk_roof(nindx,dindx,:)
+       write(iulog,*)'tk_wall:         ',urbinp%tk_wall(nindx,dindx,:)
+       write(iulog,*)'cv_roof:         ',urbinp%cv_roof(nindx,dindx,:)
+       write(iulog,*)'cv_wall:         ',urbinp%cv_wall(nindx,dindx,:)
+       if (urbinp%nlev_improad(nindx,dindx) .gt. 0) then
+          nlev = urbinp%nlev_improad(nindx,dindx)
+          write(iulog,*)'tk_improad: ',urbinp%tk_improad(nindx,dindx,1:nlev)
+          write(iulog,*)'cv_improad: ',urbinp%cv_improad(nindx,dindx,1:nlev)
+       end if
+       call endrun()
+    end if
+
+  end subroutine surfrd_check_urban
 
 end module surfrdMod

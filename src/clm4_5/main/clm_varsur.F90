@@ -16,6 +16,9 @@ module clm_varsur
   ! weight of each landunit on the grid cell
   real(r8), pointer :: wt_lunit(:,:)     
 
+  ! whether we have valid urban data in each grid cell
+  logical , pointer :: urban_valid(:)
+
   ! for natural veg landunit, weight of each pft on the landunit (adds to 1.0 on the
   ! landunit for all all grid cells, even! those without any natural pft)
   ! (second dimension goes natpft_lb:natpft_ub)

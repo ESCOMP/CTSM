@@ -348,8 +348,9 @@ contains
     ! Snow balance check
 
     do c = bounds%begc,bounds%endc
-       g = cgridcell(c)
-       l = clandunit(c)
+       if (cactive(c)) then
+          g = cgridcell(c)
+          l = clandunit(c)
           ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at 
           ! any given time step but only if there is at least one snow layer.  h2osno 
           ! also includes snow that is part of the soil column (an initial snow layer is 
@@ -357,13 +358,13 @@ contains
           if (snl(c) .lt. 0) then
              snow_sources(c) = qflx_prec_grnd(c) + qflx_dew_snow(c) + qflx_dew_grnd(c)
              snow_sinks(c)   = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_snow_melt(c) &
-                               + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) + qflx_sl_top_soil(c)
+                  + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) + qflx_sl_top_soil(c)
 
              if (ltype(l) == istdlak) then 
                 if ( do_capsnow(c) ) then
                    snow_sources(c) = qflx_snow_grnd_col(c) &
                         + frac_sno_eff(c) * (qflx_dew_snow(c) + qflx_dew_grnd(c) ) 
-                   
+
                    snow_sinks(c)   = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c) ) &
                         + (qflx_snwcp_ice(c) + qflx_snwcp_liq(c) - qflx_prec_grnd(c))  &
                         + qflx_snow_melt(c)  + qflx_sl_top_soil(c)
@@ -371,24 +372,24 @@ contains
                    snow_sources(c) = qflx_snow_grnd_col(c) &
                         + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
                         +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) 
-                   
+
                    snow_sinks(c)   = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c) ) &
                         + qflx_snow_melt(c)  + qflx_sl_top_soil(c)
                 endif
              endif
 
              if (ltype(l) == istsoil .or. ltype(l) == istcrop .or. ltype(l) == istwet ) then
-                 if ( do_capsnow(c) ) then
-                    snow_sources(c) = frac_sno_eff(c) * (qflx_dew_snow(c) + qflx_dew_grnd(c) ) &
-                         + qflx_h2osfc_to_ice(c) + qflx_prec_grnd(c)
+                if ( do_capsnow(c) ) then
+                   snow_sources(c) = frac_sno_eff(c) * (qflx_dew_snow(c) + qflx_dew_grnd(c) ) &
+                        + qflx_h2osfc_to_ice(c) + qflx_prec_grnd(c)
 
-                    snow_sinks(c)   = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c)) &
-                         + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
-                         + qflx_snow_melt(c) + qflx_sl_top_soil(c)
-                 else
-                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
-                         + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
-                         +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) + qflx_h2osfc_to_ice(c)
+                   snow_sinks(c)   = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c)) &
+                        + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
+                        + qflx_snow_melt(c) + qflx_sl_top_soil(c)
+                else
+                   snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
+                        + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
+                        +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) + qflx_h2osfc_to_ice(c)
 
                    snow_sinks(c)   = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c)) &
                         + qflx_snow_melt(c) + qflx_sl_top_soil(c)
@@ -407,13 +408,17 @@ contains
              snow_sinks(c) = 0._r8
              errh2osno(c) = 0._r8
           end if
+
+       end if
     end do
 
     found = .false.
     do c = bounds%begc,bounds%endc
-       if (cactive(c) .and. abs(errh2osno(c)) > 1.0e-7_r8) then
-          found = .true.
-          indexc = c
+       if (cactive(c)) then
+          if (abs(errh2osno(c)) > 1.0e-7_r8) then
+             found = .true.
+             indexc = c
+          end if
        end if
     end do
     if ( found ) then
