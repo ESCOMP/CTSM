@@ -1,4 +1,124 @@
 ===============================================================
+Tag name:  clm4_5_44
+Originator(s):  sacks (sacks)
+Date: Fri Nov  8 08:19:56 MST 2013
+One-line Summary: temporary hack to daylength initialization to provide baselines for the next tag
+
+Purpose of changes:
+
+   The next tag (clm4_5_45) involves a major refactor to the daylength
+   calculation. That refactor is bfb in most respects, but gives differences in
+   the first time step in a few situations.
+
+   This tag (clm4_5_44) does the minimal changes needed to get the same results
+   as clm4_5_45, in order to have more confidence when testing clm4_5_45. 
+
+   Note that the changes here are a kludge that will be reverted in clm4_5_45.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+   1850 (incorrect daylength in first timestep of some runs)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: OK
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+    There were a number of expected compare_hist failures, as described below.
+
+    There was one unexpected compare_hist failure:
+    FAIL  PET_P15x2_Lm25.f10_f10.ICLM45BGCDVCROP.yellowstone_intel.clm-reduceOutput.GC.145424.compare_hist.clm4_5_43 
+
+    Diffs are just in voc cpl fields. CLM hist files are identical at the end of
+    the run. An SMS version of this test passes. Interestingly, the kludgey code
+    that I have added for clm4_5_44 isn't even executed in this test... so the
+    only diffs should be in variable declarations and 'use' statements. And
+    clm4_5_45 (which I will tag soon) gives identical cpl hist files to
+    clm4_5_43. So there may just be a compiler fluke in the compilation of this
+    tag with openmp enabled. Because clm4_5_45 will give identical results to
+    clm4_5_43, I'm not worrying about this.
+
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+
+    A number of expected compare_hist failures, as described below.
+
+CLM tag used for the baseline comparisons: clm4_5_43
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45 with BGC (and probably CN), involving
+      either (a) initial conditions interpolated from a different resolution, or
+      (b) a change in start date relative to the ref date of an initial file
+      (which shows up in ERI tests) - see bug 1850
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+        Not investigated carefully, but almost certainly larger than
+        roundoff/same climate, since this code mod just changes things in the
+        first timestep.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_43
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date: Wed Nov  6 09:21:25 MST 2013

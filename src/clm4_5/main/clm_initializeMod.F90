@@ -267,6 +267,8 @@ contains
     ! o Initializes accumulation variables.
     !
     ! !USES:
+    use clmtype
+    use clm_varcon            , only : istsoil, istcrop
     use clm_atmlnd            , only : clm_map2gcell_minimal
     use clm_glclnd            , only : update_clm_s2x
     use clm_varctl            , only : finidat, fpftdyn
@@ -309,6 +311,8 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: nl,na,nag             ! indices
     integer  :: i,j,k                 ! indices
+    integer  :: p,c,l
+    logical  :: dayl_set
     integer  :: yr                    ! current year (0, ...)
     integer  :: mon                   ! current month (1 -> 12)
     integer  :: day                   ! current day (1 -> 31)
@@ -325,6 +329,8 @@ contains
     real(r8) :: declin                ! solar declination angle in radians for nstep
     real(r8) :: declinm1              ! solar declination angle in radians for nstep-1
     real(r8) :: eccf                  ! earth orbit eccentricity factor
+    real(r8):: lat           ! latitude (radians) for daylength calculation
+    real(r8):: temp          ! temporary variable for daylength
     type(bounds_type) :: bounds_proc  ! processor bounds
     type(bounds_type) :: bounds_clump ! clump bounds
     character(len=32) :: subname = 'initialize2' ! subroutine name
@@ -598,6 +604,8 @@ contains
     endif
     call t_stopf('init_wlog')
 
+    dayl_set = .false.
+
     if (get_nstep() == 0 .or. nsrest == nsrStartup) then
        ! Initialize albedos (correct pft filters are needed)
 
@@ -616,6 +624,7 @@ contains
           
           call t_startf('init_orbSA')
           call initSurfAlb( calday, declin, declinm1 )
+          dayl_set = .true.
           call t_stopf('init_orbSA')
           call t_stopf('init_orb')
        else if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
@@ -630,7 +639,54 @@ contains
        call clm_map2gcell_minimal(bounds_proc)
        call t_stopf('init_map2gc')
 
-    end if
+    end  if
+    
+    if (use_cn .and. .not. dayl_set) then
+       ! Kludgey, temporary fix to initialize dayl & prev_dayl appropriately. This is
+       ! needed so that values will be correct in the first time step when we're starting
+       ! up from interpinic'ed initial conditions, but it shouldn't hurt to do this in
+       ! other cases (e.g., for continue runs). Note that this will soon be replaced by a
+       ! more robust refactoring of the daylength calculations, so I am just putting in
+       ! place a kludgey fix for now.
+
+       ! The following is copied from above
+       calday = get_curr_calday()
+       call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
+       dtime = get_step_size()
+       caldaym1 = get_curr_calday(offset=-int(dtime))
+       call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
+
+       ! The following is copied from initSurfAlbMod
+
+       ! declination for previous timestep
+       do c = bounds_proc%begc, bounds_proc%endc
+          l = col%landunit(c)
+          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+             cps%decl(c) = declinm1
+          end if
+       end do
+
+       ! daylength for previous timestep
+       do p = bounds_proc%begp, bounds_proc%endp
+          c = pft%column(p)
+          l = pft%landunit(p)
+          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+             lat = grc%latdeg(pft%gridcell(p)) * SHR_CONST_PI / 180._r8
+             temp = -(sin(lat)*sin(cps%decl(c)))/(cos(lat) * cos(cps%decl(c)))
+             temp = min(1._r8,max(-1._r8,temp))
+             pepv%dayl(p) = 2.0_r8 * 13750.9871_r8 * acos(temp) 
+          end if
+       end do
+
+       ! declination for current timestep
+       do c = bounds_proc%begc, bounds_proc%endc
+          l = col%landunit(c)
+          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+             cps%decl(c) = declin
+          end if
+       end do
+
+    end if  ! .not. dayl_set
 
     ! Initialize sno export state
     if (create_glacier_mec_landunit) then
