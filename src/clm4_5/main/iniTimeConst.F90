@@ -57,6 +57,7 @@ subroutine iniTimeConst(bounds)
   use CNDecompCascadeCNMod , only : init_decompcascade_cn
   use CNDecompCascadeBGCMod, only : init_decompcascade_bgc
   use CNSharedParamsMod    , only : CNParamsShareInst
+  use DaylengthMod         , only : daylength
   !
   ! !ARGUMENTS:
   implicit none
@@ -76,7 +77,7 @@ subroutine iniTimeConst(bounds)
   real(r8) , pointer :: dzsoifl (:)   ! Output: [real(r8) (:)]  original soil thickness 
   real(r8) :: clay,sand        ! temporaries
   real(r8) :: slope,intercept  ! temporary, for rooting distribution
-  real(r8) :: temp, max_decl   ! temporary, for calculation of max_dayl
+  real(r8) :: max_decl         ! temporary, for calculation of max_dayl
   integer  :: ivic,ivicstrt,ivicend  ! indices
   real(r8) ,pointer :: b2d (:)          ! read in - VIC b  
   real(r8) ,pointer :: ds2d (:)         ! read in - VIC Ds 
@@ -216,7 +217,7 @@ subroutine iniTimeConst(bounds)
    abm_lf                              =>    cps%abm_lf                                  , & ! Output: [integer (:)]  global abm data                                    
    gwc_thr                             =>    cps%gwc_thr                                 , & ! Output: [real(r8) (:)]  threshold soil moisture based on clay content     
    mss_frc_cly_vld                     =>    cps%mss_frc_cly_vld                         , & ! Output: [real(r8) (:)]  [frc] Mass fraction clay limited to 0.20          
-   max_dayl                            =>    cps%max_dayl                                , & ! Output: [real(r8) (:)]  maximum daylength (s)                             
+   max_dayl                            =>    gps%max_dayl                                , & ! Output: [real(r8) (:)]  maximum daylength (s)                             
    cellsand                            =>    cps%cellsand                                , & ! Output: [real(r8) (:,:)]  column 3D sand                                  
    cellclay                            =>    cps%cellclay                                , & ! Output: [real(r8) (:,:)]  column 3D clay                                  
    cellorg                             =>    cps%cellorg                                 , & ! Output: [real(r8) (:,:)]  column 3D org content                           
@@ -770,6 +771,13 @@ subroutine iniTimeConst(bounds)
       ! Set gridcell and landunit indices
       efisop(:,g)=efisop2d(:,g)
 
+      ! initialize maximum daylength, based on latitude and maximum declination
+      ! maximum declination hardwired for present-day orbital parameters, 
+      ! +/- 23.4667 degrees = +/- 0.409571 radians, use negative value for S. Hem
+      max_decl = 0.409571
+      if (grc%lat(g) .lt. 0._r8) max_decl = -max_decl
+      max_dayl(g) = daylength(grc%lat(g), max_decl)
+
    end do
 
 
@@ -786,15 +794,6 @@ subroutine iniTimeConst(bounds)
       g = col%gridcell(c)
       l = col%landunit(c)
       
-      ! initialize maximum daylength, based on latitude and maximum declination
-      ! maximum declination hardwired for present-day orbital parameters, 
-      ! +/- 23.4667 degrees = +/- 0.409571 radians, use negative value for S. Hem
-      max_decl = 0.409571
-      if (grc%lat(g) .lt. 0._r8) max_decl = -max_decl
-      temp = -(sin(grc%lat(g))*sin(max_decl))/(cos(grc%lat(g)) * cos(max_decl))
-      temp = min(1._r8,max(-1._r8,temp))
-      max_dayl(c) = 2.0_r8 * 13750.9871_r8 * acos(temp)
-
       ! Initialize restriction for min of soil potential (mm)
       smpmin(c) = -1.e8_r8
 

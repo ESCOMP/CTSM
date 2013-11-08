@@ -21,7 +21,7 @@ module initSurfalbMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine initSurfalb( calday, declin, declinm1 )
+  subroutine initSurfalb( calday, declin )
     !
     ! !DESCRIPTION:
     ! The variable, h2osoi_vol, is needed by the soil albedo routine - this is not needed
@@ -53,14 +53,11 @@ contains
     implicit none
     real(r8), intent(in) :: calday               ! calendar day for declin
     real(r8), intent(in) :: declin               ! declination angle (radians) for calday
-    real(r8), intent(in), optional :: declinm1   ! declination angle (radians) for caldaym1
     !
     ! !LOCAL VARIABLES:
     integer :: nc,j,l,c,p,fc ! indices
     integer :: nclumps       ! number of clumps on this processor
     integer :: ier           ! MPI return code
-    real(r8):: lat           ! latitude (radians) for daylength calculation
-    real(r8):: temp          ! temporary variable for daylength
     real(r8):: snowbd        ! temporary calculation of snow bulk density (kg/m3)
     real(r8):: fmelt         ! snowbd/100
     type(bounds_type) :: bounds  ! bounds
@@ -84,9 +81,7 @@ contains
    tsai                  =>    pps%tsai                , & ! Output: [real(r8) (:)]  one-sided stem area index, no burying by snow     
    elai                  =>    pps%elai                , & ! Output: [real(r8) (:)]  one-sided leaf area index with burying by snow    
    esai                  =>    pps%esai                , & ! Output: [real(r8) (:)]  one-sided stem area index with burying by snow    
-   fdry                  =>    pps%fdry                , & ! Output: [real(r8) (:)]  fraction of foliage that is green and dry [-] (new)
-   decl                  =>    cps%decl                , & ! Output: [real(r8) (:)]  solar declination angle (radians)                 
-   dayl                  =>    pepv%dayl                 & ! Input:  [real(r8) (:)]  daylength (seconds)                               
+   fdry                  =>    pps%fdry                  & ! Output: [real(r8) (:)]  fraction of foliage that is green and dry [-] (new)
    )
 
     ! ========================================================================
@@ -111,7 +106,7 @@ contains
     nclumps = get_proc_clumps()
 
     ! Loop over clumps on this processor
-    !$OMP PARALLEL DO PRIVATE (nc,p,j,l,c,fc,bounds,lat,temp,snowbd,fmelt)
+    !$OMP PARALLEL DO PRIVATE (nc,p,j,l,c,fc,bounds,snowbd,fmelt)
     do nc = 1,nclumps
 
        ! Determine clump bounds
@@ -172,44 +167,6 @@ contains
        if (use_cn) then
           ! CN initialization is done only on the soil landunits.
           
-          if (.not. present(declinm1)) then
-             write(iulog,*)'declination for the previous timestep (declinm1) must be ',&
-                  ' present as argument in CN mode'
-             call endrun()
-          end if
-          
-          ! it is necessary to initialize the solar declination for the previous
-          ! timestep (caldaym1) so that the CNphenology routines know if this is 
-          ! before or after the summer solstice.
-          
-          ! declination for previous timestep
-          do c = bounds%begc, bounds%endc
-             l = col%landunit(c)
-             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-                decl(c) = declinm1
-             end if
-          end do
-          
-          ! daylength for previous timestep
-          do p = bounds%begp, bounds%endp
-             c = pft%column(p)
-             l = pft%landunit(p)
-             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-                lat = grc%latdeg(pft%gridcell(p)) * SHR_CONST_PI / 180._r8
-                temp = -(sin(lat)*sin(decl(c)))/(cos(lat) * cos(decl(c)))
-                temp = min(1._r8,max(-1._r8,temp))
-                dayl(p) = 2.0_r8 * 13750.9871_r8 * acos(temp) 
-             end if
-          end do
-       
-          ! declination for current timestep
-          do c = bounds%begc, bounds%endc
-             l = col%landunit(c)
-             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-                decl(c) = declin
-             end if
-          end do
-
           call CNEcosystemDynNoLeaching(bounds, &
                filter(nc)%num_soilc, filter(nc)%soilc, &
                filter(nc)%num_soilp, filter(nc)%soilp, &

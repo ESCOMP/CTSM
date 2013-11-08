@@ -416,21 +416,19 @@ contains
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
    !
    ! !LOCAL VARIABLES:
-   integer :: c,p            !indices
+   integer :: g,c,p          !indices
    integer :: fp             !lake filter pft index
    real(r8):: ws_flag        !winter-summer solstice flag (0 or 1)
    real(r8):: crit_onset_gdd !critical onset growing degree-day sum
    real(r8):: soilt
-   real(r8):: lat            !latitude (radians)
-   real(r8):: temp           !temporary variable for daylength calculation
    !-----------------------------------------------------------------------
 
    associate(& 
    ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
    pcolumn                             =>    pft%column                                  , & ! Input:  [integer (:)]  pft's column index                                 
-   pgridcell                           =>    pft%gridcell                                , & ! Input:  [integer (:)]  pft's gridcell index                               
-   latdeg                              =>    grc%latdeg                                  , & ! Input:  [real(r8) (:)]  latitude (radians)                                
-   decl                                =>    cps%decl                                    , & ! Input:  [real(r8) (:)]  solar declination (radians)                       
+   pgridcell                           =>    pft%gridcell                                , & ! Input:  [integer (:)]  pft's gridcell index
+   dayl                                =>    gps%dayl                                    , & ! Input:  [real(r8) (:)]  daylength (s)
+   prev_dayl                           =>    gps%prev_dayl                               , & ! Input:  [real(r8) (:)]  daylength from previous time step (s)
    t_soisno                            =>    ces%t_soisno                                , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
    leafc_storage                       =>    pcs%leafc_storage                           , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C storage                            
    frootc_storage                      =>    pcs%frootc_storage                          , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C storage                       
@@ -455,8 +453,6 @@ contains
    onset_gdd                           =>    pepv%onset_gdd                              , & ! InOut:  [real(r8) (:)]  onset growing degree days                         
    offset_flag                         =>    pepv%offset_flag                            , & ! InOut:  [real(r8) (:)]  offset flag                                       
    offset_counter                      =>    pepv%offset_counter                         , & ! InOut:  [real(r8) (:)]  offset counter (seconds)                          
-   dayl                                =>    pepv%dayl                                   , & ! InOut:  [real(r8) (:)]  daylength (seconds)                               
-   prev_dayl                           =>    pepv%prev_dayl                              , & ! InOut:  [real(r8) (:)]  daylength from previous albedo timestep (seconds) 
    annavg_t2m                          =>    pepv%annavg_t2m                             , & ! InOut:  [real(r8) (:)]  annual average 2m air temperature (K)             
    prev_leafc_to_litter                =>    pepv%prev_leafc_to_litter                   , & ! InOut:  [real(r8) (:)]  previous timestep leaf C litterfall flux (gC/m2/s)
    prev_frootc_to_litter               =>    pepv%prev_frootc_to_litter                  , & ! InOut:  [real(r8) (:)]  previous timestep froot C litterfall flux (gC/m2/s)
@@ -507,6 +503,7 @@ contains
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       c = pcolumn(p)
+      g = pgridcell(p)
 
       if (season_decid(ivt(p)) == 1._r8) then
 
@@ -519,18 +516,8 @@ contains
          ! onset gdd sum from Biome-BGC, v4.1.2
          crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
 
-         ! use solar declination information stored during Surface Albedo()
-         ! and latitude from gps to calcluate daylength (convert latitude from degrees to radians)
-         ! the constant 13750.9871 is the number of seconds per radian of hour-angle
-
-         prev_dayl(p) = dayl(p)
-         lat = (SHR_CONST_PI/180._r8)*grc%latdeg(pgridcell(p))
-         temp = -(sin(lat)*sin(decl(c)))/(cos(lat) * cos(decl(c)))
-         temp = min(1._r8,max(-1._r8,temp))
-         dayl(p) = 2.0_r8 * 13750.9871_r8 * acos(temp)
-
          ! set flag for solstice period (winter->summer = 1, summer->winter = 0)
-         if (dayl(p) >= prev_dayl(p)) then
+         if (dayl(g) >= prev_dayl(g)) then
             ws_flag = 1._r8
          else
             ws_flag = 0._r8
@@ -685,7 +672,7 @@ contains
             end if
 
             ! only begin to test for offset daylength once past the summer sol
-            if (ws_flag == 0._r8 .and. dayl(p) < crit_dayl) then
+            if (ws_flag == 0._r8 .and. dayl(g) < crit_dayl) then
                offset_flag(p) = 1._r8
                offset_counter(p) = ndays_off * secspday
                prev_leafc_to_litter(p) = 0._r8
@@ -725,22 +712,19 @@ contains
    !
    ! !LOCAL VARIABLES:
    real(r8),parameter :: secspqtrday = secspday / 4  ! seconds per quarter day
-   integer :: c,p             ! indices
+   integer :: g,c,p           ! indices
    integer :: fp              ! lake filter pft index
    real(r8):: dayspyr         ! days per year
    real(r8):: crit_onset_gdd  ! degree days for onset trigger
    real(r8):: soilt           ! temperature of top soil layer
    real(r8):: psi             ! water stress of top soil layer
-   real(r8):: lat             !latitude (radians)
-   real(r8):: temp            !temporary variable for daylength calculation
    !-----------------------------------------------------------------------
 
    associate(& 
    ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
    pcolumn                             =>    pft%column                                  , & ! Input:  [integer (:)]  pft's column index                                 
    pgridcell                           =>    pft%gridcell                                , & ! Input:  [integer (:)]  pft's gridcell index                               
-   latdeg                              =>    grc%latdeg                                  , & ! Input:  [real(r8) (:)]  latitude (radians)                                
-   decl                                =>    cps%decl                                    , & ! Input:  [real(r8) (:)]  solar declination (radians)                       
+   dayl                                =>    gps%dayl                                    , & ! Input:  [real(r8) (:)]  daylength (s)
    leafc_storage                       =>    pcs%leafc_storage                           , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C storage                            
    frootc_storage                      =>    pcs%frootc_storage                          , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C storage                       
    livestemc_storage                   =>    pcs%livestemc_storage                       , & ! Input:  [real(r8) (:)]  (gC/m2) live stem C storage                       
@@ -769,7 +753,6 @@ contains
    onset_swi                           =>    pepv%onset_swi                              , & ! InOut:  [real(r8) (:)]  onset soil water index                            
    offset_flag                         =>    pepv%offset_flag                            , & ! InOut:  [real(r8) (:)]  offset flag                                       
    offset_counter                      =>    pepv%offset_counter                         , & ! InOut:  [real(r8) (:)]  offset counter (seconds)                          
-   dayl                                =>    pepv%dayl                                   , & ! InOut:  [real(r8) (:)]  daylength (seconds)                               
    offset_fdd                          =>    pepv%offset_fdd                             , & ! InOut:  [real(r8) (:)]  offset freezing degree days counter               
    offset_swi                          =>    pepv%offset_swi                             , & ! InOut:  [real(r8) (:)]  offset soil water index                           
    annavg_t2m                          =>    pepv%annavg_t2m                             , & ! InOut:  [real(r8) (:)]  annual average 2m air temperature (K)             
@@ -823,19 +806,11 @@ contains
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       c = pcolumn(p)
+      g = pgridcell(p)
 
       if (stress_decid(ivt(p)) == 1._r8) then
          soilt = t_soisno(c,3)
          psi = soilpsi(c,3)
-
-         ! use solar declination information stored during Surface Albedo()
-         ! and latitude from gps to calcluate daylength (convert latitude from degrees to radians)
-         ! the constant 13750.9871 is the number of seconds per radian of hour-angle
-
-         lat = (SHR_CONST_PI/180._r8)*grc%latdeg(pgridcell(p))
-         temp = -(sin(lat)*sin(decl(c)))/(cos(lat) * cos(decl(c)))
-         temp = min(1._r8,max(-1._r8,temp))
-         dayl(p) = 2.0_r8 * 13750.9871_r8 * acos(temp)
 
          ! onset gdd sum from Biome-BGC, v4.1.2
          crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
@@ -953,7 +928,7 @@ contains
             end if
             
             ! only allow onset if dayl > 6hrs
-            if (onset_flag(p) == 1._r8 .and. dayl(p) <= secspqtrday) then
+            if (onset_flag(p) == 1._r8 .and. dayl(g) <= secspqtrday) then
                 onset_flag(p) = 0._r8
             end if
 
@@ -1035,7 +1010,7 @@ contains
             end if
             
             ! force offset if daylength is < 6 hrs
-            if (dayl(p) <= secspqtrday) then
+            if (dayl(g) <= secspqtrday) then
                offset_flag(p) = 1._r8
             end if
 

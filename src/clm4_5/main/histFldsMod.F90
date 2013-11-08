@@ -464,10 +464,6 @@ contains
          avgflag='A', long_name='cosine of solar zenith angle', &
          ptr_col=cps%coszen, default='inactive')
 
-    call hist_addfld1d (fname='DECL', units='radians', &
-         avgflag='A', long_name='solar declination angle', &
-         ptr_col=cps%decl, default='inactive')
-
     ! Surface energy fluxes
 
     call hist_addfld1d (fname='FCTR', units='W/m^2',  &
@@ -5239,11 +5235,11 @@ contains
 
        call hist_addfld1d (fname='DAYL',  units='s', &
             avgflag='A', long_name='daylength', &
-            ptr_pft=pepv%dayl, default='inactive')
+            ptr_gcell=gps%dayl, default='inactive')
 
        call hist_addfld1d (fname='PREV_DAYL', units='s', &
             avgflag='A', long_name='daylength from previous timestep', &
-            ptr_pft=pepv%prev_dayl, default='inactive')
+            ptr_gcell=gps%prev_dayl, default='inactive')
 
        call hist_addfld1d (fname='ANNAVG_T2M', units='K', &
             avgflag='A', long_name='annual average 2m air temperature', &

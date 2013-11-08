@@ -67,6 +67,10 @@ module clm_varctl
   ! Landunit logic
   !
   logical, public :: create_crop_landunit = .false.     ! true => separate crop landunit is not created by default
+  
+  ! Other subgrid logic
+  logical, public :: all_active = .false.          ! true => make ALL pfts, cols & landunits active (even if weight is 0)
+
   !
   ! BGC logic and datasets
   !

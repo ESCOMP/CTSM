@@ -30,7 +30,7 @@ contains
     use clmtype
     use clm_varpar, only : ndecomp_pools, nlevdecomp, crop_prog
     use clm_time_manager, only : is_restart, get_nstep
-    use clm_varcon, only : nlevgrnd
+    use clm_varcon, only : nlevgrnd, dzsoi_decomp
     use clm_varctl, only : use_c13, use_c14, use_vertsoilc, use_nitrif_denitrif, &
                            use_century_decomp, use_cndv, spinup_state
     use clm_varcon, only : c13ratio, c14ratio, spval
@@ -298,30 +298,6 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='bgtr', data=pepv%bgtr, &
-            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
-       if (flag=='read' .and. .not. readvar) then
-  	  if (is_restart()) call endrun
-       end if	
-    end if
-
-    ! dayl
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='dayl', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='dayl', data=pepv%dayl, &
-            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
-       if (flag=='read' .and. .not. readvar) then
-  	  if (is_restart()) call endrun
-       end if	
-    end if
-
-    ! prev_dayl
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='prev_dayl', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='prev_dayl', data=pepv%prev_dayl, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2176,18 +2152,6 @@ contains
     ! column physical state variables
     !--------------------------------
     
-    ! decl
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='decl', xtype=ncd_double,  &
-            dim1name='column',long_name='',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='decl', data=cps%decl, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
-       if (flag=='read' .and. .not. readvar) then
-  	  if (is_restart()) call endrun
-       end if	
-    end if
-
     ! fpi
     call cnrest_addfld_decomp(ncid=ncid, varname='fpi',                        &
                               longname='fraction of potential immobilization', &
@@ -2780,6 +2744,15 @@ contains
           call endrun( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
        end if
     end if
+
+    ! Set the integrated sminn based on sminn_vr, as is done in CNSummaryMod (this may
+    ! not be the most appropriate method or place to do this)
+    cns%sminn(bounds%begc:bounds%endc) = 0._r8
+    do j = 1, nlevdecomp
+       do c = bounds%begc, bounds%endc
+          cns%sminn(c) = cns%sminn(c) + cns%sminn_vr(c,j) * dzsoi_decomp(j)
+       end do
+    end do
 
     ! totcoln
     if (flag == 'define') then

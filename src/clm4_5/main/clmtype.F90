@@ -431,8 +431,6 @@ type, public :: pft_epv_type
    real(r8), pointer :: lgsf(:)                 !long growing season factor [0-1]
    real(r8), pointer :: bglfr(:)                !background litterfall rate (1/s)
    real(r8), pointer :: bgtr(:)                 !background transfer growth rate (1/s)
-   real(r8), pointer :: dayl(:)                 !daylength (seconds)
-   real(r8), pointer :: prev_dayl(:)            !daylength from previous timestep (seconds)
    real(r8), pointer :: annavg_t2m(:)           !annual average 2m air temperature (K)
    real(r8), pointer :: tempavg_t2m(:)          !temporary average 2m air temperature (K)
    real(r8), pointer :: gpp(:)                  !GPP flux before downregulation (gC/m2/s)
@@ -1295,7 +1293,6 @@ type, public :: column_pstate_type
    real(r8), pointer :: wf(:)                 !soil water as frac. of whc for top 0.05 m (0-1) (only comment changed by F. Li and S. Levis)
    real(r8), pointer :: wf2(:)                !soil water as frac. of whc for top 0.17 m (0-1) added by F. Li and S. Levis
 
-   real(r8), pointer :: max_dayl(:)           !maximum daylength for this column (s)
    ! VICHYRDRO
    real(r8), pointer :: b_infil(:)          !b infiltration parameter
    real(r8), pointer :: ds(:)               !fracton of Dsmax where non-linear baseflow begins
@@ -1310,7 +1307,6 @@ type, public :: column_pstate_type
    real(r8), pointer :: max_moist(:,:)      !max layer moist + ice (mm)
    real(r8), pointer :: vic_clm_fract(:,:,:)!fraction of VIC layers in CLM layers
    ! new variables for CN code
-   real(r8), pointer :: decl(:)               ! solar declination angle (radians)
    real(r8), pointer :: coszen(:)             ! cosine of solar zenith angle
    real(r8), pointer :: soilpsi(:,:)          ! soil water potential in each soil layer (MPa)
    real(r8), pointer :: bd(:,:)               ! bulk density of dry soil material [kg/m^3]
@@ -2088,8 +2084,12 @@ type(column_eflux_type)   :: cef_a   ! column-level energy flux variables averag
 ! gridcell physical state variables structure
 !----------------------------------------------------
 type, public :: gridcell_pstate_type
-   real(r8), pointer :: dummy_entry(:)
+   real(r8), pointer :: max_dayl(:)  !maximum daylength for this grid cell (s)
+   real(r8), pointer :: dayl(:)      !daylength (seconds)
+   real(r8), pointer :: prev_dayl(:) !daylength from previous timestep (seconds)
 end type gridcell_pstate_type
+
+type(gridcell_pstate_type) :: gps   ! gridcell physical state
 
 !----------------------------------------------------
 ! gridcell energy state variables structure

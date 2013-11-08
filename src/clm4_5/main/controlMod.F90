@@ -195,7 +195,7 @@ contains
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
-         albice, more_vertlayers, subgridflag, irrigate
+         albice, more_vertlayers, subgridflag, irrigate, all_active
     ! Urban options
 
     namelist /clm_inparm/  &
@@ -461,6 +461,9 @@ contains
 
     ! Landunit generation
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    ! Other subgrid logic
+    call mpi_bcast(all_active, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! max number of plant functional types in naturally vegetated landunit
     call mpi_bcast(maxpatch_pft, 1, MPI_LOGICAL, 0, mpicom, ier)

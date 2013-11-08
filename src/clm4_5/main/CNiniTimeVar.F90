@@ -237,8 +237,6 @@ subroutine CNiniTimeVar(bounds)
    lgsf                                =>    pepv%lgsf                                   , & ! Output: [real(r8) (:)]  long growing season factor [0-1]                  
    bglfr                               =>    pepv%bglfr                                  , & ! Output: [real(r8) (:)]  background litterfall rate (1/s)                  
    bgtr                                =>    pepv%bgtr                                   , & ! Output: [real(r8) (:)]  background transfer rate (1/s)                    
-   dayl                                =>    pepv%dayl                                   , & ! Output: [real(r8) (:)]  daylength (seconds)                               
-   prev_dayl                           =>    pepv%prev_dayl                              , & ! Output: [real(r8) (:)]  daylength from previous timestep (seconds)        
    annavg_t2m                          =>    pepv%annavg_t2m                             , & ! Output: [real(r8) (:)]  annual average 2m air temperature (K)             
    tempavg_t2m                         =>    pepv%tempavg_t2m                            , & ! Output: [real(r8) (:)]  temporary average 2m air temperature (K)          
    gpp                                 =>    pepv%gpp                                    , & ! Output: [real(r8) (:)]  GPP flux before downregulation (gC/m2/s)          

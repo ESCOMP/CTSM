@@ -233,8 +233,6 @@ contains
     real(r8) :: rdl                   ! dry litter layer resistance for water vapor  (s/m)
     real(r8) :: elai_dl               ! exposed (dry) plant litter area index
     real(r8) :: fsno_dl               ! effective snow cover over plant litter
-    real(r8) :: dayl                  ! daylength (s)
-    real(r8) :: temp                  ! temporary, for daylength calculation
     real(r8) :: dayl_factor(bounds%begp:bounds%endp)  ! scalar (0-1) for daylength effect on Vcmax
     real(r8) :: rootfr_unf(bounds%begp:bounds%endp,1:nlevgrnd) ! Rootfraction defined for unfrozen layers only.
     ! If no unfrozen layers, put all in the top layer.
@@ -283,8 +281,9 @@ contains
    forc_v                => clm_a2l%forc_v             , & ! Input:  [real(r8) (:)]  atmospheric wind speed in north direction (m/s)                       
    forc_th               => clm_a2l%forc_th            , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (Kelvin)                            
    forc_rho              => clm_a2l%forc_rho           , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                                     
-   lat                   => grc%lat                    , & ! Input:  [real(r8) (:)]  latitude (radians)                                                    
    londeg                => grc%londeg                 , & ! Input:  [real(r8) (:)]  longitude (degrees) (for calculation of local time)                   
+   dayl                  => gps%dayl                   , & ! Input:  [real(r8) (:)]  daylength (s)
+   max_dayl              => gps%max_dayl               , & ! Input:  [real(r8) (:)]  maximum daylength for this grid cell (s)
    t_soisno              => ces%t_soisno               , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)                                           
    watsat                => cps%watsat                 , & ! Input:  [real(r8) (:,:)]  volumetric soil water at saturation (porosity)                      
    watdry                => cps%watdry                 , & ! Input:  [real(r8) (:,:)]  btran parameter for btran=0                                         
@@ -305,8 +304,6 @@ contains
    frac_sno              => cps%frac_sno_eff           , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)                           
    snow_depth            => cps%snow_depth             , & ! Input:  [real(r8) (:)]  snow height (m)                                                       
    soilbeta              => cws%soilbeta               , & ! Input:  [real(r8) (:)]  soil wetness relative to field capacity                               
-   decl                  => cps%decl                   , & ! Input:  [real(r8) (:)]  declination angle (radians)                                           
-   max_dayl              => cps%max_dayl               , & ! Input:  [real(r8) (:)] maximum daylength for this column (s)                                  
    ivt                   => pft%itype                  , & ! Input:  [integer (:)]  pft vegetation type                                                    
    pcolumn               => pft%column                 , & ! Input:  [integer (:)]  pft's column index                                                     
    plandunit             => pft%landunit               , & ! Input:  [integer (:)]  pft's landunit index                                                   
@@ -428,15 +425,10 @@ contains
    ! calculate daylength control for Vcmax
    do f = 1, fn
       p=filterp(f)
-      c=pcolumn(p)
       g=pgridcell(p)
-      ! calculate daylength
-      temp = -(sin(lat(g))*sin(decl(c)))/(cos(lat(g)) * cos(decl(c)))
-      temp = min(1._r8,max(-1._r8,temp))
-      dayl = 2.0_r8 * 13750.9871_r8 * acos(temp)
       ! calculate dayl_factor as the ratio of (current:max dayl)^2
       ! set a minimum of 0.01 (1%) for the dayl_factor
-      dayl_factor(p)=min(1._r8,max(0.01_r8,(dayl*dayl)/(max_dayl(c)*max_dayl(c))))
+      dayl_factor(p)=min(1._r8,max(0.01_r8,(dayl(g)*dayl(g))/(max_dayl(g)*max_dayl(g))))
    end do
 
    rb1(begp:endp) = 0._r8

@@ -71,6 +71,14 @@ over-productive.
 If TRUE, separate the vegetated landunit into a crop landunit and a natural vegetation landunit
 </entry>
 
+<entry id="all_active" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, make ALL pfts, columns and landunits active, even those with 0 weight.
+This means that computations will be run even over these 0-weight points.
+
+THIS IS ONLY FOR TESTING PURPOSES - IT HAS NOT BEEN CHECKED FOR SCIENTIFIC VALIDITY.
+</entry>
+
 <entry id="more_vertlayers" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, run with an increased number of soil layers

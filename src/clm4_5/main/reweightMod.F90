@@ -89,7 +89,7 @@ module reweightMod
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils, only : endrun
-  use clm_varctl, only : iulog
+  use clm_varctl, only : iulog, all_active
   use decompMod , only: bounds_type
   use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
@@ -225,16 +225,21 @@ contains
     integer :: g  ! grid cell index
     !------------------------------------------------------------------------
 
-    l =pft%landunit(p)
-    g =pft%gridcell(p)
+    if (all_active) then
+       is_active_p = .true.
+
+    else
+       l =pft%landunit(p)
+       g =pft%gridcell(p)
     
-    is_active_p = .false.
+       is_active_p = .false.
 
-    if (pft%wtgcell(p) > 0) is_active_p = .true.
+       if (pft%wtgcell(p) > 0) is_active_p = .true.
 
-    ! always run over ice_mec landunits within the glcmask, because this is where glc
-    ! might need input from virtual (0-weight) landunits
-    if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_p = .true.
+       ! always run over ice_mec landunits within the glcmask, because this is where glc
+       ! might need input from virtual (0-weight) landunits
+       if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_p = .true.
+    end if
 
   end function is_active_p
 
@@ -258,16 +263,21 @@ contains
     integer :: g  ! grid cell index
     !------------------------------------------------------------------------
 
-    l =col%landunit(c)
-    g =col%gridcell(c)
+    if (all_active) then
+       is_active_c = .true.
 
-    is_active_c = .false.
+    else
+       l =col%landunit(c)
+       g =col%gridcell(c)
 
-    if (col%wtgcell(c) > 0) is_active_c = .true.
+       is_active_c = .false.
 
-    ! always run over ice_mec landunits within the glcmask, because this is where glc
-    ! might need input from virtual (0-weight) landunits
-    if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_c = .true.
+       if (col%wtgcell(c) > 0) is_active_c = .true.
+
+       ! always run over ice_mec landunits within the glcmask, because this is where glc
+       ! might need input from virtual (0-weight) landunits
+       if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_c = .true.
+    end if
 
   end function is_active_c
 
@@ -290,15 +300,20 @@ contains
     integer :: g  ! grid cell index
     !------------------------------------------------------------------------
 
-    g =lun%gridcell(l)
+    if (all_active) then
+       is_active_l = .true.
 
-    is_active_l = .false.
+    else
+       g =lun%gridcell(l)
 
-    if (lun%wtgcell(l) > 0) is_active_l = .true.
+       is_active_l = .false.
 
-    ! always run over ice_mec landunits within the glcmask, because this is where glc
-    ! might need input from virtual (0-weight) landunits
-    if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_l = .true.
+       if (lun%wtgcell(l) > 0) is_active_l = .true.
+
+       ! always run over ice_mec landunits within the glcmask, because this is where glc
+       ! might need input from virtual (0-weight) landunits
+       if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_l = .true.
+    end if
 
   end function is_active_l
 

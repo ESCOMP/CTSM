@@ -135,7 +135,6 @@ contains
    h2osno                    =>    cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
    albgrd                    =>    cps%albgrd              , & ! Input:  [real(r8) (:,:)]  ground albedo (direct)                
    albgri                    =>    cps%albgri              , & ! Input:  [real(r8) (:,:)]  ground albedo (diffuse)               
-   decl                      =>    cps%decl                , & ! Input:  [real(r8) (:)]  solar declination angle (radians)       
    coszen                    =>    cps%coszen              , & ! Input:  [real(r8) (:)]  cosine of solar zenith angle            
    albsod                    =>    cps%albsod              , & ! Input:  [real(r8) (:,:)]  direct-beam soil albedo (col,bnd) [frc]
    albsoi                    =>    cps%albsoi              , & ! Input:  [real(r8) (:,:)]  diffuse soil albedo (col,bnd) [frc]   
@@ -213,7 +212,6 @@ contains
        g = col%gridcell(c)
        coszen_col(c) = coszen_gcell(g)
        coszen(c) = coszen_col(c)
-       decl(c) = declinp1
     end do
 
     do fp = 1,num_nourbanp

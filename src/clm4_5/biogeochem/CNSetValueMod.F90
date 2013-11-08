@@ -259,8 +259,6 @@ subroutine CNSetPepv (num, filter, val, pepv)
       pepv%lgsf(i) = val
       pepv%bglfr(i) = val
       pepv%bgtr(i) = val
-      pepv%dayl(i) = val
-      pepv%prev_dayl(i) = val
       pepv%annavg_t2m(i) = val
       pepv%tempavg_t2m(i) = val
       pepv%gpp(i) = val
@@ -810,7 +808,6 @@ subroutine CNSetCps(num, filter, val, cps)
 
    do fi = 1,num
       i = filter(fi)
-      cps%decl(i) = val
       cps%coszen(i) = val
       cps%fpi(i) = val
       cps%fpg(i) = val

@@ -294,6 +294,10 @@ contains
 
     call init_gridcell_estate_type(bounds%begg, bounds%endg, ges)
 
+    ! gridcell: physical state variables
+    
+    call init_gridcell_pstate_type(bounds%begg, bounds%endg, gps)
+
     ! gridcell: ch4 variables
 
     call init_gridcell_ch4_type(bounds%begg, bounds%endg, gch4)
@@ -987,10 +991,6 @@ contains
     pepv%bglfr(:)= nanr
     allocate(pepv%bgtr(beg:end))
     pepv%bgtr(:)= nanr
-    allocate(pepv%dayl(beg:end))
-    pepv%dayl(:)= nanr
-    allocate(pepv%prev_dayl(beg:end))
-    pepv%prev_dayl(:)= nanr
     allocate(pepv%annavg_t2m(beg:end))
     pepv%annavg_t2m(:)= nanr
     allocate(pepv%tempavg_t2m(beg:end))
@@ -2593,11 +2593,8 @@ contains
     allocate(cps%wf(beg:end))
     cps%wf(:)= nanr
     allocate(cps%wf2(beg:end))
-    allocate(cps%max_dayl(beg:end))
     allocate(cps%soilpsi(beg:end,nlevgrnd))
     cps%soilpsi(:,:)= spval
-    allocate(cps%decl(beg:end))
-    cps%decl(:)= nanr
     allocate(cps%coszen(beg:end))
     cps%coszen(:)= nanr
     allocate(cps%bd(beg:end,nlevgrnd))
@@ -3997,6 +3994,28 @@ contains
     ges%gc_heat2(:)= nanr
 
   end subroutine init_gridcell_estate_type
+
+  !------------------------------------------------------------------------
+  subroutine init_gridcell_pstate_type(beg, end, gps)
+    !
+    ! !DESCRIPTION:
+    ! Initialize gridcell energy state variables     
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: beg, end
+    type (gridcell_pstate_type), intent(inout):: gps
+    !------------------------------------------------------------------------
+
+    allocate(gps%max_dayl(beg:end))
+    gps%max_dayl(:)= nanr
+    allocate(gps%dayl(beg:end))
+    gps%dayl(:)= nanr
+    allocate(gps%prev_dayl(beg:end))
+    gps%prev_dayl(:)= nanr
+
+  end subroutine init_gridcell_pstate_type
+
 
   !-------------------------------------------------------------------------
   subroutine init_gridcell_ch4_type(beg, end, gch4)

@@ -118,6 +118,7 @@ module clm_driver
   use abortutils          , only : endrun
   use UrbanMod            , only : UrbanAlbedo, UrbanRadiation, UrbanFluxes 
   use SNICARMod           , only : SnowAge_grain
+  use DaylengthMod        , only : UpdateDaylength
   use clm_atmlnd          , only : clm_map2gcell
   use clm_glclnd          , only : update_clm_s2x
   use perf_mod
@@ -393,10 +394,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      pcf%cisun_z(bounds_clump%begp:bounds_clump%endp, :) = -999._r8
      pcf%cisha_z(bounds_clump%begp:bounds_clump%endp, :) = -999._r8
 
-     ! initialize declination for current timestep
-     do c = bounds_clump%begc,bounds_clump%endc
-        cps%decl(c) = declin
-     end do
+     call UpdateDaylength(bounds_clump, declin)
      
      call clm_driverInit(bounds_clump, &
           filter(nc)%num_nolakec, filter(nc)%nolakec, &

@@ -227,14 +227,14 @@
          </edison>
          <yellowstone>
             <INTEL>
-               <entry testId="CME_Ly5.f10_f10.I1850CLM45BGC.yellowstone_intel.clm-default" failType="RUN">Runs out of time. CME_Ly4.f10_f10.I1850CLM45BGC.yellowstone_intel.clm-monthly passes</entry>
                <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                         failType="FAIL"  bugz="1696" >use before define in history.  runs with frankfurt_pgi, yellowstone_intel and yellowstone_pgi</entry>
-               <entry testId="ERS_Ly5.f10_f10.ICLM45BGCCROP.yellowstone_intel.clm-irrigOn_reduceOutput" failType="FAIL" bugz="1846" >restarts not exact due to bug 1846: crop restarts are not exact due to sminn field</entry>
                <entry testId="ERI_D.ne30_g16.ICLM45BGC.yellowstone_intel.clm-vrtlay"      failType="FAIL" >Seg fault while writing h1 file. This used to pass on yellowstone, but it failed on edison; now it is failing on yellowstone, too (it fails in clm4_5_37, too).</entry>
+               <entry testId="NCK.f10_f10.ICRUCLM45.yellowstone_intel"                    failType="FAIL"  bugz="1860">Diffs in cpl log files in rofl, rofi and volr</entry>
             </INTEL>
             <PGI>
                <entry testId="SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PTCLM45.yellowstone_pgi.clm-USUMB" failType="FAIL" bugz="1825"> Needs new surface dataset</entry>
                <entry testId="ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default"     failType="FAIL" >Restart not BFB.  Runs as ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi</entry>
+               <entry testId="NCK.f10_f10.I.yellowstone_pgi"                              failType="FAIL"  bugz="1860">Diffs in cpl log files in rofl, rofi and volr</entry>
             </PGI>
          </yellowstone>
          <frankfurt>
