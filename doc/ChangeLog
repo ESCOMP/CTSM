@@ -1,4 +1,135 @@
 ===============================================================
+Tag name:  clm4_5_46
+Originator(s):  sacks (sacks)
+Date: Fri Nov  8 17:26:02 MST 2013
+One-line Summary: remove zeroing out of slope for special landunits
+
+Purpose of changes:
+
+   Previously, there was code to zero out slope for grid cells with 100% special
+   landunits. However, there were a number of problems with this:
+
+   (1) With dynamic landunits, this is problematic, because a grid cell could
+   start as 100% special landunits, then later become < 100% special landunits
+   (e.g., due to retreating glaciers)
+
+   (2) Moreover, why should the slope of a special landunit depend on whether
+   the grid cell has 100% special landunits. This seems to be saying that, e.g.,
+   the slope of a glacier landunit depends on whether the grid cell is entirely
+   glacier or part glacier and part natural veg.
+
+   (3) And I guess moreover, why is the slope zeroed out for special landunits
+   in the first place?
+
+
+   From talking with Erik, we decided thish code was probably a relic from a
+   time when the surface dataset had some bad values (e.g., over Greenland /
+   Antarctica). This is no longer the case, so this code is no longer needed.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: erik
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/clm4_5/main/iniTimeConst.F90
+
+CLM testing:
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+    Following are the baseline failures, which are expected (see below):
+
+FAIL  SMS_D.1x1_mexicocityMEX.ICLM45.frankfurt_intel.clm-default.GC.131107-223431.compare_hist.clm4_5_45 
+FAIL  SMS_D.1x1_vancouverCAN.ICLM45.frankfurt_pgi.clm-default.GC.131107-223435.compare_hist.clm4_5_45 
+FAIL  ERS_Mmpi-serial.1x1_mexicocityMEX.I1PTCLM45.frankfurt_nag.clm-default.GC.131107-223439.compare_hist.clm4_5_45 
+FAIL  SMS_D_Mmpi-serial.1x1_vancouverCAN.I1PTCLM45.frankfurt_nag.clm-default.GC.131107-223439.compare_hist.clm4_5_45 
+FAIL  ERI.f09_g16.ICLM45BGC.yellowstone_intel.GC.131107-223256.compare_hist.clm4_5_45 
+FAIL  ERI_D.f09_g16.ICLM45BGC.yellowstone_intel.GC.131107-223256.compare_hist.clm4_5_45 
+FAIL  ERI_D.ne30_g16.ICLM45BGC.yellowstone_intel.GC.131107-223256.compare_hist.clm4_5_45 
+FAIL  ERS_Lm3.1x1_vancouverCAN.I1PTCLM45.yellowstone_intel.clm-default.GC.131107-223256.compare_hist.clm4_5_45 
+FAIL  SMS.1x1_mexicocityMEX.I1PTCLM45.yellowstone_intel.clm-default.GC.131107-223256.compare_hist.clm4_5_45 
+FAIL  ERI.f09_g16.I1850CRUCLM45BGC.yellowstone_pgi.GC.131107-223301.compare_hist.clm4_5_45 
+FAIL  ERI.f09_g16.ICLM45BGC.yellowstone_pgi.GC.131107-223301.compare_hist.clm4_5_45 
+FAIL  ERI_D.f09_g16.ICLM45BGC.yellowstone_pgi.GC.131107-223301.compare_hist.clm4_5_45 
+
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+
+    Following are the baseline failures, which are expected:
+
+FAIL   ERS_Lm3.1x1_vancouverCAN.I1PTCLM45.yellowstone_intel.clm-default.compare_hist.clm4_5_45.clm2.h0 
+FAIL   ERS_Lm3.1x1_vancouverCAN.I1PTCLM45.yellowstone_intel.clm-default.compare_hist.clm4_5_45.clm2.h1 
+FAIL   SMS.1x1_mexicocityMEX.I1PTCLM45.yellowstone_intel.clm-default.compare_hist.clm4_5_45.clm2.h0 
+FAIL   SMS.1x1_mexicocityMEX.I1PTCLM45.yellowstone_intel.clm-default.compare_hist.clm4_5_45.clm2.h1 
+
+
+CLM tag used for the baseline comparisons: clm4_5_45
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Any configuration that includes a grid cell that
+      has 100% special landunits, including at least some urban
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+      Not investigated carefully, but expected to be larger than roundoff/same
+      climate - since this only affects a very small number of grid cells, and
+      (I believe) only the urban pervious road in those grid cells
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_45
 Originator(s):  sacks (sacks)
 Date: Fri Nov  8 16:10:22 MST 2013

@@ -31,7 +31,6 @@ subroutine iniTimeConst(bounds)
                                     scmlon,scmlat,single_column, use_lch4, use_vichydro, use_cndv,&
                                     use_vancouver, use_mexicocity, use_vertsoilc, use_century_decomp, &
                                     use_cn, iulog 
-  use clm_varsur           , only : pctspec
   use pftvarcon            , only : noveg, ntree, roota_par, rootb_par,  &
                                     smpso, smpsc, fnitr, nbrdlf_dcd_brl_shrub, &
                                     z0mr, displar, dleaf, rhol, rhos, taul, taus, xl, &
@@ -144,7 +143,6 @@ subroutine iniTimeConst(bounds)
   integer :: closelatidx,closelonidx
   real(r8):: closelat,closelon
   integer :: iostat
-  integer :: nzero_slope               ! Number of points to zero out slope
   real(r8):: maxslope, slopemax, minslope, d, fd, dfdd, slope0,slopebeta
   !------------------------------------------------------------------------
 
@@ -786,7 +784,6 @@ subroutine iniTimeConst(bounds)
    ! Initialize soil color, thermal and hydraulic properties
    ! --------------------------------------------------------------------
 
-   nzero_slope = 0
    ! Column level initialization
    do c = bounds%begc, bounds%endc
 
@@ -837,14 +834,8 @@ subroutine iniTimeConst(bounds)
 
       ! Topographic variables
       topo_std(c) = std(g)
-      if ( pctspec(g) >= 100.0_r8-mach_eps )then
-         ! Zero out slope over ALL special land-units
-         topo_slope(c) = 0.0_r8
-         nzero_slope   = nzero_slope + 1
-      else
-         ! check for near zero slopes, set minimum value
-         topo_slope(c) = max(tslope(g),0.2_r8)
-       end if
+      ! check for near zero slopes, set minimum value
+      topo_slope(c) = max(tslope(g),0.2_r8)
 
       ! SCA shape function defined
       if (lun%itype(l)==istice_mec) then
@@ -1171,11 +1162,6 @@ subroutine iniTimeConst(bounds)
       mss_frc_cly_vld(c) = min(clay*0.01_r8, 0.20_r8)
 
    end do
-
-   if ( nzero_slope > 0 )then
-      write(iulog,'(A,I6,A)') "Set", nzero_slope, &
-                             " 100% special land-units points to zero slope"
-   end if
 
    ! pft level initialization
    do p = bounds%begp,bounds%endp
