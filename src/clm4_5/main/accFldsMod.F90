@@ -244,7 +244,8 @@ contains
     use clm_varcon       , only : spval
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
-    use accumulMod       , only : update_accum_field, extract_accum_field
+    use accumulMod       , only : update_accum_field, extract_accum_field, &
+                                  accumResetVal
     use pftvarcon        , only : nwcereal, nwcerealirrig, mxtmp, baset
     use pftvarcon        , only : ndllf_dcd_brl_tree
     !
@@ -264,6 +265,7 @@ contains
     logical :: end_cd                    ! temporary for is_end_curr_day() value
     integer :: ier                       ! error status
     real(r8), pointer :: rbufslp(:)      ! temporary single level - pft level
+    
 !------------------------------------------------------------------------
 
     !    clm_a2l%forc_t                Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                  
@@ -512,7 +514,7 @@ contains
        do p = bounds%begp,bounds%endp
           rbufslp(p) = max(0._r8, (pes%t10(p) - SHR_CONST_TKFRZ - dgv_pftcon%twmax(ndllf_dcd_brl_tree)) &
                * dtime/SHR_CONST_CDAY)
-          if (month==1 .and. day==1 .and. secs==int(dtime)) rbufslp(p) = -99999._r8
+          if (month==1 .and. day==1 .and. secs==int(dtime)) rbufslp(p) = accumResetVal
        end do
        call update_accum_field  ('AGDDTW', rbufslp, nstep)
        call extract_accum_field ('AGDDTW', pdgvs%agddtw, nstep)
@@ -522,6 +524,10 @@ contains
        do p = bounds%begp,bounds%endp
           rbufslp(p) = max(0.0_r8, (pes%t_ref2m(p) - (SHR_CONST_TKFRZ + 5.0_r8)) &
                * dtime/SHR_CONST_CDAY)
+          !
+          ! Fix (for bug 1858) from Sam Levis to reset the annual AGDD variable
+          ! 
+          if (month==1 .and. day==1 .and. secs==int(dtime)) rbufslp(p) = accumResetVal
        end do
        call update_accum_field  ('AGDD', rbufslp, nstep)
        call extract_accum_field ('AGDD', pdgvs%agdd, nstep)
@@ -568,7 +574,7 @@ contains
           itypveg = pft%itype(p)
           g = pft%gridcell(p)
           if (month==1 .and. day==1 .and. secs==int(dtime)) then
-             rbufslp(p) = -99999._r8 ! reset gdd
+             rbufslp(p) = accumResetVal ! reset gdd
           else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
                    ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
              rbufslp(p) = max(0._r8, min(26._r8, pes%t_ref2m(p)-SHR_CONST_TKFRZ)) &
@@ -586,7 +592,7 @@ contains
           itypveg = pft%itype(p)
           g = pft%gridcell(p)
           if (month==1 .and. day==1 .and. secs==int(dtime)) then
-             rbufslp(p) = -99999._r8 ! reset gdd
+             rbufslp(p) = accumResetVal ! reset gdd
           else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
                    ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
              rbufslp(p) = max(0._r8, min(30._r8, &
@@ -605,7 +611,7 @@ contains
           itypveg = pft%itype(p)
           g = pft%gridcell(p)
           if (month==1 .and. day==1 .and. secs==int(dtime)) then
-             rbufslp(p) = -99999._r8 ! reset gdd
+             rbufslp(p) = accumResetVal ! reset gdd
           else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
                    ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
              rbufslp(p) = max(0._r8, min(30._r8, &
@@ -628,7 +634,7 @@ contains
                           * dtime/SHR_CONST_CDAY
              if (itypveg == nwcereal .or. itypveg == nwcerealirrig) rbufslp(p) = rbufslp(p)*pps%vf(p)
           else
-             rbufslp(p) = -99999._r8
+             rbufslp(p) = accumResetVal
           end if
        end do
        call update_accum_field  ('GDDPLANT', rbufslp, nstep)
@@ -648,7 +654,7 @@ contains
                   (SHR_CONST_TKFRZ + baset(itypveg)))) * dtime/SHR_CONST_CDAY
              if (itypveg == nwcereal .or. itypveg == nwcerealirrig) rbufslp(p) = rbufslp(p)*pps%vf(p)
           else
-             rbufslp(p) = -99999._r8
+             rbufslp(p) = accumResetVal
           end if
        end do
        call update_accum_field  ('GDDTSOI', rbufslp, nstep)

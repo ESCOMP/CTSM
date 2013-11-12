@@ -1,4 +1,73 @@
 ===============================================================
+Tag name:  clm4_5_47
+Originator(s):  muszala (Stefan Muszala)
+Date: Tue Nov 12 09:26:20 MST 2013
+One-line Summary: fix Bug 1858 - AGDD now reset annually
+
+Purpose of changes: Fix bug 1858.  AGDD is now reset annually.  Replace -99999_r8 with a 
+   parameter in accumulMod.F90 which is used in accFldsMod.F90
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 1858
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: slevis, sacks, muszala
+
+List any svn externals directories updated (csm_share, mct, etc.): N/A
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/util_share/accumulMod.F90
+M       models/lnd/clm/src/clm4_5/main/accFldsMod.F90
+
+CLM testing:
+
+  build-namelist tests: N/A
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    frankfurt_intel - OK
+    frankfurt_pgi - OK
+    frankfurt_nag - OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_46
+
+Changes answers relative to baseline: Generally, No.  There may be changes
+  in DV compsets over very long simulation times and at very high resolutions.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_46
 Originator(s):  sacks (sacks)
 Date: Fri Nov  8 17:26:02 MST 2013

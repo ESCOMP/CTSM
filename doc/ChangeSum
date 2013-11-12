@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_47      muszala 11/12/2013 fix Bug 1858 - AGDD now reset annually
    clm4_5_46        sacks 11/08/2013 remove zeroing out of slope for special landunits
    clm4_5_45        sacks 11/08/2013 refactor daylength calculation, and other minor changes
    clm4_5_44        sacks 11/08/2013 temporary hack to daylength initialization to provide baselines for the next tag

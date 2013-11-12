@@ -74,6 +74,8 @@ module accumulMod
      integer :: period              !field accumulation period (in model time steps)
   end type accum_field
 
+  real(r8), parameter, public :: accumResetVal = -99999._r8 ! used to do an annual reset ( put in for bug 1858)
+
   integer, parameter :: max_accum = 100    !maximum number of accumulated fields
   type (accum_field) :: accum(max_accum)   !array accumulated fields
   integer :: naccflds = 0                  !accumulator field counter
