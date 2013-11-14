@@ -383,14 +383,26 @@ CONTAINS
                 end if
              end if
 
-             rs=ri(index_season,wesveg)*crs 
-             if(wesveg.eq.7) then ! over water
+             !-------------------------------------------------------------------------------------
+             ! no deposition on snow, ice, desert, and water
+             !-------------------------------------------------------------------------------------
+             if( wesveg == 1 .or. wesveg == 7 .or. wesveg == 8 .or. index_season == 4 ) then 
                 rclx(ispec)=1.e36_r8
                 rsmx(ispec)=1.e36_r8
                 rlux(ispec)=1.e36_r8
              else 
-                ! ??? fvitt   rs=(fsun(pi)*rssun(pi))+(rssha(pi)*(1.-fsun(pi))) -- made the same as mo_drydep
-                rsmx(ispec) = (dewm*rs*drat(ispec)+rmx) 
+                
+                rs=(fsun(pi)*rssun(pi))+(rssha(pi)*(1._r8-fsun(pi)))
+                if (rs==0._r8) then ! fvitt -- what to do when rs is zero ???
+                   rsmx(ispec) = 1.e36_r8
+                else
+                   rsmx(ispec) = dewm*rs*drat(ispec)+rmx
+                endif
+
+                rclx(ispec) = cts + 1._r8/((heff(ispec)/(1.e5_r8*rcls(index_season,wesveg))) + & 
+                                           (foxd(ispec)/rclo(index_season,wesveg))) 
+                rlux(ispec) = cts + rlu(index_season,wesveg)/(1.e-5_r8*heff(ispec)+foxd(ispec)) 
+
              endif
 
              !-------------------------------------------------------------------------------------
@@ -403,16 +415,12 @@ CONTAINS
                 end if
              end if
 
-             rclx(ispec) = cts + 1._r8/((heff(ispec)/(1.e5_r8*rcls(index_season,wesveg))) + & 
-                           (foxd(ispec)/rclo(index_season,wesveg))) 
-             rlux(ispec) = cts + rlu(index_season,wesveg)/(1.e-5_r8*heff(ispec)+foxd(ispec)) 
-
           end do species_loop1
           
           ! 
           ! no effect over water
           ! 
-          no_water: if(wesveg.ne.7) then 
+          no_water: if( wesveg.ne.1 .and. wesveg.ne.7 .and. wesveg.ne.8 .and. index_season.ne.4 ) then
              ! 
              ! no effect if sfc_temp < O C 
              ! 
@@ -489,7 +497,7 @@ CONTAINS
              ! compute rc 
              ! 
              rc = 1._r8/((1._r8/rsmx(ispec))+(1._r8/rlux(ispec)) + & 
-                        (1._r8/(rdc+rclx(ispec)))+(1._r8/(rac(index_season,wesveg)+rgsx(ispec)))) 
+                        (1._r8/(rdc+rclx(ispec)))+(1._r8/(rac(index_season,wesveg)+rgsx(ispec))))
              rc = max( 10._r8, rc)
              !
              ! assume no surface resistance for SO2 over water
