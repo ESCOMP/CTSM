@@ -106,6 +106,18 @@ module clm_cpl_indices
   integer, public ::index_x2l_Flgg_rofi(glc_nec_max) = 0   ! Ice runoff from glc model
   integer, public ::index_x2l_Flgg_rofl(glc_nec_max) = 0   ! Liquid runoff from glc model
   integer, public ::index_x2l_Flgg_hflx(glc_nec_max) = 0
+  ! 
+  ! decls for anomoly forcing
+  !
+  integer, public ::index_x2l_Sa_precsf       ! bias correction scale factor
+  integer, public ::index_x2l_Sa_prec_af      ! anomaly forcing precipitation 
+  integer, public ::index_x2l_Sa_u_af         ! anomaly forcing u wind
+  integer, public ::index_x2l_Sa_v_af         ! anomaly forcing v wind
+  integer, public ::index_x2l_Sa_tbot_af      ! anomaly forcing temperature
+  integer, public ::index_x2l_Sa_pbot_af      ! anomaly forcing pressure
+  integer, public ::index_x2l_Sa_shum_af      ! anomaly forcing humidity
+  integer, public ::index_x2l_Sa_swdn_af      ! anomaly forcing shortwave
+  integer, public ::index_x2l_Sa_lwdn_af      ! anomaly forcing longwave
 
   integer, public :: nflds_x2l = 0
 
@@ -206,6 +218,19 @@ contains
     !-------------------------------------------------------------
     ! drv -> clm
     !-------------------------------------------------------------
+
+    !
+    ! for anomaly forcing
+    !
+    index_x2l_Sa_precsf      = mct_avect_indexra(x2l,'Sa_precsf',perrwith='quiet')
+    index_x2l_Sa_prec_af     = mct_avect_indexra(x2l,'Sa_prec_af',perrwith='quiet')
+    index_x2l_Sa_u_af        = mct_avect_indexra(x2l,'Sa_u_af',perrwith='quiet')
+    index_x2l_Sa_v_af        = mct_avect_indexra(x2l,'Sa_v_af',perrwith='quiet')
+    index_x2l_Sa_tbot_af     = mct_avect_indexra(x2l,'Sa_tbot_af',perrwith='quiet')
+    index_x2l_Sa_pbot_af     = mct_avect_indexra(x2l,'Sa_pbot_af',perrwith='quiet')
+    index_x2l_Sa_shum_af     = mct_avect_indexra(x2l,'Sa_shum_af',perrwith='quiet')
+    index_x2l_Sa_swdn_af     = mct_avect_indexra(x2l,'Sa_swdn_af',perrwith='quiet')
+    index_x2l_Sa_lwdn_af     = mct_avect_indexra(x2l,'Sa_lwdn_af',perrwith='quiet')
 
     index_x2l_Sa_z          = mct_avect_indexra(x2l,'Sa_z')
     index_x2l_Sa_u          = mct_avect_indexra(x2l,'Sa_u')

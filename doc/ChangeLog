@@ -1,4 +1,99 @@
 ===============================================================
+Tag name:  clm4_5_49
+Originator(s):  muszala (Stefan Muszala)
+Date: Sat Nov 16 07:51:27 MST 2013
+One-line Summary: Swenson anomaly forcing - Part 1
+
+purpose of changes:
+   add additional data streams to modify existing
+   data streams for purposes such as bias correction or specifying 
+   future changes relative to baseline data streams, e.g. specifying
+   future atmospheric forcing anomalies when running CLM with data atmosphere. 
+   Paired with datm8_131115.
+
+   For what to set in user_nl_cpl, user_nl_datm, see testing section.
+
+   This is part 1 of 2.  Part 2 will address a general way to handle
+   streams in the DATM that is triggered off of an AF compset.
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: swenson, kluzek, self
+
+List any svn externals directories updated (csm_share, mct, etc.): update to datm8_131116
+
+List all files eliminated:  N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/clm4_5/main/clm_atmlnd.F90
+M       models/lnd/clm/src/clm4_0/main/clm_atmlnd.F90
+M       models/lnd/clm/src/cpl/clm_cpl_indices.F90
+M       models/lnd/clm/src/cpl/lnd_import_export.F90
+M       SVN_EXTERNAL_DIRECTORIES
+
+CLM testing:
+
+Testing for features of this tag: f09_g16, ICRUCLM45
+
+anomaly forcing namelists
+   user_nl_cpl: cplflds_custom = 'Sa_prec_af->a2x', 'Sa_prec_af->x2l','Sa_tbot_af->a2x',
+           'Sa_tbot_af->x2l','Sa_pbot_af->a2x', 'Sa_pbot_af->x2l','Sa_shum_af->a2x',
+           'Sa_shum_af->x2l','Sa_u_af->a2x', 'Sa_u_af->x2 l','Sa_v_af->a2x',
+           'Sa_v_af->x2l','Sa_swdn_af->a2x', 'Sa_swdn_af->x2l','Sa_lwdn_af->a2x',
+           'Sa_lwdn_af->x2l'
+   user_nl_datm: anomaly_forcing = 'Anomaly.Forcing.Precip','Anomaly.Forcing.Temperature',
+            'Anomaly.Forcing.Pressure','Anomaly.Forcing.Humidity','Anomaly.Forcing.Uwind',
+            'Anomaly.Forcing.Vwind','Anomaly.Forcing.Shortwave','Anomaly.Forcing.Longwave'
+bias correction namelists
+   user_nl_cpl: cplflds_custom = 'Sa_precsf->a2x', 'Sa_precsf->x2l'
+   user_nl_datm: bias_correct = 'BC.CRUNCEP.GPCP.Precip' 
+
+  build-namelist tests: N/A
+
+  regular tests (aux_clm):
+
+    yellowstone_intel - OK 
+    yellowstone_pgi - OK 
+    frankfurt_intel - OK
+    frankfurt_pgi - OK
+    frankfurt_nag - OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_48
+
+Changes answers relative to baseline: No
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_48
 Originator(s):  muszala (Stefan Muszala)
 Date: Thu Nov 14 08:28:31 MST 2013

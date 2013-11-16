@@ -60,7 +60,18 @@ module clm_atmlnd
      real(r8), pointer :: forc_aer(:,:)   => null() ! aerosol deposition array
      ! Needed for backwards compatibility with lnd_comp_mct used in clm4_5
      real(r8), pointer :: forc_pch4(:)     => null() !CH4 partial pressure (Pa)
-
+     ! anomaly forcing - only define and only used in clm4_5.  This is a hack
+     ! since lnd_import_export doesn't have a way to deal with the 45/40
+     ! distinction
+     real(r8), pointer ::af_precip(:)      => null() ! anomaly forcing 
+     real(r8), pointer ::af_uwind(:)       => null() ! anomaly forcing 
+     real(r8), pointer ::af_vwind(:)       => null() ! anomaly forcing 
+     real(r8), pointer ::af_tbot(:)        => null() ! anomaly forcing 
+     real(r8), pointer ::af_pbot(:)        => null() ! anomaly forcing 
+     real(r8), pointer ::af_shum(:)        => null() ! anomaly forcing 
+     real(r8), pointer ::af_swdn(:)        => null() ! anomaly forcing 
+     real(r8), pointer ::af_lwdn(:)        => null() ! anomaly forcing 
+     real(r8), pointer :: bc_precip(:)     => null() ! anomaly forcing - add bias correction
   end type atm2lnd_type
 
 !----------------------------------------------------

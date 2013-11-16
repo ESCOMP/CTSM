@@ -53,6 +53,16 @@ module clm_atmlnd
      real(r8), pointer :: volr(:)          => null() !rof volr (m3)
      real(r8), pointer :: forc_aer(:,:)    => null() !aerosol deposition array
      real(r8), pointer :: forc_pch4(:)     => null() !CH4 partial pressure (Pa)
+     ! anomaly forcing
+     real(r8), pointer ::af_precip(:)      => null() ! anomaly forcing 
+     real(r8), pointer ::af_uwind(:)       => null() ! anomaly forcing 
+     real(r8), pointer ::af_vwind(:)       => null() ! anomaly forcing 
+     real(r8), pointer ::af_tbot(:)        => null() ! anomaly forcing 
+     real(r8), pointer ::af_pbot(:)        => null() ! anomaly forcing 
+     real(r8), pointer ::af_shum(:)        => null() ! anomaly forcing 
+     real(r8), pointer ::af_swdn(:)        => null() ! anomaly forcing 
+     real(r8), pointer ::af_lwdn(:)        => null() ! anomaly forcing 
+     real(r8), pointer :: bc_precip(:)     => null() ! anomaly forcing - add bias correction
   end type atm2lnd_type
 
   !----------------------------------------------------
@@ -175,6 +185,25 @@ contains
     a2l%forc_aer(bounds%begg:bounds%endg,14)=ival
     allocate(a2l%forc_pch4(bounds%begg:bounds%endg))
     a2l%forc_pch4(bounds%begg:bounds%endg)=ival
+    ! anomaly forcing
+    allocate(a2l%bc_precip(bounds%begg:bounds%endg))
+    a2l%bc_precip(bounds%begg:bounds%endg) = ival
+    allocate(a2l%af_precip(bounds%begg:bounds%endg))
+    a2l%af_precip(bounds%begg:bounds%endg) = ival
+    allocate(a2l%af_uwind(bounds%begg:bounds%endg))
+    a2l%af_uwind(bounds%begg:bounds%endg) = ival
+    allocate(a2l%af_vwind(bounds%begg:bounds%endg))
+    a2l%af_vwind(bounds%begg:bounds%endg) = ival
+    allocate(a2l%af_tbot(bounds%begg:bounds%endg))
+    a2l%af_tbot(bounds%begg:bounds%endg) = ival
+    allocate(a2l%af_pbot(bounds%begg:bounds%endg))
+    a2l%af_pbot(bounds%begg:bounds%endg) = ival
+    allocate(a2l%af_shum(bounds%begg:bounds%endg))
+    a2l%af_shum(bounds%begg:bounds%endg) = ival
+    allocate(a2l%af_swdn(bounds%begg:bounds%endg))
+    a2l%af_swdn(bounds%begg:bounds%endg) = ival
+    allocate(a2l%af_lwdn(bounds%begg:bounds%endg))
+    a2l%af_lwdn(bounds%begg:bounds%endg) = ival
 
   end subroutine init_atm2lnd_type
 
