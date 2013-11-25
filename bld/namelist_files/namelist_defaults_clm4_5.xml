@@ -17,9 +17,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Default time step -->
 <dtime>1800</dtime>
 
-<!-- NetCDF Large file format -->
-<outnc_large_files>.true.</outnc_large_files>
-
 <!-- CO2 volume mixing ratio -->
 <co2_ppmv sim_year="1000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="2000"      >379.0</co2_ppmv>

@@ -88,7 +88,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 274;
+my $ntests = 271;
 if ( defined($opts{'compare'}) ) {
    $ntests += 165;
 }
@@ -230,7 +230,7 @@ print "==================================================\n";
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
 foreach my $options ( "-irrig .true. ", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
-                      "-clm_startfile $startfile -clm_start_type startup", 
+                      "-clm_start_type startup", 
                      ) {
    my $file = $startfile;
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
@@ -239,9 +239,6 @@ foreach my $options ( "-irrig .true. ", "-verbose", "-rcp 2.6", "-test", "-sim_y
    system( "diff lnd_in lnd_in.default" );
    $cfiles->shownmldiff( "default", $mode );
    my $finidat = `grep finidat lnd_in`;
-   if ( $options =~ /-clm_start_file/ ) {
-      like( $finidat, "/$file/", "$options" );
-   }
    if ( $options eq "-l_ncpl 1" ) {
       my $dtime = `grep dtime lnd_in`;
       like( $dtime, "/ 86400\$/", "$options" );
@@ -269,9 +266,6 @@ my %failtest = (
      "coldstart but with IC file"=>{ options=>"-clm_start_type cold",
                                      namelst=>"finidat='$finidat'",
                                    },
-     "coldstart but clm_startfile"=>{ options=>"-clm_start_type cold -clm_startfile file.nc",
-                                     namelst=>"",
-                                   },
      "l_ncpl is zero"            =>{ options=>"-l_ncpl 0",
                                      namelst=>"",
                                    },
@@ -286,12 +280,6 @@ my %failtest = (
                                    },
      "both lnd_frac and on nml"  =>{ options=>"-lnd_frac domain.nc",
                                      namelst=>"fatmlndfrc='frac.nc'",
-                                   },
-     "both start_file and finidat"=>{ options=>"-clm_startfile file.nc -clm_start_type startup",
-                                     namelst=>"finidat='finidat.nc'",
-                                   },
-     "both start_file and nrevsn"=>{ options=>"-clm_startfile file.nc -clm_start_type branch",
-                                     namelst=>"nrevsn='nrevsn.nc'",
                                    },
      "branch but NO nrevsn"      =>{ options=>"-clm_start_type branch",
                                      namelst=>"",
@@ -524,11 +512,12 @@ print "Test clm4.5 resolutions \n";
 print "==================================================\n";
 
 my $mode = "phys45";
-system( "../configure -s -phys clm4_5 -bgc cn -clm4me on -vsoilc_centbgc on" );
+system( "../configure -s -phys clm4_5" );
+my $clm45options = "-bgc bgc -clm4me -vsoilc on";
 my @clm45res = ( "10x15", "48x96", "0.9x1.25", "1.9x2.5", "360x720cru" );
 foreach my $res ( @clm45res ) {
-   $options = "-res $res";
-   eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
+   $options = "-res $res -bgc bgc";
+   eval{ system( "$bldnml $options $clm45options  > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );
    $cfiles->checkfilesexist( "$options", $mode );
    system( "diff lnd_in lnd_in.default.standard" );
@@ -543,10 +532,11 @@ foreach my $res ( @clm45res ) {
    &cleanup();
 }
 my $mode = "phys45-crop";
-system( "../configure -s -phys clm4_5 -bgc cn -crop on" );
+system( "../configure -s -phys clm4_5" );
+my $clm45options = "-bgc cn -crop";
 my $res = "1.9x2.5";
-$options = "-res $res -irrig .true. ";
-eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
+$options = "-res $res -irrig .true. -crop -bgc cn";
+eval{ system( "$bldnml $options $clm45options  > $tempfile 2>&1 " ); };
 is( $@, '', "$options" );
 $cfiles->checkfilesexist( "$options", $mode );
 system( "diff lnd_in lnd_in.default.standard" );

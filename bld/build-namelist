@@ -46,7 +46,6 @@ OPTIONS
      -clm_demand "list"       List of variables to require on clm namelist besides the usuals.
                               "-clm_demand list" to list valid options.
                               (can include a list member "null" which does nothing)
-     -clm_startfile "file"    CLM restart file to start from.
      -clm_start_type "type"   Start type of simulation 
                               (default, cold, arb_ic, startup, continue, or branch)
                               (default=do the default type for this configuration)
@@ -269,7 +268,6 @@ my %opts = ( config                => $cfg_cache,
              co2_type              => undef,
              co2_ppmv              => undef,
              clm_demand            => "null",
-             clm_startfile         => undef,
 	     help                  => 0,
              glc_nec               => "default",
              glc_grid              => "default",
@@ -304,7 +302,6 @@ my %opts = ( config                => $cfg_cache,
 
 GetOptions(
     "clm_demand=s"              => \$opts{'clm_demand'},
-    "clm_startfile=s"           => \$opts{'clm_startfile'},
     "co2_ppmv=f"                => \$opts{'co2_ppmv'},
     "co2_type=s"                => \$opts{'co2_type'},
     "config=s"                  => \$opts{'config'},
@@ -1410,25 +1407,6 @@ if ($phys eq "clm4_5" && $res eq "1x1_numaIA") {
   }
 }
 
-$var = "clm_startfile";
-if ( defined($opts{$var}) ) {
-    $val = $opts{$var};
-    my $file = $val;
-    if (     $clm_start_type =~ /startup/ || $clm_start_type =~ /arb_ic/ ) {
-       if ( defined($nl->get_value('finidat')) ) {
-          die "$ProgName ERROR: Can NOT set both -clm_startfile option AND finidat on namelist\n";
-       }
-       add_default($nl, 'finidat','val'=>"$val",'no_abspath'=>1);
-    } elsif ($clm_start_type =~ /branch/ ) {
-       if ( defined($nl->get_value('nrevsn')) ) {
-          die "$ProgName ERROR: Can NOT set both -clm_startfile option AND nrevsn on namelist\n";
-       }
-       add_default($nl, 'nrevsn', 'val'=>"$val",'no_abspath'=>1);
-    } elsif ( $clm_start_type =~ /cold/ ) {
-       die "$ProgName ERROR: Can only set -clm_startfile option for cold clm_start_type\n";
-    }
-}
-    
 $var = "lnd_frac";
 if ( defined($opts{$var}) ) {
    if ( defined($nl->get_value('fatmlndfrc')) ) {
@@ -1520,7 +1498,6 @@ if (defined $nl->get_value('fatmlndfrc')) {
     die "$ProgName ERROR: fatmlndfrc was NOT sent into CLM build-namelist.\n";
 }
 
-add_default($nl, 'outnc_large_files' );
 add_default($nl, 'fsnowoptics' );
 add_default($nl, 'fsnowaging' );
 #

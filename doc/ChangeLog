@@ -1,4 +1,158 @@
 ===============================================================
+Tag name:  clm4_5_50
+Originator(s):  erik (Erik)
+Date: Sun Nov 24 18:51:11 MST 2013
+One-line Summary: Bring in a crop of b4b bugfixes, fix getregional script,
+                   start move of PTCLM to PTCLMmkdata tool
+
+Purpose of changes:
+
+Bring in a crop of bit-for-bit bug-fixes to the trunk for November.
+Fix the getregional_datasets script and initial move of PTCLM to just
+be a CLM tool under models/lnd/clm/tools/shared to create single-point
+datasets.
+
+New option to create_newcase "-user_mods_dir" for a directory with
+user chagnes such as user_nl_* namelist modification files, xmlchange_cmnds
+file with xmlchanges to make, and SourceMods/src.*/* files.
+
+Requirements for tag: bit-for-bit bug-fixes and work on PTCLM
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+   1868 (Add user_mods_dir to create_newcase)
+   1854 (Remove fndepdat no longer used)
+   1842 (Remove unused variables from gridcell type) (Bill)
+   1835 (Add write statement to pftdyn so you can see what it is doing)
+   1828 (Clarify modulo used in irrigation code) (Bill)
+   1770 (Remove sitespf_pt valid_values list for clm4_0)
+   1724 (getregional script does NOT work)
+   1625 (Problem setting finidat in CLM for RUN_TYPE=hybrid/branch)
+   1543 (large-file format does NOT work in latest clm)
+   1481 (Provide a more direct way to set a user provided finidat file)
+   1437 (problems with link_dirtree -- no longer needed)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: SourceMods directory on create_newcase
+
+   New -user_mods_dir option to create_newcase that will copy SourceMods/src.*/*
+   files to the new case. Also copies user_nl_* files and xmlchange_cmnds
+
+Describe any changes made to the namelist: remove outnc_large_files
+   Remove outnc_large_files -- wasn't functional 
+   (now always use 64-bit format)
+   Remove fndepdat from namelist_definition/defaults no longer used.
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, sacks (fixes for 1842 and 1828)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts
+   scripts updated to scripts4_131119
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+------ Add externals for tools so PTCLM shows up in tool directory
+------ Add same files and a README file for getregional
+A       models/lnd/clm/tools/SVN_EXTERNAL_DIRECTORIES
+A       models/lnd/clm/tools/shared/ncl_scripts/sample_inlist
+A       models/lnd/clm/tools/shared/ncl_scripts/sample_outlist
+A       models/lnd/clm/tools/shared/ncl_scripts/README.getregional
+
+List all existing files that have been modified, and describe the changes:
+
+------ Get getregional_datasets script working again. Now operates on
+------ lists of files.
+M       models/lnd/clm/tools/shared/ncl_scripts/getregional_datasets.pl
+M       models/lnd/clm/tools/shared/ncl_scripts/getregional_datasets.ncl
+M       models/lnd/clm/test/tools/TSMscript_tools.sh --- Copy sample_*list files
+M       models/lnd/clm/test/tools/nl_files/getregional - change arguments
+
+------ 
+M       models/lnd/clm/tools/clm4_0/interpinic/src/interpinic.F90
+
+------ Remove clm_startfile option and outnc_large_files
+M       models/lnd/clm/bld/config_files/config_definition_clm4_0.xml --
+          Remove valid_values from sitespf_pt so can be anything.
+M       models/lnd/clm/bld/unit_testers/build-namelist_test.pl -- Remove
+          clm_startfile option and move some clm4_5 configure options
+          to build-namelist
+M       models/lnd/clm/bld/build-namelist --- Remove clm_startfile option
+          and outnc_large_files
+M       models/lnd/clm/bld/clm.buildnml.csh - Remove clm_startfile option
+          set finidat/nrevsn like how is done in CAM
+
+------ Remove fndepdat and outnc_large_files
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0_tools.xml
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_0.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90 -------- Remove
+         some gridcell variables not sued
+M       models/lnd/clm/src/clm4_5/main/pftdynMod.F90 ------------- write
+         on what's going on
+M       models/lnd/clm/src/clm4_5/main/controlMod.F90 ------------ Remove
+         outnc_large_files
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90 --------------- Remove
+         a bunch of gridcell variables not needed
+M       models/lnd/clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90 - Add
+         seconds_since_irrig_start_time temporary to clarify
+
+------ 
+M       models/lnd/clm/src/clm4_0/main/pftdynMod.F90 --- add some writes statements
+M       models/lnd/clm/src/clm4_0/main/controlMod.F90 -- remove outnc_large_files
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone yes
+    frankfurt   no
+
+  NOTE: there were some tests that were passing but in the xFail list
+        from before clm4_5_49 that I marked as working.
+
+  regular tests (aux_clm):
+
+    yellowstone_intel yes
+    yellowstone_pgi   yes
+    frankfurt_intel   yes
+    frankfurt_pgi     yes
+    frankfurt_nag     yes
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel yes
+    yellowstone_pgi   yes
+
+  tools testing:
+
+    yellowstone interactive yes
+
+CLM tag used for the baseline comparisons:  clm4_5_49
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_49
 Originator(s):  muszala (Stefan Muszala)
 Date: Sat Nov 16 07:51:27 MST 2013

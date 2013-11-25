@@ -19,7 +19,7 @@ module controlMod
   use clm_varpar   , only : maxpatch_pft, maxpatch_glcmec
   use clm_varctl   , only : caseid, ctitle, nsrest, brnch_retain_casename, hostname, &
                             model_version=>version,    &
-                            iulog, outnc_large_files, finidat, fsurdat, fatmlndfrc, &
+                            iulog, finidat, fsurdat, fatmlndfrc, &
                             fatmtopo, flndtopo, fpftdyn, fpftcon, nrevsn, &
                             create_crop_landunit, allocate_all_vegpfts,   &
                             co2_type, wrtdia, co2_ppmv, nsegspc,          &
@@ -176,8 +176,7 @@ contains
          hist_fincl1,  hist_fincl2, hist_fincl3, &
          hist_fincl4,  hist_fincl5, hist_fincl6, &
          hist_fexcl1,  hist_fexcl2, hist_fexcl3, &
-         hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
-         outnc_large_files
+         hist_fexcl4,  hist_fexcl5, hist_fexcl6
 
     ! BGC info
 
@@ -404,7 +403,6 @@ contains
 
     ! history file variables
 
-    call mpi_bcast (outnc_large_files, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_empty_htapes, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_dov2xy, size(hist_dov2xy), MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_nhtfrq, size(hist_nhtfrq), MPI_INTEGER, 0, mpicom, ier)
@@ -536,9 +534,6 @@ contains
     write(iulog,*) 'Restart parameters:'
     write(iulog,*)'   restart pointer file directory     = ',trim(rpntdir)
     write(iulog,*)'   restart pointer file name          = ',trim(rpntfil)
-    if ( outnc_large_files ) then
-       write(iulog,*)'Large file support for output files is ON'
-    end if
     write(iulog,*) 'model physics parameters:'
 
     if ( trim(co2_type) == 'constant' )then

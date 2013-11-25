@@ -249,6 +249,7 @@ contains
     integer  :: day                      ! day at start of time step
     integer  :: time                     ! time at start of time step (seconds after 0Z)
     integer  :: local_time               ! local time at start of time step (seconds after solar midnight)
+    integer  :: seconds_since_irrig_start_time
     integer  :: irrig_nsteps_per_day     ! number of time steps per day in which we irrigate
     logical  :: check_for_irrig(bounds%begp:bounds%endp) ! where do we need to check soil moisture to see if we need to irrigate?
     logical  :: frozen_soil(bounds%begp:bounds%endp)     ! set to true if we have encountered a frozen soil layer
@@ -552,7 +553,8 @@ contains
       if (irrigated(ivt(p)) == 1._r8 .and. elai(p) > irrig_min_lai .and. btran(p) < irrig_btran_thresh) then
          ! see if it's the right time of day to start irrigating:
          local_time = modulo(time + nint(grc%londeg(g)/degpsec), isecspday)
-         if (modulo(local_time - irrig_start_time, isecspday) < dtime) then
+         seconds_since_irrig_start_time = modulo(local_time - irrig_start_time, isecspday)
+         if (seconds_since_irrig_start_time < dtime) then
             ! it's time to start irrigating
             check_for_irrig(p)    = .true.
             n_irrig_steps_left(p) = irrig_nsteps_per_day

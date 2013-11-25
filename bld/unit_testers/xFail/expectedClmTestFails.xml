@@ -7,12 +7,9 @@
             <compare>
                <entry testId="211" failType="xFail"> missing datasets for us20 </entry>
                <entry testId="213" failType="xFail"> missing datasets for us20 </entry>
-               <entry testId="291" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="293" failType="xFail"> ne16 missing finidat file for 1850</entry>
             </compare>
             <generate>
                <entry testId="138" failType="xFail"> missing datasets for us20 </entry>
-               <entry testId="186" failType="xFail"> ne16 missing finidat file for 1850</entry>
             </generate>
 
             <entry testId="6" failType="xFail"> build-namelist tests need to be updated for cpp removal </entry>
@@ -93,7 +90,6 @@
             <entry testId="214" failType="xFail"> build-namelist tests need to be updated for cpp removal </entry>
             <entry testId="218" failType="xFail"> build-namelist tests need to be updated for cpp removal </entry>
             <entry testId="219" failType="xFail"> build-namelist tests need to be updated for cpp removal </entry>
-            <entry testId="223" failType="xFail"> build-namelist tests need to be updated for cpp removal </entry>
             <entry testId="224" failType="xFail"> build-namelist tests need to be updated for cpp removal </entry>
             <entry testId="228" failType="xFail"> build-namelist tests need to be updated for cpp removal </entry>
             <entry testId="229" failType="xFail"> build-namelist tests need to be updated for cpp removal </entry>

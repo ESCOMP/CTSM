@@ -31,7 +31,7 @@ Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) r
 </entry>
 
 <entry id="sitespf_pt" 
-       valid_values="none,1x1_brazil,1x1_tropicAtl,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,us20,wus12" 
+       valid_values=""
        value="none" 
        category="physics">
 Flag to turn on site specific special configuration flags for supported single 

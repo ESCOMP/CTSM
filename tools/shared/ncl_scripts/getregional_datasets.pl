@@ -40,47 +40,29 @@ if ($ProgDir) {
     $scrdir = $cwd;
 }
 
-# Default resolution
-
-my $res        = "1.9x2.5";
-my $rcp        = "-999.9";
-my $mask       = "gx1v6";
-my $sim_year   = "2000";
-my $sim_yr_rng = "constant";
-my $mycsmdata  = $ENV{'HOME'} . "/inputdata";
+my $gridfilename = "fatmlndfrc";
 
 #-----------------------------------------------------------------------------------------------
 
 sub usage {
     die <<EOF;
 SYNOPSIS
-     $ProgName [options]	   Extracts out files for a single box region from the global
-                                   grid for the region of interest. Choose a box determined by
-                                   the NorthEast and SouthWest corners.
+     $ProgName [options]	    Extracts out files for a single box region from the global
+                                    grid for the region of interest. Choose a box determined by
+                                    the NorthEast and SouthWest corners.
 REQUIRED OPTIONS
-     -mydataid "name" [or -id]     Your name for the region that will be extracted.               (REQUIRED)
-                                   Recommended name: grid-size_global-resolution_location (?x?pt_f??_????)
-                                   (i.e. 12x13pt_f19_alaskaUSA for 12x13 grid cells from the f19 global resolution over Alaska)
-     -NE_corner "lat,lon" [or -ne] North East corner latitude and longitude                       (REQUIRED)
-     -SW_corner "lat,lon" [or -sw] South West corner latitude and longitude                       (REQUIRED)
+     -infilelist  "inlistfilename"  Input list of files to extract (namelist format).
+       [-or -i] (REQUIRED)          The file variable ($gridfilename) is also required.
+     -outfilelist "outlistfilename" Output list of filenames to extract (namelist format).
+       [-or -o] (REQUIRED)          Must be the same variable names as infilelist.
+     -NE_corner "lat,lon" [or -ne]  North East corner latitude and longitude                       (REQUIRED)
+     -SW_corner "lat,lon" [or -sw]  South West corner latitude and longitude                       (REQUIRED)
 OPTIONS
-     -debug [or -d]                Just debug by printing out what the script would do.
-                                   This can be useful to find the size of the output area.
-     -help [or -h]                 Print usage to STDOUT.
-     -mask "landmask"              Type of land-mask (i.e. navy, gx3v7, gx1v6 etc.) (default $mask)
-     -mycsmdata "dir"              Root directory of where to put your csmdata. 
-                                   (default $mycsmdata or value of CSMDATA env variable)
-     -nomv                         Do NOT move datasets to final location, just leave them in current directory
-     -res "resolution"             Global horizontal resolution to extract data from (default $res).
-     -rcp "pathway"                Representative concentration pathway for future scenarios 
-                                   Only used when simulation year range ends in a future
-                                   year, such as 2100.
-                                   (default $rcp).
-     -sim_year   "year"            Year to simulate for input datasets (i.e. 1850, 2000) (default $sim_year)
-     -sim_yr_rng "year-range"      Range of years for transient simulations 
-                                   (i.e. 1850-2000, 1850-2100,  or constant) (default $sim_yr_rng)
+     -debug [or -d]                 Just debug by printing out what the script would do.
+                                    This can be useful to find the size of the output area.
+     -help [or -h]                  Print usage to STDOUT.
 
-     -verbose [or -v]              Make output more verbose.
+     -verbose [or -v]               Make output more verbose.
 EOF
 }
 
@@ -122,31 +104,19 @@ EOF
 # Process command-line options.
 
 my %opts = ( 
-              mask             => $mask,
-              sim_year         => $sim_year,
-              sim_yr_rng       => $sim_yr_rng,
-              mycsmdata        => undef,
-              mydataid         => undef,
               SW_corner        => undef,
               NE_corner        => undef,
-              res              => $res,
-              rcp              => $rcp,
+              infilelist       => undef,
+              outfilelist      => undef,
               help             => 0, 
-              nomv             => 0,
               verbose          => 0,
               debug            => 0,
            );
 GetOptions(
     "sw|SW_corner=s"   => \$opts{'SW_corner'},
     "ne|NE_corner=s"   => \$opts{'NE_corner'},
-    "mycsmdata=s"      => \$opts{'mycsmdata'},
-    "id|mydataid=s"    => \$opts{'mydataid'},
-    "sim_year=i"       => \$opts{'sim_year'},
-    "mask=s"           => \$opts{'mask'},
-    "res=s"            => \$opts{'res'},
-    "rcp=f"            => \$opts{'rcp'},
-    "nomv"             => \$opts{'nomv'},
-    "sim_yr_rng=s"     => \$opts{'sim_yr_rng'},
+    "i|infilelist=s"   => \$opts{'infilelist'},
+    "o|outfilelist=s"  => \$opts{'outfilelist'},
     "h|help"           => \$opts{'help'},
     "d|debug"          => \$opts{'debug'},
     "v|verbose"        => \$opts{'verbose'},
@@ -161,12 +131,12 @@ if (@ARGV) {
     usage();
 }
 
-if ( ! defined($opts{'SW_corner'}) || ! defined($opts{'NE_corner'}) ) {
-    print "ERROR: MUST set both SW_corner and NE_corner\n";
+if ( ! defined($opts{'infilelist'}) || ! defined($opts{'outfilelist'}) ) {
+    print "ERROR: MUST set both infilelist and outfilelist\n";
     usage();
 }
-if ( ! defined($opts{'mydataid'}) ) {
-    print "ERROR: MUST set mydataid\n";
+if ( ! defined($opts{'SW_corner'}) || ! defined($opts{'NE_corner'}) ) {
+    print "ERROR: MUST set both SW_corner and NE_corner\n";
     usage();
 }
 
@@ -182,46 +152,163 @@ if ( $E_lon <= $W_lon ) {
     usage();
 }
 
-my $inputdata_rootdir;
-
-if (defined($opts{'mycsmdata'})) {
-    $inputdata_rootdir = $opts{'mycsmdata'};
-}
-elsif (defined $ENV{'CSMDATA'}) {
-    $inputdata_rootdir = $ENV{'CSMDATA'};
-}
-else {
-    die "$ProgName - ERROR: Personal CESM inputdata root directory must be specified by either -mycsmdata argument\n" .
-        " or by the CSMDATA environment variable. :";
-}
-(-d $inputdata_rootdir)  or  die <<"EOF";
-** $ProgName - CESM inputdata root is not a directory: \"$inputdata_rootdir\" **
-EOF
-$ENV{'DIN_LOC_ROOT'} = $inputdata_rootdir;
-
-print "CESM inputdata root directory: $inputdata_rootdir\n";
-
 #-----------------------------------------------------------------------------------------------
 my $debug;
 if ( $opts{'debug'} ) {
   $debug = "DEBUG=TRUE";  
-}
-my $nomv;
-if ( $opts{'nomv'} ) {
-  $nomv = "NOMV=TRUE";  
 }
 my $print;
 if ( $opts{'verbose'} ) {
   $print = "PRINT=TRUE";  
 }
 
+my %infiles  = parse_filelist( $opts{'infilelist'}  );
+my %outfiles = parse_filelist( $opts{'outfilelist'} );
+
+(my $GRIDFILE, my $INFILES, my $OUTFILES) = get_filelists( \%infiles, \%outfiles );
+
+write_usermods( \%outfiles );
+
 my $cmd = "env S_LAT=$S_lat W_LON=$W_lon N_LAT=$N_lat E_LON=$E_lon " . 
-          "SIM_YR=$opts{'sim_year'} SIM_YR_RNG=$opts{'sim_yr_rng'} MASK=$opts{'mask'} " .
-          "CLM_USRDAT_NAME=$opts{'mydataid'} RCP=$opts{'rcp'} RES=$opts{'res'} MYCSMDATA=$inputdata_rootdir " .
-          "$debug $print $nomv ncl $scrdir/getregional_datasets.ncl";
+          "GRIDFILE=$GRIDFILE OUTFILELIST=$OUTFILES INFILELIST=$INFILES " .
+          "$debug $print ncl $scrdir/getregional_datasets.ncl";
 
 print "Execute: $cmd\n";
 system( $cmd );
+
+#-------------------------------------------------------------------------------
+
+sub parse_filelist {
+#
+# Parse a list of files (in "filename = 'filepath'" format) into a hash
+#
+  my $file = shift;
+
+  # check that the file exists
+  (-f $file)  or  die "$nm: failed to find filelist file $file";
+  my $fh = IO::File->new($file, '<') or die "$nm: can't open file: $file\n";
+  
+  my %files = ( );
+  my $valstring1 = '\'[^\']*\'';
+  my $valstring2 = '"[^"]*"';
+  while( my $line = <$fh> ) {
+    if ( $line =~ m/^\s*(\S+)\s*=\s*($valstring1|$valstring2)$/ ) {
+       my $var    = $1;
+       my $string = $2;
+       $string =~ s/'|"//g;
+       if ( exists($files{$var}) ) {
+          die "$nm: variable listed twice in file ($file): $var\n";
+       }
+       $files{$var} = $string;
+    # Ignore empty lines or comments
+    } elsif ( ($line =~ m/^\s*$/) || ($line =~ m/^\s*!/) ) {
+       # ignore empty lines or comments
+    } else {
+       die "$nm: unexpected line in $file: $line\n";
+    }
+  }
+  $fh->close; 
+
+  return( %files );
+}
+
+#-------------------------------------------------------------------------------
+
+sub get_filelists {
+#
+# Make sure file hashes compare correctly, and if so return in and out lists
+#
+  my $infiles_ref  = shift;
+  my $outfiles_ref = shift;
+
+  my @infiles  = sort( keys(%$infiles_ref ) );
+  my @outfiles = sort( keys(%$outfiles_ref) );
+
+  if ( $#infiles != $#outfiles ) {
+     die "$nm: number of infiles is different from outfiles\n";
+  }
+  if ( "@infiles" ne "@outfiles" ) {
+     die "$nm: list of infiles is different from outfiles list\n";
+  }
+  my $infilelist  = "";
+  my $outfilelist = "";
+
+  foreach my $file ( @infiles ) {
+     my $infile  = $$infiles_ref{$file};
+     if ( ! -f "$infile" ) {
+        die "$nm: infile ($file) $infile does NOT exist!\n";
+     }
+     if ( $infilelist eq "" ) {
+        $infilelist  = $infile;
+     } else {
+        $infilelist  .= ",$infile";
+     }
+     my $outfile = $$outfiles_ref{$file};
+     if ( $outfilelist eq "" ) {
+        $outfilelist  = $outfile;
+     } else {
+        $outfilelist  .= ",$outfile";
+     }
+     if ( -f "$outfile" ) {
+        die "$nm: outfile ($file) $outfile already exists, delete it if you want to overwrite!\n";
+     }
+  }
+  my $var = $gridfilename;
+  my $gridfile = "";
+  if ( exists($$infiles_ref{$var}) ) {
+     $gridfile = $$infiles_ref{$var};
+  } else {
+      die "$nm: the grid file ($var) is required to be on the lists!\n";
+  }
+
+  return( $gridfile, $infilelist, $outfilelist );
+}
+
+#-------------------------------------------------------------------------------
+
+sub write_usermods {
+#
+# Write the user_nl_clm and xmlchng_cmnds files out
+# These can be used to setup a case after getregional_datasets is run.
+#
+  my $outfiles_ref = shift;
+
+  my $cwd = getcwd();  # current working directory
+
+  #
+  # Write out the user_nl_clm file
+  #
+  my $usrnlfile = "user_nl_clm";
+  my $fh = IO::File->new($usrnlfile, '>') or die "$nm: can't open file: $usrnlfile\n";
+
+  my $outgridfile = undef;
+  foreach my $file ( sort(keys(%$outfiles_ref)) ) {
+     my $filepath = $$outfiles_ref{$file};
+     # Add current directory on front of path if not an absolute path in filepath
+     if ( $filepath !~ m/^\// ) {
+        $filepath = "$cwd/$filepath";
+     }
+     # Write all filenames out besides the gridfilename
+     if ( $file ne $gridfilename ) {
+        print $fh "$file = '$filepath'\n";
+     } else {
+       $outgridfile = $filepath;
+     }
+  }
+  $fh->close();
+  #
+  # Write out the xmlchnge_cmnds file
+  #
+  (my $filename = $outgridfile)=~ s!(.*)/!!;
+  my $filedir   = $1;
+  my $cmndsfile = "xmlchange_cmnds";
+  my $fh = IO::File->new($cmndsfile, '>') or die "$nm: can't open file: $cmndsfile\n";
+  print $fh "./xmlchange ATM_DOMAIN_PATH=$filedir\n";
+  print $fh "./xmlchange LND_DOMAIN_PATH=$filedir\n";
+  print $fh "./xmlchange ATM_DOMAIN_FILE=$filename\n";
+  print $fh "./xmlchange LND_DOMAIN_FILE=$filename\n";
+  $fh->close();
+}
 
 #-------------------------------------------------------------------------------
 

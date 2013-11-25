@@ -2308,17 +2308,6 @@ type(landunit_type), target :: lun  !geomorphological landunits
 !----------------------------------------------------
 
 type, public :: gridcell_type
-   ! g/l/c/p hierarchy, local g/l/c/p cells only
-   integer, pointer :: luni(:)          !beginning landunit index 
-   integer, pointer :: lunf(:)          !ending landunit index 
-   integer, pointer :: nlandunits(:)    !number of landunit for each gridcell
-   integer, pointer :: coli(:)          !beginning column index
-   integer, pointer :: colf(:)          !ending column index
-   integer, pointer :: ncolumns(:)      !number of columns for each gridcell
-   integer, pointer :: pfti(:)          !beginning pft index
-   integer, pointer :: pftf(:)          !ending pft index
-   integer, pointer :: npfts(:)         !number of pfts for each gridcell
-
    ! topological mapping functionality, local 1d gdc arrays
    integer , pointer :: gindex(:)       !global index
    real(r8), pointer :: area(:)         !total land area, gridcell (km^2)

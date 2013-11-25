@@ -125,6 +125,7 @@ contains
     integer :: dimids(3) = -1      ! netCDF dimension ids
     integer :: dimlen              ! input dimension length       
     integer :: ret                 ! netcdf return code
+    integer :: ncformat            ! netcdf file format
     character(len=256) :: varname  !variable name
     real(r8), allocatable :: rbufmlo (:,:) !output array
     !--------------------------------------------------------------------
@@ -135,6 +136,11 @@ contains
 
     call check_ret (nf90_open(fin,  NF90_NOWRITE, ncidi ))
     call check_ret (nf90_open(fout, NF90_WRITE,   ncido ))
+    call check_ret (nf_inq_format( ncido, ncformat ))
+    if ( ncformat /= NF_FORMAT_64BIT )then
+       write (6,*) 'Warning: output file is NOT in NetCDF large-file format!'
+       !stop
+    end if
 
     call addglobal (ncido, cmdline)
 

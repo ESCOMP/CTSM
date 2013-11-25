@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_50         erik 11/24/2013 Bring in a bunch of b4b bugfixes, fix getregional script, start move of PTCLM to PTCLMmkdata tool
    clm4_5_49      muszala 11/16/2013 swenson anomaly forcing - part 1
    clm4_5_48      muszala 11/14/2013 bug fixes for CLM dry deposition and MEGAN VOC emissions
    clm4_5_47      muszala 11/12/2013 fix Bug 1858 - AGDD now reset annually

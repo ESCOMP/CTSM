@@ -400,10 +400,6 @@ contains
     type(gridcell_type), intent(inout):: grc
     !------------------------------------------------------------------------
 
-    allocate(grc%luni(beg:end),grc%lunf(beg:end),grc%nlandunits(beg:end))
-    allocate(grc%coli(beg:end),grc%colf(beg:end),grc%ncolumns  (beg:end))
-    allocate(grc%pfti(beg:end),grc%pftf(beg:end),grc%npfts     (beg:end))
-
     allocate(grc%gindex(beg:end))
     allocate(grc%area(beg:end))
     allocate(grc%lat(beg:end))

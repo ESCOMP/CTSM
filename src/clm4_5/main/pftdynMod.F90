@@ -265,9 +265,15 @@ contains
 
     ! Get pctpft time samples bracketing the current time
 
+    if (masterproc) then
+       write(iulog,*) 'Get PFTDYN data for year: ', yearspft(nt1)
+    end if
     call pftdyn_getdata(bounds, nt1, &
          wtpft1(bounds%begg:bounds%endg, natpft_lb:natpft_ub), &
          natpft_lb,natpft_ub)
+    if (masterproc) then
+       write(iulog,*) 'Get PFTDYN data for year: ', yearspft(nt2)
+    end if
     call pftdyn_getdata(bounds, nt2, &
          wtpft2(bounds%begg:bounds%endg, natpft_lb:natpft_ub), &
          natpft_lb,natpft_ub)
@@ -360,6 +366,9 @@ contains
              end do
           end do
 
+          if (masterproc) then
+             write(iulog,*) 'Get PFTDYN data for year: ', yearspft(nt2)
+          end if
           call pftdyn_getdata(bounds, nt2, &
                wtpft2(bounds%begg:bounds%endg, natpft_lb:natpft_ub), &
                natpft_lb,natpft_ub)
