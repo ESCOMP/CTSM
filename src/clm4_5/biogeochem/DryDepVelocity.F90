@@ -55,7 +55,7 @@ Module DryDepVelocity
   use clmtype 
   use abortutils,           only : endrun
   use clm_time_manager,     only : get_nstep, get_curr_date, get_curr_time 
-  use clm_atmlnd,           only : clm_a2l
+  use clm_atmlnd,           only : clm_a2l, a2l_downscaled_col
   use spmdMod,              only : masterproc
   use seq_drydep_mod,       only : n_drydep, drydep_list
   use seq_drydep_mod,       only : drydep_method, DD_XLND
@@ -161,24 +161,24 @@ CONTAINS
     if ( n_drydep == 0 .or. drydep_method /= DD_XLND ) return
 
    associate(& 
-   forc_t      =>    clm_a2l%forc_t                              , & ! Input:  [real(r8) (:)] atmospheric temperature (Kelvin)                   
-   forc_q      =>    clm_a2l%forc_q                              , & ! Input:  [real(r8) (:)] atmospheric specific humidity (kg/kg)              
-   forc_psrf   =>    clm_a2l%forc_pbot                           , & ! Input:  [real(r8) (:)] surface pressure (Pa)                              
-   forc_rain   =>    clm_a2l%forc_rain                           , & ! Input:  [real(r8) (:)] rain rate [mm/s]                                   
-   forc_solai  =>    clm_a2l%forc_solai                          , & ! Input:  [real(r8) (:,:)] direct beam radiation (visible only)             
-   forc_solad  =>    clm_a2l%forc_solad                          , & ! Input:  [real(r8) (:,:)] direct beam radiation (visible only)             
-   elai        =>    pps%elai                                    , & ! Input:  [real(r8) (:)] one-sided leaf area index with burying by snow     
-   ram1        =>    pps%ram1                                    , & ! Input:  [real(r8) (:)] aerodynamical resistance                           
-   vds         =>    pps%vds                                     , & ! Input:  [real(r8) (:)] aerodynamical resistance                           
-   fsun        =>    pps%fsun                                    , & ! Input:  [real(r8) (:)] sunlit fraction of canopy                          
-   rssun       =>    pps%rssun                                   , & ! Input:  [real(r8) (:)] stomatal resistance                                
-   rssha       =>    pps%rssha                                   , & ! Input:  [real(r8) (:)] shaded stomatal resistance (s/m)                   
-   rb1         =>    pps%rb1                                     , & ! Input:  [real(r8) (:)] leaf boundary layer resistance [s/m]               
-   mlaidiff    =>    pps%mlaidiff                                , & ! Input:  [real(r8) (:)] difference in lai between month one and month two  
-   annlai      =>    pps%annlai                                  , & ! Input:  [real(r8) (:,:)] 12 months of monthly lai from input data set     
-   h2osoi_vol  =>    cws%h2osoi_vol                              , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat)   
-   snow_depth  =>    cps%snow_depth                              , & ! Input:  [real(r8) (:)]  snow height (m)                                   
-   velocity    =>    pdd%drydepvel                                 & ! Output:  [real(r8) (:,:)]  cm/sec                                                 
+   forc_t      =>    a2l_downscaled_col%forc_t    , & ! Input:  [real(r8) (:)] atmospheric temperature (Kelvin)                   
+   forc_q      =>    a2l_downscaled_col%forc_q    , & ! Input:  [real(r8) (:)] atmospheric specific humidity (kg/kg)              
+   forc_psrf   =>    a2l_downscaled_col%forc_pbot , & ! Input:  [real(r8) (:)] surface pressure (Pa)                              
+   forc_rain   =>    a2l_downscaled_col%forc_rain , & ! Input:  [real(r8) (:)] rain rate [mm/s]                                   
+   forc_solai  =>    clm_a2l%forc_solai           , & ! Input:  [real(r8) (:,:)] direct beam radiation (visible only)             
+   forc_solad  =>    clm_a2l%forc_solad           , & ! Input:  [real(r8) (:,:)] direct beam radiation (visible only)             
+   elai        =>    pps%elai                     , & ! Input:  [real(r8) (:)] one-sided leaf area index with burying by snow     
+   ram1        =>    pps%ram1                     , & ! Input:  [real(r8) (:)] aerodynamical resistance                           
+   vds         =>    pps%vds                      , & ! Input:  [real(r8) (:)] aerodynamical resistance                           
+   fsun        =>    pps%fsun                     , & ! Input:  [real(r8) (:)] sunlit fraction of canopy                          
+   rssun       =>    pps%rssun                    , & ! Input:  [real(r8) (:)] stomatal resistance                                
+   rssha       =>    pps%rssha                    , & ! Input:  [real(r8) (:)] shaded stomatal resistance (s/m)                   
+   rb1         =>    pps%rb1                      , & ! Input:  [real(r8) (:)] leaf boundary layer resistance [s/m]               
+   mlaidiff    =>    pps%mlaidiff                 , & ! Input:  [real(r8) (:)] difference in lai between month one and month two  
+   annlai      =>    pps%annlai                   , & ! Input:  [real(r8) (:,:)] 12 months of monthly lai from input data set     
+   h2osoi_vol  =>    cws%h2osoi_vol               , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat)   
+   snow_depth  =>    cps%snow_depth               , & ! Input:  [real(r8) (:)]  snow height (m)                                   
+   velocity    =>    pdd%drydepvel                  & ! Output:  [real(r8) (:,:)]  cm/sec                                                 
    )
 
     !_________________________________________________________________ 
@@ -193,10 +193,10 @@ CONTAINS
           g = pft%gridcell(pi)
           !solar_flux = forc_lwrad  !rename CLM variables to fit with Dry Dep variables 
 
-          pg         = forc_psrf(g)  
-          spec_hum   = forc_q(g)
-          rain       = forc_rain(g) 
-          sfc_temp   = forc_t(g) 
+          pg         = forc_psrf(c)  
+          spec_hum   = forc_q(c)
+          rain       = forc_rain(c) 
+          sfc_temp   = forc_t(c) 
           lat        = grc%latdeg(g) 
           lon        = grc%londeg(g) 
           solar_flux = forc_solad(g,1) 

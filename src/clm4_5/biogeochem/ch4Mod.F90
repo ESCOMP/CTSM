@@ -11,7 +11,7 @@ module ch4Mod
   use clm_varpar        , only : nlevsoi, ngases, nlevsno
   use clm_varcon        , only : denh2o, denice, tfrz, grav, spval, rgas
   use clm_varcon        , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
-  use clm_atmlnd        , only : clm_a2l, clm_l2a
+  use clm_atmlnd        , only : clm_a2l, a2l_not_downscaled_gcell, clm_l2a
   use clm_time_manager  , only : get_step_size, get_nstep
   use clm_varctl        , only : iulog, use_cn, use_nitrif_denitrif
   use abortutils        , only : endrun
@@ -353,8 +353,8 @@ contains
     !-----------------------------------------------------------------------
 
    associate(& 
-   forc_t                              =>    clm_a2l%forc_t                              , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                  
-   forc_pbot                           =>    clm_a2l%forc_pbot                           , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
+   forc_t                              =>    a2l_not_downscaled_gcell%forc_t               , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                  
+   forc_pbot                           =>    a2l_not_downscaled_gcell%forc_pbot            , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
    forc_po2                            =>    clm_a2l%forc_po2                            , & ! Input:  [real(r8) (:)]  O2 partial pressure (Pa)                          
    forc_pco2                           =>    clm_a2l%forc_pco2                           , & ! Input:  [real(r8) (:)]  CO2 partial pressure (Pa)                         
    forc_pch4                           =>    clm_a2l%forc_pch4                           , & ! Input:  [real(r8) (:)]  CH4 partial pressure (Pa)                         
@@ -1562,6 +1562,7 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
 
   ! !USES:
   use clmtype
+  use clm_atmlnd      , only : a2l_downscaled_col
   use clm_time_manager, only : get_step_size
   !
   ! !ARGUMENTS:
@@ -1574,7 +1575,7 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
   logical, intent(in) :: lake                ! function called with lake filter
   !
   ! !LOCAL VARIABLES:
-  integer :: c,j,g    ! indices
+  integer :: c,j      ! indices
   integer :: fc       ! soil filter column index
   integer :: fp       ! soil filter pft index
   real(r8) :: dtime   ! land model time step (sec)
@@ -1598,18 +1599,18 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
    call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
-   forc_pbot      =>    clm_a2l%forc_pbot , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
-   cgridcell      =>    col%gridcell      , & ! Input:  [integer (:)]  gridcell of corresponding column                   
-   z              =>    cps%z             , & ! Input:  [real(r8) (:,:)]  soil layer depth (m)                            
-   dz             =>    cps%dz            , & ! Input:  [real(r8) (:,:)]  layer thickness (m)  (-nlevsno+1:nlevsoi)       
-   zi             =>    cps%zi            , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m)           
-   t_soisno       =>    ces%t_soisno      , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
-   h2osoi_vol     =>    cws%h2osoi_vol    , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-   watsat         =>    cps%watsat        , & ! Input:  [real(r8) (:,:)]  volumetric soil water at saturation (porosity)  
-   lakedepth      =>    cps%lakedepth     , & ! Input:  [real(r8) (:)]  column lake depth (m)                             
-   lake_icefrac   =>    cws%lake_icefrac  , & ! Input:  [real(r8) (:,:)]  mass fraction of lake layer that is frozen      
-   h2osfc         =>    cws%h2osfc        , & ! Input:  [real(r8) (:)]  surface water (mm)                                
-   frac_h2osfc    =>    cps%frac_h2osfc     & ! Input:  [real(r8) (:)]  fraction of ground covered by surface water (0 to 1)
+   forc_pbot      =>    a2l_downscaled_col%forc_pbot , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
+   cgridcell      =>    col%gridcell                 , & ! Input:  [integer (:)]  gridcell of corresponding column                   
+   z              =>    cps%z                        , & ! Input:  [real(r8) (:,:)]  soil layer depth (m)                            
+   dz             =>    cps%dz                       , & ! Input:  [real(r8) (:,:)]  layer thickness (m)  (-nlevsno+1:nlevsoi)       
+   zi             =>    cps%zi                       , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m)           
+   t_soisno       =>    ces%t_soisno                 , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
+   h2osoi_vol     =>    cws%h2osoi_vol               , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+   watsat         =>    cps%watsat                   , & ! Input:  [real(r8) (:,:)]  volumetric soil water at saturation (porosity)  
+   lakedepth      =>    cps%lakedepth                , & ! Input:  [real(r8) (:)]  column lake depth (m)                             
+   lake_icefrac   =>    cws%lake_icefrac             , & ! Input:  [real(r8) (:,:)]  mass fraction of lake layer that is frozen      
+   h2osfc         =>    cws%h2osfc                   , & ! Input:  [real(r8) (:)]  surface water (mm)                                
+   frac_h2osfc    =>    cps%frac_h2osfc                & ! Input:  [real(r8) (:)]  fraction of ground covered by surface water (0 to 1)
    )
 
      if (sat == 0) then ! unsaturated
@@ -1638,7 +1639,6 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
    do j=1,nlevsoi
       do fc = 1, num_methc
          c = filter_methc (fc)
-         g = cgridcell(c)
 
          if (j .gt. jwt(c) .and. t_soisno(c,j) > tfrz) then ! Ebullition occurs only below the water table
 
@@ -1647,13 +1647,13 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
             k_h_cc = t_soisno(c,j) * k_h * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)] 
 
             if (.not. lake) then
-                pressure = forc_pbot(g) + denh2o * grav * (z(c,j)-zi(c,jwt(c))) ! (Pa)
+                pressure = forc_pbot(c) + denh2o * grav * (z(c,j)-zi(c,jwt(c))) ! (Pa)
                 if (sat == 1 .and. frac_h2osfc(c) > 0._r8) then ! Add ponding pressure head
                    pressure = pressure + denh2o * grav * h2osfc(c)/1000._r8/frac_h2osfc(c)
                                                           ! mm     / mm/m
                 end if
             else
-                pressure = forc_pbot(g) + denh2o * grav * (z(c,j) + lakedepth(c))
+                pressure = forc_pbot(c) + denh2o * grav * (z(c,j) + lakedepth(c))
             end if
 
             ! Compare partial pressure to ambient pressure.
@@ -1804,8 +1804,7 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
    h2osfc                              =>    cws%h2osfc                                  , & ! Input:  [real(r8) (:)]  surface water (mm)                                
    frac_h2osfc                         =>    cps%frac_h2osfc                             , & ! Input:  [real(r8) (:)]  fraction of ground covered by surface water (0 to 1)
    t_h2osfc                            =>    ces%t_h2osfc                                , & ! Input:  [real(r8) (:)]  surface water temperature                         
-   c_atm                               =>    gch4%c_atm                                  , & ! InOut:  [real(r8) (:,:)]  CH4, O2, CO2 atmospheric conc  (mol/m3)         
-   forc_pbot                           =>    clm_a2l%forc_pbot                             & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
+   c_atm                               =>    gch4%c_atm                                    & ! InOut:  [real(r8) (:,:)]  CH4, O2, CO2 atmospheric conc  (mol/m3)         
    )
 
    if (sat == 0) then ! unsaturated

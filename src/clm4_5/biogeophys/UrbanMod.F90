@@ -559,7 +559,7 @@ contains
                                   icol_road_perv, icol_road_imperv, sb
     use clm_varcon       , only : tfrz                ! To use new constant..
     use clm_time_manager , only : get_curr_date, get_step_size
-    use clm_atmlnd       , only : clm_a2l
+    use clm_atmlnd       , only : clm_a2l, a2l_not_downscaled_gcell
     !
     ! !ARGUMENTS:
     implicit none
@@ -617,7 +617,7 @@ contains
    forc_solad                          =>    clm_a2l%forc_solad                          , & ! Input:  [real(r8) (:,:)]  direct beam radiation  (vis=forc_sols , nir=forc_soll ) (W/m**2)
    forc_solai                          =>    clm_a2l%forc_solai                          , & ! Input:  [real(r8) (:,:)]  diffuse beam radiation (vis=forc_sols , nir=forc_soll ) (W/m**2)
    forc_solar                          =>    clm_a2l%forc_solar                          , & ! Input:  [real(r8) (:)]  incident solar radiation (W/m**2)                 
-   forc_lwrad                          =>    clm_a2l%forc_lwrad                          , & ! Input:  [real(r8) (:)]  downward infrared (longwave) radiation (W/m**2)   
+   forc_lwrad                          =>    a2l_not_downscaled_gcell%forc_lwrad           , & ! Input:  [real(r8) (:)]  downward infrared (longwave) radiation (W/m**2)   
    pfti                                =>   lun%pfti                                     , & ! Input:  [integer (:)]  beginning pfti index for landunit                  
    pftf                                =>   lun%pftf                                     , & ! Input:  [integer (:)]  ending pftf index for landunit                     
    coli                                =>   lun%coli                                     , & ! Input:  [integer (:)]  beginning column index for landunit                
@@ -2251,7 +2251,7 @@ contains
     use QSatMod            , only : QSat
     use clm_varpar         , only : maxpatch_urb, nlevurb, nlevgrnd
     use clm_time_manager   , only : get_curr_date, get_step_size, get_nstep
-    use clm_atmlnd         , only : clm_a2l
+    use clm_atmlnd         , only : clm_a2l, a2l_not_downscaled_gcell
 
     !
     ! !ARGUMENTS:
@@ -2376,13 +2376,13 @@ contains
    canyon_hwr                          =>    lun%canyon_hwr                              , & ! Input:  [real(r8) (:)]  ratio of building height to street width          
    wtroad_perv                         =>    lun%wtroad_perv                             , & ! Input:  [real(r8) (:)]  weight of pervious road wrt total road            
    wind_hgt_canyon                     =>    urban_params%wind_hgt_canyon                , & ! Input:  [real(r8) (:)]  height above road at which wind in canyon is to be computed (m)
-   forc_t                              =>    clm_a2l%forc_t                              , & ! Input:  [real(r8) (:)]  atmospheric temperature (K)                       
-   forc_th                             =>    clm_a2l%forc_th                             , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (K)             
+   forc_t                              =>    a2l_not_downscaled_gcell%forc_t               , & ! Input:  [real(r8) (:)]  atmospheric temperature (K)                       
+   forc_th                             =>    a2l_not_downscaled_gcell%forc_th              , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (K)             
    forc_u                              =>    clm_a2l%forc_u                              , & ! Input:  [real(r8) (:)]  atmospheric wind speed in east direction (m/s)    
    forc_v                              =>    clm_a2l%forc_v                              , & ! Input:  [real(r8) (:)]  atmospheric wind speed in north direction (m/s)   
-   forc_rho                            =>    clm_a2l%forc_rho                            , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                 
-   forc_q                              =>    clm_a2l%forc_q                              , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)             
-   forc_pbot                           =>    clm_a2l%forc_pbot                           , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
+   forc_rho                            =>    a2l_not_downscaled_gcell%forc_rho             , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                 
+   forc_q                              =>    a2l_not_downscaled_gcell%forc_q               , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)             
+   forc_pbot                           =>    a2l_not_downscaled_gcell%forc_pbot            , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
    londeg                              =>    grc%londeg                                  , & ! Input:  [real(r8) (:)]  longitude (degrees)                               
    pfti                                =>   lun%pfti                                     , & ! Input:  [integer (:)]  beginning pft index for landunit                   
    pftf                                =>   lun%pftf                                     , & ! Input:  [integer (:)]  ending pft index for landunit                      

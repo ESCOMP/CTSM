@@ -61,6 +61,7 @@ module controlMod
   use CNVerticalProfileMod, only: &
        exponential_rooting_profile, rootprof_exp, surfprof_exp, pftspecific_rootingprofile
   use CNSharedParamsMod , only : anoxia_wtsat
+  use clm_varcon, only: h2osno_max
 
   !
   ! !PUBLIC TYPES:
@@ -186,8 +187,9 @@ contains
                                                                       ! lake_melt_icealb is of dimension numrad
 
     ! Glacier_mec info
-    namelist /clm_inparm / &    
-         maxpatch_glcmec, glc_smb, glc_dyntopo, glc_grid, fglcmask 
+    namelist /clm_inparm/ &    
+         maxpatch_glcmec, glc_smb, glc_dyntopo, glcmec_downscale_rain_snow_convert, &
+         glcmec_downscale_longwave, glc_grid, fglcmask 
 
     ! Other options
 
@@ -531,6 +533,8 @@ contains
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (glc_smb, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_dyntopo, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (glcmec_downscale_rain_snow_convert, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (glcmec_downscale_longwave, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_grid, len(glc_grid), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fglcmask, len(fglcmask), MPI_CHARACTER, 0, mpicom, ier)
 
@@ -691,6 +695,18 @@ contains
        write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
        write(iulog,*) '   glc grid for glacier mask file = ',trim(glc_grid)
        write(iulog,*) '   glc glacier mask file = ',trim(fglcmask)
+       
+       write(iulog,*) '   Max snow depth (mm) =', h2osno_max
+       if (glcmec_downscale_rain_snow_convert) then
+          write(iulog,*) '   Rain and snow will be converted based on surface temperature'
+       else
+          write(iulog,*) '   Rain and snow will NOT be converted based on surface temperature'
+       endif
+       if (glcmec_downscale_longwave) then
+          write(iulog,*) '   Longwave radiation will be downscaled'
+       else
+          write(iulog,*) '   Longwave radiation will NOT be downscaled'
+       endif
        if (glc_dyntopo) then
           write(iulog,*) '   glc CLM glacier topography will evolve dynamically'
        else

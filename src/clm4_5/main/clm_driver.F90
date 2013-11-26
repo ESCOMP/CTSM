@@ -19,6 +19,7 @@ module clm_driver
   !
   ! ==== Begin Loop over clumps ====
   !  -> clm_driverInit      save of variables from previous time step
+  !  -> downscale_forcings  downscale atm forcings from gridcell to column
   !  -> Hydrology1          canopy interception and precip on ground
   !     -> FracWet          fraction of wet vegetated surface and dry elai
   !  -> SurfaceRadiation    surface solar radiation
@@ -119,7 +120,7 @@ module clm_driver
   use UrbanMod            , only : UrbanAlbedo, UrbanRadiation, UrbanFluxes 
   use SNICARMod           , only : SnowAge_grain
   use DaylengthMod        , only : UpdateDaylength
-  use clm_atmlnd          , only : clm_map2gcell
+  use clm_atmlnd          , only : clm_map2gcell, downscale_forcings
   use clm_glclnd          , only : update_clm_s2x
   use perf_mod
   !
@@ -378,7 +379,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   call t_stopf('pftdynwts')
 
   ! ============================================================================
-  ! Initialize variables from previous time step and
+  ! Initialize variables from previous time step, downscale atm forcings, and
   ! Determine canopy interception and precipitation onto ground surface.
   ! Determine the fraction of foliage covered by water and the fraction
   ! of foliage that is dry and transpiring. Initialize snow layer if the
@@ -397,8 +398,11 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call UpdateDaylength(bounds_clump, declin)
      
      call clm_driverInit(bounds_clump, &
-          filter(nc)%num_nolakec, filter(nc)%nolakec, &
-          filter(nc)%num_lakec, filter(nc)%lakec)
+          filter(nc)%num_nolakec, filter(nc)%nolakec)
+
+     call downscale_forcings(bounds_clump, &
+          filter(nc)%num_icemecc, filter(nc)%icemecc)
+
      call t_stopf('drvinit')
 
      ! ============================================================================

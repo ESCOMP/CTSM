@@ -1428,8 +1428,6 @@ type, public :: column_pstate_type
    ! added by Lei Meng for pH effects of methane production
    real(r8), pointer :: pH(:)               ! pH values
    ! End New variables for methane code
-   real(r8), pointer :: forc_pbot(:)          ! surface atm pressure, downscaled to column (Pa)
-   real(r8), pointer :: forc_rho(:)           ! surface air density, downscaled to column (kg/m^3)
    real(r8), pointer :: glc_frac(:)           ! ice fractional area
    real(r8), pointer :: glc_topo(:)           ! surface elevation (m)
 end type column_pstate_type
@@ -1452,8 +1450,6 @@ type, public :: column_estate_type
    real(r8), pointer :: thv(:)                !virtual potential temperature (kelvin)
    real(r8), pointer :: hc_soi(:)             !soil heat content (MJ/m2)
    real(r8), pointer :: hc_soisno(:)          !soil plus snow heat content (MJ/m2)
-   real(r8), pointer :: forc_t(:)             !atm temperature, downscaled to column (Kelvin)
-   real(r8), pointer :: forc_th(:)            !atm potl temperature, downscaled to column (Kelvin)
    real(r8), pointer :: t_h2osfc(:) 	      !surface water temperature
    real(r8), pointer :: t_h2osfc_bef(:)       !surface water temperature from time-step before
 end type column_estate_type
@@ -1495,7 +1491,6 @@ type, public :: column_wstate_type
    real(r8), pointer :: smp_l(:,:)            !soil matric potential (mm)
    real(r8), pointer :: hk_l(:,:)             !hydraulic conductivity (mm/s)
    real(r8), pointer :: fsat(:)               !fractional area with water table at surface
-   real(r8), pointer :: forc_q(:)             !atm specific humidity, downscaled to column (kg/kg)
    ! VICHYDRO
    real(r8), pointer :: moist(:,:)            !soil moisture (kg/m2) for VIC soil layers
    real(r8), pointer :: ice(:,:)              !soil ice (kg/m2) for VIC soil layers

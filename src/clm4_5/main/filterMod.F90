@@ -69,6 +69,9 @@ module filterMod
      integer, pointer :: nolakeurbanp(:) ! non-lake, non-urban filter (pfts)
      integer :: num_nolakeurbanp         ! number of pfts in non-lake, non-urban filter
 
+     integer, pointer :: icemecc(:)      ! glacier mec filter (cols)
+     integer :: num_icemecc              ! number of columns in glacier mec filter
+
   end type clumpfilter
   public clumpfilter
 
@@ -194,6 +197,8 @@ contains
 
        allocate(this_filter(nc)%pcropp(bounds%endp-bounds%begp+1))
        allocate(this_filter(nc)%soilnopcropp(bounds%endp-bounds%begp+1))
+
+       allocate(this_filter(nc)%icemecc(bounds%endc-bounds%begc+1))
     end do
 !$OMP END PARALLEL DO
 
@@ -246,8 +251,7 @@ contains
     use clmtype
     use decompMod , only : BOUNDS_LEVEL_CLUMP
     use pftvarcon , only : npcropmin
-    use clm_varcon, only : istsoil, icol_road_perv
-    use clm_varcon, only : istcrop
+    use clm_varcon, only : istsoil, istcrop, icol_road_perv, istice_mec
     !
     ! !ARGUMENTS:
     implicit none
@@ -432,6 +436,18 @@ contains
     end do
     this_filter(nc)%num_urbanp = f
     this_filter(nc)%num_nourbanp = fn
+
+    f = 0
+    do c = bounds%begc,bounds%endc
+       if (col%active(c) .or. include_inactive) then
+          l = col%landunit(c)
+          if (lun%itype(l) == istice_mec) then
+             f = f + 1
+             this_filter(nc)%icemecc(f) = c
+          end if
+       end if
+    end do
+    this_filter(nc)%num_icemecc = f
 
     ! Note: snow filters are reconstructed each time step in Hydrology2
     ! Note: CNDV "pft present" filter is reconstructed each time CNDV is run

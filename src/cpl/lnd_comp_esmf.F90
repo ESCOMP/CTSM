@@ -456,7 +456,7 @@ contains
     ! Run clm model
     !
     ! !USES:
-    use clm_atmlnd      ,only : clm_l2a, clm_a2l
+    use clm_atmlnd      ,only : clm_l2a, clm_a2l, a2l_not_downscaled_gcell
     use clm_glclnd      ,only : clm_s2x, clm_x2s
     use clm_driver      ,only : clm_drv
     use clm_varorb      ,only : eccen, obliqr, lambm0, mvelpp
@@ -561,7 +561,7 @@ contains
     call ESMF_ArrayGet(x2l, localDe=0, farrayPtr=fptr, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call lnd_import( bounds, fptr, clm_a2l, clm_x2s )
+    call lnd_import( bounds, fptr, clm_a2l, a2l_not_downscaled_gcell, clm_x2s )
 
     call t_stopf ('lc_lnd_import')
 

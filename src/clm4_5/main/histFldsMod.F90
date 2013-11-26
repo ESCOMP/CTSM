@@ -32,7 +32,7 @@ contains
     use clmtype
     use clm_varcon , only : spval
     use clm_varpar , only : maxpatch_glcmec, crop_prog
-    use clm_atmlnd , only : clm_a2l
+    use clm_atmlnd , only : clm_a2l, a2l_not_downscaled_gcell
     use clm_varctl , only : create_glacier_mec_landunit, &
                             use_c13, use_c14, use_lch4, hist_wrtch4diag
     use clm_atmlnd , only : clm_l2a
@@ -1051,19 +1051,19 @@ contains
 
     call hist_addfld1d (fname='RAIN', units='mm/s',  &
          avgflag='A', long_name='atmospheric rain', &
-         ptr_lnd=clm_a2l%forc_rain)
+         ptr_lnd=a2l_not_downscaled_gcell%forc_rain)
 
     call hist_addfld1d (fname='SNOW', units='mm/s',  &
          avgflag='A', long_name='atmospheric snow', &
-         ptr_lnd=clm_a2l%forc_snow)
+         ptr_lnd=a2l_not_downscaled_gcell%forc_snow)
 
     call hist_addfld1d (fname='TBOT', units='K',  &
          avgflag='A', long_name='atmospheric air temperature', &
-         ptr_lnd=clm_a2l%forc_t)
+         ptr_lnd=a2l_not_downscaled_gcell%forc_t)
 
     call hist_addfld1d (fname='THBOT', units='K',  &
          avgflag='A', long_name='atmospheric air potential temperature', &
-         ptr_lnd=clm_a2l%forc_th)
+         ptr_lnd=a2l_not_downscaled_gcell%forc_th)
 
     call hist_addfld1d (fname='WIND', units='m/s',  &
          avgflag='A', long_name='atmospheric wind velocity magnitude', &
@@ -1076,15 +1076,15 @@ contains
 
     call hist_addfld1d (fname='Tair', units='K',  &
          avgflag='A', long_name='atmospheric air temperature', &
-         ptr_gcell=clm_a2l%forc_t, default='inactive')
+         ptr_gcell=a2l_not_downscaled_gcell%forc_t, default='inactive')
 
     call hist_addfld1d (fname='PSurf', units='Pa',  &
          avgflag='A', long_name='surface pressure', &
-         ptr_gcell=clm_a2l%forc_pbot, default='inactive')
+         ptr_gcell=a2l_not_downscaled_gcell%forc_pbot, default='inactive')
 
     call hist_addfld1d (fname='Rainf', units='mm/s',  &
          avgflag='A', long_name='atmospheric rain', &
-         ptr_gcell=clm_a2l%forc_rain, default='inactive')
+         ptr_gcell=a2l_not_downscaled_gcell%forc_rain, default='inactive')
 
     call hist_addfld1d (fname='SWdown', units='W/m^2',  &
          avgflag='A', long_name='atmospheric incident solar radiation', &
@@ -1092,7 +1092,7 @@ contains
 
     call hist_addfld1d (fname='LWdown', units='W/m^2',  &
          avgflag='A', long_name='atmospheric longwave radiation', &
-         ptr_gcell=clm_a2l%forc_lwrad, default='inactive')
+         ptr_gcell=a2l_not_downscaled_gcell%forc_lwrad, default='inactive')
 
     call hist_addfld1d (fname='RH', units='%',  &
          avgflag='A', long_name='atmospheric relative humidity', &
@@ -1100,12 +1100,12 @@ contains
 
     call hist_addfld1d (fname='QBOT', units='kg/kg',  &
          avgflag='A', long_name='atmospheric specific humidity', &
-         ptr_lnd=clm_a2l%forc_q)
+         ptr_lnd=a2l_not_downscaled_gcell%forc_q)
 
     ! Rename of QBOT for Urban intercomparision project
     call hist_addfld1d (fname='Qair', units='kg/kg',  &
          avgflag='A', long_name='atmospheric specific humidity', &
-         ptr_lnd=clm_a2l%forc_q, default='inactive')
+         ptr_lnd=a2l_not_downscaled_gcell%forc_q, default='inactive')
 
     call hist_addfld1d (fname='ZBOT', units='m',  &
          avgflag='A', long_name='atmospheric reference height', &
@@ -1113,7 +1113,7 @@ contains
 
     call hist_addfld1d (fname='FLDS', units='W/m^2',  &
          avgflag='A', long_name='atmospheric longwave radiation', &
-         ptr_lnd=clm_a2l%forc_lwrad)
+         ptr_lnd=a2l_not_downscaled_gcell%forc_lwrad)
 
     call hist_addfld1d (fname='FSDS', units='W/m^2',  &
          avgflag='A', long_name='atmospheric incident solar radiation', &
@@ -1125,7 +1125,7 @@ contains
 
     call hist_addfld1d (fname='PBOT', units='Pa',  &
          avgflag='A', long_name='atmospheric pressure', &
-         ptr_lnd=clm_a2l%forc_pbot)
+         ptr_lnd=a2l_not_downscaled_gcell%forc_pbot)
 
 ! WJS (5-2-13): I am trying to get rid of uses of the CROP CPP token, replacing it with
 ! 'if (crop_prog)'. But it's hard to fix this boolean logic in a way that doesn't

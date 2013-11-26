@@ -13,14 +13,14 @@ contains
 
   !===============================================================================
 
-  subroutine lnd_import( bounds, x2l, a2l, x2s)
+  subroutine lnd_import( bounds, x2l, a2l, a2l_not_downscaled_gcell, x2s)
 
     !---------------------------------------------------------------------------
     ! !DESCRIPTION:
     ! Convert the input data from the coupler to the land model 
     !
     ! !USES:
-    use clm_atmlnd      , only: atm2lnd_type
+    use clm_atmlnd      , only: atm2lnd_type, atm2lnd_downscaled_fields_type
     use clm_glclnd      , only: glc2lnd_type
     use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
     use clm_varcon      , only: rair, o2_molar_const, c13ratio
@@ -29,16 +29,20 @@ contains
     implicit none
     !
     ! !ARGUMENTS:
-    type(bounds_type) , intent(in)    :: bounds   ! bounds
-    real(r8)          , intent(in)    :: x2l(:,:) ! driver import state to land model
-    type(atm2lnd_type), intent(inout) :: a2l      ! clm internal input data type
-    type(glc2lnd_type), intent(inout) :: x2s      ! clm internal input data type
+    type(bounds_type)                    , intent(in)    :: bounds                 ! bounds
+    real(r8)                             , intent(in)    :: x2l(:,:)               ! driver import state to land model
+    type(atm2lnd_type)                   , intent(inout) :: a2l                    ! clm internal input data type
+    type(atm2lnd_downscaled_fields_type) , intent(inout) :: a2l_not_downscaled_gcell ! clm internal input data type
+    type(glc2lnd_type)                   , intent(inout) :: x2s                    ! clm internal input data type
     !
     ! !LOCAL VARIABLES:
     integer  :: g,i,nstep,ier        ! indices, number of steps, and error code
     real(r8) :: forc_rainc           ! rainxy Atm flux mm/s
     real(r8) :: e                    ! vapor pressure (Pa)
     real(r8) :: qsat                 ! saturation specific humidity (kg/kg)
+    real(r8) :: forc_t               ! atmospheric temperature (Kelvin)
+    real(r8) :: forc_q               ! atmospheric specific humidity (kg/kg)
+    real(r8) :: forc_pbot            ! atmospheric pressure (Pa)
     real(r8) :: forc_rainl           ! rainxy Atm flux mm/s
     real(r8) :: forc_snowc           ! snowfxy Atm flux  mm/s
     real(r8) :: forc_snowl           ! snowfxl Atm flux  mm/s
@@ -107,19 +111,21 @@ contains
        a2l%forc_hgt(g)     = x2l(index_x2l_Sa_z,i)         ! zgcmxy  Atm state m
        a2l%forc_u(g)       = x2l(index_x2l_Sa_u,i)         ! forc_uxy  Atm state m/s
        a2l%forc_v(g)       = x2l(index_x2l_Sa_v,i)         ! forc_vxy  Atm state m/s
-       a2l%forc_th(g)      = x2l(index_x2l_Sa_ptem,i)      ! forc_thxy Atm state K
-       a2l%forc_q(g)       = x2l(index_x2l_Sa_shum,i)      ! forc_qxy  Atm state kg/kg
-       a2l%forc_pbot(g)    = x2l(index_x2l_Sa_pbot,i)      ! ptcmxy  Atm state Pa
-       a2l%forc_t(g)       = x2l(index_x2l_Sa_tbot,i)      ! forc_txy  Atm state K
-       a2l%forc_lwrad(g)   = x2l(index_x2l_Faxa_lwdn,i)    ! flwdsxy Atm flux  W/m^2
-       forc_rainc          = x2l(index_x2l_Faxa_rainc,i)   ! mm/s
-       forc_rainl          = x2l(index_x2l_Faxa_rainl,i)   ! mm/s
-       forc_snowc          = x2l(index_x2l_Faxa_snowc,i)   ! mm/s
-       forc_snowl          = x2l(index_x2l_Faxa_snowl,i)   ! mm/s
        a2l%forc_solad(g,2) = x2l(index_x2l_Faxa_swndr,i)   ! forc_sollxy  Atm flux  W/m^2
        a2l%forc_solad(g,1) = x2l(index_x2l_Faxa_swvdr,i)   ! forc_solsxy  Atm flux  W/m^2
        a2l%forc_solai(g,2) = x2l(index_x2l_Faxa_swndf,i)   ! forc_solldxy Atm flux  W/m^2
        a2l%forc_solai(g,1) = x2l(index_x2l_Faxa_swvdf,i)   ! forc_solsdxy Atm flux  W/m^2
+
+       a2l_not_downscaled_gcell%forc_th(g)      = x2l(index_x2l_Sa_ptem,i)      ! forc_thxy Atm state K
+       a2l_not_downscaled_gcell%forc_q(g)       = x2l(index_x2l_Sa_shum,i)      ! forc_qxy  Atm state kg/kg
+       a2l_not_downscaled_gcell%forc_pbot(g)    = x2l(index_x2l_Sa_pbot,i)      ! ptcmxy  Atm state Pa
+       a2l_not_downscaled_gcell%forc_t(g)       = x2l(index_x2l_Sa_tbot,i)      ! forc_txy  Atm state K
+       a2l_not_downscaled_gcell%forc_lwrad(g)   = x2l(index_x2l_Faxa_lwdn,i)    ! flwdsxy Atm flux  W/m^2
+
+       forc_rainc          = x2l(index_x2l_Faxa_rainc,i)   ! mm/s
+       forc_rainl          = x2l(index_x2l_Faxa_rainl,i)   ! mm/s
+       forc_snowc          = x2l(index_x2l_Faxa_snowc,i)   ! mm/s
+       forc_snowl          = x2l(index_x2l_Faxa_snowl,i)   ! mm/s
 
        !
        ! anomaly forcing code 
@@ -147,26 +153,26 @@ contains
 
        if (index_x2l_Sa_shum_af /= 0) then
           a2l%af_shum(g)    = x2l(index_x2l_Sa_shum_af,i)
-          a2l%forc_q(g) = a2l%forc_q(g) + a2l%af_shum(g)
+          a2l_not_downscaled_gcell%forc_q(g) = a2l_not_downscaled_gcell%forc_q(g) + a2l%af_shum(g)
           ! avoid possible negative q values
-          if(a2l%forc_q(g) < 0._r8) then 
-             a2l%forc_q(g) = 1.e-6_r8
+          if(a2l_not_downscaled_gcell%forc_q(g) < 0._r8) then 
+             a2l_not_downscaled_gcell%forc_q(g) = 1.e-6_r8
           endif
        endif
 
        if (index_x2l_Sa_pbot_af /= 0) then
           a2l%af_pbot(g)    = x2l(index_x2l_Sa_pbot_af,i)
-          a2l%forc_pbot(g) =  a2l%forc_pbot(g) + a2l%af_pbot(g)
+          a2l_not_downscaled_gcell%forc_pbot(g) =  a2l_not_downscaled_gcell%forc_pbot(g) + a2l%af_pbot(g)
        endif
 
        if (index_x2l_Sa_tbot_af /= 0) then
           a2l%af_tbot(g)    = x2l(index_x2l_Sa_tbot_af,i)
-          a2l%forc_t(g) =  a2l%forc_t(g) + a2l%af_tbot(g)
+          a2l_not_downscaled_gcell%forc_t(g) =  a2l_not_downscaled_gcell%forc_t(g) + a2l%af_tbot(g)
        endif
 
        if (index_x2l_Sa_lwdn_af /= 0) then
           a2l%af_lwdn(g)    = x2l(index_x2l_Sa_lwdn_af,i)
-          a2l%forc_lwrad(g) = a2l%forc_lwrad(g) * a2l%af_lwdn(g)
+          a2l_not_downscaled_gcell%forc_lwrad(g) = a2l_not_downscaled_gcell%forc_lwrad(g) * a2l%af_lwdn(g)
        endif
 
        if (index_x2l_Sa_prec_af /= 0) then
@@ -223,28 +229,33 @@ contains
        endif
 
        ! Determine derived quantities for required fields
+
+       forc_t = a2l_not_downscaled_gcell%forc_t(g)
+       forc_q = a2l_not_downscaled_gcell%forc_q(g)
+       forc_pbot = a2l_not_downscaled_gcell%forc_pbot(g)
+       
        a2l%forc_hgt_u(g) = a2l%forc_hgt(g)    !observational height of wind [m]
        a2l%forc_hgt_t(g) = a2l%forc_hgt(g)    !observational height of temperature [m]
        a2l%forc_hgt_q(g) = a2l%forc_hgt(g)    !observational height of humidity [m]
-       a2l%forc_vp(g)    = a2l%forc_q(g) * a2l%forc_pbot(g) &
-            / (0.622_r8 + 0.378_r8 * a2l%forc_q(g))
-       a2l%forc_rho(g)   = (a2l%forc_pbot(g) - 0.378_r8 * a2l%forc_vp(g)) &
-            / (rair * a2l%forc_t(g))
-       a2l%forc_po2(g)   = o2_molar_const * a2l%forc_pbot(g)
+       a2l%forc_vp(g)    = forc_q * forc_pbot &
+            / (0.622_r8 + 0.378_r8 * forc_q)
+       a2l_not_downscaled_gcell%forc_rho(g)   = (forc_pbot - 0.378_r8 * a2l%forc_vp(g)) &
+            / (rair * forc_t)
+       a2l%forc_po2(g)   = o2_molar_const * forc_pbot
        a2l%forc_wind(g)  = sqrt(a2l%forc_u(g)**2 + a2l%forc_v(g)**2)
        a2l%forc_solar(g) = a2l%forc_solad(g,1) + a2l%forc_solai(g,1) + &
             a2l%forc_solad(g,2) + a2l%forc_solai(g,2)
-       a2l%forc_rain(g)  = forc_rainc + forc_rainl
-       a2l%forc_snow(g)  = forc_snowc + forc_snowl
-       a2l%rainf    (g)  = a2l%forc_rain(g) + a2l%forc_snow(g)
 
-       if (a2l%forc_t(g) > SHR_CONST_TKFRZ) then
-          e = esatw(tdc(a2l%forc_t(g)))
+       a2l_not_downscaled_gcell%forc_rain(g)  = forc_rainc + forc_rainl
+       a2l_not_downscaled_gcell%forc_snow(g)  = forc_snowc + forc_snowl
+
+       if (forc_t > SHR_CONST_TKFRZ) then
+          e = esatw(tdc(forc_t))
        else
-          e = esati(tdc(a2l%forc_t(g)))
+          e = esati(tdc(forc_t))
        end if
-       qsat           = 0.622_r8*e / (a2l%forc_pbot(g) - 0.378_r8*e)
-       a2l%forc_rh(g) = 100.0_r8*(a2l%forc_q(g) / qsat)
+       qsat           = 0.622_r8*e / (forc_pbot - 0.378_r8*e)
+       a2l%forc_rh(g) = 100.0_r8*(forc_q / qsat)
        ! Make sure relative humidity is properly bounded
        ! a2l%forc_rh(g) = min( 100.0_r8, a2l%forc_rh(g) )
        ! a2l%forc_rh(g) = max(   0.0_r8, a2l%forc_rh(g) )
@@ -260,9 +271,9 @@ contains
        else
           co2_ppmv_val = co2_ppmv
        end if
-       a2l%forc_pco2(g)   = co2_ppmv_val * 1.e-6_r8 * a2l%forc_pbot(g) 
+       a2l%forc_pco2(g)   = co2_ppmv_val * 1.e-6_r8 * forc_pbot 
        if (use_c13) then
-          a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
+          a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * forc_pbot
        end if
 
        ! glc coupling 

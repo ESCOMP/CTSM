@@ -148,6 +148,20 @@ Full pathname of topography data file. Only required when
 land-ice model is active.
 </entry>
 
+<entry id="glcmec_downscale_rain_snow_convert" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, downscale precipitation division into rain vs. snow over glc_mec landunits.
+WARNING: THIS BREAKS ENERGY CONSERVATION, SO SHOULD NOT BE USED IN COUPLED SIMULATIONS
+<default>Default: .false.</default>
+</entry>
+
+<entry id="glcmec_downscale_longwave" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, downscale longwave radiation over glc_mec landunits.
+This downscaling is conservative.
+<default>Default: .false.</default>
+</entry>
+
 <entry id="paramfile" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname datafile with plant function type (PFT) constants combined with

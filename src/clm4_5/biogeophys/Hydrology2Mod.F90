@@ -92,8 +92,6 @@ contains
     !-----------------------------------------------------------------------
 
    associate(& 
-   forc_rain            => clm_a2l%forc_rain       , & ! Input:  [real(r8) (:)]  rain rate [mm/s]                        
-   forc_snow            => clm_a2l%forc_snow       , & ! Input:  [real(r8) (:)]  snow rate [mm/s]                        
    ityplun              => lun%itype               , & ! Input:  [integer (:)]  landunit type                            
    urbpoi               => lun%urbpoi              , & ! Input:  [logical (:)]  true => landunit is an urban point       
    snow_depth           => cps%snow_depth          , & ! Input:  [real(r8) (:)] snow height of snow covered area (m)     
@@ -630,7 +628,7 @@ contains
     !
     ! !USES:
     use clmtype
-    use clm_atmlnd      , only : clm_a2l
+    use clm_atmlnd      , only : clm_a2l, a2l_downscaled_col
     use clm_varcon      , only : istice, istwet, istsoil, istice_mec, spval, &
          icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
          icol_shadewall, denh2o, denice
@@ -661,43 +659,43 @@ contains
     !-----------------------------------------------------------------------
 
    associate(&    
-   forc_rain                           =>    clm_a2l%forc_rain                           , & ! Input:  [real(r8) (:)]  rain rate [mm/s]                                  
-   forc_snow                           =>    clm_a2l%forc_snow                           , & ! Input:  [real(r8) (:)]  snow rate [mm/s]                                  
-   ityplun                             =>    lun%itype                                   , & ! Input:  [integer (:)]  landunit type                                      
-   urbpoi                              =>   lun%urbpoi                                   , & ! Output: [logical (:)]  true => landunit is an urban point                 
-   dz                                  =>    cps%dz                                      , & ! Input:  [real(r8) (:,:)]  layer thickness depth (m)                       
-   h2osfc                              =>    cws%h2osfc                                  , & ! Input:  [real(r8) (:)]  surface water (mm)                                
-   qflx_drain_perched                  =>    cwf%qflx_drain_perched                      , & ! Input:  [real(r8) (:)]  sub-surface runoff from perched zwt (mm H2O /s)   
-   qflx_floodg                         =>    clm_a2l%forc_flood                          , & ! Input:  [real(r8) (:)]  gridcell flux of flood water from RTM             
-   cactive                             =>    col%active                                  , & ! Input:  [logical (:)]  true=>do computations on this column (see reweightMod for details)
-   qflx_h2osfc_surf                    =>    cwf%qflx_h2osfc_surf                        , & ! Input:  [real(r8) (:)] surface water runoff (mm/s)                        
-   cgridcell                           =>   col%gridcell                                 , & ! Input:  [integer (:)]  column's gridcell                                  
-   clandunit                           =>   col%landunit                                 , & ! Input:  [integer (:)]  column's landunit                                  
-   ctype                               =>    col%itype                                   , & ! Input:  [integer (:)]  column type                                        
-   h2ocan                              =>    pws_a%h2ocan                                , & ! Input:  [real(r8) (:)]  canopy water (mm H2O)                             
-   h2osno                              =>    cws%h2osno                                  , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                               
-   fcov                                =>    cws%fcov                                    , & ! Input:  [real(r8) (:)]  fractional impermeable area                       
-   fsat                                =>    cws%fsat                                    , & ! Input:  [real(r8) (:)]  fractional area with water table at surface       
-   wa                                  =>    cws%wa                                      , & ! Input:  [real(r8) (:)]  water in the unconfined aquifer (mm)              
-   qcharge                             =>    cws%qcharge                                 , & ! Input:  [real(r8) (:)]  aquifer recharge rate (mm/s)                      
-   h2osoi_ice                          =>    cws%h2osoi_ice                              , & ! Output: [real(r8) (:,:)]  ice lens (kg/m2)                                
-   h2osoi_liq                          =>    cws%h2osoi_liq                              , & ! Output: [real(r8) (:,:)]  liquid water (kg/m2)                            
-   h2osoi_vol                          =>    cws%h2osoi_vol                              , & ! Output: [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-   qflx_evap_tot                       =>    pwf_a%qflx_evap_tot                         , & ! Input:  [real(r8) (:)]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
-   qflx_drain                          =>    cwf%qflx_drain                              , & ! Output: [real(r8) (:)]  sub-surface runoff (mm H2O /s)                    
-   qflx_surf                           =>    cwf%qflx_surf                               , & ! Output: [real(r8) (:)]  surface runoff (mm H2O /s)                        
-   qflx_infl                           =>    cwf%qflx_infl                               , & ! Output: [real(r8) (:)]  infiltration (mm H2O /s)                          
-   qflx_qrgwl                          =>    cwf%qflx_qrgwl                              , & ! Output: [real(r8) (:)]  qflx_surf at glaciers, wetlands, lakes            
-   qflx_irrig                          =>    pwf_a%qflx_irrig                            , & ! Input:  [real(r8) (:)]  irrigation flux (mm H2O /s)                       
-   endwb                               =>    cwbal%endwb                                 , & ! Output: [real(r8) (:)]  water mass end of the time step                   
-   begwb                               =>    cwbal%begwb                                 , & ! Input:  [real(r8) (:)]  water mass begining of the time step              
-   qflx_rsub_sat                       =>    cwf%qflx_rsub_sat                           , & ! Input:  [real(r8) (:)]  soil saturation excess [mm h2o/s]                 
-   qflx_runoff                         =>    cwf%qflx_runoff                             , & ! Output: [real(r8) (:)]  total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-   qflx_runoff_u                       =>    cwf%qflx_runoff_u                           , & ! Output: [real(r8) (:)]  Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
-   qflx_runoff_r                       =>    cwf%qflx_runoff_r                           , & ! Output: [real(r8) (:)]  Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-   qflx_snwcp_ice                      =>    pwf_a%qflx_snwcp_ice                        , & ! Output: [real(r8) (:)]  excess snowfall due to snow capping (mm H2O /s) [+]`
-   qflx_glcice                         =>    cwf%qflx_glcice                             , & ! Output: [real(r8) (:)]  flux of new glacier ice (mm H2O /s)               
-   qflx_glcice_frz                     =>    cwf%qflx_glcice_frz                           & ! Output: [real(r8) (:)]  ice growth (positive definite) (mm H2O/s)         
+   forc_rain                           =>    a2l_downscaled_col%forc_rain , & ! Input:  [real(r8) (:)]  rain rate [mm/s]                                  
+   forc_snow                           =>    a2l_downscaled_col%forc_snow , & ! Input:  [real(r8) (:)]  snow rate [mm/s]                                  
+   ityplun                             =>    lun%itype                    , & ! Input:  [integer (:)]  landunit type                                      
+   urbpoi                              =>   lun%urbpoi                    , & ! Output: [logical (:)]  true => landunit is an urban point                 
+   dz                                  =>    cps%dz                       , & ! Input:  [real(r8) (:,:)]  layer thickness depth (m)                       
+   h2osfc                              =>    cws%h2osfc                   , & ! Input:  [real(r8) (:)]  surface water (mm)                                
+   qflx_drain_perched                  =>    cwf%qflx_drain_perched       , & ! Input:  [real(r8) (:)]  sub-surface runoff from perched zwt (mm H2O /s)   
+   qflx_floodg                         =>    clm_a2l%forc_flood           , & ! Input:  [real(r8) (:)]  gridcell flux of flood water from RTM             
+   cactive                             =>    col%active                   , & ! Input:  [logical (:)]  true=>do computations on this column (see reweightMod for details)
+   qflx_h2osfc_surf                    =>    cwf%qflx_h2osfc_surf         , & ! Input:  [real(r8) (:)] surface water runoff (mm/s)                        
+   cgridcell                           =>   col%gridcell                  , & ! Input:  [integer (:)]  column's gridcell                                  
+   clandunit                           =>   col%landunit                  , & ! Input:  [integer (:)]  column's landunit                                  
+   ctype                               =>    col%itype                    , & ! Input:  [integer (:)]  column type                                        
+   h2ocan                              =>    pws_a%h2ocan                 , & ! Input:  [real(r8) (:)]  canopy water (mm H2O)                             
+   h2osno                              =>    cws%h2osno                   , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                               
+   fcov                                =>    cws%fcov                     , & ! Input:  [real(r8) (:)]  fractional impermeable area                       
+   fsat                                =>    cws%fsat                     , & ! Input:  [real(r8) (:)]  fractional area with water table at surface       
+   wa                                  =>    cws%wa                       , & ! Input:  [real(r8) (:)]  water in the unconfined aquifer (mm)              
+   qcharge                             =>    cws%qcharge                  , & ! Input:  [real(r8) (:)]  aquifer recharge rate (mm/s)                      
+   h2osoi_ice                          =>    cws%h2osoi_ice               , & ! Output: [real(r8) (:,:)]  ice lens (kg/m2)                                
+   h2osoi_liq                          =>    cws%h2osoi_liq               , & ! Output: [real(r8) (:,:)]  liquid water (kg/m2)                            
+   h2osoi_vol                          =>    cws%h2osoi_vol               , & ! Output: [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+   qflx_evap_tot                       =>    pwf_a%qflx_evap_tot          , & ! Input:  [real(r8) (:)]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
+   qflx_drain                          =>    cwf%qflx_drain               , & ! Output: [real(r8) (:)]  sub-surface runoff (mm H2O /s)                    
+   qflx_surf                           =>    cwf%qflx_surf                , & ! Output: [real(r8) (:)]  surface runoff (mm H2O /s)                        
+   qflx_infl                           =>    cwf%qflx_infl                , & ! Output: [real(r8) (:)]  infiltration (mm H2O /s)                          
+   qflx_qrgwl                          =>    cwf%qflx_qrgwl               , & ! Output: [real(r8) (:)]  qflx_surf at glaciers, wetlands, lakes            
+   qflx_irrig                          =>    pwf_a%qflx_irrig             , & ! Input:  [real(r8) (:)]  irrigation flux (mm H2O /s)                       
+   endwb                               =>    cwbal%endwb                  , & ! Output: [real(r8) (:)]  water mass end of the time step                   
+   begwb                               =>    cwbal%begwb                  , & ! Input:  [real(r8) (:)]  water mass begining of the time step              
+   qflx_rsub_sat                       =>    cwf%qflx_rsub_sat            , & ! Input:  [real(r8) (:)]  soil saturation excess [mm h2o/s]                 
+   qflx_runoff                         =>    cwf%qflx_runoff              , & ! Output: [real(r8) (:)]  total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
+   qflx_runoff_u                       =>    cwf%qflx_runoff_u            , & ! Output: [real(r8) (:)]  Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
+   qflx_runoff_r                       =>    cwf%qflx_runoff_r            , & ! Output: [real(r8) (:)]  Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
+   qflx_snwcp_ice                      =>    pwf_a%qflx_snwcp_ice         , & ! Output: [real(r8) (:)]  excess snowfall due to snow capping (mm H2O /s) [+]`
+   qflx_glcice                         =>    cwf%qflx_glcice              , & ! Output: [real(r8) (:)]  flux of new glacier ice (mm H2O /s)               
+   qflx_glcice_frz                     =>    cwf%qflx_glcice_frz            & ! Output: [real(r8) (:)]  ice growth (positive definite) (mm H2O/s)         
    )
     
     ! Determine time step and step size
@@ -767,8 +765,9 @@ contains
           qflx_surf(c)          = 0._r8
           qflx_infl(c)          = 0._r8
           ! add flood water flux to runoff for wetlands/glaciers
-          qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
-                          (endwb(c)-begwb(c))/dtime
+          qflx_qrgwl(c) = forc_rain(c) + forc_snow(c) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
+               (endwb(c)-begwb(c))/dtime
+
           ! For dynamic topography, add meltwater from glacier_mec ice to the runoff.
           ! (Negative qflx_glcice => positive contribution to runoff)
           ! Note: The meltwater contribution is computed in PhaseChanges (part of Biogeophysics2).

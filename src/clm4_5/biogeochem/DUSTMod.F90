@@ -54,7 +54,7 @@ contains
     ! Source: C. Zender's dust model
     !
     ! !USES
-    use clm_atmlnd   , only : clm_a2l
+    use clm_atmlnd   , only : a2l_downscaled_col
     use shr_const_mod, only : SHR_CONST_RHOFW
     !
     ! !ARGUMENTS:
@@ -94,27 +94,27 @@ contains
 !------------------------------------------------------------------------
 
    associate(& 
-   forc_rho              =>    clm_a2l%forc_rho        , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                 
-   ityplun               =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                                      
-   frac_sno              =>    cps%frac_sno            , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)       
-   gwc_thr               =>    cps%gwc_thr             , & ! Input:  [real(r8) (:)]  threshold gravimetric soil moisture based on clay content
-   mbl_bsn_fct           =>    cps%mbl_bsn_fct         , & ! Input:  [real(r8) (:)]  basin factor                                      
-   mss_frc_cly_vld       =>    cps%mss_frc_cly_vld     , & ! Input:  [real(r8) (:)]  [frc] Mass fraction clay limited to 0.20          
-   h2osoi_vol            =>    cws%h2osoi_vol          , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat)   
-   h2osoi_liq            =>    cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid soil water (kg/m2)                       
-   h2osoi_ice            =>    cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  frozen soil water (kg/m2)                       
-   watsat                =>    cps%watsat              , & ! Input:  [real(r8) (:,:)]  saturated volumetric soil water                 
-   pactive               =>    pft%active              , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
-   pgridcell             =>    pft%gridcell            , & ! Input:  [integer (:)]  pft's gridcell index                               
-   plandunit             =>    pft%landunit            , & ! Input:  [integer (:)]  pft's landunit index                               
-   pcolumn               =>    pft%column              , & ! Input:  [integer (:)]  pft's column index                                 
-   tlai                  =>    pps%tlai                , & ! Input:  [real(r8) (:)]  one-sided leaf area index, no burying by snow     
-   tsai                  =>    pps%tsai                , & ! Input:  [real(r8) (:)]  one-sided stem area index, no burying by snow     
-   fv                    =>    pps%fv                  , & ! Input:  [real(r8) (:)]  friction velocity (m/s) (for dust model)          
-   u10                   =>    pps%u10                 , & ! Input:  [real(r8) (:)]  10-m wind (m/s) (created for dust model)          
-   flx_mss_vrt_dst       =>    pdf%flx_mss_vrt_dst     , & ! Output: [real(r8) (:,:)]  surface dust emission (kg/m**2/s)               
-   flx_mss_vrt_dst_tot   =>    pdf%flx_mss_vrt_dst_tot , & ! Output: [real(r8) (:)]  total dust flux into atmosphere                   
-   wtlunit               =>    pft%wtlunit               & ! Output: [real(r8) (:)]  weight of pft relative to landunit                
+   forc_rho              =>    a2l_downscaled_col%forc_rho , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                 
+   ityplun               =>    lun%itype                   , & ! Input:  [integer (:)]  landunit type                                      
+   frac_sno              =>    cps%frac_sno                , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)       
+   gwc_thr               =>    cps%gwc_thr                 , & ! Input:  [real(r8) (:)]  threshold gravimetric soil moisture based on clay content
+   mbl_bsn_fct           =>    cps%mbl_bsn_fct             , & ! Input:  [real(r8) (:)]  basin factor                                      
+   mss_frc_cly_vld       =>    cps%mss_frc_cly_vld         , & ! Input:  [real(r8) (:)]  [frc] Mass fraction clay limited to 0.20          
+   h2osoi_vol            =>    cws%h2osoi_vol              , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat)   
+   h2osoi_liq            =>    cws%h2osoi_liq              , & ! Input:  [real(r8) (:,:)]  liquid soil water (kg/m2)                       
+   h2osoi_ice            =>    cws%h2osoi_ice              , & ! Input:  [real(r8) (:,:)]  frozen soil water (kg/m2)                       
+   watsat                =>    cps%watsat                  , & ! Input:  [real(r8) (:,:)]  saturated volumetric soil water                 
+   pactive               =>    pft%active                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pgridcell             =>    pft%gridcell                , & ! Input:  [integer (:)]  pft's gridcell index                               
+   plandunit             =>    pft%landunit                , & ! Input:  [integer (:)]  pft's landunit index                               
+   pcolumn               =>    pft%column                  , & ! Input:  [integer (:)]  pft's column index                                 
+   tlai                  =>    pps%tlai                    , & ! Input:  [real(r8) (:)]  one-sided leaf area index, no burying by snow     
+   tsai                  =>    pps%tsai                    , & ! Input:  [real(r8) (:)]  one-sided stem area index, no burying by snow     
+   fv                    =>    pps%fv                      , & ! Input:  [real(r8) (:)]  friction velocity (m/s) (for dust model)          
+   u10                   =>    pps%u10                     , & ! Input:  [real(r8) (:)]  10-m wind (m/s) (created for dust model)          
+   flx_mss_vrt_dst       =>    pdf%flx_mss_vrt_dst         , & ! Output: [real(r8) (:,:)]  surface dust emission (kg/m**2/s)               
+   flx_mss_vrt_dst_tot   =>    pdf%flx_mss_vrt_dst_tot     , & ! Output: [real(r8) (:)]  total dust flux into atmosphere                   
+   wtlunit               =>    pft%wtlunit                   & ! Output: [real(r8) (:)]  weight of pft relative to landunit                
    )
 
     ttlai(bounds%begp : bounds%endp) = 0._r8
@@ -240,7 +240,7 @@ contains
           !          subr. wnd_frc_thr_slt_get which computes dry threshold
           !          friction velocity for saltation
           
-          wnd_frc_thr_slt = tmp1 / sqrt(forc_rho(g)) * frc_thr_wet_fct * frc_thr_rgh_fct
+          wnd_frc_thr_slt = tmp1 / sqrt(forc_rho(c)) * frc_thr_wet_fct * frc_thr_rgh_fct
           
           ! reset these variables which will be updated in the following if-block
           
@@ -268,7 +268,7 @@ contains
           
           if (wnd_frc_slt > wnd_frc_thr_slt) then
              wnd_frc_rat = wnd_frc_thr_slt / wnd_frc_slt
-             flx_mss_hrz_slt_ttl = cst_slt * forc_rho(g) * (wnd_frc_slt**3.0_r8) * &
+             flx_mss_hrz_slt_ttl = cst_slt * forc_rho(c) * (wnd_frc_slt**3.0_r8) * &
                   (1.0_r8 - wnd_frc_rat) * (1.0_r8 + wnd_frc_rat) * (1.0_r8 + wnd_frc_rat) / grav
              
              ! the following loop originates from subr. dst_mbl
@@ -337,14 +337,14 @@ contains
     !
     ! !USES
     use shr_const_mod, only : SHR_CONST_PI, SHR_CONST_RDAIR, SHR_CONST_BOLTZ
-    use clm_atmlnd   , only : clm_a2l
+    use clm_atmlnd   , only : a2l_downscaled_col
     !
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
     !
     ! !LOCAL VARIABLES
-    integer  :: p,g,m,n               ! indices
+    integer  :: p,c,g,m,n             ! indices
     real(r8) :: vsc_dyn_atm(bounds%begp:bounds%endp)  ! [kg m-1 s-1] Dynamic viscosity of air
     real(r8) :: vsc_knm_atm(bounds%begp:bounds%endp)  ! [m2 s-1] Kinematic viscosity of atmosphere
     real(r8) :: shm_nbr_xpn           ! [frc] Sfc-dep exponent for aerosol-diffusion dependence on Schmidt number
@@ -364,23 +364,25 @@ contains
 
 
    associate(& 
-   forc_pbot   =>    clm_a2l%forc_pbot , & ! Input:  [real(r8) (:)]  atm pressure (Pa)                                 
-   forc_rho    =>    clm_a2l%forc_rho  , & ! Input:  [real(r8) (:)]  atm density (kg/m**3)                             
-   forc_t      =>    clm_a2l%forc_t    , & ! Input:  [real(r8) (:)]  atm temperature (K)                               
-   pactive     =>    pft%active        , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
-   pgridcell   =>    pft%gridcell      , & ! Input:  [integer (:)]  pft's gridcell index                               
-   fv          =>    pps%fv            , & ! Input:  [real(r8) (:)]  friction velocity (m/s)                           
-   ram1        =>    pps%ram1          , & ! Input:  [real(r8) (:)]  aerodynamical resistance (s/m)                    
-   vlc_trb     =>    pdf%vlc_trb       , & ! Input:  [real(r8) (:,:)]  Turbulent deposn velocity (m/s)                 
-   vlc_trb_1   =>    pdf%vlc_trb_1     , & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 1                   
-   vlc_trb_2   =>    pdf%vlc_trb_2     , & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 2                   
-   vlc_trb_3   =>    pdf%vlc_trb_3     , & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 3                   
-   vlc_trb_4   =>    pdf%vlc_trb_4       & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 4                   
+   forc_pbot   =>    a2l_downscaled_col%forc_pbot , & ! Input:  [real(r8) (:)]  atm pressure (Pa)                                 
+   forc_rho    =>    a2l_downscaled_col%forc_rho  , & ! Input:  [real(r8) (:)]  atm density (kg/m**3)                             
+   forc_t      =>    a2l_downscaled_col%forc_t    , & ! Input:  [real(r8) (:)]  atm temperature (K)                               
+   pactive     =>    pft%active                   , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pcolumn     =>    pft%column                   , & ! Input:  [integer (:)]  pft's column index
+   pgridcell   =>    pft%gridcell                 , & ! Input:  [integer (:)]  pft's gridcell index                               
+   fv          =>    pps%fv                       , & ! Input:  [real(r8) (:)]  friction velocity (m/s)                           
+   ram1        =>    pps%ram1                     , & ! Input:  [real(r8) (:)]  aerodynamical resistance (s/m)                    
+   vlc_trb     =>    pdf%vlc_trb                  , & ! Input:  [real(r8) (:,:)]  Turbulent deposn velocity (m/s)                 
+   vlc_trb_1   =>    pdf%vlc_trb_1                , & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 1                   
+   vlc_trb_2   =>    pdf%vlc_trb_2                , & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 2                   
+   vlc_trb_3   =>    pdf%vlc_trb_3                , & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 3                   
+   vlc_trb_4   =>    pdf%vlc_trb_4                  & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 4                   
    )
 
     do p = bounds%begp,bounds%endp
        if (pactive(p)) then
           g = pgridcell(p)
+          c = pcolumn(p)
 
           ! from subroutine dst_dps_dry (consider adding sanity checks from line 212)
           ! when code asks to use midlayer density, pressure, temperature,
@@ -389,11 +391,11 @@ contains
           ! Quasi-laminar layer resistance: call rss_lmn_get
           ! Size-independent thermokinetic properties
           
-          vsc_dyn_atm(p) = 1.72e-5_r8 * ((forc_t(g)/273.0_r8)**1.5_r8) * 393.0_r8 / &
-               (forc_t(g)+120.0_r8)      ![kg m-1 s-1] RoY94 p. 102
+          vsc_dyn_atm(p) = 1.72e-5_r8 * ((forc_t(c)/273.0_r8)**1.5_r8) * 393.0_r8 / &
+               (forc_t(c)+120.0_r8)      ![kg m-1 s-1] RoY94 p. 102
           mfp_atm = 2.0_r8 * vsc_dyn_atm(p) / &   ![m] SeP97 p. 455
-               (forc_pbot(g)*sqrt(8.0_r8/(SHR_CONST_PI*SHR_CONST_RDAIR*forc_t(g))))
-          vsc_knm_atm(p) = vsc_dyn_atm(p) / forc_rho(g) ![m2 s-1] Kinematic viscosity of air
+               (forc_pbot(c)*sqrt(8.0_r8/(SHR_CONST_PI*SHR_CONST_RDAIR*forc_t(c))))
+          vsc_knm_atm(p) = vsc_dyn_atm(p) / forc_rho(c) ![m2 s-1] Kinematic viscosity of air
           
           do m = 1, ndst
              slp_crc(p,m) = 1.0_r8 + 2.0_r8 * mfp_atm * &
@@ -410,9 +412,10 @@ contains
        do p = bounds%begp,bounds%endp
           if (pactive(p)) then
              g = pgridcell(p)
-             
+             c = pcolumn(p)
+
              stk_nbr = vlc_grv(p,m) * fv(p) * fv(p) / (grav * vsc_knm_atm(p))  ![frc] SeP97 p.965
-             dff_aer = SHR_CONST_BOLTZ * forc_t(g) * slp_crc(p,m) / &          ![m2 s-1]
+             dff_aer = SHR_CONST_BOLTZ * forc_t(c) * slp_crc(p,m) / &          ![m2 s-1]
                   (3.0_r8*SHR_CONST_PI * vsc_dyn_atm(p) * dmt_vwr(m))          !SeP97 p.474
              shm_nbr = vsc_knm_atm(p) / dff_aer                                ![frc] SeP97 p.972
              shm_nbr_xpn = shm_nbr_xpn_lnd                                     ![frc]

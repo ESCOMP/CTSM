@@ -68,7 +68,7 @@ contains
     !
     !
     ! !USES:
-    use clm_atmlnd   , only : clm_a2l
+    use clm_atmlnd   , only : clm_a2l, a2l_downscaled_col
     use clmtype
     use domainMod,     only : ldomain 
     use clm_varcon   , only : spval
@@ -132,56 +132,56 @@ contains
     end if
 
    associate(& 
-   clandunit                           =>   col%landunit                                 , & ! Input:  [integer (:)]  gridcell of corresponding column                   
-   ltype                               =>    lun%itype                                   , & ! Input:  [integer (:)]  landunit type                                      
-   forc_solad                          =>    clm_a2l%forc_solad                          , & ! Input:  [real(r8) (:,:)]  direct beam radiation (visible only)            
-   forc_solai                          =>    clm_a2l%forc_solai                          , & ! Input:  [real(r8) (:,:)]  diffuse radiation     (visible only)            
-   forc_pbot                           =>    clm_a2l%forc_pbot                           , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
-   forc_solad24                        =>    pvs%fsd24                                   , & ! Input:  [real(r8) (:)]  direct beam radiation last 24hrs  (visible only)  
-   forc_solad240                       =>    pvs%fsd240                                  , & ! Input:  [real(r8) (:)]  direct beam radiation last 240hrs (visible only)  
-   forc_solai24                        =>    pvs%fsi24                                   , & ! Input:  [real(r8) (:)]  diffuse radiation  last 24hrs     (visible only)  
-   forc_solai240                       =>    pvs%fsi240                                  , & ! Input:  [real(r8) (:)]  diffuse radiation  last 240hrs    (visible only)  
-   t_veg24                             =>    pvs%t_veg24                                 , & ! Input:  [real(r8) (:)]  avg pft vegetation temperature for last 24 hrs    
-   t_veg240                            =>    pvs%t_veg240                                , & ! Input:  [real(r8) (:)]  avg pft vegetation temperature for last 240 hrs   
-   fsun24                              =>    pvs%fsun24                                  , & ! Input:  [real(r8) (:)]  sunlit fraction of canopy last 24 hrs             
-   fsun240                             =>    pvs%fsun240                                 , & ! Input:  [real(r8) (:)]  sunlit fraction of canopy last 240 hrs            
-   elai_p                              =>    pvs%elai_p                                  , & ! Input:  [real(r8) (:)]  one-sided leaf area index from previous timestep  
-   h2osoi_vol                          =>    cws%h2osoi_vol                              , & ! Input:  [real(r8) (:,:)]  volumetric soil water (m3/m3)                   
-   h2osoi_ice                          =>    cws%h2osoi_ice                              , & ! Input:  [real(r8) (:,:)]  ice soil content (kg/m3)                        
-   dz                                  =>    cps%dz                                      , & ! Input:  [real(r8) (:,:)]  depth of layer (m)                              
-   bsw                                 =>    cps%bsw                                     , & ! Input:  [real(r8) (:,:)]  Clapp and Hornberger "b" (nlevgrnd)             
-   watsat                              =>    cps%watsat                                  , & ! Input:  [real(r8) (:,:)]  volumetric soil water at saturation (porosity) (nlevgrnd)
-   sucsat                              =>    cps%sucsat                                  , & ! Input:  [real(r8) (:,:)]  minimum soil suction (mm) (nlevgrnd)            
-   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  gridcell index of corresponding pft                
-   pcolumn                             =>   pft%column                                   , & ! Input:  [integer (:)]  column index of corresponding pft                  
-   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type for current                    
-   t_veg                               =>    pes%t_veg                                   , & ! Input:  [real(r8) (:)]  pft vegetation temperature (Kelvin)               
-   fsun                                =>    pps%fsun                                    , &! Input:  [real(r8) (:)]  sunlit fraction of canopy                         
-   elai                                =>    pps%elai                                    , & ! Input:  [real(r8) (:)]  one-sided leaf area index with burying by snow    
-   clayfrac                            =>    pps%clayfrac                                , & ! Input:  [real(r8) (:)]  fraction of soil that is clay                     
-   sandfrac                            =>    pps%sandfrac                                , & ! Input:  [real(r8) (:)]  fraction of soil that is sand                     
-   cisun_z                             =>    pcf%cisun_z                                 , & ! Input:  [real(r8) (:,:)]  sunlit intracellular CO2 (Pa)                   
-   cisha_z                             =>    pcf%cisha_z                                 , & ! Input:  [real(r8) (:,:)]  shaded intracellular CO2 (Pa)                   
-   vocflx                              =>    pvf%vocflx                                  , & ! Output: [real(r8) (:,:)]  VOC flux [moles/m2/sec]                         
-   vocflx_tot                          =>    pvf%vocflx_tot                              , & ! Output: [real(r8) (:)]  VOC flux [moles/m2/sec]                           
-   meg_out                             =>    pvf%meg                                     , & ! Output: [type(megan_out_type) (:)]  fluxes for CLM history                
-   gammaL_out                          =>    pvf%gammaL_out                              , & ! Output: [real(r8) (:)]                                                    
-   gammaT_out                          =>    pvf%gammaT_out                              , & ! Output: [real(r8) (:)]                                                    
-   gammaP_out                          =>    pvf%gammaP_out                              , & ! Output: [real(r8) (:)]                                                    
-   gammaA_out                          =>    pvf%gammaA_out                              , & ! Output: [real(r8) (:)]                                                    
-   gammaS_out                          =>    pvf%gammaS_out                              , & ! Output: [real(r8) (:)]                                                    
-   gammaC_out                          =>    pvf%gammaC_out                              , & ! Output: [real(r8) (:)]                                                    
-   gamma_out                           =>    pvf%gamma_out                               , & ! Output: [real(r8) (:)]                                                    
-   Eopt_out                            =>    pvf%Eopt_out                                , & ! Output: [real(r8) (:)]                                                    
-   topt_out                            =>    pvf%topt_out                                , & ! Output: [real(r8) (:)]                                                    
-   alpha_out                           =>    pvf%alpha_out                               , & ! Output: [real(r8) (:)]                                                    
-   cp_out                              =>    pvf%cp_out                                  , & ! Output: [real(r8) (:)]                                                    
-   paru_out                            =>    pvf%paru_out                                , & ! Output: [real(r8) (:)]                                                    
-   par24u_out                          =>    pvf%par24u_out                              , & ! Output: [real(r8) (:)]                                                    
-   par240u_out                         =>    pvf%par240u_out                             , & ! Output: [real(r8) (:)]                                                    
-   para_out                            =>    pvf%para_out                                , & ! Output: [real(r8) (:)]                                                    
-   par24a_out                          =>    pvf%par24a_out                              , & ! Output: [real(r8) (:)]                                                    
-   par240a_out                         =>    pvf%par240a_out                               & ! Output: [real(r8) (:)]                                                    
+   clandunit                           =>   col%landunit                  , & ! Input:  [integer (:)]  gridcell of corresponding column                   
+   ltype                               =>    lun%itype                    , & ! Input:  [integer (:)]  landunit type                                      
+   forc_solad                          =>    clm_a2l%forc_solad           , & ! Input:  [real(r8) (:,:)]  direct beam radiation (visible only)            
+   forc_solai                          =>    clm_a2l%forc_solai           , & ! Input:  [real(r8) (:,:)]  diffuse radiation     (visible only)            
+   forc_pbot                           =>    a2l_downscaled_col%forc_pbot , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
+   forc_solad24                        =>    pvs%fsd24                    , & ! Input:  [real(r8) (:)]  direct beam radiation last 24hrs  (visible only)  
+   forc_solad240                       =>    pvs%fsd240                   , & ! Input:  [real(r8) (:)]  direct beam radiation last 240hrs (visible only)  
+   forc_solai24                        =>    pvs%fsi24                    , & ! Input:  [real(r8) (:)]  diffuse radiation  last 24hrs     (visible only)  
+   forc_solai240                       =>    pvs%fsi240                   , & ! Input:  [real(r8) (:)]  diffuse radiation  last 240hrs    (visible only)  
+   t_veg24                             =>    pvs%t_veg24                  , & ! Input:  [real(r8) (:)]  avg pft vegetation temperature for last 24 hrs    
+   t_veg240                            =>    pvs%t_veg240                 , & ! Input:  [real(r8) (:)]  avg pft vegetation temperature for last 240 hrs   
+   fsun24                              =>    pvs%fsun24                   , & ! Input:  [real(r8) (:)]  sunlit fraction of canopy last 24 hrs             
+   fsun240                             =>    pvs%fsun240                  , & ! Input:  [real(r8) (:)]  sunlit fraction of canopy last 240 hrs            
+   elai_p                              =>    pvs%elai_p                   , & ! Input:  [real(r8) (:)]  one-sided leaf area index from previous timestep  
+   h2osoi_vol                          =>    cws%h2osoi_vol               , & ! Input:  [real(r8) (:,:)]  volumetric soil water (m3/m3)                   
+   h2osoi_ice                          =>    cws%h2osoi_ice               , & ! Input:  [real(r8) (:,:)]  ice soil content (kg/m3)                        
+   dz                                  =>    cps%dz                       , & ! Input:  [real(r8) (:,:)]  depth of layer (m)                              
+   bsw                                 =>    cps%bsw                      , & ! Input:  [real(r8) (:,:)]  Clapp and Hornberger "b" (nlevgrnd)             
+   watsat                              =>    cps%watsat                   , & ! Input:  [real(r8) (:,:)]  volumetric soil water at saturation (porosity) (nlevgrnd)
+   sucsat                              =>    cps%sucsat                   , & ! Input:  [real(r8) (:,:)]  minimum soil suction (mm) (nlevgrnd)            
+   pgridcell                           =>   pft%gridcell                  , & ! Input:  [integer (:)]  gridcell index of corresponding pft                
+   pcolumn                             =>   pft%column                    , & ! Input:  [integer (:)]  column index of corresponding pft                  
+   ivt                                 =>   pft%itype                     , & ! Input:  [integer (:)]  pft vegetation type for current                    
+   t_veg                               =>    pes%t_veg                    , & ! Input:  [real(r8) (:)]  pft vegetation temperature (Kelvin)               
+   fsun                                =>    pps%fsun                     , &! Input:  [real(r8) (:)]  sunlit fraction of canopy                         
+   elai                                =>    pps%elai                     , & ! Input:  [real(r8) (:)]  one-sided leaf area index with burying by snow    
+   clayfrac                            =>    pps%clayfrac                 , & ! Input:  [real(r8) (:)]  fraction of soil that is clay                     
+   sandfrac                            =>    pps%sandfrac                 , & ! Input:  [real(r8) (:)]  fraction of soil that is sand                     
+   cisun_z                             =>    pcf%cisun_z                  , & ! Input:  [real(r8) (:,:)]  sunlit intracellular CO2 (Pa)                   
+   cisha_z                             =>    pcf%cisha_z                  , & ! Input:  [real(r8) (:,:)]  shaded intracellular CO2 (Pa)                   
+   vocflx                              =>    pvf%vocflx                   , & ! Output: [real(r8) (:,:)]  VOC flux [moles/m2/sec]                         
+   vocflx_tot                          =>    pvf%vocflx_tot               , & ! Output: [real(r8) (:)]  VOC flux [moles/m2/sec]                           
+   meg_out                             =>    pvf%meg                      , & ! Output: [type(megan_out_type) (:)]  fluxes for CLM history                
+   gammaL_out                          =>    pvf%gammaL_out               , & ! Output: [real(r8) (:)]                                                    
+   gammaT_out                          =>    pvf%gammaT_out               , & ! Output: [real(r8) (:)]                                                    
+   gammaP_out                          =>    pvf%gammaP_out               , & ! Output: [real(r8) (:)]                                                    
+   gammaA_out                          =>    pvf%gammaA_out               , & ! Output: [real(r8) (:)]                                                    
+   gammaS_out                          =>    pvf%gammaS_out               , & ! Output: [real(r8) (:)]                                                    
+   gammaC_out                          =>    pvf%gammaC_out               , & ! Output: [real(r8) (:)]                                                    
+   gamma_out                           =>    pvf%gamma_out                , & ! Output: [real(r8) (:)]                                                    
+   Eopt_out                            =>    pvf%Eopt_out                 , & ! Output: [real(r8) (:)]                                                    
+   topt_out                            =>    pvf%topt_out                 , & ! Output: [real(r8) (:)]                                                    
+   alpha_out                           =>    pvf%alpha_out                , & ! Output: [real(r8) (:)]                                                    
+   cp_out                              =>    pvf%cp_out                   , & ! Output: [real(r8) (:)]                                                    
+   paru_out                            =>    pvf%paru_out                 , & ! Output: [real(r8) (:)]                                                    
+   par24u_out                          =>    pvf%par24u_out               , & ! Output: [real(r8) (:)]                                                    
+   par240u_out                         =>    pvf%par240u_out              , & ! Output: [real(r8) (:)]                                                    
+   para_out                            =>    pvf%para_out                 , & ! Output: [real(r8) (:)]                                                    
+   par24a_out                          =>    pvf%par24a_out               , & ! Output: [real(r8) (:)]                                                    
+   par240a_out                         =>    pvf%par240a_out                & ! Output: [real(r8) (:)]                                                    
    )
 
     ! initialize variables which get passed to the atmosphere
@@ -283,7 +283,7 @@ contains
 
              ! Activity factor for CO2 (only for isoprene)
              if (trim(meg_cmp%name) == 'isoprene') then 
-                gamma_c = get_gamma_C(cisun_z(p,1),cisha_z(p,1),forc_pbot(g),fsun(p))
+                gamma_c = get_gamma_C(cisun_z(p,1),cisha_z(p,1),forc_pbot(c),fsun(p))
              else
                 gamma_c = 1._r8
              end if

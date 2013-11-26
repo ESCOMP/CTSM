@@ -300,7 +300,7 @@ contains
 
        ! Prepare for lake layer temperature calculations below
 
-       ! fin(c) = betaprime * sabg(p) + forc_lwrad(g) - (eflx_lwrad_out(p) + &
+       ! fin(c) = betaprime * sabg(p) + forc_lwrad(c) - (eflx_lwrad_out(p) + &
        !     eflx_sh_tot(p) + eflx_lh_tot(p)) 
        ! fin(c) now passed from SLakeFluxes as eflx_gnet
        fin(c) = eflx_gnet(p)

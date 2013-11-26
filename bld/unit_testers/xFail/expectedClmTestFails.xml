@@ -5,11 +5,11 @@
       <yellowstone>
          <INTEL>
             <compare>
-               <entry testId="211" failType="xFail"> missing datasets for us20 </entry>
-               <entry testId="213" failType="xFail"> missing datasets for us20 </entry>
+               <entry testId="208" failType="xFail"> missing datasets for us20 </entry>
+               <entry testId="210" failType="xFail"> missing datasets for us20 </entry>
             </compare>
             <generate>
-               <entry testId="138" failType="xFail"> missing datasets for us20 </entry>
+               <entry testId="135" failType="xFail"> missing datasets for us20 </entry>
             </generate>
 
             <entry testId="6" failType="xFail"> build-namelist tests need to be updated for cpp removal </entry>

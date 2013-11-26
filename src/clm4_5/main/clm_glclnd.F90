@@ -109,7 +109,7 @@ contains
     use clmtype 
     use domainMod , only : ldomain
     use clm_varcon, only : istice_mec
-    use clm_atmlnd, only : clm_l2a, clm_a2l
+    use clm_atmlnd, only : clm_l2a, a2l_not_downscaled_gcell
     use clm_varcon, only : spval
     !
     ! !ARGUMENTS:
@@ -171,15 +171,15 @@ contains
        n = 1
        do g = bounds%begg,bounds%endg
           clm_s2x%tsrf(g,n) = clm_l2a%t_ref2m(g)
-          clm_s2x%qice(g,n) = clm_a2l%forc_snow(g)   ! Assume rain runs off
+          clm_s2x%qice(g,n) = a2l_not_downscaled_gcell%forc_snow(g)   ! Assume rain runs off
           clm_s2x%topo(g,n) = ldomain%topo(g)
           ! Check for bad values of qice
           if (clm_s2x%qice(g,n) > -1.0_r8 .and. clm_s2x%qice(g,n) < 1.0_r8) then
              continue
           else
              write(iulog,*) 'WARNING: qice out of bounds: g, n, qice =', g, n, clm_s2x%qice(g,n)
-             write(iulog,*) 'forc_rain =', clm_a2l%forc_rain(g)
-             write(iulog,*) 'forc_snow =', clm_a2l%forc_snow(g)
+             write(iulog,*) 'forc_rain =', a2l_not_downscaled_gcell%forc_rain(g)
+             write(iulog,*) 'forc_snow =', a2l_not_downscaled_gcell%forc_snow(g)
           endif
        enddo
     endif   ! glc_smb

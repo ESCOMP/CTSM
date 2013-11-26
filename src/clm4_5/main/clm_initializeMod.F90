@@ -59,7 +59,7 @@ contains
     use controlMod       ,only: control_init, control_print, nlfilename
     use UrbanInputMod    ,only: UrbanInput
     use ncdio_pio        ,only: ncd_pio_init
-    use clm_atmlnd       ,only: init_atm2lnd_type, init_lnd2atm_type, clm_a2l, clm_l2a
+    use clm_atmlnd       ,only: init_atm2lnd, init_lnd2atm
     use clm_glclnd       ,only: init_glc2lnd_type, init_lnd2glc_type, clm_x2s, clm_s2x
     use initGridCellsMod ,only: initGridCells
     use ch4varcon        ,only: ch4conrd
@@ -219,8 +219,8 @@ contains
 
     ! Initialize atm->lnd, lnd->atm, glc->lnd and lnd->glc data structures
 
-    call init_atm2lnd_type(bounds_proc, clm_a2l)
-    call init_lnd2atm_type(bounds_proc, clm_l2a)
+    call init_atm2lnd(bounds_proc)
+    call init_lnd2atm(bounds_proc)
     if (create_glacier_mec_landunit) then
        call init_glc2lnd_type(bounds_proc, clm_x2s)
        call init_lnd2glc_type(bounds_proc, clm_s2x)

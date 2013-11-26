@@ -27,7 +27,7 @@ contains
     !
     ! !USES:
     use clmtype
-    use clm_atmlnd         , only : clm_a2l
+    use clm_atmlnd         , only : clm_a2l, a2l_downscaled_col
     use clm_varpar         , only : nlevgrnd
     use clm_varcon         , only : cpair, vkc, grav, denice, denh2o, istsoil
     use clm_varcon         , only : istcrop
@@ -100,11 +100,11 @@ contains
    qflx_ev_h2osfc                 =>    pwf%qflx_ev_h2osfc                               , & ! Input:  [real(r8) (:)]  evaporation flux from h2osfc (W/m**2) [+ to atm]                      
    forc_u                         =>    clm_a2l%forc_u                                   , & ! Input:  [real(r8) (:)]  atmospheric wind speed in east direction (m/s)                        
    forc_v                         =>    clm_a2l%forc_v                                   , & ! Input:  [real(r8) (:)]  atmospheric wind speed in north direction (m/s)                       
-   forc_th                        =>    ces%forc_th                                      , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (Kelvin)                            
-   forc_t                         =>    ces%forc_t                                       , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                                      
-   forc_pbot                      =>    cps%forc_pbot                                    , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                                             
-   forc_rho                       =>    cps%forc_rho                                     , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                                     
-   forc_q                         =>    cws%forc_q                                       , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)                                 
+   forc_th                        =>    a2l_downscaled_col%forc_th                       , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (Kelvin)                            
+   forc_t                         =>    a2l_downscaled_col%forc_t                        , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                                      
+   forc_pbot                      =>    a2l_downscaled_col%forc_pbot                     , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                                             
+   forc_rho                       =>    a2l_downscaled_col%forc_rho                      , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                                     
+   forc_q                         =>    a2l_downscaled_col%forc_q                        , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)                                 
    frac_veg_nosno                 =>    pps%frac_veg_nosno                               , & ! Input:  [integer (:)]  fraction of vegetation not covered by snow (0 OR 1) [-]                
    dlrad                          =>    pef%dlrad                                        , & ! Output: [real(r8) (:)]  downward longwave radiation below the canopy [W/m2]                   
    ulrad                          =>    pef%ulrad                                        , & ! Output: [real(r8) (:)]  upward longwave radiation above the canopy [W/m2]                     

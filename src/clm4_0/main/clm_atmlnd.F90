@@ -28,7 +28,25 @@ module clm_atmlnd
 ! atmosphere -> land variables structure
 !----------------------------------------------------
 
-  type, public :: atm2lnd_type
+  ! Notes about atm2lnd_downscaled_fields_type, atm2lnd_type, and
+  ! a2l_not_downscaled_gcell: On the CLM4.5 side, atm2lnd_type has been broken into two
+  ! types: atm2lnd_type contains a subset of the original type, and
+  ! atm2lnd_downscaled_fields_type contains the remaining fields. Similarly, there are two
+  ! variables at the grid cell level: clm_a2l (of type atm2lnd_type) and
+  ! a2l_not_downscaled_gcell (of type atm2lnd_downscaled_fields_type). Because
+  ! lnd_import_export accesses these types and the related variables, and because
+  ! lnd_import_export is shared between the clm4.0 and clm4.5 sides, we needed to make
+  ! changes on the clm4.0 side for compatibility. Specifically, we needed to introduce a
+  ! pointer/alias named a2l_not_downscaled_gcell; for simplicity, this is simply another
+  ! way to access all of the fields in clm_a2l. Getting its type right is a bit tricky:
+  ! lnd_import_export expects it to be of type atm2lnd_downscaled_fields_type, but it
+  ! needs to point to a variable of type atm2lnd_type. To accomplish this, we have used
+  ! inheritance & polymorphism (Fortran 2003 features).
+
+  ! This is really the type definition for atm2lnd_type. However, for compatibility with
+  ! clm4_5 (particularly in lnd_import_export) we need to call this
+  ! atm2lnd_downscaled_fields_type, and then define an extended type called atm2lnd_type.
+  type, public :: atm2lnd_downscaled_fields_type
      real(r8), pointer :: forc_t(:)       => null() !atmospheric temperature (Kelvin)
      real(r8), pointer :: forc_u(:)       => null() !atm wind speed, east direction (m/s)
      real(r8), pointer :: forc_v(:)       => null() !atm wind speed, north direction (m/s)
@@ -52,7 +70,6 @@ module clm_atmlnd
      real(r8), pointer :: forc_rain(:)    => null() !rain rate [mm/s]
      real(r8), pointer :: forc_snow(:)    => null() !snow rate [mm/s]
      real(r8), pointer :: forc_ndep(:)    => null() !nitrogen deposition rate (gN/m2/s)
-     real(r8), pointer :: rainf(:)        => null() !ALMA rain+snow [mm/s]
      real(r8), pointer :: forc_pc13o2(:)  => null() !C13O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2(:)     => null() !O2 partial pressure (Pa)
      real(r8), pointer :: forc_flood(:)   => null() ! rof flood (mm/s)
@@ -72,6 +89,11 @@ module clm_atmlnd
      real(r8), pointer ::af_swdn(:)        => null() ! anomaly forcing 
      real(r8), pointer ::af_lwdn(:)        => null() ! anomaly forcing 
      real(r8), pointer :: bc_precip(:)     => null() ! anomaly forcing - add bias correction
+  end type atm2lnd_downscaled_fields_type
+
+  ! The following type extension is needed just so that lnd_import_export can remain
+  ! consistent between the clm4_0 code and clm4_5 code.
+  type, public, extends(atm2lnd_downscaled_fields_type) :: atm2lnd_type
   end type atm2lnd_type
 
 !----------------------------------------------------
@@ -108,6 +130,10 @@ module clm_atmlnd
 
   type(atm2lnd_type),public,target :: clm_a2l      ! a2l fields on clm grid
   type(lnd2atm_type),public,target :: clm_l2a      ! l2a fields on clm grid
+
+  ! The following alias is needed just so that lnd_import_export can remain consistent
+  ! between the clm4_0 code and clm4_5 code.
+  class(atm2lnd_downscaled_fields_type),public,pointer :: a2l_not_downscaled_gcell
 
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: init_atm2lnd_type
@@ -174,7 +200,6 @@ contains
   allocate(a2l%forc_rain(beg:end))
   allocate(a2l%forc_snow(beg:end))
   allocate(a2l%forc_ndep(beg:end))
-  allocate(a2l%rainf(beg:end))
   allocate(a2l%forc_pc13o2(beg:end))
   allocate(a2l%forc_po2(beg:end))
   allocate(a2l%forc_flood(beg:end))
@@ -207,12 +232,15 @@ contains
   a2l%forc_rain(beg:end) = ival
   a2l%forc_snow(beg:end) = ival
   a2l%forc_ndep(beg:end) = ival
-  a2l%rainf(beg:end) = nan
   a2l%forc_pc13o2(beg:end) = ival
   a2l%forc_po2(beg:end) = ival
   a2l%forc_flood(beg:end) = ival
   a2l%volr(beg:end) = ival
   a2l%forc_aer(beg:end,:) = ival
+
+  ! The following alias is needed just so that lnd_import_export can remain consistent
+  ! between the clm4_0 code and clm4_5 code.
+  a2l_not_downscaled_gcell => clm_a2l
 
 end subroutine init_atm2lnd_type
 

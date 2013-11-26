@@ -15,7 +15,7 @@ module clm_driverInitMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine clm_driverInit(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec)
+  subroutine clm_driverInit(bounds, num_nolakec, filter_nolakec)
     !
     ! !DESCRIPTION:
     ! Initialization of clm driver variables needed from previous timestep
@@ -24,30 +24,19 @@ contains
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use clm_varpar   , only : nlevsno
-    use subgridAveMod, only : p2c
-    use clm_varcon   , only : h2osno_max, rair, cpair, grav, istice_mec, lapse_glcmec
-    use clm_atmlnd   , only : clm_a2l
-    use domainMod    , only : ldomain
-    use clmtype
-    use QsatMod      , only : Qsat
+    use clm_varcon   , only : h2osno_max, istice_mec
     use decompMod    , only : bounds_type
+    use shr_infnan_mod,only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
     integer, intent(in) :: num_nolakec                 ! number of column non-lake points in column filter
     integer, intent(in) :: filter_nolakec(:)   ! column filter for non-lake points
-    integer, intent(in) :: num_lakec                   ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_lakec(:)     ! column filter for non-lake points
     !
     ! !LOCAL VARIABLES:
-    integer :: g, l, c, p, f, j, fc         ! indices
-    ! temporaries for topo downscaling
-    real(r8) :: hsurf_g,hsurf_c,Hbot
-    real(r8) :: zbot_g, tbot_g, pbot_g, thbot_g, qbot_g, qs_g, es_g
-    real(r8) :: zbot_c, tbot_c, pbot_c, thbot_c, qbot_c, qs_c, es_c
-    real(r8) :: egcm_c, rhos_c
-    real(r8) :: dum1,   dum2
+    integer :: l, c, p, f, j         ! indices
+
     !-----------------------------------------------------------------------
 
    associate(& 
@@ -61,27 +50,12 @@ contains
    do_capsnow         => cps%do_capsnow          , & ! Output: [logical (:)]  true => do snow capping                  
    frac_iceold        => cps%frac_iceold         , & ! Output: [real(r8) (:,:)]  fraction of ice relative to the tot water
    qflx_glcice        => cwf%qflx_glcice         , & ! Output: [real(r8) (:)]  flux of new glacier ice (mm H2O/s) [+ = ice grows]
-   eflx_bot           => cef%eflx_bot            , & ! Output: [real(r8) (:)]  heat flux from beneath soil/ice column (W/m**2)
-   glc_topo           => cps%glc_topo            , & ! Output: [real(r8) (:)]  sfc elevation for glacier_mec column (m)
-   forc_t             => ces%forc_t              , & ! Output: [real(r8) (:)]  atmospheric temperature (Kelvin)        
-   forc_th            => ces%forc_th             , & ! Output: [real(r8) (:)]  atmospheric potential temperature (Kelvin)
-   forc_q             => cws%forc_q              , & ! Output: [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
-   forc_pbot          => cps%forc_pbot           , & ! Output: [real(r8) (:)]  atmospheric pressure (Pa)               
-   forc_rho           => cps%forc_rho              & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
+   eflx_bot           => cef%eflx_bot              & ! Output: [real(r8) (:)]  heat flux from beneath soil/ice column (W/m**2)
    )
 
     do c = bounds%begc,bounds%endc
 
       l = col%landunit(c)
-      g = col%gridcell(c)
-
-      ! Initialize column forcing
-
-      forc_t(c)    = clm_a2l%forc_t(g)
-      forc_th(c)   = clm_a2l%forc_th(g)
-      forc_q(c)    = clm_a2l%forc_q(g)
-      forc_pbot(c) = clm_a2l%forc_pbot(g)
-      forc_rho(c)  = clm_a2l%forc_rho(g)
 
       ! Save snow mass at previous time step
       h2osno_old(c) = h2osno(c)
@@ -123,53 +97,8 @@ contains
       end do
     end do
 
-   ! Downscale forc_t, forc_th, forc_q, forc_pbot, and forc_rho to columns.
-   ! For glacier_mec columns the downscaling is based on surface elevation.
-   ! For other columns the downscaling is a simple copy.
-
-    do f = 1, num_nolakec
-       c = filter_nolakec(f)
-       l = col%landunit(c)
-       g = col%gridcell(c)
-
-       if (lun%itype(l) == istice_mec) then   ! downscale to elevation classes
-
-          ! This is a simple downscaling procedure 
-          ! Note that forc_hgt, forc_u, and forc_v are not downscaled.
-
-          hsurf_g      = ldomain%topo(g)          ! gridcell sfc elevation
-          hsurf_c      = glc_topo(c)              ! column sfc elevation
-
-          tbot_g       = clm_a2l%forc_t(g)        ! atm sfc temp
-          thbot_g      = clm_a2l%forc_th(g)       ! atm sfc pot temp
-          qbot_g       = clm_a2l%forc_q(g)        ! atm sfc spec humid
-          pbot_g       = clm_a2l%forc_pbot(g)     ! atm sfc pressure
-          zbot_g       = clm_a2l%forc_hgt(g)      ! atm ref height
-
-          zbot_c = zbot_g
-          tbot_c = tbot_g-lapse_glcmec*(hsurf_c-hsurf_g)   ! sfc temp for column
-
-          Hbot   = rair*0.5_r8*(tbot_g+tbot_c)/grav        ! scale ht at avg temp
-          pbot_c = pbot_g*exp(-(hsurf_c-hsurf_g)/Hbot)     ! column sfc press
-          thbot_c= tbot_c*exp((zbot_c/Hbot)*(rair/cpair))  ! pot temp calc
-
-          call Qsat(tbot_g,pbot_g,es_g,dum1,qs_g,dum2)
-          call Qsat(tbot_c,pbot_c,es_c,dum1,qs_c,dum2)
-
-          qbot_c = qbot_g*(qs_c/qs_g)
-          egcm_c = qbot_c*pbot_c/(0.622+0.378*qbot_c)
-          rhos_c = (pbot_c-0.378*egcm_c) / (rair*tbot_c)
-
-          forc_t(c)    = tbot_c
-          forc_th(c)   = thbot_c
-          forc_q(c)    = qbot_c
-          forc_pbot(c) = pbot_c
-          forc_rho(c)  = rhos_c
-
-       endif
-    enddo    ! num_nolakec
-
     end associate 
    end subroutine clm_driverInit
+
 
 end module clm_driverInitMod

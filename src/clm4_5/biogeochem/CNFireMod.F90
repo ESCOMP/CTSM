@@ -101,7 +101,7 @@ contains
     use clm_time_manager, only: get_step_size, get_days_per_year, get_curr_date, get_nstep
     use clm_varpar      , only: max_pft_per_col
     use clm_varcon      , only: secspday
-    use clm_atmlnd      , only: clm_a2l
+    use clm_atmlnd      , only: clm_a2l, a2l_downscaled_col
     use shr_infnan_mod  , only: shr_infnan_isnan
     use clm_varctl      , only: fpftdyn, use_nofire
     use pftvarcon       , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree, &
@@ -148,65 +148,65 @@ contains
     !-----------------------------------------------------------------------
 
    associate(& 
-   prec60                              =>    pps%prec60                                  , & ! Input:  [real(r8) (:)]  60-day running mean of tot. precipitation         
-   prec10                              =>    pps%prec10                                  , & ! Input:  [real(r8) (:)]  10-day running mean of tot. precipitation         
-   deadcrootc                          =>    pcs%deadcrootc                              , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C                        
-   deadcrootc_storage                  =>    pcs%deadcrootc_storage                      , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C storage                
-   deadcrootc_xfer                     =>    pcs%deadcrootc_xfer                         , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C transfer               
-   frootc                              =>    pcs%frootc                                  , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C                               
-   frootc_storage                      =>    pcs%frootc_storage                          , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C storage                       
-   frootc_xfer                         =>    pcs%frootc_xfer                             , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C transfer                      
-   livecrootc                          =>    pcs%livecrootc                              , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C                        
-   livecrootc_storage                  =>    pcs%livecrootc_storage                      , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C storage                
-   livecrootc_xfer                     =>    pcs%livecrootc_xfer                         , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C transfer               
-   totvegc                             =>    pcs%totvegc                                 , & ! Input:  [real(r8) (:)]  (gC/m2) total vegetation carbon, excluding cpool  
-   btran2                              =>    pps%btran2                                  , & ! Input:  [real(r8) (:)]  root zone soil wetness                            
-   leafc                               =>    pcs%leafc                                   , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C                                    
-   leafc_storage                       =>    pcs%leafc_storage                           , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C storage                            
-   leafc_xfer                          =>    pcs%leafc_xfer                              , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C transfer                           
-   lfpftd                              =>    pps%lfpftd                                  , & ! Input:  [real(r8) (:)]  decrease of pft weight (0-1) on the col. for timestep
-   burndate                            =>    pps%burndate                                , & ! Input:  [integer (:)]  burn date for crop                                 
-   wf                                  =>    cps%wf                                      , & ! Input:  [real(r8) (:)]  soil water as frac. of whc for top 0.05 m         
-   wf2                                 =>    cps%wf2                                     , & ! Input:  [real(r8) (:)]  soil water as frac. of whc for top 0.17 m         
-   tsoi17                              =>    ces%tsoi17                                  , & ! Input:  [real(r8) (:)]  soil T for top 0.17 m                             
-   farea_burned                        =>    cps%farea_burned                            , & ! InOut:  [real(r8) (:)]  fractional area burned in this timestep           
-   baf_crop                            =>    cps%baf_crop                                , & ! Input:  [real(r8) (:)]  burned area fraction for cropland                 
-   baf_peatf                           =>    cps%baf_peatf                               , & ! Input:  [real(r8) (:)]  burned area fraction for peatland                 
-   fbac                                =>    cps%fbac                                    , & ! Input:  [real(r8) (:)]  total burned area out of conversion               
-   fbac1                               =>    cps%fbac1                                   , & ! Input:  [real(r8) (:)]  burned area out of conversion region due to land use fire
-   cropf_col                           =>    cps%cropf_col                               , & ! Input:  [real(r8) (:)]  cropland fraction in veg column                   
-   gdp_lf                              =>    cps%gdp_lf                                  , & ! Input:  [real(r8) (:)]  gdp data                                          
-   peatf_lf                            =>    cps%peatf_lf                                , & ! Input:  [real(r8) (:)]  peatland fraction data                            
-   abm_lf                              =>    cps%abm_lf                                  , & ! Input:  [integer (:)]  proscribed crop fire time                          
-   nfire                               =>    cps%nfire                                   , & ! InOut:  [real(r8) (:)]  fire counts (count/km2/timestep), valid only in Reg. C
-   totlitc                             =>    ccs%totlitc                                 , & ! Input:  [real(r8) (:)]  (gC/m2) total lit C (column-level mean)           
-   fsr_col                             =>    cps%fsr_col                                 , & ! Input:  [real(r8) (:)]  fire spread rate at column level                  
-   fd_col                              =>    cps%fd_col                                  , & ! Input:  [real(r8) (:)]  fire duration at column level                     
-   rootc_col                           =>    ccs%rootc_col                               , & ! Input:  [real(r8) (:)]  root carbon                                       
-   totvegc_col                         =>    ccs%totvegc_col                             , & ! Input:  [real(r8) (:)]  totvegc at column level                           
-   leafc_col                           =>    ccs%leafc_col                               , & ! Input:  [real(r8) (:)]  leaf carbon at column level                       
-   lgdp_col                            =>    cps%lgdp_col                                , & ! Input:  [real(r8) (:)]  gdp limitation factor for nfire                   
-   lgdp1_col                           =>    cps%lgdp1_col                               , & ! Input:  [real(r8) (:)]  gdp limitation factor for baf per fire            
-   lpop_col                            =>    cps%lpop_col                                , & ! Input:  [real(r8) (:)]  pop limitation factor for baf per fire            
-   fuelc                               =>    ccs%fuelc                                   , & ! Input:  [real(r8) (:)]  fuel avalability factor for Reg.C                 
-   fuelc_crop                          =>    ccs%fuelc_crop                              , & ! Input:  [real(r8) (:)]  fuel avalability factor for Reg.A                 
-   btran_col                           =>    cps%btran_col                               , & ! Input:  [real(r8) (:)]  transpiration wetness factor (0 to 1)             
-   wtlf                                =>    cps%wtlf                                    , & ! Input:  [real(r8) (:)]  fractional coverage of non-crop PFTs              
-   lfwt                                =>    cps%lfwt                                    , & ! Input:  [real(r8) (:)]  fractional coverage of non-crop and non-bare-soil PFTs
-   trotr1_col                          =>    cps%trotr1_col                              , & ! Input:  [real(r8) (:)]  pft weight of BET on the gridcell (0-1)           
-   trotr2_col                          =>    cps%trotr2_col                              , & ! Input:  [real(r8) (:)]  pft weight of BDT on the gridcell (0-1)           
-   dtrotr_col                          =>    cps%dtrotr_col                              , & ! Input:  [real(r8) (:)]  annual decreased fraction coverage of BET+BDT on gridcell
-   prec60_col                          =>    cps%prec60_col                              , & ! Input:  [real(r8) (:)]  60-day running mean of tot. precipitation         
-   prec10_col                          =>    cps%prec10_col                              , & ! Input:  [real(r8) (:)]  10-day running mean of tot. precipitation         
-   lfc                                 =>    cps%lfc                                     , & ! Input:  [real(r8) (:)]  conversion area frac. of BET+BDT that haven't burned before
-   fsat                                =>    cws%fsat                                    , & ! Input:  [real(r8) (:)]  fractional area with water table at surface       
-   is_cwd                              =>    decomp_cascade_con%is_cwd                   , & ! InOut:  [logical (:)]  TRUE => pool is a cwd pool                         
-   decomp_cpools_vr                    =>    ccs%decomp_cpools_vr                        , & ! Input:  [real(r8) (:,:,:)]  (gC/m3)  vert.-resolved decomposing c pools   
-   forc_rh                             =>    clm_a2l%forc_rh                             , & ! Input:  [real(r8) (:)]  relative humidity                                 
-   forc_wind                           =>    clm_a2l%forc_wind                           , & ! Input:  [real(r8) (:)] atmospheric wind speed (m/s)                       
-   forc_t                              =>    clm_a2l%forc_t                              , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                  
-   forc_rain                           =>    clm_a2l%forc_rain                           , & ! Input:  [real(r8) (:)]  rain                                              
-   forc_snow                           =>    clm_a2l%forc_snow                             & ! Input:  [real(r8) (:)]  snow                                              
+   prec60                              =>    pps%prec60                   , & ! Input:  [real(r8) (:)]  60-day running mean of tot. precipitation         
+   prec10                              =>    pps%prec10                   , & ! Input:  [real(r8) (:)]  10-day running mean of tot. precipitation         
+   deadcrootc                          =>    pcs%deadcrootc               , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C                        
+   deadcrootc_storage                  =>    pcs%deadcrootc_storage       , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C storage                
+   deadcrootc_xfer                     =>    pcs%deadcrootc_xfer          , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C transfer               
+   frootc                              =>    pcs%frootc                   , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C                               
+   frootc_storage                      =>    pcs%frootc_storage           , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C storage                       
+   frootc_xfer                         =>    pcs%frootc_xfer              , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C transfer                      
+   livecrootc                          =>    pcs%livecrootc               , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C                        
+   livecrootc_storage                  =>    pcs%livecrootc_storage       , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C storage                
+   livecrootc_xfer                     =>    pcs%livecrootc_xfer          , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C transfer               
+   totvegc                             =>    pcs%totvegc                  , & ! Input:  [real(r8) (:)]  (gC/m2) total vegetation carbon, excluding cpool  
+   btran2                              =>    pps%btran2                   , & ! Input:  [real(r8) (:)]  root zone soil wetness                            
+   leafc                               =>    pcs%leafc                    , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C                                    
+   leafc_storage                       =>    pcs%leafc_storage            , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C storage                            
+   leafc_xfer                          =>    pcs%leafc_xfer               , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C transfer                           
+   lfpftd                              =>    pps%lfpftd                   , & ! Input:  [real(r8) (:)]  decrease of pft weight (0-1) on the col. for timestep
+   burndate                            =>    pps%burndate                 , & ! Input:  [integer (:)]  burn date for crop                                 
+   wf                                  =>    cps%wf                       , & ! Input:  [real(r8) (:)]  soil water as frac. of whc for top 0.05 m         
+   wf2                                 =>    cps%wf2                      , & ! Input:  [real(r8) (:)]  soil water as frac. of whc for top 0.17 m         
+   tsoi17                              =>    ces%tsoi17                   , & ! Input:  [real(r8) (:)]  soil T for top 0.17 m                             
+   farea_burned                        =>    cps%farea_burned             , & ! InOut:  [real(r8) (:)]  fractional area burned in this timestep           
+   baf_crop                            =>    cps%baf_crop                 , & ! Input:  [real(r8) (:)]  burned area fraction for cropland                 
+   baf_peatf                           =>    cps%baf_peatf                , & ! Input:  [real(r8) (:)]  burned area fraction for peatland                 
+   fbac                                =>    cps%fbac                     , & ! Input:  [real(r8) (:)]  total burned area out of conversion               
+   fbac1                               =>    cps%fbac1                    , & ! Input:  [real(r8) (:)]  burned area out of conversion region due to land use fire
+   cropf_col                           =>    cps%cropf_col                , & ! Input:  [real(r8) (:)]  cropland fraction in veg column                   
+   gdp_lf                              =>    cps%gdp_lf                   , & ! Input:  [real(r8) (:)]  gdp data                                          
+   peatf_lf                            =>    cps%peatf_lf                 , & ! Input:  [real(r8) (:)]  peatland fraction data                            
+   abm_lf                              =>    cps%abm_lf                   , & ! Input:  [integer (:)]  proscribed crop fire time                          
+   nfire                               =>    cps%nfire                    , & ! InOut:  [real(r8) (:)]  fire counts (count/km2/timestep), valid only in Reg. C
+   totlitc                             =>    ccs%totlitc                  , & ! Input:  [real(r8) (:)]  (gC/m2) total lit C (column-level mean)           
+   fsr_col                             =>    cps%fsr_col                  , & ! Input:  [real(r8) (:)]  fire spread rate at column level                  
+   fd_col                              =>    cps%fd_col                   , & ! Input:  [real(r8) (:)]  fire duration at column level                     
+   rootc_col                           =>    ccs%rootc_col                , & ! Input:  [real(r8) (:)]  root carbon                                       
+   totvegc_col                         =>    ccs%totvegc_col              , & ! Input:  [real(r8) (:)]  totvegc at column level                           
+   leafc_col                           =>    ccs%leafc_col                , & ! Input:  [real(r8) (:)]  leaf carbon at column level                       
+   lgdp_col                            =>    cps%lgdp_col                 , & ! Input:  [real(r8) (:)]  gdp limitation factor for nfire                   
+   lgdp1_col                           =>    cps%lgdp1_col                , & ! Input:  [real(r8) (:)]  gdp limitation factor for baf per fire            
+   lpop_col                            =>    cps%lpop_col                 , & ! Input:  [real(r8) (:)]  pop limitation factor for baf per fire            
+   fuelc                               =>    ccs%fuelc                    , & ! Input:  [real(r8) (:)]  fuel avalability factor for Reg.C                 
+   fuelc_crop                          =>    ccs%fuelc_crop               , & ! Input:  [real(r8) (:)]  fuel avalability factor for Reg.A                 
+   btran_col                           =>    cps%btran_col                , & ! Input:  [real(r8) (:)]  transpiration wetness factor (0 to 1)             
+   wtlf                                =>    cps%wtlf                     , & ! Input:  [real(r8) (:)]  fractional coverage of non-crop PFTs              
+   lfwt                                =>    cps%lfwt                     , & ! Input:  [real(r8) (:)]  fractional coverage of non-crop and non-bare-soil PFTs
+   trotr1_col                          =>    cps%trotr1_col               , & ! Input:  [real(r8) (:)]  pft weight of BET on the gridcell (0-1)           
+   trotr2_col                          =>    cps%trotr2_col               , & ! Input:  [real(r8) (:)]  pft weight of BDT on the gridcell (0-1)           
+   dtrotr_col                          =>    cps%dtrotr_col               , & ! Input:  [real(r8) (:)]  annual decreased fraction coverage of BET+BDT on gridcell
+   prec60_col                          =>    cps%prec60_col               , & ! Input:  [real(r8) (:)]  60-day running mean of tot. precipitation         
+   prec10_col                          =>    cps%prec10_col               , & ! Input:  [real(r8) (:)]  10-day running mean of tot. precipitation         
+   lfc                                 =>    cps%lfc                      , & ! Input:  [real(r8) (:)]  conversion area frac. of BET+BDT that haven't burned before
+   fsat                                =>    cws%fsat                     , & ! Input:  [real(r8) (:)]  fractional area with water table at surface       
+   is_cwd                              =>    decomp_cascade_con%is_cwd    , & ! InOut:  [logical (:)]  TRUE => pool is a cwd pool                         
+   decomp_cpools_vr                    =>    ccs%decomp_cpools_vr         , & ! Input:  [real(r8) (:,:,:)]  (gC/m3)  vert.-resolved decomposing c pools   
+   forc_rh                             =>    clm_a2l%forc_rh              , & ! Input:  [real(r8) (:)]  relative humidity                                 
+   forc_wind                           =>    clm_a2l%forc_wind            , & ! Input:  [real(r8) (:)] atmospheric wind speed (m/s)                       
+   forc_t                              =>    a2l_downscaled_col%forc_t    , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                  
+   forc_rain                           =>    a2l_downscaled_col%forc_rain , & ! Input:  [real(r8) (:)]  rain                                              
+   forc_snow                           =>    a2l_downscaled_col%forc_snow   & ! Input:  [real(r8) (:)]  snow                                              
    )
  
      !pft to column average 
@@ -430,8 +430,8 @@ contains
            if (pi <=  col%npfts(c)) then
               p = col%pfti(c) + pi - 1
               ! For crop
-              if( forc_t(g) .ge. SHR_CONST_TKFRZ .and. pft%itype(p) .gt. nc4_grass .and.  &
-                   kmo == abm_lf(c) .and. forc_rain(g)+forc_snow(g) .eq. 0._r8  .and. &
+              if( forc_t(c) .ge. SHR_CONST_TKFRZ .and. pft%itype(p) .gt. nc4_grass .and.  &
+                   kmo == abm_lf(c) .and. forc_rain(c)+forc_snow(c) .eq. 0._r8  .and. &
                    burndate(p) >= 999 .and. pft%wtcol(p) .gt. 0._r8 )then ! catch  crop burn time
                  ! calculate human density impact on ag. fire
                  fhd = 0.04_r8+0.96_r8*exp(-1._r8*SHR_CONST_PI*(hdmlf/350._r8)**0.5_r8)
@@ -502,7 +502,7 @@ contains
            m        = max(0._r8,wf(c))
            fire_m   = exp(-SHR_CONST_PI *(m/0.69_r8)**2)*(1.0_r8 - max(0._r8, &
                 min(1._r8,(forc_rh(g)-30._r8)/(70._r8-30._r8))))*  &
-                min(1._r8,exp(SHR_CONST_PI*(forc_t(g)-SHR_CONST_TKFRZ)/10._r8))
+                min(1._r8,exp(SHR_CONST_PI*(forc_t(c)-SHR_CONST_TKFRZ)/10._r8))
            lh       = 0.0035_r8*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
            fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
            ig       = (lh+forc_lnfm(g)*0.25_r8)*(1._r8-fs)*(1._r8-cropf_col(c)) 
@@ -535,7 +535,7 @@ contains
                     cli = (max(0._r8,min(1._r8,(cri-prec60_col(c)*secspday)/cri))**0.5)* &
                          (max(0._r8,min(1._r8,(cri-prec10_col(c)*secspday)/cri))**0.5)* &
                          max(0.0005_r8,min(1._r8,19._r8*dtrotr_col(c)*dayspyr*secspday/dt-0.001_r8))* &
-                         max(0._r8,min(1._r8,(0.25_r8-(forc_rain(g)+forc_snow(g))*secsphr)/0.25_r8))
+                         max(0._r8,min(1._r8,(0.25_r8-(forc_rain(c)+forc_snow(c))*secsphr)/0.25_r8))
                     ! NOTE: THIS SHOULD TAKE INTO ACCOUNT THE TIME-STEP AND CURRENTLY DOES NOT!
                     !       As such results are only valid for a time-step of a half-hour.
                     farea_burned(c) = cli/cli_scale +baf_crop(c)+baf_peatf(c)

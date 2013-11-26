@@ -240,7 +240,7 @@ contains
     !
     ! !USES:
     use clmtype
-    use clm_atmlnd       , only : clm_a2l
+    use clm_atmlnd       , only : clm_a2l, a2l_downscaled_col
     use clm_varcon       , only : spval
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
@@ -268,9 +268,9 @@ contains
     
 !------------------------------------------------------------------------
 
-    !    clm_a2l%forc_t                Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                  
-    !    clm_a2l%forc_rain             Input:  [real(r8) (:)]  rain rate [mm/s]                                  
-    !    clm_a2l%forc_snow             Input:  [real(r8) (:)]  snow rate [mm/s]                                  
+    !    a2l_downscaled_col%forc_t     Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                  
+    !    a2l_downscaled_col%forc_rain  Input:  [real(r8) (:)]  rain rate [mm/s]                                  
+    !    a2l_downscaled_col%forc_snow  Input:  [real(r8) (:)]  snow rate [mm/s]                                  
     !    clm_a2l%forc_solad 	       Input: [real(r8) (:,:)]  direct beam radiation (visible only)            
     !    clm_a2l%forc_solai 	       Input: [real(r8) (:,:)]  diffuse radiation     (visible only)            
     !    pps%croplive                  Input:  [logical (:)]  Flag, true if planted, not harvested               
@@ -485,8 +485,8 @@ contains
        ! Also determine t_mo_min
        
        do p = bounds%begp,bounds%endp
-          g = pft%gridcell(p)
-          rbufslp(p) = clm_a2l%forc_t(g)
+          c = pft%column(p)
+          rbufslp(p) = a2l_downscaled_col%forc_t(c)
        end do
        call update_accum_field  ('TDA', rbufslp, nstep)
        call extract_accum_field ('TDA', rbufslp, nstep)
@@ -499,8 +499,8 @@ contains
        ! (accumulates total precipitation as 365-day running mean)
 
        do p = bounds%begp,bounds%endp
-          g = pft%gridcell(p)
-          rbufslp(p) = clm_a2l%forc_rain(g) + clm_a2l%forc_snow(g)
+          c = pft%column(p)
+          rbufslp(p) = a2l_downscaled_col%forc_rain(c) + a2l_downscaled_col%forc_snow(c)
        end do
        call update_accum_field  ('PREC365', rbufslp, nstep)
        call extract_accum_field ('PREC365', pdgvs%prec365, nstep)
@@ -534,8 +534,8 @@ contains
     end if
     
     do p = bounds%begp,bounds%endp
-       g = pft%gridcell(p)
-       rbufslp(p) = clm_a2l%forc_rain(g) + clm_a2l%forc_snow(g)
+       c = pft%column(p)
+       rbufslp(p) = a2l_downscaled_col%forc_rain(c) + a2l_downscaled_col%forc_snow(c)
     end do
     call update_accum_field  ('PREC60', rbufslp, nstep)
     call extract_accum_field ('PREC60', pps%prec60, nstep)
@@ -543,8 +543,8 @@ contains
     ! Accumulate and extract PREC10
     ! (accumulates total precipitation as 10-day running mean)
      do p = bounds%begp,bounds%endp
-       g = pft%gridcell(p)
-       rbufslp(p) = clm_a2l%forc_rain(g) + clm_a2l%forc_snow(g)
+       c = pft%column(p)
+       rbufslp(p) = a2l_downscaled_col%forc_rain(c) + a2l_downscaled_col%forc_snow(c)
     end do
     call update_accum_field  ('PREC10', rbufslp, nstep)
     call extract_accum_field ('PREC10', pps%prec10, nstep)

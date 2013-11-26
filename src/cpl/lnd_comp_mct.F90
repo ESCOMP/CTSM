@@ -287,7 +287,7 @@ contains
     ! !USES:
     use shr_kind_mod    ,only : r8 => shr_kind_r8
     use clmtype
-    use clm_atmlnd      ,only : clm_l2a, clm_a2l
+    use clm_atmlnd      ,only : clm_l2a, clm_a2l, a2l_not_downscaled_gcell
     use clm_glclnd      ,only : clm_s2x, clm_x2s
     use clm_driver      ,only : clm_drv
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
@@ -388,7 +388,7 @@ contains
     ! Map to clm (only when state and/or fluxes need to be updated)
 
     call t_startf ('lc_lnd_import')
-    call lnd_import( bounds, x2l_l%rattr, clm_a2l, clm_x2s)
+    call lnd_import( bounds, x2l_l%rattr, clm_a2l, a2l_not_downscaled_gcell, clm_x2s)
     call t_stopf ('lc_lnd_import')
 
     ! Use infodata to set orbital values if updated mid-run

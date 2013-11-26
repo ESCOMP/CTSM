@@ -2808,10 +2808,6 @@ contains
     allocate(cps%pH(beg:end))
     cps%pH(:)= nanr
 
-    allocate(cps%forc_pbot(beg:end))
-    cps%forc_pbot(:)= nanr
-    allocate(cps%forc_rho(beg:end))
-    cps%forc_rho(:)= nanr
     allocate(cps%glc_topo(beg:end))
     cps%glc_topo(:)= nanr
 
@@ -2897,10 +2893,6 @@ contains
     ces%hc_soi(:)= nanr
     allocate(ces%hc_soisno(beg:end))
     ces%hc_soisno(:)= nanr
-    allocate(ces%forc_t(beg:end))
-    ces%forc_t(:)= nanr
-    allocate(ces%forc_th(beg:end))
-    ces%forc_th(:)= nanr
     allocate(ces%t_h2osfc(beg:end))
     ces%t_h2osfc(:)= spval
     allocate(ces%t_h2osfc_bef(beg:end))
@@ -2977,8 +2969,6 @@ contains
     allocate(cws%lake_icethick(beg:end))
     cws%lake_icethick(:)= nanr
 
-    allocate(cws%forc_q(beg:end))
-    cws%forc_q(:)= nanr
     allocate(cws%moist(beg:end,1:nlayert))
     cws%moist(:,:)= spval
     allocate(cws%ice(beg:end,1:nlayert))

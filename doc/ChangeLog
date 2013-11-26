@@ -1,4 +1,184 @@
 ===============================================================
+Tag name:  clm4_5_51
+Originator(s):  sacks (sacks)
+Date: Tue Nov 26 05:46:29 MST 2013
+One-line Summary: rework downscaling of atm fields for glc_mec
+
+Purpose of changes:
+
+A number of changes related to downscaling atm -> clm fields for glc_mec
+landunits:
+
+(1) Add new options to downscale precip (division into rain/snow) and longwave
+    radiation (developed by Bill Lipscomb). Both are currently off by default.
+
+(2) Move downscaling code out of clm_driverInit into clm_atmlnd.F90 - this is a
+    more appropriate module, and is a step towards modularity, because the code
+    to deal with the atmospheric forcing fields lives in the same module as the
+    definition of these atmospheric forcing fields.
+
+(3) Ensure that all code uses the downscaled, column-level fields where
+    possible. Previously, some code (which did not operate over glc_mec
+    landunits) used the non-downscaled, gridcell-level version of fields such as
+    forc_t. This was a problem because (a) it was confusing and error-prone, and
+    (b) we will soon be bringing in code to do downscaling over other landunits
+    as well as glc_mec landunits.
+
+(4) To support (3), and make it harder for someone to accidentally use the
+    gridcell-level version of a field when they should be using the downscaled,
+    column-level version: Broke clm_a2l into two pieces - one containing fields
+    that aren't downscaled, and one containing fields that are downscaled. For
+    fields that are downscaled, clearly distinguished the non-downscaled
+    versions so they couldn't be used by accident.
+
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: For glc_mec runs, added two new
+namelist options: glcmec_downscale_rain_snow_convert and
+glcmec_downscale_longwave.
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: erik; portions reviewed by Bill Lipscomb, Mariana, Stefan
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+========= Significant changes: includes stuff that used to be in
+          clm_driverInitMod; added new downscaling code for precip & lwrad;
+          split atm2lnd type into two types; reworked initialization interfaces;
+          removed unused field rainf, because it currently isn't used and could
+          theoretically become inconsistent with the downscaled rain/snow
+M       models/lnd/clm/src/clm4_5/main/clm_atmlnd.F90
+
+========= Removed downscaling code from here
+M       models/lnd/clm/src/clm4_5/biogeophys/clm_driverInitMod.F90
+
+========= Added call to downscale_forcings
+M       models/lnd/clm/src/clm4_5/main/clm_driver.F90
+
+========= Changed interface to init_atm2lnd: previously, clm_initialize used
+          clm_a2l from clm_atmlnd and passed it to init_atm2lnd_type (also in
+          clm_atmlnd) - there was no reason for this, it was confusing, and to
+          some extent broke modularity
+M       models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+
+========= New parameter
+M       models/lnd/clm/src/clm4_5/main/clm_varcon.F90
+
+========= Removed some variables
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+
+========= New namelist control variables
+M       models/lnd/clm/src/clm4_5/main/clm_varctl.F90
+M       models/lnd/clm/src/clm4_5/main/controlMod.F90
+M       models/lnd/clm/bld/build-namelist
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+
+========= Removed unused rainf, added pointer to allow lnd_import_export to
+          remain identical between clm4_0 and clm4_5 code
+M       models/lnd/clm/src/clm4_0/main/clm_atmlnd.F90
+
+========= Fixed test ids for failing build-namelist tests
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+========= Minor changes in lots of places to (a) use fields from
+          a2l_downscaled_col instead of clm_a2l, and (b) index those fields by
+          column rather than by gridcell
+M       models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DUSTMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/VOCEmissionMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DryDepVelocity.F90
+M       models/lnd/clm/src/clm4_5/main/clm_glclnd.F90
+M       models/lnd/clm/src/clm4_5/main/accFldsMod.F90
+M       models/lnd/clm/src/clm4_5/main/filterMod.F90
+M       models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilTemperatureMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeTemperatureMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BareGroundFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+M       models/lnd/clm/src/cpl/lnd_comp_esmf.F90
+M       models/lnd/clm/src/cpl/lnd_import_export.F90
+M       models/lnd/clm/src/cpl/lnd_comp_mct.F90
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: OK
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+    Note the following expected nlcomp failures:
+    FAIL ERS_D.f19_g16.ICLM45GLCMEC.yellowstone_intel.clm-glcMEC.GC.131125-104703.nlcomp
+    FAIL ERI.f19_g16.IG1850CLM45.yellowstone_pgi.GC.131125-104751.nlcomp
+    FAIL PEM_D.f19_g16.IG1850CLM45.yellowstone_pgi.GC.131125-104751.nlcomp
+
+    Also, there were BFAILs for the following, implying that the baselines
+    didn't exist; I'm not too concerned because baseline comparisons passed for
+    similar tests:
+    BFAIL SMS_Ly1_Mmpich.f19_g16.ICLM45BGCCROP.frankfurt_nag.clm-reduceOutput.GC.131125-104832.compare_hist.clm4_5_50 
+    BFAIL ERS_Ly5.f10_f10.I20TRCRUCLM45BGC.yellowstone_intel.clm-monthly_noinitial.GC.131125-104703.compare_hist.clm4_5_50 
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+
+    As above, baselines were missing for this test:
+    BFAIL2 ERS_Ly5.f10_f10.I20TRCRUCLM45BGC.yellowstone_intel.clm-monthly_noinitial.compare_hist.clm4_5_50.clm2.h0 (baseline history file does not exist)
+    BFAIL2 ERS_Ly5.f10_f10.I20TRCRUCLM45BGC.yellowstone_intel.clm-monthly_noinitial.compare_hist.clm4_5_50.clm2.h1 (baseline history file does not exist)
+
+
+CLM tag used for the baseline comparisons: clm4_5_50
+
+Changes answers relative to baseline: NO
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_50
 Originator(s):  erik (Erik)
 Date: Sun Nov 24 18:51:11 MST 2013

@@ -94,7 +94,7 @@ contains
      !
      ! !USES:
      use clmtype
-     use clm_atmlnd   , only : clm_a2l
+     use clm_atmlnd   , only : clm_a2l, a2l_downscaled_col
      use clm_varcon   , only : tfrz, istice, istwet, istsoil, istice_mec, &
           istcrop, icol_roof, icol_sunwall, icol_shadewall,&
           hfus,denice, zlnd,rpi,spval
@@ -150,78 +150,78 @@ contains
 
 
    associate(& 
-   pgridcell           => pft%gridcell            , & ! Input:  [integer (:)]  pft's gridcell                           
-   forc_rain           => clm_a2l%forc_rain       , & ! Input:  [real(r8) (:)]  rain rate [mm/s]                        
-   forc_snow           => clm_a2l%forc_snow       , & ! Input:  [real(r8) (:)]  snow rate [mm/s]                        
-   ltype               => lun%itype               , & ! Input:  [integer (:)]  landunit type                            
-   urbpoi              => lun%urbpoi              , & ! Input:  [logical (:)]  true => landunit is an urban point       
-   swe_old             => cws%swe_old             , & ! Input:  [real(r8) (:,:)]  snow water before update              
-   frac_sno_eff        => cps%frac_sno_eff        , & ! Input:  [real(r8) (:)]  eff. fraction of ground covered by snow (0 to 1)
-   frac_sno            => cps%frac_sno            , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
-   frac_h2osfc         => cps%frac_h2osfc         , & ! Input:  [real(r8) (:)]  fraction of ground covered by surface water (0 to 1)
-   h2osfc              => cws%h2osfc              , & ! Input:  [real(r8) (:)]  surface water (mm)                      
-   qflx_snow_h2osfc    => cwf%qflx_snow_h2osfc    , & ! Input:  [real(r8) (:)] snow falling on surface water (mm/s)     
-   int_snow            => cws%int_snow            , & ! Input:  [real(r8) (:)]  integrated snowfall [mm]                
-   qflx_floodg         => clm_a2l%forc_flood      , & ! Input:  [real(r8) (:)]  gridcell flux of flood water from RTM   
-   qflx_floodc         => cwf%qflx_floodc         , & ! Input:  [real(r8) (:)]  column flux of flood water from RTM     
-   qflx_snow_melt      => cwf%qflx_snow_melt      , & ! Input:  [real(r8) (:)]  snow melt from previous time step       
-   n_melt              => cps%n_melt              , & ! Input:  [real(r8) (:)]  SCA shape parameter                     
-   cgridcell           => col%gridcell            , & ! Input:  [integer (:)]  columns's gridcell                       
-   clandunit           => col%landunit            , & ! Input:  [integer (:)]  columns's landunit                       
-   ctype               => col%itype               , & ! Input:  [integer (:)]  column type                              
-   pfti                => col%pfti                , & ! Input:  [integer (:)]  column's beginning pft index             
-   npfts               => col%npfts               , & ! Input:  [integer (:)]  number of pfts in column                 
-   do_capsnow          => cps%do_capsnow          , & ! Input:  [logical (:)]  true => do snow capping                  
-   forc_t              => ces%forc_t              , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
-   t_grnd              => ces%t_grnd              , & ! Input:  [real(r8) (:)]  ground temperature (Kelvin)             
-   snl                 => cps%snl                 , & ! Input:  [integer (:)]  number of snow layers                    
-   snow_depth          => cps%snow_depth          , & ! Input:  [real(r8) (:)]  snow height (m)                         
-   h2osno              => cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
-   zi                  => cps%zi                  , & ! Output: [real(r8) (:,:)]  interface level below a "z" level (m) 
-   dz                  => cps%dz                  , & ! Output: [real(r8) (:,:)]  layer depth (m)                       
-   z                   => cps%z                   , & ! Output: [real(r8) (:,:)]  layer thickness (m)                   
-   frac_iceold         => cps%frac_iceold         , & ! Output: [real(r8) (:,:)]  fraction of ice relative to the tot water
-   t_soisno            => ces%t_soisno            , & ! Output: [real(r8) (:,:)]  soil temperature (Kelvin)             
-   h2osoi_ice          => cws%h2osoi_ice          , & ! Output: [real(r8) (:,:)]  ice lens (kg/m2)                      
-   h2osoi_liq          => cws%h2osoi_liq          , & ! Output: [real(r8) (:,:)]  liquid water (kg/m2)                  
-   qflx_snow_grnd_col  => pwf_a%qflx_snow_grnd    , & ! Output: [real(r8) (:)]  snow on ground after interception (mm H2O/s) [+]
-   h2ocan_loss         => cwf%h2ocan_loss         , & ! Input:  [real(r8) (:)]  canopy water mass balance term (column) 
-   snw_rds             => cps%snw_rds             , & ! Output: [real(r8) (:,:)]  effective snow grain radius (col,lyr) [microns, m^-6]
-   mss_bcpho           => cps%mss_bcpho           , & ! Output: [real(r8) (:,:)]  mass of hydrophobic BC in snow (col,lyr) [kg]
-   mss_bcphi           => cps%mss_bcphi           , & ! Output: [real(r8) (:,:)]  mass of hydrophilic BC in snow (col,lyr) [kg]
-   mss_bctot           => cps%mss_bctot           , & ! Output: [real(r8) (:,:)]  total mass of BC in snow (col,lyr) [kg]
-   mss_bc_col          => cps%mss_bc_col          , & ! Output: [real(r8) (:)]  total column mass of BC in snow (col,lyr) [kg]
-   mss_bc_top          => cps%mss_bc_top          , & ! Output: [real(r8) (:)]  total top-layer mass of BC (col,lyr) [kg]
-   mss_ocpho           => cps%mss_ocpho           , & ! Output: [real(r8) (:,:)]  mass of hydrophobic OC in snow (col,lyr) [kg]
-   mss_ocphi           => cps%mss_ocphi           , & ! Output: [real(r8) (:,:)]  mass of hydrophilic OC in snow (col,lyr) [kg]
-   mss_octot           => cps%mss_octot           , & ! Output: [real(r8) (:,:)]  total mass of OC in snow (col,lyr) [kg]
-   mss_oc_col          => cps%mss_oc_col          , & ! Output: [real(r8) (:)]  total column mass of OC in snow (col,lyr) [kg]
-   mss_oc_top          => cps%mss_oc_top          , & ! Output: [real(r8) (:)]  total top-layer mass of OC (col,lyr) [kg]
-   mss_dst1            => cps%mss_dst1            , & ! Output: [real(r8) (:,:)]  mass of dust species 1 in snow (col,lyr) [kg]
-   mss_dst2            => cps%mss_dst2            , & ! Output: [real(r8) (:,:)]  mass of dust species 2 in snow (col,lyr) [kg]
-   mss_dst3            => cps%mss_dst3            , & ! Output: [real(r8) (:,:)]  mass of dust species 3 in snow (col,lyr) [kg]
-   mss_dst4            => cps%mss_dst4            , & ! Output: [real(r8) (:,:)]  mass of dust species 4 in snow (col,lyr) [kg]
-   mss_dsttot          => cps%mss_dsttot          , & ! Output: [real(r8) (:,:)]  total mass of dust in snow (col,lyr) [kg]
-   mss_dst_col         => cps%mss_dst_col         , & ! Output: [real(r8) (:)]  total column mass of dust in snow (col,lyr) [kg]
-   mss_dst_top         => cps%mss_dst_top         , & ! Output: [real(r8) (:)]  total top-layer mass of dust in snow (col,lyr) [kg]
-   plandunit           => pft%landunit            , & ! Input:  [integer (:)]  pft's landunit                           
-   pcolumn             => pft%column              , & ! Input:  [integer (:)]  pft's column                             
-   dewmx               => pps%dewmx               , & ! Input:  [real(r8) (:)]  Maximum allowed dew [mm]                
-   frac_veg_nosno      => pps%frac_veg_nosno      , & ! Input:  [integer (:)]  fraction of veg not covered by snow (0/1 now) [-]
-   elai                => pps%elai                , & ! Input:  [real(r8) (:)]  one-sided leaf area index with burying by snow
-   esai                => pps%esai                , & ! Input:  [real(r8) (:)]  one-sided stem area index with burying by snow
-   h2ocan              => pws%h2ocan              , & ! Input:  [real(r8) (:)]  total canopy water (mm H2O)             
-   qflx_prec_intr      => pwf%qflx_prec_intr      , & ! Output: [real(r8) (:)]  interception of precipitation [mm/s]    
-   qflx_prec_grnd      => pwf%qflx_prec_grnd      , & ! Output: [real(r8) (:)]  water onto ground including canopy runoff [kg/(m2 s)]
-   qflx_snwcp_liq      => pwf%qflx_snwcp_liq      , & ! Output: [real(r8) (:)]  excess rainfall due to snow capping (mm H2O /s) [+]
-   qflx_snwcp_ice      => pwf%qflx_snwcp_ice      , & ! Output: [real(r8) (:)]  excess snowfall due to snow capping (mm H2O /s) [+]
-   qflx_snow_grnd_pft  => pwf%qflx_snow_grnd      , & ! Output: [real(r8) (:)]  snow on ground after interception (mm H2O/s) [+]
-   qflx_rain_grnd      => pwf%qflx_rain_grnd      , & ! Output: [real(r8) (:)]  rain on ground after interception (mm H2O/s) [+]
-   fwet                => pps%fwet                , & ! Output: [real(r8) (:)]  fraction of canopy that is wet (0 to 1) 
-   fdry                => pps%fdry                , & ! Output: [real(r8) (:)]  fraction of foliage that is green and dry [-] (new)
-   irrig_rate          => pps%irrig_rate          , & ! Input:  [real(r8) (:)]  current irrigation rate (applied if n_irrig_steps_left > 0) [mm/s]
-   n_irrig_steps_left  => pps%n_irrig_steps_left  , & ! Input:  [integer (:)]  number of time steps for which we still need to irrigate today
-   qflx_irrig          => pwf%qflx_irrig            & ! Output: [real(r8) (:)]  irrigation amount (mm/s)                
+   pgridcell           => pft%gridcell                 , & ! Input:  [integer (:)]  pft's gridcell                           
+   forc_rain           => a2l_downscaled_col%forc_rain , & ! Input:  [real(r8) (:)]  rain rate [mm/s]                        
+   forc_snow           => a2l_downscaled_col%forc_snow , & ! Input:  [real(r8) (:)]  snow rate [mm/s]                        
+   ltype               => lun%itype                    , & ! Input:  [integer (:)]  landunit type                            
+   urbpoi              => lun%urbpoi                   , & ! Input:  [logical (:)]  true => landunit is an urban point       
+   swe_old             => cws%swe_old                  , & ! Input:  [real(r8) (:,:)]  snow water before update              
+   frac_sno_eff        => cps%frac_sno_eff             , & ! Input:  [real(r8) (:)]  eff. fraction of ground covered by snow (0 to 1)
+   frac_sno            => cps%frac_sno                 , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
+   frac_h2osfc         => cps%frac_h2osfc              , & ! Input:  [real(r8) (:)]  fraction of ground covered by surface water (0 to 1)
+   h2osfc              => cws%h2osfc                   , & ! Input:  [real(r8) (:)]  surface water (mm)                      
+   qflx_snow_h2osfc    => cwf%qflx_snow_h2osfc         , & ! Input:  [real(r8) (:)] snow falling on surface water (mm/s)     
+   int_snow            => cws%int_snow                 , & ! Input:  [real(r8) (:)]  integrated snowfall [mm]                
+   qflx_floodg         => clm_a2l%forc_flood           , & ! Input:  [real(r8) (:)]  gridcell flux of flood water from RTM   
+   qflx_floodc         => cwf%qflx_floodc              , & ! Input:  [real(r8) (:)]  column flux of flood water from RTM     
+   qflx_snow_melt      => cwf%qflx_snow_melt           , & ! Input:  [real(r8) (:)]  snow melt from previous time step       
+   n_melt              => cps%n_melt                   , & ! Input:  [real(r8) (:)]  SCA shape parameter                     
+   cgridcell           => col%gridcell                 , & ! Input:  [integer (:)]  columns's gridcell                       
+   clandunit           => col%landunit                 , & ! Input:  [integer (:)]  columns's landunit                       
+   ctype               => col%itype                    , & ! Input:  [integer (:)]  column type                              
+   pfti                => col%pfti                     , & ! Input:  [integer (:)]  column's beginning pft index             
+   npfts               => col%npfts                    , & ! Input:  [integer (:)]  number of pfts in column                 
+   do_capsnow          => cps%do_capsnow               , & ! Input:  [logical (:)]  true => do snow capping                  
+   forc_t              => a2l_downscaled_col%forc_t    , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
+   t_grnd              => ces%t_grnd                   , & ! Input:  [real(r8) (:)]  ground temperature (Kelvin)             
+   snl                 => cps%snl                      , & ! Input:  [integer (:)]  number of snow layers                    
+   snow_depth          => cps%snow_depth               , & ! Input:  [real(r8) (:)]  snow height (m)                         
+   h2osno              => cws%h2osno                   , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
+   zi                  => cps%zi                       , & ! Output: [real(r8) (:,:)]  interface level below a "z" level (m) 
+   dz                  => cps%dz                       , & ! Output: [real(r8) (:,:)]  layer depth (m)                       
+   z                   => cps%z                        , & ! Output: [real(r8) (:,:)]  layer thickness (m)                   
+   frac_iceold         => cps%frac_iceold              , & ! Output: [real(r8) (:,:)]  fraction of ice relative to the tot water
+   t_soisno            => ces%t_soisno                 , & ! Output: [real(r8) (:,:)]  soil temperature (Kelvin)             
+   h2osoi_ice          => cws%h2osoi_ice               , & ! Output: [real(r8) (:,:)]  ice lens (kg/m2)                      
+   h2osoi_liq          => cws%h2osoi_liq               , & ! Output: [real(r8) (:,:)]  liquid water (kg/m2)                  
+   qflx_snow_grnd_col  => pwf_a%qflx_snow_grnd         , & ! Output: [real(r8) (:)]  snow on ground after interception (mm H2O/s) [+]
+   h2ocan_loss         => cwf%h2ocan_loss              , & ! Input:  [real(r8) (:)]  canopy water mass balance term (column) 
+   snw_rds             => cps%snw_rds                  , & ! Output: [real(r8) (:,:)]  effective snow grain radius (col,lyr) [microns, m^-6]
+   mss_bcpho           => cps%mss_bcpho                , & ! Output: [real(r8) (:,:)]  mass of hydrophobic BC in snow (col,lyr) [kg]
+   mss_bcphi           => cps%mss_bcphi                , & ! Output: [real(r8) (:,:)]  mass of hydrophilic BC in snow (col,lyr) [kg]
+   mss_bctot           => cps%mss_bctot                , & ! Output: [real(r8) (:,:)]  total mass of BC in snow (col,lyr) [kg]
+   mss_bc_col          => cps%mss_bc_col               , & ! Output: [real(r8) (:)]  total column mass of BC in snow (col,lyr) [kg]
+   mss_bc_top          => cps%mss_bc_top               , & ! Output: [real(r8) (:)]  total top-layer mass of BC (col,lyr) [kg]
+   mss_ocpho           => cps%mss_ocpho                , & ! Output: [real(r8) (:,:)]  mass of hydrophobic OC in snow (col,lyr) [kg]
+   mss_ocphi           => cps%mss_ocphi                , & ! Output: [real(r8) (:,:)]  mass of hydrophilic OC in snow (col,lyr) [kg]
+   mss_octot           => cps%mss_octot                , & ! Output: [real(r8) (:,:)]  total mass of OC in snow (col,lyr) [kg]
+   mss_oc_col          => cps%mss_oc_col               , & ! Output: [real(r8) (:)]  total column mass of OC in snow (col,lyr) [kg]
+   mss_oc_top          => cps%mss_oc_top               , & ! Output: [real(r8) (:)]  total top-layer mass of OC (col,lyr) [kg]
+   mss_dst1            => cps%mss_dst1                 , & ! Output: [real(r8) (:,:)]  mass of dust species 1 in snow (col,lyr) [kg]
+   mss_dst2            => cps%mss_dst2                 , & ! Output: [real(r8) (:,:)]  mass of dust species 2 in snow (col,lyr) [kg]
+   mss_dst3            => cps%mss_dst3                 , & ! Output: [real(r8) (:,:)]  mass of dust species 3 in snow (col,lyr) [kg]
+   mss_dst4            => cps%mss_dst4                 , & ! Output: [real(r8) (:,:)]  mass of dust species 4 in snow (col,lyr) [kg]
+   mss_dsttot          => cps%mss_dsttot               , & ! Output: [real(r8) (:,:)]  total mass of dust in snow (col,lyr) [kg]
+   mss_dst_col         => cps%mss_dst_col              , & ! Output: [real(r8) (:)]  total column mass of dust in snow (col,lyr) [kg]
+   mss_dst_top         => cps%mss_dst_top              , & ! Output: [real(r8) (:)]  total top-layer mass of dust in snow (col,lyr) [kg]
+   plandunit           => pft%landunit                 , & ! Input:  [integer (:)]  pft's landunit                           
+   pcolumn             => pft%column                   , & ! Input:  [integer (:)]  pft's column                             
+   dewmx               => pps%dewmx                    , & ! Input:  [real(r8) (:)]  Maximum allowed dew [mm]                
+   frac_veg_nosno      => pps%frac_veg_nosno           , & ! Input:  [integer (:)]  fraction of veg not covered by snow (0/1 now) [-]
+   elai                => pps%elai                     , & ! Input:  [real(r8) (:)]  one-sided leaf area index with burying by snow
+   esai                => pps%esai                     , & ! Input:  [real(r8) (:)]  one-sided stem area index with burying by snow
+   h2ocan              => pws%h2ocan                   , & ! Input:  [real(r8) (:)]  total canopy water (mm H2O)             
+   qflx_prec_intr      => pwf%qflx_prec_intr           , & ! Output: [real(r8) (:)]  interception of precipitation [mm/s]    
+   qflx_prec_grnd      => pwf%qflx_prec_grnd           , & ! Output: [real(r8) (:)]  water onto ground including canopy runoff [kg/(m2 s)]
+   qflx_snwcp_liq      => pwf%qflx_snwcp_liq           , & ! Output: [real(r8) (:)]  excess rainfall due to snow capping (mm H2O /s) [+]
+   qflx_snwcp_ice      => pwf%qflx_snwcp_ice           , & ! Output: [real(r8) (:)]  excess snowfall due to snow capping (mm H2O /s) [+]
+   qflx_snow_grnd_pft  => pwf%qflx_snow_grnd           , & ! Output: [real(r8) (:)]  snow on ground after interception (mm H2O/s) [+]
+   qflx_rain_grnd      => pwf%qflx_rain_grnd           , & ! Output: [real(r8) (:)]  rain on ground after interception (mm H2O/s) [+]
+   fwet                => pps%fwet                     , & ! Output: [real(r8) (:)]  fraction of canopy that is wet (0 to 1) 
+   fdry                => pps%fdry                     , & ! Output: [real(r8) (:)]  fraction of foliage that is green and dry [-] (new)
+   irrig_rate          => pps%irrig_rate               , & ! Input:  [real(r8) (:)]  current irrigation rate (applied if n_irrig_steps_left > 0) [mm/s]
+   n_irrig_steps_left  => pps%n_irrig_steps_left       , & ! Input:  [integer (:)]  number of time steps for which we still need to irrigate today
+   qflx_irrig          => pwf%qflx_irrig                 & ! Output: [real(r8) (:)]  irrigation amount (mm/s)                
    )
 
     ! Compute time step
@@ -249,12 +249,12 @@ contains
           fracrain(p) = 0._r8          ! fraction of input precip that is rain
 
           if (ctype(c) /= icol_sunwall .and. ctype(c) /= icol_shadewall) then
-             if (frac_veg_nosno(p) == 1 .and. (forc_rain(g) + forc_snow(g)) > 0._r8) then
+             if (frac_veg_nosno(p) == 1 .and. (forc_rain(c) + forc_snow(c)) > 0._r8) then
 
                 ! determine fraction of input precipitation that is snow and rain
 
-                fracsnow(p) = forc_snow(g)/(forc_snow(g) + forc_rain(g))
-                fracrain(p) = forc_rain(g)/(forc_snow(g) + forc_rain(g))
+                fracsnow(p) = forc_snow(c)/(forc_snow(c) + forc_rain(c))
+                fracrain(p) = forc_rain(c)/(forc_snow(c) + forc_rain(c))
                 
                 ! The leaf water capacities for solid and liquid are different,
                 ! generally double for snow, but these are of somewhat less
@@ -268,11 +268,11 @@ contains
                 fpi = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
                 
                 ! Direct throughfall
-                qflx_through_snow(p) = forc_snow(g) * (1._r8-fpi)
-                qflx_through_rain(p) = forc_rain(g) * (1._r8-fpi)
+                qflx_through_snow(p) = forc_snow(c) * (1._r8-fpi)
+                qflx_through_rain(p) = forc_rain(c) * (1._r8-fpi)
                 
                 ! Intercepted precipitation [mm/s]
-                qflx_prec_intr(p) = (forc_snow(g) + forc_rain(g)) * fpi
+                qflx_prec_intr(p) = (forc_snow(c) + forc_rain(c)) * fpi
                 
                 ! Water storage of intercepted precipitation and dew
                 h2ocan(p) = max(0._r8, h2ocan(p) + dtime*qflx_prec_intr(p))
@@ -314,8 +314,8 @@ contains
 
        if (ctype(c) /= icol_sunwall .and. ctype(c) /= icol_shadewall) then
           if (frac_veg_nosno(p) == 0) then
-             qflx_prec_grnd_snow(p) = forc_snow(g)
-             qflx_prec_grnd_rain(p) = forc_rain(g) + h2ocan_loss(c)
+             qflx_prec_grnd_snow(p) = forc_snow(c)
+             qflx_prec_grnd_rain(p) = forc_rain(c) + h2ocan_loss(c)
           else
              qflx_prec_grnd_snow(p) = qflx_through_snow(p) + (qflx_candrip(p) * fracsnow(p))
              qflx_prec_grnd_rain(p) = qflx_through_rain(p) + (qflx_candrip(p) * fracrain(p)) + h2ocan_loss(c)

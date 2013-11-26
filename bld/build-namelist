@@ -1534,6 +1534,12 @@ if ( $glc_nec > 0 ) {
   $glc_grid =~ s/['"]//g;
   add_default($nl, 'flndtopo'  , 'hgrid'=>$res, 'mask'=>$mask );
   add_default($nl, 'fglcmask'  , 'hgrid'=>$res, 'glc_grid'=>$glc_grid );
+
+  if ($phys eq "clm4_5") {
+     add_default($nl, 'glcmec_downscale_rain_snow_convert');
+     add_default($nl, 'glcmec_downscale_longwave');
+  }
+
 } else {
   my $glc_grid = $nl->get_value('glc_grid');
   $glc_grid =~ s/['"]//g;
