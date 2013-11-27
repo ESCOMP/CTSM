@@ -1,4 +1,115 @@
 ===============================================================
+Tag name:  clm4_5_52
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Tue Nov 26 22:07:32 MST 2013
+One-line Summary: turn on longwave radiation downscaling for glc_mec by default
+
+Purpose of changes: Turn on longwave radiation downscaling for glc_mec by default
+
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: set glcmec_downscale_longwave to true
+by default
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   scripts: updated to scripts4_131126a, to get tweaked test list
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Change glcmec_downscale_longwave to true by default
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       models/lnd/clm/src/clm4_5/main/clm_varctl.F90
+
+========= Remove build-namelist tests that are no longer xFails
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+========= Update scripts to scripts4_131126a, to get tweaked test list
+M       SVN_EXTERNAL_DIRECTORIES
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+    frankfurt
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    frankfurt_intel: ok
+    frankfurt_pgi: ok
+    frankfurt_nag: ok
+
+Expected baseline failures:
+FAIL  ERI.f19_g16.IG1850CLM45.yellowstone_pgi.GC.131126-131812.compare_hist.clm4_5_51 
+FAIL ERI.f19_g16.IG1850CLM45.yellowstone_pgi.GC.131126-131812.nlcomp
+
+Two BFAILs due to changed tests; I reran them as their old versions and confirmed that answers changed, as expected:
+BFAIL ERS_D.f19_g16.ICLM45GLCMEC.yellowstone_intel.clm-glcMEC_changeFlags.GC.131126-131807.compare_hist.clm4_5_51 
+BFAIL PEM_D.f19_g16.IG1850CLM45.yellowstone_pgi.clm-glcMEC.GC.131126-214346.compare_hist.clm4_5_51 
+
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+
+CLM tag used for the baseline comparisons: clm4_5_51
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45 with glc_mec (IG compsets)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+	larger than roundoff; not investigated whether it is same climate or new climate
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_51
 Originator(s):  sacks (sacks)
 Date: Tue Nov 26 05:46:29 MST 2013

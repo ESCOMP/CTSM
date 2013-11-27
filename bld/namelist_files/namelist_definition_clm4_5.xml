@@ -159,7 +159,7 @@ WARNING: THIS BREAKS ENERGY CONSERVATION, SO SHOULD NOT BE USED IN COUPLED SIMUL
        group="clm_inparm" valid_values="" >
 If TRUE, downscale longwave radiation over glc_mec landunits.
 This downscaling is conservative.
-<default>Default: .false.</default>
+<default>Default: .true.</default>
 </entry>
 
 <entry id="paramfile" type="char*256" category="datasets"

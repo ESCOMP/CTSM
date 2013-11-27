@@ -99,7 +99,7 @@ module clm_varctl
   ! if false, pass positive-degree-day info to GLC
   logical , public :: glc_dyntopo = .false.                 ! true => CLM glacier topography changes dynamically
   logical , public :: glcmec_downscale_rain_snow_convert = .false.     ! true => downscale precip division into rain & snow
-  logical , public :: glcmec_downscale_longwave = .false.    ! true => downscale longwave radiation
+  logical , public :: glcmec_downscale_longwave = .true.    ! true => downscale longwave radiation
   character(len=256), public :: glc_grid = ' '              ! glc_grid used to determine fglcmask  
   character(len=256), public :: fglcmask = ' '              ! glacier mask file name (based on glc_grid)
   !

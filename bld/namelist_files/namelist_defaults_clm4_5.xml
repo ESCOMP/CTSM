@@ -51,7 +51,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Determine whether to perform certain downscaling operations over glc_mec landunits -->
 <glcmec_downscale_rain_snow_convert>.false.</glcmec_downscale_rain_snow_convert>
-<glcmec_downscale_longwave>.false.</glcmec_downscale_longwave>
+<glcmec_downscale_longwave>.true.</glcmec_downscale_longwave>
 
 <!-- ================================================================== -->
 <!-- The default filenames are given relative to the root directory
