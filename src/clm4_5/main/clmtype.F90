@@ -464,7 +464,7 @@ type, public :: pft_epv_type
    real(r8), pointer :: rc14_atm(:)             !C14O2/C12O2 in atmosphere
 end type pft_epv_type                        
 
-type(pft_epv_type)    :: pepv        !pft ecophysiological variables
+type(pft_epv_type), target :: pepv        !pft ecophysiological variables
 
 !----------------------------------------------------
 ! pft energy state variables structure
@@ -496,7 +496,7 @@ type, public :: pft_estate_type
    real(r8), pointer :: thm(:)                !intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
 end type pft_estate_type
 
-type(pft_estate_type) :: pes      !pft energy state
+type(pft_estate_type), target :: pes      !pft energy state
 
 !----------------------------------------------------
 ! pft water state variables structure
@@ -505,7 +505,7 @@ type, public :: pft_wstate_type
    real(r8), pointer :: h2ocan(:)         !canopy water (mm H2O)
 end type pft_wstate_type
 
-type(pft_wstate_type) :: pws         !pft water state
+type(pft_wstate_type), target :: pws         !pft water state
 
 !----------------------------------------------------
 ! pft carbon state variables structure
@@ -594,8 +594,8 @@ type, public :: pft_nstate_type
    real(r8), pointer :: totpftn(:)            ! (gN/m2) total pft-level nitrogen
 end type pft_nstate_type
 
-type(pft_nstate_type) :: pns      !pft nitrogen state
-type(pft_nstate_type) :: pns_a    !pft-level nitrogen state variables averaged to the column
+type(pft_nstate_type), target :: pns      !pft nitrogen state
+type(pft_nstate_type), target :: pns_a    !pft-level nitrogen state variables averaged to the column
 
 !----------------------------------------------------
 ! pft VOC state variables structure
@@ -612,7 +612,7 @@ type, public :: pft_vstate_type
    real(r8), pointer :: elai_p(:)              ! leaf area index average over timestep 
 end type pft_vstate_type
 
-type(pft_vstate_type) :: pvs         !pft VOC state
+type(pft_vstate_type), target :: pvs         !pft VOC state
 
 !----------------------------------------------------
 ! pft DGVM state variables structure
@@ -638,7 +638,7 @@ type, public :: pft_dgvstate_type
    real(r8), pointer :: heatstress(:)
 end type pft_dgvstate_type
 
-type(pft_dgvstate_type) :: pdgvs     !pft DGVM state variables
+type(pft_dgvstate_type), target :: pdgvs     !pft DGVM state variables
 
 !----------------------------------------------------
 ! pft energy flux variables structure
@@ -726,7 +726,7 @@ type, public :: pft_eflux_type
    real(r8), pointer :: fsds_sno_ni(:)    ! incident near-IR, diffuse radiation on snow (for history files) [W/m2]
 end type pft_eflux_type
 
-type(pft_eflux_type)  :: pef         !pft energy flux
+type(pft_eflux_type), target  :: pef         !pft energy flux
 
 !----------------------------------------------------
 ! pft momentum flux variables structure
@@ -736,7 +736,7 @@ type, public :: pft_mflux_type
    real(r8),pointer ::  tauy(:)           !wind (shear) stress: n-s (kg/m/s**2)
 end type pft_mflux_type
 
-type(pft_mflux_type)  :: pmf         !pft momentum flux
+type(pft_mflux_type), target  :: pmf         !pft momentum flux
 
 !----------------------------------------------------
 ! pft water flux variables structure
@@ -763,7 +763,7 @@ type, public :: pft_wflux_type
    real(r8), pointer :: qflx_irrig(:)     !irrigation flux (mm H2O/s)
 end type pft_wflux_type
 
-type(pft_wflux_type)  :: pwf         !pft water flux
+type(pft_wflux_type), target  :: pwf         !pft water flux
 
 !----------------------------------------------------
 ! pft carbon flux variables structure
@@ -1152,8 +1152,8 @@ type, public :: pft_nflux_type
    real(r8), pointer :: pft_fire_nloss(:)                   ! total pft-level fire N loss (gN/m2/s) 
 end type pft_nflux_type
 
-type(pft_nflux_type)  :: pnf       !pft nitrogen flux
-type(pft_nflux_type)  :: pnf_a     !pft-level nitrogen flux variables averaged to the column
+type(pft_nflux_type), target :: pnf       !pft nitrogen flux
+type(pft_nflux_type), target :: pnf_a     !pft-level nitrogen flux variables averaged to the column
 
 !----------------------------------------------------
 ! pft VOC fluxes structure for history output
@@ -1188,7 +1188,7 @@ type, public :: pft_vflux_type
    type(megan_out_type), pointer :: meg(:) ! points to output fluxes
 end type pft_vflux_type
 
-type(pft_vflux_type)  :: pvf         !pft VOC flux
+type(pft_vflux_type), target :: pvf         !pft VOC flux
 
 !----------------------------------------------------
 ! pft dry dep velocity variables structure
@@ -1432,7 +1432,7 @@ type, public :: column_pstate_type
    real(r8), pointer :: glc_topo(:)           ! surface elevation (m)
 end type column_pstate_type
 
-type(column_pstate_type) :: cps      !column physical state variables
+type(column_pstate_type), target :: cps      !column physical state variables
 
 !----------------------------------------------------
 ! column energy state variables structure
@@ -1454,7 +1454,7 @@ type, public :: column_estate_type
    real(r8), pointer :: t_h2osfc_bef(:)       !surface water temperature from time-step before
 end type column_estate_type
 
-type(column_estate_type) :: ces      !column energy state
+type(column_estate_type), target :: ces      !column energy state
 
 !----------------------------------------------------
 ! column water state variables structure
@@ -1505,8 +1505,8 @@ type, public :: column_wstate_type
    ! end new variables for S Lake code
 end type column_wstate_type
 
-type(column_wstate_type) :: cws      !column water state
-type(pft_wstate_type)    :: pws_a    !pft-level water state variables averaged to the column
+type(column_wstate_type), target :: cws      !column water state
+type(pft_wstate_type), target    :: pws_a    !pft-level water state variables averaged to the column
 
 !----------------------------------------------------
 ! column carbon state variables structure
@@ -2050,8 +2050,8 @@ type, public :: landunit_pstate_type
    real(r8), pointer :: sabs_perroad_dif(:,:)    ! diffuse solar absorbed by pervious road per unit ground area per unit incident flux
 end type landunit_pstate_type
 
-type(landunit_pstate_type) :: lps     !land unit physical state variables
-type(column_pstate_type)   :: cps_a   !column-level physical state variables averaged to landunit
+type(landunit_pstate_type), target :: lps     !land unit physical state variables
+type(column_pstate_type)  , target :: cps_a   !column-level physical state variables averaged to landunit
 
 !----------------------------------------------------
 ! landunit energy flux variables structure
@@ -2064,8 +2064,8 @@ type, public :: landunit_eflux_type
    real(r8), pointer :: eflx_heat_from_ac(:)    ! sensible heat flux to be put back into canyon due to removal by AC (W/m**2)
 end type landunit_eflux_type
 
-type(landunit_eflux_type) :: lef     ! average of energy fluxes all columns
-type(column_eflux_type)   :: cef_a   ! column-level energy flux variables averaged to landunit
+type(landunit_eflux_type), target :: lef     ! average of energy fluxes all columns
+type(column_eflux_type)  , target :: cef_a   ! column-level energy flux variables averaged to landunit
 
 !----------------------------------------------------
 ! End definition of structures defined at the landunit_type level

@@ -1,11 +1,8 @@
 module ch4RestMod
-!-----------------------------------------------------------------------
+
+  !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Reads from or writes restart data
-  !
-  ! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use abortutils,   only : endrun
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -26,324 +23,155 @@ contains
     !
     ! !USES:
     use clmtype
-    use ncdio_pio
-    use clm_varctl    , only : nsrest, use_cn
-    use clm_time_manager , only : is_restart
+    use clm_varctl, only : use_cn
+    use ncdio_pio,  only : ncd_double 
+    use pio,        only : file_desc_t
+    use restUtilMod
     !
     ! !ARGUMENTS:
-    implicit none
     type(file_desc_t), intent(inout) :: ncid ! netcdf id
-    character(len=*), intent(in) :: flag     ! 'read' or 'write'
+    character(len=*),  intent(in)    :: flag ! 'read' or 'write'
     !
     ! !LOCAL VARIABLES:
-    integer :: c,l,g,j      ! indices
     logical :: readvar      ! determine if variable is on initial file
-    character(len=128) :: varname         ! temporary
     !-----------------------------------------------------------------------
 
     ! column ch4 state variable - conc_ch4_sat
-
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='CONC_CH4_SAT', xtype=ncd_double, &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='methane soil concentration', units='mol/m^3')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='CONC_CH4_SAT', data=cch4%conc_ch4_sat, &
-            dim1name='column', switchdim=.true., &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
+    call restartvar(ncid=ncid, flag=flag, varname='CONC_CH4_SAT', xtype=ncd_double, &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='methane soil concentration', units='mol/m^3', &
+         readvar=readvar, interpinic_flag='interp', data=cch4%conc_ch4_sat)
 
     ! column ch4 state variable - conc_ch4_unsat
-    
-    if (flag == 'define') then 
-       call ncd_defvar(ncid=ncid, varname='CONC_CH4_UNSAT', xtype=ncd_double, &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='methane soil concentration', units='mol/m^3')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='CONC_CH4_UNSAT', data=cch4%conc_ch4_unsat, &
-            dim1name='column', switchdim=.true., &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
+    call restartvar(ncid=ncid, flag=flag, varname='CONC_CH4_UNSAT', xtype=ncd_double, &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='methane soil concentration', units='mol/m^3', &
+         readvar=readvar, interpinic_flag='interp', data=cch4%conc_ch4_unsat)
 
     ! column ch4 state variable - conc_o2_sat
-    
-    if (flag == 'define') then 
-       call ncd_defvar(ncid=ncid, varname='CONC_O2_SAT', xtype=ncd_double, &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='oxygen soil concentration', units='mol/m^3')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='CONC_O2_SAT', data=cch4%conc_o2_sat, &
-            dim1name='column', switchdim=.true., &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
+    call restartvar(ncid=ncid, flag=flag, varname='CONC_O2_SAT', xtype=ncd_double, &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='oxygen soil concentration', units='mol/m^3', &
+         readvar=readvar, interpinic_flag='interp', data=cch4%conc_o2_sat)
 
     ! column ch4 state variable - conc_o2_unsat
-
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='CONC_O2_UNSAT', xtype=ncd_double, &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='oxygen soil concentration', units='mol/m^3')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='CONC_O2_UNSAT', data=cch4%conc_o2_unsat, &
-            dim1name='column', switchdim=.true., &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
+    call restartvar(ncid=ncid, flag=flag, varname='CONC_O2_UNSAT', xtype=ncd_double, &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='oxygen soil concentration', units='mol/m^3', &
+         readvar=readvar, interpinic_flag='interp', data=cch4%conc_o2_unsat)
 
     ! column ch4 flux variable - o2stress_sat (used in CNDecompCascade)
-
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='O2STRESS_SAT', xtype=ncd_double, &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='oxygen stress fraction', units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='O2STRESS_SAT', data=cch4%o2stress_sat, &
-            dim1name='column', switchdim=.true., &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
+    call restartvar(ncid=ncid, flag=flag, varname='O2STRESS_SAT', xtype=ncd_double, &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='oxygen stress fraction', units='', &
+         readvar=readvar, interpinic_flag='interp', data=cch4%o2stress_sat)
 
     ! column ch4 flux variable - o2stress_unsat (used in CNDecompCascade)
-
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='O2STRESS_UNSAT', xtype=ncd_double, &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='oxygen stress fraction', units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='O2STRESS_UNSAT', data=cch4%o2stress_unsat, &
-            dim1name='column', switchdim=.true., &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
+    call restartvar(ncid=ncid, flag=flag, varname='O2STRESS_UNSAT', xtype=ncd_double, &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='oxygen stress fraction', units='', &
+         readvar=readvar, interpinic_flag='interp', data=cch4%o2stress_unsat)
 
     ! column ch4 state variable - layer_sat_lag
-
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='LAYER_SAT_LAG', xtype=ncd_double, &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='lagged saturation status of layer in unsat. zone', units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='LAYER_SAT_LAG', data=cch4%layer_sat_lag, &
-            dim1name='column', switchdim=.true., &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
+    call restartvar(ncid=ncid, flag=flag, varname='LAYER_SAT_LAG', xtype=ncd_double, &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='lagged saturation status of layer in unsat. zone', units='', &
+         readvar=readvar, interpinic_flag='interp', data=cch4%layer_sat_lag)
 
     ! column ch4 state variable - qflx_surf_lag
- 
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='QFLX_SURF_LAG', xtype=ncd_double, &
-            dim1name='column', long_name='time-lagged surface runoff', units='mm/s')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='QFLX_SURF_LAG', data=cch4%qflx_surf_lag, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then 
-          if (is_restart()) call endrun()
-       end if
-    end if
+    call restartvar(ncid=ncid, flag=flag, varname='QFLX_SURF_LAG', xtype=ncd_double, &
+         dim1name='column', &
+         long_name='time-lagged surface runoff', units='mm/s', &
+         readvar=readvar, interpinic_flag='interp', data=cch4%qflx_surf_lag)
 
     ! column ch4 state variable - finundated_lag
+    call restartvar(ncid=ncid, flag=flag, varname='FINUNDATED_LAG', xtype=ncd_double, &
+         dim1name='column', &
+         long_name='time-lagged inundated fraction', units='', &
+         readvar=readvar, interpinic_flag='interp', data=cch4%finundated_lag)
 
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='FINUNDATED_LAG', xtype=ncd_double, &
-            dim1name='column', long_name='time-lagged inundated fraction', units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='FINUNDATED_LAG', data=cch4%finundated_lag, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then 
-          if (is_restart()) call endrun()
-       end if
-    end if
-
-
-    ! column ch4 state variable - fsat_bef
-    ! fsat_bef = finundated except inside methane code
-    ! Only necessary for bit-for-bit restarts
-
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='FINUNDATED', xtype=ncd_double, &
-            dim1name='column', long_name='inundated fraction', units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='FINUNDATED', data=cch4%fsat_bef, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then 
-          if (is_restart()) call endrun()
-       end if
-    end if
+    ! column ch4 state variable - fsat_bef  (finundated except inside methane code)
+    ! only necessary for bit-for-bit restarts
+    call restartvar(ncid=ncid, flag=flag, varname='FINUNDATED', xtype=ncd_double, &
+            dim1name='column', &
+            long_name='inundated fraction', units='', &
+            readvar=readvar, interpinic_flag='interp', data=cch4%fsat_bef)
 
     if (use_cn) then
 
        ! column ch4 state variable - annavg_somhr
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='annavg_somhr', xtype=ncd_double,  &
-               dim1name='column',long_name='Annual Average SOMHR',units='gC/m^2/s')
-       else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='annavg_somhr', data=cch4%annavg_somhr, &
-               dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='annavg_somhr', xtype=ncd_double,  &
+            dim1name='column',&
+            long_name='Annual Average SOMHR',units='gC/m^2/s', &
+            readvar=readvar, interpinic_flag='interp', data=cch4%annavg_somhr)
 
        ! column ch4 state variable - annavg_finrw
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='annavg_finrw', xtype=ncd_double,  &
-               dim1name='column',long_name='Annual Average Respiration-Weighted FINUNDATED',units='')
-       else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='annavg_finrw', data=cch4%annavg_finrw, &
-               dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='annavg_finrw', xtype=ncd_double,  &
+            dim1name='column',&
+            long_name='Annual Average Respiration-Weighted FINUNDATED',units='', &
+            readvar=readvar, interpinic_flag='interp', data=cch4%annavg_finrw)
 
        ! column ch4 state variable - annsum_counter
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='annsum_counter_ch4', xtype=ncd_double,  &
-               dim1name='column',long_name='CH4 Ann. Sum Time Counter',units='s')
-       else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='annsum_counter_ch4', data=cch4%annsum_counter, &
-               dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='annsum_counter_ch4', xtype=ncd_double,  &
+            dim1name='column',&
+            long_name='CH4 Ann. Sum Time Counter',units='s', &
+            readvar=readvar, interpinic_flag='interp', data=cch4%annsum_counter)
 
        ! column ch4 state variable - tempavg_somhr
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='tempavg_somhr', xtype=ncd_double,  &
-               dim1name='column',long_name='Temp. Average SOMHR',units='gC/m^2/s')
-       else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='tempavg_somhr', data=cch4%tempavg_somhr, &
-               dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='tempavg_somhr', xtype=ncd_double,  &
+            dim1name='column',&
+            long_name='Temp. Average SOMHR',units='gC/m^2/s', &
+            readvar=readvar, interpinic_flag='interp', data=cch4%tempavg_somhr)
 
        ! column ch4 state variable - tempavg_finrwi
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='tempavg_finrw', xtype=ncd_double,  &
-               dim1name='column',long_name='Temp. Average Respiration-Weighted FINUNDATED',units='')
-       else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='tempavg_finrw', data=cch4%tempavg_finrw, &
-               dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='tempavg_finrw', xtype=ncd_double,  &
+            dim1name='column',&
+            long_name='Temp. Average Respiration-Weighted FINUNDATED',units='', &
+            readvar=readvar, interpinic_flag='interp', data=cch4%tempavg_finrw)
 
        ! pft ch4 state variable - tempavg_agnpp
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='tempavg_agnpp', xtype=ncd_double,  &
-               dim1name='pft',long_name='Temp. Average AGNPP',units='gC/m^2/s')
-       else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='tempavg_agnpp', data=pcf%tempavg_agnpp, &
-               dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='tempavg_agnpp', xtype=ncd_double,  &
+            dim1name='pft',&
+            long_name='Temp. Average AGNPP',units='gC/m^2/s', &
+            readvar=readvar, interpinic_flag='interp', data=pcf%tempavg_agnpp)
 
        ! pft ch4 state variable - tempavg_bgnpp
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='tempavg_bgnpp', xtype=ncd_double,  &
-               dim1name='pft',long_name='Temp. Average BGNPP',units='gC/m^2/s')
-       else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='tempavg_bgnpp', data=pcf%tempavg_bgnpp, &
-               dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='tempavg_bgnpp', xtype=ncd_double,  &
+            dim1name='pft',&
+            long_name='Temp. Average BGNPP',units='gC/m^2/s', &
+            readvar=readvar, interpinic_flag='interp', data=pcf%tempavg_bgnpp)
 
        ! pft ch4 state variable - annavg_agnpp
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='annavg_agnpp', xtype=ncd_double,  &
-               dim1name='pft',long_name='Ann. Average AGNPP',units='gC/m^2/s')
-       else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='annavg_agnpp', data=pcf%annavg_agnpp, &
-               dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='annavg_agnpp', xtype=ncd_double,  &
+            dim1name='pft',&
+            long_name='Ann. Average AGNPP',units='gC/m^2/s', &
+            readvar=readvar, interpinic_flag='interp', data=pcf%annavg_agnpp)
 
        ! pft ch4 state variable - annavg_bgnpp
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='annavg_bgnpp', xtype=ncd_double,  &
-               dim1name='pft',long_name='Ann. Average BGNPP',units='gC/m^2/s')
-       else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='annavg_bgnpp', data=pcf%annavg_bgnpp, &
-               dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='annavg_bgnpp', xtype=ncd_double,  &
+            dim1name='pft',&
+            long_name='Ann. Average BGNPP',units='gC/m^2/s', &
+            readvar=readvar, interpinic_flag='interp', data=pcf%annavg_bgnpp)
 
        ! column ch4 flux variable - o2_decomp_depth_sat (used in CNNitrifDenitrif)
-
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='O2_DECOMP_DEPTH_SAT', xtype=ncd_double, &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='O2 consumption during decomposition', units='mol/m3/s')
-       else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='O2_DECOMP_DEPTH_SAT', data=cch4%o2_decomp_depth_sat, &
-               dim1name='column', switchdim=.true., &
-               ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun()
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='O2_DECOMP_DEPTH_SAT', xtype=ncd_double, &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., &
+            long_name='O2 consumption during decomposition', units='mol/m3/s', &
+            readvar=readvar, interpinic_flag='interp', data=cch4%o2_decomp_depth_sat)
 
        ! column ch4 flux variable - o2_decomp_depth_unsat (used in CNNitrifDenitrif)
-
-       if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='O2_DECOMP_DEPTH_UNSAT', xtype=ncd_double, &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='O2 consumption during decomposition', units='mol/m3/s')
-       else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='O2_DECOMP_DEPTH_UNSAT', data=cch4%o2_decomp_depth_unsat, &
-               dim1name='column', switchdim=.true., &
-               ncid=ncid, flag=flag, readvar=readvar)
-          if (flag=='read' .and. .not. readvar) then
-             if (is_restart()) call endrun()
-          end if
-       end if
+       call restartvar(ncid=ncid, flag=flag, varname='O2_DECOMP_DEPTH_UNSAT', xtype=ncd_double, &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., &
+            long_name='O2 consumption during decomposition', units='mol/m3/s', &
+            readvar=readvar, interpinic_flag='interp', data=cch4%o2_decomp_depth_unsat)
 
     end if  ! end of use_cn if-block
 
     ! column ch4 state variable - lake_soilc
-
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='LAKE_SOILC', xtype=ncd_double, &
-            dim1name='column', dim2name='levgrnd', switchdim=.true.,&
-            long_name='lake soil carbon concentration', units='g/m^3')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='LAKE_SOILC', data=cch4%lake_soilc, &
-            dim1name='column', switchdim=.true., &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then 
-          if (is_restart()) call endrun()
-       end if
-    end if
+    call restartvar(ncid=ncid, flag=flag, varname='LAKE_SOILC', xtype=ncd_double, &
+         dim1name='column', dim2name='levgrnd', switchdim=.true.,&
+         long_name='lake soil carbon concentration', units='g/m^3', &
+         readvar=readvar, interpinic_flag='interp', data=cch4%lake_soilc)
 
   end subroutine ch4Rest
 

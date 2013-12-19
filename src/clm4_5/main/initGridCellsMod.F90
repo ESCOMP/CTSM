@@ -562,7 +562,6 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: m                                ! index
     integer  :: c                                ! column loop index
-    integer  :: ctype                            ! column type
     integer  :: ier                              ! error status 
     integer  :: npfts                            ! number of pfts in landunit
     real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
@@ -600,7 +599,6 @@ contains
 
           ! Assume that columns are of type 1 and that each column has its own pft
 
-          ctype = 1
           li = li + 1
 
           ! Determine landunit properties
@@ -631,7 +629,7 @@ contains
                 ci = ci + 1
                 pi = pi + 1
 
-                col%itype    (ci) = ctype
+                col%itype    (ci) = istice_mec*100 + m
                 col%gridcell (ci) = gi
                 col%wtgcell  (ci) = wtcol2lunit * wtlunit2gcell
                 col%landunit (ci) = li
@@ -660,7 +658,6 @@ contains
           ! (of type 1) and that each column has its own pft
        
           wtcol2lunit = 1.0_r8
-          ctype = 1
 
           li = li + 1
           ci = ci + 1
@@ -683,7 +680,7 @@ contains
           ! For the wet, ice or lake landunits it is assumed that each 
           ! column has its own pft
 
-          col%itype(ci)     = ctype
+          col%itype(ci)     = ltype
           col%gridcell (ci) = gi
           col%wtgcell(ci)   = wtcol2lunit * wtlunit2gcell
           col%landunit (ci) = li
@@ -705,6 +702,7 @@ contains
   end subroutine set_landunit_wet_ice_lake
 
   !------------------------------------------------------------------------
+
   subroutine set_landunit_crop_noncompete (ltype, gi, li, ci, pi, setdata)
     !
     ! !DESCRIPTION: 
@@ -769,21 +767,21 @@ contains
              ci = ci + 1
              pi = pi + 1
              
-             col%itype(ci)    = 1
-             pft%itype(pi)    = m
-             pft%mxy(pi)      = m + 1
-
-             col%gridcell (ci) = gi
-             col%landunit (ci) = li
-             col%wtlunit(ci) = wt_cft(gi,m)
-             col%wtgcell(ci) = col%wtlunit(ci) * wtlunit2gcell
-
+             pft%itype(pi)     = m
+             pft%mxy(pi)       = m + 1
              pft%gridcell (pi) = gi
              pft%landunit (pi) = li
-             pft%column (pi) = ci
-             pft%wtcol(pi) = 1._r8
-             pft%wtlunit(pi) = col%wtlunit(ci)
-             pft%wtgcell(pi) = col%wtgcell(ci)
+             pft%column (pi)   = ci
+             pft%wtcol(pi)     = 1._r8
+
+             col%itype(ci)     = (istcrop*100) + m
+             col%gridcell (ci) = gi
+             col%landunit (ci) = li
+             col%wtlunit(ci)   = wt_cft(gi,m)
+             col%wtgcell(ci)   = col%wtlunit(ci) * wtlunit2gcell
+
+             pft%wtlunit(pi)    = col%wtlunit(ci)
+             pft%wtgcell(pi)    = col%wtgcell(ci)
           end do
        end if
 
@@ -792,6 +790,7 @@ contains
   end subroutine set_landunit_crop_noncompete
 
   !------------------------------------------------------------------------------
+
   subroutine set_landunit_urban (ltype, gi, li, ci, pi, setdata)
     !
     ! !DESCRIPTION: 

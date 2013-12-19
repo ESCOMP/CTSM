@@ -410,8 +410,10 @@ contains
 
     do t=1,ntapes
        tape(t)%dov2xy = hist_dov2xy(t)
-       write(iulog,*)trim(subname),' hist tape = ',t,&
-            ' written with dov2xy= ',tape(t)%dov2xy
+       if (masterproc) then
+          write(iulog,*)trim(subname),' hist tape = ',t,&
+               ' written with dov2xy= ',tape(t)%dov2xy
+       end if
     end do
 
     ! Set number of time samples in each history file and
@@ -2022,7 +2024,6 @@ contains
     integer :: dim1id(1)                  ! netCDF dimension id
     integer :: dim2id(2)                  ! netCDF dimension id
     integer :: varid                      ! netCDF variable id
-    type(Var_desc_t) :: vardesc           ! netCDF variable description
     character(len=max_chars) :: long_name ! variable long name
     character(len=max_namlen):: varname   ! variable name
     character(len=max_namlen):: units     ! variable units
@@ -2921,6 +2922,8 @@ contains
     use domainMod       , only : ldomain
     use clm_varpar      , only : nlevgrnd, nlevlak, numrad, nlevdecomp_full
     use clm_time_manager, only : is_restart
+    use restUtilMod     , only : iflag_skip
+    use pio
     !
     ! !ARGUMENTS:
     implicit none
@@ -2983,6 +2986,8 @@ contains
     real(r8), pointer :: hbuf1d(:)               ! 1d history buffer
     integer , pointer :: nacs(:,:)               ! accumulation counter
     integer , pointer :: nacs1d(:)               ! 1d accumulation counter
+    integer           :: ier                     ! error code
+    type(Var_desc_t)  :: vardesc                 ! netCDF variable description
     character(len=*),parameter :: subname = 'hist_restart_ncd'
 !------------------------------------------------------------------------
 
@@ -3027,10 +3032,15 @@ contains
             long_name="History filename",     &
             comment="This variable NOT needed for startup or branch simulations", &
             dim1name='max_chars', dim2name="ntapes" )
+       ier = PIO_inq_varid(ncid, 'locfnh', vardesc)
+       ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
+
        call ncd_defvar(ncid=ncid, varname='locfnhr', xtype=ncd_char, &
             long_name="Restart history filename",     &
             comment="This variable NOT needed for startup or branch simulations", &
             dim1name='max_chars', dim2name="ntapes" )
+       ier = PIO_inq_varid(ncid, 'locfnhr', vardesc)
+       ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
 
        ! max_nflds is the maximum number of fields on any tape
        ! max_flds is the maximum number possible number of fields 

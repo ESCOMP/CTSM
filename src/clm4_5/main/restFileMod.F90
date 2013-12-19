@@ -98,10 +98,11 @@ contains
 
     if (use_cn) then
        call CNRest(bounds,  ncid, flag='define')
-       if ( crop_prog ) call CropRest( ncid, flag='define' )
+       if ( crop_prog ) call CropRest( bounds, ncid, flag='define' )
     end if
+    
+    call accumulRest( ncid, flag='define' )
 
-    call accumulRest(ncid, flag='define' )
     call SLakeRest( ncid, flag='define' )
 
     if (use_lch4) then
@@ -124,13 +125,14 @@ contains
 
     if (use_cn) then
        call CNRest( bounds, ncid, flag='write' )
-       if ( crop_prog ) call CropRest( ncid, flag='write' )
+       if ( crop_prog ) call CropRest( bounds, ncid, flag='write' )
     end if
 
     call SLakeRest( ncid, flag='write' )
     if (use_lch4) then
        call ch4Rest ( ncid, flag='write' )
     end if
+
     call accumulRest( ncid, flag='write' )
     
     call hist_restart_ncd ( bounds, ncid, flag='write' )
@@ -194,7 +196,7 @@ contains
 
     if (use_cn) then
        call CNRest( bounds, ncid, flag='read' )
-       if ( crop_prog ) call CropRest( ncid, flag='read' )
+       if ( crop_prog ) call CropRest( bounds, ncid, flag='read' )
     end if
 
     if (use_lch4) then
@@ -471,6 +473,7 @@ contains
     use clm_varctl  , only : caseid, ctitle, version, username, hostname, fsurdat, &
          conventions, source
     use clm_varpar  , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevurb, nlevcan
+    use clm_varpar  , only : cft_lb, cft_ub, maxpatch_glcmec
     use decompMod   , only : get_proc_global
     !
     ! !ARGUMENTS:
@@ -478,11 +481,6 @@ contains
     type(file_desc_t), intent(inout) :: ncid
     !
     ! !LOCAL VARIABLES:
-    integer :: yr                  ! current year (0 -> ...)
-    integer :: mon                 ! current month (1 -> 12)
-    integer :: day                 ! current day (1 -> 31)
-    integer :: mcsec               ! seconds of current date
-    integer :: mcdate              ! current date
     integer :: dimid               ! netCDF dimension id
     integer :: numg                ! total number of gridcells across all processors
     integer :: numl                ! total number of landunits across all processors
@@ -500,20 +498,23 @@ contains
 
     ! Define dimensions
 
-    call ncd_defdim(ncid, 'gridcell', numg           , dimid)
-    call ncd_defdim(ncid, 'landunit', numl           , dimid)
-    call ncd_defdim(ncid, 'column'  , numc           , dimid)
-    call ncd_defdim(ncid, 'pft'     , nump           , dimid)
+    call ncd_defdim(ncid , 'gridcell', numg           ,  dimid)
+    call ncd_defdim(ncid , 'landunit', numl           ,  dimid)
+    call ncd_defdim(ncid , 'column'  , numc           ,  dimid)
+    call ncd_defdim(ncid , 'pft'     , nump           ,  dimid)
 
-    call ncd_defdim(ncid, 'levgrnd' , nlevgrnd       , dimid)
-    call ncd_defdim(ncid, 'levurb'  , nlevurb        , dimid)
-    call ncd_defdim(ncid, 'levlak'  , nlevlak        , dimid)
-    call ncd_defdim(ncid, 'levsno'  , nlevsno        , dimid)
-    call ncd_defdim(ncid, 'levsno1'  , nlevsno+1     , dimid)
-    call ncd_defdim(ncid, 'levtot'  , nlevsno+nlevgrnd, dimid)
-    call ncd_defdim(ncid, 'numrad'  , numrad         , dimid)
-    call ncd_defdim(ncid, 'levcan'  , nlevcan        , dimid)
-    call ncd_defdim(ncid, 'string_length', 64        , dimid)
+    call ncd_defdim(ncid , 'levgrnd' , nlevgrnd       ,  dimid)
+    call ncd_defdim(ncid , 'levurb'  , nlevurb        ,  dimid)
+    call ncd_defdim(ncid , 'levlak'  , nlevlak        ,  dimid)
+    call ncd_defdim(ncid , 'levsno'  , nlevsno        ,  dimid)
+    call ncd_defdim(ncid , 'levsno1' , nlevsno+1      ,  dimid)
+    call ncd_defdim(ncid , 'levtot'  , nlevsno+nlevgrnd, dimid)
+    call ncd_defdim(ncid , 'numrad'  , numrad         ,  dimid)
+    call ncd_defdim(ncid , 'levcan'  , nlevcan        ,  dimid)
+    call ncd_defdim(ncid , 'string_length', 64        ,  dimid)
+    if (create_glacier_mec_landunit) then
+       call ncd_defdim(ncid , 'glc_nec', maxpatch_glcmec, dimid)
+    end if
 
     ! Define global attributes
 
@@ -530,8 +531,62 @@ contains
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_title'     , trim(ctitle))
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_id'        , trim(caseid))
     call ncd_putatt(ncid, NCD_GLOBAL, 'surface_dataset', trim(fsurdat))
-    call ncd_putatt(ncid, NCD_GLOBAL, 'title', &
-         'CLM Restart information, required to continue a simulation' )
+    call ncd_putatt(ncid, NCD_GLOBAL, 'title', 'CLM Restart information')
+    if (create_glacier_mec_landunit) then
+       call ncd_putatt(ncid, ncd_global, 'created_glacier_mec_landunits', 'true')
+    else
+       call ncd_putatt(ncid, ncd_global, 'created_glacier_mec_landunits', 'false')
+    end if
+
+    call ncd_putatt(ncid, ncd_global, 'ipft_not_vegetated'                       ,0 ) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_needleleaf_evergreen_temperate_tree' ,1 ) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_needleleaf_evergreen_boreal_tree'    ,2 ) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_needleleaf_deciduous_boreal_tree'    ,3 ) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_evergreen_tropical_tree'   ,4 ) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_evergreen_temperate_tree'  ,5 ) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_deciduous_tropical_tree'   ,6 ) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_deciduous_temperate_tree'  ,7 ) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_deciduous_boreal_tree'     ,8 ) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_evergreen_shrub'           ,9 ) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_deciduous_temperate_shrub' ,10) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_deciduous_boreal_shrub'    ,11) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_c3_arctic_grass'                     ,12) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_c3_non-arctic_grass'                 ,13) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_c4_grass'                            ,14) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_c3_crop'                             ,15) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_c3_irrigated'                        ,16) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_corn'                                ,17) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_irrigated_corn'                      ,18) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_spring_temperate_cereal'             ,19) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_irrigated_spring_temperate_cereal'   ,20) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_winter_temperate_cereal'             ,21) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_irrigated_winter_temperate_cereal'   ,22) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_soybean'                             ,23) 
+    call ncd_putatt(ncid, ncd_global, 'ipft_irrigated_soybean'                   ,24) 
+
+    call ncd_putatt(ncid, ncd_global, 'cft_lb'                                 , cft_lb)
+    call ncd_putatt(ncid, ncd_global, 'cft_ub'                                 , cft_ub)
+
+    call ncd_putatt(ncid, ncd_global, 'icol_vegetated_or_bare_soil'            , 1) 
+    call ncd_putatt(ncid, ncd_global, 'icol_crop'                              , 2) 
+    call ncd_putatt(ncid, ncd_global, 'icol_crop_noncompete'                   , '2*100+m, m=cft_lb,cft_ub')
+    call ncd_putatt(ncid, ncd_global, 'icol_landice'                           , 3) 
+    call ncd_putatt(ncid, ncd_global, 'icol_landice_multiple_elevation_classes', '4*100+m, m=1,glcnec')  
+    call ncd_putatt(ncid, ncd_global, 'icol_deep_lake'                         , 5) 
+    call ncd_putatt(ncid, ncd_global, 'icol_wetland'                           , 6) 
+    call ncd_putatt(ncid, ncd_global, 'icol_urban_roof'                        , 71)
+    call ncd_putatt(ncid, ncd_global, 'icol_urban_sunwall'                     , 72)
+    call ncd_putatt(ncid, ncd_global, 'icol_urban_shadewall'                   , 73)
+    call ncd_putatt(ncid, ncd_global, 'icol_urban_impervious_road'             , 74)
+    call ncd_putatt(ncid, ncd_global, 'icol_urban_pervious_road'               , 75)
+
+    call ncd_putatt(ncid, ncd_global, 'ilun_vegetated_or_bare_soil'             , 1)
+    call ncd_putatt(ncid, ncd_global, 'ilun_crop'                               , 2)
+    call ncd_putatt(ncid, ncd_global, 'ilun_landice'                            , 3)
+    call ncd_putatt(ncid, ncd_global, 'ilun_landice_multiple_elevation_classes' , 4)
+    call ncd_putatt(ncid, ncd_global, 'ilun_deep_lake'                          , 5)
+    call ncd_putatt(ncid, ncd_global, 'ilun_wetland'                            , 6)
+    call ncd_putatt(ncid, ncd_global, 'ilun_urban_tbd'                          , 7)
 
   end subroutine restFile_dimset
 
