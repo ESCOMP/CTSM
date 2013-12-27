@@ -67,7 +67,6 @@ module clmtype
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use domainMod   , only: domain_type
 !
 ! !PUBLIC TYPES:
   implicit none

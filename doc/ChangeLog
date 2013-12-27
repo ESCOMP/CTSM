@@ -1,4 +1,111 @@
 ===============================================================
+Tag name:  clm4_5_55
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Fri Dec 27 16:21:45 MST 2013
+One-line Summary: add hooks to Sean Santos's unit test framework, and begin to add CLM unit tests
+
+Purpose of changes:
+
+   (1) add hooks to Sean Santos's unit test framework
+
+   (2) begin to add CLM unit tests
+
+   Note: this tag currently does NOT have the CMake utilities that are needed to
+   run the unit tests. Instead, the instructions show how to point to a version
+   of these in my directory. That's because, as of the time I submitted this tag
+   for testing, the necessary working version of the CMake utilities was not yet
+   tagged. In the near future, another external could be added to pull in these
+   CMake utilities in the CLM directory tree.
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self, santos
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   tools/unit_testing: added external
+   models/csm_share: share3_131101 -> share3_131226 (to get changes needed for building unit tests)
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+========= Set up unit test directories & CMakeLists.txt files, and add unit
+          tests for DaylengthMod. Note that the tests themselves are in
+          Daylength_test/test_daylength.pf. See the README file for how to run
+          the tests
+A       models/lnd/clm/test/unit
+A       models/lnd/clm/test/unit/clm4_5
+A       models/lnd/clm/test/unit/clm4_5/README
+A       models/lnd/clm/test/unit/clm4_5/CMakeLists.txt
+A       models/lnd/clm/test/unit/clm4_5/mock
+A       models/lnd/clm/test/unit/clm4_5/mock/decompMod_boundsTypeDecl.F90
+A       models/lnd/clm/test/unit/clm4_5/mock/CMakeLists.txt
+A       models/lnd/clm/test/unit/clm4_5/Daylength_test
+A       models/lnd/clm/test/unit/clm4_5/Daylength_test/test_daylength.pf
+A       models/lnd/clm/test/unit/clm4_5/Daylength_test/CMakeLists.txt
+
+========= Add CMakeLists.txt files that are needed to build unit tests
+A       models/lnd/clm/src/clm4_5/main/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/biogeophys/CMakeLists.txt
+
+List all existing files that have been modified, and describe the changes:
+
+========= Remove unneeded 'use' statement, to prevent pulling in more than is
+          necessary for the unit test build
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+
+========= Externals updated - see above
+M       SVN_EXTERNAL_DIRECTORIES
+
+
+CLM testing:
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: OK
+    yellowstone_pgi: OK
+
+  Also ran the new unit tests, as per the instructions in
+  models/lnd/clm/test/unit/clm4_5/README - all PASS
+
+CLM tag used for the baseline comparisons: clm4_5_54
+
+Changes answers relative to baseline: No
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_54
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date: Fri Dec 27 15:55:05 MST 2013
