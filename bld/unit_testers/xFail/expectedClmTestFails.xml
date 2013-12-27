@@ -56,12 +56,10 @@
             <INTEL>
                <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                         failType="FAIL"  bugz="1696" >use before define in history.  runs with frankfurt_pgi, yellowstone_intel and yellowstone_pgi</entry>
                <entry testId="ERI_D.ne30_g16.ICLM45BGC.yellowstone_intel.clm-vrtlay"      failType="FAIL" >Seg fault while writing h1 file. This used to pass on yellowstone, but it failed on edison; now it is failing on yellowstone, too (it fails in clm4_5_37, too).</entry>
-               <entry testId="NCK.f10_f10.ICRUCLM45.yellowstone_intel"                    failType="FAIL"  bugz="1860">Diffs in cpl log files in rofl, rofi and volr</entry>
             </INTEL>
             <PGI>
                <entry testId="SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PTCLM45.yellowstone_pgi.clm-USUMB" failType="FAIL" bugz="1825"> Needs new surface dataset</entry>
                <entry testId="ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default"     failType="FAIL" >Restart not BFB.  Runs as ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi</entry>
-               <entry testId="NCK.f10_f10.I.yellowstone_pgi"                              failType="FAIL"  bugz="1860">Diffs in cpl log files in rofl, rofi and volr</entry>
             </PGI>
          </yellowstone>
          <frankfurt>
@@ -73,7 +71,7 @@
                <entry testId="SMS_RLA_Mmpich.f45_f45.ICLM45.frankfurt_nag.clm-default" failType="FAIL" >Sometimes passes, sometimes fails. MPI error with > 1 pe.  works with mpi-serial which is the normal use case for this setup.</entry>
             </NAG>
             <PGI>
-               <entry testId="ERS_D.f19_g16.IGRCP26CN.frankfurt_pgi"                     failType="CFAIL" >Problem with cism build</entry>
+               <entry testId="ERS_D.f19_g16.IGRCP26CN.frankfurt_pgi"                     failType="RUN"   >undefined symbol: netcdf_nf90_open_</entry>
                <entry testId="ERI_D.f19_g16.ICLM45BGC.frankfurt_pgi"                     failType="FAIL"  >Fails after reading clmforc.Li_2012_hdm_0.5x0.5_AVHRR_simyr1850-2010_c130401.nc.  This same test passes with yellowstone_intel, yellowstone_pgi, frankfurt_intel and frankfurt_nag</entry>
                <entry testId="ERI.f19_g16.ICLM45BGC.frankfurt_pgi"                       failType="FAIL"  >Fails after reading clmforc.Li_2012_hdm_0.5x0.5_AVHRR_simyr1850-2010_c130401.nc.  This same test passes with yellowstone_intel, yellowstone_pgi, frankfurt_intel and frankfurt_nag</entry>
                <entry testId="SMS_Ld5.f19_g16.IRCP45CLM45BGC.frankfurt_pgi.clm-decStart" failType="FAIL"  >Fails after reading clmforc.Li_2012_hdm_0.5x0.5_AVHRR_simyr1850-2010_c130401.nc.  This same test passes with yellowstone_intel</entry>
