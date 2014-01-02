@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_56        sacks 01/02/2014 update scripts external to fix I20TRCLM45BGC compset
    clm4_5_55        sacks 12/27/2013 add hooks to Sean Santos's unit test frameworks, and begin to add CLM unit tests
    clm4_5_54        sacks 12/27/2013 update externals to cesm1_3_beta06
    clm4_5_53      muszala 12/19/2013 refactor restart interfaces

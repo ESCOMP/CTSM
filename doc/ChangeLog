@@ -1,4 +1,81 @@
 ===============================================================
+Tag name:  clm4_5_56
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Thu Jan  2 09:06:32 MST 2014
+One-line Summary: update scripts external to fix I20TRCLM45BGC compset
+
+Purpose of changes: update scripts external to fix I20TRCLM45BGC compset
+
+Requirements for tag: fix bug 1869
+
+Test level of tag: limited (see below)
+
+Bugs fixed (include bugzilla ID): 1869 (I20TRCLM45BGC compset improperly defined)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   scripts: scripts4_131203 -> scripts4_140102
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes: none
+
+CLM testing:
+
+   ONLY TESTED THE 3 AFFECTED TESTS from the yellowstone & frankfurt aux_clm test suites:
+
+   PASS  PET_P15x2_Lm13.f10_f10.I20TRCLM45BGC.yellowstone_pgi.clm-reduceOutput.GC.140102-060037 
+   PASS  ERS_D.f10_f10.I20TRCLM45BGC.frankfurt_pgi.clm-decStart.GC.140102-060448 
+   PASS  ERS_Mmpich.f10_f10.I20TRCLM45BGC.frankfurt_nag.clm-decStart.GC.140102-060608 
+
+CLM tag used for the baseline comparisons: clm4_5_55
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only I20TRCLM45BGC compsets
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+       
+       New climate for this compset: correctly uses CLM4.5 instead of CLM4.0 code.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_55
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date: Fri Dec 27 16:21:45 MST 2013
