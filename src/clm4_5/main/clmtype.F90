@@ -1724,7 +1724,6 @@ type, public :: column_wflux_type
    real(r8), pointer :: qflx_runoff_u(:)    ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
    real(r8), pointer :: qflx_runoff_r(:)    ! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
    real(r8), pointer :: qmelt(:) 	    ! snow melt [mm/s]
-   real(r8), pointer :: h2ocan_loss(:)      ! mass balance correction term for dynamic weights
    real(r8), pointer :: qflx_rsub_sat(:)    ! soil saturation excess [mm/s]
    real(r8), pointer :: flx_bc_dep_dry(:)   ! dry (BCPHO+BCPHI) BC deposition on ground (positive definite) (col) [kg/s]
    real(r8), pointer :: flx_bc_dep_wet(:)   ! wet (BCPHI) BC deposition on ground (positive definite) (col) [kg/s]

@@ -3188,8 +3188,6 @@ contains
     cwf%qflx_runoff_r(:)= nanr
     allocate(cwf%qmelt(beg:end))
     cwf%qmelt(:)= nanr
-    allocate(cwf%h2ocan_loss(beg:end))
-    cwf%h2ocan_loss(:)= nanr
     allocate(cwf%qflx_rsub_sat(beg:end))
     cwf%qflx_rsub_sat(:)= spval
     allocate(cwf%flx_bc_dep_dry(beg:end))

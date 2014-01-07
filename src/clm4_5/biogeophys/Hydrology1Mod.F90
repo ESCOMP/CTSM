@@ -185,7 +185,6 @@ contains
    h2osoi_ice          => cws%h2osoi_ice               , & ! Output: [real(r8) (:,:)]  ice lens (kg/m2)                      
    h2osoi_liq          => cws%h2osoi_liq               , & ! Output: [real(r8) (:,:)]  liquid water (kg/m2)                  
    qflx_snow_grnd_col  => pwf_a%qflx_snow_grnd         , & ! Output: [real(r8) (:)]  snow on ground after interception (mm H2O/s) [+]
-   h2ocan_loss         => cwf%h2ocan_loss              , & ! Input:  [real(r8) (:)]  canopy water mass balance term (column) 
    snw_rds             => cps%snw_rds                  , & ! Output: [real(r8) (:,:)]  effective snow grain radius (col,lyr) [microns, m^-6]
    mss_bcpho           => cps%mss_bcpho                , & ! Output: [real(r8) (:,:)]  mass of hydrophobic BC in snow (col,lyr) [kg]
    mss_bcphi           => cps%mss_bcphi                , & ! Output: [real(r8) (:,:)]  mass of hydrophilic BC in snow (col,lyr) [kg]
@@ -306,19 +305,14 @@ contains
        end if
 
        ! Precipitation onto ground (kg/(m2 s))
-       ! PET, 1/18/2005: Added new terms for mass balance correction
-       ! due to dynamic pft weight shifting (column-level h2ocan_loss)
-       ! Because the fractionation between rain and snow is indeterminate if
-       ! rain + snow = 0, I am adding this very small flux only to the rain
-       ! components.
 
        if (ctype(c) /= icol_sunwall .and. ctype(c) /= icol_shadewall) then
           if (frac_veg_nosno(p) == 0) then
              qflx_prec_grnd_snow(p) = forc_snow(c)
-             qflx_prec_grnd_rain(p) = forc_rain(c) + h2ocan_loss(c)
+             qflx_prec_grnd_rain(p) = forc_rain(c)
           else
              qflx_prec_grnd_snow(p) = qflx_through_snow(p) + (qflx_candrip(p) * fracsnow(p))
-             qflx_prec_grnd_rain(p) = qflx_through_rain(p) + (qflx_candrip(p) * fracrain(p)) + h2ocan_loss(c)
+             qflx_prec_grnd_rain(p) = qflx_through_rain(p) + (qflx_candrip(p) * fracrain(p))
           end if
        ! Urban sunwall and shadewall have no intercepted precipitation
        else

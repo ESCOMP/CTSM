@@ -77,7 +77,7 @@ module clm_driver
   use reweightMod         , only : reweightWrapup
   use CNDVMod             , only : dv, histCNDV
   use pftdynMod           , only : pftwt_interp
-  use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal
+  use pftdynMod           , only : pftdyn_interp
   use pftdynMod           , only : pftdyn_cnbal
   use dynlandMod          , only : dynland_hwcontent
   use clm_varcon          , only : zlnd
@@ -215,7 +215,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   end if
 
   ! ============================================================================
-  ! change pft weights and compute associated heat & water fluxes
+  ! get initial heat and water content for land cover change
   ! ============================================================================
 
   !$OMP PARALLEL DO PRIVATE (nc,g,bounds_clump)
@@ -281,31 +281,22 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
    end do
    !$OMP END PARALLEL DO
 
+  ! ============================================================================
+  ! change pft weights for prescribed transient pfts
+  ! ============================================================================
+
    if (.not. use_cndv) then
       if (fpftdyn /= ' ') then
          call t_startf("pftdyn_interp")
          call pftdyn_interp(bounds_proc)  ! change the pft weights
       
-         !$OMP PARALLEL DO PRIVATE (nc,g,bounds_clump)
+         !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
          do nc = 1,nclumps
             call get_clump_bounds(nc, bounds_clump)
             
             ! do stuff that needs to be done after changing weights
             ! This call should be made as soon as possible after pftdyn_interp
             call reweightWrapup(bounds_clump)
-            
-            !--- get new heat,water content: (new-old)/dt = flux into lnd model ---
-            call dynland_hwcontent( bounds_clump, &
-                 gws%gc_liq2(bounds_clump%begg:bounds_clump%endg), &
-                 gws%gc_ice2(bounds_clump%begg:bounds_clump%endg), &
-                 ges%gc_heat2(bounds_clump%begg:bounds_clump%endg) )
-
-            dtime = get_step_size()
-            do g = bounds_clump%begg,bounds_clump%endg
-               gwf%qflx_liq_dynbal(g) = (gws%gc_liq2 (g) - gws%gc_liq1 (g))/dtime
-               gwf%qflx_ice_dynbal(g) = (gws%gc_ice2 (g) - gws%gc_ice1 (g))/dtime
-               gef%eflx_dynbal    (g) = (ges%gc_heat2(g) - ges%gc_heat1(g))/dtime
-            enddo
          end do
          !$OMP END PARALLEL DO
          call t_stopf("pftdyn_interp")
@@ -313,19 +304,12 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
    end if
       
    ! ============================================================================
-   ! Initialize the mass balance checks: water, carbon, and nitrogen
+   ! Initialize the mass balance checks for carbon and nitrogen
    ! ============================================================================
 
-   !$OMP PARALLEL DO PRIVATE (nc,g,bounds_clump)
+   !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
    do nc = 1,nclumps
       call get_clump_bounds(nc, bounds_clump)
-      
-      call t_startf('begwbal')
-      call BeginWaterBalance(bounds_clump, &
-           filter(nc)%num_nolakec, filter(nc)%nolakec, &
-           filter(nc)%num_lakec, filter(nc)%lakec, &
-           filter(nc)%num_hydrologyc, filter(nc)%hydrologyc)
-      call t_stopf('begwbal')
       
       if (use_cn) then
          call t_startf('begcnbal')
@@ -337,22 +321,21 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   !$OMP END PARALLEL DO
 
   ! ============================================================================
-  ! Initialize h2ocan_loss to zero
+  ! Change pft weights for cndv, do CN balance for both cndv and prescribed
+  ! transient pfts, and compute heat & water fluxes associated with land cover
+  ! change for both cndv and prescribed transient pfts
   ! ============================================================================
   call t_startf('pftdynwts')
 
-  !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
+  !$OMP PARALLEL DO PRIVATE (nc,g,bounds_clump)
   do nc = 1,nclumps
      call get_clump_bounds(nc, bounds_clump)
-
-     call pftdyn_wbal_init(bounds_clump)
 
      if (use_cndv) then
         ! NOTE: Currently CNDV and fpftdyn /= ' ' are incompatible
         call CNZeroFluxes_dwt(bounds_clump)
         call pftwt_interp(bounds_clump)
         call reweightWrapup(bounds_clump)
-        call pftdyn_wbal(bounds_clump)
         call pftdyn_cnbal(bounds_clump)
      else
         if (use_cn) then
@@ -362,8 +345,50 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
            end if
         end if
      end if
+
+     if (use_cndv .or. fpftdyn /= ' ') then
+        !--- get new heat,water content: (new-old)/dt = flux into lnd model ---
+        call dynland_hwcontent( bounds_clump, &
+             gws%gc_liq2(bounds_clump%begg:bounds_clump%endg), &
+             gws%gc_ice2(bounds_clump%begg:bounds_clump%endg), &
+             ges%gc_heat2(bounds_clump%begg:bounds_clump%endg) )
+        
+        dtime = get_step_size()
+        do g = bounds_clump%begg,bounds_clump%endg
+           gwf%qflx_liq_dynbal(g) = (gws%gc_liq2 (g) - gws%gc_liq1 (g))/dtime
+           gwf%qflx_ice_dynbal(g) = (gws%gc_ice2 (g) - gws%gc_ice1 (g))/dtime
+           gef%eflx_dynbal    (g) = (ges%gc_heat2(g) - ges%gc_heat1(g))/dtime
+        enddo
+     end if
+
   end do
   !$OMP END PARALLEL DO
+  call t_stopf('pftdynwts')
+
+  ! ============================================================================
+  ! Initialize the mass balance checks for water.
+  !
+  ! Currently, I believe this needs to be done after weights are updated for
+  ! prescribed transient PFTs or CNDV, because column-level water is not
+  ! generally conserved when weights change (instead the difference is put in
+  ! the grid cell-level terms, qflx_liq_dynbal, etc.). In the future, we may
+  ! want to change the balance checks to ensure that the grid cell-level water
+  ! is conserved, considering qflx_liq_dynbal; in this case, the call to
+  ! BeginWaterBalance should be moved to before the weight updates.
+  ! ============================================================================
+
+   !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
+   do nc = 1,nclumps
+      call get_clump_bounds(nc, bounds_clump)
+      
+      call t_startf('begwbal')
+      call BeginWaterBalance(bounds_clump, &
+           filter(nc)%num_nolakec, filter(nc)%nolakec, &
+           filter(nc)%num_lakec, filter(nc)%lakec, &
+           filter(nc)%num_hydrologyc, filter(nc)%hydrologyc)
+      call t_stopf('begwbal')
+   end do
+  
 
   ! ============================================================================
   ! Update dynamic N deposition field, on albedo timestep
@@ -371,12 +396,13 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   ! re-written to go inside.
   ! ============================================================================
   
+  call t_startf('ndep_interp')
   if (use_cn) then
      ! PET: switching CN timestep
      call ndep_interp(bounds_proc)
      call CNFireInterp(bounds_proc)
   end if
-  call t_stopf('pftdynwts')
+  call t_stopf('ndep_interp')
 
   ! ============================================================================
   ! Initialize variables from previous time step, downscale atm forcings, and
