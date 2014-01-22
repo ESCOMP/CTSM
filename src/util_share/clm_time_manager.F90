@@ -37,6 +37,7 @@ module clm_time_manager
         get_calday,               &! return calendar day from input date
         get_calendar,             &! return calendar
         get_days_per_year,        &! return the days per year for current year
+        get_curr_yearfrac,        &! return the fractional position in the current year
         set_nextsw_cday,          &! set the next radiation calendar day
         is_first_step,            &! return true on first step of initial run
         is_first_restart_step,    &! return true on first step of restart or branch run
@@ -1331,6 +1332,32 @@ contains
     call chkrc(rc, sub//': error return from ESMF_TimeGet')
 
   end function get_days_per_year
+
+  !=========================================================================================
+
+  integer function get_curr_yearfrac( offset )
+
+    !---------------------------------------------------------------------------------
+    ! Get the fractional position in the current year. This is 0 at midnight on Jan 1,
+    ! and 1 at the end of Dec 31.
+
+    !
+    ! Arguments
+    integer, optional, intent(in) :: offset  ! Offset from current time in seconds.
+    ! Positive for future times, negative 
+    ! for previous times.
+
+    character(len=*), parameter :: sub = 'clm::get_curr_yearfrac'
+    real(r8) :: cday               ! current calendar day (1.0 = 0Z on Jan 1)
+    real(r8) :: days_per_year      ! days per year
+
+    cday          = get_curr_calday(offset=offset)
+    days_per_year = get_days_per_year()
+
+    get_curr_yearfrac = (cday - 1._r8)/days_per_year
+
+  end function get_curr_yearfrac
+
 
   !=========================================================================================
 

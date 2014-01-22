@@ -1,0 +1,2 @@
+add_subdirectory(dynVar_test)
+add_subdirectory(dynTimeInfo_test)

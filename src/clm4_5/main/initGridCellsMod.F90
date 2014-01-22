@@ -43,6 +43,7 @@ contains
     use clmtype 
     use domainMod   , only : ldomain
     use decompMod   , only : get_proc_bounds, get_clump_bounds, get_proc_clumps
+    use reweightMod , only : compute_higher_order_weights
     use clm_varcon  , only : istsoil, istice, istwet, istdlak, istice_mec, &
                              isturb_tbd, isturb_hd, isturb_md, istcrop
     use clm_varctl  , only : create_glacier_mec_landunit
@@ -221,6 +222,9 @@ contains
        ! if a clump is responsible for landunit L, then that same clump is also
        ! responsible for all columns and pfts in L.
        call clm_ptrs_check(bounds_clump)
+
+       ! Set pft%wtlunit, pft%wtgcell and col%wtgcell
+       call compute_higher_order_weights(bounds_clump)
 
     end do
     !$OMP END PARALLEL DO
@@ -512,7 +516,6 @@ contains
        ! Set column properties for this landunit (only one column on landunit)
        col%itype(ci)    = 1
        col%gridcell(ci) = gi
-       col%wtgcell(ci)  = wtlunit2gcell
        col%landunit(ci) = li
        col%wtlunit(ci)  = 1.0_r8
 
@@ -527,8 +530,6 @@ contains
           pft%landunit(pi) = li
           pft%column(pi)   = ci
           pft%wtcol(pi)    = wt_nat_pft(gi, m)
-          pft%wtlunit(pi)  = pft%wtcol(pi)
-          pft%wtgcell(pi)  = pft%wtlunit(pi) * wtlunit2gcell
        end do
     end if
 
@@ -631,7 +632,6 @@ contains
 
                 col%itype    (ci) = istice_mec*100 + m
                 col%gridcell (ci) = gi
-                col%wtgcell  (ci) = wtcol2lunit * wtlunit2gcell
                 col%landunit (ci) = li
                 col%wtlunit  (ci) = wtcol2lunit
 
@@ -643,9 +643,7 @@ contains
 
                 pft%itype    (pi) = noveg
                 pft%gridcell (pi) = gi
-                pft%wtgcell  (pi) = wtcol2lunit * wtlunit2gcell
                 pft%landunit (pi) = li
-                pft%wtlunit  (pi) = wtcol2lunit
                 pft%column   (pi) = ci
                 pft%wtcol    (pi) = 1.0_r8
 
@@ -682,7 +680,6 @@ contains
 
           col%itype(ci)     = ltype
           col%gridcell (ci) = gi
-          col%wtgcell(ci)   = wtcol2lunit * wtlunit2gcell
           col%landunit (ci) = li
           col%wtlunit(ci)   = wtcol2lunit
 
@@ -690,9 +687,7 @@ contains
 
           pft%itype(pi)     = noveg
           pft%gridcell (pi) = gi
-          pft%wtgcell(pi)   =  wtcol2lunit * wtlunit2gcell
           pft%landunit (pi) = li
-          pft%wtlunit(pi)   = wtcol2lunit
           pft%column (pi)   = ci
           pft%wtcol(pi)     = 1.0_r8
 
@@ -778,10 +773,6 @@ contains
              col%gridcell (ci) = gi
              col%landunit (ci) = li
              col%wtlunit(ci)   = wt_cft(gi,m)
-             col%wtgcell(ci)   = col%wtlunit(ci) * wtlunit2gcell
-
-             pft%wtlunit(pi)    = col%wtlunit(ci)
-             pft%wtgcell(pi)    = col%wtgcell(ci)
           end do
        end if
 
@@ -890,15 +881,12 @@ contains
 
           col%itype(ci)    = ctype
           col%gridcell(ci) = gi
-          col%wtgcell(ci)  = wtcol2lunit * wtlunit2gcell
           col%landunit(ci) = li
           col%wtlunit(ci)  = wtcol2lunit
 
           pft%itype(pi)    = noveg
           pft%gridcell(pi) = gi
-          pft%wtgcell(pi)  = wtcol2lunit * wtlunit2gcell
           pft%landunit(pi) = li
-          pft%wtlunit(pi)  = wtcol2lunit
           pft%column(pi)   = ci
           pft%wtcol(pi)    = 1.0_r8
 

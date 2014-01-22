@@ -1,0 +1,101 @@
+module dynLandunitAreaMod
+
+  !---------------------------------------------------------------------------
+  !
+  ! !DESCRIPTION:
+  ! Handle dynamic landunit weights
+  !
+  ! !USES:
+  use clmtype
+  use shr_assert_mod , only : shr_assert
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
+
+  implicit none
+  save
+  private
+
+  public :: update_landunit_weights
+  
+  ! The following is only public for the sake of unit testing; it should not be called
+  ! directly by CLM code outside this module
+  public :: update_landunit_weights_one_gcell
+
+contains
+
+
+  ! THIS IS A SKELETON, WHICH NEEDS TO BE COMPLETED
+  subroutine update_landunit_weights(bounds)
+    
+    real(r8) :: landunit_weights(max_lunit)
+
+
+    do g = bounds%begg, bounds%endg
+       
+       ! Determine current landunit weights. Landunits that don't exist on this grid cell
+       ! get a weight of 0
+
+       ! Adjust weights so they sum to 100%
+       call dynlu_update_landunit_weights_one_gcell(landunit_weights)
+
+       
+       ! Update landunit weights on the grid cell
+    end do
+
+  end subroutine dynlu_update_landunit_weights
+
+  
+  ! THIS IS A SKELETON, WHICH NEEDS TO BE COMPLETED
+  subroutine update_landunit_weights_one_gcell(landunit_weights)
+
+    real(r8), intent(inout) :: landunit_weights(:)  ! weight of each landunit; this is updated in-place
+
+    ! This parameter specifies the order in which landunit areas are decreased when the
+    ! specified areas add to greater than 100%. Landunits not listed here can never be
+    ! decreased unless the forcings say they should be decreased. In particular, note
+    ! that istice_mec doesn't appear here, so that the istice_mec area always will match
+    ! the areas specified by GLC.
+    integer, parameter :: decrease_order(8) = &
+         (/istsoil, istcrop, isturb_md, isturb_hd, isturb_tbd, istwet, istdlak, istice/)
+
+    real(r8), parameter :: tol = 1.e-13
+
+
+    call shr_assert((size(landunit_weights) == max_lunit), errMsg(__FILE__, __LINE__))
+
+    landunit_sum = sum(landunit_weights)
+    
+    ! If landunits sum to ~ 100% already, we're done
+    if (abs(landunit_sum - 1._r8) <= tol) then
+       ! Do nothing
+
+    ! If landunits sum to < 100%, increase natural vegetation so sum is 100%
+    else if (landunit_sum < 1._r8) then
+       ! FILL THIS IN
+
+    ! If landunits sum to > 100%, decrease areas in priority order
+    else
+       decrease_index = 1
+       excess = landunit_sum - 1._r8
+       do while ((excess > tol) .and. decrease_index <= size(decrease_order))
+          ! Decrease weight of the next landunit, but not below 0
+          cur_landunit = decrease_order(decrease_index)
+          landunit_weights(cur_landunit) = landunit_weights(cur_landunit) - excess
+          if (landunit_weights(cur_landunit) < 0._r8) then
+             landunit_weights(cur_landunit) = 0._r8
+          end if
+
+          ! Update sum and excess based on new weights
+          ! FILL THIS IN
+          
+          decrease_index = decrease_index + 1
+       end do
+
+       ! Abort if landunit_sum is still > 1._r8 + tol (should never happen)
+    end if
+
+    ! Confirm that landunit sum is now equal to 100%, within tolerance
+
+    
+  end subroutine dynlu_update_landunit_weights_one_gcell
+
+end module dynLandunitAreaMod

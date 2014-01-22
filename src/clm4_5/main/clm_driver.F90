@@ -7,79 +7,16 @@ module clm_driver
   ! scale entities) assigned to each MPI process. Computation is further
   ! parallelized by looping over clumps on each process using shared memory OpenMP.
   !
-  ! The main CLM driver physics calling sequence 
-  !     + interpMonthlyVeg      interpolate monthly vegetation data      [! CN or ! CNDV]
-  !     + readMonthlyVegetation read vegetation data for two months      [! CN or ! CNDV]
-  !
-  ! ==== Begin Loop over clumps ====
-  !  -> dynland_hwcontent   Get initial heat, water content
-  !     + pftdyn_interp                                                    [pftdyn]
-  !     + dynland_hwcontent   Get new heat, water content                  [pftdyn]
-  ! ==== End Loop over clumps  ====
-  !
-  ! ==== Begin Loop over clumps ====
-  !  -> clm_driverInit      save of variables from previous time step
-  !  -> downscale_forcings  downscale atm forcings from gridcell to column
-  !  -> Hydrology1          canopy interception and precip on ground
-  !     -> FracWet          fraction of wet vegetated surface and dry elai
-  !  -> SurfaceRadiation    surface solar radiation
-  !  -> UrbanRadiation      surface solar and longwave radiation for Urban landunits
-  !  -> Biogeophysics1      leaf temperature and surface fluxes
-  !  -> BareGroundFluxes    surface fluxes for bare soil or snow-covered
-  !                         vegetation patches
-  !  -> UrbanFluxes         surface fluxes for urban landunits
-  !     -> MoninObukIni     first-guess Monin-Obukhov length and wind speed
-  !     -> FrictionVelocity friction velocity and potential temperature and
-  !                         humidity profiles
-  !  -> CanopyFluxes        leaf temperature and surface fluxes for vegetated patches
-  !     -> QSat             saturated vapor pressure, specific humidity, derivatives at leaf surface
-  !     -> MoninObukIni     first-guess Monin-Obukhov length and wind speed
-  !     -> FrictionVelocity friction velocity and potential temperature and humidity profiles
-  !     -> Stomata          stomatal resistance and photosynthesis for sunlit leaves
-  !     -> Stomata          stomatal resistance and photosynthesis for shaded leaves
-  !     -> QSat             recalculation of saturated vapor pressure,
-  !                         specific humidity, & derivatives at leaf surface
-  !   + DustEmission        Dust mobilization
-  !   + DustDryDep          Dust dry deposition
-  !  -> SLakeFluxes         lake surface fluxes
-  !  -> SLakeTemperature    lake temperature
-  !   + VOCEmission         compute VOC emission                          [VOC]
-  !  -> Biogeophysics2      soil/snow & ground temp and update surface fluxes
-  !  -> pft2col             Average from PFT level to column level
-  !  -> Hydrology2          surface and soil hydrology
-  !  -> SLakeHydrology      lake hydrology
-  !  -> SnowAge_grain       update snow effective grain size for snow radiative transfer
-  !   + CNEcosystemDyn      Carbon Nitrogen model ecosystem dynamics:     [CN]
-  !                         vegetation phenology and soil carbon  
-  !   + EcosystemDyn        "static" ecosystem dynamics:                  [! CN ]
-  !                         vegetation phenology and soil carbon  
-  !  -> BalanceCheck        check for errors in energy and water balances
-  !  -> SurfaceAlbedo       albedos for next time step
-  !  -> UrbanAlbedo         Urban landunit albedos for next time step
-  !  ====  End Loop over clumps  ====
-  !
-  ! Second phase of the clm main driver, for handling history and restart file output.
-  !
-  !  -> write_diagnostic    output diagnostic if appropriate
-  !  -> updateAccFlds       update accumulated fields
-  !  -> hist_update_hbuf    accumulate history fields for time interval
-  !  -> htapes_wrapup       write history tapes if appropriate
-  !  -> restFile_write      write restart file if appropriate
-  !
   ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use clmtype
-  use clm_varctl          , only : wrtdia, fpftdyn, iulog, create_glacier_mec_landunit, &
+  use clm_varctl          , only : wrtdia, iulog, create_glacier_mec_landunit, &
                                    use_cn, use_cndv, use_lch4, use_noio
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds, get_proc_bounds, bounds_type
   use filterMod           , only : filter, filter_inactive_and_active
-  use reweightMod         , only : reweightWrapup
+  use dynSubgridDriverMod , only : dynSubgrid_driver
   use CNDVMod             , only : dv, histCNDV
-  use pftdynMod           , only : pftwt_interp
-  use pftdynMod           , only : pftdyn_interp
-  use pftdynMod           , only : pftdyn_cnbal
-  use dynlandMod          , only : dynland_hwcontent
   use clm_varcon          , only : zlnd
   use clm_time_manager    , only : get_step_size,get_curr_date,get_ref_date,get_nstep
   use CropRestMod         , only : CropRestIncYear
@@ -214,38 +151,6 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      end if
   end if
 
-  ! ============================================================================
-  ! get initial heat and water content for land cover change
-  ! ============================================================================
-
-  !$OMP PARALLEL DO PRIVATE (nc,g,bounds_clump)
-  do nc = 1,nclumps
-     call get_clump_bounds(nc, bounds_clump)
-
-     call t_startf("init_hwcontent")
-     ! initialize heat and water content and dynamic balance fields to zero
-     do g = bounds_clump%begg, bounds_clump%endg
-        gwf%qflx_liq_dynbal(g) = 0._r8
-        gws%gc_liq2(g)         = 0._r8
-        gws%gc_liq1(g)         = 0._r8
-        gwf%qflx_ice_dynbal(g) = 0._r8
-        gws%gc_ice2(g)         = 0._r8 
-        gws%gc_ice1(g)         = 0._r8
-        gef%eflx_dynbal(g)     = 0._r8
-        ges%gc_heat2(g)        = 0._r8
-        ges%gc_heat1(g)        = 0._r8
-     enddo
-
-     !--- get initial heat,water content ---
-      call dynland_hwcontent( bounds_clump, &
-           gws%gc_liq1(bounds_clump%begg:bounds_clump%endg), &
-           gws%gc_ice1(bounds_clump%begg:bounds_clump%endg), &
-           ges%gc_heat1(bounds_clump%begg:bounds_clump%endg) )
-
-     call t_stopf("init_hwcontent")
-   end do
-   !$OMP END PARALLEL DO
-
    ! ==================================================================================
    ! Determine decomp vertical profiles
    !
@@ -281,30 +186,9 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
    end do
    !$OMP END PARALLEL DO
 
-  ! ============================================================================
-  ! change pft weights for prescribed transient pfts
-  ! ============================================================================
-
-   if (.not. use_cndv) then
-      if (fpftdyn /= ' ') then
-         call t_startf("pftdyn_interp")
-         call pftdyn_interp(bounds_proc)  ! change the pft weights
-      
-         !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
-         do nc = 1,nclumps
-            call get_clump_bounds(nc, bounds_clump)
-            
-            ! do stuff that needs to be done after changing weights
-            ! This call should be made as soon as possible after pftdyn_interp
-            call reweightWrapup(bounds_clump)
-         end do
-         !$OMP END PARALLEL DO
-         call t_stopf("pftdyn_interp")
-      end if
-   end if
-      
    ! ============================================================================
-   ! Initialize the mass balance checks for carbon and nitrogen
+   ! Initialize the mass balance checks for carbon and nitrogen, and zero fluxes for
+   ! transient land cover
    ! ============================================================================
 
    !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
@@ -315,55 +199,21 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
          call t_startf('begcnbal')
          call BeginCBalance(bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc)
          call BeginNBalance(bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc)
+         call CNZeroFluxes_dwt(bounds_clump)
          call t_stopf('begcnbal')
       end if
   end do
   !$OMP END PARALLEL DO
 
   ! ============================================================================
-  ! Change pft weights for cndv, do CN balance for both cndv and prescribed
-  ! transient pfts, and compute heat & water fluxes associated with land cover
-  ! change for both cndv and prescribed transient pfts
+  ! Update subgrid weights with dynamic landcover (prescribed transient PFTs,
+  ! CNDV, and or dynamic landunits), and do related adjustments. Note that this
+  ! call needs to happen outside loops over nclumps.
   ! ============================================================================
-  call t_startf('pftdynwts')
 
-  !$OMP PARALLEL DO PRIVATE (nc,g,bounds_clump)
-  do nc = 1,nclumps
-     call get_clump_bounds(nc, bounds_clump)
-
-     if (use_cndv) then
-        ! NOTE: Currently CNDV and fpftdyn /= ' ' are incompatible
-        call CNZeroFluxes_dwt(bounds_clump)
-        call pftwt_interp(bounds_clump)
-        call reweightWrapup(bounds_clump)
-        call pftdyn_cnbal(bounds_clump)
-     else
-        if (use_cn) then
-           call CNZeroFluxes_dwt(bounds_clump)
-           if (fpftdyn /= ' ') then
-              call pftdyn_cnbal(bounds_clump)
-           end if
-        end if
-     end if
-
-     if (use_cndv .or. fpftdyn /= ' ') then
-        !--- get new heat,water content: (new-old)/dt = flux into lnd model ---
-        call dynland_hwcontent( bounds_clump, &
-             gws%gc_liq2(bounds_clump%begg:bounds_clump%endg), &
-             gws%gc_ice2(bounds_clump%begg:bounds_clump%endg), &
-             ges%gc_heat2(bounds_clump%begg:bounds_clump%endg) )
-        
-        dtime = get_step_size()
-        do g = bounds_clump%begg,bounds_clump%endg
-           gwf%qflx_liq_dynbal(g) = (gws%gc_liq2 (g) - gws%gc_liq1 (g))/dtime
-           gwf%qflx_ice_dynbal(g) = (gws%gc_ice2 (g) - gws%gc_ice1 (g))/dtime
-           gef%eflx_dynbal    (g) = (ges%gc_heat2(g) - ges%gc_heat1(g))/dtime
-        enddo
-     end if
-
-  end do
-  !$OMP END PARALLEL DO
-  call t_stopf('pftdynwts')
+  call t_startf('dyn_subgrid')
+  call dynSubgrid_driver(bounds_proc)
+  call t_stopf('dyn_subgrid')
 
   ! ============================================================================
   ! Initialize the mass balance checks for water.

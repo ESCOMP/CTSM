@@ -1,4 +1,217 @@
 ===============================================================
+Tag name:  clm4_5_58
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Wed Jan 22 14:11:30 MST 2014
+One-line Summary: major refactor of transient pft code, in prep for dynamic landunits
+
+Purpose of changes: 
+
+Major refactor of transient pft code, in prep for dynamic landunits.
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 
+   1899 (harvest rates remain non-zero even after the end of the pftdyn dataset)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Erik; design reviewed by CLM-CMT
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   scripts: scripts4_140102 -> scripts4_140114
+   Machines: Machines_131206b -> Machines_140107
+   csm_share: share3_131226 -> share3_131231
+   pio: pio1_8_3 -> pio1_8_6
+   
+   CMake: New external added
+
+List all files eliminated:
+
+========= renamed to dynConsBiogeophysMod.F90
+D       models/lnd/clm/src/clm4_5/main/dynlandMod.F90
+
+========= renamed to dynpftFileMod.F90; much of the stuff in here moved to other
+          files in the dyn_subgrid directory
+D       models/lnd/clm/src/clm4_5/main/pftdynMod.F90
+
+========= renamed
+D       models/lnd/clm/test/unit
+
+List all files added and what they do:
+
+========= Rename test/unit to test/unit_testers, and add unit tests for some of
+          the stuff in dyn_subgrid. This also involved adding some mocks -
+          particularly of ncdio_pio.
+A       models/lnd/clm/test/unit_testers/clm4_5/biogeophys/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/biogeophys/Daylength_test/test_daylength.pf
+A       models/lnd/clm/test/unit_testers/clm4_5/biogeophys/Daylength_test/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/biogeophys/Daylength_test
+A       models/lnd/clm/test/unit_testers/clm4_5/biogeophys
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynVar_test/test_dynVarShared.F90
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynVar_test/test_dynVarTimeInterp.pf
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynVar_test/test_dynVarTimeUninterp.pf
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynVar_test/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynVar_test
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynTimeInfo_test/test_dynTimeInfo.pf
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynTimeInfo_test/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynTimeInfo_test
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/ncdio_var.F90
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/ncdio_var.F90.in
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/ncdio_pio_mock.F90
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/spmdMod_mock.F90
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/do_genf90
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/ncdio_pio_mock.F90.in
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/csm_share/shr_sys_mod_mock.F90
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/csm_share/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/csm_share
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/main/decompMod_boundsTypeDecl.F90
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/main/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/main
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/dyn_subgrid/dynFileMod_mock.F90
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/dyn_subgrid/dynUtilsMod_mock.F90
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/dyn_subgrid/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/dyn_subgrid
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/mock
+A       models/lnd/clm/test/unit_testers/clm4_5/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/README
+A       models/lnd/clm/test/unit_testers/clm4_5
+A       models/lnd/clm/test/unit_testers
+
+========= Make a new directory to hold all of the stuff related to dynamic
+          subgrid weights. Currently this means transient PFTs, but soon it will
+          also mean dynamic landunits. This includes stuff that used to be in
+          pftdynMod and dynlandMod, as well as a bit from clm_driver. I have
+          added a new driver for the dyn_subgrid stuff (dynSubgridDriverMod),
+          and pulled out much of the shared, lower-level functionality into new
+          modules (dynTimeInfoMod, dynFileMod, dynVarMod, dynVarTimeInterpMod,
+          dynVarTimeUninterpMod, dynUtilsMod [which will soon go away]). In
+          addition, I have separated the many routines in pftdynMod into
+          separate modules, each with a single, better-defined function.
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynTimeInfoMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynSubgridDriverMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynHarvestMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynFileMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynConsBiogeochemMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynPriorWeightsMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynpftFileMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarTimeInterpMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynCNDVMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynConsBiogeophysMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarTimeUninterpMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarMod.F90.in
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarTimeInterpMod.F90.in
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynLandunitAreaMod.F90.IN_PROGRESS
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynUtilsMod.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarTimeUninterpMod.F90.in
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/dyn_subgrid
+
+========= script to generate files from their .in files using genf90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/do_genf90
+
+
+========= move check_sums_equal_1 to a new module, partly to reduce dependencies
+          of unit tests, and partly because it is cleaner design to have it
+          outside of surfrdMod
+A       models/lnd/clm/src/clm4_5/main/surfrdUtilsMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+========= Add dyn_subgrid directory
+M       models/lnd/clm/bld/configure
+
+========= Add get_curr_yearfrac function (currently broken, will be fixed in
+          next tag)
+M       models/lnd/clm/src/util_share/clm_time_manager.F90
+
+========= Change type(file_desc_t) to class(file_desc_t); add 'only' clause to
+          use statements to allow compilation with pgi
+M       models/lnd/clm/src/util_share/ncdio_pio.F90
+M       models/lnd/clm/src/util_share/ncdio_pio.F90.in
+
+========= Change 'use statement' for reworked dyn_subgrid code
+M       models/lnd/clm/src/clm4_5/biogeochem/CNEcosystemDynMod.F90
+
+========= Move surfrd_check_urban and surfrd_check_sums_equal_1 to more
+          appropriate places
+M       models/lnd/clm/src/clm4_5/main/surfrdMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInputMod.F90
+
+========= Move some code into dynSubgridDriverMod
+M       models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_driver.F90
+           - also remove incorrect header comment
+
+========= Add compute_higher_order_weights routine
+M       models/lnd/clm/src/clm4_5/main/initGridCellsMod.F90
+M       models/lnd/clm/src/clm4_5/main/reweightMod.F90
+
+========= Add unit testing support
+M       models/lnd/clm/src/clm4_5/main/CMakeLists.txt
+
+
+========= Frankfurt-PGI tests now pass!
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+
+  regular tests (aux_clm):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    frankfurt_intel: ok
+    frankfurt_pgi: ok
+    frankfurt_nag: ok
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+
+CLM tag used for the baseline comparisons: clm4_5_57
+
+Changes answers relative to baseline: YES (very limited; see below)
+
+  Can change answers due to the following:
+
+  (1) Changes answers for harvest when a run starts inside the pftdyn timeseries
+  but extends beyond it, without an intervening restart (see bug 1899)
+
+  (2) Could theoretically change answers for yellowstone-pgi or hopper-pgi due
+  to machines updates, but no changes showed up in the yellowstone test suite
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_57
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date: Tue Jan  7 14:17:04 MST 2014

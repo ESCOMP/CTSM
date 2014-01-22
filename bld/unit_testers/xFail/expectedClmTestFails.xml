@@ -71,10 +71,6 @@
                <entry testId="SMS_RLA_Mmpich.f45_f45.ICLM45.frankfurt_nag.clm-default" failType="FAIL" >Sometimes passes, sometimes fails. MPI error with > 1 pe.  works with mpi-serial which is the normal use case for this setup.</entry>
             </NAG>
             <PGI>
-               <entry testId="ERS_D.f19_g16.IGRCP26CN.frankfurt_pgi"                     failType="RUN"   >undefined symbol: netcdf_nf90_open_</entry>
-               <entry testId="ERI_D.f19_g16.ICLM45BGC.frankfurt_pgi"                     failType="FAIL"  >Fails after reading clmforc.Li_2012_hdm_0.5x0.5_AVHRR_simyr1850-2010_c130401.nc.  This same test passes with yellowstone_intel, yellowstone_pgi, frankfurt_intel and frankfurt_nag</entry>
-               <entry testId="ERI.f19_g16.ICLM45BGC.frankfurt_pgi"                       failType="FAIL"  >Fails after reading clmforc.Li_2012_hdm_0.5x0.5_AVHRR_simyr1850-2010_c130401.nc.  This same test passes with yellowstone_intel, yellowstone_pgi, frankfurt_intel and frankfurt_nag</entry>
-               <entry testId="SMS_Ld5.f19_g16.IRCP45CLM45BGC.frankfurt_pgi.clm-decStart" failType="FAIL"  >Fails after reading clmforc.Li_2012_hdm_0.5x0.5_AVHRR_simyr1850-2010_c130401.nc.  This same test passes with yellowstone_intel</entry>
             </PGI>
          </frankfurt>
      </auxTests>

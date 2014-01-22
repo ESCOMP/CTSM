@@ -28,8 +28,16 @@ module ncdio_pio
   use decompMod      , only : get_clmlevel_gsize,get_clmlevel_gsmap
   use perf_mod       , only : t_startf, t_stopf
   use fileutils      , only : getavu, relavu
-  use mct_mod
-  use pio
+  use mct_mod        , only : mct_gsMap, mct_gsMap_lsize, mct_gsMap_gsize, mct_gsMap_OP
+  use pio            , only : file_desc_t, io_desc_t, iosystem_desc_t, pio_64bit_offset, &
+       pio_bcast_error, pio_char, pio_clobber, pio_closefile, pio_createfile, pio_def_dim,&
+       pio_def_var, pio_double, pio_enddef, pio_get_var, pio_global, pio_initdecomp, &
+       pio_inq_dimid, pio_inq_dimlen, pio_inq_dimname, pio_inq_vardimid, pio_inq_varid, &
+       pio_inq_varname, pio_inq_varndims, pio_inquire, pio_int, pio_internal_error, &
+       pio_noclobber, pio_noerr, pio_nofill, pio_nowrite, pio_offset, pio_openfile, &
+       pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling, &
+       pio_setframe, pio_unlimited, pio_write, pio_write_darray, var_desc_t
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -79,20 +87,20 @@ module ncdio_pio
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   !
-# 77 "ncdio_pio.F90.in"
+# 85 "ncdio_pio.F90.in"
   interface ncd_defvar
      module procedure ncd_defvar_bynf
      module procedure ncd_defvar_bygrid
   end interface
 
-# 82 "ncdio_pio.F90.in"
+# 90 "ncdio_pio.F90.in"
   interface ncd_putatt
      module procedure ncd_putatt_int
      module procedure ncd_putatt_real
      module procedure ncd_putatt_char
   end interface
 
-# 88 "ncdio_pio.F90.in"
+# 96 "ncdio_pio.F90.in"
   interface ncd_io 
      module procedure ncd_io_char_var0_start_glob
 
@@ -160,7 +168,7 @@ module ncdio_pio
      module procedure ncd_io_1d_logical
   end interface
 
-# 111 "ncdio_pio.F90.in"
+# 119 "ncdio_pio.F90.in"
   interface ncd_inqvdlen
      module procedure ncd_inqvdlen_byDesc
      module procedure ncd_inqvdlen_byName
@@ -191,11 +199,11 @@ module ncdio_pio
   type(iodesc_plus_type) ,private, target :: iodesc_list(max_iodesc)
   !-----------------------------------------------------------------------
 
-# 141 "ncdio_pio.F90.in"
+# 149 "ncdio_pio.F90.in"
 contains
 
   !-----------------------------------------------------------------------
-# 144 "ncdio_pio.F90.in"
+# 152 "ncdio_pio.F90.in"
   subroutine ncd_pio_init()
     !
     ! !DESCRIPTION:
@@ -209,20 +217,20 @@ contains
     PIO_subsystem => shr_pio_getiosys(inst_name)
     io_type       =  shr_pio_getiotype(inst_name)
 
-# 157 "ncdio_pio.F90.in"
+# 165 "ncdio_pio.F90.in"
   end subroutine ncd_pio_init
 
   !-----------------------------------------------------------------------
-# 160 "ncdio_pio.F90.in"
+# 168 "ncdio_pio.F90.in"
   subroutine ncd_pio_openfile(file, fname, mode)
     !
     ! !DESCRIPTION:
     ! Open a NetCDF PIO file
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: file   ! Output PIO file handle
-    character(len=*) , intent(in)    :: fname  ! Input filename to open
-    integer          , intent(in)    :: mode   ! file mode
+    class(file_desc_t) , intent(inout) :: file   ! Output PIO file handle
+    character(len=*)   , intent(in)    :: fname  ! Input filename to open
+    integer            , intent(in)    :: mode   ! file mode
     !
     ! !LOCAL VARIABLES:
     integer :: ierr
@@ -236,35 +244,35 @@ contains
        write(iulog,*) 'Opened existing file ', trim(fname), file%fh
     end if
 
-# 182 "ncdio_pio.F90.in"
+# 190 "ncdio_pio.F90.in"
   end subroutine ncd_pio_openfile
 
   !-----------------------------------------------------------------------
-# 185 "ncdio_pio.F90.in"
+# 193 "ncdio_pio.F90.in"
   subroutine ncd_pio_closefile(file)
     !
     ! !DESCRIPTION:
     ! Close a NetCDF PIO file
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: file   ! PIO file handle to close
+    class(file_desc_t), intent(inout) :: file   ! PIO file handle to close
     !-----------------------------------------------------------------------
 
     call pio_closefile(file)
 
-# 196 "ncdio_pio.F90.in"
+# 204 "ncdio_pio.F90.in"
   end subroutine ncd_pio_closefile
 
   !-----------------------------------------------------------------------
-# 199 "ncdio_pio.F90.in"
+# 207 "ncdio_pio.F90.in"
   subroutine ncd_pio_createfile(file, fname)
     !
     ! !DESCRIPTION:
     ! Create a new NetCDF file with PIO
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: file    ! PIO file descriptor
-    character(len=*),  intent(in)    :: fname   ! File name to create
+    class(file_desc_t), intent(inout) :: file    ! PIO file descriptor
+    character(len=*) ,  intent(in)    :: fname   ! File name to create
     !
     ! !LOCAL VARIABLES:
     integer :: ierr
@@ -278,22 +286,22 @@ contains
        write(iulog,*) 'Opened file ', trim(fname),  ' to write', file%fh
     end if
 
-# 220 "ncdio_pio.F90.in"
+# 228 "ncdio_pio.F90.in"
   end subroutine ncd_pio_createfile
 
   !-----------------------------------------------------------------------
-# 223 "ncdio_pio.F90.in"
+# 231 "ncdio_pio.F90.in"
   subroutine check_var(ncid, varname, vardesc, readvar, print_err )
     !
     ! !DESCRIPTION:
     ! Check if variable is on netcdf file
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout)  :: ncid      ! PIO file descriptor
-    character(len=*) , intent(in)     :: varname   ! Varible name to check
-    type(Var_desc_t) , intent(out)    :: vardesc   ! Output variable descriptor
-    logical          , intent(out)    :: readvar   ! If variable exists or not
-    logical, optional, intent(in)     :: print_err ! If should print about error
+    class(file_desc_t) , intent(inout)  :: ncid      ! PIO file descriptor
+    character(len=*)   , intent(in)     :: varname   ! Varible name to check
+    type(Var_desc_t)   , intent(out)    :: vardesc   ! Output variable descriptor
+    logical            , intent(out)    :: readvar   ! If variable exists or not
+    logical, optional  , intent(in)     :: print_err ! If should print about error
     !
     ! !LOCAL VARIABLES:
     integer :: ret     ! return value
@@ -317,20 +325,20 @@ contains
     end if
     call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
 
-# 257 "ncdio_pio.F90.in"
+# 265 "ncdio_pio.F90.in"
   end subroutine check_var
 
   !-----------------------------------------------------------------------
-# 260 "ncdio_pio.F90.in"
+# 268 "ncdio_pio.F90.in"
   subroutine check_dim(ncid, dimname, value)
     !
     ! !DESCRIPTION:
     ! Validity check on dimension
     !
     ! !ARGUMENTS:
-    type(file_desc_t),intent(in) :: ncid      ! PIO file handle
-    character(len=*), intent(in) :: dimname   ! Dimension name
-    integer, intent(in)          :: value     ! Expected dimension size
+    class(file_desc_t),intent(in) :: ncid      ! PIO file handle
+    character(len=*) , intent(in) :: dimname   ! Dimension name
+    integer, intent(in)           :: value     ! Expected dimension size
     !
     ! !LOCAL VARIABLES:
     integer :: dimid, dimlen    ! temporaries
@@ -346,18 +354,18 @@ contains
        call shr_sys_abort()
     end if
 
-# 284 "ncdio_pio.F90.in"
+# 292 "ncdio_pio.F90.in"
   end subroutine check_dim
 
   !-----------------------------------------------------------------------
-# 287 "ncdio_pio.F90.in"
+# 295 "ncdio_pio.F90.in"
   subroutine ncd_enddef(ncid)
     !
     ! !DESCRIPTION:
     ! enddef netcdf file
     !
     ! !ARGUMENTS:
-    type(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
     !
     ! !LOCAL VARIABLES:
     integer :: status   ! error status
@@ -365,21 +373,21 @@ contains
 
     status = PIO_enddef(ncid)
 
-# 301 "ncdio_pio.F90.in"
+# 309 "ncdio_pio.F90.in"
   end subroutine ncd_enddef
 
   !-----------------------------------------------------------------------
-# 304 "ncdio_pio.F90.in"
+# 312 "ncdio_pio.F90.in"
   subroutine ncd_inqdid(ncid,name,dimid,dimexist)
     !
     ! !DESCRIPTION:
     ! inquire on a dimension id
     !
     ! !ARGUMENTS:
-    type(file_desc_t),intent(inout) :: ncid   ! netcdf file id
-    character(len=*), intent(in) :: name      ! dimension name
-    integer         , intent(out):: dimid     ! dimension id
-    logical,optional, intent(out):: dimexist  ! if this dimension exists or not
+    class(file_desc_t),intent(inout) :: ncid   ! netcdf file id
+    character(len=*) , intent(in) :: name      ! dimension name
+    integer          , intent(out):: dimid     ! dimension id
+    logical,optional , intent(out):: dimexist  ! if this dimension exists or not
     !
     ! !LOCAL VARIABLES:
     integer :: status
@@ -398,21 +406,21 @@ contains
        call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
     end if
 
-# 332 "ncdio_pio.F90.in"
+# 340 "ncdio_pio.F90.in"
   end subroutine ncd_inqdid
 
   !-----------------------------------------------------------------------
-# 335 "ncdio_pio.F90.in"
+# 343 "ncdio_pio.F90.in"
   subroutine ncd_inqdlen(ncid,dimid,len,name)
     !
     ! !DESCRIPTION:
     ! enddef netcdf file
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid       ! netcdf file id
-    integer          , intent(inout) :: dimid      ! dimension id
-    integer          , intent(out)   :: len        ! dimension len
-    character(len=*), optional, intent(in) :: name ! dimension name
+    class(file_desc_t), intent(inout) :: ncid       ! netcdf file id
+    integer           , intent(inout) :: dimid      ! dimension id
+    integer           , intent(out)   :: len        ! dimension len
+    character(len=*), optional, intent(in) :: name  ! dimension name
     !
     ! !LOCAL VARIABLES:
     integer :: status
@@ -424,20 +432,20 @@ contains
     len = -1
     status = PIO_inq_dimlen(ncid,dimid,len)
 
-# 356 "ncdio_pio.F90.in"
+# 364 "ncdio_pio.F90.in"
   end subroutine ncd_inqdlen
 
   !-----------------------------------------------------------------------
-# 359 "ncdio_pio.F90.in"
+# 367 "ncdio_pio.F90.in"
   subroutine ncd_inqdname(ncid,dimid,dname)
     !
     ! !DESCRIPTION:
     ! inquire dim name
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(in) :: ncid      ! netcdf file id
-    integer          , intent(in) :: dimid     ! dimension id
-    character(len=*) , intent(out):: dname     ! dimension name
+    class(file_desc_t), intent(in) :: ncid      ! netcdf file id
+    integer           , intent(in) :: dimid     ! dimension id
+    character(len=*)  , intent(out):: dname     ! dimension name
     !
     ! !LOCAL VARIABLES:
     integer :: status
@@ -445,19 +453,19 @@ contains
 
     status = PIO_inq_dimname(ncid,dimid,dname)
 
-# 375 "ncdio_pio.F90.in"
+# 383 "ncdio_pio.F90.in"
   end subroutine ncd_inqdname
 
   !-----------------------------------------------------------------------
-# 378 "ncdio_pio.F90.in"
+# 386 "ncdio_pio.F90.in"
   subroutine ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout):: ncid
-    logical          , intent(out)  :: isgrid2d
-    integer          , intent(out)  :: ni
-    integer          , intent(out)  :: nj
-    integer          , intent(out)  :: ns
+    class(file_desc_t), intent(inout):: ncid
+    logical           , intent(out)  :: isgrid2d
+    integer           , intent(out)  :: ni
+    integer           , intent(out)  :: nj
+    integer           , intent(out)  :: ns
     !
     ! !LOCAL VARIABLES:
     integer  :: dimid                                ! netCDF id
@@ -513,22 +521,22 @@ contains
 
     ns = ni*nj
 
-# 441 "ncdio_pio.F90.in"
+# 449 "ncdio_pio.F90.in"
   end subroutine ncd_inqfdims
 
   !-----------------------------------------------------------------------
-# 444 "ncdio_pio.F90.in"
+# 452 "ncdio_pio.F90.in"
   subroutine ncd_inqvid(ncid,name,varid,vardesc,readvar)
     !
     ! !DESCRIPTION:
     ! Inquire on a variable ID
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid      ! netcdf file id
-    character(len=*) , intent(in)    :: name      ! variable name
-    integer          , intent(out)   :: varid     ! variable id
-    type(Var_desc_t) , intent(out)   :: vardesc   ! variable descriptor
-    logical, optional, intent(out)   :: readvar   ! does variable exist
+    class(file_desc_t), intent(inout) :: ncid      ! netcdf file id
+    character(len=*)  , intent(in)    :: name      ! variable name
+    integer           , intent(out)   :: varid     ! variable id
+    type(Var_desc_t)  , intent(out)   :: vardesc   ! variable descriptor
+    logical, optional , intent(out)   :: readvar   ! does variable exist
     !
     ! !LOCAL VARIABLES:
     integer :: ret               ! return code
@@ -551,20 +559,20 @@ contains
     endif
     varid = vardesc%varid
 
-# 477 "ncdio_pio.F90.in"
+# 485 "ncdio_pio.F90.in"
   end subroutine ncd_inqvid
 
   !-----------------------------------------------------------------------
-# 480 "ncdio_pio.F90.in"
+# 488 "ncdio_pio.F90.in"
   subroutine ncd_inqvdims(ncid,ndims,vardesc)
     !
     ! !DESCRIPTION:
     ! inquire variable dimensions
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(in)   :: ncid      ! netcdf file id
-    integer          , intent(out)  :: ndims     ! variable ndims
-    type(Var_desc_t) , intent(inout):: vardesc   ! variable descriptor
+    class(file_desc_t), intent(in)   :: ncid      ! netcdf file id
+    integer           , intent(out)  :: ndims     ! variable ndims
+    type(Var_desc_t)  , intent(inout):: vardesc   ! variable descriptor
     !
     ! !LOCAL VARIABLES:
     integer :: status
@@ -573,21 +581,21 @@ contains
     ndims = -1
     status = PIO_inq_varndims(ncid,vardesc,ndims)
 
-# 497 "ncdio_pio.F90.in"
+# 505 "ncdio_pio.F90.in"
   end subroutine ncd_inqvdims
 
   !-----------------------------------------------------------------------
-# 500 "ncdio_pio.F90.in"
+# 508 "ncdio_pio.F90.in"
   subroutine ncd_inqvname(ncid,varid,vname,vardesc)
     !
     ! !DESCRIPTION:
     ! inquire variable name
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(in)   :: ncid      ! netcdf file id
-    integer          , intent(in)   :: varid     ! variable id
-    character(len=*) , intent(out)  :: vname     ! variable vname
-    type(Var_desc_t) , intent(inout):: vardesc   ! variable descriptor
+    class(file_desc_t), intent(in)   :: ncid      ! netcdf file id
+    integer           , intent(in)   :: varid     ! variable id
+    character(len=*)  , intent(out)  :: vname     ! variable vname
+    type(Var_desc_t)  , intent(inout):: vardesc   ! variable descriptor
     !
     ! !LOCAL VARIABLES:
     integer :: status
@@ -596,20 +604,20 @@ contains
     vname = ''
     status = PIO_inq_varname(ncid,vardesc,vname)
 
-# 518 "ncdio_pio.F90.in"
+# 526 "ncdio_pio.F90.in"
   end subroutine ncd_inqvname
 
   !-----------------------------------------------------------------------
-# 521 "ncdio_pio.F90.in"
+# 529 "ncdio_pio.F90.in"
   subroutine ncd_inqvdids(ncid,dids,vardesc)
     !
     ! !DESCRIPTION:
     ! inquire variable dimension ids
     !
     ! !ARGUMENTS:
-    type(file_desc_t),intent(in)  :: ncid      ! netcdf file id
-    integer         ,intent(out)  :: dids(:)   ! variable dids
-    type(Var_desc_t),intent(inout):: vardesc   ! variable descriptor
+    class(file_desc_t),intent(in)  :: ncid      ! netcdf file id
+    integer          ,intent(out)  :: dids(:)   ! variable dids
+    type(Var_desc_t) ,intent(inout):: vardesc   ! variable descriptor
     !
     ! !LOCAL VARIABLES:
     integer :: status
@@ -618,11 +626,11 @@ contains
     dids = -1
     status = PIO_inq_vardimid(ncid,vardesc,dids)
 
-# 538 "ncdio_pio.F90.in"
+# 546 "ncdio_pio.F90.in"
   end subroutine ncd_inqvdids
 
   !-----------------------------------------------------------------------
-# 541 "ncdio_pio.F90.in"
+# 549 "ncdio_pio.F90.in"
   subroutine ncd_inqvdlen_byDesc(ncid,vardesc,dimnum,dlen,err_code)
     !
     ! !DESCRIPTION:
@@ -637,11 +645,11 @@ contains
     ! 1: dimnum out of range
     !
     ! !ARGUMENTS:
-    type(file_desc_t),intent(inout) :: ncid      ! netcdf file id
-    type(Var_desc_t) ,intent(inout) :: vardesc   ! variable descriptor
-    integer          ,intent(in)    :: dimnum    ! dimension number to query
-    integer          ,intent(out)   :: dlen      ! length of the dimension
-    integer          ,intent(out)   :: err_code  ! error code (0 means no error)
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    type(Var_desc_t)  ,intent(inout) :: vardesc   ! variable descriptor
+    integer           ,intent(in)    :: dimnum    ! dimension number to query
+    integer           ,intent(out)   :: dlen      ! length of the dimension
+    integer           ,intent(out)   :: err_code  ! error code (0 means no error)
     !
     ! !LOCAL VARIABLES:
     integer              :: ndims      ! number of dimensions
@@ -666,12 +674,12 @@ contains
        err_code = error_dimnum_out_of_range
     end if
 
-# 584 "ncdio_pio.F90.in"
+# 592 "ncdio_pio.F90.in"
   end subroutine ncd_inqvdlen_byDesc
 
 
   !-----------------------------------------------------------------------
-# 588 "ncdio_pio.F90.in"
+# 596 "ncdio_pio.F90.in"
   subroutine ncd_inqvdlen_byName(ncid,varname,dimnum,dlen,err_code)
     !
     ! !DESCRIPTION:
@@ -687,11 +695,11 @@ contains
     ! 11: variable not found
     !
     ! !ARGUMENTS:
-    type(file_desc_t),intent(inout) :: ncid      ! netcdf file id
-    character(len=*) ,intent(in)    :: varname   ! variable name
-    integer          ,intent(in)    :: dimnum    ! dimension number to query
-    integer          ,intent(out)   :: dlen      ! length of the dimension
-    integer          ,intent(out)   :: err_code  ! error code (0 means no error)
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    character(len=*)  ,intent(in)    :: varname   ! variable name
+    integer           ,intent(in)    :: dimnum    ! dimension number to query
+    integer           ,intent(out)   :: dlen      ! length of the dimension
+    integer           ,intent(out)   :: err_code  ! error code (0 means no error)
     !
     ! !LOCAL VARIABLES:
     type(Var_desc_t) :: vardesc        ! variable descriptor
@@ -708,23 +716,23 @@ contains
        err_code = error_variable_not_found
     end if
 
-# 624 "ncdio_pio.F90.in"
+# 632 "ncdio_pio.F90.in"
   end subroutine ncd_inqvdlen_byName
 
 
   !-----------------------------------------------------------------------
-# 628 "ncdio_pio.F90.in"
+# 636 "ncdio_pio.F90.in"
   subroutine ncd_putatt_int(ncid,varid,attrib,value,xtype)
     !
     ! !DESCRIPTION:
     ! put integer attributes
     !
     ! !ARGUMENTS:
-    type(file_desc_t),intent(inout) :: ncid      ! netcdf file id
-    integer          ,intent(in)    :: varid     ! netcdf var id
-    character(len=*) ,intent(in)    :: attrib    ! netcdf attrib
-    integer          ,intent(in)    :: value     ! netcdf attrib value
-    integer,optional ,intent(in)    :: xtype     ! netcdf data type
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    integer           ,intent(in)    :: value     ! netcdf attrib value
+    integer,optional  ,intent(in)    :: xtype     ! netcdf data type
     !
     ! !LOCAL VARIABLES:
     integer :: status
@@ -732,22 +740,22 @@ contains
 
     status = PIO_put_att(ncid,varid,trim(attrib),value)
 
-# 646 "ncdio_pio.F90.in"
+# 654 "ncdio_pio.F90.in"
   end subroutine ncd_putatt_int
 
   !-----------------------------------------------------------------------
-# 649 "ncdio_pio.F90.in"
+# 657 "ncdio_pio.F90.in"
   subroutine ncd_putatt_char(ncid,varid,attrib,value,xtype)
     !
     ! !DESCRIPTION:
     ! put character attributes
     !
     ! !ARGUMENTS:
-    type(file_desc_t),intent(inout) :: ncid      ! netcdf file id
-    integer          ,intent(in)    :: varid     ! netcdf var id
-    character(len=*) ,intent(in)    :: attrib    ! netcdf attrib
-    character(len=*) ,intent(in)    :: value     ! netcdf attrib value
-    integer,optional ,intent(in)    :: xtype     ! netcdf data type
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    character(len=*)  ,intent(in)    :: value     ! netcdf attrib value
+    integer,optional  ,intent(in)    :: xtype     ! netcdf data type
     !
     ! !LOCAL VARIABLES:
     integer :: status
@@ -755,22 +763,22 @@ contains
 
     status = PIO_put_att(ncid,varid,trim(attrib),value)
 
-# 667 "ncdio_pio.F90.in"
+# 675 "ncdio_pio.F90.in"
   end subroutine ncd_putatt_char
 
   !-----------------------------------------------------------------------
-# 670 "ncdio_pio.F90.in"
+# 678 "ncdio_pio.F90.in"
   subroutine ncd_putatt_real(ncid,varid,attrib,value,xtype)
     !
     ! !DESCRIPTION:
     ! put real attributes
     !
     ! !ARGUMENTS:
-    type(file_desc_t),intent(inout) :: ncid      ! netcdf file id
-    integer          ,intent(in)    :: varid     ! netcdf var id
-    character(len=*) ,intent(in)    :: attrib    ! netcdf attrib
-    real(r8)         ,intent(in)    :: value     ! netcdf attrib value
-    integer          ,intent(in)    :: xtype     ! netcdf data type
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    real(r8)          ,intent(in)    :: value     ! netcdf attrib value
+    integer           ,intent(in)    :: xtype     ! netcdf data type
     !
     ! !LOCAL VARIABLES:
     integer :: status
@@ -785,21 +793,21 @@ contains
        status = PIO_put_att(ncid,varid,trim(attrib),value4)
     endif
 
-# 695 "ncdio_pio.F90.in"
+# 703 "ncdio_pio.F90.in"
   end subroutine ncd_putatt_real
 
   !-----------------------------------------------------------------------
-# 698 "ncdio_pio.F90.in"
+# 706 "ncdio_pio.F90.in"
   subroutine ncd_defdim(ncid,attrib,value,dimid)
     !
     ! !DESCRIPTION:
     ! define dimension
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(in) :: ncid      ! netcdf file id
-    character(len=*) , intent(in) :: attrib    ! netcdf attrib
-    integer          , intent(in) :: value     ! netcdf attrib value
-    integer          , intent(out):: dimid     ! netcdf dimension id
+    class(file_desc_t), intent(in) :: ncid      ! netcdf file id
+    character(len=*)  , intent(in) :: attrib    ! netcdf attrib
+    integer           , intent(in) :: value     ! netcdf attrib value
+    integer           , intent(out):: dimid     ! netcdf dimension id
     !
     ! !LOCAL VARIABLES:
     integer :: status
@@ -807,11 +815,11 @@ contains
 
     status = pio_def_dim(ncid,attrib,value,dimid)
 
-# 715 "ncdio_pio.F90.in"
+# 723 "ncdio_pio.F90.in"
   end subroutine ncd_defdim
 
   !-----------------------------------------------------------------------
-# 718 "ncdio_pio.F90.in"
+# 726 "ncdio_pio.F90.in"
   subroutine ncd_defvar_bynf(ncid, varname, xtype, ndims, dimid, varid, &
        long_name, units, cell_method, missing_value, fill_value, &
        imissing_value, ifill_value, comment, flag_meanings, &
@@ -821,23 +829,23 @@ contains
     !  Define a netcdf variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid                  ! netcdf file id
-    character(len=*) , intent(in)  :: varname                 ! variable name
-    integer          , intent(in)  :: xtype                   ! external type
-    integer          , intent(in)  :: ndims                   ! number of dims
-    integer          , intent(inout) :: varid                 ! returned var id
-    integer          , intent(in), optional :: dimid(:)       ! dimids
-    character(len=*) , intent(in), optional :: long_name      ! attribute
-    character(len=*) , intent(in), optional :: units          ! attribute
-    character(len=*) , intent(in), optional :: cell_method    ! attribute
-    character(len=*) , intent(in), optional :: comment        ! attribute
-    character(len=*) , intent(in), optional :: flag_meanings(:) ! attribute
-    real(r8)         , intent(in), optional :: missing_value  ! attribute for real
-    real(r8)         , intent(in), optional :: fill_value     ! attribute for real
-    integer          , intent(in), optional :: imissing_value ! attribute for int
-    integer          , intent(in), optional :: ifill_value    ! attribute for int
-    integer          , intent(in), optional :: flag_values(:)  ! attribute for int
-    integer          , intent(in), optional :: nvalid_range(2)  ! attribute for int
+    class(file_desc_t) , intent(inout) :: ncid                  ! netcdf file id
+    character(len=*)   , intent(in)  :: varname                 ! variable name
+    integer            , intent(in)  :: xtype                   ! external type
+    integer            , intent(in)  :: ndims                   ! number of dims
+    integer            , intent(inout) :: varid                 ! returned var id
+    integer            , intent(in), optional :: dimid(:)       ! dimids
+    character(len=*)   , intent(in), optional :: long_name      ! attribute
+    character(len=*)   , intent(in), optional :: units          ! attribute
+    character(len=*)   , intent(in), optional :: cell_method    ! attribute
+    character(len=*)   , intent(in), optional :: comment        ! attribute
+    character(len=*)   , intent(in), optional :: flag_meanings(:) ! attribute
+    real(r8)           , intent(in), optional :: missing_value  ! attribute for real
+    real(r8)           , intent(in), optional :: fill_value     ! attribute for real
+    integer            , intent(in), optional :: imissing_value ! attribute for int
+    integer            , intent(in), optional :: ifill_value    ! attribute for int
+    integer            , intent(in), optional :: flag_values(:)  ! attribute for int
+    integer            , intent(in), optional :: nvalid_range(2)  ! attribute for int
     !
     ! !LOCAL VARIABLES:
     integer :: n                   ! indices
@@ -949,11 +957,11 @@ contains
        status = PIO_put_att(ncid,varid,'valid_range',    (/0, 1/) )
     end if
 
-# 855 "ncdio_pio.F90.in"
+# 863 "ncdio_pio.F90.in"
   end subroutine ncd_defvar_bynf
 
   !-----------------------------------------------------------------------
-# 858 "ncdio_pio.F90.in"
+# 866 "ncdio_pio.F90.in"
   subroutine ncd_defvar_bygrid(ncid, varname, xtype, &
        dim1name, dim2name, dim3name, dim4name, dim5name, &
        long_name, units, cell_method, missing_value, fill_value, &
@@ -964,26 +972,26 @@ contains
     !  Define a netcdf variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid                 ! netcdf file id
-    character(len=*), intent(in)  :: varname                 ! variable name
-    integer         , intent(in)  :: xtype                   ! external type
-    character(len=*), intent(in), optional :: dim1name       ! dimension name
-    character(len=*), intent(in), optional :: dim2name       ! dimension name
-    character(len=*), intent(in), optional :: dim3name       ! dimension name
-    character(len=*), intent(in), optional :: dim4name       ! dimension name
-    character(len=*), intent(in), optional :: dim5name       ! dimension name
-    character(len=*), intent(in), optional :: long_name      ! attribute
-    character(len=*), intent(in), optional :: units          ! attribute
-    character(len=*), intent(in), optional :: cell_method    ! attribute
-    character(len=*), intent(in), optional :: comment        ! attribute
-    character(len=*), intent(in), optional :: flag_meanings(:) ! attribute
-    real(r8)        , intent(in), optional :: missing_value  ! attribute for real
-    real(r8)        , intent(in), optional :: fill_value     ! attribute for real
-    integer         , intent(in), optional :: imissing_value ! attribute for int
-    integer         , intent(in), optional :: ifill_value    ! attribute for int
-    logical         , intent(in), optional :: switchdim      ! true=> permute dim1 and dim2 for output
-    integer         , intent(in), optional :: flag_values(:)  ! attribute for int
-    integer         , intent(in), optional :: nvalid_range(2)  ! attribute for int
+    class(file_desc_t) , intent(inout) :: ncid                 ! netcdf file id
+    character(len=*)   , intent(in)  :: varname                 ! variable name
+    integer            , intent(in)  :: xtype                   ! external type
+    character(len=*)   , intent(in), optional :: dim1name       ! dimension name
+    character(len=*)   , intent(in), optional :: dim2name       ! dimension name
+    character(len=*)   , intent(in), optional :: dim3name       ! dimension name
+    character(len=*)   , intent(in), optional :: dim4name       ! dimension name
+    character(len=*)   , intent(in), optional :: dim5name       ! dimension name
+    character(len=*)   , intent(in), optional :: long_name      ! attribute
+    character(len=*)   , intent(in), optional :: units          ! attribute
+    character(len=*)   , intent(in), optional :: cell_method    ! attribute
+    character(len=*)   , intent(in), optional :: comment        ! attribute
+    character(len=*)   , intent(in), optional :: flag_meanings(:) ! attribute
+    real(r8)           , intent(in), optional :: missing_value  ! attribute for real
+    real(r8)           , intent(in), optional :: fill_value     ! attribute for real
+    integer            , intent(in), optional :: imissing_value ! attribute for int
+    integer            , intent(in), optional :: ifill_value    ! attribute for int
+    logical            , intent(in), optional :: switchdim      ! true=> permute dim1 and dim2 for output
+    integer            , intent(in), optional :: flag_values(:)  ! attribute for int
+    integer            , intent(in), optional :: nvalid_range(2)  ! attribute for int
     !
     ! !LOCAL VARIABLES:
     integer :: n              ! indices
@@ -1029,22 +1037,22 @@ contains
          comment=comment, flag_meanings=flag_meanings, &
          flag_values=flag_values, nvalid_range=nvalid_range )
 
-# 933 "ncdio_pio.F90.in"
+# 941 "ncdio_pio.F90.in"
   end subroutine ncd_defvar_bygrid
 
   !------------------------------------------------------------------------
-# 936 "ncdio_pio.F90.in"
+# 944 "ncdio_pio.F90.in"
   subroutine ncd_io_char_var0_start_glob(vardesc, data, flag, ncid, start )
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global character array with start indices input
     !
     ! !ARGUMENTS:
-    type(file_desc_t),intent(inout) :: ncid             ! netcdf file id
-    character(len=*), intent(in)    :: flag             ! 'read' or 'write'
-    type(var_desc_t), intent(in)    :: vardesc          ! local vardesc pointer
-    character(len=*), intent(inout) :: data             ! raw data for this index
-    integer         , intent(in)    :: start(:)         ! output bounds
+    class(file_desc_t),intent(inout) :: ncid             ! netcdf file id
+    character(len=*) , intent(in)    :: flag             ! 'read' or 'write'
+    type(var_desc_t) , intent(in)    :: vardesc          ! local vardesc pointer
+    character(len=*) , intent(inout) :: data             ! raw data for this index
+    integer          , intent(in)    :: start(:)         ! output bounds
     !
     ! !LOCAL VARIABLES:
     integer :: status               ! error code
@@ -1061,25 +1069,25 @@ contains
 
     endif
 
-# 963 "ncdio_pio.F90.in"
+# 971 "ncdio_pio.F90.in"
   end subroutine ncd_io_char_var0_start_glob
 
   !------------------------------------------------------------------------
   !DIMS 0,1
-# 967 "ncdio_pio.F90.in"
+# 975 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_log_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global integer variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid      ! netcdf file id
-    character(len=*) , intent(in)    :: flag      ! 'read' or 'write'
-    character(len=*) , intent(in)    :: varname   ! variable name
-    logical          , intent(inout) :: data ! raw data
-    logical, optional, intent(out)   :: readvar   ! was var read?
-    integer, optional, intent(in)    :: nt        ! time sample index
-    logical          , optional, intent(in) :: posNOTonfile ! position is NOT on this file
+    class(file_desc_t) , intent(inout) :: ncid      ! netcdf file id
+    character(len=*)   , intent(in)    :: flag      ! 'read' or 'write'
+    character(len=*)   , intent(in)    :: varname   ! variable name
+    logical            , intent(inout) :: data ! raw data
+    logical, optional  , intent(out)   :: readvar   ! was var read?
+    integer, optional  , intent(in)    :: nt        ! time sample index
+    logical            , optional, intent(in) :: posNOTonfile ! position is NOT on this file
     !
     ! !LOCAL VARIABLES:
     integer           :: varid              ! netCDF variable id
@@ -1155,23 +1163,23 @@ contains
 
     endif   ! flag
 
-# 1055 "ncdio_pio.F90.in"
+# 1063 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_log_glob
   !DIMS 0,1
-# 967 "ncdio_pio.F90.in"
+# 975 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_log_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global integer variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid      ! netcdf file id
-    character(len=*) , intent(in)    :: flag      ! 'read' or 'write'
-    character(len=*) , intent(in)    :: varname   ! variable name
-    logical          , intent(inout) :: data(:) ! raw data
-    logical, optional, intent(out)   :: readvar   ! was var read?
-    integer, optional, intent(in)    :: nt        ! time sample index
-    logical          , optional, intent(in) :: posNOTonfile ! position is NOT on this file
+    class(file_desc_t) , intent(inout) :: ncid      ! netcdf file id
+    character(len=*)   , intent(in)    :: flag      ! 'read' or 'write'
+    character(len=*)   , intent(in)    :: varname   ! variable name
+    logical            , intent(inout) :: data(:) ! raw data
+    logical, optional  , intent(out)   :: readvar   ! was var read?
+    integer, optional  , intent(in)    :: nt        ! time sample index
+    logical            , optional, intent(in) :: posNOTonfile ! position is NOT on this file
     !
     ! !LOCAL VARIABLES:
     integer           :: varid              ! netCDF variable id
@@ -1247,20 +1255,20 @@ contains
 
     endif   ! flag
 
-# 1055 "ncdio_pio.F90.in"
+# 1063 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_log_glob
 
   !------------------------------------------------------------------------
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1060 "ncdio_pio.F90.in"
+# 1068 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t),          intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
     character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
     character(len=*),           intent(in)    :: varname      ! variable name
     integer(i4)         ,           intent(inout) :: data ! raw data
@@ -1347,18 +1355,18 @@ contains
 
     endif
 
-# 1153 "ncdio_pio.F90.in"
+# 1161 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1060 "ncdio_pio.F90.in"
+# 1068 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t),          intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
     character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
     character(len=*),           intent(in)    :: varname      ! variable name
     integer(i4)         ,           intent(inout) :: data(:) ! raw data
@@ -1445,18 +1453,18 @@ contains
 
     endif
 
-# 1153 "ncdio_pio.F90.in"
+# 1161 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1060 "ncdio_pio.F90.in"
+# 1068 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t),          intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
     character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
     character(len=*),           intent(in)    :: varname      ! variable name
     integer(i4)         ,           intent(inout) :: data(:,:) ! raw data
@@ -1543,18 +1551,18 @@ contains
 
     endif
 
-# 1153 "ncdio_pio.F90.in"
+# 1161 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1060 "ncdio_pio.F90.in"
+# 1068 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t),          intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
     character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
     character(len=*),           intent(in)    :: varname      ! variable name
     integer(i4)         ,           intent(inout) :: data(:,:,:) ! raw data
@@ -1641,18 +1649,18 @@ contains
 
     endif
 
-# 1153 "ncdio_pio.F90.in"
+# 1161 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1060 "ncdio_pio.F90.in"
+# 1068 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t),          intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
     character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
     character(len=*),           intent(in)    :: varname      ! variable name
     real(r8)         ,           intent(inout) :: data ! raw data
@@ -1739,18 +1747,18 @@ contains
 
     endif
 
-# 1153 "ncdio_pio.F90.in"
+# 1161 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1060 "ncdio_pio.F90.in"
+# 1068 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t),          intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
     character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
     character(len=*),           intent(in)    :: varname      ! variable name
     real(r8)         ,           intent(inout) :: data(:) ! raw data
@@ -1837,18 +1845,18 @@ contains
 
     endif
 
-# 1153 "ncdio_pio.F90.in"
+# 1161 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1060 "ncdio_pio.F90.in"
+# 1068 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t),          intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
     character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
     character(len=*),           intent(in)    :: varname      ! variable name
     real(r8)         ,           intent(inout) :: data(:,:) ! raw data
@@ -1935,18 +1943,18 @@ contains
 
     endif
 
-# 1153 "ncdio_pio.F90.in"
+# 1161 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1060 "ncdio_pio.F90.in"
+# 1068 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t),          intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
     character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
     character(len=*),           intent(in)    :: varname      ! variable name
     real(r8)         ,           intent(inout) :: data(:,:,:) ! raw data
@@ -2033,20 +2041,20 @@ contains
 
     endif
 
-# 1153 "ncdio_pio.F90.in"
+# 1161 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_double_glob
 
   !------------------------------------------------------------------------
   !DIMS 0,1,2
   !TYPE text
-# 1158 "ncdio_pio.F90.in"
+# 1166 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t),          intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
     character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
     character(len=*),           intent(in)    :: varname      ! variable name
     character(len=*)         ,           intent(inout) :: data ! raw data
@@ -2116,18 +2124,18 @@ contains
 
     endif
 
-# 1234 "ncdio_pio.F90.in"
+# 1242 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_text_glob 
   !DIMS 0,1,2
   !TYPE text
-# 1158 "ncdio_pio.F90.in"
+# 1166 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t),          intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
     character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
     character(len=*),           intent(in)    :: varname      ! variable name
     character(len=*)         ,           intent(inout) :: data(:) ! raw data
@@ -2197,18 +2205,18 @@ contains
 
     endif
 
-# 1234 "ncdio_pio.F90.in"
+# 1242 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_text_glob 
   !DIMS 0,1,2
   !TYPE text
-# 1158 "ncdio_pio.F90.in"
+# 1166 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
     ! netcdf I/O of global variable
     !
     ! !ARGUMENTS:
-    type(file_desc_t),          intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
     character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
     character(len=*),           intent(in)    :: varname      ! variable name
     character(len=*)         ,           intent(inout) :: data(:,:) ! raw data
@@ -2278,20 +2286,20 @@ contains
 
     endif
 
-# 1234 "ncdio_pio.F90.in"
+# 1242 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_text_glob 
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double,logical
-# 1239 "ncdio_pio.F90.in"
+# 1247 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_int(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
     ! netcdf I/O for 1d 
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout)         :: ncid          ! netcdf file id
+    class(file_desc_t), intent(inout)        :: ncid          ! netcdf file id
     character(len=*) , intent(in)            :: flag          ! 'read' or 'write'
     character(len=*) , intent(in)            :: varname       ! variable name
     integer(i4)          , pointer               :: data(:)       ! local decomposition data
@@ -2448,17 +2456,17 @@ contains
 
     endif
 
-# 1402 "ncdio_pio.F90.in"
+# 1410 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_int
   !TYPE int,double,logical
-# 1239 "ncdio_pio.F90.in"
+# 1247 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_double(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
     ! netcdf I/O for 1d 
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout)         :: ncid          ! netcdf file id
+    class(file_desc_t), intent(inout)        :: ncid          ! netcdf file id
     character(len=*) , intent(in)            :: flag          ! 'read' or 'write'
     character(len=*) , intent(in)            :: varname       ! variable name
     real(r8)          , pointer               :: data(:)       ! local decomposition data
@@ -2615,17 +2623,17 @@ contains
 
     endif
 
-# 1402 "ncdio_pio.F90.in"
+# 1410 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_double
   !TYPE int,double,logical
-# 1239 "ncdio_pio.F90.in"
+# 1247 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_logical(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
     ! netcdf I/O for 1d 
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout)         :: ncid          ! netcdf file id
+    class(file_desc_t), intent(inout)        :: ncid          ! netcdf file id
     character(len=*) , intent(in)            :: flag          ! 'read' or 'write'
     character(len=*) , intent(in)            :: varname       ! variable name
     logical          , pointer               :: data(:)       ! local decomposition data
@@ -2782,13 +2790,13 @@ contains
 
     endif
 
-# 1402 "ncdio_pio.F90.in"
+# 1410 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_logical
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double
-# 1407 "ncdio_pio.F90.in"
+# 1415 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_int(varname, data, dim1name, lowerb2, upperb2, &
        flag, ncid, nt, readvar, switchdim, cnvrtnan2fill)
     !
@@ -2796,7 +2804,7 @@ contains
     ! Netcdf i/o of 2d 
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid          ! netcdf file id
+    class(file_desc_t), intent(inout) :: ncid         ! netcdf file id
     character(len=*) , intent(in)  :: flag            ! 'read' or 'write'
     character(len=*) , intent(in)  :: varname         ! variable name
     integer(i4)          , pointer     :: data(:,:)       ! local decomposition input data
@@ -3011,10 +3019,10 @@ contains
        deallocate(temp)
     end if
 
-# 1629 "ncdio_pio.F90.in"
+# 1637 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_int
   !TYPE int,double
-# 1407 "ncdio_pio.F90.in"
+# 1415 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_double(varname, data, dim1name, lowerb2, upperb2, &
        flag, ncid, nt, readvar, switchdim, cnvrtnan2fill)
     !
@@ -3022,7 +3030,7 @@ contains
     ! Netcdf i/o of 2d 
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid          ! netcdf file id
+    class(file_desc_t), intent(inout) :: ncid         ! netcdf file id
     character(len=*) , intent(in)  :: flag            ! 'read' or 'write'
     character(len=*) , intent(in)  :: varname         ! variable name
     real(r8)          , pointer     :: data(:,:)       ! local decomposition input data
@@ -3237,20 +3245,20 @@ contains
        deallocate(temp)
     end if
 
-# 1629 "ncdio_pio.F90.in"
+# 1637 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_double
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double
-# 1634 "ncdio_pio.F90.in"
+# 1642 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_int(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
     ! Netcdf i/o of 3d 
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid          ! netcdf file id
+    class(file_desc_t), intent(inout) :: ncid         ! netcdf file id
     character(len=*) , intent(in)  :: flag            ! 'read' or 'write'
     character(len=*) , intent(in)  :: varname         ! variable name
     integer(i4)          , pointer     :: data(:,:,:)     ! local decomposition input data
@@ -3370,17 +3378,17 @@ contains
 
     endif
 
-# 1760 "ncdio_pio.F90.in"
+# 1768 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_int
   !TYPE int,double
-# 1634 "ncdio_pio.F90.in"
+# 1642 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_double(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
     ! Netcdf i/o of 3d 
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid          ! netcdf file id
+    class(file_desc_t), intent(inout) :: ncid         ! netcdf file id
     character(len=*) , intent(in)  :: flag            ! 'read' or 'write'
     character(len=*) , intent(in)  :: varname         ! variable name
     real(r8)          , pointer     :: data(:,:,:)     ! local decomposition input data
@@ -3500,12 +3508,12 @@ contains
 
     endif
 
-# 1760 "ncdio_pio.F90.in"
+# 1768 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_double
 
   !------------------------------------------------------------------------
 
-# 1764 "ncdio_pio.F90.in"
+# 1772 "ncdio_pio.F90.in"
   subroutine scam_field_offsets( ncid, dim1name, vardesc, start, count, &
        found, posNOTonfile)
     !
@@ -3518,7 +3526,7 @@ contains
     use shr_string_mod, only: shr_string_toLower
     !
     ! !ARGUMENTS:
-    type(file_desc_t) , intent(inout) :: ncid         ! netcdf file id
+    class(file_desc_t), intent(inout) :: ncid         ! netcdf file id
     character(len=*)  , intent(in)    :: dim1name     ! dimension 1 name
     type(Var_desc_t)  , intent(inout) :: vardesc      ! variable descriptor
     integer           , intent(inout) :: start(:)     ! start index
@@ -3554,7 +3562,7 @@ contains
        if ( posNOTonfile )then
           if ( .not. present(found) )then
              call shr_sys_abort( subname// &
-# 1812 "ncdio_pio.F90.in"
+# 1820 "ncdio_pio.F90.in"
                   'ERROR: Bad subroutine calling structure posNOTonfile sent, but found was NOT!')
           end if
           found = .false.
@@ -3699,12 +3707,12 @@ contains
     enddo
     deallocate(dids)
 
-# 1956 "ncdio_pio.F90.in"
+# 1964 "ncdio_pio.F90.in"
   end subroutine scam_field_offsets
 
   !------------------------------------------------------------------------
 
-# 1960 "ncdio_pio.F90.in"
+# 1968 "ncdio_pio.F90.in"
   subroutine ncd_getiodesc(ncid, clmlevel, ndims, dims, dimids, &
        xtype, iodnum, switchdim) 
     !
@@ -3712,14 +3720,14 @@ contains
     ! Returns an index to an io descriptor
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid       ! PIO file descriptor
-    character(len=8) , intent(in)    :: clmlevel   ! clmlevel
-    integer          , intent(in)    :: ndims      ! ndims for var      
-    integer          , intent(in)    :: dims(:)    ! dim sizes
-    integer          , intent(in)    :: dimids(:)  ! dim ids
-    integer          , intent(in)    :: xtype      ! file external type
-    integer          , intent(out)   :: iodnum     ! iodesc num in list
-    logical,optional , intent(in)    :: switchdim  ! switch level dimension and first dim 
+    class(file_desc_t) , intent(inout) :: ncid       ! PIO file descriptor
+    character(len=8)   , intent(in)    :: clmlevel   ! clmlevel
+    integer            , intent(in)    :: ndims      ! ndims for var      
+    integer            , intent(in)    :: dims(:)    ! dim sizes
+    integer            , intent(in)    :: dimids(:)  ! dim ids
+    integer            , intent(in)    :: xtype      ! file external type
+    integer            , intent(out)   :: iodnum     ! iodesc num in list
+    logical,optional   , intent(in)    :: switchdim  ! switch level dimension and first dim 
     !
     ! !LOCAL VARIABLES:
     integer :: k,m,n,cnt                     ! indices
@@ -3893,7 +3901,7 @@ contains
     iodesc_list(iodnum)%dims(1:ndims)   = dims(1:ndims)
     iodesc_list(iodnum)%dimids(1:ndims) = dimids(1:ndims)
 
-# 2148 "ncdio_pio.F90.in"
+# 2156 "ncdio_pio.F90.in"
   end subroutine ncd_getiodesc
 
 end module ncdio_pio

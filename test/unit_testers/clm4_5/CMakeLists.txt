@@ -15,10 +15,12 @@ add_subdirectory(${CESM_ROOT}/models/csm_share/shr csm_share)
 
 # Add CLM source directories
 add_subdirectory(${CLM_ROOT}/src/clm4_5/biogeophys clm_biogeophys)
+add_subdirectory(${CLM_ROOT}/src/clm4_5/dyn_subgrid clm_dyn_subgrid)
 add_subdirectory(${CLM_ROOT}/src/clm4_5/main clm_main)
 
 # Add general unit test directories (mocked out files, etc.)
 add_subdirectory(mock)
 
 # Add each main unit test directory
-add_subdirectory(Daylength_test)
+add_subdirectory(dyn_subgrid)
+add_subdirectory(biogeophys)

@@ -269,7 +269,7 @@ contains
     ! !USES:
     use clm_atmlnd            , only : clm_map2gcell_minimal
     use clm_glclnd            , only : update_clm_s2x
-    use clm_varctl            , only : finidat, fpftdyn
+    use clm_varctl            , only : finidat
     use decompMod             , only : get_proc_clumps, get_proc_bounds, get_clump_bounds,&
          bounds_type
     use filterMod             , only : allocFilters
@@ -279,10 +279,9 @@ contains
     use restFileMod           , only : restFile_getfile, restFile_open, restFile_close, restFile_read 
     use accFldsMod            , only : initAccFlds, initAccClmtype
     use mkarbinitMod          , only : mkarbinit
-    use pftdynMod             , only : pftdyn_init, pftdyn_interp
     use ndepStreamMod         , only : ndep_init, ndep_interp
     use CNEcosystemDynMod     , only : CNEcosystemDynInit
-    use pftdynMod             , only : pftwt_init
+    use dynSubgridDriverMod   , only : dynSubgrid_init
     use CNDVEcosystemDyniniMod, only : CNDVEcosystemDynini
 
     use STATICEcosysDynMod    , only : EcosystemDynini, readAnnualVegetation, interpMonthlyVeg
@@ -471,22 +470,14 @@ contains
     end if
 
     ! ------------------------------------------------------------------------
-    ! Initialization of dynamic pft weights
+    ! Initialization of dynamic subgrid weights (for prescribed transient PFTs,
+    ! CNDV, and/or dynamic landunits); note that these will be overwritten in a
+    ! restart run
     ! ------------------------------------------------------------------------
 
-    ! Determine correct pft weights (interpolate pftdyn dataset if initial run)
-    ! Otherwise these are read in for a restart run
-
-    if (use_cndv) then
-       call pftwt_init(bounds_proc)
-    else
-       if (fpftdyn /= ' ') then
-          call t_startf('init_pftdyn')
-          call pftdyn_init(bounds_proc)
-          call pftdyn_interp(bounds_proc)
-          call t_stopf('init_pftdyn')
-       end if
-    end if
+    call t_startf('init_dyn_subgrid')
+    call dynSubgrid_init(bounds_proc)
+    call t_stopf('init_dyn_subgrid')
 
     ! ------------------------------------------------------------------------
     ! Read restart/initial info

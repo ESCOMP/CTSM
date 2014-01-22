@@ -77,7 +77,7 @@ contains
     use CNAnnualUpdateMod      , only: CNAnnualUpdate
     use CNCIsoFluxMod          , only: CIsoFlux1, CIsoFlux2, CIsoFlux2h, CIsoFlux3
     use CNC14DecayMod          , only: C14Decay, C14BombSpike
-    use pftdynMod              , only: CNHarvest
+    use dynHarvestMod          , only: CNHarvest
     use CNWoodProductsMod      , only: CNWoodProducts
     use CNSoilLittVertTranspMod, only: CNSoilLittVertTransp
     use perf_mod               , only: t_startf, t_stopf

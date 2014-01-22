@@ -101,7 +101,8 @@ module reweightMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: reweightWrapup  ! do modifications and error-checks after modifying subgrid weights
+  public :: compute_higher_order_weights  ! given p2c, c2l and l2g weights, compute other weights
+  public :: reweightWrapup                ! do modifications and error-checks after modifying subgrid weights
   !
   ! !REVISION HISTORY:
   ! Created by Bill Sacks
@@ -117,6 +118,36 @@ module reweightMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine compute_higher_order_weights(bounds)
+    !
+    ! !DESCRIPTION:
+    ! Assuming pft%wtcol, col%wtlunit and lun%wtgcell have already been computed, compute
+    ! the "higher-order" weights: pft%wtlunit, pft%wtgcell and col%wtgcell, for all p and c
+    !
+    ! !USES:
+    use clmtype
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type), intent(in) :: bounds  ! clump bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p, c, l      ! indices for pft, col & landunit
+    !------------------------------------------------------------------------
+
+    do c = bounds%begc, bounds%endc
+       l = col%landunit(c)
+       col%wtgcell(c) = col%wtlunit(c) * lun%wtgcell(l)
+    end do
+
+    do p = bounds%begp, bounds%endp
+       c = pft%column(p)
+       pft%wtlunit(p) = pft%wtcol(p) * col%wtlunit(c)
+       pft%wtgcell(p) = pft%wtcol(p) * col%wtgcell(c)
+    end do
+  end subroutine compute_higher_order_weights
 
   !-----------------------------------------------------------------------
   subroutine reweightWrapup(bounds)
@@ -166,7 +197,7 @@ contains
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
     !
-    ! LOCAL VARIABLES:
+    ! !LOCAL VARIABLES:
     integer :: l,c,p       ! loop counters
     logical :: error_found ! true if we find an error
 
@@ -220,7 +251,7 @@ contains
     implicit none
     integer, intent(in) :: p   ! pft index
     !
-    ! LOCAL VARIABLES:
+    ! !LOCAL VARIABLES:
     integer :: l  ! landunit index
     integer :: g  ! grid cell index
     !------------------------------------------------------------------------
@@ -258,7 +289,7 @@ contains
     implicit none
     integer, intent(in) :: c   ! column index
     !
-    ! LOCAL VARIABLES:
+    ! !LOCAL VARIABLES:
     integer :: l  ! landunit index
     integer :: g  ! grid cell index
     !------------------------------------------------------------------------
@@ -296,7 +327,7 @@ contains
     implicit none
     integer, intent(in) :: l   ! landunit index
     !
-    ! LOCAL VARIABLES:
+    ! !LOCAL VARIABLES:
     integer :: g  ! grid cell index
     !------------------------------------------------------------------------
 
@@ -471,7 +502,7 @@ contains
     logical , intent(in) :: active_weights_only ! true if sumwts just includes active children, etc.
     logical , intent(in) :: i_am_active         ! true if the current point is active
     !
-    ! LOCAL VARIABLES:
+    ! !LOCAL VARIABLES:
     logical :: weights_equal_1
     real(r8), parameter :: tolerance = 1.e-12_r8  ! tolerance for checking whether weights sum to 1
     !------------------------------------------------------------------------
