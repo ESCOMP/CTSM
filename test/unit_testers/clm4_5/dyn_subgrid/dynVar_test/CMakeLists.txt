@@ -6,8 +6,8 @@ set (pfunit_sources
 
 set (sources_needed
   dynVarMod.F90 dynVarTimeInterpMod.F90 dynVarTimeUninterpMod.F90
-  dynTimeInfoMod.F90 dynFileMod_mock.F90 dynUtilsMod_mock.F90
-  surfrdUtilsMod.F90 clm_varctl.F90 ncdio_pio_mock.F90 ncdio_var.F90 spmdMod_mock.F90
+  dynTimeInfoMod.F90 dynFileMod_mock.F90
+  surfrdUtilsMod.F90 clm_varctl.F90 clm_time_manager_mock.F90 ncdio_pio_mock.F90 ncdio_var.F90 spmdMod_mock.F90
   shr_assert_mod.F90 shr_kind_mod.F90 shr_infnan_mod.F90 shr_log_mod.F90 shr_sys_mod_mock.F90)
 
 extract_sources("${sources_needed}" "${all_sources}" test_sources)

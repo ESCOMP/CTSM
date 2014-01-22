@@ -122,7 +122,7 @@ contains
     ! underlying dyn_file variable
     !
     ! !USES:
-    use dynUtilsMod, only : dyn_time_weights
+    use clm_time_manager, only : get_curr_yearfrac
     !
     ! !ARGUMENTS:
     class(dyn_var_time_interp_type) , intent(inout) :: this             ! this object
@@ -144,7 +144,7 @@ contains
     ! time 2
     call this%read_data_if_needed()
     allocate(cur_data_1d(size(this%data_nt1)))
-    call dyn_time_weights(wt1)
+    wt1 = 1.0_r8 - get_curr_yearfrac()
     cur_data_1d(:) = this%data_nt2(:) + wt1*(this%data_nt1(:) - this%data_nt2(:))
     cur_data = reshape(cur_data_1d, shape(cur_data))
     deallocate(cur_data_1d)

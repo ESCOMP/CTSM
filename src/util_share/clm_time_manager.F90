@@ -1335,7 +1335,7 @@ contains
 
   !=========================================================================================
 
-  integer function get_curr_yearfrac( offset )
+  function get_curr_yearfrac( offset )
 
     !---------------------------------------------------------------------------------
     ! Get the fractional position in the current year. This is 0 at midnight on Jan 1,
@@ -1343,6 +1343,8 @@ contains
 
     !
     ! Arguments
+    real(r8) :: get_curr_yearfrac  ! function result
+    
     integer, optional, intent(in) :: offset  ! Offset from current time in seconds.
     ! Positive for future times, negative 
     ! for previous times.

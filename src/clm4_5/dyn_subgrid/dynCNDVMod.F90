@@ -53,9 +53,8 @@ contains
     ! Time interpolate cndv pft weights from annual to time step
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date, get_step_size, get_nstep
+    use clm_time_manager, only : get_curr_date, get_step_size, get_nstep, get_curr_yearfrac
     use clm_varcon      , only : istsoil ! CNDV incompatible with dynLU
-    use dynUtilsMod     , only : dyn_time_weights
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! bounds
@@ -63,7 +62,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: c,g,l,p            ! indices
     real(r8) :: cday               ! current calendar day (1.0 = 0Z on Jan 1)
-    real(r8) :: wt1                ! time interpolation weights
+    real(r8) :: wt1                ! time interpolation weights (weight of time 1)
     real(r8) :: dtime              ! model time step
     real(r8) :: days_per_year      ! days per year
     integer  :: nstep              ! time step number
@@ -82,7 +81,7 @@ contains
     nstep         = get_nstep()
     dtime         = get_step_size()
 
-    call dyn_time_weights(wt1, offset = -int(dtime))
+    wt1 = 1.0_r8 - get_curr_yearfrac(offset = -int(dtime))
 
     call get_curr_date(year, mon, day, sec, offset=int(dtime))
 
