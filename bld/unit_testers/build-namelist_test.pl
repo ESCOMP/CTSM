@@ -163,12 +163,12 @@ foreach my $options ( "clm_demand", "rcp",      "res",
    eval{ system( "$bldnml -${options} list > $tempfile 2>&1 " ); };
    my $result = `cat $tempfile`;
    my $expect;
-   if ( $options !~ /use_case/ ) {
-      $expect = "valid values for $options";
+   if ( $options =~ /use_case/ ) {
+      $expect = "use cases :";
    } else {
-      $expect = "use cases:";
+      $expect = "valid values for $options";
    }
-   $expect    = "/^CLM build-namelist - $expect/";
+   $expect    = "/CLM build-namelist : $expect/";
    like( $result, $expect, "$options list" );
    is( (-f "lnd_in"), undef, "Check that lnd_in file does NOT exist" );
    &cleanup();
@@ -358,7 +358,7 @@ print "==================================================\n";
 # Run over all use-cases...
 my $list = `$bldnml -use_case list 2>&1 | grep "use case"`;
 my @usecases;
-if ( $list =~ /build-namelist - use cases: (.+)$/ ) {
+if ( $list =~ /build-namelist : use cases : (.+)$/ ) {
   my @usecases  = split( / /, $list );
 } else {
   die "ERROR:: Trouble getting list of use-cases\n";
@@ -366,7 +366,7 @@ if ( $list =~ /build-namelist - use cases: (.+)$/ ) {
 foreach my $usecase ( @usecases ) {
    $options = "-use_case $usecase ";
    eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
-   is( $@, '', "$options" );
+   is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
    system( "diff lnd_in lnd_in.default.standard" );
    $cfiles->shownmldiff( "default", "standard" );
