@@ -180,7 +180,8 @@ contains
    fsds_sno_vd               =>    pef%fsds_sno_vd         , & ! Output: [real(r8) (:)]  incident visible, direct radiation on snow (for history files) (pft) [W/m2]
    fsds_sno_nd               =>    pef%fsds_sno_nd         , & ! Output: [real(r8) (:)]  incident near-IR, direct radiation on snow (for history files) (pft) [W/m2]
    fsds_sno_vi               =>    pef%fsds_sno_vi         , & ! Output: [real(r8) (:)]  incident visible, diffuse radiation on snow (for history files) (pft) [W/m2]
-   fsds_sno_ni               =>    pef%fsds_sno_ni           & ! Output: [real(r8) (:)]  incident near-IR, diffuse radiation on snow (for history files) (pft) [W/m2]
+   fsds_sno_ni               =>    pef%fsds_sno_ni         , & ! Output: [real(r8) (:)]  incident near-IR, diffuse radiation on snow (for history files) (pft) [W/m2]
+   sub_surf_abs_SW           =>    cps%sub_surf_abs_SW       & ! Output: [real(r8) (:)]
    )
 
      ! Determine seconds off current time step
@@ -326,6 +327,8 @@ contains
         l = pft%landunit(p)
         sabg_snl_sum = 0._r8
 
+        sub_surf_abs_SW(c) = 0._r8
+
         ! CASE1: No snow layers: all energy is absorbed in top soil layer
         if (snl(c) == 0) then
            sabg_lyr(p,:) = 0._r8
@@ -342,7 +345,18 @@ contains
               if (i >= snl(c)+1) then
                  sabg_snl_sum = sabg_snl_sum + sabg_lyr(p,i)
               endif
+              if (i > snl(c)+1) then ! if snow layer is below surface snow layer
+                 !accumulate subsurface flux as a diagnostic for history file
+                 sub_surf_abs_SW(c) = sub_surf_abs_SW(c) + sabg_lyr(p,i)
+              endif
            enddo
+
+           ! Divide absorbed by total, to get % absorbed in subsurface
+           if (sabg_snl_sum /= 0._r8) then
+              sub_surf_abs_SW(c) = sub_surf_abs_SW(c)/sabg_snl_sum
+           else
+              sub_surf_abs_SW(c) = 0._r8
+           endif
 
            ! Error handling: The situation below can occur when solar radiation is 
            ! NOT computed every timestep.

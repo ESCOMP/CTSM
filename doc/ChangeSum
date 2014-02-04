@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_61        sacks 02/04/2014 add 3-d snow history fields; continue harvest past end of pftdyn timeseries
    clm4_5_60        andre 01/30/2014 refactor build-namelist
    clm4_5_59        sacks 01/22/2014 use new get_curr_yearfrac function in clm_time_manager
    clm4_5_58        sacks 01/22/2014 major refactor of transient pft code, in prep for dynamic landunits

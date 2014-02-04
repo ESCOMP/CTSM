@@ -39,9 +39,10 @@ contains
     use ch4varcon  , only : allowlakeprod
     use clm_glclnd , only : clm_s2x
     use histFileMod, only : hist_add_subscript, hist_addfld1d, hist_addfld2d, &
-                            hist_printflds
+                            hist_printflds, no_snow_normal, no_snow_zero
     use shr_megan_mod, only : shr_megan_linkedlist, shr_megan_megcomp_t, shr_megan_megcomps_n
-    use clm_varpar , only :  ndecomp_cascade_transitions, ndecomp_pools, nlevdecomp, nlevdecomp_full
+    use clm_varpar , only :  ndecomp_cascade_transitions, ndecomp_pools, nlevdecomp, &
+         nlevdecomp_full, nlevsno
     !
     ! !ARGUMENTS:
     implicit none
@@ -5760,6 +5761,63 @@ contains
     call hist_addfld1d (fname='OCDEP', units='kg/m^2/s', &
          avgflag='A', long_name='total OC deposition (dry+wet) from atmosphere', &
          ptr_col=cwf%flx_oc_dep, set_urb=spval)
+
+    call hist_addfld1d (fname='SNOINTABS', units='%', &
+         avgflag='A', long_name='Percent of incoming solar absorbed by lower snow layers', &
+         ptr_col=cps%sub_surf_abs_SW, set_lake=spval, set_urb=spval)
+        
+    !-------------------------------
+    ! Begin multi-layer snow fields
+    !-------------------------------
+
+    data2dptr => cps%snow_layer_unity(:,-nlevsno+1:0)
+    call hist_addfld2d (fname='SNO_EXISTENCE', units='unitless', type2d='levsno', &
+         avgflag='A', long_name='Fraction of averaging period for which each snow layer existed', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_zero, default='inactive')
+
+    data2dptr => pef%sabg_lyr(:,-nlevsno+1:0)
+    call hist_addfld2d (fname='SNO_ABS', units='W/m^2', type2d='levsno',  &
+         avgflag='A', long_name='Absorbed solar radiation in each snow layer', &
+         ptr_pft=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+        
+    data2dptr => ces%t_soisno(:,-nlevsno+1:0)
+    call hist_addfld2d (fname='SNO_T', units='K', type2d='levsno',  &
+         avgflag='A', long_name='Snow temperatures', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+        
+    data2dptr => cps%snw_rds(:,-nlevsno+1:0)
+    call hist_addfld2d (fname='SNO_GS', units='Microns', type2d='levsno',  &
+         avgflag='A', long_name='Mean snow grain size', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+        
+    data2dptr => cps%dz(:,-nlevsno+1:0)
+    call hist_addfld2d (fname='SNO_Z', units='m', type2d='levsno',  &
+         avgflag='A', long_name='Snow layer thicknesses', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+        
+    data2dptr => cws%h2osoi_liq(:,-nlevsno+1:0)
+    call hist_addfld2d (fname='SNO_LIQH2O', units='kg/m2', type2d='levsno',  &
+         avgflag='A', long_name='Snow liquid water content', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+
+    data2dptr => cws%h2osoi_ice(:,-nlevsno+1:0)
+    call hist_addfld2d (fname='SNO_ICE', units='kg/m2', type2d='levsno',  &
+         avgflag='A', long_name='Snow ice content', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+
+    data2dptr => cps%thk(:,-nlevsno+1:0)
+    call hist_addfld2d (fname='SNO_TK', units='W/m-K', type2d='levsno', &
+         avgflag='A', long_name='Thermal conductivity', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+
+    data2dptr => cws%bw(:,-nlevsno+1:0)
+    call hist_addfld2d (fname='SNO_BW', units='kg/m3', type2d='levsno', &
+         avgflag='A', long_name='Partial density of water in the snow pack (ice + liquid)', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+
+    !-------------------------------
+    ! End multi-layer snow fields
+    !-------------------------------
 
     if (use_snicar_frc) then
        call hist_addfld1d (fname='SNOAERFRCL', units='W/m^2', &

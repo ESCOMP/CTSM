@@ -28,6 +28,16 @@ module histFileMod
   integer , public, parameter :: max_tapes = 6          ! max number of history tapes
   integer , public, parameter :: max_flds = 2500        ! max number of history fields
   integer , public, parameter :: max_namlen = 64        ! maximum number of characters for field name
+
+  ! Possible ways to treat multi-layer snow fields at times when no snow is present in a
+  ! given layer. Note that the public parameters are the only ones that can be used by
+  ! calls to hist_addfld2d; the private parameters are just used internally by the
+  ! histFile implementation.
+  integer , private, parameter :: no_snow_MIN = 1                 ! minimum valid value for this flag
+  integer , public , parameter :: no_snow_normal = 1              ! normal treatment, which should be used for most fields (use spval when snow layer not present)
+  integer , public , parameter :: no_snow_zero = 2                ! average in a 0 value for times when the snow layer isn't present
+  integer , private, parameter :: no_snow_MAX = 2                 ! maximum valid value for this flag
+  integer , private, parameter :: no_snow_unset = no_snow_MIN - 1 ! flag specifying that field is NOT a multi-layer snow field
   !
   ! Counters
   !
@@ -110,6 +120,7 @@ module histFileMod
   private :: hfields_1dinfo            ! Define/output 1d subgrid info if appropriate
   private :: hist_update_hbuf_field_1d ! Updates history buffer for specific field and tape
   private :: hist_update_hbuf_field_2d ! Updates history buffer for specific field and tape 
+  private :: hist_set_snow_field_2d    ! Set values in history field dimensioned by levsno
   private :: list_index                ! Find index of field in exclude list
   private :: set_hist_filename         ! Determine history dataset filenames
   private :: getname                   ! Retrieve name portion of input "inname"
@@ -144,6 +155,7 @@ module histFileMod
      character(len=8) :: p2c_scale_type        ! scale factor when averaging pft to column
      character(len=8) :: c2l_scale_type        ! scale factor when averaging column to landunit
      character(len=8) :: l2g_scale_type        ! scale factor when averaging landunit to gridcell
+     integer :: no_snow_behavior               ! for multi-layer snow fields, flag saying how to treat times when a given snow layer is absent
   end type field_info
 
   type master_entry
@@ -248,27 +260,33 @@ contains
   !-----------------------------------------------------------------------
   subroutine masterlist_addfld (fname, type1d, type1d_out, &
         type2d, num2d, units, avgflag, long_name, hpindex, &
-        p2c_scale_type, c2l_scale_type, l2g_scale_type)
+        p2c_scale_type, c2l_scale_type, l2g_scale_type, &
+        no_snow_behavior)
     !
     ! !DESCRIPTION:
     ! Add a field to the master field list. Put input arguments of
     ! field name, units, number of levels, averaging flag, and long name
     ! into a type entry in the global master field list (masterlist).
     !
+    ! The optional argument no_snow_behavior should be given when this is a multi-layer
+    ! snow field, and should be absent otherwise. It should take on one of the no_snow_*
+    ! parameters defined above
+    !
     ! !ARGUMENTS:
     implicit none
-    character(len=*), intent(in) :: fname        ! field name
-    character(len=*), intent(in) :: type1d       ! 1d data type
-    character(len=*), intent(in) :: type1d_out   ! 1d output type
-    character(len=*), intent(in) :: type2d       ! 2d output type
-    integer         , intent(in) :: num2d        ! size of second dimension (e.g. number of vertical levels)
-    character(len=*), intent(in) :: units        ! units of field
-    character(len=1), intent(in) :: avgflag      ! time averaging flag
-    character(len=*), intent(in) :: long_name    ! long name of field
-    integer         , intent(in) :: hpindex      ! clmtype index for history buffer output
-    character(len=*), intent(in) :: p2c_scale_type ! scale type for subgrid averaging of pfts to column
-    character(len=*), intent(in) :: c2l_scale_type ! scale type for subgrid averaging of columns to landunits
-    character(len=*), intent(in) :: l2g_scale_type ! scale type for subgrid averaging of landunits to gridcells
+    character(len=*), intent(in)  :: fname            ! field name
+    character(len=*), intent(in)  :: type1d           ! 1d data type
+    character(len=*), intent(in)  :: type1d_out       ! 1d output type
+    character(len=*), intent(in)  :: type2d           ! 2d output type
+    integer         , intent(in)  :: num2d            ! size of second dimension (e.g. number of vertical levels)
+    character(len=*), intent(in)  :: units            ! units of field
+    character(len=1), intent(in)  :: avgflag          ! time averaging flag
+    character(len=*), intent(in)  :: long_name        ! long name of field
+    integer         , intent(in)  :: hpindex          ! clmtype index for history buffer output
+    character(len=*), intent(in)  :: p2c_scale_type   ! scale type for subgrid averaging of pfts to column
+    character(len=*), intent(in)  :: c2l_scale_type   ! scale type for subgrid averaging of columns to landunits
+    character(len=*), intent(in)  :: l2g_scale_type   ! scale type for subgrid averaging of landunits to gridcells
+    integer, intent(in), optional :: no_snow_behavior ! if a multi-layer snow field, behavior to use for absent snow layers
     !
     ! !LOCAL VARIABLES:
     integer :: n            ! loop index
@@ -355,6 +373,12 @@ contains
        write(iulog,*) trim(subname),' ERROR: unknown 1d output type= ',type1d
        call endrun()
     end select
+
+    if (present(no_snow_behavior)) then
+       masterlist(f)%field%no_snow_behavior = no_snow_behavior
+    else
+       masterlist(f)%field%no_snow_behavior = no_snow_unset
+    end if
 
     ! The following two fields are used only in master field list,
     ! NOT in the runtime active field list
@@ -1263,9 +1287,11 @@ contains
     character(len=8)  :: p2c_scale_type ! scale type for subgrid averaging of pfts to column
     character(len=8)  :: c2l_scale_type ! scale type for subgrid averaging of columns to landunits
     character(len=8)  :: l2g_scale_type ! scale type for subgrid averaging of landunits to gridcells
+    integer  :: no_snow_behavior        ! for multi-layer snow fields, behavior to use when a given layer is absent
     real(r8), pointer :: hbuf(:,:)      ! history buffer
     integer , pointer :: nacs(:,:)      ! accumulation counter
     real(r8), pointer :: field(:,:)     ! clm 2d pointer field
+    logical           :: field_allocated! whether 'field' was allocated here
     logical , pointer :: active(:)      ! flag saying whether each point is active (used for type1d = landunit/column/pft) (this refers to a point being active, NOT a history field being active)
     real(r8) :: field_gcell(bounds%begg:bounds%endg,num2d) ! gricell level field (used if mapping to gridcell is done)
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
@@ -1273,18 +1299,41 @@ contains
 
     call shr_assert(bounds%level == BOUNDS_LEVEL_PROC, errMsg(__FILE__, __LINE__))
 
-    avgflag        =  tape(t)%hlist(f)%avgflag
-    nacs           => tape(t)%hlist(f)%nacs
-    hbuf           => tape(t)%hlist(f)%hbuf
-    beg1d          =  tape(t)%hlist(f)%field%beg1d
-    end1d          =  tape(t)%hlist(f)%field%end1d
-    type1d         =  tape(t)%hlist(f)%field%type1d
-    type1d_out     =  tape(t)%hlist(f)%field%type1d_out
-    p2c_scale_type =  tape(t)%hlist(f)%field%p2c_scale_type
-    c2l_scale_type =  tape(t)%hlist(f)%field%c2l_scale_type
-    l2g_scale_type =  tape(t)%hlist(f)%field%l2g_scale_type
-    hpindex        =  tape(t)%hlist(f)%field%hpindex
-    field          => clmptr_ra(hpindex)%ptr(:,1:num2d)
+    avgflag             =  tape(t)%hlist(f)%avgflag
+    nacs                => tape(t)%hlist(f)%nacs
+    hbuf                => tape(t)%hlist(f)%hbuf
+    beg1d               =  tape(t)%hlist(f)%field%beg1d
+    end1d               =  tape(t)%hlist(f)%field%end1d
+    type1d              =  tape(t)%hlist(f)%field%type1d
+    type1d_out          =  tape(t)%hlist(f)%field%type1d_out
+    p2c_scale_type      =  tape(t)%hlist(f)%field%p2c_scale_type
+    c2l_scale_type      =  tape(t)%hlist(f)%field%c2l_scale_type
+    l2g_scale_type      =  tape(t)%hlist(f)%field%l2g_scale_type
+    no_snow_behavior    =  tape(t)%hlist(f)%field%no_snow_behavior
+    hpindex             =  tape(t)%hlist(f)%field%hpindex
+
+    if (no_snow_behavior /= no_snow_unset) then
+       ! For multi-layer snow fields, build a special output variable that handles
+       ! missing snow layers appropriately
+
+       ! Note, regarding bug 1786: The following allocation is not what we would want if
+       ! this routine were operating in a threaded region (or, more generally, within a
+       ! loop over nclumps) - in that case we would want to use the bounds information for
+       ! this clump. But currently that's not possible because the bounds of some fields
+       ! have been reset to 1 - see also bug 1786. Similarly, if we wanted to allow
+       ! operation within a loop over clumps, we would need to pass 'bounds' to
+       ! hist_set_snow_field_2d rather than relying on beg1d & end1d (which give the proc
+       ! bounds, not the clump bounds)
+
+       allocate(field(lbound(clmptr_ra(hpindex)%ptr, 1) : ubound(clmptr_ra(hpindex)%ptr, 1), 1:num2d))
+       field_allocated = .true.
+
+       call hist_set_snow_field_2d(field, clmptr_ra(hpindex)%ptr, no_snow_behavior, type1d, &
+            beg1d, end1d)
+    else
+       field => clmptr_ra(hpindex)%ptr(:,1:num2d)
+       field_allocated = .false.
+    end if
 
     ! set variables to check weights when allocate all pfts
 
@@ -1479,7 +1528,107 @@ contains
        end select
     end if
 
+    if (field_allocated) then
+       deallocate(field)
+    end if
+
   end subroutine hist_update_hbuf_field_2d
+
+  !-----------------------------------------------------------------------
+  subroutine hist_set_snow_field_2d (field_out, field_in, no_snow_behavior, type1d, beg1d, end1d)
+    !
+    ! !DESCRIPTION:
+    ! Set values in history field dimensioned by levsno. 
+    !
+    ! This routine handles what to do when a given snow layer doesn't exist for a given
+    ! point, based on the no_snow_behavior argument. Options are:
+    !
+    ! - no_snow_normal: This is the normal behavior, which applies to most snow fields:
+    !   Use spval (missing value flag). This means that temporal averages will just
+    !   consider times when a particular snow layer actually existed
+    !
+    ! - no_snow_zero: Average in a 0 value for times when the snow layer isn't present
+    !
+    ! Input and output fields can be defined at the pft or column level
+    !
+    ! !USES:
+    use clmtype
+    !
+    ! !ARGUMENTS:
+    implicit none
+    integer         , intent(in)  :: beg1d                    ! beginning spatial index
+    integer         , intent(in)  :: end1d                    ! ending spatial index
+    real(r8)        , intent(out) :: field_out( beg1d: , 1: ) ! output field [point, lev]
+    real(r8)        , intent(in)  :: field_in ( beg1d: , 1: ) ! input field [point, lev]
+    integer         , intent(in)  :: no_snow_behavior         ! behavior to use when a snow layer is absent
+    character(len=*), intent(in)  :: type1d                   ! 1d clm pointer type ("column" or "pft")
+    !
+    ! !LOCAL VARIABLES:
+    integer :: num_levels             ! total number of possible snow layers
+    integer :: point
+    integer :: level
+    integer :: num_snow_layers        ! number of snow layers that exist at a point
+    integer :: num_nonexistent_layers
+    integer :: c                      ! column index
+    real(r8):: no_snow_val            ! value to use when a snow layer is missing
+    character(len=*), parameter :: subname = 'hist_set_snow_field_2d'
+    !-----------------------------------------------------------------------
+
+    call shr_assert((ubound(field_out, 1) == end1d), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(field_in , 1) == end1d), errMsg(__FILE__, __LINE__))
+    call shr_assert((ubound(field_out, 2) == ubound(field_in, 2)), errMsg(__FILE__, __LINE__))
+
+    associate(&
+    snl            => cps%snl  &   ! Input: [integer (:)] number of snow layers (negative)
+    )
+
+    num_levels = ubound(field_in, 2)
+
+    ! Determine no_snow_val
+    select case (no_snow_behavior)
+    case (no_snow_normal)
+       no_snow_val = spval
+    case (no_snow_zero)
+       no_snow_val = 0._r8
+    case default
+       write(iulog,*) trim(subname), ' ERROR: unrecognized no_snow_behavior: ', &
+            no_snow_behavior
+       call endrun()
+    end select
+
+    do point = beg1d, end1d
+
+       ! Get number of snow layers at this point
+
+       if (type1d == namec) then
+          c = point
+       else if (type1d == namep) then
+          c = pft%column(point)
+       else
+          write(iulog,*) trim(subname), ' ERROR: Only implemented for pft and col-level fields'
+          write(iulog,*) 'type1d = ', trim(type1d)
+          call endrun()
+       end if
+
+       num_snow_layers = abs(snl(c))
+       num_nonexistent_layers = num_levels - num_snow_layers
+       
+       ! Fill output field appropriately for each layer
+       ! When only a subset of snow layers exist, it is the LAST num_snow_layers that exist
+
+       do level = 1, num_nonexistent_layers
+          field_out(point, level) = no_snow_val
+       end do
+       do level = (num_nonexistent_layers + 1), num_levels
+          field_out(point, level) = field_in(point, level)
+       end do
+          
+    end do
+
+    end associate
+
+  end subroutine hist_set_snow_field_2d
+
 
   !-----------------------------------------------------------------------
   subroutine hfields_normalize (t)
@@ -1565,7 +1714,7 @@ contains
     !
     ! !USES:
     use clmtype
-    use clm_varpar  , only : nlevgrnd, nlevlak, nlevurb, numrad, &
+    use clm_varpar  , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad, &
                              maxpatch_glcmec, nlevdecomp_full
     use clm_varctl  , only : caseid, ctitle, fsurdat, finidat, paramfile, &
                              version, hostname, username, conventions, source
@@ -1697,6 +1846,7 @@ contains
     end if
     call ncd_defdim(lnfid, 'levlak' , nlevlak, dimid)
     call ncd_defdim(lnfid, 'numrad' , numrad , dimid)
+    call ncd_defdim(lnfid, 'levsno' , nlevsno , dimid)
     if (maxpatch_glcmec > 0) then
        call ncd_defdim(lnfid, 'glc_nec' , maxpatch_glcmec , dimid)
     end if
@@ -4014,7 +4164,8 @@ contains
   subroutine hist_addfld2d (fname, type2d, units, avgflag, long_name, type1d_out, &
                         ptr_gcell, ptr_lunit, ptr_col, ptr_pft, ptr_lnd, ptr_atm, &
                         p2c_scale_type, c2l_scale_type, l2g_scale_type, &
-                        set_lake, set_nolake, set_urb, set_nourb, set_spec, default)
+                        set_lake, set_nolake, set_urb, set_nourb, set_spec, &
+                        no_snow_behavior, default)
     !
     ! !DESCRIPTION:
     ! Initialize a single level history field. The pointer, ptrhist,
@@ -4028,32 +4179,33 @@ contains
     !
     ! !USES:
     use clmtype
-    use clm_varpar, only : nlevgrnd, nlevlak, numrad, nlevdecomp_full, &
+    use clm_varpar, only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, &
                            maxpatch_glcmec
     !
     ! !ARGUMENTS:
     implicit none
-    character(len=*), intent(in) :: fname                    ! field name
-    character(len=*), intent(in) :: type2d                   ! 2d output type
-    character(len=*), intent(in) :: units                    ! units of field
-    character(len=1), intent(in) :: avgflag                  ! time averaging flag
-    character(len=*), intent(in) :: long_name                ! long name of field
-    character(len=*), optional, intent(in) :: type1d_out     ! output type (from clmtype)
-    real(r8)        , optional, pointer    :: ptr_atm(:,:)   ! pointer to atm array
-    real(r8)        , optional, pointer    :: ptr_lnd(:,:)   ! pointer to lnd array
-    real(r8)        , optional, pointer    :: ptr_gcell(:,:) ! pointer to gridcell array
-    real(r8)        , optional, pointer    :: ptr_lunit(:,:) ! pointer to landunit array
-    real(r8)        , optional, pointer    :: ptr_col(:,:)   ! pointer to column array
-    real(r8)        , optional, pointer    :: ptr_pft(:,:)   ! pointer to pft array
-    real(r8)        , optional, intent(in) :: set_lake       ! value to set lakes to
-    real(r8)        , optional, intent(in) :: set_nolake     ! value to set non-lakes to
-    real(r8)        , optional, intent(in) :: set_urb        ! value to set urban to
-    real(r8)        , optional, intent(in) :: set_nourb      ! value to set non-urban to
-    real(r8)        , optional, intent(in) :: set_spec       ! value to set special to
-    character(len=*), optional, intent(in) :: p2c_scale_type ! scale type for subgrid averaging of pfts to column
-    character(len=*), optional, intent(in) :: c2l_scale_type ! scale type for subgrid averaging of columns to landunits
-    character(len=*), optional, intent(in) :: l2g_scale_type ! scale type for subgrid averaging of landunits to gridcells
-    character(len=*), optional, intent(in) :: default        ! if set to 'inactive, field will not appear on primary tape
+    character(len=*), intent(in) :: fname                      ! field name
+    character(len=*), intent(in) :: type2d                     ! 2d output type
+    character(len=*), intent(in) :: units                      ! units of field
+    character(len=1), intent(in) :: avgflag                    ! time averaging flag
+    character(len=*), intent(in) :: long_name                  ! long name of field
+    character(len=*), optional, intent(in) :: type1d_out       ! output type (from clmtype)
+    real(r8)        , optional, pointer    :: ptr_atm(:,:)     ! pointer to atm array
+    real(r8)        , optional, pointer    :: ptr_lnd(:,:)     ! pointer to lnd array
+    real(r8)        , optional, pointer    :: ptr_gcell(:,:)   ! pointer to gridcell array
+    real(r8)        , optional, pointer    :: ptr_lunit(:,:)   ! pointer to landunit array
+    real(r8)        , optional, pointer    :: ptr_col(:,:)     ! pointer to column array
+    real(r8)        , optional, pointer    :: ptr_pft(:,:)     ! pointer to pft array
+    real(r8)        , optional, intent(in) :: set_lake         ! value to set lakes to
+    real(r8)        , optional, intent(in) :: set_nolake       ! value to set non-lakes to
+    real(r8)        , optional, intent(in) :: set_urb          ! value to set urban to
+    real(r8)        , optional, intent(in) :: set_nourb        ! value to set non-urban to
+    real(r8)        , optional, intent(in) :: set_spec         ! value to set special to
+    integer         , optional, intent(in) :: no_snow_behavior ! if a multi-layer snow field, behavior to use for absent snow layers (should be one of the public no_snow_* parameters defined above)
+    character(len=*), optional, intent(in) :: p2c_scale_type   ! scale type for subgrid averaging of pfts to column
+    character(len=*), optional, intent(in) :: c2l_scale_type   ! scale type for subgrid averaging of columns to landunits
+    character(len=*), optional, intent(in) :: l2g_scale_type   ! scale type for subgrid averaging of landunits to gridcells
+    character(len=*), optional, intent(in) :: default          ! if set to 'inactive, field will not appear on primary tape
     !
     ! !LOCAL VARIABLES:
     integer :: p,c,l,g                 ! indices
@@ -4071,6 +4223,30 @@ contains
 
     call get_proc_bounds(bounds)
     
+    ! Error-check no_snow_behavior optional argument: It should be present if and only if
+    ! type2d is 'levsno', and its value should be one of the public no_snow_* parameters
+    ! defined above.
+    if (present(no_snow_behavior)) then
+       if (type2d /= 'levsno') then
+          write(iulog,*) trim(subname), &
+               ' ERROR: Only specify no_snow_behavior for fields with dimension levsno'
+          call endrun()
+       end if
+
+       if (no_snow_behavior < no_snow_MIN .or. no_snow_behavior > no_snow_MAX) then
+          write(iulog,*) trim(subname), &
+               ' ERROR: Invalid value for no_snow_behavior: ', no_snow_behavior
+          call endrun()
+       end if
+
+    else  ! no_snow_behavior is absent
+       if (type2d == 'levsno') then
+          write(iulog,*) trim(subname), &
+               ' ERROR: must specify no_snow_behavior for fields with dimension levsno'
+          call endrun()
+       end if
+    end if
+
     ! Determine second dimension size
 
     select case (type2d)
@@ -4090,9 +4266,11 @@ contains
                ' only valid for maxpatch_glcmec > 0'
           call endrun()
        end if
+    case ('levsno')
+       num2d = nlevsno
     case default
        write(iulog,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
-          ' currently supported types for multi level fields are [levgrnd,levlak,numrad,levdcmp,glc_nec]'
+          ' currently supported types for multi level fields are [levgrnd,levlak,numrad,levdcmp,glc_nec,levsno]'
        call endrun()
     end select
 
@@ -4233,7 +4411,8 @@ contains
     call masterlist_addfld (fname=trim(fname), type1d=l_type1d, type1d_out=l_type1d_out, &
          type2d=type2d, num2d=num2d, &
          units=units, avgflag=avgflag, long_name=long_name, hpindex=hpindex, &
-         p2c_scale_type=scale_type_p2c, c2l_scale_type=scale_type_c2l, l2g_scale_type=scale_type_l2g)
+         p2c_scale_type=scale_type_p2c, c2l_scale_type=scale_type_c2l, l2g_scale_type=scale_type_l2g, &
+         no_snow_behavior=no_snow_behavior)
 
     l_default = 'active'
     if (present(default)) then

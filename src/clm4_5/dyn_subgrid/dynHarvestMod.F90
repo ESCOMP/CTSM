@@ -129,7 +129,13 @@ contains
     if (use_cn) then
        harvest(bounds%begg:bounds%endg) = 0._r8
 
-       if (dynHarvest_file%is_within_bounds()) then
+       if (dynHarvest_file%is_before_time_series()) then
+          ! Turn off harvest before the start of the harvest time series
+          do_harvest = .false.
+       else
+          ! Note that do_harvest stays true even past the end of the time series. This
+          ! means that harvest rates will be maintained at the rate given in the last
+          ! year of the file for all years past the end of this specified time series.
           do_harvest = .true.
           allocate(this_data(bounds%begg:bounds%endg))
           do varnum = 1, num_harvest_vars
@@ -138,14 +144,6 @@ contains
                                                 this_data(bounds%begg:bounds%endg)
           end do
           deallocate(this_data)
-       else
-          ! Turn off harvest when the model year runs past the end of the dynpft time series.
-          !
-          ! In principle, we could still do harvest for one more year past the time bounds
-          ! of the file (since harvest information is specified as a constant rate that
-          ! applies for the following year), but we're ignoring that last year of harvest
-          ! information for consistency with the old version of the code.
-          do_harvest = .false.
        end if
     end if
 

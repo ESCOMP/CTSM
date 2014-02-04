@@ -27,10 +27,13 @@ module dynFileMod
      procedure :: update_time_info     ! should be called every time step to update time information
 
      ! The following are pass-through methods to time_info:
-     procedure :: get_nt1              ! get lower bound index of current interval
-     procedure :: get_nt2              ! get upper bound index of current interval
-     procedure :: get_year             ! get the year associated with a given time index
-     procedure :: is_within_bounds     ! return true if we are currently within the bounds of this file
+     procedure :: get_nt1               ! get lower bound index of current interval
+     procedure :: get_nt2               ! get upper bound index of current interval
+     procedure :: get_year              ! get the year associated with a given time index
+     procedure :: is_within_bounds      ! return true if we are currently within the bounds of this file
+     procedure :: is_before_time_series ! returns true if we are currently prior to the bounds of this file
+     procedure :: is_after_time_series  ! returns true if we are currently after the bounds of this file (if the last year of the file is (e.g.) 2005, then this is TRUE if the current year is 2005)
+     
   end type dyn_file_type
 
   interface dyn_file_type
@@ -183,5 +186,30 @@ contains
     
     is_within_bounds = this%time_info%is_within_bounds()
   end function is_within_bounds
+
+  !-----------------------------------------------------------------------
+  pure logical function is_before_time_series(this)
+    ! !DESCRIPTION: Returns true if we are currently prior to the bounds of this file
+    !
+    ! !ARGUMENTS:
+    class(dyn_file_type), intent(in) :: this
+    !-----------------------------------------------------------------------
+    
+    is_before_time_series = this%time_info%is_before_time_series()
+  end function is_before_time_series
+
+  !-----------------------------------------------------------------------
+  pure logical function is_after_time_series(this)
+    ! !DESCRIPTION: Returns true if we are currently after the bounds of this file
+    !
+    ! If the last year of the file is (e.g.) 2005, then this is TRUE if the current year
+    ! is 2005
+    !
+    ! !ARGUMENTS:
+    class(dyn_file_type), intent(in) :: this
+    !-----------------------------------------------------------------------
+    
+    is_after_time_series = this%time_info%is_after_time_series()
+  end function is_after_time_series
 
 end module dynFileMod

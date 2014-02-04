@@ -28,15 +28,15 @@ module dynTimeInfoMod
      integer :: nt2           ! upper bound index of the current interval
 
    contains
-     procedure :: update_time_info ! should be called every time step to update time information
-     procedure :: get_nt1          ! get lower bound index of current interval
-     procedure :: get_nt2          ! get upper bound index of current interval
-     procedure :: get_year         ! get the year associated with a given time index
-     procedure :: is_within_bounds ! return true if we are currently within the bounds of this file
+     procedure :: update_time_info      ! should be called every time step to update time information
+     procedure :: get_nt1               ! get lower bound index of current interval
+     procedure :: get_nt2               ! get upper bound index of current interval
+     procedure :: get_year              ! get the year associated with a given time index
+     procedure :: is_within_bounds      ! return true if we are currently within the bounds of this file
+     procedure :: is_before_time_series ! returns true if we are currently prior to the bounds of this file
+     procedure :: is_after_time_series  ! returns true if we are currently after the bounds of this file (if the last year of the file is (e.g.) 2005, then this is TRUE if the current year is 2005)
 
      procedure, private :: year_in_current_interval ! returns true if the current year is in the current interval
-     procedure, private :: is_before_time_series    ! returns true if we are currently prior to the bounds of this file
-     procedure, private :: is_after_time_series     ! returns true if we are currently after the bounds of this file
   end type time_info_type
 
   interface time_info_type
@@ -109,11 +109,6 @@ contains
     !
     ! This mechanism permits the introduction of a dynamic pft period in the middle of a
     ! simulation, with constant weights before and after the dynamic period.
-    !
-    ! PET: harvest - since harvest is specified as a rate for each year, this approach
-    ! will not work. Instead, need to seta flag (based on is_within_years) that indicates
-    ! harvest is zero for the period before the beginning and after the end of the dynpft
-    ! timeseries.
 
     associate( &
          nyears => this%nyears, &
@@ -261,6 +256,9 @@ contains
   !-----------------------------------------------------------------------
   pure logical function is_after_time_series(this)
     ! !DESCRIPTION: Returns true if we are currently after the bounds of this file
+    !
+    ! If the last year of the file is (e.g.) 2005, then this is TRUE if the current year
+    ! is 2005
     !
     ! !ARGUMENTS:
     class(time_info_type), intent(in) :: this

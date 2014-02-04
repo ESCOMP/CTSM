@@ -118,6 +118,84 @@ contains
     
   
   ! ----------------------------------------------------------------------
+  ! Tests of is_before_time_series and is_after_time_series
+  ! ----------------------------------------------------------------------
+
+  @Test
+  subroutine test_is_before_after_early()
+    ! Test is_before_time_series and is_after_time_series, when year is before the time
+    ! series
+    type(time_info_type) :: my_info
+
+    my_info = time_info_type([11,12,13,14], 10)
+    
+    @assertTrue(my_info%is_before_time_series())
+    @assertFalse(my_info%is_after_time_series())
+  end subroutine test_is_before_after_early
+
+  @Test
+  subroutine test_is_before_after_first()
+    ! Test is_before_time_series and is_after_time_series, when year is the first year in
+    ! the time series
+    type(time_info_type) :: my_info
+
+    my_info = time_info_type([11,12,13,14], 11)
+    
+    @assertFalse(my_info%is_before_time_series())
+    @assertFalse(my_info%is_after_time_series())
+  end subroutine test_is_before_after_first
+
+  @Test
+  subroutine test_is_before_after_mid()
+    ! Test is_before_time_series and is_after_time_series, when year is in the middle of
+    ! the time series
+    type(time_info_type) :: my_info
+
+    my_info = time_info_type([11,12,13,14], 12)
+    
+    @assertFalse(my_info%is_before_time_series())
+    @assertFalse(my_info%is_after_time_series())
+  end subroutine test_is_before_after_mid
+
+  @Test
+  subroutine test_is_before_after_last()
+    ! Test is_before_time_series and is_after_time_series, when year is in the last
+    ! interval of the time series
+    type(time_info_type) :: my_info
+
+    my_info = time_info_type([11,12,13,14], 13)
+    
+    @assertFalse(my_info%is_before_time_series())
+    @assertFalse(my_info%is_after_time_series())
+  end subroutine test_is_before_after_last
+
+  @Test
+  subroutine test_is_before_after_late()
+    ! Test is_before_time_series and is_after_time_series, when year is just past the end
+    ! of the time series
+    type(time_info_type) :: my_info
+
+    my_info = time_info_type([11,12,13,14], 14)
+    
+    @assertFalse(my_info%is_before_time_series())
+    @assertTrue(my_info%is_after_time_series())
+  end subroutine test_is_before_after_late
+
+  @Test
+  subroutine test_is_before_after_very_late()
+    ! Test is_before_time_series and is_after_time_series, when year is far past the end
+    ! of the time series
+    type(time_info_type) :: my_info
+
+    my_info = time_info_type([11,12,13,14], 15)
+    
+    @assertFalse(my_info%is_before_time_series())
+    @assertTrue(my_info%is_after_time_series())
+  end subroutine test_is_before_after_very_late
+
+
+
+  ! ----------------------------------------------------------------------
   ! Tests of update_time_info - typical scenarios
   ! ----------------------------------------------------------------------
 

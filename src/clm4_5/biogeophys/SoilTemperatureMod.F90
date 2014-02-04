@@ -814,18 +814,16 @@ contains
      integer , intent(in)  :: num_nolakec                      ! number of column non-lake points in column filter
      integer , intent(in)  :: filter_nolakec(:)                ! column filter for non-lake points
      real(r8), intent(out) :: cv( bounds%begc: , -nlevsno+1: ) ! heat capacity [J/(m2 K)] [col, lev]
-     real(r8), intent(out) :: tk( bounds%begc: , -nlevsno+1: ) ! thermal conductivity [W/(m K)] [col, lev]
+     real(r8), intent(out) :: tk( bounds%begc: , -nlevsno+1: ) ! thermal conductivity at the layer interface [W/(m K)] [col, lev]
      real(r8), intent(out) :: tk_h2osfc( bounds%begc: )        ! thermal conductivity of h2osfc [W/(m K)] [col]
      !
      ! !LOCAL VARIABLES:
      integer  :: l,c,j                     ! indices
      integer  :: fc                        ! lake filtered column indices
-     real(r8) :: bw                        ! partial density of water (ice + liquid)
      real(r8) :: dksat                     ! thermal conductivity for saturated soil (j/(k s m))
      real(r8) :: dke                       ! kersten number
      real(r8) :: fl                        ! volume fraction of liquid or unfrozen water to total water
      real(r8) :: satw                      ! relative total water content of soil.
-     real(r8) :: thk(bounds%begc:bounds%endc,-nlevsno+1:nlevgrnd) ! thermal conductivity of layer
      real(r8) :: zh2osfc
      !-----------------------------------------------------------------------
 
@@ -849,12 +847,14 @@ contains
    tkmg                      =>    cps%tkmg                , & ! Input:  [real(r8) (:,:)]  thermal conductivity, soil minerals  [W/m-K]
    tkdry                     =>    cps%tkdry               , & ! Input:  [real(r8) (:,:)]  thermal conductivity, dry soil (W/m/Kelvin)
    csol                      =>    cps%csol                , & ! Input:  [real(r8) (:,:)]  heat capacity, soil solids (J/m**3/Kelvin)
+   thk                       =>    cps%thk                 , & ! Output: [real(r8) (:,:)]  thermal conductivity of each layer  [W/m-K] (-nlevsno+1:nlevgrnd)
    dz                        =>    cps%dz                  , & ! Input:  [real(r8) (:,:)]  layer depth (m)                       
    zi                        =>    cps%zi                  , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m) 
    z                         =>    cps%z                   , & ! Input:  [real(r8) (:,:)]  layer thickness (m)                   
    t_soisno                  =>    ces%t_soisno            , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)             
    h2osoi_liq                =>    cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                  
    h2osoi_ice                =>    cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                      
+   bw                        =>    cws%bw                  , & ! Output: [real(r8) (:,:)]  partial density of water in the snow pack (ice + liquid) [kg/m3] (-nlevsno+1:0)
    tk_wall                   =>    lps%tk_wall             , & ! Input:  [real(r8) (:,:)]  thermal conductivity of urban wall    
    tk_roof                   =>    lps%tk_roof             , & ! Input:  [real(r8) (:,:)]  thermal conductivity of urban roof    
    tk_improad                =>    lps%tk_improad          , & ! Input:  [real(r8) (:,:)]  thermal conductivity of urban impervious road
@@ -918,8 +918,8 @@ contains
           ! Thermal conductivity of snow, which from Jordan (1991) pp. 18
           ! Only examine levels from snl(c)+1 -> 0 where snl(c) < 1
           if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0)) then  
-             bw = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j))
-             thk(c,j) = tkair + (7.75e-5_r8 *bw + 1.105e-6_r8*bw*bw)*(tkice-tkair)
+             bw(c,j) = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j))
+             thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
           end if
 
        end do

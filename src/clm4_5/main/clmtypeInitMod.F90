@@ -1539,7 +1539,7 @@ contains
     allocate(pef%fsr_nir_d_ln(beg:end))
     pef%fsr_nir_d_ln(:)= nanr
     allocate(pef%sabg_lyr(beg:end,-nlevsno+1:1))
-    pef%sabg_lyr(:,:)= nanr
+    pef%sabg_lyr(:,:)= spval
     allocate(pef%sabg_pen(beg:end))
     pef%sabg_pen(:)= nanr
     allocate(pef%sfc_frc_aer(beg:end))
@@ -2495,6 +2495,9 @@ contains
     !------------------------------------------------------------------------
 
     allocate(cps%snl(beg:end))      !* cannot be averaged up
+    allocate(cps%snow_layer_unity(beg:end,-nlevsno+1:0))
+    cps%snow_layer_unity(:,:) = 1._r8
+
     allocate(cps%isoicol(beg:end))  !* cannot be averaged up
 
     !F. Li and S. Levis
@@ -2519,6 +2522,8 @@ contains
     cps%hksat(:,:)= nanr
     allocate(cps%sucsat(beg:end,nlevgrnd))
     cps%sucsat(:,:)= nanr
+    allocate(cps%thk(beg:end, -nlevsno+1:nlevgrnd))
+    cps%thk(:,:)= spval
     allocate(cps%csol(beg:end,nlevgrnd))
     cps%csol(:,:)= nanr
     allocate(cps%tkmg(beg:end,nlevgrnd))
@@ -2810,6 +2815,8 @@ contains
 
     allocate(cps%glc_topo(beg:end))
     cps%glc_topo(:)= nanr
+    allocate(cps%sub_surf_abs_SW(beg:end))
+    cps%sub_surf_abs_SW(:)= nanr
 
     allocate(cps%rf_decomp_cascade(beg:end,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
     cps%rf_decomp_cascade(:,:,:)= nanr
@@ -2928,6 +2935,8 @@ contains
     cws%h2osoi_liqice_10cm(:)= spval
     allocate(cws%h2osoi_vol(beg:end,1:nlevgrnd))
     cws%h2osoi_vol(:,:)= spval
+    allocate(cws%bw(beg:end,-nlevsno+1:0))
+    cws%bw(:,:)= spval
     allocate(cws%h2osno_old(beg:end))
     cws%h2osno_old(:)= nanr
     allocate(cws%qg(beg:end))

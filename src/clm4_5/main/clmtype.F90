@@ -1227,6 +1227,8 @@ type(pft_dflux_type)  :: pdf         !pft dust flux
 !----------------------------------------------------
 type, public :: column_pstate_type
    integer , pointer :: snl(:)                !number of snow layers
+   real(r8), pointer :: snow_layer_unity(:,:) !value 1 for each snow layer, used for history diagnostics
+
    integer , pointer :: isoicol(:)            !soil color class
 
    !F. Li and S. Levis
@@ -1243,9 +1245,8 @@ type, public :: column_pstate_type
    real(r8), pointer :: watopt(:,:)           !btran parameter for btran = 1
    real(r8), pointer :: hksat(:,:)            !hydraulic conductivity at saturation (mm H2O /s) (nlevgrnd) 
    real(r8), pointer :: hksat_min(:,:)        !mineral hksat
-   real(r8), pointer :: tk_hist(:,:)          !thermal conductivity
-   real(r8), pointer :: cv_hist(:,:)          !heat capacity
    real(r8), pointer :: sucsat(:,:)           !minimum soil suction (mm) (nlevgrnd) 
+   real(r8), pointer :: thk(:,:)              !thermal conductivity of each layer [W/m-K] (-nlevsno+1:nlevgrnd)
    real(r8), pointer :: hkdepth(:)            !decay factor (m)
    real(r8), pointer :: wtfact(:)             !maximum saturated fraction for a gridcell
    real(r8), pointer :: fracice(:,:)          !fractional impermeability (-)
@@ -1429,6 +1430,7 @@ type, public :: column_pstate_type
    ! End New variables for methane code
    real(r8), pointer :: glc_frac(:)           ! ice fractional area
    real(r8), pointer :: glc_topo(:)           ! surface elevation (m)
+   real(r8), pointer :: sub_surf_abs_SW(:)    ! percent of solar radiation absorbed below first snow layer
 end type column_pstate_type
 
 type(column_pstate_type), target :: cps      !column physical state variables
@@ -1472,6 +1474,7 @@ type, public :: column_wstate_type
    real(r8), pointer :: h2osoi_ice(:,:)       !ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
    real(r8), pointer :: h2osoi_liqice_10cm(:) !liquid water + ice lens in top 10cm of soil (kg/m2)
    real(r8), pointer :: h2osoi_vol(:,:)       !volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)  
+   real(r8), pointer :: bw(:,:)               !partial density of water in the snow pack (ice + liquid) [kg/m3] (-nlevsno+1:0)
    real(r8), pointer :: h2osno_old(:)         !snow mass for previous time step (kg/m2) (new)
    real(r8), pointer :: qg(:)                 !ground specific humidity [kg/kg]
    real(r8), pointer :: dqgdT(:)              !d(qg)/dT
