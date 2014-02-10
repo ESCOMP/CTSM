@@ -115,6 +115,7 @@ $CODEROOT/lnd/clm/bld/build-namelist -infile $CASEBUILD/clmconf/cesm_namelist \
     -inputdata $CASEBUILD/clm.input_data_list $ignore \
     -namelist "&clm_inparm start_ymd = $start_ymd $CLM_NAMELIST_OPTS /" $usecase $glc_opts \
     -res $RESOLUTION $clmusr -clm_start_type $START_TYPE \
+    -envxml_dir $CASEROOT \
     -l_ncpl $LND_NCPL -lnd_frac "${LND_DOMAIN_PATH}/${LND_DOMAIN_FILE}" \
     -glc_nec $GLC_NEC -co2_ppmv $CCSM_CO2_PPMV -co2_type $CLM_CO2_TYPE \
     -config $CASEBUILD/clmconf/config_cache.xml $CLM_BLDNML_OPTS || exit -3

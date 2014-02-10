@@ -1,4 +1,147 @@
 ===============================================================
+Tag name:  clm4_5_62
+Originator(s):  erik (Erik)
+Date: Mon Feb 10 04:16:07 MST 2014
+One-line Summary: Get PTCLM working robustly, US-UMB test working, add CO2 streams to datm, add more 
+                  consistency testing between compsets and user settings
+
+Purpose of changes:
+
+US-UMB fix in scripts and datm update. Fix so build-namelist will abort if there is an inconsistency with CLM_BLDNML_OPTS 
+and user_nl_clm. Add CO2 streams as a built-in option to datm. Turn CO2 streams on with the DATM_CO2_TSERIES env_run.xml
+variable. Can be set to: none,20tr,rcp2.6,rcp4.5,rcp6.0,rcp8.5, by default is none.
+
+Requirements for tag:
+
+   datm -- CO2 update, streams improvements
+   Fix build-namelist consistency issues
+   Fix bug 1847 -- end1d in hist for clm4_0
+   Add envxml_dir
+   check that cndv and fpftdyn aren't on the same time
+   Add PTCLM tests to test_Driver
+   Add PTCLM test system in
+   Make PTCLM more robust
+
+Test level of tag: regular, tools, build_namelist
+
+Bugs fixed (include bugzilla ID):
+     1918 -- sort options in build-namelist
+     1917 -- remove WRF resolutions
+     1903 -- buildtools fails for PTCLM
+     1900 -- Remove BUILDHEAT and Qanth from output for CLM testing
+     1896 -- CLM build-namelist should abort if use_cndv AND fpftdyn are set.
+     1881 -- Add envxml_casedir option to CLM build-namelist
+     1879 -- need error triggered when use_crop and CLM_BLDNL_OPTS are not consistent 
+     1847 -- 'histfilemod_mp_hist_restart_ncd_$END1D' is being used without being defined 
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: frankfurt switched out for goldbach
+
+Describe any changes made to the namelist: CLM build-namelist changed to ensure user changes don't conflict with
+    command-line options
+
+List any changes to the defaults for the boundary datasets: remove WRF datasets
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+     scripts    to scripts4_140209
+     Machines   to Machines_140207a
+     datm       to datm8_140114
+     pio        to pio1_8_8
+     cprnc      to cprnc_140203
+
+     PTCLM      to PTCLM2_140204
+
+List all files eliminated: move frankfurt to goldbach
+
+D       models/lnd/clm/test/tools/tests_posttag_frankfurt_nompi
+ 
+List all files added and what they do: goldbach, and add PTCLM tools testing
+
+A  +    models/lnd/clm/test/tools/tests_posttag_goldbach_nompi
+A       models/lnd/clm/test/tools/TCBscripttools.sh ------------ Add script to run buildtools for PTCLM
+A       models/lnd/clm/test/tools/config_files/PTCLM__s -------- Config for PTCLM
+A       models/lnd/clm/test/tools/nl_files/PTCLM_USUMB_clm4_0
+A       models/lnd/clm/test/tools/nl_files/PTCLM_USUMB_clm4_5
+A       models/lnd/clm/test/tools/nl_files/PTCLM_USUMB_Cycle_clm4_5
+A       models/lnd/clm/test/tools/nl_files/PTCLM_USUMB_Global_clm4_5
+A       models/lnd/clm/bld/unit_testers/myuser_nl_clm --- New build-namelist tests
+A       models/lnd/clm/bld/unit_testers/env_run.xm 
+
+
+List all existing files that have been modified, and describe the changes:
+
+    M    models/lnd/clm/bld/build-namelist ----- Sort options, add -envxml_dir option, check that user hasn't contradicted themself
+             with CLM_BLDNML_OPTS and user_nl_clm, remove options: -noio, -nofire, -snicar_frc, -vsoilc, -exlaklayers, -clm4me
+             use Cwd::abs_path and remove home-grown absolute_path, add some more docmentation and comments, redo some ordering and names
+    M    models/lnd/clm/bld/clm.buildnml.csh --- add -envxml_dir so will use env_*.xml files to expand env variables
+    M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml --- Add irrig setting, remove WRF files
+    M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Add irrig, bgc_spinup, and bgc_mode
+    M    models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml -- Remove WRF resolutions: us20, wus12
+    M    models/lnd/clm/bld/namelist_files/namelist_definition_clm4_0.xml - Remove WRF resolutions
+    M    models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Remove WRF resolutions, add bgc_mode
+    M    models/lnd/clm/bld/unit_testers/build-namelist_test.pl ----------- Add a bunch of new tests
+    M    models/lnd/clm/bld/user_nl_clm ----- make note of variables that should be done by command-line build-namelist options
+
+    M    models/lnd/clm/src/clm4_0/main/histFileMod.F90 --- Fix bug 1847
+
+------------ Add PTCLM testing
+    M    models/lnd/clm/test/tools/README.testnames
+    M    models/lnd/clm/test/tools/test_driver.sh ------ Remove bluefire, lynx, mirage, jaguarpf -- switch frankfurt for goldbach
+    M    models/lnd/clm/test/tools/TBLscript_tools.sh
+    M    models/lnd/clm/test/tools/TSMscript_tools.sh
+    M    models/lnd/clm/test/tools/input_tests_master
+    M    models/lnd/clm/test/tools/tests_posttag_nompi_regression
+    M    models/lnd/clm/test/tools/tests_posttag_yong
+    M    models/lnd/clm/test/tools/tests_pretag_yellowstone_nompi
+
+------------ Don't die if debug and files were not created.
+    M    models/lnd/clm/tools/clm4_0/mksurfdata_map/mksurfdata.pl
+    M    models/lnd/clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl
+
+CLM testing: regular, build-namelist, tools
+
+  build-namelist tests:
+
+    yellowstone
+
+  regular tests (aux_clm):
+
+    yellowstone_intel
+    yellowstone_pgi
+    goldbach_nag
+    edison_intel
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel
+    yellowstone_pgi
+
+  tools testing:
+
+    yellowstone interactive
+    goldbach interactive
+
+CLM tag used for the baseline comparisons:  clm4_5_61
+
+Changes answers relative to baseline: None, bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_61
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date: Tue Feb  4 09:45:43 MST 2014
@@ -176,7 +319,6 @@ List all existing files that have been modified, and describe the changes:
   M models/lnd/clm/bld/build-namelist - major refactor described above
   M models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - fix incorrect comments
   M models/lnd/clm/bld/unit_testers/build-namelist_test.pl - minor updates to check new output style
-
 
 CLM testing:
 

@@ -922,7 +922,7 @@ CLM run type.
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,wus12,us20,1km-merge-10min">
+"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,1km-merge-10min">
 Horizontal resolutions
 Note: 0.1x0.1, 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 
@@ -936,7 +936,7 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v7,gx1v6,navy,test,tx0.1v2,tx1v1,T62,cruncep,us20,wus12">
+       valid_values="USGS,gx3v7,gx1v6,navy,test,tx0.1v2,tx1v1,T62,cruncep">
 Land mask description
 </entry> 
 
@@ -977,6 +977,18 @@ Description of the use case selected.
 <entry id="bgc_spinup" type="char*3" category="default_settings"
        group="default_settings" valid_values="on,off" >
 Command line arguement for turning on CN spinup mode.
+</entry>
+
+<entry id="bgc_mode" type="char*4" category="default_settings"
+       group="default_settings" valid_values="sp,cn,bgc" >
+Command line arguement for biogeochemistry mode for CLM4.5
+   sp  = Satellitte Phenology
+   cn  = Carbon Nitrogen model
+   bgc = CLM4.5 BGC model with: 
+        CENTURY model pools 
+        Nitrification/De-nitrification
+        Methane model
+        Vertically resolved Carbon
 </entry>
 
 <!-- ========================================================================================  -->

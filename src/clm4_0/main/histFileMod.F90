@@ -3547,6 +3547,7 @@ contains
              case (namep)
                 num1d = nump
                 beg1d = begp
+                end1d = endp
              case default
                 write(iulog,*) trim(subname),' ERROR: read unknown 1d type=',type1d
                 call endrun ()

@@ -782,7 +782,7 @@ EOF
                   }
                }
    
-            } else {
+            } elsif( ! $opts{'debug'} ) {
               die "ERROR files were NOT created: nc=$ncfiles[0] log=$lfiles[0]\n";
             }
             if ( (! $opts{'debug'}) && $opts{'mv'} && (-f "$ncfiles[0]" || -f "$lfiles[0]") ) {

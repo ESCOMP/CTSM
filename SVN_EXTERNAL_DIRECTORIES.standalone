@@ -1,11 +1,11 @@
 # CESM scripts, machines and driver
-scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_140114
-scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_140107
+scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_140209
+scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_140207a
 scripts/ccsm_utils/CMake        https://github.com/quantheory/CMake_Fortran_utils/tags/CMake_Fortran_utils_140109
 models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq5_0_07
 
 # Model components: Data atmosphere, and stub components as well as land-ice model
-models/atm/datm                 https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_131201
+models/atm/datm                 https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_140114
 models/ocn/socn                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/socn
 models/ice/sice                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/sice
 models/glc/sglc                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/sglc
@@ -18,10 +18,10 @@ models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/t
 models/utils/esmf_wrf_timemgr   https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_130213
 models/utils/timing             https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_131108
 models/utils/mct                https://github.com/quantheory/MCT/tags/compiler_fixes_n03_MCT_2.8.3
-models/utils/pio                http://parallelio.googlecode.com/svn/trunk_tags/pio1_8_6/pio
+models/utils/pio                http://parallelio.googlecode.com/svn/trunk_tags/pio1_8_8/pio
 
 # Mapping tools:
-tools/cprnc                            https://svn-ccsm-models.cgd.ucar.edu/tools/cprnc/trunk_tags/cprnc_131120
+tools/cprnc                            https://svn-ccsm-models.cgd.ucar.edu/tools/cprnc/trunk_tags/cprnc_140203
 tools/mapping                          https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_130716
 models/lnd/clm/tools/shared/gen_domain https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_130716/gen_domain_files
 

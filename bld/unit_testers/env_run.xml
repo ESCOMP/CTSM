@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<config_definition>
+
+<entry id="DIN_LOC_ROOT"   value="MYDINLOCROOT"  /> 
+
+</config_definition>

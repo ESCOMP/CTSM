@@ -58,15 +58,13 @@ CLM testing:
   build-namelist tests:
 
     yellowstone
-    frankfurt
 
   regular tests (aux_clm):
 
     yellowstone_intel
     yellowstone_pgi
-    frankfurt_intel
-    frankfurt_pgi
-    frankfurt_nag
+    goldbach_nag
+    edison_intel
 
   history file comparison with component_gen_comp and summarize_cprnc_diffs:
 
@@ -77,14 +75,12 @@ CLM testing:
 
     yellowstone_intel
     yellowstone_pgi
-    frankfurt_intel
-    frankfurt_pgi
-    frankfurt_nag
+    goldbach_nag
 
   tools testing:
 
     yellowstone interactive
-    frankfurt interactive
+    goldbach interactive
 
 CLM tag used for the baseline comparisons: 
 

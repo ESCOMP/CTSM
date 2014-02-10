@@ -88,9 +88,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 271;
+my $ntests = 297;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 165;
+   $ntests += 163;
 }
 plan( tests=>$ntests );
 
@@ -231,6 +231,7 @@ my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
 foreach my $options ( "-irrig .true. ", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_start_type startup", 
+                      "-envxml_dir . -infile myuser_nl_clm", 
                      ) {
    my $file = $startfile;
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
@@ -239,9 +240,12 @@ foreach my $options ( "-irrig .true. ", "-verbose", "-rcp 2.6", "-test", "-sim_y
    system( "diff lnd_in lnd_in.default" );
    $cfiles->shownmldiff( "default", $mode );
    my $finidat = `grep finidat lnd_in`;
-   if ( $options eq "-l_ncpl 1" ) {
+   if (      $options eq "-l_ncpl 1" ) {
       my $dtime = `grep dtime lnd_in`;
       like( $dtime, "/ 86400\$/", "$options" );
+   } elsif ( $options =~ /myuser_nl_clm/ ) {
+      my $fsurdat =  `grep fsurdat lnd_in`;
+      like( $fsurdat, "/MYDINLOCROOT/lnd/clm2/PTCLMmydatafiles/1x1pt_US-UMB/surfdata_1x1pt_US-UMB_simyr2000_clm4_5_c131122.nc/", "$options" );
    }
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
@@ -265,36 +269,159 @@ system( "touch $finidat" );
 my %failtest = ( 
      "coldstart but with IC file"=>{ options=>"-clm_start_type cold",
                                      namelst=>"finidat='$finidat'",
+                                     conopts=>"",
                                    },
      "l_ncpl is zero"            =>{ options=>"-l_ncpl 0",
                                      namelst=>"",
+                                     conopts=>"",
                                    },
      "l_ncpl not integer"        =>{ options=>"-l_ncpl 1.0",
                                      namelst=>"",
+                                     conopts=>"",
                                    },
      "both l_ncpl and dtime"     =>{ options=>"-l_ncpl 24",
                                      namelst=>"dtime=1800",
+                                     conopts=>"",
+                                   },
+     "use_crop without -crop"    =>{ options=>"",
+                                     namelst=>"use_crop=.true.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "CNDV with fpftdyn"         =>{ options=>"",
+                                     namelst=>"fpftdyn='myfpftdynfile.nc'",
+                                     conopts=>"-bgc cndv",
+                                   },
+     "CNDV with fpftdyn - clm4_5"=>{ options=>"-bgc bgc -dynamic_vegetation",
+                                     namelst=>"fpftdyn='myfpftdynfile.nc'",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "use_cndv=T without bldnml op"=>{ options=>"-bgc cn",
+                                     namelst=>"use_cndv=.true.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "use_cndv=F with dyn_veg op"=>{ options=>"-bgc cn -dynamic_vegetation",
+                                     namelst=>"use_cndv=.false.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "crop with use_crop false"  =>{ options=>"-crop -bgc bgc",
+                                     namelst=>"use_crop=.false.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "crop without CN"           =>{ options=>"-crop -bgc sp",
+                                     namelst=>"",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "irrigate=T without -irr op"=>{ options=>"-crop -bgc cn",
+                                     namelst=>"irrigate=.true.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "irrigate=F with -irrg op"  =>{ options=>"-crop -bgc cn -irrig .true.",
+                                     namelst=>"irrigate=.false.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "-irrig without -crop"      =>{ options=>"-bgc cn -irrig .true.",
+                                     namelst=>"",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "sp and c13"                =>{ options=>"-bgc sp",
+                                     namelst=>"use_c13=.true.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "sp and c14"                =>{ options=>"-bgc sp",
+                                     namelst=>"use_c14=.true.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "crop and c13"              =>{ options=>"-crop -bgc bgc",
+                                     namelst=>"use_c13=.true.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "crop and c14"              =>{ options=>"-crop -bgc cn",
+                                     namelst=>"use_c14=.true.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "bgc=cn and bgc settings"   =>{ options=>"-bgc cn",
+                                     namelst=>"use_lch4=.true.,use_nitrif_denitrif=.true.,use_vertsoilc=.true.,use_century_decomp=.true.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "bgc=bgc and cn-only set"   =>{ options=>"-bgc bgc",
+                                     namelst=>"use_lch4=.false.,use_nitrif_denitrif=.false.,use_vertsoilc=.false.,use_century_decomp=.false.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "use_cn=true bgc=sp"        =>{ options=>"-bgc sp",
+                                     namelst=>"use_cn=.true.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "use_cn=false bgc=cn"       =>{ options=>"-bgc cn",
+                                     namelst=>"use_cn=.false.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "vichydro without clm4_5"   =>{ options=>"-vichydro",
+                                     namelst=>"",
+                                     conopts=>"-phys clm4_0",
+                                   },
+     "use_vic=F with -vic op"    =>{ options=>"-vichydro",
+                                     namelst=>"use_vichydro=.false.",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "bgc without clm4_5"        =>{ options=>"-bgc sp",
+                                     namelst=>"",
+                                     conopts=>"-phys clm4_0",
+                                   },
+     "bgc_spinup without clm4_5" =>{ options=>"-bgc_spinup on",
+                                     namelst=>"",
+                                     conopts=>"-phys clm4_0",
+                                   },
+     "DV without clm4_5"         =>{ options=>"-dynamic_vegetation",
+                                     namelst=>"",
+                                     conopts=>"-phys clm4_0",
+                                   },
+     "bgc_spinup without cn"     =>{ options=>"-bgc_spinup on -bgc sp",
+                                     namelst=>"",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "spinup=1 without bldnml op"=>{ options=>"-bgc bgc",
+                                     namelst=>"spinup_state=1",,
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "spinup=0 with bldnml op"   =>{ options=>"-bgc bgc -bgc_spinup on",
+                                     namelst=>"spinup_state=0",
+                                     conopts=>"-phys clm4_5",
                                    },
      "both co2_type and on nml"  =>{ options=>"-co2_type constant",
-                                    namelst=>"co2_type='prognostic'",
+                                     namelst=>"co2_type='prognostic'",
+                                     conopts=>"",
                                    },
      "both lnd_frac and on nml"  =>{ options=>"-lnd_frac domain.nc",
                                      namelst=>"fatmlndfrc='frac.nc'",
+                                     conopts=>"",
                                    },
      "branch but NO nrevsn"      =>{ options=>"-clm_start_type branch",
                                      namelst=>"",
+                                     conopts=>"",
                                    },
      "glc_nec inconsistent"      =>{ options=>"-glc_nec 10",
                                      namelst=>"maxpatch_glcmec=5",
+                                     conopts=>"",
                                    },
      "glc_smb inconsistent"      =>{ options=>"-glc_nec 10 -glc_smb .true.",
                                      namelst=>"glc_smb=.false.",
+                                     conopts=>"",
                                    },
      "glc_grid inconsistent"     =>{ options=>"-glc_nec 10 -glc_grid gland10",
                                      namelst=>"glc_grid='gland5'",
+                                     conopts=>"",
+                                   },
+     "envxml_not_dir"            =>{ options=>"-envxml_dir myuser_nl_clm",
+                                     namelst=>"",
+                                     conopts=>"",
+                                   },
+     "envxml_emptydir"           =>{ options=>"-envxml_dir xFail",
+                                     namelst=>"",
+                                     conopts=>"",
                                    },
                );
 foreach my $key ( keys(%failtest) ) {
+   system( "../configure -s ".$failtest{$key}{"conopts"});
    my $options  = $failtest{$key}{"options"};
    my $namelist = $failtest{$key}{"namelst"};
    eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
@@ -513,10 +640,10 @@ print "==================================================\n";
 
 my $mode = "phys45";
 system( "../configure -s -phys clm4_5" );
-my $clm45options = "-bgc bgc -clm4me -vsoilc on";
+my $clm45options = "-bgc bgc";
 my @clm45res = ( "10x15", "48x96", "0.9x1.25", "1.9x2.5", "360x720cru" );
 foreach my $res ( @clm45res ) {
-   $options = "-res $res -bgc bgc";
+   $options = "-res $res";
    eval{ system( "$bldnml $options $clm45options  > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );
    $cfiles->checkfilesexist( "$options", $mode );
