@@ -11,7 +11,7 @@ module clmtypeInitMod
   use shr_infnan_mod, only: &
        nan => shr_infnan_nan, assignment(=)
   use clm_varcon, only : &
-       spval, ispval
+       spval, ispval, max_lunit
   use clm_varpar  , only : &
        maxpatch_pft, nlevsno, nlevgrnd, numrad, nlevlak, &
        numpft, ndst, nlevurb, nlevsoi, nlevdecomp, nlevdecomp_full, &
@@ -406,6 +406,9 @@ contains
     allocate(grc%lon(beg:end))
     allocate(grc%latdeg(beg:end))
     allocate(grc%londeg(beg:end))
+
+    allocate(grc%landunit_indices(1:max_lunit, beg:end))
+    grc%landunit_indices(:,:) = ispval
 
     allocate(grc%gris_mask(beg:end))
     grc%gris_mask(:)=nanr

@@ -255,14 +255,16 @@ contains
     !
     ! !USES
     use clmtype
+    use clm_varcon, only : ispval
     !
     ! !ARGUMENTS
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: c,p               ! loop counters
-    integer :: curl,curc,curp      ! tracks l,c,p indexes in arrays
+    integer :: l,c,p               ! loop counters
+    integer :: curg,curl,curc,curp ! tracks g,l,c,p indexes in arrays
+    integer :: ltype               ! landunit type
     !------------------------------------------------------------------------------
 
     !--- Set the current c,l (curc, curl) to zero for initialization,
@@ -317,6 +319,26 @@ contains
        lun%ncolumns(curl) = lun%colf(curl) - lun%coli(curl) + 1
     enddo
 
+    ! Determine landunit_indices: indices into landunit-level arrays for each grid cell.
+    ! Note that landunits not present in a given grid cell are set to ispval.
+    grc%landunit_indices(:,bounds%begg:bounds%endg) = ispval
+    do l = bounds%begl,bounds%endl
+       ltype = lun%itype(l)
+       curg = lun%gridcell(l)
+       if (curg < bounds%begg .or. curg > bounds%endg) then
+          write(iulog,*) 'clm_ptrs_compdown ERROR: landunit_indices ', l,curg,bounds%begg,bounds%endg
+          call endrun()
+       end if
+
+       if (grc%landunit_indices(ltype, curg) == ispval) then
+          grc%landunit_indices(ltype, curg) = l
+       else
+          write(iulog,*) 'clm_ptrs_compdown ERROR: This landunit type has already been set for this gridcell'
+          write(iulog,*) 'l, ltype, curg = ', l, ltype, curg
+          call endrun()
+       end if
+    end do
+
   end subroutine clm_ptrs_compdown
 
   !------------------------------------------------------------------------------
@@ -327,6 +349,7 @@ contains
     !
     ! !USES
     use clmtype
+    use clm_varcon, only : ispval, max_lunit
     !
     ! !ARGUMENTS
     implicit none
@@ -335,6 +358,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: g,l,c,p       ! loop counters
     integer :: l_prev        ! l value of previous point
+    integer :: ltype         ! landunit type
     logical :: error         ! error flag
     !------------------------------------------------------------------------------
 
@@ -353,6 +377,21 @@ contains
     if (masterproc) write(iulog,*) '---clm_ptrs_check:'
 
     !--- check index ranges ---
+    error = .false.
+    do g = begg, endg
+       do ltype = 1, max_lunit
+          l = grc%landunit_indices(ltype, g)
+          if (l /= ispval) then
+             if (l < begl .or. l > endl) error = .true.
+          end if
+       end do
+    end do
+    if (error) then
+       write(iulog,*) '   clm_ptrs_check: g index ranges - ERROR'
+       call endrun()
+    end if
+    if (masterproc) write(iulog,*) '   clm_ptrs_check: g index ranges - OK'
+
     error = .false.
     if (minval(lun%gridcell(begl:endl)) < begg .or. maxval(lun%gridcell(begl:endl)) > endg) error=.true.
     if (minval(lun%coli(begl:endl)) < begc .or. maxval(lun%coli(begl:endl)) > endc) error=.true.
@@ -444,22 +483,30 @@ contains
 
     !--- check that the tree is internally consistent ---
     error = .false.
-    do l = begl, endl
-       g = lun%gridcell(l)
-       do c = lun%coli(l),lun%colf(l)
-          if (col%gridcell(c) /= g) error = .true.
-          if (col%landunit(c) /= l) error = .true.
-          do p = col%pfti(c),col%pftf(c)
-             if (pft%gridcell(p) /= g) error = .true.
-             if (pft%landunit(p) /= l) error = .true.
-             if (pft%column(p)   /= c) error = .true.
-             if (error) then
-                write(iulog,*) '   clm_ptrs_check: tree consistent - ERROR'
-                call endrun()
-             endif
-          enddo
-       enddo
-    enddo
+    do g = begg, endg
+       do ltype = 1, max_lunit
+          l = grc%landunit_indices(ltype, g)
+
+          ! skip l == ispval, which implies that this landunit type doesn't exist on this grid cell
+          if (l /= ispval) then
+             if (lun%itype(l) /= ltype) error = .true.
+             if (lun%gridcell(l) /= g) error = .true.
+             do c = lun%coli(l),lun%colf(l)
+                if (col%gridcell(c) /= g) error = .true.
+                if (col%landunit(c) /= l) error = .true.
+                do p = col%pfti(c),col%pftf(c)
+                   if (pft%gridcell(p) /= g) error = .true.
+                   if (pft%landunit(p) /= l) error = .true.
+                   if (pft%column(p)   /= c) error = .true.
+                   if (error) then
+                      write(iulog,*) '   clm_ptrs_check: tree consistent - ERROR'
+                      call endrun()
+                   endif
+                enddo  ! p
+             enddo  ! c
+          end if  ! l /= ispval
+       enddo  ! ltype
+    enddo  ! g
     if (masterproc) write(iulog,*) '   clm_ptrs_check: tree consistent - OK'
     if (masterproc) write(iulog,*) ' '
 

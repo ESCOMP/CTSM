@@ -92,6 +92,7 @@ contains
     use clm_varctl           , only : fpftdyn, use_cndv, use_cn
     use decompMod            , only : bounds_type, get_proc_clumps, get_clump_bounds, &
                                       BOUNDS_LEVEL_PROC
+    use dynLandunitAreaMod   , only : update_landunit_weights
     use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
     use dynConsBiogeochemMod , only : dyn_cnbal_pft
     use dynpftFileMod        , only : dynpft_interp
@@ -155,6 +156,8 @@ contains
        ! actually changed some weights in this time step. However, it doesn't hurt for
        ! these things to be called all the time (except for a minor performance hit), so
        ! I'm leaving them outside any conditionals for simplicity
+
+       call update_landunit_weights(bounds_clump)
 
        call compute_higher_order_weights(bounds_clump)
 

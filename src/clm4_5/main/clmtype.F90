@@ -2305,18 +2305,22 @@ type(landunit_type), target :: lun  !geomorphological landunits
 
 type, public :: gridcell_type
    ! topological mapping functionality, local 1d gdc arrays
-   integer , pointer :: gindex(:)       !global index
-   real(r8), pointer :: area(:)         !total land area, gridcell (km^2)
-   real(r8), pointer :: lat(:)          !latitude (radians)
-   real(r8), pointer :: lon(:)          !longitude (radians)
-   real(r8), pointer :: latdeg(:)       !latitude (degrees)
-   real(r8), pointer :: londeg(:)       !longitude (degrees)
+   integer , pointer :: gindex(:)    !global index
+   real(r8), pointer :: area(:)      !total land area, gridcell (km^2)
+   real(r8), pointer :: lat(:)       !latitude (radians)
+   real(r8), pointer :: lon(:)       !longitude (radians)
+   real(r8), pointer :: latdeg(:)    !latitude (degrees)
+   real(r8), pointer :: londeg(:)    !longitude (degrees)
 
-   real(r8), pointer :: gris_mask(:)    !Greenland ice sheet mask 
-   real(r8), pointer :: gris_area(:)    !Greenland ice-covered area per gridcell (km^2)
-   real(r8), pointer :: aais_mask(:)    !Antarctic ice sheet mask 
-   real(r8), pointer :: aais_area(:)    !Antarctic ice-covered area per gridcell (km^2)
-   real(r8), pointer :: tws(:)          !total water storage (mm H2O)
+   ! indices into landunit-level arrays for landunits in this grid cell (ispval implies
+   ! this landunit doesn't exist on this grid cell) [1:max_lunit, begg:endg]
+   integer , pointer :: landunit_indices(:,:) 
+
+   real(r8), pointer :: gris_mask(:) !Greenland ice sheet mask 
+   real(r8), pointer :: gris_area(:) !Greenland ice-covered area per gridcell (km^2)
+   real(r8), pointer :: aais_mask(:) !Antarctic ice sheet mask 
+   real(r8), pointer :: aais_area(:) !Antarctic ice-covered area per gridcell (km^2)
+   real(r8), pointer :: tws(:)       !total water storage (mm H2O)
 end type gridcell_type
 
 type(gridcell_type), target :: grc    !gridcell data structure

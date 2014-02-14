@@ -76,7 +76,7 @@ module clm_varcon
   real(r8), public, parameter ::  secspday= SHR_CONST_CDAY  ! Seconds per day
   integer,  public, parameter :: isecspday= secspday        ! Integer seconds per day
   real(r8), public, parameter ::  spval = 1.e36_r8  ! special value for real data
-  integer , public, parameter :: ispval = -9999     ! special value for int data
+  integer , public, parameter :: ispval = -9999     ! special value for int data (keep this negative to avoid conflicts with possible valid values)
 
   ! These are tunable constants from clm2_3
 

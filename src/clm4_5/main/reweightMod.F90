@@ -109,12 +109,13 @@ module reweightMod
   !
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: setActive      ! set 'active' flags at pft, column & landunit level
-  private :: is_active_p    ! determine whether the given pft is active
-  private :: is_active_c    ! determine whether the given column is active
-  private :: is_active_l    ! determine whether the given landunit is active
-  private :: checkWeights   ! check subgrid weights
-  private :: weightsOkay    ! determine if sum of weights satisfies requirements laid out above
+  private :: setActive                       ! set 'active' flags at pft, column & landunit level
+  private :: is_active_l                     ! determine whether the given landunit is active
+  private :: is_active_c                     ! determine whether the given column is active
+  private :: is_active_p                     ! determine whether the given pft is active
+  private :: is_gcell_of_landunit_all_istice ! determine whether a grid cell is 100% covered by the istice landunit
+  private :: checkWeights                    ! check subgrid weights
+  private :: weightsOkay                     ! determine if sum of weights satisfies requirements laid out above
   !-----------------------------------------------------------------------
 
 contains
@@ -237,42 +238,69 @@ contains
   end subroutine setActive
 
   !-----------------------------------------------------------------------
-  logical function is_active_p(p)
+  logical function is_active_l(l)
     !
     ! !DESCRIPTION:
-    ! Determine whether the given pft is active
+    ! Determine whether the given landunit is active
     !
     ! !USES:
     use clmtype
-    use clm_varcon, only : istice_mec
+    use clm_varcon, only : istsoil, istice_mec
     use domainMod , only : ldomain
     !
     ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: p   ! pft index
+    integer, intent(in) :: l   ! landunit index
     !
     ! !LOCAL VARIABLES:
-    integer :: l  ! landunit index
     integer :: g  ! grid cell index
     !------------------------------------------------------------------------
 
     if (all_active) then
-       is_active_p = .true.
+       is_active_l = .true.
 
     else
-       l =pft%landunit(p)
-       g =pft%gridcell(p)
-    
-       is_active_p = .false.
+       g =lun%gridcell(l)
 
-       if (pft%wtgcell(p) > 0) is_active_p = .true.
+       is_active_l = .false.
 
-       ! always run over ice_mec landunits within the glcmask, because this is where glc
+       ! ------------------------------------------------------------------------
+       ! General conditions under which is_active_l NEEDS to be true in order to satisfy
+       ! the requirements laid out at the top of this module:
+       ! ------------------------------------------------------------------------
+       if (lun%wtgcell(l) > 0) is_active_l = .true.
+
+       ! ------------------------------------------------------------------------
+       ! Conditions under which is_active_p is set to true because we want extra virtual landunits:
+       ! ------------------------------------------------------------------------
+
+       ! Always run over ice_mec landunits within the glcmask, because this is where glc
        ! might need input from virtual (0-weight) landunits
-       if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_p = .true.
+       if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_l = .true.
+
+       ! In general, include a virtual natural vegetation landunit. This aids
+       ! initialization of a new landunit; and for runs that are coupled to CISM, this
+       ! provides bare land SMB forcing even if there is no vegetated area.
+       !
+       ! However, we do NOT include a virtual vegetated column in grid cells that are 100%
+       ! standard (non-mec) glacier. This is for performance reasons: for FV 0.9x1.25,
+       ! excluding these virtual vegetated columns (mostly over Antarctica) leads to a ~
+       ! 6% performance improvement (the performance improvement is much less for ne30,
+       ! though). In such grid cells, we do not need the forcing to CISM (because if we
+       ! needed forcing to CISM, we'd be using an istice_mec point rather than plain
+       ! istice). Furthermore, standard glacier landunits cannot retreat (only istice_mec
+       ! points can retreat, due to coupling with CISM), so we don't need to worry about
+       ! the glacier retreating in this grid cell, exposing new natural veg area. The
+       ! only thing that could happen is the growth of some special landunit - e.g., crop
+       ! - in this grid cell, due to dynamic landunits. We'll live with the fact that
+       ! initialization of the new crop landunit will be initialized in an un-ideal way
+       ! in this rare situation.
+       if (lun%itype(l) == istsoil .and. .not. is_gcell_of_landunit_all_istice(l)) then
+          is_active_l = .true.
+       end if
     end if
 
-  end function is_active_p
+  end function is_active_l
 
   !-----------------------------------------------------------------------
   logical function is_active_c(c)
@@ -303,50 +331,95 @@ contains
 
        is_active_c = .false.
 
-       if (col%wtgcell(c) > 0) is_active_c = .true.
+       ! ------------------------------------------------------------------------
+       ! General conditions under which is_active_c NEEDS to be true in order to satisfy
+       ! the requirements laid out at the top of this module:
+       ! ------------------------------------------------------------------------
+       if (lun%active(l) .and. col%wtlunit(c) > 0._r8) is_active_c = .true.
 
-       ! always run over ice_mec landunits within the glcmask, because this is where glc
-       ! might need input from virtual (0-weight) landunits
+       ! ------------------------------------------------------------------------
+       ! Conditions under which is_active_c is set to true because we want extra virtual columns:
+       ! ------------------------------------------------------------------------
+
+       ! always run over all ice_mec columns within the glcmask, because this is where glc
+       ! might need input from virtual (0-weight) columns
        if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_c = .true.
     end if
 
   end function is_active_c
 
   !-----------------------------------------------------------------------
-  logical function is_active_l(l)
+  logical function is_active_p(p)
     !
     ! !DESCRIPTION:
-    ! Determine whether the given landunit is active
+    ! Determine whether the given pft is active
     !
     ! !USES:
     use clmtype
     use clm_varcon, only : istice_mec
-    use domainMod , only : ldomain
     !
     ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: l   ! landunit index
+    integer, intent(in) :: p   ! pft index
     !
     ! !LOCAL VARIABLES:
-    integer :: g  ! grid cell index
+    integer :: c  ! column index
     !------------------------------------------------------------------------
 
     if (all_active) then
-       is_active_l = .true.
+       is_active_p = .true.
 
     else
-       g =lun%gridcell(l)
+       c =pft%column(p)
+    
+       is_active_p = .false.
 
-       is_active_l = .false.
+       ! ------------------------------------------------------------------------
+       ! General conditions under which is_active_p NEEDS to be true in order to satisfy
+       ! the requirements laid out at the top of this module:
+       ! ------------------------------------------------------------------------
+       if (col%active(c) .and. pft%wtcol(p) > 0._r8) is_active_p = .true.
 
-       if (lun%wtgcell(l) > 0) is_active_l = .true.
-
-       ! always run over ice_mec landunits within the glcmask, because this is where glc
-       ! might need input from virtual (0-weight) landunits
-       if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_l = .true.
     end if
 
-  end function is_active_l
+  end function is_active_p
+
+  !-----------------------------------------------------------------------
+  function is_gcell_of_landunit_all_istice(l) result(all_istice)
+    !
+    ! !DESCRIPTION:
+    ! For a given landunit, determine whether its grid cell is 100% covered by the istice
+    ! landunit (not to be confused with istice_mec)
+    !
+    ! !USES:
+    use clmtype    , only : lun, grc
+    use clm_varcon , only : istice, ispval
+    !
+    ! !ARGUMENTS:
+    implicit none
+    logical :: all_istice        ! function result
+    integer, intent(in) :: l     ! landunit index (i.e., index into landunit-level arrays)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g        ! grid cell index
+    integer :: l_istice ! index of the istice landunit in this grid cell
+
+    real(r8), parameter :: tolerance = 1.e-13_r8  ! tolerance for checking whether landunit's weight is 1
+    character(len=*), parameter :: subname = 'is_gcell_of_landunit_all_istice'
+    !------------------------------------------------------------------------------
+
+    g = lun%gridcell(l)
+    l_istice = grc%landunit_indices(istice, g)
+    if (l_istice == ispval) then
+       ! There is no istice landunit on this grid cell
+       all_istice = .false.
+    else if (lun%wtgcell(l_istice) >= (1._r8 - tolerance)) then
+       all_istice = .true.
+    else
+       all_istice = .false.
+    end if
+
+  end function is_gcell_of_landunit_all_istice
 
   !------------------------------------------------------------------------------
   subroutine checkWeights (bounds, active_only)
