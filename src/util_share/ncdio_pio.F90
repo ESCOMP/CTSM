@@ -1101,6 +1101,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_0d_log_glob'
     !-----------------------------------------------------------------------
 
+    start(:) = 0
+    count(:) = 0
+
     if (flag == 'read') then
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
@@ -1163,7 +1166,7 @@ contains
 
     endif   ! flag
 
-# 1063 "ncdio_pio.F90.in"
+# 1066 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_log_glob
   !DIMS 0,1
 # 975 "ncdio_pio.F90.in"
@@ -1193,6 +1196,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_1d_log_glob'
     !-----------------------------------------------------------------------
 
+    start(:) = 0
+    count(:) = 0
+
     if (flag == 'read') then
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
@@ -1255,13 +1261,13 @@ contains
 
     endif   ! flag
 
-# 1063 "ncdio_pio.F90.in"
+# 1066 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_log_glob
 
   !------------------------------------------------------------------------
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1068 "ncdio_pio.F90.in"
+# 1071 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1290,6 +1296,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_0d_int_glob'
     !-----------------------------------------------------------------------
 
+    start(:) = 0
+    count(:) = 0
+
     if (flag == 'read') then
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
@@ -1355,11 +1364,11 @@ contains
 
     endif
 
-# 1161 "ncdio_pio.F90.in"
+# 1167 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1068 "ncdio_pio.F90.in"
+# 1071 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1388,6 +1397,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_1d_int_glob'
     !-----------------------------------------------------------------------
 
+    start(:) = 0
+    count(:) = 0
+
     if (flag == 'read') then
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
@@ -1453,11 +1465,11 @@ contains
 
     endif
 
-# 1161 "ncdio_pio.F90.in"
+# 1167 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1068 "ncdio_pio.F90.in"
+# 1071 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1485,6 +1497,9 @@ contains
     integer(i4) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_2d_int_glob'
     !-----------------------------------------------------------------------
+
+    start(:) = 0
+    count(:) = 0
 
     if (flag == 'read') then
 
@@ -1551,11 +1566,11 @@ contains
 
     endif
 
-# 1161 "ncdio_pio.F90.in"
+# 1167 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1068 "ncdio_pio.F90.in"
+# 1071 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1583,6 +1598,9 @@ contains
     integer(i4) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_3d_int_glob'
     !-----------------------------------------------------------------------
+
+    start(:) = 0
+    count(:) = 0
 
     if (flag == 'read') then
 
@@ -1649,11 +1667,11 @@ contains
 
     endif
 
-# 1161 "ncdio_pio.F90.in"
+# 1167 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1068 "ncdio_pio.F90.in"
+# 1071 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1681,6 +1699,9 @@ contains
     real(r8) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_0d_double_glob'
     !-----------------------------------------------------------------------
+
+    start(:) = 0
+    count(:) = 0
 
     if (flag == 'read') then
 
@@ -1747,11 +1768,11 @@ contains
 
     endif
 
-# 1161 "ncdio_pio.F90.in"
+# 1167 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1068 "ncdio_pio.F90.in"
+# 1071 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1779,6 +1800,9 @@ contains
     real(r8) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_1d_double_glob'
     !-----------------------------------------------------------------------
+
+    start(:) = 0
+    count(:) = 0
 
     if (flag == 'read') then
 
@@ -1845,11 +1869,11 @@ contains
 
     endif
 
-# 1161 "ncdio_pio.F90.in"
+# 1167 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1068 "ncdio_pio.F90.in"
+# 1071 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1877,6 +1901,9 @@ contains
     real(r8) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_2d_double_glob'
     !-----------------------------------------------------------------------
+
+    start(:) = 0
+    count(:) = 0
 
     if (flag == 'read') then
 
@@ -1943,11 +1970,11 @@ contains
 
     endif
 
-# 1161 "ncdio_pio.F90.in"
+# 1167 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1068 "ncdio_pio.F90.in"
+# 1071 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1975,6 +2002,9 @@ contains
     real(r8) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_3d_double_glob'
     !-----------------------------------------------------------------------
+
+    start(:) = 0
+    count(:) = 0
 
     if (flag == 'read') then
 
@@ -2041,13 +2071,13 @@ contains
 
     endif
 
-# 1161 "ncdio_pio.F90.in"
+# 1167 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_double_glob
 
   !------------------------------------------------------------------------
   !DIMS 0,1,2
   !TYPE text
-# 1166 "ncdio_pio.F90.in"
+# 1172 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2073,6 +2103,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_0d_text_glob'
     !-----------------------------------------------------------------------
 
+    start(:) = 0
+    count(:) = 0
+
     if (flag == 'read') then
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
@@ -2092,11 +2125,11 @@ contains
           do m = 1,len(data)
              tmpString(m:m) = data(m:m)
           end do
+          start(1) = 1 ; count(1) = len(data)
+          start(2) = nt; count(2) = 1
           if ( count(1) > size(tmpString) )then
              write(iulog,*) subname//' ERROR: input string size is too large:'
           end if
-          start(1) = 1 ; count(1) = len(data)
-          start(2) = nt; count(2) = 1
           status = pio_put_var(ncid, varid, start, count, ival=tmpString(1:count(1)))
        else
           status = pio_put_var(ncid, varid, data )
@@ -2124,11 +2157,11 @@ contains
 
     endif
 
-# 1242 "ncdio_pio.F90.in"
+# 1251 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_text_glob 
   !DIMS 0,1,2
   !TYPE text
-# 1166 "ncdio_pio.F90.in"
+# 1172 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2154,6 +2187,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_1d_text_glob'
     !-----------------------------------------------------------------------
 
+    start(:) = 0
+    count(:) = 0
+
     if (flag == 'read') then
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
@@ -2173,11 +2209,11 @@ contains
           do m = 1,len(data)
              tmpString(m:m) = data(m:m)
           end do
+          start(1) = 1 ; count(1) = len(data)
+          start(2) = nt; count(2) = 1
           if ( count(1) > size(tmpString) )then
              write(iulog,*) subname//' ERROR: input string size is too large:'
           end if
-          start(1) = 1 ; count(1) = len(data)
-          start(2) = nt; count(2) = 1
           status = pio_put_var(ncid, varid, start, count, ival=tmpString(1:count(1)))
        else
           status = pio_put_var(ncid, varid, data )
@@ -2205,11 +2241,11 @@ contains
 
     endif
 
-# 1242 "ncdio_pio.F90.in"
+# 1251 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_text_glob 
   !DIMS 0,1,2
   !TYPE text
-# 1166 "ncdio_pio.F90.in"
+# 1172 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2235,6 +2271,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_2d_text_glob'
     !-----------------------------------------------------------------------
 
+    start(:) = 0
+    count(:) = 0
+
     if (flag == 'read') then
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
@@ -2254,11 +2293,11 @@ contains
           do m = 1,len(data)
              tmpString(m:m) = data(m:m)
           end do
+          start(1) = 1 ; count(1) = len(data)
+          start(2) = nt; count(2) = 1
           if ( count(1) > size(tmpString) )then
              write(iulog,*) subname//' ERROR: input string size is too large:'
           end if
-          start(1) = 1 ; count(1) = len(data)
-          start(2) = nt; count(2) = 1
           status = pio_put_var(ncid, varid, start, count, ival=tmpString(1:count(1)))
        else
           status = pio_put_var(ncid, varid, data )
@@ -2286,13 +2325,13 @@ contains
 
     endif
 
-# 1242 "ncdio_pio.F90.in"
+# 1251 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_text_glob 
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double,logical
-# 1247 "ncdio_pio.F90.in"
+# 1256 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_int(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2328,6 +2367,9 @@ contains
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter       :: subname='ncd_io_1d_int' ! subroutine name
     !-----------------------------------------------------------------------
+
+    start(:) = 0
+    count(:) = 0
 
     clmlevel = dim1name
 
@@ -2456,10 +2498,10 @@ contains
 
     endif
 
-# 1410 "ncdio_pio.F90.in"
+# 1422 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_int
   !TYPE int,double,logical
-# 1247 "ncdio_pio.F90.in"
+# 1256 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_double(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2495,6 +2537,9 @@ contains
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter       :: subname='ncd_io_1d_double' ! subroutine name
     !-----------------------------------------------------------------------
+
+    start(:) = 0
+    count(:) = 0
 
     clmlevel = dim1name
 
@@ -2623,10 +2668,10 @@ contains
 
     endif
 
-# 1410 "ncdio_pio.F90.in"
+# 1422 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_double
   !TYPE int,double,logical
-# 1247 "ncdio_pio.F90.in"
+# 1256 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_logical(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2662,6 +2707,9 @@ contains
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter       :: subname='ncd_io_1d_logical' ! subroutine name
     !-----------------------------------------------------------------------
+
+    start(:) = 0
+    count(:) = 0
 
     clmlevel = dim1name
 
@@ -2790,13 +2838,13 @@ contains
 
     endif
 
-# 1410 "ncdio_pio.F90.in"
+# 1422 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_logical
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double
-# 1415 "ncdio_pio.F90.in"
+# 1427 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_int(varname, data, dim1name, lowerb2, upperb2, &
        flag, ncid, nt, readvar, switchdim, cnvrtnan2fill)
     !
@@ -2842,6 +2890,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_2d_int' ! subroutine name
     !-----------------------------------------------------------------------
 
+    start(:)=0
+    count(:)=0
+     
     clmlevel = dim1name      
 
     if (masterproc .and. debug > 1) then
@@ -3019,10 +3070,10 @@ contains
        deallocate(temp)
     end if
 
-# 1637 "ncdio_pio.F90.in"
+# 1652 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_int
   !TYPE int,double
-# 1415 "ncdio_pio.F90.in"
+# 1427 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_double(varname, data, dim1name, lowerb2, upperb2, &
        flag, ncid, nt, readvar, switchdim, cnvrtnan2fill)
     !
@@ -3068,6 +3119,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_2d_double' ! subroutine name
     !-----------------------------------------------------------------------
 
+    start(:)=0
+    count(:)=0
+     
     clmlevel = dim1name      
 
     if (masterproc .and. debug > 1) then
@@ -3245,13 +3299,13 @@ contains
        deallocate(temp)
     end if
 
-# 1637 "ncdio_pio.F90.in"
+# 1652 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_double
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double
-# 1642 "ncdio_pio.F90.in"
+# 1657 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_int(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
@@ -3285,6 +3339,9 @@ contains
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter :: subname='ncd_io_3d_int' ! subroutine name
     !-----------------------------------------------------------------------
+
+    start(:)=0
+    count(:)=0
 
     clmlevel = dim1name      
 
@@ -3378,10 +3435,10 @@ contains
 
     endif
 
-# 1768 "ncdio_pio.F90.in"
+# 1786 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_int
   !TYPE int,double
-# 1642 "ncdio_pio.F90.in"
+# 1657 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_double(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
@@ -3415,6 +3472,9 @@ contains
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter :: subname='ncd_io_3d_double' ! subroutine name
     !-----------------------------------------------------------------------
+
+    start(:)=0
+    count(:)=0
 
     clmlevel = dim1name      
 
@@ -3508,12 +3568,12 @@ contains
 
     endif
 
-# 1768 "ncdio_pio.F90.in"
+# 1786 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_double
 
   !------------------------------------------------------------------------
 
-# 1772 "ncdio_pio.F90.in"
+# 1790 "ncdio_pio.F90.in"
   subroutine scam_field_offsets( ncid, dim1name, vardesc, start, count, &
        found, posNOTonfile)
     !
@@ -3557,12 +3617,15 @@ contains
     character(len=32)    :: dimname           ! dimension name
     character(len=32)    :: subname = 'scam_field_offsets'
     !------------------------------------------------------------------------
+    
+    start(:)=0
+    count(:)=0
 
     if ( present(posNOTonfile) )then
        if ( posNOTonfile )then
           if ( .not. present(found) )then
              call shr_sys_abort( subname// &
-# 1820 "ncdio_pio.F90.in"
+# 1841 "ncdio_pio.F90.in"
                   'ERROR: Bad subroutine calling structure posNOTonfile sent, but found was NOT!')
           end if
           found = .false.
@@ -3707,12 +3770,12 @@ contains
     enddo
     deallocate(dids)
 
-# 1964 "ncdio_pio.F90.in"
+# 1985 "ncdio_pio.F90.in"
   end subroutine scam_field_offsets
 
   !------------------------------------------------------------------------
 
-# 1968 "ncdio_pio.F90.in"
+# 1989 "ncdio_pio.F90.in"
   subroutine ncd_getiodesc(ncid, clmlevel, ndims, dims, dimids, &
        xtype, iodnum, switchdim) 
     !
@@ -3901,7 +3964,7 @@ contains
     iodesc_list(iodnum)%dims(1:ndims)   = dims(1:ndims)
     iodesc_list(iodnum)%dimids(1:ndims) = dimids(1:ndims)
 
-# 2156 "ncdio_pio.F90.in"
+# 2177 "ncdio_pio.F90.in"
   end subroutine ncd_getiodesc
 
 end module ncdio_pio

@@ -998,6 +998,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_{DIMS}d_log_glob'
     !-----------------------------------------------------------------------
 
+    start(:) = 0
+    count(:) = 0
+
     if (flag == 'read') then
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
@@ -1092,6 +1095,9 @@ contains
     {VTYPE} :: temp(1)
     character(len=*),parameter :: subname='ncd_io_{DIMS}d_{TYPE}_glob'
     !-----------------------------------------------------------------------
+
+    start(:) = 0
+    count(:) = 0
 
     if (flag == 'read') then
 
@@ -1188,6 +1194,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_{DIMS}d_{TYPE}_glob'
     !-----------------------------------------------------------------------
 
+    start(:) = 0
+    count(:) = 0
+
     if (flag == 'read') then
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
@@ -1207,11 +1216,11 @@ contains
           do m = 1,len(data)
              tmpString(m:m) = data(m:m)
           end do
+          start(1) = 1 ; count(1) = len(data)
+          start(2) = nt; count(2) = 1
           if ( count(1) > size(tmpString) )then
              write(iulog,*) subname//' ERROR: input string size is too large:'
           end if
-          start(1) = 1 ; count(1) = len(data)
-          start(2) = nt; count(2) = 1
           status = pio_put_var(ncid, varid, start, count, ival=tmpString(1:count(1)))
        else
           status = pio_put_var(ncid, varid, data )
@@ -1279,6 +1288,9 @@ contains
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter       :: subname='ncd_io_1d_{TYPE}' ! subroutine name
     !-----------------------------------------------------------------------
+
+    start(:) = 0
+    count(:) = 0
 
     clmlevel = dim1name
 
@@ -1457,6 +1469,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_2d_{TYPE}' ! subroutine name
     !-----------------------------------------------------------------------
 
+    start(:)=0
+    count(:)=0
+     
     clmlevel = dim1name      
 
     if (masterproc .and. debug > 1) then
@@ -1673,6 +1688,9 @@ contains
     character(len=*),parameter :: subname='ncd_io_3d_{TYPE}' ! subroutine name
     !-----------------------------------------------------------------------
 
+    start(:)=0
+    count(:)=0
+
     clmlevel = dim1name      
 
     if (masterproc .and. debug > 1) then
@@ -1812,6 +1830,9 @@ contains
     character(len=32)    :: dimname           ! dimension name
     character(len=32)    :: subname = 'scam_field_offsets'
     !------------------------------------------------------------------------
+    
+    start(:)=0
+    count(:)=0
 
     if ( present(posNOTonfile) )then
        if ( posNOTonfile )then

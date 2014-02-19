@@ -54,7 +54,6 @@ module clm_time_manager
 
    ! Private module data
 
-
    ! Private data for input
 
    character(len=ESMF_MAXSTR), save ::&
@@ -82,8 +81,6 @@ module clm_time_manager
    type(ESMF_Time),     save   :: tm_perp_date ! perpetual date
 
    ! Data required to restart time manager:
-   integer, save :: rst_nstep             = uninit_int ! current step number
-   integer, save :: rst_step_days         = uninit_int ! days component of timestep size
    integer, save :: rst_step_sec          = uninit_int ! timestep size seconds
    integer, save :: rst_start_ymd         = uninit_int ! start date
    integer, save :: rst_start_tod         = uninit_int ! start time of day
@@ -91,21 +88,13 @@ module clm_time_manager
    integer, save :: rst_ref_tod           = uninit_int ! reference time of day
    integer, save :: rst_curr_ymd          = uninit_int ! current date
    integer, save :: rst_curr_tod          = uninit_int ! current time of day
-   integer, save :: rst_perp_ymd          = uninit_int ! perpetual date
 
    integer, save :: rst_nstep_rad_prev                 ! nstep of previous radiation call
-   logical, save :: rst_perp_cal          = .false.    ! true when using perpetual calendar
    integer, save :: perpetual_ymd         = uninit_int ! Perpetual calendar date (YYYYMMDD)
    logical, save :: tm_first_restart_step = .false.    ! true for first step of a restart or branch run
    logical, save :: tm_perp_calendar      = .false.    ! true when using perpetual calendar
-   integer, save :: cal_type              = uninit_int ! calendar type
    logical, save :: timemgr_set           = .false.    ! true when timemgr initialized
    integer, save :: nestep                = uninit_int ! ending time-step
-   !
-   ! Last short-wave radiation calendar day
-   ! 
-   integer, save :: prev_rad_nstep = uninit_int  ! previous radiation nstep
-
    !
    ! Next short-wave radiation calendar day
    ! 
@@ -205,7 +194,6 @@ contains
   !=========================================================================================
 
   subroutine timemgr_init( )
-
 
     !---------------------------------------------------------------------------------
     ! Initialize the ESMF time manager from the sync clock
@@ -335,7 +323,6 @@ contains
     character(len=*), parameter :: sub = 'clm::init_clock'
     type(ESMF_TimeInterval)     :: step_size         ! timestep size
     type(ESMF_Time)             :: current           ! current date (from clock)
-    integer                     :: yr, mon, day, tod ! Year, month, day, and second as integers
     integer                     :: rc                ! return code
     !---------------------------------------------------------------------------------
 
@@ -436,11 +423,9 @@ contains
     integer :: rc                  ! return code
     logical :: readvar             ! determine if variable is on initial file
     type(ESMF_Time) :: start_date  ! start date for run
-    type(ESMF_Time) :: stop_date   ! stop date for run
     type(ESMF_Time) :: ref_date    ! reference date for run
     type(ESMF_Time) :: curr_date   ! date of data in restart file
     integer :: rst_caltype         ! calendar type
-    type(var_desc_t)   :: vardesc  ! local vardesc
     integer, parameter :: noleap = 1
     integer, parameter :: gregorian = 2
     character(len=len(calendar)) :: cal
@@ -1570,7 +1555,7 @@ contains
 
   subroutine timemgr_spmdbcast( )
 
-    use spmdMod, only : mpicom, MPI_INTEGER, MPI_CHARACTER
+    use spmdMod, only : mpicom, MPI_INTEGER
 
     integer :: ier
 
