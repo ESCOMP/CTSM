@@ -9,7 +9,7 @@ module clm_atmlnd
   use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon    , only : rair, grav, cpair, hfus, tfrz
-  use clm_varctl    , only : iulog, use_c13, use_cn, use_lch4
+  use clm_varctl    , only : iulog, use_c13, use_cn, use_lch4, use_voc
   use seq_drydep_mod, only : n_drydep, drydep_method, DD_XLND
   use shr_megan_mod , only : shr_megan_mechcomps_n
   use decompMod     , only : bounds_type
@@ -565,12 +565,14 @@ contains
        clm_l2a%flxdst(bounds%begg:bounds%endg, :), &
        p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-    if (shr_megan_mechcomps_n>0) then
-       call p2g(bounds, shr_megan_mechcomps_n, &
-           pvf%vocflx(bounds%begp:bounds%endp, :), &
-           clm_l2a%flxvoc(bounds%begg:bounds%endg, :), &
-           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-    endif
+    if (use_voc) then
+       if (shr_megan_mechcomps_n>0) then
+          call p2g(bounds, shr_megan_mechcomps_n, &
+               pvf%vocflx(bounds%begp:bounds%endp, :), &
+               clm_l2a%flxvoc(bounds%begg:bounds%endg, :), &
+               p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+       endif
+    end if
 
     if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
        call p2g(bounds, n_drydep, &

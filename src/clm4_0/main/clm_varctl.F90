@@ -162,6 +162,9 @@ module clm_varctl
 #else
   logical, public :: use_exit_spinup = .false.
 #endif
+  !needed for compatibility with changes in clm4_5 and reference dy lnd_comp_mct
+  !however use_voc is not used anywhere inside the clm4_0 code
+  logical, public :: use_voc = .true. 
 !
 ! !PRIVATE DATA MEMBERS:
 !

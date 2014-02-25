@@ -30,19 +30,17 @@ contains
     !
     ! !USES:
     use clmtype
-    use clm_varcon , only : spval
-    use clm_varpar , only : maxpatch_glcmec, crop_prog
-    use clm_atmlnd , only : clm_a2l, a2l_not_downscaled_gcell
-    use clm_varctl , only : create_glacier_mec_landunit, &
-                            use_c13, use_c14, use_lch4, hist_wrtch4diag
-    use clm_atmlnd , only : clm_l2a
-    use ch4varcon  , only : allowlakeprod
-    use clm_glclnd , only : clm_s2x
-    use histFileMod, only : hist_add_subscript, hist_addfld1d, hist_addfld2d, &
-                            hist_printflds, no_snow_normal, no_snow_zero
-    use shr_megan_mod, only : shr_megan_linkedlist, shr_megan_megcomp_t, shr_megan_megcomps_n
-    use clm_varpar , only :  ndecomp_cascade_transitions, ndecomp_pools, nlevdecomp, &
-         nlevdecomp_full, nlevsno
+    use clm_varcon    , only : spval
+    use clm_varpar    , only : maxpatch_glcmec, crop_prog
+    use clm_varpar    , only : ndecomp_cascade_transitions, ndecomp_pools, nlevdecomp, nlevdecomp_full, nlevsno
+    use clm_varctl    , only : create_glacier_mec_landunit
+    use clm_varctl    , only : use_c13, use_c14, use_lch4, hist_wrtch4diag, use_voc
+    use clm_atmlnd    , only : clm_a2l, a2l_not_downscaled_gcell, clm_l2a
+    use clm_glclnd    , only : clm_s2x
+    use ch4varcon     , only : allowlakeprod
+    use histFileMod   , only : hist_add_subscript, hist_addfld1d, hist_addfld2d
+    use histFileMod   , only : hist_printflds, no_snow_normal, no_snow_zero
+    use shr_megan_mod , only : shr_megan_linkedlist, shr_megan_megcomp_t, shr_megan_megcomps_n
     !
     ! !ARGUMENTS:
     implicit none
@@ -664,8 +662,8 @@ contains
          ptr_pft=pdf%vlc_trb_4, default='inactive')
 
     ! for MEGAN emissions diagnositics
-    if (shr_megan_megcomps_n>0) then
-       
+    if (use_voc .and. shr_megan_megcomps_n>0) then
+
        ! loop over megan compounds
        meg_cmp => shr_megan_linkedlist
        do while(associated(meg_cmp))

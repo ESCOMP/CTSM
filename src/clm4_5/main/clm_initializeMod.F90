@@ -7,9 +7,8 @@ module clm_initializeMod
   use spmdMod         , only : masterproc
   use shr_sys_mod     , only : shr_sys_flush, shr_sys_abort
   use abortutils      , only : endrun
-  use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, &
-                               create_glacier_mec_landunit, iulog, use_lch4, use_cn, &
-                               use_cndv
+  use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl      , only : create_glacier_mec_landunit, iulog, use_lch4, use_cn, use_cndv, use_voc
   use clm_varsur      , only : wt_lunit, urban_valid, wt_nat_pft, wt_cft, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
@@ -370,7 +369,9 @@ contains
     
     ! Initialize MEGAN emissions model 
 
-    call VOCEmission_init()
+    if (use_voc) then
+       call VOCEmission_init()
+    end if
 
     ! Initialize time constant urban variables
 

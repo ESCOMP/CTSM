@@ -334,6 +334,14 @@ contains
           anoxia = .false.
        end if
 
+       ! ----------------------------------------------------------------------
+       !TURN OFF MEGAN VOCs if crop prognostic is on
+       ! This is a temporary place holder and should be removed once MEGAN VOCs and
+       ! crop ar compatible
+       if (use_crop) then
+          use_voc = .false.
+       end if
+
     endif   ! end of if-masterproc if-block
 
     ! ----------------------------------------------------------------------
@@ -440,6 +448,7 @@ contains
     call mpi_bcast (use_cn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cndv, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_voc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_snicar_frc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_mexicocity, 1, MPI_LOGICAL, 0, mpicom, ier)

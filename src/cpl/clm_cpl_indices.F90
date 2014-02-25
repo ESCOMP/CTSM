@@ -127,36 +127,34 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine clm_cpl_indices_set( )
-    
     !
     ! !DESCRIPTION: 
     ! Set the coupler indices needed by the land model coupler
     ! interface.
     !
     ! !USES:
-    use seq_flds_mod  , only: seq_flds_x2l_fields, seq_flds_l2x_fields
-    use mct_mod       , only: mct_aVect, mct_aVect_init, mct_avect_indexra, &
-                              mct_aVect_clean, mct_avect_nRattr
-    use seq_drydep_mod, only: drydep_fields_token, lnd_drydep
-    use shr_megan_mod,  only: shr_megan_fields_token, shr_megan_mechcomps_n
-
-! !ARGUMENTS:
+    use seq_flds_mod   , only: seq_flds_x2l_fields, seq_flds_l2x_fields
+    use mct_mod        , only: mct_aVect, mct_aVect_init, mct_avect_indexra
+    use mct_mod        , only: mct_aVect_clean, mct_avect_nRattr
+    use seq_drydep_mod , only: drydep_fields_token, lnd_drydep
+    use shr_megan_mod  , only: shr_megan_fields_token, shr_megan_mechcomps_n
+    use clm_varctl     , only: use_voc
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-! 01/2011, Erik Kluzek:         Added protex headers
-!
-! !LOCAL VARIABLES:
+    !
+    ! !REVISION HISTORY:
+    ! Author: Mariana Vertenstein
+    ! 01/2011, Erik Kluzek:         Added protex headers
+    !
+    ! !LOCAL VARIABLES:
     type(mct_aVect)   :: l2x      ! temporary, land to coupler
     type(mct_aVect)   :: x2l      ! temporary, coupler to land
     integer           :: num 
     character(len= 2) :: cnum
     character(len=64) :: name
     character(len=32) :: subname = 'clm_cpl_indices_set'  ! subroutine name
-!EOP
-!
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! Determine attribute vector indices
 
@@ -209,7 +207,9 @@ contains
     index_l2x_Fall_methane  = mct_avect_indexra(l2x,'Fall_methane',perrWith='quiet')
 
     ! MEGAN fluxes
-    if (shr_megan_mechcomps_n>0) then
+    ! use_voc is a temporary logic to enable turning off MEGAN fluxes when prognostic crop
+    ! is used
+    if (shr_megan_mechcomps_n>0 .and. use_voc) then
        index_l2x_Fall_flxvoc = mct_avect_indexra(l2x,trim(shr_megan_fields_token))
     else
        index_l2x_Fall_flxvoc = 0

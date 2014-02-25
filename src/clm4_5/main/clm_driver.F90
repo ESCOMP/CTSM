@@ -10,8 +10,8 @@ module clm_driver
   ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use clmtype
-  use clm_varctl          , only : wrtdia, iulog, create_glacier_mec_landunit, &
-                                   use_cn, use_cndv, use_lch4, use_noio
+  use clm_varctl          , only : wrtdia, iulog, create_glacier_mec_landunit
+  use clm_varctl          , only : use_cn, use_cndv, use_lch4, use_voc, use_noio
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds, get_proc_bounds, bounds_type
   use filterMod           , only : filter, filter_inactive_and_active
@@ -40,8 +40,7 @@ module clm_driver
   use CNSetValueMod       , only : CNZeroFluxes_dwt
   use CNEcosystemDynMod   , only : CNEcosystemDynNoLeaching,CNEcosystemDynLeaching
   use CNAnnualUpdateMod   , only : CNAnnualUpdate
-  use CNBalanceCheckMod   , only : BeginCBalance, BeginNBalance, &
-                                   CBalanceCheck, NBalanceCheck
+  use CNBalanceCheckMod   , only : BeginCBalance, BeginNBalance, CBalanceCheck, NBalanceCheck
   use ndepStreamMod       , only : ndep_interp
   use CNVerticalProfileMod, only : decomp_vertprofiles
   use CNFireMod           , only : CNFireInterp
@@ -384,8 +383,10 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call DustDryDep(bounds_clump)
 
      ! VOC emission (A. Guenther's MEGAN (2006) model)
-     call VOCEmission(bounds_clump, &
-          filter(nc)%num_soilp, filter(nc)%soilp)
+     if (use_voc) then
+        call VOCEmission(bounds_clump, &
+             filter(nc)%num_soilp, filter(nc)%soilp)
+     end if
 
      call t_stopf('bgc')
 

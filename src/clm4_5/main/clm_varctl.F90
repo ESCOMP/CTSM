@@ -58,7 +58,10 @@ module clm_varctl
   character(len=256), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=256), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=256), public :: fsnowaging   = ' '      ! snow aging parameters file name
-
+  !
+  ! Flag to turn on MEGAN VOC's
+  !
+  logical, public :: use_voc = .true. 
   !
   ! Irrigate logic
   !
