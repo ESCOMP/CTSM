@@ -63,11 +63,11 @@ contains
     !-----------------------------------------------------------------------
     
    associate(& 
-   dz                        =>    cps%dz                  , & ! Input:  [real(r8) (:,:)]  layer depth (m)                       
-   zi                        =>    cps%zi                  , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m) 
-   z                         =>    cps%z                   , & ! Input:  [real(r8) (:,:)]  layer thickness (m)                   
-   depth                     =>    cps%depth               , & ! Input:  [real(r8) (:,:)]  layer depth of VIC (m)                
-   vic_clm_fract             =>    cps%vic_clm_fract         & ! Input:  [real(r8) (:,:,:)]  fraction of VIC layers in clm layers
+   dz            =>    cps%dz             , & ! Input:  [real(r8) (:,:)]  layer depth (m)                       
+   zi            =>    cps%zi             , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m) 
+   z             =>    cps%z              , & ! Input:  [real(r8) (:,:)]  layer thickness (m)                   
+   depth         =>    cps%depth          , & ! Input:  [real(r8) (:,:)]  layer depth of VIC (m)                
+   vic_clm_fract =>    cps%vic_clm_fract    & ! Input:  [real(r8) (:,:,:)]  fraction of VIC layers in clm layers
    )
    !************************************************************************  
 

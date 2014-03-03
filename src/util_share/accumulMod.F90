@@ -244,7 +244,7 @@ contains
     ! is assigned to  indicate the time average is not yet valid.
     !
     ! !USES:
-    use clm_varcon, only : spval
+    use clm_varcon, only : spval, ispval
     !
     ! !ARGUMENTS:
     implicit none
@@ -571,6 +571,7 @@ contains
     !
     ! !USES:
     use clm_time_manager, only : is_restart
+    use clm_varcon      , only : ispval
     use ncdio_pio
     use pio
     !
@@ -634,7 +635,7 @@ contains
        varname = trim(accum(nf)%name) // '_PERIOD'
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
-               long_name='', units='time steps', imissing_value=huge(1), &
+               long_name='', units='time steps', imissing_value=ispval, &
                ifill_value=huge(1))
           ier = PIO_inq_varid(ncid, trim(varname), vardesc)
           ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_copy)

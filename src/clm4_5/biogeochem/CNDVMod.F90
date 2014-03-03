@@ -10,6 +10,7 @@ module CNDVMod
   use abortutils          , only : endrun
   use CNVegStructUpdateMod, only : CNVegStructUpdate
   use decompMod           , only : bounds_type
+  use shr_log_mod         , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -146,7 +147,8 @@ contains
    )
 
     allocate(rbuf2dg(bounds%begg:bounds%endg,maxpatch_pft), stat=ier)
-    if (ier /= 0) call endrun('histCNDV: allocation error for rbuf2dg')
+    if (ier /= 0) call endrun(msg='histCNDV: allocation error for rbuf2dg'//&
+         errMsg(__FILE__, __LINE__))
 
     ! Set output precision
 
@@ -171,7 +173,8 @@ contains
     call ncd_putatt(ncid, ncd_global,'history', trim(str))
     
     call shr_sys_getenv('LOGNAME', str, ier)
-    if (ier /= 0) call endrun('error: LOGNAME environment variable not defined')
+    if (ier /= 0) call endrun(msg='error: LOGNAME environment variable not defined'//&
+         errMsg(__FILE__, __LINE__))
        
     call ncd_putatt (ncid, ncd_global, 'logname', trim(str))
        

@@ -84,6 +84,7 @@ contains
     use fileutils   , only : relavu, getavu
     use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_LOGICAL
     use shr_nl_mod  , only : shr_nl_find_group_name
+    use shr_log_mod , only : errMsg => shr_log_errMsg
     !
     implicit none
     !
@@ -123,7 +124,8 @@ contains
        if (ierr == 0) then
           read(unitn, ch4par_in, iostat=ierr)
           if (ierr /= 0) then
-             call endrun( subname//' error in reading in ch4par_in namelist' )
+             call endrun(msg='error in reading in ch4par_in namelist'//&
+                  errMsg(__FILE__, __LINE__))
           end if
        end if
        call relavu( unitn )

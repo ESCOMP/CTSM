@@ -41,13 +41,14 @@ contains
     ! 
     ! !USES:
     use clmtype
-    use pft2colMod, only: p2c
-    use clm_varcon, only: zsoi, dzsoi, zisoi, dzsoi_decomp
-    use clm_varpar, only: nlevdecomp, nlevgrnd, nlevdecomp_full, maxpatch_pft
-    use clm_varctl, only: use_vertsoilc, iulog
-    use pftvarcon , only: rootprof_beta, noveg
-    use abortutils, only: endrun
-    use decompMod , only: bounds_type
+    use pft2colMod  , only: p2c
+    use clm_varcon  , only: zsoi, dzsoi, zisoi, dzsoi_decomp
+    use clm_varpar  , only: nlevdecomp, nlevgrnd, nlevdecomp_full, maxpatch_pft
+    use clm_varctl  , only: use_vertsoilc, iulog
+    use pftvarcon   , only: rootprof_beta, noveg
+    use abortutils  , only: endrun
+    use shr_log_mod , only: errMsg => shr_log_errMsg
+    use decompMod   , only: bounds_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -253,7 +254,7 @@ contains
              write(iulog, *) 'p, ivt(p), wtcol(p): ', p, ivt(p), wtcol(p)
              write(iulog, *) 'cinput_rootfr(p,:): ', cinput_rootfr(p,:)
           end do
-          call endrun( trim(subname)//" ERROR: _prof_sum-1>delta" )
+          call endrun(msg=" ERROR: _prof_sum-1>delta"//errMsg(__FILE__, __LINE__))
        endif
     end do
 
@@ -272,7 +273,7 @@ contains
        if ( ( abs(froot_prof_sum - 1._r8) .gt. delta ) .or.  ( abs(croot_prof_sum - 1._r8) .gt. delta ) .or. &
             ( abs(stem_prof_sum - 1._r8) .gt. delta ) .or.  ( abs(leaf_prof_sum - 1._r8) .gt. delta ) ) then
           write(iulog, *) 'profile sums: ', froot_prof_sum, croot_prof_sum, leaf_prof_sum, stem_prof_sum
-          call endrun( trim(subname)//' ERROR: sum-1 > delta' )
+          call endrun(msg=' ERROR: sum-1 > delta'//errMsg(__FILE__, __LINE__))
        endif
     end do
 

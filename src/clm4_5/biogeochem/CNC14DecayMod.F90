@@ -234,9 +234,10 @@ contains
    ! !USES:
    use ncdio_pio
    use fileutils   , only : getfil
-   use abortutils,      only : endrun
-   use clm_varctl,      only : iulog
-   use spmdMod      , only : masterproc
+   use abortutils  , only : endrun
+   use clm_varctl  , only : iulog
+   use spmdMod     , only : masterproc
+   use shr_log_mod , only : errMsg => shr_log_errMsg
    !
    ! !ARGUMENTS:
    implicit none
@@ -276,7 +277,7 @@ contains
       do t = 2, ntim
          if ( atm_c14file_time(t) - atm_c14file_time(t-1) .le. 0._r8 ) then
             write(iulog, *) 'C14_init_BombSpike: error.  time axis must be monotonically increasing'
-            call endrun()
+            call endrun(msg=errMsg(__FILE__, __LINE__))
          endif
       end do
    endif

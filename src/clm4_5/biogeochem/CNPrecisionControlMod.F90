@@ -29,7 +29,6 @@ contains
     !
     ! !USES:
     use clmtype
-    use abortutils,   only: endrun
     use clm_varctl,   only: iulog, use_c13, use_c14, use_nitrif_denitrif
     use clm_varpar,   only: nlevdecomp, crop_prog
     use pftvarcon,    only: nc3crop

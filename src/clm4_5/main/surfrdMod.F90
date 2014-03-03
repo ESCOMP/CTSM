@@ -6,11 +6,12 @@ module surfrdMod
   !
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_log_mod , only : errMsg => shr_log_errMsg
   use abortutils  , only : endrun
   use clm_varpar  , only : nlevsoifl, numpft, numcft
   use clm_varcon  , only : numurbl
-  use clm_varctl  , only : iulog, scmlat, scmlon, single_column, &
-                           create_glacier_mec_landunit, use_cndv
+  use clm_varctl  , only : iulog, scmlat, scmlon, single_column
+  use clm_varctl  , only : create_glacier_mec_landunit, use_cndv
   use clmtype
   use spmdMod                         
   use ncdio_pio
@@ -79,7 +80,7 @@ contains
     if (masterproc) then
        if (filename == ' ') then
           write(iulog,*) trim(subname),' ERROR: filename must be specified '
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        endif
     end if
 
@@ -118,7 +119,7 @@ contains
           call ncd_io(ncid=ncid, varname='mask', data=mask, flag='read', readvar=readvar)
        end if
     end if
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: landmask not on fatmlndfrc file' )
+    if (.not. readvar) call endrun( msg=' ERROR: landmask not on fatmlndfrc file'//errMsg(__FILE__, __LINE__))
 
     call ncd_pio_closefile(ncid)
 
@@ -169,7 +170,7 @@ contains
     if (masterproc) then
        if (filename == ' ') then
           write(iulog,*) trim(subname),' ERROR: filename must be specified '
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        endif
     end if
 
@@ -196,27 +197,27 @@ contains
             dim1name=grlnd, readvar=readvar)
        ! convert from radians**2 to km**2
        ldomain%area = ldomain%area * (re**2)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: area NOT on file' )
+       if (.not. readvar) call endrun( msg=' ERROR: area NOT on file'//errMsg(__FILE__, __LINE__))
        
        call ncd_io(ncid=ncid, varname= 'xc', flag='read', data=ldomain%lonc, &
             dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: xc NOT on file' )
+       if (.not. readvar) call endrun( msg=' ERROR: xc NOT on file'//errMsg(__FILE__, __LINE__))
        
        call ncd_io(ncid=ncid, varname= 'yc', flag='read', data=ldomain%latc, &
             dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: yc NOT on file' )
+       if (.not. readvar) call endrun( msg=' ERROR: yc NOT on file'//errMsg(__FILE__, __LINE__))
     else
        call ncd_io(ncid=ncid, varname= 'AREA', flag='read', data=ldomain%area, &
             dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: AREA NOT on file' )
+       if (.not. readvar) call endrun( msg=' ERROR: AREA NOT on file'//errMsg(__FILE__, __LINE__))
        
        call ncd_io(ncid=ncid, varname= 'LONGXY', flag='read', data=ldomain%lonc, &
             dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: LONGXY NOT on file' )
+       if (.not. readvar) call endrun( msg=' ERROR: LONGXY NOT on file'//errMsg(__FILE__, __LINE__))
        
        call ncd_io(ncid=ncid, varname= 'LATIXY', flag='read', data=ldomain%latc, &
             dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: LATIXY NOT on file' )
+       if (.not. readvar) call endrun( msg=' ERROR: LATIXY NOT on file'//errMsg(__FILE__, __LINE__))
     end if
 
     if (isgrid2d) then
@@ -244,7 +245,7 @@ contains
         maxval(ldomain%latc) >  90.0_r8) then
        write(iulog,*) trim(subname),' WARNING: lat/lon min/max is ', &
             minval(ldomain%latc),maxval(ldomain%latc)
-       ! call endrun( trim(subname)//' ERROR: lat is outside [-90,90]' )
+       ! call endrun( msg=' ERROR: lat is outside [-90,90]'//errMsg(__FILE__, __LINE__))
        ! write(iulog,*) trim(subname),' Limiting lat/lon to [-90/90] from ', &
        !     minval(domain%latc),maxval(domain%latc)
        ! where (ldomain%latc < -90.0_r8) ldomain%latc = -90.0_r8
@@ -257,7 +258,7 @@ contains
        call ncd_io(ncid=ncid, varname='mask', flag='read', data=ldomain%mask, &
             dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
-          call endrun( trim(subname)//' ERROR: LANDMASK NOT on fracdata file' )
+          call endrun( msg=' ERROR: LANDMASK NOT on fracdata file'//errMsg(__FILE__, __LINE__))
        end if
     end if
 
@@ -267,7 +268,7 @@ contains
        call ncd_io(ncid=ncid, varname='frac', flag='read', data=ldomain%frac, &
             dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
-          call endrun( trim(subname)//' ERROR: LANDFRAC NOT on fracdata file' )
+          call endrun( msg=' ERROR: LANDFRAC NOT on fracdata file'//errMsg(__FILE__, __LINE__))
        end if
     end if
 
@@ -277,7 +278,7 @@ contains
        if (masterproc) then
           if (glcfilename == ' ') then
              write(iulog,*) trim(subname),' ERROR: glc filename must be specified '
-             call endrun()
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           endif
        end if
        call getfil( glcfilename, locfn, 0 )
@@ -286,7 +287,7 @@ contains
        ldomain%glcmask(:) = 0
        call ncd_io(ncid=ncidg, varname='GLCMASK', flag='read', data=ldomain%glcmask, &
             dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: GLCMASK NOT in file' )
+       if (.not. readvar) call endrun( msg=' ERROR: GLCMASK NOT in file'//errMsg(__FILE__, __LINE__))
 
        ! Make sure the glc mask is a subset of the land mask
        do n = begg,endg
@@ -295,7 +296,7 @@ contains
                   'initialize1: landmask/glcmask mismatch'
              write(iulog,*)trim(subname),&
                   'glc requires input where landmask = 0, gridcell index', n
-             call endrun()
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           endif
        enddo
        call ncd_pio_closefile(ncidg)
@@ -337,7 +338,7 @@ contains
     if (masterproc) then
        if (filename == ' ') then
           write(iulog,*) trim(subname),' ERROR: filename must be specified '
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        else
           write(iulog,*) 'Attempting to read lnd topo from flndtopo ',trim(filename)
        endif
@@ -350,7 +351,7 @@ contains
     if (domain%ns /= ns) then
        write(iulog,*) trim(subname),' ERROR: topo file mismatch ns',&
             domain%ns,ns
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
     
     beg = domain%nbeg
@@ -360,24 +361,24 @@ contains
 
     call ncd_io(ncid=ncid, varname='LONGXY', flag='read', data=lonc, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: LONGXY  NOT on topodata file' )
+    if (.not. readvar) call endrun( msg=' ERROR: LONGXY  NOT on topodata file'//errMsg(__FILE__, __LINE__))
 
     call ncd_io(ncid=ncid, varname='LATIXY', flag='read', data=latc, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: LONGXY  NOT on topodata file' )
+    if (.not. readvar) call endrun( msg=' ERROR: LONGXY  NOT on topodata file'//errMsg(__FILE__, __LINE__))
 
     do n = beg,end
        if (abs(latc(n)-domain%latc(n)) > eps .or. &
            abs(lonc(n)-domain%lonc(n)) > eps) then
           write(iulog,*) trim(subname),' ERROR: topo file mismatch lat,lon',latc(n),&
                domain%latc(n),lonc(n),domain%lonc(n),eps
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        endif
     enddo
 
     call ncd_io(ncid=ncid, varname='TOPO', flag='read', data=domain%topo, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: LONGXY  NOT on topodata file' )
+    if (.not. readvar) call endrun( msg=' ERROR: LONGXY  NOT on topodata file'//errMsg(__FILE__, __LINE__))
 
     deallocate(latc,lonc)
 
@@ -439,7 +440,8 @@ contains
     if (masterproc) then
        write(iulog,*) 'Attempting to read surface boundary data .....'
        if (lfsurdat == ' ') then
-          write(iulog,*)'lfsurdat must be specified'; call endrun()
+          write(iulog,*)'lfsurdat must be specified'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        endif
     endif
 
@@ -458,7 +460,7 @@ contains
 
     call ncd_io(ncid=ncid, varname= 'PFTDATA_MASK', flag='read', data=ldomain%pftm, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: pftm NOT on surface dataset' )
+    if (.not. readvar) call endrun( msg=' ERROR: pftm NOT on surface dataset'//errMsg(__FILE__, __LINE__))
 
     ! Check if fsurdat grid is "close" to fatmlndfrc grid, exit if lats/lon > 0.001
 
@@ -470,7 +472,7 @@ contains
        if (readvar) then
           istype_domain = .false.
        else
-          call endrun( trim(subname)//' ERROR: unknown domain type')
+          call endrun( msg=' ERROR: unknown domain type'//errMsg(__FILE__, __LINE__))
        end if
     end if
     if (istype_domain) then
@@ -489,11 +491,11 @@ contains
 
     call ncd_io(ncid=ncid, varname=lon_var, flag='read', data=surfdata_domain%lonc, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: lon var NOT on surface dataset' )
+    if (.not. readvar) call endrun( msg=' ERROR: lon var NOT on surface dataset'//errMsg(__FILE__, __LINE__))
 
     call ncd_io(ncid=ncid, varname=lat_var, flag='read', data=surfdata_domain%latc, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: lat var NOT on surface dataset' )
+    if (.not. readvar) call endrun( msg=' ERROR: lat var NOT on surface dataset'//errMsg(__FILE__, __LINE__))
 
     rmaxlon = 0.0_r8
     rmaxlat = 0.0_r8
@@ -508,9 +510,8 @@ contains
        rmaxlat = max(rmaxlat,abs(ldomain%latc(n)-surfdata_domain%latc(n)))
     enddo
     if (rmaxlon > 0.001_r8 .or. rmaxlat > 0.001_r8) then
-       write(iulog,*) trim(subname)//': surfdata/fatmgrid lon/lat mismatch error',&
-            rmaxlon,rmaxlat
-       call endrun(trim(subname))
+       write(iulog,*)' ERROR: surfdata/fatmgrid lon/lat mismatch error', rmaxlon,rmaxlat
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     call domain_clean(surfdata_domain)
 
@@ -591,15 +592,15 @@ contains
 
     call ncd_io(ncid=ncid, varname='PCT_WETLAND', flag='read', data=pctwet, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_WETLAND  NOT on surfdata file' )
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_WETLAND  NOT on surfdata file'//errMsg(__FILE__, __LINE__))
 
     call ncd_io(ncid=ncid, varname='PCT_LAKE'   , flag='read', data=pctlak, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_LAKE NOT on surfdata file' )
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_LAKE NOT on surfdata file'//errMsg(__FILE__, __LINE__))
 
     call ncd_io(ncid=ncid, varname='PCT_GLACIER', flag='read', data=pctgla, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_GLACIER NOT on surfdata file' )
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_GLACIER NOT on surfdata file'//errMsg(__FILE__, __LINE__))
 
     ! Read urban info
     if (nlevurb == 0) then
@@ -610,11 +611,11 @@ contains
     else
       call ncd_io(ncid=ncid, varname='PCT_URBAN'  , flag='read', data=pcturb, &
            dim1name=grlnd, readvar=readvar)
-      if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on surfdata file' )
+      if (.not. readvar) call endrun( msg=' ERROR: PCT_URBAN NOT on surfdata file'//errMsg(__FILE__, __LINE__))
 
       call ncd_io(ncid=ncid, varname='URBAN_REGION_ID', flag='read', data=urban_region_id, &
            dim1name=grlnd, readvar=readvar)
-      if (.not. readvar) call endrun( trim(subname)// ' ERROR: URBAN_REGION_ID NOT on surfdata file' )
+      if (.not. readvar) call endrun( msg= ' ERROR: URBAN_REGION_ID NOT on surfdata file'//errMsg(__FILE__, __LINE__))
       where (urban_region_id == urban_invalid_region)
          urban_valid = .false.
       elsewhere
@@ -622,7 +623,9 @@ contains
       end where
     end if
     if ( nlevurb == 0 )then
-       if ( any(pcturb > 0.0_r8) ) call endrun( trim(subname)//' ERROR: PCT_URBAN MUST be zero when nlevurb=0' )
+       if ( any(pcturb > 0.0_r8) ) then
+          call endrun( msg=' ERROR: PCT_URBAN MUST be zero when nlevurb=0'//errMsg(__FILE__, __LINE__))
+       end if
     end if
 
     pcturb_tot(:) = 0._r8
@@ -639,14 +642,14 @@ contains
 
        call ncd_io(ncid=ncid, varname='PCT_GLC_MEC', flag='read', data=wt_glc_mec, &
             dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_GLC_MEC NOT on surfdata file' )
+       if (.not. readvar) call endrun( msg=' ERROR: PCT_GLC_MEC NOT on surfdata file'//errMsg(__FILE__, __LINE__))
 
        wt_glc_mec(:,:) = wt_glc_mec(:,:) / 100._r8
        call check_sums_equal_1(wt_glc_mec, begg, 'wt_glc_mec', subname)
 
        call ncd_io(ncid=ncid, varname='TOPO_GLC_MEC',  flag='read', data=topo_glc_mec, &
             dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: TOPO_GLC_MEC NOT on surfdata file' )
+       if (.not. readvar) call endrun( msg=' ERROR: TOPO_GLC_MEC NOT on surfdata file'//errMsg(__FILE__, __LINE__))
 
        topo_glc_mec(:,:) = max(topo_glc_mec(:,:), 0._r8)
 
@@ -677,7 +680,7 @@ contains
     end do
     if ( found ) then
        write(iulog,*)'surfrd error: PFT cover>100 for nl=',nindx
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     ! Determine wt_lunit for special landunits
@@ -748,10 +751,10 @@ contains
        ! that's the case.
        call ncd_inqdid(ncid, 'cft', dimid, cft_dim_exists)
        if (cft_dim_exists) then
-          call endrun( trim(subname)// &
-               ' ERROR: unexpectedly found cft dimension on dataset when cft_size=0'// &
+          call endrun( msg= ' ERROR: unexpectedly found cft dimension on dataset when cft_size=0'// &
                ' (if the surface dataset has a separate crop landunit, then the code'// &
-               ' must also have a separate crop landunit, and vice versa)')
+               ' must also have a separate crop landunit, and vice versa)'//&
+               errMsg(__FILE__, __LINE__))
        end if
     end if
 
@@ -761,26 +764,26 @@ contains
 
     call ncd_io(ncid=ncid, varname='PCT_NATVEG', flag='read', data=arrayl, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_NATVEG NOT on surfdata file' )
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_NATVEG NOT on surfdata file'//errMsg(__FILE__, __LINE__))
     wt_lunit(begg:endg,istsoil) = arrayl(begg:endg) / 100._r8
 
     call ncd_io(ncid=ncid, varname='PCT_CROP', flag='read', data=arrayl, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_CROP NOT on surfdata file' )
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_CROP NOT on surfdata file'//errMsg(__FILE__, __LINE__))
     wt_lunit(begg:endg,istcrop) = arrayl(begg:endg) / 100._r8
 
     deallocate(arrayl)
 
     call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=wt_nat_pft, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_NAT_PFT NOT on surfdata file' )
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_NAT_PFT NOT on surfdata file'//errMsg(__FILE__, __LINE__))
     wt_nat_pft(begg:endg,:) = wt_nat_pft(begg:endg,:) / 100._r8
     call check_sums_equal_1(wt_nat_pft, begg, 'wt_nat_pft', subname)
     
     if (cft_size > 0) then
        call ncd_io(ncid=ncid, varname='PCT_CFT', flag='read', data=wt_cft, &
             dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_CFT NOT on surfdata file' )
+       if (.not. readvar) call endrun( msg=' ERROR: PCT_CFT NOT on surfdata file'//errMsg(__FILE__, __LINE__)) 
        wt_cft(begg:endg,:) = wt_cft(begg:endg,:) / 100._r8
        call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
 
@@ -788,10 +791,10 @@ contains
        ! If cft_size == 0, and thus we aren't reading PCT_CFT, then make sure PCT_CROP is
        ! 0 everywhere (PCT_CROP > 0 anywhere requires that we have a PCT_CFT array)
        if (any(wt_lunit(begg:endg,istcrop) > 0._r8)) then
-          call endrun( trim(subname)// &
-               ' ERROR: if PCT_CROP > 0 anywhere, then cft_size must be > 0'// &
+          call endrun( msg=' ERROR: if PCT_CROP > 0 anywhere, then cft_size must be > 0'// &
                ' (if the surface dataset has a separate crop landunit, then the code'// &
-               ' must also have a separate crop landunit, and vice versa)')
+               ' must also have a separate crop landunit, and vice versa)'//&
+               errMsg(__FILE__, __LINE__))
        end if
     end if
 
@@ -804,8 +807,8 @@ contains
        end if
 
        if (cft_size <= 0) then
-          call endrun( trim(subname)// &
-               'ERROR: Trying to merge irrigated CFTs with rainfed, but cft_size <= 0')
+          call endrun( msg='ERROR: Trying to merge irrigated CFTs with rainfed, but cft_size <= 0'//&
+               errMsg(__FILE__, __LINE__))
        end if
 
        do nl = begg,endg

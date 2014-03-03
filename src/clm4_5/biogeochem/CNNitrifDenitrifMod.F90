@@ -5,6 +5,7 @@ module CNNitrifDenitrifMod
   !
   use shr_kind_mod , only: r8 => shr_kind_r8
   use shr_const_mod, only: SHR_CONST_TKFRZ
+  use shr_log_mod  , only: errMsg => shr_log_errMsg
   use clm_varcon   , only: secspday
   use clm_varctl   , only: use_lch4
   use abortutils   , only: endrun
@@ -39,7 +40,6 @@ contains
     !
     !
     use ncdio_pio    , only: file_desc_t,ncd_io
-    use abortutils   , only: endrun
     !
     ! !ARGUMENTS:
     implicit none
@@ -57,37 +57,37 @@ contains
     !
     tString='k_nitr_max'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNNitrifDenitrifParamsInst%k_nitr_max=tempr
 
     tString='surface_tension_water'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNNitrifDenitrifParamsInst%surface_tension_water=tempr
 
     tString='rij_kro_a'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNNitrifDenitrifParamsInst%rij_kro_a=tempr
 
     tString='rij_kro_alpha'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNNitrifDenitrifParamsInst%rij_kro_alpha=tempr
 
     tString='rij_kro_beta'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNNitrifDenitrifParamsInst%rij_kro_beta=tempr
 
     tString='rij_kro_gamma'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNNitrifDenitrifParamsInst%rij_kro_gamma=tempr
 
     tString='rij_kro_delta'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNNitrifDenitrifParamsInst%rij_kro_delta=tempr
 
   end subroutine readCNNitrifDenitrifParams
@@ -274,7 +274,7 @@ contains
             ! otherwise diffusivity will be zeroed out here. EBK CDK 10/18/2011
             anaerobic_frac(c,j) = 0._r8
             diffus (c,j) = 0._r8
-            !call endrun( trim(subname)//' ERROR: NITRIF_DENITRIF requires Methane model to be active' )
+            !call endrun(msg=' ERROR: NITRIF_DENITRIF requires Methane model to be active'//errMsg(__FILE__, __LINE__) )
          end if
 
          

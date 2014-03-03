@@ -19,6 +19,7 @@ module ncdio_pio
   use shr_sys_mod    , only : shr_sys_abort
   use shr_file_mod   , only : shr_file_getunit, shr_file_freeunit
   use shr_string_mod , only : shr_string_toUpper
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use spmdMod        , only : masterproc, mpicom, iam, npes
   use spmdMod        , only : MPI_REAL8, MPI_INTEGER, MPI_LOGICAL
   use clmtype        , only : grlnd, nameg, namel, namec, namep
@@ -29,15 +30,14 @@ module ncdio_pio
   use perf_mod       , only : t_startf, t_stopf
   use fileutils      , only : getavu, relavu
   use mct_mod        , only : mct_gsMap, mct_gsMap_lsize, mct_gsMap_gsize, mct_gsMap_OP
-  use pio            , only : file_desc_t, io_desc_t, iosystem_desc_t, pio_64bit_offset, &
-       pio_bcast_error, pio_char, pio_clobber, pio_closefile, pio_createfile, pio_def_dim,&
-       pio_def_var, pio_double, pio_enddef, pio_get_var, pio_global, pio_initdecomp, &
-       pio_inq_dimid, pio_inq_dimlen, pio_inq_dimname, pio_inq_vardimid, pio_inq_varid, &
-       pio_inq_varname, pio_inq_varndims, pio_inquire, pio_int, pio_internal_error, &
-       pio_noclobber, pio_noerr, pio_nofill, pio_nowrite, pio_offset, pio_openfile, &
-       pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling, &
-       pio_setframe, pio_unlimited, pio_write, pio_write_darray, var_desc_t
-
+  use pio            , only : file_desc_t, io_desc_t, iosystem_desc_t, pio_64bit_offset
+  use pio            , only : pio_bcast_error, pio_char, pio_clobber, pio_closefile, pio_createfile, pio_def_dim
+  use pio            , only : pio_def_var, pio_double, pio_enddef, pio_get_var, pio_global, pio_initdecomp
+  use pio            , only : pio_inq_dimid, pio_inq_dimlen, pio_inq_dimname, pio_inq_vardimid, pio_inq_varid
+  use pio            , only : pio_inq_varname, pio_inq_varndims, pio_inquire, pio_int, pio_internal_error
+  use pio            , only : pio_noclobber, pio_noerr, pio_nofill, pio_nowrite, pio_offset, pio_openfile
+  use pio            , only : pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling
+  use pio            , only : pio_setframe, pio_unlimited, pio_write, pio_write_darray, var_desc_t
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -351,7 +351,7 @@ contains
     if (dimlen /= value) then
        write(iulog,*) subname//' ERROR: mismatch of input dimension ',dimlen, &
             ' with expected value ',value,' for variable ',trim(dimname)
-       call shr_sys_abort()
+       call shr_sys_abort(errMsg(__FILE__, __LINE__))
     end if
 
 # 292 "ncdio_pio.F90.in"
@@ -510,7 +510,7 @@ contains
 
     if (ni == 0 .or. nj == 0) then
        write(iulog,*) trim(subname),' ERROR: ni,nj = ',ni,nj,' cannot be zero '
-       call shr_sys_abort()
+       call shr_sys_abort(errMsg(__FILE__, __LINE__))
     end if
 
     if (nj == 1) then
@@ -868,7 +868,7 @@ contains
     else   ! ndims must be zero if dimid not present
        if (ndims /= 0) then
           write(iulog,*) subname//' ERROR: dimid not supplied and ndims ne 0 ',trim(varname),ndims
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        endif
     endif
 
@@ -904,23 +904,23 @@ contains
        status = PIO_put_att(ncid,varid,'flag_values',flag_values)
        if ( .not. present(flag_meanings)) then
           write(iulog,*) 'Error in defining variable = ', trim(varname)
-          call shr_sys_abort( subname//" ERROR:: flag_values set -- but not flag_meanings" )
+          call shr_sys_abort(" ERROR:: flag_values set -- but not flag_meanings"//errMsg(__FILE__, __LINE__))
        end if
     end if
     if (present(flag_meanings)) then
        if ( .not. present(flag_values)) then
           write(iulog,*) 'Error in defining variable = ', trim(varname)
-          call shr_sys_abort( subname//" ERROR:: flag_meanings set -- but not flag_values" )
+          call shr_sys_abort(" ERROR:: flag_meanings set -- but not flag_values"//errMsg(__FILE__, __LINE__) )
        end if
        if ( size(flag_values) /= size(flag_meanings) ) then
           write(iulog,*) 'Error in defining variable = ', trim(varname)
-          call shr_sys_abort( subname//" ERROR:: flag_meanings and flag_values dimension different")
+          call shr_sys_abort(" ERROR:: flag_meanings and flag_values dimension different"//errMsg(__FILE__, __LINE__))
        end if
        str = flag_meanings(1)
        do n = 1, size(flag_meanings)
           if ( index(flag_meanings(n), ' ') /= 0 )then
              write(iulog,*) 'Error in defining variable = ', trim(varname)
-             call shr_sys_abort( subname//" ERROR:: flag_meanings has an invalid space in it" )
+             call shr_sys_abort(" ERROR:: flag_meanings has an invalid space in it"//errMsg(__FILE__, __LINE__) )
           end if
           if ( n > 1 ) str = trim(str)//" "//flag_meanings(n)
        end do
@@ -1110,8 +1110,8 @@ contains
        if (varpresent) then
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
-                call shr_sys_abort( subname// &
-                     ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
+                call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
+                     errMsg(__FILE__, __LINE__))
              end if
           endif
 #if (0==0) 
@@ -1121,14 +1121,13 @@ contains
           else if ( idata == 1 )then
              data = .true.
           else
-             call shr_sys_abort( subname//' ERROR: bad integer value for logical data' )
+             call shr_sys_abort(' ERROR: bad integer value for logical data'//errMsg(__FILE__, __LINE__))
           end if
 #else
           allocate(idata1d(size(data))) 
           data = (idata == 1)
           if ( any(idata1d /= 0 .and. idata1d /= 1) )then
-             call shr_sys_abort( subname// &
-                  ' ERROR: read in bad integer value(s) for logical data' )
+             call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
           end if
           deallocate(idata1d)
 #endif
@@ -1166,7 +1165,7 @@ contains
 
     endif   ! flag
 
-# 1066 "ncdio_pio.F90.in"
+# 1065 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_log_glob
   !DIMS 0,1
 # 975 "ncdio_pio.F90.in"
@@ -1205,8 +1204,8 @@ contains
        if (varpresent) then
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
-                call shr_sys_abort( subname// &
-                     ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
+                call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
+                     errMsg(__FILE__, __LINE__))
              end if
           endif
 #if (1==0) 
@@ -1216,14 +1215,13 @@ contains
           else if ( idata == 1 )then
              data = .true.
           else
-             call shr_sys_abort( subname//' ERROR: bad integer value for logical data' )
+             call shr_sys_abort(' ERROR: bad integer value for logical data'//errMsg(__FILE__, __LINE__))
           end if
 #else
           allocate(idata1d(size(data))) 
           data = (idata == 1)
           if ( any(idata1d /= 0 .and. idata1d /= 1) )then
-             call shr_sys_abort( subname// &
-                  ' ERROR: read in bad integer value(s) for logical data' )
+             call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
           end if
           deallocate(idata1d)
 #endif
@@ -1261,13 +1259,13 @@ contains
 
     endif   ! flag
 
-# 1066 "ncdio_pio.F90.in"
+# 1065 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_log_glob
 
   !------------------------------------------------------------------------
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1071 "ncdio_pio.F90.in"
+# 1070 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1308,8 +1306,8 @@ contains
           status = pio_get_var(ncid, vardesc, data)
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
-                call shr_sys_abort( subname// &
-                ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
+                call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
+                     errMsg(__FILE__, __LINE__))
              end if
           endif
        end if
@@ -1364,11 +1362,11 @@ contains
 
     endif
 
-# 1167 "ncdio_pio.F90.in"
+# 1166 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1071 "ncdio_pio.F90.in"
+# 1070 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1409,8 +1407,8 @@ contains
           status = pio_get_var(ncid, vardesc, data)
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
-                call shr_sys_abort( subname// &
-                ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
+                call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
+                     errMsg(__FILE__, __LINE__))
              end if
           endif
        end if
@@ -1465,11 +1463,11 @@ contains
 
     endif
 
-# 1167 "ncdio_pio.F90.in"
+# 1166 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1071 "ncdio_pio.F90.in"
+# 1070 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1510,8 +1508,8 @@ contains
           status = pio_get_var(ncid, vardesc, data)
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
-                call shr_sys_abort( subname// &
-                ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
+                call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
+                     errMsg(__FILE__, __LINE__))
              end if
           endif
        end if
@@ -1566,11 +1564,11 @@ contains
 
     endif
 
-# 1167 "ncdio_pio.F90.in"
+# 1166 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1071 "ncdio_pio.F90.in"
+# 1070 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1611,8 +1609,8 @@ contains
           status = pio_get_var(ncid, vardesc, data)
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
-                call shr_sys_abort( subname// &
-                ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
+                call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
+                     errMsg(__FILE__, __LINE__))
              end if
           endif
        end if
@@ -1667,11 +1665,11 @@ contains
 
     endif
 
-# 1167 "ncdio_pio.F90.in"
+# 1166 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1071 "ncdio_pio.F90.in"
+# 1070 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1712,8 +1710,8 @@ contains
           status = pio_get_var(ncid, vardesc, data)
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
-                call shr_sys_abort( subname// &
-                ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
+                call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
+                     errMsg(__FILE__, __LINE__))
              end if
           endif
        end if
@@ -1768,11 +1766,11 @@ contains
 
     endif
 
-# 1167 "ncdio_pio.F90.in"
+# 1166 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1071 "ncdio_pio.F90.in"
+# 1070 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1813,8 +1811,8 @@ contains
           status = pio_get_var(ncid, vardesc, data)
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
-                call shr_sys_abort( subname// &
-                ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
+                call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
+                     errMsg(__FILE__, __LINE__))
              end if
           endif
        end if
@@ -1869,11 +1867,11 @@ contains
 
     endif
 
-# 1167 "ncdio_pio.F90.in"
+# 1166 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1071 "ncdio_pio.F90.in"
+# 1070 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1914,8 +1912,8 @@ contains
           status = pio_get_var(ncid, vardesc, data)
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
-                call shr_sys_abort( subname// &
-                ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
+                call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
+                     errMsg(__FILE__, __LINE__))
              end if
           endif
        end if
@@ -1970,11 +1968,11 @@ contains
 
     endif
 
-# 1167 "ncdio_pio.F90.in"
+# 1166 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1071 "ncdio_pio.F90.in"
+# 1070 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -2015,8 +2013,8 @@ contains
           status = pio_get_var(ncid, vardesc, data)
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
-                call shr_sys_abort( subname// &
-                ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
+                call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
+                     errMsg(__FILE__, __LINE__))
              end if
           endif
        end if
@@ -2071,13 +2069,13 @@ contains
 
     endif
 
-# 1167 "ncdio_pio.F90.in"
+# 1166 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_double_glob
 
   !------------------------------------------------------------------------
   !DIMS 0,1,2
   !TYPE text
-# 1172 "ncdio_pio.F90.in"
+# 1171 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2157,11 +2155,11 @@ contains
 
     endif
 
-# 1251 "ncdio_pio.F90.in"
+# 1250 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_text_glob 
   !DIMS 0,1,2
   !TYPE text
-# 1172 "ncdio_pio.F90.in"
+# 1171 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2241,11 +2239,11 @@ contains
 
     endif
 
-# 1251 "ncdio_pio.F90.in"
+# 1250 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_text_glob 
   !DIMS 0,1,2
   !TYPE text
-# 1172 "ncdio_pio.F90.in"
+# 1171 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2325,13 +2323,13 @@ contains
 
     endif
 
-# 1251 "ncdio_pio.F90.in"
+# 1250 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_text_glob 
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double,logical
-# 1256 "ncdio_pio.F90.in"
+# 1255 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_int(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2380,7 +2378,8 @@ contains
 #if (103==TYPEDOUBLE) 
     if ( present(cnvrtnan2fill) )then
        if (.not. cnvrtnan2fill) then
-          call shr_sys_abort( subname//' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used' )
+          call shr_sys_abort(' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used'//&
+               errMsg(__FILE__, __LINE__))
        endif
     end if
 #endif
@@ -2406,7 +2405,7 @@ contains
              status = pio_get_var(ncid, varid, start, count, idata)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
-                call shr_sys_abort( subname//' ERROR: read in bad integer value(s) for logical data' )
+                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
              end if
              deallocate( idata )
 #else
@@ -2440,7 +2439,7 @@ contains
              call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
-                call shr_sys_abort( subname//' ERROR: read in bad integer value(s) for logical data' )
+                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
              end if
              deallocate( idata )
 #else
@@ -2493,7 +2492,7 @@ contains
 
        if (masterproc) then
           write(iulog,*) subname//' ERROR: unsupported flag ',trim(flag)
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        endif
 
     endif
@@ -2501,7 +2500,7 @@ contains
 # 1422 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_int
   !TYPE int,double,logical
-# 1256 "ncdio_pio.F90.in"
+# 1255 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_double(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2550,7 +2549,8 @@ contains
 #if (102==TYPEDOUBLE) 
     if ( present(cnvrtnan2fill) )then
        if (.not. cnvrtnan2fill) then
-          call shr_sys_abort( subname//' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used' )
+          call shr_sys_abort(' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used'//&
+               errMsg(__FILE__, __LINE__))
        endif
     end if
 #endif
@@ -2576,7 +2576,7 @@ contains
              status = pio_get_var(ncid, varid, start, count, idata)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
-                call shr_sys_abort( subname//' ERROR: read in bad integer value(s) for logical data' )
+                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
              end if
              deallocate( idata )
 #else
@@ -2610,7 +2610,7 @@ contains
              call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
-                call shr_sys_abort( subname//' ERROR: read in bad integer value(s) for logical data' )
+                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
              end if
              deallocate( idata )
 #else
@@ -2663,7 +2663,7 @@ contains
 
        if (masterproc) then
           write(iulog,*) subname//' ERROR: unsupported flag ',trim(flag)
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        endif
 
     endif
@@ -2671,7 +2671,7 @@ contains
 # 1422 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_double
   !TYPE int,double,logical
-# 1256 "ncdio_pio.F90.in"
+# 1255 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_logical(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2720,7 +2720,8 @@ contains
 #if (105==TYPEDOUBLE) 
     if ( present(cnvrtnan2fill) )then
        if (.not. cnvrtnan2fill) then
-          call shr_sys_abort( subname//' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used' )
+          call shr_sys_abort(' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used'//&
+               errMsg(__FILE__, __LINE__))
        endif
     end if
 #endif
@@ -2746,7 +2747,7 @@ contains
              status = pio_get_var(ncid, varid, start, count, idata)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
-                call shr_sys_abort( subname//' ERROR: read in bad integer value(s) for logical data' )
+                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
              end if
              deallocate( idata )
 #else
@@ -2780,7 +2781,7 @@ contains
              call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
-                call shr_sys_abort( subname//' ERROR: read in bad integer value(s) for logical data' )
+                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
              end if
              deallocate( idata )
 #else
@@ -2833,7 +2834,7 @@ contains
 
        if (masterproc) then
           write(iulog,*) subname//' ERROR: unsupported flag ',trim(flag)
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        endif
 
     endif
@@ -2892,7 +2893,7 @@ contains
 
     start(:)=0
     count(:)=0
-     
+
     clmlevel = dim1name      
 
     if (masterproc .and. debug > 1) then
@@ -2902,7 +2903,8 @@ contains
 #if (103==TYPEDOUBLE) 
     if ( present(cnvrtnan2fill) )then
        if (.not. cnvrtnan2fill) then
-          call shr_sys_abort( subname//' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used' )
+          call shr_sys_abort( ' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used'//&
+               errMsg(__FILE__, __LINE__))
        endif
     end if
 #endif
@@ -2952,7 +2954,7 @@ contains
              status = pio_inq_dimname(ncid, dids(ndims), dimname)
              if (ndims == 0) then
                 write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-                call shr_sys_abort()
+                call shr_sys_abort(errMsg(__FILE__, __LINE__))
              end if
              if ('time' == trim(dimname)) then
                 ndims_iod = ndims - 1
@@ -3005,7 +3007,7 @@ contains
        status = pio_inq_vardimid(ncid, vardesc , dids)
        if (ndims == 0) then
           write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        end if
        status = pio_inq_dimname(ncid,dids(ndims),dimname)
        if ('time' == trim(dimname)) then
@@ -3061,7 +3063,7 @@ contains
 
        if (masterproc) then
           write(iulog,*) subname,' error: unsupported flag ',trim(flag)
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        endif
 
     endif
@@ -3070,7 +3072,7 @@ contains
        deallocate(temp)
     end if
 
-# 1652 "ncdio_pio.F90.in"
+# 1653 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_int
   !TYPE int,double
 # 1427 "ncdio_pio.F90.in"
@@ -3121,7 +3123,7 @@ contains
 
     start(:)=0
     count(:)=0
-     
+
     clmlevel = dim1name      
 
     if (masterproc .and. debug > 1) then
@@ -3131,7 +3133,8 @@ contains
 #if (102==TYPEDOUBLE) 
     if ( present(cnvrtnan2fill) )then
        if (.not. cnvrtnan2fill) then
-          call shr_sys_abort( subname//' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used' )
+          call shr_sys_abort( ' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used'//&
+               errMsg(__FILE__, __LINE__))
        endif
     end if
 #endif
@@ -3181,7 +3184,7 @@ contains
              status = pio_inq_dimname(ncid, dids(ndims), dimname)
              if (ndims == 0) then
                 write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-                call shr_sys_abort()
+                call shr_sys_abort(errMsg(__FILE__, __LINE__))
              end if
              if ('time' == trim(dimname)) then
                 ndims_iod = ndims - 1
@@ -3234,7 +3237,7 @@ contains
        status = pio_inq_vardimid(ncid, vardesc , dids)
        if (ndims == 0) then
           write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        end if
        status = pio_inq_dimname(ncid,dids(ndims),dimname)
        if ('time' == trim(dimname)) then
@@ -3290,7 +3293,7 @@ contains
 
        if (masterproc) then
           write(iulog,*) subname,' error: unsupported flag ',trim(flag)
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        endif
 
     endif
@@ -3299,13 +3302,13 @@ contains
        deallocate(temp)
     end if
 
-# 1652 "ncdio_pio.F90.in"
+# 1653 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_double
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double
-# 1657 "ncdio_pio.F90.in"
+# 1658 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_int(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
@@ -3340,9 +3343,6 @@ contains
     character(len=*),parameter :: subname='ncd_io_3d_int' ! subroutine name
     !-----------------------------------------------------------------------
 
-    start(:)=0
-    count(:)=0
-
     clmlevel = dim1name      
 
     if (masterproc .and. debug > 1) then
@@ -3379,7 +3379,7 @@ contains
              status = pio_inq_dimname(ncid, dids(ndims), dimname)
              if (ndims == 0) then
                 write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-                call shr_sys_abort()
+                call shr_sys_abort(errMsg(__FILE__, __LINE__))
              end if
              if ('time' == trim(dimname)) then
                 ndims_iod = ndims - 1
@@ -3407,7 +3407,7 @@ contains
        status = pio_inq_vardimid(ncid, vardesc , dids)
        if (ndims == 0) then
           write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        end if
        status = pio_inq_dimname(ncid,dids(ndims),dimname)
        if ('time' == trim(dimname)) then
@@ -3430,15 +3430,15 @@ contains
 
        if (masterproc) then
           write(iulog,*) subname,' error: unsupported flag ',trim(flag)
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        endif
 
     endif
 
-# 1786 "ncdio_pio.F90.in"
+# 1784 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_int
   !TYPE int,double
-# 1657 "ncdio_pio.F90.in"
+# 1658 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_double(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
@@ -3473,9 +3473,6 @@ contains
     character(len=*),parameter :: subname='ncd_io_3d_double' ! subroutine name
     !-----------------------------------------------------------------------
 
-    start(:)=0
-    count(:)=0
-
     clmlevel = dim1name      
 
     if (masterproc .and. debug > 1) then
@@ -3512,7 +3509,7 @@ contains
              status = pio_inq_dimname(ncid, dids(ndims), dimname)
              if (ndims == 0) then
                 write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-                call shr_sys_abort()
+                call shr_sys_abort(errMsg(__FILE__, __LINE__))
              end if
              if ('time' == trim(dimname)) then
                 ndims_iod = ndims - 1
@@ -3540,7 +3537,7 @@ contains
        status = pio_inq_vardimid(ncid, vardesc , dids)
        if (ndims == 0) then
           write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        end if
        status = pio_inq_dimname(ncid,dids(ndims),dimname)
        if ('time' == trim(dimname)) then
@@ -3563,17 +3560,17 @@ contains
 
        if (masterproc) then
           write(iulog,*) subname,' error: unsupported flag ',trim(flag)
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        endif
 
     endif
 
-# 1786 "ncdio_pio.F90.in"
+# 1784 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_double
 
   !------------------------------------------------------------------------
 
-# 1790 "ncdio_pio.F90.in"
+# 1788 "ncdio_pio.F90.in"
   subroutine scam_field_offsets( ncid, dim1name, vardesc, start, count, &
        found, posNOTonfile)
     !
@@ -3617,16 +3614,16 @@ contains
     character(len=32)    :: dimname           ! dimension name
     character(len=32)    :: subname = 'scam_field_offsets'
     !------------------------------------------------------------------------
-    
+
     start(:)=0
     count(:)=0
 
     if ( present(posNOTonfile) )then
        if ( posNOTonfile )then
           if ( .not. present(found) )then
-             call shr_sys_abort( subname// &
-# 1841 "ncdio_pio.F90.in"
-                  'ERROR: Bad subroutine calling structure posNOTonfile sent, but found was NOT!')
+# 1838 "ncdio_pio.F90.in"
+             call shr_sys_abort('ERROR: Bad subroutine calling structure posNOTonfile sent, but found was NOT!'//&
+                  errMsg(__FILE__, __LINE__))
           end if
           found = .false.
           return
@@ -3680,7 +3677,7 @@ contains
           end do
           if (ndata == 0) then
              write(iulog,*)'couldnt find any columns for this latitude ',latidx,' and longitude ',lonidx
-             call shr_sys_abort( subname//'ERROR:: no columns for this position' )
+             call shr_sys_abort('ERROR:: no columns for this position'//errMsg(__FILE__, __LINE__))
           else
              data_offset=cols(1)
           end if
@@ -3716,7 +3713,7 @@ contains
           end do
           if (ndata == 0) then
              write(iulog,*)'couldnt find any pfts for this latitude ',closelat,' and longitude ',closelon
-             call shr_sys_abort( subname//'ERROR:: no PFTs for this position' )
+             call shr_sys_abort('ERROR:: no PFTs for this position'//errMsg(__FILE__, __LINE__))
           else
              data_offset=pfts(1)
           end if
@@ -3752,7 +3749,7 @@ contains
           end do
           if (ndata == 0) then
              write(iulog,*)'couldnt find any landunits for this latitude ',closelat,' and longitude ',closelon
-             call shr_sys_abort( subname//'ERROR:: no landunits for this position' )
+             call shr_sys_abort('ERROR:: no landunits for this position'//errMsg(__FILE__, __LINE__))
           else
              data_offset=landunits(1)
           end if
@@ -3770,12 +3767,12 @@ contains
     enddo
     deallocate(dids)
 
-# 1985 "ncdio_pio.F90.in"
+# 1983 "ncdio_pio.F90.in"
   end subroutine scam_field_offsets
 
   !------------------------------------------------------------------------
 
-# 1989 "ncdio_pio.F90.in"
+# 1987 "ncdio_pio.F90.in"
   subroutine ncd_getiodesc(ncid, clmlevel, ndims, dims, dimids, &
        xtype, iodnum, switchdim) 
     !
@@ -3848,7 +3845,7 @@ contains
              iodnum = n
              if (iodnum > num_iodesc) then
                 write(iulog,*) trim(subname),' ERROR: iodnum out of range ',iodnum,num_iodesc
-                call shr_sys_abort()
+                call shr_sys_abort(errMsg(__FILE__, __LINE__))
              endif
              RETURN
           endif
@@ -3862,7 +3859,7 @@ contains
        num_iodesc = num_iodesc + 1
        if (num_iodesc > max_iodesc) then
           write(iulog,*) trim(subname),' ERROR num_iodesc gt max_iodesc ',max_iodesc
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        endif
        iodnum = num_iodesc
        if (masterproc .and. debug > 1) then
@@ -3894,7 +3891,7 @@ contains
     vsize = fullsize / gsize
     if (mod(fullsize,gsize) /= 0) then
        write(iulog,*) subname,' ERROR in vsize ',fullsize,gsize,vsize
-       call shr_sys_abort()
+       call shr_sys_abort(errMsg(__FILE__, __LINE__))
     endif
 
     allocate(compDOF(gsmap_lsize*vsize))
@@ -3910,7 +3907,7 @@ contains
           enddo
        else
           write(iulog,*) subname,' ERROR switch dims present must have switchdim true' 
-          call shr_sys_abort()
+          call shr_sys_abort(errMsg(__FILE__, __LINE__))
        end if
     else         ! currently allow for up to two vertical dimensions
        if (vsize /= 1 .and. vsize /= dims(ndims)) then
@@ -3918,7 +3915,7 @@ contains
           vsize2 = dims(ndims)
           if (vsize1*vsize2 /= vsize) then
              write(iulog,*)'vsize1= ',vsize1,' vsize2= ',vsize2,' vsize= ',vsize
-             call shr_sys_abort('error in vsize1 and vsize2 computation')
+             call shr_sys_abort('error in vsize1 and vsize2 computation'//errMsg(__FILE__, __LINE__))
           end if
           cnt = 0
           do k = 1,vsize2
@@ -3964,7 +3961,7 @@ contains
     iodesc_list(iodnum)%dims(1:ndims)   = dims(1:ndims)
     iodesc_list(iodnum)%dimids(1:ndims) = dimids(1:ndims)
 
-# 2177 "ncdio_pio.F90.in"
+# 2175 "ncdio_pio.F90.in"
   end subroutine ncd_getiodesc
 
 end module ncdio_pio

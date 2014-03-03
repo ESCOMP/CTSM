@@ -17,6 +17,7 @@ module dynHarvestMod
   use shr_assert_mod          , only : shr_assert
   use dynFileMod              , only : dyn_file_type
   use dynVarTimeUninterpMod   , only : dyn_var_time_uninterp_type
+  use shr_log_mod             , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -76,7 +77,7 @@ contains
 
     allocate(harvest(bounds%begg:bounds%endg),stat=ier)
     if (ier /= 0) then
-       call endrun( subname//' allocation error for harvest')
+       call endrun(msg=' allocation error for harvest'//errMsg(__FILE__, __LINE__))
     end if
 
     dynHarvest_file = dyn_file_type(fpftdyn)

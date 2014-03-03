@@ -8,10 +8,11 @@ module dynFileMod
   ! that there is a single time sample per year.
   !
   ! !USES:
-  use shr_sys_mod    , only : shr_sys_abort
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use dynTimeInfoMod , only : time_info_type
   use ncdio_pio      , only : file_desc_t, ncd_pio_openfile, ncd_inqdid, ncd_inqdlen, ncd_io
   use clm_varctl     , only : iulog
+  use abortutils     , only : endrun
   implicit none
   save
   private
@@ -92,8 +93,7 @@ contains
     call ncd_inqdlen(file_desc_t, varid, ntimes)
     allocate(years(ntimes), stat=ier)
     if (ier /= 0) then
-       write(iulog,*) subname//' allocation error for years'
-       call shr_sys_abort()
+       call endrun(msg=' allocation error for years'//errMsg(__FILE__, __LINE__))
     end if
     call ncd_io(ncid=file_desc_t, varname='YEAR', flag='read', data=years)
     

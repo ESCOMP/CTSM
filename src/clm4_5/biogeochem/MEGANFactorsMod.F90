@@ -7,6 +7,7 @@ module MEGANFactorsMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils,   only : endrun
   use clm_varctl,   only : iulog
+  use shr_log_mod,  only : errMsg => shr_log_errMsg
   !
   implicit none
   private
@@ -69,8 +70,8 @@ contains
 
     if (ndx<1) then 
        errmes = 'megan_factors_get: '//trim(comp_name)//' compound not found in MEGAN table'
-        write(iulog,*) trim(errmes)
-       call endrun(errmes)
+       write(iulog,*) trim(errmes)
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
 
     factors(:) = comp_factors_table( ndx )%eff(:)
@@ -128,9 +129,13 @@ contains
     ierr = pio_inq_varid(ncid,'Class_Num',class_num_vid)
     ierr = pio_inq_varid(ncid,'Comp_MW',  comp_mw_vid)
 
-    allocate( factors(n_pfts) )
+    allocate( factors(n_pfts) ) 
     allocate( comp_factors(n_pfts) )
     allocate( class_factors(n_pfts) )
+    
+    factors(1:n_pfts) = 0._r8
+    comp_factors(1:n_pfts) = 0._r8
+    class_factors(1:n_pfts) = 0._r8
 
     allocate( comp_names(n_comps) )
     allocate( comp_molecwghts(n_comps) )
@@ -144,7 +149,7 @@ contains
     call  bld_hash_table_indices( comp_names )
     do i=1,n_comps
        start=(/i,1/)
-       count=(/1,16/)
+       count=(/1,16/) !TODO - this SHOULD NOT BE HARD-WIRED here!!!!!
        ierr = pio_get_var( ncid, comp_ef_vid,  start, count, comp_factors )
        start=(/class_nums(i),1/)
        ierr = pio_get_var( ncid, class_ef_vid, start, count, class_factors  )

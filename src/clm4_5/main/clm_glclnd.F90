@@ -15,14 +15,15 @@ module clm_glclnd
   ! 'ice' refers to sea ice, not land ice.
   !
   ! !USES:
-  use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
-  use decompMod   , only : get_proc_bounds
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use spmdMod     , only : masterproc
-  use clm_varpar  , only : maxpatch_glcmec
-  use clm_varctl  , only : iulog, glc_smb
-  use abortutils  , only : endrun
-  use decompMod   , only : bounds_type
+  use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use decompMod      , only : get_proc_bounds
+  use shr_kind_mod   , only : r8 => shr_kind_r8
+  use spmdMod        , only : masterproc
+  use clm_varpar     , only : maxpatch_glcmec
+  use clm_varctl     , only : iulog, glc_smb
+  use abortutils     , only : endrun
+  use decompMod      , only : bounds_type
   !
   ! !REVISION HISTORY:
   ! Created by William Lipscomb, Dec. 2007, based on clm_atmlnd.F90.
@@ -166,7 +167,8 @@ contains
     else  ! Pass PDD info (same info in each elevation class)
        ! Require maxpatch_glcmec = 1 for this case 
        if (maxpatch_glcmec .ne. 1) then
-          call endrun('update_clm_s2x error: maxpatch_glcmec must be 1 if glc_smb is false') 
+          call endrun(msg='update_clm_s2x error: maxpatch_glcmec must be 1 if glc_smb is false'//&
+               errMsg(__FILE__, __LINE__)) 
        end if
        n = 1
        do g = bounds%begg,bounds%endg

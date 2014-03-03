@@ -15,6 +15,7 @@ module CNPhenologyMod
   use shr_sys_mod , only: shr_sys_flush
   use abortutils  , only: endrun
   use decompMod   , only: bounds_type
+  use shr_log_mod , only: errMsg => shr_log_errMsg
   implicit none
   save
   private
@@ -79,7 +80,6 @@ contains
     !
     ! !USES:
     use ncdio_pio    , only: file_desc_t,ncd_io
-    use abortutils   , only: endrun
 
     ! !ARGUMENTS:
     implicit none
@@ -98,57 +98,57 @@ contains
     !   
     tString='crit_dayl'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNPhenolParamsInst%crit_dayl=tempr
 
     tString='ndays_on'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNPhenolParamsInst%ndays_on=tempr
 
     tString='ndays_off'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNPhenolParamsInst%ndays_off=tempr
 
     tString='fstor2tran'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNPhenolParamsInst%fstor2tran=tempr
 
     tString='crit_onset_fdd'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNPhenolParamsInst%crit_onset_fdd=tempr
 
     tString='crit_onset_swi'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNPhenolParamsInst%crit_onset_swi=tempr
 
     tString='soilpsi_on'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNPhenolParamsInst%soilpsi_on=tempr
 
     tString='crit_offset_fdd'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNPhenolParamsInst%crit_offset_fdd=tempr
 
     tString='crit_offset_swi'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNPhenolParamsInst%crit_offset_swi=tempr
 
     tString='soilpsi_off'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNPhenolParamsInst%soilpsi_off=tempr
 
     tString='lwtop_ann'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNPhenolParamsInst%lwtop=tempr   
 
   end subroutine readCNPhenolParams

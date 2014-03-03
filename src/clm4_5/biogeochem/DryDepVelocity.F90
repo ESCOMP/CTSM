@@ -51,18 +51,19 @@ Module DryDepVelocity
   ! Modified: Francis Vitt -- 30 Mar 2007
   !----------------------------------------------------------------------- 
 
-  use shr_kind_mod,         only : r8 => shr_kind_r8 
+  use shr_kind_mod     , only : r8 => shr_kind_r8 
   use clmtype 
-  use abortutils,           only : endrun
-  use clm_time_manager,     only : get_nstep, get_curr_date, get_curr_time 
-  use clm_atmlnd,           only : clm_a2l, a2l_downscaled_col
-  use spmdMod,              only : masterproc
-  use seq_drydep_mod,       only : n_drydep, drydep_list
-  use seq_drydep_mod,       only : drydep_method, DD_XLND
-  use seq_drydep_mod,       only : index_o3=>o3_ndx, index_o3a=>o3a_ndx, index_so2=>so2_ndx, index_h2=>h2_ndx, &
-                                   index_co=>co_ndx, index_ch4=>ch4_ndx, index_pan=>pan_ndx, &
-                                   index_xpan=>xpan_ndx
-  use decompMod,            only : bounds_type
+  use abortutils       , only : endrun
+  use clm_time_manager , only : get_nstep, get_curr_date, get_curr_time 
+  use clm_atmlnd       , only : clm_a2l, a2l_downscaled_col
+  use spmdMod          , only : masterproc
+  use seq_drydep_mod   , only : n_drydep, drydep_list
+  use seq_drydep_mod   , only : drydep_method, DD_XLND
+  use seq_drydep_mod   , only : index_o3=>o3_ndx, index_o3a=>o3a_ndx, index_so2=>so2_ndx, index_h2=>h2_ndx
+  use seq_drydep_mod   , only : index_co=>co_ndx, index_ch4=>ch4_ndx, index_pan=>pan_ndx
+  use seq_drydep_mod   , only : index_xpan=>xpan_ndx
+  use decompMod        , only : bounds_type
+  use shr_log_mod      , only : errMsg => shr_log_errMsg
   implicit none 
   save 
 
@@ -226,7 +227,9 @@ CONTAINS
           if (clmveg >= npcropmin .and. clmveg <= npcropmax ) wesveg = 2 
           if (wesveg == wveg_unset )then
              write(iulog,*) 'clmveg = ', clmveg, 'lun%itype = ', lun%itype(l)
-             call endrun( subname//': Not able to determine Wesley vegetation type')
+             call endrun(decomp_index=pi, clmlevel=namep, &
+                  msg='ERROR: Not able to determine Wesley vegetation type'//&
+                  errMsg(__FILE__, __LINE__))
           end if
 
           ! creat seasonality index used to index wesely data tables from LAI,  Bascially 
@@ -290,7 +293,7 @@ CONTAINS
           endif
 
           if (index_season<0) then 
-             call endrun( subname//': not able to determine season')
+             call endrun('ERROR: not able to determine season'//errmsg(__FILE__, __LINE__))
           endif
 
           ! saturation specific humidity 

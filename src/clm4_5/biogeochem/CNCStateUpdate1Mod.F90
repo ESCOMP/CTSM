@@ -3,9 +3,10 @@ module CNCStateUpdate1Mod
   ! Module for carbon state variable update, non-mortality fluxes.
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8
+  use shr_kind_mod , only: r8 => shr_kind_r8
   use clm_varpar   , only: ndecomp_cascade_transitions, nlevdecomp
-  use abortutils  , only: endrun
+  use abortutils   , only: endrun
+  use shr_log_mod  , only: errMsg => shr_log_errMsg
   implicit none
   save
   private
@@ -54,7 +55,8 @@ contains
       pcisof =>  pc13f
       pcisos =>  pc13s
    case default
-      call endrun('CNCIsoStateUpdate1Mod: iso must be bulk, c13 or c14')
+      call endrun(msg='CNCIsoStateUpdate1Mod: iso must be bulk, c13 or c14'//&
+           errMsg(__FILE__, __LINE__))
    end select
 
    associate(& 
@@ -126,7 +128,8 @@ contains
       ccisof =>  cc13f
       ccisos =>  cc13s
    case default
-      call endrun('CNCIsoStateUpdate1Mod: iso must be bulk, c13 or c14')
+      call endrun(msg='CNCIsoStateUpdate1Mod: iso must be bulk, c13 or c14'//&
+           errMsg(__FILE__, __LINE__))
    end select
 
    associate(& 

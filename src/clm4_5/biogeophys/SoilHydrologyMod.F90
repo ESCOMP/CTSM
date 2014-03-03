@@ -3,10 +3,11 @@ module SoilHydrologyMod
   ! !DESCRIPTION:
   ! Calculate soil hydrology
   !
-  use clm_varctl    , only : iulog, use_vichydro
-  use shr_kind_mod  , only : r8 => shr_kind_r8
-  use clm_varcon    , only : e_ice,denh2o, denice,rpi
-  use decompMod ,  only: bounds_type
+  use shr_kind_mod , only: r8 => shr_kind_r8
+  use shr_log_mod  , only: errMsg => shr_log_errMsg
+  use clm_varctl   , only: iulog, use_vichydro
+  use clm_varcon   , only: e_ice,denh2o, denice,rpi
+  use decompMod    , only: bounds_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -41,8 +42,10 @@ contains
     use clm_nlUtilsMod, only : find_nlgroup_name
     use shr_mpi_mod   , only : shr_mpi_bcast
     use abortutils    , only : endrun
+    !
     ! !ARGUMENTS:
     character(len=*), intent(IN) :: NLFilename ! Namelist filename
+    !
     ! !LOCAL VARIABLES:
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
@@ -64,12 +67,13 @@ contains
        if (ierr == 0) then
           read(unitn, clm_soilhydrology_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(subname // ':: ERROR reading clm_soilhydrology_inparm namelist')
+             call endrun(msg="ERROR reading clm_soilhydrology_inparm namelist"//errmsg(__FILE__, __LINE__))
           end if
        end if
        call relavu( unitn )
 
     end if
+
     ! Broadcast namelist variables read in
     call shr_mpi_bcast(h2osfcflag, mpicom)
     call shr_mpi_bcast(origflag,   mpicom)
@@ -85,9 +89,9 @@ contains
     !
     ! !USES:
     use clmtype
-    use clm_varcon      , only : denice, denh2o, wimp, pondmx_urban, &
-         icol_roof, icol_sunwall, icol_shadewall, &
-         icol_road_imperv, icol_road_perv
+    use clm_varcon      , only : denice, denh2o, wimp, pondmx_urban
+    use clm_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
+    use clm_varcon      , only : icol_road_imperv, icol_road_perv
     use clm_varpar      , only : nlevsoi, maxpatch_pft
     use clm_time_manager, only : get_step_size
     use clm_varpar      , only : nlayer, nlayert
@@ -95,28 +99,28 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    integer , intent(in)  :: num_hydrologyc               ! number of column soil points in column filter
-    integer , intent(in)  :: filter_hydrologyc(:) ! column filter for soil points
-    integer , intent(in)  :: num_urbanc                   ! number of column urban points in column filter
-    integer , intent(in)  :: filter_urbanc(:)     ! column filter for urban points
+    type(bounds_type) , intent(in) :: bounds               ! bounds
+    integer           , intent(in) :: num_hydrologyc       ! number of column soil points in column filter
+    integer           , intent(in) :: filter_hydrologyc(:) ! column filter for soil points
+    integer           , intent(in) :: num_urbanc           ! number of column urban points in column filter
+    integer           , intent(in) :: filter_urbanc(:)     ! column filter for urban points
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,j,fc,g,l,i               !indices
-    real(r8) :: dtime                      ! land model time step (sec)
-    real(r8) :: xs(bounds%begc:bounds%endc)                ! excess soil water above urban ponding limit
+    integer  :: c,j,fc,g,l,i                               !indices
+    real(r8) :: dtime                                      !land model time step (sec)
+    real(r8) :: xs(bounds%begc:bounds%endc)                !excess soil water above urban ponding limit
     real(r8) :: vol_ice(bounds%begc:bounds%endc,1:nlevsoi) !partial volume of ice lens in layer
     real(r8) :: fff(bounds%begc:bounds%endc)               !decay factor (m-1)
-    real(r8) :: s1                         !variable to calculate qinmax
-    real(r8) :: su                         !variable to calculate qinmax
-    real(r8) :: v                          !variable to calculate qinmax
-    real(r8) :: qinmax                     !maximum infiltration capacity (mm/s)
+    real(r8) :: s1                                         !variable to calculate qinmax
+    real(r8) :: su                                         !variable to calculate qinmax
+    real(r8) :: v                                          !variable to calculate qinmax
+    real(r8) :: qinmax                                     !maximum infiltration capacity (mm/s)
     real(r8) :: A(bounds%begc:bounds%endc)                 !fraction of the saturated area
     real(r8) :: ex(bounds%begc:bounds%endc)                !temporary variable (exponent)
     real(r8) :: top_moist(bounds%begc:bounds%endc)         !temporary, soil moisture in top VIC layers
     real(r8) :: top_max_moist(bounds%begc:bounds%endc)     !temporary, maximum soil moisture in top VIC layers
     real(r8) :: top_ice(bounds%begc:bounds%endc)           !temporary, ice len in top VIC layers
-    character(len=32) :: subname = 'SurfaceRunoff'  ! subroutine name
+    character(len=32) :: subname = 'SurfaceRunoff'         !subroutine name
     !-----------------------------------------------------------------------
 
    associate(& 
@@ -218,7 +222,7 @@ contains
        endif
        if (origflag == 1) then
           if (use_vichydro) then
-             call endrun(subname // ':: VICHYDRO is not available for origflag = 1')
+             call endrun(msg="VICHYDRO is not available for origflag=1"//errmsg(__FILE__, __LINE__))
           else
              fcov(c) = (1._r8 - fracice(c,1)) * fsat(c) + fracice(c,1)
           end if
@@ -289,10 +293,9 @@ contains
      !
      ! !USES:
      use clmtype
-     use clm_varcon      , only : icol_roof, icol_road_imperv, icol_sunwall, &
-          icol_shadewall, icol_road_perv,denh2o, denice, roverg, wimp, &
-          istsoil,pc,mu,tfrz, istcrop
-     use clmtype
+     use clm_varcon      , only : icol_roof, icol_road_imperv, icol_sunwall
+     use clm_varcon      , only : icol_shadewall, icol_road_perv,denh2o, denice, roverg, wimp
+     use clm_varcon      , only : istsoil,pc,mu,tfrz, istcrop
      use clm_time_manager, only : get_step_size
      use clm_varpar      , only : nlevsoi
      use H2OSfcMod       , only : FracH2oSfc
@@ -308,10 +311,10 @@ contains
      integer, intent(in) :: filter_urbanc(:)               ! column filter for urban points
      !
      ! !LOCAL VARIABLES:
-     integer :: c,j,l, fc                   ! indices
-     real(r8) :: dtime                      ! land model time step (sec)
-     real(r8) :: s1,su,v                    ! variable to calculate qinmax
-     real(r8) :: qinmax                     ! maximum infiltration capacity (mm/s)
+     integer :: c,j,l, fc                                   ! indices
+     real(r8) :: dtime                                      ! land model time step (sec)
+     real(r8) :: s1,su,v                                    ! variable to calculate qinmax
+     real(r8) :: qinmax                                     ! maximum infiltration capacity (mm/s)
      real(r8) :: vol_ice(bounds%begc:bounds%endc,1:nlevsoi) ! partial volume of ice lens in layer
      real(r8) :: alpha_evap(bounds%begc:bounds%endc)        ! fraction of total evap from h2osfc
      real(r8) :: qflx_evap(bounds%begc:bounds%endc)         ! local evaporation array
@@ -319,27 +322,27 @@ contains
      real(r8) :: qflx_in_h2osfc(bounds%begc:bounds%endc)    ! surface input to h2osfc
      real(r8) :: qflx_in_soil(bounds%begc:bounds%endc)      ! surface input to soil
      real(r8) :: qflx_infl_excess(bounds%begc:bounds%endc)  ! infiltration excess runoff -> h2osfc
-     real(r8) :: frac_infclust              ! fraction of submerged area that is connected
-     real(r8) :: fsno                       ! copy of frac_sno
-     real(r8) :: k_wet                      ! linear reservoir coefficient for h2osfc
-     real(r8) :: fac                        ! soil wetness of surface layer
-     real(r8) :: psit                       ! negative potential of soil
-     real(r8) :: hr                         ! relative humidity
-     real(r8) :: wx                         ! partial volume of ice and water of surface layer
+     real(r8) :: frac_infclust                              ! fraction of submerged area that is connected
+     real(r8) :: fsno                                       ! copy of frac_sno
+     real(r8) :: k_wet                                      ! linear reservoir coefficient for h2osfc
+     real(r8) :: fac                                        ! soil wetness of surface layer
+     real(r8) :: psit                                       ! negative potential of soil
+     real(r8) :: hr                                         ! relative humidity
+     real(r8) :: wx                                         ! partial volume of ice and water of surface layer
      real(r8) :: z_avg
      real(r8) :: rho_avg
      real(r8) :: fmelt
      real(r8) :: f_sno
      real(r8) :: imped
      real(r8) :: d
-     real(r8) :: h2osoi_vol                 !
-     real(r8) :: basis                      ! temporary, variable soil moisture holding capacity 
+     real(r8) :: h2osoi_vol                                 
+     real(r8) :: basis                                      ! temporary, variable soil moisture holding capacity 
      ! in top VIC layers for runoff calculation
-     real(r8) :: rsurf_vic                  ! temp VIC surface runoff
+     real(r8) :: rsurf_vic                                  ! temp VIC surface runoff
      real(r8) :: top_moist(bounds%begc:bounds%endc)         ! temporary, soil moisture in top VIC layers
      real(r8) :: top_max_moist(bounds%begc:bounds%endc)     ! temporary, maximum soil moisture in top VIC layers
      real(r8) :: top_ice(bounds%begc:bounds%endc)           ! temporary, ice len in top VIC layers
-     real(r8) :: top_icefrac                ! temporary, ice fraction in top VIC layers
+     real(r8) :: top_icefrac                                ! temporary, ice fraction in top VIC layers
      !-----------------------------------------------------------------------
 
    associate(& 
@@ -1738,7 +1741,7 @@ contains
        ! add ice impedance factor to baseflow
        if(origflag == 1) then 
           if (use_vichydro) then
-             call endrun(subname // ':: VICHYDRO is not available for origflag = 1')
+             call endrun(msg="VICHYDRO is not available for origflag=1"//errmsg(__FILE__, __LINE__))
           else
              fracice_rsub(c) = max(0._r8,exp(-3._r8*(1._r8-(icefracsum/dzsum))) &
                   - exp(-3._r8))/(1.0_r8-exp(-3._r8))
@@ -1791,10 +1794,8 @@ contains
           rsub_top_tot = - rsub_top(c) * dtime
           !should never be positive... but include for completeness
           if(rsub_top_tot > 0.) then !rising water table
-             write(iulog,*) 'RSUB_TOP IS POSITIVE in Drainage!'
-             write(iulog,*)'clm model is stopping'
-             call endrun()
 
+             call endrun(msg="RSUB_TOP IS POSITIVE in Drainage!"//errmsg(__FILE__, __LINE__))
 
           else ! deepening water table
              if (use_vichydro) then

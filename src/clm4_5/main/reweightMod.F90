@@ -87,10 +87,10 @@ module reweightMod
   !
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8
-  use abortutils, only : endrun
-  use clm_varctl, only : iulog, all_active
-  use decompMod , only: bounds_type
+  use shr_kind_mod   , only : r8 => shr_kind_r8
+  use abortutils     , only : endrun
+  use clm_varctl     , only : iulog, all_active
+  use decompMod      , only : bounds_type
   use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
@@ -219,6 +219,9 @@ contains
                          'at c = ', c, ', l = ', l
           error_found = .true. 
        end if
+       if (error_found) then
+          call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
+       end if
     end do
 
     do p = bounds%begp,bounds%endp
@@ -229,12 +232,11 @@ contains
                          'at p = ', p, ', c = ', c
           error_found = .true. 
        end if
+       if (error_found) then
+          call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(__FILE__, __LINE__))
+       end if
     end do
 
-    if (error_found) then
-       call endrun()
-    end if
-      
   end subroutine setActive
 
   !-----------------------------------------------------------------------
@@ -298,6 +300,7 @@ contains
        if (lun%itype(l) == istsoil .and. .not. is_gcell_of_landunit_all_istice(l)) then
           is_active_l = .true.
        end if
+
     end if
 
   end function is_active_l
@@ -310,7 +313,7 @@ contains
     !
     ! !USES:
     use clmtype
-    use clm_varcon, only : istice_mec
+    use clm_varcon, only : istice_mec, isturb_MIN, isturb_MAX
     use domainMod , only : ldomain
     !
     ! !ARGUMENTS:
@@ -344,6 +347,16 @@ contains
        ! always run over all ice_mec columns within the glcmask, because this is where glc
        ! might need input from virtual (0-weight) columns
        if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_c = .true.
+
+       ! We don't really need to run over 0-weight urban columns. But because of some
+       ! messiness in the urban code (many loops are over the landunit filter, then drill
+       ! down to columns - so we would need to add 'col%active(c)' conditionals in many
+       ! places) it keeps the code cleaner to run over 0-weight urban columns. This generally
+       ! shouldn't add much computation time, since in most places, all urban columns are
+       ! non-zero weight if the landunit is non-zero weight.
+       if (lun%active(l) .and. (lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX)) then
+          is_active_c = .true.
+       end if
     end if
 
   end function is_active_c
@@ -548,7 +561,7 @@ contains
     deallocate(sumwtcol, sumwtlunit, sumwtgcell)
 
     if (error_found) then
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     ! Success

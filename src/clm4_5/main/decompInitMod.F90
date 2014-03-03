@@ -9,6 +9,7 @@ module decompInitMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc, iam, npes, mpicom, comp_id
   use shr_sys_mod , only : shr_sys_flush
+  use shr_log_mod , only : errMsg => shr_log_errMsg
   use abortutils  , only : endrun
   use clm_varctl  , only : iulog
   use mct_mod
@@ -69,11 +70,11 @@ contains
        if (nclumps < npes) then
           write(iulog,*) 'decompInit_lnd(): Number of gridcell clumps= ',nclumps, &
                ' is less than the number of processes = ', npes
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
     else
        write(iulog,*)'clump_pproc= ',clump_pproc,'  must be greater than 0'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     ! allocate and initialize procinfo and clumps 
@@ -82,7 +83,7 @@ contains
     allocate(procinfo%cid(clump_pproc), stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'decompInit_lnd(): allocation error for procinfo%cid'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
     procinfo%nclumps = clump_pproc
     procinfo%cid(:)  = -1
@@ -102,7 +103,7 @@ contains
     allocate(clumps(nclumps), stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'decompInit_lnd(): allocation error for clumps'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     clumps(:)%owner   = -1
     clumps(:)%ncells  = 0
@@ -124,14 +125,14 @@ contains
        pid = mod(n-1,npes)
        if (pid < 0 .or. pid > npes-1) then
           write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        endif
        clumps(n)%owner = pid
        if (iam == pid) then
           cid = cid + 1
           if (cid < 1 .or. cid > clump_pproc) then
              write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
-             call endrun()
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           endif
           procinfo%cid(cid) = n
        endif
@@ -148,12 +149,12 @@ contains
     if (npes > numg) then
        write(iulog,*) 'decompInit_lnd(): Number of processes exceeds number ', &
             'of land grid cells',npes,numg
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     if (nclumps > numg) then
        write(iulog,*) 'decompInit_lnd(): Number of clumps exceeds number ', &
             'of land grid cells',nclumps,numg
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     if (float(numg)/float(nclumps) < float(nsegspc)) then
@@ -224,12 +225,12 @@ contains
     allocate(ldecomp%gdc2glo(numg), stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'decompInit_lnd(): allocation error1 for ldecomp, etc'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(clumpcnt(nclumps),stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'decompInit_lnd(): allocation error1 for clumpcnt'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     ldecomp%gdc2glo(:) = 0
@@ -304,7 +305,6 @@ contains
     ! set by clump_pproc
     !
     ! !USES:
-    use clmtype   , only : grlnd, nameg, namel, namec, namep
     use subgridMod, only : subgrid_get_gcellinfo
     use spmdMod
     !
@@ -434,7 +434,7 @@ contains
           write(iulog,*) 'decompInit_glcp(): allvecg error lunits ',iam,n,clumps(n)%nlunits,allvecg(n,2)
           write(iulog,*) 'decompInit_glcp(): allvecg error ncols  ',iam,n,clumps(n)%ncols  ,allvecg(n,3)
           write(iulog,*) 'decompInit_glcp(): allvecg error pfts   ',iam,n,clumps(n)%npfts  ,allvecg(n,4)
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        endif
     enddo
 
@@ -450,7 +450,7 @@ contains
     ! Determine gsmaps for landunits, columns and pfts
     !
     ! !USES:
-    use clmtype   
+    use clmtype   , only : lun, col, pft, grlnd
     use spmdMod
     use spmdGathScatMod
     use subgridMod, only : subgrid_get_gcellinfo
@@ -611,14 +611,14 @@ contains
           i = i + 1
           if (i < begg .or. i > endg) then
              write(iulog,*) 'decompInit_glcp error i ',i,begg,endg
-             call endrun()
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           endif
           gindex(i) = gstart(gi) + l - 1
        enddo
     enddo
     if (i /= endg) then
        write(iulog,*) 'decompInit_glcp error size ',i,begg,endg
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
     locsize = endg-begg+1
     globsize = numg

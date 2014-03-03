@@ -1,30 +1,31 @@
-module STATICEcosysdynMOD
+module SatellitePhenologyMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Static Ecosystem dynamics: phenology, vegetation. This is for the CLM Satelitte Phenology 
-  ! model (CLMSP). Allow some subroutines to be used by the CLM Carbon Nitrogen model (CLMCN) 
+  ! CLM Satelitte Phenology model (SP) ecosystem dynamics (phenology, vegetation). 
+  ! Allow some subroutines to be used by the CLM Carbon Nitrogen model (CLMCN) 
   ! so that DryDeposition code can get estimates of LAI differences between months.
   !
   ! !USES:
-  use shr_kind_mod,    only : r8 => shr_kind_r8
-  use abortutils,      only : endrun
-  use clm_varctl,      only : scmlat,scmlon,single_column
-  use clm_varctl,      only : iulog
-  use perf_mod,        only : t_startf, t_stopf
-  use spmdMod,         only : masterproc
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use shr_log_mod  , only : errMsg => shr_log_errMsg
+  use abortutils   , only : endrun
+  use clm_varctl   , only : scmlat,scmlon,single_column
+  use clm_varctl   , only : iulog
+  use perf_mod     , only : t_startf, t_stopf
+  use spmdMod      , only : masterproc
   use ncdio_pio   
-  use decompMod   , only : bounds_type
+  use decompMod    , only : bounds_type
   !
   ! !PUBLIC TYPES:
   implicit none
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: EcosystemDyn         ! CLMSP Ecosystem dynamics: phenology, vegetation
-  public :: EcosystemDynini      ! Dynamically allocate memory
-  public :: interpMonthlyVeg     ! interpolate monthly vegetation data
-  public :: readAnnualVegetation ! Read in annual vegetation (needed for Dry-deposition)
+  public :: SatellitePhenology     ! CLMSP Ecosystem dynamics: phenology, vegetation
+  public :: SatellitePhenologyInit ! Dynamically allocate memory
+  public :: interpMonthlyVeg       ! interpolate monthly vegetation data
+  public :: readAnnualVegetation   ! Read in annual vegetation (needed for Dry-deposition)
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: readMonthlyVegetation   ! read monthly vegetation data for two months
@@ -41,7 +42,7 @@ module STATICEcosysdynMOD
 contains
 
   !-----------------------------------------------------------------------
-  subroutine EcosystemDynini (bounds)
+  subroutine SatellitePhenologyInit (bounds)
     !
     ! !DESCRIPTION:
     ! Dynamically allocate memory and set to signaling NaN.
@@ -68,7 +69,7 @@ contains
     end if
     if (ier /= 0) then
        write(iulog,*) 'EcosystemDynini allocation error'
-       call endrun
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     mlai2t(bounds%begp : bounds%endp, :) = nan
@@ -76,10 +77,10 @@ contains
     mhvt2t(bounds%begp : bounds%endp, :) = nan
     mhvb2t(bounds%begp : bounds%endp, :) = nan
 
-  end subroutine EcosystemDynini
+  end subroutine SatellitePhenologyInit
 
   !-----------------------------------------------------------------------
-  subroutine EcosystemDyn(bounds, num_nolakep, filter_nolakep, doalb)
+  subroutine SatellitePhenology(bounds, num_nolakep, filter_nolakep, doalb)
     !
     ! !DESCRIPTION:
     ! Ecosystem dynamics: phenology, vegetation
@@ -92,29 +93,29 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    integer, intent(in) :: num_nolakep                 ! number of column non-lake points in pft filter
-    integer, intent(in) :: filter_nolakep(bounds%endp-bounds%begp+1)   ! pft filter for non-lake points
-    logical, intent(in) :: doalb                       ! true = surface albedo calculation time step
+    type(bounds_type), intent(in) :: bounds                          ! bounds
+    integer, intent(in) :: num_nolakep                               ! number of column non-lake points in pft filter
+    integer, intent(in) :: filter_nolakep(bounds%endp-bounds%begp+1) ! pft filter for non-lake points
+    logical, intent(in) :: doalb                                     ! true = surface albedo calculation time step
     !
     ! !LOCAL VARIABLES:
-    ! local pointers to implicit in arguments
-    real(r8), pointer :: frac_sno(:) ! fraction of ground covered by snow (0 to 1)
-    integer , pointer :: pcolumn(:)  ! column index associated with each pft
-    real(r8), pointer :: snow_depth(:)   ! snow height (m)
-    integer , pointer :: ivt(:)      ! pft vegetation type
-    ! local pointers to implicit out arguments
-    real(r8), pointer :: tlai(:)     ! one-sided leaf area index, no burying by snow
-    real(r8), pointer :: tsai(:)     ! one-sided stem area index, no burying by snow
-    real(r8), pointer :: htop(:)     ! canopy top (m)
-    real(r8), pointer :: hbot(:)     ! canopy bottom (m)
-    real(r8), pointer :: elai(:)     ! one-sided leaf area index with burying by snow
-    real(r8), pointer :: esai(:)     ! one-sided stem area index with burying by snow
+                                               ! local pointers to implicit in arguments
+    real(r8), pointer :: frac_sno(:)           ! fraction of ground covered by snow (0 to 1)
+    integer , pointer :: pcolumn(:)            ! column index associated with each pft
+    real(r8), pointer :: snow_depth(:)         ! snow height (m)
+    integer , pointer :: ivt(:)                ! pft vegetation type
+                                               ! local pointers to implicit out arguments
+    real(r8), pointer :: tlai(:)               ! one-sided leaf area index, no burying by snow
+    real(r8), pointer :: tsai(:)               ! one-sided stem area index, no burying by snow
+    real(r8), pointer :: htop(:)               ! canopy top (m)
+    real(r8), pointer :: hbot(:)               ! canopy bottom (m)
+    real(r8), pointer :: elai(:)               ! one-sided leaf area index with burying by snow
+    real(r8), pointer :: esai(:)               ! one-sided stem area index with burying by snow
     integer , pointer :: frac_veg_nosno_alb(:) ! frac of vegetation not covered by snow [-]
-    !    
-    integer  :: fp,p,c   ! indices
-    real(r8) :: ol       ! thickness of canopy layer covered by snow (m)
-    real(r8) :: fb       ! fraction of canopy layer covered by snow
+                                               !    
+    integer  :: fp,p,c                         ! indices
+    real(r8) :: ol                             ! thickness of canopy layer covered by snow (m)
+    real(r8) :: fb                             ! fraction of canopy layer covered by snow
     !-----------------------------------------------------------------------
 
     if (doalb) then
@@ -178,9 +179,9 @@ contains
 
           ! area weight by snow covered fraction
           elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) &
-               +tlai(p)*fb*frac_sno(c), 0.0_r8)
+                       +tlai(p)*fb*frac_sno(c), 0.0_r8)
           esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) &
-               +tsai(p)*fb*frac_sno(c), 0.0_r8)
+                       +tsai(p)*fb*frac_sno(c), 0.0_r8)
           if (elai(p) < 0.05_r8) elai(p) = 0._r8
           if (esai(p) < 0.05_r8) esai(p) = 0._r8
 
@@ -196,7 +197,7 @@ contains
 
     end if  !end of if-doalb block
 
-  end subroutine EcosystemDyn
+  end subroutine SatellitePhenology
 
   !-----------------------------------------------------------------------
   subroutine interpMonthlyVeg (bounds)
@@ -294,7 +295,8 @@ contains
 
     allocate(mlai(bounds%begg:bounds%endg,0:numpft), stat=ier)
     if (ier /= 0) then
-       write(iulog,*)subname, 'allocation error '; call endrun()
+       write(iulog,*)subname, 'allocation error ' 
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     if (masterproc) then
@@ -310,7 +312,7 @@ contains
        write(iulog,*)trim(subname), 'ldomain%ni,ni,= ',ldomain%ni,ni
        write(iulog,*)trim(subname), 'ldomain%nj,nj,= ',ldomain%nj,nj
        write(iulog,*)trim(subname), 'ldomain%ns,ns,= ',ldomain%ns,ns
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     call check_dim(ncid, 'lsmpft', numpft+1)
 
@@ -403,7 +405,8 @@ contains
          mhgtb(bounds%begg:bounds%endg,0:numpft), &
          stat=ier)
     if (ier /= 0) then
-       write(iulog,*)subname, 'allocation big error '; call endrun()
+       write(iulog,*)subname, 'allocation big error '
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     ! ----------------------------------------------------------------------
@@ -423,19 +426,19 @@ contains
 
        call ncd_io(ncid=ncid, varname='MONTHLY_LAI', flag='read', data=mlai, dim1name=grlnd, &
             nt=months(k), readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: MONTHLY_LAI NOT on fveg file' )
+       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_LAI NOT on fveg file'//errMsg(__FILE__, __LINE__))
 
        call ncd_io(ncid=ncid, varname='MONTHLY_SAI', flag='read', data=msai, dim1name=grlnd, &
             nt=months(k), readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: MONTHLY_SAI NOT on fveg file' )
+       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_SAI NOT on fveg file'//errMsg(__FILE__, __LINE__))
 
        call ncd_io(ncid=ncid, varname='MONTHLY_HEIGHT_TOP', flag='read', data=mhgtt, dim1name=grlnd, &
             nt=months(k), readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file' )
+       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file'//errMsg(__FILE__, __LINE__))
 
        call ncd_io(ncid=ncid, varname='MONTHLY_HEIGHT_BOT', flag='read', data=mhgtb, dim1name=grlnd, &
             nt=months(k), readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file' )
+       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file'//errMsg(__FILE__, __LINE__))
 
        ! Store data directly in clmtype structure
        ! only vegetated pfts have nonzero values
@@ -482,4 +485,4 @@ contains
 
   end subroutine readMonthlyVegetation
 
-end module STATICEcosysDynMod
+end module SatellitePhenologyMod

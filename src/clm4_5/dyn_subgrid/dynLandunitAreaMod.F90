@@ -12,7 +12,7 @@ module dynLandunitAreaMod
   use decompMod      , only: bounds_type
   use clm_varctl     , only : iulog
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_sys_mod    , only : shr_sys_abort
+  use abortutils     , only : endrun
   use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
 
@@ -76,7 +76,7 @@ contains
           else if (landunit_weights(ltype) > 0._r8) then
              write(iulog,*) subname//' ERROR: Attempt to assign non-zero weight to a non-existent landunit'
              write(iulog,*) 'g, l, ltype, landunit_weights(ltype) = ', g, l, ltype, landunit_weights(ltype)
-             call shr_sys_abort()
+             call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
           end if
        end do
 
@@ -162,7 +162,7 @@ contains
        write(iulog,*) subname//' ERROR: After all landunit adjustments, landunit weights still do not equal 100%'
        write(iulog,*) 'landunit_sum = ', landunit_sum
        write(iulog,*) 'landunit_weights = ', landunit_weights
-       call shr_sys_abort()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     
   end subroutine update_landunit_weights_one_gcell

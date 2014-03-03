@@ -7,11 +7,11 @@ module decompMod
   !
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_abort
+  ! Must use shr_sys_abort rather than endrun here to avoid circular dependency
+  use shr_sys_mod , only : shr_sys_abort 
   use spmdMod     , only : masterproc, iam, npes, mpicom, comp_id
   use clm_varctl  , only : iulog
   use mct_mod
-  use abortutils  , only : endrun
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -325,7 +325,7 @@ contains
         get_clmlevel_gsize = nump
      case default
         write(iulog,*) 'get_clmlevel_gsize does not match clmlevel type: ', trim(clmlevel)
-        call endrun()
+        call shr_sys_abort()
      end select
 
    end function get_clmlevel_gsize
@@ -358,7 +358,7 @@ contains
        gsmap => gsmap_pft_gdc2glo
     case default
        write(iulog,*) 'get_clmlevel_gsmap: Invalid expansion character: ',trim(clmlevel)
-       call endrun
+       call shr_sys_abort()
     end select
   end subroutine get_clmlevel_gsmap
 

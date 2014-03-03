@@ -7,13 +7,13 @@ module CanopyFluxesMod
   ! accumulation due to evaporation.
   !
   ! !USES:
-  use abortutils  , only: endrun
-  use clm_varctl  , only: iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv
-  use shr_sys_mod , only: shr_sys_flush
-  use decompMod   , only: bounds_type
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_assert_mod, only : shr_assert
-  use shr_log_mod , only : errMsg => shr_log_errMsg
+  use abortutils  ,   only: endrun
+  use clm_varctl  ,   only: iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv
+  use decompMod   ,   only: bounds_type
+  use shr_sys_mod ,   only: shr_sys_flush
+  use shr_kind_mod,   only: r8 => shr_kind_r8
+  use shr_assert_mod, only: shr_assert
+  use shr_log_mod ,   only: errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -25,7 +25,7 @@ module CanopyFluxesMod
   ! !PUBLIC DATA MEMBERS:
   logical,  public :: perchroot     = .false.  ! true => btran is based only on unfrozen soil levels
   logical,  public :: perchroot_alt = .false.  ! true => btran is based on active layer (defined over two years); 
-  ! false => btran is based on currently unfrozen levels
+  !                                            ! false => btran is based on currently unfrozen levels
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: Photosynthesis !Leaf stomatal resistance and leaf photosynthesis
@@ -667,8 +667,8 @@ contains
    end do
 
    if (found) then
-      write(iulog,*)'Error: Forcing height is below canopy height for pft index ',index
-      call endrun()
+      write(iulog,*)'Error: Forcing height is below canopy height for pft index '
+      call endrun(decomp_index=index, clmlevel=namep, msg=errmsg(__FILE__, __LINE__))
    end if
 
    do f = 1, fn
@@ -1707,9 +1707,9 @@ subroutine Photosynthesis (bounds, fn, filterp, esat_tv, eair, oair, cair, &
             ! Make sure iterative solution is correct
 
             if (gs_mol(p,iv) < 0._r8) then
-               write (iulog,*) 'Negative stomatal conductance:'
-               write (iulog,*) gs_mol(p,iv)
-               call endrun()
+               write (iulog,*)'Negative stomatal conductance:'
+               write (iulog,*)'p,iv,gs_mol= ',p,iv,gs_mol(p,iv)
+               call endrun(decomp_index=p, clmlevel=namep, msg=errmsg(__FILE__, __LINE__))
             end if
 
             ! Compare with Ball-Berry model: gs_mol = m * an * hs/cs p + b
@@ -1928,7 +1928,7 @@ subroutine quadratic (a, b, c, r1, r2)
 
    if (a == 0._r8) then
       write (iulog,*) 'Quadratic solution error: a = ',a
-      call endrun()
+      call endrun(msg=errmsg(__FILE__, __LINE__))
    end if
 
    if (b >= 0._r8) then
@@ -1987,7 +1987,7 @@ subroutine quadratic (a, b, c, r1, r2)
    fb=f2
    if((fa > 0._r8 .and. fb > 0._r8).or.(fa < 0._r8 .and. fb < 0._r8))then
       write(iulog,*) 'root must be bracketed for brent'
-      call endrun()
+      call endrun(msg=errmsg(__FILE__, __LINE__))
    endif 
    c=b
    fc=fb

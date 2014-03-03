@@ -72,7 +72,8 @@ contains
     ! Error check
 
     if ( maxpatch_pft /= numpft+1 )then
-       call endrun( subname//' maxpatch_pft does NOT equal numpft+1 -- this is invalid for dynamic PFT case' )
+       call endrun(msg=' maxpatch_pft does NOT equal numpft+1 -- this is invalid for dynamic PFT case'//&
+            errMsg(__FILE__, __LINE__) )
     end if
 
     allocate(pctnatveg(bounds%begg:bounds%endg))
@@ -100,27 +101,27 @@ contains
 
     call ncd_io(ncid=dynpft_file, varname='PCT_NATVEG', flag='read', data=pctnatveg, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_NATVEG NOT on pftdyn file' )
+    if (.not. readvar) call endrun(msg=' ERROR: PCT_NATVEG NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
 
     call ncd_io(ncid=dynpft_file, varname='PCT_CROP', flag='read', data=pctcrop, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_CROP NOT on pftdyn file' )
+    if (.not. readvar) call endrun(msg=' ERROR: PCT_CROP NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
 
     call ncd_io(ncid=dynpft_file, varname='PCT_WETLAND', flag='read', data=pctwet, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_WETLAND NOT on pftdyn file' )
+    if (.not. readvar) call endrun(msg=' ERROR: PCT_WETLAND NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
 
     call ncd_io(ncid=dynpft_file, varname= 'PCT_LAKE', flag='read', data=pctlak, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_LAKE NOT on pftdyn file' )
+    if (.not. readvar) call endrun(msg=' ERROR: PCT_LAKE NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
 
     call ncd_io(ncid=dynpft_file, varname= 'PCT_GLACIER', flag='read', data=pctgla, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_GLACIER NOT on pftdyn file' )
+    if (.not. readvar) call endrun(msg=' ERROR: PCT_GLACIER NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
 
     call ncd_io(ncid=dynpft_file, varname= 'PCT_URBAN'  , flag='read', data=pcturb, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on pftdyn file' )
+    if (.not. readvar) call endrun(msg=' ERROR: PCT_URBAN NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
     pcturb_tot(bounds%begg : bounds%endg) = 0._r8
     do n = 1, numurbl
        do nl = bounds%begg,bounds%endg
@@ -147,13 +148,13 @@ contains
           write(iulog,*) subname//'mismatch between input PCT_NATVEG = ', pctnatveg(g), &
                ' and that obtained from surface dataset ', wt_lunit(g,istsoil)*100._r8, &
                ' at g= ',g
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        if (abs(pctcrop(g) - wt_lunit(g,istcrop)*100._r8) > 1.e-13_r8) then
           write(iulog,*) subname//'mismatch between input PCT_CROP = ', pctcrop(g), &
                ' and that obtained from surface dataset ', wt_lunit(g,istcrop)*100._r8, &
                ' at g= ',g
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
 
     !   This was causing a fail, even though values are the same to within 1e-15
@@ -162,7 +163,7 @@ contains
           write(iulog,*) subname//'mismatch between input pctspec = ',&
                      pctlak(g)+pctwet(g)+pcturb_tot(g)+pctgla(g),&
                     ' and that obtained from surface dataset ', pctspec(g),' at g= ',g
-           call endrun()
+           call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
     end do
 

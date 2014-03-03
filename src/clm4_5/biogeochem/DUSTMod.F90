@@ -12,16 +12,17 @@ module DUSTMod
   ! the dust dry deposition flux to the surface.
   !                              
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8 
+  use shr_kind_mod  , only : r8 => shr_kind_r8 
+  use shr_log_mod   , only : errMsg => shr_log_errMsg
   use clmtype
-  use clm_varpar  , only : dst_src_nbr, ndst, sz_nbr
-  use clm_varcon  , only : grav, istsoil
-  use clm_varcon  , only : istcrop, istice_mec
-  use clm_varctl  , only : iulog
-  use abortutils  , only : endrun
-  use subgridAveMod, only: p2l_1d
-  use clm_varcon  , only: spval
-  use decompMod   , only : bounds_type
+  use clm_varpar    , only : dst_src_nbr, ndst, sz_nbr
+  use clm_varcon    , only : grav, istsoil
+  use clm_varcon    , only : istcrop, istice_mec
+  use clm_varctl    , only : iulog
+  use abortutils    , only : endrun
+  use subgridAveMod , only : p2l_1d
+  use clm_varcon    , only : spval
+  use decompMod     , only : bounds_type
   !  
   ! !PUBLIC TYPES
   implicit none
@@ -59,9 +60,9 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    integer, intent(in) :: num_nolakep                 ! number of column non-lake points in pft filter
-    integer, intent(in) :: filter_nolakep(num_nolakep) ! pft filter for non-lake points
+    type(bounds_type) , intent(in) :: bounds                      ! bounds
+    integer           , intent(in) :: num_nolakep                 ! number of column non-lake points in pft filter
+    integer           , intent(in) :: filter_nolakep(num_nolakep) ! pft filter for non-lake points
     !
     ! !LOCAL VARIABLES
     integer  :: fp,p,c,l,g,m,n      ! indices
@@ -82,39 +83,33 @@ contains
     real(r8) :: gwc_sfc
     real(r8) :: ttlai(bounds%begp:bounds%endp)
     real(r8) :: tlai_lu(bounds%begl:bounds%endl)
+    real(r8) :: sumwt(bounds%begl:bounds%endl) ! sum of weights
+    logical  :: found                          ! temporary for error check
+    integer  :: index
     !    
     ! constants
     !
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
     real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
     real(r8), parameter :: vai_mbl_thr = 0.3_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
-    real(r8) :: sumwt(bounds%begl:bounds%endl)              ! sum of weights
-    logical  :: found                       ! temporary for error check
-    integer  :: index
-!------------------------------------------------------------------------
+    !------------------------------------------------------------------------
 
    associate(& 
-   forc_rho              =>    a2l_downscaled_col%forc_rho , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                 
-   ityplun               =>    lun%itype                   , & ! Input:  [integer (:)]  landunit type                                      
-   frac_sno              =>    cps%frac_sno                , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)       
-   gwc_thr               =>    cps%gwc_thr                 , & ! Input:  [real(r8) (:)]  threshold gravimetric soil moisture based on clay content
-   mbl_bsn_fct           =>    cps%mbl_bsn_fct             , & ! Input:  [real(r8) (:)]  basin factor                                      
-   mss_frc_cly_vld       =>    cps%mss_frc_cly_vld         , & ! Input:  [real(r8) (:)]  [frc] Mass fraction clay limited to 0.20          
-   h2osoi_vol            =>    cws%h2osoi_vol              , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat)   
-   h2osoi_liq            =>    cws%h2osoi_liq              , & ! Input:  [real(r8) (:,:)]  liquid soil water (kg/m2)                       
-   h2osoi_ice            =>    cws%h2osoi_ice              , & ! Input:  [real(r8) (:,:)]  frozen soil water (kg/m2)                       
-   watsat                =>    cps%watsat                  , & ! Input:  [real(r8) (:,:)]  saturated volumetric soil water                 
-   pactive               =>    pft%active                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
-   pgridcell             =>    pft%gridcell                , & ! Input:  [integer (:)]  pft's gridcell index                               
-   plandunit             =>    pft%landunit                , & ! Input:  [integer (:)]  pft's landunit index                               
-   pcolumn               =>    pft%column                  , & ! Input:  [integer (:)]  pft's column index                                 
-   tlai                  =>    pps%tlai                    , & ! Input:  [real(r8) (:)]  one-sided leaf area index, no burying by snow     
-   tsai                  =>    pps%tsai                    , & ! Input:  [real(r8) (:)]  one-sided stem area index, no burying by snow     
-   fv                    =>    pps%fv                      , & ! Input:  [real(r8) (:)]  friction velocity (m/s) (for dust model)          
-   u10                   =>    pps%u10                     , & ! Input:  [real(r8) (:)]  10-m wind (m/s) (created for dust model)          
-   flx_mss_vrt_dst       =>    pdf%flx_mss_vrt_dst         , & ! Output: [real(r8) (:,:)]  surface dust emission (kg/m**2/s)               
-   flx_mss_vrt_dst_tot   =>    pdf%flx_mss_vrt_dst_tot     , & ! Output: [real(r8) (:)]  total dust flux into atmosphere                   
-   wtlunit               =>    pft%wtlunit                   & ! Output: [real(r8) (:)]  weight of pft relative to landunit                
+   forc_rho              => a2l_downscaled_col%forc_rho , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                 
+   frac_sno              => cps%frac_sno                , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+   gwc_thr               => cps%gwc_thr                 , & ! Input:  [real(r8) (:)   ]  threshold gravimetric soil moisture based on clay content
+   mbl_bsn_fct           => cps%mbl_bsn_fct             , & ! Input:  [real(r8) (:)   ]  basin factor                                      
+   mss_frc_cly_vld       => cps%mss_frc_cly_vld         , & ! Input:  [real(r8) (:)   ]  [frc] Mass fraction clay limited to 0.20          
+   h2osoi_vol            => cws%h2osoi_vol              , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat)   
+   h2osoi_liq            => cws%h2osoi_liq              , & ! Input:  [real(r8) (:,:) ]  liquid soil water (kg/m2)                       
+   h2osoi_ice            => cws%h2osoi_ice              , & ! Input:  [real(r8) (:,:) ]  frozen soil water (kg/m2)                       
+   watsat                => cps%watsat                  , & ! Input:  [real(r8) (:,:) ]  saturated volumetric soil water                 
+   tlai                  => pps%tlai                    , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index, no burying by snow     
+   tsai                  => pps%tsai                    , & ! Input:  [real(r8) (:)   ]  one-sided stem area index, no burying by snow     
+   fv                    => pps%fv                      , & ! Input:  [real(r8) (:)   ]  friction velocity (m/s) (for dust model)          
+   u10                   => pps%u10                     , & ! Input:  [real(r8) (:)   ]  10-m wind (m/s) (created for dust model)          
+   flx_mss_vrt_dst       => pdf%flx_mss_vrt_dst         , & ! Output: [real(r8) (:,:) ]  surface dust emission (kg/m**2/s)               
+   flx_mss_vrt_dst_tot   => pdf%flx_mss_vrt_dst_tot       & ! Output: [real(r8) (:)   ]  total dust flux into atmosphere                   
    )
 
     ttlai(bounds%begp : bounds%endp) = 0._r8
@@ -127,12 +122,12 @@ contains
     tlai_lu(bounds%begl : bounds%endl) = spval
     sumwt(bounds%begl : bounds%endl) = 0._r8
     do p = bounds%begp,bounds%endp
-       if (ttlai(p) /= spval .and. pactive(p) .and. wtlunit(p) /= 0._r8) then
-          c = pcolumn(p)
-          l = plandunit(p)
+       if (ttlai(p) /= spval .and. pft%active(p) .and. pft%wtlunit(p) /= 0._r8) then
+          c = pft%column(p)
+          l = pft%landunit(p)
           if (sumwt(l) == 0._r8) tlai_lu(l) = 0._r8
-          tlai_lu(l) = tlai_lu(l) + ttlai(p) * wtlunit(p)
-          sumwt(l) = sumwt(l) + wtlunit(p)
+          tlai_lu(l) = tlai_lu(l) + ttlai(p) * pft%wtlunit(p)
+          sumwt(l) = sumwt(l) + pft%wtlunit(p)
        end if
     end do
     found = .false.
@@ -147,18 +142,18 @@ contains
     end do
     if (found) then
        write(iulog,*) 'p2l_1d error: sumwt is greater than 1.0 at l= ',index
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
-! Loop through pfts
+    ! Loop through pfts
 
-! initialize variables which get passed to the atmosphere
+    ! initialize variables which get passed to the atmosphere
     flx_mss_vrt_dst(bounds%begp:bounds%endp,:)=0._r8
 
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
-       c = pcolumn(p)
-       l = plandunit(p)
+       c = pft%column(p)
+       l = pft%landunit(p)
        
        ! the following code from subr. lnd_frc_mbl_get was adapted for lsm use
        ! purpose: return fraction of each gridcell suitable for dust mobilization
@@ -167,7 +162,7 @@ contains
        ! linearly from 1 to 0 as VAI(=tlai+tsai) increases from 0 to vai_mbl_thr
        ! if ice sheet, wetland, or lake, no dust allowed
        
-       if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           if (tlai_lu(l) < vai_mbl_thr) then
              lnd_frc_mbl(p) = 1.0_r8 - (tlai_lu(l))/vai_mbl_thr
           else
@@ -183,7 +178,7 @@ contains
        p = filter_nolakep(fp)
        if (lnd_frc_mbl(p)>1.0_r8 .or. lnd_frc_mbl(p)<0.0_r8) then
           write(iulog,*)'Error dstmbl: pft= ',p,' lnd_frc_mbl(p)= ',lnd_frc_mbl(p)
-          call endrun 
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
     end do
     
@@ -202,9 +197,9 @@ contains
     
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
-       c = pcolumn(p)
-       l = plandunit(p)
-       g = pgridcell(p)
+       c = pft%column(p)
+       l = pft%landunit(p)
+       g = pft%gridcell(p)
        
        ! only perform the following calculations if lnd_frc_mbl is non-zero 
        
@@ -367,9 +362,6 @@ contains
    forc_pbot   =>    a2l_downscaled_col%forc_pbot , & ! Input:  [real(r8) (:)]  atm pressure (Pa)                                 
    forc_rho    =>    a2l_downscaled_col%forc_rho  , & ! Input:  [real(r8) (:)]  atm density (kg/m**3)                             
    forc_t      =>    a2l_downscaled_col%forc_t    , & ! Input:  [real(r8) (:)]  atm temperature (K)                               
-   pactive     =>    pft%active                   , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
-   pcolumn     =>    pft%column                   , & ! Input:  [integer (:)]  pft's column index
-   pgridcell   =>    pft%gridcell                 , & ! Input:  [integer (:)]  pft's gridcell index                               
    fv          =>    pps%fv                       , & ! Input:  [real(r8) (:)]  friction velocity (m/s)                           
    ram1        =>    pps%ram1                     , & ! Input:  [real(r8) (:)]  aerodynamical resistance (s/m)                    
    vlc_trb     =>    pdf%vlc_trb                  , & ! Input:  [real(r8) (:,:)]  Turbulent deposn velocity (m/s)                 
@@ -380,9 +372,9 @@ contains
    )
 
     do p = bounds%begp,bounds%endp
-       if (pactive(p)) then
-          g = pgridcell(p)
-          c = pcolumn(p)
+       if (pft%active(p)) then
+          g = pft%gridcell(p)
+          c = pft%column(p)
 
           ! from subroutine dst_dps_dry (consider adding sanity checks from line 212)
           ! when code asks to use midlayer density, pressure, temperature,
@@ -410,9 +402,9 @@ contains
 
     do m = 1, ndst
        do p = bounds%begp,bounds%endp
-          if (pactive(p)) then
-             g = pgridcell(p)
-             c = pcolumn(p)
+          if (pft%active(p)) then
+             g = pft%gridcell(p)
+             c = pft%column(p)
 
              stk_nbr = vlc_grv(p,m) * fv(p) * fv(p) / (grav * vsc_knm_atm(p))  ![frc] SeP97 p.965
              dff_aer = SHR_CONST_BOLTZ * forc_t(c) * slp_crc(p,m) / &          ![m2 s-1]
@@ -437,7 +429,7 @@ contains
 
     do m = 1, ndst
        do p = bounds%begp,bounds%endp
-          if (pactive(p)) then
+          if (pft%active(p)) then
              rss_trb = ram1(p) + rss_lmn(p,m) + ram1(p) * rss_lmn(p,m) * vlc_grv(p,m) ![s m-1]
              vlc_trb(p,m) = 1.0_r8 / rss_trb                                          ![m s-1]
           end if
@@ -445,7 +437,7 @@ contains
     end do
 
     do p = bounds%begp,bounds%endp
-       if (pactive(p)) then
+       if (pft%active(p)) then
           vlc_trb_1(p) = vlc_trb(p,1)
           vlc_trb_2(p) = vlc_trb(p,2)
           vlc_trb_3(p) = vlc_trb(p,3)
@@ -574,7 +566,7 @@ contains
 
     if (ryn_nbr_frc_thr_prx_opt < 0.03_r8) then
        write(iulog,*) 'dstmbl: ryn_nbr_frc_thr_prx_opt < 0.03'
-       call endrun
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     else if (ryn_nbr_frc_thr_prx_opt < 10.0_r8) then
        ryn_nbr_frc_thr_opt_fnc = -1.0_r8 + 1.928_r8 * (ryn_nbr_frc_thr_prx_opt**0.0922_r8)
        ryn_nbr_frc_thr_opt_fnc = 0.1291_r8 * 0.1291_r8 / ryn_nbr_frc_thr_opt_fnc
@@ -620,8 +612,9 @@ contains
        end do
     else
        write(iulog,*) 'Dustini error: ndst must equal to 4 with current code'
-       call endrun                                      !see more comments above
-    end if                                              !end if ndst == 4
+       call endrun(msg=errMsg(__FILE__, __LINE__))
+       !see more comments above end if ndst == 4
+    end if
 
     ! Bin physical properties
 
@@ -745,7 +738,7 @@ contains
           else
              write(iulog,'(a,es9.2)') "ryn_nbr_grv(m) = ",ryn_nbr_grv(m)
              write(iulog,*)'Dustini error: Reynolds number too large in stk_crc_get()'
-             call endrun 
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           end if
 
           ! Update terminal velocity based on new Reynolds number and drag coeff

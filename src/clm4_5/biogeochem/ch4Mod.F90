@@ -17,8 +17,8 @@ module ch4Mod
   use abortutils        , only : endrun
   use decompMod         , only : bounds_type
   use CNSharedParamsMod , only : CNParamsShareInst
-  use shr_assert_mod, only : shr_assert
-  use shr_log_mod  , only : errMsg => shr_log_errMsg
+  use shr_assert_mod    , only : shr_assert
+  use shr_log_mod       , only : errMsg => shr_log_errMsg
 
   implicit none
   save
@@ -93,7 +93,6 @@ contains
 
      use shr_kind_mod , only : r8 => shr_kind_r8
      use ncdio_pio    , only : file_desc_t,ncd_io
-     use abortutils   , only : endrun
      use ch4varcon    , only : use_aereoxid_prog
 
      implicit none
@@ -108,7 +107,7 @@ contains
      if ( .not. use_aereoxid_prog ) then
         tString='aereoxid'
         call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-        if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
         CH4ParamsInst%aereoxid=tempr
      else
         ! value should never be used.  
@@ -117,179 +116,179 @@ contains
 
      tString='q10ch4'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%q10ch4=tempr
 
      tString='q10ch4base'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%q10ch4base=tempr
 
      tString='f_ch4'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%f_ch4=tempr
 
      tString='rootlitfrac'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%rootlitfrac=tempr
 
      tString='cnscalefactor'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%cnscalefactor=tempr
 
      tString='redoxlag'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%redoxlag=tempr
 
      tString='lake_decomp_fact'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%lake_decomp_fact=tempr
 
      tString='redoxlag_vertical'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%redoxlag_vertical=tempr
 
      tString='pHmax'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%pHmax=tempr
    
      tString='pHmin'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%pHmin=tempr
 
      tString='vmax_ch4_oxid'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%vmax_ch4_oxid=45.e-6_r8 * 1000._r8 / 3600._r8
      ! SPM can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%vmax_ch4_oxid=tempr
 
      tString='oxinhib'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%oxinhib=tempr
 
      tString='k_m'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%k_m= 5.e-6_r8 * 1000._r8
      ! SPM can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%k_m=tempr
    
      tString='q10_ch4oxid'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%q10_ch4oxid=tempr
    
      tString='smp_crit'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%smp_crit=tempr
  
      tString='k_m_o2'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%k_m_o2  = 20.e-6_r8 * 1000._r8 
      ! SPM can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%k_m_o2=tempr
 
      tString='k_m_unsat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%k_m_unsat= 5.e-6_r8 * 1000._r8 / 10._r8
      ! SPM can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%k_m_unsat=tempr
 
      tString='vmax_oxid_unsat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%vmax_oxid_unsat = 45.e-6_r8 * 1000._r8 / 3600._r8 / 10._r8
      ! SPM can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%vmax_oxid_unsat=tempr
 
      tString='scale_factor_aere'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%scale_factor_aere=tempr 
    
      tString='nongrassporosratio'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%nongrassporosratio=tempr 
 
      tString='unsat_aere_ratio'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%unsat_aere_ratio= 0.05_r8 / 0.3_r8 
      ! SPM can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%unsat_aere_ratio=tempr
 
      tString='porosmin'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%porosmin=tempr
    
      tString='vgc_max'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%vgc_max=tempr
  
      tString='satpow'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%satpow=tempr
 
      tString='scale_factor_gasdiff'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%scale_factor_gasdiff=tempr   
 
      tString='scale_factor_liqdiff'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%scale_factor_liqdiff=tempr
 
      tString='f_sat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%f_sat=tempr
    
      tString='qflxlagd'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%qflxlagd=tempr
 
      tString='highlatfact'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%highlatfact=tempr
    
      tString='q10lakebase'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%q10lakebase=tempr
    
      tString='atmch4'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%atmch4=tempr
    
      tString='rob'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%rob=tempr   
 
      tString='capthick'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%capthick=tempr
    
   end subroutine readCH4Params
@@ -306,8 +305,8 @@ contains
     use subgridAveMod , only : p2c, c2g
     use clm_varpar, only : nlevgrnd, nlevdecomp
     use pftvarcon,  only : noveg
-    use ch4varcon,  only : replenishlakec, allowlakeprod, &
-                           ch4offline, fin_use_fsat
+    use ch4varcon,  only : replenishlakec, allowlakeprod
+    use ch4varcon,  only : ch4offline, fin_use_fsat
     use clm_varcon, only : secspday
     !
     ! !ARGUMENTS:
@@ -321,11 +320,11 @@ contains
     integer, intent(in) :: filter_soilp(:)    ! pft filter for soil points
     !
     ! !LOCAL VARIABLES:
-    integer :: sat ! 0 = unsatured, 1 = saturated
-    logical :: lake ! lake or not lake
-    integer :: fc,c,g,j,fp,p               ! indices
-    real(r8) :: dtime                      ! land model time step (sec)
-    real(r8) :: dtime_ch4                  ! ch4 model time step (sec)
+    integer :: sat                                         ! 0 = unsatured, 1 = saturated
+    logical :: lake                                        ! lake or not lake
+    integer :: fc,c,g,j,fp,p                               ! indices
+    real(r8) :: dtime                                      ! land model time step (sec)
+    real(r8) :: dtime_ch4                                  ! ch4 model time step (sec)
     integer  :: nstep
     integer  :: jwt(bounds%begc:bounds%endc)               !index of the soil layer right above the water table (-)
     real(r8) :: ch4_surf_flux_tot(bounds%begc:bounds%endc) !CH4 surface flux for column (kg C/m**2/s)
@@ -336,20 +335,20 @@ contains
     real(r8) :: totalunsat
     real(r8) :: dfsat
     real(r8) :: rootfraction(bounds%begp:bounds%endp, 1:nlevgrnd) 
-    real(r8) :: totcolch4_bef(bounds%begc:bounds%endc) ! g C / m^2
-    real(r8) :: errch4                 ! g C / m^2
+    real(r8) :: totcolch4_bef(bounds%begc:bounds%endc)     ! g C / m^2
+    real(r8) :: errch4                                     ! g C / m^2
     real(r8) :: zwt_actual
-    real(r8) :: qflxlags               ! Time to lag qflx_surf_lag (s)
-    real(r8) :: redoxlag               ! Redox time lag 
-    real(r8) :: redoxlag_vertical      ! Vertical redox lag time 
-    real(r8) :: atmch4          ! Atmospheric CH4 mixing ratio to
-                                ! prescribe if not provided by the atmospheric model (= 1.7e-6_r8) (mol/mol)
-    real(r8) :: redoxlags              ! Redox time lag in s
-    real(r8) :: redoxlags_vertical     ! Vertical redox lag time in s
-    real(r8) :: qflxlagd               !   days to lag qflx_surf_lag in the tropics (days)
-    real(r8) :: highlatfact            ! multiple of qflxlagd for high latitudes
-    integer  :: dummyfilter(1)                  ! empty filter
-    character(len=32) :: subname='ch4'          ! subroutine name
+    real(r8) :: qflxlags                                   ! Time to lag qflx_surf_lag (s)
+    real(r8) :: redoxlag                                   ! Redox time lag 
+    real(r8) :: redoxlag_vertical                          ! Vertical redox lag time 
+    real(r8) :: atmch4                                     ! Atmospheric CH4 mixing ratio to
+                                                           ! prescribe if not provided by the atmospheric model (= 1.7e-6_r8) (mol/mol)
+    real(r8) :: redoxlags                                  ! Redox time lag in s
+    real(r8) :: redoxlags_vertical                         ! Vertical redox lag time in s
+    real(r8) :: qflxlagd                                   !   days to lag qflx_surf_lag in the tropics (days)
+    real(r8) :: highlatfact                                ! multiple of qflxlagd for high latitudes
+    integer  :: dummyfilter(1)                             ! empty filter
+    character(len=32) :: subname='ch4'                     ! subroutine name
     !-----------------------------------------------------------------------
 
    associate(& 
@@ -451,7 +450,8 @@ contains
          if (forc_pch4(g) == 0._r8) then
             write(iulog,*)'not using ch4offline, but methane concentration not passed from the atmosphere', &
                           'to land model! CLM Model is stopping.'
-            call endrun( trim(subname)//' ERROR: Methane not being passed to atmosphere')
+            call endrun(msg=' ERROR: Methane not being passed to atmosphere'//&
+                 errMsg(__FILE__, __LINE__))
          end if
       end if
 
@@ -786,7 +786,7 @@ contains
                              nstep,c,errch4
                g = cgridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun( trim(subname)//' ERROR: Methane conservation error')
+               call endrun(msg=' ERROR: Methane conservation error'//errMsg(__FILE__, __LINE__))
             end if 
          end if
 
@@ -806,7 +806,8 @@ contains
                                 nstep,c,errch4
                   g = cgridcell(c)
                   write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-                  call endrun( trim(subname)//' ERROR: Methane conservation error, allowlakeprod')
+                  call endrun(msg=' ERROR: Methane conservation error, allowlakeprod'//&
+                       errMsg(__FILE__, __LINE__))
                end if
             end if
    
@@ -1018,7 +1019,8 @@ subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
                   end if ! anoxia
                end if
             else
-               call endrun( trim(subname)//' ERROR: No source for decomp rate in CH4Prod. CH4 model currently requires CN.' )
+               call endrun(msg=' ERROR: No source for decomp rate in CH4Prod.'//&
+                    ' CH4 model currently requires CN.'//errMsg(__FILE__, __LINE__))
             end if ! use_cn
 
             ! For sensitivity studies
@@ -1709,56 +1711,56 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
   real(r8), intent(in):: dtime_ch4           ! time step for ch4 calculations
   !
   ! !LOCAL VARIABLES:
-  integer :: c,j,g,p,s,i,ll ! indices
-  integer :: fc             ! soil filter column index
-  integer :: fp             ! soil filter pft index
-  integer  :: jtop(bounds%begc:bounds%endc) ! top level at each column
-  integer :: iter           ! iteration counter when dtime_ch4 < dtime
-  real(r8) :: dtime         ! land model time step (sec)
-  real(r8) :: at (bounds%begc:bounds%endc,0:nlevsoi)  ! "a" vector for tridiagonal matrix
-  real(r8) :: bt (bounds%begc:bounds%endc,0:nlevsoi)  ! "b" vector for tridiagonal matrix
-  real(r8) :: ct (bounds%begc:bounds%endc,0:nlevsoi)  ! "c" vector for tridiagonal matrix
-  real(r8) :: rt (bounds%begc:bounds%endc,0:nlevsoi)  ! "r" vector for tridiagonal solution
-  real(r8) :: f_a                     ! air-filled fraction of available pore space
-  real(r8) :: diffus (bounds%begc:bounds%endc,0:nlevsoi) !diffusivity (m2/s)
-  real(r8) :: k_h_inv                    ! 1/Henry's Law Constant in Latm/mol
-  real(r8) :: k_h_cc(bounds%begc:bounds%endc,0:nlevsoi,ngases)   ! ratio of mol/m3 in liquid to mol/m3 in gas
-  real(r8) :: dzj                         ! 
-  real(r8) :: dp1_zp1 (bounds%begc:bounds%endc,0:nlevsoi) ! diffusivity/delta_z for next j
-  real(r8) :: dm1_zm1 (bounds%begc:bounds%endc,0:nlevsoi) ! diffusivity/delta_z for previous j
-  real(r8) :: t_soisno_c                  ! soil temperature (C)  (-nlevsno+1:nlevsoi)
-  real(r8) :: eps                         ! either epsilon_a or epsilon_w, depending on where in soil, wrt WT
-  real(r8) :: deficit                     ! mol CH4 /m^2 that must be subtracted from diffusive flux to atm. to make up
-  ! for keeping concentrations always above zero
-  real(r8) :: conc_ch4_bef(bounds%begc:bounds%endc,1:nlevsoi) ! concentration at the beginning of the timestep
-  real(r8) :: errch4(bounds%begc:bounds%endc)             ! Error (Mol CH4 /m^2) [+ = too much CH4]
-  real(r8) :: conc_ch4_rel(bounds%begc:bounds%endc,0:nlevsoi) ! Concentration per volume of air or water
-  real(r8) :: conc_o2_rel(bounds%begc:bounds%endc,0:nlevsoi)  ! Concentration per volume of air or water
-  real(r8) :: conc_ch4_rel_old(bounds%begc:bounds%endc,0:nlevsoi) ! Concentration during last Crank-Nich. loop
-  real(r8) :: h2osoi_vol_min(bounds%begc:bounds%endc,1:nlevsoi)   ! h2osoi_vol restricted to be <= watsat
+  integer :: c,j,g,p,s,i,ll                                              ! indices
+  integer :: fc                                                          ! soil filter column index
+  integer :: fp                                                          ! soil filter pft index
+  integer  :: jtop(bounds%begc:bounds%endc)                              ! top level at each column
+  integer :: iter                                                        ! iteration counter when dtime_ch4 < dtime
+  real(r8) :: dtime                                                      ! land model time step (sec)
+  real(r8) :: at (bounds%begc:bounds%endc,0:nlevsoi)                     ! "a" vector for tridiagonal matrix
+  real(r8) :: bt (bounds%begc:bounds%endc,0:nlevsoi)                     ! "b" vector for tridiagonal matrix
+  real(r8) :: ct (bounds%begc:bounds%endc,0:nlevsoi)                     ! "c" vector for tridiagonal matrix
+  real(r8) :: rt (bounds%begc:bounds%endc,0:nlevsoi)                     ! "r" vector for tridiagonal solution
+  real(r8) :: f_a                                                        ! air-filled fraction of available pore space
+  real(r8) :: diffus (bounds%begc:bounds%endc,0:nlevsoi)                 ! diffusivity (m2/s)
+  real(r8) :: k_h_inv                                                    ! 1/Henry's Law Constant in Latm/mol
+  real(r8) :: k_h_cc(bounds%begc:bounds%endc,0:nlevsoi,ngases)           ! ratio of mol/m3 in liquid to mol/m3 in gas
+  real(r8) :: dzj                                                        ! 
+  real(r8) :: dp1_zp1 (bounds%begc:bounds%endc,0:nlevsoi)                ! diffusivity/delta_z for next j
+  real(r8) :: dm1_zm1 (bounds%begc:bounds%endc,0:nlevsoi)                ! diffusivity/delta_z for previous j
+  real(r8) :: t_soisno_c                                                 ! soil temperature (C)  (-nlevsno+1:nlevsoi)
+  real(r8) :: eps                                                        ! either epsilon_a or epsilon_w, depending on where in soil, wrt WT
+  real(r8) :: deficit                                                    ! mol CH4 /m^2 that must be subtracted from diffusive flux to atm. to make up
+                                                                         ! for keeping concentrations always above zero
+  real(r8) :: conc_ch4_bef(bounds%begc:bounds%endc,1:nlevsoi)            ! concentration at the beginning of the timestep
+  real(r8) :: errch4(bounds%begc:bounds%endc)                            ! Error (Mol CH4 /m^2) [+ = too much CH4]
+  real(r8) :: conc_ch4_rel(bounds%begc:bounds%endc,0:nlevsoi)            ! Concentration per volume of air or water
+  real(r8) :: conc_o2_rel(bounds%begc:bounds%endc,0:nlevsoi)             ! Concentration per volume of air or water
+  real(r8) :: conc_ch4_rel_old(bounds%begc:bounds%endc,0:nlevsoi)        ! Concentration during last Crank-Nich. loop
+  real(r8) :: h2osoi_vol_min(bounds%begc:bounds%endc,1:nlevsoi)          ! h2osoi_vol restricted to be <= watsat
   real(r8), parameter :: smallnumber = 1.e-12_r8
-  real(r8) :: snowdiff                            ! snow diffusivity (m^2/s)
-  real(r8) :: snowres(bounds%begc:bounds%endc)                    ! Cumulative Snow resistance (s/m). Also includes
-  real(r8) :: pondres                             ! Additional resistance from ponding, up to pondmx water on top of top soil layer (s/m)
-  real(r8) :: pondz                               ! Depth of ponding (m)
-  real(r8) :: ponddiff                            ! Pondwater diffusivity (m^2/s)
-  real(r8) :: spec_grnd_cond(bounds%begc:bounds%endc,1:ngases)    ! species grnd conductance (s/m)
-  real(r8) :: airfrac                             ! air fraction in snow
-  real(r8) :: waterfrac                           ! water fraction in snow
-  real(r8) :: icefrac                             ! ice fraction in snow
-  real(r8) :: epsilon_t (bounds%begc:bounds%endc,1:nlevsoi,1:ngases) !
-  real(r8) :: epsilon_t_old (bounds%begc:bounds%endc,1:nlevsoi,1:ngases) !epsilon_t from last time step !Currently deprecated
-  real(r8) :: source (bounds%begc:bounds%endc,1:nlevsoi,1:ngases)      !source
-  real(r8) :: source_old (bounds%begc:bounds%endc,1:nlevsoi,1:ngases)  !source from last time step !Currently deprecated
-  real(r8) :: om_frac                             ! organic matter fraction
-  real(r8) :: o2demand, ch4demand                 ! mol/m^3/s
+  real(r8) :: snowdiff                                                   ! snow diffusivity (m^2/s)
+  real(r8) :: snowres(bounds%begc:bounds%endc)                           ! Cumulative Snow resistance (s/m). Also includes
+  real(r8) :: pondres                                                    ! Additional resistance from ponding, up to pondmx water on top of top soil layer (s/m)
+  real(r8) :: pondz                                                      ! Depth of ponding (m)
+  real(r8) :: ponddiff                                                   ! Pondwater diffusivity (m^2/s)
+  real(r8) :: spec_grnd_cond(bounds%begc:bounds%endc,1:ngases)           ! species grnd conductance (s/m)
+  real(r8) :: airfrac                                                    ! air fraction in snow
+  real(r8) :: waterfrac                                                  ! water fraction in snow
+  real(r8) :: icefrac                                                    ! ice fraction in snow
+  real(r8) :: epsilon_t (bounds%begc:bounds%endc,1:nlevsoi,1:ngases)     !
+  real(r8) :: epsilon_t_old (bounds%begc:bounds%endc,1:nlevsoi,1:ngases) ! epsilon_t from last time step !Currently deprecated
+  real(r8) :: source (bounds%begc:bounds%endc,1:nlevsoi,1:ngases)        ! source
+  real(r8) :: source_old (bounds%begc:bounds%endc,1:nlevsoi,1:ngases)    ! source from last time step !Currently deprecated
+  real(r8) :: om_frac                                                    ! organic matter fraction
+  real(r8) :: o2demand, ch4demand                                        ! mol/m^3/s
   real(r8) :: liqfrac(bounds%begc:bounds%endc, 1:nlevsoi)
-  real(r8) :: capthick                            ! (mm) min thickness before assuming h2osfc is impermeable
-  real(r8) :: satpow  			     ! exponent on watsat for saturated soil solute diffusion
-  real(r8) :: scale_factor_gasdiff ! For sensitivity tests; convection would allow this to be > 1
-  real(r8) :: scale_factor_liqdiff ! For sensitivity tests; convection would allow this to be > 1
-  real(r8) :: organic_max          ! organic matter content (kg/m3) where soil is assumed to act like peat
-  real(r8) :: aereoxid             ! fraction of methane flux entering aerenchyma rhizosphere 
+  real(r8) :: capthick                                                   ! (mm) min thickness before assuming h2osfc is impermeable
+  real(r8) :: satpow                                                     ! exponent on watsat for saturated soil solute diffusion
+  real(r8) :: scale_factor_gasdiff                                       ! For sensitivity tests; convection would allow this to be > 1
+  real(r8) :: scale_factor_liqdiff                                       ! For sensitivity tests; convection would allow this to be > 1
+  real(r8) :: organic_max                                                ! organic matter content (kg/m3) where soil is assumed to act like peat
+  real(r8) :: aereoxid                                                   ! fraction of methane flux entering aerenchyma rhizosphere 
 
   real(r8), pointer :: ch4_prod_depth(:,:)  ! backwards compatibility 
   real(r8), pointer :: ch4_oxid_depth(:,:)  ! backwards compatibility 
@@ -1973,13 +1975,15 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
                             source(c,j,1) + conc_ch4(c,j) / dtime, c, j
             g = cgridcell(c)
             write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-            call endrun( trim(subname)//' ERROR: Methane demands exceed methane available.' )
+            call endrun(msg=' ERROR: Methane demands exceed methane available.'&
+                 //errMsg(__FILE__, __LINE__))
          else if (ch4stress(c,j) < 1._r8 .and. source(c,j,1) + conc_ch4(c,j) / dtime > 1.e-12_r8) then
             write(iulog,*) 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
                  source(c,j,1) + conc_ch4(c,j) / dtime, c, j
             g = cgridcell(c)
             write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-            call endrun( trim(subname)//' ERROR: Methane limited, yet some left over.' )
+            call endrun(msg=' ERROR: Methane limited, yet some left over.'//&
+                 errMsg(__FILE__, __LINE__))
          end if
 
          source(c,j,2) = -o2_oxid_depth(c,j) - o2_decomp_depth(c,j) + o2_aere_depth(c,j) ! O2 [mol/m3/s]
@@ -1988,13 +1992,14 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
                  source(c,j,2) + conc_o2(c,j) / dtime, c, j
             g = cgridcell(c)
             write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-            call endrun( trim(subname)//' ERROR: Oxygen demands exceed oxygen available.' )
+            call endrun(msg=' ERROR: Oxygen demands exceed oxygen available.'//&
+                 errMsg(__FILE__, __LINE__) )
          else if (o2stress(c,j) < 1._r8 .and. source(c,j,2) + conc_o2(c,j) / dtime > 1.e-12_r8) then
             write(iulog,*) 'Oxygen limited, yet some left over. Error in oxygen competition (mol/m^3/s), c,j:', &
                  source(c,j,2) + conc_o2(c,j) / dtime, c, j
             g = cgridcell(c)
             write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-            call endrun( trim(subname)//' ERROR: Oxygen limited, yet some left over.' )
+            call endrun(msg=' ERROR: Oxygen limited, yet some left over.'//errMsg(__FILE__, __LINE__))
          end if
 
          conc_ch4_bef(c,j) = conc_ch4(c,j) !For Balance Check
@@ -2460,7 +2465,8 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
               nstep,c,errch4(c)
          g = cgridcell(c)
          write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-         call endrun( trim(subname)//' ERROR: CH4 Conservation Error in CH4Mod during diffusion' )
+         call endrun(msg=' ERROR: CH4 Conservation Error in CH4Mod during diffusion'//&
+              errMsg(__FILE__, __LINE__))
       end if
    end do
 

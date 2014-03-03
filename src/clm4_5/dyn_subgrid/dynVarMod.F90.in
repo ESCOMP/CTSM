@@ -27,8 +27,9 @@ module dynVarMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use clm_varctl     , only : iulog
   use dynFileMod     , only : dyn_file_type
-  use shr_sys_mod    , only : shr_sys_abort
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_assert_mod , only : shr_assert
+  use abortutils     , only : endrun
   implicit none
   save
   private
@@ -249,7 +250,8 @@ contains
     else if (ndims == 2) then
        call read_variable_2d(this, nt, data)
     else
-       call shr_sys_abort(subname//' ERROR: read_variable can only handle 1 or 2 dimensions')
+       call endrun(msg='ERROR: read_variable can only handle 1 or 2 dimensions'//&
+            errMsg(__FILE__, __LINE__))
     end if
 
   end subroutine read_variable
@@ -297,7 +299,8 @@ contains
     call ncd_io(ncid=this%dyn_file, varname=this%varname, flag='read', data=arrayl, &
          dim1name=this%dim1name, nt=nt, readvar=readvar)
     if (.not. readvar) then
-       call shr_sys_abort(subname//' ERROR: ' // trim(this%varname) // ' NOT on file')
+       call endrun(msg=' ERROR: ' // trim(this%varname) // ' NOT on file'//&
+            errMsg(__FILE__, __LINE__))
     end if
 
     arrayl = arrayl / this%conversion_factor

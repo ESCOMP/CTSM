@@ -287,7 +287,7 @@ contains
           curc = pft%column(p)
           if (curc < bounds%begc .or. curc > bounds%endc) then
              write(iulog,*) 'clm_ptrs_compdown ERROR: pcolumn ',p,curc,bounds%begc,bounds%endc
-             call endrun()
+             call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(__FILE__, __LINE__))
           endif
           col%pfti(curc) = p
        endif
@@ -297,7 +297,7 @@ contains
           curl = pft%landunit(p)
           if (curl < bounds%begl .or. curl > bounds%endl) then
              write(iulog,*) 'clm_ptrs_compdown ERROR: plandunit ',p,curl,bounds%begl,bounds%endl
-             call endrun()
+             call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(__FILE__, __LINE__))
           endif
           lun%pfti(curl) = p
        endif
@@ -311,7 +311,7 @@ contains
           curl = col%landunit(c)
           if (curl < bounds%begl .or. curl > bounds%endl) then
              write(iulog,*) 'clm_ptrs_compdown ERROR: clandunit ',c,curl,bounds%begl,bounds%endl
-             call endrun()
+             call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
           endif
           lun%coli(curl) = c
        endif
@@ -327,7 +327,7 @@ contains
        curg = lun%gridcell(l)
        if (curg < bounds%begg .or. curg > bounds%endg) then
           write(iulog,*) 'clm_ptrs_compdown ERROR: landunit_indices ', l,curg,bounds%begg,bounds%endg
-          call endrun()
+          call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
        end if
 
        if (grc%landunit_indices(ltype, curg) == ispval) then
@@ -335,7 +335,7 @@ contains
        else
           write(iulog,*) 'clm_ptrs_compdown ERROR: This landunit type has already been set for this gridcell'
           write(iulog,*) 'l, ltype, curg = ', l, ltype, curg
-          call endrun()
+          call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
        end if
     end do
 
@@ -388,7 +388,7 @@ contains
     end do
     if (error) then
        write(iulog,*) '   clm_ptrs_check: g index ranges - ERROR'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     if (masterproc) write(iulog,*) '   clm_ptrs_check: g index ranges - OK'
 
@@ -400,7 +400,7 @@ contains
     if (minval(lun%pftf(begl:endl)) < begp .or. maxval(lun%pftf(begl:endl)) > endp) error=.true.
     if (error) then
        write(iulog,*) '   clm_ptrs_check: l index ranges - ERROR'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
     if (masterproc) write(iulog,*) '   clm_ptrs_check: l index ranges - OK'
 
@@ -411,7 +411,7 @@ contains
     if (minval(col%pftf(begc:endc)) < begp .or. maxval(col%pftf(begc:endc)) > endp) error=.true.
     if (error) then
        write(iulog,*) '   clm_ptrs_check: c index ranges - ERROR'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
     if (masterproc) write(iulog,*) '   clm_ptrs_check: c index ranges - OK'
 
@@ -421,7 +421,7 @@ contains
     if (minval(pft%column(begp:endp)) < begc .or. maxval(pft%column(begp:endp)) > endc) error=.true.
     if (error) then
        write(iulog,*) '   clm_ptrs_check: p index ranges - ERROR'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
     if (masterproc) write(iulog,*) '   clm_ptrs_check: p index ranges - OK'
 
@@ -439,7 +439,7 @@ contains
       if (lun%pftf(l) < lun%pftf(l-1)) error = .true.
       if (error) then
          write(iulog,*) '   clm_ptrs_check: l mono increasing - ERROR'
-         call endrun()
+         call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
       endif
     enddo
     if (masterproc) write(iulog,*) '   clm_ptrs_check: l mono increasing - OK'
@@ -458,7 +458,7 @@ contains
       if (col%pftf(c) < col%pftf(c-1)) error = .true.
       if (error) then
          write(iulog,*) '   clm_ptrs_check: c mono increasing - ERROR'
-         call endrun()
+         call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
       endif
     enddo
     if (masterproc) write(iulog,*) '   clm_ptrs_check: c mono increasing - OK'
@@ -476,7 +476,7 @@ contains
       if (pft%column  (p) < pft%column  (p-1)) error = .true.
       if (error) then
          write(iulog,*) '   clm_ptrs_check: p mono increasing - ERROR'
-         call endrun()
+         call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(__FILE__, __LINE__))
       endif
     enddo
     if (masterproc) write(iulog,*) '   clm_ptrs_check: p mono increasing - OK'
@@ -491,16 +491,24 @@ contains
           if (l /= ispval) then
              if (lun%itype(l) /= ltype) error = .true.
              if (lun%gridcell(l) /= g) error = .true.
+             if (error) then
+                write(iulog,*) '   clm_ptrs_check: tree consistent - ERROR'
+                call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
+             endif
              do c = lun%coli(l),lun%colf(l)
                 if (col%gridcell(c) /= g) error = .true.
                 if (col%landunit(c) /= l) error = .true.
+                if (error) then
+                   write(iulog,*) '   clm_ptrs_check: tree consistent - ERROR'
+                   call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
+                endif
                 do p = col%pfti(c),col%pftf(c)
                    if (pft%gridcell(p) /= g) error = .true.
                    if (pft%landunit(p) /= l) error = .true.
                    if (pft%column(p)   /= c) error = .true.
                    if (error) then
                       write(iulog,*) '   clm_ptrs_check: tree consistent - ERROR'
-                      call endrun()
+                      call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(__FILE__, __LINE__))
                    endif
                 enddo  ! p
              enddo  ! c
@@ -629,7 +637,7 @@ contains
     else
        write(iulog,*)' set_landunit_wet_ice_lake: ltype of ',ltype,' not valid'
        write(iulog,*)' only istwet, istdlak, istice and istice_mec ltypes are valid'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     wtlunit2gcell = wt_lunit(gi, ltype)
@@ -640,7 +648,7 @@ contains
           write(iulog,*)' set_landunit_wet_ice_lake: compete landunit must'// &
                ' have one pft '
           write(iulog,*)' current value of npfts=',npfts
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
 
        if (ltype==istice_mec) then   ! multiple columns per landunit
@@ -879,7 +887,7 @@ contains
        call subgrid_get_gcellinfo(gi, nurban_md=npfts)
     case default
        write(iulog,*)' set_landunit_urban: unknown ltype: ', ltype
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end select
 
     wtlunit2gcell = wt_lunit(gi, ltype)

@@ -8,7 +8,8 @@ module dynTimeInfoMod
   ! !USES:
   use clm_varctl     , only : iulog
   use shr_assert_mod , only : shr_assert
-  use shr_sys_mod    , only : shr_sys_abort
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use abortutils     , only : endrun
 
   implicit none
   save
@@ -141,7 +142,7 @@ contains
           if (.not. found) then
              write(iulog,*) subname//' ERROR: model year not found in pftdyn timeseries'
              write(iulog,*)'model year = ',cur_year
-             call shr_sys_abort()
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           end if
        end if
     end if

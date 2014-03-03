@@ -9,6 +9,7 @@ module CNDVEstablishmentMod
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils  , only: endrun
   use decompMod   , only : bounds_type
+  use shr_log_mod , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -415,7 +416,7 @@ contains
     if (fn > 0) then
        g = filterg(1)
        write(iulog,*) 'Error in Establishment: fpc_total =',fpc_total(g), ' at gridcell ',g
-       call endrun
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     end associate 

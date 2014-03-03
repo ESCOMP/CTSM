@@ -8,6 +8,7 @@ module CNGapMortalityMod
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils  , only: endrun
+  use shr_log_mod , only: errMsg => shr_log_errMsg
   implicit none
   save
   private
@@ -50,12 +51,12 @@ contains
 
     tString='r_mort'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNGapMortParamsInst%am=tempr
 
     tString='k_mort'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNGapMortParamsInst%k_mort=tempr   
     
   end subroutine readCNGapMortParams

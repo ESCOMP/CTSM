@@ -7,10 +7,10 @@ module filterMod
   ! naturally-vegetated patches.
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8
-  use abortutils, only : endrun
-  use clm_varctl, only : iulog
-  use decompMod , only : bounds_type  
+  use shr_kind_mod   , only : r8 => shr_kind_r8
+  use abortutils     , only : endrun
+  use clm_varctl     , only : iulog
+  use decompMod      , only : bounds_type  
   use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
@@ -160,7 +160,7 @@ contains
     end if
     if (ier /= 0) then
        write(iulog,*) 'allocFiltersOneGroup(): allocation error for clumpsfilters'
-       call endrun
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     ! Loop over clumps on this processor

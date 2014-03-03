@@ -7,6 +7,8 @@ module CNSoilLittVertTranspMod
   use clm_varctl  , only : iulog, use_c13, use_c14, spinup_state, use_vertsoilc
   use clm_varcon  , only : secspday
   use decompMod   , only : bounds_type
+  use abortutils  , only : endrun
+  use shr_log_mod , only : errMsg => shr_log_errMsg
   !
   implicit none
   save
@@ -36,8 +38,7 @@ contains
   !-----------------------------------------------------------------------  
   subroutine readCNSoilLittVertTranspParams ( ncid )
     !
-    use ncdio_pio , only : file_desc_t,ncd_io
-    use abortutils   , only: endrun
+    use ncdio_pio   , only : file_desc_t,ncd_io
     !
     implicit none
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
@@ -53,14 +54,14 @@ contains
     !
      tString='som_diffus'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      !CNSoilLittVertTranspParamsInst%som_diffus=tempr
      ! SPM - can't be pulled out since division makes things not bfb
      CNSoilLittVertTranspParamsInst%som_diffus = 1e-4_r8 / (secspday * 365._r8)  
 
      tString='cryoturb_diffusion_k'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      !CNSoilLittVertTranspParamsInst%cryoturb_diffusion_k=tempr
      !SPM Todo.  This constant cannot be on file since the divide makes things
      !not bfb
@@ -68,7 +69,7 @@ contains
 
      tString='max_altdepth_cryoturbation'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CNSoilLittVertTranspParamsInst%max_altdepth_cryoturbation=tempr
     
   end subroutine readCNSoilLittVertTranspParams
@@ -89,7 +90,6 @@ contains
     use clm_varpar      , only: nlevdecomp, ndecomp_pools, nlevdecomp_full
     use clm_varcon      , only: zsoi, dzsoi_decomp, zisoi
     use TridiagonalMod  , only: Tridiagonal
-    use abortutils      , only: endrun
     !
     ! !ARGUMENTS:
     implicit none
@@ -234,7 +234,7 @@ contains
             trcr_tendency_ptr => cc14f%decomp_cpools_transport_tendency
          else
             write(iulog,*) 'error.  ncase = 4, but c13 and c14 not both enabled.'
-            call endrun()
+            call endrun(msg=errMsg(__FILE__, __LINE__))
          endif
       end select
 

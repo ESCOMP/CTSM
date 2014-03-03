@@ -6,7 +6,7 @@ module CNEcosystemDynMod
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use clm_varctl  , only: fpftdyn, use_c13, use_c14
-  use decompMod   , only : bounds_type
+  use decompMod   , only: bounds_type
   !
   ! !PUBLIC TYPES:
   implicit none

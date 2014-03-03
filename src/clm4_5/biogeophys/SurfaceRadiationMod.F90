@@ -6,6 +6,7 @@ module SurfaceRadiationMod
   !
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
+  use shr_log_mod , only: errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -39,12 +40,10 @@ contains
      ! !USES:
      use clmtype
      use clm_atmlnd      , only : clm_a2l
-     use clm_varpar      , only : numrad
-     use clm_varcon      , only : spval, istsoil, degpsec, isecspday
-     use clm_varcon      , only : istcrop
+     use clm_varpar      , only : numrad, nlevsno
+     use clm_varcon      , only : spval, istsoil, degpsec, isecspday, istcrop
      use clm_varctl      , only : subgridflag, use_snicar_frc, iulog
      use clm_time_manager, only : get_curr_date, get_step_size
-     use clm_varpar      , only : nlevsno
      use SNICARMod       , only : DO_SNO_OC
      use abortutils      , only : endrun
      use decompMod       , only : bounds_type
@@ -56,37 +55,37 @@ contains
      integer, intent(in) :: filter_nourbanp(:) ! pft filter for non-urban points
      !
      ! !LOCAL VARIABLES:
-     integer , parameter :: nband = numrad    ! number of solar radiation waveband classes
-     real(r8), parameter :: mpe = 1.e-06_r8   ! prevents overflow for division by zero
-     integer  :: fp                  ! non-urban filter pft index
-     integer  :: p                   ! pft index
-     integer  :: c                   ! column index
-     integer  :: l                   ! landunit index
-     integer  :: g                   ! grid cell index
-     integer  :: ib                  ! waveband number (1=vis, 2=nir)
-     integer  :: iv                  ! canopy layer
-     real(r8) :: absrad              ! absorbed solar radiation (W/m**2)
-     real(r8) :: rnir                ! reflected solar radiation [nir] (W/m**2)
-     real(r8) :: rvis                ! reflected solar radiation [vis] (W/m**2)
+     integer , parameter :: nband = numrad           ! number of solar radiation waveband classes
+     real(r8), parameter :: mpe = 1.e-06_r8          ! prevents overflow for division by zero
+     integer  :: fp                                  ! non-urban filter pft index
+     integer  :: p                                   ! pft index
+     integer  :: c                                   ! column index
+     integer  :: l                                   ! landunit index
+     integer  :: g                                   ! grid cell index
+     integer  :: ib                                  ! waveband number (1=vis, 2=nir)
+     integer  :: iv                                  ! canopy layer
+     real(r8) :: absrad                              ! absorbed solar radiation (W/m**2)
+     real(r8) :: rnir                                ! reflected solar radiation [nir] (W/m**2)
+     real(r8) :: rvis                                ! reflected solar radiation [vis] (W/m**2)
      real(r8) :: trd(bounds%begp:bounds%endp,numrad) ! transmitted solar radiation: direct (W/m**2)
      real(r8) :: tri(bounds%begp:bounds%endp,numrad) ! transmitted solar radiation: diffuse (W/m**2)
      real(r8) :: cad(bounds%begp:bounds%endp,numrad) ! direct beam absorbed by canopy (W/m**2)
      real(r8) :: cai(bounds%begp:bounds%endp,numrad) ! diffuse radiation absorbed by canopy (W/m**2)
-     integer  :: local_secp1         ! seconds into current date in local time
-     real(r8) :: dtime               ! land model time step (sec)
-     integer  :: year,month,day,secs !  calendar info for current time step
-     integer  :: i                   ! layer index [idx]
-     real(r8) :: sabg_snl_sum        ! temporary, absorbed energy in all active snow layers [W/m2]
-     real(r8) :: absrad_pur          ! temp: absorbed solar radiation by pure snow [W/m2]
-     real(r8) :: absrad_bc           ! temp: absorbed solar radiation without BC [W/m2]
-     real(r8) :: absrad_oc           ! temp: absorbed solar radiation without OC [W/m2]
-     real(r8) :: absrad_dst          ! temp: absorbed solar radiation without dust [W/m2]
+     integer  :: local_secp1                         ! seconds into current date in local time
+     real(r8) :: dtime                               ! land model time step (sec)
+     integer  :: year,month,day,secs                 ! calendar info for current time step
+     integer  :: i                                   ! layer index [idx]
+     real(r8) :: sabg_snl_sum                        ! temporary, absorbed energy in all active snow layers [W/m2]
+     real(r8) :: absrad_pur                          ! temp: absorbed solar radiation by pure snow [W/m2]
+     real(r8) :: absrad_bc                           ! temp: absorbed solar radiation without BC [W/m2]
+     real(r8) :: absrad_oc                           ! temp: absorbed solar radiation without OC [W/m2]
+     real(r8) :: absrad_dst                          ! temp: absorbed solar radiation without dust [W/m2]
      real(r8) :: sabg_pur(bounds%begp:bounds%endp)   ! solar radiation absorbed by ground with pure snow [W/m2]
      real(r8) :: sabg_bc(bounds%begp:bounds%endp)    ! solar radiation absorbed by ground without BC [W/m2]
      real(r8) :: sabg_oc(bounds%begp:bounds%endp)    ! solar radiation absorbed by ground without OC [W/m2]
      real(r8) :: sabg_dst(bounds%begp:bounds%endp)   ! solar radiation absorbed by ground without dust [W/m2]
      real(r8) :: parveg(bounds%begp:bounds%endp)     ! absorbed par by vegetation (W/m**2)
-     integer  :: nstep               ! time step number
+     integer  :: nstep                               ! time step number
      !------------------------------------------------------------------------------
 
    associate(& 
@@ -404,18 +403,22 @@ contains
 
         ! This situation should not happen:
         if (abs(sum(sabg_lyr(p,:))-sabg_snow(p)) > 0.00001_r8) then
-           write(iulog,*) "SNICAR ERROR: Absorbed ground radiation not equal to summed snow layer radiation. pft = ",   &
-                p," Col= ", c, " Diff= ",sum(sabg_lyr(p,:))-sabg_snow(p), &
-                " sabg_snow(p)= ", sabg_snow(p), " sabg_sum(p)= ", &
-                sum(sabg_lyr(p,:)), " snl(c)= ", snl(c)
-           write(iulog,*) "flx_absdv1= ", trd(p,1)*(1.-albgrd(c,1)), "flx_absdv2= ", sum(flx_absdv(c,:))*trd(p,1)
-           write(iulog,*) "flx_absiv1= ", tri(p,1)*(1.-albgri(c,1))," flx_absiv2= ", sum(flx_absiv(c,:))*tri(p,1)
-           write(iulog,*) "flx_absdn1= ", trd(p,2)*(1.-albgrd(c,2))," flx_absdn2= ", sum(flx_absdn(c,:))*trd(p,2)
-           write(iulog,*) "flx_absin1= ", tri(p,2)*(1.-albgri(c,2))," flx_absin2= ", sum(flx_absin(c,:))*tri(p,2)
-
-           write(iulog,*) "albgrd_nir= ", albgrd(c,2)
-           write(iulog,*) "coszen= ", coszen(c)
-           call endrun()
+           write(iulog,*)"SNICAR ERROR: Absorbed ground radiation not equal to summed snow layer radiation"
+           write(iulog,*)"Diff        = ",sum(sabg_lyr(p,:))-sabg_snow(p)
+           write(iulog,*)"sabg_snow(p)= ",sabg_snow(p)
+           write(iulog,*)"sabg_sum(p) = ",sum(sabg_lyr(p,:))
+           write(iulog,*)"snl(c)      = ",snl(c)
+           write(iulog,*)"flx_absdv1  = ",trd(p,1)*(1.-albgrd(c,1))
+           write(iulog,*)"flx_absdv2  = ",sum(flx_absdv(c,:))*trd(p,1)
+           write(iulog,*)"flx_absiv1  = ",tri(p,1)*(1.-albgri(c,1))
+           write(iulog,*)"flx_absiv2  = ",sum(flx_absiv(c,:))*tri(p,1)
+           write(iulog,*)"flx_absdn1  = ",trd(p,2)*(1.-albgrd(c,2))
+           write(iulog,*)"flx_absdn2  = ",sum(flx_absdn(c,:))*trd(p,2)
+           write(iulog,*)"flx_absin1  = ",tri(p,2)*(1.-albgri(c,2))
+           write(iulog,*)"flx_absin2  = ",sum(flx_absin(c,:))*tri(p,2)
+           write(iulog,*)"albgrd_nir  = ",albgrd(c,2)
+           write(iulog,*)"coszen      = ",coszen(c)
+           call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
         endif
 
         ! Diagnostic: shortwave penetrating ground (e.g. top layer)

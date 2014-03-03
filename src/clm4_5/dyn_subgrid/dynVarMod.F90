@@ -31,8 +31,9 @@ module dynVarMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use clm_varctl     , only : iulog
   use dynFileMod     , only : dyn_file_type
-  use shr_sys_mod    , only : shr_sys_abort
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_assert_mod , only : shr_assert
+  use abortutils     , only : endrun
   implicit none
   save
   private
@@ -77,7 +78,7 @@ module dynVarMod
      ! This is a pointer rather than an allocatable to work around a pgi compiler bug
      ! (pgi 13.9)
      integer, pointer :: data_shape(:)
-# 76 "dynVarMod.F90.in"
+# 77 "dynVarMod.F90.in"
    contains
      ! Public methods:
 
@@ -101,7 +102,7 @@ module dynVarMod
 
   abstract interface
 
-# 99 "dynVarMod.F90.in"
+# 100 "dynVarMod.F90.in"
      subroutine read_data_if_needed_interface(this)
        ! !DESCRIPTION:
        ! Determine if new data need to be read from the file; if so, read them.
@@ -111,10 +112,10 @@ module dynVarMod
        !
        ! !ARGUMENTS:
        class(dyn_var_type), intent(inout) :: this  ! this object
-# 108 "dynVarMod.F90.in"
+# 109 "dynVarMod.F90.in"
      end subroutine read_data_if_needed_interface
 
-# 111 "dynVarMod.F90.in"
+# 112 "dynVarMod.F90.in"
      ! DIMS 1,2
      subroutine get_current_data_1d_interface(this, cur_data)
        ! !DESCRIPTION:
@@ -134,7 +135,7 @@ module dynVarMod
        ! !ARGUMENTS:
        class(dyn_var_type) , intent(inout) :: this             ! this object
        real(r8)            , intent(out)   :: cur_data(:) ! current value of data
-# 129 "dynVarMod.F90.in"
+# 130 "dynVarMod.F90.in"
      end subroutine get_current_data_1d_interface
      ! DIMS 1,2
      subroutine get_current_data_2d_interface(this, cur_data)
@@ -155,13 +156,13 @@ module dynVarMod
        ! !ARGUMENTS:
        class(dyn_var_type) , intent(inout) :: this             ! this object
        real(r8)            , intent(out)   :: cur_data(:,:) ! current value of data
-# 129 "dynVarMod.F90.in"
+# 130 "dynVarMod.F90.in"
      end subroutine get_current_data_2d_interface
 
   end interface
   
 
-# 134 "dynVarMod.F90.in"
+# 135 "dynVarMod.F90.in"
 contains
 
   ! ======================================================================
@@ -172,7 +173,7 @@ contains
   ! ======================================================================
 
   !-----------------------------------------------------------------------
-# 144 "dynVarMod.F90.in"
+# 145 "dynVarMod.F90.in"
   subroutine set_metadata(this, dyn_file, varname, dim1name, conversion_factor, &
        do_check_sums_equal_1, data_shape)
     !
@@ -219,12 +220,12 @@ contains
     allocate(this%data_shape(ndims))
     this%data_shape = data_shape
 
-# 190 "dynVarMod.F90.in"
+# 191 "dynVarMod.F90.in"
   end subroutine set_metadata
 
 
   !-----------------------------------------------------------------------
-# 194 "dynVarMod.F90.in"
+# 195 "dynVarMod.F90.in"
   function get_dyn_file(this)
     !
     ! !DESCRIPTION:
@@ -235,11 +236,11 @@ contains
     class(dyn_var_type) , intent(in) :: this ! this object
     !-----------------------------------------------------------------------
     get_dyn_file => this%dyn_file
-# 204 "dynVarMod.F90.in"
+# 205 "dynVarMod.F90.in"
   end function get_dyn_file
 
   !-----------------------------------------------------------------------
-# 207 "dynVarMod.F90.in"
+# 208 "dynVarMod.F90.in"
   function get_data_shape(this)
     !
     ! !DESCRIPTION:
@@ -251,12 +252,12 @@ contains
     !-----------------------------------------------------------------------
     allocate(get_data_shape(size(this%data_shape)))
     get_data_shape = this%data_shape
-# 218 "dynVarMod.F90.in"
+# 219 "dynVarMod.F90.in"
   end function get_data_shape
 
 
   !-----------------------------------------------------------------------
-# 222 "dynVarMod.F90.in"
+# 223 "dynVarMod.F90.in"
   subroutine read_variable(this, nt, data)
     !
     ! !DESCRIPTION:
@@ -287,10 +288,11 @@ contains
     else if (ndims == 2) then
        call read_variable_2d(this, nt, data)
     else
-       call shr_sys_abort(subname//' ERROR: read_variable can only handle 1 or 2 dimensions')
+       call endrun(msg='ERROR: read_variable can only handle 1 or 2 dimensions'//&
+            errMsg(__FILE__, __LINE__))
     end if
 
-# 255 "dynVarMod.F90.in"
+# 257 "dynVarMod.F90.in"
   end subroutine read_variable
 
 
@@ -300,7 +302,7 @@ contains
 
   ! DIMS 1,2
   !-----------------------------------------------------------------------
-# 264 "dynVarMod.F90.in"
+# 266 "dynVarMod.F90.in"
   subroutine read_variable_1d(this, nt, data)
     !
     ! !DESCRIPTION:
@@ -337,7 +339,8 @@ contains
     call ncd_io(ncid=this%dyn_file, varname=this%varname, flag='read', data=arrayl, &
          dim1name=this%dim1name, nt=nt, readvar=readvar)
     if (.not. readvar) then
-       call shr_sys_abort(subname//' ERROR: ' // trim(this%varname) // ' NOT on file')
+       call endrun(msg=' ERROR: ' // trim(this%varname) // ' NOT on file'//&
+            errMsg(__FILE__, __LINE__))
     end if
 
     arrayl = arrayl / this%conversion_factor
@@ -352,11 +355,11 @@ contains
 
     data = reshape(arrayl, shape(data))
     deallocate(arrayl)
-# 315 "dynVarMod.F90.in"
+# 318 "dynVarMod.F90.in"
   end subroutine read_variable_1d
   ! DIMS 1,2
   !-----------------------------------------------------------------------
-# 264 "dynVarMod.F90.in"
+# 266 "dynVarMod.F90.in"
   subroutine read_variable_2d(this, nt, data)
     !
     ! !DESCRIPTION:
@@ -393,7 +396,8 @@ contains
     call ncd_io(ncid=this%dyn_file, varname=this%varname, flag='read', data=arrayl, &
          dim1name=this%dim1name, nt=nt, readvar=readvar)
     if (.not. readvar) then
-       call shr_sys_abort(subname//' ERROR: ' // trim(this%varname) // ' NOT on file')
+       call endrun(msg=' ERROR: ' // trim(this%varname) // ' NOT on file'//&
+            errMsg(__FILE__, __LINE__))
     end if
 
     arrayl = arrayl / this%conversion_factor
@@ -408,7 +412,7 @@ contains
 
     data = reshape(arrayl, shape(data))
     deallocate(arrayl)
-# 315 "dynVarMod.F90.in"
+# 318 "dynVarMod.F90.in"
   end subroutine read_variable_2d
 
   ! ======================================================================

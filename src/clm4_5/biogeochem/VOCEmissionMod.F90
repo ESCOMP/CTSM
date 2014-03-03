@@ -5,21 +5,22 @@ module VOCEmissionMod
   ! Volatile organic compound emission
   !
   ! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use clm_varctl,   only : iulog
-  use abortutils,   only : endrun
-  use clm_varpar,   only : numpft, nlevcan
-  use pftvarcon ,   only : ndllf_evr_tmp_tree,  ndllf_evr_brl_tree,    &
-                           ndllf_dcd_brl_tree,  nbrdlf_evr_trp_tree,   &
-                           nbrdlf_evr_tmp_tree, nbrdlf_dcd_brl_shrub,  &
-                           nbrdlf_dcd_trp_tree, nbrdlf_dcd_tmp_tree,   &
-                           nbrdlf_dcd_brl_tree, nbrdlf_evr_shrub,      &
-                           nc3_arctic_grass,    nc3crop,               &
-                           nc4_grass,           noveg
-  use shr_megan_mod,  only : shr_megan_megcomps_n, shr_megan_megcomp_t, shr_megan_linkedlist
-  use shr_megan_mod,  only : shr_megan_mechcomps_n, shr_megan_mechcomps, shr_megan_mapped_emisfctrs
-  use MEGANFactorsMod,only : Agro, Amat, Anew, Aold, betaT, ct1, ct2, LDF, Ceo
-  use decompMod      ,only : bounds_type
+  use shr_kind_mod    , only : r8 => shr_kind_r8
+  use shr_log_mod     , only : errMsg => shr_log_errMsg
+  use clm_varctl      , only : iulog
+  use abortutils      , only : endrun
+  use clm_varpar      , only : numpft, nlevcan
+  use pftvarcon       , only : ndllf_evr_tmp_tree,  ndllf_evr_brl_tree
+  use pftvarcon       , only : ndllf_dcd_brl_tree,  nbrdlf_evr_trp_tree
+  use pftvarcon       , only : nbrdlf_evr_tmp_tree, nbrdlf_dcd_brl_shrub
+  use pftvarcon       , only : nbrdlf_dcd_trp_tree, nbrdlf_dcd_tmp_tree
+  use pftvarcon       , only : nbrdlf_dcd_brl_tree, nbrdlf_evr_shrub
+  use pftvarcon       , only : nc3_arctic_grass,    nc3crop
+  use pftvarcon       , only : nc4_grass,           noveg
+  use shr_megan_mod   , only : shr_megan_megcomps_n, shr_megan_megcomp_t, shr_megan_linkedlist
+  use shr_megan_mod   , only : shr_megan_mechcomps_n, shr_megan_mechcomps, shr_megan_mapped_emisfctrs
+  use MEGANFactorsMod , only : Agro, Amat, Anew, Aold, betaT, ct1, ct2, LDF, Ceo
+  use decompMod       , only : bounds_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -128,7 +129,7 @@ contains
     if ( shr_megan_mechcomps_n < 1) return
 
     if ( nlevcan /= 1 )then
-       call endrun( subname//' error: can NOT work without nlevcan == 1' )
+       call endrun(msg=' error: can NOT work without nlevcan == 1'//errmsg(__FILE__, __LINE__))
     end if
 
    associate(& 

@@ -6,11 +6,12 @@ module BiogeophysRestMod
   !
   ! !USES:
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use shr_sys_mod      , only : shr_sys_abort
+  use shr_log_mod      , only : errMsg => shr_log_errMsg
   use shr_infnan_mod   , only : shr_infnan_isnan
   use spmdMod          , only : masterproc
   use decompMod        , only : bounds_type, get_proc_global
   use clm_time_manager , only : is_first_step
+  use abortutils       , only : endrun
   use restUtilMod
   use ncdio_pio
   !
@@ -22,6 +23,9 @@ module BiogeophysRestMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: BiogeophysRest
+  !
+  ! !PUBLIC DATA:
+  logical, public  :: bound_h2osoi = .true.
   !-----------------------------------------------------------------------
 
 
@@ -45,7 +49,6 @@ contains
     use clm_varctl      , only : nsrest, nsrContinue, nsrStartup, nsrBranch, fpftdyn, iulog 
     use clm_varctl      , only : use_cndv, use_snicar_frc 
     use clm_atmlnd      , only : clm_a2l
-    use initSurfAlbMod  , only : do_initsurfalb
     use SNICARMod       , only : snw_rds_min
     !
     ! !ARGUMENTS:
@@ -150,8 +153,8 @@ contains
                 write(iulog,*) "ERROR:: maximum difference is ", maxdiff, " max allowed = ", adiff
                 write(iulog,*) "ERROR:: Run interpinic on your initial condition" // &
                      "file to interpolate to the new surface dataset"
-                call shr_sys_abort( sub//"::ERROR:: Weights between initial condition file " // &
-                     "and surface dataset are too different" )
+                call endrun( msg='ERROR:: Weights between initial condition file'// &
+                     'and surface dataset are too different'//errMsg(__FILE__, __LINE__))
              else
                 write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
                      " file and ", trim(fileusing), " file(s) are different to < ", &
@@ -181,7 +184,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='EFLX_LWRAD_OUT', xtype=ncd_double,  & 
          dim1name='pft', &
          long_name='emitted infrared (longwave) radiation', units='watt/m^2', &
-         interpinic_flag='skip', readvar=readvar, data=pef%eflx_lwrad_out)
+         interpinic_flag='interp', readvar=readvar, data=pef%eflx_lwrad_out)
 
     ! column water state variable - snow levels
     call restartvar(ncid=ncid, flag=flag, varname='SNLSNO', xtype=ncd_int,  & 
@@ -357,36 +360,6 @@ contains
          long_name='diffuse solar absorbed by pervious road per unit ground area per unit incident flux', units='', &
          interpinic_flag='interp', readvar=readvar, data=lps%sabs_perroad_dif)
 
-    ! landunit type physical state variable - vf_sr
-    call restartvar(ncid=ncid, flag=flag, varname='vf_sr', xtype=ncd_double,  & 
-         dim1name='landunit', &
-         long_name='view factor of sky for road', units='', &
-         interpinic_flag='skip', readvar=readvar, data=lps%vf_sr)
-
-    ! landunit type physical state variable - vf_wr
-    call restartvar(ncid=ncid, flag=flag, varname='vf_wr', xtype=ncd_double,  & 
-         dim1name='landunit', &
-         long_name='view factor of one wall for road', units='', &
-         interpinic_flag='skip', readvar=readvar, data=lps%vf_wr)
-
-    ! landunit type physical state variable - vf_sw
-    call restartvar(ncid=ncid, flag=flag, varname='vf_sw', xtype=ncd_double,  & 
-         dim1name='landunit', &
-         long_name='view factor of sky for one wall', units='', &
-         interpinic_flag='skip', readvar=readvar, data=lps%vf_sw)
-
-    ! landunit type physical state variable - vf_rw
-    call restartvar(ncid=ncid, flag=flag, varname='vf_rw', xtype=ncd_double,  & 
-         dim1name='landunit', &
-         long_name='view factor of road for one wall', units='', &
-         interpinic_flag='skip', readvar=readvar, data=lps%vf_rw)
-
-    ! landunit type physical state variable - vf_ww
-    call restartvar(ncid=ncid, flag=flag, varname='vf_ww', xtype=ncd_double,  & 
-         dim1name='landunit', &
-         long_name='view factor of opposing wall for one wall', units='', &
-         interpinic_flag='skip', readvar=readvar, data=lps%vf_ww)
-
     ! landunit type physical state variable - taf
     call restartvar(ncid=ncid, flag=flag, varname='taf', xtype=ncd_double,  & 
          dim1name='landunit', &
@@ -404,18 +377,12 @@ contains
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='surface albedo (direct) (0 to 1)', units='', &
          interpinic_flag='interp', readvar=readvar, data=pps%albd)
-    if (flag=='read' .and. .not. readvar) then
-       if (nsrest == nsrStartup) do_initsurfalb = .true.
-    end if
 
     ! pft type physical state variable - albi
     call restartvar(ncid=ncid, flag=flag, varname='albi', xtype=ncd_double,  & 
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='surface albedo (diffuse) (0 to 1)', units='', &
          interpinic_flag='interp', readvar=readvar, data=pps%albi)
-    if (flag=='read' .and. .not. readvar) then
-       if (nsrest == nsrStartup) do_initsurfalb = .true.
-    end if
 
     ! column type physical state variable - albgrd
     call restartvar(ncid=ncid, flag=flag, varname='albgrd', xtype=ncd_double,  &
@@ -434,18 +401,12 @@ contains
          dim1name='column', dim2name='numrad', switchdim=.true., &
          long_name='soil albedo (direct) (0 to 1)', units='', &
          interpinic_flag='interp', readvar=readvar, data=cps%albsod)
-    if (flag=='read' .and. .not. readvar) then
-       if (nsrest == nsrStartup) do_initsurfalb = .true.
-    end if
 
     ! column type physical state variable - albsoi
     call restartvar(ncid=ncid, flag=flag, varname='albsoi', xtype=ncd_double,  &
          dim1name='column', dim2name='numrad', switchdim=.true., &
          long_name='soil albedo (indirect) (0 to 1)', units='', &
          interpinic_flag='interp', readvar=readvar, data=cps%albsoi)
-    if (flag=='read' .and. .not. readvar) then
-       if (nsrest == nsrStartup) do_initsurfalb = .true.
-    end if
 
     if (use_snicar_frc) then
 
@@ -997,7 +958,9 @@ contains
          dim1name='pft', &
          long_name='2m height surface air temperature', units='K', &
          interpinic_flag='interp', readvar=readvar, data=pes%t_ref2m)
-    if (flag=='read' .and. .not. readvar) call shr_sys_abort()
+    if (flag=='read' .and. .not. readvar) then
+       call endrun(msg=errMsg(__FILE__, __LINE__))
+    end if
 
     ! pft type water state variable - h2ocan
     call restartvar(ncid=ncid, flag=flag, varname='H2OCAN', xtype=ncd_double,  &
@@ -1055,7 +1018,8 @@ contains
 
        do c = bounds%begc, bounds%endc
           l = col%landunit(c)
-          if ( col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. &
+          if ( col%itype(c) == icol_sunwall   .or. &
+               col%itype(c) == icol_shadewall .or. &
                col%itype(c) == icol_roof )then
              nlevs = nlevurb
           else
@@ -1069,12 +1033,14 @@ contains
              end do
           end if
        end do
+    end if
 
-       ! ------------------------------------------------------------
-       ! If initial run -- ensure that water is properly bounded
-       ! ------------------------------------------------------------
+    ! ------------------------------------------------------------
+    ! If initial run -- ensure that water is properly bounded (read only)
+    ! ------------------------------------------------------------
 
-       if ( is_first_step() )then
+    if (flag == 'read' ) then
+       if ( is_first_step() .and. bound_h2osoi) then
           do c = bounds%begc, bounds%endc
              l = col%landunit(c)
              if ( col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. &
@@ -1089,10 +1055,10 @@ contains
                    cws%h2osoi_liq(c,j) = max(0._r8,cws%h2osoi_liq(c,j))
                    cws%h2osoi_ice(c,j) = max(0._r8,cws%h2osoi_ice(c,j))
                    cws%h2osoi_vol(c,j) = cws%h2osoi_liq(c,j)/(cps%dz(c,j)*denh2o) &
-                        + cws%h2osoi_ice(c,j)/(cps%dz(c,j)*denice)
+                                       + cws%h2osoi_ice(c,j)/(cps%dz(c,j)*denice)
                    if (j == 1) then
                       maxwatsat = (cps%watsat(c,j)*cps%dz(c,j)*1000.0_r8 + pondmx) / &
-                           (cps%dz(c,j)*1000.0_r8)
+                                  (cps%dz(c,j)*1000.0_r8)
                    else
                       maxwatsat = cps%watsat(c,j)
                    end if
@@ -1100,14 +1066,14 @@ contains
                       excess = (cws%h2osoi_vol(c,j) - maxwatsat)*cps%dz(c,j)*1000.0_r8
                       totwat = cws%h2osoi_liq(c,j) + cws%h2osoi_ice(c,j)
                       cws%h2osoi_liq(c,j) = cws%h2osoi_liq(c,j) - &
-                           (cws%h2osoi_liq(c,j)/totwat) * excess
+                                           (cws%h2osoi_liq(c,j)/totwat) * excess
                       cws%h2osoi_ice(c,j) = cws%h2osoi_ice(c,j) - &
-                           (cws%h2osoi_ice(c,j)/totwat) * excess
+                                           (cws%h2osoi_ice(c,j)/totwat) * excess
                    end if
                    cws%h2osoi_liq(c,j) = max(watmin,cws%h2osoi_liq(c,j))
                    cws%h2osoi_ice(c,j) = max(watmin,cws%h2osoi_ice(c,j))
                    cws%h2osoi_vol(c,j) = cws%h2osoi_liq(c,j)/(cps%dz(c,j)*denh2o) &
-                        + cws%h2osoi_ice(c,j)/(cps%dz(c,j)*denice)
+                                       + cws%h2osoi_ice(c,j)/(cps%dz(c,j)*denice)
                 end if
              end do
           end do
@@ -1137,7 +1103,7 @@ contains
              cps%snw_rds(c,-nlevsno+1:cps%snl(c)) = 0._r8
              cps%snw_rds_top(c) = snw_rds_min
              cps%sno_liq_top(c) = cws%h2osoi_liq(c,cps%snl(c)+1) / &
-                  (cws%h2osoi_liq(c,cps%snl(c)+1)+cws%h2osoi_ice(c,cps%snl(c)+1))
+                                 (cws%h2osoi_liq(c,cps%snl(c)+1)+cws%h2osoi_ice(c,cps%snl(c)+1))
           elseif (cws%h2osno(c) > 0._r8) then
              cps%snw_rds(c,0) = snw_rds_min
              cps%snw_rds(c,-nlevsno+1:-1) = 0._r8
@@ -1236,40 +1202,24 @@ contains
          dim1name='column', dim2name='levsno1', switchdim=.true., lowerb2=-nlevsno+1, upperb2=1, &
          long_name='snow layer flux absorption factors (direct, VIS)', units='fraction', &
          interpinic_flag='interp', readvar=readvar, data=cps%flx_absdv)
-    if (flag == 'read' .and. .not. readvar) then
-       ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
-       if (nsrest == nsrStartup) do_initsurfalb = .true.
-    end if
 
     ! column type physical state variable - flx_absdn
     call restartvar(ncid=ncid, flag=flag, varname='flx_absdn', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno1', switchdim=.true., lowerb2=-nlevsno+1, upperb2=1, &
          long_name='snow layer flux absorption factors (direct, NIR)', units='fraction', &
          interpinic_flag='interp', readvar=readvar, data=cps%flx_absdn)
-    if (flag == 'read' .and. .not. readvar) then
-       ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
-       if (nsrest == nsrStartup) do_initsurfalb = .true.
-    end if
 
     ! column type physical state variable - flx_absiv
     call restartvar(ncid=ncid, flag=flag, varname='flx_absiv', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno1', switchdim=.true., lowerb2=-nlevsno+1, upperb2=1, &
          long_name='snow layer flux absorption factors (diffuse, VIS)', units='fraction', &
          interpinic_flag='interp', readvar=readvar, data=cps%flx_absiv)
-    if (flag == 'read' .and. .not. readvar) then
-       ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
-       if (nsrest == nsrStartup) do_initsurfalb = .true.
-    end if
 
     ! column type physical state variable - flx_absin
     call restartvar(ncid=ncid, flag=flag, varname='flx_absin', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno1', switchdim=.true., lowerb2=-nlevsno+1, upperb2=1, &
          long_name='snow layer flux absorption factors (diffuse, NIR)', units='fraction', &
          interpinic_flag='interp', readvar=readvar, data=cps%flx_absin)
-    if (flag == 'read' .and. .not. readvar) then
-       ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
-       if (nsrest == nsrStartup) do_initsurfalb = .true.
-    end if
 
     ! column type physical state variable - albsnd_hst
     call restartvar(ncid=ncid, flag=flag, varname='albsnd_hst', xtype=ncd_double,  &
@@ -1303,11 +1253,12 @@ contains
        cwf%qflx_snow_melt = 0._r8
     endif
 
-    ! gridcell type water flux variable - qflx_floodg
+    ! gridcell type water flux variable - qflx_floodg 
+    !TODO - what should this be in terms of interpolation? For now set it to skip
     call restartvar(ncid=ncid, flag=flag, varname='qflx_floodg', xtype=ncd_double, &
          dim1name='gridcell', &
          long_name='flood water flux', units='mm/s', &
-         interpinic_flag='interp', readvar=readvar, data=clm_a2l%forc_flood)
+         interpinic_flag='skip', readvar=readvar, data=clm_a2l%forc_flood)
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, readvar=readvar, not restart: initialize flood to zero
        clm_a2l%forc_flood = 0._r8

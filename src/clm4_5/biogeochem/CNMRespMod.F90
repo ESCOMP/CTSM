@@ -11,6 +11,7 @@ module CNMRespMod
   use shr_const_mod      , only: SHR_CONST_TKFRZ
   use decompMod          , only: bounds_type
   use abortutils         , only: endrun
+  use shr_log_mod        , only: errMsg => shr_log_errMsg
   use CNSharedParamsMod  , only: CNParamsShareInst
   !
   implicit none
@@ -53,7 +54,7 @@ contains
 
     tString='br_mr'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNMRespParamsInst%br=tempr
     
   end subroutine readCNMRespParams

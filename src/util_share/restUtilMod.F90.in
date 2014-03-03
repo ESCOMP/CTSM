@@ -6,7 +6,8 @@ module restUtilMod
   use shr_kind_mod, only: r8=>shr_kind_r8, r4 => shr_kind_r4, i4=>shr_kind_i4
   use shr_sys_mod,  only: shr_sys_abort
   use spmdMod,      only: masterproc
-  use clm_varctl, only: iulog
+  use clm_varctl,   only: iulog
+  use clm_varcon,   only: spval, ispval
   use ncdio_pio
   use pio
   !
@@ -24,11 +25,11 @@ module restUtilMod
      module procedure restartvar_2d_double_bounds
   end interface restartvar
 
-  integer,parameter, public  :: iflag_interp = 1
-  integer,parameter, public  :: iflag_copy   = 2
-  integer,parameter, public  :: iflag_skip   = 3
-  integer,parameter, private :: iflag_noswitchdim = 0
-  integer,parameter, private :: iflag_switchdim   = 1
+  integer,parameter, public :: iflag_interp = 1
+  integer,parameter, public :: iflag_copy   = 2
+  integer,parameter, public :: iflag_skip   = 3
+  integer,parameter, public :: iflag_noswitchdim = 0
+  integer,parameter, public :: iflag_switchdim   = 1
 
   public :: restartvar
 
@@ -105,18 +106,23 @@ contains
        end if
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
-       end if
-       if (present(nvalid_range)) then
-          status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if ( xtype == ncd_log )then
           status = PIO_put_att(ncid,varid,'flag_values',     (/0, 1/) )
@@ -217,17 +223,26 @@ contains
        if (present(units)) then
           call ncd_putatt(ncid, varid, 'units', trim(units))
        end if
+
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if (present(nvalid_range)) then
           status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
@@ -348,15 +363,23 @@ contains
        end if
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
-          call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype )
+          call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if (present(nvalid_range)) then
           status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )

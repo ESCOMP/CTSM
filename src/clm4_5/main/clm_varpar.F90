@@ -5,15 +5,13 @@ module clm_varpar
   ! Module containing CLM parameters
   !
   ! !USES:
-  use shr_kind_mod, only: &
-       r8 => shr_kind_r8
-  use shr_sys_mod , only: &
-       shr_sys_abort
-  use clm_varctl  , only: &
-       use_extralakelayers, use_vertsoilc, use_crop, &
-       use_century_decomp, use_c13, use_c14, &
-       iulog, create_crop_landunit, irrigate, fpftdyn, &
-       use_vichydro
+  use shr_kind_mod , only: r8 => shr_kind_r8
+  use shr_log_mod  , only: errMsg => shr_log_errMsg
+  use abortutils   , only: endrun
+  use clm_varctl   , only: use_extralakelayers, use_vertsoilc, use_crop
+  use clm_varctl   , only: use_century_decomp, use_c13, use_c14
+  use clm_varctl   , only: iulog, create_crop_landunit, irrigate, fpftdyn
+  use clm_varctl   , only: use_vichydro
   !
   ! !PUBLIC TYPES:
   implicit none

@@ -7,8 +7,8 @@ module surfrdUtilsMod
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
   use clm_varctl   , only : iulog
-  use shr_sys_mod  , only : shr_sys_abort
-
+  use abortutils   , only : endrun
+  use shr_log_mod  , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -54,7 +54,7 @@ contains
     if (found) then
        write(iulog,*) trim(caller), ' ERROR: sum of ', trim(name), ' not 1.0 at nl=', nindx
        write(iulog,*) 'sum is: ', sum(arr(nindx,:))
-       call shr_sys_abort()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
   end subroutine check_sums_equal_1

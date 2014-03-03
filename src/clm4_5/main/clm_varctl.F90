@@ -6,7 +6,8 @@ module clm_varctl
   !
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8, SHR_KIND_CL
-  use shr_sys_mod , only : shr_sys_abort
+  ! cannot use endrun here due to circular dependency
+  use shr_sys_mod , only: shr_sys_abort
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -62,6 +63,13 @@ module clm_varctl
   ! Flag to turn on MEGAN VOC's
   !
   logical, public :: use_voc = .true. 
+  !
+  ! Interpolation of finidat if requested
+  ! If finidat_interp_source is non-blank and finidat is blank then interpolation will be done from
+  ! finidat_interp_source to finidat_interp_dest
+  !
+  character(len=256), public :: finidat_interp_source = ' '
+  character(len=256), public :: finidat_interp_dest   = 'finidat_interp_dest.nc'     
   !
   ! Irrigate logic
   !
@@ -179,7 +187,7 @@ contains
     !-----------------------------------------------------------------------
 
     if ( clmvarctl_isset )then
-       call shr_sys_abort( subname//' ERROR:: control variables already set -- can not call this subroutine' )
+       call shr_sys_abort(' ERROR:: control variables already set, cannot call this routine')
     end if
 
     if ( present(caseid_in       ) ) caseid        = caseid_in

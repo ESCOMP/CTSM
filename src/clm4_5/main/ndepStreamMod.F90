@@ -32,20 +32,17 @@ module ndepStreamMod
   public :: ndep_init      ! position datasets for dynamic ndep
   public :: ndep_interp    ! interpolates between two years of ndep file data
   public :: clm_domain_mct ! Sets up MCT domain for this resolution
-  !
-  !EOP
 
   ! ! PRIVATE TYPES
-
   type(shr_strdata_type)  :: sdat         ! input data stream
   integer :: stream_year_first_ndep       ! first year in stream to use
   integer :: stream_year_last_ndep        ! last year in stream to use
   integer :: model_year_align_ndep        ! align stream_year_firstndep with 
-!==============================================================================
+  !==============================================================================
 
 contains
 
-!==============================================================================
+  !==============================================================================
 
   subroutine ndep_init(bounds)
    !    
@@ -57,6 +54,7 @@ contains
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
    use shr_nl_mod       , only : shr_nl_find_group_name
+   use shr_log_mod      , only : errMsg => shr_log_errMsg
    !
    ! arguments
    implicit none
@@ -94,7 +92,7 @@ contains
       if (nml_error == 0) then
          read(nu_nml, nml=ndepdyn_nml,iostat=nml_error)
          if (nml_error /= 0) then
-            call endrun(subname // ':: ERROR reading ndepdyn_nml namelist')
+            call endrun(msg=' ERROR reading ndepdyn_nml namelist'//errMsg(__FILE__, __LINE__))
          end if
       end if
       close(nu_nml)
@@ -150,8 +148,7 @@ contains
 
  end subroutine ndep_init
   
-!================================================================
-
+ !================================================================
  subroutine ndep_interp(bounds)
 
    !-----------------------------------------------------------------------
@@ -187,8 +184,7 @@ contains
    
  end subroutine ndep_interp
 
-!==============================================================================
-
+ !==============================================================================
   subroutine clm_domain_mct(bounds, dom_clm)
 
     !-------------------------------------------------------------------

@@ -24,10 +24,11 @@ contains
     !
     ! !USES:
     use clmtype
-    use clm_time_manager, only: get_step_size
-    use clm_varpar   , only: nlevdecomp, ndecomp_pools
-    use clm_varpar   , only: i_cwd, i_met_lit, i_cel_lit, i_lig_lit
-    use abortutils  , only: endrun
+    use clm_time_manager , only: get_step_size
+    use clm_varpar       , only: nlevdecomp, ndecomp_pools
+    use clm_varpar       , only: i_cwd, i_met_lit, i_cel_lit, i_lig_lit
+    use abortutils       , only: endrun
+    use shr_log_mod      , only: errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
     implicit none
@@ -65,7 +66,8 @@ contains
       ccisof =>  cc13f
       ccisos =>  cc13s
    case default
-      call endrun('CNCIsoStateUpdate3Mod: iso must be bulk, c13 or c14')
+      call endrun(msg='CNCIsoStateUpdate3Mod: iso must be bulk, c13 or c14'//&
+           errMsg(__FILE__, __LINE__))
    end select
 
    associate(& 

@@ -22,6 +22,7 @@ module accFldsMod
   !
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
+  use shr_log_mod , only: errMsg => shr_log_errMsg
   use abortutils,   only: endrun
   use clm_varctl,   only: iulog, use_cndv
   use clm_varpar,   only: crop_prog
@@ -239,13 +240,14 @@ contains
     ! Update and/or extract accumulated fields
     !
     ! !USES:
-    use clmtype
+    use clmtype          , only : dgv_pftcon, pft, col, lun, grc
+    use clmtype          , only : cps, ces, cws
+    use clmtype          , only : pps, pes, pvs, pdgvs 
     use clm_atmlnd       , only : clm_a2l, a2l_downscaled_col
     use clm_varcon       , only : spval
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
-    use accumulMod       , only : update_accum_field, extract_accum_field, &
-                                  accumResetVal
+    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
     use pftvarcon        , only : nwcereal, nwcerealirrig, mxtmp, baset
     use pftvarcon        , only : ndllf_dcd_brl_tree
     !
@@ -271,8 +273,8 @@ contains
     !    a2l_downscaled_col%forc_t     Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                  
     !    a2l_downscaled_col%forc_rain  Input:  [real(r8) (:)]  rain rate [mm/s]                                  
     !    a2l_downscaled_col%forc_snow  Input:  [real(r8) (:)]  snow rate [mm/s]                                  
-    !    clm_a2l%forc_solad 	       Input: [real(r8) (:,:)]  direct beam radiation (visible only)            
-    !    clm_a2l%forc_solai 	       Input: [real(r8) (:,:)]  diffuse radiation     (visible only)            
+    !    clm_a2l%forc_solad 	       Input:  [real(r8) (:,:)]  direct beam radiation (visible only)            
+    !    clm_a2l%forc_solai 	       Input:  [real(r8) (:,:)]  diffuse radiation     (visible only)            
     !    pps%croplive                  Input:  [logical (:)]  Flag, true if planted, not harvested               
     !    pps%vf                        Input:  [real(r8) (:)]  vernalization factor                              
     !    ces%t_soisno                  Input:  [real(r8) (:,:)]  soil temperature (K)                            
@@ -343,7 +345,7 @@ contains
     allocate(rbufslp(bounds%begp:bounds%endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
-       call endrun
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
 
     ! Accumulate and extract TREFAV - hourly average 2m air temperature
@@ -762,7 +764,7 @@ contains
     allocate(rbufslp(bounds%begp:bounds%endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)'extract_accum_hist allocation error for rbufslp in '//subname
-       call endrun
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
 
     ! Initialize clmtype variables that are to be time accumulated

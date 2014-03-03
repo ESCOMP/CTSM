@@ -5,13 +5,13 @@ module subgridAveMod
   ! Utilities to perfrom subgrid averaging
   !
   ! !USES:
-  use shr_kind_mod    , only: r8 => shr_kind_r8
-  use clmtype
-  use clm_varcon      , only : spval, icol_roof, icol_sunwall, icol_shadewall, &
-       icol_road_perv , icol_road_imperv
+  use clmtype         , only : pft, col, lun, namep, namec, namel, nameg 
+  use shr_kind_mod    , only : r8 => shr_kind_r8
+  use clm_varcon      , only : spval, icol_roof, icol_sunwall, icol_shadewall
+  use clm_varcon      , only : icol_road_perv , icol_road_imperv
   use clm_varctl      , only : iulog
   use abortutils      , only : endrun
-  use decompMod       , only: bounds_type
+  use decompMod       , only : bounds_type
   use shr_assert_mod  , only : shr_assert
   use shr_log_mod     , only : errMsg => shr_log_errMsg
  
@@ -20,12 +20,12 @@ module subgridAveMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: p2c   ! Perfrom an average from pfts to columns
-  public :: p2l   ! Perfrom an average from pfts to landunits
-  public :: p2g   ! Perfrom an average from pfts to gridcells
-  public :: c2l   ! Perfrom an average from columns to landunits
-  public :: c2g   ! Perfrom an average from columns to gridcells
-  public :: l2g   ! Perfrom an average from landunits to gridcells
+  public :: p2c   ! Perform an average pfts to columns
+  public :: p2l   ! Perform an average pfts to landunits
+  public :: p2g   ! Perform an average pfts to gridcells
+  public :: c2l   ! Perform an average columns to landunits
+  public :: c2g   ! Perform an average columns to gridcells
+  public :: l2g   ! Perform an average landunits to gridcells
 
   interface p2c
      module procedure p2c_1d
@@ -91,10 +91,10 @@ contains
     character(len=*), intent(in) :: p2c_scale_type ! scale type
     !
     ! !LOCAL VARIABLES:
-    integer  :: pi,p,c,index           ! indices
-    real(r8) :: scale_p2c(bounds%begp:bounds%endp)     ! scale factor for column->landunit mapping
-    logical  :: found                  ! temporary for error check
-    real(r8) :: sumwt(bounds%begc:bounds%endc)         ! sum of weights
+    integer  :: pi,p,c,index                       ! indices
+    real(r8) :: scale_p2c(bounds%begp:bounds%endp) ! scale factor for column->landunit mapping
+    logical  :: found                              ! temporary for error check
+    real(r8) :: sumwt(bounds%begc:bounds%endc)     ! sum of weights
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -106,8 +106,8 @@ contains
           scale_p2c(p) = 1.0_r8
        end do
     else
-       write(iulog,*)'p2c_1d error: scale type ',p2c_scale_type,' not supported'
-       call endrun()
+       write(iulog,*)'p2c_2d error: scale type ',p2c_scale_type,' not supported'
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     carr(bounds%begc:bounds%endc) = spval
@@ -132,8 +132,8 @@ contains
        end if
     end do
     if (found) then
-       write(iulog,*)'p2c error: sumwt is greater than 1.0 at c= ',index
-       call endrun()
+       write(iulog,*)'p2c_1d error: sumwt is greater than 1.0'
+       call endrun(decomp_index=index, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
     end if
 
   end subroutine p2c_1d
@@ -147,16 +147,16 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    integer , intent(in)  :: num2d                 ! size of second dimension
-    real(r8), intent(in)  :: parr( bounds%begp: , 1: )   ! pft array
-    real(r8), intent(out) :: carr( bounds%begc: , 1: )   ! column array
-    character(len=*), intent(in) :: p2c_scale_type ! scale type
+    type(bounds_type), intent(in) :: bounds            ! bounds
+    integer , intent(in)  :: num2d                     ! size of second dimension
+    real(r8), intent(in)  :: parr( bounds%begp: , 1: ) ! pft array
+    real(r8), intent(out) :: carr( bounds%begc: , 1: ) ! column array
+    character(len=*), intent(in) :: p2c_scale_type     ! scale type
     !
     ! !LOCAL VARIABLES:
-    integer  :: j,pi,p,c,index         ! indices
+    integer  :: j,pi,p,c,index                         ! indices
     real(r8) :: scale_p2c(bounds%begp:bounds%endp)     ! scale factor for column->landunit mapping
-    logical  :: found                  ! temporary for error check
+    logical  :: found                                  ! temporary for error check
     real(r8) :: sumwt(bounds%begc:bounds%endc)         ! sum of weights
     !------------------------------------------------------------------------
 
@@ -170,7 +170,7 @@ contains
        end do
     else
        write(iulog,*)'p2c_2d error: scale type ',p2c_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     carr(bounds%begc : bounds%endc, :) = spval
@@ -197,7 +197,7 @@ contains
        end do
        if (found) then
           write(iulog,*)'p2c_2d error: sumwt is greater than 1.0 at c= ',index,' lev= ',j
-          call endrun()
+          call endrun(decomp_index=index, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
        end if
     end do 
   end subroutine p2c_2d
@@ -273,18 +273,18 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    real(r8), intent(in)  :: parr( bounds%begp: )         ! input column array
-    real(r8), intent(out) :: larr( bounds%begl: )         ! output landunit array
+    type(bounds_type), intent(in) :: bounds        ! bounds
+    real(r8), intent(in)  :: parr( bounds%begp: )  ! input column array
+    real(r8), intent(out) :: larr( bounds%begl: )  ! output landunit array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
-    integer  :: pi,p,c,l,index         ! indices
-    logical  :: found                  ! temporary for error check
-    real(r8) :: sumwt(bounds%begl:bounds%endl)         ! sum of weights
-    real(r8) :: scale_p2c(bounds%begc:bounds%endc)     ! scale factor for pft->column mapping
-    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
+    integer  :: pi,p,c,l,index                     ! indices
+    logical  :: found                              ! temporary for error check
+    real(r8) :: sumwt(bounds%begl:bounds%endl)     ! sum of weights
+    real(r8) :: scale_p2c(bounds%begc:bounds%endc) ! scale factor for pft->column mapping
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc) ! scale factor for column->landunit mapping
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -331,7 +331,7 @@ contains
        end do
     else
        write(iulog,*)'p2l_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     if (p2c_scale_type == 'unity') then
@@ -340,7 +340,7 @@ contains
        end do
     else
        write(iulog,*)'p2l_1d error: scale type ',p2c_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     larr(bounds%begl : bounds%endl) = spval
@@ -367,7 +367,7 @@ contains
     end do
     if (found) then
        write(iulog,*)'p2l_1d error: sumwt is greater than 1.0 at l= ',index
-       call endrun()
+       call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
     end if
 
   end subroutine p2l_1d
@@ -440,7 +440,7 @@ contains
        end do
     else
        write(iulog,*)'p2l_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     if (p2c_scale_type == 'unity') then
@@ -449,7 +449,7 @@ contains
        end do
     else
        write(iulog,*)'p2l_2d error: scale type ',p2c_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     larr(bounds%begl : bounds%endl, :) = spval
@@ -477,7 +477,7 @@ contains
        end do
        if (found) then
           write(iulog,*)'p2l_2d error: sumwt is greater than 1.0 at l= ',index,' j= ',j
-          call endrun()
+          call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
        end if
     end do
 
@@ -492,20 +492,20 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    real(r8), intent(in)  :: parr( bounds%begp: )       ! input pft array
-    real(r8), intent(out) :: garr( bounds%begg: )       ! output gridcell array
+    type(bounds_type), intent(in) :: bounds        ! bounds
+    real(r8), intent(in)  :: parr( bounds%begp: )  ! input pft array
+    real(r8), intent(out) :: garr( bounds%begg: )  ! output gridcell array
     character(len=*), intent(in) :: p2c_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
     !
     !  !LOCAL VARIABLES:
-    integer  :: pi,p,c,l,g,index       ! indices
-    logical  :: found                  ! temporary for error check
-    real(r8) :: scale_p2c(bounds%begp:bounds%endp)     ! scale factor
-    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor
-    real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
-    real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
+    integer  :: pi,p,c,l,g,index                   ! indices
+    logical  :: found                              ! temporary for error check
+    real(r8) :: scale_p2c(bounds%begp:bounds%endp) ! scale factor
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc) ! scale factor
+    real(r8) :: scale_l2g(bounds%begl:bounds%endl) ! scale factor
+    real(r8) :: sumwt(bounds%begg:bounds%endg)     ! sum of weights
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -555,7 +555,7 @@ contains
        end do
     else
        write(iulog,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     if (p2c_scale_type == 'unity') then
@@ -564,7 +564,7 @@ contains
        end do
     else
        write(iulog,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     garr(bounds%begg : bounds%endg) = spval
@@ -592,7 +592,7 @@ contains
     end do
     if (found) then
        write(iulog,*)'p2g_1d error: sumwt is greater than 1.0 at g= ',index
-       call endrun()
+       call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
     end if
 
   end subroutine p2g_1d
@@ -617,8 +617,8 @@ contains
     character(len=*), intent(in) :: l2g_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
-    integer  :: j,pi,p,c,l,g,index     ! indices
-    logical  :: found                  ! temporary for error check
+    integer  :: j,pi,p,c,l,g,index                     ! indices
+    logical  :: found                                  ! temporary for error check
     real(r8) :: scale_p2c(bounds%begp:bounds%endp)     ! scale factor
     real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor
     real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
@@ -672,7 +672,7 @@ contains
        end do
     else
        write(iulog,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     if (p2c_scale_type == 'unity') then
@@ -681,7 +681,7 @@ contains
        end do
     else
        write(iulog,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     garr(bounds%begg : bounds%endg, :) = spval
@@ -710,13 +710,13 @@ contains
        end do
        if (found) then
           write(iulog,*)'p2g_2d error: sumwt gt 1.0 at g/sumwt = ',index,sumwt(index)
-          call endrun()
+          call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
        end if
     end do
 
   end subroutine p2g_2d
 
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
   subroutine c2l_1d (bounds, carr, larr, c2l_scale_type)
     !
     ! !DESCRIPTION:
@@ -725,17 +725,17 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    real(r8), intent(in)  :: carr( bounds%begc: ) ! input column array
-    real(r8), intent(out) :: larr( bounds%begl: ) ! output landunit array
+    type(bounds_type), intent(in) :: bounds        ! bounds
+    real(r8), intent(in)  :: carr( bounds%begc: )  ! input column array
+    real(r8), intent(out) :: larr( bounds%begl: )  ! output landunit array
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
-    integer  :: ci,c,l,index           ! indices
-    integer  :: max_col_per_lu         ! max columns per landunit; on the fly
-    logical  :: found                  ! temporary for error check
-    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
-    real(r8) :: sumwt(bounds%begl:bounds%endl)         ! sum of weights
+    integer  :: ci,c,l,index                       ! indices
+    integer  :: max_col_per_lu                     ! max columns per landunit; on the fly
+    logical  :: found                              ! temporary for error check
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc) ! scale factor for column->landunit mapping
+    real(r8) :: sumwt(bounds%begl:bounds%endl)     ! sum of weights
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -782,7 +782,7 @@ contains
        end do
     else
        write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     larr(bounds%begl : bounds%endl) = spval
@@ -808,7 +808,7 @@ contains
     end do
     if (found) then
        write(iulog,*)'c2l_1d error: sumwt is greater than 1.0 at l= ',index
-       call endrun()
+       call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
     end if
 
   end subroutine c2l_1d
@@ -829,10 +829,10 @@ contains
     character(len=*), intent(in) :: c2l_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
-    integer  :: j,l,ci,c,index         ! indices
-    integer  :: max_col_per_lu         ! max columns per landunit; on the fly
-    logical  :: found                  ! temporary for error check
-    real(r8) :: scale_c2l(bounds%begc:bounds%endc)        ! scale factor for column->landunit mapping
+    integer  :: j,l,ci,c,index                         ! indices
+    integer  :: max_col_per_lu                         ! max columns per landunit; on the fly
+    logical  :: found                                  ! temporary for error check
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
     real(r8) :: sumwt(bounds%begl:bounds%endl)         ! sum of weights
     !------------------------------------------------------------------------
 
@@ -880,7 +880,7 @@ contains
        end do
     else
        write(iulog,*)'c2l_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     larr(bounds%begl : bounds%endl, :) = spval
@@ -907,7 +907,7 @@ contains
        end do
        if (found) then
           write(iulog,*)'c2l_2d error: sumwt is greater than 1.0 at l= ',index,' lev= ',j
-          call endrun()
+          call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
        end if
     end do
 
@@ -922,19 +922,19 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    real(r8), intent(in)  :: carr( bounds%begc: )         ! input column array
-    real(r8), intent(out) :: garr( bounds%begg: )         ! output gridcell array
+    type(bounds_type), intent(in) :: bounds        ! bounds
+    real(r8), intent(in)  :: carr( bounds%begc: )  ! input column array
+    real(r8), intent(out) :: garr( bounds%begg: )  ! output gridcell array
     character(len=*), intent(in) :: c2l_scale_type ! scale factor type for averaging
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
-    integer  :: ci,c,l,g,index         ! indices
-    integer  :: max_col_per_gcell      ! max columns per gridcell; on the fly
-    logical  :: found                  ! temporary for error check
-    real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor
-    real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
-    real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
+    integer  :: ci,c,l,g,index                     ! indices
+    integer  :: max_col_per_gcell                  ! max columns per gridcell; on the fly
+    logical  :: found                              ! temporary for error check
+    real(r8) :: scale_c2l(bounds%begc:bounds%endc) ! scale factor
+    real(r8) :: scale_l2g(bounds%begl:bounds%endl) ! scale factor
+    real(r8) :: sumwt(bounds%begg:bounds%endg)     ! sum of weights
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -984,7 +984,7 @@ contains
        end do
     else
        write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     garr(bounds%begg : bounds%endg) = spval
@@ -1011,7 +1011,7 @@ contains
     end do
     if (found) then
        write(iulog,*)'c2g_1d error: sumwt is greater than 1.0 at g= ',index
-       call endrun()
+       call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
     end if
 
   end subroutine c2g_1d
@@ -1033,9 +1033,9 @@ contains
     character(len=*), intent(in) :: l2g_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
-    integer  :: j,ci,c,g,l,index       ! indices
-    integer  :: max_col_per_gcell      ! max columns per gridcell; on the fly
-    logical  :: found                  ! temporary for error check
+    integer  :: j,ci,c,g,l,index                       ! indices
+    integer  :: max_col_per_gcell                      ! max columns per gridcell; on the fly
+    logical  :: found                                  ! temporary for error check
     real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor
     real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
     real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
@@ -1088,7 +1088,7 @@ contains
        end do
     else
        write(iulog,*)'c2g_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     garr(bounds%begg : bounds%endg,:) = spval
@@ -1116,7 +1116,7 @@ contains
        end do
        if (found) then
           write(iulog,*)'c2g_2d error: sumwt is greater than 1.0 at g= ',index
-          call endrun()
+          call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
        end if
     end do
 
@@ -1131,17 +1131,17 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
+    type(bounds_type), intent(in) :: bounds        ! bounds
     real(r8), intent(in)  :: larr( bounds%begl: )  ! input landunit array
     real(r8), intent(out) :: garr( bounds%begg: )  ! output gridcell array
     character(len=*), intent(in) :: l2g_scale_type ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
-    integer  :: li,l,g,index           ! indices
-    integer  :: max_lu_per_gcell       ! max landunits per gridcell; on the fly
-    logical  :: found                  ! temporary for error check
-    real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
-    real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
+    integer  :: li,l,g,index                       ! indices
+    integer  :: max_lu_per_gcell                   ! max landunits per gridcell; on the fly
+    logical  :: found                              ! temporary for error check
+    real(r8) :: scale_l2g(bounds%begl:bounds%endl) ! scale factor
+    real(r8) :: sumwt(bounds%begg:bounds%endg)     ! sum of weights
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -1174,7 +1174,7 @@ contains
     end do
     if (found) then
        write(iulog,*)'l2g_1d error: sumwt is greater than 1.0 at g= ',index
-       call endrun()
+       call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
     end if
 
   end subroutine l2g_1d
@@ -1195,9 +1195,9 @@ contains
     character(len=*), intent(in) :: l2g_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
-    integer  :: j,g,li,l,index         ! indices
-    integer  :: max_lu_per_gcell       ! max landunits per gridcell; on the fly
-    logical  :: found                  ! temporary for error check
+    integer  :: j,g,li,l,index                         ! indices
+    integer  :: max_lu_per_gcell                       ! max landunits per gridcell; on the fly
+    logical  :: found                                  ! temporary for error check
     real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
     real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
     !------------------------------------------------------------------------
@@ -1233,7 +1233,7 @@ contains
        end do
        if (found) then
           write(iulog,*)'l2g_2d error: sumwt is greater than 1.0 at g= ',index,' lev= ',j
-          call endrun()
+          call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
        end if
     end do
 
@@ -1278,8 +1278,8 @@ contains
     ! each landunit type depending on l2g_scale_type
     !
     ! !USES:
-    use clm_varcon, only : istsoil, istcrop, istice, istice_mec, istdlak, istwet, &
-         isturb_MIN, isturb_MAX, max_lunit, spval
+    use clm_varcon, only : istsoil, istcrop, istice, istice_mec, istdlak, istwet
+    use clm_varcon, only : isturb_MIN, isturb_MAX, max_lunit, spval
     !
     ! !ARGUMENTS:
     implicit none
@@ -1327,7 +1327,7 @@ contains
         scale_lookup(istdlak) = 1.0_r8
      else
         write(iulog,*)'scale_l2g_lookup_array error: scale type ',l2g_scale_type,' not supported'
-        call endrun()
+        call endrun(msg=errMsg(__FILE__, __LINE__))
      end if
 
   end subroutine create_scale_l2g_lookup

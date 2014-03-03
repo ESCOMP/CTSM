@@ -4,22 +4,23 @@ module CNCIsoFluxMod
   ! Module for carbon isotopic flux variable update, non-mortality fluxes.
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8
+  use shr_kind_mod , only: r8 => shr_kind_r8
   use clm_varpar   , only: ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
-  use abortutils  , only: endrun
+  use abortutils   , only: endrun
+  use shr_log_mod  , only: errMsg => shr_log_errMsg
   implicit none
   save
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public:: CIsoFlux1
-  public:: CIsoFlux2
-  public:: CIsoFlux2h
-  public:: CIsoFlux3
-  private:: CNCIsoLitterToColumn
-  private:: CNCIsoGapPftToColumn
-  private:: CNCIsoHarvestPftToColumn
-  private:: CIsoFluxCalc
+  public  :: CIsoFlux1
+  public  :: CIsoFlux2
+  public  :: CIsoFlux2h
+  public  :: CIsoFlux3
+  private :: CNCIsoLitterToColumn
+  private :: CNCIsoGapPftToColumn
+  private :: CNCIsoHarvestPftToColumn
+  private :: CIsoFluxCalc
   !-----------------------------------------------------------------------
 
 contains
@@ -67,7 +68,7 @@ contains
       ccisof =>  cc13f
       ccisos =>  cc13s
    case default
-      call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
+      call endrun(msg='CNCIsoFluxMod: iso must be either c13 or c14'//errMsg(__FILE__, __LINE__))
    end select
 
    associate(&
@@ -386,7 +387,7 @@ subroutine CIsoFlux2(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
       pcisof =>  pc13f
       pcisos =>  pc13s
    case default
-      call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
+      call endrun(msg='CNCIsoFluxMod: iso must be either c13 or c14'//errMsg(__FILE__, __LINE__))
    end select
 
    ! pft-level gap mortality fluxes
@@ -511,7 +512,7 @@ subroutine CIsoFlux2h(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
       pcisof =>  pc13f
       pcisos =>  pc13s
    case default
-      call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
+      call endrun(msg='CNCIsoFluxMod: iso must be either c13 or c14'//errMsg(__FILE__, __LINE__))
    end select
 	
    ! pft-level gap mortality fluxes
@@ -654,7 +655,7 @@ subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
       ccisof =>  cc13f
       ccisos =>  cc13s
    case default
-      call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
+      call endrun(msg='CNCIsoFluxMod: iso must be either c13 or c14'//errMsg(__FILE__, __LINE__))
    end select
 
    associate(&
@@ -823,28 +824,28 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
        pcisof =>  pc13f
        ccisof =>  cc13f
     case default
-       call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
+       call endrun(msg='CNCIsoFluxMod: iso must be either c13 or c14'//errMsg(__FILE__, __LINE__))
     end select
 
    associate(& 
-   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
-   wtcol                               =>   pft%wtcol                                    , & ! Input:  [real(r8) (:)]  weight (relative to column) for this pft (0-1)    
-   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
-   leafc_to_litter                     =>    pcisof%leafc_to_litter                      , & ! Input:  [real(r8) (:)]                                                    
-   frootc_to_litter                    =>    pcisof%frootc_to_litter                     , & ! Input:  [real(r8) (:)]                                                    
-   npfts                               =>   col%npfts                                    , & ! Input:  [integer (:)]  number of pfts for each column                     
-   pfti                                =>   col%pfti                                     , & ! Input:  [integer (:)]  beginning pft index for each column                
-   lf_flab                             =>    pftcon%lf_flab                              , & ! Input:  [real(r8) (:)]  leaf litter labile fraction                       
-   lf_fcel                             =>    pftcon%lf_fcel                              , & ! Input:  [real(r8) (:)]  leaf litter cellulose fraction                    
-   lf_flig                             =>    pftcon%lf_flig                              , & ! Input:  [real(r8) (:)]  leaf litter lignin fraction                       
-   fr_flab                             =>    pftcon%fr_flab                              , & ! Input:  [real(r8) (:)]  fine root litter labile fraction                  
-   fr_fcel                             =>    pftcon%fr_fcel                              , & ! Input:  [real(r8) (:)]  fine root litter cellulose fraction               
-   fr_flig                             =>    pftcon%fr_flig                              , & ! Input:  [real(r8) (:)]  fine root litter lignin fraction                  
-   phenology_c_to_litr_met_c           =>    ccisof%phenology_c_to_litr_met_c            , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
-   phenology_c_to_litr_cel_c           =>    ccisof%phenology_c_to_litr_cel_c            , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
-   phenology_c_to_litr_lig_c           =>    ccisof%phenology_c_to_litr_lig_c            , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
-   leaf_prof                           =>    pps%leaf_prof                               , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of leaves                         
-   froot_prof                          =>    pps%froot_prof                                & ! InOut:  [real(r8) (:,:)]  (1/m) profile of fine roots                     
+   ivt                       =>    pft%itype                        , & ! Input:  [integer (:)]  pft vegetation type                                
+   wtcol                     =>    pft%wtcol                        , & ! Input:  [real(r8) (:)]  weight (relative to column) for this pft (0-1)    
+   pactive                   =>    pft%active                       , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   leafc_to_litter           =>    pcisof%leafc_to_litter           , & ! Input:  [real(r8) (:)]                                                    
+   frootc_to_litter          =>    pcisof%frootc_to_litter          , & ! Input:  [real(r8) (:)]                                                    
+   npfts                     =>    col%npfts                        , & ! Input:  [integer (:)]  number of pfts for each column                     
+   pfti                      =>    col%pfti                         , & ! Input:  [integer (:)]  beginning pft index for each column                
+   lf_flab                   =>    pftcon%lf_flab                   , & ! Input:  [real(r8) (:)]  leaf litter labile fraction                       
+   lf_fcel                   =>    pftcon%lf_fcel                   , & ! Input:  [real(r8) (:)]  leaf litter cellulose fraction                    
+   lf_flig                   =>    pftcon%lf_flig                   , & ! Input:  [real(r8) (:)]  leaf litter lignin fraction                       
+   fr_flab                   =>    pftcon%fr_flab                   , & ! Input:  [real(r8) (:)]  fine root litter labile fraction                  
+   fr_fcel                   =>    pftcon%fr_fcel                   , & ! Input:  [real(r8) (:)]  fine root litter cellulose fraction               
+   fr_flig                   =>    pftcon%fr_flig                   , & ! Input:  [real(r8) (:)]  fine root litter lignin fraction                  
+   phenology_c_to_litr_met_c =>    ccisof%phenology_c_to_litr_met_c , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
+   phenology_c_to_litr_cel_c =>    ccisof%phenology_c_to_litr_cel_c , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
+   phenology_c_to_litr_lig_c =>    ccisof%phenology_c_to_litr_lig_c , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
+   leaf_prof                 =>    pps%leaf_prof                    , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of leaves                         
+   froot_prof                =>    pps%froot_prof                     & ! InOut:  [real(r8) (:,:)]  (1/m) profile of fine roots                     
    )
 
     do j = 1, nlevdecomp
@@ -913,7 +914,7 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
        pcisof =>  pc13f
        ccisof =>  cc13f
     case default
-       call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
+       call endrun(msg='CNCIsoFluxMod: iso must be either c13 or c14'//errMsg(__FILE__, __LINE__))
     end select
 
    associate(& 
@@ -1068,7 +1069,7 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
        pcisof =>  pc13f
        ccisof =>  cc13f
     case default
-       call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
+       call endrun(msg='CNCIsoFluxMod: iso must be either c13 or c14'//errMsg(__FILE__, __LINE__))
     end select
 
    associate(& 
@@ -1251,7 +1252,7 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
    case ('c13')
       frax = frax_c13
    case default
-      call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
+      call endrun(msg='CNCIsoFluxMod: iso must be either c13 or c14'//errMsg(__FILE__, __LINE__))
    end select
 
    ! loop over the supplied filter

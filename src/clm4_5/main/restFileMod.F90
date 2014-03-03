@@ -8,8 +8,9 @@ module restFileMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use decompMod   , only : bounds_type
   use spmdMod     , only : masterproc
-  use abortutils  , only : endrun
   use clm_varpar  , only : crop_prog
+  use abortutils  , only : endrun
+  use shr_log_mod , only : errMsg => shr_log_errMsg
   use clm_varctl  
   use ncdio_pio       
   !
@@ -40,7 +41,7 @@ module restFileMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine restFile_write( bounds, file, nlend, noptr, rdate )
+  subroutine restFile_write( bounds, file, rdate, noptr )
     !
     ! !DESCRIPTION:
     ! Read/write CLM restart file.
@@ -58,10 +59,9 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds  ! bounds
+    type(bounds_type), intent(in) :: bounds          ! bounds
     character(len=*) , intent(in) :: file            ! output netcdf restart file
-    logical,           intent(in) :: nlend	     ! if at the end of the simulation
-    character(len=*) , intent(in) :: rdate           ! restart file time stamp for name
+    character(len=*) , intent(in), optional :: rdate ! restart file time stamp for name
     logical,           intent(in), optional :: noptr ! if should NOT write to the restart pointer file
     !
     ! !LOCAL VARIABLES:
@@ -106,10 +106,12 @@ contains
     call SLakeRest( ncid, flag='define' )
 
     if (use_lch4) then
-       call ch4Rest (ncid, flag='define')
+       call ch4Rest (bounds, ncid, flag='define')
     end if
 
-    call hist_restart_ncd (bounds, ncid, flag='define', rdate=rdate )
+    if (present(rdate)) then 
+       call hist_restart_ncd (bounds, ncid, flag='define', rdate=rdate )
+    end if
 
     call restFile_enddef( ncid )
 
@@ -130,7 +132,7 @@ contains
 
     call SLakeRest( ncid, flag='write' )
     if (use_lch4) then
-       call ch4Rest ( ncid, flag='write' )
+       call ch4Rest ( bounds, ncid, flag='write' )
     end if
 
     call accumulRest( ncid, flag='write' )
@@ -142,7 +144,7 @@ contains
     ! --------------------------------------------
     
     call restFile_close( ncid )
-    call restFile_closeRestart( file, nlend )
+    call restFile_closeRestart( file )
     
     ! Write restart pointer file
     
@@ -200,7 +202,7 @@ contains
     end if
 
     if (use_lch4) then
-       call ch4Rest( ncid, flag='read' )
+       call ch4Rest( bounds, ncid, flag='read' )
     end if
 
     call accumulRest( ncid, flag='read' )
@@ -228,8 +230,8 @@ contains
     ! Determine and obtain netcdf restart file
     !
     ! !USES:
-    use clm_varctl, only : caseid, finidat, nrevsn, nsrest, brnch_retain_casename, &
-                           nsrContinue, nsrBranch, nsrStartup
+    use clm_varctl, only : caseid, nrevsn, nsrest, brnch_retain_casename
+    use clm_varctl, only : nsrContinue, nsrBranch
     use fileutils , only : getfil
     !
     ! !ARGUMENTS:
@@ -270,20 +272,16 @@ contains
        ftest = 'xx.'//trim(file)
        status = index(trim(ftest),trim(ctest))
        if (status /= 0 .and. .not.(brnch_retain_casename)) then
-          write(iulog,*) 'Must change case name on branch run if ',&
-               'brnch_retain_casename namelist is not set'
-          write(iulog,*) 'previous case filename= ',trim(file),&
-               ' current case = ',trim(caseid), ' ctest = ',trim(ctest), &
-               ' ftest = ',trim(ftest)
-          call endrun()
+          if (masterproc) then
+             write(iulog,*) 'Must change case name on branch run if ',&
+                  'brnch_retain_casename namelist is not set'
+             write(iulog,*) 'previous case filename= ',trim(file),&
+                  ' current case = ',trim(caseid), &
+                  ' ctest = ',trim(ctest), &
+                  ' ftest = ',trim(ftest)
+          end if
+          call endrun(msg=errMsg(__FILE__, __LINE__)) 
        end if
-    end if
-
-    ! Initial run: 
-    ! Restart file pathname is obtained from namelist "finidat"
-
-    if (nsrest==nsrStartup) then
-       call getfil( finidat, file, 0 )
     end if
 
   end subroutine restFile_getfile
@@ -334,7 +332,7 @@ contains
   end subroutine restFile_read_pfile
 
   !-----------------------------------------------------------------------
-  subroutine restFile_closeRestart( file, nlend )
+  subroutine restFile_closeRestart( file )
     !
     ! !DESCRIPTION:
     ! Close restart file and write restart pointer file if
@@ -346,7 +344,6 @@ contains
     ! !ARGUMENTS:
     implicit none
     character(len=*) , intent(in) :: file  ! local output filename
-    logical,           intent(in) :: nlend
     !
     ! !CALLED FROM:
     ! subroutine restart in this module
@@ -587,6 +584,8 @@ contains
     call ncd_putatt(ncid, ncd_global, 'ilun_deep_lake'                          , 5)
     call ncd_putatt(ncid, ncd_global, 'ilun_wetland'                            , 6)
     call ncd_putatt(ncid, ncd_global, 'ilun_urban_tbd'                          , 7)
+    call ncd_putatt(ncid, ncd_global, 'ilun_urban_hd'                           , 8)
+    call ncd_putatt(ncid, ncd_global, 'ilun_urban_md'                           , 9)
 
   end subroutine restFile_dimset
 

@@ -39,8 +39,9 @@ contains
     ! Read parameters
     !
     ! !USES:
-    use ncdio_pio    , only : file_desc_t,ncd_io
+    use ncdio_pio    , only: file_desc_t,ncd_io
     use abortutils   , only: endrun
+    use shr_log_mod  , only: errMsg => shr_log_errMsg
 
     ! !ARGUMENTS:
     implicit none
@@ -56,7 +57,7 @@ contains
 
     tString='dnp'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNDecompParamsInst%dnp=tempr 
 
   end subroutine readCNDecompParams

@@ -309,7 +309,7 @@ contains
 
     if (fname == ' ') then
        write(iulog,*) trim(subname),' ERROR: blank field name not allowed'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     ! Ensure that new field doesn't already exist
@@ -317,7 +317,7 @@ contains
     do n = 1,nfmaster
        if (masterlist(n)%field%name == fname) then
           write(iulog,*) trim(subname),' ERROR:', fname, ' already on list'
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
     end do
 
@@ -331,7 +331,7 @@ contains
     if (nfmaster > max_flds) then
        write(iulog,*) trim(subname),' ERROR: too many fields for primary history file ', &
             '-- max_flds,nfmaster=', max_flds, nfmaster
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     ! Add field to master list
@@ -371,7 +371,7 @@ contains
        masterlist(f)%field%num1d = nump
     case default
        write(iulog,*) trim(subname),' ERROR: unknown 1d output type= ',type1d
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end select
 
     if (present(no_snow_behavior)) then
@@ -390,32 +390,32 @@ contains
 
   end subroutine masterlist_addfld
 
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
   subroutine hist_htapes_build ()
-!
-! !DESCRIPTION:
-! Initialize history file for initial or continuation run.  For example,
-! on an initial run, this routine initializes ``ntapes'' history files.
-! On a restart run, this routine only initializes history files declared
-! beyond what existed on the previous run.  Files which already existed on
-! the previous run have already been initialized (i.e. named and opened)
-! in routine restart\_history.  Loop over tapes and fields per tape setting
-! appropriate variables and calling appropriate routines
-!
-! !USES:
+    !
+    ! !DESCRIPTION:
+    ! Initialize history file for initial or continuation run.  For example,
+    ! on an initial run, this routine initializes ``ntapes'' history files.
+    ! On a restart run, this routine only initializes history files declared
+    ! beyond what existed on the previous run.  Files which already existed on
+    ! the previous run have already been initialized (i.e. named and opened)
+    ! in routine restart\_history.  Loop over tapes and fields per tape setting
+    ! appropriate variables and calling appropriate routines
+    !
+    ! !USES:
     use clm_time_manager, only: get_prev_time
     use clm_varcon      , only: secspday
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !LOCAL VARIABLES:
+    !
+    ! !LOCAL VARIABLES:
     integer :: i                   ! index
     integer :: ier                 ! error code
     integer :: t, f                ! tape, field indices
     integer :: day, sec            ! day and seconds from base date
     character(len=*),parameter :: subname = 'hist_htapes_build'
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     if (masterproc) then
        write(iulog,*)  trim(subname),' Initializing clm2 history files'
@@ -472,40 +472,30 @@ contains
 
   end subroutine hist_htapes_build
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: masterlist_make_active
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine masterlist_make_active (name, tape_index, avgflag)
-!
-! !DESCRIPTION:
-! Add a field to the default ``on'' list for a given history file.
-! Also change the default time averaging flag if requested.
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION:
+    ! Add a field to the default ``on'' list for a given history file.
+    ! Also change the default time averaging flag if requested.
+    !
+    ! !ARGUMENTS:
     implicit none
     character(len=*), intent(in) :: name          ! field name
     integer, intent(in) :: tape_index             ! history tape index
     character(len=1), intent(in), optional :: avgflag  ! time averaging flag
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer :: f            ! field index
     logical :: found        ! flag indicates field found in masterlist
     character(len=*),parameter :: subname = 'masterlist_make_active'
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! Check validity of input arguments
 
     if (tape_index > max_tapes) then
        write(iulog,*) trim(subname),' ERROR: tape index=', tape_index, ' is too big'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     if (present(avgflag)) then
@@ -513,7 +503,7 @@ contains
             avgflag /= 'A' .and. avgflag /= 'I' .and. &
             avgflag /= 'X' .and. avgflag /= 'M') then
           write(iulog,*) trim(subname),' ERROR: unknown averaging flag=', avgflag
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        endif
     end if
 
@@ -534,39 +524,27 @@ contains
     end do
     if (.not. found) then
        write(iulog,*) trim(subname),' ERROR: field=', name, ' not found'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
   end subroutine masterlist_make_active
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: masterlist_change_timeavg
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine masterlist_change_timeavg (t)
-!
-! !DESCRIPTION:
-! Override default history tape contents for a specific tape.
-! Copy the flag into the master field list.
-!
-! !USES:
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION:
+    ! Override default history tape contents for a specific tape.
+    ! Copy the flag into the master field list.
+    !
+    ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: t         ! history tape index
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     integer :: f                     ! field index
     character(len=1) :: avgflag      ! lcl equiv of hist_avgflag_pertape(t)
     character(len=*),parameter :: subname = 'masterlist_change_timeavg'
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     avgflag = hist_avgflag_pertape(t)
 
@@ -582,47 +560,35 @@ contains
           masterlist(f)%avgflag(t) = avgflag
        case default
           write(iulog,*) trim(subname),' ERROR: unknown avgflag=',avgflag
-          call endrun ()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end select
     end do
 
   end subroutine masterlist_change_timeavg
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: htapes_fieldlist
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine htapes_fieldlist()
-!
-! !DESCRIPTION:
-! Define the contents of each history file based on namelist
-! input for initial or branch run, and restart data if a restart run.
-! Use arrays fincl and fexcl to modify default history tape contents.
-! Then sort the result alphanumerically.
-!
-! !USES:
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION:
+    ! Define the contents of each history file based on namelist
+    ! input for initial or branch run, and restart data if a restart run.
+    ! Use arrays fincl and fexcl to modify default history tape contents.
+    ! Then sort the result alphanumerically.
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    integer :: t, f                ! tape, field indices
-    integer :: ff                  ! index into include, exclude and fprec list
+    !
+    ! !LOCAL VARIABLES:
+    integer :: t, f                         ! tape, field indices
+    integer :: ff                           ! index into include, exclude and fprec list
     character(len=max_namlen) :: name       ! field name portion of fincl (i.e. no avgflag separator)
     character(len=max_namlen) :: mastername ! name from masterlist field
-    character(len=1)  :: avgflag    ! averaging flag
-    character(len=1)  :: prec_acc   ! history buffer precision flag
-    character(len=1)  :: prec_wrt   ! history buffer write precision flag
-    type (history_entry) :: tmp     ! temporary used for swapping
+    character(len=1)  :: avgflag            ! averaging flag
+    character(len=1)  :: prec_acc           ! history buffer precision flag
+    character(len=1)  :: prec_wrt           ! history buffer write precision flag
+    type (history_entry) :: tmp             ! temporary used for swapping
     character(len=*),parameter :: subname = 'htapes_fieldlist'
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     ! Override averaging flag for all fields on a particular tape
     ! if namelist input so specifies
@@ -661,7 +627,7 @@ contains
           if (name /= mastername) then
              write(iulog,*) trim(subname),' ERROR: ', trim(name), ' in fincl(', f, ') ',&
                   'for history tape ',t,' not found'
-             call endrun()
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           end if
           f = f + 1
        end do
@@ -675,7 +641,7 @@ contains
           if (fexcl(f,t) /= mastername) then
              write(iulog,*) trim(subname),' ERROR: ', fexcl(f,t), ' in fexcl(', f, ') ', &
                   'for history tape ',t,' not found'
-             call endrun()
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           end if
           f = f + 1
        end do
@@ -739,7 +705,7 @@ contains
                 write(iulog,*) trim(subname),' ERROR: Duplicate field ', &
                    tape(t)%hlist(ff)%field%name, &
                    't,ff,name=',t,ff,tape(t)%hlist(ff+1)%field%name
-                call endrun()
+                call endrun(msg=errMsg(__FILE__, __LINE__))
 
              end if
           end do
@@ -773,7 +739,7 @@ contains
     do t = 1,ntapes
        if (tape(t)%nflds  ==  0) then
           write(iulog,*) trim(subname),' ERROR: Tape ',t,' is empty'
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
     end do
 
@@ -782,7 +748,7 @@ contains
 
     if (ntapes > max_tapes) then
        write(iulog,*) trim(subname),' ERROR: Too many history files declared, max_tapes=',max_tapes
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     ! Change 1d output per tape output flag if requested - only for history
@@ -796,7 +762,7 @@ contains
              write(iulog,*)'history tape ',t,' will have 1d output type of ',hist_type1d_pertape(t)
           case default
              write(iulog,*) trim(subname),' ERROR: unknown namelist type1d per tape=',hist_type1d_pertape(t)
-             call endrun()
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           end select
        end if
     end do
@@ -863,7 +829,7 @@ contains
     if (htapes_defined) then
        write(iulog,*) trim(subname),' ERROR: attempt to add field ', &
             masterlist(f)%field%name, ' after history files are set'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     tape(t)%nflds = tape(t)%nflds + 1
@@ -916,7 +882,7 @@ contains
           tape(t)%hlist(n)%field%type1d_out = namep
        case default
           write(iulog,*) trim(subname),' ERROR: unknown input hist_type1d_pertape= ', hist_type1d_pertape(t)
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end select
 
     endif
@@ -946,7 +912,7 @@ contains
        num1d_out = nump
     else
        write(iulog,*) trim(subname),' ERROR: incorrect value of type1d_out= ',type1d_out
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     tape(t)%hlist(n)%field%beg1d_out = beg1d_out
@@ -971,7 +937,7 @@ contains
        tape(t)%hlist(n)%avgflag = avgflag
     case default
        write(iulog,*) trim(subname),' ERROR: unknown avgflag=', avgflag
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end select
 
   end subroutine htape_addfld
@@ -1144,7 +1110,7 @@ contains
           end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end select
 
     else  ! Do not map to gridcell
@@ -1244,7 +1210,7 @@ contains
           end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end select
     end if
 
@@ -1418,7 +1384,7 @@ contains
           end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end select
 
     else  ! Do not map to gridcell
@@ -1524,7 +1490,7 @@ contains
           end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end select
     end if
 
@@ -1953,7 +1919,7 @@ contains
           else if (ifld == 6) then
              long_name='saturated hydraulic conductivity'; units = 'unitless'
           else
-             call endrun( subname//' ERROR: bad 3D time-constant field index' )
+             call endrun(msg=' ERROR: bad 3D time-constant field index'//errMsg(__FILE__, __LINE__))
           end if
           if (tape(t)%dov2xy) then
              if (ldomain%isgrid2d) then
@@ -1977,7 +1943,8 @@ contains
 
        allocate(histi(bounds%begc:bounds%endc,nlevgrnd), stat=ier)
        if (ier /= 0) then
-          write(iulog,*) trim(subname),' ERROR: allocation error for histi'; call endrun()
+          write(iulog,*) trim(subname),' ERROR: allocation error for histi'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
 
        ! Write time constant fields
@@ -1985,7 +1952,8 @@ contains
        if (tape(t)%dov2xy) then
           allocate(histo(bounds%begg:bounds%endg,nlevgrnd), stat=ier)
           if (ier /= 0) then
-             write(iulog,*)  trim(subname),' ERROR: allocation error for histo'; call endrun()
+             write(iulog,*)  trim(subname),' ERROR: allocation error for histo'
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           end if
        end if
 
@@ -2062,7 +2030,7 @@ contains
           else if (ifld == 2) then
              long_name='lake layer thickness'; units = 'm'
           else
-             call endrun( subname//' ERROR: bad 3D time-constant field index' )
+             call endrun(msg=' ERROR: bad 3D time-constant field index'//errMsg(__FILE__, __LINE__))
           end if
           if (tape(t)%dov2xy) then
              if (ldomain%isgrid2d) then
@@ -2086,7 +2054,8 @@ contains
 
        allocate(histil(bounds%begc:bounds%endc,nlevlak), stat=ier)
        if (ier /= 0) then
-          write(iulog,*) trim(subname),' ERROR: allocation error for histil'; call endrun()
+          write(iulog,*) trim(subname),' ERROR: allocation error for histil'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
 
        ! Write time constant fields
@@ -2094,7 +2063,8 @@ contains
        if (tape(t)%dov2xy) then
           allocate(histol(bounds%begg:bounds%endg,nlevlak), stat=ier)
           if (ier /= 0) then
-             write(iulog,*)  trim(subname),' ERROR: allocation error for histol'; call endrun()
+             write(iulog,*)  trim(subname),' ERROR: allocation error for histol'
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           end if
        end if
 
@@ -2480,7 +2450,8 @@ contains
           case ('M')
              avgstr = 'minimum'
           case default
-             write(iulog,*) trim(subname),' ERROR: unknown time averaging flag (avgflag)=',avgflag; call endrun()
+             write(iulog,*) trim(subname),' ERROR: unknown time averaging flag (avgflag)=',avgflag
+             call endrun(msg=errMsg(__FILE__, __LINE__))
           end select
 
           if (type1d_out == grlnd) then
@@ -2530,7 +2501,8 @@ contains
           if (num2d == 1) then
              allocate(hist1do(beg1d_out:end1d_out), stat=ier)
              if (ier /= 0) then
-                write(iulog,*) trim(subname),' ERROR: allocation'; call endrun()
+                write(iulog,*) trim(subname),' ERROR: allocation'
+                call endrun(msg=errMsg(__FILE__, __LINE__))
              end if
              hist1do(beg1d_out:end1d_out) = histo(beg1d_out:end1d_out,1)
           end if
@@ -2730,14 +2702,18 @@ contains
             rcarr(bounds%begc:bounds%endc),&
             rparr(bounds%begp:bounds%endp),&
             stat=ier)
-       if (ier /= 0) call endrun('hfields_1dinfo allocation error of rarrs')
+       if (ier /= 0) then
+          call endrun(msg=' hfields_1dinfo allocation error of rarrs'//errMsg(__FILE__, __LINE__))
+       end if
 
        allocate(&
             igarr(bounds%begg:bounds%endg),&
             ilarr(bounds%begl:bounds%endl),&
             icarr(bounds%begc:bounds%endc),&
             iparr(bounds%begp:bounds%endp),stat=ier)
-       if (ier /= 0) call endrun('hfields_1dinfo allocation error of iarrs')
+       if (ier /= 0) then
+          call endrun(msg=' hfields_1dinfo allocation error of iarrs'//errMsg(__FILE__, __LINE__))
+       end if
 
        ! Write gridcell info
 
@@ -3168,7 +3144,7 @@ contains
     !================================================
 
        if (.not. present(rdate)) then
-          call endrun('variable rdate must be present for writing restart files')
+          call endrun(msg=' variable rdate must be present for writing restart files'//errMsg(__FILE__, __LINE__))
        end if
 
        !
@@ -3467,8 +3443,9 @@ contains
        call ncd_inqdlen(ncid,dimid,ntapes_onfile, name='ntapes')
        if ( is_restart() .and. ntapes_onfile /= ntapes )then
           write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
-          call endrun( trim(subname)//' ERROR: number of ntapes different than on restart file!,'// &
-            ' you can NOT change history options on restart!' )
+          call endrun(msg=' ERROR: number of ntapes different than on restart file!,'// &
+               ' you can NOT change history options on restart!' //&
+               errMsg(__FILE__, __LINE__))
        end if
        if ( is_restart() .and. ntapes > 0 )then
           call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
@@ -3514,8 +3491,9 @@ contains
              call ncd_io('nflds',   nflds_onfile, 'read', ncid_hist(t) )
              if ( nflds_onfile /= tape(t)%nflds )then
                 write(iulog,*) 'nflds = ', tape(t)%nflds, ' nflds_onfile = ', nflds_onfile
-                call endrun( trim(subname)//' ERROR: number of fields different than on restart file!,'// &
-                  ' you can NOT change history options on restart!' )
+                call endrun(msg=' ERROR: number of fields different than on restart file!,'// &
+                     ' you can NOT change history options on restart!' //&
+                     errMsg(__FILE__, __LINE__))
              end if
              call ncd_io('ntimes',  tape(t)%ntimes, 'read', ncid_hist(t) )
              call ncd_io('nhtfrq',  tape(t)%nhtfrq, 'read', ncid_hist(t) )
@@ -3592,7 +3570,7 @@ contains
                    end1d_out = bounds%endp
                 case default
                    write(iulog,*) trim(subname),' ERROR: read unknown 1d output type=',trim(type1d_out)
-                   call endrun ()
+                   call endrun(msg=errMsg(__FILE__, __LINE__))
                 end select
 
                 tape(t)%hlist(f)%field%num1d_out = num1d_out
@@ -3605,7 +3583,7 @@ contains
                           stat=status)
                 if (status /= 0) then
                    write(iulog,*) trim(subname),' ERROR: allocation error for hbuf,nacs at t,f=',t,f
-                   call endrun()
+                   call endrun(msg=errMsg(__FILE__, __LINE__))
                 endif
                 tape(t)%hlist(f)%hbuf(:,:) = 0._r8
                 tape(t)%hlist(f)%nacs(:,:) = 0
@@ -3634,7 +3612,7 @@ contains
                    end1d = bounds%endp
                 case default
                    write(iulog,*) trim(subname),' ERROR: read unknown 1d type=',type1d
-                   call endrun ()
+                   call endrun(msg=errMsg(__FILE__, __LINE__))
                 end select
 
                 tape(t)%hlist(f)%field%num1d = num1d
@@ -3698,7 +3676,8 @@ contains
                    allocate(hbuf1d(beg1d_out:end1d_out), &
                             nacs1d(beg1d_out:end1d_out), stat=status)
                    if (status /= 0) then
-                      write(iulog,*) trim(subname),' ERROR: allocation'; call endrun()
+                      write(iulog,*) trim(subname),' ERROR: allocation'
+                      call endrun(msg=errMsg(__FILE__, __LINE__))
                    end if
                 
                    hbuf1d(beg1d_out:end1d_out) = hbuf(beg1d_out:end1d_out,1)
@@ -3749,7 +3728,8 @@ contains
                    allocate(hbuf1d(beg1d_out:end1d_out), &
                         nacs1d(beg1d_out:end1d_out), stat=status)
                    if (status /= 0) then
-                      write(iulog,*) trim(subname),' ERROR: allocation'; call endrun()
+                      write(iulog,*) trim(subname),' ERROR: allocation'
+                      call endrun(msg=errMsg(__FILE__, __LINE__))
                    end if
                    
                    call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name), &
@@ -3822,7 +3802,7 @@ contains
 
      if (length < max_namlen .or. length > max_namlen+2) then
         write(iulog,*) trim(subname),' ERROR: bad length=',length
-        call endrun()
+        call endrun(msg=errMsg(__FILE__, __LINE__))
      end if
 
      getname = ' '
@@ -3854,7 +3834,7 @@ contains
 
      if (length < max_namlen .or. length > max_namlen+2) then
         write(iulog,*) trim(subname),' ERROR: bad length=',length
-        call endrun()
+        call endrun(msg=errMsg(__FILE__, __LINE__))
      end if
 
      getflag = ' '
@@ -4126,7 +4106,7 @@ contains
     else
        write(iulog,*) trim(subname),' ERROR: must specify a valid pointer index,', &
           ' choices are [ptr_atm, ptr_lnd, ptr_gcell, ptr_lunit, ptr_col, ptr_pft] '
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
 
     end if
 
@@ -4264,14 +4244,14 @@ contains
        else
           write(iulog,*) trim(subname),' ERROR: 2d type =', trim(type2d), &
                ' only valid for maxpatch_glcmec > 0'
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
     case ('levsno')
        num2d = nlevsno
     case default
        write(iulog,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
           ' currently supported types for multi level fields are [levgrnd,levlak,numrad,levdcmp,glc_nec,levsno]'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     end select
 
     ! History buffer pointer
@@ -4391,7 +4371,7 @@ contains
     else
        write(iulog,*) trim(subname),' ERROR: must specify a valid pointer index,', &
           ' choices are ptr_atm, ptr_lnd, ptr_gcell, ptr_lunit, ptr_col, ptr_pft'
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
 
     end if
 
@@ -4426,75 +4406,56 @@ contains
 
   end subroutine hist_addfld2d
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: pointer_index
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   integer function pointer_index ()
-!
-! !DESCRIPTION:
-! Set the current pointer index and increment the value of the index.
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION:
+    ! Set the current pointer index and increment the value of the index.
+    !
+    ! !ARGUMENTS:
     implicit none
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
+    !
     integer, save :: lastindex = 1
     character(len=*),parameter :: subname = 'pointer_index'
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     pointer_index = lastindex
     lastindex = lastindex + 1
     if (lastindex > max_mapflds) then
        write(iulog,*) trim(subname),' ERROR: ',&
             ' lastindex = ',lastindex,' greater than max_mapflds= ',max_mapflds
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
 
   end function pointer_index
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: hist_add_subscript
-!
-! !INTERFACE:
+  !-----------------------------------------------------------------------
   subroutine hist_add_subscript(name, dim)
-!
-! !DESCRIPTION:
-! Add a history variable to the output history tape.
-!
-! !ARGUMENTS:
+    !
+    ! !DESCRIPTION:
+    ! Add a history variable to the output history tape.
+    !
+    ! !ARGUMENTS:
     implicit none
     character(len=*), intent(in) :: name ! name of subscript
     integer         , intent(in) :: dim  ! dimension of subscript
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    !
+    ! !LOCAL VARIABLES:
     character(len=*),parameter :: subname = 'hist_add_subscript'
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     num_subs = num_subs + 1
     if (num_subs > max_subs) then
        write(iulog,*) trim(subname),' ERROR: ',&
             ' num_subs = ',num_subs,' greater than max_subs= ',max_subs
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
     subs_name(num_subs) = name
     subs_dim(num_subs) =  dim
 
   end subroutine hist_add_subscript
 
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
   subroutine strip_null(str)
     character(len=*), intent(inout) :: str
@@ -4504,25 +4465,19 @@ contains
     end do
   end subroutine strip_null
   
-!------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: hist_do_disp
-!
-! !INTERFACE:
+  !------------------------------------------------------------------------
   subroutine hist_do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, rstwr, nlend)
-!
-! !DESCRIPTION:
-! Determine logic for closeing and/or disposing history file
-! Sets values for if_disphist, if_stop (arguments)
-! Remove history files unless this is end of run or
-! history file is not full.
-!
-! !USES:
-    use shr_sys_mod     , only : shr_sys_abort
+    !
+    ! !DESCRIPTION:
+    ! Determine logic for closeing and/or disposing history file
+    ! Sets values for if_disphist, if_stop (arguments)
+    ! Remove history files unless this is end of run or
+    ! history file is not full.
+    !
+    ! !USES:
     use clm_time_manager, only : is_last_step
-!
-! !ARGUMENTS:
+    !
+    ! !ARGUMENTS:
     implicit none
     integer, intent(in)  :: ntapes              !actual number of history tapes
     integer, intent(in)  :: hist_ntimes(ntapes) !current numbers of time samples on history tape
@@ -4532,16 +4487,11 @@ contains
     logical, intent(in)  :: rstwr
     logical, intent(in)  :: nlend	
     !
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
+    ! !LOCAL VARIABLES:
     integer :: t                   ! history tape index
     logical :: rest_now            ! temporary
     logical :: stop_now            ! temporary
-!------------------------------------------------------------------------
+    !------------------------------------------------------------------------
 
     rest_now = .false.
     stop_now = .false.

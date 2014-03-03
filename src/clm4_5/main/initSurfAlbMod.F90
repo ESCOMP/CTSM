@@ -11,8 +11,6 @@ module initSurfalbMod
   !
   ! !PUBLIC TYPES:
   implicit none
-  logical, public :: do_initsurfalb
-  ! save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: InitSurfAlb
@@ -45,9 +43,9 @@ contains
     use SurfaceAlbedoMod    , only : SurfaceAlbedo
     use CNEcosystemDynMod   , only : CNEcosystemDynNoLeaching, CNEcosystemDynLeaching
     use CNVegStructUpdateMod, only : CNVegStructUpdate
-    use STATICEcosysDynMod  , only : EcosystemDyn, interpMonthlyVeg
     use UrbanMod            , only : UrbanAlbedo
     use abortutils          , only : endrun
+    use SatellitePhenologyMod, only : SatellitePhenology, interpMonthlyVeg
     !
     ! !ARGUMENTS:
     implicit none
@@ -180,7 +178,7 @@ contains
        else
           ! this is the default call if CN not set
           
-          call EcosystemDyn(bounds, &
+          call SatellitePhenology(bounds, &
                filter(nc)%num_nolakep, filter(nc)%nolakep, doalb=.true.)
        end if
 

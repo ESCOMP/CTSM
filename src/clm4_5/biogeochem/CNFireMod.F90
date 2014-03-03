@@ -12,8 +12,9 @@ module CNFireMod
   ! !USES:
   use shr_kind_mod   , only: r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_const_mod  , only: SHR_CONST_PI,SHR_CONST_TKFRZ
-  use shr_strdata_mod, only: shr_strdata_type, shr_strdata_create, shr_strdata_print, &
-                             shr_strdata_advance
+  use shr_strdata_mod, only: shr_strdata_type, shr_strdata_create, shr_strdata_print
+  use shr_strdata_mod, only: shr_strdata_advance
+  use shr_log_mod    , only: errMsg => shr_log_errMsg
   use pft2colMod     , only: p2c
   use clm_varctl     , only: iulog
   use clm_varpar     , only: nlevdecomp, ndecomp_pools
@@ -1180,7 +1181,7 @@ contains
       if (nml_error == 0) then
          read(nu_nml, nml=popd_streams,iostat=nml_error)
          if (nml_error /= 0) then
-            call endrun(subname // ':: ERROR reading popd_streams namelist')
+            call endrun(msg='ERROR reading popd_streams namelist'//errMsg(__FILE__, __LINE__))
          end if
       end if
       close(nu_nml)
@@ -1334,7 +1335,7 @@ subroutine lnfm_init( bounds )
       if (nml_error == 0) then
          read(nu_nml, nml=light_streams,iostat=nml_error)
          if (nml_error /= 0) then
-            call endrun(subname // ':: ERROR reading light_streams namelist')
+            call endrun(msg='ERROR reading light_streams namelist'//errMsg(__FILE__, __LINE__))
          end if
       end if
       close(nu_nml)

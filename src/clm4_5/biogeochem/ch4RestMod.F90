@@ -16,7 +16,7 @@ module ch4RestMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine ch4Rest( ncid, flag )
+  subroutine ch4Rest( bounds, ncid, flag )
     !
     ! !DESCRIPTION:
     ! Read/Write biogeophysics information to/from restart file.
@@ -26,11 +26,13 @@ contains
     use clm_varctl, only : use_cn
     use ncdio_pio,  only : ncd_double 
     use pio,        only : file_desc_t
+    use decompMod,  only : bounds_type
     use restUtilMod
     !
     ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid ! netcdf id
-    character(len=*),  intent(in)    :: flag ! 'read' or 'write'
+    type(bounds_type), intent(in)    :: bounds ! bounds
+    type(file_desc_t), intent(inout) :: ncid   ! netcdf id
+    character(len=*),  intent(in)    :: flag   ! 'read' or 'write'
     !
     ! !LOCAL VARIABLES:
     logical :: readvar      ! determine if variable is on initial file
@@ -96,6 +98,8 @@ contains
             dim1name='column', &
             long_name='inundated fraction', units='', &
             readvar=readvar, interpinic_flag='interp', data=cch4%fsat_bef)
+    ! Set finundated to fsat_bef when reading in restart or finidat
+    cws%finundated(bounds%begc:bounds%endc) = cch4%fsat_bef(bounds%begc:bounds%endc)
 
     if (use_cn) then
 

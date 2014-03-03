@@ -5,10 +5,11 @@ module SnowHydrologyMod
   ! Calculate snow hydrology.
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varpar  , only: nlevsno
-  use clm_varctl  , only: iulog
-  use decompMod       , only: bounds_type
+  use shr_kind_mod , only: r8 => shr_kind_r8
+  use shr_log_mod  , only: errMsg => shr_log_errMsg
+  use clm_varpar   , only: nlevsno
+  use clm_varctl   , only: iulog
+  use decompMod    , only: bounds_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -2001,8 +2002,8 @@ contains
              if ( abs(dztot(c)) > 1.e-10_r8 .or. abs(snwicetot(c)) > 1.e-7_r8 .or. &
                   abs(snwliqtot(c)) > 1.e-7_r8 ) then
                 write(iulog,*)'Inconsistency in SnowDivision_Lake! c, remainders', &
-                              'dztot, snwicetot, snwliqtot = ',c,dztot(c),snwicetot(c),snwliqtot(c)
-                call endrun()
+                     'dztot, snwicetot, snwliqtot = ',c,dztot(c),snwicetot(c),snwliqtot(c)
+                call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
              end if
           end if
        end do

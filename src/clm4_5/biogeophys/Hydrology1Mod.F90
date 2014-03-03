@@ -10,11 +10,12 @@ module Hydrology1Mod
   ! (4) snow layer initialization if the snow accumulation exceeds 10 mm.
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varctl,   only: iulog
-  use abortutils,   only: endrun
-  use shr_sys_mod,  only: shr_sys_flush
-  use decompMod   , only : bounds_type
+  use shr_kind_mod , only: r8 => shr_kind_r8
+  use shr_log_mod  , only: errMsg => shr_log_errMsg
+  use clm_varctl   , only: iulog
+  use abortutils   , only: endrun
+  use shr_sys_mod  , only: shr_sys_flush
+  use decompMod    , only: bounds_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -67,7 +68,7 @@ contains
        if (ierr == 0) then
           read(unitn, clm_hydrology1_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(subname // ':: ERROR reading clm_hydrology1_inparm namelist')
+             call endrun(msg="ERROR reading clm_hydrology1_inparm namelist"//errmsg(__FILE__, __LINE__))
           end if
        end if
        call relavu( unitn )

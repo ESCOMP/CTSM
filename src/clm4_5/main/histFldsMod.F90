@@ -15,6 +15,7 @@ module histFldsMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public hist_initFlds ! Build master field list of all possible history file fields
+  public hist_addfld_decomp
   !------------------------------------------------------------------------
 
 contains
@@ -5877,15 +5878,16 @@ contains
 
   end subroutine hist_initFlds
 
-
+  !-----------------------------------------------------------------------
   subroutine hist_addfld_decomp (fname, type2d, units, avgflag, long_name, ptr_col, ptr_pft, default)
 
+    !
     ! !USES:
-    use clm_varpar, only : nlevdecomp_full, crop_prog
-
-    use histFileMod, only : hist_addfld1d, hist_addfld2d
-    use abortutils, only: endrun
-    use clm_varctl, only : iulog
+    use clm_varpar  , only : nlevdecomp_full, crop_prog
+    use histFileMod , only : hist_addfld1d, hist_addfld2d
+    use abortutils  , only : endrun
+    use clm_varctl  , only : iulog
+    use shr_log_mod , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
     implicit none
@@ -5897,8 +5899,10 @@ contains
     real(r8)        , optional, pointer    :: ptr_col(:,:)   ! pointer to column array
     real(r8)        , optional, pointer    :: ptr_pft(:,:)   ! pointer to pft array
     character(len=*), optional, intent(in) :: default        ! if set to 'inactive, field will not appear on primary tape
-
-    real(r8)        , pointer  :: ptr_1d(:)
+    !
+    ! !LOCAL VARIABLES:
+    real(r8), pointer  :: ptr_1d(:)
+    !-----------------------------------------------------------------------
 
     if (present(ptr_col)) then
 
@@ -5957,8 +5961,9 @@ contains
     else
        write(iulog, *) ' error: hist_addfld_decomp needs either pft or column level pointer'
        write(iulog, *) fname
-       call endrun()
+       call endrun(msg=errMsg(__FILE__, __LINE__))
     endif
+
   end subroutine hist_addfld_decomp
 
 

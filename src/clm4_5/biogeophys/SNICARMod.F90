@@ -438,7 +438,7 @@ contains
                 write (iulog,*) "column: ", c_idx, " level: ", i, " snl(c)= ", snl_lcl
                 write (iulog,*) "lat= ", lat_coord, " lon= ", lon_coord
                 write (iulog,*) "h2osno(c)= ", h2osno_lcl
-                call endrun()
+                call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
              endif
           enddo
 
@@ -909,8 +909,7 @@ contains
                    write(iulog,*) "column index: ", c_idx
                    write(iulog,*) "landunit type", lun%itype(l_idx)
                    write(iulog,*) "frac_sno: ", frac_sno(c_idx)
-                  
-                   call endrun()
+                   call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
                 else
                    flg_dover = 0
                 endif
@@ -923,11 +922,10 @@ contains
              if (abs(energy_sum) > 0.00001_r8) then
                 write (iulog,"(a,e12.6,a,i6,a,i6)") "SNICAR ERROR: Energy conservation error of : ", energy_sum, &
                              " at timestep: ", nstep, " at column: ", c_idx
-                call endrun()
+                call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
              endif
 
              albout_lcl(bnd_idx) = albedo
-
 
              ! Check that albedo is less than 1
              if (albout_lcl(bnd_idx) > 1.0) then
@@ -957,7 +955,7 @@ contains
                 write (iulog,*) "SNICAR STATS: snw_rds(-1)= ", snw_rds(c_idx,-1)
                 write (iulog,*) "SNICAR STATS: snw_rds(0)= ", snw_rds(c_idx,0)
                 
-                call endrun()
+                call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
              endif
              
           enddo   ! loop over wvl bands
@@ -1040,7 +1038,6 @@ contains
     use clm_time_manager , only : get_step_size, get_nstep
     use clm_varpar       , only : nlevsno
     use clm_varcon       , only : spval
-    use abortutils       , only : endrun
     use shr_const_mod    , only : SHR_CONST_RHOICE, SHR_CONST_PI
     !
     ! !ARGUMENTS:
@@ -1179,7 +1176,6 @@ contains
           ! change in snow effective radius, using best-fit parameters
           dr_fresh = snw_rds(c_idx,i)-snw_rds_min
           dr = (bst_drdt0*(bst_tau/(dr_fresh+bst_tau))**(1/bst_kappa)) * (dtime/3600)
-          
 
           !
           !**********  2. WET SNOW AGING  ***********

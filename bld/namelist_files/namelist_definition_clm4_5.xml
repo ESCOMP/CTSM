@@ -8,6 +8,27 @@
 <!-- CLM Namelist -->
 <!-- ========================================================================================  -->
 
+<entry id="finidat_interp_source" 
+       type="char*256" 
+       category="datasets"
+       input_pathname="abs" 
+       group="clm_inparm" 
+       valid_values="" >
+If non-blank, then interpinic will be called to interpolate finidat_interp_source and 
+create output file specified by finidat_interp_dest.
+For this to be used finidat MUST BE blank.
+</entry>
+
+<entry id="finidat_interp_dest" 
+       type="char*256" 
+       category="datasets"
+       input_pathname="abs" 
+       group="clm_inparm" 
+       valid_values="" >
+If finidat_interp_source is set to non-blank, then interpinic will be called 
+to interpolate finidat_interp_source and create output file finidat_interp_dest.
+</entry>
+
 <entry id="finidat" 
        type="char*256" 
        category="datasets"

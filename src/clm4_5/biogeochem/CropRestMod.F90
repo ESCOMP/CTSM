@@ -7,6 +7,7 @@ module CropRestMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
+  use shr_log_mod , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -433,9 +434,9 @@ contains
        if ( stmon_day /= rsmon_day )then
           write(iulog,formDate) 'Start date is: ', styr, stmon_day/100, &
                (stmon_day - stmon_day/100)
-          call endrun( trim(subname)// &
-               ' ERROR: For prognostic crop to work correctly, the start date (month and day)'// &
-               ' and the date on the restart file needs to match (years can be different)' )
+          call endrun(msg=' ERROR: For prognostic crop to work correctly, the start date (month and day)'// &
+               ' and the date on the restart file needs to match (years can be different)'//&
+               errMsg(__FILE__, __LINE__))
        end if
     end if
 

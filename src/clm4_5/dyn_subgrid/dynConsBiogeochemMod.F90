@@ -10,6 +10,7 @@ module dynConsBiogeochemMod
   use decompMod  , only : bounds_type
   use abortutils , only : endrun
   use clm_varctl , only : iulog, use_c13, use_c14
+  use shr_log_mod, only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -112,135 +113,167 @@ contains
     ! Allocate pft-level mass loss arrays
     allocate(dwt_leafc_seed(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_leafc_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_leafc_seed'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(dwt_leafn_seed(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_leafn_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_leafn_seed'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(dwt_deadstemc_seed(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_deadstemc_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadstemc_seed'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(dwt_deadstemn_seed(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_deadstemn_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadstemn_seed'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(dwt_frootc_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_frootc_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_frootc_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(dwt_livecrootc_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_livecrootc_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_livecrootc_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(dwt_deadcrootc_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_deadcrootc_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadcrootc_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(dwt_frootn_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_frootn_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_frootn_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(dwt_livecrootn_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_livecrootn_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_livecrootn_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(dwt_deadcrootn_to_litter(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_deadcrootn_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadcrootn_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(conv_cflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for conv_cflux'; call endrun()
+          write(iulog,*)subname,' allocation error for conv_cflux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(prod10_cflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod10_cflux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod10_cflux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(prod100_cflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod100_cflux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod100_cflux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(conv_nflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for conv_nflux'; call endrun()
+          write(iulog,*)subname,' allocation error for conv_nflux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(prod10_nflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod10_nflux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod10_nflux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(prod100_nflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod100_nflux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod100_nflux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
     if ( use_c13 ) then
        allocate(dwt_leafc13_seed(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_leafc13_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_leafc13_seed'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(dwt_deadstemc13_seed(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_deadstemc13_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadstemc13_seed'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(dwt_frootc13_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_frootc13_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_frootc13_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(dwt_livecrootc13_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_livecrootc13_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_livecrootc13_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(dwt_deadcrootc13_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_deadcrootc13_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadcrootc13_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(conv_c13flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for conv_c13flux'; call endrun()
+          write(iulog,*)subname,' allocation error for conv_c13flux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(prod10_c13flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod10_c13flux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod10_c13flux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(prod100_c13flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod100_c13flux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod100_c13flux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
     endif
     if ( use_c14 ) then
        allocate(dwt_leafc14_seed(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_leafc14_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_leafc14_seed'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(dwt_deadstemc14_seed(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_deadstemc14_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadstemc14_seed'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(dwt_frootc14_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_frootc14_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_frootc14_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(dwt_livecrootc14_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_livecrootc14_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_livecrootc14_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(dwt_deadcrootc14_to_litter(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for dwt_deadcrootc14_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadcrootc14_to_litter'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(conv_c14flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for conv_c14flux'; call endrun()
+          write(iulog,*)subname,' allocation error for conv_c14flux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(prod10_c14flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod10_c14flux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod10_c14flux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
        allocate(prod100_c14flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod100_c14flux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod100_c14flux'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
     endif
     

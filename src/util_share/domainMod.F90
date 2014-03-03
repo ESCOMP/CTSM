@@ -9,8 +9,8 @@ module domainMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_sys_mod , only : shr_sys_abort
   use spmdMod     , only : masterproc
-  use abortutils  , only : endrun
   use clm_varctl  , only : iulog
 !
 ! !PUBLIC TYPES:
@@ -108,8 +108,7 @@ contains
              domain%pftm(nb:ne),domain%area(nb:ne),domain%lonc(nb:ne), &
              domain%topo(nb:ne),domain%glcmask(nb:ne),stat=ier)
     if (ier /= 0) then
-       write(iulog,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
-       call endrun()
+       call shr_sys_abort('domain_init ERROR: allocate mask, frac, lat, lon, area ')
     endif
 
     if (present(clmlevel)) then
@@ -172,8 +171,7 @@ end subroutine domain_init
                   domain%lonc,domain%area,domain%pftm, &
                   domain%topo,domain%glcmask,stat=ier)
        if (ier /= 0) then
-          write(iulog,*) 'domain_clean ERROR: deallocate mask, frac, lat, lon, area '
-          call endrun()
+          call shr_sys_abort('domain_clean ERROR: deallocate mask, frac, lat, lon, area ')
        endif
     else
        if (masterproc) then

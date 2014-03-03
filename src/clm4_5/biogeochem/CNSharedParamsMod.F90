@@ -34,8 +34,9 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNParamsReadShared(ncid)
     !
-    use ncdio_pio    , only : file_desc_t,ncd_io
-    use abortutils   , only: endrun
+    use ncdio_pio   , only : file_desc_t,ncd_io
+    use abortutils  , only : endrun
+    use shr_log_mod , only : errMsg => shr_log_errMsg
     !
     implicit none
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
@@ -49,46 +50,46 @@ contains
     !
     ! netcdf read here
     !
-   tString='q10_mr'
-   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNParamsShareInst%Q10=tempr
+    tString='q10_mr'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    CNParamsShareInst%Q10=tempr
 
-   tString='minpsi_hr'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNParamsShareInst%minpsi=tempr 
-      
-   tString='cwd_fcel'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNParamsShareInst%cwd_fcel=tempr
+    tString='minpsi_hr'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    CNParamsShareInst%minpsi=tempr 
 
-   tString='cwd_flig'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNParamsShareInst%cwd_flig=tempr 
+    tString='cwd_fcel'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    CNParamsShareInst%cwd_fcel=tempr
 
-   tString='froz_q10'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNParamsShareInst%froz_q10=tempr   
-   
-   tString='decomp_depth_efolding'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNParamsShareInst%decomp_depth_efolding=tempr  
+    tString='cwd_flig'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    CNParamsShareInst%cwd_flig=tempr 
 
-   tString='mino2lim'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNParamsShareInst%mino2lim=tempr 
-   !CNParamsShareInst%mino2lim=0.2_r8 
+    tString='froz_q10'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    CNParamsShareInst%froz_q10=tempr   
 
-   tString='organic_max'
-   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-   CNParamsShareInst%organic_max=tempr
+    tString='decomp_depth_efolding'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    CNParamsShareInst%decomp_depth_efolding=tempr  
+
+    tString='mino2lim'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    CNParamsShareInst%mino2lim=tempr 
+    !CNParamsShareInst%mino2lim=0.2_r8 
+
+    tString='organic_max'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    CNParamsShareInst%organic_max=tempr
 
   end subroutine CNParamsReadShared
 

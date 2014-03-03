@@ -5,7 +5,8 @@ module CNRestMod
   !
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_abort
+  use abortutils  , only : endrun
+  use shr_log_mod , only : errMsg => shr_log_errMsg
   use spmdMod     , only : masterproc
   use clm_varctl  , only : iulog, override_bgc_restart_mismatch_dump
   use decompMod   , only : bounds_type
@@ -1431,7 +1432,8 @@ contains
                interpinic_flag='interp' , readvar=readvar, data=ptr1d)
        end if
        if (flag=='read' .and. .not. readvar) then
-          call shr_sys_abort( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
+          call endrun(msg='ERROR:: '//trim(varname)//' is required on an initialization dataset'//&
+               errMsg(__FILE__, __LINE__))
        end if
     end do
 
@@ -1450,7 +1452,8 @@ contains
             interpinic_flag='interp' , readvar=readvar, data=ptr1d)
     end if
     if (flag=='read' .and. .not. readvar) then
-       call shr_sys_abort( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
+       call endrun(msg='ERROR:: '//trim(varname)//' is required on an initialization dataset'//&
+            errMsg(__FILE__, __LINE__))
     end if
 
     ! ! nfixation_prof
@@ -1756,7 +1759,8 @@ contains
             interpinic_flag='interp' , readvar=readvar, data=ptr1d)
     end if
     if (flag=='read' .and. .not. readvar) then
-       call shr_sys_abort( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
+       call endrun(msg='ERROR::'//trim(varname)//' is required on an initialization dataset'//&
+            errMsg(__FILE__, __LINE__))
     end if
 
     ! decomposing N pools
@@ -1776,7 +1780,8 @@ contains
                interpinic_flag='interp' , readvar=readvar, data=ptr1d)
        end if
        if (flag=='read' .and. .not. readvar) then
-          call shr_sys_abort( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
+          call endrun(msg='ERROR:: '//trim(varname)//' is required on an initialization dataset'//&
+               errMsg(__FILE__, __LINE__))
        end if
     end do
 
@@ -1812,7 +1817,8 @@ contains
                interpinic_flag='interp', readvar=readvar, data=ptr1d)
        end if
        if (flag=='read' .and. .not. readvar) then
-          call shr_sys_abort( 'ERROR:: f_nit_vr'//' is required on an initialization dataset' )
+          call endrun(msg='ERROR:: f_nit_vr'//' is required on an initialization dataset'//&
+               errMsg(__FILE__, __LINE__))
        end if
 
        ! pot_f_nit_vr
@@ -1830,7 +1836,7 @@ contains
                interpinic_flag='interp', readvar=readvar, data=ptr1d)
        end if
        if (flag=='read' .and. .not. readvar) then
-          call shr_sys_abort( 'ERROR:: pot_f_nit_vr'//' is required on an initialization dataset' )
+          call endrun(msg= 'ERROR:: pot_f_nit_vr'//' is required on an initialization dataset' )
        end if
 
        ! smin_no3_vr
@@ -1848,7 +1854,7 @@ contains
                interpinic_flag='interp', readvar=readvar, data=ptr1d)
        end if
        if (flag=='read' .and. .not. readvar) then
-          call shr_sys_abort( 'ERROR:: smin_no3_vr'//' is required on an initialization dataset' )
+          call endrun(msg= 'ERROR:: smin_no3_vr'//' is required on an initialization dataset' )
        end if
 
        ! smin_nh4
@@ -1866,7 +1872,7 @@ contains
                interpinic_flag='interp', readvar=readvar, data=ptr1d)
        end if
        if (flag=='read' .and. .not. readvar) then
-          call shr_sys_abort( 'ERROR:: smin_nh4_vr'//' is required on an initialization dataset' )
+          call endrun(msg= 'ERROR:: smin_nh4_vr'//' is required on an initialization dataset' )
        end if
 
     end if
@@ -1943,7 +1949,8 @@ contains
                 write(iulog,*) 'If you really wish to proceed, then override by setting '
                 write(iulog,*) 'override_bgc_restart_mismatch_dump to .true. in the namelist'
                 if ( .not. override_bgc_restart_mismatch_dump ) then
-                   call shr_sys_abort( ' CNRest: Stopping. Decomposition cascade mismatch error.')
+                   call endrun(msg= ' CNRest: Stopping. Decomposition cascade mismatch error.'//&
+                        errMsg(__FILE__, __LINE__))
                 endif
              endif
           endif
@@ -1989,12 +1996,13 @@ contains
           if ( masterproc ) write(iulog,*) ' CNRest: taking SOM pools into AD spinup mode'
           enter_spinup = .true.
        else
-          call shr_sys_abort(' CNRest: error in entering/exiting spinup.  spinup_state ' &
-               // ' != restart_file_spinup_state, but do not know what to do')
+          call endrun(msg=' CNRest: error in entering/exiting spinup.  spinup_state ' &
+               // ' != restart_file_spinup_state, but do not know what to do'//&
+               errMsg(__FILE__, __LINE__))
        end if
        if (nstep .ge. 2) then
-          call shr_sys_abort(&
-               ' CNRest: error in entering/exiting spinup - should occur only when nstep = 1')
+          call endrun(msg=' CNRest: error in entering/exiting spinup - should occur only when nstep = 1'//&
+               errMsg(__FILE__, __LINE__))
        endif
        do k = 1, ndecomp_pools
           if ( exit_spinup ) then

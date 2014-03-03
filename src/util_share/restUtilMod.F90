@@ -11,7 +11,8 @@ module restUtilMod
   use shr_kind_mod, only: r8=>shr_kind_r8, r4 => shr_kind_r4, i4=>shr_kind_i4
   use shr_sys_mod,  only: shr_sys_abort
   use spmdMod,      only: masterproc
-  use clm_varctl, only: iulog
+  use clm_varctl,   only: iulog
+  use clm_varcon,   only: spval, ispval
   use ncdio_pio
   use pio
   !
@@ -22,7 +23,7 @@ module restUtilMod
   !
   !-----------------------------------------------------------------------
 
-# 20 "restUtilMod.F90.in"
+# 21 "restUtilMod.F90.in"
   interface restartvar
      !TYPE text,int,double
      !DIMS 0,1,2
@@ -54,23 +55,23 @@ module restUtilMod
      module procedure restartvar_2d_double_bounds
   end interface restartvar
 
-  integer,parameter, public  :: iflag_interp = 1
-  integer,parameter, public  :: iflag_copy   = 2
-  integer,parameter, public  :: iflag_skip   = 3
-  integer,parameter, private :: iflag_noswitchdim = 0
-  integer,parameter, private :: iflag_switchdim   = 1
+  integer,parameter, public :: iflag_interp = 1
+  integer,parameter, public :: iflag_copy   = 2
+  integer,parameter, public :: iflag_skip   = 3
+  integer,parameter, public :: iflag_noswitchdim = 0
+  integer,parameter, public :: iflag_switchdim   = 1
 
   public :: restartvar
 
   private :: is_restart
 
-# 37 "restUtilMod.F90.in"
+# 38 "restUtilMod.F90.in"
 contains
 
   !-----------------------------------------------------------------------
   !DIMS 0
   !TYPE text,int,double
-# 42 "restUtilMod.F90.in"
+# 43 "restUtilMod.F90.in"
   subroutine restartvar_0d_text(&
        ncid, flag, varname, xtype, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -137,18 +138,23 @@ contains
        end if
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
-       end if
-       if (present(nvalid_range)) then
-          status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if ( xtype == ncd_log )then
           status = PIO_put_att(ncid,varid,'flag_values',     (/0, 1/) )
@@ -168,11 +174,11 @@ contains
        if (.not. readvar .and. is_restart()) call shr_sys_abort()
     end if
 
-# 139 "restUtilMod.F90.in"
+# 145 "restUtilMod.F90.in"
   end subroutine restartvar_0d_text
   !DIMS 0
   !TYPE text,int,double
-# 42 "restUtilMod.F90.in"
+# 43 "restUtilMod.F90.in"
   subroutine restartvar_0d_int(&
        ncid, flag, varname, xtype, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -239,18 +245,23 @@ contains
        end if
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
-       end if
-       if (present(nvalid_range)) then
-          status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if ( xtype == ncd_log )then
           status = PIO_put_att(ncid,varid,'flag_values',     (/0, 1/) )
@@ -270,11 +281,11 @@ contains
        if (.not. readvar .and. is_restart()) call shr_sys_abort()
     end if
 
-# 139 "restUtilMod.F90.in"
+# 145 "restUtilMod.F90.in"
   end subroutine restartvar_0d_int
   !DIMS 0
   !TYPE text,int,double
-# 42 "restUtilMod.F90.in"
+# 43 "restUtilMod.F90.in"
   subroutine restartvar_0d_double(&
        ncid, flag, varname, xtype, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -341,18 +352,23 @@ contains
        end if
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
-       end if
-       if (present(nvalid_range)) then
-          status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if ( xtype == ncd_log )then
           status = PIO_put_att(ncid,varid,'flag_values',     (/0, 1/) )
@@ -372,13 +388,13 @@ contains
        if (.not. readvar .and. is_restart()) call shr_sys_abort()
     end if
 
-# 139 "restUtilMod.F90.in"
+# 145 "restUtilMod.F90.in"
   end subroutine restartvar_0d_double
 
   !-----------------------------------------------------------------------
   !DIMS 1,2
   !TYPE text,int,double
-# 144 "restUtilMod.F90.in"
+# 150 "restUtilMod.F90.in"
   subroutine restartvar_1d_text(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -455,17 +471,26 @@ contains
        if (present(units)) then
           call ncd_putatt(ncid, varid, 'units', trim(units))
        end if
+
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if (present(nvalid_range)) then
           status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
@@ -493,11 +518,11 @@ contains
        if (.not. readvar .and. is_restart()) call shr_sys_abort()
     end if
 
-# 258 "restUtilMod.F90.in"
+# 273 "restUtilMod.F90.in"
   end subroutine restartvar_1d_text
   !DIMS 1,2
   !TYPE text,int,double
-# 144 "restUtilMod.F90.in"
+# 150 "restUtilMod.F90.in"
   subroutine restartvar_2d_text(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -574,17 +599,26 @@ contains
        if (present(units)) then
           call ncd_putatt(ncid, varid, 'units', trim(units))
        end if
+
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if (present(nvalid_range)) then
           status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
@@ -612,11 +646,11 @@ contains
        if (.not. readvar .and. is_restart()) call shr_sys_abort()
     end if
 
-# 258 "restUtilMod.F90.in"
+# 273 "restUtilMod.F90.in"
   end subroutine restartvar_2d_text
   !DIMS 1,2
   !TYPE text,int,double
-# 144 "restUtilMod.F90.in"
+# 150 "restUtilMod.F90.in"
   subroutine restartvar_1d_int(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -693,17 +727,26 @@ contains
        if (present(units)) then
           call ncd_putatt(ncid, varid, 'units', trim(units))
        end if
+
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if (present(nvalid_range)) then
           status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
@@ -731,11 +774,11 @@ contains
        if (.not. readvar .and. is_restart()) call shr_sys_abort()
     end if
 
-# 258 "restUtilMod.F90.in"
+# 273 "restUtilMod.F90.in"
   end subroutine restartvar_1d_int
   !DIMS 1,2
   !TYPE text,int,double
-# 144 "restUtilMod.F90.in"
+# 150 "restUtilMod.F90.in"
   subroutine restartvar_2d_int(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -812,17 +855,26 @@ contains
        if (present(units)) then
           call ncd_putatt(ncid, varid, 'units', trim(units))
        end if
+
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if (present(nvalid_range)) then
           status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
@@ -850,11 +902,11 @@ contains
        if (.not. readvar .and. is_restart()) call shr_sys_abort()
     end if
 
-# 258 "restUtilMod.F90.in"
+# 273 "restUtilMod.F90.in"
   end subroutine restartvar_2d_int
   !DIMS 1,2
   !TYPE text,int,double
-# 144 "restUtilMod.F90.in"
+# 150 "restUtilMod.F90.in"
   subroutine restartvar_1d_double(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -931,17 +983,26 @@ contains
        if (present(units)) then
           call ncd_putatt(ncid, varid, 'units', trim(units))
        end if
+
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if (present(nvalid_range)) then
           status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
@@ -969,11 +1030,11 @@ contains
        if (.not. readvar .and. is_restart()) call shr_sys_abort()
     end if
 
-# 258 "restUtilMod.F90.in"
+# 273 "restUtilMod.F90.in"
   end subroutine restartvar_1d_double
   !DIMS 1,2
   !TYPE text,int,double
-# 144 "restUtilMod.F90.in"
+# 150 "restUtilMod.F90.in"
   subroutine restartvar_2d_double(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -1050,17 +1111,26 @@ contains
        if (present(units)) then
           call ncd_putatt(ncid, varid, 'units', trim(units))
        end if
+
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if (present(nvalid_range)) then
           status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
@@ -1088,12 +1158,12 @@ contains
        if (.not. readvar .and. is_restart()) call shr_sys_abort()
     end if
 
-# 258 "restUtilMod.F90.in"
+# 273 "restUtilMod.F90.in"
   end subroutine restartvar_2d_double
 
   !-----------------------------------------------------------------------
 
-# 262 "restUtilMod.F90.in"
+# 277 "restUtilMod.F90.in"
   subroutine restartvar_2d_double_bounds(ncid, flag, varname, xtype, &
        dim1name, dim2name, switchdim, lowerb2, upperb2, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -1183,15 +1253,23 @@ contains
        end if
        if (present(fill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, '_FillValue', spval, lxtype)
        end if
        if (present(missing_value)) then
           call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
+       else if (lxtype == ncd_double) then
+          call ncd_putatt(ncid, varid, 'missing_value', spval, lxtype)
        end if
        if (present(ifill_value)) then
           call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, '_FillValue', ispval, lxtype)
        end if
        if (present(imissing_value)) then
-          call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype )
+          call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
+       else if (lxtype == ncd_int) then
+          call ncd_putatt(ncid, varid, 'missing_value', ispval, lxtype)
        end if
        if (present(nvalid_range)) then
           status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
@@ -1221,12 +1299,12 @@ contains
        if (.not. readvar .and. is_restart()) call shr_sys_abort()
     end if
 
-# 389 "restUtilMod.F90.in"
+# 412 "restUtilMod.F90.in"
   end subroutine restartvar_2d_double_bounds
 
 
   !-----------------------------------------------------------------------
-# 393 "restUtilMod.F90.in"
+# 416 "restUtilMod.F90.in"
   logical function is_restart( )
     ! Determine if restart run
     use clm_varctl, only : nsrest, nsrContinue
@@ -1235,7 +1313,7 @@ contains
     else
        is_restart = .false.
     end if
-# 401 "restUtilMod.F90.in"
+# 424 "restUtilMod.F90.in"
   end function is_restart
   
 end module restUtilMod

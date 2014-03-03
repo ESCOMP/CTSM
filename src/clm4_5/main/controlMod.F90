@@ -11,58 +11,36 @@ module controlMod
   !
   ! !USES:
   use clm_varctl   
-  use shr_kind_mod , only : r8 => shr_kind_r8, SHR_KIND_CL
-  use shr_sys_mod, &
-       only : shr_sys_abort
-  use shr_nl_mod, only: &
-       shr_nl_find_group_name
-  use shr_const_mod , only: &
-       SHR_CONST_CDAY
-  use abortutils, only: &
-       endrun
-  use clm_varpar, only : &
-       maxpatch_pft, maxpatch_glcmec, more_vertlayers
-  use CanopyFluxesMod , only : &
-       perchroot, perchroot_alt
-  use SLakeCon, only : &
-       deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
-  use SurfaceAlbedoMod, only : &
-       albice
-  use CNAllocationMod , only : &
-       suplnitro
-  use CNNDynamicsMod, only : &
-       nfix_timeconst
-  use spmdMod, only : &
-       masterproc
-  use decompMod, only : &
-       clump_pproc
-  use histFileMod   , only : &
-       max_tapes, max_namlen, &
-       hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape, &
-       hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3, &
-       hist_fincl4, hist_fincl5, hist_fincl6, hist_fexcl1, hist_fexcl2, hist_fexcl3, &
-       hist_fexcl4, hist_fexcl5, hist_fexcl6
-  use UrbanMod, only: &
-       urban_hac, urban_traffic
-  use CNNitrifDenitrifMod, only: &
-       no_frozen_nitrif_denitrif
-  use CNC14DecayMod, only: &
-       use_c14_bombspike, atm_c14_filename
-  use SurfaceAlbedoMod, only: &
-       albice
-  use CNAllocationMod, only: &
-       suplnitro
-  use Hydrology1Mod, only: &
-       Hydrology1_readnl
-  use SoilHydrologyMod, only: &
-       SoilHydrology_readnl
-  use CNSoilLittVertTranspMod, only: &
-       som_adv_flux, max_depth_cryoturb
-  use CNVerticalProfileMod, only: &
-       exponential_rooting_profile, rootprof_exp, surfprof_exp, pftspecific_rootingprofile
-  use CNSharedParamsMod , only : anoxia_wtsat
-  use clm_varcon, only: h2osno_max
-
+  use shr_kind_mod            , only: r8 => shr_kind_r8, SHR_KIND_CL
+  use shr_nl_mod              , only: shr_nl_find_group_name
+  use shr_const_mod           , only: SHR_CONST_CDAY
+  use shr_log_mod             , only: errMsg => shr_log_errMsg
+  use abortutils              , only: endrun
+  use clm_varpar              , only: maxpatch_pft, maxpatch_glcmec, more_vertlayers
+  use CanopyFluxesMod         , only: perchroot, perchroot_alt
+  use SLakeCon                , only: deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
+  use SurfaceAlbedoMod        , only: albice
+  use CNAllocationMod         , only: suplnitro
+  use CNNDynamicsMod          , only: nfix_timeconst
+  use spmdMod                 , only: masterproc
+  use decompMod               , only: clump_pproc
+  use histFileMod             , only: max_tapes, max_namlen 
+  use histFileMod             , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
+  use histFileMod             , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
+  use histFileMod             , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fexcl1, hist_fexcl2, hist_fexcl3
+  use histFileMod             , only: hist_fexcl4, hist_fexcl5, hist_fexcl6
+  use UrbanMod                , only: urban_hac, urban_traffic
+  use CNNitrifDenitrifMod     , only: no_frozen_nitrif_denitrif
+  use CNC14DecayMod           , only: use_c14_bombspike, atm_c14_filename
+  use SurfaceAlbedoMod        , only: albice
+  use CNAllocationMod         , only: suplnitro
+  use Hydrology1Mod           , only: Hydrology1_readnl
+  use SoilHydrologyMod        , only: SoilHydrology_readnl
+  use CNSoilLittVertTranspMod , only: som_adv_flux, max_depth_cryoturb
+  use CNVerticalProfileMod    , only: exponential_rooting_profile, rootprof_exp 
+  use CNVerticalProfileMod    , only: surfprof_exp, pftspecific_rootingprofile  
+  use CNSharedParamsMod       , only: anoxia_wtsat
+  use clm_varcon              , only: h2osno_max
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -102,14 +80,15 @@ contains
 
     ! Error checking...
     if ( len_trim(NLFile) == 0 )then
-       call endrun( subname//' error: nlfilename entered is not set' )
+       call endrun(msg=' error: nlfilename entered is not set'//errMsg(__FILE__, __LINE__))
     end if
     inquire (file = trim(NLFile), exist = lexist)
     if ( .not. lexist )then
-       call endrun( subname//' error: NLfilename entered does NOT exist:'//trim(NLFile) )
+       call endrun(msg=' error: NLfilename entered does NOT exist:'//&
+            trim(NLFile)//errMsg(__FILE__, __LINE__))
     end if
     if ( len_trim(NLFile) > len(NLFilename) )then
-       call endrun( subname//' error: entered NLFile is too long' )
+       call endrun(msg=' error: entered NLFile is too long'//errMsg(__FILE__, __LINE__))
     end if
     ! Set the filename
     NLFilename = NLFile
@@ -149,7 +128,8 @@ contains
     ! CLM namelist settings
 
     namelist /clm_inparm / &
-         fatmlndfrc, finidat, nrevsn
+         fatmlndfrc, finidat, nrevsn, &
+         finidat_interp_source, finidat_interp_dest
 
     ! Input datasets
 
@@ -258,7 +238,7 @@ contains
        ! ----------------------------------------------------------------------
 
        if ( len_trim(NLFilename) == 0  )then
-          call endrun( subname//' error: nlfilename not set' )
+          call endrun(msg=' error: nlfilename not set'//errMsg(__FILE__, __LINE__))
        end if
        unitn = getavu()
        write(iulog,*) 'Read in clm_inparm namelist from: ', trim(NLFilename)
@@ -267,7 +247,7 @@ contains
        if (ierr == 0) then
           read(unitn, clm_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(subname // ':: ERROR reading clm_inparm namelist')
+             call endrun(msg='ERROR reading clm_inparm namelist'//errMsg(__FILE__, __LINE__))
           end if
        end if
        call relavu( unitn )
@@ -280,7 +260,7 @@ contains
 
        if (urban_traffic) then
           write(iulog,*)'Urban traffic fluxes are not implemented currently'
-          call endrun()
+          call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
 
        ! History and restart files
@@ -297,8 +277,9 @@ contains
        ! if the driver is a startup type
        if ( override_nsrest /= nsrest )then
            if ( override_nsrest /= nsrBranch .and. nsrest /= nsrStartup )then
-              call endrun( subname//' ERROR: can ONLY override clm start-type ' // &
-                           'to branch type and ONLY if driver is a startup type' )
+              call endrun(msg= ' ERROR: can ONLY override clm start-type ' // &
+                   'to branch type and ONLY if driver is a startup type'// &
+                   errMsg(__FILE__, __LINE__))
            end if
            call clm_varctl_set( nsrest_in=override_nsrest )
        end if
@@ -310,22 +291,23 @@ contains
        end if
 
        if (use_crop .and. (use_c13 .or. use_c14)) then
-          call shr_sys_abort( subname// &
-               ' ERROR:: CROP and C13/C14 can NOT be on at the same time' )
+          call endrun(msg=' ERROR:: CROP and C13/C14 can NOT be on at the same time'//&
+            errMsg(__FILE__, __LINE__))
        end if
        
        if (use_crop .and. .not. create_crop_landunit) then
-          call shr_sys_abort( subname// &
-               ' ERROR: prognostic crop PFTs require create_crop_landunit=.true.' )
+          call endrun(msg=' ERROR: prognostic crop PFTs require create_crop_landunit=.true.'//&
+            errMsg(__FILE__, __LINE__))
        end if
        
-       if (use_crop .and. fpftdyn /= ' ') &
-            call shr_sys_abort( subname// &
-            ' ERROR: prognostic crop is incompatible with transient landuse' )
+       if (use_crop .and. fpftdyn /= ' ') then
+          call endrun(msg=' ERROR: prognostic crop is incompatible with transient landuse'//&
+               errMsg(__FILE__, __LINE__))
+       end if
        
        if (.not. use_crop .and. irrigate) then
-          call shr_sys_abort( subname// &
-               ' ERROR: irrigate = .true. requires CROP model active.' )
+          call endrun(msg=' ERROR: irrigate = .true. requires CROP model active.'//&
+            errMsg(__FILE__, __LINE__))
        end if
        
        if (use_lch4 .and. use_vertsoilc) then 
@@ -362,27 +344,35 @@ contains
     ! ----------------------------------------------------------------------
 
     if (fpftdyn /= ' ' .and. create_crop_landunit) then
-       call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with create_crop_landunit option' )
+       call endrun(msg=' ERROR:: dynamic landuse is currently not supported with create_crop_landunit option'//&
+            errMsg(__FILE__, __LINE__))
     end if
     if (fpftdyn /= ' ' .and. use_cndv) then
-       call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with CNDV option' )
+       call endrun(msg=' ERROR:: dynamic landuse is currently not supported with CNDV option'//&
+            errMsg(__FILE__, __LINE__))
     end if
 
     ! Consistency settings for co2 type
     if (co2_type /= 'constant' .and. co2_type /= 'prognostic' .and. co2_type /= 'diagnostic') then
        write(iulog,*)'co2_type = ',co2_type,' is not supported'
-       call shr_sys_abort( subname//' ERROR:: choices are constant, prognostic or diagnostic' )
+       call endrun(msg=' ERROR:: choices are constant, prognostic or diagnostic'//&
+            errMsg(__FILE__, __LINE__))
     end if
 
     ! Check on run type
-    if (nsrest == iundef) call shr_sys_abort( subname//' ERROR:: must set nsrest' )
+    if (nsrest == iundef) then
+       call endrun(msg=' ERROR:: must set nsrest'//& 
+            errMsg(__FILE__, __LINE__))
+    end if
     if (nsrest == nsrBranch .and. nrevsn == ' ') then
-       call shr_sys_abort( subname//' ERROR: need to set restart data file name' )
+       call endrun(msg=' ERROR: need to set restart data file name'//&
+            errMsg(__FILE__, __LINE__))
     end if
 
     ! Consistency settings for co2_ppvm
     if ( (co2_ppmv <= 0.0_r8) .or. (co2_ppmv > 3000.0_r8) ) then
-       call shr_sys_abort( subname//' ERROR: co2_ppmv is out of a reasonable range' )
+       call endrun(msg=' ERROR: co2_ppmv is out of a reasonable range'//& 
+            errMsg(__FILE__, __LINE__))
     end if
 
     ! Consistency settings for nrevsn
@@ -390,14 +380,17 @@ contains
     if (nsrest == nsrStartup ) nrevsn = ' '
     if (nsrest == nsrContinue) nrevsn = 'set by restart pointer file file'
     if (nsrest /= nsrStartup .and. nsrest /= nsrContinue .and. nsrest /= nsrBranch ) then
-       call shr_sys_abort( subname//' ERROR: nsrest NOT set to a valid value' )
+       call endrun(msg=' ERROR: nsrest NOT set to a valid value'//&
+            errMsg(__FILE__, __LINE__))
     end if
 
     ! Single Column
     if ( single_column .and. (scmlat == rundef  .or. scmlon == rundef ) ) then
-       call shr_sys_abort( subname//' ERROR:: single column mode on -- but scmlat and scmlon are NOT set' )
+       call endrun(msg=' ERROR:: single column mode on -- but scmlat and scmlon are NOT set'//&
+            errMsg(__FILE__, __LINE__))
        if (.not. use_lch4 .and. anoxia) then
-          call shr_sys_abort( subname//'ERROR:: anoxia is turned on, but this currently requires turning on the CH4 submodel')
+          call endrun(msg='ERROR:: anoxia is turned on, but this currently requires turning on the CH4 submodel'//&
+            errMsg(__FILE__, __LINE__))
        end if
     end if
 
@@ -457,14 +450,16 @@ contains
     ! initial file variables
     call mpi_bcast (nrevsn, len(nrevsn), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (finidat, len(finidat), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (finidat_interp_source, len(finidat_interp_source), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (finidat_interp_dest, len(finidat_interp_dest), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsurdat, len(fsurdat), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmtopo, len(fatmtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (paramfile, len(paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (fsnowoptics,  len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fsnowoptics, len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fsnowaging,  len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
 
     ! Irrigation
     call mpi_bcast(irrigate, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -662,7 +657,8 @@ contains
        else if ( spinup_state .eq. 1 ) then
           write(iulog,*) '   model is currently in AD spinup mode.'
        else
-          call endrun( subname//' error: spinup_state can only have integer value of 0 or 1' )
+          call endrun(msg=' error: spinup_state can only have integer value of 0 or 1'//&
+               errMsg(__FILE__, __LINE__))
        end if
        
        write(iulog,*) '   override_bgc_restart_mismatch_dump                     : ', override_bgc_restart_mismatch_dump

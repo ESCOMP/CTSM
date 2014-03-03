@@ -1,4 +1,288 @@
 ===============================================================
+Tag name: clm4_5_66
+Originator(s): mvertens
+Date: Mon Mar  3 10:50:24 MST 2014
+One-line Summary: refactoring of initialization and introduction of run-time finidat interpolation
+
+Purpose of changes: refactoring of initialization and introduction of run-time finidat interpolation
+
+Completely rewrote clm_initialize to leverage new initialization scheme
+In the new scheme, cold start initialization is ALWAYS called and values
+are overwritten by either an appropriate finidat file OR by calling 
+finidat_interp to interplate finidat to the output resolution/mask.
+
+Requirements for tag:
+
+Test level of tag: regular, short, tools, build_namelist, doc
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+
+   1930 (MEGAN does not work correctly with prognostic crops on)
+   1147 (mkgriddata can't straddle over Greenwich)
+   1025 (SCM mode can NOT use a global finidat file)
+   1017 (SCM mode can NOT restart)
+    896 (T62 mode does not work)
+    701 (svn keyword)
+    452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+
+    NONE	 
+
+Describe any changes made to the namelist:
+
+   - ALL clm4.5 finidat files have been updated to contain new metadata that will enable the
+     online interpinic to operate on them. The time stamp on all new files has the date c140111.
+     The files have been created so that they are bit-for-bit compatible with the code base.
+   - The following new namelist variables have been added to the namelist_definition_clm4_5.xml file
+       - finidat_interp_source 
+         if non-blank, then interpinic will be called to interpolate finidat_interp_source and 
+         create output file specified by finidat_interp_dest.
+       - finidat_interp_dest  
+         if finidat_interp_source is set to non-blank, then interpinic will be called 
+         to interpolate finidat_interp_source and create output file finidat_interp_dest
+
+List any changes to the defaults for the boundary datasets:
+
+     None
+
+Describe any substantial timing or memory changes:
+
+     None	 
+	 
+Code reviewed by: 
+
+     mvertens, sacks
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+     None
+
+List all files eliminated:
+
+        The following file pairs were renamed and subsequently extensively modfified
+        Summaries of the modifications are below:
+
+        ------- New module initColdMod.F90 contains calls to initialize the cold start for
+        ------- the entire model. The cold start values are then overwritten with either
+        ------- an finidat file or an interpolation file using finidat_interp_source. 
+D       models/lnd/clm/src/clm4_5/main/mkarbinitMod.F90
+A       models/lnd/clm/src/clm4_5/main/initColdMod.F90
+
+        ------- Renamed file 
+D       models/lnd/clm/src/clm4_5/biogeochem/STATICEcosysDynMod.F90
+A       models/lnd/clm/src/clm4_5/biogeochem/SatellitePhenologyMod.F90
+
+        ------- Renamed file 
+D       models/lnd/clm/src/clm4_5/biogeochem/CNDVEcosystemDynIniMod.F90
+A       models/lnd/clm/src/clm4_5/biogeochem/CNDVInitMod.F90
+
+        ------- Renamed file, removed initch4, merged routines initTimeConst_ch4 and makearbinit_ch4
+        --------into new routine initColdCH4.Also removed almost all associate statements
+        ------- (but kept the intput/output documentation) and used the explicit clmtype definition.	 
+D       models/lnd/clm/src/clm4_5/biogeochem/initch4Mod.F90
+A       models/lnd/clm/src/clm4_5/biogeochem/ch4InitMod.F90
+
+        ------- Renamed and combined files
+        ------- Migrated all CN cold start initialization for both soil and
+        ------- special landuntis into new routine initColdCN in new module biogeochem/CNInitMod.
+D       models/lnd/clm/src/clm4_5/main/CNiniSpecial.F90
+D       models/lnd/clm/src/clm4_5/main/CNiniTimeVar.F90
+A       models/lnd/clm/src/clm4_5/biogeochem/CNInitMod.F90
+
+        ------- Renamed file and merged routines makearbinit and snow_depth2Lake
+        ------- into one new routine initColdSlake. Also removed almost all associate
+        ------- statements (but kept the intput/output documentation) and used the explict
+        ------- clmtype definition.	 
+A       models/lnd/clm/src/clm4_5/biogeophys/SLakeInitMod.F90
+D       models/lnd/clm/src/clm4_5/biogeophys/initSlakeMod.F90
+
+        ------- Renamed iniTimeConst, removed associate statements but kept
+        ------- the documentation of input/output and also explictly listed 
+        ------- full clmtype variables
+D       models/lnd/clm/src/clm4_5/main/iniTimeConst.F90
+A       models/lnd/clm/src/clm4_5/main/initTimeConstMod.F90
+
+List all files added and what they do:
+
+        ------- New run-time interpolation of input finidat to target resolution/mask
+        ------- using the new namelist variables finidat_interp_source and finidat_interp_dest
+A       models/lnd/clm/src/clm4_5/main/initInterp.F90
+
+        ------- Obtain/write global index space value for target point at given clmlevel
+A       models/lnd/clm/src/util_share/GetGlobalValuesMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+        ------- In all files, unless otherwise noted added call to errMsg(__FILE__,__LINE__) 
+        ------- and in some cases optional arguments of decomp_index and clmlevel also added
+
+        ------- See documentation for namelist changes above
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+        ------  Overloaded endrun subroutine to also print out global index infromation by 
+        ------ 	calling new GetGlobalWrite routine if optional arguments decomp_index and
+        ------ 	clm_level are passed in
+M       models/lnd/clm/src/util_share/abortutils.F90 
+
+        ------- Replaced missing value setting of huge(1) with ispval 
+M       models/lnd/clm/src/util_share/accumulMod.F90
+
+        ------- Replaced endrun with call to shr_sys_abort
+M       models/lnd/clm/src/util_share/domainMod.F90
+	
+        ------- Added in missing values and special values for variable metadata - this
+        ------- is needed needed by initInterp
+M       models/lnd/clm/src/util_share/restUtilMod.F90
+M       models/lnd/clm/src/util_share/restUtilMod.F90.in
+
+        ------- Completely rewrote clm_initialize to leverage new initialization scheme
+        ------- In the new scheme, cold start initialization is ALWAYS called and values
+        -------	are overwritten by either an appropriate finidat file OR by calling 
+        -------	finidat_interp to interplate finidat to the output resolution/mask.
+M       models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+
+        -------	Added new metadata and variables - include global indices for parent subgrid
+        -------	level(s) (i.e. column, landunit and gridcell for pfts)
+M       models/lnd/clm/src/clm4_5/main/subgridRestMod.F90
+
+        ------- Moved view_factor routine and associated variable from a separate routine
+        ------- in UrbanMod to part of the initTimeConstUrban subroutine in UrbanInitMod
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanMod.F90
+
+        ------- Removed vf_xx variables from restart file and also 
+        ------- removed do_initsurfalb variable
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+
+        ------- In all files, unless otherwise noted added call to errMsg(__FILE__,__LINE__) 
+        ------- and in some cases optional arguments of decomp_index and clmlevel also added
+M       models/lnd/clm/src/util_share/ncdio_pio.F90
+M       models/lnd/clm/src/util_share/ncdio_pio.F90.in
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNGapMortalityMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNitrifDenitrifMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CropRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNBalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNMRespMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/MEGANFactorsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNVerticalProfileMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4RestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCIsoFluxMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPrecisionControlMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSummaryMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DUSTMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPhenologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4varcon.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate3Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSharedParamsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/VOCEmissionMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNDynamicsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAllocationMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DryDepVelocity.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNEcosystemDynMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeBGCMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSoilLittVertTranspMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVEstablishmentMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeCNMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNC14DecayMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_varpar.F90
+M       models/lnd/clm/src/clm4_5/main/decompInitMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_glclnd.F90
+M       models/lnd/clm/src/clm4_5/main/accFldsMod.F90
+M       models/lnd/clm/src/clm4_5/main/ndepStreamMod.F90
+M       models/lnd/clm/src/clm4_5/main/histFileMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_atmlnd.F90
+M       models/lnd/clm/src/clm4_5/main/restFileMod.F90
+M       models/lnd/clm/src/clm4_5/main/controlMod.F90
+M       models/lnd/clm/src/clm4_5/main/initSurfAlbMod.F90
+M       models/lnd/clm/src/clm4_5/main/filterMod.F90
+M       models/lnd/clm/src/clm4_5/main/surfrdUtilsMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_varctl.F90
+M       models/lnd/clm/src/clm4_5/main/clm_driver.F90
+M       models/lnd/clm/src/clm4_5/main/subgridAveMod.F90
+M       models/lnd/clm/src/clm4_5/main/initGridCellsMod.F90
+M       models/lnd/clm/src/clm4_5/main/initSoilParVICMod.F90
+M       models/lnd/clm/src/clm4_5/main/pftvarcon.F90
+M       models/lnd/clm/src/clm4_5/main/surfrdMod.F90
+M       models/lnd/clm/src/clm4_5/main/decompMod.F90
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+M       models/lnd/clm/src/clm4_5/main/reweightMod.F90
+M       models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInputMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SnowHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/CLMVICMapMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SNICARMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SurfaceRadiationMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SurfaceAlbedoMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynLandunitAreaMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynTimeInfoMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynHarvestMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynFileMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynConsBiogeochemMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynPriorWeightsMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynpftFileMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarMod.F90.in
+
+CLM testing:
+
+  regular tests (aux_clm):
+
+    NOTE1: that all namelists compares where finidat was not blank will fail - since
+    new finidat files are used that have new metadata - BUT - the results are still bfb
+
+    yellowstone_intel  - OK
+       expected failures:
+    ERI_D.ne30_g16.ICLM45BGC.yellowstone_intel.clm-vrtlay
+    ERS_D.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay
+    PET_P15x2_Ly3.f10_f10.ICLM45BGCCROP.yellowstone_intel.clm-irrigOn_reduceOutput
+
+    yellowstone_pgi - OK
+       expected failures:
+    ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default
+    ERS.f09_g16.ICLM45VIC.yellowstone_pgi.clm-vrtlay
+    PET_P15x2_D.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-ciso
+
+    goldbach_nag   - OK
+
+    goldbach_intel - OK
+
+    goldbach_pgi   - OK
+        expected failures
+    ERS.f10_f10.I1850CLM45BGC.goldbach_pgi.clm-default
+    ERS_D.f10_f10.ICLM45BGC.goldbach_pgi.clm-ciso
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    NOTE1: all .h1 tests fail since there are new meta data fields for 
+           cols1d_active, pfts1d_active - and FILLDIFF is different
+
+    yellowstone_intel    OK
+    yellowstone_pgi      OK
+
+CLM tag used for the baseline comparisons: clm4_5_65
+
+Changes answers relative to baseline: No - bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_65
 Originator(s):  mvertens (Mariana Vertenstein,UCAR/CSEG,303-497-1349)
 Date: Tue Feb 25 13:45:38 MST 2014

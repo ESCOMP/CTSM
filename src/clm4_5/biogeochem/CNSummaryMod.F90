@@ -5,12 +5,13 @@ module CNSummaryMod
   ! Module for carbon and nitrogen summary calculations
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varcon, only: dzsoi_decomp, zisoi
-  use pftvarcon   , only: npcropmin
-  use clm_varpar  , only: crop_prog
-  use abortutils  , only: endrun
-  use decompMod   , only: bounds_type
+  use shr_kind_mod , only: r8 => shr_kind_r8
+  use clm_varcon   , only: dzsoi_decomp, zisoi
+  use pftvarcon    , only: npcropmin
+  use clm_varpar   , only: crop_prog
+  use abortutils   , only: endrun
+  use decompMod    , only: bounds_type
+  use shr_log_mod  , only: errMsg => shr_log_errMsg
   implicit none
   save
   private
@@ -92,7 +93,8 @@ contains
       pcisof_a => pc13f_a
       pcisos_a => pc13s_a
    case default
-      call endrun('CNCIsoSummaryMod: iso must be bulk, c13 or c14')
+      call endrun(msg='CNCIsoSummaryMod: iso must be bulk, c13 or c14'//&
+           errMsg(__FILE__, __LINE__))
    end select
 
    associate(& 

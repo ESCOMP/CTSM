@@ -11,6 +11,7 @@ module CNAllocationMod
   use abortutils  , only: endrun
   use clm_varctl  , only: use_c13, use_c14, use_nitrif_denitrif
   use decompMod   , only: bounds_type
+  use shr_log_mod , only: errMsg => shr_log_errMsg
   implicit none
   save
   private
@@ -82,42 +83,42 @@ contains
 
     tString='bdnr'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNAllocParamsInst%bdnr=tempr
 
     tString='dayscrecover'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNAllocParamsInst%dayscrecover=tempr
 
     tString='compet_plant_no3'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNAllocParamsInst%compet_plant_no3=tempr
 
     tString='compet_plant_nh4'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNAllocParamsInst%compet_plant_nh4=tempr
    
     tString='compet_decomp_no3'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNAllocParamsInst%compet_decomp_no3=tempr
 
     tString='compet_decomp_nh4'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNAllocParamsInst%compet_decomp_nh4=tempr
    
     tString='compet_denit'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNAllocParamsInst%compet_denit=tempr
 
     tString='compet_nit'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNAllocParamsInst%compet_nit=tempr   
 
   end subroutine readCNAllocParams
@@ -166,7 +167,8 @@ contains
     case default
        write(iulog,*) 'Supplemental Nitrogen flag (suplnitro) can only be: ', &
             suplnNon, ' or ', suplnAll
-       call endrun( trim(subname)//'ERROR: supplemental Nitrogen flag is not correct' )
+       call endrun(msg='ERROR: supplemental Nitrogen flag is not correct'//&
+            errMsg(__FILE__, __LINE__))
     end select
 
   end subroutine CNAllocationInit
@@ -267,142 +269,142 @@ contains
    endif
 
    associate(& 
-   ivt                       =>   pft%itype                     , & ! Input:  [integer (:)]  pft vegetation type                      
-   pcolumn                   =>   pft%column                    , & ! Input:  [integer (:)]  pft's column index                       
-   plandunit                 =>   pft%landunit                  , & ! Input:  [integer (:)]  index into landunit level quantities     
-   clandunit                 =>   col%landunit                  , & ! Input:  [integer (:)]  index into landunit level quantities     
-   pfti                      =>   col%pfti                      , & ! Input:  [integer (:)]  initial pft index in landunit            
-   itypelun                  =>    lun%itype                    , & ! Input:  [integer (:)]  landunit type                            
-   lgsf                      =>    pepv%lgsf                    , & ! Input:  [real(r8) (:)]  long growing season factor [0-1]        
-   xsmrpool                  =>    pcs%xsmrpool                 , & ! Input:  [real(r8) (:)]  (gC/m2) temporary photosynthate C pool  
-   retransn                  =>    pns%retransn                 , & ! Input:  [real(r8) (:)]  (gN/m2) plant pool of retranslocated N  
-   psnsun                    =>    pcf%psnsun                   , & ! Input:  [real(r8) (:)]  sunlit leaf-level photosynthesis (umol CO2 /m**2/ s)
-   psnsha                    =>    pcf%psnsha                   , & ! Input:  [real(r8) (:)]  shaded leaf-level photosynthesis (umol CO2 /m**2/ s)
-   laisun                    =>    pps%laisun                   , & ! Input:  [real(r8) (:)]  sunlit projected leaf area index        
-   laisha                    =>    pps%laisha                   , & ! Input:  [real(r8) (:)]  shaded projected leaf area index        
-   leafc                     =>    pcs%leafc                    , & ! Input:  [real(r8) (:)]                                          
-   frootc                    =>    pcs%frootc                   , & ! Input:  [real(r8) (:)]                                          
-   livestemc                 =>    pcs%livestemc                , & ! Input:  [real(r8) (:)]                                          
-   leaf_mr                   =>    pcf%leaf_mr                  , & ! Input:  [real(r8) (:)]                                          
-   froot_mr                  =>    pcf%froot_mr                 , & ! Input:  [real(r8) (:)]                                          
-   livestem_mr               =>    pcf%livestem_mr              , & ! Input:  [real(r8) (:)]                                          
-   livecroot_mr              =>    pcf%livecroot_mr             , & ! Input:  [real(r8) (:)]                                          
-   grain_mr                  =>    pcf%grain_mr                 , & ! Input:  [real(r8) (:)]                                          
-   leaf_curmr                =>    pcf%leaf_curmr               , & ! Input:  [real(r8) (:)]                                          
-   froot_curmr               =>    pcf%froot_curmr              , & ! Input:  [real(r8) (:)]                                          
-   livestem_curmr            =>    pcf%livestem_curmr           , & ! Input:  [real(r8) (:)]                                          
-   livecroot_curmr           =>    pcf%livecroot_curmr          , & ! Input:  [real(r8) (:)]                                          
-   grain_curmr               =>    pcf%grain_curmr              , & ! Input:  [real(r8) (:)]                                          
-   leaf_xsmr                 =>    pcf%leaf_xsmr                , & ! Input:  [real(r8) (:)]                                          
-   froot_xsmr                =>    pcf%froot_xsmr               , & ! Input:  [real(r8) (:)]                                          
-   livestem_xsmr             =>    pcf%livestem_xsmr            , & ! Input:  [real(r8) (:)]                                          
-   livecroot_xsmr            =>    pcf%livecroot_xsmr           , & ! Input:  [real(r8) (:)]                                          
-   grain_xsmr                =>    pcf%grain_xsmr               , & ! Input:  [real(r8) (:)]                                          
-   sminn_vr                  =>    cns%sminn_vr                 , & ! Input:  [real(r8) (:,:)]  (gN/m3) soil mineral N                
-   woody                     =>    pftcon%woody                 , & ! Input:  [real(r8) (:)]  binary flag for woody lifeform (1=woody, 0=not woody)
-   froot_leaf                =>    pftcon%froot_leaf            , & ! Input:  [real(r8) (:)]  allocation parameter: new fine root C per new leaf C (gC/gC)
-   croot_stem                =>    pftcon%croot_stem            , & ! Input:  [real(r8) (:)]  allocation parameter: new coarse root C per new stem C (gC/gC)
-   stem_leaf                 =>    pftcon%stem_leaf             , & ! Input:  [real(r8) (:)]  allocation parameter: new stem c per new leaf C (gC/gC)
-   flivewd                   =>    pftcon%flivewd               , & ! Input:  [real(r8) (:)]  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-   leafcn                    =>    pftcon%leafcn                , & ! Input:  [real(r8) (:)]  leaf C:N (gC/gN)                        
-   frootcn                   =>    pftcon%frootcn               , & ! Input:  [real(r8) (:)]  fine root C:N (gC/gN)                   
-   livewdcn                  =>    pftcon%livewdcn              , & ! Input:  [real(r8) (:)]  live wood (phloem and ray parenchyma) C:N (gC/gN)
-   deadwdcn                  =>    pftcon%deadwdcn              , & ! Input:  [real(r8) (:)]  dead wood (xylem and heartwood) C:N (gC/gN)
-   fcur2                     =>    pftcon%fcur                  , & ! Input:  [real(r8) (:)]  allocation parameter: fraction of allocation that goes to currently displayed growth, remainder to storage
-   gddmaturity               =>    pps%gddmaturity              , & ! Input:  [real(r8) (:)]  gdd needed to harvest                   
-   huileaf                   =>    pps%huileaf                  , & ! Input:  [real(r8) (:)]  heat unit index needed from planting to leaf emergence
-   huigrain                  =>    pps%huigrain                 , & ! Input:  [real(r8) (:)]  same to reach vegetative maturity       
-   hui                       =>    pps%gddplant                 , & ! Input:  [real(r8) (:)]  =gdd since planting (gddplant)          
-   leafout                   =>    pps%gddtsoi                  , & ! Input:  [real(r8) (:)]  =gdd from top soil layer temperature    
-   croplive                  =>    pps%croplive                 , & ! Input:  [logical (:)]  flag, true if planted, not harvested     
-   peaklai                   =>    pps%peaklai                  , & ! Input:  [integer (:)]  1: max allowed lai; 0: not at max        
-   graincn                   =>    pftcon%graincn               , & ! Input:  [real(r8) (:)]  grain C:N (gC/gN)                       
-   fleafcn                   =>    pftcon%fleafcn               , & ! Input:  [real(r8) (:)]  leaf c:n during organ fill              
-   ffrootcn                  =>    pftcon%ffrootcn              , & ! Input:  [real(r8) (:)]  froot c:n during organ fill             
-   fstemcn                   =>    pftcon%fstemcn               , & ! Input:  [real(r8) (:)]  stem c:n during organ fill              
-   grain_flag                =>    pepv%grain_flag              , & ! InOut:  [real(r8) (:)]  1: grain fill stage; 0: not             
-   gpp                       =>    pepv%gpp                     , & ! InOut:  [real(r8) (:)]  GPP flux before downregulation (gC/m2/s)
-   availc                    =>    pepv%availc                  , & ! InOut:  [real(r8) (:)]  C flux available for allocation (gC/m2/s)
-   xsmrpool_recover          =>    pepv%xsmrpool_recover        , & ! InOut:  [real(r8) (:)]  C flux assigned to recovery of negative cpool (gC/m2/s)
-   c_allometry               =>    pepv%c_allometry             , & ! InOut:  [real(r8) (:)]  C allocation index (DIM)                
-   n_allometry               =>    pepv%n_allometry             , & ! InOut:  [real(r8) (:)]  N allocation index (DIM)                
-   plant_ndemand             =>    pepv%plant_ndemand           , & ! InOut:  [real(r8) (:)]  N flux required to support initial GPP (gN/m2/s)
-   tempsum_potential_gpp     =>    pepv%tempsum_potential_gpp   , & ! InOut:  [real(r8) (:)]  temporary annual sum of potential GPP   
-   tempmax_retransn          =>    pepv%tempmax_retransn        , & ! InOut:  [real(r8) (:)]  temporary annual max of retranslocated N pool (gN/m2)
-   annsum_potential_gpp      =>    pepv%annsum_potential_gpp    , & ! InOut:  [real(r8) (:)]  annual sum of potential GPP             
-   avail_retransn            =>    pepv%avail_retransn          , & ! InOut:  [real(r8) (:)]  N flux available from retranslocation pool (gN/m2/s)
-   annmax_retransn           =>    pepv%annmax_retransn         , & ! InOut:  [real(r8) (:)]  annual max of retranslocated N pool     
-   plant_nalloc              =>    pepv%plant_nalloc            , & ! InOut:  [real(r8) (:)]  total allocated N flux (gN/m2/s)        
-   plant_calloc              =>    pepv%plant_calloc            , & ! InOut:  [real(r8) (:)]  total allocated C flux (gC/m2/s)        
-   excess_cflux              =>    pepv%excess_cflux            , & ! InOut:  [real(r8) (:)]  C flux not allocated due to downregulation (gC/m2/s)
-   downreg                   =>    pepv%downreg                 , & ! InOut:  [real(r8) (:)]  fractional reduction in GPP due to N limitation (DIM)
-   annsum_npp                =>    pepv%annsum_npp              , & ! InOut:  [real(r8) (:)]  annual sum of NPP, for wood allocation  
-   cpool_to_xsmrpool         =>    pcf%cpool_to_xsmrpool        , & ! InOut:  [real(r8) (:)]                                          
-   psnsun_to_cpool           =>    pcf%psnsun_to_cpool          , & ! InOut:  [real(r8) (:)]                                          
-   psnshade_to_cpool         =>    pcf%psnshade_to_cpool        , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_leafc            =>    pcf%cpool_to_leafc           , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_leafc_storage    =>    pcf%cpool_to_leafc_storage   , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_frootc           =>    pcf%cpool_to_frootc          , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_frootc_storage   =>    pcf%cpool_to_frootc_storage  , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_livestemc        =>    pcf%cpool_to_livestemc       , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_livestemc_storage =>   pcf%cpool_to_livestemc_storage  , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_deadstemc         =>   pcf%cpool_to_deadstemc          , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_deadstemc_storage =>   pcf%cpool_to_deadstemc_storage  , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_livecrootc        =>   pcf%cpool_to_livecrootc         , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_livecrootc_storage=>   pcf%cpool_to_livecrootc_storage , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_deadcrootc        =>   pcf%cpool_to_deadcrootc         , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_deadcrootc_storage=>   pcf%cpool_to_deadcrootc_storage , & ! InOut:  [real(r8) (:)]                                          
-   cpool_to_gresp_storage    =>    pcf%cpool_to_gresp_storage   , & ! InOut:  [real(r8) (:)]  allocation to growth respiration storage (gC/m2/s)
-   cpool_to_grainc           =>    pcf%cpool_to_grainc          , & ! InOut:  [real(r8) (:)]  allocation to grain C (gC/m2/s)         
-   cpool_to_grainc_storage   =>    pcf%cpool_to_grainc_storage  , & ! InOut:  [real(r8) (:)]  allocation to grain C storage (gC/m2/s) 
-   npool_to_grainn           =>    pnf%npool_to_grainn          , & ! InOut:  [real(r8) (:)]  allocation to grain N (gN/m2/s)         
-   npool_to_grainn_storage   =>    pnf%npool_to_grainn_storage  , & ! InOut:  [real(r8) (:)]  allocation to grain N storage (gN/m2/s) 
-   retransn_to_npool         =>    pnf%retransn_to_npool        , & ! InOut:  [real(r8) (:)]  deployment of retranslocated N (gN/m2/s)
-   sminn_to_npool            =>    pnf%sminn_to_npool           , & ! InOut:  [real(r8) (:)]  deployment of soil mineral N uptake (gN/m2/s)
-   npool_to_leafn            =>    pnf%npool_to_leafn           , & ! InOut:  [real(r8) (:)]  allocation to leaf N (gN/m2/s)          
-   npool_to_leafn_storage    =>    pnf%npool_to_leafn_storage   , & ! InOut:  [real(r8) (:)]  allocation to leaf N storage (gN/m2/s)  
-   npool_to_frootn           =>    pnf%npool_to_frootn          , & ! InOut:  [real(r8) (:)]  allocation to fine root N (gN/m2/s)     
-   npool_to_frootn_storage   =>    pnf%npool_to_frootn_storage  , & ! InOut:  [real(r8) (:)]  allocation to fine root N storage (gN/m2/s)
-   npool_to_livestemn        =>    pnf%npool_to_livestemn       , & ! InOut:  [real(r8) (:)]                                          
-   npool_to_livestemn_storage=>    pnf%npool_to_livestemn_storage , & ! InOut:  [real(r8) (:)]                                          
-   npool_to_deadstemn        =>    pnf%npool_to_deadstemn         , & ! InOut:  [real(r8) (:)]                                          
-   npool_to_deadstemn_storage=>    pnf%npool_to_deadstemn_storage , & ! InOut:  [real(r8) (:)]                                          
-   npool_to_livecrootn       =>    pnf%npool_to_livecrootn        , & ! InOut:  [real(r8) (:)]                                          
-   npool_to_livecrootn_storage=>   pnf%npool_to_livecrootn_storage, & ! InOut:  [real(r8) (:)]                                          
-   npool_to_deadcrootn       =>    pnf%npool_to_deadcrootn        , & ! InOut:  [real(r8) (:)]                                          
-   npool_to_deadcrootn_storage=>   pnf%npool_to_deadcrootn_storage, & ! InOut:  [real(r8) (:)]                                          
-   leafn_to_retransn         =>    pnf%leafn_to_retransn        , & ! Output: [real(r8) (:)]                                          
-   frootn_to_retransn        =>    pnf%frootn_to_retransn       , & ! Output: [real(r8) (:)]                                          
-   livestemn_to_retransn     =>    pnf%livestemn_to_retransn    , & ! Output: [real(r8) (:)]                                          
-   fpg                       =>    cps%fpg                      , & ! InOut:  [real(r8) (:)]  fraction of potential gpp (no units)    
-   potential_immob           =>    cnf%potential_immob          , & ! InOut:  [real(r8) (:)]                                          
-   actual_immob              =>    cnf%actual_immob             , & ! InOut:  [real(r8) (:)]                                          
-   sminn_to_plant            =>    cnf%sminn_to_plant           , & ! InOut:  [real(r8) (:)]                                          
-   fpi                       =>    cps%fpi                      , & ! InOut:  [real(r8) (:)]  fraction of potential immobilization (no units)
-   fpi_vr                    =>    cps%fpi_vr                   , & ! InOut:  [real(r8) (:,:)]  fraction of potential immobilization (no units)
-   sminn_to_denit_excess_vr  =>    cnf%sminn_to_denit_excess_vr , & ! InOut:  [real(r8) (:,:)]                                        
-   smin_nh4_vr               =>    cns%smin_nh4_vr              , & ! InOut:  [real(r8) (:,:)]  (gN/m3) soil mineral NH4              
-   smin_no3_vr               =>    cns%smin_no3_vr              , & ! InOut:  [real(r8) (:,:)]  (gN/m3) soil mineral NO3              
-   pot_f_nit_vr              =>    cnf%pot_f_nit_vr             , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s) potential soil nitrification flux
-   pot_f_denit_vr            =>    cnf%pot_f_denit_vr           , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s) potential soil denitrification flux
-   f_nit_vr                  =>    cnf%f_nit_vr                 , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s) soil nitrification flux     
-   f_denit_vr                =>    cnf%f_denit_vr               , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s) soil denitrification flux   
-   actual_immob_no3_vr       =>    cnf%actual_immob_no3_vr      , & ! InOut:  [real(r8) (:,:)]                                        
-   actual_immob_nh4_vr       =>    cnf%actual_immob_nh4_vr      , & ! InOut:  [real(r8) (:,:)]                                        
-   smin_no3_to_plant_vr      =>    cnf%smin_no3_to_plant_vr     , & ! InOut:  [real(r8) (:,:)]                                        
-   smin_nh4_to_plant_vr      =>    cnf%smin_nh4_to_plant_vr     , & ! InOut:  [real(r8) (:,:)]                                        
-   n2_n2o_ratio_denit_vr     =>    cnf%n2_n2o_ratio_denit_vr    , & ! InOut:  [real(r8) (:,:)]  ratio of N2 to N2O production by denitrification [gN/gN]
-   f_n2o_denit_vr            =>    cnf%f_n2o_denit_vr           , & ! InOut:  [real(r8) (:,:)]  flux of N2O from denitrification [gN/m3/s]
-   f_n2o_nit_vr              =>    cnf%f_n2o_nit_vr             , & ! InOut:  [real(r8) (:,:)]  flux of N2O from nitrification [gN/m3/s]
-   supplement_to_sminn_vr    =>    cnf%supplement_to_sminn_vr   , & ! InOut:  [real(r8) (:,:)]                                        
-   sminn_to_plant_vr         =>    cnf%sminn_to_plant_vr        , & ! InOut:  [real(r8) (:,:)]                                        
-   nfixation_prof            =>    cps%nfixation_prof           , & ! InOut:  [real(r8) (:,:)]                                        
-   potential_immob_vr        =>    cnf%potential_immob_vr       , & ! InOut:  [real(r8) (:,:)]                                        
-   actual_immob_vr           =>    cnf%actual_immob_vr          , & ! InOut:  [real(r8) (:,:)]                                        
-   aleafi                    =>    pps%aleafi                   , & ! Input:  [real(r8) (:)]  saved allocation coefficient from phase 2
-   astemi                    =>    pps%astemi                   , & ! Input:  [real(r8) (:)]  saved allocation coefficient from phase 2
-   aleaf                     =>    pps%aleaf                    , & ! Input:  [real(r8) (:)]  leaf allocation coefficient             
-   astem                     =>    pps%astem                      & ! Input:  [real(r8) (:)]  stem allocation coefficient             
+   ivt                         =>   pft%itype                       , & ! Input:  [integer (:)]  pft vegetation type                      
+   pcolumn                     =>   pft%column                      , & ! Input:  [integer (:)]  pft's column index                       
+   plandunit                   =>   pft%landunit                    , & ! Input:  [integer (:)]  index into landunit level quantities     
+   clandunit                   =>   col%landunit                    , & ! Input:  [integer (:)]  index into landunit level quantities     
+   pfti                        =>   col%pfti                        , & ! Input:  [integer (:)]  initial pft index in landunit            
+   itypelun                    =>    lun%itype                      , & ! Input:  [integer (:)]  landunit type                            
+   lgsf                        =>    pepv%lgsf                      , & ! Input:  [real(r8) (:)]  long growing season factor [0-1]        
+   xsmrpool                    =>    pcs%xsmrpool                   , & ! Input:  [real(r8) (:)]  (gC/m2) temporary photosynthate C pool  
+   retransn                    =>    pns%retransn                   , & ! Input:  [real(r8) (:)]  (gN/m2) plant pool of retranslocated N  
+   psnsun                      =>    pcf%psnsun                     , & ! Input:  [real(r8) (:)]  sunlit leaf-level photosynthesis (umol CO2 /m**2/ s)
+   psnsha                      =>    pcf%psnsha                     , & ! Input:  [real(r8) (:)]  shaded leaf-level photosynthesis (umol CO2 /m**2/ s)
+   laisun                      =>    pps%laisun                     , & ! Input:  [real(r8) (:)]  sunlit projected leaf area index        
+   laisha                      =>    pps%laisha                     , & ! Input:  [real(r8) (:)]  shaded projected leaf area index        
+   leafc                       =>    pcs%leafc                      , & ! Input:  [real(r8) (:)]                                          
+   frootc                      =>    pcs%frootc                     , & ! Input:  [real(r8) (:)]                                          
+   livestemc                   =>    pcs%livestemc                  , & ! Input:  [real(r8) (:)]                                          
+   leaf_mr                     =>    pcf%leaf_mr                    , & ! Input:  [real(r8) (:)]                                          
+   froot_mr                    =>    pcf%froot_mr                   , & ! Input:  [real(r8) (:)]                                          
+   livestem_mr                 =>    pcf%livestem_mr                , & ! Input:  [real(r8) (:)]                                          
+   livecroot_mr                =>    pcf%livecroot_mr               , & ! Input:  [real(r8) (:)]                                          
+   grain_mr                    =>    pcf%grain_mr                   , & ! Input:  [real(r8) (:)]                                          
+   leaf_curmr                  =>    pcf%leaf_curmr                 , & ! Input:  [real(r8) (:)]                                          
+   froot_curmr                 =>    pcf%froot_curmr                , & ! Input:  [real(r8) (:)]                                          
+   livestem_curmr              =>    pcf%livestem_curmr             , & ! Input:  [real(r8) (:)]                                          
+   livecroot_curmr             =>    pcf%livecroot_curmr            , & ! Input:  [real(r8) (:)]                                          
+   grain_curmr                 =>    pcf%grain_curmr                , & ! Input:  [real(r8) (:)]                                          
+   leaf_xsmr                   =>    pcf%leaf_xsmr                  , & ! Input:  [real(r8) (:)]                                          
+   froot_xsmr                  =>    pcf%froot_xsmr                 , & ! Input:  [real(r8) (:)]                                          
+   livestem_xsmr               =>    pcf%livestem_xsmr              , & ! Input:  [real(r8) (:)]                                          
+   livecroot_xsmr              =>    pcf%livecroot_xsmr             , & ! Input:  [real(r8) (:)]                                          
+   grain_xsmr                  =>    pcf%grain_xsmr                 , & ! Input:  [real(r8) (:)]                                          
+   sminn_vr                    =>    cns%sminn_vr                   , & ! Input:  [real(r8) (:,:)]  (gN/m3) soil mineral N                
+   woody                       =>    pftcon%woody                   , & ! Input:  [real(r8) (:)]  binary flag for woody lifeform (1=woody, 0=not woody)
+   froot_leaf                  =>    pftcon%froot_leaf              , & ! Input:  [real(r8) (:)]  allocation parameter: new fine root C per new leaf C (gC/gC)
+   croot_stem                  =>    pftcon%croot_stem              , & ! Input:  [real(r8) (:)]  allocation parameter: new coarse root C per new stem C (gC/gC)
+   stem_leaf                   =>    pftcon%stem_leaf               , & ! Input:  [real(r8) (:)]  allocation parameter: new stem c per new leaf C (gC/gC)
+   flivewd                     =>    pftcon%flivewd                 , & ! Input:  [real(r8) (:)]  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
+   leafcn                      =>    pftcon%leafcn                  , & ! Input:  [real(r8) (:)]  leaf C:N (gC/gN)                        
+   frootcn                     =>    pftcon%frootcn                 , & ! Input:  [real(r8) (:)]  fine root C:N (gC/gN)                   
+   livewdcn                    =>    pftcon%livewdcn                , & ! Input:  [real(r8) (:)]  live wood (phloem and ray parenchyma) C:N (gC/gN)
+   deadwdcn                    =>    pftcon%deadwdcn                , & ! Input:  [real(r8) (:)]  dead wood (xylem and heartwood) C:N (gC/gN)
+   fcur2                       =>    pftcon%fcur                    , & ! Input:  [real(r8) (:)]  allocation parameter: fraction of allocation that goes to currently displayed growth, remainder to storage
+   gddmaturity                 =>    pps%gddmaturity                , & ! Input:  [real(r8) (:)]  gdd needed to harvest                   
+   huileaf                     =>    pps%huileaf                    , & ! Input:  [real(r8) (:)]  heat unit index needed from planting to leaf emergence
+   huigrain                    =>    pps%huigrain                   , & ! Input:  [real(r8) (:)]  same to reach vegetative maturity       
+   hui                         =>    pps%gddplant                   , & ! Input:  [real(r8) (:)]  =gdd since planting (gddplant)          
+   leafout                     =>    pps%gddtsoi                    , & ! Input:  [real(r8) (:)]  =gdd from top soil layer temperature    
+   croplive                    =>    pps%croplive                   , & ! Input:  [logical (:)]  flag, true if planted, not harvested     
+   peaklai                     =>    pps%peaklai                    , & ! Input:  [integer (:)]  1: max allowed lai; 0: not at max        
+   graincn                     =>    pftcon%graincn                 , & ! Input:  [real(r8) (:)]  grain C:N (gC/gN)                       
+   fleafcn                     =>    pftcon%fleafcn                 , & ! Input:  [real(r8) (:)]  leaf c:n during organ fill              
+   ffrootcn                    =>    pftcon%ffrootcn                , & ! Input:  [real(r8) (:)]  froot c:n during organ fill             
+   fstemcn                     =>    pftcon%fstemcn                 , & ! Input:  [real(r8) (:)]  stem c:n during organ fill              
+   grain_flag                  =>    pepv%grain_flag                , & ! InOut:  [real(r8) (:)]  1: grain fill stage; 0: not             
+   gpp                         =>    pepv%gpp                       , & ! InOut:  [real(r8) (:)]  GPP flux before downregulation (gC/m2/s)
+   availc                      =>    pepv%availc                    , & ! InOut:  [real(r8) (:)]  C flux available for allocation (gC/m2/s)
+   xsmrpool_recover            =>    pepv%xsmrpool_recover          , & ! InOut:  [real(r8) (:)]  C flux assigned to recovery of negative cpool (gC/m2/s)
+   c_allometry                 =>    pepv%c_allometry               , & ! InOut:  [real(r8) (:)]  C allocation index (DIM)                
+   n_allometry                 =>    pepv%n_allometry               , & ! InOut:  [real(r8) (:)]  N allocation index (DIM)                
+   plant_ndemand               =>    pepv%plant_ndemand             , & ! InOut:  [real(r8) (:)]  N flux required to support initial GPP (gN/m2/s)
+   tempsum_potential_gpp       =>    pepv%tempsum_potential_gpp     , & ! InOut:  [real(r8) (:)]  temporary annual sum of potential GPP   
+   tempmax_retransn            =>    pepv%tempmax_retransn          , & ! InOut:  [real(r8) (:)]  temporary annual max of retranslocated N pool (gN/m2)
+   annsum_potential_gpp        =>    pepv%annsum_potential_gpp      , & ! InOut:  [real(r8) (:)]  annual sum of potential GPP             
+   avail_retransn              =>    pepv%avail_retransn            , & ! InOut:  [real(r8) (:)]  N flux available from retranslocation pool (gN/m2/s)
+   annmax_retransn             =>    pepv%annmax_retransn           , & ! InOut:  [real(r8) (:)]  annual max of retranslocated N pool     
+   plant_nalloc                =>    pepv%plant_nalloc              , & ! InOut:  [real(r8) (:)]  total allocated N flux (gN/m2/s)        
+   plant_calloc                =>    pepv%plant_calloc              , & ! InOut:  [real(r8) (:)]  total allocated C flux (gC/m2/s)        
+   excess_cflux                =>    pepv%excess_cflux              , & ! InOut:  [real(r8) (:)]  C flux not allocated due to downregulation (gC/m2/s)
+   downreg                     =>    pepv%downreg                   , & ! InOut:  [real(r8) (:)]  fractional reduction in GPP due to N limitation (DIM)
+   annsum_npp                  =>    pepv%annsum_npp                , & ! InOut:  [real(r8) (:)]  annual sum of NPP, for wood allocation  
+   cpool_to_xsmrpool           =>    pcf%cpool_to_xsmrpool          , & ! InOut:  [real(r8) (:)]                                          
+   psnsun_to_cpool             =>    pcf%psnsun_to_cpool            , & ! InOut:  [real(r8) (:)]                                          
+   psnshade_to_cpool           =>    pcf%psnshade_to_cpool          , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_leafc              =>    pcf%cpool_to_leafc             , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_leafc_storage      =>    pcf%cpool_to_leafc_storage     , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_frootc             =>    pcf%cpool_to_frootc            , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_frootc_storage     =>    pcf%cpool_to_frootc_storage    , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_livestemc          =>    pcf%cpool_to_livestemc         , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_livestemc_storage  =>   pcf%cpool_to_livestemc_storage  , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_deadstemc          =>   pcf%cpool_to_deadstemc          , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_deadstemc_storage  =>   pcf%cpool_to_deadstemc_storage  , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_livecrootc         =>   pcf%cpool_to_livecrootc         , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_livecrootc_storage =>   pcf%cpool_to_livecrootc_storage , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_deadcrootc         =>   pcf%cpool_to_deadcrootc         , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_deadcrootc_storage =>   pcf%cpool_to_deadcrootc_storage , & ! InOut:  [real(r8) (:)]                                          
+   cpool_to_gresp_storage      =>    pcf%cpool_to_gresp_storage     , & ! InOut:  [real(r8) (:)]  allocation to growth respiration storage (gC/m2/s)
+   cpool_to_grainc             =>    pcf%cpool_to_grainc            , & ! InOut:  [real(r8) (:)]  allocation to grain C (gC/m2/s)         
+   cpool_to_grainc_storage     =>    pcf%cpool_to_grainc_storage    , & ! InOut:  [real(r8) (:)]  allocation to grain C storage (gC/m2/s) 
+   npool_to_grainn             =>    pnf%npool_to_grainn            , & ! InOut:  [real(r8) (:)]  allocation to grain N (gN/m2/s)         
+   npool_to_grainn_storage     =>    pnf%npool_to_grainn_storage    , & ! InOut:  [real(r8) (:)]  allocation to grain N storage (gN/m2/s) 
+   retransn_to_npool           =>    pnf%retransn_to_npool          , & ! InOut:  [real(r8) (:)]  deployment of retranslocated N (gN/m2/s)
+   sminn_to_npool              =>    pnf%sminn_to_npool             , & ! InOut:  [real(r8) (:)]  deployment of soil mineral N uptake (gN/m2/s)
+   npool_to_leafn              =>    pnf%npool_to_leafn             , & ! InOut:  [real(r8) (:)]  allocation to leaf N (gN/m2/s)          
+   npool_to_leafn_storage      =>    pnf%npool_to_leafn_storage     , & ! InOut:  [real(r8) (:)]  allocation to leaf N storage (gN/m2/s)  
+   npool_to_frootn             =>    pnf%npool_to_frootn            , & ! InOut:  [real(r8) (:)]  allocation to fine root N (gN/m2/s)     
+   npool_to_frootn_storage     =>    pnf%npool_to_frootn_storage    , & ! InOut:  [real(r8) (:)]  allocation to fine root N storage (gN/m2/s)
+   npool_to_livestemn          =>    pnf%npool_to_livestemn         , & ! InOut:  [real(r8) (:)]                                          
+   npool_to_livestemn_storage  =>    pnf%npool_to_livestemn_storage , & ! InOut:  [real(r8) (:)]                                          
+   npool_to_deadstemn          =>    pnf%npool_to_deadstemn         , & ! InOut:  [real(r8) (:)]                                          
+   npool_to_deadstemn_storage  =>    pnf%npool_to_deadstemn_storage , & ! InOut:  [real(r8) (:)]                                          
+   npool_to_livecrootn         =>    pnf%npool_to_livecrootn        , & ! InOut:  [real(r8) (:)]                                          
+   npool_to_livecrootn_storage =>   pnf%npool_to_livecrootn_storage , & ! InOut:  [real(r8) (:)]                                          
+   npool_to_deadcrootn         =>    pnf%npool_to_deadcrootn        , & ! InOut:  [real(r8) (:)]                                          
+   npool_to_deadcrootn_storage =>   pnf%npool_to_deadcrootn_storage , & ! InOut:  [real(r8) (:)]                                          
+   leafn_to_retransn           =>    pnf%leafn_to_retransn          , & ! Output: [real(r8) (:)]                                          
+   frootn_to_retransn          =>    pnf%frootn_to_retransn         , & ! Output: [real(r8) (:)]                                          
+   livestemn_to_retransn       =>    pnf%livestemn_to_retransn      , & ! Output: [real(r8) (:)]                                          
+   fpg                         =>    cps%fpg                        , & ! InOut:  [real(r8) (:)]  fraction of potential gpp (no units)    
+   potential_immob             =>    cnf%potential_immob            , & ! InOut:  [real(r8) (:)]                                          
+   actual_immob                =>    cnf%actual_immob               , & ! InOut:  [real(r8) (:)]                                          
+   sminn_to_plant              =>    cnf%sminn_to_plant             , & ! InOut:  [real(r8) (:)]                                          
+   fpi                         =>    cps%fpi                        , & ! InOut:  [real(r8) (:)]  fraction of potential immobilization (no units)
+   fpi_vr                      =>    cps%fpi_vr                     , & ! InOut:  [real(r8) (:,:)]  fraction of potential immobilization (no units)
+   sminn_to_denit_excess_vr    =>    cnf%sminn_to_denit_excess_vr   , & ! InOut:  [real(r8) (:,:)]                                        
+   smin_nh4_vr                 =>    cns%smin_nh4_vr                , & ! InOut:  [real(r8) (:,:)]  (gN/m3) soil mineral NH4              
+   smin_no3_vr                 =>    cns%smin_no3_vr                , & ! InOut:  [real(r8) (:,:)]  (gN/m3) soil mineral NO3              
+   pot_f_nit_vr                =>    cnf%pot_f_nit_vr               , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s) potential soil nitrification flux
+   pot_f_denit_vr              =>    cnf%pot_f_denit_vr             , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s) potential soil denitrification flux
+   f_nit_vr                    =>    cnf%f_nit_vr                   , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s) soil nitrification flux     
+   f_denit_vr                  =>    cnf%f_denit_vr                 , & ! InOut:  [real(r8) (:,:)]  (gN/m3/s) soil denitrification flux   
+   actual_immob_no3_vr         =>    cnf%actual_immob_no3_vr        , & ! InOut:  [real(r8) (:,:)]                                        
+   actual_immob_nh4_vr         =>    cnf%actual_immob_nh4_vr        , & ! InOut:  [real(r8) (:,:)]                                        
+   smin_no3_to_plant_vr        =>    cnf%smin_no3_to_plant_vr       , & ! InOut:  [real(r8) (:,:)]                                        
+   smin_nh4_to_plant_vr        =>    cnf%smin_nh4_to_plant_vr       , & ! InOut:  [real(r8) (:,:)]                                        
+   n2_n2o_ratio_denit_vr       =>    cnf%n2_n2o_ratio_denit_vr      , & ! InOut:  [real(r8) (:,:)]  ratio of N2 to N2O production by denitrification [gN/gN]
+   f_n2o_denit_vr              =>    cnf%f_n2o_denit_vr             , & ! InOut:  [real(r8) (:,:)]  flux of N2O from denitrification [gN/m3/s]
+   f_n2o_nit_vr                =>    cnf%f_n2o_nit_vr               , & ! InOut:  [real(r8) (:,:)]  flux of N2O from nitrification [gN/m3/s]
+   supplement_to_sminn_vr      =>    cnf%supplement_to_sminn_vr     , & ! InOut:  [real(r8) (:,:)]                                        
+   sminn_to_plant_vr           =>    cnf%sminn_to_plant_vr          , & ! InOut:  [real(r8) (:,:)]                                        
+   nfixation_prof              =>    cps%nfixation_prof             , & ! InOut:  [real(r8) (:,:)]                                        
+   potential_immob_vr          =>    cnf%potential_immob_vr         , & ! InOut:  [real(r8) (:,:)]                                        
+   actual_immob_vr             =>    cnf%actual_immob_vr            , & ! InOut:  [real(r8) (:,:)]                                        
+   aleafi                      =>    pps%aleafi                     , & ! Input:  [real(r8) (:)]  saved allocation coefficient from phase 2
+   astemi                      =>    pps%astemi                     , & ! Input:  [real(r8) (:)]  saved allocation coefficient from phase 2
+   aleaf                       =>    pps%aleaf                      , & ! Input:  [real(r8) (:)]  leaf allocation coefficient             
+   astem                       =>    pps%astem                        & ! Input:  [real(r8) (:)]  stem allocation coefficient             
    )
 
    ! set time steps

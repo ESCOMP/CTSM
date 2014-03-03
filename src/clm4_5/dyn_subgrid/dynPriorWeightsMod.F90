@@ -10,7 +10,8 @@ module dynPriorWeightsMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type, BOUNDS_LEVEL_PROC
   use shr_assert_mod , only : shr_assert
-  use shr_sys_mod    , only : shr_sys_abort
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use abortutils     , only : endrun
 
   implicit none
   save
@@ -56,7 +57,7 @@ contains
     
     allocate(constructor%pwtcol(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-       call shr_sys_abort(subname//' allocation error for pwtcol')
+       call endrun(msg=' allocation error for pwtcol'//errMsg(__FILE__, __LINE__))
     end if
   end function constructor
 

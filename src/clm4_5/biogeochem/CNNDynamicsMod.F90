@@ -52,18 +52,9 @@ contains
     ! !DESCRIPTION:
     ! Initialize module variables
     !
-    ! !USES:
-
     ! !ARGUMENTS:
-
     implicit none
-
-    !
-    ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
-    
-    !
-    !   
 
     if (nfix_timeconst .eq. -1.2345_r8) then
        ! If nfix_timeconst is equal to the junk default value, then it
@@ -86,9 +77,10 @@ contains
     ! Read in parameters
     !
     ! !USES:
-    use ncdio_pio , only : file_desc_t,ncd_io
-    use abortutils   , only: endrun
-
+    use ncdio_pio   , only : file_desc_t,ncd_io
+    use abortutils  , only : endrun
+    use shr_log_mod , only : errMsg => shr_log_errMsg
+    !
     ! !ARGUMENTS:
     implicit none
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
@@ -101,19 +93,17 @@ contains
     character(len=100) :: tString ! temp. var for reading
     !-----------------------------------------------------------------------
     
-    !
-    !
     call CNNDynamicsInit()
 
     tString='sf_minn'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNNDynamicsParamsInst%sf=tempr
 
-     tString='sf_no3'
-     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-     if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
-     CNNDynamicsParamsInst%sf_no3=tempr
+    tString='sf_no3'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    CNNDynamicsParamsInst%sf_no3=tempr
    
   end subroutine readCNNDynamicsParams
 

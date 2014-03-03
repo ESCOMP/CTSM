@@ -626,7 +626,6 @@ contains
     real(r8) :: dum1,   dum2
 
     character(len=*), parameter :: subname = 'downscale_forcings'
-
     !-----------------------------------------------------------------------
 
     associate(& 
@@ -765,6 +764,7 @@ contains
     use clm_varctl   , only : iulog, glcmec_downscale_longwave
     use decompMod    , only : bounds_type
     use abortutils   , only : endrun
+    use shr_log_mod  , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
     implicit none
@@ -783,7 +783,6 @@ contains
     real(r8), dimension(bounds%begg : bounds%endg) :: newsum_lwrad_g ! weighted sum of column-level lwrad after normalization
 
     character(len=*), parameter :: subname = 'downscale_longwave'
-
     !-----------------------------------------------------------------------
 
     
@@ -872,7 +871,8 @@ contains
              if (abs((newsum_lwrad_g(g) / sum_wts_g(g)) - forc_lwrad_g(g)) > 1.e-8_r8) then
                 write(iulog,*) 'g, newsum_lwrad_g, sum_wts_g, forc_lwrad_g: ', &
                      g, newsum_lwrad_g(g), sum_wts_g(g), forc_lwrad_g(g)
-                call endrun(subname//' ERROR: Energy conservation error downscaling longwave')
+                call endrun(msg=' ERROR: Energy conservation error downscaling longwave'//&
+                     errMsg(__FILE__, __LINE__))
              end if
           end if
        end do
@@ -960,9 +960,10 @@ contains
     !
     ! !USES:
     use clmtype
-    use abortutils, only : endrun
-    use clm_varctl, only : iulog
-    use decompMod    , only : bounds_type
+    use abortutils , only : endrun
+    use shr_log_mod, only : errMsg => shr_log_errMsg
+    use clm_varctl , only : iulog
+    use decompMod  , only : bounds_type
 
     !
     ! !ARGUMENTS:
@@ -971,9 +972,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g, l, c    ! indices
-
     character(len=*), parameter :: subname = 'check_downscale_consistency'
-    
     !-----------------------------------------------------------------------
 
     associate(&
@@ -1019,7 +1018,7 @@ contains
                  forc_lwrad_c(c) /= forc_lwrad_g(g)) then
                 write(iulog,*) subname//' ERROR: column-level forcing differs from gridcell-level forcing for urban point'
                 write(iulog,*) 'c, g = ', c, g
-                call endrun
+                call endrun(msg=errMsg(__FILE__, __LINE__))
              end if  ! inequal
           end if  ! urbpoi
        end if  ! active

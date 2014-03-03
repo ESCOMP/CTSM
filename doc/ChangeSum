@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-   clm4_5_65     mvertens 02/25/2014 Turn off MEGAN vocs when crops is running
+   clm4_5_65     mvertens 03/03/2014 Turn off MEGAN vocs when crops is running
    clm4_5_64      muszala 02/19/2014 fix and clean ncdio_pio.F90.in.  clean clm_time_manager.  update externals.
    clm4_5_63        sacks 02/14/2014 add some code needed for dynamic landunits; activate 0-weight veg landunit sometimes
    clm4_5_62         erik 02/10/2014 Get PTCLM working robustly, US-UMB test working, add CO2 streams to datm, add more consistency testing between compsets and user settings
