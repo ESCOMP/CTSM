@@ -964,7 +964,6 @@ contains
           if ( shr_infnan_isnan(rbufsli(no)) ) then
              rbufslo(no) = spval
           end if
-          rbufslo(no) = spval !DEBUG
        end if
     end do
 
@@ -1099,7 +1098,6 @@ contains
                 if ( shr_infnan_isnan(rbuf2do(no,lev)) ) then
                    rbuf2do(no,lev) = spval
                 end if
-                rbuf2do(no,lev) = spval !DEBUG
              end if
           end do
        end do

@@ -117,12 +117,14 @@ contains
     ! cps%zi                  Output: [real(r8) (:,:) ]  interface level below a "z" level (m) OVER SNOW ONLY           
     ! cps%dz                  Output: [real(r8) (:,:) ]  layer thickness depth (m) OVER SNOW ONLY           
     ! cps%frac_h2osfc         Output: [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+    ! cps%frac_sno            Output: [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
     ! cps%snl                 Output: [integer (:)    ]  number of snow layers                              
     ! cps%soilpsi             Output: [real(r8) (:,:) ]  soil water potential in each soil layer (MPa)   
     ! cps%snow_depth          Output: [real(r8) (:)   ]  snow height (m)                                   
     ! cps%snw_rds             Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6]
     ! cps%snw_rds_top         Output: [real(r8) (:)   ]  snow grain size, top (col) [microns]              
     ! cps%sno_liq_top         Output: [real(r8) (:)   ]  liquid water fraction (mass) in top snow layer (col) [frc]
+
     ! cps%mss_bcpho           Output: [real(r8) (:,:) ]  mass of hydrophobic BC in snow (col,lyr) [kg]   
     ! cps%mss_bcphi           Output: [real(r8) (:,:) ]  mass of hydrophillic BC in snow (col,lyr) [kg]  
     ! cps%mss_bctot           Output: [real(r8) (:,:) ]  total mass of BC (pho+phi) (col,lyr) [kg]       
@@ -146,13 +148,21 @@ contains
     ! cps%mss_cnc_dst2        Output: [real(r8) (:,:) ]  mass concentration of dust species 2 (col,lyr) [kg/kg]
     ! cps%mss_cnc_dst3        Output: [real(r8) (:,:) ]  mass concentration of dust species 3 (col,lyr) [kg/kg]
     ! cps%mss_cnc_dst4        Output: [real(r8) (:,:) ]  mass concentration of dust species 4 (col,lyr) [kg/kg]
-    ! cps%frac_sno            Output: [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+
     ! cps%albgrd              Output: [real(r8) (:,:) ]  ground albedo (direct)                
     ! cps%albgri              Output: [real(r8) (:,:) ]  ground albedo (diffuse)               
     ! cps%albsod              Output: [real(r8) (:,:) ]  direct-beam soil albedo (col,bnd) [frc]
     ! cps%albsoi              Output: [real(r8) (:,:) ]  diffuse soil albedo (col,bnd) [frc]   
     ! cps%albsnd_hst          Output: [real(r8) (:,:) ]  snow albedo, direct, for history files (col,bnd) [frc]
     ! cps%albsni_hst          Output: [real(r8) (:,:) ]  snow ground albedo, diffuse, for history files (col,bnd) [frc]
+    ! cps%albgrd_pur(:,:)     Output: [real(r8) (:,:) ]  pure snow ground direct albedo (numrad)
+    ! cps%albgri_pur(:,:)     Output: [real(r8) (:,:) ]  pure snow ground diffuse albedo (numrad)
+    ! cps%albgrd_bc(:,:)      Output: [real(r8) (:,:) ]  ground direct albedo without BC  (numrad)
+    ! cps%albgri_bc(:,:)      Output: [real(r8) (:,:) ]  ground diffuse albedo without BC (numrad)
+    ! cps%albgrd_oc(:,:)      Output: [real(r8) (:,:) ]  ground direct albedo without OC  (numrad)
+    ! cps%albgri_oc(:,:)      Output: [real(r8) (:,:) ]  ground diffuse albedo without OC (numrad)
+    ! cps%albgrd_dst(:,:)     Output: [real(r8) (:,:) ]  ground direct albedo without dust  (numrad)
+    ! cps%albgri_dst(:,:)     Output: [real(r8) (:,:) ]  ground diffuse albedo without dust (numrad)
 
     ! cws%h2osfc              Output: [real(r8) (:)   ]  surface water (mm)                                
     ! cws%zwt_perched         Output: [real(r8) (:)   ]  perched water table depth (m)                     
@@ -495,6 +505,15 @@ contains
     cps%albsni_hst(bounds%begc:bounds%endc, :) = 0.6_r8
     pps%albd(bounds%begp:bounds%endp, :)       = 0.2_r8
     pps%albi(bounds%begp:bounds%endp, :)       = 0.2_r8
+
+    cps%albgrd_pur(bounds%begc:bounds%endc, :) = 0.2_r8
+    cps%albgri_pur(bounds%begc:bounds%endc, :) = 0.2_r8
+    cps%albgrd_bc(bounds%begc:bounds%endc, :)  = 0.2_r8
+    cps%albgri_bc(bounds%begc:bounds%endc, :)  = 0.2_r8
+    cps%albgrd_oc(bounds%begc:bounds%endc, :)  = 0.2_r8
+    cps%albgri_oc(bounds%begc:bounds%endc, :)  = 0.2_r8
+    cps%albgrd_dst(bounds%begc:bounds%endc, :) = 0.2_r8
+    cps%albgri_dst(bounds%begc:bounds%endc, :) = 0.2_r8
 
     pps%fabi(bounds%begp:bounds%endp, :)       = 0.0_r8
     pps%fabd(bounds%begp:bounds%endp, :)       = 0.0_r8

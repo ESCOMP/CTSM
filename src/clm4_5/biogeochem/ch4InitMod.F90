@@ -272,15 +272,6 @@ contains
 
        end if
 
-       ! Note - this is no longer needed - since arbitrary initialization is always called
-       ! TODO - remove this when initSurfAlb is removed
-       !if (lun%itype(l) == istdlak .and. .not. allowlakeprod) then
-       !   !To avoid rare pathologies with allowlakeprod switching between restarts
-       !   cch4%conc_ch4_sat(c,:) = 0._r8
-       !   cch4%conc_o2_sat(c,:)  = 0._r8
-       !   cch4%lake_soilc(c,1:nlevsoi)   = 580._r8 * cps%cellorg(c,1:nlevsoi)
-       !end if
-
     end do
 
   end subroutine initColdCH4

@@ -270,7 +270,6 @@ contains
     use SLakeInitMod          , only : initTimeConstSLake
     use initColdMod           , only : initCold
     use initInterpMod         , only : initInterp
-    use initSurfAlbMod        , only : initSurfAlb
     use DaylengthMod          , only : InitDaylength
     use BiogeophysRestMod     , only : bound_h2osoi
     use fileutils             , only : getfil
@@ -300,10 +299,6 @@ contains
     type(bounds_type)  :: bounds_clump ! clump bounds
     logical            :: lexist
     character(len=32)  :: subname = 'initialize2' 
-    !
-    ! To change metadata in existing initial files (this can go away soon)
-    logical           :: do_finidat_newmeta = .false. 
-    character(len=256):: finidat_newmeta
     !----------------------------------------------------------------------
 
     call t_startf('clm_init2')
@@ -493,30 +488,6 @@ contains
     call t_stopf('init_filters')
 
     ! ------------------------------------------------------------------------
-    ! Upgrade old initial data files to have new metadata
-    ! This can be removed at some point soon - by default is false - and can
-    ! be turned on by setting local variable do_finidat_newmeta to .true.
-    ! ------------------------------------------------------------------------
-
-    if (do_finidat_newmeta) then
-       bound_h2osoi = .false.
-       call restFile_read(bounds_proc, finidat)
-       bound_h2osoi = .true.
-       do nc = 1, nclumps
-          call get_clump_bounds(nc, bounds_clump)
-          call reweightWrapup(bounds_clump)
-       end do
-       finidat_newmeta = finidat(1:len_trim(finidat)-3) // '.newmeta.nc'
-       inquire (file = trim(finidat_newmeta), exist = lexist)
-       if ( .not. lexist )then
-          if (masterproc) then
-             write(iulog,*)'Creating finidat with new meta data ',trim(finidat_newmeta)
-          end if
-          call restFile_write(bounds_proc, trim(finidat_newmeta))
-       end if
-    end if
-
-    ! ------------------------------------------------------------------------
     ! If appropriate, create interpolated initial conditions
     ! ------------------------------------------------------------------------
 
@@ -605,16 +576,6 @@ contains
           ! This needs to be done even if CN or CNDV is on!
           call interpMonthlyVeg(bounds_proc)
        end if
-    end if
-
-    !------------------------------------------------------------       
-    ! Initialize albedos if necessary (***THIS WILL GO AWAY SOON***)
-    !------------------------------------------------------------       
-
-    if (nsrest == nsrStartup .and. finidat == ' ') then
-       call t_startf('init_orbSA')
-       call initSurfAlb( calday, declin )
-       call t_stopf('init_orbSA')
     end if
 
     !------------------------------------------------------------       

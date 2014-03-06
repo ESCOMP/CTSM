@@ -546,28 +546,20 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      ! ============================================================================
 
      if (doalb) then
-        call t_startf('surfalb')
-
-        ! The following calls don't really need to use the filter_inactive_and_active
-        ! version of the filters, but do so for consistency with the calls to these
-        ! routines from initSurfAlbMod
 
         ! Albedos for non-urban columns
-
+        call t_startf('surfalb')
         call SurfaceAlbedo(bounds_clump, &
              filter_inactive_and_active(nc)%num_nourbanc, &
              filter_inactive_and_active(nc)%nourbanc, &
              filter_inactive_and_active(nc)%num_nourbanp, &
              filter_inactive_and_active(nc)%nourbanp, &
              nextsw_cday, declinp1)
-
         call t_stopf('surfalb')
 
         ! Albedos for urban columns
-
-        call t_startf('urbsurfalb')
-
         if (filter_inactive_and_active(nc)%num_urbanl > 0) then
+           call t_startf('urbsurfalb')
            call UrbanAlbedo(bounds_clump, &
                 filter_inactive_and_active(nc)%num_urbanl, &
                 filter_inactive_and_active(nc)%urbanl, &
@@ -575,9 +567,8 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
                 filter_inactive_and_active(nc)%urbanc, &
                 filter_inactive_and_active(nc)%num_urbanp, &
                 filter_inactive_and_active(nc)%urbanp)
+           call t_stopf('urbsurfalb')
         end if
-
-        call t_stopf('urbsurfalb')
 
      end if
 
