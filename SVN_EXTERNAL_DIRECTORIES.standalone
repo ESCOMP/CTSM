@@ -1,5 +1,5 @@
 # CESM scripts, machines and driver
-scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_140220
+scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_140305
 scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_140218
 scripts/ccsm_utils/CMake        https://github.com/quantheory/CMake_Fortran_utils/tags/CMake_Fortran_utils_140109
 models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq5_0_07
@@ -11,7 +11,7 @@ models/ice/sice                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk
 models/glc/sglc                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/sglc
 models/wav/swav                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/swav
 models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_34
-models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_131008
+models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_140303
 
 # Utilities: csm_share, esmf, timing, MCT, PIO
 models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_131231

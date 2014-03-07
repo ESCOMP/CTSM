@@ -1,4 +1,87 @@
 ===============================================================
+Tag name:  clm4_5_68
+Originator(s):  erik (Erik)
+Date: Fri Mar  7 16:43:23 MST 2014
+One-line Summary: Update scripts to version that turns on transient CO2 streams for 
+                  transient compsets, and update CISM (changes answers)
+
+Purpose of changes:
+
+Bring in the scripts version that by default had transient CO2 for any transient 
+compsets. You can still turn it off by setting DATM_CO2_TSERIES=FALSE in env_run.xml. 
+Also bring in the latest CISM version that has answer changes for any IG compsets.
+It fixes fields sent from CISM to the coupler (fixes an exact restart problem).
+
+Requirements for tag:
+   update scripts and CISM, transient and IG compsets have different answers
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 979 (adding CO2 streams)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+    scripts to scripts4_140305
+    cism    to cism1_140303
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes: None
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone yes
+
+  regular tests (aux_clm):
+
+    yellowstone_intel yes
+    yellowstone_pgi   yes
+    goldbach_nag      yes
+    goldbach_pgi      yes
+    goldbach_intel    yes
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    yellowstone_intel  yes
+    yellowstone_pgi    yes
+
+  tools testing: None
+
+CLM tag used for the baseline comparisons:  clm4_5_67
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers:
+    - what code configurations: transient and IG compsets
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff
+
+===============================================================
+===============================================================
 Tag name: clm4_5_67
 Originator(s): mvertens
 Date: Thu Mar  6 16:53:23 MST 2014

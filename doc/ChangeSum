@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_68         erik 03/07/2014 Update scripts to version that turns on transient CO2 streams for transient compsets, and update CISM (changes answers)
    clm4_5_65     mvertens 03/06/2014 Turn off MEGAN vocs when crops is running
    clm4_5_64      muszala 02/19/2014 fix and clean ncdio_pio.F90.in.  clean clm_time_manager.  update externals.
    clm4_5_63        sacks 02/14/2014 add some code needed for dynamic landunits; activate 0-weight veg landunit sometimes
