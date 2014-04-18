@@ -1,5 +1,7 @@
 module subgridAveMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Utilities to perfrom subgrid averaging
@@ -12,7 +14,6 @@ module subgridAveMod
   use clm_varctl      , only : iulog
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type
-  use shr_assert_mod  , only : shr_assert
   use shr_log_mod     , only : errMsg => shr_log_errMsg
  
   ! !PUBLIC TYPES:
@@ -98,8 +99,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
     if (p2c_scale_type == 'unity') then
        do p = bounds%begp,bounds%endp
@@ -161,8 +162,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
 
     if (p2c_scale_type == 'unity') then
        do p = bounds%begp,bounds%endp
@@ -221,8 +222,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(pftarr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(colarr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(pftarr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(colarr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
     do fc = 1,numfc
        c = filterc(fc)
@@ -288,8 +289,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -397,8 +398,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -509,8 +510,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -626,8 +627,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -739,8 +740,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -837,8 +838,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -938,8 +939,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -1042,8 +1043,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -1145,8 +1146,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -1203,8 +1204,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -1260,7 +1261,7 @@ contains
     integer  :: l                       ! index
     !-----------------------------------------------------------------------
      
-    call shr_assert((ubound(scale_l2g) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(scale_l2g) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
 
      call create_scale_l2g_lookup(l2g_scale_type, scale_lookup)
 

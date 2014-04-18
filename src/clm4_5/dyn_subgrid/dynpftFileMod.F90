@@ -1,5 +1,7 @@
 module dynpftFileMod
 
+#include "shr_assert.h"
+
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Handle reading of the pftdyn dataset, which specifies transient areas of natural PFTs
@@ -13,7 +15,6 @@ module dynpftFileMod
   use clm_varctl            , only : iulog
   use abortutils            , only : endrun
   use spmdMod               , only : masterproc
-  use shr_assert_mod        , only : shr_assert
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -67,7 +68,7 @@ contains
     character(len= 32)     :: subname='dynpft_init'! subroutine name
     !-----------------------------------------------------------------------
 
-    call shr_assert(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     ! Error check
 
@@ -211,7 +212,7 @@ contains
     ! assumes that maxpatch_pft = numpft + 1, that each landunit has only 1 column, 
     ! SCAM and CNDV have not been defined, and create_croplandunit = .false.
 
-    call shr_assert(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     ! Get pft weights for this time step
 

@@ -1,5 +1,7 @@
 module CanopyFluxesMod
 
+#include "shr_assert.h"
+
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Calculates the leaf temperature and the leaf fluxes,
@@ -12,7 +14,6 @@ module CanopyFluxesMod
   use decompMod   ,   only: bounds_type
   use shr_sys_mod ,   only: shr_sys_flush
   use shr_kind_mod,   only: r8 => shr_kind_r8
-  use shr_assert_mod, only: shr_assert
   use shr_log_mod ,   only: errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
@@ -1272,12 +1273,12 @@ subroutine Photosynthesis (bounds, fn, filterp, esat_tv, eair, oair, cair, &
 
    ! Enforce expected array sizes
    
-   call shr_assert((ubound(esat_tv)     == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(eair)        == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(oair)        == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(cair)        == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(rb)          == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(dayl_factor) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(esat_tv)     == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(eair)        == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(oair)        == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(cair)        == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(rb)          == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(dayl_factor) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
 
    if (phase == 'sun') then
       lai_z     =>    pps%laisun_z        ! Input:  [real(r8) (:,:)]  leaf area index for canopy layer, sunlit or shaded                  

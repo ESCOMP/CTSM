@@ -1,5 +1,7 @@
 module dynPriorWeightsMod
 
+#include "shr_assert.h"
+
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Defines a derived type and associated methods for working with prior subgrid weights
@@ -9,7 +11,6 @@ module dynPriorWeightsMod
   use clmtype
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type, BOUNDS_LEVEL_PROC
-  use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
 
@@ -53,7 +54,7 @@ contains
     character(len=*), parameter :: subname = 'prior_weights_type constructor'
     ! ----------------------------------------------------------------------
      
-    call shr_assert(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
     
     allocate(constructor%pwtcol(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then

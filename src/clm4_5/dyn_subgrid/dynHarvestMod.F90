@@ -1,5 +1,7 @@
 module dynHarvestMod
 
+#include "shr_assert.h"
+
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Handle reading of the harvest data, as well as the state updates that happen as a
@@ -14,7 +16,6 @@ module dynHarvestMod
   use decompMod               , only : bounds_type, BOUNDS_LEVEL_PROC
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use abortutils              , only : endrun
-  use shr_assert_mod          , only : shr_assert
   use dynFileMod              , only : dyn_file_type
   use dynVarTimeUninterpMod   , only : dyn_var_time_uninterp_type
   use shr_log_mod             , only : errMsg => shr_log_errMsg
@@ -73,7 +74,7 @@ contains
     character(len=*), parameter :: subname = 'dynHarvest_init'
     !-----------------------------------------------------------------------
 
-    call shr_assert(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     allocate(harvest(bounds%begg:bounds%endg),stat=ier)
     if (ier /= 0) then
@@ -122,7 +123,7 @@ contains
     character(len=*), parameter :: subname = 'dynHarvest_interp'
     !-----------------------------------------------------------------------
 
-    call shr_assert(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     call dynHarvest_file%update_time_info()
 

@@ -1,5 +1,7 @@
 module dynLandunitAreaMod
 
+#include "shr_assert.h"
+
   !---------------------------------------------------------------------------
   !
   ! !DESCRIPTION:
@@ -13,7 +15,6 @@ module dynLandunitAreaMod
   use clm_varctl     , only : iulog
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use abortutils     , only : endrun
-  use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
 
   implicit none
@@ -125,7 +126,7 @@ contains
     character(len=*), parameter :: subname = 'update_landunit_weights_one_gcell'
     !-----------------------------------------------------------------------
 
-    call shr_assert((size(landunit_weights) == max_lunit), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(landunit_weights) == max_lunit), errMsg(__FILE__, __LINE__))
 
     landunit_sum = sum(landunit_weights)
     

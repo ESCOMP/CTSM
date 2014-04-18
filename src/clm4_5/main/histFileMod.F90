@@ -1,5 +1,7 @@
 module histFileMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module containing methods to for CLM history file handling.
@@ -15,7 +17,6 @@ module histFileMod
   use decompMod   , only : get_proc_bounds, get_proc_global, bounds_type
   use clm_varcon  , only : dzsoi_decomp
   use ncdio_pio
-  use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   implicit none
   save
@@ -1020,7 +1021,7 @@ contains
     integer k_offset                    ! offset for mapping sliced subarray pointers when outputting variables in PFT/col vector form
     !-----------------------------------------------------------------------
 
-    call shr_assert(bounds%level == BOUNDS_LEVEL_PROC, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(__FILE__, __LINE__))
 
     avgflag        =  tape(t)%hlist(f)%avgflag
     nacs           => tape(t)%hlist(f)%nacs
@@ -1263,7 +1264,7 @@ contains
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
     !-----------------------------------------------------------------------
 
-    call shr_assert(bounds%level == BOUNDS_LEVEL_PROC, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(__FILE__, __LINE__))
 
     avgflag             =  tape(t)%hlist(f)%avgflag
     nacs                => tape(t)%hlist(f)%nacs
@@ -1540,9 +1541,9 @@ contains
     character(len=*), parameter :: subname = 'hist_set_snow_field_2d'
     !-----------------------------------------------------------------------
 
-    call shr_assert((ubound(field_out, 1) == end1d), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(field_in , 1) == end1d), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(field_out, 2) == ubound(field_in, 2)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(field_out, 1) == end1d), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(field_in , 1) == end1d), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(field_out, 2) == ubound(field_in, 2)), errMsg(__FILE__, __LINE__))
 
     associate(&
     snl            => cps%snl  &   ! Input: [integer (:)] number of snow layers (negative)

@@ -1,5 +1,7 @@
 module SNICARMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Calculate albedo of snow containing impurities 
@@ -12,7 +14,6 @@ module SNICARMod
   use shr_const_mod  , only : SHR_CONST_RHOICE
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
-  use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
   implicit none
@@ -325,14 +326,14 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(coszen)         == (/bounds%endc/)),                 errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(h2osno_liq)     == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(h2osno_ice)     == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(snw_rds)        == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(mss_cnc_aer_in) == (/bounds%endc, 0, sno_nbr_aer/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(albsfc)         == (/bounds%endc, numrad/)),         errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(albout)         == (/bounds%endc, numrad/)),         errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(flx_abs)        == (/bounds%endc, 1, numrad/)),      errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(coszen)         == (/bounds%endc/)),                 errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(h2osno_liq)     == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(h2osno_ice)     == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(snw_rds)        == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(mss_cnc_aer_in) == (/bounds%endc, 0, sno_nbr_aer/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(albsfc)         == (/bounds%endc, numrad/)),         errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(albout)         == (/bounds%endc, numrad/)),         errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(flx_abs)        == (/bounds%endc, 1, numrad/)),      errMsg(__FILE__, __LINE__))
 
    associate(& 
    snl         =>   cps%snl          , & ! Input:  [integer (:)]  negative number of snow layers (col) [nbr]

@@ -1,5 +1,7 @@
 module TridiagonalMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Tridiagonal matrix solution
@@ -27,7 +29,6 @@ contains
     use clm_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_varctl     , only : iulog
     use decompMod      , only : bounds_type
-    use shr_assert_mod , only : shr_assert
     use shr_log_mod    , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
@@ -49,12 +50,12 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(jtop) == (/bounds%endc/)),      errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(a)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(b)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(c)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(r)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(u)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(jtop) == (/bounds%endc/)),      errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(a)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(b)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(c)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(r)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(u)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
 
     ! Solve the matrix
 

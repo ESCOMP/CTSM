@@ -1,5 +1,7 @@
 module dynSubgridDriverMod
 
+#include "shr_assert.h"
+
   !---------------------------------------------------------------------------
   !
   ! !DESCRIPTION:
@@ -8,7 +10,6 @@ module dynSubgridDriverMod
   !
   ! !USES:
   use clmtype
-  use shr_assert_mod     , only : shr_assert
   use dynPriorWeightsMod , only : prior_weights_type
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -53,7 +54,7 @@ contains
     character(len=*), parameter :: subname = 'dynSubgrid_init'
     !-----------------------------------------------------------------------
 
-    call shr_assert(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     prior_weights = prior_weights_type(bounds)
 
@@ -111,7 +112,7 @@ contains
     character(len=*), parameter :: subname = 'dynSubgrid_driver'
     !-----------------------------------------------------------------------
 
-    call shr_assert(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     nclumps = get_proc_clumps()
     

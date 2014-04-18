@@ -1,20 +1,23 @@
 module BandDiagonalMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Band Diagonal matrix solution
   !
+  !
   ! !USES:
   use decompMod   , only : bounds_type
-  use abortutils  , only: endrun
-  use shr_kind_mod, only: r8 => shr_kind_r8
+  use abortutils  , only : endrun
+  use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_varctl  , only : iulog
-  use shr_assert_mod, only : shr_assert
   use shr_log_mod , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
   implicit none
   save
+  private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: BandDiagonal
@@ -51,11 +54,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(jtop) == (/bounds%endc/)),             errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(jbot) == (/bounds%endc/)),             errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(b)    == (/bounds%endc, nband, ubj/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(r)    == (/bounds%endc, ubj/)),        errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(u)    == (/bounds%endc, ubj/)),        errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(jtop) == (/bounds%endc/)),             errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(jbot) == (/bounds%endc/)),             errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(b)    == (/bounds%endc, nband, ubj/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(r)    == (/bounds%endc, ubj/)),        errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(u)    == (/bounds%endc, ubj/)),        errMsg(__FILE__, __LINE__))
 
 
 !!$     SUBROUTINE SGBSV( N, KL, KU, NRHS, AB, LDAB, IPIV, B, LDB, INFO )

@@ -1,4 +1,7 @@
 module SurfaceAlbedoMod
+
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Performs surface albedo calculations
@@ -11,7 +14,6 @@ module SurfaceAlbedoMod
   use clm_varpar     , only : nlevsno
   use SNICARMod      , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
   use decompMod      , only : bounds_type
-  use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
 
   implicit none
@@ -847,9 +849,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     call shr_assert((ubound(coszen) == (/bounds%endc/)),         errMsg(__FILE__, __LINE__))
-     call shr_assert((ubound(albsnd) == (/bounds%endc, numrad/)), errMsg(__FILE__, __LINE__))
-     call shr_assert((ubound(albsni) == (/bounds%endc, numrad/)), errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(coszen) == (/bounds%endc/)),         errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(albsnd) == (/bounds%endc, numrad/)), errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(albsni) == (/bounds%endc, numrad/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    isoicol       => cps%isoicol      , & ! Input:  [integer (:)]  soil color class                         
@@ -1001,9 +1003,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     call shr_assert((ubound(coszen) == (/bounds%endp/)),         errMsg(__FILE__, __LINE__))
-     call shr_assert((ubound(rho)    == (/bounds%endp, numrad/)), errMsg(__FILE__, __LINE__))
-     call shr_assert((ubound(tau)    == (/bounds%endp, numrad/)), errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(coszen) == (/bounds%endp/)),         errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(rho)    == (/bounds%endp, numrad/)), errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(tau)    == (/bounds%endp, numrad/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    albgrd                    =>    cps%albgrd              , & ! Input:  [real(r8) (:,:)]  ground albedo (direct) (column-level) 

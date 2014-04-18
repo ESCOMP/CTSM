@@ -55,7 +55,7 @@ contains
     real(r8), parameter :: offset_pole = pole - lat_epsilon
     !-----------------------------------------------------------------------
 
-    ! Can't call shr_assert in an elemental function; instead, return a bad value if any
+    ! Can't SHR_ASSERT in an elemental function; instead, return a bad value if any
     ! preconditions are violated
 
     ! lat must be less than pi/2 within a small tolerance

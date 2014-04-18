@@ -4,6 +4,8 @@
 !===================================================
 module dynVarTimeInterpMod
 
+#include "shr_assert.h"
+
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Contains a derived type and associated methods that extend the base class,
@@ -20,7 +22,6 @@ module dynVarTimeInterpMod
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use dynVarMod      , only : dyn_var_type
-  use shr_assert_mod , only : shr_assert
 
   implicit none
   private
@@ -147,8 +148,8 @@ contains
 
     ! Do some error checking
     ndims = size(this%get_data_shape())
-    call shr_assert(1 == ndims, subname//' ERROR: # dims of output argument must match ndims')
-    call shr_assert((shape(cur_data) == this%get_data_shape()), subname//' ERROR: shape of cur_data must match shape of data')
+    SHR_ASSERT(1 == ndims, subname//' ERROR: # dims of output argument must match ndims')
+    SHR_ASSERT_ALL((shape(cur_data) == this%get_data_shape()), subname//' ERROR: shape of cur_data must match shape of data')
 
     ! Get current data, using a temporal weighting of the data at time 1 and the data at
     ! time 2
@@ -192,8 +193,8 @@ contains
 
     ! Do some error checking
     ndims = size(this%get_data_shape())
-    call shr_assert(2 == ndims, subname//' ERROR: # dims of output argument must match ndims')
-    call shr_assert((shape(cur_data) == this%get_data_shape()), subname//' ERROR: shape of cur_data must match shape of data')
+    SHR_ASSERT(2 == ndims, subname//' ERROR: # dims of output argument must match ndims')
+    SHR_ASSERT_ALL((shape(cur_data) == this%get_data_shape()), subname//' ERROR: shape of cur_data must match shape of data')
 
     ! Get current data, using a temporal weighting of the data at time 1 and the data at
     ! time 2

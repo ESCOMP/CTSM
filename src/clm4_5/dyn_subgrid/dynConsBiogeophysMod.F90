@@ -1,5 +1,7 @@
 module dynConsBiogeophysMod
 
+#include "shr_assert.h"
+
   !---------------------------------------------------------------------------
   !
   ! !DESCRIPTION:
@@ -10,7 +12,6 @@ module dynConsBiogeophysMod
   use clmtype
   use decompMod      , only : bounds_type
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -145,9 +146,9 @@ contains
     !-------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    call shr_assert((ubound(gcell_liq)  == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(gcell_ice)  == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
-    call shr_assert((ubound(gcell_heat) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(gcell_liq)  == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(gcell_ice)  == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(gcell_heat) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
 
     nlev_improad => lps%nlev_improad
     cv_wall      => lps%cv_wall

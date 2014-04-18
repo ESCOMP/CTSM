@@ -1,5 +1,7 @@
 module filterMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module of filters used for processing columns and pfts of particular
@@ -11,7 +13,6 @@ module filterMod
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
   use decompMod      , only : bounds_type  
-  use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
@@ -216,7 +217,7 @@ contains
     type(bounds_type), intent(in) :: bounds  ! bounds
     !------------------------------------------------------------------------
 
-    call shr_assert(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
 
     call setFiltersOneGroup(bounds, &
          filter, include_inactive = .false.)
@@ -268,7 +269,7 @@ contains
     integer :: f, fn       ! general indices
     !------------------------------------------------------------------------
 
-    call shr_assert(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
 
     nc = bounds%clump_index
 

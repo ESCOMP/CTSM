@@ -1,5 +1,7 @@
 module reweightMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Handles modifications and error-checks related to changing subgrid weights
@@ -91,7 +93,6 @@ module reweightMod
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog, all_active
   use decompMod      , only : bounds_type
-  use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
   ! PUBLIC TYPES:
@@ -169,7 +170,7 @@ contains
     type(bounds_type), intent(in) :: bounds  ! clump bounds
     !------------------------------------------------------------------------
 
-    call shr_assert(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
 
     call setActive(bounds)
     call checkWeights(bounds, active_only=.false.)

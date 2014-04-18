@@ -59,19 +59,15 @@ CLM testing:
 
     yellowstone
 
-  regular tests (aux_clm):
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
 
     yellowstone_intel
     yellowstone_pgi
     goldbach_nag
-    edison_intel
+    goldbach_intel
+    goldbach_pgi
 
-  history file comparison with component_gen_comp and summarize_cprnc_diffs:
-
-    yellowstone_intel
-    yellowstone_pgi
-
-  short tests (aux_clm_short):
+  short tests (aux_clm_short) (generally these are NOT used when making a tag):
 
     yellowstone_intel
     yellowstone_pgi

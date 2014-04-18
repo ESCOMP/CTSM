@@ -1,11 +1,12 @@
 module H2OSfcMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Calculate surface water hydrology
   !
   ! !USES:
-  use shr_assert_mod, only : shr_assert
   use shr_log_mod   , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
@@ -48,7 +49,7 @@ contains
     real(r8):: min_h2osfc
     !-----------------------------------------------------------------------
 
-   call shr_assert((ubound(frac_h2osfc) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(frac_h2osfc) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    h2osfc        =>  cws%h2osfc        , & ! Input:  [real(r8) (:)]  surface water (mm)                                

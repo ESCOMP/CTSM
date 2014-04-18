@@ -1,11 +1,13 @@
 module SLakeTemperatureMod
+
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Calculates lake temperatures.
   !
   use decompMod      , only : bounds_type
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   !    
   ! !PUBLIC TYPES:
@@ -1072,9 +1074,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     call shr_assert((ubound(cv)           == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-     call shr_assert((ubound(tk)           == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-     call shr_assert((ubound(tktopsoillay) == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(cv)           == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(tktopsoillay) == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
 
    associate(& 
    snl         => cps%snl        , & ! Input:  [integer (:)]  number of snow layers                    
@@ -1247,9 +1249,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     call shr_assert((ubound(cv)      == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-     call shr_assert((ubound(cv_lake) == (/bounds%endc, nlevlak/)),  errMsg(__FILE__, __LINE__))
-     call shr_assert((ubound(lhabs)   == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(cv)      == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(cv_lake) == (/bounds%endc, nlevlak/)),  errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(lhabs)   == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
 
 
    associate(& 

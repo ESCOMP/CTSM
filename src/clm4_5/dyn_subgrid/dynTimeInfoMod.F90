@@ -1,4 +1,7 @@
 module dynTimeInfoMod
+
+#include "shr_assert.h"
+
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Contains a derived type and associated methods for storing and working with time
@@ -7,7 +10,6 @@ module dynTimeInfoMod
   !
   ! !USES:
   use clm_varctl     , only : iulog
-  use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
 
@@ -147,7 +149,7 @@ contains
        end if
     end if
 
-    call shr_assert(nt2 <= nyears, subname // ': nt2 should not be greater than nyears')
+    SHR_ASSERT(nt2 <= nyears, subname // ': nt2 should not be greater than nyears')
           
     end associate
 
@@ -193,7 +195,7 @@ contains
     character(len=*), parameter :: subname = 'get_year'
     !-----------------------------------------------------------------------
 
-    call shr_assert(1 <= nt .and. nt <= this%nyears, subname // ': nt out of bounds')
+    SHR_ASSERT(1 <= nt .and. nt <= this%nyears, subname // ': nt out of bounds')
     get_year = this%years(nt)
   end function get_year
 

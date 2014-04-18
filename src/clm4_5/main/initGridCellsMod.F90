@@ -1,5 +1,7 @@
 module initGridCellsMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Initializes sub-grid mapping for each land grid cell
@@ -10,7 +12,6 @@ module initGridCellsMod
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
   use decompMod      , only : bounds_type, ldecomp
-  use shr_assert_mod , only : shr_assert
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
@@ -166,9 +167,9 @@ contains
        endif
 
        ! Ensure that we have set the expected number of pfts, cols and landunits for this clump
-       call shr_assert(li == bounds_clump%endl, errMsg(__FILE__, __LINE__))
-       call shr_assert(ci == bounds_clump%endc, errMsg(__FILE__, __LINE__))
-       call shr_assert(pi == bounds_clump%endp, errMsg(__FILE__, __LINE__))
+       SHR_ASSERT(li == bounds_clump%endl, errMsg(__FILE__, __LINE__))
+       SHR_ASSERT(ci == bounds_clump%endc, errMsg(__FILE__, __LINE__))
+       SHR_ASSERT(pi == bounds_clump%endp, errMsg(__FILE__, __LINE__))
 
        ! Set some other gridcell-level variables
 

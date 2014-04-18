@@ -1,4 +1,7 @@
 module ch4Mod
+
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module holding routines to calculate methane fluxes
@@ -17,7 +20,6 @@ module ch4Mod
   use abortutils        , only : endrun
   use decompMod         , only : bounds_type
   use CNSharedParamsMod , only : CNParamsShareInst
-  use shr_assert_mod    , only : shr_assert
   use shr_log_mod       , only : errMsg => shr_log_errMsg
 
   implicit none
@@ -904,7 +906,7 @@ subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
   !-----------------------------------------------------------------------
 
    ! Enforce expected array sizes
-   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    latdeg                              =>     grc%latdeg                                 , & ! Input:  [real(r8) (:)]  latitude (degrees)                                
@@ -1218,7 +1220,7 @@ subroutine ch4_oxid (bounds, num_methc, filter_methc, jwt, sat, lake)
   !-----------------------------------------------------------------------
 
    ! Enforce expected array sizes
-   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    h2osoi_vol => cws%h2osoi_vol , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
@@ -1375,7 +1377,7 @@ subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, &
   !-----------------------------------------------------------------------
 
    ! Enforce expected array sizes
-   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    c_atm                               =>    gch4%c_atm                                  , & ! Input:  [real(r8) (:,:)]  CH4, O2, CO2 atmospheric conc  (mol/m3)         
@@ -1598,7 +1600,7 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
   !-----------------------------------------------------------------------
 
    ! Enforce expected array sizes
-   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    forc_pbot      =>    a2l_downscaled_col%forc_pbot , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
@@ -1783,7 +1785,7 @@ subroutine ch4_tran (bounds, num_methc, filter_methc, jwt, dtime_ch4, sat, lake)
   character(len=32) :: subname='ch4_tran' ! subroutine name
   !-----------------------------------------------------------------------
 
-   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    z                                   =>    cps%z                                       , & ! Input:  [real(r8) (:,:)]  soil layer depth (m)                            
@@ -2495,7 +2497,7 @@ subroutine get_jwt (bounds, num_methc, filter_methc, jwt)
   integer  :: fc       ! filter column index
   !-----------------------------------------------------------------------
 
-   call shr_assert((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    h2osoi_vol => cws%h2osoi_vol , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]

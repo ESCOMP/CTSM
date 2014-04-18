@@ -1,5 +1,7 @@
 module FrictionVelocityMod
 
+#include "shr_assert.h"
+
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Calculation of the friction velocity, relation for potential
@@ -7,7 +9,6 @@ module FrictionVelocityMod
   !
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use shr_assert_mod, only : shr_assert
   use shr_log_mod , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
@@ -83,19 +84,19 @@ contains
     !------------------------------------------------------------------------------
 
    ! Enforce expected array sizes
-   call shr_assert((ubound(displa)  == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(z0m)     == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(z0h)     == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(z0q)     == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(obu)     == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(ur)      == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(um)      == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(ustar)   == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(temp1)   == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(temp12m) == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(temp2)   == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(temp22m) == (/ubn/)), errMsg(__FILE__, __LINE__))
-   call shr_assert((ubound(fm)      == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(displa)  == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(z0m)     == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(z0h)     == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(z0q)     == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(obu)     == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(ur)      == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(um)      == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(ustar)   == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(temp1)   == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(temp12m) == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(temp2)   == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(temp22m) == (/ubn/)), errMsg(__FILE__, __LINE__))
+   SHR_ASSERT_ALL((ubound(fm)      == (/ubn/)), errMsg(__FILE__, __LINE__))
 
    associate(& 
    vds             => pps%vds            , & ! Output: [real(r8) (:)]  dry deposition velocity term (m/s) (for SO4 NH4NO3)

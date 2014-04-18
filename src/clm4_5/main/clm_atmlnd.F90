@@ -1,5 +1,7 @@
 module clm_atmlnd
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Handle atm2lnd, lnd2atm mapping
@@ -13,7 +15,6 @@ module clm_atmlnd
   use seq_drydep_mod, only : n_drydep, drydep_method, DD_XLND
   use shr_megan_mod , only : shr_megan_mechcomps_n
   use decompMod     , only : bounds_type
-  use shr_assert_mod, only : shr_assert
   use shr_log_mod   , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC TYPES:
@@ -926,9 +927,9 @@ contains
 
     !-----------------------------------------------------------------------
 
-    call shr_assert((size(orig_field) == size(norms)), errMsg(__FILE__, __LINE__))
-    call shr_assert((size(sum_field) == size(norms)), errMsg(__FILE__, __LINE__))
-    call shr_assert((size(sum_wts) == size(norms)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(orig_field) == size(norms)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(sum_field) == size(norms)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(sum_wts) == size(norms)), errMsg(__FILE__, __LINE__))
 
     where (sum_wts == 0._r8)
        ! Avoid divide by zero; if sum_wts is 0, then the normalization doesn't matter,

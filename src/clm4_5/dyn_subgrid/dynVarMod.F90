@@ -3,6 +3,9 @@
 ! Any changes you make to this file may be lost
 !===================================================
 module dynVarMod
+
+#include "shr_assert.h"
+
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Contains a derived type and associated methods for working with a single dynamic
@@ -32,7 +35,6 @@ module dynVarMod
   use clm_varctl     , only : iulog
   use dynFileMod     , only : dyn_file_type
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use shr_assert_mod , only : shr_assert
   use abortutils     , only : endrun
   implicit none
   save
@@ -206,9 +208,9 @@ contains
     ndims = size(data_shape)
 
     ! Do some error checking on the inputs
-    call shr_assert(ndims <= dyn_var_max_dims, subname//' ERROR: ndims must be <= dyn_var_max_dims')
+    SHR_ASSERT(ndims <= dyn_var_max_dims, subname//' ERROR: ndims must be <= dyn_var_max_dims')
     if (do_check_sums_equal_1) then
-       call shr_assert(ndims == 2, subname//' ERROR: do_check_sums_equal_1 only valid for ndims==2')
+       SHR_ASSERT(ndims == 2, subname//' ERROR: do_check_sums_equal_1 only valid for ndims==2')
     end if
 
     ! Set metadata for this variable
