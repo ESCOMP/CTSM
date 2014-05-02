@@ -28,11 +28,6 @@ module BiogeophysRestMod
   logical, public  :: bound_h2osoi = .true.
   !-----------------------------------------------------------------------
 
-
-  private :: weights_exactly_the_same
-  private :: weights_within_roundoff_different
-  private :: weights_tooDifferent
-
 contains
 
   !-----------------------------------------------------------------------
@@ -61,7 +56,6 @@ contains
     real(r8)              :: maxwatsat    ! maximum porosity    
     real(r8)              :: excess       ! excess volumetric soil water
     real(r8)              :: totwat       ! total soil water (mm)
-    real(r8)              :: maxdiff      ! maximum difference in PFT weights
     integer               :: p,c,l,g,j,iv ! indices
     integer               :: numg_global  ! total number of grid cells, globally
     integer               :: numl_global  ! total number of landunits, globally
@@ -72,13 +66,8 @@ contains
     logical               :: do_io        ! whether to do i/o for the given variable
     integer               :: dimlen       ! dimension length
     integer               :: err_code     ! error code
-    real(r8), pointer     :: wtgcell(:)   ! grid cell weights for pft
-    real(r8), pointer     :: wtlunit(:)   ! land-unit weights for pft
-    real(r8), pointer     :: wtcol(:)     ! column weights for pft
     real(r8), pointer     :: temp2d(:,:)  ! temporary for zisno
     character(len=7)      :: filetypes(0:3)
-    character(len=32)     :: fileusing
-    real(r8)        , parameter :: adiff = 5.e-04_r8   ! tolerance of acceptible difference
     character(len=*), parameter :: sub="BiogeophysRest"
     !-----------------------------------------------------------------------
 
@@ -96,85 +85,6 @@ contains
 
     ! Get expected total number of points, for later error checks
     call get_proc_global(numg_global, numl_global, numc_global, nump_global)
-
-    ! Read in weights
-
-    ! pft weight wrt gridcell 
-    call restartvar(ncid=ncid, flag=flag, varname='PFT_WTGCELL', xtype=ncd_double,  & 
-         dim1name='pft', &
-         long_name='pft weight relative to corresponding gridcell', units='',  &
-         readvar=readvar, interpinic_flag='skip', data=pft%wtgcell )
-
-    ! pft weight wrt landunit
-    call restartvar(ncid=ncid, flag=flag, varname='PFT_WTLUNIT', xtype=ncd_double,  & 
-         dim1name='pft', &
-         long_name='pft weight relative to corresponding landunit', units='',  &
-         readvar=readvar, interpinic_flag='skip', data=pft%wtlunit )
-
-    ! pft weight wrt column
-    call restartvar(ncid=ncid, flag=flag, varname='PFT_WTCOL', xtype=ncd_double,  & 
-         dim1name='pft', &
-         long_name='pft weight relative to corresponding column',  units='',  &
-         readvar=readvar, interpinic_flag='skip', data=pft%wtcol )
-
-    if (flag == 'read' )then
-
-       allocate( wtgcell(bounds%begp:bounds%endp) )
-       wtgcell(:) = pft%wtgcell(:)
-
-       allocate( wtlunit(bounds%begp:bounds%endp) )
-       wtlunit(:) = pft%wtlunit(:)
-
-       allocate( wtcol(bounds%begp:bounds%endp)   )
-       wtcol(:) = pft%wtcol(:)
-
-       if ( fpftdyn /= ' ' )then
-          fileusing = "fsurdat/fpftdyn"
-       else
-          fileusing = "fsurdat"
-       end if
-       !
-       ! Note: Do not compare weights if restart or if dynamic-pft branch
-       !
-       if ( nsrest == nsrContinue .or. fpftdyn /= ' ' )then
-          ! Do NOT do any testing for restart or a pftdyn case
-          !
-          ! Otherwise test and make sure weights agree to reasonable tolerence
-          !
-       else if ( .not.weights_exactly_the_same(  wtgcell, wtlunit, wtcol ) )then
-          if (use_cndv) then
-             if (      weights_within_roundoff_different(  wtgcell, wtlunit, wtcol ) )then
-                write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
-                     " file and ", trim(fileusing), " file(s) are different to roundoff -- using ", &
-                     trim(fileusing), " values."
-             else if ( weights_tooDifferent( bounds,  wtgcell, adiff, maxdiff ) )then
-                write(iulog,*) "ERROR:: PFT weights are SIGNIFICANTLY different from the input ", &
-                     filetypes(nsrest), " file and ", trim(fileusing), " file(s)."
-                write(iulog,*) "ERROR:: maximum difference is ", maxdiff, " max allowed = ", adiff
-                write(iulog,*) "ERROR:: Run interpinic on your initial condition" // &
-                     "file to interpolate to the new surface dataset"
-                call endrun( msg='ERROR:: Weights between initial condition file'// &
-                     'and surface dataset are too different'//errMsg(__FILE__, __LINE__))
-             else
-                write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
-                     " file and ", trim(fileusing), " file(s) are different to < ", &
-                     adiff, " -- using ", trim(fileusing), " values."
-             end if
-             write(iulog,*) sub//"::WARNING, weights different between ", filetypes(nsrest), &
-                  " file and ", trim(fileusing), " file(s), but close enough -- using ",    &
-                  trim(fileusing), " values."
-             ! Copy weights from fsurdat file back in -- they are only off by roundoff to 1% or so...
-             pft%wtgcell(:) = wtgcell(:)
-             pft%wtlunit(:) = wtlunit(:)
-             pft%wtcol(:)   = wtcol(:)
-          end if
-       end if
-
-       deallocate( wtgcell )
-       deallocate( wtlunit )
-       deallocate( wtcol   )
-
-    end if
 
     ! Note - for the snow interfaces, are only examing the snow interfaces
     ! above zi=0 which is why zisno and zsno have the same level dimension below
@@ -206,7 +116,16 @@ contains
     if (flag=='read' .and. .not. readvar) then
        cws%int_snow(:) = 0.0_r8
     end if
-
+    
+    ! perennial snow persistence - snow_persistence
+    call restartvar(ncid=ncid, flag=flag, varname='SNOW_PERS', xtype=ncd_double,  & 
+         dim1name='column', &
+         long_name='continuous snow cover time', units='sec', &
+         interpinic_flag='interp', readvar=readvar, data=cps%snow_persistence)    
+    if (flag=='read' .and. .not. readvar) then
+         cps%snow_persistence(:) = 0.0_r8
+    end if
+       
     ! column water state variable - wa
     call restartvar(ncid=ncid, flag=flag, varname='WA', xtype=ncd_double,  & 
          dim1name='column', &
@@ -1298,92 +1217,5 @@ contains
     !-- SNICAR variables
 
   end subroutine BiogeophysRest
-
-  !-----------------------------------------------------------------------
-  logical function weights_exactly_the_same(  wtgcell, wtlunit, wtcol )
-    !
-    ! !DESCRIPTION:
-    ! Determine if the weights read in are exactly the same as those from surface dataset
-    !
-    ! !USES:
-    use clmtype
-    !
-    ! !ARGUMENTS:
-    implicit none
-    real(r8), intent(IN)    :: wtgcell(:) ! grid cell weights for each PFT
-    real(r8), intent(IN)    :: wtlunit(:) ! land-unit weights for each PFT
-    real(r8), intent(IN)    :: wtcol(:)   ! column weights for each PFT
-    !-----------------------------------------------------------------------
-
-    ! Check that weights are identical for all PFT's and all weight types
-    if ( all( pft%wtgcell(:) == wtgcell ) .and. &
-         all( pft%wtlunit(:) == wtlunit ) .and. &
-         all( pft%wtcol(:)   == wtcol ) ) then
-       weights_exactly_the_same = .true.
-    else
-       weights_exactly_the_same = .false.
-    end if
-
-  end function weights_exactly_the_same
-
-  !-----------------------------------------------------------------------
-  logical function weights_within_roundoff_different(  wtgcell, wtlunit, wtcol )
-    !
-    ! !DESCRIPTION:
-    ! Determine if the weights are within roundoff different from each other
-    !
-    ! !USES:
-    use clmtype
-    !
-    ! !ARGUMENTS:
-    implicit none
-    real(r8), intent(IN)    :: wtgcell(:) ! grid cell weights for each PFT
-    real(r8), intent(IN)    :: wtlunit(:) ! land-unit weights for each PFT
-    real(r8), intent(IN)    :: wtcol(:)   ! column weights for each PFT
-    !-----------------------------------------------------------------------
-    real(r8), parameter :: rndVal  = 1.e-13_r8
-
-    ! If differences between all weights for each PFT and each weight type is
-    ! less than or equal to double precision roundoff level -- weights are close
-    if (all( abs(pft%wtgcell(:) - wtgcell) <= rndVal ) .and. &
-        all( abs(pft%wtlunit(:) - wtlunit) <= rndVal ) .and. &
-        all( abs(pft%wtcol(:)   - wtcol  ) <= rndVal ) )then
-       weights_within_roundoff_different = .true.
-    else
-       weights_within_roundoff_different = .false.
-    end if
-
-  end function weights_within_roundoff_different
-
-  !-----------------------------------------------------------------------
-  logical function weights_tooDifferent( bounds,  wtgcell, adiff, maxdiff )
-    !
-    ! !DESCRIPTION:
-    ! Determine if the weights read in are too different and should flag an error
-    !
-    ! !USES:
-    use clmtype
-    implicit none
-    !
-    ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds  ! bounds
-    real(r8), intent(IN)    :: wtgcell(bounds%begp:) ! grid cell weights for each PFT
-    real(r8), intent(IN)    :: adiff              ! tolerance of acceptible difference
-    real(r8), intent(OUT)   :: maxdiff            ! maximum difference found
-    !-----------------------------------------------------------------------
-
-    integer  :: p        ! PFT index
-    real(r8) :: diff     ! difference in weights
-
-    ! Assume weights are NOT different and only change if find weights too different
-    weights_tooDifferent = .false.
-    maxdiff = 0.0_r8
-    do p = bounds%begp,bounds%endp
-       diff = abs(pft%wtgcell(p) - wtgcell(p))
-       if ( diff > maxdiff ) maxdiff = diff
-       if ( diff > adiff   ) weights_tooDifferent = .true.
-    end do
-
-  end function weights_tooDifferent
 
 end module BiogeophysRestMod

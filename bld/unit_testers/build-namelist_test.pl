@@ -643,7 +643,7 @@ system( "../configure -s -phys clm4_5" );
 my $clm45options = "-bgc bgc";
 my @clm45res = ( "10x15", "48x96", "0.9x1.25", "1.9x2.5", "360x720cru" );
 foreach my $res ( @clm45res ) {
-   $options = "-res $res";
+   $options = "-res $res -envxml_dir .";
    eval{ system( "$bldnml $options $clm45options  > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );
    $cfiles->checkfilesexist( "$options", $mode );
@@ -662,7 +662,7 @@ my $mode = "phys45-crop";
 system( "../configure -s -phys clm4_5" );
 my $clm45options = "-bgc cn -crop";
 my $res = "1.9x2.5";
-$options = "-res $res -irrig .true. -crop -bgc cn";
+$options = "-res $res -irrig .true. -crop -bgc cn -envxml_dir .";
 eval{ system( "$bldnml $options $clm45options  > $tempfile 2>&1 " ); };
 is( $@, '', "$options" );
 $cfiles->checkfilesexist( "$options", $mode );

@@ -180,7 +180,7 @@ contains
    eflx_urban_ac             =>    cef%eflx_urban_ac             , & ! Output: [real(r8) (:)]  urban air conditioning flux (W/m**2)    
    eflx_urban_heat           =>    cef%eflx_urban_heat           , & ! Output: [real(r8) (:)]  urban heating flux (W/m**2)             
    eflx_bot                  =>    cef%eflx_bot                  , & ! Input:  [real(r8) (:)]  heat flux from beneath column (W/m**2) [+ = upward]
-   pactive                   =>    pft%active                    , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive                   =>    pft%active                    , & ! Input:  [logical (:)]  true=>do computations on this pft 
    pgridcell                 =>   pft%gridcell                   , & ! Input:  [integer (:)]  pft's gridcell index                     
    plandunit                 =>   pft%landunit                   , & ! Input:  [integer (:)]  pft's landunit index                     
    pwtcol                    =>   pft%wtcol                      , & ! Input:  [real(r8) (:)]  weight of pft relative to column        
@@ -1303,11 +1303,7 @@ contains
        xmf(c) = 0._r8
        qflx_snofrz_lyr(c,-nlevsno+1:0) = 0._r8
        qflx_snofrz_col(c) = 0._r8
-       if (ltype(l)==istice_mec) then
-          ! only need to initialize qflx_glcice_melt over ice_mec landunits, because
-          ! those are the only places where it is computed
-          qflx_glcice_melt(c) = 0._r8
-       end if
+       qflx_glcice_melt(c) = 0._r8
        qflx_snow_melt(c) = 0._r8
     end do
 
@@ -1543,7 +1539,12 @@ contains
 
           ! For glacier_mec columns, compute negative ice flux from melted ice.
           ! Note that qflx_glcice can also include a positive component from excess snow,
-          !  as computed in Hydrology2Mod.F90.
+          !  as computed in Hydrology2Mod.F90.  
+          
+          ! Note also here: There is no need to calculate a negative ice flux for
+          ! qflx_glcice here over soil columns (analagous to the + ice flux potentially
+          ! calculated in Hydrology2Mod.F90), since by definition there is no ice to melt
+          ! over bare land.
 
           l = col%landunit(c)
           if (ltype(l)==istice_mec) then
@@ -1551,7 +1552,7 @@ contains
              if (j>=1 .and. h2osoi_liq(c,j) > 0._r8) then   ! ice layer with meltwater
                 ! melting corresponds to a negative ice flux
                 qflx_glcice_melt(c) = qflx_glcice_melt(c) + h2osoi_liq(c,j)/dtime
-                qflx_glcice(c) = qflx_glcice(c) - h2osoi_liq(c,j)/dtime
+                qflx_glcice(c) =      qflx_glcice(c)      - h2osoi_liq(c,j)/dtime
 
                 ! convert layer back to pure ice by "borrowing" ice from below the column
                 h2osoi_ice(c,j) = h2osoi_ice(c,j) + h2osoi_liq(c,j)

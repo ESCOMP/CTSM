@@ -2074,7 +2074,7 @@ contains
    !-----------------------------------------------------------------------
 
    associate(& 
-   pactive                             =>    pft%active                      , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive                             =>    pft%active                      , & ! Input:  [logical (:)]  true=>do computations on this pft 
    ivt                                 =>    pft%itype                       , & ! Input:  [integer (:)]  pft vegetation type                                
    wtcol                               =>    pft%wtcol                       , & ! Input:  [real(r8) (:)]  weight (relative to column) for this pft (0-1)    
    leafc_to_litter                     =>    pcf%leafc_to_litter             , & ! Input:  [real(r8) (:)]  leaf C litterfall (gC/m2/s)                       

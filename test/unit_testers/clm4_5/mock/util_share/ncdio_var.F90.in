@@ -4,7 +4,11 @@ module ncdio_var
   ! associated methods for working with this derived type.
 
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_assert_mod , only : shr_assert
+
+  ! Note that we use shr_assert directly rather than using the macros. This is so we don't
+  ! have to worry about whether or not NDEBUG is defined (we ALWAYS want to do these
+  ! assertions here).
+  use shr_assert_mod , only : shr_assert, shr_assert_all
   
   implicit none
   private
@@ -67,10 +71,10 @@ contains
 
     constructor%varname = varname
 
-    allocate(constructor%data, source=data)
+    allocate(constructor%data(size(data,1), size(data,2)))
     constructor%data = data
     
-    allocate(constructor%data_shape, source=data_shape)
+    allocate(constructor%data_shape(size(data_shape)))
     constructor%data_shape = data_shape
 
     constructor%ntimes = size(data, 2)
@@ -123,7 +127,7 @@ contains
 
     character(len=*), parameter :: subname = 'get_data_{DIMS}d'
 
-    call shr_assert((shape(data) == this%data_shape), subname//' incorrect shape for data')
+    call shr_assert_all((shape(data) == this%data_shape), subname//' incorrect shape for data')
     call shr_assert(1 <= nt .and. nt <= this%ntimes, subname//' nt out of bounds')
 
     data = reshape(this%data(:,nt), this%data_shape(1:{DIMS}))

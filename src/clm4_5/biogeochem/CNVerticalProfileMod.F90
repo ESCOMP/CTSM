@@ -91,7 +91,7 @@ contains
    pcolumn               => pft%column                , & ! Input:  [integer (:)]  pft's column index                                 
    rootfr                => pps%rootfr                , & ! Input:  [real(r8) (:,:)]  fraction of roots in each soil layer  (nlevgrnd)
    wtcol                 => pft%wtcol                 , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
-   pactive               => pft%active                , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive               => pft%active                , & ! Input:  [logical (:)]  true=>do computations on this pft 
    begp                  => bounds%begp               , &
    endp                  => bounds%endp               , &
    begc                  => bounds%begc               , &

@@ -414,7 +414,7 @@ contains
     use clm_varctl  , only : create_crop_landunit
     use fileutils   , only : getfil
     use domainMod   , only : domain_type, domain_init, domain_clean
-    use clm_varsur  , only : pctspec, wt_lunit, topo_glc_mec
+    use clm_varsur  , only : wt_lunit, topo_glc_mec
     !
     ! !ARGUMENTS:
     implicit none
@@ -444,9 +444,6 @@ contains
           call endrun(msg=errMsg(__FILE__, __LINE__))
        endif
     endif
-
-    allocate(pctspec(begg:endg))
-    pctspec(begg:endg) = 0._r8
 
     topo_glc_mec(:,:) = 0._r8
 
@@ -548,7 +545,7 @@ contains
     ! !USES:
     use clm_varpar    , only : maxpatch_glcmec, nlevurb
     use clm_varcon    , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice, istice_mec
-    use clm_varsur    , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec, pctspec
+    use clm_varsur    , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec
     use UrbanInputMod , only : CheckUrban
     !
     ! !ARGUMENTS:
@@ -572,6 +569,7 @@ contains
     integer ,pointer :: urban_region_id(:)
     real(r8),pointer :: pctglc_mec_tot(:) ! percent of grid cell is glacier (sum over classes)
     real(r8),pointer :: pcturb_tot(:)  ! percent of grid cell is urban (sum over density classes)
+    real(r8),pointer :: pctspec(:)     ! percent of spec lunits wrt gcell
     integer  :: dens_index             ! urban density index
     character(len=32) :: subname = 'surfrd_special'  ! subroutine name
     real(r8) closelat,closelon
@@ -585,6 +583,7 @@ contains
     allocate(pcturb_tot(begg:endg))
     allocate(urban_region_id(begg:endg))
     allocate(pctglc_mec_tot(begg:endg))
+    allocate(pctspec(begg:endg))
 
     call check_dim(ncid, 'nlevsoi', nlevsoifl)
 
@@ -704,7 +703,7 @@ contains
 
     call CheckUrban(begg, endg, pcturb(begg:endg,:), subname)
 
-    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,urban_region_id,pctglc_mec_tot)
+    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,urban_region_id,pctglc_mec_tot,pctspec)
 
   end subroutine surfrd_special
 

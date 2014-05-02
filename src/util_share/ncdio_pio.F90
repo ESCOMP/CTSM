@@ -32,8 +32,8 @@ module ncdio_pio
   use mct_mod        , only : mct_gsMap, mct_gsMap_lsize, mct_gsMap_gsize, mct_gsMap_OP
   use pio            , only : file_desc_t, io_desc_t, iosystem_desc_t, pio_64bit_offset
   use pio            , only : pio_bcast_error, pio_char, pio_clobber, pio_closefile, pio_createfile, pio_def_dim
-  use pio            , only : pio_def_var, pio_double, pio_enddef, pio_get_var, pio_global, pio_initdecomp
-  use pio            , only : pio_inq_dimid, pio_inq_dimlen, pio_inq_dimname, pio_inq_vardimid, pio_inq_varid
+  use pio            , only : pio_def_var, pio_double, pio_enddef, pio_get_att, pio_get_var, pio_global, pio_initdecomp
+  use pio            , only : pio_inq_att, pio_inq_dimid, pio_inq_dimlen, pio_inq_dimname, pio_inq_vardimid, pio_inq_varid
   use pio            , only : pio_inq_varname, pio_inq_varndims, pio_inquire, pio_int, pio_internal_error
   use pio            , only : pio_noclobber, pio_noerr, pio_nofill, pio_nowrite, pio_offset, pio_openfile
   use pio            , only : pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling
@@ -47,6 +47,7 @@ module ncdio_pio
   ! !PUBLIC MEMBER FUNCTIONS:
   !
   public :: check_var          ! determine if variable is on netcdf file
+  public :: check_att          ! check if attribute is on file
   public :: check_dim          ! validity check on dimension
   public :: ncd_pio_openfile   ! open a file
   public :: ncd_pio_createfile ! create a new file
@@ -54,6 +55,7 @@ module ncdio_pio
   public :: ncd_pio_init       ! called from clm_comp
   public :: ncd_enddef         ! end define mode
   public :: ncd_putatt         ! put attribute
+  public :: ncd_getatt         ! get attribute
   public :: ncd_defdim         ! define dimension
   public :: ncd_inqdid         ! inquire dimension id
   public :: ncd_inqdname       ! inquire dimension name
@@ -87,20 +89,25 @@ module ncdio_pio
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   !
-# 85 "ncdio_pio.F90.in"
+# 87 "ncdio_pio.F90.in"
   interface ncd_defvar
      module procedure ncd_defvar_bynf
      module procedure ncd_defvar_bygrid
   end interface
 
-# 90 "ncdio_pio.F90.in"
+# 92 "ncdio_pio.F90.in"
   interface ncd_putatt
      module procedure ncd_putatt_int
      module procedure ncd_putatt_real
      module procedure ncd_putatt_char
   end interface
 
-# 96 "ncdio_pio.F90.in"
+# 98 "ncdio_pio.F90.in"
+  interface ncd_getatt
+     module procedure ncd_getatt_char
+  end interface ncd_getatt
+
+# 102 "ncdio_pio.F90.in"
   interface ncd_io 
      module procedure ncd_io_char_var0_start_glob
 
@@ -168,7 +175,7 @@ module ncdio_pio
      module procedure ncd_io_1d_logical
   end interface
 
-# 119 "ncdio_pio.F90.in"
+# 125 "ncdio_pio.F90.in"
   interface ncd_inqvdlen
      module procedure ncd_inqvdlen_byDesc
      module procedure ncd_inqvdlen_byName
@@ -199,11 +206,11 @@ module ncdio_pio
   type(iodesc_plus_type) ,private, target :: iodesc_list(max_iodesc)
   !-----------------------------------------------------------------------
 
-# 149 "ncdio_pio.F90.in"
+# 155 "ncdio_pio.F90.in"
 contains
 
   !-----------------------------------------------------------------------
-# 152 "ncdio_pio.F90.in"
+# 158 "ncdio_pio.F90.in"
   subroutine ncd_pio_init()
     !
     ! !DESCRIPTION:
@@ -217,11 +224,11 @@ contains
     PIO_subsystem => shr_pio_getiosys(inst_name)
     io_type       =  shr_pio_getiotype(inst_name)
 
-# 165 "ncdio_pio.F90.in"
+# 171 "ncdio_pio.F90.in"
   end subroutine ncd_pio_init
 
   !-----------------------------------------------------------------------
-# 168 "ncdio_pio.F90.in"
+# 174 "ncdio_pio.F90.in"
   subroutine ncd_pio_openfile(file, fname, mode)
     !
     ! !DESCRIPTION:
@@ -244,11 +251,11 @@ contains
        write(iulog,*) 'Opened existing file ', trim(fname), file%fh
     end if
 
-# 190 "ncdio_pio.F90.in"
+# 196 "ncdio_pio.F90.in"
   end subroutine ncd_pio_openfile
 
   !-----------------------------------------------------------------------
-# 193 "ncdio_pio.F90.in"
+# 199 "ncdio_pio.F90.in"
   subroutine ncd_pio_closefile(file)
     !
     ! !DESCRIPTION:
@@ -260,11 +267,11 @@ contains
 
     call pio_closefile(file)
 
-# 204 "ncdio_pio.F90.in"
+# 210 "ncdio_pio.F90.in"
   end subroutine ncd_pio_closefile
 
   !-----------------------------------------------------------------------
-# 207 "ncdio_pio.F90.in"
+# 213 "ncdio_pio.F90.in"
   subroutine ncd_pio_createfile(file, fname)
     !
     ! !DESCRIPTION:
@@ -286,11 +293,11 @@ contains
        write(iulog,*) 'Opened file ', trim(fname),  ' to write', file%fh
     end if
 
-# 228 "ncdio_pio.F90.in"
+# 234 "ncdio_pio.F90.in"
   end subroutine ncd_pio_createfile
 
   !-----------------------------------------------------------------------
-# 231 "ncdio_pio.F90.in"
+# 237 "ncdio_pio.F90.in"
   subroutine check_var(ncid, varname, vardesc, readvar, print_err )
     !
     ! !DESCRIPTION:
@@ -325,11 +332,45 @@ contains
     end if
     call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
 
-# 265 "ncdio_pio.F90.in"
+# 271 "ncdio_pio.F90.in"
   end subroutine check_var
 
   !-----------------------------------------------------------------------
-# 268 "ncdio_pio.F90.in"
+# 274 "ncdio_pio.F90.in"
+  subroutine check_att(ncid, varid, attrib, att_found)
+    !
+    ! !DESCRIPTION:
+    ! Check if attribute is on file
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    logical           ,intent(out)   :: att_found ! true if the attribute was found
+    !
+    ! !LOCAL VARIABLES:
+    integer :: att_type  ! attribute type
+    integer :: att_len   ! attribute length
+    integer :: status
+
+    character(len=*), parameter :: subname = 'check_att'
+    !-----------------------------------------------------------------------
+    
+    att_found = .true.
+    call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
+    status = PIO_inq_att(ncid, varid, trim(attrib), att_type, att_len)
+    if (status /= PIO_noerr) then
+       att_found = .false.
+    end if
+    call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
+
+# 303 "ncdio_pio.F90.in"
+  end subroutine check_att
+
+  !-----------------------------------------------------------------------
+# 306 "ncdio_pio.F90.in"
   subroutine check_dim(ncid, dimname, value)
     !
     ! !DESCRIPTION:
@@ -354,11 +395,11 @@ contains
        call shr_sys_abort(errMsg(__FILE__, __LINE__))
     end if
 
-# 292 "ncdio_pio.F90.in"
+# 330 "ncdio_pio.F90.in"
   end subroutine check_dim
 
   !-----------------------------------------------------------------------
-# 295 "ncdio_pio.F90.in"
+# 333 "ncdio_pio.F90.in"
   subroutine ncd_enddef(ncid)
     !
     ! !DESCRIPTION:
@@ -373,11 +414,11 @@ contains
 
     status = PIO_enddef(ncid)
 
-# 309 "ncdio_pio.F90.in"
+# 347 "ncdio_pio.F90.in"
   end subroutine ncd_enddef
 
   !-----------------------------------------------------------------------
-# 312 "ncdio_pio.F90.in"
+# 350 "ncdio_pio.F90.in"
   subroutine ncd_inqdid(ncid,name,dimid,dimexist)
     !
     ! !DESCRIPTION:
@@ -406,11 +447,11 @@ contains
        call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
     end if
 
-# 340 "ncdio_pio.F90.in"
+# 378 "ncdio_pio.F90.in"
   end subroutine ncd_inqdid
 
   !-----------------------------------------------------------------------
-# 343 "ncdio_pio.F90.in"
+# 381 "ncdio_pio.F90.in"
   subroutine ncd_inqdlen(ncid,dimid,len,name)
     !
     ! !DESCRIPTION:
@@ -432,11 +473,11 @@ contains
     len = -1
     status = PIO_inq_dimlen(ncid,dimid,len)
 
-# 364 "ncdio_pio.F90.in"
+# 402 "ncdio_pio.F90.in"
   end subroutine ncd_inqdlen
 
   !-----------------------------------------------------------------------
-# 367 "ncdio_pio.F90.in"
+# 405 "ncdio_pio.F90.in"
   subroutine ncd_inqdname(ncid,dimid,dname)
     !
     ! !DESCRIPTION:
@@ -453,11 +494,11 @@ contains
 
     status = PIO_inq_dimname(ncid,dimid,dname)
 
-# 383 "ncdio_pio.F90.in"
+# 421 "ncdio_pio.F90.in"
   end subroutine ncd_inqdname
 
   !-----------------------------------------------------------------------
-# 386 "ncdio_pio.F90.in"
+# 424 "ncdio_pio.F90.in"
   subroutine ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
     !
     ! !ARGUMENTS:
@@ -521,11 +562,11 @@ contains
 
     ns = ni*nj
 
-# 449 "ncdio_pio.F90.in"
+# 487 "ncdio_pio.F90.in"
   end subroutine ncd_inqfdims
 
   !-----------------------------------------------------------------------
-# 452 "ncdio_pio.F90.in"
+# 490 "ncdio_pio.F90.in"
   subroutine ncd_inqvid(ncid,name,varid,vardesc,readvar)
     !
     ! !DESCRIPTION:
@@ -559,11 +600,11 @@ contains
     endif
     varid = vardesc%varid
 
-# 485 "ncdio_pio.F90.in"
+# 523 "ncdio_pio.F90.in"
   end subroutine ncd_inqvid
 
   !-----------------------------------------------------------------------
-# 488 "ncdio_pio.F90.in"
+# 526 "ncdio_pio.F90.in"
   subroutine ncd_inqvdims(ncid,ndims,vardesc)
     !
     ! !DESCRIPTION:
@@ -581,11 +622,11 @@ contains
     ndims = -1
     status = PIO_inq_varndims(ncid,vardesc,ndims)
 
-# 505 "ncdio_pio.F90.in"
+# 543 "ncdio_pio.F90.in"
   end subroutine ncd_inqvdims
 
   !-----------------------------------------------------------------------
-# 508 "ncdio_pio.F90.in"
+# 546 "ncdio_pio.F90.in"
   subroutine ncd_inqvname(ncid,varid,vname,vardesc)
     !
     ! !DESCRIPTION:
@@ -604,11 +645,11 @@ contains
     vname = ''
     status = PIO_inq_varname(ncid,vardesc,vname)
 
-# 526 "ncdio_pio.F90.in"
+# 564 "ncdio_pio.F90.in"
   end subroutine ncd_inqvname
 
   !-----------------------------------------------------------------------
-# 529 "ncdio_pio.F90.in"
+# 567 "ncdio_pio.F90.in"
   subroutine ncd_inqvdids(ncid,dids,vardesc)
     !
     ! !DESCRIPTION:
@@ -626,11 +667,11 @@ contains
     dids = -1
     status = PIO_inq_vardimid(ncid,vardesc,dids)
 
-# 546 "ncdio_pio.F90.in"
+# 584 "ncdio_pio.F90.in"
   end subroutine ncd_inqvdids
 
   !-----------------------------------------------------------------------
-# 549 "ncdio_pio.F90.in"
+# 587 "ncdio_pio.F90.in"
   subroutine ncd_inqvdlen_byDesc(ncid,vardesc,dimnum,dlen,err_code)
     !
     ! !DESCRIPTION:
@@ -674,12 +715,12 @@ contains
        err_code = error_dimnum_out_of_range
     end if
 
-# 592 "ncdio_pio.F90.in"
+# 630 "ncdio_pio.F90.in"
   end subroutine ncd_inqvdlen_byDesc
 
 
   !-----------------------------------------------------------------------
-# 596 "ncdio_pio.F90.in"
+# 634 "ncdio_pio.F90.in"
   subroutine ncd_inqvdlen_byName(ncid,varname,dimnum,dlen,err_code)
     !
     ! !DESCRIPTION:
@@ -716,12 +757,12 @@ contains
        err_code = error_variable_not_found
     end if
 
-# 632 "ncdio_pio.F90.in"
+# 670 "ncdio_pio.F90.in"
   end subroutine ncd_inqvdlen_byName
 
 
   !-----------------------------------------------------------------------
-# 636 "ncdio_pio.F90.in"
+# 674 "ncdio_pio.F90.in"
   subroutine ncd_putatt_int(ncid,varid,attrib,value,xtype)
     !
     ! !DESCRIPTION:
@@ -740,11 +781,11 @@ contains
 
     status = PIO_put_att(ncid,varid,trim(attrib),value)
 
-# 654 "ncdio_pio.F90.in"
+# 692 "ncdio_pio.F90.in"
   end subroutine ncd_putatt_int
 
   !-----------------------------------------------------------------------
-# 657 "ncdio_pio.F90.in"
+# 695 "ncdio_pio.F90.in"
   subroutine ncd_putatt_char(ncid,varid,attrib,value,xtype)
     !
     ! !DESCRIPTION:
@@ -763,11 +804,11 @@ contains
 
     status = PIO_put_att(ncid,varid,trim(attrib),value)
 
-# 675 "ncdio_pio.F90.in"
+# 713 "ncdio_pio.F90.in"
   end subroutine ncd_putatt_char
 
   !-----------------------------------------------------------------------
-# 678 "ncdio_pio.F90.in"
+# 716 "ncdio_pio.F90.in"
   subroutine ncd_putatt_real(ncid,varid,attrib,value,xtype)
     !
     ! !DESCRIPTION:
@@ -793,11 +834,38 @@ contains
        status = PIO_put_att(ncid,varid,trim(attrib),value4)
     endif
 
-# 703 "ncdio_pio.F90.in"
+# 741 "ncdio_pio.F90.in"
   end subroutine ncd_putatt_real
 
   !-----------------------------------------------------------------------
-# 706 "ncdio_pio.F90.in"
+# 744 "ncdio_pio.F90.in"
+  subroutine ncd_getatt_char(ncid,varid,attrib,value)
+    !
+    ! !DESCRIPTION:
+    ! get a character attribute
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    character(len=*)  ,intent(out)   :: value     ! netcdf attrib value
+    !
+    ! !LOCAL VARIABLES:
+    integer :: status
+    
+    character(len=*), parameter :: subname = 'ncd_getatt_char'
+    !-----------------------------------------------------------------------
+    
+    status = PIO_get_att(ncid,varid,trim(attrib),value)
+
+# 765 "ncdio_pio.F90.in"
+  end subroutine ncd_getatt_char
+
+
+  !-----------------------------------------------------------------------
+# 769 "ncdio_pio.F90.in"
   subroutine ncd_defdim(ncid,attrib,value,dimid)
     !
     ! !DESCRIPTION:
@@ -815,11 +883,11 @@ contains
 
     status = pio_def_dim(ncid,attrib,value,dimid)
 
-# 723 "ncdio_pio.F90.in"
+# 786 "ncdio_pio.F90.in"
   end subroutine ncd_defdim
 
   !-----------------------------------------------------------------------
-# 726 "ncdio_pio.F90.in"
+# 789 "ncdio_pio.F90.in"
   subroutine ncd_defvar_bynf(ncid, varname, xtype, ndims, dimid, varid, &
        long_name, units, cell_method, missing_value, fill_value, &
        imissing_value, ifill_value, comment, flag_meanings, &
@@ -957,11 +1025,11 @@ contains
        status = PIO_put_att(ncid,varid,'valid_range',    (/0, 1/) )
     end if
 
-# 863 "ncdio_pio.F90.in"
+# 926 "ncdio_pio.F90.in"
   end subroutine ncd_defvar_bynf
 
   !-----------------------------------------------------------------------
-# 866 "ncdio_pio.F90.in"
+# 929 "ncdio_pio.F90.in"
   subroutine ncd_defvar_bygrid(ncid, varname, xtype, &
        dim1name, dim2name, dim3name, dim4name, dim5name, &
        long_name, units, cell_method, missing_value, fill_value, &
@@ -1037,11 +1105,11 @@ contains
          comment=comment, flag_meanings=flag_meanings, &
          flag_values=flag_values, nvalid_range=nvalid_range )
 
-# 941 "ncdio_pio.F90.in"
+# 1004 "ncdio_pio.F90.in"
   end subroutine ncd_defvar_bygrid
 
   !------------------------------------------------------------------------
-# 944 "ncdio_pio.F90.in"
+# 1007 "ncdio_pio.F90.in"
   subroutine ncd_io_char_var0_start_glob(vardesc, data, flag, ncid, start )
     !
     ! !DESCRIPTION:
@@ -1069,12 +1137,12 @@ contains
 
     endif
 
-# 971 "ncdio_pio.F90.in"
+# 1034 "ncdio_pio.F90.in"
   end subroutine ncd_io_char_var0_start_glob
 
   !------------------------------------------------------------------------
   !DIMS 0,1
-# 975 "ncdio_pio.F90.in"
+# 1038 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_log_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -1165,10 +1233,10 @@ contains
 
     endif   ! flag
 
-# 1065 "ncdio_pio.F90.in"
+# 1128 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_log_glob
   !DIMS 0,1
-# 975 "ncdio_pio.F90.in"
+# 1038 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_log_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -1259,13 +1327,13 @@ contains
 
     endif   ! flag
 
-# 1065 "ncdio_pio.F90.in"
+# 1128 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_log_glob
 
   !------------------------------------------------------------------------
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1070 "ncdio_pio.F90.in"
+# 1133 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1362,11 +1430,11 @@ contains
 
     endif
 
-# 1166 "ncdio_pio.F90.in"
+# 1229 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1070 "ncdio_pio.F90.in"
+# 1133 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1463,11 +1531,11 @@ contains
 
     endif
 
-# 1166 "ncdio_pio.F90.in"
+# 1229 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1070 "ncdio_pio.F90.in"
+# 1133 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1564,11 +1632,11 @@ contains
 
     endif
 
-# 1166 "ncdio_pio.F90.in"
+# 1229 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1070 "ncdio_pio.F90.in"
+# 1133 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1665,11 +1733,11 @@ contains
 
     endif
 
-# 1166 "ncdio_pio.F90.in"
+# 1229 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1070 "ncdio_pio.F90.in"
+# 1133 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1766,11 +1834,11 @@ contains
 
     endif
 
-# 1166 "ncdio_pio.F90.in"
+# 1229 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1070 "ncdio_pio.F90.in"
+# 1133 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1867,11 +1935,11 @@ contains
 
     endif
 
-# 1166 "ncdio_pio.F90.in"
+# 1229 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1070 "ncdio_pio.F90.in"
+# 1133 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -1968,11 +2036,11 @@ contains
 
     endif
 
-# 1166 "ncdio_pio.F90.in"
+# 1229 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
-# 1070 "ncdio_pio.F90.in"
+# 1133 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
     !
     ! !DESCRIPTION:
@@ -2069,13 +2137,13 @@ contains
 
     endif
 
-# 1166 "ncdio_pio.F90.in"
+# 1229 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_double_glob
 
   !------------------------------------------------------------------------
   !DIMS 0,1,2
   !TYPE text
-# 1171 "ncdio_pio.F90.in"
+# 1234 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2155,11 +2223,11 @@ contains
 
     endif
 
-# 1250 "ncdio_pio.F90.in"
+# 1313 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_text_glob 
   !DIMS 0,1,2
   !TYPE text
-# 1171 "ncdio_pio.F90.in"
+# 1234 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2239,11 +2307,11 @@ contains
 
     endif
 
-# 1250 "ncdio_pio.F90.in"
+# 1313 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_text_glob 
   !DIMS 0,1,2
   !TYPE text
-# 1171 "ncdio_pio.F90.in"
+# 1234 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2323,13 +2391,13 @@ contains
 
     endif
 
-# 1250 "ncdio_pio.F90.in"
+# 1313 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_text_glob 
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double,logical
-# 1255 "ncdio_pio.F90.in"
+# 1318 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_int(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2497,10 +2565,10 @@ contains
 
     endif
 
-# 1422 "ncdio_pio.F90.in"
+# 1485 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_int
   !TYPE int,double,logical
-# 1255 "ncdio_pio.F90.in"
+# 1318 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_double(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2668,10 +2736,10 @@ contains
 
     endif
 
-# 1422 "ncdio_pio.F90.in"
+# 1485 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_double
   !TYPE int,double,logical
-# 1255 "ncdio_pio.F90.in"
+# 1318 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_logical(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2839,13 +2907,13 @@ contains
 
     endif
 
-# 1422 "ncdio_pio.F90.in"
+# 1485 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_logical
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double
-# 1427 "ncdio_pio.F90.in"
+# 1490 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_int(varname, data, dim1name, lowerb2, upperb2, &
        flag, ncid, nt, readvar, switchdim, cnvrtnan2fill)
     !
@@ -3072,10 +3140,10 @@ contains
        deallocate(temp)
     end if
 
-# 1653 "ncdio_pio.F90.in"
+# 1716 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_int
   !TYPE int,double
-# 1427 "ncdio_pio.F90.in"
+# 1490 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_double(varname, data, dim1name, lowerb2, upperb2, &
        flag, ncid, nt, readvar, switchdim, cnvrtnan2fill)
     !
@@ -3302,13 +3370,13 @@ contains
        deallocate(temp)
     end if
 
-# 1653 "ncdio_pio.F90.in"
+# 1716 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_double
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double
-# 1658 "ncdio_pio.F90.in"
+# 1721 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_int(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
@@ -3435,10 +3503,10 @@ contains
 
     endif
 
-# 1784 "ncdio_pio.F90.in"
+# 1847 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_int
   !TYPE int,double
-# 1658 "ncdio_pio.F90.in"
+# 1721 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_double(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
@@ -3565,12 +3633,12 @@ contains
 
     endif
 
-# 1784 "ncdio_pio.F90.in"
+# 1847 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_double
 
   !------------------------------------------------------------------------
 
-# 1788 "ncdio_pio.F90.in"
+# 1851 "ncdio_pio.F90.in"
   subroutine scam_field_offsets( ncid, dim1name, vardesc, start, count, &
        found, posNOTonfile)
     !
@@ -3621,7 +3689,7 @@ contains
     if ( present(posNOTonfile) )then
        if ( posNOTonfile )then
           if ( .not. present(found) )then
-# 1838 "ncdio_pio.F90.in"
+# 1901 "ncdio_pio.F90.in"
              call shr_sys_abort('ERROR: Bad subroutine calling structure posNOTonfile sent, but found was NOT!'//&
                   errMsg(__FILE__, __LINE__))
           end if
@@ -3767,12 +3835,12 @@ contains
     enddo
     deallocate(dids)
 
-# 1983 "ncdio_pio.F90.in"
+# 2046 "ncdio_pio.F90.in"
   end subroutine scam_field_offsets
 
   !------------------------------------------------------------------------
 
-# 1987 "ncdio_pio.F90.in"
+# 2050 "ncdio_pio.F90.in"
   subroutine ncd_getiodesc(ncid, clmlevel, ndims, dims, dimids, &
        xtype, iodnum, switchdim) 
     !
@@ -3961,7 +4029,7 @@ contains
     iodesc_list(iodnum)%dims(1:ndims)   = dims(1:ndims)
     iodesc_list(iodnum)%dimids(1:ndims) = dimids(1:ndims)
 
-# 2175 "ncdio_pio.F90.in"
+# 2238 "ncdio_pio.F90.in"
   end subroutine ncd_getiodesc
 
 end module ncdio_pio

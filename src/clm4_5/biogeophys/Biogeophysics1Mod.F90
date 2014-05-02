@@ -146,7 +146,7 @@ contains
    watopt                    =>    cps%watopt                   , & ! Input:  [real(r8) (:,:)] volumetric soil moisture corresponding to no restriction on ET from urban pervious surface
    rootfr_road_perv          =>    cps%rootfr_road_perv         , & ! Input:  [real(r8) (:,:)] fraction of roots in each soil layer for urban pervious road
    rootr_road_perv           =>    cps%rootr_road_perv          , & ! Input:  [real(r8) (:,:)] effective fraction of roots in each soil layer for urban pervious road
-   pactive                   =>    pft%active                   , & ! Input:  [logical (:)] true=>do computations on this pft (see reweightMod for details)
+   pactive                   =>    pft%active                   , & ! Input:  [logical (:)] true=>do computations on this pft 
    ivt                       =>   pft%itype                     , & ! Input:  [integer (:)] pft vegetation type                       
    elai                      =>    pps%elai                     , & ! Input:  [real(r8) (:)] one-sided leaf area index with burying by snow
    esai                      =>    pps%esai                     , & ! Input:  [real(r8) (:)] one-sided stem area index with burying by snow

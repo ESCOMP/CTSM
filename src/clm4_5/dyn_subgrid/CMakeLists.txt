@@ -9,6 +9,6 @@ sourcelist_to_parent(clm_genf90_sources)
 
 list(APPEND clm_sources "${clm_genf90_sources}")
 
-list(APPEND clm_sources dynTimeInfoMod.F90 dynLandunitAreaMod.F90)
+list(APPEND clm_sources dynPriorWeightsMod.F90 dynTimeInfoMod.F90 dynLandunitAreaMod.F90 dynInitColumnsMod.F90)
 
 sourcelist_to_parent(clm_sources)

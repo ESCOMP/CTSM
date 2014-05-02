@@ -1342,7 +1342,7 @@ sub process_namelist_inline_logic {
   setup_logic_delta_time($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_decomp_performance($opts->{'test'}, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snow($opts->{'test_files'}, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_params_file($opts->{'test'}, $nl_flags, $definition, $defaults, $nl);
   setup_logic_create_crop_landunit($opts->{'test'}, $nl_flags, $definition, $defaults, $nl);
   setup_logic_urban($opts->{'test'}, $nl_flags, $definition, $defaults, $nl);
@@ -1577,7 +1577,26 @@ sub setup_logic_glacier {
   #
   # Glacier multiple elevation class options
   #
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
+
+  if ($nl_flags->{'phys'} eq "clm4_5") {
+     # glc_do_dynglacier is set via CLM_UPDATE_GLC_AREAS; it cannot be set via
+     # user_nl_clm (this is because we might eventually want the coupler and glc
+     # to also respond to CLM_UPDATE_GLC_AREAS, by not bothering to send / map
+     # these fields - so we want to ensure that CLM is truly listening to this
+     # shared xml variable and not overriding it)
+     my $var = "glc_do_dynglacier";
+     my $val = logical_to_fortran($envxml_ref->{'CLM_UPDATE_GLC_AREAS'});
+     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'val'=>$val);
+     if (lc($nl->get_value($var)) ne lc($val)) {
+        fatal_error("glc_do_dynglacier can only be set via the env variable CLM_UPDATE_GLC_AREAS: it can NOT be set in user_nl_clm\n");
+     }
+
+     # glc_dyn_runoff_routing is also set via CLM_UPDATE_GLC_AREAS by default,
+     # but unlike glc_do_dynglacier, it can be overridden via user_nl_clm
+     $var = "glc_dyn_runoff_routing";
+     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'val'=>$val);     
+  }
 
   my $var = "maxpatch_glcmec";
   add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'val'=>$nl_flags->{'glc_nec'} );
@@ -1614,6 +1633,7 @@ sub setup_logic_glacier {
     if ($nl_flags->{'phys'} eq "clm4_5") {
       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glcmec_downscale_rain_snow_convert');
       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glcmec_downscale_longwave');
+      add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glc_snow_persistence_max_days');
     }
 
   } else {
@@ -1624,9 +1644,8 @@ sub setup_logic_glacier {
         fatal_error("glc_grid is set, but glc_nec is zero");
       }
     }
-    # Error checking for glacier multiple elevation class options when glc_nec off
-    # Make sure create_glacier_mec_landunit/glc_smb/glc_dyntopo are NOT true, and fglcmask
-    # is NOT set
+    # Error checking for glacier multiple elevation class options when glc_mec off
+    # Make sure various glc_mec-specific logicals are not true, and fglcmask is not set
     my $create_glcmec = $nl->get_value('create_glacier_mec_landunit');
     if ( defined($create_glcmec) ) {
       if ( $create_glcmec =~ /$TRUE/i ) {
@@ -1643,6 +1662,18 @@ sub setup_logic_glacier {
     if ( defined($glc_dyntopo) ) {
       if ( $glc_dyntopo =~ /$TRUE/i ) {
         fatal_error("glc_dyntopo is true, but glc_nec is equal to zero");
+      }
+    }
+    my $glc_do_dynglacier= $nl->get_value('glc_do_dynglacier');
+    if ( defined($glc_do_dynglacier) ) {
+      if ( $glc_do_dynglacier =~ /$TRUE/i ) {
+        fatal_error("glc_do_dynglacier (set from CLM_UPDATE_GLC_AREAS env variable) is true, but glc_nec is equal to zero");
+      }
+    }
+    my $glc_dyn_runoff_routing= $nl->get_value('glc_dyn_runoff_routing');
+    if ( defined($glc_dyn_runoff_routing) ) {
+      if ( $glc_dyn_runoff_routing =~ /$TRUE/i ) {
+        fatal_error("glc_dyn_runoff_routing is true, but glc_nec is equal to zero");
       }
     }
     my $fglcmask = $nl->get_value('fglcmask');
@@ -2281,7 +2312,7 @@ sub write_output_files {
   if ($nl_flags->{'phys'} eq "clm4_0") {
     @groups = qw(clm_inparm ndepdyn_nml);
   } else {
-    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams clm_hydrology1_inparm clm_soilhydrology_inparm);
+    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams clm_hydrology1_inparm clm_soilhydrology_inparm finidat_consistency_checks dynpft_consistency_checks);
     if ( $nl_flags->{'use_lch4'}  eq ".true." ) {
       push @groups, "ch4par_in";
     }
@@ -2779,6 +2810,27 @@ sub quote_string {
         $str = "\'$str\'";
     }
     return $str;
+}
+
+#-------------------------------------------------------------------------------
+
+sub logical_to_fortran {
+   # Given a logical variable ('true' / 'false'), convert it to a fortran-style logical ('.true.' / '.false.')
+   # The result will be lowercase, regardless of the case of the input.
+   my ($var) = @_;
+   my $result;
+
+   if (lc($var) eq 'true') {
+      $result = ".true.";
+   }
+   elsif (lc($var) eq 'false') {
+      $result = ".false.";
+   }
+   else {
+      fatal_error("Unexpected value in logical_to_fortran: $var\n");
+   }
+
+   return $result;
 }
 
 #-------------------------------------------------------------------------------

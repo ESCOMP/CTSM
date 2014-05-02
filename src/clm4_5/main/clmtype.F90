@@ -1259,7 +1259,8 @@ type, public :: column_pstate_type
    real(r8), pointer :: mss_frc_cly_vld(:)    ![frc] Mass fraction clay limited to 0.20
    real(r8), pointer :: mbl_bsn_fct(:)        !basin factor
    logical , pointer :: do_capsnow(:)         !true => do snow capping
-   real(r8), pointer :: snow_depth(:)             !snow height of snow covered area (m)
+   real(r8), pointer :: snow_depth(:)         !snow height of snow covered area (m)
+   real(r8), pointer :: snow_persistence(:)   !length of time that ground has had non-zero snow thickness (sec)
    real(r8), pointer :: snowdp(:)             ! gridcell averaged snow height (m)
    real(r8), pointer :: frac_sno(:)           !fraction of ground covered by snow (0 to 1)
    real(r8), pointer :: frac_sno_eff(:)       !fraction of ground covered by snow (0 to 1)
@@ -1427,7 +1428,6 @@ type, public :: column_pstate_type
    ! added by Lei Meng for pH effects of methane production
    real(r8), pointer :: pH(:)               ! pH values
    ! End New variables for methane code
-   real(r8), pointer :: glc_frac(:)           ! ice fractional area
    real(r8), pointer :: glc_topo(:)           ! surface elevation (m)
    real(r8), pointer :: sub_surf_abs_SW(:)    ! percent of solar radiation absorbed below first snow layer
 end type column_pstate_type
@@ -1749,8 +1749,6 @@ type, public :: column_wflux_type
    real(r8), pointer :: qflx_glcice(:)      ! net flux of new glacial ice (growth - melt) (mm H2O/s), passed to GLC
    real(r8), pointer :: qflx_glcice_frz(:)  ! ice growth (positive definite) (mm H2O/s)
    real(r8), pointer :: qflx_glcice_melt(:) ! ice melt (positive definite) (mm H2O/s)
-   real(r8), pointer :: glc_rofi(:)         ! ice runoff passed from GLC to CLM (mm H2O /s)
-   real(r8), pointer :: glc_rofl(:)         ! liquid runoff passed from GLC to CLM (mm H2O /s)
 end type column_wflux_type
 
 type(column_wflux_type) :: cwf       ! column water flux
@@ -2235,7 +2233,7 @@ type, public :: pft_type
    ! topological mapping functionality
    integer , pointer :: itype(:)        !pft vegetation 
    integer , pointer :: mxy(:)          !m index for laixy(i,j,m),etc. (undefined for special landunits)
-   logical , pointer :: active(:)       !true=>do computations on this pft (see reweightMod for details)
+   logical , pointer :: active(:)       !true=>do computations on this pft 
 end type pft_type
 
 type(pft_type), target :: pft  !plant functional type (pft) data structure 
@@ -2255,7 +2253,7 @@ type, public :: column_type
    integer , pointer :: npfts(:)        !number of pfts for each column
    ! topological mapping functionality
    integer , pointer :: itype(:)        !column type
-   logical , pointer :: active(:)       !true=>do computations on this column (see reweightMod for details)
+   logical , pointer :: active(:)       !true=>do computations on this column 
 end type column_type
 
 type(column_type), target :: col !column data structure (soil/snow/canopy columns)
@@ -2291,7 +2289,7 @@ type, public :: landunit_type
    logical , pointer :: lakpoi(:)       !true=>lake point
    logical , pointer :: urbpoi(:)       !true=>urban point
    logical , pointer :: glcmecpoi(:)    !true=>glacier_mec point
-   logical , pointer :: active(:)       !true=>do computations on this landunit (see reweightMod for details)
+   logical , pointer :: active(:)       !true=>do computations on this landunit 
 end type landunit_type
 
 type(landunit_type), target :: lun  !geomorphological landunits
@@ -2311,12 +2309,16 @@ type, public :: gridcell_type
 
    ! indices into landunit-level arrays for landunits in this grid cell (ispval implies
    ! this landunit doesn't exist on this grid cell) [1:max_lunit, begg:endg]
+   ! (note that the spatial dimension is last here, in contrast to most 2-d variables;
+   ! this is for efficiency, since most loops will go over g in the outer loop, and
+   ! landunit type in the inner loop)
    integer , pointer :: landunit_indices(:,:) 
 
    real(r8), pointer :: gris_mask(:) !Greenland ice sheet mask 
    real(r8), pointer :: gris_area(:) !Greenland ice-covered area per gridcell (km^2)
    real(r8), pointer :: aais_mask(:) !Antarctic ice sheet mask 
    real(r8), pointer :: aais_area(:) !Antarctic ice-covered area per gridcell (km^2)
+   real(r8), pointer :: icemask(:)      !Total ice sheet grid coverage mask (0-1) (true ice sheet mask, received from glc, in contrast to glcmask, which is just a guess available at initialization)
    real(r8), pointer :: tws(:)       !total water storage (mm H2O)
 end type gridcell_type
 

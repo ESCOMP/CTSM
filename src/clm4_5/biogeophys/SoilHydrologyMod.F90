@@ -698,7 +698,7 @@ contains
    pfti             =>    col%pfti           , & ! Input:  [integer (:)]  beginning pft index for each column                
    smp_l            =>    cws%smp_l          , & ! Input:  [real(r8) (:,:)]  soil matrix potential [mm]                      
    hk_l             =>    cws%hk_l           , & ! Input:  [real(r8) (:,:)]  hydraulic conductivity (mm/s)                   
-   pactive          =>    pft%active         , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive          =>    pft%active         , & ! Input:  [logical (:)]  true=>do computations on this pft 
    qflx_tran_veg_pft=>    pwf%qflx_tran_veg  , & ! Input:  [real(r8) (:)]  vegetation transpiration (mm H2O/s) (+ = to atm)  
    rootr_pft        =>    pps%rootr          , & ! Input:  [real(r8) (:,:)]  effective fraction of roots in each soil layer  
    pwtcol           =>    pft%wtcol            & ! Input:  [real(r8) (:)]  weight relative to column for each pft            

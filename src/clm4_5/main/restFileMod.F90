@@ -7,7 +7,7 @@ module restFileMod
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use decompMod   , only : bounds_type
-  use spmdMod     , only : masterproc
+  use spmdMod     , only : masterproc, mpicom
   use clm_varpar  , only : crop_prog
   use abortutils  , only : endrun
   use shr_log_mod , only : errMsg => shr_log_errMsg
@@ -33,6 +33,9 @@ module restFileMod
   private :: restFile_dimset
   private :: restFile_dimcheck
   private :: restFile_enddef
+  private :: restFile_check_consistency  ! Perform consistency checks on the restart file
+  private :: restFile_check_fsurdat      ! Check consistency of fsurdat on the restart file
+  private :: restFile_check_year         ! Check consistency of year on the restart file
   !
   ! !PRIVATE TYPES: None
   private
@@ -166,6 +169,7 @@ contains
     ! Read a CLM restart file.
     !
     ! !USES:
+    use subgridRestMod   , only : SubgridRest, subgridRest_read_cleanup
     use BiogeophysRestMod, only : BiogeophysRest
     use CNRestMod        , only : CNRest
     use CropRestMod      , only : CropRest
@@ -192,6 +196,8 @@ contains
 
     call restFile_dimcheck( ncid )
 
+    call SubgridRest (bounds, ncid, flag='read')
+
     call SLakeRest( ncid, flag='read' )
 
     call BiogeophysRest( bounds, ncid, flag='read' )
@@ -209,8 +215,13 @@ contains
 
     call hist_restart_ncd (bounds, ncid, flag='read')
 
+    ! Do error checking on file
+    
+    call restFile_check_consistency(bounds, ncid)
+
     ! Close file 
 
+    call subgridRest_read_cleanup
     call restFile_close( ncid )
 
     ! Write out diagnostic info
@@ -465,10 +476,9 @@ contains
     ! Read/Write initial data from/to netCDF instantaneous initial data file
     !
     ! !USES:
-    use clm_time_manager, only : get_nstep, get_curr_date
-    use spmdMod     , only : mpicom, MPI_LOGICAL
+    use clm_time_manager, only : get_nstep
     use clm_varctl  , only : caseid, ctitle, version, username, hostname, fsurdat, &
-         conventions, source
+         fpftdyn, conventions, source
     use clm_varpar  , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevurb, nlevcan
     use clm_varpar  , only : cft_lb, cft_ub, maxpatch_glcmec
     use decompMod   , only : get_proc_global
@@ -528,6 +538,7 @@ contains
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_title'     , trim(ctitle))
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_id'        , trim(caseid))
     call ncd_putatt(ncid, NCD_GLOBAL, 'surface_dataset', trim(fsurdat))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'flanduse_timeseries', trim(fpftdyn))
     call ncd_putatt(ncid, NCD_GLOBAL, 'title', 'CLM Restart information')
     if (create_glacier_mec_landunit) then
        call ncd_putatt(ncid, ncd_global, 'created_glacier_mec_landunits', 'true')
@@ -659,6 +670,239 @@ contains
     call ncd_pio_closefile(ncid)
 
   end subroutine restFile_close
+
+  !-----------------------------------------------------------------------
+  subroutine restFile_check_consistency(bounds, ncid)
+    !
+    ! !DESCRIPTION:
+    ! Perform some consistency checks on the restart file
+    !
+    ! !USES:
+    use subgridRestMod, only : subgridRest_check_consistency
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds  ! bounds
+    type(file_desc_t), intent(inout) :: ncid    ! netcdf id
+    !
+    ! !LOCAL VARIABLES:
+    logical :: check_finidat_fsurdat_consistency ! whether to check consistency between fsurdat on finidat file and current fsurdat
+    logical :: check_finidat_year_consistency    ! whether to check consistency between year on finidat file and current year
+    logical :: check_finidat_pct_consistency     ! whether to check consistency between pct_pft on finidat file and surface dataset
+    
+    character(len=*), parameter :: subname = 'restFile_check_consistency'
+    !-----------------------------------------------------------------------
+    
+    call read_namelist
+
+    if (check_finidat_fsurdat_consistency) then
+       call restFile_check_fsurdat(ncid)
+    end if
+
+    if (check_finidat_year_consistency) then
+       call restFile_check_year(ncid)
+    end if
+
+    if (check_finidat_pct_consistency) then
+       call subgridRest_check_consistency(bounds)
+    end if
+
+  contains
+    !-----------------------------------------------------------------------
+    subroutine read_namelist
+      !
+      ! !DESCRIPTION:
+      ! Read namelist settings related to finidat consistency checks
+      !
+      ! !USES:
+      use fileutils      , only : getavu, relavu
+      use clm_nlUtilsMod , only : find_nlgroup_name
+      use controlMod     , only : NLFilename
+      use shr_mpi_mod    , only : shr_mpi_bcast
+      !
+      ! !ARGUMENTS:
+      !
+      ! !LOCAL VARIABLES:
+      integer :: nu_nml    ! unit for namelist file
+      integer :: nml_error ! namelist i/o error flag
+      
+      character(len=*), parameter :: subname = 'read_namelist'
+      !-----------------------------------------------------------------------
+      
+      namelist /finidat_consistency_checks/ &
+           check_finidat_fsurdat_consistency, &
+           check_finidat_year_consistency, &
+           check_finidat_pct_consistency
+
+      ! Set default namelist values
+      check_finidat_fsurdat_consistency = .true.
+      check_finidat_year_consistency = .true.
+      check_finidat_pct_consistency = .true.
+
+      ! Read namelist
+      if (masterproc) then
+         nu_nml = getavu()
+         open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
+         call find_nlgroup_name(nu_nml, 'finidat_consistency_checks', status=nml_error)
+         if (nml_error == 0) then
+            read(nu_nml, nml=finidat_consistency_checks,iostat=nml_error)
+            if (nml_error /= 0) then
+               call endrun(msg='ERROR reading finidat_consistency_checks namelist'//errMsg(__FILE__, __LINE__))
+            end if
+         end if
+         close(nu_nml)
+         call relavu( nu_nml )
+      endif
+
+      call shr_mpi_bcast (check_finidat_fsurdat_consistency, mpicom)
+      call shr_mpi_bcast (check_finidat_year_consistency, mpicom)
+      call shr_mpi_bcast (check_finidat_pct_consistency, mpicom)
+
+      if (masterproc) then
+         write(iulog,*) ' '
+         write(iulog,*) 'finidat_consistency_checks settings:'
+         write(iulog,nml=finidat_consistency_checks)
+         write(iulog,*) ' '
+      end if
+
+    end subroutine read_namelist
+
+
+  end subroutine restFile_check_consistency
+
+  !-----------------------------------------------------------------------
+  subroutine restFile_check_fsurdat(ncid)
+    !
+    ! !DESCRIPTION:
+    ! Check consistency of the fsurdat value on the restart file and the current fsurdat
+    !
+    ! !USES:
+    use fileutils      , only : get_filename
+    use clm_varctl     , only : fname_len, fsurdat, fpftdyn
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid    ! netcdf id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=fname_len) :: fsurdat_rest  ! fsurdat from the restart file (includes full path)
+    character(len=fname_len) :: filename_cur  ! current fsurdat file name
+    character(len=fname_len) :: filename_rest ! fsurdat file name from restart file (does NOT include full path)
+    
+    character(len=*), parameter :: subname = 'restFile_check_fsurdat'
+    !-----------------------------------------------------------------------
+    
+    ! Only do this check for a transient run. The problem with doing this check for a non-
+    ! transient run is the transition from transient to non-transient: It is legitimate to
+    ! run with an 1850 surface dataset and a pftdyn file, then use the restart file from
+    ! that run to start a present-day (non-transient) run, which would use a 2000 surface
+    ! dataset.
+    if (fpftdyn /= ' ') then
+       call ncd_getatt(ncid, NCD_GLOBAL, 'surface_dataset', fsurdat_rest)
+
+       ! Compare file names, ignoring path
+       filename_cur = get_filename(fsurdat)
+       filename_rest = get_filename(fsurdat_rest)
+
+       if (filename_rest /= filename_cur) then
+          if (masterproc) then
+             write(iulog,*) 'ERROR: Initial conditions file (finidat) was generated from a different surface dataset'
+             write(iulog,*) 'than the one being used for the current simulation (fsurdat).'
+             write(iulog,*) 'Current fsurdat: ', trim(filename_cur)
+             write(iulog,*) 'Surface dataset used to generate initial conditions file: ', trim(filename_rest)
+             write(iulog,*)
+             write(iulog,*) 'Possible solutions to this problem:'
+             write(iulog,*) '(1) Make sure you are using the correct surface dataset and initial conditions file'
+             write(iulog,*) '(2) If you generated the surface dataset and/or initial conditions file yourself,'
+             write(iulog,*) '    then you may need to manually change the surface_dataset global attribute on the'
+             write(iulog,*) '    initial conditions file (e.g., using ncatted)'
+             write(iulog,*) '(3) If you are confident that you are using the correct surface dataset and initial conditions file,'
+             write(iulog,*) '    yet are still experiencing this error, then you can bypass this check by setting:'
+             write(iulog,*) '      check_finidat_fsurdat_consistency = .false.'
+             write(iulog,*) '    in user_nl_clm'
+             write(iulog,*) ' '
+          end if
+          call endrun(msg=errMsg(__FILE__, __LINE__))
+       end if
+    end if
+
+  end subroutine restFile_check_fsurdat
+
+  !-----------------------------------------------------------------------
+  subroutine restFile_check_year(ncid)
+    !
+    ! !DESCRIPTION:
+    ! Make sure year on the restart file is consistent with the current model year
+    !
+    ! !USES:
+    use clm_time_manager, only : get_curr_date, get_rest_date
+    use clm_varctl      , only : fname_len
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid    ! netcdf id
+    !
+    ! !LOCAL VARIABLES:
+    logical                  :: att_found    ! whether the attribute was found on the netcdf file
+    character(len=fname_len) :: fpftdyn_rest ! fpftdyn from the restart file
+    integer                  :: year         ! current model year
+    integer                  :: mon          ! current model month
+    integer                  :: day          ! current model day of month
+    integer                  :: tod          ! current model time of day
+    integer                  :: rest_year    ! year from restart file
+
+    character(len=*), parameter :: subname = 'restFile_check_year'
+    !-----------------------------------------------------------------------
+    
+    ! Only do this check for a transient run
+    if (fpftdyn /= ' ') then
+       ! Determine if the restart file was generated from a transient run; if so, we will
+       ! do this consistency check. For backwards compatibility, we allow for the
+       ! possibility that the flanduse_timeseries attribute was not on the restart file;
+       ! in that case, we act as if the restart file was generated from a non-transient
+       ! run, thus skipping this check.
+       call check_att(ncid, NCD_GLOBAL, 'flanduse_timeseries', att_found)
+       if (att_found) then
+          call ncd_getatt(ncid, NCD_GLOBAL, 'flanduse_timeseries', fpftdyn_rest)
+       else
+          write(iulog,*) ' '
+          write(iulog,*) subname//' WARNING: flanduse_timeseries attribute not found on restart file'
+          write(iulog,*) 'Assuming that the restart file was generated from a non-transient run,'
+          write(iulog,*) 'and thus skipping the year check'
+          write(iulog,*) ' '
+
+          fpftdyn_rest = ' '
+       end if
+       
+       ! If the restart file was generated from a transient run, then confirm that the
+       ! year of the restart file matches the current model year.
+       if (fpftdyn_rest /= ' ') then
+          call get_curr_date(year, mon, day, tod)
+          call get_rest_date(ncid, rest_year)
+          if (year /= rest_year) then
+             if (masterproc) then
+                write(iulog,*) 'ERROR: Current model year does not match year on initial conditions file (finidat)'
+                write(iulog,*) 'Current year: ', year
+                write(iulog,*) 'Year on initial conditions file: ', rest_year
+                write(iulog,*) ' '
+                write(iulog,*) 'This match is a requirement when both:'
+                write(iulog,*) '(a) The current run is a transient run, and'
+                write(iulog,*) '(b) The initial conditions file was generated from a transient run'
+                write(iulog,*) ' '
+                write(iulog,*) 'Possible solutions to this problem:'
+                write(iulog,*) '(1) Make sure RUN_STARTDATE is set correctly'
+                write(iulog,*) '(2) Make sure you are using the correct initial conditions file (finidat)'
+                write(iulog,*) '(3) If you are confident that you are using the correct start date and initial conditions file,'
+                write(iulog,*) '    yet are still experiencing this error, then you can bypass this check by setting:'
+                write(iulog,*) '      check_finidat_year_consistency = .false.'
+                write(iulog,*) '    in user_nl_clm'
+                write(iulog,*) ' '
+             end if
+             call endrun(msg=errMsg(__FILE__, __LINE__))
+          end if  ! year /= rest_year
+       end if  ! fpftdyn_rest /= ' '
+    end if  ! fpftdyn /= ' '
+
+  end subroutine restFile_check_year
+
+
 
 end module restFileMod
 

@@ -33,9 +33,6 @@ module clm_varsur
   ! landunit for all grid cells, even those without any glacier)
   real(r8), pointer :: wt_glc_mec(:,:)   
 
-  ! percent of spec lunits wrt gcell
-  real(r8), pointer :: pctspec(:)        
-
   ! subgrid glacier_mec sfc elevation
   real(r8), pointer :: topo_glc_mec(:,:) 
   !-----------------------------------------------------------------------

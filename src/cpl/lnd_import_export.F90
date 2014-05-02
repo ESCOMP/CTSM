@@ -22,7 +22,7 @@ contains
     ! !USES:
     use clm_atmlnd      , only: atm2lnd_type, atm2lnd_downscaled_fields_type
     use clm_glclnd      , only: glc2lnd_type
-    use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
+    use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13, create_glacier_mec_landunit
     use clm_varcon      , only: rair, o2_molar_const, c13ratio
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use domainMod       , only: ldomain
@@ -278,11 +278,14 @@ contains
 
        ! glc coupling 
 
-       do num = 1,glc_nec
-          x2s%frac(g,num)  = x2l(index_x2l_Sg_frac(num),i)
-          x2s%topo(g,num)  = x2l(index_x2l_Sg_topo(num),i)
-          x2s%hflx(g,num)  = x2l(index_x2l_Flgg_hflx(num),i)
-       end do
+       if (create_glacier_mec_landunit) then
+          do num = 0,glc_nec
+             x2s%frac(g,num)  = x2l(index_x2l_Sg_frac(num),i)
+             x2s%topo(g,num)  = x2l(index_x2l_Sg_topo(num),i)
+             x2s%hflx(g,num)  = x2l(index_x2l_Flgg_hflx(num),i)
+          end do
+          x2s%icemask(g)  = x2l(index_x2l_Sg_icemask,i)
+       end if
 
     end do
 
@@ -298,7 +301,7 @@ contains
     ! 
     ! !USES:
     use shr_kind_mod       , only : r8 => shr_kind_r8
-    use clm_varctl         , only : iulog
+    use clm_varctl         , only : iulog, create_glacier_mec_landunit
     use clm_time_manager   , only : get_nstep, get_step_size  
     use seq_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
@@ -379,11 +382,13 @@ contains
 
        ! glc coupling
 
-       do num = 1,glc_nec
-          l2x(index_l2x_Sl_tsrf(num),i)   = clm_s2x%tsrf(g,num)
-          l2x(index_l2x_Sl_topo(num),i)   = clm_s2x%topo(g,num)
-          l2x(index_l2x_Flgl_qice(num),i) = clm_s2x%qice(g,num)
-       end do
+       if (create_glacier_mec_landunit) then
+          do num = 0,glc_nec
+             l2x(index_l2x_Sl_tsrf(num),i)   = clm_s2x%tsrf(g,num)
+             l2x(index_l2x_Sl_topo(num),i)   = clm_s2x%topo(g,num)
+             l2x(index_l2x_Flgl_qice(num),i) = clm_s2x%qice(g,num)
+          end do
+       end if
 
     end do
 

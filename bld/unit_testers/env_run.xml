@@ -2,6 +2,7 @@
 
 <config_definition>
 
-<entry id="DIN_LOC_ROOT"   value="MYDINLOCROOT"  /> 
+<entry id="DIN_LOC_ROOT"         value="MYDINLOCROOT"  /> 
+<entry id="CLM_UPDATE_GLC_AREAS" value="FALSE"         />
 
 </config_definition>

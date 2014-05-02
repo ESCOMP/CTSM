@@ -223,11 +223,11 @@ contains
        call ch4conrd()
     end if
 
-    ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere
-    ! Note that wt_lunit is kept until the end of initialize2 so we can do some
-    ! consistency checking; urban_valid is kept through the end of the run for error checking. 
+    ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere.
+    ! Some things are kept until the end of initialize2; urban_valid is kept through the
+    ! end of the run for error checking.
 
-    deallocate (wt_nat_pft, wt_cft, wt_glc_mec, topo_glc_mec)
+    deallocate (wt_lunit, wt_cft, wt_glc_mec)
 
     call t_stopf('clm_init1')
 
@@ -252,8 +252,9 @@ contains
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart
     use decompMod             , only : get_proc_clumps, get_proc_bounds, get_clump_bounds, bounds_type
-    use filterMod             , only : allocFilters
-    use reweightMod           , only : reweightWrapup
+    use filterMod             , only : allocFilters, filter
+    use reweightMod           , only : reweight_wrapup
+    use subgridWeightsMod     , only : init_subgrid_weights_mod
     use histFldsMod           , only : hist_initFlds
     use histFileMod           , only : hist_htapes_build, htapes_fieldlist
     use restFileMod           , only : restFile_getfile, restFile_open, restFile_close
@@ -400,6 +401,7 @@ contains
     ! ------------------------------------------------------------------------
 
     call t_startf('init_dyn_subgrid')
+    call init_subgrid_weights_mod(bounds_proc)
     call dynSubgrid_init(bounds_proc)
     call t_stopf('init_dyn_subgrid')
 
@@ -502,7 +504,7 @@ contains
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1, nclumps
           call get_clump_bounds(nc, bounds_clump)
-          call reweightWrapup(bounds_clump)
+          call reweight_wrapup(bounds_clump)
        end do
        !$OMP END PARALLEL DO
 
@@ -525,7 +527,7 @@ contains
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1, nclumps
        call get_clump_bounds(nc, bounds_clump)
-       call reweightWrapup(bounds_clump)
+       call reweight_wrapup(bounds_clump)
     end do
     !$OMP END PARALLEL DO
 
@@ -592,20 +594,34 @@ contains
     ! Initialize sno export state to send to glc
     !------------------------------------------------------------       
 
-    if (create_glacier_mec_landunit) then
-       call t_startf('init_create_s2x')
-       call update_clm_s2x(bounds_proc, init=.true.)
-       call t_stopf('init_create_s2x')
-    end if
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+
+       if (create_glacier_mec_landunit) then  
+          call t_startf('create_s2x')
+          call update_clm_s2x(bounds_clump, &
+               filter(nc)%num_do_smb_c, filter(nc)%do_smb_c, &
+               init=.true.)
+          call t_stopf('create_s2x')
+       end if
+    end do
+    !$OMP END PARALLEL DO
 
     !------------------------------------------------------------       
-    ! Deallocate wt_lunit
+    ! Deallocate wt_nat_pft
     !------------------------------------------------------------       
 
-    ! wt_lunit was allocated in initialize1, but needed to be kept around through
+    ! wt_nat_pft was allocated in initialize1, but needed to be kept around through
     ! initialize2 for some consistency checking; now it can be deallocated
 
-    deallocate(wt_lunit)
+    deallocate(wt_nat_pft)
+
+    ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
+    ! initialize2 because it is used to initialize other variables; now it can be
+    ! deallocated
+
+    deallocate(topo_glc_mec)
 
     !------------------------------------------------------------       
     ! Write log output for end of initialization

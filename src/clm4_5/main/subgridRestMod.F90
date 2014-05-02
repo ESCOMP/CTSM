@@ -1,39 +1,83 @@
 module subgridRestMod
 
+  ! !USES:
+#include "shr_assert.h"
+  use shr_kind_mod       , only : r8 => shr_kind_r8
+  use shr_log_mod        , only : errMsg => shr_log_errMsg
+  use abortutils         , only : endrun
+  use decompMod          , only : bounds_type, BOUNDS_LEVEL_PROC, ldecomp
+  use domainMod          , only : ldomain
+  use clm_time_manager   , only : get_curr_date
+  use pio                , only : file_desc_t
+  use ncdio_pio          , only : ncd_int, ncd_double
+  use GetGlobalValuesMod , only : GetGlobalIndex
+  use restUtilMod
+  use clmtype
+
   ! !PUBLIC TYPES:
   implicit none
   save
-  public
+  private
+
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: subgridRest                   ! handle restart of subgrid variables
+  public :: subgridRest_check_consistency ! check consistency of variables read by subgridRest
+  public :: subgridRest_read_cleanup      ! do cleanup of variables allocated when reading the restart file; should be called after subgridRest and subgridRest_check_consistency are complete
+
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private :: subgridRest_write_only     ! handle restart of subgrid variables that only need to be written, not read
+  private :: subgridRest_write_and_read ! handle restart of subgrid variables that need to be read as well as written
+  private :: save_old_weights
+
+  ! !PRIVATE TYPES:
+  real(r8), allocatable :: pft_wtlunit_before_rest_read(:)  ! pft%wtlunit weights - saved values from before the restart read
 
 contains
 
   !------------------------------------------------------------------------
   subroutine subgridRest( bounds, ncid, flag )
-
-    use shr_kind_mod       , only : r8 => shr_kind_r8
-    use shr_log_mod        , only : errMsg => shr_log_errMsg
-    use decompMod          , only : bounds_type, ldecomp
-    use domainMod          , only : ldomain
-    use clm_time_manager   , only : get_curr_date
-    use pio                , only : file_desc_t
-    use ncdio_pio          , only : ncd_int, ncd_double
-    use GetGlobalValuesMod , only : GetGlobalIndex
-    use restUtilMod
-    use clmtype
-   !
+    !
+    ! !DESCRIPTION:
+    ! Handle restart of subgrid variables
+    !
     ! !ARGUMENTS:
-    implicit none
+    type(bounds_type), intent(in)    :: bounds ! bounds
+    type(file_desc_t), intent(inout) :: ncid   ! netCDF dataset id
+    character(len=*) , intent(in)    :: flag   ! flag to determine if define, write or read data
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32) :: subname='SubgridRest' ! subroutine name
+    !------------------------------------------------------------------------
+
+    if (flag /= 'read') then
+       call subgridRest_write_only(bounds, ncid, flag)
+    end if
+
+    call subgridRest_write_and_read(bounds, ncid, flag)
+
+  end subroutine subgridRest
+
+  !-----------------------------------------------------------------------
+  subroutine subgridRest_write_only(bounds, ncid, flag)
+    !
+    ! !DESCRIPTION:
+    ! Handle restart for variables that only need to be written, not read. This applies
+    ! to variables that are time-constant and are only put on the restart file for the
+    ! sake of having some additional metadata there.
+    !
+    ! Note that 'active' flags appear in this routine: they don't need to be read because
+    ! they can be computed using other info on the restart file (particularly subgrid
+    ! weights).
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds ! bounds
     type(file_desc_t), intent(inout) :: ncid   ! netCDF dataset id
     character(len=*) , intent(in)    :: flag   ! flag to determine if define, write or read data
     !
     ! !LOCAL VARIABLES:
     integer :: g,l,c,p,i           ! indices
-    integer :: yr                  ! current year (0 -> ...)
-    integer :: mon                 ! current month (1 -> 12)
-    integer :: day                 ! current day (1 -> 31)
-    integer :: mcsec               ! seconds of current date
-    integer :: mcdate              ! current date
     logical :: readvar             ! temporary
     real(r8),pointer :: rgarr(:)   ! temporary
     real(r8),pointer :: rlarr(:)   ! temporary
@@ -43,23 +87,10 @@ contains
     integer ,pointer :: ilarr(:)   ! temporary
     integer ,pointer :: icarr(:)   ! temporary
     integer ,pointer :: iparr(:)   ! temporary
-    character(len=32) :: subname='SubgridRest' ! subroutine name
-    !------------------------------------------------------------------------
-
-    ! Below argument readvar is ONLY needed for API consistency - it is not used
-
-    ! Write output data (first write current date and seconds of current date)
-    call get_curr_date (yr, mon, day, mcsec)
-    mcdate = yr*10000 + mon*100 + day
-
-    call restartvar(ncid=ncid, flag=flag, varname='mcdate', xtype=ncd_int,  &
-         long_name='current date as 8 digit integer (YYYYMMDD)', &
-         interpinic_flag='skip', readvar=readvar, data=mcdate)
-
-    call restartvar(ncid=ncid, flag=flag, varname='mcsec', xtype=ncd_int,   &
-         long_name='current seconds of current date', units='s', &
-         interpinic_flag='skip', readvar=readvar, data=mcsec)
-
+    
+    character(len=*), parameter :: subname = 'subgridRest_write_only'
+    !-----------------------------------------------------------------------
+    
     !------------------------------------------------------------------
     ! Write gridcell info
     !------------------------------------------------------------------
@@ -140,11 +171,6 @@ contains
          long_name='gridcell index of corresponding landunit',                            &
          interpinic_flag='skip', readvar=readvar, data=ilarr)
 
-    call restartvar(ncid=ncid, flag=flag, varname='land1d_wtxy', xtype=ncd_double, &
-         dim1name='landunit',                                                      &
-         long_name='landunit weight relative to corresponding gridcell',           &
-         interpinic_flag='skip', readvar=readvar, data=lun%wtgcell)
-
     call restartvar(ncid=ncid, flag=flag, varname='land1d_ityplun', xtype=ncd_int, &
          dim1name='landunit',                                                      &
          long_name='landunit type (see global attributes)', units=' ',             &
@@ -218,16 +244,6 @@ contains
          long_name='landunit index of corresponding column',                              &
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
-    call restartvar(ncid=ncid, flag=flag, varname='cols1d_wtxy', xtype=ncd_double,  &
-         dim1name='column',                                                         &
-         long_name='column weight relative to corresponding gridcell', units=' ',   &
-         interpinic_flag='skip', readvar=readvar, data=col%wtgcell)
-
-    call restartvar(ncid=ncid, flag=flag, varname='cols1d_wtlnd', xtype=ncd_double, &
-         dim1name='column',                                                         &
-         long_name='column weight relative to corresponding landunit', units=' ',   &
-         interpinic_flag='skip', readvar=readvar, data=col%wtlunit)
-
     do c= bounds%begc, bounds%endc
        icarr(c) = lun%itype(col%landunit(c))
     enddo
@@ -252,11 +268,6 @@ contains
          dim1name='column',                                                         &
          long_name='column active flag (1=active, 0=inactive)', units=' ',          &
          interpinic_flag='skip', readvar=readvar, data=icarr)
-
-    call restartvar(ncid=ncid, flag=flag, varname='cols1d_topoglc', xtype=ncd_double,   &
-         dim1name='column',                                                             &
-         long_name='mean elevation on glacier elevation classes', units='m',            &
-         interpinic_flag='skip', readvar=readvar, data=cps%glc_topo)
 
     deallocate(rcarr, icarr)
 
@@ -322,21 +333,6 @@ contains
          long_name='column index of corresponding pft',                                   &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtxy', xtype=ncd_double,  &
-         dim1name='pft',                                                            &
-         long_name='pft weight relative to corresponding gridcell', units='',       &  
-         interpinic_flag='skip', readvar=readvar, data=pft%wtgcell)
-
-    call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtlnd', xtype=ncd_double, &
-         dim1name='pft',                                                            &
-         long_name='pft weight relative to corresponding landunit', units='',       & 
-         interpinic_flag='skip', readvar=readvar, data=pft%wtlunit)
-
-    call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtcol', xtype=ncd_double, &
-         dim1name='pft',                                                            &
-         long_name='pft weight relative to corresponding column', units='',         &
-         interpinic_flag='skip', readvar=readvar, data=pft%wtcol)
-
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_itypveg', xtype=ncd_int,  &
          dim1name='pft',                                                            &
          long_name='pft vegetation type', units='',                                 &
@@ -381,6 +377,242 @@ contains
 
     deallocate(rparr, iparr)
 
-  end subroutine subgridRest
+  end subroutine subgridRest_write_only
+
+
+  !-----------------------------------------------------------------------
+  subroutine subgridRest_write_and_read(bounds, ncid, flag)
+    !
+    ! !DESCRIPTION:
+    !
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds ! bounds
+    type(file_desc_t), intent(inout) :: ncid   ! netCDF dataset id
+    character(len=*) , intent(in)    :: flag   ! flag to determine if define, write or read data
+    !
+    ! !LOCAL VARIABLES:
+    logical :: readvar             ! temporary
+    
+    character(len=*), parameter :: subname = 'subgridRest_write_and_read'
+    !-----------------------------------------------------------------------
+    
+    if (flag == 'read') then
+       call save_old_weights(bounds)
+    end if
+
+    call restartvar(ncid=ncid, flag=flag, varname='icemask', xtype=ncd_double, &
+         dim1name='gridcell', &
+         long_name='total ice-sheet grid coverage mask', units='fraction', &
+         interpinic_flag='skip', readvar=readvar, data=grc%icemask)
+
+    call restartvar(ncid=ncid, flag=flag, varname='land1d_wtxy', xtype=ncd_double, &
+         dim1name='landunit',                                                      &
+         long_name='landunit weight relative to corresponding gridcell',           &
+         interpinic_flag='skip', readvar=readvar, data=lun%wtgcell)
+
+    call restartvar(ncid=ncid, flag=flag, varname='cols1d_wtxy', xtype=ncd_double,  &
+         dim1name='column',                                                         &
+         long_name='column weight relative to corresponding gridcell', units=' ',   &
+         interpinic_flag='skip', readvar=readvar, data=col%wtgcell)
+
+    call restartvar(ncid=ncid, flag=flag, varname='cols1d_wtlnd', xtype=ncd_double, &
+         dim1name='column',                                                         &
+         long_name='column weight relative to corresponding landunit', units=' ',   &
+         interpinic_flag='skip', readvar=readvar, data=col%wtlunit)
+
+    call restartvar(ncid=ncid, flag=flag, varname='cols1d_topoglc', xtype=ncd_double,   &
+         dim1name='column',                                                             &
+         long_name='mean elevation on glacier elevation classes', units='m',            &
+         interpinic_flag='skip', readvar=readvar, data=cps%glc_topo)
+
+    call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtxy', xtype=ncd_double,  &
+         dim1name='pft',                                                            &
+         long_name='pft weight relative to corresponding gridcell', units='',       &  
+         interpinic_flag='skip', readvar=readvar, data=pft%wtgcell)
+
+    call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtlnd', xtype=ncd_double, &
+         dim1name='pft',                                                            &
+         long_name='pft weight relative to corresponding landunit', units='',       & 
+         interpinic_flag='skip', readvar=readvar, data=pft%wtlunit)
+
+    call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtcol', xtype=ncd_double, &
+         dim1name='pft',                                                            &
+         long_name='pft weight relative to corresponding column', units='',         &
+         interpinic_flag='skip', readvar=readvar, data=pft%wtcol)
+
+  end subroutine subgridRest_write_and_read
+
+  !-----------------------------------------------------------------------
+  subroutine save_old_weights(bounds)
+    !
+    ! !DESCRIPTION:
+    ! Save old weights, from before the restart read, for later consistency checks.
+    !
+    ! !USES:
+    type(bounds_type), intent(in)    :: bounds ! bounds (expected to be proc-level)
+    !
+    ! !ARGUMENTS:
+    !
+    ! !LOCAL VARIABLES:
+    
+    character(len=*), parameter :: subname = 'save_old_weights'
+    !-----------------------------------------------------------------------
+    
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname//' ERROR: expect proc-level bounds')
+
+    allocate(pft_wtlunit_before_rest_read(bounds%begp:bounds%endp))
+    pft_wtlunit_before_rest_read(bounds%begp:bounds%endp) = pft%wtlunit(bounds%begp:bounds%endp)
+
+  end subroutine save_old_weights
+
+
+  !-----------------------------------------------------------------------
+  subroutine subgridRest_check_consistency(bounds)
+    !
+    ! !DESCRIPTION:
+    ! Check consistency of variables read by subgridRest.
+    !
+    ! This should be called AFTER subgridRest is called to read the restart file.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds ! bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'subgridRest_check_consistency'
+    !-----------------------------------------------------------------------
+
+    if (do_check_weights()) then
+       call check_weights(bounds)
+    end if
+
+  contains
+
+    !-----------------------------------------------------------------------
+    logical function do_check_weights()
+      !
+      ! !DESCRIPTION:
+      ! Return true if we should check weights
+      !
+      ! !USES:
+      use clm_varctl, only : fpftdyn, nsrest, nsrContinue, use_cndv
+      !
+      ! !ARGUMENTS:
+      !
+      ! !LOCAL VARIABLES:
+      
+      character(len=*), parameter :: subname = 'do_check_weights'
+      !-----------------------------------------------------------------------
+      
+      if (fpftdyn /= ' ') then
+         ! Don't check weights for a pftdyn case, because it's harder to come up with the
+         ! correct weights to check against
+         do_check_weights = .false.
+      else if (nsrest == nsrContinue) then
+         ! Don't check weights for a restart run
+         !
+         ! WJS (3-25-14): I'm not sure why we don't do the check in this case, but I'm
+         ! maintaining the logic that used to be in BiogeophysRestMod regarding these
+         ! weight checks
+         do_check_weights = .false.
+      else if (use_cndv) then
+         ! Don't check weights for a cndv case, because the weights will almost certainly
+         ! differ from the surface dataset in this case
+         do_check_weights = .false.
+      else
+         do_check_weights = .true.
+      end if
+
+    end function do_check_weights
+
+    !-----------------------------------------------------------------------
+    subroutine check_weights(bounds)
+      !
+      ! !DESCRIPTION:
+      ! Make sure that pft weights on the landunit agree with the weights read from the
+      ! surface dataset, for the natural veg landunit.
+      !
+      ! Note that we do NOT do a more general check of all subgrid weights, because it's
+      ! possible that some other subgrid weights have changed relative to the surface
+      ! dataset, e.g., due to dynamic landunits. It would probably be possible to do more
+      ! checking than is done here, but the check here should be sufficient to catch major
+      ! inconsistencies between the restart file and the surface dataset.
+      !
+      ! !USES:
+      use clm_varcon, only : istsoil
+      use clm_varctl, only : iulog
+      !
+      ! !ARGUMENTS:
+      type(bounds_type), intent(in)    :: bounds ! bounds
+      !
+      ! !LOCAL VARIABLES:
+      integer  :: p, l ! indices
+      real(r8) :: diff ! difference in weights
+
+      real(r8), parameter :: tol = 5.e-3  ! tolerance for checking weights
+      
+      character(len=*), parameter :: subname = 'check_weights'
+      !-----------------------------------------------------------------------
+      
+      do p = bounds%begp, bounds%endp
+         l = pft%landunit(p)
+         if (lun%itype(l) == istsoil) then
+            diff = abs(pft%wtlunit(p) - pft_wtlunit_before_rest_read(p))
+            if (diff > tol) then
+               write(iulog,*) 'ERROR: PFT weights are SIGNIFICANTLY different between the restart (finidat) file'
+               write(iulog,*) 'and the surface dataset (fsurdat).'
+               write(iulog,*) 'Maximum allowed difference: ', tol
+               write(iulog,*) 'Difference found: ', diff
+               write(iulog,*) 'This match is a requirement for non-transient runs'
+               write(iulog,*)
+               write(iulog,*) 'Possible solutions to this problem:'
+               write(iulog,*) '(1) Make sure you are using the intended finidat and fsurdat files'
+               write(iulog,*) '(2) If you are running a present-day simulation, then make sure that your'
+               write(iulog,*) '    initial conditions file is from the END of a 20th century transient run'
+               write(iulog,*) '(3) If you are confident that you are using the correct finidat and fsurdat files,'
+               write(iulog,*) '    yet are still experiencing this error, then you can bypass this check by setting:'
+               write(iulog,*) '      check_finidat_pct_consistency = .false.'
+               write(iulog,*) '    in user_nl_clm'
+               write(iulog,*) '    In this case, CLM will take the weights from the initial conditions file.'
+               write(iulog,*) ' '
+               call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(__FILE__, __LINE__))
+            end if
+         end if
+      end do
+
+    end subroutine check_weights
+
+  end subroutine subgridRest_check_consistency
+
+
+  !-----------------------------------------------------------------------
+  subroutine subgridRest_read_cleanup
+    !
+    ! !DESCRIPTION:
+    ! Do cleanup of variables allocated when reading the restart file
+    !
+    ! Should be called after subgridRest and subgridRest_check_consistency are complete.
+    ! Note that this must be called after subgridRest is called to read the restart file,
+    ! in order to avoid a memory leak.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    !
+    ! !LOCAL VARIABLES:
+    
+    character(len=*), parameter :: subname = 'subgridRest_read_cleanup'
+    !-----------------------------------------------------------------------
+    
+    deallocate(pft_wtlunit_before_rest_read)
+
+  end subroutine subgridRest_read_cleanup
+
+
 
 end module subgridRestMod

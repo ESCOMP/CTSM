@@ -274,7 +274,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
           filter(nc)%num_nolakec, filter(nc)%nolakec)
 
      call downscale_forcings(bounds_clump, &
-          filter(nc)%num_icemecc, filter(nc)%icemecc)
+          filter(nc)%num_do_smb_c, filter(nc)%do_smb_c)
 
      call t_stopf('drvinit')
 
@@ -511,7 +511,8 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call Hydrology2Drainage(bounds_clump, &
                      filter(nc)%num_nolakec, filter(nc)%nolakec, &
                      filter(nc)%num_hydrologyc, filter(nc)%hydrologyc, &
-                     filter(nc)%num_urbanc, filter(nc)%urbanc)                 
+                     filter(nc)%num_urbanc, filter(nc)%urbanc, &
+                     filter(nc)%num_do_smb_c, filter(nc)%do_smb_c)                
      
      call t_stopf('hydro2 drainage')     
      ! ============================================================================
@@ -526,7 +527,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      end if
      
      call t_startf('balchk')
-     call BalanceCheck(bounds_clump)
+     call BalanceCheck(bounds_clump,filter(nc)%num_do_smb_c,filter(nc)%do_smb_c)
      call t_stopf('balchk')
 
      if (use_cn) then
@@ -571,7 +572,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
         end if
 
      end if
-
+     
   end do
   !$OMP END PARALLEL DO
 
@@ -582,13 +583,20 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   call t_startf('clm_map2gcell')
   call clm_map2gcell(bounds_proc)
   call t_stopf('clm_map2gcell')
-
-  if (create_glacier_mec_landunit) then
-     call t_startf('create_s2x')
-     call update_clm_s2x(bounds_proc, init=.false.)
-     call t_stopf('create_s2x')
-  end if
   
+  !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+  do nc = 1,nclumps
+     call get_clump_bounds(nc, bounds_clump)
+  
+     if (create_glacier_mec_landunit) then  
+        call t_startf('create_s2x')
+        call update_clm_s2x(bounds_clump, &
+             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c, &
+             init=.false.)
+        call t_stopf('create_s2x')
+     end if
+  end do
+  !$OMP END PARALLEL DO
 
   ! ============================================================================
   ! Write global average diagnostics to standard output

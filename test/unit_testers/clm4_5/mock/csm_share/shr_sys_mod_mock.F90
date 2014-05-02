@@ -1,11 +1,11 @@
 module shr_sys_mod
 
-  ! This is a mock replacement for shr_sys_mod, which just contains an abort routine
-  ! without any dependencies
+  ! This is a mock replacement for shr_sys_mod, which removes dependencies
 
   implicit none
 
   public :: shr_sys_abort
+  public :: shr_sys_flush
 
 contains
 
@@ -35,5 +35,13 @@ contains
     stop
 
   end subroutine shr_sys_abort
+
+  subroutine shr_sys_flush(unit)
+    use shr_kind_mod, only : SHR_KIND_IN
+    implicit none
+    integer(SHR_KIND_IN) :: unit
+
+    ! do nothing
+  end subroutine shr_sys_flush
 
 end module shr_sys_mod

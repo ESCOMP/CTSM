@@ -1315,6 +1315,8 @@ contains
 
      if (l2g_scale_type == 'unity') then
         scale_lookup(:) = 1.0_r8
+     else if (l2g_scale_type == 'natveg') then
+        scale_lookup(istsoil) = 1.0_r8
      else if (l2g_scale_type == 'veg') then
         scale_lookup(istsoil) = 1.0_r8
         scale_lookup(istcrop) = 1.0_r8

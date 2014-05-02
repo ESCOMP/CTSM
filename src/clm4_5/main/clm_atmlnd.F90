@@ -589,14 +589,13 @@ contains
 
   end subroutine clm_map2gcell
 
-
   !-----------------------------------------------------------------------
-  subroutine downscale_forcings(bounds, num_icemecc, filter_icemecc)
+  subroutine downscale_forcings(bounds,num_do_smb_c,filter_do_smb_c)
     !
     ! !DESCRIPTION:
     ! Downscale atmospheric forcing fields from gridcell to column
     !
-    ! Downscaling is done over columns defined by filter_icemecc. But we also do direct copies
+    ! Downscaling is done over columns defined by filter_do_smb_c. But we also do direct copies
     ! of gridcell-level forcings into column-level forcings over all other active columns.
     !
     ! !USES:
@@ -612,9 +611,9 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
-    integer, intent(in) :: num_icemecc       ! number of columns in filter
-    integer, intent(in) :: filter_icemecc(:) ! filter giving columns over which downscaling should be done (currently glcmec columns)
-    !
+    integer, intent(in) :: num_do_smb_c       ! number of columns in filter_do_smb_c
+    integer, intent(in) :: filter_do_smb_c(:) ! filter_do_smb_c giving columns over which downscaling should be done   
+    
     ! !LOCAL VARIABLES:
     integer :: g, l, c, fc         ! indices
     integer :: clo, cc
@@ -666,30 +665,27 @@ contains
        end if
     end do
 
-
     ! Downscale forc_t, forc_th, forc_q, forc_pbot, and forc_rho to columns.
     ! For glacier_mec columns the downscaling is based on surface elevation.
     ! For other columns the downscaling is a simple copy (above).
-    do fc = 1, num_icemecc
-       c = filter_icemecc(fc)
+    
+    do fc = 1, num_do_smb_c
+       c = filter_do_smb_c(fc)
        l = col%landunit(c)
        g = col%gridcell(c)
 
        ! This is a simple downscaling procedure 
        ! Note that forc_hgt, forc_u, and forc_v are not downscaled.
        
-       hsurf_g      = ldomain%topo(g)          ! gridcell sfc elevation
-       hsurf_c      = glc_topo(c)              ! column sfc elevation
-
+       hsurf_g      = ldomain%topo(g)     ! gridcell sfc elevation
+       hsurf_c      = glc_topo(c)         ! column sfc elevation
        tbot_g       = forc_t_g(g)         ! atm sfc temp
        thbot_g      = forc_th_g(g)        ! atm sfc pot temp
        qbot_g       = forc_q_g(g)         ! atm sfc spec humid
        pbot_g       = forc_pbot_g(g)      ! atm sfc pressure
        zbot_g       = clm_a2l%forc_hgt(g) ! atm ref height
-
        zbot_c = zbot_g
        tbot_c = tbot_g-lapse_glcmec*(hsurf_c-hsurf_g)   ! sfc temp for column
-
        Hbot   = rair*0.5_r8*(tbot_g+tbot_c)/grav        ! scale ht at avg temp
        pbot_c = pbot_g*exp(-(hsurf_c-hsurf_g)/Hbot)     ! column sfc press
 
@@ -740,18 +736,17 @@ contains
        endif   ! glcmec_downscale_rain_snow_convert
 
     end do    
-    
-    call downscale_longwave(bounds, num_icemecc, filter_icemecc)
+
+    call downscale_longwave(bounds, num_do_smb_c, filter_do_smb_c)
 
     call check_downscale_consistency(bounds)
 
     end associate
-
+    
   end subroutine downscale_forcings
 
-
   !-----------------------------------------------------------------------
-  subroutine downscale_longwave(bounds, num_icemecc, filter_icemecc)
+  subroutine downscale_longwave(bounds, num_do_smb_c, filter_do_smb_c)
     !
     ! !DESCRIPTION:
     ! Downscale longwave radiation from gridcell to column
@@ -770,8 +765,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
-    integer, intent(in) :: num_icemecc       ! number of columns in filter
-    integer, intent(in) :: filter_icemecc(:) ! filter giving columns over which downscaling should be done (currently glcmec columns)
+    integer, intent(in) :: num_do_smb_c       ! number of columns in filter_do_smb_c
+    integer, intent(in) :: filter_do_smb_c(:) ! filter_do_smb_c giving columns over which downscaling should be done (currently glcmec columns)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,g,fc     ! indices
@@ -786,7 +781,6 @@ contains
     character(len=*), parameter :: subname = 'downscale_longwave'
     !-----------------------------------------------------------------------
 
-    
     associate(&
     glc_topo     => cps%glc_topo                     , & ! Input:  [real(r8) (:)]  sfc elevation for glacier_mec column (m)
 
@@ -799,7 +793,6 @@ contains
     forc_lwrad_c => a2l_downscaled_col%forc_lwrad      & ! Output: [real(r8) (:)]  downward longwave (W/m**2)
     )
 
-    
     ! Initialize column forcing (needs to be done for ALL active columns)
     do c = bounds%begc, bounds%endc
        if (col%active(c)) then
@@ -820,14 +813,14 @@ contains
        end do
 
        ! Do the downscaling
-       do fc = 1, num_icemecc
-          c = filter_icemecc(fc)
+       do fc = 1, num_do_smb_c
+          c = filter_do_smb_c(fc)
           l = col%landunit(c)
           g = col%gridcell(c)
 
           hsurf_g = ldomain%topo(g)
           hsurf_c = glc_topo(c)
-
+	  
           ! Here we assume that deltaLW = (dLW/dT)*(dT/dz)*deltaz
           ! We get dLW/dT = 4*eps*sigma*T^3 = 4*LW/T from the Stefan-Boltzmann law,
           ! evaluated at the mean temp.
@@ -855,8 +848,8 @@ contains
                                 sum_wts=sum_wts_g(bounds%begg:bounds%endg), &
                                 norms=lwrad_norm_g(bounds%begg:bounds%endg))
 
-       do fc = 1, num_icemecc
-          c = filter_icemecc(fc)
+       do fc = 1, num_do_smb_c
+          c = filter_do_smb_c(fc)
           l = col%landunit(c)
           g = col%gridcell(c)
 
@@ -879,7 +872,6 @@ contains
        end do
 
     end if    ! glcmec_downscale_longwave
-
 
     end associate
 

@@ -8,7 +8,11 @@ module ncdio_var
   ! associated methods for working with this derived type.
 
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_assert_mod , only : shr_assert
+
+  ! Note that we use shr_assert directly rather than using the macros. This is so we don't
+  ! have to worry about whether or not NDEBUG is defined (we ALWAYS want to do these
+  ! assertions here).
+  use shr_assert_mod , only : shr_assert, shr_assert_all
   
   implicit none
   private
@@ -40,7 +44,7 @@ module ncdio_var
      ! the last call to reset_read_times
      logical, allocatable :: read_times(:) 
 
-# 39 "ncdio_var.F90.in"
+# 43 "ncdio_var.F90.in"
    contains
      generic, public :: get_data => &  ! get the value of data for a single time
           get_data_1d, get_data_2d
@@ -52,16 +56,16 @@ module ncdio_var
      procedure, private :: get_data_2d
   end type ncdio_var_type
 
-# 50 "ncdio_var.F90.in"
+# 54 "ncdio_var.F90.in"
   interface ncdio_var_type
      module procedure constructor
   end interface ncdio_var_type
 
-# 54 "ncdio_var.F90.in"
+# 58 "ncdio_var.F90.in"
 contains
   
   !-----------------------------------------------------------------------
-# 57 "ncdio_var.F90.in"
+# 61 "ncdio_var.F90.in"
   type(ncdio_var_type) function constructor(varname, data, data_shape)
     ! Create a new object of type ncdio_var_type
 
@@ -75,43 +79,43 @@ contains
 
     constructor%varname = varname
 
-    allocate(constructor%data, source=data)
+    allocate(constructor%data(size(data,1), size(data,2)))
     constructor%data = data
     
-    allocate(constructor%data_shape, source=data_shape)
+    allocate(constructor%data_shape(size(data_shape)))
     constructor%data_shape = data_shape
 
     constructor%ntimes = size(data, 2)
     
     allocate(constructor%read_times(constructor%ntimes))
     call constructor%reset_read_times()
-# 80 "ncdio_var.F90.in"
+# 84 "ncdio_var.F90.in"
   end function constructor
 
   !-----------------------------------------------------------------------
-# 83 "ncdio_var.F90.in"
+# 87 "ncdio_var.F90.in"
   character(len=max_name) function get_varname(this)
     ! Get the name associated with this variable
     class(ncdio_var_type), intent(in) :: this
 
     get_varname = this%varname
-# 88 "ncdio_var.F90.in"
+# 92 "ncdio_var.F90.in"
   end function get_varname
 
 
   !-----------------------------------------------------------------------
-# 92 "ncdio_var.F90.in"
+# 96 "ncdio_var.F90.in"
   subroutine reset_read_times(this)
     ! Reset the 'read_times' variable. Any call to get_read_time will tell you whether a
     ! given time slice has been read since the last call to reset_read_times
     class(ncdio_var_type), intent(inout) :: this
 
     this%read_times(:) = .false.
-# 98 "ncdio_var.F90.in"
+# 102 "ncdio_var.F90.in"
   end subroutine reset_read_times
     
   !-----------------------------------------------------------------------
-# 101 "ncdio_var.F90.in"
+# 105 "ncdio_var.F90.in"
   function get_read_times(this)
     ! Return the value of 'read_times' for all times. This tells you whether this variable
     ! has been 'read' for each time index since the last call to reset_read_times (or
@@ -122,12 +126,12 @@ contains
     character(len=*), parameter :: subname = 'get_read_times'
 
     get_read_times = this%read_times
-# 111 "ncdio_var.F90.in"
+# 115 "ncdio_var.F90.in"
   end function get_read_times
 
   ! DIMS 1,2
   !-----------------------------------------------------------------------
-# 115 "ncdio_var.F90.in"
+# 119 "ncdio_var.F90.in"
   subroutine get_data_1d(this, nt, data)
     ! Return the value of data at the given time. The output variable ('data') should
     ! have the shape of true, underlying data (i.e., multi-dimensional if applicable) but
@@ -139,18 +143,18 @@ contains
 
     character(len=*), parameter :: subname = 'get_data_1d'
 
-    call shr_assert((shape(data) == this%data_shape), subname//' incorrect shape for data')
+    call shr_assert_all((shape(data) == this%data_shape), subname//' incorrect shape for data')
     call shr_assert(1 <= nt .and. nt <= this%ntimes, subname//' nt out of bounds')
 
     data = reshape(this%data(:,nt), this%data_shape(1:1))
 
     this%read_times(nt) = .true.
 
-# 133 "ncdio_var.F90.in"
+# 137 "ncdio_var.F90.in"
   end subroutine get_data_1d
   ! DIMS 1,2
   !-----------------------------------------------------------------------
-# 115 "ncdio_var.F90.in"
+# 119 "ncdio_var.F90.in"
   subroutine get_data_2d(this, nt, data)
     ! Return the value of data at the given time. The output variable ('data') should
     ! have the shape of true, underlying data (i.e., multi-dimensional if applicable) but
@@ -162,14 +166,14 @@ contains
 
     character(len=*), parameter :: subname = 'get_data_2d'
 
-    call shr_assert((shape(data) == this%data_shape), subname//' incorrect shape for data')
+    call shr_assert_all((shape(data) == this%data_shape), subname//' incorrect shape for data')
     call shr_assert(1 <= nt .and. nt <= this%ntimes, subname//' nt out of bounds')
 
     data = reshape(this%data(:,nt), this%data_shape(1:2))
 
     this%read_times(nt) = .true.
 
-# 133 "ncdio_var.F90.in"
+# 137 "ncdio_var.F90.in"
   end subroutine get_data_2d
 
 end module ncdio_var

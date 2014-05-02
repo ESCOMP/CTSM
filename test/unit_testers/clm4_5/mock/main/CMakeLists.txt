@@ -1,3 +1,3 @@
-list(APPEND clm_sources decompMod_boundsTypeDecl.F90)
+list(APPEND clm_sources histFileMod_mock.F90)
 
 sourcelist_to_parent(clm_sources)

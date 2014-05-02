@@ -40,12 +40,12 @@ contains
     ! clumps - so this routine needs to be called from outside any loops over clumps.
     !
     ! !USES:
-    use clm_varctl    , only : fpftdyn, use_cndv
-    use decompMod     , only : bounds_type, BOUNDS_LEVEL_PROC
-    use dynpftFileMod , only : dynpft_init
-    use dynHarvestMod , only : dynHarvest_init
-    use dynCNDVMod    , only : dynCNDV_init
-    use reweightMod   , only : compute_higher_order_weights
+    use clm_varctl        , only : fpftdyn, use_cndv
+    use decompMod         , only : bounds_type, BOUNDS_LEVEL_PROC
+    use dynpftFileMod     , only : dynpft_init
+    use dynHarvestMod     , only : dynHarvest_init
+    use dynCNDVMod        , only : dynCNDV_init
+    use subgridWeightsMod , only : compute_higher_order_weights
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! processor-level bounds
@@ -90,16 +90,20 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl           , only : fpftdyn, use_cndv, use_cn
+    use clm_varctl           , only : fpftdyn, use_cndv, use_cn, create_glacier_mec_landunit
     use decompMod            , only : bounds_type, get_proc_clumps, get_clump_bounds, &
                                       BOUNDS_LEVEL_PROC
     use dynLandunitAreaMod   , only : update_landunit_weights
+    use dynInitColumnsMod    , only : initialize_new_columns
     use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
     use dynConsBiogeochemMod , only : dyn_cnbal_pft
     use dynpftFileMod        , only : dynpft_interp
     use dynHarvestMod        , only : dynHarvest_interp
     use dynCNDVMod           , only : dynCNDV_interp
-    use reweightMod          , only : compute_higher_order_weights, reweightWrapup
+    use reweightMod          , only : reweight_wrapup
+    use subgridWeightsMod    , only : compute_higher_order_weights, &
+                                      set_subgrid_diagnostic_fields
+    use clm_glclnd           , only : update_clm_x2s
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds_proc  ! processor-level bounds
@@ -153,16 +157,26 @@ contains
           call dynCNDV_interp(bounds_clump)
        end if
 
+       if (create_glacier_mec_landunit) then
+          call update_clm_x2s(bounds_clump)
+       end if
+
        ! Everything following this point in this loop only needs to be called if we have
-       ! actually changed some weights in this time step. However, it doesn't hurt for
-       ! these things to be called all the time (except for a minor performance hit), so
-       ! I'm leaving them outside any conditionals for simplicity
+       ! actually changed some weights in this time step. This is also required in the
+       ! first time step of the run to update filters to reflect state of CISM
+       ! (particularly mask that is past through coupler).
 
        call update_landunit_weights(bounds_clump)
 
        call compute_higher_order_weights(bounds_clump)
 
-       call reweightWrapup(bounds_clump)
+       ! Here: filters are re-made
+       call reweight_wrapup(bounds_clump)
+
+       call set_subgrid_diagnostic_fields(bounds_clump)
+
+       call initialize_new_columns(bounds_clump, &
+            prior_weights%cactive(bounds_clump%begc:bounds_clump%endc))
 
        call dyn_hwcontent_final(bounds_clump)
 

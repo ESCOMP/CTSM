@@ -14,7 +14,7 @@ module dynpftFileMod
   use dynVarTimeInterpMod   , only : dyn_var_time_interp_type
   use clm_varctl            , only : iulog
   use abortutils            , only : endrun
-  use spmdMod               , only : masterproc
+  use spmdMod               , only : masterproc, mpicom
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -24,9 +24,14 @@ module dynpftFileMod
   public :: dynpft_init     ! initialize information read from pftdyn dataset
   public :: dynpft_interp   ! interpolate pftdyn information to current time step
   !
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private :: dynpft_check_consistency ! check consistency with surface dataset
+  !
   ! ! PRIVATE TYPES
   type(dyn_file_type), target    :: dynpft_file   ! information for the pftdyn file
   type(dyn_var_time_interp_type) :: wtpft         ! weight of each pft relative to the natural veg landunit
+
+  character(len=*), parameter    :: varname = 'PCT_NAT_PFT'  ! name of variable on file
   !---------------------------------------------------------------------------
 
 contains
@@ -43,28 +48,15 @@ contains
     !
     ! !USES:
     use clm_varctl  , only : fpftdyn
-    use clm_varpar  , only : numpft, maxpatch_pft, natpft_lb, natpft_ub, natpft_size
-    use clm_varcon  , only : numurbl, istsoil, istcrop
-    use clm_varsur  , only : pctspec, wt_lunit
+    use clm_varpar  , only : numpft, maxpatch_pft, natpft_size
     use ncdio_pio
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc-level bounds
     !
     ! !LOCAL VARIABLES:
-    integer  :: n,g,nl                          ! indices
-    integer  :: ier                             ! error status
-    logical  :: readvar	                        ! true => variable is on input dataset
     integer  :: wtpft_shape(2)                  ! shape of the wtpft data
-    ! leave the following as pointers instead of changing to allocatable since the ncd_io
-    ! interface expects a pointer type
-    real(r8) , pointer     :: pctnatveg (:)        ! percent of gcell is natural vegetation landunit 
-    real(r8) , pointer     :: pctcrop (:)          ! percent of gcell is crop landunit 
-    real(r8) , pointer     :: pctgla (:)           ! percent of gcell is glacier 
-    real(r8) , pointer     :: pctlak (:)           ! percent of gcell is lake 
-    real(r8) , pointer     :: pctwet (:)           ! percent of gcell is wetland 
-    real(r8) , pointer     :: pcturb (:,:)         ! percent of gcell is urbanized 
-    real(r8) , pointer     :: pcturb_tot (:)       ! percent of grid cell is urban (sum over density classes) 
+
     character(len= 32)     :: subname='dynpft_init'! subroutine name
     !-----------------------------------------------------------------------
 
@@ -77,96 +69,15 @@ contains
             errMsg(__FILE__, __LINE__) )
     end if
 
-    allocate(pctnatveg(bounds%begg:bounds%endg))
-    allocate(pctcrop(bounds%begg:bounds%endg))
-    allocate(pctgla(bounds%begg:bounds%endg))
-    allocate(pctlak(bounds%begg:bounds%endg))
-    allocate(pctwet(bounds%begg:bounds%endg))
-    allocate(pcturb(bounds%begg:bounds%endg,numurbl))
-    allocate(pcturb_tot(bounds%begg:bounds%endg))
-
-    ! pctspec must be saved between time samples
-    ! position to first time sample - assume that first time sample must match starting date
-    ! check consistency -  special landunits, grid, frac and mask
-    ! only do this once
-
     if (masterproc) then
        write(iulog,*) 'Attempting to read pft dynamic landuse data .....'
     end if
 
     dynpft_file = dyn_file_type(fpftdyn)
 
-    ! Consistency check
-    
+    ! Consistency checks
     call check_dim(dynpft_file, 'natpft', natpft_size)
-
-    call ncd_io(ncid=dynpft_file, varname='PCT_NATVEG', flag='read', data=pctnatveg, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun(msg=' ERROR: PCT_NATVEG NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
-
-    call ncd_io(ncid=dynpft_file, varname='PCT_CROP', flag='read', data=pctcrop, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun(msg=' ERROR: PCT_CROP NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
-
-    call ncd_io(ncid=dynpft_file, varname='PCT_WETLAND', flag='read', data=pctwet, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun(msg=' ERROR: PCT_WETLAND NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
-
-    call ncd_io(ncid=dynpft_file, varname= 'PCT_LAKE', flag='read', data=pctlak, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun(msg=' ERROR: PCT_LAKE NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
-
-    call ncd_io(ncid=dynpft_file, varname= 'PCT_GLACIER', flag='read', data=pctgla, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun(msg=' ERROR: PCT_GLACIER NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
-
-    call ncd_io(ncid=dynpft_file, varname= 'PCT_URBAN'  , flag='read', data=pcturb, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun(msg=' ERROR: PCT_URBAN NOT on pftdyn file'//errMsg(__FILE__, __LINE__))
-    pcturb_tot(bounds%begg : bounds%endg) = 0._r8
-    do n = 1, numurbl
-       do nl = bounds%begg,bounds%endg
-          pcturb_tot(nl) = pcturb_tot(nl) + pcturb(nl,n)
-       enddo
-    enddo
-
-    ! Consistency check
-    do g = bounds%begg,bounds%endg
-       ! WJS (5-9-13): I am adding these pctnatveg and pctcrop consistency checks for now,
-       ! although both these and the following pctspec consistency check (which was
-       ! already here) may not be necessary now that pctpft is specified as % of landunit
-       ! rather than % of grid cell. Furthermore, once we have dynamic landunits, both of
-       ! these consistency checks may become problematic, and could be removed. If these
-       ! consistency checks are removed, I think we could do quite a bit of cleanup:
-       ! (1) I think that the time-invariant PCT fields no longer need to be on the pftdyn dataset
-       ! (2) Similarly, much of this routine could be removed
-       ! (3) I think that pctspec no longer needs to be saved (I think it's just saved
-       !     for the sake of this consistency check)
-       ! (4) wt_lunit no longer needs to be saved past the end of the initialize1 routine
-       !     in clm_initializeMod (so we can move its deallocation from initialize2 to
-       !     initialize1)
-       if (abs(pctnatveg(g) - wt_lunit(g,istsoil)*100._r8) > 1.e-13_r8) then
-          write(iulog,*) subname//'mismatch between input PCT_NATVEG = ', pctnatveg(g), &
-               ' and that obtained from surface dataset ', wt_lunit(g,istsoil)*100._r8, &
-               ' at g= ',g
-          call endrun(msg=errMsg(__FILE__, __LINE__))
-       end if
-       if (abs(pctcrop(g) - wt_lunit(g,istcrop)*100._r8) > 1.e-13_r8) then
-          write(iulog,*) subname//'mismatch between input PCT_CROP = ', pctcrop(g), &
-               ' and that obtained from surface dataset ', wt_lunit(g,istcrop)*100._r8, &
-               ' at g= ',g
-          call endrun(msg=errMsg(__FILE__, __LINE__))
-       end if
-
-    !   This was causing a fail, even though values are the same to within 1e-15
-    !   if (pctlak(g)+pctwet(g)+pcturb(g)+pctgla(g) /= pctspec(g)) then 
-       if (abs((pctlak(g)+pctwet(g)+pcturb_tot(g)+pctgla(g))-pctspec(g)) > 1e-13_r8) then 
-          write(iulog,*) subname//'mismatch between input pctspec = ',&
-                     pctlak(g)+pctwet(g)+pcturb_tot(g)+pctgla(g),&
-                    ' and that obtained from surface dataset ', pctspec(g),' at g= ',g
-           call endrun(msg=errMsg(__FILE__, __LINE__))
-       end if
-    end do
+    call dynpft_check_consistency(bounds)
 
     ! read data PCT_NAT_PFT corresponding to correct year
     !
@@ -178,15 +89,141 @@ contains
 
     wtpft_shape = [(bounds%endg-bounds%begg+1), natpft_size]
     wtpft = dyn_var_time_interp_type( &
-         dyn_file=dynpft_file, varname='PCT_NAT_PFT', &
+         dyn_file=dynpft_file, varname=varname, &
          dim1name=grlnd, conversion_factor=100._r8, &
          do_check_sums_equal_1=.true., data_shape=wtpft_shape)
 
     call dynpft_interp(bounds)
 
-    deallocate(pctnatveg, pctcrop, pctgla,pctlak,pctwet,pcturb,pcturb_tot)
-
   end subroutine dynpft_init
+
+  !-----------------------------------------------------------------------
+  subroutine dynpft_check_consistency(bounds)
+    !
+    ! !DESCRIPTION:
+    ! Check consistency between dynpft file and surface dataset.
+    !
+    ! This is done by assuming that PCT_NAT_PFT at time 1 in the pftdyn file agrees with
+    ! PCT_NAT_PFT on the surface dataset.
+    !
+    ! !USES:
+    use clm_varsur, only : wt_nat_pft
+    use clm_varpar, only : natpft_size
+    use ncdio_pio
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds  ! proc-level bounds
+    !
+    ! !LOCAL VARIABLES:
+    logical             :: check_dynpft_consistency ! whether to do the consistency check in this routine
+    integer             :: g                        ! index
+    real(r8), pointer   :: wtpft_time1(:,:)         ! weight of each pft in each grid cell at first time
+    logical             :: readvar                  ! whether variable was read
+    real(r8), parameter :: tol = 1.e-13_r8          ! tolerance for checking equality
+
+    character(len=*), parameter :: subname = 'dynpft_check_consistency'
+    !-----------------------------------------------------------------------
+    
+    call read_namelist
+
+    if (check_dynpft_consistency) then
+
+       ! Read first time slice of PCT_NAT_PFT
+
+       allocate(wtpft_time1(bounds%begg:bounds%endg, natpft_size))
+       call ncd_io(ncid=dynpft_file, varname=varname, flag='read', data=wtpft_time1, &
+            dim1name=grlnd, nt=1, readvar=readvar)
+       if (.not. readvar) then
+          call endrun(msg=' ERROR: ' // trim(varname) // ' NOT on pftdyn file'//&
+               errMsg(__FILE__, __LINE__))
+       end if
+
+       ! Convert from PCT to weight on grid cell
+       wtpft_time1(bounds%begg:bounds%endg,:) = wtpft_time1(bounds%begg:bounds%endg,:) / 100._r8
+    
+       ! Compare with values read from surface dataset
+       do g = bounds%begg, bounds%endg
+          if (any(abs(wtpft_time1(g,:) - wt_nat_pft(g,:)) > tol)) then
+             write(iulog,*) subname//' mismatch between PCT_NAT_PFT at initial time and that obtained from surface dataset'
+             write(iulog,*) 'On pftdyn file: ', wtpft_time1(g,:)
+             write(iulog,*) 'On surface dataset: ', wt_nat_pft(g,:)
+             write(iulog,*) ' '
+             write(iulog,*) 'Confirm that the year of your surface dataset'
+             write(iulog,*) 'corresponds to the first year of your pftdyn file'
+             write(iulog,*) '(e.g., for a pftdyn file starting at year 1850, which is typical,'
+             write(iulog,*) 'you should be using an 1850 surface dataset),'
+             write(iulog,*) 'and that your pftdyn file is compatible with the surface dataset.'
+             write(iulog,*) ' '
+             write(iulog,*) 'If you are confident that you are using the correct pftdyn file'
+             write(iulog,*) 'and the correct surface dataset, then you can bypass this check by setting:'
+             write(iulog,*) '  check_dynpft_consistency = .false.'
+             write(iulog,*) 'in user_nl_clm'
+             write(iulog,*) ' '
+             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+          end if
+       end do
+
+       deallocate(wtpft_time1)
+
+    end if
+
+  contains
+    !-----------------------------------------------------------------------
+    subroutine read_namelist
+      !
+      ! !DESCRIPTION:
+      ! Read namelist settings related to pftdyn consistency checks
+      !
+      ! !USES:
+      use fileutils      , only : getavu, relavu
+      use clm_nlUtilsMod , only : find_nlgroup_name
+      use controlMod     , only : NLFilename
+      use shr_mpi_mod    , only : shr_mpi_bcast
+      !
+      ! !ARGUMENTS:
+      !
+      ! !LOCAL VARIABLES:
+      integer :: nu_nml    ! unit for namelist file
+      integer :: nml_error ! namelist i/o error flag
+      
+      character(len=*), parameter :: subname = 'read_namelist'
+      !-----------------------------------------------------------------------
+      
+      namelist /dynpft_consistency_checks/ &
+           check_dynpft_consistency
+
+      ! Set default namelist values
+      check_dynpft_consistency = .true.
+
+      ! Read namelist
+      if (masterproc) then
+         nu_nml = getavu()
+         open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
+         call find_nlgroup_name(nu_nml, 'dynpft_consistency_checks', status=nml_error)
+         if (nml_error == 0) then
+            read(nu_nml, nml=dynpft_consistency_checks,iostat=nml_error)
+            if (nml_error /= 0) then
+               call endrun(msg='ERROR reading dynpft_consistency_checks namelist'//errMsg(__FILE__, __LINE__))
+            end if
+         end if
+         close(nu_nml)
+         call relavu( nu_nml )
+      endif
+
+      call shr_mpi_bcast (check_dynpft_consistency, mpicom)
+
+      if (masterproc) then
+         write(iulog,*) ' '
+         write(iulog,*) 'dynpft_consistency_checks settings:'
+         write(iulog,nml=dynpft_consistency_checks)
+         write(iulog,*) ' '
+      end if
+
+    end subroutine read_namelist
+
+
+  end subroutine dynpft_check_consistency
+
 
   !-----------------------------------------------------------------------
   subroutine dynpft_interp(bounds)

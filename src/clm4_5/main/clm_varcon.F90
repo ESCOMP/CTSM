@@ -3,9 +3,13 @@ module clm_varcon
 !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module containing various model constants. This includes physical constants, landunit
-  ! and column indices, and others.
+  ! and column indices, and others. This also contains functions for operating on these
+  ! constants and associated variables.
+  !
+  ! TODO: Move some of the stuff here into column_varcon.F90 and landunit_varcon.F90 (bug 1928).
   !
   ! !USES:
+#include "shr_assert.h"
   use shr_kind_mod , only: r8 => shr_kind_r8
   use shr_const_mod, only: SHR_CONST_G,SHR_CONST_STEBOL,SHR_CONST_KARMAN,     &
                            SHR_CONST_RWV,SHR_CONST_RDAIR,SHR_CONST_CPFW,      &
@@ -17,11 +21,25 @@ module clm_varcon
   use clm_varpar   , only: numrad, nlevgrnd, nlevlak, nlevdecomp_full
   use clm_varpar   , only: ngases
   use clm_varpar   , only: nlayer
+  use shr_log_mod    , only : errMsg => shr_log_errMsg
+
   
   !
   ! !PUBLIC TYPES:
   implicit none
   save
+
+  ! !PUBLIC MEMBER FUNCTIONS:
+  public :: clm_varcon_init  ! initialize constants in clm_varcon
+
+  ! TODO: Move the following to a new module, column_varcon.F90 (see bug 1928). For now,
+  ! I'm putting these here, to be in the same module as the icol_* variables defined here.
+  public :: icemec_class_to_col_itype  ! convert an icemec class (1..maxpatch_glcmec) into col%itype
+  public :: col_itype_to_icemec_class  ! convert col%itype into an icemec class (1..maxpatch_glcmec)
+  
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private :: set_landunit_names  ! set the landunit_names vector
   !
   ! !REVISION HISTORY:
   ! Created by Mariana Vertenstein
@@ -61,7 +79,7 @@ module clm_varcon
   real(r8) :: tkice  = 2.290_r8     !thermal conductivity of ice   [W/m/K]
   real(r8) :: tkwat  = 0.57_r8       !thermal conductivity of water [W/m/K]
   real(r8) :: tfrz   = SHR_CONST_TKFRZ  !freezing temperature [K]
-  real(r8) :: tcrit  = 2.5_r8       !critical temperature to determine rain or snow
+  real(r8), parameter :: tcrit  = 2.5_r8       !critical temperature to determine rain or snow
   real(r8) :: o2_molar_const = 0.209_r8   !constant atmospheric O2 molar ratio (mol/mol)
 
   real(r8) :: bdsno = 250._r8       !bulk density snow (kg/m**3)
@@ -118,7 +136,7 @@ module clm_varcon
   !  real(r8), parameter :: nitrif_n2o_loss_frac = 0.02_r8   !fraction of N lost as N2O in nitrification (Parton et al., 2001)
   real(r8), parameter :: nitrif_n2o_loss_frac = 6.e-4_r8   !fraction of N lost as N2O in nitrification (Li et al., 2000)
   real(r8), parameter :: frac_minrlztn_to_no3 = 0.2_r8   !fraction of N mineralized that is dieverted to the nitrification stream (Parton et al., 2001)
-
+  
   !------------------------------------------------------------------
   ! Initialize landunit & column type constants
   !------------------------------------------------------------------
@@ -138,6 +156,9 @@ module clm_varcon
 
   integer, parameter :: max_lunit  = 9  !maximum value that lun%itype can have
                                         !(i.e., largest value in the above list)
+
+  integer, parameter                   :: landunit_name_length = 12  ! max length of landunit names
+  character(len=landunit_name_length)  :: landunit_names(max_lunit)  ! name of each landunit type
 
   ! urban column types
 
@@ -207,9 +228,7 @@ module clm_varcon
   real(r8) :: kh_theta(ngases)    ! Henry's constant (L.atm/mol) at standard temperature (298K)
   data kh_theta(1:3) /714.29_r8, 769.23_r8, 29.4_r8/ ! CH4, O2, CO2
   real(r8) :: kh_tbase = 298._r8 ! base temperature for calculation of Henry's constant (K)
-
-! !PUBLIC MEMBER FUNCTIONS:
-  public clm_varcon_init          ! Initialze constants that need to be initialized
+  
 
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -241,6 +260,89 @@ contains
     allocate( nlvic(1:nlayer))
     allocate( dzvic(1:nlayer))
 
+    call set_landunit_names()
+
   end subroutine clm_varcon_init
+
+  !-----------------------------------------------------------------------
+  subroutine set_landunit_names
+    !
+    ! !DESCRIPTION:
+    ! Set the landunit_names vector
+    !
+    ! !USES:
+    use abortutils, only : endrun
+    !
+    character(len=*), parameter :: not_set = 'NOT_SET'
+    character(len=*), parameter :: subname = 'set_landunit_names'
+    !-----------------------------------------------------------------------
+    
+    landunit_names(:) = not_set
+
+    landunit_names(istsoil) = 'soil'
+    landunit_names(istcrop) = 'crop'
+    landunit_names(istice) = 'ice'
+    landunit_names(istice_mec) = 'ice_mec'
+    landunit_names(istdlak) = 'lake'
+    landunit_names(istwet) = 'wetland'
+    landunit_names(isturb_tbd) = 'urb_tbd'
+    landunit_names(isturb_hd) = 'urb_hd'
+    landunit_names(isturb_md) = 'urb_md'
+
+    if (any(landunit_names == not_set)) then
+       call endrun(msg=subname//': Not all landunit names set')
+    end if
+
+  end subroutine set_landunit_names
+
+  !-----------------------------------------------------------------------
+  function icemec_class_to_col_itype(icemec_class) result(col_itype)
+    !
+    ! !DESCRIPTION:
+    ! Convert an icemec class (1..maxpatch_glcmec) into col%itype
+    !
+    ! !USES:
+    use clm_varpar, only : maxpatch_glcmec
+    !
+    ! !ARGUMENTS:
+    integer :: col_itype                ! function result
+    integer, intent(in) :: icemec_class ! icemec class, between 1 and maxpatch_glcmec
+    !
+    ! !LOCAL VARIABLES:
+    
+    character(len=*), parameter :: subname = 'icemec_class_to_col_itype'
+    !-----------------------------------------------------------------------
+    
+    SHR_ASSERT((1 <= icemec_class .and. icemec_class <= maxpatch_glcmec), errMsg(__FILE__, __LINE__))
+
+    col_itype = istice_mec*100 + icemec_class
+
+  end function icemec_class_to_col_itype
+
+  !-----------------------------------------------------------------------
+  function col_itype_to_icemec_class(col_itype) result(icemec_class)
+    !
+    ! !DESCRIPTION:
+    ! Convert a col%itype value (for an icemec landunit) into an icemec class (1..maxpatch_glcmec)
+    !
+    ! !USES:
+    use clm_varpar, only : maxpatch_glcmec
+    !
+    ! !ARGUMENTS:
+    integer :: icemec_class          ! function result
+    integer, intent(in) :: col_itype ! col%itype value for an icemec landunit
+    !
+    ! !LOCAL VARIABLES:
+    
+    character(len=*), parameter :: subname = 'col_itype_to_icemec_class'
+    !-----------------------------------------------------------------------
+    
+    icemec_class = col_itype - istice_mec*100
+
+    ! The following assertion is here to ensure that col_itype is really from an
+    ! istice_mec landunit
+    SHR_ASSERT((1 <= icemec_class .and. icemec_class <= maxpatch_glcmec), errMsg(__FILE__, __LINE__))
+
+  end function col_itype_to_icemec_class
 
 end module clm_varcon

@@ -134,7 +134,7 @@ contains
    h2osoi_liq                =>    cws%h2osoi_liq                , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2) (new)            
    errsoi_col                =>    cebal%errsoi                  , & ! Output: [real(r8) (:)]  column-level soil/lake energy conservation error (W/m**2)
    eflx_building_heat        =>    cef%eflx_building_heat        , & ! Input:  [real(r8) (:)]  heat flux from urban building interior to walls, roof
-   pactive                   =>    pft%active                    , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive                   =>    pft%active                    , & ! Input:  [logical (:)]  true=>do computations on this pft 
    pcolumn                   =>   pft%column                     , & ! Input:  [integer (:)]  pft's column index                       
    plandunit                 =>   pft%landunit                   , & ! Input:  [integer (:)]  pft's landunit index                     
    pgridcell                 =>   pft%gridcell                   , & ! Input:  [integer (:)]  pft's gridcell index                     

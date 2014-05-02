@@ -6,6 +6,6 @@ sourcelist_to_parent(clm_genf90_sources)
 
 list(APPEND clm_sources "${clm_genf90_sources}")
 
-list(APPEND clm_sources clm_time_manager_mock.F90 ncdio_pio_mock.F90 ncdio_var.F90 spmdMod_mock.F90)
+list(APPEND clm_sources GetGlobalValuesMod_mock.F90 clm_time_manager_mock.F90 ncdio_pio_mock.F90 ncdio_var.F90 spmdMod_mock.F90)
 
 sourcelist_to_parent(clm_sources)

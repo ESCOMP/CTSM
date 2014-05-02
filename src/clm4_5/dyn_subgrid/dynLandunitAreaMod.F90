@@ -21,7 +21,7 @@ module dynLandunitAreaMod
   save
   private
 
-  public :: update_landunit_weights
+  public :: update_landunit_weights      ! update landunit weights for all grid cells
   
   ! The following is only public for the sake of unit testing; it should not be called
   ! directly by CLM code outside this module
@@ -42,12 +42,13 @@ contains
     ! specified, e.g., if there are conflicts between glacier area and crop area).
     !
     ! !USES:
+    use subgridWeightsMod, only : get_landunit_weight, set_landunit_weight
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer  :: g, l                        ! grid cell and landunit indices
+    integer  :: g                           ! grid cell index
     integer  :: ltype                       ! landunit type
     real(r8) :: landunit_weights(max_lunit) ! weight of each landunit on a single grid cell
     
@@ -58,12 +59,8 @@ contains
        
        ! Determine current landunit weights. Landunits that don't exist on this grid cell
        ! get a weight of 0
-       landunit_weights(:) = 0._r8
        do ltype = 1, max_lunit
-          l = grc%landunit_indices(ltype, g)
-          if (l /= ispval) then
-             landunit_weights(ltype) = lun%wtgcell(l)
-          end if
+          landunit_weights(ltype) = get_landunit_weight(g, ltype)
        end do
 
        ! Adjust weights so they sum to 100%
@@ -71,14 +68,7 @@ contains
        
        ! Put the new landunit weights back into lun%wtgcell
        do ltype = 1, max_lunit
-          l = grc%landunit_indices(ltype, g)
-          if (l /= ispval) then
-             lun%wtgcell(l) = landunit_weights(ltype)
-          else if (landunit_weights(ltype) > 0._r8) then
-             write(iulog,*) subname//' ERROR: Attempt to assign non-zero weight to a non-existent landunit'
-             write(iulog,*) 'g, l, ltype, landunit_weights(ltype) = ', g, l, ltype, landunit_weights(ltype)
-             call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
-          end if
+          call set_landunit_weight(g, ltype, landunit_weights(ltype))
        end do
 
     end do

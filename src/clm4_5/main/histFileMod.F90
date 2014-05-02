@@ -144,7 +144,7 @@ module histFileMod
      character(len=max_chars)  :: units        ! units
      character(len=8) :: type1d                ! clm pointer first dimension type from clmtype (nameg, etc)
      character(len=8) :: type1d_out            ! hbuf first dimension type from clmtype (nameg, etc)
-     character(len=8) :: type2d                ! hbuf second dimension type ["levgrnd","levlak","numrad","glc_nec","subname(n)"]
+     character(len=8) :: type2d                ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)"]
      integer :: beg1d                          ! on-node 1d clm pointer start index
      integer :: end1d                          ! on-node 1d clm pointer end index
      integer :: num1d                          ! size of clm pointer first dimension (all nodes)
@@ -1682,7 +1682,8 @@ contains
     ! !USES:
     use clmtype
     use clm_varpar  , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad, &
-                             maxpatch_glcmec, nlevdecomp_full
+                             natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
+    use clm_varcon  , only : max_lunit
     use clm_varctl  , only : caseid, ctitle, fsurdat, finidat, paramfile, &
                              version, hostname, username, conventions, source
     use domainMod   , only : ldomain
@@ -1814,8 +1815,16 @@ contains
     call ncd_defdim(lnfid, 'levlak' , nlevlak, dimid)
     call ncd_defdim(lnfid, 'numrad' , numrad , dimid)
     call ncd_defdim(lnfid, 'levsno' , nlevsno , dimid)
+    call ncd_defdim(lnfid, 'ltype', max_lunit, dimid)
+    call ncd_defdim(lnfid, 'natpft', natpft_size, dimid)
+    if (cft_size > 0) then
+       call ncd_defdim(lnfid, 'cft', cft_size, dimid)
+    end if
     if (maxpatch_glcmec > 0) then
        call ncd_defdim(lnfid, 'glc_nec' , maxpatch_glcmec , dimid)
+       ! elevclas (in contrast to glc_nec) includes elevation class 0 (bare land)
+       ! (although on the history file it will go 1:(nec+1) rather than 0:nec)
+       call ncd_defdim(lnfid, 'elevclas' , maxpatch_glcmec + 1, dimid)
     end if
 
     do n = 1,num_subs
@@ -4161,7 +4170,8 @@ contains
     ! !USES:
     use clmtype
     use clm_varpar, only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, &
-                           maxpatch_glcmec
+                           natpft_size, cft_size, maxpatch_glcmec
+    use clm_varcon, only : max_lunit
     !
     ! !ARGUMENTS:
     implicit none
@@ -4239,9 +4249,31 @@ contains
        num2d = numrad
     case ('levdcmp')
        num2d = nlevdecomp_full
+    case('ltype')
+       num2d = max_lunit
+    case('natpft')
+       num2d = natpft_size
+    case('cft')
+       if (cft_size > 0) then
+          num2d = cft_size
+       else
+          write(iulog,*) trim(subname),' ERROR: 2d type =', trim(type2d), &
+               ' only valid for cft_size > 0'
+          call endrun()
+       end if
     case ('glc_nec')
        if (maxpatch_glcmec > 0) then
           num2d = maxpatch_glcmec
+       else
+          write(iulog,*) trim(subname),' ERROR: 2d type =', trim(type2d), &
+               ' only valid for maxpatch_glcmec > 0'
+          call endrun(msg=errMsg(__FILE__, __LINE__))
+       end if
+    case ('elevclas')
+       if (maxpatch_glcmec > 0) then
+          ! add one because indexing starts at 0 (elevclas, unlike glc_nec, includes the
+          ! bare ground "elevation class")
+          num2d = maxpatch_glcmec + 1
        else
           write(iulog,*) trim(subname),' ERROR: 2d type =', trim(type2d), &
                ' only valid for maxpatch_glcmec > 0'
@@ -4251,7 +4283,8 @@ contains
        num2d = nlevsno
     case default
        write(iulog,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
-          ' currently supported types for multi level fields are [levgrnd,levlak,numrad,levdcmp,glc_nec,levsno]'
+          ' currently supported types for multi level fields are: ', &
+          '[levgrnd,levlak,numrad,levdcmp,ltype,natpft,cft,glc_nec,elevclas,levsno]'
        call endrun(msg=errMsg(__FILE__, __LINE__))
     end select
 

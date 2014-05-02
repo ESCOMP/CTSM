@@ -319,7 +319,7 @@ subroutine CNGapPftToColumn (num_soilc, filter_soilc)
    fr_flig                             =>    pftcon%fr_flig                              , & ! Input:  [real(r8) (:)]  fine root litter lignin fraction                  
    npfts                               =>    col%npfts                                   , & ! Input:  [integer (:)]  number of pfts for each column                     
    pfti                                =>    col%pfti                                    , & ! Input:  [integer (:)]  beginning pft index for each column                
-   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft 
    ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
    wtcol                               =>    pft%wtcol                                   , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
    m_leafc_to_litter                   =>    pcf%m_leafc_to_litter                       , & ! Input:  [real(r8) (:)]                                                    

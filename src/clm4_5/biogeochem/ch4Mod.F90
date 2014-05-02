@@ -406,7 +406,7 @@ contains
    finundated_lag                      =>    cch4%finundated_lag                         , & ! InOut:  [real(r8) (:)]  time-lagged fractional inundated area             
    layer_sat_lag                       =>    cch4%layer_sat_lag                          , & ! InOut:  [real(r8) (:,:)]  Lagged saturation status of soil layer in the unsaturated zone (1 = sat)
    frac_h2osfc                         =>    cps%frac_h2osfc                             , & ! Input:  [real(r8) (:)]  fraction of ground covered by surface water (0 to 1)
-   cactive                             =>    col%active                                  , & ! Input:  [logical (:)]  true=>do computations on this column (see reweightMod for details)
+   cactive                             =>    col%active                                  , & ! Input:  [logical (:)]  true=>do computations on this column 
    rootfr                              =>    pps%rootfr                                  , & ! Input:  [real(r8) (:,:)]  fraction of roots in each soil layer  (nlevgrnd)
    grnd_ch4_cond                       =>    pps%grnd_ch4_cond                           , & ! Input:  [real(r8) (:)]  tracer conductance for boundary layer [m/s]       
    pwtc                                =>   pft%wtcol                                    , & ! Input:  [real(r8) (:)]  weight (relative to column)                       

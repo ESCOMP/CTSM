@@ -72,6 +72,9 @@ module filterMod
 
      integer, pointer :: icemecc(:)      ! glacier mec filter (cols)
      integer :: num_icemecc              ! number of columns in glacier mec filter
+     
+     integer, pointer :: do_smb_c(:)     ! glacier+bareland SMB calculations-on filter (cols)
+     integer :: num_do_smb_c             ! number of columns in glacier+bareland SMB mec filter         
 
   end type clumpfilter
   public clumpfilter
@@ -199,7 +202,9 @@ contains
        allocate(this_filter(nc)%pcropp(bounds%endp-bounds%begp+1))
        allocate(this_filter(nc)%soilnopcropp(bounds%endp-bounds%begp+1))
 
-       allocate(this_filter(nc)%icemecc(bounds%endc-bounds%begc+1))
+       allocate(this_filter(nc)%icemecc(bounds%endc-bounds%begc+1))      
+       allocate(this_filter(nc)%do_smb_c(bounds%endc-bounds%begc+1))       
+       
     end do
 !$OMP END PARALLEL DO
 
@@ -225,16 +230,17 @@ contains
     ! At least as of June, 2013, the 'inactive_and_active' version of the filters is
     ! static in time. Thus, we could have some logic saying whether we're in
     ! initialization, and if so, skip this call. But this is problematic for two reasons:
-    ! (1) it requires that the caller of this routine (currently reweightWrapup) know
+    ! (1) it requires that the caller of this routine (currently reweight_wrapup) know
     ! whether it is in initialization; and (2) it assumes that the filter definitions
     ! won't be changed in the future in a way that creates some variability in time. So
     ! for now, it seems cleanest and safest to just update these filters whenever the main
     ! filters are updated. But if this proves to be a performance problem, we could
     ! introduce an argument saying whether we're in initialization, and if so, skip this
     ! call.
+    
     call setFiltersOneGroup(bounds, &
          filter_inactive_and_active, include_inactive = .true.)
-
+    
   end subroutine setFilters
 
 
@@ -267,6 +273,7 @@ contains
     integer :: fnl,fnlu    ! non-lake filter index
     integer :: fs          ! soil filter index
     integer :: f, fn       ! general indices
+    integer :: g           !gridcell index
     !------------------------------------------------------------------------
 
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
@@ -449,6 +456,20 @@ contains
        end if
     end do
     this_filter(nc)%num_icemecc = f
+    
+    f = 0
+    do c = bounds%begc,bounds%endc
+       if (col%active(c) .or. include_inactive) then
+          l = col%landunit(c)
+          g = col%gridcell(c)
+          if ( lun%itype(l) == istice_mec .or. &
+             (lun%itype(l) == istsoil .and. grc%icemask(g) > 0.)) then
+             f = f + 1
+             this_filter(nc)%do_smb_c(f) = c
+          end if
+       end if
+    end do
+    this_filter(nc)%num_do_smb_c = f    
 
     ! Note: snow filters are reconstructed each time step in Hydrology2
     ! Note: CNDV "pft present" filter is reconstructed each time CNDV is run

@@ -6,4 +6,5 @@ module spmdMod
   private
 
   logical, parameter, public :: masterproc = .true.
+  integer, parameter, public :: iam = 0
 end module spmdMod

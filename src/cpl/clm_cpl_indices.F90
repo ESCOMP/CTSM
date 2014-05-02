@@ -54,9 +54,10 @@ module clm_cpl_indices
   integer, public ::index_l2x_Fall_flxdst4    ! dust flux size bin 4
   integer, public ::index_l2x_Fall_flxvoc     ! MEGAN fluxes
 
-  integer, public ::index_l2x_Sl_tsrf(glc_nec_max)   = 0 ! glc MEC temperature
-  integer, public ::index_l2x_Sl_topo(glc_nec_max)   = 0 ! glc MEC topo height
-  integer, public ::index_l2x_Flgl_qice(glc_nec_max) = 0 ! glc MEC ice flux
+  ! In the following, index 0 is bare land, other indices are glc elevation classes
+  integer, public ::index_l2x_Sl_tsrf(0:glc_nec_max)   = 0 ! glc MEC temperature
+  integer, public ::index_l2x_Sl_topo(0:glc_nec_max)   = 0 ! glc MEC topo height
+  integer, public ::index_l2x_Flgl_qice(0:glc_nec_max) = 0 ! glc MEC ice flux
 
   integer, public ::index_x2l_Sa_methane
   integer, public ::index_l2x_Fall_methane
@@ -101,11 +102,13 @@ module clm_cpl_indices
   integer, public ::index_x2l_Flrr_flood      ! rtm->lnd rof (flood) flux
   integer, public ::index_x2l_Flrr_volr      ! rtm->lnd rof volr
 
-  integer, public ::index_x2l_Sg_frac(glc_nec_max)   = 0   ! Fraction of glacier in glc MEC class 1
-  integer, public ::index_x2l_Sg_topo(glc_nec_max)   = 0   ! Topo height in glc MEC class 1
-  integer, public ::index_x2l_Flgg_rofi(glc_nec_max) = 0   ! Ice runoff from glc model
-  integer, public ::index_x2l_Flgg_rofl(glc_nec_max) = 0   ! Liquid runoff from glc model
-  integer, public ::index_x2l_Flgg_hflx(glc_nec_max) = 0
+  ! In the following, index 0 is bare land, other indices are glc elevation classes
+  integer, public ::index_x2l_Sg_frac(0:glc_nec_max)   = 0   ! Fraction of glacier from glc model
+  integer, public ::index_x2l_Sg_topo(0:glc_nec_max)   = 0   ! Topo height from glc model 
+  integer, public ::index_x2l_Flgg_hflx(0:glc_nec_max) = 0   ! Heat flux from glc model
+  
+  integer, public ::index_x2l_Sg_icemask
+  
   ! 
   ! decls for anomoly forcing
   !
@@ -278,41 +281,43 @@ contains
 
     glc_nec = 0
 
-    do num = 1,glc_nec_max
+    do num = 0,glc_nec_max 
+    
        write(cnum,'(i2.2)') num
        name = 'Sg_frac' // cnum
        index_x2l_Sg_frac(num)   = mct_avect_indexra(x2l,trim(name),perrwith='quiet') 
        name = 'Sg_topo' // cnum
        index_x2l_Sg_topo(num)   = mct_avect_indexra(x2l,trim(name),perrwith='quiet')
-       name = 'Flgg_rofi' // cnum
-       index_x2l_Flgg_rofi(num) = mct_avect_indexra(x2l,trim(name),perrwith='quiet')
-       name = 'Flgg_rofl' // cnum
-       index_x2l_Flgg_rofl(num) = mct_avect_indexra(x2l,trim(name),perrwith='quiet')
        name = 'Flgg_hflx' // cnum
        index_x2l_Flgg_hflx(num) = mct_avect_indexra(x2l,trim(name),perrwith='quiet')
        if ( index_x2l_Sg_frac(num)   == 0 .and. &
             index_x2l_Sg_topo(num)   == 0 .and. &
-            index_x2l_Flgg_rofi(num) == 0 .and. &
-            index_x2l_Flgg_rofl(num) == 0 .and. &
             index_x2l_Flgg_hflx(num) == 0 ) then
           exit
        end if
        glc_nec = num
     end do
+    
+    index_x2l_Sg_icemask = mct_avect_indexra(x2l,'Sg_icemask',perrwith='quiet')
+    
     if (glc_nec == glc_nec_max) then
        call shr_sys_abort (subname // 'error: glc_nec_cpl cannot equal glc_nec_max')
     end if
 
-    do num = 1,glc_nec
-       write(cnum,'(i2.2)') num
-
-       name = 'Sl_tsrf' // cnum
-       index_l2x_Sl_tsrf(num)   = mct_avect_indexra(l2x,trim(name))
-       name = 'Sl_topo' // cnum
-       index_l2x_Sl_topo(num)   = mct_avect_indexra(l2x,trim(name))
-       name = 'Flgl_qice' // cnum
-       index_l2x_Flgl_qice(num) = mct_avect_indexra(l2x,trim(name))
-    end do
+    ! If glc_nec > 0, then create coupling fields for all glc elevation classes
+    ! (1:glc_nec) plus bare land (index 0). Note that, if glc_nec = 0, then we don't
+    ! even need the bare land (0) index.
+    if (glc_nec > 0) then
+       do num = 0,glc_nec
+          write(cnum,'(i2.2)') num
+          name = 'Sl_tsrf' // cnum
+          index_l2x_Sl_tsrf(num)   = mct_avect_indexra(l2x,trim(name))
+          name = 'Sl_topo' // cnum
+          index_l2x_Sl_topo(num)   = mct_avect_indexra(l2x,trim(name))
+          name = 'Flgl_qice' // cnum
+          index_l2x_Flgl_qice(num) = mct_avect_indexra(l2x,trim(name))
+       end do
+    end if
 
     call mct_aVect_clean(x2l)
     call mct_aVect_clean(l2x)

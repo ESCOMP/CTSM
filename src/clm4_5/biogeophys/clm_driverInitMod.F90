@@ -68,11 +68,9 @@ contains
       end if
       eflx_bot(c)    = 0._r8
       
-      ! Initialize qflx_glcice, but only over ice_mec landunits (elsewhere, it is spval)
-      if (lun%itype(l) == istice_mec) then
-         qflx_glcice(c) = 0._r8
-      end if
-
+      ! Initialize qflx_glcice everywhere, to zero.
+      qflx_glcice(c) = 0._r8     
+      
     end do
 
     ! Initialize fraction of vegetation not covered by snow (pft-level)

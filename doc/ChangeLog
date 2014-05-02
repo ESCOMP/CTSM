@@ -1,4 +1,321 @@
 ===============================================================
+Tag name:  clm4_5_71
+Originator(s):  Bill Sacks & Jeremy Fyke
+Date: Fri May  2 13:00:10 MDT 2014
+One-line Summary: 2-way feedbacks for glacier, veg columns compute glacier SMB, and related changes
+
+Purpose of changes:
+
+  (1) Bring in two-way feedbacks for glacier when coupled to CISM, via dynamic
+      landunits, so that CLM's glacier area remains consistent with CISM's
+      glacier area. Also update CLM's glacier topography to be consistent with
+      CISM. 
+
+  (2) Add an elevation class "0", which provides surface mass balance over the
+      vegetated portion of the grid cell. This is used to achieve glacial
+      inception in CISM. Along with this change, also (a) set the topographic
+      height of non-glacier areas based on bare land topography from CISM, and
+      (b) change the downscaling of atmospheric fields so that they are also
+      downscaled over vegetated columns within CISM's ice mask, to achieve
+      greater consistency between what's happening in the glacier and vegetated
+      portions of CISM's domain. (Note that, because longwave radiation is
+      normalized, downscaling it over the vegetated column also changes answers
+      over glacier columns.) These changes were primarily from Jeremy Fyke.
+
+  (3) Rework some consistency checks to play nicely with dynamic landunits.
+
+  (4) Rework unit test build to use libraries for the clm source and csm_share source
+
+  (5) Misc. other changes, as noted below.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+  - 1969 (incorrect values for QSNWCPICE_NODYNLNDUSE)
+  - 1929 (dynFileMod breaks with gfortran 4.8)
+  - 1832 (logic for weights error check differs between clm4.0 and clm4.5)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+
+Describe any changes made to the namelist:
+
+List any changes to the defaults for the boundary datasets:
+
+Describe any substantial timing or memory changes:
+
+Code reviewed by:
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+========= Add tests
+-scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_140305
++scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/add_dynlu_tests_tags/add_dynlu_tests_n03_scripts4_140305
+
+========= Pull in Machines_140318, needed for goldbach
+-scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/branch_tags/arfs_tags/arfs_01_mach140218
++scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/branch_tags/arfs_tags/arfs_02_mach140218
+
+========= Changes needed for elevation class 0, etc.
+-models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq5_0_07
++models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq5_0_10
+-models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_140416
++models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_140501
+
+
+List all files eliminated:
+
+========= Point to real decompMod rather than mock
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/main/decompMod_boundsTypeDecl.F90
+
+List all files added and what they do:
+
+========= Most of reweightMod.F90 moved here; also includes the following changes:
+            (1) renames some subroutines
+            (2) adds some diagnostic fields that are written to the history file
+            (3) adds some utility routines such as get_landunit_weight
+A       models/lnd/clm/src/clm4_5/main/subgridWeightsMod.F90
+
+========= Add code to initialize newly-active columns
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/dynInitColumnsMod.F90
+
+========= New unit tests
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynInitColumns_test/test_init_columns.pf
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynInitColumns_test/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynInitColumns_test
+
+========= Need new mocks and new real files now that we use the real decompMod, and also because of endrun calls
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/GetGlobalValuesMod_mock.F90
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/csm_share/mct_mod_mock.F90
+A       models/lnd/clm/src/util_share/CMakeLists.txt
+
+========= Need stub histFileMod now that many modules include calls to hist_addfld
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/main/CMakeLists.txt
+A       models/lnd/clm/test/unit_testers/clm4_5/mock/main/histFileMod_mock.F90
+
+List all existing files that have been modified, and describe the changes:
+
+========= Update glacier cover and topographic heights based on values from CISM; rework
+          code to accommodate icemask and elevation class 0
+M       models/lnd/clm/src/clm4_5/main/clm_glclnd.F90
+M       models/lnd/clm/src/cpl/clm_cpl_indices.F90
+M       models/lnd/clm/src/cpl/lnd_import_export.F90
+
+========= Change to be consistent with clm4_5 version, adding elevation class 0 and
+          x2s%icemask (neither of which are used in the clm4_0 version)
+M       models/lnd/clm/src/clm4_0/main/clm_glclnd.F90
+
+========= Add glc_do_dynglacier namelist option, which triggers off of
+          CLM_UPDATE_GLC_AREAS; rename glc_dyntopo to glc_dyn_runoff_routing and make it
+          also trigger off of CLM_UPDATE_GLC_AREAS; add glc_snow_persistence_max_days; add
+          dynpft_consistency_checks and finidat_consistency_checks groups
+M       models/lnd/clm/bld/user_nl_clm
+M       models/lnd/clm/bld/CLMBuildNamelist.pm
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       models/lnd/clm/bld/unit_testers/build-namelist_test.pl
+M       models/lnd/clm/bld/unit_testers/env_run.xml
+M       models/lnd/clm/src/clm4_5/main/controlMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_varctl.F90
+          - also use parameter for file name length, so that other modules can
+            ensure consistency of char length
+
+========= Add functions to convert between col%itype and icemec class; also add
+          landunit_names vector
+M       models/lnd/clm/src/clm4_5/main/clm_varcon.F90
+
+========= Add functions add_landunit, add_column, add_patch (cleans up this code, and will
+          assist with setting up unit tests) and use new functions from clm_varcon
+M       models/lnd/clm/src/clm4_5/main/initGridCellsMod.F90
+
+========= Use new functions from initGridCellsMod
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynLandunitAreaMod.F90
+
+========= Remove old consistency checks for restart file, add new ones (these changes are
+          needed so that consistency checks work right with dynamic landunits, and we're
+          adding some new consistency checks that weren't in place before)
+M       models/lnd/clm/src/util_share/clm_time_manager.F90
+M       models/lnd/clm/src/util_share/ncdio_pio.F90
+M       models/lnd/clm/src/util_share/ncdio_pio.F90.in
+M       models/lnd/clm/src/clm4_5/main/restFileMod.F90
+M       models/lnd/clm/src/clm4_5/main/subgridRestMod.F90
+          - also read all subgrid weights and glc topo on restart
+            (some of these used to be read in BiogeophysRestMod;
+            we need all of them with dynamic landunits)
+          - also remove redundant mcdate, mcsec
+          - also add icemask restart variable
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+          - also remove redundant PFT_WTGCELL, PFT_WTLUNIT, PFT_WTCOL
+            (equivalent variables are already output by subgridRestMod)
+          - also add snow_persistence
+
+========= Remove old consistency checks for pftdyn file, add new ones
+          (these changes are needed so that consistency checks work right with dynamic landunits)
+M       models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+          - also call init_subgrid_weights_mod, put call to update_clm_s2x in
+            loop over clumps, and move deallocation of topo_glc_mec to later
+M       models/lnd/clm/src/clm4_5/main/clm_varsur.F90
+M       models/lnd/clm/src/clm4_5/main/surfrdMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynpftFileMod.F90
+
+========= Add new dimensions for multi-level fields - for subgrid weight diagnostics; add
+          a dimension to accommodate fields dimensioned by glc_nec+1
+M       models/lnd/clm/src/clm4_5/main/histFileMod.F90
+
+========= Call new routines (update_clm_x2s, set_subgrid_diagnostic_fields, initialize_new_columns)
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynSubgridDriverMod.F90
+
+========= Make various code operate over veg as well as icemec columns
+M       models/lnd/clm/src/clm4_5/main/filterMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_atmlnd.F90
+M       models/lnd/clm/src/clm4_5/main/clm_driver.F90
+          - also put call to update_clm_s2x in a loop over clumps
+M       models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilTemperatureMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/clm_driverInitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+          - also compute snow_persistence, and rework some code for clarity
+
+========= Add initialization of icemask & snow_persistence; change
+          initialization of glc_topo and h2osno
+M       models/lnd/clm/src/clm4_5/main/initColdMod.F90
+
+========= Add l2g_scale_type = natveg
+M       models/lnd/clm/src/clm4_5/main/subgridAveMod.F90
+
+========= Fix QSNWCPICE_NODYNLNDUSE, add l2g_scale_type for QICE & related fields, add
+          SNOW_PERSISTENCE and ICE_MASK, change _FORC fields to include elevation class 0
+M       models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+
+========= Get rid of associate statement that caused problems with some compilers
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynFileMod.F90
+
+========= Track old col%active values, needed for initializing new columns
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynPriorWeightsMod.F90
+
+========= Moved most functionality to subgridWeightsMod.F90 (now just a small
+          wrapper to some of the stuff in subgridWeightsMod, whose main purpose
+          is to avoid a dependency of subgridWeightsMod on filterMod)
+M       models/lnd/clm/src/clm4_5/main/reweightMod.F90
+
+========= Changes for unit tests:
+            (1) Update unit tests to use libraries for the clm source and csm_share source
+            (2) New unit test
+            (3) Make unit tests work with latest CLM trunk
+            (4) Point to real decompMod rather than mock
+M       models/lnd/clm/test/unit_testers/clm4_5/biogeophys/Daylength_test/CMakeLists.txt
+M       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynLandunitArea_test/CMakeLists.txt
+M       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynVar_test/CMakeLists.txt
+M       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynTimeInfo_test/CMakeLists.txt
+M       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/CMakeLists.txt
+M       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/ncdio_var.F90
+M       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/ncdio_var.F90.in
+M       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/spmdMod_mock.F90
+M       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/CMakeLists.txt
+M       models/lnd/clm/test/unit_testers/clm4_5/mock/csm_share/shr_sys_mod_mock.F90
+M       models/lnd/clm/test/unit_testers/clm4_5/mock/csm_share/CMakeLists.txt
+M       models/lnd/clm/test/unit_testers/clm4_5/mock/main/CMakeLists.txt
+M       models/lnd/clm/test/unit_testers/clm4_5/mock/CMakeLists.txt
+M       models/lnd/clm/test/unit_testers/clm4_5/CMakeLists.txt
+M       models/lnd/clm/src/clm4_5/main/CMakeLists.txt
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/CMakeLists.txt
+
+========= Add icemask & snow_persistence; remove unused glc_frac, glc_rofi & glc_rofl
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+
+========= Minor changes to 'use' statements for the sake of breaking dependencies for unit tests
+M       models/lnd/clm/src/util_share/GetGlobalValuesMod.F90
+M       models/lnd/clm/src/clm4_5/main/decompMod.F90
+
+========= Changes to comments only
+M       models/lnd/clm/src/clm4_5/biogeochem/CNGapMortalityMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNVerticalProfileMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCIsoFluxMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPhenologyMod.F90
+M       models/lnd/clm/src/clm4_5/main/filterMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynHarvestMod.F90
+M       models/lnd/clm/src/util_share/domainMod.F90
+
+========= Remove no-longer-failing test, change failType of a test (it was RUN
+          rather than FAIL at least as far back as clm4_5_69)
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+
+  regular tests
+
+    NOTE: Most tests were done on bare_land_smb_n15_clm4_5_70, which did NOT
+    include r59820 (add a comma in histFileMod to fix a syntax error caught by
+    nag). After r59820, reran all goldbach_nag tests, plus one goldbach_pgi and
+    one goldbach_intel.
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    goldbach_nag: ok
+    goldbach_intel: ok
+    goldbach_pgi: ok
+
+  component_gen_comp on yellowstone_intel & yellowstone_pgi: ok
+
+CLM tag used for the baseline comparisons: clm4_5_69 (clm4_5_68 for a few tests
+   with missing baselines in clm4_5_69)
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All IG compsets (i.e., GLC compsets)
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+         New Climate
+
+   Changes are:
+
+     (1) All IG compsets (clm4.0 & clm4.5) change due to new CISM external
+
+     (2) In addition, IG compsets with CLM4.5 change further due to:
+         (a) 2-way feedbacks (CLM updated to match CISM)
+         (b) downscaling done over vegetated landunits within the icemask
+
+     (3) Also, the QSNWCPICE_NODYNLNDUSE history diagnostic field changes for
+         ALL CLM4.5 runs, due to fixing bug 1969.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_70
 Originator(s):  muszala (Stefan Muszala)
 Date:  Fri Apr 18 08:24:44 MDT 2014

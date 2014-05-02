@@ -418,6 +418,8 @@ contains
     grc%aais_mask(:)=nanr
     allocate(grc%aais_area(beg:end))
     grc%aais_area(:)=nanr
+    allocate(grc%icemask(beg:end))
+    grc%icemask(:)=nanr      
     allocate(grc%tws(beg:end))
     grc%tws(:)=nanr
 
@@ -2554,6 +2556,8 @@ contains
     allocate(cps%do_capsnow(beg:end))
     allocate(cps%snow_depth(beg:end))
     cps%snow_depth(:)= nanr
+    allocate(cps%snow_persistence(beg:end))
+    cps%snow_persistence(:)= nanr   
     allocate(cps%snowdp(beg:end))
     cps%snowdp(:)= nanr
     allocate(cps%frac_sno(beg:end))
@@ -3250,10 +3254,6 @@ contains
     cwf%qflx_glcice_frz(:)= nanr
     allocate(cwf%qflx_glcice_melt(beg:end))
     cwf%qflx_glcice_melt(:)= spval
-    allocate(cwf%glc_rofi(beg:end))
-    cwf%glc_rofi(:)= nanr
-    allocate(cwf%glc_rofl(beg:end))
-    cwf%glc_rofl(:)= nanr
 
     allocate(cwf%qflx_h2osfc_to_ice(beg:end))
     cwf%qflx_h2osfc_to_ice(:)= spval

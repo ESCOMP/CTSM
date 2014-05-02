@@ -112,7 +112,7 @@ contains
    end subroutine BeginWaterBalance
 
    !-----------------------------------------------------------------------
-   subroutine BalanceCheck(bounds)
+   subroutine BalanceCheck(bounds, num_do_smb_c, filter_do_smb_c)
      !
      ! !DESCRIPTION:
      ! This subroutine accumulates the numerical truncation errors of the water
@@ -136,14 +136,16 @@ contains
      use clm_varcon       , only : icol_roof, icol_sunwall, icol_shadewall
      use clm_varcon       , only : spval, icol_road_perv, icol_road_imperv, istice_mec
      use clm_varcon       , only : istdlak, istsoil,istcrop,istwet
-     use clm_varctl       , only : glc_dyntopo, create_glacier_mec_landunit
+     use clm_varctl       , only : glc_dyn_runoff_routing, create_glacier_mec_landunit
      !
      ! !ARGUMENTS:
      implicit none
-     type(bounds_type), intent(in) :: bounds  ! bounds
+     type(bounds_type), intent(in) :: bounds    ! bounds
+     integer, intent(in) :: num_do_smb_c        ! number of columns in filter_do_smb_c
+     integer, intent(in) :: filter_do_smb_c (:) ! column filter for points where SMB calculations are done
      !
      ! !LOCAL VARIABLES:
-     integer  :: p,c,l,g                     ! indices
+     integer  :: p,c,l,g,fc                  ! indices
      real(r8) :: dtime                       ! land model time step (sec)
      integer  :: nstep                       ! time step number
      logical  :: found                       ! flag in search loop
@@ -179,7 +181,7 @@ contains
    ltype                =>    lun%itype                     , & ! Input:  [integer (:)]  landunit type                            
    canyon_hwr           =>    lun%canyon_hwr                , & ! Input:  [real(r8) (:)]  ratio of building height to street width
    urbpoi               =>    lun%urbpoi                    , & ! Input:  [logical (:)]  true => landunit is an urban point       
-   cactive              =>    col%active                    , & ! Input:  [logical (:)]  true=>do computations on this column (see reweightMod for details)
+   cactive              =>    col%active                    , & ! Input:  [logical (:)]  true=>do computations on this column 
    ctype                =>    col%itype                     , & ! Input:  [integer (:)]  column type                              
    endwb                =>    cwbal%endwb                   , & ! Input:  [real(r8) (:)]  water mass end of the time step         
    begwb                =>    cwbal%begwb                   , & ! Input:  [real(r8) (:)]  water mass begining of the time step    
@@ -190,8 +192,8 @@ contains
    qflx_runoff          =>    cwf%qflx_runoff               , & ! Input:  [real(r8) (:)]  total runoff (mm H2O /s)                
    qflx_snwcp_ice       =>    pwf_a%qflx_snwcp_ice          , & ! Input:  [real(r8) (:)]  excess snowfall due to snow capping (mm H2O /s) [+]`
    qflx_evap_tot        =>    pwf_a%qflx_evap_tot           , & ! Input:  [real(r8) (:)]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-   qflx_glcice          =>    cwf%qflx_glcice               , & ! Input:  [real(r8) (:)]  flux of new glacier ice (mm H2O /s) [+ if ice grows]
    qflx_glcice_frz      =>    cwf%qflx_glcice_frz           , & ! Input:  [real(r8) (:)]  ice growth (mm H2O/s) [+]               
+   qflx_glcice_melt     =>    cwf%qflx_glcice_melt          , & ! Input:  [real(r8) (:)]  ice melt (mm H2O/s) [             
    h2osno               =>    cws%h2osno                    , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
    h2osno_old           =>    cws%h2osno_old                , & ! Input:  [real(r8) (:)]  snow water (mm H2O) at previous time step
    qflx_dew_snow        =>    pwf_a%qflx_dew_snow           , & ! Input:  [real(r8) (:)]  surface dew added to snow pack (mm H2O /s) [+]
@@ -203,7 +205,7 @@ contains
    qflx_snwcp_liq       =>    pwf_a%qflx_snwcp_liq          , & ! Input:  [real(r8) (:)]  excess liquid water due to snow capping (mm H2O /s) [+]`
    qflx_sl_top_soil     =>    cwf%qflx_sl_top_soil          , & ! Input:  [real(r8) (:)]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
    snl                  =>    cps%snl                       , & ! Input:  [integer (:)]  number of snow layers                    
-   pactive              =>    pft%active                    , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive              =>    pft%active                    , & ! Input:  [logical (:)]  true=>do computations on this pft 
    fsa                  =>    pef%fsa                       , & ! Input:  [real(r8) (:)]  solar radiation absorbed (total) (W/m**2)
    fsr                  =>    pef%fsr                       , & ! Input:  [real(r8) (:)]  solar radiation reflected (W/m**2)      
    eflx_lwrad_out       =>    pef%eflx_lwrad_out            , & ! Input:  [real(r8) (:)]  emitted infrared (longwave) radiation (W/m**2)
@@ -257,8 +259,6 @@ contains
     ! Water balance check
 
     do c = bounds%begc, bounds%endc
-       g = col%gridcell(c)
-       l = col%landunit(c)
       
        ! add qflx_drain_perched and qflx_flood
        if (cactive(c))then
@@ -267,20 +267,6 @@ contains
                  - qflx_evap_tot(c) - qflx_surf(c)  - qflx_h2osfc_surf(c) &
                  - qflx_qrgwl(c) - qflx_drain(c) - qflx_drain_perched(c) - qflx_snwcp_ice(c)) * dtime
 
-          ! Suppose glc_dyntopo = T:   
-          ! (1) We have qflx_snwcp_ice = 0, and excess snow has been incorporated in qflx_glcice.  
-          !     This flux must be included here to complete the water balance.
-          ! (2) Meltwater from ice is allowed to run off and is included in qflx_qrgwl,
-          !     but the water content of the ice column has not changed (at least for now) because
-          !     an equivalent ice mass has been "borrowed" from the base of the column.  That
-          !     meltwater is included in qflx_glcice.
-          !
-          ! Note that qflx_glcice is only valid over ice_mec landunits; elsewhere it is spval
-
-          if (glc_dyntopo .and. ltype(l)==istice_mec) then
-             errh2o(c) = errh2o(c) + qflx_glcice(c)*dtime
-          end if
-
        else
 
           errh2o(c) = 0.0_r8
@@ -288,7 +274,25 @@ contains
        end if
 
     end do
+    
+    ! Suppose glc_dyn_runoff_routing = T:   
+    ! (1) We have qflx_snwcp_ice = 0, and excess snow has been incorporated in qflx_glcice_frz.
+    !     This flux must be included here to complete the water balance, because it is a
+    !     sink of water as far as CLM is concerned (this water will now be owned by CISM).
+    ! (2) Meltwater from ice (qflx_glcice_melt) is allowed to run off and is included in qflx_qrgwl,
+    !     but the water content of the ice column has not changed (at least for now) because
+    !     an equivalent ice mass has been "borrowed" from the base of the column.  So this mass
+    !     has to be added back to the column, as far as the error correction is concerned, by
+    !     adding back the equivalent flux*timestep.
 
+    if (glc_dyn_runoff_routing) then
+       do fc = 1,num_do_smb_c
+          c = filter_do_smb_c(fc)
+          errh2o(c) = errh2o(c) + qflx_glcice_frz(c)*dtime
+          errh2o(c) = errh2o(c) - qflx_glcice_melt(c)*dtime
+       end do
+    endif
+    
     found = .false.
     do c = bounds%begc, bounds%endc
        if (abs(errh2o(c)) > 1e-7_r8) then
@@ -343,6 +347,9 @@ contains
           write(iulog,*)'qflx_drain_perched = ',qflx_drain_perched(indexc)
           write(iulog,*)'qflx_flood         = ',qflx_floodc(indexc)
           write(iulog,*)'qflx_snwcp_ice     = ',qflx_snwcp_ice(indexc)
+          write(iulog,*)'qflx_glcice_melt   = ',qflx_glcice_melt(indexc)
+          write(iulog,*)'qflx_glcice_frz    = ',qflx_glcice_frz(indexc)
+          write(iulog,*)'icemask=' , grc%icemask(col%gridcell(indexc))
           write(iulog,*)'clm model is stopping'
           call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
        end if
@@ -398,13 +405,13 @@ contains
                         + qflx_snow_melt(c) + qflx_sl_top_soil(c)
                 endif
              endif
-
-             ! For ice_mec landunits, if glc_dyntopo is true, then qflx_snwcp_ice = 0,
-             ! and qflx_glcice_frz instead stores this flux
-             if (ltype(l) == istice_mec .and. glc_dyntopo) then
+             
+             if (glc_dyn_runoff_routing) then
+                ! Need to add qflx_glcice_frz to snow_sinks for the same reason as it is
+                ! added to errh2o above - see the comment above for details.
                 snow_sinks(c) = snow_sinks(c) + qflx_glcice_frz(c)
              end if
-
+         
              errh2osno(c) = (h2osno(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
           else
              snow_sources(c) = 0._r8

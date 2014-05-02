@@ -20,6 +20,7 @@ module clm_varctl
   !
   integer, parameter, public ::  iundef = -9999999
   integer, parameter, public ::  rundef = -9999999._r8
+  integer, parameter, public ::  fname_len = SHR_KIND_CL   ! max length of file names in this module
   !
   ! Run control variables
   !
@@ -48,17 +49,17 @@ module clm_varctl
   !
   ! Run input files
   !
-  character(len=256), public :: finidat    = ' '        ! initial conditions file name
-  character(len=256), public :: fsurdat    = ' '        ! surface data file name
-  character(len=256), public :: fatmgrid   = ' '        ! atm grid file name
-  character(len=256), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
-  character(len=256), public :: fatmtopo   = ' '        ! topography on atm grid
-  character(len=256), public :: flndtopo   = ' '        ! topography on lnd grid
-  character(len=256), public :: fpftdyn    = ' '        ! dynamic landuse dataset
-  character(len=256), public :: paramfile  = ' '        ! ASCII data file with PFT physiological constants
-  character(len=256), public :: nrevsn     = ' '        ! restart data file name for branch run
-  character(len=256), public :: fsnowoptics  = ' '      ! snow optical properties file name
-  character(len=256), public :: fsnowaging   = ' '      ! snow aging parameters file name
+  character(len=fname_len), public :: finidat    = ' '        ! initial conditions file name
+  character(len=fname_len), public :: fsurdat    = ' '        ! surface data file name
+  character(len=fname_len), public :: fatmgrid   = ' '        ! atm grid file name
+  character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
+  character(len=fname_len), public :: fatmtopo   = ' '        ! topography on atm grid
+  character(len=fname_len), public :: flndtopo   = ' '        ! topography on lnd grid
+  character(len=fname_len), public :: fpftdyn    = ' '        ! dynamic landuse dataset
+  character(len=fname_len), public :: paramfile  = ' '        ! ASCII data file with PFT physiological constants
+  character(len=fname_len), public :: nrevsn     = ' '        ! restart data file name for branch run
+  character(len=fname_len), public :: fsnowoptics  = ' '      ! snow optical properties file name
+  character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
   !
   ! Flag to turn on MEGAN VOC's
   !
@@ -68,8 +69,8 @@ module clm_varctl
   ! If finidat_interp_source is non-blank and finidat is blank then interpolation will be done from
   ! finidat_interp_source to finidat_interp_dest
   !
-  character(len=256), public :: finidat_interp_source = ' '
-  character(len=256), public :: finidat_interp_dest   = 'finidat_interp_dest.nc'     
+  character(len=fname_len), public :: finidat_interp_source = ' '
+  character(len=fname_len), public :: finidat_interp_dest   = 'finidat_interp_dest.nc'     
   !
   ! Irrigate logic
   !
@@ -108,11 +109,13 @@ module clm_varctl
   logical , public :: create_glacier_mec_landunit = .false. ! glacier_mec landunit is not created (set in controlMod)
   logical , public :: glc_smb = .true.                      ! if true, pass surface mass balance info to GLC
   ! if false, pass positive-degree-day info to GLC
-  logical , public :: glc_dyntopo = .false.                 ! true => CLM glacier topography changes dynamically
+  logical , public :: glc_dyn_runoff_routing = .false.      ! true => handle snow capping & runoff appropriately for dynamic glacier areas (generally should agree with glc_do_dynglacier)
+  logical , public :: glc_do_dynglacier = .false.           ! true => CLM glacier area & topography changes dynamically (generally should agree with glc_dyn_runoff_routing)
   logical , public :: glcmec_downscale_rain_snow_convert = .false.     ! true => downscale precip division into rain & snow
   logical , public :: glcmec_downscale_longwave = .true.    ! true => downscale longwave radiation
+  integer , public :: glc_snow_persistence_max_days = 7300  ! number of days before one considers the perennially snow-covered point 'land ice'
   character(len=256), public :: glc_grid = ' '              ! glc_grid used to determine fglcmask  
-  character(len=256), public :: fglcmask = ' '              ! glacier mask file name (based on glc_grid)
+  character(len=fname_len), public :: fglcmask = ' '        ! glacier mask file name (based on glc_grid)
   !
   ! single column control variables
   !

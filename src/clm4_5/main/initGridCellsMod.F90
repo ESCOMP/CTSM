@@ -21,6 +21,12 @@ module initGridCellsMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public initGridcells ! initialize sub-grid gridcell mapping 
+
+  ! The following need to be public for setting up unit tests. They should not generally
+  ! be called directly by other modules in the production code
+  public add_landunit  ! add an entry in the landunit-level arrays
+  public add_column    ! add an entry in the column-level arrays
+  public add_patch     ! add an entry in the patch-level arrays
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private clm_ptrs_compdown
@@ -42,13 +48,13 @@ contains
     !
     ! !USES
     use clmtype 
-    use domainMod   , only : ldomain
-    use decompMod   , only : get_proc_bounds, get_clump_bounds, get_proc_clumps
-    use reweightMod , only : compute_higher_order_weights
-    use clm_varcon  , only : istsoil, istice, istwet, istdlak, istice_mec, &
-                             isturb_tbd, isturb_hd, isturb_md, istcrop
-    use clm_varctl  , only : create_glacier_mec_landunit
-    use shr_const_mod,only : SHR_CONST_PI
+    use domainMod         , only : ldomain
+    use decompMod         , only : get_proc_bounds, get_clump_bounds, get_proc_clumps
+    use subgridWeightsMod , only : compute_higher_order_weights
+    use clm_varcon        , only : istsoil, istice, istwet, istdlak, istice_mec, &
+                                   isturb_tbd, isturb_hd, isturb_md, istcrop
+    use clm_varctl        , only : create_glacier_mec_landunit
+    use shr_const_mod     , only : SHR_CONST_PI
     !
     ! !ARGUMENTS:
     implicit none
@@ -546,7 +552,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: m                                ! index
-    integer  :: lb_offset                        ! offset between natpft_lb and 1
     integer  :: npfts                            ! number of pfts in landunit
     integer  :: pitype                           ! pft itype
     real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
@@ -558,34 +563,13 @@ contains
     wtlunit2gcell = wt_lunit(gi, ltype)
 
     if (npfts > 0) then
-       li = li + 1
-       ci = ci + 1
+       call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
+       
+       ! Assume one column on the landunit
+       call add_column(ci=ci, li=li, ctype=1, wtlunit=1.0_r8)
 
-       ! Set landunit properties
-       lun%ifspecial(li) = .false.
-       lun%lakpoi(li)    = .false.
-       lun%urbpoi(li)    = .false.
-       lun%itype(li)     = ltype
-       lun%gridcell(li)  = gi
-       lun%wtgcell(li)   = wtlunit2gcell
-
-       ! Set column properties for this landunit (only one column on landunit)
-       col%itype(ci)    = 1
-       col%gridcell(ci) = gi
-       col%landunit(ci) = li
-       col%wtlunit(ci)  = 1.0_r8
-
-       ! Set pft properties for this landunit
-       lb_offset = 1 - natpft_lb
        do m = natpft_lb,natpft_ub
-          pi               = pi + 1
-          pitype           = m
-          pft%mxy(pi)      = m + lb_offset
-          pft%itype(pi)    = pitype
-          pft%gridcell(pi) = gi
-          pft%landunit(pi) = li
-          pft%column(pi)   = ci
-          pft%wtcol(pi)    = wt_nat_pft(gi, m)
+          call add_patch(pi=pi, ci=ci, ptype=m, wtcol=wt_nat_pft(gi,m))
        end do
     end if
 
@@ -599,8 +583,9 @@ contains
     !
     ! !USES
     use clmtype
-    use clm_varsur, only : wt_lunit, wt_glc_mec, topo_glc_mec
-    use clm_varcon, only : istwet, istdlak, istice, istice_mec
+    use clm_varsur, only : wt_lunit, wt_glc_mec
+    use clm_varcon, only : istwet, istdlak, istice, istice_mec, &
+         icemec_class_to_col_itype
     use subgridMod, only : subgrid_get_gcellinfo
     use clm_varpar, only : maxpatch_glcmec
     use pftvarcon , only : noveg
@@ -654,19 +639,7 @@ contains
 
        if (ltype==istice_mec) then   ! multiple columns per landunit
 
-          ! Assume that columns are of type 1 and that each column has its own pft
-
-          li = li + 1
-
-          ! Determine landunit properties
-          
-          lun%itype    (li) = ltype
-          lun%ifspecial(li) = .true.
-          lun%glcmecpoi(li) = .true.
-          lun%lakpoi   (li) = .false.
-          lun%urbpoi   (li) = .false.
-          lun%gridcell (li) = gi
-          lun%wtgcell  (li) = wtlunit2gcell
+          call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
 
           ! Determine column and properties
           ! (Each column has its own pft)
@@ -682,70 +655,19 @@ contains
              wtcol2lunit = wt_glc_mec(gi,m)
 
              if (wtcol2lunit > 0._r8 .or. glcmask == 1) then
-
-                ci = ci + 1
-                pi = pi + 1
-
-                col%itype    (ci) = istice_mec*100 + m
-                col%gridcell (ci) = gi
-                col%landunit (ci) = li
-                col%wtlunit  (ci) = wtcol2lunit
-
-                ! Set sfc elevation too
-
-                cps%glc_topo(ci) = topo_glc_mec(gi,m)
-
-                ! Set pft properties
-
-                pft%itype    (pi) = noveg
-                pft%gridcell (pi) = gi
-                pft%landunit (pi) = li
-                pft%column   (pi) = ci
-                pft%wtcol    (pi) = 1.0_r8
-
-             endif   ! wtcol2lunit > 0 or glcmask = 1
-          enddo      ! loop over columns
+                call add_column(ci=ci, li=li, ctype=icemec_class_to_col_itype(m), wtlunit=wtcol2lunit)
+                call add_patch(pi=pi, ci=ci, ptype=noveg, wtcol=1.0_r8)
+             endif
+          enddo
 
        else
 
           ! Currently assume that each landunit only has only one column 
-          ! (of type 1) and that each column has its own pft
+          ! and that each column has its own pft
        
-          wtcol2lunit = 1.0_r8
-
-          li = li + 1
-          ci = ci + 1
-          pi = pi + 1
-
-          ! Determine landunit properties 
-          
-          lun%itype    (li) = ltype
-          lun%ifspecial(li) = .true.
-          lun%urbpoi   (li) = .false.
-          if (ltype == istdlak) then
-             lun%lakpoi(li) = .true.
-          else
-             lun%lakpoi(li) = .false.
-          end if
-          lun%gridcell (li) = gi
-          lun%wtgcell(li)   = wtlunit2gcell
-
-          ! Determine column and properties
-          ! For the wet, ice or lake landunits it is assumed that each 
-          ! column has its own pft
-
-          col%itype(ci)     = ltype
-          col%gridcell (ci) = gi
-          col%landunit (ci) = li
-          col%wtlunit(ci)   = wtcol2lunit
-
-          ! Set pft properties
-
-          pft%itype(pi)     = noveg
-          pft%gridcell (pi) = gi
-          pft%landunit (pi) = li
-          pft%column (pi)   = ci
-          pft%wtcol(pi)     = 1.0_r8
+          call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
+          call add_column(ci=ci, li=li, ctype=ltype, wtlunit=1.0_r8)
+          call add_patch(pi=pi, ci=ci, ptype=noveg, wtcol=1.0_r8)
 
        end if   ! ltype = istice_mec
     endif       ! npfts > 0       
@@ -781,6 +703,7 @@ contains
     logical , intent(in)    :: setdata           ! set info or just compute
     !
     ! !LOCAL VARIABLES:
+    integer  :: my_ltype                         ! landunit type for crops
     integer  :: m                                ! index
     integer  :: npfts                            ! number of pfts in landunit
     real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
@@ -793,42 +716,23 @@ contains
 
     if (npfts > 0) then
 
-       ! Set landunit properties - each column has its own pft
-       
-       li = li + 1   
-
        ! Note that we cannot simply use the 'ltype' argument to set itype here,
        ! because ltype will always indicate istcrop
        if ( crop_prog )then
-          lun%itype(li) = istcrop
+          my_ltype = istcrop
        else
-          lun%itype(li) = istsoil
+          my_ltype = istsoil
        end if
-       lun%ifspecial(li) = .false.
-       lun%lakpoi(li)    = .false.
-       lun%urbpoi(li)    = .false.
-       lun%gridcell (li) = gi
-       lun%wtgcell(li) = wtlunit2gcell
 
+       call add_landunit(li=li, gi=gi, ltype=my_ltype, wtgcell=wtlunit2gcell)
+       
        ! Set column and pft properties for this landunit 
        ! (each column has its own pft)
 
        if (create_crop_landunit) then
           do m = cft_lb, cft_ub
-             ci = ci + 1
-             pi = pi + 1
-             
-             pft%itype(pi)     = m
-             pft%mxy(pi)       = m + 1
-             pft%gridcell (pi) = gi
-             pft%landunit (pi) = li
-             pft%column (pi)   = ci
-             pft%wtcol(pi)     = 1._r8
-
-             col%itype(ci)     = (istcrop*100) + m
-             col%gridcell (ci) = gi
-             col%landunit (ci) = li
-             col%wtlunit(ci)   = wt_cft(gi,m)
+             call add_column(ci=ci, li=li, ctype=((istcrop*100) + m), wtlunit=wt_cft(gi,m))
+             call add_patch(pi=pi, ci=ci, ptype=m, wtcol=1.0_r8)
           end do
        end if
 
@@ -899,16 +803,7 @@ contains
 
     if (npfts > 0) then
 
-       ! Determine landunit properties - each columns has its own pft
-
-       li = li + 1
-       lun%itype    (li) = ltype
-       lun%ifspecial(li) = .true.
-       lun%lakpoi   (li) = .false.
-       lun%urbpoi   (li) = .true.
-
-       lun%gridcell (li) = gi
-       lun%wtgcell  (li) = wtlunit2gcell
+       call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
 
        ! Loop through columns for this landunit and set the column and pft properties
        ! For the urban landunits it is assumed that each column has its own pft
@@ -932,23 +827,147 @@ contains
              wtcol2lunit = ((1. - wtlunit_roof)/3) * (wtroad_perv)
           end if
 
-          ci = ci + 1
-          pi = pi + 1 
+          call add_column(ci=ci, li=li, ctype=ctype, wtlunit=wtcol2lunit)
 
-          col%itype(ci)    = ctype
-          col%gridcell(ci) = gi
-          col%landunit(ci) = li
-          col%wtlunit(ci)  = wtcol2lunit
-
-          pft%itype(pi)    = noveg
-          pft%gridcell(pi) = gi
-          pft%landunit(pi) = li
-          pft%column(pi)   = ci
-          pft%wtcol(pi)    = 1.0_r8
+          call add_patch(pi=pi, ci=ci, ptype=noveg, wtcol=1.0_r8)
 
        end do   ! end of loop through urban columns-pfts
     end if
 
   end subroutine set_landunit_urban
+
+  !-----------------------------------------------------------------------
+  subroutine add_landunit(li, gi, ltype, wtgcell)
+    !
+    ! !DESCRIPTION:
+    ! Add an entry in the landunit-level arrays. li gives the index of the last landunit
+    ! added; the new landunit is added at li+1, and the li argument is incremented
+    ! accordingly.
+    !
+    ! !USES:
+    use clmtype    , only : lun
+    use clm_varcon , only : istsoil, istcrop, istice_mec, istdlak, isturb_MIN, isturb_MAX
+    !
+    ! !ARGUMENTS:
+    integer  , intent(inout) :: li      ! input value is index of last landunit added; output value is index of this newly-added landunit
+    integer  , intent(in)    :: gi      ! grid cell index on which this landunit should be placed
+    integer  , intent(in)    :: ltype   ! landunit type
+    real(r8) , intent(in)    :: wtgcell ! weight of the landunit relative to the grid cell
+    !
+    ! !LOCAL VARIABLES:
+    
+    character(len=*), parameter :: subname = 'add_landunit'
+    !-----------------------------------------------------------------------
+    
+    li = li + 1
+
+    lun%gridcell(li) = gi
+    lun%wtgcell(li) = wtgcell
+    lun%itype(li) = ltype
+    
+    if (ltype == istsoil .or. ltype == istcrop) then
+       lun%ifspecial(li) = .false.
+    else
+       lun%ifspecial(li) = .true.
+    end if
+
+    if (ltype == istice_mec) then
+       lun%glcmecpoi(li) = .true.
+    else
+       lun%glcmecpoi(li) = .false.
+    end if
+
+    if (ltype == istdlak) then
+       lun%lakpoi(li) = .true.
+    else
+       lun%lakpoi(li) = .false.
+    end if
+
+    if (ltype >= isturb_MIN .and. ltype <= isturb_MAX) then
+       lun%urbpoi(li) = .true.
+    else
+       lun%urbpoi(li) = .false.
+    end if
+
+  end subroutine add_landunit
+
+  !-----------------------------------------------------------------------
+  subroutine add_column(ci, li, ctype, wtlunit)
+    !
+    ! !DESCRIPTION:
+    ! Add an entry in the column-level arrays. ci gives the index of the last column
+    ! added; the new column is added at ci+1, and the ci argument is incremented
+    ! accordingly.
+    !
+    ! !USES:
+    use clmtype, only : col, lun
+    !
+    ! !ARGUMENTS:
+    integer  , intent(inout) :: ci      ! input value is index of last column added; output value is index of this newly-added column
+    integer  , intent(in)    :: li      ! landunit index on which this column should be placed (assumes this landunit has already been created)
+    integer  , intent(in)    :: ctype   ! column type
+    real(r8) , intent(in)    :: wtlunit ! weight of the column relative to the landunit
+    !
+    ! !LOCAL VARIABLES:
+    
+    character(len=*), parameter :: subname = 'add_column'
+    !-----------------------------------------------------------------------
+
+    ci = ci + 1
+
+    col%landunit(ci) = li
+    col%gridcell(ci) = lun%gridcell(li)
+    col%wtlunit(ci) = wtlunit
+    col%itype(ci) = ctype
+    
+  end subroutine add_column
+
+  !-----------------------------------------------------------------------
+  subroutine add_patch(pi, ci, ptype, wtcol)
+    !
+    ! !DESCRIPTION:
+    ! Add an entry in the patch-level arrays. pi gives the index of the last patch added; the
+    ! new patch is added at pi+1, and the pi argument is incremented accordingly.
+    !
+    ! !USES:
+    use clmtype    , only : pft, col, lun
+    use clm_varcon , only : istsoil, istcrop, ispval
+    use clm_varpar , only : natpft_lb
+    !
+    ! !ARGUMENTS:
+    integer  , intent(inout) :: pi    ! input value is index of last patch added; output value is index of this newly-added patch
+    integer  , intent(in)    :: ci    ! column index on which this patch should be placed (assumes this column has already been created)
+    integer  , intent(in)    :: ptype ! patch type
+    real(r8) , intent(in)    :: wtcol ! weight of the patch relative to the column
+    !
+    ! !LOCAL VARIABLES:
+    integer :: li        ! landunit index
+    integer :: lb_offset ! offset between natpft_lb and 1
+    
+    character(len=*), parameter :: subname = 'add_patch'
+    !-----------------------------------------------------------------------
+    
+    pi = pi + 1
+
+    pft%column(pi) = ci
+    li = col%landunit(ci)
+    pft%landunit(pi) = li
+    pft%gridcell(pi) = col%gridcell(ci)
+
+    pft%wtcol(pi) = wtcol
+
+    pft%itype(pi) = ptype
+
+    if (lun%itype(li) == istsoil .or. lun%itype(li) == istcrop) then
+       lb_offset = 1 - natpft_lb
+       pft%mxy(pi) = ptype + lb_offset
+    else
+       pft%mxy(pi) = ispval
+    end if
+    
+
+  end subroutine add_patch
+
+  
 
 end module initGridCellsMod

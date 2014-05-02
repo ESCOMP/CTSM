@@ -77,35 +77,29 @@ contains
     character(len=*), parameter :: subname = 'dyn_file_type constructor'
     !-----------------------------------------------------------------------
 
-    associate( &
-         locfn       => constructor%locfn, &
-         file_desc_t => constructor%file_desc_t, &
-         time_info   => constructor%time_info)
-
     ! Obtain file
 
-    call getfil(filename, locfn, 0)
-    call ncd_pio_openfile(file_desc_t, locfn, 0)
+    call getfil(filename, constructor%locfn, 0)
+    call ncd_pio_openfile(constructor, constructor%locfn, 0)
     
     ! Obtain years
 
-    call ncd_inqdid(file_desc_t, 'time', varid)
-    call ncd_inqdlen(file_desc_t, varid, ntimes)
+    call ncd_inqdid(constructor, 'time', varid)
+    call ncd_inqdlen(constructor, varid, ntimes)
     allocate(years(ntimes), stat=ier)
     if (ier /= 0) then
        call endrun(msg=' allocation error for years'//errMsg(__FILE__, __LINE__))
     end if
-    call ncd_io(ncid=file_desc_t, varname='YEAR', flag='read', data=years)
+    call ncd_io(ncid=constructor, varname='YEAR', flag='read', data=years)
     
     ! Initialize object containing time information for the file
 
     call get_curr_date(cur_year, mon, day, sec)
 
-    time_info = time_info_type(years, cur_year)
+    constructor%time_info = time_info_type(years, cur_year)
 
     deallocate(years)
 
-    end associate
   end function constructor
 
 

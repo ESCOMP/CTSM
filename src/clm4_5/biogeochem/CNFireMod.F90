@@ -668,7 +668,7 @@ contains
    deadcrootn_storage                  =>    pns%deadcrootn_storage                      , & ! Input:  [real(r8) (:)]  (gN/m2) dead coarse root N storage                
    deadcrootn_xfer                     =>    pns%deadcrootn_xfer                         , & ! Input:  [real(r8) (:)]  (gN/m2) dead coarse root N transfer               
    retransn                            =>    pns%retransn                                , & ! Input:  [real(r8) (:)]  (gN/m2) plant pool of retranslocated N            
-   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft 
 
    m_leafc_to_fire                     =>    pcf%m_leafc_to_fire                         , & ! Input:  [real(r8) (:)]  (gC/m2/s) fire C emissions from leafc             
    m_leafc_storage_to_fire             =>    pcf%m_leafc_storage_to_fire                 , & ! Input:  [real(r8) (:)]  (gC/m2/s) fire C emissions from leafc_storage     

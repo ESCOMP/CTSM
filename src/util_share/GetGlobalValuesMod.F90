@@ -27,6 +27,7 @@ contains
     use spmdMod    , only: iam
     use clm_varctl , only: iulog
     use shr_log_mod, only: errMsg => shr_log_errMsg
+    use shr_sys_mod, only: shr_sys_abort
     use mct_mod
     !
     ! Arguments 

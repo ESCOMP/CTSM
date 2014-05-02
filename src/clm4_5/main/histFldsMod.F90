@@ -909,10 +909,13 @@ contains
          avgflag='A', long_name='excess rainfall due to snow capping', &
          ptr_pft=pwf%qflx_snwcp_liq, c2l_scale_type='urbanf', default='inactive')
 
+    ! Use pwf_a%qflx_snwcp_ice rather than pwf%qflx_snwcp_ice, because the pwf_a version
+    ! (i.e., the column-level version) is the final version, which includes some
+    ! additional corrections beyond the pft-level version
     call hist_addfld1d (fname='QSNWCPICE_NODYNLNDUSE', units='mm H2O/s', &
          avgflag='A', &
          long_name='excess snowfall due to snow capping not including correction for land use change', &
-         ptr_pft=pwf%qflx_snwcp_ice, c2l_scale_type='urbanf')
+         ptr_col=pwf_a%qflx_snwcp_ice, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QSNWCPICE',  units='mm/s',  &
          avgflag='A', long_name='excess snowfall due to snow capping', &
@@ -1001,15 +1004,15 @@ contains
 
        call hist_addfld1d (fname='QICE',  units='mm/s',  &
             avgflag='A', long_name='ice growth/melt', &
-            ptr_col=cwf%qflx_glcice, set_noglcmec=spval)
+            ptr_col=cwf%qflx_glcice, l2g_scale_type='ice')
 
        call hist_addfld1d (fname='QICE_FRZ',  units='mm/s',  &
             avgflag='A', long_name='ice growth', &
-            ptr_col=cwf%qflx_glcice_frz, set_noglcmec=spval)
+            ptr_col=cwf%qflx_glcice_frz, l2g_scale_type='ice')
 
        call hist_addfld1d (fname='QICE_MELT',  units='mm/s',  &
             avgflag='A', long_name='ice melt', &
-            ptr_col=cwf%qflx_glcice_melt, set_noglcmec=spval)
+            ptr_col=cwf%qflx_glcice_melt, l2g_scale_type='ice')
 
        call hist_addfld1d (fname='gris_mask',  units='unitless',  &
             avgflag='A', long_name='Greenland mask', &
@@ -1027,7 +1030,13 @@ contains
             avgflag='A', long_name='Antarctic ice area', &
             ptr_gcell= grc%aais_area)
 
-   endif
+       call hist_addfld1d (fname='SNOW_PERSISTENCE',  units='seconds',  &
+            avgflag='I', &
+            long_name='Length of time of continuous snow cover (nat. veg. landunits only)', &
+            ptr_col=cps%snow_persistence, l2g_scale_type='natveg') 
+           
+    endif
+   
 
     ! Water and energy balance checks
 
@@ -5853,24 +5862,34 @@ contains
     end if
 
     !-------------------------------
-    ! Forcings sent to GLC
+    ! Forcings sent to and received from GLC
     !-------------------------------
 
     if (maxpatch_glcmec > 0) then
 
-       call hist_addfld2d (fname='QICE_FORC', units='mm/s', type2d='glc_nec', &
+       ! For this and the following fields, set up a pointer to the field simply for the
+       ! sake of changing the indexing, so that levels start with an index of 1, as is
+       ! assumed by histFileMod - so levels go 1:(nec+1) rather than 0:nec
+       data2dptr => clm_s2x%qice(:,0:maxpatch_glcmec)
+       call hist_addfld2d (fname='QICE_FORC', units='mm/s', type2d='elevclas', &
             avgflag='A', long_name='qice forcing sent to GLC', &
-            ptr_lnd=clm_s2x%qice, default='inactive')
+            ptr_lnd=data2dptr, default='inactive')
 
-       call hist_addfld2d (fname='TSRF_FORC', units='K', type2d='glc_nec', &
+       data2dptr => clm_s2x%tsrf(:,0:maxpatch_glcmec)
+       call hist_addfld2d (fname='TSRF_FORC', units='K', type2d='elevclas', &
             avgflag='A', long_name='surface temperature sent to GLC', &
-            ptr_lnd=clm_s2x%tsrf, default='inactive')
+            ptr_lnd=data2dptr, default='inactive')
 
-       call hist_addfld2d (fname='TOPO_FORC', units='m', type2d='glc_nec', &
+       data2dptr => clm_s2x%topo(:,0:maxpatch_glcmec)
+       call hist_addfld2d (fname='TOPO_FORC', units='m', type2d='elevclas', &
             avgflag='A', long_name='topographic height sent to GLC', &
-            ptr_lnd=clm_s2x%topo, default='inactive')
+            ptr_lnd=data2dptr, default='inactive')
 
-    end if
+       call hist_addfld1d (fname='ICE_MASK',  units='unitless',  &
+            avgflag='I', long_name='Ice sheet mask coverage', &
+            ptr_gcell=grc%icemask)
+
+    end if    
 
     ! Print masterlist of history fields
 

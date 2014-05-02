@@ -664,7 +664,7 @@ subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    npfts      =>   col%npfts      , & !  [integer (:)]  number of pfts for each column                            
    pfti       =>   col%pfti       , & !  [integer (:)]  beginning pft index for each column                       
    wtcol      =>   pft%wtcol      , & !  [real(r8) (:)]  weight (relative to column) for this pft (0-1)           
-   pactive    =>   pft%active       & !  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive    =>   pft%active       & !  [logical (:)]  true=>do computations on this pft 
    )
 	
    ! pft-level fire mortality fluxes
@@ -830,7 +830,7 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
    associate(& 
    ivt                       =>    pft%itype                        , & ! Input:  [integer (:)]  pft vegetation type                                
    wtcol                     =>    pft%wtcol                        , & ! Input:  [real(r8) (:)]  weight (relative to column) for this pft (0-1)    
-   pactive                   =>    pft%active                       , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive                   =>    pft%active                       , & ! Input:  [logical (:)]  true=>do computations on this pft
    leafc_to_litter           =>    pcisof%leafc_to_litter           , & ! Input:  [real(r8) (:)]                                                    
    frootc_to_litter          =>    pcisof%frootc_to_litter          , & ! Input:  [real(r8) (:)]                                                    
    npfts                     =>    col%npfts                        , & ! Input:  [integer (:)]  number of pfts for each column                     
@@ -932,7 +932,7 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
    gap_mortality_c_to_cwdc             =>    ccisof%gap_mortality_c_to_cwdc              , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with gap mortality to CWD pool (gC/m3/s)
    ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
    wtcol                               =>   pft%wtcol                                    , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
-   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft 
    m_leafc_to_litter                   =>    pcisof%m_leafc_to_litter                    , & ! Input:  [real(r8) (:)]                                                    
    m_frootc_to_litter                  =>    pcisof%m_frootc_to_litter                   , & ! Input:  [real(r8) (:)]                                                    
    m_livestemc_to_litter               =>    pcisof%m_livestemc_to_litter                , & ! Input:  [real(r8) (:)]                                                    
@@ -1089,7 +1089,7 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
    harvest_c_to_cwdc                   =>    ccisof%harvest_c_to_cwdc                    , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with harvest to CWD pool (gC/m3/s)
    ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
    wtcol                               =>   pft%wtcol                                    , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
-   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft 
    hrv_leafc_to_litter                 =>    pcisof%hrv_leafc_to_litter                  , & ! Input:  [real(r8) (:)]                                                    
    hrv_frootc_to_litter                =>    pcisof%hrv_frootc_to_litter                 , & ! Input:  [real(r8) (:)]                                                    
    hrv_livestemc_to_litter             =>    pcisof%hrv_livestemc_to_litter              , & ! Input:  [real(r8) (:)]                                                    

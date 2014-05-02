@@ -38,6 +38,7 @@ module clm_time_manager
         get_calendar,             &! return calendar
         get_days_per_year,        &! return the days per year for current year
         get_curr_yearfrac,        &! return the fractional position in the current year
+        get_rest_date,            &! return the date from the restart file
         set_nextsw_cday,          &! set the next radiation calendar day
         is_first_step,            &! return true on first step of initial run
         is_first_restart_step,    &! return true on first step of restart or branch run
@@ -1345,6 +1346,42 @@ contains
 
   end function get_curr_yearfrac
 
+  !=========================================================================================
+
+  subroutine get_rest_date(ncid, yr)
+
+    !---------------------------------------------------------------------------------
+    ! Get the date from the restart file.
+    !
+    ! Currently just returns the year (because the month & day are harder to extract, and
+    ! currently aren't needed).
+    use pio,       only: file_desc_t
+    use ncdio_pio, only: ncd_io
+    !
+    ! Arguments
+    type(file_desc_t) , intent(inout) :: ncid ! netcdf id for the restart file
+    integer           , intent(out)   :: yr   ! year from restart file
+
+    integer :: ymd     ! yyyymmdd from the restart file
+    logical :: readvar ! whether the variable was read from the file
+    
+    integer, parameter :: year_mask = 10000  ! divide by this to get year from ymd
+
+    character(len=*), parameter :: subname = 'get_rest_date'
+    !-----------------------------------------------------------------------
+    
+    ! Get the date (yyyymmdd) from restart file.
+    ! Note that we cannot simply use the rst_curr_ymd module variable, because that isn't
+    ! set under some circumstances
+    call ncd_io(varname='timemgr_rst_curr_ymd', data=ymd, &
+         ncid=ncid, flag='read', readvar=readvar)
+    if (.not. readvar) then
+       call shr_sys_abort(subname//' ERROR: timemgr_rst_curr_ymd not found on restart file')
+    end if
+    
+    ! Extract the year
+    yr = ymd / year_mask
+  end subroutine get_rest_date
 
   !=========================================================================================
 

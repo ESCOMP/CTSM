@@ -27,8 +27,8 @@ module ncdio_pio
   use mct_mod        , only : mct_gsMap, mct_gsMap_lsize, mct_gsMap_gsize, mct_gsMap_OP
   use pio            , only : file_desc_t, io_desc_t, iosystem_desc_t, pio_64bit_offset
   use pio            , only : pio_bcast_error, pio_char, pio_clobber, pio_closefile, pio_createfile, pio_def_dim
-  use pio            , only : pio_def_var, pio_double, pio_enddef, pio_get_var, pio_global, pio_initdecomp
-  use pio            , only : pio_inq_dimid, pio_inq_dimlen, pio_inq_dimname, pio_inq_vardimid, pio_inq_varid
+  use pio            , only : pio_def_var, pio_double, pio_enddef, pio_get_att, pio_get_var, pio_global, pio_initdecomp
+  use pio            , only : pio_inq_att, pio_inq_dimid, pio_inq_dimlen, pio_inq_dimname, pio_inq_vardimid, pio_inq_varid
   use pio            , only : pio_inq_varname, pio_inq_varndims, pio_inquire, pio_int, pio_internal_error
   use pio            , only : pio_noclobber, pio_noerr, pio_nofill, pio_nowrite, pio_offset, pio_openfile
   use pio            , only : pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling
@@ -42,6 +42,7 @@ module ncdio_pio
   ! !PUBLIC MEMBER FUNCTIONS:
   !
   public :: check_var          ! determine if variable is on netcdf file
+  public :: check_att          ! check if attribute is on file
   public :: check_dim          ! validity check on dimension
   public :: ncd_pio_openfile   ! open a file
   public :: ncd_pio_createfile ! create a new file
@@ -49,6 +50,7 @@ module ncdio_pio
   public :: ncd_pio_init       ! called from clm_comp
   public :: ncd_enddef         ! end define mode
   public :: ncd_putatt         ! put attribute
+  public :: ncd_getatt         ! get attribute
   public :: ncd_defdim         ! define dimension
   public :: ncd_inqdid         ! inquire dimension id
   public :: ncd_inqdname       ! inquire dimension name
@@ -92,6 +94,10 @@ module ncdio_pio
      module procedure ncd_putatt_real
      module procedure ncd_putatt_char
   end interface
+
+  interface ncd_getatt
+     module procedure ncd_getatt_char
+  end interface ncd_getatt
 
   interface ncd_io 
      module procedure ncd_io_char_var0_start_glob
@@ -263,6 +269,38 @@ contains
     call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
 
   end subroutine check_var
+
+  !-----------------------------------------------------------------------
+  subroutine check_att(ncid, varid, attrib, att_found)
+    !
+    ! !DESCRIPTION:
+    ! Check if attribute is on file
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    logical           ,intent(out)   :: att_found ! true if the attribute was found
+    !
+    ! !LOCAL VARIABLES:
+    integer :: att_type  ! attribute type
+    integer :: att_len   ! attribute length
+    integer :: status
+
+    character(len=*), parameter :: subname = 'check_att'
+    !-----------------------------------------------------------------------
+    
+    att_found = .true.
+    call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
+    status = PIO_inq_att(ncid, varid, trim(attrib), att_type, att_len)
+    if (status /= PIO_noerr) then
+       att_found = .false.
+    end if
+    call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
+
+  end subroutine check_att
 
   !-----------------------------------------------------------------------
   subroutine check_dim(ncid, dimname, value)
@@ -701,6 +739,31 @@ contains
     endif
 
   end subroutine ncd_putatt_real
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_getatt_char(ncid,varid,attrib,value)
+    !
+    ! !DESCRIPTION:
+    ! get a character attribute
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    character(len=*)  ,intent(out)   :: value     ! netcdf attrib value
+    !
+    ! !LOCAL VARIABLES:
+    integer :: status
+    
+    character(len=*), parameter :: subname = 'ncd_getatt_char'
+    !-----------------------------------------------------------------------
+    
+    status = PIO_get_att(ncid,varid,trim(attrib),value)
+
+  end subroutine ncd_getatt_char
+
 
   !-----------------------------------------------------------------------
   subroutine ncd_defdim(ncid,attrib,value,dimid)

@@ -42,6 +42,7 @@ module clm_glclnd
      real(r8), pointer :: frac(:,:) => null()
      real(r8), pointer :: topo(:,:) => null()
      real(r8), pointer :: hflx(:,:) => null()
+     real(r8), pointer :: icemask(:) => null()   
   end type glc2lnd_type
 
 !----------------------------------------------------
@@ -93,16 +94,18 @@ contains
   real(r8) :: ival   ! initial value
 !------------------------------------------------------------------------
 
-  allocate(x2s%frac(beg:end,maxpatch_glcmec))
-  allocate(x2s%topo(beg:end,maxpatch_glcmec))
-  allocate(x2s%hflx(beg:end,maxpatch_glcmec))
-
+  allocate(x2s%frac(beg:end,0:maxpatch_glcmec))
+  allocate(x2s%topo(beg:end,0:maxpatch_glcmec))
+  allocate(x2s%hflx(beg:end,0:maxpatch_glcmec))
+  allocate(x2s%icemask(beg:end))
+  
 ! ival = nan      ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
 
-  x2s%frac(beg:end,:) = ival
-  x2s%topo(beg:end,:) = ival
-  x2s%hflx(beg:end,:) = ival
+  x2s%frac(beg:end,0:) = ival
+  x2s%topo(beg:end,0:) = ival
+  x2s%hflx(beg:end,0:) = ival
+  x2s%icemask(beg:end)= ival
 
 end subroutine init_glc2lnd_type
 
@@ -131,16 +134,16 @@ end subroutine init_glc2lnd_type
   real(r8) :: ival   ! initial value
 !------------------------------------------------------------------------
 
-  allocate(s2x%tsrf(beg:end,maxpatch_glcmec))
-  allocate(s2x%topo(beg:end,maxpatch_glcmec))
-  allocate(s2x%qice(beg:end,maxpatch_glcmec))
+  allocate(s2x%tsrf(beg:end,0:maxpatch_glcmec))
+  allocate(s2x%topo(beg:end,0:maxpatch_glcmec))
+  allocate(s2x%qice(beg:end,0:maxpatch_glcmec))
 
 ! ival = nan      ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
 
-  s2x%tsrf(beg:end,:) = ival
-  s2x%topo(beg:end,:) = ival
-  s2x%qice(beg:end,:) = ival
+  s2x%tsrf(beg:end,0:) = ival
+  s2x%topo(beg:end,0:) = ival
+  s2x%qice(beg:end,0:) = ival
 
 end subroutine init_lnd2glc_type
 
@@ -160,7 +163,7 @@ end subroutine init_lnd2glc_type
   use domainMod   , only : ldomain
   use clm_varcon  , only : istice_mec
   use clm_atmlnd  , only : clm_l2a, clm_a2l
-  use clm_varcon  , only : spval
+  use clm_varcon  , only : spval, tfrz
 !
 ! !ARGUMENTS:
   implicit none
@@ -189,14 +192,19 @@ end subroutine init_lnd2glc_type
 
     ! Initialize qice because otherwise it will remain unset if init=true and
     ! glc_smb=true; note that the value here is the value qice will keep if these
-    ! conditions hold
+    ! conditions hold. Also, need to set a reasonable default for elevation class 0,
+    ! which is used by the CLM4.5 code, but not by CLM4.0.
 
-    clm_s2x%qice(:,:) = 0._r8
+    clm_s2x%qice(:,0:) = 0._r8
 
-    ! and initialize the other variables just to be safe
+    ! and initialize the other variables just to be safe; also need to set a reasonable
+    ! default for elevation class 0 (for tsrf, note that we initialize other elevation
+    ! classes to 0, to remain consistent with what was done before, but set elevation
+    ! class 0 to a reasonable default, because it will remain at its default value).
 
-    clm_s2x%tsrf(:,:) = 0._r8
-    clm_s2x%topo(:,:) = 0._r8
+    clm_s2x%tsrf(:,0)  = tfrz
+    clm_s2x%tsrf(:,1:) = 0._r8
+    clm_s2x%topo(:,:)  = 0._r8
 
     ! Fill the clm_s2x vector on the clm grid
 

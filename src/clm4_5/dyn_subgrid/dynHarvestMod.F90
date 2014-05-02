@@ -398,7 +398,7 @@ contains
    harvest_n_to_litr_cel_n             =>    cnf%harvest_n_to_litr_cel_n                 , & ! Input:  [real(r8) (:,:)]  N fluxes associated with harvest to litter cellulose pool (gN/m3/s)
    harvest_n_to_litr_lig_n             =>    cnf%harvest_n_to_litr_lig_n                 , & ! Input:  [real(r8) (:,:)]  N fluxes associated with harvest to litter lignin pool (gN/m3/s)
    harvest_n_to_cwdn                   =>    cnf%harvest_n_to_cwdn                       , & ! Input:  [real(r8) (:,:)]  N fluxes associated with harvest to CWD pool (gN/m3/s)
-   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft 
    ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
    wtcol                               =>   pft%wtcol                                    , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
    hrv_leafc_to_litter                 =>    pcf%hrv_leafc_to_litter                     , & ! Input:  [real(r8) (:)]                                                    

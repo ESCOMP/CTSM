@@ -9,9 +9,8 @@ module decompMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   ! Must use shr_sys_abort rather than endrun here to avoid circular dependency
   use shr_sys_mod , only : shr_sys_abort 
-  use spmdMod     , only : masterproc, iam, npes, mpicom, comp_id
   use clm_varctl  , only : iulog
-  use mct_mod
+  use mct_mod     , only : mct_gsMap
   !
   ! !PUBLIC TYPES:
   implicit none

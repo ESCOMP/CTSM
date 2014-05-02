@@ -51,7 +51,6 @@ contains
          icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
          icol_shadewall, istdlak, tfrz, hfus, grav
     use clm_varcon      , only : istcrop
-    use clm_varctl      , only : glc_dyntopo
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
          SnowWater, BuildSnowFilter
@@ -104,7 +103,7 @@ contains
    qflx_drain_perched   => cwf%qflx_drain_perched  , & ! Input:  [real(r8) (:)]  sub-surface runoff from perched zwt (mm H2O /s)
    qflx_floodg          => clm_a2l%forc_flood      , & ! Input:  [real(r8) (:)]  gridcell flux of flood water from RTM   
    qflx_h2osfc_surf     => cwf%qflx_h2osfc_surf    , & ! Input:  [real(r8) (:)] surface water runoff (mm/s)              
-   cactive              => col%active              , & ! Input:  [logical (:)]  true=>do computations on this column (see reweightMod for details)
+   cactive              => col%active              , & ! Input:  [logical (:)]  true=>do computations on this column 
    cgridcell            => col%gridcell            , & ! Input:  [integer (:)]  column's gridcell                        
    clandunit            => col%landunit            , & ! Input:  [integer (:)]  column's landunit                        
    ctype                => col%itype               , & ! Input:  [integer (:)]  column type                              
@@ -184,9 +183,8 @@ contains
    mss_cnc_dst4         => cps%mss_cnc_dst4        , & ! Output: [real(r8) (:,:)]  mass concentration of dust species 4 (col,lyr) [kg/kg]
    do_capsnow           => cps%do_capsnow          , & ! Output: [logical (:)]  true => do snow capping                  
    qflx_snwcp_ice       => pwf_a%qflx_snwcp_ice    , & ! Output: [real(r8) (:)]  excess snowfall due to snow capping (mm H2O /s) [+]`
-   qflx_glcice          => cwf%qflx_glcice         , & ! Output: [real(r8) (:)]  flux of new glacier ice (mm H2O /s)     
    smpmin               => cps%smpmin              , & ! Input:  [real(r8) (:)]  restriction for min of soil potential (mm)
-   qflx_glcice_frz      => cwf%qflx_glcice_frz       & ! Output: [real(r8) (:)]  ice growth (positive definite) (mm H2O/s)
+   snow_persistence     => cps%snow_persistence      & ! Output: [real(r8) (:)]  counter for length of time snow-covered
    )
 
     ! Determine time step and step size
@@ -259,6 +257,17 @@ contains
 
     call BuildSnowFilter(bounds, num_nolakec, filter_nolakec, &
          num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
+
+    ! For columns where snow exists, accumulate 'time-covered-by-snow' counters.
+    ! Otherwise, re-zero counter, since it is bareland
+    do fc = 1, num_snowc
+      c = filter_snowc(fc)
+      snow_persistence(c) = snow_persistence(c) + dtime
+    end do
+    do fc = 1, num_nosnowc
+      c = filter_nosnowc(fc)
+      snow_persistence(c) = 0._r8
+    enddo
 
     ! Vertically average t_soisno and sum of h2osoi_liq and h2osoi_ice
     ! over all snow layers for history output
@@ -616,7 +625,8 @@ contains
   subroutine Hydrology2Drainage(bounds, &
        num_nolakec, filter_nolakec, &
        num_hydrologyc, filter_hydrologyc, &
-       num_urbanc, filter_urbanc)
+       num_urbanc, filter_urbanc, &
+       num_do_smb_c, filter_do_smb_c)
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
@@ -632,8 +642,9 @@ contains
     use clm_varcon      , only : istice, istwet, istsoil, istice_mec, spval, &
          icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
          icol_shadewall, denh2o, denice
-    use clm_varcon      , only : istcrop
-    use clm_varctl      , only : glc_dyntopo, use_vichydro
+    use clm_varcon      , only : istcrop, secspday
+    use clm_varctl      , only : glc_dyn_runoff_routing, glc_snow_persistence_max_days
+    use clm_varctl      , only : use_vichydro
     use clm_varpar      , only : nlevgrnd, nlevurb
     use SoilHydrologyMod, only : Drainage
     use clm_time_manager, only : get_step_size, get_nstep
@@ -649,6 +660,8 @@ contains
     integer, intent(in) :: filter_hydrologyc(:)! column filter for soil points
     integer, intent(in) :: num_urbanc          ! number of column urban points in column filter
     integer, intent(in) :: filter_urbanc(:)    ! column filter for urban points
+    integer, intent(in) :: num_do_smb_c        ! number of bareland columns in which SMB is calculated, in column filter    
+    integer, intent(in) :: filter_do_smb_c(:)  ! column filter for bare land SMB columns      
     !
     ! !LOCAL VARIABLES:
     integer  :: g,l,c,j,fc                 ! indices
@@ -667,7 +680,7 @@ contains
    h2osfc                              =>    cws%h2osfc                   , & ! Input:  [real(r8) (:)]  surface water (mm)                                
    qflx_drain_perched                  =>    cwf%qflx_drain_perched       , & ! Input:  [real(r8) (:)]  sub-surface runoff from perched zwt (mm H2O /s)   
    qflx_floodg                         =>    clm_a2l%forc_flood           , & ! Input:  [real(r8) (:)]  gridcell flux of flood water from RTM             
-   cactive                             =>    col%active                   , & ! Input:  [logical (:)]  true=>do computations on this column (see reweightMod for details)
+   cactive                             =>    col%active                   , & ! Input:  [logical (:)]  true=>do computations on this column 
    qflx_h2osfc_surf                    =>    cwf%qflx_h2osfc_surf         , & ! Input:  [real(r8) (:)] surface water runoff (mm/s)                        
    cgridcell                           =>   col%gridcell                  , & ! Input:  [integer (:)]  column's gridcell                                  
    clandunit                           =>   col%landunit                  , & ! Input:  [integer (:)]  column's landunit                                  
@@ -695,7 +708,9 @@ contains
    qflx_runoff_r                       =>    cwf%qflx_runoff_r            , & ! Output: [real(r8) (:)]  Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
    qflx_snwcp_ice                      =>    pwf_a%qflx_snwcp_ice         , & ! Output: [real(r8) (:)]  excess snowfall due to snow capping (mm H2O /s) [+]`
    qflx_glcice                         =>    cwf%qflx_glcice              , & ! Output: [real(r8) (:)]  flux of new glacier ice (mm H2O /s)               
-   qflx_glcice_frz                     =>    cwf%qflx_glcice_frz            & ! Output: [real(r8) (:)]  ice growth (positive definite) (mm H2O/s)         
+   qflx_glcice_frz                     =>    cwf%qflx_glcice_frz          , & ! Output: [real(r8) (:)]  ice growth (positive definite) (mm H2O/s)
+   qflx_glcice_melt                    =>    cwf%qflx_glcice_melt         , & ! Input:  [real(r8) (:)]  ice melt (positive definite) (mm H2O/s)      
+   snow_persistence                    =>    cps%snow_persistence           & ! Input:  [real(r8) (:)]  counter for length of time snow-covered
    )
     
     ! Determine time step and step size
@@ -729,11 +744,10 @@ contains
 
        if (ctype(c) == icol_roof .or. ctype(c) == icol_sunwall &
           .or. ctype(c) == icol_shadewall .or. ctype(c) == icol_road_imperv) then
-         endwb(c) = h2ocan(c) + h2osno(c)
+          endwb(c) = h2ocan(c) + h2osno(c)
        else
           ! add h2osfc to water balance
           endwb(c) = h2ocan(c) + h2osno(c) + h2osfc(c) + wa(c)
-
        end if
 
     end do
@@ -750,9 +764,33 @@ contains
       end do
     end do
 
+
+    ! Prior to summing up wetland/ice hydrology, calculate land ice contributions/sinks
+    ! to this hydrology.
+    ! 1) Generate SMB from capped-snow amount.  This is done over istice_mec
+    !    columns, and also any other columns included in do_smb_c filter, where
+    !    perennial snow has remained for at least snow_persistence_max.
+    ! 2) If using glc_dyn_runoff_routing, zero qflx_snwcp_ice: qflx_snwcp_ice is the flux
+    !    sent to ice runoff, but for glc_dyn_runoff_routing, we do NOT want this to be
+    !    sent to ice runoff (instead it is sent to CISM).
+    do c = bounds%begc,bounds%endc
+       qflx_glcice_frz(c) = 0._r8
+    end do 
+    do fc = 1,num_do_smb_c
+       c = filter_do_smb_c(fc)
+       l = clandunit(c)
+       ! In the following, we convert glc_snow_persistence_max_days to r8 to avoid overflow
+       if ( (snow_persistence(c) >= (real(glc_snow_persistence_max_days, r8) * secspday)) &
+             .or. lun%itype(l) == istice_mec) then
+         qflx_glcice_frz(c) = qflx_snwcp_ice(c)  
+         qflx_glcice(c) = qflx_glcice(c) + qflx_glcice_frz(c)
+         if (glc_dyn_runoff_routing) qflx_snwcp_ice(c) = 0._r8
+       end if     
+    end do
+    
     ! Determine wetland and land ice hydrology (must be placed here
     ! since need snow updated from CombineSnowLayers)
-
+    
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        l = clandunit(c)
@@ -764,20 +802,28 @@ contains
           qflx_h2osfc_surf(c)   = 0._r8
           qflx_surf(c)          = 0._r8
           qflx_infl(c)          = 0._r8
-          ! add flood water flux to runoff for wetlands/glaciers
           qflx_qrgwl(c) = forc_rain(c) + forc_snow(c) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
                (endwb(c)-begwb(c))/dtime
-
-          ! For dynamic topography, add meltwater from glacier_mec ice to the runoff.
-          ! (Negative qflx_glcice => positive contribution to runoff)
-          ! Note: The meltwater contribution is computed in PhaseChanges (part of Biogeophysics2).
-          !       This code will not work if Hydrology2 is called before Biogeophysics2, or if
-          !        qflx_snwcp_ice has alread been included in qflx_glcice.
-          !       (The snwcp flux is added to qflx_glcice later in this subroutine.)
-
-          if (glc_dyntopo .and. ityplun(l)==istice_mec) then
-             qflx_qrgwl(c) = qflx_qrgwl(c) - qflx_glcice(c)   ! meltwater from melted ice
+               
+          ! With glc_dyn_runoff_routing = false (the less realistic way, typically used
+          ! when NOT coupling to CISM), excess snow immediately runs off, whereas melting
+          ! ice stays in place and does not run off. The reverse is true with
+          ! glc_dyn_runoff_routing = true: in this case, melting ice runs off, and excess
+          ! snow is sent to CISM, where it is converted to ice. These corrections are
+          ! done here: 
+          if (glc_dyn_runoff_routing .and. ityplun(l)==istice_mec) then
+             ! If using glc_dyn_runoff_routing, add meltwater from istice_mec ice columns to the runoff.
+             !    Note: The meltwater contribution is computed in PhaseChanges (part of Biogeophysics2)
+             qflx_qrgwl(c) = qflx_qrgwl(c) + qflx_glcice_melt(c)
+             ! Also subtract the freezing component of qflx_glcice: this ice is added to
+             ! CISM's ice column rather than running off. (This is analogous to the
+             ! subtraction of qflx_snwcp_ice from qflx_qrgwl above, which accounts for
+             ! snow that should be put into ice runoff rather than liquid runoff. But for
+             ! glc_dyn_runoff_routing=true, qflx_snwcp_ice has been zeroed out, and has
+             ! been put into qflx_glcice_frz.)
+             qflx_qrgwl(c) = qflx_qrgwl(c) - qflx_glcice_frz(c)
           endif
+          
           fcov(c)       = spval
           fsat(c)       = spval
           qcharge(c)    = spval
@@ -790,24 +836,6 @@ contains
           qcharge(c)            = spval
           qflx_rsub_sat(c)      = spval
        end if
-       ! If snow exceeds the thickness limit in glacier_mec columns, convert to an ice flux.
-       ! For dynamic glacier topography, remove qflx_snwcp_ice from the runoff.
-       ! Note that qflx_glcice can also have a negative component from melting of bare ice,
-       !  as computed in SoilTemperatureMod.F90
-
-       if (ityplun(l)==istice_mec) then
-
-          qflx_glcice_frz(c) = qflx_snwcp_ice(c)
-          qflx_glcice(c) = qflx_glcice(c) + qflx_glcice_frz(c)
-
-          ! For dynamic topography, set qflx_snwcp_ice = 0 so that this ice mass does not run off.
-          ! For static topography, qflx_glc_ice is passed to the ice sheet model, but the 
-          !  CLM runoff terms are not changed.
- 
-          if (glc_dyntopo) qflx_snwcp_ice(c) = 0._r8
-
-       endif   ! istice_mec
-
 
        qflx_runoff(c) = qflx_drain(c) + qflx_surf(c)  + qflx_h2osfc_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
 
@@ -822,7 +850,7 @@ contains
        end if
 
     end do
-
+      
   end associate
     
   end subroutine Hydrology2Drainage

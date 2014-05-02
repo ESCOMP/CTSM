@@ -77,15 +77,19 @@ contains
     use clmtype      , only : pft, pps, pes, pef, pws  
     use clmtype      , only : col, cps, ces, cws, pws_a, cwf
     use clmtype      , only : lun, lps
+    use clmtype      , only : grc
     use shr_const_mod, only : SHR_CONST_TKFRZ
     use clm_varpar   , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
     use clm_varcon   , only : bdsno, istice, istwet, istsoil, zlnd
     use clm_varcon   , only : denice, denh2o, spval, sb, icol_road_perv
     use clm_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
     use clm_varcon   , only : icol_shadewall, istcrop, istice_mec, h2osno_max
+    use clm_varcon   , only : col_itype_to_icemec_class
     use clm_varctl   , only : iulog, use_vancouver, use_mexicocity
+    use clm_varsur   , only : topo_glc_mec
     use spmdMod      , only : masterproc
     use decompMod    , only : bounds_type
+    use domainMod    , only : ldomain
     use SNICARMod    , only : snw_rds_min
     !
     ! !ARGUMENTS:
@@ -93,10 +97,11 @@ contains
     type(bounds_type), intent(in) :: bounds   ! bounds
     !
     ! !LOCAL VARIABLES:
-    integer  :: j,l,c,p ! indices
-    integer  :: nlevs   ! number of levels
-    real(r8) :: snowbd  ! temporary calculation of snow bulk density (kg/m3)
-    real(r8) :: fmelt   ! snowbd/100
+    integer  :: j,l,c,p,g    ! indices
+    integer  :: icemec_class ! current icemec class (1..maxpatch_glcmec)
+    integer  :: nlevs        ! number of levels
+    real(r8) :: snowbd       ! temporary calculation of snow bulk density (kg/m3)
+    real(r8) :: fmelt        ! snowbd/100
     !-----------------------------------------------------------------------
 
     ! cps%watsat              Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)  
@@ -124,6 +129,7 @@ contains
     ! cps%snw_rds             Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6]
     ! cps%snw_rds_top         Output: [real(r8) (:)   ]  snow grain size, top (col) [microns]              
     ! cps%sno_liq_top         Output: [real(r8) (:)   ]  liquid water fraction (mass) in top snow layer (col) [frc]
+    ! cps%snow_persistence    Output: [real(r8) (:)   ]  perennial snow counter
 
     ! cps%mss_bcpho           Output: [real(r8) (:,:) ]  mass of hydrophobic BC in snow (col,lyr) [kg]   
     ! cps%mss_bcphi           Output: [real(r8) (:,:) ]  mass of hydrophillic BC in snow (col,lyr) [kg]  
@@ -214,6 +220,37 @@ contains
     associate(snl => cps%snl) ! Output: [integer (:)    ]  number of snow layers   
 
     ! -----------------------------------------------------------------
+    ! initialize grid cell-level quantities
+    ! -----------------------------------------------------------------
+
+    do g = bounds%begg, bounds%endg
+       ! glcmask (from a file) provides a rough guess of the icemask (from CISM); thus, in
+       ! initialization, set icemask equal to glcmask; icemask will later get updated at
+       ! the start of the run loop, as soon as we have data from CISM
+       grc%icemask(g) = ldomain%glcmask(g)
+    end do
+    
+    ! -----------------------------------------------------------------
+    ! initialize glc_topo
+    ! -----------------------------------------------------------------
+
+    do c = bounds%begc, bounds%endc
+       l = col%landunit(c)
+       g = col%gridcell(c)
+       if (lun%itype(l) == istice_mec) then
+          ! For ice_mec landunits, initialize glc_topo based on surface dataset; this
+          ! will get overwritten in the run loop by values sent from CISM
+          icemec_class = col_itype_to_icemec_class(col%itype(c))
+          cps%glc_topo(c) = topo_glc_mec(g, icemec_class)
+       else
+          ! For other landunits, arbitrarily initialize glc_topo to 0 m; for landunits
+          ! where this matters, this will get overwritten in the run loop by values sent
+          ! from CISM
+          cps%glc_topo(c) = 0._r8
+       end if
+    end do
+
+    ! -----------------------------------------------------------------
     ! initialize h2osfc, frac_h2osfc, t_h2osfc, qflx_snow_melt
     ! -----------------------------------------------------------------
 
@@ -246,10 +283,16 @@ contains
        ! for columns with net ablation, at the cost of delaying ice formation
        ! in columns with net accumulation.
        l = col%landunit(c)
+       g = col%gridcell(c)
+
        if (lun%itype(l)==istice) then
           cws%h2osno(c) = h2osno_max
-       elseif (lun%itype(l)==istice_mec) then
-          cws%h2osno(c) = 0.5_r8 * h2osno_max   ! 50 cm if h2osno_max = 1 m
+       elseif (lun%itype(l)==istice_mec .or. &
+              (lun%itype(l)==istsoil .and. ldomain%glcmask(g) > 0._r8)) then 
+          ! Initialize a non-zero snow thickness where the ice sheet can/potentially operate.
+          ! Using glcmask to capture all potential vegetated points around GrIS (ideally
+          ! we would use icemask from CISM, but that isn't available until after initialization.)
+          cws%h2osno(c) = 0.5_r8 * h2osno_max  
        else
           cws%h2osno(c) = 0._r8
        endif
@@ -257,8 +300,8 @@ contains
        ! integrated snowfall
        cws%int_snow(c) = cws%h2osno(c)
 
-       ! snow depth
-       cps%snow_depth(c)  = cws%h2osno(c) / bdsno
+       cps%snow_depth(c) = cws%h2osno(c) / bdsno
+       cps%snow_persistence(c) = 0._r8
     end do
 
     ! -----------------------------------------------------------------

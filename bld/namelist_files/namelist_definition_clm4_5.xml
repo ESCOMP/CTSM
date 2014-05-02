@@ -135,11 +135,25 @@ Only works when glc_nec is greater than 0.
 (Only tested with glc_smb=.true., setting it to .false. is NOT tested)
 </entry>
 
-<entry id="glc_dyntopo" type="logical" category="clm_physics"
+<entry id="glc_do_dynglacier" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
-If TRUE, dynamically change topographic height over glacier points.
+If TRUE, dynamically change areas and topographic heights over glacier points.
+Only works when glc_nec is greater than zero, and when coupled to CISM.
+Generally should agree with glc_dyn_runoff_routing.
+</entry>
+
+<entry id="glc_dyn_runoff_routing" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, handle snow capping and runoff appropriately for dynamic glacier areas.
 Only works when glc_nec is greater than zero.
-(EXPERIMENTAL AND NOT FUNCTIONAL!)
+Generally should agree with glc_do_dynglacier.
+</entry>
+
+<entry id="glc_snow_persistence_max_days" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+Number of days before one considers the perennially snow-covered point 'land ice'
+(and thus capable of generating a positive surface mass balance for CISM).
+Default: 7300 (20 years)
 </entry>
 
 <entry id="albice" type="real(2)" category="clm_physics"
@@ -1309,5 +1323,37 @@ If TRUE then use mapped MEGAN emissions factors for isoprene.
 List of possible MEGAN compounds to use
   (the list used by the simulation is on the megan_factors_file as the Comp_Name)
 </entry> 
+
+<!-- ========================================================================================  -->
+<!-- Namelist options related to finidat consistency checks                                    -->
+<!-- ========================================================================================  -->
+
+<entry id="check_finidat_fsurdat_consistency" type="logical" category="clm_restart"
+       group="finidat_consistency_checks" valid_values="" >
+If TRUE (which is the default), check consistency between surface dataset used to create the finidat file
+and the current fsurdat. This check is only done for a transient run.
+</entry>
+
+<entry id="check_finidat_year_consistency" type="logical" category="clm_restart"
+       group="finidat_consistency_checks" valid_values="" >
+If TRUE (which is the default), check consistency between year on the finidat file
+and the current model year. This check is only done for a transient run.
+</entry>
+
+<entry id="check_finidat_pct_consistency" type="logical" category="clm_restart"
+       group="finidat_consistency_checks" valid_values="" >
+If TRUE (which is the default), check consistency between pct_pft on the finidat file
+and pct_pft read from the surface dataset. This check is only done for a NON-transient run.
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- Namelist options related to dynpft consistency checks                                     -->
+<!-- ========================================================================================  -->
+
+<entry id="check_dynpft_consistency" type="logical" category="datasets"
+       group="dynpft_consistency_checks" valid_values="" >
+If TRUE (which is the default), check consistency between pct_nat_pft on the flanduse_timeseries file
+and pct_nat_pft read from the surface dataset.
+</entry>
 
 </namelist_definition>
