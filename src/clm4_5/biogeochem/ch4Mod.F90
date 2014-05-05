@@ -170,7 +170,7 @@ contains
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%vmax_ch4_oxid=45.e-6_r8 * 1000._r8 / 3600._r8
-     ! SPM can't be read off of param file.  not bfb since it is a divide
+     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%vmax_ch4_oxid=tempr
 
      tString='oxinhib'
@@ -182,7 +182,7 @@ contains
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%k_m= 5.e-6_r8 * 1000._r8
-     ! SPM can't be read off of param file.  not bfb since it is a divide
+     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%k_m=tempr
    
      tString='q10_ch4oxid'
@@ -199,21 +199,21 @@ contains
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%k_m_o2  = 20.e-6_r8 * 1000._r8 
-     ! SPM can't be read off of param file.  not bfb since it is a divide
+     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%k_m_o2=tempr
 
      tString='k_m_unsat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%k_m_unsat= 5.e-6_r8 * 1000._r8 / 10._r8
-     ! SPM can't be read off of param file.  not bfb since it is a divide
+     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%k_m_unsat=tempr
 
      tString='vmax_oxid_unsat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%vmax_oxid_unsat = 45.e-6_r8 * 1000._r8 / 3600._r8 / 10._r8
-     ! SPM can't be read off of param file.  not bfb since it is a divide
+     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%vmax_oxid_unsat=tempr
 
      tString='scale_factor_aere'
@@ -230,7 +230,7 @@ contains
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
      CH4ParamsInst%unsat_aere_ratio= 0.05_r8 / 0.3_r8 
-     ! SPM can't be read off of param file.  not bfb since it is a divide
+     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !CH4ParamsInst%unsat_aere_ratio=tempr
 
      tString='porosmin'
@@ -1088,7 +1088,7 @@ subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
          end if
 
          ! If switched on, use pH factor for production based on spatial pH data defined in surface data.
-         if (.not. lake .and. usephfact .and. pH(c).gt. pHmin .and.pH(c).lt. pHmax) then
+         if (.not. lake .and. usephfact .and. pH(c) >  pHmin .and.pH(c) <  pHmax) then
             pH_fact_ch4 = 10._r8**(-0.2235_r8*pH(c)*pH(c) + 2.7727_r8*pH(c) - 8.6_r8)
             ! fitted function using data from Dunfield et al. 1993  
             ! Strictly less than one, with optimum at 6.5
@@ -1147,7 +1147,7 @@ subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
             end if
          end if
 
-         if (j .gt. jwt(c)) then ! Below the water table so anaerobic CH4 production can occur
+         if (j  >  jwt(c)) then ! Below the water table so anaerobic CH4 production can occur
             ! partition decomposition to layer
             ! turn into per volume-total by dz
             ch4_prod_depth(c,j) = f_ch4_adj * base_decomp * partition_z / dz (c,j)! [mol/m3-total/s]
@@ -1283,7 +1283,7 @@ subroutine ch4_oxid (bounds, num_methc, filter_methc, jwt, sat, lake)
             smp_fact = 1._r8
          end if
 
-         if (j .le. jwt(c)) then ! Above the water table
+         if (j  <=  jwt(c)) then ! Above the water table
             k_h_inv = exp(-c_h_inv(1) * (1._r8 / t_soisno(c,j) - 1._r8 / kh_tbase) + log (kh_theta(1)))
             k_h_cc = t_soisno(c,j) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
             conc_ch4_rel = conc_ch4(c,j) / (h2osoi_vol_min + porevol/k_h_cc)
@@ -1644,7 +1644,7 @@ subroutine ch4_ebul (bounds, num_methc, filter_methc, jwt, sat, lake)
       do fc = 1, num_methc
          c = filter_methc (fc)
 
-         if (j .gt. jwt(c) .and. t_soisno(c,j) > tfrz) then ! Ebullition occurs only below the water table
+         if (j  >  jwt(c) .and. t_soisno(c,j) > tfrz) then ! Ebullition occurs only below the water table
 
             k_h_inv = exp(-c_h_inv(1) * (1._r8 / t_soisno(c,j) - 1._r8 / kh_tbase) + log (kh_theta(1))) ! (4.12 Wania) (atm.L/mol)
             k_h = 1._r8 / k_h_inv ! (mol/L.atm)

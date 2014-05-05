@@ -219,7 +219,7 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
       end do
    end do
    do k = 1, ndecomp_cascade_transitions
-      if ( cascade_receiver_pool(k) .ne. 0 ) then  ! skip terminal transitions
+      if ( cascade_receiver_pool(k)  /=  0 ) then  ! skip terminal transitions
          do j = 1, nlevdecomp
             ! column loop
             do fc = 1,num_soilc
@@ -243,7 +243,7 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    if (.not. use_nitrif_denitrif) then
       ! immobilization/mineralization in litter-to-SOM and SOM-to-SOM fluxes and denitrification fluxes
       do k = 1, ndecomp_cascade_transitions
-         if ( cascade_receiver_pool(k) .ne. 0 ) then  ! skip terminal transitions
+         if ( cascade_receiver_pool(k)  /=  0 ) then  ! skip terminal transitions
             do j = 1, nlevdecomp
                ! column loop
                do fc = 1,num_soilc

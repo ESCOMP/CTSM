@@ -50,6 +50,7 @@ contains
     use accumulMod       , only : init_accum_field, print_accum_fields 
     use clm_time_manager , only : get_step_size
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
+    use clm_varctl       , only : use_ed
     !
     ! !ARGUMENTS:
     implicit none
@@ -80,10 +81,17 @@ contains
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
     ! 24hr average of vegetation temperature 
-    call init_accum_field (name='T_VEG24', units='K', &
-         desc='24hr average of vegetation temperature', &
-         accum_type='runmean', accum_period=-1, &
-         subgrid_type='pft', numlev=1, init_value=0._r8)
+    if ( use_ed ) then
+       call init_accum_field (name='T_VEG24', units='K', &
+            desc='24hr average of vegetation temperature', &
+            accum_type='runmean', accum_period=-1, &
+            subgrid_type='pft', numlev=1, init_value=283._r8)
+    else
+       call init_accum_field (name='T_VEG24', units='K', &
+            desc='24hr average of vegetation temperature', &
+            accum_type='runmean', accum_period=-1, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+    end if
 
     ! 240hr average of vegetation temperature
     call init_accum_field (name='T_VEG240', units='K', &
@@ -140,7 +148,33 @@ contains
          desc='10-day running mean of 2-m temperature', &
          accum_type='runmean', accum_period=-10, &
          subgrid_type='pft', numlev=1,init_value=SHR_CONST_TKFRZ+20._r8)
+         
+    if ( use_ed ) then
+       ! 24hr average of precipitation
+       call init_accum_field (name='PREC24', units='m', &
+            desc='24hr sum of precipitation', &
+            accum_type='runmean', accum_period=-1, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
 
+       ! 24hr average of wind
+       call init_accum_field (name='WIND24', units='m', &
+            desc='24hr average of wind', &
+            accum_type='runmean', accum_period=-1, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+            
+       ! 24hr average of RH. Fudge - this neds to be initialized from the restat file eventually. 
+       call init_accum_field (name='RH24', units='m', &
+            desc='24hr average of RH', &
+            accum_type='runmean', accum_period=-1, &
+            subgrid_type='pft', numlev=1, init_value=100._r8) 
+            
+       call init_accum_field (name='GDD0', units='K', &
+            desc='growing degree-days base 0C from planting', &
+            accum_type='runaccum', accum_period=not_used, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+     
+    end if         
+         
     if (use_cndv) then
        ! 30-day average of 2m temperature.
        
@@ -242,7 +276,8 @@ contains
     ! !USES:
     use clmtype          , only : dgv_pftcon, pft, col, lun, grc
     use clmtype          , only : cps, ces, cws
-    use clmtype          , only : pps, pes, pvs, pdgvs 
+    use clmtype          , only : pps, pes, pvs, pdgvs, pcf
+    use EDClmtype        , only : EDpcf
     use clm_atmlnd       , only : clm_a2l, a2l_downscaled_col
     use clm_varcon       , only : spval
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
@@ -250,7 +285,7 @@ contains
     use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
     use pftvarcon        , only : nwcereal, nwcerealirrig, mxtmp, baset
     use pftvarcon        , only : ndllf_dcd_brl_tree
-    !
+    use clm_varctl       , only : use_ed
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
@@ -266,6 +301,7 @@ contains
     integer :: secs                      ! seconds into current date for nstep
     logical :: end_cd                    ! temporary for is_end_curr_day() value
     integer :: ier                       ! error status
+    integer :: m                         ! month in which to begin phenology 
     real(r8), pointer :: rbufslp(:)      ! temporary single level - pft level
     
 !------------------------------------------------------------------------
@@ -273,8 +309,8 @@ contains
     !    a2l_downscaled_col%forc_t     Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                  
     !    a2l_downscaled_col%forc_rain  Input:  [real(r8) (:)]  rain rate [mm/s]                                  
     !    a2l_downscaled_col%forc_snow  Input:  [real(r8) (:)]  snow rate [mm/s]                                  
-    !    clm_a2l%forc_solad 	       Input:  [real(r8) (:,:)]  direct beam radiation (visible only)            
-    !    clm_a2l%forc_solai 	       Input:  [real(r8) (:,:)]  diffuse radiation     (visible only)            
+    !    clm_a2l%forc_solad 	         Input:  [real(r8) (:,:)]  direct beam radiation (visible only)            
+    !    clm_a2l%forc_solai 	         Input:  [real(r8) (:,:)]  diffuse radiation     (visible only)            
     !    pps%croplive                  Input:  [logical (:)]  Flag, true if planted, not harvested               
     !    pps%vf                        Input:  [real(r8) (:)]  vernalization factor                              
     !    ces%t_soisno                  Input:  [real(r8) (:,:)]  soil temperature (K)                            
@@ -321,9 +357,9 @@ contains
     !    pvs%fsun24                    Output: [real(r8) (:)]  24hr average of sunlit fraction of canopy         
     !    pvs%fsun240                   Output: [real(r8) (:)]  240hr average of sunlit fraction of canopy        
     !    pvs%elai_p                    Output: [real(r8) (:)]  leaf area index average over timestep             
-    !    pes%t_veg 	               Output: [real(r8) (:)]  pft vegetation temperature (Kelvin)               
-    !    pps%fsun 	               Output: [real(r8) (:)]  sunlit fraction of canopy                         
-    !    pps%elai 	               Output: [real(r8) (:)]  one-sided leaf area index with burying by snow    
+    !    pes%t_veg                  Output: [real(r8) (:)]  pft vegetation temperature (Kelvin)               
+    !    pps%fsun                   Output: [real(r8) (:)]  sunlit fraction of canopy                         
+    !    pps%elai                   Output: [real(r8) (:)]  one-sided leaf area index with burying by snow    
     
     ! Determine calendar information
 
@@ -481,6 +517,55 @@ contains
     call update_accum_field  ('T10', pes%t_ref2m, nstep)
     call extract_accum_field ('T10', pes%t10, nstep)
 
+    if(use_ed)then
+       do p = bounds%begp,bounds%endp
+          c = pft%column(p)
+          rbufslp(p) = a2l_downscaled_col%forc_rain(c) + a2l_downscaled_col%forc_snow(c)
+       end do
+       call update_accum_field  ('PREC24', rbufslp, nstep)
+       call extract_accum_field ('PREC24', EDpcf%prec24, nstep)
+       
+       do p = bounds%begp,bounds%endp
+          c = pft%column(p)
+          rbufslp(p) = clm_a2l%forc_wind(g) 
+       end do
+       call update_accum_field  ('WIND24', rbufslp, nstep)
+       call extract_accum_field ('WIND24', EDpcf%wind24, nstep)
+
+       do p = bounds%begp,bounds%endp
+          c = pft%column(p)
+          rbufslp(p) = clm_a2l%forc_rh(g) 
+       end do       
+       call update_accum_field  ('RH24', rbufslp, nstep)
+       call extract_accum_field ('RH24', EDpcf%rh24, nstep)
+    
+       ! Accumulate and extract GDD0
+
+       do p = bounds%begp,bounds%endp
+          itypveg = pft%itype(p)
+          g = pft%gridcell(p)
+          if(grc%latdeg(g) >= 0._r8)then
+             m = 6
+          else
+             m = 1
+          endif    
+          
+          !FIX(RF,032414) - is this accumulation a big in the normal phenology code, as it means to count from november but ctually counts from january? 
+          if (month==m .and. day==1 .and. secs==int(dtime)) then
+             rbufslp(p) = -99999._r8 ! reset gdd
+          else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
+                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
+             rbufslp(p) = max(0._r8, min(26._r8, pes%t_ref2m(p)-SHR_CONST_TKFRZ)) &
+                  * dtime/SHR_CONST_CDAY
+          else
+             rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+          end if
+       end do
+       call update_accum_field  ('GDD0', rbufslp, nstep)
+       call extract_accum_field ('GDD0', pps%gdd0, nstep)
+
+    endif
+    
     if (use_cndv) then
        ! Accumulate and extract TDA
        ! (accumulates TBOT as 30-day average)
@@ -685,8 +770,9 @@ contains
     use clmtype
     use accumulMod  , only : extract_accum_field
     use clm_time_manager, only : get_nstep
-    use clm_varctl  , only : nsrest, nsrStartup
+    use clm_varctl  , only : nsrest, nsrStartup,use_ed
     use clm_varcon  , only : spval
+    use EDClmtype   , only : EDpcf
     !
     ! !ARGUMENTS:
     implicit none
@@ -813,6 +899,30 @@ contains
     do p = bounds%begp,bounds%endp
        pvs%elai_p(p) = rbufslp(p)
     end do
+    
+    if ( use_ed ) then
+    
+       call extract_accum_field ('PREC24', rbufslp, nstep)
+       do p = bounds%begp,bounds%endp
+          EDpcf%prec24(p) = rbufslp(p)
+       end do
+       
+       call extract_accum_field ('RH24', rbufslp, nstep)
+       do p = bounds%begp,bounds%endp
+          EDpcf%rh24(p) = rbufslp(p)
+       end do
+       
+       call extract_accum_field ('WIND24', rbufslp, nstep)
+       do p = bounds%begp,bounds%endp
+          EDpcf%wind24(p) = rbufslp(p)
+       end do
+       
+       call extract_accum_field ('GDD0', rbufslp, nstep)
+       do p = bounds%begp,bounds%endp
+          pps%gdd0(p) = rbufslp(p)
+       end do
+       
+    end if
 
     if ( crop_prog )then
 

@@ -134,6 +134,7 @@ contains
     do l=bounds%begl,bounds%endl
        rlarr(l) = grc%londeg(lun%gridcell(l))
     enddo
+
     call restartvar(ncid=ncid, flag=flag, varname='land1d_lon', xtype=ncd_double,  &
          dim1name='landunit',                                                      &
          long_name='landunit longitude', units='degrees_east',                     &
@@ -500,7 +501,7 @@ contains
       ! Return true if we should check weights
       !
       ! !USES:
-      use clm_varctl, only : fpftdyn, nsrest, nsrContinue, use_cndv
+      use clm_varctl, only : fpftdyn, nsrest, nsrContinue, use_cndv, use_ed
       !
       ! !ARGUMENTS:
       !
@@ -522,6 +523,10 @@ contains
          do_check_weights = .false.
       else if (use_cndv) then
          ! Don't check weights for a cndv case, because the weights will almost certainly
+         ! differ from the surface dataset in this case
+         do_check_weights = .false.
+      else if (use_ed) then
+         ! Don't check weights for a ed case, because the weights will almost certainly
          ! differ from the surface dataset in this case
          do_check_weights = .false.
       else

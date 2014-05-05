@@ -310,7 +310,7 @@ contains
        ! Incident direct beam radiation for 
        ! (a) roof and (b) road and both walls in urban canyon
           
-       if (num_urbanl .gt. 0) then
+       if (num_urbanl  >  0) then
           call incident_direct (bounds, &
                num_urbanl, filter_urbanl, &
                canyon_hwr(begl:endl), &
@@ -325,7 +325,7 @@ contains
        ! Incident diffuse radiation for 
        ! (a) roof and (b) road and both walls in urban canyon.
        
-       if (num_urbanl .gt. 0) then
+       if (num_urbanl  >  0) then
           call incident_diffuse (bounds, &
                num_urbanl, filter_urbanl, &
                canyon_hwr(begl:endl), &
@@ -336,7 +336,7 @@ contains
        end if
 
        ! Get snow albedos for roof and impervious and pervious road
-       if (num_urbanl .gt. 0) then
+       if (num_urbanl  >  0) then
           ic = 0
           call UrbanSnowAlbedo(bounds, &
                num_urbanc, filter_urbanc, &
@@ -384,7 +384,7 @@ contains
        ! for road and both walls in urban canyon allowing for multiple reflection
        ! Reflected and absorbed solar radiation per unit incident radiation for roof
        
-       if (num_urbanl .gt. 0) then
+       if (num_urbanl  >  0) then
           call net_solar (bounds, &
                num_urbanl, filter_urbanl, &
                coszen             (begl:endl), &
@@ -718,7 +718,7 @@ contains
 
     ! Net longwave radiation for road and both walls in urban canyon allowing for multiple re-emission
     
-    if (num_urbanl .gt. 0) then
+    if (num_urbanl  >  0) then
        call net_longwave (bounds,       &
             num_urbanl, filter_urbanl,  &
             canyon_hwr(begl:endl),      &
@@ -1292,7 +1292,7 @@ contains
     do ib = 1,numrad
        do fl = 1,num_urbanl
           l = filter_urbanl(fl)
-          if (coszen(l) .gt. 0._r8) then
+          if (coszen(l)  >  0._r8) then
 
              ! initial absorption and reflection for road and both walls. 
              ! distribute reflected radiation to sky, road, and walls 
@@ -1418,7 +1418,7 @@ contains
        
        do fl = 1,num_urbanl
           l = filter_urbanl(fl)
-          if (coszen(l) .gt. 0._r8) then
+          if (coszen(l)  >  0._r8) then
 
              ! reflected direct beam
              
@@ -1623,7 +1623,7 @@ contains
 
        do fl = 1,num_urbanl
           l = filter_urbanl(fl)
-          if (coszen(l) .gt. 0._r8) then
+          if (coszen(l)  >  0._r8) then
              sref_roof_dir(l,ib) = alb_roof_dir(l,ib) * sdir(l,ib)
              sref_roof_dif(l,ib) = alb_roof_dif(l,ib) * sdif(l,ib)
              sabs_roof_dir(l,ib) = sdir(l,ib) - sref_roof_dir(l,ib)
@@ -2464,7 +2464,7 @@ contains
      ! Get friction velocity, relation for potential
      ! temperature and humidity profiles of surface boundary layer.
 
-      if (num_urbanl .gt. 0) then
+      if (num_urbanl  >  0) then
          call FrictionVelocity(begl, endl, &
               num_urbanl, filter_urbanl, &
               z_d_town(begl:endl), z_0_town(begl:endl), z_0_town(begl:endl), z_0_town(begl:endl), &
@@ -2836,7 +2836,7 @@ contains
        else if (ctype(c) == icol_road_perv) then
          ! Evaporation assigned to soil term if dew or snow
          ! or if no liquid water available in soil column
-         if (dqh(l) > 0._r8 .or. frac_sno(c) > 0._r8 .or. soilalpha_u(c) .le. 0._r8) then
+         if (dqh(l) > 0._r8 .or. frac_sno(c) > 0._r8 .or. soilalpha_u(c)  <=  0._r8) then
             qflx_evap_soi(p) = -forc_rho(g)*wtuq_road_perv_unscl(l)*dqh(l)
             qflx_tran_veg(p) = 0._r8
          ! Otherwise, evaporation assigned to transpiration term

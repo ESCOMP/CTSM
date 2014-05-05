@@ -21,6 +21,7 @@
 # 2012-03-23  Kluzek           Add megan namelist and do checking on it
 # 2012-07-01  Kluzek           Add some common CESM namelist options
 # 2013-12     Andre            Refactor everything into subroutines
+# 2013-12     Muszala          Add Ecosystem Demography functionality
 #--------------------------------------------------------------------------------------------
 
 package CLMBuildNamelist;
@@ -141,6 +142,8 @@ OPTIONS
      -dynamic_vegetation      Toggle for dynamic vegetation model. (default is off)
                               (can ONLY be turned on when BGC type is 'cn' or 'bgc')
                               This turns on the namelist variable: use_cndv
+     -ed_mode                 Turn ED (Ecosystem Demography) : [on | off] (default is off)
+                              Sets the namelist variable use_ed and use_spit_fire.
      -envxml_dir "directory"  Directory name of env_*.xml case files to read in.
                               (if read they allow user_nl_clm and CLM_BLDNML_OPTS to expand
                                variables [for example to use \$DIN_LOC_ROOT])
@@ -265,6 +268,7 @@ sub process_commandline {
                bgc                   => "default",
                crop                  => 0,
                dynamic_vegetation    => 0,
+               ed_mode               => 0,
                envxml_dir            => undef,
                vichydro              => 0,
                maxpft                => "default",
@@ -307,6 +311,7 @@ sub process_commandline {
              "bgc=s"                     => \$opts{'bgc'},
              "crop"                      => \$opts{'crop'},
              "dynamic_vegetation"        => \$opts{'dynamic_vegetation'},
+             "ed_mode"                   => \$opts{'ed_mode'},
              "vichydro"                  => \$opts{'vichydro'},
              "maxpft=i"                  => \$opts{'maxpft'},
              "v|verbose"                 => \$opts{'verbose'},
@@ -620,6 +625,7 @@ sub process_namelist_commandline_options {
   setup_cmdl_simulation_year($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_run_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_dynamic_vegetation($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_cmdl_ed_mode($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_vichydro($opts, $nl_flags, $definition, $defaults, $nl);
 }
 
@@ -690,7 +696,54 @@ sub setup_cmdl_mask {
 }
 
 #-------------------------------------------------------------------------------
+sub setup_cmdl_ed_mode {
+  #
+  # call this at least after crop check is called
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+  my $val;
+  my $var = "ed_mode";
+
+  $val = $opts->{$var};
+  $nl_flags->{'ed_mode'} = $val;
+
+  if ($nl_flags->{'phys'} eq "clm4_0" || $nl_flags->{'crop'} eq "on" ) {
+    if ( $nl_flags->{'ed_mode'} == 1 ) {
+       # ED is not a clm4_0 option and should not be used with crop and not with clm4_0
+       fatal_error("** Cannot turn ed mode on with crop or with clm4_0 physics.\n" );
+    }
+  } else {
+
+    $var = "use_ed";
+    $nl_flags->{$var} = ".false.";
+    if ($nl_flags->{'ed_mode'} eq 1) {
+      message("Using ED (Ecosystem Demography).");
+      $val = ".true.";
+      $nl_flags->{$var} = $val;
+    }
+    if ( defined($nl->get_value($var)) && $nl->get_value($var) ne $val ) {
+      fatal_error("$var is inconsistent with the commandline setting of -ed_mode");
+    }
+    if ( $nl_flags->{$var} eq ".true." ) {
+      my $group = $definition->get_group_name($var);
+      $nl->set_variable_value($group, $var, $val);
+      if (  ! $definition->is_valid_value( $var, $val ) ) {
+        my @valid_values   = $definition->get_valid_values( $var );
+        fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values\n");
+      }
+
+      $var = "use_ed_spit_fire";
+      $nl->set_variable_value($group, $var, $val);
+      if ( ! $definition->is_valid_value($var, $val) ) {
+        my @valid_values   = $definition->get_valid_values( $var );
+        fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values\n");
+      }
+    }
+  }
+}
+
+#-------------------------------------------------------------------------------
 sub setup_cmdl_bgc {
   # BGC - alias for group of biogeochemistry related use_XXX namelists
 

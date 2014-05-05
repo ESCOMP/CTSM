@@ -42,6 +42,7 @@ module clm_time_manager
         set_nextsw_cday,          &! set the next radiation calendar day
         is_first_step,            &! return true on first step of initial run
         is_first_restart_step,    &! return true on first step of restart or branch run
+        is_beg_curr_day,          &! return true on first timestep in current day
         is_end_curr_day,          &! return true on last timestep in current day
         is_end_curr_month,        &! return true on last timestep in current month
         is_last_step,             &! return true on last timestep
@@ -1397,6 +1398,27 @@ contains
     nextsw_cday = nextsw_cday_in
 
   end subroutine set_nextsw_cday
+
+  !=========================================================================================
+ 
+  function is_beg_curr_day()
+ 
+     ! Return true if current timestep is first timestep in current day.
+     
+     ! Return value
+     logical :: is_beg_curr_day
+  
+     ! Local variables
+     integer ::&
+        yr,    &! year
+        mon,   &! month
+        day,   &! day of month
+        tod     ! time of day (seconds past 0Z)
+ 
+     call get_curr_date(yr, mon, day, tod)
+     is_beg_curr_day = ( tod == dtime )
+ 
+  end function is_beg_curr_day
 
   !=========================================================================================
 

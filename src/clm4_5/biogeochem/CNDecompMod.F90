@@ -145,7 +145,7 @@ contains
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               if ( decomp_npools_vr(c,j,l) .gt. 0._r8 ) then
+               if ( decomp_npools_vr(c,j,l)  >  0._r8 ) then
                   cn_decomp_pools(c,j,l) = decomp_cpools_vr(c,j,l) / decomp_npools_vr(c,j,l)
                end if
             end do
@@ -171,13 +171,13 @@ contains
             c = filter_soilc(fc)
             
             if (decomp_cpools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. &
-               decomp_k(c,j,cascade_donor_pool(k)) .gt. 0._r8 ) then
+               decomp_k(c,j,cascade_donor_pool(k))  >  0._r8 ) then
                   p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) &
                      * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
                
                if ( .not. floating_cn_ratio_decomp_pools(cascade_receiver_pool(k)) ) then  !! not transition of cwd to litter
                   
-                  if (cascade_receiver_pool(k) .ne. i_atm ) then  ! not 100% respiration
+                  if (cascade_receiver_pool(k)  /=  i_atm ) then  ! not 100% respiration
                      ratio = 0._r8
                      
                      if (decomp_npools_vr(c,j,cascade_donor_pool(k)) > 0._r8) then
@@ -267,7 +267,7 @@ contains
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               if ( decomp_npools_vr(c,j,l) .gt. 0._r8 ) then
+               if ( decomp_npools_vr(c,j,l)  >  0._r8 ) then
                   cn_decomp_pools(c,j,l) = decomp_cpools_vr(c,j,l) / decomp_npools_vr(c,j,l)
                end if
             end do
@@ -293,8 +293,8 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             
-            if (decomp_cpools_vr(c,j,cascade_donor_pool(k)) .gt. 0._r8) then
-               if ( pmnf_decomp_cascade(c,j,k) .gt. 0._r8 ) then
+            if (decomp_cpools_vr(c,j,cascade_donor_pool(k))  >  0._r8) then
+               if ( pmnf_decomp_cascade(c,j,k)  >  0._r8 ) then
                   p_decomp_cpool_loss(c,j,k) = p_decomp_cpool_loss(c,j,k) * fpi_vr(c,j)
                   pmnf_decomp_cascade(c,j,k) = pmnf_decomp_cascade(c,j,k) * fpi_vr(c,j)
                   if (.not. use_nitrif_denitrif) then
@@ -307,12 +307,12 @@ contains
                end if
                decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
                decomp_cascade_ctransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k)) * p_decomp_cpool_loss(c,j,k)
-               if (decomp_npools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. cascade_receiver_pool(k) .ne. i_atm) then
+               if (decomp_npools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. cascade_receiver_pool(k)  /=  i_atm) then
                   decomp_cascade_ntransfer_vr(c,j,k) = p_decomp_cpool_loss(c,j,k) / cn_decomp_pools(c,j,cascade_donor_pool(k))
                else
                   decomp_cascade_ntransfer_vr(c,j,k) = 0._r8
                endif
-               if ( cascade_receiver_pool(k) .ne. 0 ) then
+               if ( cascade_receiver_pool(k)  /=  0 ) then
                   decomp_cascade_sminn_flux_vr(c,j,k) = pmnf_decomp_cascade(c,j,k)
                else  ! keep sign convention negative for terminal pools
                   decomp_cascade_sminn_flux_vr(c,j,k) = - pmnf_decomp_cascade(c,j,k)

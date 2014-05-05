@@ -124,7 +124,7 @@ contains
       uncon_frac=(1._r8-om_fracvic(i))+(1._r8-perc_frac)*om_fracvic(i)
 
       ! uncon_hksat is series addition of mineral/organic conductivites
-      if (om_fracvic(i) .lt. 1._r8) then
+      if (om_fracvic(i)  <  1._r8) then
           uncon_hksat=uncon_frac/((1._r8-om_fracvic(i))/xksat &
                     +((1._r8-perc_frac)*om_fracvic(i))/om_hksat)
       else

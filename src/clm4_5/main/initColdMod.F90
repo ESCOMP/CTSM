@@ -530,7 +530,7 @@ contains
        else
           cps%frac_sno(c) = 0._r8
           ! snow cover fraction as in Niu and Yang 2007
-          if(cps%snow_depth(c) .gt. 0.0)  then
+          if(cps%snow_depth(c)  >  0.0)  then
              snowbd   = min(400._r8, cws%h2osno(c)/cps%snow_depth(c)) !bulk density of snow (kg/m3)
              fmelt    = (snowbd/100.)**1.
              ! 100 is the assumed fresh snow density; 1 is a melting factor that could be

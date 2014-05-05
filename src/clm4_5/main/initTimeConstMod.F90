@@ -23,6 +23,9 @@ subroutine initTimeConst(bounds)
   ! !USES:
   use clmtype              , only : grlnd, grc, lun, col, pft, pftcon, dgv_pftcon     
   use clmtype              , only : gps, gve, lps, cps, pps
+  use EDClmtype            , only : EDpftcon
+  use EDInitTimeConstMod   , only : EDInitTimeConst
+  use EDPftvarcon          , only : EDPftvarcon_inst
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_scam_mod         , only : shr_scam_getCloseLatLon
   use shr_const_mod        , only : shr_const_pi
@@ -45,7 +48,7 @@ subroutine initTimeConst(bounds)
   use clm_varctl           , only : fsurdat, fsnowoptics, fsnowaging
   use clm_varctl           , only : scmlon,scmlat,single_column, use_lch4, use_vichydro, use_cndv
   use clm_varctl           , only : use_vancouver, use_mexicocity, use_vertsoilc, use_century_decomp
-  use clm_varctl           , only : use_cn, iulog 
+  use clm_varctl           , only : use_cn, use_ed, iulog
   use pftvarcon            , only : noveg, ntree, roota_par, rootb_par
   use pftvarcon            , only : smpso, smpsc, fnitr, nbrdlf_dcd_brl_shrub
   use pftvarcon            , only : z0mr, displar, dleaf, rhol, rhos, taul, taus, xl
@@ -593,7 +596,12 @@ subroutine initTimeConst(bounds)
       pftcon%fleafcn(m)   = fleafcn(m)
       pftcon%ffrootcn(m)  = ffrootcn(m)
       pftcon%fstemcn(m)   = fstemcn(m)
-   end do
+
+      if ( use_ed ) then
+         call EDInitTimeConst( bounds, EDpftcon, EDPftvarcon_inst, numpft )
+      end if !use_ed
+
+   end do ! numpft
 
    if (use_cndv) then
       do m = 0,numpft
@@ -841,7 +849,7 @@ subroutine initTimeConst(bounds)
       ! maximum declination hardwired for present-day orbital parameters, 
       ! +/- 23.4667 degrees = +/- 0.409571 radians, use negative value for S. Hem
       max_decl = 0.409571
-      if (grc%lat(g) .lt. 0._r8) max_decl = -max_decl
+      if (grc%lat(g)  <  0._r8) max_decl = -max_decl
       gps%max_dayl(g) = daylength(grc%lat(g), max_decl)
 
    end do
@@ -1043,9 +1051,9 @@ subroutine initTimeConst(bounds)
                   clay    = clay3d(g,1)
                   sand    = sand3d(g,1)
                   om_frac = organic3d(g,1)/organic_max 
-               else if (lev .le. nlevsoi) then
+               else if (lev  <=  nlevsoi) then
                   do j = 1,nlevsoifl-1
-                     if (zisoi(lev) .ge. zisoifl(j) .AND. zisoi(lev) .lt. zisoifl(j+1)) then
+                     if (zisoi(lev)  >=  zisoifl(j) .AND. zisoi(lev)  <  zisoifl(j+1)) then
                         clay    = clay3d(g,j+1)
                         sand    = sand3d(g,j+1)
                         om_frac = organic3d(g,j+1)/organic_max    
@@ -1058,7 +1066,7 @@ subroutine initTimeConst(bounds)
                endif
             else
                ! duplicate clay and sand values from 10th soil layer
-               if (lev .le. nlevsoi) then
+               if (lev  <=  nlevsoi) then
                   clay    = clay3d(g,lev)
                   sand    = sand3d(g,lev)
                   om_frac = (organic3d(g,lev)/organic_max)**2._r8
@@ -1123,7 +1131,7 @@ subroutine initTimeConst(bounds)
             ! uncon_frac is fraction of mineral soil plus fraction of "nonpercolating" organic soil
             uncon_frac=(1._r8-om_frac)+(1._r8-perc_frac)*om_frac
             ! uncon_hksat is series addition of mineral/organic conductivites
-            if (om_frac .lt. 1._r8) then
+            if (om_frac  <  1._r8) then
               uncon_hksat=uncon_frac/((1._r8-om_frac)/xksat &
                    +((1._r8-perc_frac)*om_frac)/om_hksat)
             else
@@ -1137,7 +1145,7 @@ subroutine initTimeConst(bounds)
                                 om_tkd*om_frac  
             cps%csol(c,lev)   = ((1._r8-om_frac)*(2.128_r8*sand+2.385_r8*clay) / (sand+clay) +   &
                                 om_csol*om_frac)*1.e6_r8  ! J/(m3 K)  
-            if (lev .gt. nlevsoi) then
+            if (lev  >  nlevsoi) then
                cps%csol(c,lev) = csol_bedrock
             endif
             cps%watdry(c,lev) = cps%watsat(c,lev) * (316230._r8/cps%sucsat(c,lev)) ** (-1._r8/cps%bsw(c,lev)) 

@@ -90,7 +90,7 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl           , only : fpftdyn, use_cndv, use_cn, create_glacier_mec_landunit
+    use clm_varctl           , only : fpftdyn, use_cndv, use_cn, create_glacier_mec_landunit, use_ed
     use decompMod            , only : bounds_type, get_proc_clumps, get_clump_bounds, &
                                       BOUNDS_LEVEL_PROC
     use dynLandunitAreaMod   , only : update_landunit_weights
@@ -100,6 +100,7 @@ contains
     use dynpftFileMod        , only : dynpft_interp
     use dynHarvestMod        , only : dynHarvest_interp
     use dynCNDVMod           , only : dynCNDV_interp
+    use dynEDMod             , only : dyn_ED
     use reweightMod          , only : reweight_wrapup
     use subgridWeightsMod    , only : compute_higher_order_weights, &
                                       set_subgrid_diagnostic_fields
@@ -155,6 +156,10 @@ contains
 
        if (use_cndv) then
           call dynCNDV_interp(bounds_clump)
+       end if
+       
+       if (use_ed) then
+          call dyn_ED(bounds_clump)
        end if
 
        if (create_glacier_mec_landunit) then

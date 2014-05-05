@@ -11,7 +11,7 @@ module subgridMod
   use clm_varctl  , only : iulog
 
   implicit none
-  private	
+  private   
   save
 
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -22,7 +22,7 @@ contains
 
   !------------------------------------------------------------------------------
   subroutine subgrid_get_gcellinfo (gi, &
-       nlunits, ncols, npfts, &
+       nlunits, ncols, npfts, ncohorts, &
        nveg, &
        ncrop, &
        nurban_tbd, &
@@ -43,6 +43,7 @@ contains
     use clm_varsur  , only : wt_lunit, urban_valid, wt_glc_mec
     use clm_varcon  , only : istsoil, istcrop, istice, istice_mec, istdlak, istwet, &
                              isturb_tbd, isturb_hd, isturb_md
+    use EDtypesMod  , only : cohorts_per_gcell
     !
     ! !ARGUMENTS
     implicit none
@@ -50,6 +51,7 @@ contains
     integer , optional, intent(out) :: nlunits    ! number of landunits
     integer , optional, intent(out) :: ncols      ! number of columns 
     integer , optional, intent(out) :: npfts      ! number of pfts 
+    integer , optional, intent(out) :: ncohorts   ! number of cohorts 
     integer , optional, intent(out) :: nveg       ! number of vegetated pfts in naturally vegetated landunit
     integer , optional, intent(out) :: ncrop      ! number of crop pfts in crop landunit
     integer , optional, intent(out) :: nurban_tbd ! number of urban pfts (columns) in urban TBD landunit
@@ -67,6 +69,7 @@ contains
     integer  :: ipfts            ! number of pfts in gridcell
     integer  :: icols            ! number of columns in gridcell
     integer  :: ilunits          ! number of landunits in gridcell
+    integer  :: icohorts         ! number of cohorts in gridcell
     integer  :: npfts_per_lunit  ! number of pfts in landunit
     !------------------------------------------------------------------------------
 
@@ -74,9 +77,10 @@ contains
     ! Initialize pfts, columns and landunits counters for gridcell
     ! -------------------------------------------------------------------------
 
-    ipfts   = 0
-    icols   = 0
-    ilunits = 0
+    ipfts    = 0
+    icols    = 0
+    ilunits  = 0
+    icohorts = 0
 
     ! -------------------------------------------------------------------------
     ! Set naturally vegetated landunit
@@ -94,6 +98,12 @@ contains
     icols = icols + 1  
 
     ipfts = ipfts + npfts_per_lunit
+
+    !
+    ! number of cohorts per gridcell set here.
+    !
+    icohorts = icohorts + cohorts_per_gcell
+
     if (present(nveg )) nveg  = npfts_per_lunit
 
     ! -------------------------------------------------------------------------
@@ -244,9 +254,10 @@ contains
     ! Determine return arguments
     ! -------------------------------------------------------------------------
 
-    if (present(nlunits)) nlunits = ilunits
-    if (present(ncols))   ncols   = icols
-    if (present(npfts))   npfts   = ipfts
+    if (present(nlunits)) nlunits  = ilunits
+    if (present(ncols))   ncols    = icols
+    if (present(npfts))   npfts    = ipfts
+    if (present(ncohorts))ncohorts = icohorts
 
   end subroutine subgrid_get_gcellinfo
 

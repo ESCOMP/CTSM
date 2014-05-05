@@ -6,7 +6,7 @@ module CNBalanceCheckMod
   ! !USES:
   use abortutils  , only: endrun
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varctl  , only: iulog, use_nitrif_denitrif
+  use clm_varctl  , only: iulog, use_nitrif_denitrif, use_ed
   use decompMod   , only: bounds_type
   use shr_log_mod , only : errMsg => shr_log_errMsg
   implicit none
@@ -141,7 +141,7 @@ contains
    som_c_leached           =>    ccf%som_c_leached           & ! Input:  [real(r8) (:)]  total SOM C loss from vertical transport (gC/m^2/s)
    )
    
-   
+
    ! set time steps
    dt = real( get_step_size(), r8 )
    
@@ -177,16 +177,18 @@ contains
       end if
       
    end do ! end of columns loop
-   
-   if (err_found) then
-      c = err_index
-      write(iulog,*)'column cbalance error = ', col_errcb(c), c
-      write(iulog,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-      write(iulog,*)'begcb       = ',col_begcb(c)
-      write(iulog,*)'endcb       = ',col_endcb(c)
-      write(iulog,*)'delta store = ',col_endcb(c)-col_begcb(c)
-      call endrun(msg=errMsg(__FILE__, __LINE__))
-   end if
+
+   if(.not. use_ed)then   
+      if (err_found) then
+         c = err_index
+         write(iulog,*)'column cbalance error = ', col_errcb(c), c
+         write(iulog,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+         write(iulog,*)'begcb       = ',col_begcb(c)
+         write(iulog,*)'endcb       = ',col_endcb(c)
+         write(iulog,*)'delta store = ',col_endcb(c)-col_begcb(c)
+         call endrun(msg=errMsg(__FILE__, __LINE__))
+      end if
+   end if !use_ed   
 
  end associate
  end subroutine CBalanceCheck

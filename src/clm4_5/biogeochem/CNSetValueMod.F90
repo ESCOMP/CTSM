@@ -45,7 +45,12 @@ contains
   subroutine CNZeroFluxes(num_filterc, filterc, num_filterp, filterp)
     !
     ! !ARGUMENTS:
+    use clm_varctl,     only : use_ed  
+    use EDclmType ,     only : EDpcf
+    use EDSetValuesMod, only : EDSetPcf
+
     implicit none
+
     integer, intent(in) :: num_filterc ! number of good values in filterc
     integer, intent(in) :: filterc(:)  ! column filter
     integer, intent(in) :: num_filterp ! number of good values in filterp
@@ -65,6 +70,12 @@ contains
     call CNSetPcf(num_filterc, filterc, 0._r8, pcf_a)
     call CNSetPnf(num_filterc, filterc, 0._r8, pnf_a)
 
+    if ( use_ed ) then !FIX(RF,032414) - is this right?? It looks like we never set the C values in ED?
+
+      call EDSetPcf( 0._r8, EDpcf)
+
+    end if !use_ed
+    
     ! zero the pft-level C and N fluxes
     call CNSetPcf(num_filterp, filterp, 0._r8, pcf)
 
@@ -422,6 +433,7 @@ subroutine CNSetPcf(num, filter, val, pcf)
   ! Set pft carbon flux variables
   !
   ! !ARGUMENTS:
+  use clm_varctl, only : use_ed
   implicit none
   integer , intent(in) :: num
   integer , intent(in) :: filter(:)
@@ -589,7 +601,6 @@ subroutine CNSetPcf(num, filter, val, pcf)
       pcf%gresp_storage_to_xfer(i) = val
       pcf%livestemc_to_deadstemc(i) = val
       pcf%livecrootc_to_deadcrootc(i) = val
-      pcf%gpp(i) = val
       pcf%mr(i) = val
       pcf%current_gr(i) = val
       pcf%transfer_gr(i) = val
@@ -597,7 +608,6 @@ subroutine CNSetPcf(num, filter, val, pcf)
       pcf%gr(i) = val
       pcf%ar(i) = val
       pcf%rr(i) = val
-      pcf%npp(i) = val
       pcf%agnpp(i) = val
       pcf%bgnpp(i) = val
       pcf%litfall(i) = val
@@ -612,7 +622,16 @@ subroutine CNSetPcf(num, filter, val, pcf)
       pcf%leafc_loss(i) = val
       pcf%woodc_alloc(i) = val
       pcf%woodc_loss(i) = val
-   end do
+
+      ! If ED is on, then we don't want to reset these every ts.
+      ! FIX(SPM, 042314) - is there a more elegant way to handle this?
+      if ( .not. use_ed ) then  
+         pcf%npp(i) = val
+         pcf%gpp(i) = val
+      end if
+
+   end do ! loop over fi
+
    if ( crop_prog )then
       do fi = 1,num
          i = filter(fi)

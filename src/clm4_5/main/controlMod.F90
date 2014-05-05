@@ -194,6 +194,8 @@ contains
 
     namelist /clm_inparm / use_c13, use_c14
 
+    namelist /clm_inparm / use_ed, use_ed_spit_fire
+
     namelist /clm_inparm/  &
          use_c14_bombspike, atm_c14_filename
 
@@ -485,6 +487,9 @@ contains
     ! isotopes
     call mpi_bcast (use_c13, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_c14, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (use_ed, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_ed_spit_fire, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     if (use_cn .and. use_vertsoilc) then
        ! vertical soil mixing variables

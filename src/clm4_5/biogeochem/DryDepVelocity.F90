@@ -272,20 +272,20 @@ CONTAINS
              end if
           else if ( snow_depth(c) > 0 ) then
              index_season = 4
-          else if(elai(pi).gt.0.5_r8*maxlai) then  
+          else if(elai(pi) > 0.5_r8*maxlai) then  
              index_season = 1  
           endif
 
           if (index_season<0) then 
-             if (elai(pi).lt.(minlai+0.05*(maxlai-minlai))) then  
+             if (elai(pi) < (minlai+0.05*(maxlai-minlai))) then  
                 index_season = 3 
              endif
           endif
 
           if (index_season<0) then 
-             if (mlaidiff(pi).gt.0.0_r8) then 
+             if (mlaidiff(pi) > 0.0_r8) then 
                 index_season = 2 
-             elseif (mlaidiff(pi).lt.0.0_r8) then 
+             elseif (mlaidiff(pi) < 0.0_r8) then 
                 index_season = 5 
              elseif (mlaidiff(pi).eq.0.0_r8) then 
                 index_season = 3 
@@ -324,7 +324,7 @@ CONTAINS
           crs = 1.e36_r8
 
           tc = sfc_temp - tmelt 
-          if(sfc_temp.gt.tmelt.and.sfc_temp.lt.313.15_r8) then 
+          if(sfc_temp > tmelt.and.sfc_temp < 313.15_r8) then 
              crs = (1._r8+(200._r8/(solar_flux+.1_r8))**2) * (400._r8/(tc*(40._r8-tc))) 
           endif
           ! 
@@ -344,7 +344,7 @@ CONTAINS
           !********************************************************* 
 
           species_loop1: do ispec=1, n_drydep
-             if(mapping(ispec).le.0) cycle 
+             if(mapping(ispec) <= 0) cycle 
 
              if(ispec.eq.index_o3.or.ispec.eq.index_o3a.or.ispec.eq.index_so2) then 
                 rmx=0._r8
@@ -423,11 +423,11 @@ CONTAINS
           ! 
           ! no effect over water
           ! 
-          no_water: if( wesveg.ne.1 .and. wesveg.ne.7 .and. wesveg.ne.8 .and. index_season.ne.4 ) then
+          no_water: if( wesveg /= 1 .and. wesveg /= 7 .and. wesveg /= 8 .and. index_season /= 4 ) then
              ! 
              ! no effect if sfc_temp < O C 
              ! 
-             non_freezing: if(sfc_temp.gt.tmelt) then
+             non_freezing: if(sfc_temp > tmelt) then
 
                 if( has_dew ) then 
                    rlux_o3 = 1._r8/((1._r8/3000._r8)+(1._r8/(3._r8*rlu(index_season,wesveg)))) 
@@ -459,8 +459,8 @@ CONTAINS
                 end if
 
                 species_loop2: do ispec=1,n_drydep 
-                   if(mapping(ispec).le.0) cycle 
-                   if(ispec.ne.index_o3.and.ispec.ne.index_o3a.and.ispec.ne.index_so2) then 
+                   if(mapping(ispec) <= 0) cycle 
+                   if(ispec /= index_o3.and.ispec /= index_o3a.and.ispec /= index_so2) then 
 
                       if( has_dew ) then
                          rlux(ispec)=1._r8/((1._r8/(3._r8*rlux(ispec)))+ & 
@@ -494,7 +494,7 @@ CONTAINS
           rds = 1._r8/vds(pi)
 
           species_loop3: do ispec=1,n_drydep 
-             if(mapping(ispec).le.0) cycle 
+             if(mapping(ispec) <= 0) cycle 
 
              ! 
              ! compute rc 

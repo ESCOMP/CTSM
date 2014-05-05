@@ -616,6 +616,10 @@ sub write_filepath_cesmbld
     my @dirs = ( "cpl", "util_share", "$phys/main", "$phys/biogeophys", "$phys/biogeochem");
     if ($phys eq "clm4_5") {
        push (@dirs, "$phys/dyn_subgrid");
+       push (@dirs, "$phys/biogeophys/ED");
+       push (@dirs, "$phys/biogeochem/ED");
+       push (@dirs, "$phys/main/ED");
+       push (@dirs, "$phys/main/spitfireSF");
     }
     foreach my $dir ( @dirs ) {
        if ( &is_valid_directory( "$srcdir/$dir", %opts )  ) {

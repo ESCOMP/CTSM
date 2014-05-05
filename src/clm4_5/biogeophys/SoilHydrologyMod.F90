@@ -817,13 +817,13 @@ contains
     do j=1,nlevsoi 
        do fc=1, num_hydrologyc
           c = filter_hydrologyc(fc)
-          if ((zwtmm(c) .le. zimm(c,j-1))) then 
+          if ((zwtmm(c)  <=  zimm(c,j-1))) then 
              vol_eq(c,j) = watsat(c,j)
             
           ! use the weighted average from the saturated part (depth > wtd) and the equilibrium solution for the
           ! rest of the layer
 
-          else if ((zwtmm(c) .lt. zimm(c,j)) .and. (zwtmm(c) .gt. zimm(c,j-1))) then
+          else if ((zwtmm(c)  <  zimm(c,j)) .and. (zwtmm(c)  >  zimm(c,j-1))) then
              tempi = 1.0_r8
              temp0 = (((sucsat(c,j)+zwtmm(c)-zimm(c,j-1))/sucsat(c,j)))**(1._r8-1._r8/bsw(c,j))
              voleq1 = -sucsat(c,j)*watsat(c,j)/(1._r8-1._r8/bsw(c,j))/(zwtmm(c)-zimm(c,j-1))*(tempi-temp0)
@@ -1923,7 +1923,7 @@ contains
           xs(c) = watmin-h2osoi_liq(c,j)
           searchforwater: do i = nlevsoi-1, 1, -1
             available_h2osoi_liq = max(h2osoi_liq(c,i)-watmin-xs(c),0._r8)
-            if (available_h2osoi_liq .ge. xs(c)) then
+            if (available_h2osoi_liq  >=  xs(c)) then
               h2osoi_liq(c,j) = h2osoi_liq(c,j) + xs(c)
               h2osoi_liq(c,i) = h2osoi_liq(c,i) - xs(c)
               xs(c) = 0._r8

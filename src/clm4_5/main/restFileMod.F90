@@ -59,6 +59,7 @@ contains
     use SLakeRestMod     , only : SLakeRest
     use ch4RestMod       , only : ch4Rest
     use histFileMod      , only : hist_restart_ncd
+    use EDRestVectorMod  , only : EDRest
     !
     ! !ARGUMENTS:
     implicit none
@@ -103,8 +104,12 @@ contains
        call CNRest(bounds,  ncid, flag='define')
        if ( crop_prog ) call CropRest( bounds, ncid, flag='define' )
     end if
-    
+
     call accumulRest( ncid, flag='define' )
+    
+    if (use_ed) then
+       call EDRest(bounds,  ncid, flag='define')
+    end if
 
     call SLakeRest( ncid, flag='define' )
 
@@ -131,6 +136,10 @@ contains
     if (use_cn) then
        call CNRest( bounds, ncid, flag='write' )
        if ( crop_prog ) call CropRest( bounds, ncid, flag='write' )
+    end if
+
+    if (use_ed) then
+       call EDRest( bounds, ncid, flag='write' )
     end if
 
     call SLakeRest( ncid, flag='write' )
@@ -177,6 +186,7 @@ contains
     use ch4RestMod       , only : ch4Rest
     use accumulMod       , only : accumulRest
     use histFileMod      , only : hist_restart_ncd
+    use EDRestVectorMod  , only : EDRest
     !
     ! !ARGUMENTS:
     implicit none
@@ -205,6 +215,10 @@ contains
     if (use_cn) then
        call CNRest( bounds, ncid, flag='read' )
        if ( crop_prog ) call CropRest( bounds, ncid, flag='read' )
+    end if
+
+    if (use_ed) then
+       call EDRest( bounds, ncid, flag='read' )
     end if
 
     if (use_lch4) then
@@ -482,6 +496,7 @@ contains
     use clm_varpar  , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevurb, nlevcan
     use clm_varpar  , only : cft_lb, cft_ub, maxpatch_glcmec
     use decompMod   , only : get_proc_global
+    use clmtype     , only : nameCohort
     !
     ! !ARGUMENTS:
     implicit none
@@ -493,6 +508,7 @@ contains
     integer :: numl                ! total number of landunits across all processors
     integer :: numc                ! total number of columns across all processors
     integer :: nump                ! total number of pfts across all processors
+    integer :: numCohort           ! total number of cohorts across all processors
     integer :: ier                 ! error status
     integer :: strlen_dimid        ! string dimension id
     character(len=  8) :: curdate  ! current date
@@ -501,14 +517,15 @@ contains
     character(len= 32) :: subname='restFile_dimset' ! subroutine name
     !------------------------------------------------------------------------
 
-    call get_proc_global(numg, numl, numc, nump)
+    call get_proc_global(numg, numl, numc, nump, numCohort)
 
     ! Define dimensions
 
-    call ncd_defdim(ncid , 'gridcell', numg           ,  dimid)
-    call ncd_defdim(ncid , 'landunit', numl           ,  dimid)
-    call ncd_defdim(ncid , 'column'  , numc           ,  dimid)
-    call ncd_defdim(ncid , 'pft'     , nump           ,  dimid)
+    call ncd_defdim(ncid, 'gridcell' , numg       , dimid)
+    call ncd_defdim(ncid, 'landunit' , numl       , dimid)
+    call ncd_defdim(ncid, 'column'   , numc       , dimid)
+    call ncd_defdim(ncid, 'pft'      , nump       , dimid)
+    call ncd_defdim(ncid, nameCohort , numCohort  , dimid)
 
     call ncd_defdim(ncid , 'levgrnd' , nlevgrnd       ,  dimid)
     call ncd_defdim(ncid , 'levurb'  , nlevurb        ,  dimid)
@@ -609,7 +626,8 @@ contains
     ! !USES:
     use decompMod,  only : get_proc_global
     use clm_varpar, only : nlevsno, nlevlak, nlevgrnd, nlevurb
-    use clm_varctl, only : single_column, nsrest, nsrStartup
+    use clm_varctl, only : single_column, nsrest, nsrStartup, use_ed
+    use clmtype   , only : nameCohort
     implicit none
     !
     ! !ARGUMENTS:
@@ -620,17 +638,21 @@ contains
     integer :: numl     ! total number of landunits across all processors
     integer :: numc     ! total number of columns across all processors
     integer :: nump     ! total number of pfts across all processors
+    integer :: numCohort     ! total number of cohorts across all processors
     character(len=32) :: subname='restFile_dimcheck' ! subroutine name
     !-----------------------------------------------------------------------
 
     ! Get relevant sizes
 
     if ( .not. single_column .or. nsrest /= nsrStartup )then
-       call get_proc_global(numg, numl, numc, nump)
+       call get_proc_global(numg, numl, numc, nump, numCohort)
        call check_dim(ncid, 'gridcell', numg)
        call check_dim(ncid, 'landunit', numl)
        call check_dim(ncid, 'column'  , numc)
        call check_dim(ncid, 'pft'     , nump)
+       if ( use_ed ) then
+          call check_dim(ncid, nameCohort  , numCohort)
+       endif 
     end if
     call check_dim(ncid, 'levsno'  , nlevsno)
     call check_dim(ncid, 'levgrnd' , nlevgrnd)

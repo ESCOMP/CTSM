@@ -18,19 +18,19 @@ module clm_varctl
   !
   ! !PUBLIC TYPES:
   !
-  integer, parameter, public ::  iundef = -9999999
-  integer, parameter, public ::  rundef = -9999999._r8
+  integer, parameter, public  ::  iundef = -9999999
+  real(r8), parameter, public ::  rundef = -9999999._r8
   integer, parameter, public ::  fname_len = SHR_KIND_CL   ! max length of file names in this module
   !
   ! Run control variables
   !
-  character(len=256), public :: caseid  = ' '                            ! case id
-  character(len=256), public :: ctitle  = ' '                            ! case title
-  integer, public :: nsrest             = iundef                         ! Type of run
-  integer, public, parameter :: nsrStartup  = 0                          ! Startup from initial conditions
-  integer, public, parameter :: nsrContinue = 1                          ! Continue from restart files
-  integer, public, parameter :: nsrBranch   = 2                          ! Branch from restart files
-  logical, public :: brnch_retain_casename = .false.                     ! true => allow case name to remain the same for branch run
+  character(len=256), public :: caseid  = ' '          ! case id
+  character(len=256), public :: ctitle  = ' '          ! case title
+  integer, public :: nsrest             = iundef       ! Type of run
+  integer, public, parameter :: nsrStartup  = 0        ! Startup from initial conditions
+  integer, public, parameter :: nsrContinue = 1        ! Continue from restart files
+  integer, public, parameter :: nsrBranch   = 2        ! Branch from restart files
+  logical, public :: brnch_retain_casename = .false.   ! true => allow case name to remain the same for branch run
   ! by default this is not allowed
   logical, public :: noland = .false.                                    ! true => no valid land points -- do NOT run
   character(len=256), public :: hostname = ' '                           ! Hostname of machine running on
@@ -87,10 +87,12 @@ module clm_varctl
   ! BGC logic and datasets
   !
   character(len=16), public :: co2_type = 'constant'    ! values of 'prognostic','diagnostic','constant'
-  integer, public :: spinup_state = 0 ! State of the model for the accelerated decomposition (AD) spinup. 0 (default) = normal model; 1 = AD SPINUP
+  integer, public :: spinup_state = 0 ! State of the model for the accelerated decomposition 
+                                      ! (AD) spinup. 0 (default) = normal model; 1 = AD SPINUP
   logical, public :: anoxia  = .true. ! true => anoxia is applied to heterotrophic respiration also considered in CH4 model
                                       ! default value reset in controlMod
-  logical, public :: override_bgc_restart_mismatch_dump = .false. ! used to override an error check on reading in restart files
+  logical, public :: override_bgc_restart_mismatch_dump = .false. ! used to override an error 
+                                                                  ! check on reading in restart files
   !
   ! Physics
   !
@@ -102,6 +104,11 @@ module clm_varctl
   !
   logical, public :: use_c13 = .false.                  ! true => use C-13 model
   logical, public :: use_c14 = .false.                  ! true => use C-14 model
+  !
+  !  ED switches
+  !
+  logical, public :: use_ed = .false.            ! true => use  ED
+  logical, public :: use_ed_spit_fire = .false.  ! true => use spitfire model
   !
   ! glacier_mec control variables: default values (may be overwritten by namelist)
   ! NOTE: glc_smb must have the same values for CLM and GLC
@@ -176,7 +183,8 @@ contains
     ! !ARGUMENTS:
     character(len=256), optional, intent(IN) :: caseid_in                ! case id
     character(len=256), optional, intent(IN) :: ctitle_in                ! case title
-    logical,            optional, intent(IN) :: brnch_retain_casename_in ! true => allow case name to remain the same for branch run
+    logical,            optional, intent(IN) :: brnch_retain_casename_in ! true => allow case name to remain the 
+                                                                         ! same for branch run
     logical,            optional, intent(IN) :: single_column_in         ! true => single column mode
     real(r8),           optional, intent(IN) :: scmlat_in                ! single column lat
     real(r8),           optional, intent(IN) :: scmlon_in                ! single column lon

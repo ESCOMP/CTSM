@@ -3902,7 +3902,7 @@ contains
                    exit
                 else
                    status = PIO_inq_dimname(ncid,iodesc_list(n)%dimids(m),dimname_iodesc)
-                   if (trim(dimname_file) .ne. trim(dimname_iodesc)) then
+                   if (trim(dimname_file)  /=  trim(dimname_iodesc)) then
                       found = .false.
                       exit
                    end if

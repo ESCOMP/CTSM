@@ -314,20 +314,20 @@ contains
            if (pi <=  col%npfts(c)) then
               p = col%pfti(c) + pi - 1
               ! For non-crop -- natural vegetation and bare-soil
-              if( pft%itype(p) .lt. nc3crop .and. cropf_col(c) .lt. 1.0_r8 )then
-                 if( .not. shr_infnan_isnan(btran2(p)) .and. btran2(p) .le. 1._r8 )then
+              if( pft%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+                 if( .not. shr_infnan_isnan(btran2(p)) .and. btran2(p)  <=  1._r8 )then
                     btran_col(c) = btran_col(c)+btran2(p)*pft%wtcol(p)
                     wtlf(c)      = wtlf(c)+pft%wtcol(p)
                  end if
                  if ( fpftdyn /= ' ' ) then    !true when landuse data is used
-                    if( pft%itype(p) == nbrdlf_evr_trp_tree .and. pft%wtcol(p) .gt. 0._r8 )then
+                    if( pft%itype(p) == nbrdlf_evr_trp_tree .and. pft%wtcol(p)  >  0._r8 )then
                        trotr1_col(c)=trotr1_col(c)+pft%wtcol(p)*col%wtgcell(c)
                     end if
-                    if( pft%itype(p) == nbrdlf_dcd_trp_tree .and. pft%wtcol(p) .gt. 0._r8 )then
+                    if( pft%itype(p) == nbrdlf_dcd_trp_tree .and. pft%wtcol(p)  >  0._r8 )then
                        trotr2_col(c)=trotr2_col(c)+pft%wtcol(p)*col%wtgcell(c)
                     end if
                     if( pft%itype(p) == nbrdlf_evr_trp_tree .or. pft%itype(p) == nbrdlf_dcd_trp_tree )then
-                       if(lfpftd(p).gt.0._r8)then
+                       if(lfpftd(p) > 0._r8)then
                           dtrotr_col(c)=dtrotr_col(c)+lfpftd(p)*col%wtgcell(c)
                        end if
                     end if
@@ -340,16 +340,16 @@ contains
 
                  fsr_col(c) = fsr_col(c) + fsr_pft(pft%itype(p))*pft%wtcol(p)/(1.0_r8-cropf_col(c))
 
-                 if( lfwt(c) .ne. 0.0_r8 )then    
+                 if( lfwt(c)  /=  0.0_r8 )then    
                     hdmlf=forc_hdm(g)
 
                     ! all these constants are in Li et al. BG (2012a,b;2013)
 
-                    if( hdmlf .gt. 0.1_r8 )then            
+                    if( hdmlf  >  0.1_r8 )then            
                        ! For NOT bare-soil
-                       if( pft%itype(p) .ne. noveg )then
+                       if( pft%itype(p)  /=  noveg )then
                           ! For shrub and grass (crop already excluded above)
-                          if( pft%itype(p) .ge. nbrdlf_evr_shrub )then      !for shurb and grass
+                          if( pft%itype(p)  >=  nbrdlf_evr_shrub )then      !for shurb and grass
                              lgdp_col(c)  = lgdp_col(c) + (0.1_r8 + 0.9_r8*    &
                                   exp(-1._r8*SHR_CONST_PI* &
                                   (gdp_lf(c)/8._r8)**0.5_r8))*pft%wtcol(p) &
@@ -361,15 +361,15 @@ contains
                                   exp(-1._r8*SHR_CONST_PI* &
                                   (hdmlf/450._r8)**0.5_r8))*pft%wtcol(p)/lfwt(c)
                           else   ! for trees
-                             if( gdp_lf(c) .gt. 20._r8 )then
+                             if( gdp_lf(c)  >  20._r8 )then
                                 lgdp_col(c)  =lgdp_col(c)+0.39_r8*pft%wtcol(p)/(1.0_r8 - cropf_col(c))
                              else    
                                 lgdp_col(c) = lgdp_col(c)+pft%wtcol(p)/(1.0_r8 - cropf_col(c))
                              end if
-                             if( gdp_lf(c) .gt. 20._r8 )then   
+                             if( gdp_lf(c)  >  20._r8 )then   
                                 lgdp1_col(c) = lgdp1_col(c)+0.62_r8*pft%wtcol(p)/lfwt(c)
                              else
-                                if( gdp_lf(c) .gt. 8._r8 ) then
+                                if( gdp_lf(c)  >  8._r8 ) then
                                    lgdp1_col(c)=lgdp1_col(c)+0.83_r8*pft%wtcol(p)/lfwt(c)
                                 else
                                    lgdp1_col(c)=lgdp1_col(c)+pft%wtcol(p)/lfwt(c)
@@ -396,7 +396,7 @@ contains
      if (fpftdyn /= ' ') then    !true when landuse data is used
         do fc = 1,num_soilc
            c = filter_soilc(fc)
-           if( dtrotr_col(c) .gt. 0._r8 )then
+           if( dtrotr_col(c)  >  0._r8 )then
               if( kmo == 1 .and. kda == 1 .and. mcsec == 0)then
                  lfc(c) = 0._r8
               end if
@@ -431,9 +431,9 @@ contains
            if (pi <=  col%npfts(c)) then
               p = col%pfti(c) + pi - 1
               ! For crop
-              if( forc_t(c) .ge. SHR_CONST_TKFRZ .and. pft%itype(p) .gt. nc4_grass .and.  &
+              if( forc_t(c)  >=  SHR_CONST_TKFRZ .and. pft%itype(p)  >  nc4_grass .and.  &
                    kmo == abm_lf(c) .and. forc_rain(c)+forc_snow(c) .eq. 0._r8  .and. &
-                   burndate(p) >= 999 .and. pft%wtcol(p) .gt. 0._r8 )then ! catch  crop burn time
+                   burndate(p) >= 999 .and. pft%wtcol(p)  >  0._r8 )then ! catch  crop burn time
                  ! calculate human density impact on ag. fire
                  fhd = 0.04_r8+0.96_r8*exp(-1._r8*SHR_CONST_PI*(hdmlf/350._r8)**0.5_r8)
                  ! calculate impact of GDP on ag. fire
@@ -445,7 +445,7 @@ contains
                  ! NOTE: THIS SHOULD TAKE INTO ACCOUNT THE TIME-STEP AND CURRENTLY DOES NOT!
                  !       As such results are only valid for a time-step of a half-hour.
                  baf_crop(c) = baf_crop(c) + cropfire_a1*fb*fhd*fgdp*pft%wtcol(p)
-                 if( fb*fhd*fgdp*pft%wtcol(p) .gt. 0._r8)then
+                 if( fb*fhd*fgdp*pft%wtcol(p)  >  0._r8)then
                     burndate(p)=kda
                  end if
               end if
@@ -460,7 +460,7 @@ contains
         g= col%gridcell(c)
         ! NOTE: THIS SHOULD TAKE INTO ACCOUNT THE TIME-STEP AND CURRENTLY DOES NOT!
         !       As such results are only valid for a time-step of a half-hour.
-        if(grc%latdeg(g).lt.borealat )then
+        if(grc%latdeg(g) < borealat )then
            baf_peatf(c) = non_boreal_peatfire_c*max(0._r8, &
                 min(1._r8,(4.0_r8-prec60_col(c)*secspday)/ &
                 4.0_r8))**2*peatf_lf(c)*(1._r8-fsat(c))
@@ -493,7 +493,7 @@ contains
         c = filter_soilc(fc)
         g = col%gridcell(c)
         hdmlf=forc_hdm(g)
-        if( cropf_col(c) .lt. 1.0 )then
+        if( cropf_col(c)  <  1.0 )then
            fuelc(c) = totlitc(c)+totvegc_col(c)-rootc_col(c)-fuelc_crop(c)*cropf_col(c)
            do j = 1, nlevdecomp  
               fuelc(c) = fuelc(c)+decomp_cpools_vr(c,j,i_cwd) * dzsoi_decomp(j)
@@ -787,7 +787,7 @@ contains
         ! get the column-level fractional area burned for this timestep
         ! and convert to a rate per second
         ! For non-crop (bare-soil and natural vegetation)
-        if( pft%itype(p) .lt. nc3crop )then
+        if( pft%itype(p)  <  nc3crop )then
            if (fpftdyn /= ' ') then    !true when landuse data is used
               f = (fbac(c)-baf_crop(c))/ dt
            else
@@ -1110,7 +1110,7 @@ contains
      do fc = 1,num_soilc
         c = filter_soilc(fc)
         g = col%gridcell(c)
-        if( grc%latdeg(g) .lt. borealat)then
+        if( grc%latdeg(g)  <  borealat)then
            somc_fire(c)= totsomc(c)*baf_peatf(c)/dt*6.0_r8/33.9_r8
         else
            somc_fire(c)= baf_peatf(c)/dt*2.2e3_r8

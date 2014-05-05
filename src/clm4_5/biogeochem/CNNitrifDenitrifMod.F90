@@ -192,7 +192,7 @@ contains
 
    ! Set maximum nitrification rate constant 
    k_nitr_max =  0.1_r8 / secspday   ! [1/sec] 10%/day  Parton et al., 2001 
-   ! Todo:  SPM - the explicit divide gives different results than when that
+   ! Todo:  FIX(SPM,032414) - the explicit divide gives different results than when that
    ! value is placed in the parameters netcdf file.  To get bfb, keep the 
    ! divide in source.
    !k_nitr_max = CNNitrifDenitrifParamsInst%k_nitr_max
@@ -244,8 +244,8 @@ contains
             ratio_diffusivity_water_gas(c,j) = (d_con_g(2,1) + d_con_g(2,2)*t_soisno(c,j) ) * 1.e-4_r8 / &
                  ((d_con_w(2,1) + d_con_w(2,2)*t_soisno(c,j) + d_con_w(2,3)*t_soisno(c,j)**2) * 1.e-9_r8)
 
-            if (o2_decomp_depth_unsat(c,j) .ne. spval .and. conc_o2_unsat(c,j) .ne. spval .and.  & 
-                 o2_decomp_depth_unsat(c,j) .gt. 0._r8) then
+            if (o2_decomp_depth_unsat(c,j)  /=  spval .and. conc_o2_unsat(c,j)  /=  spval .and.  & 
+                 o2_decomp_depth_unsat(c,j)  >  0._r8) then
                anaerobic_frac(c,j) = exp(-rij_kro_a * r_psi(c,j)**(-rij_kro_alpha) * &
                     o2_decomp_depth_unsat(c,j)**(-rij_kro_beta) * &
                     conc_o2_unsat(c,j)**rij_kro_gamma * (h2osoi_vol(c,j) + ratio_diffusivity_water_gas(c,j) * &
@@ -257,8 +257,8 @@ contains
             if (anoxia_wtsat) then ! Average saturated fraction values into anaerobic_frac(c,j).
                r_min_sat = 2._r8 * surface_tension_water / (rho_w * grav * abs(grav * 1.e-6_r8 * sucsat(c,j)))
                r_psi_sat = sqrt(r_min_sat * r_max)
-               if (o2_decomp_depth_sat(c,j) .ne. spval .and. conc_o2_sat(c,j) .ne. spval .and. &
-                    o2_decomp_depth_sat(c,j) .gt. 0._r8) then
+               if (o2_decomp_depth_sat(c,j)  /=  spval .and. conc_o2_sat(c,j)  /=  spval .and. &
+                    o2_decomp_depth_sat(c,j)  >  0._r8) then
                   anaerobic_frac_sat = exp(-rij_kro_a * r_psi_sat**(-rij_kro_alpha) * &
                        o2_decomp_depth_sat(c,j)**(-rij_kro_beta) * &
                        conc_o2_sat(c,j)**rij_kro_gamma * (watsat(c,j) + ratio_diffusivity_water_gas(c,j) * &
@@ -345,7 +345,7 @@ contains
          ratio_k1(c,j) = max(1.7_r8, 38.4_r8 - 350._r8 * diffus(c,j))
          
          ! ratio function (figure 7c)
-         if ( soil_co2_prod(c,j) .gt. 0 ) then
+         if ( soil_co2_prod(c,j)  >  0 ) then
             ratio_no3_co2(c,j) = smin_no3_massdens_vr(c,j) / soil_co2_prod(c,j)
          else
             ! fucntion saturates at large no3/co2 ratios, so set as some nominally large number

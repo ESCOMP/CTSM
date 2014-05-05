@@ -42,6 +42,7 @@ contains
     use histFileMod   , only : hist_add_subscript, hist_addfld1d, hist_addfld2d
     use histFileMod   , only : hist_printflds, no_snow_normal, no_snow_zero
     use shr_megan_mod , only : shr_megan_linkedlist, shr_megan_megcomp_t, shr_megan_megcomps_n
+    use EDhistFldsMod , only : EDhist_initFlds
     !
     ! !ARGUMENTS:
     implicit none
@@ -66,7 +67,7 @@ contains
     ! add the keyword to default='inactive' to the call to addfld_1d or addfld_2d
 
     ! add suffix if number of soil decomposition depths is greater than 1
-    if (nlevdecomp .gt. 1) then
+    if (nlevdecomp  >  1) then
        vr_suffix = "_vr"
     else 
        vr_suffix = ""
@@ -721,8 +722,8 @@ contains
             avgflag='A', long_name='alpha coefficient for VOC calc', &
             ptr_pft=pvf%alpha_out, set_lake=0._r8, default='inactive')
 
-       call hist_addfld1d (fname='CP', units='non',  &
-            avgflag='A', long_name='cp coefficient for VOC calc', &
+       call hist_addfld1d (fname='currentPatch', units='non',  &
+            avgflag='A', long_name='currentPatch coefficient for VOC calc', &
             ptr_pft=pvf%cp_out, set_lake=0._r8, default='inactive')
 
        call hist_addfld1d (fname='PAR_sun', units='umol/m2/s', &
@@ -1776,7 +1777,7 @@ contains
 
 
        do l  = 1, ndecomp_pools
-          if ( nlevdecomp_full .gt. 1 ) then
+          if ( nlevdecomp_full  >  1 ) then
              data2dptr => ccs%decomp_cpools_vr(:,:,l)
              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
              longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
@@ -1794,7 +1795,7 @@ contains
                avgflag='A', long_name=longname, &
                ptr_col=data1dptr)
 
-          if ( nlevdecomp_full .gt. 1 ) then
+          if ( nlevdecomp_full  >  1 ) then
              data1dptr => ccs%decomp_cpools_1m(:,l)
              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_1m'
              longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C to 1 meter'
@@ -1805,7 +1806,7 @@ contains
 
        end do
 
-       if ( nlevdecomp_full .gt. 1 ) then
+       if ( nlevdecomp_full  >  1 ) then
           call hist_addfld1d (fname='TOTLITC_1m', units='gC/m^2', &
                avgflag='A', long_name='total litter carbon to 1 meter depth', &
                ptr_col=ccs%totlitc_1m)
@@ -1890,7 +1891,7 @@ contains
           !-------------------------------
 
           do l = 1, ndecomp_pools
-             if ( nlevdecomp_full .gt. 1 ) then
+             if ( nlevdecomp_full  >  1 ) then
                 data2dptr => cc13s%decomp_cpools_vr(:,:,l)
                 fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
                 longname =  'C13 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
@@ -1922,7 +1923,7 @@ contains
                avgflag='A', long_name='C13 total soil organic matter carbon', &
                ptr_col=cc13s%totsomc)
 
-          if ( nlevdecomp_full .gt. 1 ) then
+          if ( nlevdecomp_full  >  1 ) then
              call hist_addfld1d (fname='C13_TOTLITC_1m', units='gC13/m^2', &
                   avgflag='A', long_name='C13 total litter carbon to 1 meter', &
                   ptr_col=cc13s%totlitc_1m)
@@ -1960,7 +1961,7 @@ contains
 
 
           do l = 1, ndecomp_pools
-             if ( nlevdecomp_full .gt. 1 ) then
+             if ( nlevdecomp_full  >  1 ) then
                 data2dptr => cc14s%decomp_cpools_vr(:,:,l)
                 fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_vr'
                 longname =  'C14 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C (vertically resolved)'
@@ -1976,7 +1977,7 @@ contains
                   avgflag='A', long_name=longname, &
                   ptr_col=data1dptr)
 
-             if ( nlevdecomp_full .gt. 1 ) then
+             if ( nlevdecomp_full  >  1 ) then
                 data1dptr => cc14s%decomp_cpools_1m(:,l)
                 fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_1m'
                 longname =  'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C to 1 meter'
@@ -2003,7 +2004,7 @@ contains
                avgflag='A', long_name='C14 total soil organic matter carbon', &
                ptr_col=cc14s%totsomc)
 
-          if ( nlevdecomp_full .gt. 1 ) then       
+          if ( nlevdecomp_full  >  1 ) then       
              call hist_addfld1d (fname='C14_TOTLITC_1m', units='gC14/m^2', &
                   avgflag='A', long_name='C14 total litter carbon to 1 meter', &
                   ptr_col=cc14s%totlitc_1m)
@@ -2149,7 +2150,7 @@ contains
        !-------------------------------
 
        do l  = 1, ndecomp_pools
-          if ( nlevdecomp_full .gt. 1 ) then
+          if ( nlevdecomp_full  >  1 ) then
              data2dptr => cns%decomp_npools_vr(:,:,l)
              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_vr'
              longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N (vertically resolved)'
@@ -2164,7 +2165,7 @@ contains
                avgflag='A', long_name=longname, &
                ptr_col=data1dptr)
 
-          if ( nlevdecomp_full .gt. 1 ) then
+          if ( nlevdecomp_full  >  1 ) then
              data1dptr => cns%decomp_npools_1m(:,l)
              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_1m'
              longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N to 1 meter'
@@ -2175,7 +2176,7 @@ contains
        end do
 
 
-       if ( nlevdecomp_full .gt. 1 ) then
+       if ( nlevdecomp_full  >  1 ) then
           call hist_addfld1d (fname='SMINN', units='gN/m^2', &
                avgflag='A', long_name='soil mineral N', &
                ptr_col=cns%sminn)
@@ -2203,7 +2204,7 @@ contains
                avgflag='A', long_name='soil mineral NH4 (vert. res.)', &
                ptr_col=cns%smin_nh4_vr)
 
-          if ( nlevdecomp_full .gt. 1 ) then
+          if ( nlevdecomp_full  >  1 ) then
              call hist_addfld1d (fname='SMIN_NO3', units='gN/m^2', &
                   avgflag='A', long_name='soil mineral NO3', &
                   ptr_col=cns%smin_no3)
@@ -3791,7 +3792,7 @@ contains
                   avgflag='A', long_name=longname, &
                   ptr_col=data1dptr, default='inactive')
 
-             if ( nlevdecomp_full .gt. 1 ) then
+             if ( nlevdecomp_full  >  1 ) then
                 data2dptr => ccf%m_decomp_cpools_to_fire_vr(:,:,k)
                 fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'C_TO_FIRE'//trim(vr_suffix)
                 longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' C fire loss'
@@ -3833,7 +3834,7 @@ contains
                   ptr_col=data1dptr)
           endif
           !-- transfer fluxes (none from terminal pool, if present)
-          if ( decomp_cascade_con%cascade_receiver_pool(l) .ne. 0 ) then
+          if ( decomp_cascade_con%cascade_receiver_pool(l)  /=  0 ) then
              data1dptr => ccf%decomp_cascade_ctransfer(:,l)
              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'C_TO_'//&
                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'C'
@@ -3845,7 +3846,7 @@ contains
           endif
 
           ! output the vertically resolved fluxes 
-          if ( nlevdecomp_full .gt. 1 ) then  
+          if ( nlevdecomp_full  >  1 ) then  
              !-- HR fluxes (none from CWD)
              if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
                 data2dptr => ccf%decomp_cascade_hr_vr(:,:,l)
@@ -3871,7 +3872,7 @@ contains
                      ptr_col=data2dptr, default='inactive')
              endif
              !-- transfer fluxes (none from terminal pool, if present)
-             if ( decomp_cascade_con%cascade_receiver_pool(l) .ne. 0 ) then
+             if ( decomp_cascade_con%cascade_receiver_pool(l)  /=  0 ) then
                 data2dptr => ccf%decomp_cascade_ctransfer_vr(:,:,l)
                 fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'C_TO_'//&
                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))&
@@ -3929,7 +3930,7 @@ contains
             avgflag='A', long_name='soil organic matter heterotrophic respiration', &
             ptr_col=ccf%somhr)
 
-       if ( nlevdecomp_full .gt. 1 ) then
+       if ( nlevdecomp_full  >  1 ) then
           call hist_addfld2d (fname='HR_vr', units='gC/m^3/s', type2d='levdcmp', &
                avgflag='A', long_name='total vertically resolved heterotrophic respiration', &
                ptr_col=ccf%hr_vr)
@@ -4055,7 +4056,7 @@ contains
                      avgflag='A', long_name=longname, &
                      ptr_col=data1dptr, default='inactive')
 
-                if ( nlevdecomp_full .gt. 1 ) then
+                if ( nlevdecomp_full  >  1 ) then
                    data2dptr => cc13f%m_decomp_cpools_to_fire_vr(:,:,k)
                    fieldname = 'C13_M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'C_TO_FIRE'//trim(vr_suffix)
                    longname =  'C13 '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' C fire loss'
@@ -4092,7 +4093,7 @@ contains
                      ptr_col=data2dptr, default='inactive')
              endif
              !-- transfer fluxes (none from terminal pool, if present)
-             if ( decomp_cascade_con%cascade_receiver_pool(l) .ne. 0 ) then
+             if ( decomp_cascade_con%cascade_receiver_pool(l)  /=  0 ) then
                 data2dptr => cc13f%decomp_cascade_ctransfer_vr(:,:,l)
                 fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
                      //'C_TO_'//&
@@ -4225,7 +4226,7 @@ contains
                      avgflag='A', long_name=longname, &
                      ptr_col=data1dptr, default='inactive')
 
-                if ( nlevdecomp_full .gt. 1 ) then
+                if ( nlevdecomp_full  >  1 ) then
                    data2dptr => cc14f%m_decomp_cpools_to_fire_vr(:,:,k)
                    fieldname = 'C14_M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'C_TO_FIRE'//trim(vr_suffix)
                    longname =  'C14 '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' C fire loss'
@@ -4263,7 +4264,7 @@ contains
                      ptr_col=data2dptr, default='inactive')
              endif
              !-- transfer fluxes (none from terminal pool, if present)
-             if ( decomp_cascade_con%cascade_receiver_pool(l) .ne. 0 ) then
+             if ( decomp_cascade_con%cascade_receiver_pool(l)  /=  0 ) then
                 data2dptr => cc14f%decomp_cascade_ctransfer_vr(:,:,l)
                 fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
                      //'C_TO_'//&
@@ -4719,7 +4720,7 @@ contains
                   avgflag='A', long_name=longname, &
                   ptr_col=data1dptr, default='inactive')
 
-             if ( nlevdecomp_full .gt. 1 ) then
+             if ( nlevdecomp_full  >  1 ) then
                 data2dptr => cnf%m_decomp_npools_to_fire_vr(:,:,k)
                 fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_TO_FIRE'//trim(vr_suffix)
                 longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N fire loss'
@@ -4736,7 +4737,7 @@ contains
           !-- mineralization/immobilization fluxes (none from CWD)
           if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
              data1dptr => cnf%decomp_cascade_sminn_flux(:,l)
-             if ( decomp_cascade_con%cascade_receiver_pool(l) .ne. 0 ) then
+             if ( decomp_cascade_con%cascade_receiver_pool(l)  /=  0 ) then
                 fieldname = 'SMINN_TO_'//&
                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'N_'//&
                      trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_donor_pool(l)))
@@ -4754,7 +4755,7 @@ contains
                   ptr_col=data1dptr)
           endif
           !-- transfer fluxes (none from terminal pool, if present)
-          if ( decomp_cascade_con%cascade_receiver_pool(l) .ne. 0 ) then
+          if ( decomp_cascade_con%cascade_receiver_pool(l)  /=  0 ) then
              data1dptr => cnf%decomp_cascade_ntransfer(:,l)
              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'N_TO_'//&
                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'N'
@@ -4766,11 +4767,11 @@ contains
           endif
 
           ! vertically resolved fluxes
-          if ( nlevdecomp_full .gt. 1 ) then
+          if ( nlevdecomp_full  >  1 ) then
              !-- mineralization/immobilization fluxes (none from CWD)
              if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
                 data2dptr => cnf%decomp_cascade_sminn_flux_vr(:,:,l)
-                if ( decomp_cascade_con%cascade_receiver_pool(l) .ne. 0 ) then
+                if ( decomp_cascade_con%cascade_receiver_pool(l)  /=  0 ) then
                    fieldname = 'SMINN_TO_'&
                         //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'N_'//&
                         trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_donor_pool(l)))//trim(vr_suffix)
@@ -4788,7 +4789,7 @@ contains
                      ptr_col=data2dptr, default='inactive')
              endif
              !-- transfer fluxes (none from terminal pool, if present)
-             if ( decomp_cascade_con%cascade_receiver_pool(l) .ne. 0 ) then
+             if ( decomp_cascade_con%cascade_receiver_pool(l)  /=  0 ) then
                 data2dptr => cnf%decomp_cascade_ntransfer_vr(:,:,l)
                 fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'N_TO_'//&
                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))&
@@ -4845,7 +4846,7 @@ contains
                      ptr_col=data1dptr)
              endif
 
-             if ( nlevdecomp_full .gt. 1 ) then       
+             if ( nlevdecomp_full  >  1 ) then       
                 !-- denitrification fluxes (none from CWD)
                 if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
                    data2dptr => cnf%sminn_to_denit_decomp_cascade_vr(:,:,l)
@@ -4869,7 +4870,7 @@ contains
                avgflag='A', long_name='soil mineral N pool loss to leaching', &
                ptr_col=cnf%sminn_leached)
 
-          if ( nlevdecomp_full .gt. 1 ) then  
+          if ( nlevdecomp_full  >  1 ) then  
              call hist_addfld_decomp (fname='SMINN_TO_DENIT_EXCESS'//trim(vr_suffix), units='gN/m^3/s',  type2d='levdcmp', &
                   avgflag='A', long_name='denitrification from excess mineral N pool', &
                   ptr_col=cnf%sminn_to_denit_excess_vr, default='inactive')   
@@ -4905,7 +4906,7 @@ contains
                avgflag='A', long_name='soil NO3 pool loss to runoff', &
                ptr_col=cnf%smin_no3_runoff)
 
-          if ( nlevdecomp_full .gt. 1 ) then 
+          if ( nlevdecomp_full  >  1 ) then 
              call hist_addfld_decomp (fname='F_NIT'//trim(vr_suffix), units='gN/m^3/s', type2d='levdcmp', &
                   avgflag='A', long_name='nitrification flux', &
                   ptr_col=cnf%f_nit_vr)
@@ -5042,7 +5043,7 @@ contains
 
        end if
 
-       if (nlevdecomp_full .gt. 1 ) then
+       if (nlevdecomp_full  >  1 ) then
           call hist_addfld_decomp (fname='POTENTIAL_IMMOB'//trim(vr_suffix), units='gN/m^3/s',  type2d='levdcmp', &
                avgflag='A', long_name='potential N immobilization', &
                ptr_col=cnf%potential_immob_vr, default='inactive')
@@ -5533,7 +5534,7 @@ contains
             avgflag='A', long_name='conversion area fraction of BET and BDT that burned in this timestep', &
             ptr_col=cps%lfc2)
 
-       if ( nlevdecomp_full .gt. 1 ) then
+       if ( nlevdecomp_full  >  1 ) then
           call hist_addfld1d (fname='FPI', units='proportion', &
                avgflag='A', long_name='fraction of potential immobilization', &
                ptr_col=cps%fpi)
@@ -5666,6 +5667,13 @@ contains
        call hist_addfld1d (fname='QFLX_DEW_SNOW', units='mm H2O/s', &
             avgflag='A', long_name='surface dew added to snow pacK', &
             ptr_pft=pwf%qflx_dew_snow, default='inactive', c2l_scale_type='urbanf')
+
+       !
+       ! Call hist init fields for ED
+       !
+       if (use_ed) then
+          call EDhist_initFlds()
+       end if
 
     end if
 
@@ -5927,7 +5935,7 @@ contains
 
        ! column-level data
        if (present(default)) then
-          if ( nlevdecomp_full .gt. 1 ) then
+          if ( nlevdecomp_full  >  1 ) then
              call hist_addfld2d (fname=trim(fname), units=units, type2d=type2d, &
                   avgflag=avgflag, long_name=long_name, &
                   ptr_col=ptr_col, default=default)
@@ -5938,7 +5946,7 @@ contains
                   ptr_col=ptr_1d, default=default)
           endif
        else
-          if ( nlevdecomp_full .gt. 1 ) then
+          if ( nlevdecomp_full  >  1 ) then
              call hist_addfld2d (fname=trim(fname), units=units, type2d=type2d, &
                   avgflag=avgflag, long_name=long_name, &
                   ptr_col=ptr_col)
@@ -5954,7 +5962,7 @@ contains
 
        ! pft-level data
        if (present(default)) then
-          if ( nlevdecomp_full .gt. 1 ) then
+          if ( nlevdecomp_full  >  1 ) then
              call hist_addfld2d (fname=trim(fname), units=units, type2d=type2d, &
                   avgflag=avgflag, long_name=long_name, &
                   ptr_pft=ptr_pft, default=default)
@@ -5965,7 +5973,7 @@ contains
                   ptr_pft=ptr_1d, default=default)
           endif
        else
-          if ( nlevdecomp_full .gt. 1 ) then
+          if ( nlevdecomp_full  >  1 ) then
              call hist_addfld2d (fname=trim(fname), units=units, type2d=type2d, &
                   avgflag=avgflag, long_name=long_name, &
                   ptr_pft=ptr_pft)

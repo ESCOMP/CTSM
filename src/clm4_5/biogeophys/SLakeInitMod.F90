@@ -222,7 +222,7 @@ contains
              uncon_frac=(1._r8-om_frac)+(1._r8-perc_frac)*om_frac
 
              ! uncon_hksat is series addition of mineral/organic conductivites
-             if (om_frac .lt. 1._r8) then
+             if (om_frac  <  1._r8) then
                 uncon_hksat=uncon_frac/((1._r8-om_frac)/xksat &
                      +((1._r8-perc_frac)*om_frac)/om_hksat)
              else
@@ -237,7 +237,7 @@ contains
                   om_tkd*om_frac
              cps%csol(c,lev)   = ((1._r8-om_frac)*(2.128_r8*sand+2.385_r8*clay) / (sand+clay) +   &
                   om_csol*om_frac)*1.e6_r8  ! J/(m3 K)
-             if (lev .gt. nlevsoi) then
+             if (lev  >  nlevsoi) then
                 cps%csol(c,lev) = csol_bedrock
              endif
              cps%watdry(c,lev) = cps%watsat(c,lev) * (316230._r8/cps%sucsat(c,lev)) ** (-1._r8/cps%bsw(c,lev))

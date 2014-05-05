@@ -190,7 +190,7 @@ contains
       ntim_atm_ts = size(atm_c14file_time)
       ind_below = 0
       do nt = 1, ntim_atm_ts
-         if (dateyear .ge. atm_c14file_time(nt) ) then
+         if (dateyear  >=  atm_c14file_time(nt) ) then
             ind_below = ind_below+1
          endif
       end do
@@ -275,7 +275,7 @@ contains
 
       ! check to make sure that time dimension is well behaved
       do t = 2, ntim
-         if ( atm_c14file_time(t) - atm_c14file_time(t-1) .le. 0._r8 ) then
+         if ( atm_c14file_time(t) - atm_c14file_time(t-1)  <=  0._r8 ) then
             write(iulog, *) 'C14_init_BombSpike: error.  time axis must be monotonically increasing'
             call endrun(msg=errMsg(__FILE__, __LINE__))
          endif

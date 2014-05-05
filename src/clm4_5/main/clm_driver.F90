@@ -11,14 +11,15 @@ module clm_driver
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use clmtype
   use clm_varctl          , only : wrtdia, iulog, create_glacier_mec_landunit
-  use clm_varctl          , only : use_cn, use_cndv, use_lch4, use_voc, use_noio
+  use clm_varctl          , only : use_cn, use_cndv, use_lch4, use_voc, use_noio, use_ed
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds, get_proc_bounds, bounds_type
   use filterMod           , only : filter, filter_inactive_and_active
   use dynSubgridDriverMod , only : dynSubgrid_driver
   use CNDVMod             , only : dv, histCNDV
   use clm_varcon          , only : zlnd
-  use clm_time_manager    , only : get_step_size,get_curr_date,get_ref_date,get_nstep
+  use clm_time_manager    , only : get_step_size,get_curr_date,get_ref_date,get_nstep, &
+                                  is_beg_curr_day
   use CropRestMod         , only : CropRestIncYear
   use histFileMod         , only : hist_update_hbuf, hist_htapes_wrapup
   use restFileMod         , only : restFile_write, restFile_filename
@@ -37,7 +38,7 @@ module clm_driver
   use Biogeophysics2Mod   , only : Biogeophysics2
   use SurfaceAlbedoMod    , only : SurfaceAlbedo
   use pft2colMod          , only : pft2col
-  use CNSetValueMod       , only : CNZeroFluxes_dwt
+  use CNSetValueMod       , only : CNZeroFluxes_dwt, CNZeroFluxes
   use CNEcosystemDynMod   , only : CNEcosystemDynNoLeaching,CNEcosystemDynLeaching
   use CNAnnualUpdateMod   , only : CNAnnualUpdate
   use CNBalanceCheckMod   , only : BeginCBalance, BeginNBalance, CBalanceCheck, NBalanceCheck
@@ -58,6 +59,8 @@ module clm_driver
   use clm_glclnd          , only : update_clm_s2x
   use SatellitePhenologyMod, only : SatellitePhenology, interpMonthlyVeg
   use perf_mod
+  use filterMod           , only : setFilters
+  use EDmainMod           , only : edmodel
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -94,8 +97,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   ! !LOCAL VARIABLES:
   integer  :: nstep                    ! time step number
   real(r8) :: dtime                    ! land model time step (sec)
-  real(r8) :: t1, t2, t3               ! temporary for mass balance checks
-  integer  :: nc, fc, c, fp, p, l, g   ! indices
+  integer  :: nc, c, l                 ! indices
   integer  :: nclumps                  ! number of clumps on this processor
   integer  :: yrp1                     ! year (0, ...) for nstep+1
   integer  :: monp1                    ! month (1, ..., 12) for nstep+1
@@ -110,6 +112,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   integer  :: kyr                      ! thousand years, equals 2 at end of first year
   character(len=256) :: filer          ! restart file name
   integer :: ier                       ! error code
+
   type(bounds_type) :: bounds_clump    ! bounds
   type(bounds_type) :: bounds_proc     ! bounds
   !-----------------------------------------------------------------------
@@ -133,7 +136,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
         call t_startf('interpMonthlyVeg')
         call interpMonthlyVeg(bounds_proc)
         call t_stopf('interpMonthlyVeg')
-     endif
+     end if
   else
      ! Determine weights for time interpolation of monthly vegetation data.
      ! This also determines whether it is time to read new monthly vegetation and
@@ -383,7 +386,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      ! VOC emission (A. Guenther's MEGAN (2006) model)
      if (use_voc) then
         call VOCEmission(bounds_clump, &
-             filter(nc)%num_soilp, filter(nc)%soilp)
+            filter(nc)%num_soilp, filter(nc)%soilp)
      end if
 
      call t_stopf('bgc')
@@ -465,31 +468,40 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      ! ============================================================================
      call t_startf('ecosysdyn')
 
-     if (use_cn) then
+     ! FIX(SPM,032414)  push these checks into the routines below and/or make this consistent.
+     if (.not. use_ed) then
+        if (use_cn) then
 
-        ! fully prognostic canopy structure and C-N biogeochemistry
-        ! - CNDV defined: prognostic biogeography; else prescribed
-        ! - crop model:   crop algorithms called from within CNEcosystemDyn
-        call CNEcosystemDynNoLeaching(bounds_clump, &
-             filter(nc)%num_soilc,&
-             filter(nc)%soilc, filter(nc)%num_soilp, &
-             filter(nc)%soilp, filter(nc)%num_pcropp, &
-             filter(nc)%pcropp, doalb)
+           ! fully prognostic canopy structure and C-N biogeochemistry
+           ! - CNDV defined: prognostic biogeography; else prescribed
+           ! - crop model:   crop algorithms called from within CNEcosystemDyn
+           call CNEcosystemDynNoLeaching(bounds_clump, &
+                filter(nc)%num_soilc,&
+                filter(nc)%soilc, filter(nc)%num_soilp, &
+                filter(nc)%soilp, filter(nc)%num_pcropp, &
+                filter(nc)%pcropp, doalb)
         
-        call CNAnnualUpdate(bounds_clump, &
-             filter(nc)%num_soilc,&
-             filter(nc)%soilc, filter(nc)%num_soilp, &
-             filter(nc)%soilp)
+           call CNAnnualUpdate(bounds_clump, &
+                filter(nc)%num_soilc,&
+                filter(nc)%soilc, filter(nc)%num_soilp, &
+                filter(nc)%soilp)
 
-     else
+        else ! use_cn
 
-        ! Prescribed biogeography,
-        ! prescribed canopy structure, some prognostic carbon fluxes
-        call SatellitePhenology(bounds_clump, &
-             filter(nc)%num_nolakep, filter(nc)%nolakep, &
-             doalb)
+           ! Prescribed biogeography,
+           ! prescribed canopy structure, some prognostic carbon fluxes
+           call SatellitePhenology(bounds_clump, &
+                filter(nc)%num_nolakep, filter(nc)%nolakep, &
+                doalb)
 
-     end if
+        end if ! use_cn
+
+     else ! use_ed
+
+        call CNZeroFluxes(filter(nc)%num_soilc, filter(nc)%soilc, filter(nc)%num_soilp, filter(nc)%soilp)
+
+     end if ! use_ed
+
      call t_stopf('ecosysdyn')
 
      ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
@@ -519,6 +531,8 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      ! Check the energy and water balance, also carbon and nitrogen balance
      ! ============================================================================
      if (use_cn) then
+        ! FIX(SPM,032414) there are use_ed checks in this routine...be consistent (see comment
+        ! above re: no leaching
         call CNEcosystemDynLeaching(bounds_clump, &
              filter(nc)%num_soilc,&
              filter(nc)%soilc, filter(nc)%num_soilp, &
@@ -530,9 +544,10 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call BalanceCheck(bounds_clump,filter(nc)%num_do_smb_c,filter(nc)%do_smb_c)
      call t_stopf('balchk')
 
+  if(.not. use_ed)then
      if (use_cn) then
         nstep = get_nstep()
-        if (nstep .lt. 2 )then
+        if (nstep  <  2 )then
            if (masterproc) write(iulog,*) '--WARNING-- skipping CN balance check for first timestep'
         else
            call t_startf('cnbalchk')
@@ -541,6 +556,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
            call t_stopf('cnbalchk')
         end if
      end if
+   end if  ! use_ed
 
      ! ============================================================================
      ! Determine albedos for next time step
@@ -608,13 +624,17 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   call write_diagnostic(wrtdia, nstep)
   call t_stopf('wrtdiag')
 
-  ! ============================================================================
-  ! Update accumulators
-  ! ============================================================================
+  if (.not. use_ed) then
+     ! ============================================================================
+     ! Update accumulators
+     ! ============================================================================
 
-  call t_startf('accum')
-  call updateAccFlds(bounds_proc)
-  call t_stopf('accum')
+     ! FIX(SPM,032414) double check why this isn't called for ED
+     call t_startf('accum')
+     call updateAccFlds(bounds_proc)
+     call t_stopf('accum')
+
+  end if !use_ed
 
   ! ============================================================================
   ! Update history buffer
@@ -659,7 +679,32 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call t_stopf('d2dgvm')
   end if
 
-  
+   ! ============================================================================
+   ! Call ED model on daily timestep
+   ! ============================================================================
+
+   if ( use_ed ) then
+
+      if ( is_beg_curr_day() ) then ! run ED at the start of each day
+          
+         if ( masterproc ) write(iulog,*)  'edtime ed call edmodel ',get_nstep()
+         nclumps = get_proc_clumps()
+
+         !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
+         do nc = 1,nclumps
+
+             call get_clump_bounds(nc, bounds_clump)
+
+             call edmodel( bounds_clump )
+
+             call setFilters( bounds_clump )
+
+         end do
+         !$OMP END PARALLEL DO
+      end if
+
+   end if ! use_ed branch
+
   ! ============================================================================
   ! History/Restart output
   ! ============================================================================
@@ -708,7 +753,7 @@ subroutine write_diagnostic (wrtdia, nstep)
   ! !USES:
   use clm_atmlnd , only : clm_l2a
   use decompMod  , only : get_proc_bounds, get_proc_global
-  use spmdMod    , only : masterproc, npes, MPI_REAL8, MPI_ANY_SOURCE
+  use spmdMod    , only : masterproc, npes, MPI_REAL8
   use spmdMod    , only : MPI_STATUS_SIZE, mpicom, MPI_SUM
   use shr_sys_mod, only : shr_sys_flush
   use abortutils , only : endrun
@@ -728,6 +773,7 @@ subroutine write_diagnostic (wrtdia, nstep)
   integer :: numl                    ! total number of landunits across all processors
   integer :: numc                    ! total number of columns across all processors
   integer :: nump                    ! total number of pfts across all processors
+  integer :: numCohort               ! total number of cohorts across all processors
   integer :: ier                     ! error status
   real(r8):: psum                    ! partial sum of ts
   real(r8):: tsum                    ! sum of ts
@@ -738,7 +784,7 @@ subroutine write_diagnostic (wrtdia, nstep)
 !------------------------------------------------------------------------
 
   call get_proc_bounds(bounds)
-  call get_proc_global(numg, numl, numc, nump)
+  call get_proc_global(numg, numl, numc, nump, numCohort)
 
   if (wrtdia) then
 
@@ -768,7 +814,7 @@ subroutine write_diagnostic (wrtdia, nstep)
            write(iulog,*) 'write_diagnostic: Error in mpi_reduce()'
            call endrun(msg=errMsg(__FILE__, __LINE__))
         end if
-     endif
+     end if
      if (masterproc) then
         tsxyav = tsum / numg
         write(iulog,1000) nstep, tsxyav
@@ -782,7 +828,7 @@ subroutine write_diagnostic (wrtdia, nstep)
         call shr_sys_flush(iulog)
      end if
 
-  endif
+  end if
 
 1000 format (1x,'nstep = ',i10,'   TS = ',f21.15)
 

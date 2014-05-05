@@ -742,14 +742,14 @@ contains
         col_hrv_xsmrpool_to_atm(bounds%begc:bounds%endc))
 
    if ( isotope .eq. 'bulk') then
-      if (nfix_timeconst .gt. 0._r8 .and. nfix_timeconst .lt. 500._r8 ) then
+      if (nfix_timeconst  >  0._r8 .and. nfix_timeconst  <  500._r8 ) then
          ! this code is to calculate an exponentially-relaxed npp value for use in NDynamics code
          dtime = get_step_size()
          nfixlags = nfix_timeconst * secspday
          ! column loop
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-            if ( col_lag_npp(c) .ne. spval ) then
+            if ( col_lag_npp(c)  /=  spval ) then
                col_lag_npp(c) = col_lag_npp(c) * exp(-dtime/nfixlags) &
                     + col_npp(c) * (1._r8 - exp(-dtime/nfixlags))
             else
@@ -909,7 +909,7 @@ contains
    end do
 
    ! for vertically-resolved soil biogeochemistry, calculate some diagnostics of carbon pools to a given depth
-   if ( nlevdecomp .gt. 1) then
+   if ( nlevdecomp  >  1) then
       
       ! zero some pools
       do l = 1, ndecomp_pools
@@ -923,13 +923,13 @@ contains
       maxdepth = 1._r8
       do l = 1, ndecomp_pools
          do j = 1, nlevdecomp
-            if ( zisoi(j) .le. maxdepth ) then
+            if ( zisoi(j)  <=  maxdepth ) then
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
                   decomp_cpools_1m(c,l) = decomp_cpools_1m(c,l) + &
                        decomp_cpools_vr(c,j,l) * dzsoi_decomp(j)
                end do
-            elseif ( zisoi(j-1) .lt. maxdepth ) then
+            elseif ( zisoi(j-1)  <  maxdepth ) then
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
                   decomp_cpools_1m(c,l) = decomp_cpools_1m(c,l) + &
@@ -1491,7 +1491,7 @@ contains
    end do
 
    ! for vertically-resolved soil biogeochemistry, calculate some diagnostics of carbon pools to a given depth
-   if ( nlevdecomp .gt. 1) then
+   if ( nlevdecomp  >  1) then
 
       do l = 1, ndecomp_pools
          do fc = 1,num_soilc
@@ -1504,13 +1504,13 @@ contains
       maxdepth = 1._r8
       do l = 1, ndecomp_pools
          do j = 1, nlevdecomp
-            if ( zisoi(j) .le. maxdepth ) then
+            if ( zisoi(j)  <=  maxdepth ) then
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
                   decomp_npools_1m(c,l) = decomp_npools_1m(c,l) + &
                        decomp_npools_vr(c,j,l) * dzsoi_decomp(j)
                end do
-            elseif ( zisoi(j-1) .lt. maxdepth ) then
+            elseif ( zisoi(j-1)  <  maxdepth ) then
                do fc = 1,num_soilc
                   c = filter_soilc(fc)
                   decomp_npools_1m(c,l) = decomp_npools_1m(c,l) + &

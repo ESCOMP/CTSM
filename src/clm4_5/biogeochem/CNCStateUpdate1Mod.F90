@@ -288,7 +288,7 @@ contains
        end do
     end do
     do k = 1, ndecomp_cascade_transitions
-       if ( cascade_receiver_pool(k) .ne. 0 ) then  ! skip terminal transitions
+       if ( cascade_receiver_pool(k)  /=  0 ) then  ! skip terminal transitions
           do j = 1,nlevdecomp
              ! column loop
              do fc = 1,num_soilc

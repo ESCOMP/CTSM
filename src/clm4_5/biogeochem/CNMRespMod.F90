@@ -13,6 +13,7 @@ module CNMRespMod
   use abortutils         , only: endrun
   use shr_log_mod        , only: errMsg => shr_log_errMsg
   use CNSharedParamsMod  , only: CNParamsShareInst
+  use clm_varctl         , only: use_ed 
   !
   implicit none
   save
@@ -60,6 +61,8 @@ contains
   end subroutine readCNMRespParams
 
   !-----------------------------------------------------------------------
+  ! FIX(SPM,032414) this shouldn't even be called with ED on.
+  !
   subroutine CNMResp(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
     !
     ! !DESCRIPTION:
@@ -81,7 +84,6 @@ contains
     integer :: c,p,j          ! indices
     integer :: fp             ! soil filter pft index
     integer :: fc             ! soil filter column index
-    real(r8):: mr             ! maintenance respiration (gC/m2/s)
     real(r8):: br             ! base rate (gC/gN/s)
     real(r8):: q10            ! temperature dependence
     real(r8):: tc             ! temperature correction, 2m air temp (unitless)
@@ -111,7 +113,9 @@ contains
     plandunit      =>    pft%landunit         , & ! Input:  [integer (:)]  index into landunit level quantities               
     clandunit      =>    col%landunit         , & ! Input:  [integer (:)]  index into landunit level quantities               
     itypelun       =>    lun%itype            , & ! Input:  [integer (:)]  landunit type                                      
-    woody          =>    pftcon%woody           & ! Input:  [real(r8) (:)]  binary flag for woody lifeform (1=woody, 0=not woody)
+    woody          =>    pftcon%woody         , & ! Input:  [real(r8) (:)]  binary flag for woody lifeform (1=woody, 0=not woody)
+    lmrcanopy      =>    pcf%lmrcanopy        , &
+    elai           =>    pps%elai             &
     )
 
     grainn         => pns%grainn
@@ -151,11 +155,23 @@ contains
 
       tc = Q10**((t_ref2m(p)-SHR_CONST_TKFRZ - 20.0_r8)/10.0_r8)
       if (frac_veg_nosno(p) == 1) then
-         leaf_mr(p) = lmrsun(p) * laisun(p) * 12.011e-6_r8 + &
+         if( use_ed ) then
+            leaf_mr(p) = lmrcanopy(p) * elai(p) * 12.011e-6_r8                     
+         else !use_ed
+            leaf_mr(p) = lmrsun(p) * laisun(p) * 12.011e-6_r8 + &
                       lmrsha(p) * laisha(p) * 12.011e-6_r8
-      else
+         end if !use_ed
+
+      else !nosno
+
          leaf_mr(p) = 0._r8
+
       end if
+      
+      if ( use_ed ) then
+         livestem_mr(p) = 0._r8
+         livecroot_mr(p) = 0._r8
+      end if ! use_ed
 
       if (woody(ivt(p)) == 1) then
          livestem_mr(p) = livestemn(p)*br*tc
@@ -167,6 +183,12 @@ contains
    end do
 
    ! soil and pft loop for fine root
+
+   ! FIX(SPM,032414) does this assignement need to be here for ED?
+   if ( use_ed ) then
+      froot_mr(:) = 0._r8
+   end if ! use_ed
+
    do j = 1,nlevgrnd
       do fp = 1,num_soilp
          p = filter_soilp(fp)

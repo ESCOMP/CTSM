@@ -223,8 +223,10 @@ contains
    real(r8) :: rf_l1s1
    real(r8) :: rf_l2s1
    real(r8) :: rf_l3s2
-   real(r8) :: rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
-   real(r8) :: rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
+   !real(r8) :: rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
+   !real(r8) :: rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
+   real(r8), allocatable :: rf_s1s2(:,:)
+   real(r8), allocatable :: rf_s1s3(:,:)
    real(r8) :: rf_s2s1
    real(r8) :: rf_s2s3
    real(r8) :: rf_s3s1
@@ -235,8 +237,10 @@ contains
    real(r8) :: cn_s1
    real(r8) :: cn_s2
    real(r8) :: cn_s3
-   real(r8) :: f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
-   real(r8) :: f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
+   !real(r8) :: f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
+   !real(r8) :: f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
+   real(r8), allocatable :: f_s1s2(:,:)
+   real(r8), allocatable :: f_s1s3(:,:)
    real(r8) :: f_s2s1
    real(r8) :: f_s2s3
 
@@ -284,6 +288,11 @@ contains
    cellsand                            =>    cps%cellsand                                , & !  [real(r8) (:,:)]  column 3D sand                                         
    spinup_factor                       =>    decomp_cascade_con%spinup_factor              & !  [real(r8) (:)]  factor for AD spinup associated with each pool           
    )
+
+   allocate(rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp))
+   allocate(rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp))
+   allocate(f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp))
+   allocate(f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp))
 
    !------- time-constant coefficients ---------- !
    ! set soil organic matter compartment C:N ratios
@@ -506,6 +515,10 @@ contains
    cascade_receiver_pool(i_cwdl3) = i_litr3
    pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
 
+   deallocate(rf_s1s2)
+   deallocate(rf_s1s3)
+   deallocate(f_s1s2)
+   deallocate(f_s1s3)
 
    end associate
  end subroutine init_decompcascade_bgc
@@ -605,7 +618,7 @@ contains
 
    ! century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1
    tau_cwd  = 1./0.3
-! Todo:  SPM - the explicit divide gives different results than when that
+! Todo:  FIX(SPM,032414) - the explicit divide gives different results than when that
 ! value is placed in the parameters netcdf file.  To get bfb, keep the 
 ! divide in source.
    !tau_l1 = CNDecompBgcParamsInst%tau_l1_bgc
@@ -689,7 +702,7 @@ contains
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                if (j==1) t_scalar(c,:) = 0._r8
-               if (t_soisno(c,j) .ge. SHR_CONST_TKFRZ) then
+               if (t_soisno(c,j)  >=  SHR_CONST_TKFRZ) then
                   t_scalar(c,1)=t_scalar(c,1) + (Q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j)
                else
                   t_scalar(c,1)=t_scalar(c,1) + (Q10**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))*fr(c,j)
@@ -788,7 +801,7 @@ contains
          do j = 1, nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               if (t_soisno(c,j) .ge. SHR_CONST_TKFRZ) then
+               if (t_soisno(c,j)  >=  SHR_CONST_TKFRZ) then
                   t_scalar(c,j)= (Q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))
                else
                   t_scalar(c,j)= (Q10**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))

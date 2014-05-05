@@ -1,4 +1,401 @@
 ===============================================================
+Tag name:  clm4_5_72
+Originator(s):  muszala (Stefan Muszala)
+Date: Mon May  5 17:47:52 MDT 2014
+One-line Summary: Introduce code for Ecosystem Demography (CLM(ED)) Model
+
+Purpose of changes: Introduce code for Ecosystem Demography (CLM(ED)) Model - first functional tag.
+
+A large chunk of this code was written and re-written by Rosie Fisher.
+
+"Introduce code for Ecosystem Demography (CLM(ED)) Model.  Adds capability to allow plant functional
+types to compete for light, to represent recovery from disturbance, and to allow disturbances
+(i.e. fire) to only afflict some fraction of the canopy, and to represent vegetation at the scale
+of cohorts of trees. Note that this is a large change and includes:
+
+1. Significant alterations to canopy albedo and surface radiation calculations
+2. New photosynthesis scheme, based on existing science but to allow for more complex canopy structure
+3. Introduction of a new allocation and growth scheme, (no consistent with that in CLM(CN)
+4. Removal, for now, of Nitrogen limitation capabilities
+5. Introduction of the SPITFIRE fire model, which interacts with ED via it's representation of
+   size-structured mortality and removal of litter pools. 
+6. Introduction of a simple seed bank model to allow persistence of vegetation through fire events.
+7. For ED compsets there exists a cohort dimension on the restart files.
+
+Cold starts and restarts work for the following.  The 1x1_brazil is the most heavily tested case both from 
+science and SE standpoint:
+
+1x1_brazil.ICLM45CNED.yellowstone_[intel | pgi]
+5x5_amazon.ICLM45CNED.yellowstone_[intel | pgi]
+1x1_brazil.ICLM45CNED.goldbach_[nag | intel | pgi ]
+5x5_amazon.ICLM45CNED.goldbach_[nag | intel | pgi ]
+
+Cold starts work for:
+
+f10_f10.ICLM45CNED.yellowstone_[intel | pgi].
+f19_g16.ICLM45CNED.yellowstone_[intel | pgi]
+
+Code Origins:
+
+The ED code in CLM is originally based on code by Moorcroft (www.oeb.harvard.edu/faculty/moorcroft/code_and_data/index.html)
+and has been heavily modified in regards to both scientific implementation and assumptions.  Fom a software engineering
+perspective, ED was rewritten from C into F2003 and the structure of the code has been significantly altered to fit into
+the CESM/CLM framework.
+
+The SPITFIRE code is based on (http://www.biogeosciences.net/7/1991/2010/bg-7-1991-2010.pdf) and has been significantly 
+altered and extended to fit into the CESM/CLM framework.
+
+Other points:
+   1. removed many unused variables and module uses as reported by nag
+	2. changing text wrapping on comments so they end at 139 characters
+   3. changed many text based logical operators (.ne., .lt., .ge.) with their math. equivlanet (/=, > , <=)
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:  ED functionality brought in.  Does not change existing
+configurations.  For ED, there are now a CNED and BGCED compset.  Use CNED until BGC issues are worked
+out.
+
+Describe any changes made to the namelist: ED functionality brought in.  Does not change existing
+configurations.  For ED compsets, there are two new namelist variables.  They are:
+
+use_ed = .true.
+use_ed_spit_fire = .true.
+
+use_ed_spit_fire is set to true by default if use_ed is on.  Unless you are running our ED tests, you will
+have to change your user_nl_clm to something like:
+
+paramfile ='/glade/p/cesmdata/cseg/inputdata/lnd/clm2/edParams/CLMPARAMS_ED_011514.nc'
+finidat = ''
+hist_mfilt             = 365
+hist_nhtfrq            = -24
+
+hist_empty_htapes = .true.
+
+hist_fincl1='NPP','GPP','BTRAN','TOTVEGC','H2OSOI','TLAI','LITTER_IN','LITTER_OUT',
+'STORVEGC','FIRE_AREA','SCORCH_HEIGHT','FIRE_INTENSITY','FIRE_TFC_ROS','fire_fuel_mef',
+'LITTERC','fire_fuel_bulkd','fire_fuel_sav','FIRE_NESTEROV_INDEX','PFTbiomass',
+'PFTleafbiomass','FIRE_ROS','WIND','TFC_ROS','DISPVEGC','AREA_TREES','AREA_PLANT' 
+
+If on goldbach, use:
+
+paramfile ='/fs/cgd/csm/inputdata/lnd/clm2/edParams/CLMPARAMS_ED_011514.nc'
+
+List any changes to the defaults for the boundary datasets: N/A.  
+
+Describe any substantial timing or memory changes:
+
+Code reviewed by: Stefan Muszala and Rosie Fisher. Detailed code review by Bill Sacks, Mariana Vertenstein,
+Ben Andre, and Erik Kluzek. Discussion of code review included Dave Lawrence, Forrest Hoffmann
+and Ryan Knox.
+
+List any svn externals directories updated (csm_share, mct, etc.): 
+
+Changed externals to a branch_tag that supports ED compsets.  We are using branch_tags because trunk
+scripts does not work with all of the current CLM tests:
+
+-scripts https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/add_dynlu_tests_tags/add_dynlu_tests_n03_scripts4_140305
++scripts https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/ED_scripts_tags/ED_scripts_015_140305_rev
+
+List all files eliminated: N/A
+
+List all files added and what they do:
+
+### SPITFIRE code
+# new SPITEFIRE directory
+A  +    models/lnd/clm/src/clm4_5/main/spitfireSF
+# main SPITFIRE code
+A  +    models/lnd/clm/src/clm4_5/main/spitfireSF/SFParamsMod.F90
+# handle SPITFIRE parameters
+A  +    models/lnd/clm/src/clm4_5/main/spitfireSF/SFMainMod.F90
+
+# pull out, move to a shared location, place in own module
+A  +    models/lnd/clm/src/util_share/quadraticMod.F90 
+
+### new source and directories for ED
+## ED code required for biogeophysics
+# ED directory in biogeophys
+A  +    models/lnd/clm/src/clm4_5/biogeophys/ED
+# Calculates daily carbon flux drivers from hourly calculations. 
+A  +    models/lnd/clm/src/clm4_5/biogeophys/ED/EDAccumulateFluxesMod.F90
+# Calculates absorbed, reflected and transmitted radiation in diffuse and direct streams for
+# each of the canopy layer x PFT x leaf layer three-dimensional matrix.  Uses iterative Norman
+# radiation transfer scheme.
+A  +    models/lnd/clm/src/clm4_5/biogeophys/ED/EDSurfaceAlbedoMod.F90
+# Main photosynthesis model. Calculates leaf level fluxes on a canopy layer x PFT x leaf layer
+# three-dimensional matrix. Sums to canopy to produce overall canopy conductance. Unpacks leaf-
+# level fluxes into cohort level fluxes.   Uses same scientific assumptions as CLM4.5. 
+A  +    models/lnd/clm/src/clm4_5/biogeophys/ED/EDPhotosynthesisMod.F90
+# Generates PFT specific BTRAN vector for each ED patch. Includes option for SPA-like calculations. 
+A  +    models/lnd/clm/src/clm4_5/biogeophys/ED/EDBtranMod.F90
+
+## ED code required for biogeochemistry
+# ED directory in biogeochem
+A  +    models/lnd/clm/src/clm4_5/biogeochem/ED
+# Determines which cohorts are in the upper and lower canopy layers. Sets leaf area index inputs to biogeophysics calculations.
+A  +    models/lnd/clm/src/clm4_5/biogeochem/ED/EDCanopyStructureMod.F90
+# Initializes some ED-specific variables to zero at startup.
+A  +    models/lnd/clm/src/clm4_5/biogeochem/ED/EDSetValuesMod.F90
+# Contains allometric relationships between vegetation properties (height, dbh, LAI, dead biomass, live biomass, crown area) biogeochem/ED/EDPatchDynamicsMod.F90 : Creates patches, fuses similar patches, controls disturbance and generation of area. 
+A  +    models/lnd/clm/src/clm4_5/biogeochem/ED/EDGrowthFunctionsMod.F90
+# Creates, fuses, terminates, sorts, counts and copies cohort structures. 
+A  +    models/lnd/clm/src/clm4_5/biogeochem/ED/EDCohortDynamicsMod.F90
+# Contains all calculations of derivatives of biomass, litter and seed pools.  Also includes phenology model, seed and litter production and decay models, and canopy optimization model. 
+A  +    models/lnd/clm/src/clm4_5/biogeochem/ED/EDPhysiologyMod.F90
+# Creates, fuses, terminates, sorts, counts and copies patch structures. 
+A  +    models/lnd/clm/src/clm4_5/biogeochem/ED/EDPatchDynamicsMod.F90
+
+## ED core functionality and types that interact with CLM (generally not science)
+# ED directory in main
+A  +    models/lnd/clm/src/clm4_5/main/ED
+# Transmits required information for CLM (tlai, htop, tile weights). Updates ED-specific history field variables. 
+A  +    models/lnd/clm/src/clm4_5/main/ED/EDCLMLinkMod.F90
+#  Initializes ED PFT parameter structure. 
+A  +    models/lnd/clm/src/clm4_5/main/ED/EDInitTimeConst.F90
+# Contains ED-specific variables for CLM
+A  +    models/lnd/clm/src/clm4_5/main/ED/EDClmType.F90
+# Adds history field variables specific to ED to history file. 
+A  +    models/lnd/clm/src/clm4_5/main/ED/EDHistFldsMod.F90
+#  Prints out and reads in ED state vector to/from history files. 
+A  +    models/lnd/clm/src/clm4_5/main/ED/EDRestVectorMod.F90
+# Initializes ED-specific variables for CLM 
+A  +    models/lnd/clm/src/clm4_5/main/ED/EDClmTypeInitMod.F90
+# Allocates ED PFT specific variables.
+A  +    models/lnd/clm/src/clm4_5/main/ED/EDPftvarcon.F90
+# Initializes ED site, patch and cohort structures, either to restarting or bare ground values. 
+A  +    models/lnd/clm/src/clm4_5/main/ED/EDInitMod.F90
+# Allocates and initializes ED parameters (that are not PFT specific). 
+A  +    models/lnd/clm/src/clm4_5/main/ED/EDParamsMod.F90
+# Main ED model routine. Calls all other daily ED dynamics, integrates variables, checks carbon balance.
+A  +    models/lnd/clm/src/clm4_5/main/ED/EDMainMod.F90
+# Contains ED type structures (cohort, site, patch) and static values.
+A  +    models/lnd/clm/src/clm4_5/main/ED/EDTypesMod.F90
+
+# utility routine to help in reading parameter files
+A  +    models/lnd/clm/src/clm4_5/main/paramUtilMod.F90
+# transfers weights calculated internally by ED into wtcol.
+A  +    models/lnd/clm/src/clm4_5/dyn_subgrid/dynEDMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+### build modifications
+# add ED source directories for build
+M       models/lnd/clm/bld/configure
+# build namelist additions for ED
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+# setup_cmdl_ed_mode addition.  sets namelist vars
+M       models/lnd/clm/bld/CLMBuildNamelist.pm
+
+### util_share modifications
+# add function is_beg_curr_day()
+M       models/lnd/clm/src/util_share/clm_time_manager.F90
+# modify get_proc_bounds to include beg, end cohort
+M       models/lnd/clm/src/util_share/accumulMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/util_share/ncdio_pio.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/util_share/ncdio_pio.F90.in
+
+### 4_5 Modifications
+# change text based logical with math style (.gt. to >, .ne. to /=)
+# modify get_proc_bounds to include beg, end cohort
+M       models/lnd/clm/src/clm4_5/biogeochem/CNRestMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNitrifDenitrifMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate1Mod.F90
+# add use_ed logical(s)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNBalanceCheckMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90
+# add use_ed logical(s)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNMRespMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNVerticalProfileMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPrecisionControlMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSummaryMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4Mod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNInitMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate1Mod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAnnualUpdateMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNDynamicsMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAllocationMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/DryDepVelocity.F90
+# add use_ed logical(s) 
+M       models/lnd/clm/src/clm4_5/biogeochem/CNEcosystemDynMod.F90
+# move some variables from stack to heap.  
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeBGCMod.F90
+# add use_ed logical(s)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSetValueMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+# change spacing, text wrapping
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSoilLittVertTranspMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeCNMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeochem/CNC14DecayMod.F90
+
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/main/initInterp.F90
+# change spacing, text wrapping
+M       models/lnd/clm/src/clm4_5/main/clm_varpar.F90
+# add call to call EDInitTimeConst 
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/main/initTimeConstMod.F90
+# add decomposition for cohort dimension
+M       models/lnd/clm/src/clm4_5/main/decompInitMod.F90
+# add call for ed_init
+M       models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+# add use_ed logical(s)
+M       models/lnd/clm/src/clm4_5/main/subgridRestMod.F90
+# add code for cohort dimension
+M       models/lnd/clm/src/clm4_5/main/subgridMod.F90
+# add use_ed logical(s)
+M       models/lnd/clm/src/clm4_5/main/accFldsMod.F90
+# add use_ed logical(s)
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/main/initColdMod.F90
+# change get_proc_global to support cohort dimension
+M       models/lnd/clm/src/clm4_5/main/histFileMod.F90
+# add use_ed logical to support cohort dimension
+M       models/lnd/clm/src/clm4_5/main/restFileMod.F90
+# broadcast ed namelist variables
+M       models/lnd/clm/src/clm4_5/main/controlMod.F90
+# use_ed logical to call edmodel
+M       models/lnd/clm/src/clm4_5/main/clm_driver.F90
+# change spacing, text wrapping
+M       models/lnd/clm/src/clm4_5/main/clm_varctl.F90
+# clean up unsued variables from nag compiler warnings
+M       models/lnd/clm/src/clm4_5/main/subgridAveMod.F90
+# add routine set_cohort_decomp
+# add use_ed logical(s)
+M       models/lnd/clm/src/clm4_5/main/initGridCellsMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/main/initSoilParVICMod.F90
+# change spacing, text wrapping
+# add use_ed logical(s)
+M       models/lnd/clm/src/clm4_5/main/pftvarcon.F90
+# add support for cohort dimension
+M       models/lnd/clm/src/clm4_5/main/decompMod.F90
+# change spacing, text wrapping
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+# add call to read ED and SPITFIRE params
+R  +    models/lnd/clm/src/clm4_5/main/readParamsMod.F90
+# add routine set_cohort_decomp
+# add use_ed logical(s)
+M       models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeInitMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInputMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics1Mod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeophys/FrictionVelocityMod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology1Mod.F90
+# change get_proc_global to support cohort dimension
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+# change get_proc_global to support cohort dimension
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanMod.F90
+# change get_proc_global to support cohort dimension
+M       models/lnd/clm/src/clm4_5/biogeophys/ActiveLayerMod.F90
+# change get_proc_global to support cohort dimension
+M       models/lnd/clm/src/clm4_5/biogeophys/BareGroundFluxesMod.F90
+# change spacing, text wrapping
+# add use_ed logical(s)
+# calculate ed root fractionation
+M       models/lnd/clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90
+# add use_ed logical(s) for forc_solai and parsun
+# use_ed  reporting
+M       models/lnd/clm/src/clm4_5/biogeophys/SurfaceRadiationMod.F90
+# add use_ed logical(s) for norman_radiation
+# change spacing
+M       models/lnd/clm/src/clm4_5/biogeophys/SurfaceAlbedoMod.F90
+# remove unused variable
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeCon.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+# change text based logical with math style (.gt. to >, .ne. to /=)
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+# add use_ed logical(s) for call dyn_ED
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynSubgridDriverMod.F90
+
+### 4_0 Modifications
+# add optional cohort argument for new ED dimension to get_proc_global and
+# get_proc_bounds_old for 40 backward compatibility
+M       models/lnd/clm/src/clm4_0/main/decompMod.F90
+
+CLM testing:
+
+--SNICARFRC - moved ERI_D.T31_g37.ICLM45.goldbach_nag.clm-SNICARFRC to goldbach and nag.  This is a BFAIL.
+
+--Testing for new ED compsets.  All compare hist portions were BFAIL's since this is the first time
+the tests are being put in place.
+
+--ED and yellowstone [ intel | pgi ]
+  PASS  ERS_D_Mmpi-serial.1x1_brazil.ICLM45CNED.yellowstone_[intel | pgi].clm-edTest 
+  PASS  SMS.f10_f10.ICLM45CNED.yellowstone_[intel | pgi].clm-edTest
+  PASS  SMS.f19_g16.ICLM45CNED.yellowstone_[intel | pgi].clm-edTest
+  PASS  SMS_D_Mmpi-serial.5x5_amazon.ICLM45CNED.yellowstone_[intel | pgi].clm-edTest
+
+--ED and goldbach [nag | intel | pgi ]
+  PASS  ERS_D_Mmpi-serial.1x1_brazil.ICLM45CNED.goldbach_[nag | intel | pgi ].clm-edTestGb
+  PASS  SMS_D_Mmpi-serial.5x5_amazon.ICLM45CNED.goldbach_[nag | intel | pgi ].clm-edTestGb
+
+--CLM history file comparison:
+
+yellowstone [intel | pgi] - OK
+
+I ran without the -model_gen_comp option, but ran component_gen_comp and summarize_cprnc_diffs
+by hand for both yellowstone_intel and yellowstone_pgi.  These are both OK
+
+--Regular tests (aux_clm testlist)
+
+    yellowstone_intel - OK
+    yellowstone_pgi   - OK
+    goldbach_nag      - OK
+    goldbach_intel    - OK
+    goldbach_pgi      - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_71
+
+Changes answers relative to baseline: No.  Existing compsets do not change.
+If you run with an *ED* compset, then results will differ, but that is expected.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_71
 Originator(s):  Bill Sacks & Jeremy Fyke
 Date: Fri May  2 13:00:10 MDT 2014

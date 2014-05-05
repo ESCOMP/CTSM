@@ -159,6 +159,7 @@ module pftvarcon
   real(r8), parameter :: allom3 =   0.5_r8   !...equations
   real(r8), parameter :: allom1s = 250.0_r8  !modified for shrubs by
   real(r8), parameter :: allom2s =   8.0_r8  !X.D.Z
+
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: pftconrd ! Read and initialize vegetation (PFT) constants
@@ -179,12 +180,13 @@ contains
     ! Read and initialize vegetation (PFT) constants
     !
     ! !USES:
-    use fileutils , only : getfil
-    use ncdio_pio , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t, &
-                           ncd_inqdid, ncd_inqdlen
-    use clm_varctl, only : paramfile
-    use clm_varcon, only : tfrz
-    use spmdMod   , only : masterproc
+    use fileutils ,  only : getfil
+    use ncdio_pio ,  only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t, &
+                            ncd_inqdid, ncd_inqdlen
+    use clm_varctl,  only : paramfile, use_ed
+    use clm_varcon,  only : tfrz
+    use spmdMod   ,  only : masterproc
+    use EDPftvarcon, only : EDpftconrd
     !
     ! !ARGUMENTS:
     implicit none
@@ -304,7 +306,7 @@ contains
     allocate( fr_flab(0:mxpft) )      
     allocate( fr_fcel(0:mxpft) )      
     allocate( fr_flig(0:mxpft) )      
-    allocate( leaf_long(0:mxpft) )    
+    allocate( leaf_long(0:mxpft) )   
     allocate( evergreen(0:mxpft) )    
     allocate( stress_decid(0:mxpft) ) 
     allocate( season_decid(0:mxpft) ) 
@@ -547,13 +549,25 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
     call ncd_io('max_SH_planting_date',mxSHplantdate, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
+    !
+    ! ED variables
+    !
+    if ( use_ed ) then
+
+      call EDpftconrd ( ncid )
+
+    endif
+       
     call ncd_pio_closefile(ncid)
 
     do i = 0, mxpft
-       if ( trim(adjustl(pftname(i))) /= trim(expected_pftnames(i)) )then
-          write(iulog,*)'pftconrd: pftname is NOT what is expected, name = ', &
-                        trim(pftname(i)), ', expected name = ', trim(expected_pftnames(i))
-          call endrun(msg='pftconrd: bad name for pft on paramfile dataset'//errMsg(__FILE__, __LINE__))
+       if(.not. use_ed)then
+          if ( trim(adjustl(pftname(i))) /= trim(expected_pftnames(i)) )then
+             write(iulog,*)'pftconrd: pftname is NOT what is expected, name = ', &
+                  trim(pftname(i)), ', expected name = ', trim(expected_pftnames(i))
+             call endrun(msg='pftconrd: bad name for pft on paramfile dataset'//errMsg(__FILE__, __LINE__))
+          end if
        end if
 
        if ( trim(pftname(i)) == 'not_vegetated'                       ) noveg                = i
@@ -591,38 +605,42 @@ contains
        fcur(:) = fcurdv(:)
     end if
     !
-    ! Do some error checking
+    ! Do some error checking, but not if ED is on.
     !
-    if ( npcropmax /= mxpft )then
-       call endrun(msg=' ERROR: npcropmax is NOT the last value'//errMsg(__FILE__, __LINE__))
+    ! FIX(SPM,032414) double check if some of these should be on...
+
+    if( .not. use_ed ) then
+       if ( npcropmax /= mxpft )then
+          call endrun(msg=' ERROR: npcropmax is NOT the last value'//errMsg(__FILE__, __LINE__))
+       end if
+       do i = 0, mxpft
+          if ( irrigated(i) == 1.0_r8  .and. (i == nc3irrig .or. &
+                                              i == ncornirrig .or. &
+                                              i == nscerealirrig .or. &
+                                              i == nwcerealirrig .or. &
+                                              i == nsoybeanirrig) )then
+             ! correct
+          else if ( irrigated(i) == 0.0_r8 )then
+             ! correct
+          else
+             call endrun(msg=' ERROR: irrigated has wrong values'//errMsg(__FILE__, __LINE__))
+          end if
+          if (      crop(i) == 1.0_r8 .and. (i >= nc3crop .and. i <= npcropmax) )then
+             ! correct
+          else if ( crop(i) == 0.0_r8 )then
+             ! correct
+          else
+             call endrun(msg=' ERROR: crop has wrong values'//errMsg(__FILE__, __LINE__))
+          end if
+          if ( (i /= noveg) .and. (i < npcropmin) .and. &
+               abs(pconv(i)+pprod10(i)+pprod100(i) - 1.0_r8) > 1.e-7_r8 )then
+             call endrun(msg=' ERROR: pconv+pprod10+pprod100 do NOT sum to one.'//errMsg(__FILE__, __LINE__))
+          end if
+          if ( pprodharv10(i) > 1.0_r8 .or. pprodharv10(i) < 0.0_r8 )then
+             call endrun(msg=' ERROR: pprodharv10 outside of range.'//errMsg(__FILE__, __LINE__))
+          end if
+       end do
     end if
-    do i = 0, mxpft
-       if (      irrigated(i) == 1.0_r8  .and. (i == nc3irrig .or. &
-                                                i == ncornirrig .or. &
-                                                i == nscerealirrig .or. &
-                                                i == nwcerealirrig .or. &
-                                                i == nsoybeanirrig) )then
-          ! correct
-       else if ( irrigated(i) == 0.0_r8 )then
-          ! correct
-       else
-          call endrun(msg=' ERROR: irrigated has wrong values'//errMsg(__FILE__, __LINE__))
-       end if
-       if (      crop(i) == 1.0_r8 .and. (i >= nc3crop .and. i <= npcropmax) )then
-          ! correct
-       else if ( crop(i) == 0.0_r8 )then
-          ! correct
-       else
-          call endrun(msg=' ERROR: crop has wrong values'//errMsg(__FILE__, __LINE__))
-       end if
-       if ( (i /= noveg) .and. (i < npcropmin) .and. &
-            abs(pconv(i)+pprod10(i)+pprod100(i) - 1.0_r8) > 1.e-7_r8 )then
-          call endrun(msg=' ERROR: pconv+pprod10+pprod100 do NOT sum to one.'//errMsg(__FILE__, __LINE__))
-       end if
-       if ( pprodharv10(i) > 1.0_r8 .or. pprodharv10(i) < 0.0_r8 )then
-          call endrun(msg=' ERROR: pprodharv10 outside of range.'//errMsg(__FILE__, __LINE__))
-       end if
-    end do
 
     if (masterproc) then
        write(iulog,*) 'Successfully read PFT physiological data'

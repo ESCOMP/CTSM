@@ -274,7 +274,7 @@ contains
        www     = min(max(www,0.0_r8),1._r8)
 
        !changed by K.Sakaguchi. Soilbeta is used for evaporation
-       if (dqh(p) .gt. 0._r8) then   !dew  (beta is not applied, just like rsoil used to be)
+       if (dqh(p)  >  0._r8) then   !dew  (beta is not applied, just like rsoil used to be)
           raiw    = forc_rho(c)/(raw)
        else
        ! Lee and Pielke 1992 beta is applied

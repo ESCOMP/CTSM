@@ -13,7 +13,7 @@ module histFileMod
   use abortutils  , only : endrun
   use clm_varcon  , only : spval,ispval
   use clm_varctl  , only : iulog, use_vertsoilc
-  use clmtype     , only : grlnd, nameg, namel, namec, namep
+  use clmtype     , only : grlnd, nameg, namel, namec, namep, nameCohort
   use decompMod   , only : get_proc_bounds, get_proc_global, bounds_type
   use clm_varcon  , only : dzsoi_decomp
   use ncdio_pio
@@ -297,6 +297,7 @@ contains
     integer :: numl         ! total number of landunits across all processors
     integer :: numc         ! total number of columns across all processors
     integer :: nump         ! total number of pfts across all processors
+    integer :: numCohort    ! total number of ED cohorts
     type(bounds_type) :: bounds                  ! bounds
     character(len=*),parameter :: subname = 'masterlist_addfld'
     !------------------------------------------------------------------------
@@ -304,7 +305,7 @@ contains
     ! Determine bounds
 
     call get_proc_bounds(bounds)
-    call get_proc_global(numg, numl, numc, nump)
+    call get_proc_global(numg, numl, numc, nump, numCohort)
 
     ! Ensure that new field is not all blanks
 
@@ -818,6 +819,7 @@ contains
     integer :: numl                 ! total number of landunits across all processors
     integer :: numc                 ! total number of columns across all processors
     integer :: nump                 ! total number of pfts across all processors
+    integer :: numCohort            ! total number of ED cohorts
     integer :: num2d                ! size of second dimension (e.g. .number of vertical levels)
     integer :: beg1d_out,end1d_out  ! history output per-proc 1d beginning and ending indices
     integer :: num1d_out            ! history output 1d size
@@ -843,7 +845,7 @@ contains
     ! Determine bounds
 
     call get_proc_bounds(bounds)
-    call get_proc_global(numg, numl, numc, nump)
+    call get_proc_global(numg, numl, numc, nump, numCohort)
 
     ! Modify type1d_out if necessary
 
@@ -1707,6 +1709,7 @@ contains
     integer :: ncprec              ! output netCDF write precision
     integer :: ret                 ! netCDF error status
     integer :: nump                ! total number of pfts across all processors
+    integer :: numCohort           ! total number of ED cohorts
     integer :: numc                ! total number of columns across all processors
     integer :: numl                ! total number of landunits across all processors
     integer :: numg                ! total number of gridcells across all processors
@@ -1730,7 +1733,7 @@ contains
 
     ! Determine necessary indices
 
-    call get_proc_global(numg, numl, numc, nump)
+    call get_proc_global(numg, numl, numc, nump, numCohort)
 
     ! define output write precsion for tape
 
@@ -3054,7 +3057,7 @@ contains
     ! !USES:
     use clm_varctl      , only : nsrest, caseid, inst_suffix, nsrStartup, nsrBranch
     use fileutils       , only : getfil
-    use clmtype         , only : grlnd, nameg, namel, namec, namep
+    use clmtype         , only : grlnd, nameg, namel, namec, namep, nameCohort
     use domainMod       , only : ldomain
     use clm_varpar      , only : nlevgrnd, nlevlak, numrad, nlevdecomp_full
     use clm_time_manager, only : is_restart
@@ -3078,6 +3081,7 @@ contains
     integer :: numl                 ! total number of landunits across all processors
     integer :: numc                 ! total number of columns across all processors
     integer :: nump                 ! total number of pfts across all processors
+    integer :: numCohort            ! total number of cohorts across all processors
     character(len=max_namlen) :: name            ! variable name
     character(len=max_namlen) :: name_acc        ! accumulator variable name
     character(len=max_namlen) :: long_name       ! long name of variable
@@ -3127,7 +3131,7 @@ contains
     character(len=*),parameter :: subname = 'hist_restart_ncd'
 !------------------------------------------------------------------------
 
-    call get_proc_global(numg, numl, numc, nump)
+    call get_proc_global(numg, numl, numc, nump, numCohort)
 
     ! If branch run, initialize file times and return
 

@@ -365,7 +365,7 @@ contains
           ! any given time step but only if there is at least one snow layer.  h2osno 
           ! also includes snow that is part of the soil column (an initial snow layer is 
           ! only created if h2osno > 10mm).
-          if (snl(c) .lt. 0) then
+          if (snl(c)  <  0) then
              snow_sources(c) = qflx_prec_grnd(c) + qflx_dew_snow(c) + qflx_dew_grnd(c)
              snow_sinks(c)   = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_snow_melt(c) &
                   + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) + qflx_sl_top_soil(c)

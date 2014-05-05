@@ -319,7 +319,7 @@ contains
              status = pio_get_var(ncidi, vardesc, spinup_state_i)
              status = pio_inq_varid(ncido, trim(varname), vardesc)
              status = pio_get_var(ncido, vardesc, spinup_state_o)
-             if ( spinup_state_i .ne. spinup_state_o ) then
+             if ( spinup_state_i  /=  spinup_state_o ) then
                 if (masterproc) then
                    write (iulog,*) 'Spinup states are different: Copying: ', trim(varname)
                 end if
@@ -338,7 +338,7 @@ contains
              status = pio_get_var(ncidi, vardesc, decomp_cascade_state_i)
              status = pio_inq_varid(ncido, trim(varname), vardesc)
              status = pio_get_var(ncido, vardesc, decomp_cascade_state_o)
-             if ( decomp_cascade_state_i .ne. decomp_cascade_state_o ) then
+             if ( decomp_cascade_state_i  /=  decomp_cascade_state_o ) then
                 call endrun(msg='ERROR: Decomposition cascade states are different'//errMsg(__FILE__, __LINE__))
              else
                 if (masterproc) then
@@ -1128,11 +1128,11 @@ contains
           doneloop = .false.
           do jj = 1, nlevi
              if ( .not. doneloop) then
-                if ( (abs(zsoio(ji) - zsoii(jj)) .lt. eps ) .or. (jj .eq. nlevi) ) then
+                if ( (abs(zsoio(ji) - zsoii(jj))  <  eps ) .or. (jj .eq. nlevi) ) then
                    doneloop = .true.
                    copylevels = .true.
                    index_lower = jj
-                else if ( (zsoio(ji) .gt. zsoii(jj)) .and. (zsoio(ji) .lt. zsoii(jj+1)) ) then
+                else if ( (zsoio(ji)  >  zsoii(jj)) .and. (zsoio(ji)  <  zsoii(jj+1)) ) then
                    doneloop = .true.
                    copylevels = .false.
                    index_lower = jj

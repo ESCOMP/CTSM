@@ -718,7 +718,7 @@ contains
       do j = 1, nlevdecomp
          do fc=1,num_soilc
             c = filter_soilc(fc)      
-            if (sminn_tot(c) .gt. 0.) then
+            if (sminn_tot(c)  >  0.) then
                nuptake_prof(c,j) = sminn_vr(c,j) / sminn_tot(c)
             else
                nuptake_prof(c,j) = nfixation_prof(c,j)
@@ -800,7 +800,7 @@ contains
       do j = 1, nlevdecomp
          do fc=1,num_soilc
             c = filter_soilc(fc)    
-            if (residual_plant_ndemand(c) .gt. 0._r8 ) then
+            if (residual_plant_ndemand(c)  >  0._r8 ) then
                if (nlimit(c,j) .eq. 0) then
                   residual_sminn_vr(c,j) = max(sminn_vr(c,j) - (actual_immob_vr(c,j) + sminn_to_plant_vr(c,j) ) * dt, 0._r8)
                   residual_sminn(c) = residual_sminn(c) + residual_sminn_vr(c,j) * dzsoi_decomp(j)
@@ -815,7 +815,7 @@ contains
       do j = 1, nlevdecomp
          do fc=1,num_soilc
             c = filter_soilc(fc)    
-            if ( residual_plant_ndemand(c) .gt. 0._r8 .and. residual_sminn(c) .gt. 0._r8 .and. nlimit(c,j) .eq. 0) then
+            if ( residual_plant_ndemand(c)  >  0._r8 .and. residual_sminn(c)  >  0._r8 .and. nlimit(c,j) .eq. 0) then
                sminn_to_plant_vr(c,j) = sminn_to_plant_vr(c,j) + residual_sminn_vr(c,j) * &
                     min(( residual_plant_ndemand(c) *  dt ) / residual_sminn(c), 1._r8) / dt
             endif
@@ -904,7 +904,7 @@ contains
       do j = 1, nlevdecomp
          do fc=1,num_soilc
             c = filter_soilc(fc)
-            if (sminn_tot(c) .gt. 0.) then
+            if (sminn_tot(c)  >  0.) then
                nuptake_prof(c,j) = sminn_vr(c,j) / sminn_tot(c)
             else
                nuptake_prof(c,j) = nfixation_prof(c,j)
@@ -1021,13 +1021,13 @@ contains
                !              (crop_supln .and. (itypelun(l) == istcrop) .and. &
                !               (ivt(pfti(c)) >= npcropmin)) ) then
 
-               if ( fpi_no3_vr(c,j) + fpi_nh4_vr(c,j) .lt. 1._r8 ) then
+               if ( fpi_no3_vr(c,j) + fpi_nh4_vr(c,j)  <  1._r8 ) then
                   fpi_nh4_vr(c,j) = 1.0_r8 - fpi_no3_vr(c,j)
                   supplement_to_sminn_vr(c,j) = (potential_immob_vr(c,j) -  actual_immob_no3_vr(c,j)) - actual_immob_nh4_vr(c,j) 
                   ! update to new values that satisfy demand
                   actual_immob_nh4_vr(c,j) = potential_immob_vr(c,j) -  actual_immob_no3_vr(c,j)   
                end if
-               if ( smin_no3_to_plant_vr(c,j) + smin_nh4_to_plant_vr(c,j) .lt. col_plant_ndemand(c)*nuptake_prof(c,j) ) then
+               if ( smin_no3_to_plant_vr(c,j) + smin_nh4_to_plant_vr(c,j)  <  col_plant_ndemand(c)*nuptake_prof(c,j) ) then
                   supplement_to_sminn_vr(c,j) = supplement_to_sminn_vr(c,j) + &
                        (col_plant_ndemand(c)*nuptake_prof(c,j) - smin_no3_to_plant_vr(c,j)) - smin_nh4_to_plant_vr(c,j)  ! use old values
                   smin_nh4_to_plant_vr(c,j) = col_plant_ndemand(c)*nuptake_prof(c,j) - smin_no3_to_plant_vr(c,j)
@@ -1064,7 +1064,7 @@ contains
       do j = 1, nlevdecomp  
          do fc=1,num_soilc
             c = filter_soilc(fc)
-            if (residual_plant_ndemand(c) .gt. 0._r8 ) then
+            if (residual_plant_ndemand(c)  >  0._r8 ) then
                if (nlimit_nh4(c,j) .eq. 0) then
                   residual_smin_nh4_vr(c,j) = max(smin_nh4_vr(c,j) - (actual_immob_vr(c,j) + &
                        smin_nh4_to_plant_vr(c,j) ) * dt, 0._r8)
@@ -1073,7 +1073,7 @@ contains
                   residual_smin_nh4_vr(c,j)  = 0._r8
                endif
 
-               if ( residual_smin_nh4(c) .gt. 0._r8 .and. nlimit_nh4(c,j) .eq. 0 ) then
+               if ( residual_smin_nh4(c)  >  0._r8 .and. nlimit_nh4(c,j) .eq. 0 ) then
                   smin_nh4_to_plant_vr(c,j) = smin_nh4_to_plant_vr(c,j) + residual_smin_nh4_vr(c,j) * &
                        min(( residual_plant_ndemand(c) *  dt ) / residual_smin_nh4(c), 1._r8) / dt
                endif
@@ -1105,7 +1105,7 @@ contains
       do j = 1, nlevdecomp
          do fc=1,num_soilc
             c = filter_soilc(fc)
-            if (residual_plant_ndemand(c) .gt. 0._r8 ) then
+            if (residual_plant_ndemand(c)  >  0._r8 ) then
                if (nlimit_no3(c,j) .eq. 0) then
                   residual_smin_no3_vr(c,j) = max(smin_no3_vr(c,j) - (actual_immob_vr(c,j) + &
                        smin_no3_to_plant_vr(c,j) ) * dt, 0._r8)
@@ -1114,7 +1114,7 @@ contains
                   residual_smin_no3_vr(c,j)  = 0._r8
                endif
 
-               if ( residual_smin_no3(c) .gt. 0._r8 .and. nlimit_no3(c,j) .eq. 0) then
+               if ( residual_smin_no3(c)  >  0._r8 .and. nlimit_no3(c,j) .eq. 0) then
                   smin_no3_to_plant_vr(c,j) = smin_no3_to_plant_vr(c,j) + residual_smin_no3_vr(c,j) * &
                        min(( residual_plant_ndemand(c) *  dt ) / residual_smin_no3(c), 1._r8) / dt
                endif

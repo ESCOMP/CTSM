@@ -464,7 +464,7 @@ contains
              ! use original fsca formulation (n&y 07)
              if (oldfflag == 1) then 
                 ! snow cover fraction in Niu et al. 2007
-                if(snow_depth(c) .gt. 0.0_r8)  then
+                if(snow_depth(c)  >  0.0_r8)  then
                    frac_sno(c) = tanh(snow_depth(c)/(2.5_r8*zlnd* &
                         (min(800._r8,(h2osno(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
                 endif
@@ -495,7 +495,7 @@ contains
                 ! use n&y07 formulation
                 if (oldfflag == 1) then 
                    ! snow cover fraction in Niu et al. 2007
-                   if(snow_depth(c) .gt. 0.0_r8)  then
+                   if(snow_depth(c)  >  0.0_r8)  then
                       frac_sno(c) = tanh(snow_depth(c)/(2.5_r8*zlnd* &
                            (min(800._r8,newsnow(c)/snow_depth(c))/100._r8)**1._r8) )
                    endif

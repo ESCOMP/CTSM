@@ -30,11 +30,14 @@ module clm_varpar
   integer            :: nlevurb               ! number of urban layers
   integer            :: nlevlak               ! number of lake layers
   integer            :: nlevdecomp            ! number of biogeochemically active soil layers
-  integer            :: nlevdecomp_full       ! number of biogeochemical layers (includes lower layers that are biogeochemically inactive)
-
+  integer            :: nlevdecomp_full       ! number of biogeochemical layers (includes lower layers 
+                                              ! that are biogeochemically inactive)
   integer, parameter :: nlevsno     =   5     ! maximum number of snow layers
   integer, parameter :: ngases      =   3     ! CH4, O2, & CO2
-  integer, parameter :: nlevcan     =   1     ! number of leaf layers in canopy
+  integer, parameter :: nlevcan     =   1     ! number of leaf layers in canopy layer
+  !ED variables
+  integer, parameter :: nlevcan_ed  =   40    ! number of leaf layers in canopy layer
+  integer, parameter :: nclmax      =   2     ! max number of canopy layers
   integer, parameter :: numwat      =   5     ! number of water types (soil, ice, 2 lakes, wetland)
   integer, parameter :: numrad      =   2     ! number of solar radiation bands: vis, nir
   integer, parameter :: ivis        =   1     ! index for visible band
@@ -43,7 +46,8 @@ module clm_varpar
   integer, parameter :: ndst        =   4     ! number of dust size classes (BGC only)
   integer, parameter :: dst_src_nbr =   3     ! number of size distns in src soil (BGC only)
   integer, parameter :: sz_nbr      = 200     ! number of sub-grid bins in large bin of dust size distribution (BGC only)
-  integer, parameter :: mxpft       =  24     ! maximum number of PFT's for any mode; might we set some of these automatically from reading pft-physiology?
+  integer, parameter :: mxpft       =  24     ! maximum number of PFT's for any mode;
+  ! FIX(RF,032414) might we set some of these automatically from reading pft-physiology?
   integer, parameter :: numveg      =  16     ! number of veg types (without specific crop)
   integer, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
   integer            :: nlayert               ! number of VIC soil layer + 3 lower thermal layers

@@ -60,6 +60,7 @@ contains
     integer            :: numl_global          ! total number of landunits, globally
     integer            :: numc_global          ! total number of columns, globally
     integer            :: nump_global          ! total number of pfts, globally
+    integer            :: numCohort_global     ! total number of cohorts, globally
     real(r8)           :: m                    ! multiplier for the exit_spinup code
     logical            :: readvar              ! determine if variable is on initial file
     logical            :: do_io                ! whether to do i/o for the given variable
@@ -89,7 +90,8 @@ contains
     endif
 
     ! Get expected total number of points, for later error checks
-    call get_proc_global(numg_global, numl_global, numc_global, nump_global)
+    call get_proc_global( numg_global, numl_global, numc_global, &
+         nump_global, numCohort_global ) 
 
     ! Determine necessary subgrid bounds
 
@@ -880,7 +882,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%leafc) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%leafc with atmospheric c14 value'
-          if (pcs%leafc(i) .ne. spval .and. &
+          if (pcs%leafc(i)  /=  spval .and. &
                .not. isnan(pcs%leafc(i)) ) then
              pc14s%leafc(i) = pcs%leafc(i) * c14ratio
           endif
@@ -893,7 +895,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%leafc_storage) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%leafc_storage with atmospheric c14 value'
-          if (pcs%leafc_storage(i) .ne. spval .and. &
+          if (pcs%leafc_storage(i)  /=  spval .and. &
                .not. isnan(pcs%leafc_storage(i)) ) then
              pc14s%leafc_storage(i) = pcs%leafc_storage(i) * c14ratio
           endif
@@ -906,7 +908,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%leafc_xfer) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%leafc_xfer with atmospheric c14 value'
-          if (pcs%leafc_xfer(i) .ne. spval .and. &
+          if (pcs%leafc_xfer(i)  /=  spval .and. &
                .not. isnan(pcs%leafc_xfer(i)) ) then
              pc14s%leafc_xfer(i) = pcs%leafc_xfer(i) * c14ratio
           endif
@@ -919,7 +921,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%frootc) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%frootc with atmospheric c14 value'
-          if (pcs%frootc(i) .ne. spval .and. &
+          if (pcs%frootc(i)  /=  spval .and. &
                .not. isnan(pcs%frootc(i)) ) then
              pc14s%frootc(i) = pcs%frootc(i) * c14ratio
           endif
@@ -932,7 +934,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%frootc_storage) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%frootc_storage with atmospheric c14 value'
-          if (pcs%frootc_storage(i) .ne. spval .and. .not. isnan(pcs%frootc_storage(i)) ) then
+          if (pcs%frootc_storage(i)  /=  spval .and. .not. isnan(pcs%frootc_storage(i)) ) then
              pc14s%frootc_storage(i) = pcs%frootc_storage(i) * c14ratio
           endif
        end if
@@ -944,7 +946,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%frootc_xfer) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%frootc_xfer with atmospheric c14 value'
-          if (pcs%frootc_xfer(i) .ne. spval .and. .not. isnan(pcs%frootc_xfer(i)) ) then
+          if (pcs%frootc_xfer(i)  /=  spval .and. .not. isnan(pcs%frootc_xfer(i)) ) then
              pc14s%frootc_xfer(i) = pcs%frootc_xfer(i) * c14ratio
           endif
        end if
@@ -956,7 +958,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%livestemc) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%livestemc with atmospheric c14 value'
-          if (pcs%livestemc(i) .ne. spval .and. .not. isnan(pcs%livestemc(i)) ) then
+          if (pcs%livestemc(i)  /=  spval .and. .not. isnan(pcs%livestemc(i)) ) then
              pc14s%livestemc(i) = pcs%livestemc(i) * c14ratio
           endif
        end if
@@ -968,7 +970,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%livestemc_storage) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%livestemc_storage with atmospheric c14 value'
-          if (pcs%livestemc_storage(i) .ne. spval .and. .not. isnan(pcs%livestemc_storage(i)) ) then
+          if (pcs%livestemc_storage(i)  /=  spval .and. .not. isnan(pcs%livestemc_storage(i)) ) then
              pc14s%livestemc_storage(i) = pcs%livestemc_storage(i) * c14ratio
           endif
        end if
@@ -980,7 +982,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%livestemc_xfer) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%livestemc_xfer with atmospheric c14 value'
-          if (pcs%livestemc_xfer(i) .ne. spval .and. .not. isnan(pcs%livestemc_xfer(i)) ) then
+          if (pcs%livestemc_xfer(i)  /=  spval .and. .not. isnan(pcs%livestemc_xfer(i)) ) then
              pc14s%livestemc_xfer(i) = pcs%livestemc_xfer(i) * c14ratio
           endif
        end if
@@ -992,7 +994,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%deadstemc) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%deadstemc with atmospheric c14 value'
-          if (pcs%deadstemc(i) .ne. spval .and. .not. isnan(pcs%deadstemc(i)) ) then
+          if (pcs%deadstemc(i)  /=  spval .and. .not. isnan(pcs%deadstemc(i)) ) then
              pc14s%deadstemc(i) = pcs%deadstemc(i) * c14ratio
           endif
        end if
@@ -1004,7 +1006,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%deadstemc_storage) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%deadstemc_storage with atmospheric c14 value'
-          if (pcs%deadstemc_storage(i) .ne. spval .and. .not. isnan(pcs%deadstemc_storage(i)) ) then
+          if (pcs%deadstemc_storage(i)  /=  spval .and. .not. isnan(pcs%deadstemc_storage(i)) ) then
              pc14s%deadstemc_storage(i) = pcs%deadstemc_storage(i) * c14ratio
           endif
        end if
@@ -1016,7 +1018,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%deadstemc_xfer) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%deadstemc_xfer with atmospheric c14 value'
-          if (pcs%deadstemc_xfer(i) .ne. spval .and. .not. isnan(pcs%deadstemc_xfer(i)) ) then
+          if (pcs%deadstemc_xfer(i)  /=  spval .and. .not. isnan(pcs%deadstemc_xfer(i)) ) then
              pc14s%deadstemc_xfer(i) = pcs%deadstemc_xfer(i) * c14ratio
           endif
        end if
@@ -1028,7 +1030,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%livecrootc) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%livecrootc with atmospheric c14 value'
-          if (pcs%livecrootc(i) .ne. spval .and. .not. isnan(pcs%livecrootc(i)) ) then
+          if (pcs%livecrootc(i)  /=  spval .and. .not. isnan(pcs%livecrootc(i)) ) then
              pc14s%livecrootc(i) = pcs%livecrootc(i) * c14ratio
           endif
        end if
@@ -1040,7 +1042,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%livecrootc_storage) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%livecrootc_storage with atmospheric c14 value'
-          if (pcs%livecrootc_storage(i) .ne. spval .and..not. isnan(pcs%livecrootc_storage(i)) ) then
+          if (pcs%livecrootc_storage(i)  /=  spval .and..not. isnan(pcs%livecrootc_storage(i)) ) then
              pc14s%livecrootc_storage(i) = pcs%livecrootc_storage(i) * c14ratio
           endif
        end if
@@ -1052,7 +1054,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%livecrootc_xfer) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%livecrootc_xfer with atmospheric c14 value'
-          if (pcs%livecrootc_xfer(i) .ne. spval .and. .not. isnan(pcs%livecrootc_xfer(i)) ) then
+          if (pcs%livecrootc_xfer(i)  /=  spval .and. .not. isnan(pcs%livecrootc_xfer(i)) ) then
              pc14s%livecrootc_xfer(i) = pcs%livecrootc_xfer(i) * c14ratio
           endif
        end if
@@ -1064,7 +1066,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%deadcrootc) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%deadcrootc with atmospheric c14 value'
-          if (pcs%deadcrootc(i) .ne. spval .and. .not. isnan(pcs%deadcrootc(i)) ) then
+          if (pcs%deadcrootc(i)  /=  spval .and. .not. isnan(pcs%deadcrootc(i)) ) then
              pc14s%deadcrootc(i) = pcs%deadcrootc(i) * c14ratio
           endif
        end if
@@ -1076,7 +1078,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%deadcrootc_storage) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%deadcrootc_storage with atmospheric c14 value'
-          if (pcs%deadcrootc_storage(i) .ne. spval .and. .not. isnan(pcs%deadcrootc_storage(i)) ) then
+          if (pcs%deadcrootc_storage(i)  /=  spval .and. .not. isnan(pcs%deadcrootc_storage(i)) ) then
              pc14s%deadcrootc_storage(i) = pcs%deadcrootc_storage(i) * c14ratio
           endif
        end if
@@ -1088,7 +1090,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%deadcrootc_xfer) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog) 'initializing pc14s%deadcrootc_xfer with atmospheric c14 value'
-          if (pcs%deadcrootc_xfer(i) .ne. spval .and. &
+          if (pcs%deadcrootc_xfer(i)  /=  spval .and. &
                .not. isnan(pcs%deadcrootc_xfer(i)) ) then
              pc14s%deadcrootc_xfer(i) = pcs%deadcrootc_xfer(i) * c14ratio
           endif
@@ -1101,7 +1103,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%gresp_storage) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%gresp_storage with atmospheric c14 value'
-          if (pcs%gresp_storage(i) .ne. spval .and. .not. isnan(pcs%gresp_storage(i)) ) then
+          if (pcs%gresp_storage(i)  /=  spval .and. .not. isnan(pcs%gresp_storage(i)) ) then
              pc14s%gresp_storage(i) = pcs%gresp_storage(i) * c14ratio
           endif
        end if
@@ -1113,7 +1115,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%gresp_xfer) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%gresp_xfer with atmospheric c14 value'
-          if (pcs%gresp_xfer(i) .ne. spval .and. .not. isnan(pcs%gresp_xfer(i)) ) then
+          if (pcs%gresp_xfer(i)  /=  spval .and. .not. isnan(pcs%gresp_xfer(i)) ) then
              pc14s%gresp_xfer(i) = pcs%gresp_xfer(i) * c14ratio
           endif
        end if
@@ -1125,7 +1127,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%cpool) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%cpool with atmospheric c14 value'
-          if (pcs%cpool(i) .ne. spval .and. .not. isnan(pcs%cpool(i)) ) then
+          if (pcs%cpool(i)  /=  spval .and. .not. isnan(pcs%cpool(i)) ) then
              pc14s%cpool(i) = pcs%cpool(i) * c14ratio
           endif
        end if
@@ -1137,7 +1139,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%xsmrpool) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%xsmrpool with atmospheric c14 value'
-          if (pcs%xsmrpool(i) .ne. spval .and. .not. isnan(pcs%xsmrpool(i)) ) then
+          if (pcs%xsmrpool(i)  /=  spval .and. .not. isnan(pcs%xsmrpool(i)) ) then
              pc14s%xsmrpool(i) = pcs%xsmrpool(i) * c14ratio
           endif
        end if
@@ -1149,7 +1151,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%pft_ctrunc) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%pft_ctrunc with atmospheric c14 value'
-          if (pcs%pft_ctrunc(i) .ne. spval .and. .not. isnan(pcs%pft_ctrunc(i)) ) then
+          if (pcs%pft_ctrunc(i)  /=  spval .and. .not. isnan(pcs%pft_ctrunc(i)) ) then
              pc14s%pft_ctrunc(i) = pcs%pft_ctrunc(i) * c14ratio
           endif
        end if
@@ -1161,7 +1163,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=pc14s%totvegc) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing pc14s%totvegc with atmospheric c14 value'
-          if (pcs%totvegc(i) .ne. spval .and. .not. isnan(pcs%totvegc(i)) ) then
+          if (pcs%totvegc(i)  /=  spval .and. .not. isnan(pcs%totvegc(i)) ) then
              pc14s%totvegc(i) = pcs%totvegc(i) * c14ratio
           endif
        end if
@@ -1550,7 +1552,7 @@ contains
              write(iulog,*) 'initializing cc13s%decomp_cpools_vr with atmospheric c13 value for: '//varname
              do i = bounds%begc,bounds%endc
                 do j = 1, nlevdecomp
-                   if (ccs%decomp_cpools_vr(i,j,k) .ne. spval .and. .not. isnan(ccs%decomp_cpools_vr(i,j,k)) ) then
+                   if (ccs%decomp_cpools_vr(i,j,k)  /=  spval .and. .not. isnan(ccs%decomp_cpools_vr(i,j,k)) ) then
                          cc13s%decomp_cpools_vr(i,j,k) = ccs%decomp_cpools_vr(i,j,k) * c3_r2
                    endif
                 end do
@@ -1564,7 +1566,7 @@ contains
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=cc13s%seedc) 
        if (flag=='read' .and. .not. readvar) then
-          if (ccs%seedc(i) .ne. spval .and. .not. isnan(ccs%seedc(i)) ) then
+          if (ccs%seedc(i)  /=  spval .and. .not. isnan(ccs%seedc(i)) ) then
              cc13s%seedc(i) = ccs%seedc(i) * c3_r2
           end if
        end if
@@ -1590,7 +1592,7 @@ contains
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=cc13s%totlitc) 
        if (flag=='read' .and. .not. readvar) then
-          if (ccs%totlitc(i) .ne. spval .and. .not. isnan( ccs%totlitc(i) ) ) then
+          if (ccs%totlitc(i)  /=  spval .and. .not. isnan( ccs%totlitc(i) ) ) then
              cc13s%totlitc(i) = ccs%totlitc(i) * c3_r2
           end if
        end if
@@ -1601,7 +1603,7 @@ contains
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=cc13s%totcolc) 
        if (flag=='read' .and. .not. readvar) then
-          if (ccs%totcolc(i) .ne. spval .and. .not. isnan (ccs%totcolc(i) ) ) then
+          if (ccs%totcolc(i)  /=  spval .and. .not. isnan (ccs%totcolc(i) ) ) then
              cc13s%totcolc(i) = ccs%totcolc(i) * c3_r2
           end if
        end if
@@ -1612,7 +1614,7 @@ contains
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=cc13s%prod10c) 
        if (flag=='read' .and. .not. readvar) then
-          if (ccs%prod10c(i) .ne. spval .and. .not. isnan( ccs%prod10c(i) ) ) then
+          if (ccs%prod10c(i)  /=  spval .and. .not. isnan( ccs%prod10c(i) ) ) then
              cc13s%prod10c(i) = ccs%prod10c(i) * c3_r2
           endif
        end if
@@ -1623,7 +1625,7 @@ contains
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=cc13s%prod100c) 
        if (flag=='read' .and. .not. readvar) then
-          if (ccs%prod100c(i) .ne. spval .and. .not. isnan( ccs%prod100c(i) ) ) then
+          if (ccs%prod100c(i)  /=  spval .and. .not. isnan( ccs%prod100c(i) ) ) then
              cc13s%prod100c(i) = ccs%prod100c(i) * c3_r2
           endif
        end if
@@ -1654,7 +1656,7 @@ contains
              write(iulog,*) 'initializing cc14s%decomp_cpools_vr with atmospheric c14 value for: '//trim(varname)
              do i = bounds%begc,bounds%endc
                 do j = 1, nlevdecomp
-                   if (ccs%decomp_cpools_vr(i,j,k) .ne. spval .and. .not. isnan(ccs%decomp_cpools_vr(i,j,k)) ) then
+                   if (ccs%decomp_cpools_vr(i,j,k)  /=  spval .and. .not. isnan(ccs%decomp_cpools_vr(i,j,k)) ) then
                          cc14s%decomp_cpools_vr(i,j,k) = ccs%decomp_cpools_vr(i,j,k) * c3_r2
                    endif
                 end do
@@ -1670,7 +1672,7 @@ contains
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing cc14s%seedc with atmospheric c14 value'
           do i = bounds%begc,bounds%endc
-             if (ccs%seedc(i) .ne. spval .and. .not. isnan(ccs%seedc(i)) ) then
+             if (ccs%seedc(i)  /=  spval .and. .not. isnan(ccs%seedc(i)) ) then
                 cc14s%seedc(i) = ccs%seedc(i) * c14ratio
              endif
           end do
@@ -1698,7 +1700,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=cc14s%totlitc) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing cc14s%totlitc with atmospheric c14 value'
-          if (ccs%totlitc(i) .ne. spval .and. .not. isnan(ccs%totlitc(i)) ) then
+          if (ccs%totlitc(i)  /=  spval .and. .not. isnan(ccs%totlitc(i)) ) then
              cc14s%totlitc(i) = ccs%totlitc(i) * c14ratio
           endif
        end if
@@ -1710,7 +1712,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=cc14s%totcolc) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing cc14s%totcolc with atmospheric c14 value'
-          if (ccs%totcolc(i) .ne. spval .and. .not. isnan(ccs%totcolc(i)) ) then
+          if (ccs%totcolc(i)  /=  spval .and. .not. isnan(ccs%totcolc(i)) ) then
              cc14s%totcolc(i) = ccs%totcolc(i) * c14ratio
           endif
        end if
@@ -1722,7 +1724,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=cc14s%prod10c) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing cc14s%prod10c with atmospheric c14 value'
-          if (ccs%prod10c(i) .ne. spval .and. .not. isnan(ccs%prod10c(i)) ) then
+          if (ccs%prod10c(i)  /=  spval .and. .not. isnan(ccs%prod10c(i)) ) then
              cc14s%prod10c(i) = ccs%prod10c(i) * c14ratio
           endif
        end if
@@ -1734,7 +1736,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=cc14s%prod100c) 
        if (flag=='read' .and. .not. readvar) then
           write(iulog,*) 'initializing cc14s%prod100c with atmospheric c14 value'
-          if (ccs%prod100c(i) .ne. spval .and. .not. isnan(ccs%prod100c(i)) ) then
+          if (ccs%prod100c(i)  /=  spval .and. .not. isnan(ccs%prod100c(i)) ) then
              cc14s%prod100c(i) = ccs%prod100c(i) * c14ratio
           endif
        end if
@@ -1940,7 +1942,7 @@ contains
           if ( masterproc ) write(iulog,*) '   Assuming the same as current setting: ', decomp_cascade_state
        else
           restart_file_decomp_cascade_state = itemp  
-          if (decomp_cascade_state .ne. restart_file_decomp_cascade_state ) then
+          if (decomp_cascade_state  /=  restart_file_decomp_cascade_state ) then
              if ( masterproc ) then
                 write(iulog,*) 'CNRest: ERROR--the decomposition cascade differs between the current ' &
                      // ' model state and the model that wrote the restart file. '
@@ -1988,7 +1990,7 @@ contains
 
     nstep = get_nstep()  
 
-    if (flag == 'read' .and. spinup_state .ne. restart_file_spinup_state ) then
+    if (flag == 'read' .and. spinup_state  /=  restart_file_spinup_state ) then
        if (spinup_state .eq. 0 .and. restart_file_spinup_state .eq. 1 ) then
           if ( masterproc ) write(iulog,*) ' CNRest: taking SOM pools out of AD spinup mode'
           exit_spinup = .true.
@@ -2000,7 +2002,7 @@ contains
                // ' != restart_file_spinup_state, but do not know what to do'//&
                errMsg(__FILE__, __LINE__))
        end if
-       if (nstep .ge. 2) then
+       if (nstep  >=  2) then
           call endrun(msg=' CNRest: error in entering/exiting spinup - should occur only when nstep = 1'//&
                errMsg(__FILE__, __LINE__))
        endif

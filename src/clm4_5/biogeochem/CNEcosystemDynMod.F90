@@ -5,7 +5,7 @@ module CNEcosystemDynMod
   !
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varctl  , only: fpftdyn, use_c13, use_c14
+  use clm_varctl  , only: fpftdyn, use_c13, use_c14, use_ed
   use decompMod   , only: bounds_type
   !
   ! !PUBLIC TYPES:
@@ -96,6 +96,8 @@ contains
     logical, intent(in) :: doalb             ! true = surface albedo calculation time step
     !-----------------------------------------------------------------------
 
+ ! only do if ed is off
+ if( .not. use_ed ) then
        ! Call the main CN routines
        call t_startf('CNZero')
        call CNZeroFluxes(num_soilc, filter_soilc, num_soilp, filter_soilp)
@@ -214,6 +216,8 @@ contains
        if ( use_c14 ) call C14Decay(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
        if ( use_c14 ) call C14BombSpike(num_soilp, filter_soilp)
+       
+   endif  !use_ed
 
   end subroutine CNEcosystemDynNoLeaching
   
@@ -249,30 +253,35 @@ contains
     integer, intent(in) :: filter_pcropp(:)  ! filter for prognostic crop pfts
     logical, intent(in) :: doalb             ! true = surface albedo calculation time step
     !-----------------------------------------------------------------------
-  
-    call CNNLeaching(bounds, num_soilc, filter_soilc)
 
-    call t_startf('CNUpdate3')
+   !don't do this if ed is on
+   if(.not. use_ed) then
+
+      call CNNLeaching(bounds, num_soilc, filter_soilc)
+
+      call t_startf('CNUpdate3')
        
-    call NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
-    call t_stopf('CNUpdate3')
+      call NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
+      call t_stopf('CNUpdate3')
     
-    call t_startf('CNsum')
-    call CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
+      call t_startf('CNsum')
+      call CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
     
-    if (doalb) then   
-       call CNVegStructUpdate(num_soilp, filter_soilp)
-    end if
+      if (doalb) then   
+         call CNVegStructUpdate(num_soilp, filter_soilp)
+      end if
+
+      call CSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, 'bulk')
+    
+      if ( use_c13 ) call CSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, 'c13')
+      
+      if ( use_c14 ) call CSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, 'c14')
+    
+      call NSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
+      call t_stopf('CNsum')
+    
+  endif ! use_ed
    
-    call CSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, 'bulk')
-    
-    if ( use_c13 ) call CSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, 'c13')
-    
-    if ( use_c14 ) call CSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, 'c14')
-    
-    call NSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)
-    call t_stopf('CNsum')
-    
   end subroutine CNEcosystemDynLeaching
   
 end  module CNEcosystemDynMod

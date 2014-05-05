@@ -246,7 +246,7 @@ contains
     use clm_atmlnd            , only : clm_map2gcell_minimal
     use clm_glclnd            , only : update_clm_s2x
     use clm_glclnd            , only : init_glc2lnd_type, init_lnd2glc_type, clm_x2s, clm_s2x
-    use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest
+    use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, use_ed
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size, get_curr_calday
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
@@ -271,8 +271,8 @@ contains
     use SLakeInitMod          , only : initTimeConstSLake
     use initColdMod           , only : initCold
     use initInterpMod         , only : initInterp
+    use EDInitMod                            
     use DaylengthMod          , only : InitDaylength
-    use BiogeophysRestMod     , only : bound_h2osoi
     use fileutils             , only : getfil
     !
     ! !ARGUMENTS    
@@ -616,6 +616,18 @@ contains
     ! initialize2 for some consistency checking; now it can be deallocated
 
     deallocate(wt_nat_pft)
+
+    ! --------------------------------------------------------------
+    ! Initialise the ED model state structure
+    ! --------------------------------------------------------------
+   
+    if ( use_ed ) then
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1, nclumps
+          call get_clump_bounds(nc, bounds_clump)
+          call ed_init( bounds_clump )
+       end do
+    endif ! use_ed
 
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
     ! initialize2 because it is used to initialize other variables; now it can be

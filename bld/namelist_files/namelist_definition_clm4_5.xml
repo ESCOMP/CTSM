@@ -197,6 +197,17 @@ This downscaling is conservative.
 <default>Default: .true.</default>
 </entry>
 
+<entry id="use_ed" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the ED
+(ED = 'on' is EXPERIMENTAL NOT SUPPORTED!)
+</entry>
+
+<entry id="use_ed_spit_fire" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on spit fire (only relevant if ED is being used).
+</entry>
+
 <entry id="paramfile" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname datafile with plant function type (PFT) constants combined with

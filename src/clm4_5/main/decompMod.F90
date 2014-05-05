@@ -50,12 +50,14 @@ module decompMod
   integer,public :: numl        ! total number of landunits on all procs
   integer,public :: numc        ! total number of columns on all procs
   integer,public :: nump        ! total number of pfts on all procs
+  integer,public :: numCohort   ! total number of ED cohorts on all procs
 
   type bounds_type
      integer :: begg, endg       ! beginning and ending gridcell index
      integer :: begl, endl       ! beginning and ending landunit index
      integer :: begc, endc       ! beginning and ending column index
      integer :: begp, endp       ! beginning and ending pft index
+     integer :: begCohort, endCohort ! beginning and ending cohort indices
 
      integer :: level            ! whether defined on the proc or clump level
      integer :: clump_index      ! if defined on the clump level, this gives the clump index
@@ -70,10 +72,12 @@ module decompMod
      integer :: nlunits          ! number of landunits in proc
      integer :: ncols            ! number of columns in proc
      integer :: npfts            ! number of pfts in proc
+     integer :: nCohorts          ! number of cohorts in proc
      integer :: begg, endg       ! beginning and ending gridcell index
      integer :: begl, endl       ! beginning and ending landunit index
      integer :: begc, endc       ! beginning and ending column index
      integer :: begp, endp       ! beginning and ending pft index
+     integer :: begCohort, endCohort ! beginning and ending cohort indices
   end type processor_type
   public processor_type
   type(processor_type),public :: procinfo
@@ -85,10 +89,12 @@ module decompMod
      integer :: nlunits          ! number of landunits in clump
      integer :: ncols            ! number of columns in clump
      integer :: npfts            ! number of pfts in clump
+     integer :: nCohorts          ! number of cohorts in proc
      integer :: begg, endg       ! beginning and ending gridcell index
      integer :: begl, endl       ! beginning and ending landunit index
      integer :: begc, endc       ! beginning and ending column index
      integer :: begp, endp       ! beginning and ending pft index
+     integer :: begCohort, endCohort ! beginning and ending cohort indices
   end type clump_type
   public clump_type
   type(clump_type),public, allocatable :: clumps(:)
@@ -107,6 +113,7 @@ module decompMod
   type(mct_gsMap)  ,public,target :: gsMap_lun_gdc2glo
   type(mct_gsMap)  ,public,target :: gsMap_col_gdc2glo
   type(mct_gsMap)  ,public,target :: gsMap_pft_gdc2glo
+  type(mct_gsMap)  ,public,target :: gsMap_cohort_gdc2glo
   !------------------------------------------------------------------------------
 
 contains
@@ -146,6 +153,8 @@ contains
      bounds%endl = clumps(cid)%endl
      bounds%begg = clumps(cid)%begg
      bounds%endg = clumps(cid)%endg
+     bounds%begCohort = clumps(cid)%begCohort
+     bounds%endCohort = clumps(cid)%endCohort
      
      bounds%level = BOUNDS_LEVEL_CLUMP
      bounds%clump_index = n
@@ -153,13 +162,15 @@ contains
    end subroutine get_clump_bounds_new
 
    !------------------------------------------------------------------------------
-   subroutine get_clump_bounds_old (n, begg, endg, begl, endl, begc, endc, begp, endp)
+   subroutine get_clump_bounds_old (n, begg, endg, begl, endl, begc, endc, begp, endp, &
+        begCohort, endCohort)
      implicit none
      integer, intent(in)  :: n           ! proc clump index
      integer, intent(out) :: begp, endp  ! clump beg and end pft indices
      integer, intent(out) :: begc, endc  ! clump beg and end column indices
      integer, intent(out) :: begl, endl  ! clump beg and end landunit indices
      integer, intent(out) :: begg, endg  ! clump beg and end gridcell indices
+     integer, intent(out) :: begCohort, endCohort  ! cohort beg and end gridcell indices
      integer :: cid                                                ! clump id
      !------------------------------------------------------------------------------
 
@@ -172,6 +183,8 @@ contains
      endl = clumps(cid)%endl
      begg = clumps(cid)%begg
      endg = clumps(cid)%endg
+     begCohort = clumps(cid)%begCohort
+     endCohort = clumps(cid)%endCohort
    end subroutine get_clump_bounds_old
 
    !------------------------------------------------------------------------------
@@ -205,6 +218,8 @@ contains
      bounds%endl = procinfo%endl
      bounds%begg = procinfo%begg
      bounds%endg = procinfo%endg
+     bounds%begCohort = procinfo%begCohort
+     bounds%endCohort = procinfo%endCohort
 
      bounds%level = BOUNDS_LEVEL_PROC
      bounds%clump_index = -1           ! irrelevant for proc, so assigned a bogus value
@@ -212,12 +227,14 @@ contains
    end subroutine get_proc_bounds_new
 
    !------------------------------------------------------------------------------
-   subroutine get_proc_bounds_old (begg, endg, begl, endl, begc, endc, begp, endp)
+   subroutine get_proc_bounds_old (begg, endg, begl, endl, begc, endc, begp, endp, &
+        begCohort, endCohort)
      implicit none
      integer, optional, intent(out) :: begp, endp  ! proc beg and end pft indices
      integer, optional, intent(out) :: begc, endc  ! proc beg and end column indices
      integer, optional, intent(out) :: begl, endl  ! proc beg and end landunit indices
      integer, optional, intent(out) :: begg, endg  ! proc beg and end gridcell indices
+     integer, optional, intent(out) :: begCohort, endCohort  ! cohort beg and end gridcell indices
      !------------------------------------------------------------------------------
 
      if (present(begp)) begp = procinfo%begp
@@ -228,10 +245,12 @@ contains
      if (present(endl)) endl = procinfo%endl
      if (present(begg)) begg = procinfo%begg
      if (present(endg)) endg = procinfo%endg
+     if (present(begCohort)) begCohort = procinfo%begCohort
+     if (present(endCohort)) endCohort = procinfo%endCohort
    end subroutine get_proc_bounds_old
 
    !------------------------------------------------------------------------------
-   subroutine get_proc_total(pid, ncells, nlunits, ncols, npfts)
+   subroutine get_proc_total(pid, ncells, nlunits, ncols, npfts, nCohorts)
      !
      ! !DESCRIPTION:
      ! Count up gridcells, landunits, columns, and pfts on process.
@@ -243,6 +262,7 @@ contains
      integer, intent(out) :: nlunits ! total number of landunits on the processor
      integer, intent(out) :: ncols   ! total number of columns on the processor
      integer, intent(out) :: npfts   ! total number of pfts on the processor
+     integer, intent(out) :: nCohorts ! total number of cohorts on the processor
      !
      ! !LOCAL VARIABLES:
      integer :: cid       ! clump index
@@ -252,18 +272,20 @@ contains
      nlunits = 0
      ncols   = 0
      ncells  = 0
+     nCohorts = 0
      do cid = 1,nclumps
         if (clumps(cid)%owner == pid) then
            ncells  = ncells  + clumps(cid)%ncells
            nlunits = nlunits + clumps(cid)%nlunits
            ncols   = ncols   + clumps(cid)%ncols
            npfts   = npfts   + clumps(cid)%npfts
+           nCohorts = nCohorts + clumps(cid)%nCohorts
         end if
      end do
    end subroutine get_proc_total
 
    !------------------------------------------------------------------------------
-   subroutine get_proc_global(ng, nl, nc, np)
+   subroutine get_proc_global(ng, nl, nc, np, nCohorts)
      !
      ! !DESCRIPTION:
      ! Return number of gridcells, landunits, columns, and pfts across all processes.
@@ -274,12 +296,15 @@ contains
      integer, intent(out) :: nl  ! total number of landunits across all processors
      integer, intent(out) :: nc  ! total number of columns across all processors
      integer, intent(out) :: np  ! total number of pfts across all processors
+     integer, intent(out) :: nCohorts  ! total number ED cohorts
      !------------------------------------------------------------------------------
 
      np = nump
      nc = numc
      nl = numl
      ng = numg
+     nCohorts = numCohort
+
    end subroutine get_proc_global
 
    !------------------------------------------------------------------------------
@@ -303,7 +328,7 @@ contains
      ! Determine 1d size from clmlevel
      !
      ! !USES:
-     use clmtype  , only : grlnd, nameg, namel, namec, namep
+     use clmtype  , only : grlnd, nameg, namel, namec, namep, nameCohort
      use domainMod, only : ldomain
      !
      ! !ARGUMENTS:
@@ -322,6 +347,8 @@ contains
         get_clmlevel_gsize = numc
      case(namep)
         get_clmlevel_gsize = nump
+     case(nameCohort)
+        get_clmlevel_gsize = numCohort
      case default
         write(iulog,*) 'get_clmlevel_gsize does not match clmlevel type: ', trim(clmlevel)
         call shr_sys_abort()
@@ -336,7 +363,7 @@ contains
      ! Compute arguments for gatherv, scatterv for vectors
      !
      ! !USES:
-     use clmtype, only : grlnd, nameg, namel, namec, namep
+     use clmtype, only : grlnd, nameg, namel, namec, namep, nameCohort
      !
      ! !ARGUMENTS:
      implicit none
@@ -355,6 +382,8 @@ contains
        gsmap => gsmap_col_gdc2glo
     case(namep)
        gsmap => gsmap_pft_gdc2glo
+    case(nameCohort)
+       gsmap => gsMap_cohort_gdc2glo
     case default
        write(iulog,*) 'get_clmlevel_gsmap: Invalid expansion character: ',trim(clmlevel)
        call shr_sys_abort()

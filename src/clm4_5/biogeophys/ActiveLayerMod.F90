@@ -82,7 +82,7 @@ contains
        do fc = 1,num_soilc
           c = filter_soilc(fc)
           g = cgridcell(c)
-          if ( lat(g) .gt. 0. ) then 
+          if ( lat(g)  >  0. ) then 
              altmax_lastyear(c) = altmax(c)
              altmax_lastyear_indx(c) = altmax_indx(c)
              altmax(c) = 0.
@@ -94,7 +94,7 @@ contains
        do fc = 1,num_soilc
           c = filter_soilc(fc)
           g = cgridcell(c)
-          if ( lat(g) .le. 0. ) then 
+          if ( lat(g)  <=  0. ) then 
              altmax_lastyear(c) = altmax(c)
              altmax_lastyear_indx(c) = altmax_indx(c)
              altmax(c) = 0.
@@ -123,7 +123,7 @@ contains
              endif
           end do
           
-          if ( k_frz .gt. 0 ) then
+          if ( k_frz  >  0 ) then
              ! define active layer as the depth at which the linearly interpolated temperature line intersects with zero
              z1 = zsoi(k_frz)
              z2 = zsoi(k_frz+1)
@@ -139,7 +139,7 @@ contains
        
        
        ! if appropriate, update maximum annual active layer thickness
-       if (alt(c) .gt. altmax(c)) then
+       if (alt(c)  >  altmax(c)) then
           altmax(c) = alt(c)
           altmax_indx(c) = alt_indx(c)
        endif

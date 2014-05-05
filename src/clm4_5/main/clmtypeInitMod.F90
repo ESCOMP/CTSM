@@ -34,6 +34,7 @@ module clmtypeInitMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: init_pft_type
   private :: init_column_type
+
   private :: init_landunit_type
   private :: init_gridcell_type
 
@@ -89,6 +90,12 @@ contains
     ! !DESCRIPTION:
     ! Initialize clmtype components to signaling nan
     !
+
+    use EDClmtypeInitMod,  only : EDinit_cohort_type, EDInitClmType  ! ED routines for domain decomp and init of ED-CLM vars.
+    use EDtypesMod,        only : coh                                ! unique to ED, used for domain decomp
+    use EDclmType,         only : EDpft, EDpftcon, EDpcf             ! ED types that are used to interact with CLM variables
+    use clm_varctl,        only : use_ed
+
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
@@ -97,14 +104,16 @@ contains
     character(len=32), parameter :: subname = "initClmtype"
     !------------------------------------------------------------------------
 
-    nanr = nan
-
     ! Determine necessary indices
 
-    call init_pft_type     (bounds%begp, bounds%endp, pft)
-    call init_column_type  (bounds%begc, bounds%endc, col)
-    call init_landunit_type(bounds%begl, bounds%endl, lun)
-    call init_gridcell_type(bounds%begg, bounds%endg, grc)
+    call init_pft_type      (bounds%begp, bounds%endp, pft)
+    call init_column_type   (bounds%begc, bounds%endc, col)
+    call init_landunit_type (bounds%begl, bounds%endl, lun)
+    call init_gridcell_type (bounds%begg, bounds%endg, grc)
+
+    if ( use_ed ) then
+       call EDinit_cohort_type (bounds%begCohort, bounds%endCohort, coh)
+    end if
 
     ! pft ecophysiological constants
 
@@ -302,6 +311,10 @@ contains
 
     call init_gridcell_ch4_type(bounds%begg, bounds%endg, gch4)
 
+    if ( use_ed ) then  
+       call EDInitClmType( bounds, EDpft, EDpftcon, EDpcf )
+    end if
+
   end subroutine initClmtype
 
   !------------------------------------------------------------------------
@@ -389,7 +402,7 @@ contains
   end subroutine init_landunit_type
 
   !------------------------------------------------------------------------
-  subroutine init_gridcell_type (beg, end,grc)
+  subroutine init_gridcell_type (beg, end, grc)
     !
     ! !DESCRIPTION:
     ! Initialize components of gridcell_type structure
@@ -403,7 +416,9 @@ contains
     allocate(grc%gindex(beg:end))
     allocate(grc%area(beg:end))
     allocate(grc%lat(beg:end))
+    grc%lat(:)=0.0_r8
     allocate(grc%lon(beg:end))
+    grc%lon(:)=0.0_r8
     allocate(grc%latdeg(beg:end))
     allocate(grc%londeg(beg:end))
 
@@ -598,7 +613,7 @@ contains
     allocate(pftcon%fr_flig(0:numpft))
     pftcon%fr_flig(0:numpft)=nanr
     allocate(pftcon%leaf_long(0:numpft))
-    pftcon%leaf_long(0:numpft)=nanr
+    pftcon%leaf_long(0:numpft)=nanr    
     allocate(pftcon%evergreen(0:numpft))
     pftcon%evergreen(0:numpft)=nanr
     allocate(pftcon%stress_decid(0:numpft))
@@ -741,6 +756,8 @@ contains
     pps%rresis(:,:)= spval
     allocate(pps%dewmx(beg:end))
     pps%dewmx(:)= nanr
+    allocate(pps%rscanopy(beg:end))   
+    pps%rscanopy(beg:end) = nan
     allocate(pps%rssun(beg:end))
     pps%rssun(:)= nanr
     allocate(pps%rssha(beg:end))
@@ -1674,11 +1691,15 @@ contains
     ! Initialize pft carbon flux variables
     !
     ! !ARGUMENTS:
+    use clm_varctl         , only : use_ed
     implicit none
     integer, intent(in) :: beg, end
     type (pft_cflux_type), intent(inout) :: pcf
     !------------------------------------------------------------------------
-
+    allocate(pcf%psncanopy(beg:end))
+    pcf%psncanopy(beg:end) = nan
+    allocate(pcf%lmrcanopy(beg:end))
+    pcf%lmrcanopy(beg:end) = 0.0_r8 
     allocate(pcf%psnsun(beg:end))
     pcf%psnsun(:)= nanr
     allocate(pcf%psnsha(beg:end))
@@ -2027,7 +2048,12 @@ contains
     allocate(pcf%livecrootc_to_deadcrootc(beg:end))
     pcf%livecrootc_to_deadcrootc(:)= nanr
     allocate(pcf%gpp(beg:end))
-    pcf%gpp(:)= nanr
+    ! FIX(SPM, 041614) need to clean this up
+    if ( use_ed ) then
+       pcf%gpp(:)= 0.0_r8
+    else
+       pcf%gpp(:)= nanr
+    end if
     allocate(pcf%mr(beg:end))
     pcf%mr(:)= nanr
     allocate(pcf%current_gr(beg:end))
@@ -2043,7 +2069,12 @@ contains
     allocate(pcf%rr(beg:end))
     pcf%rr(:)= nanr
     allocate(pcf%npp(beg:end))
-    pcf%npp(:)= nanr
+    ! FIX(SPM, 041614) need to clean this up
+    if ( use_ed ) then
+       pcf%npp(:)= 0.0_r8
+    else
+       pcf%npp(:)= nanr
+    end if
     allocate(pcf%agnpp(beg:end))
     pcf%agnpp(:)= nanr
     allocate(pcf%bgnpp(beg:end))

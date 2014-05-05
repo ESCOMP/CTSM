@@ -315,7 +315,7 @@ contains
               fracl = 1._r8
               tsoi17(c) = tsoi17(c) + t_soisno(c,j)*dz(c,j)*fracl
             else
-              if (zi(c,j) > 0.17_r8 .and. zi(c,j-1) .lt. 0.17_r8) then 
+              if (zi(c,j) > 0.17_r8 .and. zi(c,j-1)  <  0.17_r8) then 
                 fracl = (0.17_r8 - zi(c,j-1))/dz(c,j)
                 tsoi17(c) = tsoi17(c) + t_soisno(c,j)*dz(c,j)*fracl
                end if
@@ -328,7 +328,7 @@ contains
               (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
                                        fracl
             else
-              if (zi(c,j) > 0.1_r8 .and. zi(c,j-1) .lt. 0.1_r8) then
+              if (zi(c,j) > 0.1_r8 .and. zi(c,j-1)  <  0.1_r8) then
                  fracl = (0.1_r8 - zi(c,j-1))/dz(c,j)
                  t_soi_10cm(c) = t_soi_10cm(c) + t_soisno(c,j)*dz(c,j)*fracl
                  h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + &

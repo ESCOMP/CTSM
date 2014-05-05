@@ -68,7 +68,7 @@ contains
       annsum_counter(c) = annsum_counter(c) + dt
    end do
 
-   if (num_soilc .gt. 0) then
+   if (num_soilc  >  0) then
 
    if (annsum_counter(filter_soilc(1)) >= get_days_per_year() * secspday) then
       ! pft loop

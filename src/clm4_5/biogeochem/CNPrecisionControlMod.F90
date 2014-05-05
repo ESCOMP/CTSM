@@ -659,14 +659,14 @@ contains
          c = filter_soilc(fc)
          do j = 1,nlevdecomp
             if (abs(smin_no3_vr(c,j)) < ncrit/1e4_r8) then
-               if ( smin_no3_vr(c,j) .lt. 0._r8 ) then
+               if ( smin_no3_vr(c,j)  <  0._r8 ) then
                   write(iulog, *) '-10^-12 < smin_no3 < 0. resetting to zero.'
                   write(iulog, *) 'smin_no3_vr(c,j), c, j: ', smin_no3_vr(c,j), c, j
                   smin_no3_vr(c,j) = 0._r8
                endif
             end if
             if (abs(smin_nh4_vr(c,j)) < ncrit/1e4_r8) then
-               if ( smin_nh4_vr(c,j) .lt. 0._r8 ) then
+               if ( smin_nh4_vr(c,j)  <  0._r8 ) then
                   write(iulog, *) '-10^-12 < smin_nh4 < 0. resetting to zero.'
                   write(iulog, *) 'smin_nh4_vr(c,j), c, j: ', smin_nh4_vr(c,j), c, j
                   smin_nh4_vr(c,j) = 0._r8

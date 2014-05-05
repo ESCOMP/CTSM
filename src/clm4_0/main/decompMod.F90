@@ -200,12 +200,16 @@ contains
    end subroutine get_proc_bounds_new
 
    !------------------------------------------------------------------------------
-   subroutine get_proc_bounds_old (begg, endg, begl, endl, begc, endc, begp, endp)
+   subroutine get_proc_bounds_old (begg, endg, begl, endl, begc, endc, begp, endp, &
+        begCohort, endCohort)
      implicit none
      integer, optional, intent(out) :: begp, endp  ! proc beg and end pft indices
      integer, optional, intent(out) :: begc, endc  ! proc beg and end column indices
      integer, optional, intent(out) :: begl, endl  ! proc beg and end landunit indices
      integer, optional, intent(out) :: begg, endg  ! proc beg and end gridcell indices
+     ! these are dummy arguments for backwards compatibility with 4_5 in
+     ! util_share/accumulMod.F90.  4_0 will never have a cohort dimension
+     integer, optional, intent(out) :: begCohort, endCohort  ! cohort beg and end gridcell indices
      !------------------------------------------------------------------------------
 
      if (present(begp)) begp = procinfo%begp
@@ -251,7 +255,7 @@ contains
    end subroutine get_proc_total
 
    !------------------------------------------------------------------------------
-   subroutine get_proc_global(ng, nl, nc, np)
+   subroutine get_proc_global(ng, nl, nc, np, nCohorts)
      !
      ! !DESCRIPTION:
      ! Return number of gridcells, landunits, columns, and pfts across all processes.
@@ -262,6 +266,9 @@ contains
      integer, intent(out) :: nl  ! total number of landunits across all processors
      integer, intent(out) :: nc  ! total number of columns across all processors
      integer, intent(out) :: np  ! total number of pfts across all processors
+     ! this is a dummy argument for backwards compatibility with 4_5 in
+     ! util_share/accumulMod.F90.  4_0 will never have a cohort dimension
+     integer, optional, intent(out) :: nCohorts  ! total number ED cohorts
      !------------------------------------------------------------------------------
 
      np = nump

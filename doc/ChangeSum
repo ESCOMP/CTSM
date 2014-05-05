@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_72      muszala 05/05/2014 Introduce code for Ecosystem Demography (CLM(ED)) Model
    clm4_5_71        sacks 05/02/2014 2-way feedbacks for glacier, veg columns compute glacier SMB, and related changes
    clm4_5_70      muszala 04/18/2014 bring in SHR_ASSERT macros
    clm4_5_69        andre 03/18/2014 start unit testing build-namelist

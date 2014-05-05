@@ -29,7 +29,7 @@ module CNNDynamicsMod
   ! NOTE(bandre, 2013-10) according to Charlie Koven, nfix_timeconst
   ! is currently used as a flag and rate constant. Rate constant: time
   ! over which to exponentially relax the npp flux for N fixation term
-  ! flag: (if .le. 0. or .ge. 365; use old annual method). Default value is
+  ! flag: (if  <=  0. or  >=  365; use old annual method). Default value is
   ! junk that should always be overwritten by the namelist or init
   ! function!
 
@@ -176,12 +176,12 @@ contains
 
    dayspyr = get_days_per_year()
 
-   if ( nfix_timeconst .gt. 0._r8 .and. nfix_timeconst .lt. 500._r8 ) then
+   if ( nfix_timeconst  >  0._r8 .and. nfix_timeconst  <  500._r8 ) then
       ! use exponential relaxation with time constant nfix_timeconst for NPP - NFIX relation
       ! Loop through columns
       do fc = 1,num_soilc
          c = filter_soilc(fc)         
-         if (col_lag_npp(c) .ne. spval) then
+         if (col_lag_npp(c)  /=  spval) then
             ! need to put npp in units of gC/m^2/year here first
             t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * col_lag_npp(c)*(secspday * dayspyr))))/(secspday * dayspyr)  
             nfix_to_sminn(c) = max(0._r8,t)
@@ -268,12 +268,12 @@ contains
    ! for runoff calculation; calculate total water to a given depth
    surface_water(bounds%begc:bounds%endc) = 0._r8
    do j = 1,nlevsoi
-      if ( zisoi(j) .le. depth_runoff_Nloss)  then
+      if ( zisoi(j)  <=  depth_runoff_Nloss)  then
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             surface_water(c) = surface_water(c) + h2osoi_liq(c,j)
          end do
-      elseif ( zisoi(j-1) .lt. depth_runoff_Nloss)  then
+      elseif ( zisoi(j-1)  <  depth_runoff_Nloss)  then
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             surface_water(c) = surface_water(c) + h2osoi_liq(c,j) * ( (depth_runoff_Nloss - zisoi(j-1)) / dz(c,j))
@@ -365,10 +365,10 @@ contains
                !
                !
                ! calculate the N loss from surface runoff, assuming a shallow mixing of surface waters into soil and removal based on runoff
-               if ( zisoi(j) .le. depth_runoff_Nloss )  then
+               if ( zisoi(j)  <=  depth_runoff_Nloss )  then
                   smin_no3_runoff_vr(c,j) = disn_conc * qflx_surf(c) * &
                        h2osoi_liq(c,j) / ( surface_water(c) * dz(c,j) )
-               elseif ( zisoi(j-1) .lt. depth_runoff_Nloss )  then
+               elseif ( zisoi(j-1)  <  depth_runoff_Nloss )  then
                   smin_no3_runoff_vr(c,j) = disn_conc * qflx_surf(c) * &
                        h2osoi_liq(c,j) * ((depth_runoff_Nloss - zisoi(j-1)) / &
                        dz(c,j)) / ( surface_water(c) * (depth_runoff_Nloss-zisoi(j-1) ))

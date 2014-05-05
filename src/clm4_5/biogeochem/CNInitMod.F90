@@ -446,7 +446,7 @@ contains
           ! column carbon state variable initialization
           do j = 1, nlevdecomp
              do k = 1, ndecomp_pools
-                if (zsoi(j) .lt. 0.3 ) then  !! only initialize upper soil column
+                if (zsoi(j)  <  0.3 ) then  !! only initialize upper soil column
                    ccs%decomp_cpools_vr(c,j,k) = decomp_cascade_con%initial_stock(k)
                 else
                    ccs%decomp_cpools_vr(c,j,k) = 0._r8
@@ -454,7 +454,7 @@ contains
              end do
              ccs%col_ctrunc_vr(c,j) = 0._r8
           end do
-          if ( nlevdecomp .gt. 1 ) then
+          if ( nlevdecomp  >  1 ) then
              do j = nlevdecomp+1, nlevdecomp_full
                 do k = 1, ndecomp_pools
                    ccs%decomp_cpools_vr(c,j,k) = 0._r8
@@ -481,7 +481,7 @@ contains
                 end do
                 cc13s%col_ctrunc_vr(c,j) = ccs%col_ctrunc_vr(c,j) * c13ratio
              end do
-             if ( nlevdecomp .gt. 1 ) then
+             if ( nlevdecomp  >  1 ) then
                 do j = nlevdecomp+1, nlevdecomp_full
                    do k = 1, ndecomp_pools
                       cc13s%decomp_cpools_vr(c,j,k) = 0._r8
@@ -503,7 +503,7 @@ contains
                 end do
                 cc14s%col_ctrunc_vr(c,j) = ccs%col_ctrunc_vr(c,j) * c14ratio
              end do
-             if ( nlevdecomp .gt. 1 ) then
+             if ( nlevdecomp  >  1 ) then
                 do j = nlevdecomp+1, nlevdecomp_full
                    do k = 1, ndecomp_pools
                       cc14s%decomp_cpools_vr(c,j,k) = 0._r8
@@ -527,7 +527,7 @@ contains
              cns%sminn_vr(c,j) = 0._r8
              cns%col_ntrunc_vr(c,j) = 0._r8
           end do
-          if ( nlevdecomp .gt. 1 ) then
+          if ( nlevdecomp  >  1 ) then
              do j = nlevdecomp+1, nlevdecomp_full
                 do k = 1, ndecomp_pools
                    cns%decomp_npools_vr(c,j,k) = 0._r8

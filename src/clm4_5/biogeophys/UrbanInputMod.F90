@@ -436,40 +436,40 @@ contains
        do n = 1, numurbl
           if ( pcturb(nl,n) > 0.0_r8 ) then
              if ( .not. urban_valid(nl) .or. &
-                  urbinp%canyon_hwr(nl,n)            .le. 0._r8 .or. &
-                  urbinp%em_improad(nl,n)            .le. 0._r8 .or. &
-                  urbinp%em_perroad(nl,n)            .le. 0._r8 .or. &
-                  urbinp%em_roof(nl,n)               .le. 0._r8 .or. &
-                  urbinp%em_wall(nl,n)               .le. 0._r8 .or. &
-                  urbinp%ht_roof(nl,n)               .le. 0._r8 .or. &
-                  urbinp%thick_roof(nl,n)            .le. 0._r8 .or. &
-                  urbinp%thick_wall(nl,n)            .le. 0._r8 .or. &
-                  urbinp%t_building_max(nl,n)        .le. 0._r8 .or. &
-                  urbinp%t_building_min(nl,n)        .le. 0._r8 .or. &
-                  urbinp%wind_hgt_canyon(nl,n)       .le. 0._r8 .or. &
-                  urbinp%wtlunit_roof(nl,n)          .le. 0._r8 .or. &
-                  urbinp%wtroad_perv(nl,n)           .le. 0._r8 .or. &
-                  any(urbinp%alb_improad_dir(nl,n,:) .le. 0._r8) .or. &
-                  any(urbinp%alb_improad_dif(nl,n,:) .le. 0._r8) .or. &
-                  any(urbinp%alb_perroad_dir(nl,n,:) .le. 0._r8) .or. &
-                  any(urbinp%alb_perroad_dif(nl,n,:) .le. 0._r8) .or. &
-                  any(urbinp%alb_roof_dir(nl,n,:)    .le. 0._r8) .or. &
-                  any(urbinp%alb_roof_dif(nl,n,:)    .le. 0._r8) .or. &
-                  any(urbinp%alb_wall_dir(nl,n,:)    .le. 0._r8) .or. &
-                  any(urbinp%alb_wall_dif(nl,n,:)    .le. 0._r8) .or. &
-                  any(urbinp%tk_roof(nl,n,:)         .le. 0._r8) .or. &
-                  any(urbinp%tk_wall(nl,n,:)         .le. 0._r8) .or. &
-                  any(urbinp%cv_roof(nl,n,:)         .le. 0._r8) .or. &
-                  any(urbinp%cv_wall(nl,n,:)         .le. 0._r8)) then
+                  urbinp%canyon_hwr(nl,n)             <=  0._r8 .or. &
+                  urbinp%em_improad(nl,n)             <=  0._r8 .or. &
+                  urbinp%em_perroad(nl,n)             <=  0._r8 .or. &
+                  urbinp%em_roof(nl,n)                <=  0._r8 .or. &
+                  urbinp%em_wall(nl,n)                <=  0._r8 .or. &
+                  urbinp%ht_roof(nl,n)                <=  0._r8 .or. &
+                  urbinp%thick_roof(nl,n)             <=  0._r8 .or. &
+                  urbinp%thick_wall(nl,n)             <=  0._r8 .or. &
+                  urbinp%t_building_max(nl,n)         <=  0._r8 .or. &
+                  urbinp%t_building_min(nl,n)         <=  0._r8 .or. &
+                  urbinp%wind_hgt_canyon(nl,n)        <=  0._r8 .or. &
+                  urbinp%wtlunit_roof(nl,n)           <=  0._r8 .or. &
+                  urbinp%wtroad_perv(nl,n)            <=  0._r8 .or. &
+                  any(urbinp%alb_improad_dir(nl,n,:)  <=  0._r8) .or. &
+                  any(urbinp%alb_improad_dif(nl,n,:)  <=  0._r8) .or. &
+                  any(urbinp%alb_perroad_dir(nl,n,:)  <=  0._r8) .or. &
+                  any(urbinp%alb_perroad_dif(nl,n,:)  <=  0._r8) .or. &
+                  any(urbinp%alb_roof_dir(nl,n,:)     <=  0._r8) .or. &
+                  any(urbinp%alb_roof_dif(nl,n,:)     <=  0._r8) .or. &
+                  any(urbinp%alb_wall_dir(nl,n,:)     <=  0._r8) .or. &
+                  any(urbinp%alb_wall_dif(nl,n,:)     <=  0._r8) .or. &
+                  any(urbinp%tk_roof(nl,n,:)          <=  0._r8) .or. &
+                  any(urbinp%tk_wall(nl,n,:)          <=  0._r8) .or. &
+                  any(urbinp%cv_roof(nl,n,:)          <=  0._r8) .or. &
+                  any(urbinp%cv_wall(nl,n,:)          <=  0._r8)) then
                 found = .true.
                 nindx = nl
                 dindx = n
                 exit
              else
-                if (urbinp%nlev_improad(nl,n) .gt. 0) then
+                if (urbinp%nlev_improad(nl,n)  >  0) then
                    nlev = urbinp%nlev_improad(nl,n)
-                   if ( any(urbinp%tk_improad(nl,n,1:nlev) .le. 0._r8) .or. &
-                        any(urbinp%cv_improad(nl,n,1:nlev) .le. 0._r8)) then
+                   if ( any(urbinp%tk_improad(nl,n,1:nlev)  <=  0._r8) .or. &
+                        any(urbinp%cv_improad(nl,n,1:nlev)  <=  0._r8)) then
                       found = .true.
                       nindx = nl
                       dindx = n
@@ -510,7 +510,7 @@ contains
        write(iulog,*)'tk_wall:         ',urbinp%tk_wall(nindx,dindx,:)
        write(iulog,*)'cv_roof:         ',urbinp%cv_roof(nindx,dindx,:)
        write(iulog,*)'cv_wall:         ',urbinp%cv_wall(nindx,dindx,:)
-       if (urbinp%nlev_improad(nindx,dindx) .gt. 0) then
+       if (urbinp%nlev_improad(nindx,dindx)  >  0) then
           nlev = urbinp%nlev_improad(nindx,dindx)
           write(iulog,*)'tk_improad: ',urbinp%tk_improad(nindx,dindx,1:nlev)
           write(iulog,*)'cv_improad: ',urbinp%cv_improad(nindx,dindx,1:nlev)

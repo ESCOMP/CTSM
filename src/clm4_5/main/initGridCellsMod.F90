@@ -31,6 +31,7 @@ module initGridCellsMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private clm_ptrs_compdown
   private clm_ptrs_check
+  private set_cohort_decomp
   private set_landunit_veg_compete
   private set_landunit_wet_ice_lake
   private set_landunit_crop_noncompete
@@ -48,13 +49,13 @@ contains
     !
     ! !USES
     use clmtype 
-    use domainMod         , only : ldomain
-    use decompMod         , only : get_proc_bounds, get_clump_bounds, get_proc_clumps
+    use domainMod     , only : ldomain
+    use decompMod     , only : get_proc_bounds, get_clump_bounds, get_proc_clumps
     use subgridWeightsMod , only : compute_higher_order_weights
-    use clm_varcon        , only : istsoil, istice, istwet, istdlak, istice_mec, &
-                                   isturb_tbd, isturb_hd, isturb_md, istcrop
-    use clm_varctl        , only : create_glacier_mec_landunit
-    use shr_const_mod     , only : SHR_CONST_PI
+    use clm_varcon    , only : istsoil, istice, istwet, istdlak, istice_mec, &
+                               isturb_tbd, isturb_hd, isturb_md, istcrop
+    use clm_varctl    , only : create_glacier_mec_landunit, use_ed
+    use shr_const_mod , only : SHR_CONST_PI
     !
     ! !ARGUMENTS:
     implicit none
@@ -102,10 +103,16 @@ contains
     !
     ! So note that clump index is most slowly varying, followed by landunit type,
     ! followed by gridcell, followed by column and pft type.
-
+    ! 
+    ! Cohort layout
+    ! Array index:   1   2   3   4   5   6   7   8   9  10  11  12
+    ! ------------------------------------------------------------
+    ! Gridcell:      1   1   2   2   3   3   1   1   2   2   3   3
+    ! Cohort:        1   2   1   2   1   2   1   2   1   2   1   2
 
     nclumps = get_proc_clumps()
 
+    ! FIX(SPM,032414) add private vars for cohort and perhaps patch dimension
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump, li, ci, pi, gdc)
     do nc = 1, nclumps
 
@@ -120,57 +127,71 @@ contains
        ! Determine naturally vegetated landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_veg_compete(               &
-               ltype=istsoil, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+               ltype=istsoil, gi=gdc, li=li, ci=ci, pi=pi, &
+               setdata=.true.)
        end do
 
        ! Determine crop landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_crop_noncompete(           &
-               ltype=istcrop, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+               ltype=istcrop, gi=gdc, li=li, ci=ci, pi=pi, &
+               setdata=.true.)
        end do
 
        ! Determine urban tall building district landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_urban( &
-               ltype=isturb_tbd, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+               ltype=isturb_tbd, gi=gdc, li=li, ci=ci, pi=pi, &
+               setdata=.true.)
 
        end do
 
        ! Determine urban high density landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_urban( &
-               ltype=isturb_hd, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+               ltype=isturb_hd, gi=gdc, li=li, ci=ci, pi=pi, &
+               setdata=.true.)
        end do
 
        ! Determine urban medium density landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_urban( &
-               ltype=isturb_md, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+               ltype=isturb_md, gi=gdc, li=li, ci=ci, pi=pi, &
+               setdata=.true.)
        end do
 
        ! Determine lake, wetland and glacier landunits 
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_wet_ice_lake(              &
-               ltype=istdlak, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+               ltype=istdlak, gi=gdc, li=li, ci=ci, pi=pi, &
+               setdata=.true.)
        end do
 
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_wet_ice_lake(              &
-               ltype=istwet, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+               ltype=istwet, gi=gdc, li=li, ci=ci, pi=pi, &
+               setdata=.true.)
        end do
 
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_wet_ice_lake(              &
-               ltype=istice, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true.)
+               ltype=istice, gi=gdc, li=li, ci=ci, pi=pi, &
+               setdata=.true.)
        end do
 
        if (create_glacier_mec_landunit) then
           do gdc = bounds_clump%begg,bounds_clump%endg
              call set_landunit_wet_ice_lake(              &
-                  ltype=istice_mec, gi=gdc, li=li, ci=ci, pi=pi, setdata=.true., &
+                  ltype=istice_mec, gi=gdc, li=li, ci=ci, pi=pi, &
+                  setdata=.true., &
                   glcmask = ldomain%glcmask(gdc))
           end do
        endif
+
+       if ( use_ed ) then
+          ! cohort decomp
+          call set_cohort_decomp( bounds_clump=bounds_clump )
+       end if
 
        ! Ensure that we have set the expected number of pfts, cols and landunits for this clump
        SHR_ASSERT(li == bounds_clump%endl, errMsg(__FILE__, __LINE__))
@@ -528,6 +549,38 @@ contains
     end associate
     
   end subroutine clm_ptrs_check
+
+  !------------------------------------------------------------------------
+  subroutine set_cohort_decomp ( bounds_clump )
+    !
+    use clmtype
+    use clm_varsur, only : wt_lunit, wt_nat_pft
+    use subgridMod, only : subgrid_get_gcellinfo
+    use clm_varpar, only : numpft, maxpatch_pft, numcft, natpft_lb, natpft_ub
+
+    use EDtypesMod    , only : cohorts_per_gcell, coh
+
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type), intent(in)    :: bounds_clump  
+
+    integer cohi, gi
+    !
+    !------------------------------------------------------------------------
+
+    ! Set decomposition for cohorts
+
+    gi = bounds_clump%begg
+
+    do cohi = bounds_clump%begCohort, bounds_clump%endCohort
+
+       coh%gridcell(cohi) = gi
+       if ( mod(cohi,cohorts_per_gcell ) == 0 ) gi = gi + 1
+
+     end do
+
+  end subroutine set_cohort_decomp
 
   !------------------------------------------------------------------------
   subroutine set_landunit_veg_compete (ltype, gi, li, ci, pi, setdata)

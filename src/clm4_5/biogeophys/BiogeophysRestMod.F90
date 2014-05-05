@@ -61,6 +61,7 @@ contains
     integer               :: numl_global  ! total number of landunits, globally
     integer               :: numc_global  ! total number of columns, globally
     integer               :: nump_global  ! total number of pfts, globally
+    integer               :: numCohort_global  ! total number of cohorts, globally
     integer               :: nlevs        ! number of layers
     logical               :: readvar      ! determine if variable is on initial file
     logical               :: do_io        ! whether to do i/o for the given variable
@@ -84,7 +85,8 @@ contains
     end if
 
     ! Get expected total number of points, for later error checks
-    call get_proc_global(numg_global, numl_global, numc_global, nump_global)
+    call get_proc_global(numg_global, numl_global, numc_global, nump_global, &
+         numCohort_global )
 
     ! Note - for the snow interfaces, are only examing the snow interfaces
     ! above zi=0 which is why zisno and zsno have the same level dimension below
