@@ -70,7 +70,7 @@ contains
     use spmdMod   , only : masterproc
     use clmtype   , only : grlnd
     use domainMod , only : ldomain
-    use ncdio_pio 
+    use ncdio_pio , only : file_desc_t, ncd_pio_openfile, ncd_io, ncd_inqfdims, ncd_pio_closefile, ncd_inqdid, ncd_inqdlen
     !
     ! !ARGUMENTS:
     implicit none

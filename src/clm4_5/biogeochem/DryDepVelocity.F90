@@ -386,6 +386,7 @@ CONTAINS
                 end if
              end if
 
+             rs=(fsun(pi)*rssun(pi))+(rssha(pi)*(1._r8-fsun(pi)))
              !-------------------------------------------------------------------------------------
              ! no deposition on snow, ice, desert, and water
              !-------------------------------------------------------------------------------------
@@ -395,7 +396,6 @@ CONTAINS
                 rlux(ispec)=1.e36_r8
              else 
                 
-                rs=(fsun(pi)*rssun(pi))+(rssha(pi)*(1._r8-fsun(pi)))
                 if (rs==0._r8) then ! fvitt -- what to do when rs is zero ???
                    rsmx(ispec) = 1.e36_r8
                 else

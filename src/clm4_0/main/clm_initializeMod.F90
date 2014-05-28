@@ -18,8 +18,7 @@ module clm_initializeMod
                                use_cn, use_cndv
   use clm_varsur      , only : wtxy, vegxy, topoxy
   use perf_mod        , only : t_startf, t_stopf
-  use ncdio_pio
-  use mct_mod
+  use ncdio_pio       , only : file_desc_t
 
 ! !PUBLIC TYPES:
   implicit none

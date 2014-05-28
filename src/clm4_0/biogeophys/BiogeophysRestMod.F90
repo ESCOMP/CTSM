@@ -46,7 +46,7 @@ contains
 ! Read/Write biogeophysics information to/from restart file.
 !
 ! !USES:
-    use ncdio_pio
+    use ncdio_pio       , only : file_desc_t, ncd_defvar, ncd_io, ncd_double, ncd_int
     use clmtype
     use decompMod       , only : get_proc_bounds
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb

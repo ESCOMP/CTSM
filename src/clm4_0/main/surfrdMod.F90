@@ -30,7 +30,8 @@ module surfrdMod
   use decompMod   , only : get_proc_bounds
   use clmtype
   use spmdMod                         
-  use ncdio_pio
+  use ncdio_pio   , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile, &
+                           ncd_io, check_var, ncd_inqfdims, check_dim
   use pio
 !
 ! !PUBLIC TYPES:

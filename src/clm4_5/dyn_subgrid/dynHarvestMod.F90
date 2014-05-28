@@ -12,7 +12,6 @@ module dynHarvestMod
   ! pftdyn data, allowing them to differ in the years over which they apply.
   !
   ! !USES:
-  use clmtype
   use decompMod               , only : bounds_type, BOUNDS_LEVEL_PROC
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use abortutils              , only : endrun
@@ -61,7 +60,9 @@ contains
     ! This also calls dynHarvest_interp for the initial time
     !
     ! !USES:
+    use clmtype   , only : grlnd
     use clm_varctl, only : use_cn, fpftdyn
+    use dynVarTimeUninterpMod   , only : dyn_var_time_uninterp_type
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc-level bounds
@@ -159,7 +160,7 @@ contains
     ! Harvest mortality routine for coupled carbon-nitrogen code (CN)
     !
     ! !USES:
-    use clmtype
+    use clmtype         , only : pft, pcs, pnf, pns, pcf
     use pftvarcon       , only : noveg, nbrdlf_evr_shrub, pprodharv10
     use clm_varcon      , only : secspday
     use clm_time_manager, only : get_days_per_year
@@ -366,7 +367,7 @@ contains
    ! to the column level and assign them to the three litter pools
    !
    ! !USES:
-   use clmtype
+   use clmtype   , only : pftcon, col, ccf, cnf, pft, pcf, pps, pnf
    use clm_varpar, only : maxpatch_pft, nlevdecomp
    !
    ! !ARGUMENTS:

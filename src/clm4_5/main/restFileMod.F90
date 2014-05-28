@@ -12,7 +12,9 @@ module restFileMod
   use abortutils  , only : endrun
   use shr_log_mod , only : errMsg => shr_log_errMsg
   use clm_varctl  
-  use ncdio_pio       
+  use ncdio_pio   , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global, &
+                           ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim, &
+                           check_att, ncd_getatt
   !
   ! !PUBLIC TYPES:
   implicit none

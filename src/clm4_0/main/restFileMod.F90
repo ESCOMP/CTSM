@@ -14,7 +14,8 @@ module restFileMod
   use abortutils  , only : endrun
   use clm_varctl  , only : iulog, use_cn
   use surfrdMod   , only : crop_prog
-  use ncdio_pio       
+  use ncdio_pio   , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global, &
+                           ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim
 !
 ! !PUBLIC TYPES:
   implicit none

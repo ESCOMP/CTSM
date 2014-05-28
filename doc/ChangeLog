@@ -1,4 +1,179 @@
 ===============================================================
+Tag name:  clm4_5_73
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed May 28 15:33:10 MDT 2014
+One-line Summary: Add the stub ability for clm5_0 physics to CLM build system
+
+Purpose of changes:
+
+Add phys=clm5_0 as an option to the build. Currently, nothing is different in the code, this just
+adds the capability to do clm5_0 as a seperate configuration. The one thing that is different between
+clm4_5 and clm5_0 is the setting of urban_hac.
+
+Fix several issues needed for CAM: problem in DryDeposition (reoccurance of bug 1883, that was fixed and then
+unfixed in clm4_5_48), fix for internal compiler errors. CAM has been using the branch version of this
+since: cam5_3_29.
+
+Work on updates for PTCLM. Add some new sites for Rosie and Jinyun. Correct the call to mkmapdata.sh.
+Have CLM1PT forcing directory to use DIN_LOC_ROOT_CLMFORC so you can point it to a location seperate
+from DIN_LOC_ROOT. Add a new support script to PTCLM to submit a list of sites to batch: PTCLMsublist.
+Also allow release_tags in version find. Get buildtools to work on edison/hopper.
+
+Get tools to work on hopper and edison, and update mapping to use ESMF6.3.0.
+
+Fix various bugs: internal compiler error on janus, trigger an error if user_datm.streams.txt file is 
+                  readonly (rather than hang). Use DIN_LOC_ROOT_CLMFORC for CLM1PT.
+
+Requirements for tag: Fix bug 1883 and 1985 for Cheryl and CAM, fix PTCLM, add clm5_0, tools on hopper/edison
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+   1985  Internal compiler error on yellowstone with CLM in CAM standalone build
+   1965	 Internal compiler error on janus with CLM on janus
+   1938  Upgrade mkmapdata to ESMF6.3.0 
+   1937  Using a read-only user_datm.streams.txt file causes cesm_setup to hang 
+   1936  CLM1PT forcing directory needs to use DIN_LOC_ROOT_CLMFORC
+   1935  Changes needed to get tools to build on hopper... 
+   1933  Correct call to mkmapdata.sh in PTCLM 
+   1925  Add more sites to PTCLM 
+   1904  check for LSF_PJL_TYPE in regridbatch.sh doesn't work correctly 
+   1883	 uninitialized variable in DryDepVelocity.F90
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: Add clm5_0 as a new supported physics type
+
+Describe any changes made to the namelist: Set urban_hac according to physics
+    clm5_0=ON_WASTEHEAT, and clm4_5=ON
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self (clm_phys perl object reviewed by team: bandre, muszala, sacks)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, datm
+   scripts       to addclm50_n03_ED_scripts_015_140305_rev
+   datm          to datm8_140312
+   csm_share     to share3_140418        Use trunk version rather than branch
+   tools/mapping to mapping_131217a 
+   PTCLM         to PTCLM2_140423
+
+List all files eliminated:
+
+ D    models/lnd/clm/bld/unit_testers/env_run.xml -- This file is now built dynamically when the tester is run.
+
+List all files added and what they do:
+
+ A    models/lnd/clm/bld/query-xFail --- Add a script from Ben Andre to read and report on expected fails.
+ A    models/lnd/clm/bld/env_run.xml --- envxml_dir option is now required, so this provides a env_*.xml
+            file that can be read by default, when build-namelist is called outside of CESM for testing.
+ A    models/lnd/clm/bld/config_files/clm_phys_vers.pm - Enter physics version as a string i.e.: clm4_0
+            and then have the ability to interpret it as different types so you can do logical operations
+            on physics versions
+
+List all existing files that have been modified, and describe the changes:
+
+  M    models/lnd/clm/tools/shared/mkmapdata/regridbatch.sh ------- Add ability to run on hopper
+  M    models/lnd/clm/tools/shared/mkmapdata/mkmapdata.sh --------- Add ability to run on hopper/edison
+            remove jaguarpf, and upgrade to ESMF6.3.0
+  M    models/lnd/clm/tools/shared/ncl_scripts/getregional_datasets.ncl - New version of NCL requires
+            load before "begin" statement
+
+  M    models/lnd/clm/bld/configure ------------- Allow phys=clm5_0 and add in new clm_phys_vers object
+  M    models/lnd/clm/bld/README ---------------- Update info on files
+  M    models/lnd/clm/bld/CLMBuildNamelist.pm --- Put list of required options at top of help, and make envxml_dir
+           a required option. Add in use of clm_phys_vers object. Make sure use_ed_spitfire is only on if use_ed is
+           on.  If CLM_UPDATE_GLC_AREAS=TRUE and phys=clm4_0 trigger an error
+  M    models/lnd/clm/bld/config_files/config_definition_clm4_5.xml - Add all three physics version options
+  M    models/lnd/clm/bld/config_files/config_definition_clm4_0.xml - Add info. about clm4_5/clm5_0 options
+
+  M    models/lnd/clm/bld/unit_testers/build-namelist_test.pl - Add use of clm_phys_vers, and create env_run.xml
+            on the fly. Also add new tests for glacier update areas, and ED: usespitfireButNOTED, useEDclm40, useEDContradict2
+            useEDContradict, clm40andUpdateGlc, clm40andUpdateGlc, UpdateGlcContradict, UpdateGlcNoGLCMe, and tests
+            for clm5_0
+
+  M    models/lnd/clm/bld/test_build_namelist/t/test_vichydro.pm ----- Needs to use clm_phys_vers object
+  M    models/lnd/clm/bld/test_build_namelist/test_build_namelist.pl - Needs to use clm_phys_vers object
+
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml - urban_hac depends on clm4_5/clm5_0
+  
+-------------- Add phys=clm5_0 for all use-cases that test on phys
+  M    models/lnd/clm/bld/namelist_files/use_cases/2000_control.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/1850_control.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/20thC_transient.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/1850_glacierMEC_control.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+  M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+
+------------- Fix bugs 1883 (rs over lake) and 1983 (CAM internal compiler error) and 1965 
+-------------  (janus internal compiler error)
+  M    models/lnd/clm/src/clm4_5/biogeochem/DryDepVelocity.F90 ----- Set rs over lake
+  M    models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90 -------- Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_5/main/restFileMod.F90 -------------- Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_5/main/surfrdMod.F90 ---------------- Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_5/biogeophys/UrbanInputMod.F90 ------ Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90 -- Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_5/dyn_subgrid/dynHarvestMod.F90 ----- Add use only for clmtype and dynVarTimeUninterpMod
+           fixes internal compiler error on janus (1965)
+  M    models/lnd/clm/src/clm4_0/biogeochem/DryDepVelocity.F90 ----- Set rs over lake
+  M    models/lnd/clm/src/clm4_0/main/clm_initializeMod.F90 -------- Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_0/main/subgridRestMod.F90 ----------- Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_0/main/pftdynMod.F90 ---------------- Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_0/main/iniTimeConst.F90 ------------- Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_0/main/restFileMod.F90 -------------- Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_0/main/surfrdMod.F90 ---------------- Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_0/biogeophys/UrbanInputMod.F90 ------ Add use only for ncd_pio
+  M    models/lnd/clm/src/clm4_0/biogeophys/BiogeophysRestMod.F90 -- Add use only for ncd_pio
+
+CLM testing:
+
+    a) regular
+    b) build_namelist
+    c) tools
+
+  build-namelist tests:
+
+    yellowstone    yes
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel yes
+    yellowstone_pgi   yes
+    goldbach_nag      yes
+    goldbach_intel    yes
+    goldbach_pgi      yes
+
+  tools testing:
+
+    yellowstone interactive   yes
+
+CLM tag used for the baseline comparisons:  clm4_5_72
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_72
 Originator(s):  muszala (Stefan Muszala)
 Date: Mon May  5 17:47:52 MDT 2014

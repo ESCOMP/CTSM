@@ -13,8 +13,7 @@ module clm_initializeMod
   use clm_varsur      , only : wt_lunit, urban_valid, wt_nat_pft, wt_cft, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
-  use ncdio_pio
-  use mct_mod
+  use ncdio_pio       , only : file_desc_t
 
   implicit none
   save

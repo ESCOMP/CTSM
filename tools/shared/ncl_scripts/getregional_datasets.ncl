@@ -7,8 +7,8 @@
 ;  $Id$
 ;  $HeadURL;
 ;
+load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl";
 begin
-  load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl";
   ; ===========================================================================================================
   ;
   ; IMPORTANT NOTE: EDIT THE FOLLOWING TO CUSTOMIZE or use ENV VARIABLE SETTINGS

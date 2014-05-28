@@ -44,7 +44,7 @@ subroutine iniTimeConst
   use clm_varctl      , only : fsnowoptics, fsnowaging
   use SNICARMod       , only : SnowAge_init, SnowOptics_init
   use shr_scam_mod    , only : shr_scam_getCloseLatLon
-  use ncdio_pio       
+  use ncdio_pio       , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
 
 !
 ! !ARGUMENTS:

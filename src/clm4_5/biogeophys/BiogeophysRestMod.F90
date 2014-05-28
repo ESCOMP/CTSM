@@ -13,7 +13,8 @@ module BiogeophysRestMod
   use clm_time_manager , only : is_first_step
   use abortutils       , only : endrun
   use restUtilMod
-  use ncdio_pio
+  use ncdio_pio        , only : file_desc_t, ncd_defvar, ncd_io, ncd_double, ncd_int, &
+                                ncd_inqvdlen
   !
   ! !PUBLIC TYPES:
   implicit none

@@ -15,7 +15,7 @@ module pftdynMod
   use shr_sys_mod , only : shr_sys_flush
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
-  use ncdio_pio
+  use ncdio_pio   , only : file_desc_t, ncd_pio_openfile, ncd_inqdid, ncd_inqdlen, ncd_io, check_dim
 !
 ! !DESCRIPTION:
 ! Determine pft weights at current time using dynamic landuse datasets.

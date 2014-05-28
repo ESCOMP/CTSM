@@ -436,6 +436,8 @@ CONTAINS
                    end if
                 end if
              end if
+
+             rs=(fsun(pi)*rssun(pi))+(rssha(pi)*(1._r8-fsun(pi)))
              
              !-------------------------------------------------------------------------------------
              ! no deposition on snow, ice, desert, and water
@@ -445,7 +447,6 @@ CONTAINS
                 rsmx(ispec)=1.e36_r8
                 rlux(ispec)=1.e36_r8
              else
-                rs=(fsun(pi)*rssun(pi))+(rssha(pi)*(1.-fsun(pi)))
 
                 rsmx(ispec) = dewm*rs*drat(ispec)+rmx
 

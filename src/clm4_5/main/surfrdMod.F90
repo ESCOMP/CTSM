@@ -14,7 +14,8 @@ module surfrdMod
   use clm_varctl  , only : create_glacier_mec_landunit, use_cndv
   use clmtype
   use spmdMod                         
-  use ncdio_pio
+  use ncdio_pio   , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile, &
+                           ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid
   use pio
   use surfrdUtilsMod, only : check_sums_equal_1
   !
