@@ -4,7 +4,7 @@ project(clm45_tests Fortran C)
 list(APPEND CMAKE_MODULE_PATH ${CESM_CMAKE_MODULE_DIRECTORY})
 include(CESM_utils)
 
-set(CLM_ROOT "../../..")
+set(CLM_ROOT "..")
 set(CESM_ROOT "${CLM_ROOT}/../../..")
 
 # Add source directories from other models (csm_share, etc.). This should be
@@ -13,14 +13,15 @@ set(CESM_ROOT "${CLM_ROOT}/../../..")
 # wins).
 add_subdirectory(${CESM_ROOT}/models/csm_share/shr csm_share)
 
-# Add CLM source directories
+# Add CLM source directories (these add their own test directories)
 add_subdirectory(${CLM_ROOT}/src/util_share clm_util_share)
 add_subdirectory(${CLM_ROOT}/src/clm4_5/biogeophys clm_biogeophys)
 add_subdirectory(${CLM_ROOT}/src/clm4_5/dyn_subgrid clm_dyn_subgrid)
 add_subdirectory(${CLM_ROOT}/src/clm4_5/main clm_main)
 
 # Add general unit test directories (mocked out files, etc.)
-add_subdirectory(mock)
+add_subdirectory(unit_test_mocks)
+add_subdirectory(unit_test_shr)
 
 # Remove shr_sys_mod from share_sources.
 # This is needed because we want to use the mock shr_sys_mod in place of the real one
@@ -50,6 +51,11 @@ include_directories(${CESM_ROOT}/models/csm_share/shr)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 link_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-# Add each main unit test directory
-add_subdirectory(dyn_subgrid)
-add_subdirectory(biogeophys)
+# Add the test directories
+# Note: it's possible that these could be added by each source directory that
+# has tests in it. However, it appears that the order needs to be done
+# carefully: for example, include_directories and link_directories needs to be
+# done before adding the tests themselves.
+add_subdirectory(${CLM_ROOT}/src/clm4_5/biogeophys/test clm_biogeophys_test)
+add_subdirectory(${CLM_ROOT}/src/clm4_5/dyn_subgrid/test clm_dyn_subgrid_test)
+add_subdirectory(${CLM_ROOT}/src/clm4_5/main/test clm_main_test)

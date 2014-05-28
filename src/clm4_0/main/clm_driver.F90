@@ -82,7 +82,7 @@ module clm_driver
 ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use clmtype
-  use clm_varctl          , only : wrtdia, fpftdyn, iulog, create_glacier_mec_landunit, &
+  use clm_varctl          , only : wrtdia, flanduse_timeseries, iulog, create_glacier_mec_landunit, &
                                    use_cn, use_cndv, use_exit_spinup
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds, get_proc_bounds
@@ -297,7 +297,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
    !$OMP END PARALLEL DO
 
    if (.not. use_cndv) then
-      if (fpftdyn /= ' ') then
+      if (flanduse_timeseries /= ' ') then
          call pftdyn_interp  ! change the pft weights
       
          !$OMP PARALLEL DO PRIVATE (nc,g,begg,endg,begl,endl,begc,endc,begp,endp)
@@ -354,7 +354,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call pftdyn_wbal_init( begc, endc )
 
      if (use_cndv) then
-        ! NOTE: Currently CNDV and fpftdyn /= ' ' are incompatible
+        ! NOTE: Currently CNDV and flanduse_timeseries /= ' ' are incompatible
         call CNZeroFluxes_dwt( begc, endc, begp, endp )
         call pftwt_interp( begp, endp )
         call pftdyn_wbal( begg, endg, begc, endc, begp, endp )
@@ -364,12 +364,12 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
         ! ============================================================================
         ! Update weights and reset filters if dynamic land use
         ! This needs to be done outside the clumps loop, but after BeginWaterBalance()
-        ! The call to CNZeroFluxes_dwt() is needed regardless of fpftdyn
+        ! The call to CNZeroFluxes_dwt() is needed regardless of flanduse_timeseries
         ! ============================================================================
         if (use_cn) then
            call CNZeroFluxes_dwt( begc, endc, begp, endp )
         end if
-        if (fpftdyn /= ' ') then
+        if (flanduse_timeseries /= ' ') then
            if (use_cn) then
               call pftdyn_cnbal( begc, endc, begp, endp )
            end if

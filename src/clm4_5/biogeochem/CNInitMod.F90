@@ -34,8 +34,8 @@ contains
     use clmtype       , only: pps_a, pcs_a, pcf_a, pc13f_a, pc14f_a, pns_a, pnf_a    
     use clmtype       , only: lun
     use clm_varpar    , only: nlevgrnd, nlevdecomp, ndecomp_pools, nlevdecomp_full, crop_prog
-    use clm_varcon    , only: istsoil, zsoi, spval, denh2o
-    use clm_varcon    , only: istcrop, c13ratio, c14ratio
+    use clm_varcon    , only: zsoi, spval, denh2o, c13ratio, c14ratio
+    use landunit_varcon,only: istsoil, istcrop
     use clm_varctl    , only: use_c13, use_c14, use_nitrif_denitrif, use_cndv 
     use clm_varctl    , only: nsrest, nsrStartup
     use CNSetValueMod , only: cnsetpnf, cnsetpns, cnsetpcf, cnsetpcs, cnsetpps, cnsetpepv 

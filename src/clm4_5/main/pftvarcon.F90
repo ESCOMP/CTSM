@@ -152,6 +152,9 @@ module pftvarcon
   real(r8), allocatable :: pftpar30(:)       !min growing degree days (>= 5 deg C)
   real(r8), allocatable :: pftpar31(:)       !upper limit of temperature of the warmest month (twmax)
 
+  integer, parameter :: pftname_len = 40    ! max length of pftname       
+  character(len=pftname_len) :: pftname(0:mxpft) !PFT description
+
   real(r8), parameter :: reinickerp = 1.6_r8 !parameter in allometric equation
   real(r8), parameter :: dwood  = 2.5e5_r8   !cn wood density (gC/m3); lpj:2.0e5
   real(r8), parameter :: allom1 = 100.0_r8   !parameters in
@@ -211,8 +214,7 @@ contains
     !       and finally crops, ending with soybean
     ! DO NOT CHANGE THE ORDER -- WITHOUT MODIFYING OTHER PARTS OF THE CODE WHERE THE ORDER MATTERS!
     !
-    character(len=40) :: pftname(0:24)           !PFT description
-    character(len=40) :: expected_pftnames(0:24) 
+    character(len=pftname_len) :: expected_pftnames(0:mxpft) 
 !-----------------------------------------------------------------------
 
     expected_pftnames( 0) = 'not_vegetated                      '

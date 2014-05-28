@@ -10,7 +10,7 @@ module clmtype
 ! -------------------------------------------------------- 
 !   1 => default
 ! -------------------------------------------------------- 
-! landunits types can have values of (see clm_varcon.F90)
+! landunits types can have values of (see landunit_varcon.F90)
 ! -------------------------------------------------------- 
 !   1  => (istsoil)    soil (vegetated or bare soil landunit)
 !   2  => (istcrop)    crop (only for crop configuration)

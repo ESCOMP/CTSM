@@ -258,7 +258,8 @@ contains
     use clmtype
     use decompMod , only : BOUNDS_LEVEL_CLUMP
     use pftvarcon , only : npcropmin
-    use clm_varcon, only : istsoil, istcrop, icol_road_perv, istice_mec
+    use landunit_varcon, only : istsoil, istcrop, istice_mec
+    use column_varcon, only : icol_road_perv
     !
     ! !ARGUMENTS:
     implicit none

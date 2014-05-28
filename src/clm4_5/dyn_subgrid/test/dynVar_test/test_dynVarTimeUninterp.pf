@@ -48,7 +48,7 @@ contains
   @Test
   subroutine test_get_current_data_1d_noReads_update()
     ! Test get_current_data_1d with no reads after initialization, although it has an
-    ! update_time_info call that shouldn't do anything
+    ! set_current_year call that shouldn't do anything
     
     type(dyn_file_type), target :: dyn_file
     type(dyn_var_time_uninterp_type) :: var
@@ -66,8 +66,8 @@ contains
 
     call ncd_reset_read_times(dyn_file, 'foo_1d')
 
-    ! make sure that a call to update_time_info with an unchanged year doesn't affect things at all
-    call dyn_file%update_time_info(12)
+    ! make sure that a call to set_current_year with an unchanged year doesn't affect things at all
+    call dyn_file%time_info%set_current_year(12)
 
     call var%get_current_data(data)
     @assertEqual([4.0_r8, 5.0_r8, 6.0_r8], data)
@@ -125,7 +125,7 @@ contains
     call ncd_reset_read_times(dyn_file, 'foo_1d')
 
     ! advance to the next year, which should force a read
-    call dyn_file%update_time_info(13)
+    call dyn_file%time_info%set_current_year(13)
 
     call var%get_current_data(data)
     @assertEqual([7.0_r8, 8.0_r8, 9.0_r8], data)

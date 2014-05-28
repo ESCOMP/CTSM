@@ -35,7 +35,7 @@ contains
 
     use clmtype     , only : pft, pps, col, lun, pftcon
     use EDClmtype   , only : EDpft
-    use clm_varcon  , only : istsoil
+    use landunit_varcon, only : istsoil
     use clm_varctl  , only : iulog
     use clm_varpar  , only : numpft, numcft
 
@@ -458,7 +458,7 @@ end subroutine update_ed_history_variables
   subroutine clm_indices( bounds, geds_local )
 
     use clmtype     , only : col, lun
-    use clm_varcon,   only: istsoil
+    use landunit_varcon, only: istsoil
 
     implicit none
 

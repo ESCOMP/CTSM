@@ -47,7 +47,7 @@ contains
     ! This also calls dynpft_interp for the initial time
     !
     ! !USES:
-    use clm_varctl  , only : fpftdyn
+    use clm_varctl  , only : flanduse_timeseries
     use clm_varpar  , only : numpft, maxpatch_pft, natpft_size
     use ncdio_pio
     !
@@ -73,7 +73,7 @@ contains
        write(iulog,*) 'Attempting to read pft dynamic landuse data .....'
     end if
 
-    dynpft_file = dyn_file_type(fpftdyn)
+    dynpft_file = dyn_file_type(flanduse_timeseries)
 
     ! Consistency checks
     call check_dim(dynpft_file, 'natpft', natpft_size)
@@ -134,7 +134,7 @@ contains
        call ncd_io(ncid=dynpft_file, varname=varname, flag='read', data=wtpft_time1, &
             dim1name=grlnd, nt=1, readvar=readvar)
        if (.not. readvar) then
-          call endrun(msg=' ERROR: ' // trim(varname) // ' NOT on pftdyn file'//&
+          call endrun(msg=' ERROR: ' // trim(varname) // ' NOT on landuse_timeseries file'//&
                errMsg(__FILE__, __LINE__))
        end if
 
@@ -145,16 +145,16 @@ contains
        do g = bounds%begg, bounds%endg
           if (any(abs(wtpft_time1(g,:) - wt_nat_pft(g,:)) > tol)) then
              write(iulog,*) subname//' mismatch between PCT_NAT_PFT at initial time and that obtained from surface dataset'
-             write(iulog,*) 'On pftdyn file: ', wtpft_time1(g,:)
+             write(iulog,*) 'On landuse_timeseries file: ', wtpft_time1(g,:)
              write(iulog,*) 'On surface dataset: ', wt_nat_pft(g,:)
              write(iulog,*) ' '
              write(iulog,*) 'Confirm that the year of your surface dataset'
-             write(iulog,*) 'corresponds to the first year of your pftdyn file'
-             write(iulog,*) '(e.g., for a pftdyn file starting at year 1850, which is typical,'
+             write(iulog,*) 'corresponds to the first year of your landuse_timeseries file'
+             write(iulog,*) '(e.g., for a landuse_timeseries file starting at year 1850, which is typical,'
              write(iulog,*) 'you should be using an 1850 surface dataset),'
-             write(iulog,*) 'and that your pftdyn file is compatible with the surface dataset.'
+             write(iulog,*) 'and that your landuse_timeseries file is compatible with the surface dataset.'
              write(iulog,*) ' '
-             write(iulog,*) 'If you are confident that you are using the correct pftdyn file'
+             write(iulog,*) 'If you are confident that you are using the correct landuse_timeseries file'
              write(iulog,*) 'and the correct surface dataset, then you can bypass this check by setting:'
              write(iulog,*) '  check_dynpft_consistency = .false.'
              write(iulog,*) 'in user_nl_clm'
@@ -232,8 +232,9 @@ contains
     ! Time interpolate dynamic pft data to get pft weights for model time
     !
     ! !USES:
-    use clm_varcon      , only : istsoil
+    use landunit_varcon , only : istsoil
     use clm_varpar      , only : natpft_lb, natpft_ub
+    use dynTimeInfoMod  , only : time_info_type
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc-level bounds
@@ -253,7 +254,9 @@ contains
 
     ! Get pft weights for this time step
 
-    call dynpft_file%update_time_info()
+    ! As a workaround for an internal compiler error with ifort 13.1.2 on goldbach, call
+    ! the specific name of this procedure rather than using its generic name
+    call dynpft_file%time_info%set_current_year_get_year()
 
     allocate(wtpft_cur(bounds%begg:bounds%endg, natpft_lb:natpft_ub))
     call wtpft%get_current_data(wtpft_cur)

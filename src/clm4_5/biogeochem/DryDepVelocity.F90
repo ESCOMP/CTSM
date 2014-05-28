@@ -84,7 +84,7 @@ CONTAINS
     use seq_drydep_mod    , only : seq_drydep_setHCoeff, mapping, drat, foxd, &
                                    rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, &
                                    rgss, rgso
-    use clm_varcon        , only : istsoil, istice, istice_mec, istdlak, istwet
+    use landunit_varcon   , only : istsoil, istice, istice_mec, istdlak, istwet
     use clm_varctl        , only : iulog
     use pftvarcon         , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree,   &
                                    ndllf_dcd_brl_tree,        nbrdlf_evr_trp_tree,  &

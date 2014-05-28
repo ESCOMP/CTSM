@@ -260,7 +260,7 @@ contains
 ! !USES:
     use clm_atmlnd      , only : clm_map2gcell_minimal
     use clm_glclnd      , only : update_clm_s2x
-    use clm_varctl      , only : finidat, fpftdyn
+    use clm_varctl      , only : finidat, flanduse_timeseries
     use decompMod       , only : get_proc_clumps, get_proc_bounds
     use filterMod       , only : allocFilters, setFilters
     use histFldsMod     , only : hist_initFlds
@@ -447,7 +447,7 @@ contains
     if (use_cndv) then
        call pftwt_init()
     else
-       if (fpftdyn /= ' ') then
+       if (flanduse_timeseries /= ' ') then
           call t_startf('init_pftdyn')
           call pftdyn_init()
           call pftdyn_interp( )

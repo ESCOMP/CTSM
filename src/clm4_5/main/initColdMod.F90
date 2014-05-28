@@ -80,11 +80,11 @@ contains
     use clmtype      , only : grc
     use shr_const_mod, only : SHR_CONST_TKFRZ
     use clm_varpar   , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use clm_varcon   , only : bdsno, istice, istwet, istsoil, zlnd
-    use clm_varcon   , only : denice, denh2o, spval, sb, icol_road_perv
-    use clm_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
-    use clm_varcon   , only : icol_shadewall, istcrop, istice_mec, h2osno_max
-    use clm_varcon   , only : col_itype_to_icemec_class
+    use clm_varcon   , only : bdsno, zlnd
+    use clm_varcon   , only : denice, denh2o, spval, sb, h2osno_max
+    use column_varcon, only : icol_road_perv, icol_road_imperv, icol_roof, icol_sunwall, icol_shadewall
+    use column_varcon, only : col_itype_to_icemec_class
+    use landunit_varcon,only: istice, istwet, istsoil, istcrop, istice_mec
     use clm_varctl   , only : iulog, use_vancouver, use_mexicocity
     use clm_varsur   , only : topo_glc_mec
     use spmdMod      , only : masterproc

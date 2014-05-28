@@ -13,7 +13,7 @@
 
 <clm_start_type>arb_ic</clm_start_type>
 
-<clm_demand >fpftdyn</clm_demand>
+<clm_demand >flanduse_timeseries</clm_demand>
 
 <stream_year_first_ndep phys="clm4_0" bgc="cn"   >1850</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm4_0" bgc="cn"   >2005</stream_year_last_ndep>

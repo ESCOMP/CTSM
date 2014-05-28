@@ -34,8 +34,8 @@ contains
     use clmtype
     use clm_varpar   , only : nlevgrnd, nlevsoi, nlevurb
     use subgridAveMod, only : p2c
-    use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall 
-    use clm_varcon   , only : icol_road_perv, icol_road_imperv
+    use column_varcon, only : icol_roof, icol_sunwall, icol_shadewall 
+    use column_varcon, only : icol_road_perv, icol_road_imperv
     use clm_varcon   , only : denh2o, denice
     !
     ! !ARGUMENTS:
@@ -133,9 +133,10 @@ contains
      use subgridAveMod
      use clm_atmlnd       , only : clm_a2l, a2l_downscaled_col
      use clm_time_manager , only : get_step_size, get_nstep
-     use clm_varcon       , only : icol_roof, icol_sunwall, icol_shadewall
-     use clm_varcon       , only : spval, icol_road_perv, icol_road_imperv, istice_mec
-     use clm_varcon       , only : istdlak, istsoil,istcrop,istwet
+     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
+     use column_varcon    , only : icol_road_perv, icol_road_imperv
+     use clm_varcon       , only : spval
+     use landunit_varcon  , only : istice_mec, istdlak, istsoil,istcrop,istwet
      use clm_varctl       , only : glc_dyn_runoff_routing, create_glacier_mec_landunit
      !
      ! !ARGUMENTS:
@@ -295,7 +296,7 @@ contains
     
     found = .false.
     do c = bounds%begc, bounds%endc
-       if (abs(errh2o(c)) > 1e-7_r8) then
+       if (abs(errh2o(c)) > 1.e-7_r8) then
           found = .true.
           indexc = c
        end if
@@ -311,9 +312,9 @@ contains
        if ((ctype(indexc) .eq. icol_roof .or. &
             ctype(indexc) .eq. icol_road_imperv .or. &
             ctype(indexc) .eq. icol_road_perv) .and. &
-            abs(errh2o(indexc)) > 1.e-1 .and. (nstep > 2) ) then
+            abs(errh2o(indexc)) > 1.e-4_r8 .and. (nstep > 2) ) then
 
-          write(iulog,*)'clm urban model is stopping - error is greater than .10 (mm)'
+          write(iulog,*)'clm urban model is stopping - error is greater than 1e-4 (mm)'
           write(iulog,*)'nstep          = ',nstep
           write(iulog,*)'errh2o         = ',errh2o(indexc)
           write(iulog,*)'forc_rain      = ',forc_rain_col(indexc)
@@ -329,9 +330,9 @@ contains
           write(iulog,*)'clm model is stopping'
           call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
 
-       else if (abs(errh2o(indexc)) > .10_r8 .and. (nstep > 2) ) then
+       else if (abs(errh2o(indexc)) > 1.e-4_r8 .and. (nstep > 2) ) then
 
-          write(iulog,*)'clm model is stopping - error is greater than .10 (mm)'
+          write(iulog,*)'clm model is stopping - error is greater than 1e-4 (mm)'
           write(iulog,*)'nstep              = ',nstep
           write(iulog,*)'errh2o             = ',errh2o(indexc)
           write(iulog,*)'forc_rain          = ',forc_rain_col(indexc)
@@ -440,8 +441,8 @@ contains
             ' ltype= ',ltype(col%landunit(indexc)), &
             ' errh2osno= ',errh2osno(indexc)
        
-       if (abs(errh2osno(indexc)) > 0.1_r8 .and. (nstep > 2) ) then
-          write(iulog,*)'clm model is stopping - error is greater than .10 (mm)'
+       if (abs(errh2osno(indexc)) > 1.e-4_r8 .and. (nstep > 2) ) then
+          write(iulog,*)'clm model is stopping - error is greater than 1e-4 (mm)'
           write(iulog,*)'nstep            = ',nstep
           write(iulog,*)'errh2osno        = ',errh2osno(indexc)
           write(iulog,*)'snl              = ',snl(indexc)
@@ -519,7 +520,7 @@ contains
     found = .false.
     do p = bounds%begp, bounds%endp
        if (pactive(p)) then
-          if ( (errsol(p) /= spval) .and. (abs(errsol(p)) > .10_r8) ) then
+          if ( (errsol(p) /= spval) .and. (abs(errsol(p)) > 1.e-3_r8) ) then
              found = .true.
              indexp = p
              indexg = pft%gridcell(indexp)
@@ -547,7 +548,7 @@ contains
     found = .false.
     do p = bounds%begp, bounds%endp
        if (pactive(p)) then
-          if ( (errlon(p) /= spval) .and. (abs(errlon(p)) > .10_r8) ) then
+          if ( (errlon(p) /= spval) .and. (abs(errlon(p)) > 1.e-3_r8) ) then
              found = .true.
              indexp = p
           end if
@@ -565,7 +566,7 @@ contains
     found = .false.
     do p = bounds%begp, bounds%endp
        if (pactive(p)) then
-          if (abs(errseb(p)) > .10_r8 ) then
+          if (abs(errseb(p)) > 1.e-3_r8 ) then
              found = .true.
              indexp = p
              indexc = pft%column(indexp)
@@ -599,7 +600,7 @@ contains
        end if
     end do
     if ( found ) then
-       if (abs(errsoi_col(indexc)) > .10_r8 .and. (nstep > 2) ) then
+       if (abs(errsoi_col(indexc)) > 1.e-3_r8 .and. (nstep > 2) ) then
           write(iulog,*)'BalanceCheck: soil balance error (mm)'
           write(iulog,*)'nstep         = ',nstep
           write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)

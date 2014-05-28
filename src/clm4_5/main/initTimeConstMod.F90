@@ -39,9 +39,9 @@ subroutine initTimeConst(bounds)
   use clm_varpar           , only : nlevsoi, nlevgrnd, nlevlak, numpft, numrad, nlevurb, mach_eps
   use clm_varpar           , only : toplev_equalspace, nlev_equalspace, more_vertlayers, nlevsoifl
   use clm_varpar           , only : nlayer, nlayert
-  use clm_varcon           , only : istice, istdlak, istwet, istsoil, istcrop, istice_mec
-  use clm_varcon           , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
-  use clm_varcon           , only : icol_road_imperv, zlak, dzlak, zsoi, dzsoi, zisoi, spval
+  use landunit_varcon      , only : istice, istdlak, istwet, istsoil, istcrop, istice_mec
+  use column_varcon        , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
+  use clm_varcon           , only : zlak, dzlak, zsoi, dzsoi, zisoi, spval
   use clm_varcon           , only : albsat, albdry, dzsoi_decomp, secspday
   use clm_varcon           , only : nlvic, dzvic, pc, mu
   use clm_varcon           , only : pc, mu

@@ -33,8 +33,9 @@ contains
     use clmtype          , only : col, cps, cws, lun, namec
     use decompMod        , only : get_proc_bounds, get_proc_global
     use clm_varpar       , only : nlevsoi, nlevlak, nlevgrnd
-    use clm_varcon       , only : istdlak, zlak, dzlak, zsoi, dzsoi, zisoi, spval
+    use clm_varcon       , only : zlak, dzlak, zsoi, dzsoi, zisoi, spval
     use clm_varcon       , only : secspday, denh2o, denice
+    use landunit_varcon  , only : istdlak
     use clm_varctl       , only : nsrest, iulog, use_extralakelayers
     use clm_time_manager , only : get_step_size
     use SLakeCon         , only : fcrit, minz0lake, depthcrit, mixfact, pudz

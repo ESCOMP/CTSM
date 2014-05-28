@@ -53,7 +53,7 @@ contains
     use clm_varcon      , only : istcrop
     use clm_varcon      , only : denice, denh2o, istdlak, istslak, isturb, &
                                  istsoil, pondmx, watmin, spval
-    use clm_varctl      , only : allocate_all_vegpfts, nsrest, fpftdyn,    &
+    use clm_varctl      , only : allocate_all_vegpfts, nsrest, flanduse_timeseries,    &
                                  iulog, nsrContinue, nsrStartup, nsrBranch, &
                                  use_cndv, use_cn, use_snicar_frc
     use initSurfAlbMod  , only : do_initsurfalb
@@ -140,7 +140,7 @@ contains
                dim1name='pft', &
                long_name='pft weight relative to corresponding gridcell', units='')
        else if (flag == 'read' .or. flag == 'write') then
-          ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
+          ! Copy weights calculated from fsurdat/flanduse_timeseries to temp array for comparision
           ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
           if (flag == 'read' )then
              allocate( wtgcell(begp:endp) )
@@ -161,7 +161,7 @@ contains
                dim1name='pft', &
                long_name='pft weight relative to corresponding landunit', units='')
        else if (flag == 'read' .or. flag == 'write') then
-          ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
+          ! Copy weights calculated from fsurdat/flanduse_timeseries to temp array for comparision
           ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
           if (flag == 'read' )then
              allocate( wtlunit(begp:endp) )
@@ -182,7 +182,7 @@ contains
                dim1name='pft', &
                long_name='pft weight relative to corresponding column', units='')
        else if (flag == 'read' .or. flag == 'write') then
-          ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
+          ! Copy weights calculated from fsurdat/flanduse_timeseries to temp array for comparision
           ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
           if (flag == 'read' )then
              allocate( wtcol(begp:endp)   )
@@ -198,15 +198,15 @@ contains
 
        if (flag == 'read' )then
 
-          if ( fpftdyn /= ' ' )then
-             fileusing = "fsurdat/fpftdyn"
+          if ( flanduse_timeseries /= ' ' )then
+             fileusing = "fsurdat/flanduse_timeseries"
           else
              fileusing = "fsurdat"
           end if
           !
           ! Note: Do not compare weights if restart or if dynamic-pft branch
           !
-          if ( nsrest == nsrContinue .or. fpftdyn /= ' ' )then
+          if ( nsrest == nsrContinue .or. flanduse_timeseries /= ' ' )then
              ! Do NOT do any testing for restart or a pftdyn case
           !
           ! Otherwise test and make sure weights agree to reasonable tolerence

@@ -20,7 +20,7 @@ module controlMod
   use clm_varctl   , only : caseid, ctitle, nsrest, brnch_retain_casename, hostname, &
                             model_version=>version,    &
                             iulog, finidat, fsurdat, fatmlndfrc, &
-                            fatmtopo, flndtopo, fpftdyn, fpftcon, nrevsn, &
+                            fatmtopo, flndtopo, flanduse_timeseries, fpftcon, nrevsn, &
                             create_crop_landunit, allocate_all_vegpfts,   &
                             co2_type, wrtdia, co2_ppmv, nsegspc,          &
                             username, fsnowaging, fsnowoptics, fglcmask, &
@@ -165,7 +165,7 @@ contains
 
     namelist /clm_inparm/  &
          fsurdat, fatmtopo, flndtopo, &
-         fpftcon, fpftdyn,  fsnowoptics, fsnowaging
+         fpftcon, flanduse_timeseries,  fsnowoptics, fsnowaging
 
     ! History, restart options
 
@@ -359,7 +359,7 @@ contains
     call mpi_bcast (fatmtopo, len(fatmtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftcon , len(fpftcon) , MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (flanduse_timeseries , len(flanduse_timeseries) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowoptics,  len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
 

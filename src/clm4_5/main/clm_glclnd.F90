@@ -192,7 +192,9 @@ contains
     !
     ! !USES:
     use clmtype           , only : grc, lun, col
-    use clm_varcon        , only : istice_mec, ispval, col_itype_to_icemec_class
+    use clm_varcon        , only : ispval
+    use landunit_varcon   , only : istice_mec
+    use column_varcon     , only : col_itype_to_icemec_class
     use subgridWeightsMod , only : set_landunit_weight
     !
     ! !ARGUMENTS:
@@ -266,7 +268,8 @@ contains
     !
     ! !USES:
     use clmtype    , only : grc, lun, col, cps
-    use clm_varcon , only : istice_mec, col_itype_to_icemec_class
+    use column_varcon, only : col_itype_to_icemec_class
+    use landunit_varcon, only : istice_mec
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds ! bounds
@@ -320,8 +323,9 @@ contains
     !
     ! !USES:
     use clmtype   , only : col, lun, ces, cps, cwf, namec
-    use clm_varcon, only : istice_mec, istsoil
-    use clm_varcon, only : spval, tfrz, col_itype_to_icemec_class
+    use landunit_varcon, only : istice_mec, istsoil
+    use clm_varcon, only : spval, tfrz
+    use column_varcon, only : col_itype_to_icemec_class
     !
     ! !ARGUMENTS:
     implicit none
@@ -437,7 +441,7 @@ contains
     !
     ! !USES:
     use clmtype           , only : col, grc
-    use clm_varcon        , only : istice_mec
+    use landunit_varcon   , only : istice_mec
     use subgridWeightsMod , only : get_landunit_weight
     !
     ! !ARGUMENTS:

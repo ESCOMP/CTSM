@@ -106,9 +106,9 @@ contains
     ! dynamic land cover.
 
     ! !USES:
-    use clm_varcon, only : istsoil,istice,istwet,istdlak,istice_mec,istcrop,&
-                           icol_road_perv,icol_road_imperv,icol_roof,icol_sunwall,icol_shadewall,&
-                           cpice,  cpliq, denh2o
+    use clm_varcon, only : cpice,  cpliq, denh2o
+    use column_varcon, only : icol_road_perv,icol_road_imperv,icol_roof,icol_sunwall,icol_shadewall
+    use landunit_varcon, only: istsoil,istice,istwet,istdlak,istice_mec,istcrop
     use clm_varpar, only : nlevsno, nlevgrnd, nlevurb, nlevlak
     !
     ! !ARGUMENTS:

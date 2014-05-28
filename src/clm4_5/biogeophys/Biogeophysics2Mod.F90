@@ -61,9 +61,9 @@ contains
     use clmtype
     use clm_atmlnd        , only : a2l_downscaled_col
     use clm_time_manager  , only : get_step_size
-    use clm_varcon        , only : hvap, cpair, grav, vkc, tfrz, sb, icol_road_perv, &
-                                   icol_roof, icol_sunwall, icol_shadewall, istsoil
-    use clm_varcon        , only : istcrop
+    use clm_varcon        , only : hvap, cpair, grav, vkc, tfrz, sb
+    use column_varcon     , only : icol_road_perv, icol_roof, icol_sunwall, icol_shadewall
+    use landunit_varcon   , only : istsoil, istcrop
     use clm_varpar        , only : nlevsno, nlevgrnd, nlevurb, max_pft_per_col
     use SoilTemperatureMod, only : SoilTemperature
     use subgridAveMod     , only : p2c

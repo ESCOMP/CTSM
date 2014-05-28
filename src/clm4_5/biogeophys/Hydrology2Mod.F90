@@ -47,10 +47,9 @@ contains
     ! !USES:
     use clmtype
     use clm_atmlnd      , only : clm_a2l
-    use clm_varcon      , only : denh2o, denice, istice, istwet, istsoil, istice_mec, spval, &
-         icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
-         icol_shadewall, istdlak, tfrz, hfus, grav
-    use clm_varcon      , only : istcrop
+    use clm_varcon      , only : denh2o, denice, spval, tfrz, hfus, grav
+    use column_varcon   , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, icol_shadewall
+    use landunit_varcon , only : istice, istwet, istsoil, istice_mec, istcrop, istdlak
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
          SnowWater, BuildSnowFilter
@@ -639,10 +638,9 @@ contains
     ! !USES:
     use clmtype
     use clm_atmlnd      , only : clm_a2l, a2l_downscaled_col
-    use clm_varcon      , only : istice, istwet, istsoil, istice_mec, spval, &
-         icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
-         icol_shadewall, denh2o, denice
-    use clm_varcon      , only : istcrop, secspday
+    use clm_varcon      , only : spval, secspday, denh2o, denice
+    use column_varcon   , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, icol_shadewall
+    use landunit_varcon , only : istice, istwet, istsoil, istice_mec, istcrop
     use clm_varctl      , only : glc_dyn_runoff_routing, glc_snow_persistence_max_days
     use clm_varctl      , only : use_vichydro
     use clm_varpar      , only : nlevgrnd, nlevurb

@@ -34,7 +34,8 @@ contains
     ! !USES:
     use clmtypeInitMod   ,only: initClmtype
     use clm_varpar       ,only: clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
-    use clm_varcon       ,only: clm_varcon_init, max_lunit
+    use clm_varcon       ,only: clm_varcon_init
+    use landunit_varcon  ,only: landunit_varcon_init, max_lunit
     use clm_varctl       ,only: fsurdat, fatmlndfrc, flndtopo, fglcmask, noland, version  
     use pftvarcon        ,only: pftconrd
     use decompInitMod    ,only: decompInit_lnd, decompInit_clumps, decompInit_glcp
@@ -77,6 +78,7 @@ contains
     call control_init()
     call clm_varpar_init()
     call clm_varcon_init()
+    call landunit_varcon_init()
     call ncd_pio_init()
 
     if (masterproc) call control_print()

@@ -128,7 +128,6 @@ module subgridWeightsMod
 
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: landunit_metadata            ! return a string containing landunit metadata, for the history file
   private :: is_active_l                  ! determine whether the given landunit is active
   private :: is_active_c                  ! determine whether the given column is active
   private :: is_active_p                  ! determine whether the given pft is active
@@ -147,7 +146,7 @@ contains
     ! Initialize stuff in this module
     !
     ! !USES:
-    use clm_varcon     , only : max_lunit
+    use landunit_varcon, only : max_lunit
     use clm_varpar     , only : maxpatch_glcmec, natpft_size, cft_size
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use decompMod      , only : BOUNDS_LEVEL_PROC
@@ -184,7 +183,7 @@ contains
     ! ------------------------------------------------------------------------
 
     call hist_addfld2d (fname='PCT_LANDUNIT', units='%', type2d='ltype', &
-         avgflag='A', long_name='% of each landunit on grid cell; types:'//trim(landunit_metadata()), &
+         avgflag='A', long_name='% of each landunit on grid cell', &
          ptr_lnd=subgrid_weights_diagnostics%pct_landunit)
 
     call hist_addfld2d (fname='PCT_NAT_PFT', units='%', type2d='natpft', &
@@ -205,35 +204,6 @@ contains
 
 
   end subroutine init_subgrid_weights_mod
-
-
-  !-----------------------------------------------------------------------
-  pure function landunit_metadata() result(metadata_str)
-    !
-    ! !DESCRIPTION:
-    ! Return a string giving metadata about the landunit types - specifically, which
-    ! number corresponds to each type
-    !
-    ! !USES:
-    use clm_varcon, only : max_lunit, landunit_names
-    !
-    ! !ARGUMENTS:
-    character(len=128) :: metadata_str  ! function result
-    !
-    ! !LOCAL VARIABLES:
-    integer :: ltype                      ! landunit type
-    character(len=16) :: one_landunit_str ! string for a single landunit's metadata
-
-    character(len=*), parameter :: subname = 'landunit_metadata'
-    !-----------------------------------------------------------------------
-    
-    metadata_str = ' '
-    do ltype = 1, max_lunit
-       write(one_landunit_str, '(1x,a,":",i0,",")') trim(landunit_names(ltype)), ltype
-       metadata_str = trim(metadata_str) // one_landunit_str
-    end do
-
-  end function landunit_metadata
 
 
   !-----------------------------------------------------------------------
@@ -323,7 +293,7 @@ contains
     ! Determine whether the given landunit is active
     !
     ! !USES:
-    use clm_varcon, only : istsoil, istice, istice_mec
+    use landunit_varcon, only : istsoil, istice, istice_mec
     use domainMod , only : ldomain
     !
     ! !ARGUMENTS:
@@ -393,7 +363,7 @@ contains
     ! Determine whether the given column is active
     !
     ! !USES:
-    use clm_varcon, only : istice_mec, isturb_MIN, isturb_MAX
+    use landunit_varcon, only : istice_mec, isturb_MIN, isturb_MAX
     use domainMod , only : ldomain
     !
     ! !ARGUMENTS:
@@ -451,7 +421,6 @@ contains
     ! Determine whether the given pft is active
     !
     ! !USES:
-    use clm_varcon, only : istice_mec
     !
     ! !ARGUMENTS:
     implicit none
@@ -807,7 +776,8 @@ contains
     ! that has a 0-weight (i.e., virtual) glc_mec landunit.
     !
     ! !USES:
-    use clm_varcon, only : istice_mec, col_itype_to_icemec_class
+    use landunit_varcon, only : istice_mec
+    use column_varcon, only : col_itype_to_icemec_class
     use clm_varpar, only : maxpatch_glcmec
     !
     ! !ARGUMENTS:
@@ -842,7 +812,7 @@ contains
     ! Set pct_nat_pft & pct_cft diagnostic fields: % of PFTs on their landunit
     !
     ! !USES:
-    use clm_varcon, only : istsoil, istcrop
+    use landunit_varcon, only : istsoil, istcrop
     use clm_varpar, only : natpft_lb, cft_lb
     !
     ! !ARGUMENTS:

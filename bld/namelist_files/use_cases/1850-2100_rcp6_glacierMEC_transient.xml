@@ -17,7 +17,7 @@
 
 <rcp>6</rcp>
 
-<clm_demand >fpftdyn</clm_demand>
+<clm_demand >flanduse_timeseries</clm_demand>
 
 <glc_nec>10</glc_nec>
 

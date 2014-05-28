@@ -3,7 +3,7 @@ module dynEDMod
   ! !USES:
   use clmtype
   use decompMod,  only : bounds_type
-  use clm_varcon, only : istsoil
+  use landunit_varcon, only : istsoil
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none

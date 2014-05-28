@@ -113,6 +113,9 @@ module histFileMod
   private :: masterlist_change_timeavg ! Override default history tape contents for specific tape
   private :: htape_addfld              ! Add a field to the active list for a history tape
   private :: htape_create              ! Define contents of history file t
+  private :: htape_add_ltype_metadata  ! Add global metadata defining landunit types
+  private :: htape_add_natpft_metadata ! Add global metadata defining natpft types
+  private :: htape_add_cft_metadata    ! Add global metadata defining cft types
   private :: htape_timeconst           ! Write time constant values to history tape
   private :: htape_timeconst3D         ! Write time constant 3D values to primary history tape
   private :: hfields_normalize         ! Normalize history file fields by number of accumulations
@@ -991,7 +994,6 @@ contains
     ! !USES:
     use clmtype
     use subgridAveMod, only : p2g, c2g, l2g
-    use clm_varcon   , only : istice_mec
     use decompMod    , only : BOUNDS_LEVEL_PROC
     !
     ! !ARGUMENTS:
@@ -1232,7 +1234,6 @@ contains
     ! !USES:
     use clmtype
     use subgridAveMod, only : p2g, c2g, l2g
-    use clm_varcon   , only : istice_mec
     use decompMod    , only : BOUNDS_LEVEL_PROC
     !
     ! !ARGUMENTS:
@@ -1685,7 +1686,7 @@ contains
     use clmtype
     use clm_varpar  , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad, &
                              natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
-    use clm_varcon  , only : max_lunit
+    use landunit_varcon, only : max_lunit
     use clm_varctl  , only : caseid, ctitle, fsurdat, finidat, paramfile, &
                              version, hostname, username, conventions, source
     use domainMod   , only : ldomain
@@ -1819,9 +1820,12 @@ contains
     call ncd_defdim(lnfid, 'numrad' , numrad , dimid)
     call ncd_defdim(lnfid, 'levsno' , nlevsno , dimid)
     call ncd_defdim(lnfid, 'ltype', max_lunit, dimid)
+    call htape_add_ltype_metadata(lnfid)
     call ncd_defdim(lnfid, 'natpft', natpft_size, dimid)
+    call htape_add_natpft_metadata(lnfid)
     if (cft_size > 0) then
        call ncd_defdim(lnfid, 'cft', cft_size, dimid)
+       call htape_add_cft_metadata(lnfid)
     end if
     if (maxpatch_glcmec > 0) then
        call ncd_defdim(lnfid, 'glc_nec' , maxpatch_glcmec , dimid)
@@ -1854,6 +1858,94 @@ contains
     end if
 
   end subroutine htape_create
+
+  !-----------------------------------------------------------------------
+  subroutine htape_add_ltype_metadata(lnfid)
+    !
+    ! !DESCRIPTION:
+    ! Add global metadata defining landunit types
+    !
+    ! !USES:
+    use landunit_varcon, only : max_lunit, landunit_names, landunit_name_length
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: lnfid ! local file id
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ltype  ! landunit type
+    character(len=*), parameter :: att_prefix = 'ltype_'  ! prefix for attributes
+    character(len=len(att_prefix)+landunit_name_length) :: attname ! attribute name
+
+    character(len=*), parameter :: subname = 'htape_add_ltype_metadata'
+    !-----------------------------------------------------------------------
+    
+    do ltype = 1, max_lunit
+       attname = att_prefix // landunit_names(ltype)
+       call ncd_putatt(lnfid, ncd_global, attname, ltype)
+    end do
+
+  end subroutine htape_add_ltype_metadata
+
+  !-----------------------------------------------------------------------
+  subroutine htape_add_natpft_metadata(lnfid)
+    !
+    ! !DESCRIPTION:
+    ! Add global metadata defining natpft types
+    !
+    ! !USES:
+    use clm_varpar, only : natpft_lb, natpft_ub
+    use pftvarcon , only : pftname_len, pftname
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: lnfid ! local file id
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ptype  ! pft type
+    integer :: ptype_1_indexing ! pft type, translated to 1 indexing
+    character(len=*), parameter :: att_prefix = 'natpft_' ! prefix for attributes
+    character(len=len(att_prefix)+pftname_len) :: attname ! attribute name
+
+    character(len=*), parameter :: subname = 'htape_add_natpft_metadata'
+    !-----------------------------------------------------------------------
+    
+    do ptype = natpft_lb, natpft_ub
+       ptype_1_indexing = ptype + (1 - natpft_lb)
+       attname = att_prefix // pftname(ptype)
+       call ncd_putatt(lnfid, ncd_global, attname, ptype_1_indexing)
+    end do
+
+  end subroutine htape_add_natpft_metadata
+
+  !-----------------------------------------------------------------------
+  subroutine htape_add_cft_metadata(lnfid)
+    !
+    ! !DESCRIPTION:
+    ! Add global metadata defining natpft types
+    !
+    ! !USES:
+    use clm_varpar, only : cft_lb, cft_ub
+    use pftvarcon , only : pftname_len, pftname
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: lnfid ! local file id
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ptype  ! pft type
+    integer :: ptype_1_indexing ! pft type, translated to 1 indexing
+    character(len=*), parameter :: att_prefix = 'cft_'    ! prefix for attributes
+    character(len=len(att_prefix)+pftname_len) :: attname ! attribute name
+
+    character(len=*), parameter :: subname = 'htape_add_cft_metadata'
+    !-----------------------------------------------------------------------
+    
+    do ptype = cft_lb, cft_ub
+       ptype_1_indexing = ptype + (1 - cft_lb)
+       attname = att_prefix // pftname(ptype)
+       call ncd_putatt(lnfid, ncd_global, attname, ptype_1_indexing)
+    end do
+
+  end subroutine htape_add_cft_metadata
+
 
   !-----------------------------------------------------------------------
   subroutine htape_timeconst3D(t, mode)
@@ -4175,7 +4267,7 @@ contains
     use clmtype
     use clm_varpar, only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, &
                            natpft_size, cft_size, maxpatch_glcmec
-    use clm_varcon, only : max_lunit
+    use landunit_varcon, only : max_lunit
     !
     ! !ARGUMENTS:
     implicit none

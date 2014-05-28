@@ -17,7 +17,7 @@
 
 <rcp>8.5</rcp>
 
-<clm_demand >fpftdyn</clm_demand>
+<clm_demand >flanduse_timeseries</clm_demand>
 
 <clm_start_type>arb_ic</clm_start_type>
 

@@ -26,7 +26,7 @@ contains
     use shr_kind_mod   , only: r8 => shr_kind_r8
     use clmtype
     use clm_varpar     , only : nlevurb
-    use clm_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
+    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_varctl     , only : iulog
     use decompMod      , only : bounds_type
     use shr_log_mod    , only : errMsg => shr_log_errMsg

@@ -42,7 +42,8 @@ contains
      use clmtype
      use clm_atmlnd      , only : clm_a2l
      use clm_varpar      , only : numrad, nlevsno
-     use clm_varcon      , only : spval, istsoil, degpsec, isecspday, istcrop
+     use clm_varcon      , only : spval, degpsec, isecspday
+     use landunit_varcon , only : istsoil, istcrop 
      use clm_varctl      , only : subgridflag, use_snicar_frc, iulog, use_ed
      use clm_time_manager, only : get_curr_date, get_step_size
      use SNICARMod       , only : DO_SNO_OC

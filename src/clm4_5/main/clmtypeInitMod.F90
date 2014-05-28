@@ -11,7 +11,8 @@ module clmtypeInitMod
   use shr_infnan_mod, only: &
        nan => shr_infnan_nan, assignment(=)
   use clm_varcon, only : &
-       spval, ispval, max_lunit
+       spval, ispval
+  use landunit_varcon, only : max_lunit
   use clm_varpar  , only : &
        maxpatch_pft, nlevsno, nlevgrnd, numrad, nlevlak, &
        numpft, ndst, nlevurb, nlevsoi, nlevdecomp, nlevdecomp_full, &

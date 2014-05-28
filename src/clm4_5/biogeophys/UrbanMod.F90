@@ -82,8 +82,8 @@ contains
     ! !USES:
     use clmtype
     use shr_orb_mod  , only : shr_orb_decl, shr_orb_cosz
-    use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv, &
-                              sb
+    use clm_varcon   , only : sb
+    use column_varcon, only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
     !
     ! !ARGUMENTS:
     implicit none
@@ -467,7 +467,7 @@ contains
     !
     ! !USES:
     use clmtype
-    use clm_varcon   , only : icol_roof, icol_road_perv, icol_road_imperv
+    use column_varcon, only : icol_roof, icol_road_perv, icol_road_imperv
     !
     ! !ARGUMENTS:
     implicit none
@@ -548,9 +548,9 @@ contains
     
     ! !USES:
     use clmtype
-    use clm_varcon       , only : spval, icol_roof, icol_sunwall, icol_shadewall, &
-                                  icol_road_perv, icol_road_imperv, sb
-    use clm_varcon       , only : tfrz                ! To use new constant..
+    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, &
+                                  icol_road_perv, icol_road_imperv
+    use clm_varcon       , only : spval, sb, tfrz
     use clm_time_manager , only : get_curr_date, get_step_size
     use clm_atmlnd       , only : clm_a2l, a2l_not_downscaled_gcell
     !
@@ -2039,7 +2039,7 @@ contains
     ! !USES:
     use clmtype
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
-    use clm_varcon    , only : isturb_MIN
+    use landunit_varcon,only : isturb_MIN
     use UrbanInputMod , only : urbinp
     !
     ! !ARGUMENTS:
@@ -2134,11 +2134,11 @@ contains
     
     ! !USES:
     use clmtype
-    use clm_varcon         , only : cpair, vkc, spval, icol_roof, icol_sunwall, &
-                                    icol_shadewall, icol_road_perv, icol_road_imperv, &
+    use clm_varcon         , only : cpair, vkc, spval, &
                                     grav, pondmx_urban, rpi, rgas, &
                                     ht_wasteheat_factor, ac_wasteheat_factor, &
                                     wasteheat_limit
+    use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
     use filterMod          , only : filter
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use QSatMod            , only : QSat

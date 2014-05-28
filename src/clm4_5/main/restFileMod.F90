@@ -33,6 +33,9 @@ module restFileMod
   private :: restFile_write_pfile    ! Writes restart pointer file
   private :: restFile_closeRestart   ! Close restart file and write restart pointer file
   private :: restFile_dimset
+  private :: restFile_add_ilun_metadata  ! Add global metadata defining landunit types
+  private :: restFile_add_icol_metadata  ! Add global metadata defining column types
+  private :: restFile_add_ipft_metadata  ! Add global metadata defining pft types
   private :: restFile_dimcheck
   private :: restFile_enddef
   private :: restFile_check_consistency  ! Perform consistency checks on the restart file
@@ -494,7 +497,7 @@ contains
     ! !USES:
     use clm_time_manager, only : get_nstep
     use clm_varctl  , only : caseid, ctitle, version, username, hostname, fsurdat, &
-         fpftdyn, conventions, source
+         flanduse_timeseries, conventions, source
     use clm_varpar  , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevurb, nlevcan
     use clm_varpar  , only : cft_lb, cft_ub, maxpatch_glcmec
     use decompMod   , only : get_proc_global
@@ -557,7 +560,7 @@ contains
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_title'     , trim(ctitle))
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_id'        , trim(caseid))
     call ncd_putatt(ncid, NCD_GLOBAL, 'surface_dataset', trim(fsurdat))
-    call ncd_putatt(ncid, NCD_GLOBAL, 'flanduse_timeseries', trim(fpftdyn))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'flanduse_timeseries', trim(flanduse_timeseries))
     call ncd_putatt(ncid, NCD_GLOBAL, 'title', 'CLM Restart information')
     if (create_glacier_mec_landunit) then
        call ncd_putatt(ncid, ncd_global, 'created_glacier_mec_landunits', 'true')
@@ -565,59 +568,106 @@ contains
        call ncd_putatt(ncid, ncd_global, 'created_glacier_mec_landunits', 'false')
     end if
 
-    call ncd_putatt(ncid, ncd_global, 'ipft_not_vegetated'                       ,0 ) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_needleleaf_evergreen_temperate_tree' ,1 ) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_needleleaf_evergreen_boreal_tree'    ,2 ) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_needleleaf_deciduous_boreal_tree'    ,3 ) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_evergreen_tropical_tree'   ,4 ) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_evergreen_temperate_tree'  ,5 ) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_deciduous_tropical_tree'   ,6 ) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_deciduous_temperate_tree'  ,7 ) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_deciduous_boreal_tree'     ,8 ) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_evergreen_shrub'           ,9 ) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_deciduous_temperate_shrub' ,10) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_broadleaf_deciduous_boreal_shrub'    ,11) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_c3_arctic_grass'                     ,12) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_c3_non-arctic_grass'                 ,13) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_c4_grass'                            ,14) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_c3_crop'                             ,15) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_c3_irrigated'                        ,16) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_corn'                                ,17) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_irrigated_corn'                      ,18) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_spring_temperate_cereal'             ,19) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_irrigated_spring_temperate_cereal'   ,20) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_winter_temperate_cereal'             ,21) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_irrigated_winter_temperate_cereal'   ,22) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_soybean'                             ,23) 
-    call ncd_putatt(ncid, ncd_global, 'ipft_irrigated_soybean'                   ,24) 
-
-    call ncd_putatt(ncid, ncd_global, 'cft_lb'                                 , cft_lb)
-    call ncd_putatt(ncid, ncd_global, 'cft_ub'                                 , cft_ub)
-
-    call ncd_putatt(ncid, ncd_global, 'icol_vegetated_or_bare_soil'            , 1) 
-    call ncd_putatt(ncid, ncd_global, 'icol_crop'                              , 2) 
-    call ncd_putatt(ncid, ncd_global, 'icol_crop_noncompete'                   , '2*100+m, m=cft_lb,cft_ub')
-    call ncd_putatt(ncid, ncd_global, 'icol_landice'                           , 3) 
-    call ncd_putatt(ncid, ncd_global, 'icol_landice_multiple_elevation_classes', '4*100+m, m=1,glcnec')  
-    call ncd_putatt(ncid, ncd_global, 'icol_deep_lake'                         , 5) 
-    call ncd_putatt(ncid, ncd_global, 'icol_wetland'                           , 6) 
-    call ncd_putatt(ncid, ncd_global, 'icol_urban_roof'                        , 71)
-    call ncd_putatt(ncid, ncd_global, 'icol_urban_sunwall'                     , 72)
-    call ncd_putatt(ncid, ncd_global, 'icol_urban_shadewall'                   , 73)
-    call ncd_putatt(ncid, ncd_global, 'icol_urban_impervious_road'             , 74)
-    call ncd_putatt(ncid, ncd_global, 'icol_urban_pervious_road'               , 75)
-
-    call ncd_putatt(ncid, ncd_global, 'ilun_vegetated_or_bare_soil'             , 1)
-    call ncd_putatt(ncid, ncd_global, 'ilun_crop'                               , 2)
-    call ncd_putatt(ncid, ncd_global, 'ilun_landice'                            , 3)
-    call ncd_putatt(ncid, ncd_global, 'ilun_landice_multiple_elevation_classes' , 4)
-    call ncd_putatt(ncid, ncd_global, 'ilun_deep_lake'                          , 5)
-    call ncd_putatt(ncid, ncd_global, 'ilun_wetland'                            , 6)
-    call ncd_putatt(ncid, ncd_global, 'ilun_urban_tbd'                          , 7)
-    call ncd_putatt(ncid, ncd_global, 'ilun_urban_hd'                           , 8)
-    call ncd_putatt(ncid, ncd_global, 'ilun_urban_md'                           , 9)
+    call restFile_add_ipft_metadata(ncid)
+    call restFile_add_icol_metadata(ncid)
+    call restFile_add_ilun_metadata(ncid)
 
   end subroutine restFile_dimset
+
+  !-----------------------------------------------------------------------
+  subroutine restFile_add_ilun_metadata(ncid)
+    !
+    ! !DESCRIPTION:
+    ! Add global metadata defining landunit types
+    !
+    ! !USES:
+    use landunit_varcon, only : max_lunit, landunit_names, landunit_name_length
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid ! local file id
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ltype  ! landunit type
+    character(len=*), parameter :: att_prefix = 'ilun_'  ! prefix for attributes
+    character(len=len(att_prefix)+landunit_name_length) :: attname ! attribute name
+
+    character(len=*), parameter :: subname = 'restFile_add_ilun_metadata'
+    !-----------------------------------------------------------------------
+    
+    do ltype = 1, max_lunit
+       attname = att_prefix // landunit_names(ltype)
+       call ncd_putatt(ncid, ncd_global, attname, ltype)
+    end do
+
+  end subroutine restFile_add_ilun_metadata
+
+  !-----------------------------------------------------------------------
+  subroutine restFile_add_icol_metadata(ncid)
+    !
+    ! !DESCRIPTION:
+    ! Add global metadata defining column types
+    !
+    ! !USES:
+    use column_varcon, only : icol_roof, icol_sunwall, icol_shadewall, icol_road_imperv, icol_road_perv
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid ! local file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: att_prefix = 'icol_'  ! prefix for attributes
+
+    character(len=*), parameter :: subname = 'restFile_add_icol_metadata'
+    !-----------------------------------------------------------------------
+    
+    ! Unlike ilun and ipft, the column names currently do not exist in column_varcon.
+    ! This is partly because of the trickiness of encoding column values for crop &
+    ! icemec.
+
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'vegetated_or_bare_soil', 1) 
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'crop'                  , 2) 
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'crop_noncompete'       , '2*100+m, m=cft_lb,cft_ub')
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'landice'               , 3) 
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'landice_multiple_elevation_classes', '4*100+m, m=1,glcnec')  
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'deep_lake'             , 5) 
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'wetland'               , 6) 
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'urban_roof'            , icol_roof)
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'urban_sunwall'         , icol_sunwall)
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'urban_shadewall'       , icol_shadewall)
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'urban_impervious_road' , icol_road_imperv)
+    call ncd_putatt(ncid, ncd_global, att_prefix // 'urban_pervious_road'   , icol_road_perv)
+
+  end subroutine restFile_add_icol_metadata
+
+  !-----------------------------------------------------------------------
+  subroutine restFile_add_ipft_metadata(ncid)
+    !
+    ! !DESCRIPTION:
+    ! Add global metadata defining pft types
+    !
+    ! !USES:
+    use clm_varpar, only : natpft_lb, mxpft, cft_lb, cft_ub
+    use pftvarcon , only : pftname_len, pftname
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid ! local file id
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ptype  ! pft type
+    character(len=*), parameter :: att_prefix = 'ipft_'   ! prefix for attributes
+    character(len=len(att_prefix)+pftname_len) :: attname ! attribute name
+
+    character(len=*), parameter :: subname = 'restFile_add_ipft_metadata'
+    !-----------------------------------------------------------------------
+    
+    do ptype = natpft_lb, mxpft
+       attname = att_prefix // pftname(ptype)
+       call ncd_putatt(ncid, ncd_global, attname, ptype)
+    end do
+
+    call ncd_putatt(ncid, ncd_global, 'cft_lb', cft_lb)
+    call ncd_putatt(ncid, ncd_global, 'cft_ub', cft_ub)
+
+  end subroutine restFile_add_ipft_metadata
 
   !-----------------------------------------------------------------------
   subroutine restFile_dimcheck( ncid )
@@ -801,7 +851,7 @@ contains
     !
     ! !USES:
     use fileutils      , only : get_filename
-    use clm_varctl     , only : fname_len, fsurdat, fpftdyn
+    use clm_varctl     , only : fname_len, fsurdat, flanduse_timeseries
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid    ! netcdf id
@@ -816,10 +866,10 @@ contains
     
     ! Only do this check for a transient run. The problem with doing this check for a non-
     ! transient run is the transition from transient to non-transient: It is legitimate to
-    ! run with an 1850 surface dataset and a pftdyn file, then use the restart file from
+    ! run with an 1850 surface dataset and a landuse_timeseries file, then use the restart file from
     ! that run to start a present-day (non-transient) run, which would use a 2000 surface
     ! dataset.
-    if (fpftdyn /= ' ') then
+    if (flanduse_timeseries /= ' ') then
        call ncd_getatt(ncid, NCD_GLOBAL, 'surface_dataset', fsurdat_rest)
 
        ! Compare file names, ignoring path
@@ -865,7 +915,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     logical                  :: att_found    ! whether the attribute was found on the netcdf file
-    character(len=fname_len) :: fpftdyn_rest ! fpftdyn from the restart file
+    character(len=fname_len) :: flanduse_timeseries_rest ! flanduse_timeseries from the restart file
     integer                  :: year         ! current model year
     integer                  :: mon          ! current model month
     integer                  :: day          ! current model day of month
@@ -876,7 +926,7 @@ contains
     !-----------------------------------------------------------------------
     
     ! Only do this check for a transient run
-    if (fpftdyn /= ' ') then
+    if (flanduse_timeseries /= ' ') then
        ! Determine if the restart file was generated from a transient run; if so, we will
        ! do this consistency check. For backwards compatibility, we allow for the
        ! possibility that the flanduse_timeseries attribute was not on the restart file;
@@ -884,7 +934,7 @@ contains
        ! run, thus skipping this check.
        call check_att(ncid, NCD_GLOBAL, 'flanduse_timeseries', att_found)
        if (att_found) then
-          call ncd_getatt(ncid, NCD_GLOBAL, 'flanduse_timeseries', fpftdyn_rest)
+          call ncd_getatt(ncid, NCD_GLOBAL, 'flanduse_timeseries', flanduse_timeseries_rest)
        else
           write(iulog,*) ' '
           write(iulog,*) subname//' WARNING: flanduse_timeseries attribute not found on restart file'
@@ -892,12 +942,12 @@ contains
           write(iulog,*) 'and thus skipping the year check'
           write(iulog,*) ' '
 
-          fpftdyn_rest = ' '
+          flanduse_timeseries_rest = ' '
        end if
        
        ! If the restart file was generated from a transient run, then confirm that the
        ! year of the restart file matches the current model year.
-       if (fpftdyn_rest /= ' ') then
+       if (flanduse_timeseries_rest /= ' ') then
           call get_curr_date(year, mon, day, tod)
           call get_rest_date(ncid, rest_year)
           if (year /= rest_year) then
@@ -921,8 +971,8 @@ contains
              end if
              call endrun(msg=errMsg(__FILE__, __LINE__))
           end if  ! year /= rest_year
-       end if  ! fpftdyn_rest /= ' '
-    end if  ! fpftdyn /= ' '
+       end if  ! flanduse_timeseries_rest /= ' '
+    end if  ! flanduse_timeseries /= ' '
 
   end subroutine restFile_check_year
 

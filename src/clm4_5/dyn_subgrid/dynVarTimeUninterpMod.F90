@@ -4,7 +4,7 @@
 !===================================================
 module dynVarTimeUninterpMod
 
-#include "shr_assert.h"
+#include "shr_assert.h" 
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -31,9 +31,9 @@ module dynVarTimeUninterpMod
      private
      ! Note that data are stored as 1-d, then converted to the appropriate dimensionality
      ! as needed
-     real(r8), allocatable :: data_nt1(:) ! data at time nt1
-     integer :: nt1                       ! current nt1 corresponding to the data
-# 31 "dynVarTimeUninterpMod.F90.in"
+     real(r8), allocatable :: data_at_tlower(:) ! data at time time_index_lower
+     integer :: time_index_lower                       ! current time_index_lower corresponding to the data
+# 32 "dynVarTimeUninterpMod.F90.in"
    contains
      generic :: get_current_data => &      ! Get the current value of the data
           get_current_data_1d, get_current_data_2d
@@ -42,12 +42,12 @@ module dynVarTimeUninterpMod
      procedure :: read_data_if_needed  ! Read the next time slice of data, if necessary
   end type dyn_var_time_uninterp_type
 
-# 39 "dynVarTimeUninterpMod.F90.in"
+# 40 "dynVarTimeUninterpMod.F90.in"
   interface dyn_var_time_uninterp_type
      module procedure constructor  ! initialize a new dyn_var_time_uninterp_type object
   end interface dyn_var_time_uninterp_type
 
-# 43 "dynVarTimeUninterpMod.F90.in"
+# 44 "dynVarTimeUninterpMod.F90.in"
 contains
   
   ! ======================================================================
@@ -55,7 +55,7 @@ contains
   ! ======================================================================
 
   !-----------------------------------------------------------------------
-# 50 "dynVarTimeUninterpMod.F90.in"
+# 51 "dynVarTimeUninterpMod.F90.in"
   type(dyn_var_time_uninterp_type) function constructor( &
        dyn_file, varname, dim1name, conversion_factor, &
        do_check_sums_equal_1, data_shape)
@@ -68,6 +68,7 @@ contains
     !
     ! !USES:
     use dynFileMod     , only : dyn_file_type
+    use dynTimeInfoMod , only : time_info_type
     !
     ! !ARGUMENTS:
     type(dyn_file_type), target, intent(in) :: dyn_file ! file containing this variable
@@ -93,12 +94,12 @@ contains
          data_shape=data_shape)
 
     ! Allocate space for data
-    allocate(constructor%data_nt1(product(data_shape)))
+    allocate(constructor%data_at_tlower(product(data_shape)))
 
     ! Read first set of data
-    constructor%nt1 = dyn_file%get_nt1()
-    call constructor%read_variable(constructor%nt1, constructor%data_nt1)
-# 92 "dynVarTimeUninterpMod.F90.in"
+    constructor%time_index_lower = dyn_file%time_info%get_time_index_lower()
+    call constructor%read_variable(constructor%time_index_lower, constructor%data_at_tlower)
+# 94 "dynVarTimeUninterpMod.F90.in"
   end function constructor
     
   ! ======================================================================
@@ -110,7 +111,7 @@ contains
 
   ! DIMS 1,2
   !-----------------------------------------------------------------------
-# 103 "dynVarTimeUninterpMod.F90.in"
+# 105 "dynVarTimeUninterpMod.F90.in"
   subroutine get_current_data_1d(this, cur_data)
     !
     ! !DESCRIPTION:
@@ -120,7 +121,7 @@ contains
     ! 
     ! If necessary, new data are read from the file.
     !
-    ! Should be called once per time step, AFTER calling update_time_info on the
+    ! Should be called once per time step, AFTER calling set_current_year on the
     ! underlying dyn_file variable
     !
     ! !ARGUMENTS:
@@ -140,13 +141,13 @@ contains
 
     ! Get current data
     call this%read_data_if_needed()
-    cur_data = reshape(this%data_nt1, shape(cur_data))
+    cur_data = reshape(this%data_at_tlower, shape(cur_data))
 
-# 134 "dynVarTimeUninterpMod.F90.in"
+# 136 "dynVarTimeUninterpMod.F90.in"
   end subroutine get_current_data_1d
   ! DIMS 1,2
   !-----------------------------------------------------------------------
-# 103 "dynVarTimeUninterpMod.F90.in"
+# 105 "dynVarTimeUninterpMod.F90.in"
   subroutine get_current_data_2d(this, cur_data)
     !
     ! !DESCRIPTION:
@@ -156,7 +157,7 @@ contains
     ! 
     ! If necessary, new data are read from the file.
     !
-    ! Should be called once per time step, AFTER calling update_time_info on the
+    ! Should be called once per time step, AFTER calling set_current_year on the
     ! underlying dyn_file variable
     !
     ! !ARGUMENTS:
@@ -176,9 +177,9 @@ contains
 
     ! Get current data
     call this%read_data_if_needed()
-    cur_data = reshape(this%data_nt1, shape(cur_data))
+    cur_data = reshape(this%data_at_tlower, shape(cur_data))
 
-# 134 "dynVarTimeUninterpMod.F90.in"
+# 136 "dynVarTimeUninterpMod.F90.in"
   end subroutine get_current_data_2d
   
   ! ======================================================================
@@ -186,7 +187,7 @@ contains
   ! ======================================================================
 
   !-----------------------------------------------------------------------
-# 141 "dynVarTimeUninterpMod.F90.in"
+# 143 "dynVarTimeUninterpMod.F90.in"
   subroutine read_data_if_needed(this)
     !
     ! !DESCRIPTION:
@@ -196,25 +197,26 @@ contains
     ! for which we currently have stored data.
     !
     ! !USES:
-    use dynFileMod, only : dyn_file_type
+    use dynFileMod     , only : dyn_file_type
+    use dynTimeInfoMod , only : time_info_type
     !
     ! !ARGUMENTS:
     class(dyn_var_time_uninterp_type), intent(inout) :: this   ! this object
     !
     ! !LOCAL VARIABLES:
     type(dyn_file_type), pointer :: dyn_file ! the dyn_file of this object
-    integer :: nt1_cur                       ! current value of nt1 on dyn_file
+    integer :: time_index_lower_cur                       ! current value of time_index_lower on dyn_file
     
     character(len=*), parameter :: subname = 'read_data_if_needed'
     !-----------------------------------------------------------------------
 
     dyn_file => this%get_dyn_file()
-    nt1_cur = dyn_file%get_nt1()
-    if (nt1_cur /= this%nt1) then
-       call this%read_variable(nt1_cur, this%data_nt1)
-       this%nt1 = nt1_cur
+    time_index_lower_cur = dyn_file%time_info%get_time_index_lower()
+    if (time_index_lower_cur /= this%time_index_lower) then
+       call this%read_variable(time_index_lower_cur, this%data_at_tlower)
+       this%time_index_lower = time_index_lower_cur
     end if
-# 168 "dynVarTimeUninterpMod.F90.in"
+# 171 "dynVarTimeUninterpMod.F90.in"
   end subroutine read_data_if_needed
 
 

@@ -51,10 +51,9 @@ contains
     use clmtype
     use clm_atmlnd         , only : clm_a2l, a2l_downscaled_col
     use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, &
-         istice, istice_mec, istwet, istsoil, istdlak, &
-         zlnd, zsno, tfrz, icol_roof, icol_sunwall, icol_shadewall,     &
-         icol_road_imperv, icol_road_perv, tfrz, spval, istdlak
-    use clm_varcon         , only : istcrop
+         zlnd, zsno, tfrz, tfrz, spval
+    use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_imperv, icol_road_perv
+    use landunit_varcon    , only : istice, istice_mec, istwet, istsoil, istdlak, istcrop, istdlak
     use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, nlevsoi
     use QSatMod            , only : QSat
     use shr_const_mod      , only : SHR_CONST_PI

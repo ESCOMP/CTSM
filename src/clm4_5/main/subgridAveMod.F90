@@ -9,8 +9,8 @@ module subgridAveMod
   ! !USES:
   use clmtype         , only : pft, col, lun, namep, namec, namel, nameg 
   use shr_kind_mod    , only : r8 => shr_kind_r8
-  use clm_varcon      , only : spval, icol_roof, icol_sunwall, icol_shadewall
-  use clm_varcon      , only : icol_road_perv , icol_road_imperv
+  use clm_varcon      , only : spval
+  use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv , icol_road_imperv
   use clm_varctl      , only : iulog
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type
@@ -1243,7 +1243,7 @@ contains
     ! This array can later be used to scale each landunit in forming grid cell averages.
     !
     ! !USES:
-    use clm_varcon, only : max_lunit
+    use landunit_varcon, only : max_lunit
     !
     ! !ARGUMENTS:
     implicit none
@@ -1274,8 +1274,9 @@ contains
     ! each landunit type depending on l2g_scale_type
     !
     ! !USES:
-    use clm_varcon, only : istsoil, istcrop, istice, istice_mec, istdlak
-    use clm_varcon, only : isturb_MIN, isturb_MAX, max_lunit, spval
+    use clm_varcon     , only : spval
+    use landunit_varcon, only : istsoil, istcrop, istice, istice_mec, istdlak
+    use landunit_varcon, only : isturb_MIN, isturb_MAX, max_lunit
     !
     ! !ARGUMENTS:
     implicit none

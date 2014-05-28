@@ -84,7 +84,7 @@ contains
     ! Returns ispval if there is no column to use for initialization
     !
     ! !USES:
-    use clm_varcon, only : istsoil, istcrop, istice, istice_mec, istdlak, istwet, isturb_MIN, isturb_MAX
+    use landunit_varcon, only : istsoil, istcrop, istice, istice_mec, istdlak, istwet, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     integer :: c_template  ! function result
@@ -175,7 +175,8 @@ contains
     ! Returns ispval if there is no column to use for initialization
     !
     ! !USES:
-    use clm_varcon, only : istsoil, istcrop, ispval
+    use clm_varcon, only : ispval
+    use landunit_varcon, only : istsoil, istcrop
     !
     ! !ARGUMENTS:
     integer :: c_template  ! function result

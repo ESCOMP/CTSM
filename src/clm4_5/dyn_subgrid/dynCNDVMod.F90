@@ -54,7 +54,7 @@ contains
     !
     ! !USES:
     use clm_time_manager, only : get_curr_date, get_step_size, get_nstep, get_curr_yearfrac
-    use clm_varcon      , only : istsoil ! CNDV incompatible with dynLU
+    use landunit_varcon , only : istsoil ! CNDV incompatible with dynLU
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! bounds

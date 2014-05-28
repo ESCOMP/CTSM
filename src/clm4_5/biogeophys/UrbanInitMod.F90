@@ -59,8 +59,9 @@ contains
     ! !USES:
     use clmtype      , only : col, cps  
     use clmtype      , only : lun, lps, lef, namel
-    use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, vkc, spval
-    use clm_varcon   , only : icol_road_perv, icol_road_imperv, isturb_MIN
+    use clm_varcon   , only : vkc, spval
+    use column_varcon, only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
+    use landunit_varcon,only: isturb_MIN
     use UrbanInputMod, only : urbinp, UrbanInput
     use UrbanMod     , only : UrbanParamInit
     !
@@ -277,7 +278,8 @@ contains
     use clmtype   , only : pft, pes, pes, pef
     use clmtype   , only : col, cws, ces, cef, cwf
     use clmtype   , only : lun, lps, lef 
-    use clm_varcon, only : spval, icol_road_perv
+    use clm_varcon, only : spval
+    use column_varcon, only: icol_road_perv
     !
     ! !ARGUMENTS:
     implicit none

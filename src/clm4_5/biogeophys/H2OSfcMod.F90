@@ -31,7 +31,7 @@ contains
     use clmtype
     use shr_const_mod, only : shr_const_pi
     use shr_spfn_mod , only : erf => shr_spfn_erf
-    use clm_varcon   , only : istsoil, istcrop
+    use landunit_varcon,only: istsoil, istcrop
     use decompMod    , only : bounds_type
     !
     ! !ARGUMENTS:

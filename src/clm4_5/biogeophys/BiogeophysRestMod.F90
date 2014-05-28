@@ -40,9 +40,10 @@ contains
     ! !USES:
     use clmtype
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevsoi, nlevcan
-    use clm_varcon      , only : denice, denh2o, istcrop, istdlak, istsoil, pondmx, watmin, spval  
-    use clm_varcon      , only : icol_roof, icol_sunwall, icol_shadewall, zsoi
-    use clm_varctl      , only : nsrest, nsrContinue, nsrStartup, nsrBranch, fpftdyn, iulog 
+    use clm_varcon      , only : denice, denh2o, pondmx, watmin, spval, zsoi
+    use landunit_varcon , only : istcrop, istdlak, istsoil
+    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
+    use clm_varctl      , only : nsrest, nsrContinue, nsrStartup, nsrBranch, flanduse_timeseries, iulog 
     use clm_varctl      , only : use_cndv, use_snicar_frc 
     use clm_atmlnd      , only : clm_a2l
     use SNICARMod       , only : snw_rds_min

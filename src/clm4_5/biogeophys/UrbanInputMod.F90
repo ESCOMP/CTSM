@@ -65,7 +65,7 @@ contains
     !
     ! !USES:
     use clm_varpar, only : numrad, nlevurb
-    use clm_varcon, only : numurbl
+    use landunit_varcon, only : numurbl
     use fileutils , only : getavu, relavu, getfil, opnfil
     use spmdMod   , only : masterproc
     use clmtype   , only : grlnd
@@ -413,7 +413,7 @@ contains
     !
     ! !USES:
     use clm_varsur, only : urban_valid
-    use clm_varcon, only : numurbl
+    use landunit_varcon, only : numurbl
     !
     ! !ARGUMENTS:
     implicit none

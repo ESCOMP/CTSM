@@ -7,10 +7,9 @@ module SurfaceAlbedoMod
   ! Performs surface albedo calculations
   !
   ! !PUBLIC TYPES:
-  use clm_varcon     , only : istsoil
+  use landunit_varcon, only : istsoil, istcrop
   use clm_varpar     , only : numrad, nlevcan
   use spmdMod        , only : masterproc, iam
-  use clm_varcon     , only : istcrop
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use clm_varpar     , only : nlevsno
   use SNICARMod      , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
@@ -856,8 +855,8 @@ contains
      ! !USES:
     use clmtype
     use clm_varpar, only : numrad
-    use clm_varcon, only : albsat, albdry, tfrz, istice, istice_mec
-    use clm_varcon, only : istdlak
+    use clm_varcon, only : albsat, albdry, tfrz
+    use landunit_varcon, only : istice, istice_mec, istdlak
     use SLakeCon  , only : alblak
     use SLakeCon  , only : alblakwi, calb, lakepuddling
     use EDtypesMod

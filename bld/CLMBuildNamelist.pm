@@ -1828,7 +1828,7 @@ sub setup_logic_demand {
   $settings{'rcp'}            = $nl_flags->{'rcp'};
   $settings{'glc_nec'}        = $nl_flags->{'glc_nec'};
   if ( $physv->as_long() >= $physv->as_long("clm4_5")) {
-    # necessary for demand to be set correctly (fpftdyn requires
+    # necessary for demand to be set correctly (flanduse_timeseries requires
     # use_crop, maybe other options require other flags?)!
     $settings{'use_cn'}              = $nl_flags->{'use_cn'};
     $settings{'use_cndv'}            = $nl_flags->{'use_cndv'};
@@ -1868,27 +1868,27 @@ sub setup_logic_demand {
 
 sub setup_logic_surface_dataset {
   #
-  # Get surface dataset after fpftdyn so that we can get surface data
+  # Get surface dataset after flanduse_timeseries so that we can get surface data
   # consistent with it
-  # MUST BE AFTER: setup_logic_demand which is where fpftdyn is set
+  # MUST BE AFTER: setup_logic_demand which is where flanduse_timeseries is set
   #
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
-  $nl_flags->{'fpftdyn'} = "null";
-  my $fpftdyn = $nl->get_value('fpftdyn');
-  if (defined($fpftdyn)) {
-    $fpftdyn =~ s!(.*)/!!;
-    $fpftdyn =~ s/\'//;
-    $fpftdyn =~ s/\"//;
-    if ( $fpftdyn ne "" ) {
-      $nl_flags->{'fpftdyn'} = $fpftdyn;
+  $nl_flags->{'flanduse_timeseries'} = "null";
+  my $flanduse_timeseries = $nl->get_value('flanduse_timeseries');
+  if (defined($flanduse_timeseries)) {
+    $flanduse_timeseries =~ s!(.*)/!!;
+    $flanduse_timeseries =~ s/\'//;
+    $flanduse_timeseries =~ s/\"//;
+    if ( $flanduse_timeseries ne "" ) {
+      $nl_flags->{'flanduse_timeseries'} = $flanduse_timeseries;
     }
   }
-  $fpftdyn = $nl_flags->{'fpftdyn'};
+  $flanduse_timeseries = $nl_flags->{'flanduse_timeseries'};
 
   if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
-    if ($fpftdyn ne "null" && $nl_flags->{'bgc_mode'} eq "cndv" ) {
-        fatal_error( "dynamic PFT's (setting fpftdyn) are incompatible with dynamic vegetation ('-bgc cndv' in CLM_CONFIG_OPTS)." );
+    if ($flanduse_timeseries ne "null" && $nl_flags->{'bgc_mode'} eq "cndv" ) {
+        fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation ('-bgc cndv' in CLM_CONFIG_OPTS)." );
     }
 
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
@@ -1896,8 +1896,8 @@ sub setup_logic_surface_dataset {
                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrig'=>$nl_flags->{'irrig'},
                 'crop'=>$nl_flags->{'crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
   } else{
-    if ($fpftdyn ne "null" && $nl_flags->{'use_cndv'} =~ /$TRUE/i ) {
-        fatal_error( "dynamic PFT's (setting fpftdyn) are incompatible with dynamic vegetation (use_cndv=.true)." );
+    if ($flanduse_timeseries ne "null" && $nl_flags->{'use_cndv'} =~ /$TRUE/i ) {
+        fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
     }
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
                 'hgrid'=>$nl_flags->{'res'},
@@ -1914,7 +1914,7 @@ sub setup_logic_initial_conditions {
   # the user explicitly requests to ignore the initial date via the -ignore_ic_date option,
   # or just ignore the year of the initial date via the -ignore_ic_year option.
   #
-  # MUST BE AFTER: setup_logic_demand   which is where fpftdyn is set
+  # MUST BE AFTER: setup_logic_demand   which is where flanduse_timeseries is set
   #         AFTER: setup_logic_irrigate which is where irrigate is set
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
@@ -1938,14 +1938,14 @@ sub setup_logic_initial_conditions {
       if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
         add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                     'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'nofail'=>$nofail, 'fpftdyn'=>$nl_flags->{'fpftdyn'},
+                    'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
                     'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
                     'irrig'=>$nl_flags->{'irrig'}, 'glc_nec'=>$nl_flags->{'glc_nec'},
                     'crop'=>$nl_flags->{'crop'}, 'bgc'=>$nl_flags->{'bgc_mode'} );
       } else {
         add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                     'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'nofail'=>$nofail, 'fpftdyn'=>$nl_flags->{'fpftdyn'},
+                    'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
                     'use_cn'=>$nl_flags->{'use_cn'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
                     'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'},
                     'use_vertsoilc'=>$nl_flags->{'use_vertsoilc'},
@@ -1959,14 +1959,14 @@ sub setup_logic_initial_conditions {
       if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
         add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                     'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$nl_flags->{'fpftdyn'},
+                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
                     'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
                     'irrig'=>$nl_flags->{'irrig'}, 'glc_nec'=>$nl_flags->{'glc_nec'},
                     'crop'=>$nl_flags->{'crop'}, 'bgc'=>$nl_flags->{'bgc_mode'} );
       } else {
         add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                     'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$nl_flags->{'fpftdyn'},
+                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
                     'use_cn'=>$nl_flags->{'use_cn'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
                     'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'},
                     'use_vertsoilc'=>$nl_flags->{'use_vertsoilc'},
@@ -1980,14 +1980,14 @@ sub setup_logic_initial_conditions {
       if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
         add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                     'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$nl_flags->{'fpftdyn'},
+                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
                     'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
                     'irrig'=>$nl_flags->{'irrig'}, 'glc_nec'=>$nl_flags->{'glc_nec'},
                     'crop'=>$nl_flags->{'crop'}, 'bgc'=>$nl_flags->{'bgc_mode'} );
       } else {
         add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                     'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'},
-                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$nl_flags->{'fpftdyn'},
+                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'flanduse_timeseries'=>$nl_flags->{'flanduse_timeseries'},
                     'use_cn'=>$nl_flags->{'use_cn'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
                     'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'},
                     'use_vertsoilc'=>$nl_flags->{'use_vertsoilc'},

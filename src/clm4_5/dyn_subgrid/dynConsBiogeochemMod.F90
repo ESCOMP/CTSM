@@ -30,9 +30,8 @@ contains
     !
     ! !USES:
     use shr_const_mod      , only : SHR_CONST_PDB
-    use clm_varcon         , only : istsoil
+    use landunit_varcon    , only : istsoil, istcrop
     use clm_varpar         , only : numveg, nlevdecomp, max_pft_per_col
-    use clm_varcon         , only : istcrop
     use pftvarcon          , only : pconv, pprod10, pprod100
     use clm_varcon         , only : c13ratio, c14ratio
     use clm_time_manager   , only : get_step_size

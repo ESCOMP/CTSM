@@ -104,7 +104,7 @@ contains
     use clm_varcon      , only: secspday
     use clm_atmlnd      , only: clm_a2l, a2l_downscaled_col
     use shr_infnan_mod  , only: shr_infnan_isnan
-    use clm_varctl      , only: fpftdyn, use_nofire
+    use clm_varctl      , only: flanduse_timeseries, use_nofire
     use pftvarcon       , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree, &
                                 nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
     !
@@ -301,7 +301,7 @@ contains
         lpop_col(c)  = 0._r8
         btran_col(c) = 0._r8
         wtlf(c)      = 0._r8
-        if (fpftdyn /= ' ') then    !true when landuse data is used
+        if (flanduse_timeseries /= ' ') then    !true when landuse data is used
            trotr1_col(c)=0._r8
            trotr2_col(c)=0._r8
            dtrotr_col(c)=0._r8
@@ -319,7 +319,7 @@ contains
                     btran_col(c) = btran_col(c)+btran2(p)*pft%wtcol(p)
                     wtlf(c)      = wtlf(c)+pft%wtcol(p)
                  end if
-                 if ( fpftdyn /= ' ' ) then    !true when landuse data is used
+                 if ( flanduse_timeseries /= ' ' ) then    !true when landuse data is used
                     if( pft%itype(p) == nbrdlf_evr_trp_tree .and. pft%wtcol(p)  >  0._r8 )then
                        trotr1_col(c)=trotr1_col(c)+pft%wtcol(p)*col%wtgcell(c)
                     end if
@@ -393,7 +393,7 @@ contains
         end do
      end do
 
-     if (fpftdyn /= ' ') then    !true when landuse data is used
+     if (flanduse_timeseries /= ' ') then    !true when landuse data is used
         do fc = 1,num_soilc
            c = filter_soilc(fc)
            if( dtrotr_col(c)  >  0._r8 )then
@@ -525,7 +525,7 @@ contains
            ! if landuse change data is used, calculate deforestation fires and 
            ! add it in the total of burned area fraction
            !
-           if (fpftdyn /= ' ') then    !true when landuse change data is used
+           if (flanduse_timeseries /= ' ') then    !true when landuse change data is used
               if( trotr1_col(c)+trotr2_col(c) > 0.6_r8 )then
                  if(( kmo == 1 .and. kda == 1 .and. mcsec == 0) .or. &
                       dtrotr_col(c) <=0._r8 )then
@@ -591,7 +591,7 @@ contains
    use pftvarcon, only: nc3crop,lf_flab,lf_fcel,lf_flig,fr_flab,fr_fcel,fr_flig
    use clm_time_manager, only: get_step_size,get_days_per_year,get_curr_date
    use clm_varpar  , only: max_pft_per_col
-   use clm_varctl  , only: fpftdyn, use_cndv
+   use clm_varctl  , only: flanduse_timeseries, use_cndv
    use clm_varcon  , only: secspday
    !
    ! !ARGUMENTS:
@@ -788,7 +788,7 @@ contains
         ! and convert to a rate per second
         ! For non-crop (bare-soil and natural vegetation)
         if( pft%itype(p)  <  nc3crop )then
-           if (fpftdyn /= ' ') then    !true when landuse data is used
+           if (flanduse_timeseries /= ' ') then    !true when landuse data is used
               f = (fbac(c)-baf_crop(c))/ dt
            else
               f = (farea_burned(c))/ dt
@@ -1084,7 +1084,7 @@ contains
      !
      ! carbon loss due to deforestation fires
      !
-     if (fpftdyn /= ' ') then    !true when landuse data is used
+     if (flanduse_timeseries /= ' ') then    !true when landuse data is used
         call get_curr_date (kyr, kmo, kda, mcsec)
         do fc = 1,num_soilc
            c = filter_soilc(fc)

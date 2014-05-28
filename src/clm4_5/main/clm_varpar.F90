@@ -10,7 +10,7 @@ module clm_varpar
   use abortutils   , only: endrun
   use clm_varctl   , only: use_extralakelayers, use_vertsoilc, use_crop
   use clm_varctl   , only: use_century_decomp, use_c13, use_c14
-  use clm_varctl   , only: iulog, create_crop_landunit, irrigate, fpftdyn
+  use clm_varctl   , only: iulog, create_crop_landunit, irrigate, flanduse_timeseries
   use clm_varctl   , only: use_vichydro
   !
   ! !PUBLIC TYPES:

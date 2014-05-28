@@ -36,7 +36,8 @@ contains
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype      , only : pps_a, cps, cws, cch4, col, lun
     use clm_varpar   , only : nlevsoi, nlevgrnd, nlevdecomp
-    use clm_varcon   , only : istsoil, istdlak, spval, istcrop
+    use clm_varcon   , only : spval
+    use landunit_varcon,only: istsoil, istdlak, istcrop
     use clm_varctl   , only : iulog
     use ch4varcon    , only : allowlakeprod
     use decompMod    , only : bounds_type

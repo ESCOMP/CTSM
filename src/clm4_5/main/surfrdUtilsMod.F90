@@ -2,7 +2,7 @@ module surfrdUtilsMod
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Contains utility methods that can be used when reading surface datasets or similar
-  ! datasets (such as the pftdyn dataset)
+  ! datasets (such as the landuse_timeseries dataset)
   !
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8

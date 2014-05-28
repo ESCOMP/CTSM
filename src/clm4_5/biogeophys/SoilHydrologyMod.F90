@@ -90,8 +90,8 @@ contains
     ! !USES:
     use clmtype
     use clm_varcon      , only : denice, denh2o, wimp, pondmx_urban
-    use clm_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varcon      , only : icol_road_imperv, icol_road_perv
+    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
+    use column_varcon   , only : icol_road_imperv, icol_road_perv
     use clm_varpar      , only : nlevsoi, maxpatch_pft
     use clm_time_manager, only : get_step_size
     use clm_varpar      , only : nlayer, nlayert
@@ -293,9 +293,9 @@ contains
      !
      ! !USES:
      use clmtype
-     use clm_varcon      , only : icol_roof, icol_road_imperv, icol_sunwall
-     use clm_varcon      , only : icol_shadewall, icol_road_perv,denh2o, denice, roverg, wimp
-     use clm_varcon      , only : istsoil,pc,mu,tfrz, istcrop
+     use column_varcon   , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
+     use clm_varcon      , only : denh2o, denice, roverg, wimp, pc, mu, tfrz
+     use landunit_varcon , only : istsoil, istcrop
      use clm_time_manager, only : get_step_size
      use clm_varpar      , only : nlevsoi
      use H2OSfcMod       , only : FracH2oSfc
@@ -609,7 +609,8 @@ contains
      !
      ! !USES:
      use clmtype
-     use clm_varcon    , only : wimp, icol_roof, icol_road_imperv,grav,hfus,tfrz
+     use clm_varcon    , only : wimp,grav,hfus,tfrz
+     use column_varcon , only : icol_roof, icol_road_imperv
      use clm_varpar    , only : nlevsoi, max_pft_per_col, nlevgrnd
      use shr_const_mod , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
      use TridiagonalMod, only : Tridiagonal
@@ -1117,8 +1118,8 @@ contains
      ! !USES:
      use clmtype
      use clm_time_manager, only : get_step_size
-     use clm_varcon  , only : pondmx, tfrz, icol_roof, icol_road_imperv, &
-                              watmin,denice,denh2o
+     use clm_varcon  , only : pondmx, tfrz, watmin,denice,denh2o
+     use column_varcon, only: icol_roof, icol_road_imperv
      use clm_varpar  , only : nlevsoi
      !
      ! !ARGUMENTS:
@@ -1416,9 +1417,9 @@ contains
       ! !USES:
       use clmtype
       use clm_time_manager, only : get_step_size
-      use clm_varcon  , only : pondmx, tfrz, icol_roof, icol_road_imperv, icol_road_perv, watmin,rpi
+      use clm_varcon  , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
+      use column_varcon,only : icol_roof, icol_road_imperv, icol_road_perv
       use clm_varpar  , only : nlevsoi,nlevgrnd
-      use clm_varcon  , only : secspday,nlvic
       use clm_varpar  , only : nlayer, nlayert
       use CLMVICMapMod , only : CLMVICMap
       use abortutils  , only : endrun

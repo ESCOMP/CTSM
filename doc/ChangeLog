@@ -1,4 +1,461 @@
 ===============================================================
+Tag name:  clm4_5_74
+Originator(s):  sacks (sacks)
+Date: Wed May 28 16:05:36 MDT 2014
+One-line Summary: misc. bfb changes - see detailed summary below
+
+Purpose of changes:
+
+  (1) Rename fpftdyn to flanduse_timeseries, and make related changes to names
+      throughout the code. This rename is in preparation for an upcoming tag
+      where this file will take on more general uses (e.g., transient crop
+      areas).
+
+  (2) Decrease thresholds for water, snow and energy balance checks (these were
+      too permissive)
+
+  (3) Move stuff out of clm_varcon into landunit_varcon (for constants specific
+      to CLM's landunits) and column_varcon (for constants specific to CLM's
+      columns) - analogous to the existing pftvarcon
+
+  (4) Move some routines out of initGridCellsMod into a new initSubgridMod
+
+  (5) Make time_info a public member of dyn_file_type, which allows removing a
+      bunch of delegation methods. And rename some things in time_info_type for
+      clarity.
+
+  (6) Rework metadata for the description of landunit, column and pft types
+      on the history and restart files, to centralize these descriptions to the
+      appropriate place in the code.
+
+  (7) Add general-purpose functionality for setting up subgrid structure for
+      unit tests
+
+  (8) Move unit tests into source tree, rather than being in
+      test/unit_testers. Now the top-level script is in models/lnd/clm/src.
+
+  (9) Fix baseline comparisons for PTCLM tests
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+  - 1928 (create landunit_varcon.F90 and column_varcon.F90 from parts of clm_varcon.F90)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: fpftdyn renamed to flanduse_timeseries
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   scripts: addclm50_n03_ED_scripts_015_140305_rev -> addclm50_n04_ED_scripts_015_140305_rev
+     - Rename CLM's fpftdyn to flanduse_timeseries in tests; update perl5lib
+
+   tools/unit_testing: unit_testing_0_04 -> unit_testing_0_05
+     - the major change here is allowing rebuilds with intel without needing to
+       specify --clean
+
+   models/lnd/clm/tools/PTCLM: PTCLM2_140423 -> PTCLM2_140521
+     - rename fpftdyn -> flanduse_timeseries, and other related renames
+
+List all files eliminated:
+
+========= Renamed
+D       models/lnd/clm/tools/clm4_5/mksurfdata_map/pftdyn_hist_simyr1850-2005.txt
+D       models/lnd/clm/tools/clm4_0/mksurfdata_map/pftdyn_hist_simyr1850-2005.txt
+
+========= Move unit tests into source tree
+D       models/lnd/clm/test/unit_testers/clm4_5/biogeophys/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/biogeophys/Daylength_test/test_daylength.pf
+D       models/lnd/clm/test/unit_testers/clm4_5/biogeophys/Daylength_test/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/biogeophys/Daylength_test
+D       models/lnd/clm/test/unit_testers/clm4_5/biogeophys
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynLandunitArea_test/test_update_landunit_weights_one_gcell.pf
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynLandunitArea_test/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynLandunitArea_test/test_update_landunit_weights.pf
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynLandunitArea_test
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynVar_test/test_dynVarShared.F90
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynVar_test/test_dynVarTimeInterp.pf
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynVar_test/test_dynVarTimeUninterp.pf
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynVar_test/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynVar_test
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynTimeInfo_test/test_dynTimeInfo.pf
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynTimeInfo_test/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynTimeInfo_test
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynInitColumns_test/test_init_columns.pf
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynInitColumns_test/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid/dynInitColumns_test
+D       models/lnd/clm/test/unit_testers/clm4_5/dyn_subgrid
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/ncdio_var.F90
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/GetGlobalValuesMod_mock.F90
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/ncdio_var.F90.in
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/clm_time_manager_mock.F90
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/ncdio_pio_mock.F90
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/spmdMod_mock.F90
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/do_genf90
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share/ncdio_pio_mock.F90.in
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/util_share
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/csm_share/shr_sys_mod_mock.F90
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/csm_share/mct_mod_mock.F90
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/csm_share/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/csm_share
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/main/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/main/histFileMod_mock.F90
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/main
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/dyn_subgrid/dynFileMod_mock.F90
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/dyn_subgrid/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/dyn_subgrid
+D       models/lnd/clm/test/unit_testers/clm4_5/mock/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/mock
+D       models/lnd/clm/test/unit_testers/clm4_5/CMakeLists.txt
+D       models/lnd/clm/test/unit_testers/clm4_5/README
+D       models/lnd/clm/test/unit_testers/clm4_5
+D       models/lnd/clm/test/unit_testers
+
+
+List all files added and what they do:
+
+========= Renamed
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/landuse_timeseries_hist_simyr1850-2005.txt
+A       models/lnd/clm/tools/clm4_0/mksurfdata_map/landuse_timeseries_hist_simyr1850-2005.txt
+
+========= Move stuff out of clm_varcon into landunit_varcon (for constants
+          specific to CLM's landunits) and column_varcon (for constants specific
+          to CLM's columns) - analogous to the existing pftvarcon.
+A       models/lnd/clm/src/clm4_5/main/landunit_varcon.F90
+A       models/lnd/clm/src/clm4_5/main/column_varcon.F90
+
+
+========= Move some routines out of initGridCellsMod - these are lower-level
+          routines that can also be used by unit test code. So initGridCellsMod
+          contains higher-level stuff that is specific to how the subgrid
+          structure is set up in a production run; and initSubgridMod contains
+          lower-level stuff that doesn't know or care how things are actually
+          set up, conceptually.
+A       models/lnd/clm/src/clm4_5/main/initSubgridMod.F90
+
+========= Add general-purpose functionality for setting up subgrid structure for unit tests
+A       models/lnd/clm/src/unit_test_shr/unittestSubgridMod.F90
+A       models/lnd/clm/src/unit_test_shr/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_shr
+
+
+========= Move unit tests into source tree; also modify some unit tests to take
+          advantage of the new unittestSubgridMod; also add tests of
+          subgridWeightsMod and clm_glclnd
+A       models/lnd/clm/src/clm4_5/main/test/subgridWeights_test/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/main/test/subgridWeights_test/test_subgridWeights.pf
+A       models/lnd/clm/src/clm4_5/main/test/subgridWeights_test
+A       models/lnd/clm/src/clm4_5/main/test/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/main/test/clm_glclnd_test/test_clm_glclnd.pf
+A       models/lnd/clm/src/clm4_5/main/test/clm_glclnd_test/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/main/test/clm_glclnd_test
+A       models/lnd/clm/src/clm4_5/main/test
+A       models/lnd/clm/src/clm4_5/biogeophys/test/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/biogeophys/test/Daylength_test/test_daylength.pf
+A       models/lnd/clm/src/clm4_5/biogeophys/test/Daylength_test/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/biogeophys/test/Daylength_test
+A       models/lnd/clm/src/clm4_5/biogeophys/test
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynLandunitArea_test/test_update_landunit_weights_one_gcell.pf
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynLandunitArea_test/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynLandunitArea_test/test_update_landunit_weights.pf
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynLandunitArea_test
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynVar_test/test_dynVarShared.F90
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynVar_test/test_dynVarTimeInterp.pf
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynVar_test/test_dynVarTimeUninterp.pf
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynVar_test/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynVar_test
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynTimeInfo_test/test_dynTimeInfo.pf
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynTimeInfo_test/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynTimeInfo_test
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynInitColumns_test/test_init_columns.pf
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynInitColumns_test/CMakeLists.txt
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test/dynInitColumns_test
+A       models/lnd/clm/src/clm4_5/dyn_subgrid/test
+A       models/lnd/clm/src/README.unit_testing
+A       models/lnd/clm/src/unit_test_mocks/util_share/ncdio_var.F90
+A       models/lnd/clm/src/unit_test_mocks/util_share/GetGlobalValuesMod_mock.F90
+A       models/lnd/clm/src/unit_test_mocks/util_share/ncdio_var.F90.in
+A       models/lnd/clm/src/unit_test_mocks/util_share/clm_time_manager_mock.F90
+        - also add a routine to this mock, needed because of refactor of
+          dyn_file_type / dyn_time_inof
+A       models/lnd/clm/src/unit_test_mocks/util_share/ncdio_pio_mock.F90
+A       models/lnd/clm/src/unit_test_mocks/util_share/spmdMod_mock.F90
+A       models/lnd/clm/src/unit_test_mocks/util_share/do_genf90
+A       models/lnd/clm/src/unit_test_mocks/util_share/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_mocks/util_share/ncdio_pio_mock.F90.in
+A       models/lnd/clm/src/unit_test_mocks/util_share
+A       models/lnd/clm/src/unit_test_mocks/csm_share/shr_sys_mod_mock.F90
+A       models/lnd/clm/src/unit_test_mocks/csm_share/mct_mod_mock.F90
+A       models/lnd/clm/src/unit_test_mocks/csm_share/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_mocks/csm_share
+A       models/lnd/clm/src/unit_test_mocks/main/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_mocks/main/histFileMod_mock.F90
+A       models/lnd/clm/src/unit_test_mocks/main
+A       models/lnd/clm/src/unit_test_mocks/dyn_subgrid/dynFileMod_mock.F90
+A       models/lnd/clm/src/unit_test_mocks/dyn_subgrid/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_mocks/dyn_subgrid
+A       models/lnd/clm/src/unit_test_mocks/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_mocks
+A       models/lnd/clm/src/CMakeLists.txt
+
+List all existing files that have been modified, and describe the changes:
+
+========= Renamed fpftdyn -> flanduse_timeseries, and other related changes to
+          variable names
+          (NOTE: Some source files are listed both here and elsewhere in the
+          ChangeLog entry)
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/mksurfdata_map.namelist
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/README
+M       models/lnd/clm/tools/shared/ncl_scripts/sample_inlist
+M       models/lnd/clm/tools/shared/ncl_scripts/sample_outlist
+M       models/lnd/clm/tools/clm4_0/mksurfdata_map/src/clm_varctl.F90
+M       models/lnd/clm/tools/clm4_0/mksurfdata_map/mksurfdata_map.namelist
+M       models/lnd/clm/tools/clm4_0/mksurfdata_map/mksurfdata.pl
+M       models/lnd/clm/tools/clm4_0/mksurfdata_map/README
+M       models/lnd/clm/bld/CLMBuildNamelist.pm
+M       models/lnd/clm/bld/unit_testers/build-namelist_test.pl
+M       models/lnd/clm/bld/test_build_namelist/t/input/namelist_defaults_clm4_5_test.xml
+M       models/lnd/clm/bld/test_build_namelist/t/input/namelist_definition_clm4_5_test.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_0.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/20thC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_usr_files.xml
+M       models/lnd/clm/doc/UsersGuide/trouble_shooting.xml
+M       models/lnd/clm/doc/UsersGuide/single_point.xml
+M       models/lnd/clm/doc/UsersGuide/tools.xml
+M       models/lnd/clm/doc/UsersGuide/adding_files.xml
+M       models/lnd/clm/doc/UsersGuide/custom.xml
+M       models/lnd/clm/doc/UsersGuide/ptclm.xml
+M       models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNEcosystemDynMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_varpar.F90
+M       models/lnd/clm/src/clm4_5/main/subgridRestMod.F90
+M       models/lnd/clm/src/clm4_5/main/restFileMod.F90
+M       models/lnd/clm/src/clm4_5/main/controlMod.F90
+M       models/lnd/clm/src/clm4_5/main/surfrdUtilsMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_varctl.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynSubgridDriverMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynHarvestMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynpftFileMod.F90
+M       models/lnd/clm/src/clm4_0/biogeochem/CNEcosystemDynMod.F90
+M       models/lnd/clm/src/clm4_0/main/clm_initializeMod.F90
+M       models/lnd/clm/src/clm4_0/main/pftdynMod.F90
+M       models/lnd/clm/src/clm4_0/main/controlMod.F90
+M       models/lnd/clm/src/clm4_0/main/clm_varctl.F90
+M       models/lnd/clm/src/clm4_0/main/clm_driver.F90
+M       models/lnd/clm/src/clm4_0/biogeophys/BiogeophysRestMod.F90
+
+========= Updated PTCLM external to rename fpftdyn -> flanduse_timeseries
+M       models/lnd/clm/tools/SVN_EXTERNAL_DIRECTORIES
+
+========= Decrease threshold for water & snow balance checks by 3 orders of
+          magnitude; decrease threshold for energy balance checks by 2 orders of
+          magnitude
+M       models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+
+========= Separate clm_varcon into clm_varcon, column_varcon and landunit_varcon
+M       models/lnd/clm/src/clm4_5/main/clm_varcon.F90
+M       models/lnd/clm/src/clm4_5/main/CMakeLists.txt
+
+========= Move some routines out of initGridCellsMod, into a new initSubgridMod
+          (see detailed notes above)
+M       models/lnd/clm/src/clm4_5/main/initGridCellsMod.F90
+
+========= Make time_info a public member of dyn_file_type. This allows us to
+          remove all methods from dyn_file_type (which were just delegating
+          responsibility to time_info_type). Also rename some methods and
+          variables in time_info_type.
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynFileMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynTimeInfoMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynHarvestMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynpftFileMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarMod.F90.in
+         - also change intent(in) to intent(inout), fixing a gfortran problem
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarTimeUninterpMod.F90.in
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarTimeUninterpMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarTimeInterpMod.F90.in
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynVarTimeInterpMod.F90
+
+========= Rework metadata for the description of landunit, column and pft types
+          on the history and restart files. Point is to centralize the
+          definition of these different types as much as possible (rather than,
+          e.g., having restFileMod know about the translation between landunit
+          indices and names). For the history file, I am removing the metadata
+          from the PCT_LANDUNIT long name, instead putting it in global
+          metadata, as is done for the restart file.
+M       models/lnd/clm/src/clm4_5/main/subgridWeightsMod.F90
+M       models/lnd/clm/src/clm4_5/main/histFileMod.F90
+M       models/lnd/clm/src/clm4_5/main/restFileMod.F90
+M       models/lnd/clm/src/clm4_5/main/pftvarcon.F90
+
+========= Change 'use' statements based on my split of clm_varcon into
+          clm_varcon, landunit_varcon and column_varcon
+M       models/lnd/clm/src/clm4_5/biogeochem/CNWoodProductsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DUSTMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNInitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4InitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAllocationMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DryDepVelocity.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVEstablishmentMod.F90
+M       models/lnd/clm/src/clm4_5/main/initTimeConstMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+M       models/lnd/clm/src/clm4_5/main/subgridRestMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_glclnd.F90
+M       models/lnd/clm/src/clm4_5/main/subgridMod.F90
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+M       models/lnd/clm/src/clm4_5/main/initColdMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_atmlnd.F90
+M       models/lnd/clm/src/clm4_5/main/filterMod.F90
+M       models/lnd/clm/src/clm4_5/main/ED/EDCLMLinkMod.F90
+M       models/lnd/clm/src/clm4_5/main/subgridAveMod.F90
+M       models/lnd/clm/src/clm4_5/main/surfrdMod.F90
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeInitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilTemperatureMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SnowHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInputMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/TridiagonalMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/clm_driverInitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BareGroundFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SurfaceRadiationMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/H2OSfcMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SurfaceAlbedoMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynLandunitAreaMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynConsBiogeochemMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynEDMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynCNDVMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynConsBiogeophysMod.F90
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/dynInitColumnsMod.F90
+
+========= Fix baseline comparisons for PTCLM tests
+M       models/lnd/clm/test/tools/TSMscript_tools.sh
+M       models/lnd/clm/test/tools/TBLscript_tools.sh
+
+========= Just changes in whitespace
+M       models/lnd/clm/src/clm4_5/dyn_subgrid/CMakeLists.txt
+M       models/lnd/clm/src/clm4_5/biogeophys/CMakeLists.txt
+
+
+CLM testing:
+
+  Most testing done on dynlu_crops_n01_addclm50bld_n06_clm4_5_72; PTCLM and
+  tools testing done on dynlu_crops_n03_addclm50bld_n06_clm4_5_72
+
+  Note that the branch was up-to-date with addclm50bld_n06_clm4_5_72; this is
+  identical to clm4_5_73 except for a fix to the build-namelist tests (see below)
+
+  build-namelist tests:
+
+    yellowstone: ok
+      compared against addclm50bld_n06_clm4_5_72 (essentially clm4_5_73)
+      expected diffs for transient cases
+
+      The following tests also failed when comparing the baseline against
+      itself (NOTE: this is apparently fixed in clm4_5_73):
+
+      466/497 < FAIL> <Test Id: 466> <Desc: compare file lnd_in DNE for phys-crop.clm4_5 and -res+1.9x2.5+-irrig+.true.+-crop+-bgc+cn++-envxml_dir+.>  
+      467/497 < FAIL> <Test Id: 467> <Desc: compare file temp_file.txt DNE for phys-crop.clm4_5 and -res+1.9x2.5+-irrig+.true.+-crop+-bgc+cn++-envxml_dir+.>  
+      496/497 < FAIL> <Test Id: 496> <Desc: compare file lnd_in DNE for phys-crop.clm5_0 and -res+1.9x2.5+-irrig+.true.+-crop+-bgc+cn++-envxml_dir+.>  
+      497/497 < FAIL> <Test Id: 497> <Desc: compare file temp_file.txt DNE for phys-crop.clm5_0 and -res+1.9x2.5+-irrig+.true.+-crop+-bgc+cn++-envxml_dir+.>  
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    goldbach_nag: ok
+    goldbach_intel: ok
+    goldbach_pgi: ok
+
+      Most comparisons were done against clm4_5_72.
+
+      These comparisons failed due to a problem with component_gen_comp and the
+      SSP test; manual comparisons show these to be identical to Erik's tests (for
+      clm4_5_73):
+
+        FAIL SSP.f19_g16.I1850CLM45BGC.yellowstone_pgi.clm-default.GC.0520-2021.45.p.clm2.h0.compare_hist.clm4_5_72 
+        FAIL SSP.f19_g16.I1850CLM45BGC.yellowstone_pgi.clm-default.GC.0520-2021.45.p.clm2.h1.compare_hist.clm4_5_72     
+
+      For new tests added in Erik's upcoming tag (clm4_5_73), I did manual
+      comparisons against Erik's baselines (cpl & clm hist for the yellowstone
+      tests, just cpl for goldbach tests) - all PASS.
+
+      Note that CLM hist files were NOT compared for any goldbach tests, because
+      there were no CLM hist file baselines for clm4_5_72.
+
+  tools testing:
+
+    yellowstone interactive: ok
+
+      Compared against addclm50bld_n06_clm4_5_72 (essentially clm4_5_73)
+
+      Failures in the following baseline comparisons, due to changed name of output
+      file (surfdata.pftdyn -> landuse.timeseries). Manual comparisons showed the
+      output files to be identical in all cases:
+
+      010 bl754 TBLtools.sh clm4_0 mksurfdata_map tools__s namelist ...................................\c
+       rc=7 FAIL
+      012 blg54 TBLtools.sh clm4_5 mksurfdata_map tools__s namelist ...................................\c
+       rc=7 FAIL
+      018 bl974 TBLscript_tools.sh clm4_0 mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools_\c
+       rc=7 FAIL
+      030 bli74 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools_\c
+       rc=7 FAIL
+      040 blfg4 TBLscript_tools.sh shared PTCLM PTCLMmkdata PTCLM_USUMB_Global_clm4_5^buildtools ......\c
+       rc=7 FAIL
+
+       Other than that, all tests & baseline comparisons passed
+
+CLM tag used for the baseline comparisons: clm4_5_72, except where noted above
+
+Changes answers relative to baseline: NO - bfb
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_73
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed May 28 15:33:10 MDT 2014

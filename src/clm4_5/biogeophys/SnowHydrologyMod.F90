@@ -46,7 +46,8 @@ contains
     !
     ! !USES:
     use clmtype
-    use clm_varcon        , only : denh2o, denice, wimp, ssi, istsoil,istdlak
+    use clm_varcon        , only : denh2o, denice, wimp, ssi
+    use landunit_varcon   , only : istsoil,istdlak
     use clm_time_manager  , only : get_step_size
     use clm_atmlnd        , only : clm_a2l
     use SNICARMod         , only : scvng_fct_mlt_bcphi, scvng_fct_mlt_bcpho, &
@@ -453,8 +454,8 @@ contains
      ! !USES:
      use clmtype
      use clm_time_manager, only : get_step_size
-     use clm_varcon      , only : denice, denh2o, tfrz, istice_mec
-     use clm_varcon      , only : rpi, istdlak, istsoil, istcrop
+     use clm_varcon      , only : denice, denh2o, tfrz, rpi
+     use landunit_varcon , only : istice_mec, istdlak, istsoil, istcrop
      use clm_varctl      , only : subgridflag
      !
      ! !ARGUMENTS:
@@ -603,10 +604,8 @@ contains
      !
      ! !USES:
      use clmtype
-     use clm_varcon, only : istsoil, istdlak
+     use landunit_varcon, only : istsoil, istdlak, istsoil, istwet, istice, istice_mec, istcrop
      use SLakeCon  , only : lsadz
-     use clm_varcon, only : istsoil, istwet,istice, istice_mec
-     use clm_varcon, only : istcrop
      use clm_time_manager, only : get_step_size
      !
      ! !ARGUMENTS:

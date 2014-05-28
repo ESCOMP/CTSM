@@ -7,7 +7,7 @@ module dynHarvestMod
   ! Handle reading of the harvest data, as well as the state updates that happen as a
   ! result of harvest.
   !
-  ! Currently, it is assumed that the harvest data are on the fpftdyn file. However, this
+  ! Currently, it is assumed that the harvest data are on the flanduse_timeseries file. However, this
   ! could theoretically be changed so that the harvest data were separated from the
   ! pftdyn data, allowing them to differ in the years over which they apply.
   !
@@ -61,7 +61,7 @@ contains
     !
     ! !USES:
     use clmtype   , only : grlnd
-    use clm_varctl, only : use_cn, fpftdyn
+    use clm_varctl, only : use_cn, flanduse_timeseries
     use dynVarTimeUninterpMod   , only : dyn_var_time_uninterp_type
     !
     ! !ARGUMENTS:
@@ -82,7 +82,7 @@ contains
        call endrun(msg=' allocation error for harvest'//errMsg(__FILE__, __LINE__))
     end if
 
-    dynHarvest_file = dyn_file_type(fpftdyn)
+    dynHarvest_file = dyn_file_type(flanduse_timeseries)
     
     ! Get initial harvest data
     if (use_cn) then
@@ -112,7 +112,8 @@ contains
     ! year, with abrupt changes in the rate at annual boundaries.
     !
     ! !USES:
-    use clm_varctl, only : use_cn
+    use clm_varctl     , only : use_cn
+    use dynTimeInfoMod , only : time_info_type
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc-level bounds
@@ -126,13 +127,15 @@ contains
 
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
-    call dynHarvest_file%update_time_info()
+    ! As a workaround for an internal compiler error with ifort 13.1.2 on goldbach, call
+    ! the specific name of this procedure rather than using its generic name
+    call dynHarvest_file%time_info%set_current_year_get_year()
 
     ! Get total harvest for this time step
     if (use_cn) then
        harvest(bounds%begg:bounds%endg) = 0._r8
 
-       if (dynHarvest_file%is_before_time_series()) then
+       if (dynHarvest_file%time_info%is_before_time_series()) then
           ! Turn off harvest before the start of the harvest time series
           do_harvest = .false.
        else

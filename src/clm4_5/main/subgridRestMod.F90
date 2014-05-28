@@ -501,7 +501,7 @@ contains
       ! Return true if we should check weights
       !
       ! !USES:
-      use clm_varctl, only : fpftdyn, nsrest, nsrContinue, use_cndv, use_ed
+      use clm_varctl, only : flanduse_timeseries, nsrest, nsrContinue, use_cndv, use_ed
       !
       ! !ARGUMENTS:
       !
@@ -510,8 +510,8 @@ contains
       character(len=*), parameter :: subname = 'do_check_weights'
       !-----------------------------------------------------------------------
       
-      if (fpftdyn /= ' ') then
-         ! Don't check weights for a pftdyn case, because it's harder to come up with the
+      if (flanduse_timeseries /= ' ') then
+         ! Don't check weights for a transient PFT case, because it's harder to come up with the
          ! correct weights to check against
          do_check_weights = .false.
       else if (nsrest == nsrContinue) then
@@ -549,7 +549,7 @@ contains
       ! inconsistencies between the restart file and the surface dataset.
       !
       ! !USES:
-      use clm_varcon, only : istsoil
+      use landunit_varcon, only : istsoil
       use clm_varctl, only : iulog
       !
       ! !ARGUMENTS:

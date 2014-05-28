@@ -6,7 +6,7 @@ module CNWoodProductsMod
   ! !USES:
   use decompMod   , only : get_proc_bounds
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varcon  , only: istsoil
+  use landunit_varcon, only: istsoil
   use spmdMod     , only: masterproc
   implicit none
   save

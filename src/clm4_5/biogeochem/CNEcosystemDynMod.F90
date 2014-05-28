@@ -5,7 +5,7 @@ module CNEcosystemDynMod
   !
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varctl  , only: fpftdyn, use_c13, use_c14, use_ed
+  use clm_varctl  , only: flanduse_timeseries, use_c13, use_c14, use_ed
   use decompMod   , only: bounds_type
   !
   ! !PUBLIC TYPES:
@@ -178,7 +178,7 @@ contains
 
        call NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
        
-       if (fpftdyn /= ' ') then
+       if (flanduse_timeseries /= ' ') then
           call CNHarvest(num_soilc, filter_soilc, num_soilp, filter_soilp)
        end if 
 

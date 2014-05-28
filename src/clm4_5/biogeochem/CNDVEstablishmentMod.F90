@@ -31,7 +31,7 @@ contains
     ! !USES:
     use clmtype
     use clm_varpar   , only : numpft
-    use clm_varcon   , only : istsoil
+    use landunit_varcon, only : istsoil
     use clm_varctl   , only : iulog
     use pftvarcon    , only : noveg, nc3_arctic_grass
     use shr_const_mod, only : SHR_CONST_CDAY, SHR_CONST_PI, SHR_CONST_TKFRZ

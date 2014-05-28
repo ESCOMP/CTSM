@@ -182,11 +182,11 @@ contains
     use shr_sys_mod,only: shr_sys_flush
     use pft2colMod, only: p2c
     use clm_varpar, only: nlevsoi, nlevdecomp
-    use clm_varcon, only: nitrif_n2o_loss_frac
+    use clm_varcon, only: nitrif_n2o_loss_frac, secspday
     use pftvarcon , only: npcropmin, declfact, bfact, aleaff, arootf, astemf, &
                           arooti, fleafi, allconsl, allconss, grperc, grpnow, &
                           nsoybean
-    use clm_varcon, only: secspday, istsoil, istcrop
+    use landunit_varcon, only: istsoil, istcrop
     use clm_varpar, only: max_pft_per_col
     use clm_time_manager , only : get_step_size
     !

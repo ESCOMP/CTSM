@@ -4,7 +4,7 @@
 !===================================================
 module dynVarMod
 
-#include "shr_assert.h"
+#include "shr_assert.h" 
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -15,8 +15,8 @@ module dynVarMod
   ! (dyn_var_time_uninterp_type or dyn_var_time_interp_type). Besides the lack of
   ! definition of some methods, also note that it does NOT define the data
   ! themselves. This is because different type extensions have different needs for what
-  ! data are stored - and particularly whether they need data at just nt1, or data at both
-  ! nt1 and nt2.
+  ! data are stored - and particularly whether they need data at just time_index_lower, or data at both
+  ! time_index_lower and time_index_upper.
   !
   ! The use of this class (or its extensions) is:
   !   In initialization:
@@ -34,6 +34,7 @@ module dynVarMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use clm_varctl     , only : iulog
   use dynFileMod     , only : dyn_file_type
+  use dynTimeInfoMod , only : time_info_type
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   implicit none
@@ -58,13 +59,13 @@ module dynVarMod
   !
   ! In addition, a type extension needs to define the data field(s); these are not defined
   ! in the base class because different type extensions have different needs for what data
-  ! are stored - and particularly whether they need data at just nt1, or data at both nt1
-  ! and nt2.
+  ! are stored - and particularly whether they need data at just time_index_lower, or data at both time_index_lower
+  ! and time_index_upper.
   !
   ! Although this base class doesn't define the data themselves, note that the
   ! implementation here assumes that the data will be stored as a 1-d vector, even if the
   ! data are truly 2-d. i.e., the type extension should define its data as:
-  ! real(r8), allocatable :: data_nt1(:)
+  ! real(r8), allocatable :: data_at_tlower(:)
   type, abstract :: dyn_var_type
      private
      type(dyn_file_type), pointer :: dyn_file  ! pointer to the file containing this variable
@@ -80,7 +81,7 @@ module dynVarMod
      ! This is a pointer rather than an allocatable to work around a pgi compiler bug
      ! (pgi 13.9)
      integer, pointer :: data_shape(:)
-# 77 "dynVarMod.F90.in"
+# 80 "dynVarMod.F90.in"
    contains
      ! Public methods:
 
@@ -104,7 +105,7 @@ module dynVarMod
 
   abstract interface
 
-# 100 "dynVarMod.F90.in"
+# 103 "dynVarMod.F90.in"
      subroutine read_data_if_needed_interface(this)
        ! !DESCRIPTION:
        ! Determine if new data need to be read from the file; if so, read them.
@@ -114,10 +115,10 @@ module dynVarMod
        !
        ! !ARGUMENTS:
        class(dyn_var_type), intent(inout) :: this  ! this object
-# 109 "dynVarMod.F90.in"
+# 112 "dynVarMod.F90.in"
      end subroutine read_data_if_needed_interface
 
-# 112 "dynVarMod.F90.in"
+# 115 "dynVarMod.F90.in"
      ! DIMS 1,2
      subroutine get_current_data_1d_interface(this, cur_data)
        ! !DESCRIPTION:
@@ -127,7 +128,7 @@ module dynVarMod
        ! 
        ! If necessary, new data are read from the file.
        !
-       ! Should be called once per time step, AFTER calling update_time_info on the
+       ! Should be called once per time step, AFTER calling set_current_year on the
        ! underlying dyn_file variable
        !
        ! !USES:
@@ -137,7 +138,7 @@ module dynVarMod
        ! !ARGUMENTS:
        class(dyn_var_type) , intent(inout) :: this             ! this object
        real(r8)            , intent(out)   :: cur_data(:) ! current value of data
-# 130 "dynVarMod.F90.in"
+# 133 "dynVarMod.F90.in"
      end subroutine get_current_data_1d_interface
      ! DIMS 1,2
      subroutine get_current_data_2d_interface(this, cur_data)
@@ -148,7 +149,7 @@ module dynVarMod
        ! 
        ! If necessary, new data are read from the file.
        !
-       ! Should be called once per time step, AFTER calling update_time_info on the
+       ! Should be called once per time step, AFTER calling set_current_year on the
        ! underlying dyn_file variable
        !
        ! !USES:
@@ -158,13 +159,13 @@ module dynVarMod
        ! !ARGUMENTS:
        class(dyn_var_type) , intent(inout) :: this             ! this object
        real(r8)            , intent(out)   :: cur_data(:,:) ! current value of data
-# 130 "dynVarMod.F90.in"
+# 133 "dynVarMod.F90.in"
      end subroutine get_current_data_2d_interface
 
   end interface
   
 
-# 135 "dynVarMod.F90.in"
+# 138 "dynVarMod.F90.in"
 contains
 
   ! ======================================================================
@@ -175,7 +176,7 @@ contains
   ! ======================================================================
 
   !-----------------------------------------------------------------------
-# 145 "dynVarMod.F90.in"
+# 148 "dynVarMod.F90.in"
   subroutine set_metadata(this, dyn_file, varname, dim1name, conversion_factor, &
        do_check_sums_equal_1, data_shape)
     !
@@ -222,12 +223,12 @@ contains
     allocate(this%data_shape(ndims))
     this%data_shape = data_shape
 
-# 191 "dynVarMod.F90.in"
+# 194 "dynVarMod.F90.in"
   end subroutine set_metadata
 
 
   !-----------------------------------------------------------------------
-# 195 "dynVarMod.F90.in"
+# 198 "dynVarMod.F90.in"
   function get_dyn_file(this)
     !
     ! !DESCRIPTION:
@@ -238,11 +239,11 @@ contains
     class(dyn_var_type) , intent(in) :: this ! this object
     !-----------------------------------------------------------------------
     get_dyn_file => this%dyn_file
-# 205 "dynVarMod.F90.in"
+# 208 "dynVarMod.F90.in"
   end function get_dyn_file
 
   !-----------------------------------------------------------------------
-# 208 "dynVarMod.F90.in"
+# 211 "dynVarMod.F90.in"
   function get_data_shape(this)
     !
     ! !DESCRIPTION:
@@ -254,12 +255,12 @@ contains
     !-----------------------------------------------------------------------
     allocate(get_data_shape(size(this%data_shape)))
     get_data_shape = this%data_shape
-# 219 "dynVarMod.F90.in"
+# 222 "dynVarMod.F90.in"
   end function get_data_shape
 
 
   !-----------------------------------------------------------------------
-# 223 "dynVarMod.F90.in"
+# 226 "dynVarMod.F90.in"
   subroutine read_variable(this, nt, data)
     !
     ! !DESCRIPTION:
@@ -269,9 +270,9 @@ contains
     use spmdMod   , only : masterproc
     !
     ! !ARGUMENTS:
-    class(dyn_var_type) , intent(in)  :: this    ! this object
-    integer             , intent(in)  :: nt      ! time index to read
-    real(r8)            , intent(out) :: data(:) ! variable holding data read from file
+    class(dyn_var_type) , intent(inout) :: this    ! this object
+    integer             , intent(in)    :: nt      ! time index to read
+    real(r8)            , intent(out)   :: data(:) ! variable holding data read from file
     !
     ! !LOCAL VARIABLES:
     integer :: ndims  ! number of dimensions of the underlying variable
@@ -281,7 +282,7 @@ contains
     
     if (masterproc) then
        write(iulog,*) 'Get data for variable ', trim(this%varname), ' for year ', &
-            this%dyn_file%get_year(nt)
+            this%dyn_file%time_info%get_year(nt)
     end if
 
     ndims = size(this%data_shape)
@@ -294,7 +295,7 @@ contains
             errMsg(__FILE__, __LINE__))
     end if
 
-# 257 "dynVarMod.F90.in"
+# 260 "dynVarMod.F90.in"
   end subroutine read_variable
 
 
@@ -304,7 +305,7 @@ contains
 
   ! DIMS 1,2
   !-----------------------------------------------------------------------
-# 266 "dynVarMod.F90.in"
+# 269 "dynVarMod.F90.in"
   subroutine read_variable_1d(this, nt, data)
     !
     ! !DESCRIPTION:
@@ -316,8 +317,8 @@ contains
     use surfrdUtilsMod , only : check_sums_equal_1
     !
     ! !ARGUMENTS:
-    class(dyn_var_type) , intent(in)  :: this    ! this object
-    integer             , intent(in)  :: nt      ! time index to read
+    class(dyn_var_type) , intent(inout) :: this ! this object (needs to be intent(inout) because this%dynfile is intent(inout) in the ncd_io call)
+    integer             , intent(in)    :: nt   ! time index to read
     ! variable holding data read from file (note that this is 1-d regardless of the
     ! dimensionality of the underlying data)
     real(r8)            , intent(out) :: data(:) 
@@ -357,11 +358,11 @@ contains
 
     data = reshape(arrayl, shape(data))
     deallocate(arrayl)
-# 318 "dynVarMod.F90.in"
+# 321 "dynVarMod.F90.in"
   end subroutine read_variable_1d
   ! DIMS 1,2
   !-----------------------------------------------------------------------
-# 266 "dynVarMod.F90.in"
+# 269 "dynVarMod.F90.in"
   subroutine read_variable_2d(this, nt, data)
     !
     ! !DESCRIPTION:
@@ -373,8 +374,8 @@ contains
     use surfrdUtilsMod , only : check_sums_equal_1
     !
     ! !ARGUMENTS:
-    class(dyn_var_type) , intent(in)  :: this    ! this object
-    integer             , intent(in)  :: nt      ! time index to read
+    class(dyn_var_type) , intent(inout) :: this ! this object (needs to be intent(inout) because this%dynfile is intent(inout) in the ncd_io call)
+    integer             , intent(in)    :: nt   ! time index to read
     ! variable holding data read from file (note that this is 1-d regardless of the
     ! dimensionality of the underlying data)
     real(r8)            , intent(out) :: data(:) 
@@ -414,11 +415,7 @@ contains
 
     data = reshape(arrayl, shape(data))
     deallocate(arrayl)
-# 318 "dynVarMod.F90.in"
+# 321 "dynVarMod.F90.in"
   end subroutine read_variable_2d
-
-  ! ======================================================================
-  ! Private methods that should be over-ridden by any type extensions
-  ! ======================================================================
 
 end module dynVarMod

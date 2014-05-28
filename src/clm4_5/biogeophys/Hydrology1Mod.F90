@@ -96,9 +96,9 @@ contains
      ! !USES:
      use clmtype
      use clm_atmlnd   , only : clm_a2l, a2l_downscaled_col
-     use clm_varcon   , only : tfrz, istice, istwet, istsoil, istice_mec, &
-          istcrop, icol_roof, icol_sunwall, icol_shadewall,&
-          hfus,denice, zlnd,rpi,spval
+     use clm_varcon   , only : tfrz, hfus,denice, zlnd,rpi,spval
+     use landunit_varcon,only: istice, istwet, istsoil, istice_mec, istcrop
+     use column_varcon, only : icol_roof, icol_sunwall, icol_shadewall
      use clm_varctl   , only : subgridflag
      use clm_varpar   , only : nlevsoi,nlevsno
      use H2OSfcMod    , only : FracH2oSfc

@@ -601,7 +601,7 @@ contains
     ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
-    use clm_varcon   , only : rair, cpair, grav, istice_mec, lapse_glcmec, &
+    use clm_varcon   , only : rair, cpair, grav, lapse_glcmec, &
          glcmec_rain_snow_threshold
     use domainMod    , only : ldomain
     use QsatMod      , only : Qsat
@@ -755,7 +755,7 @@ contains
     ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
-    use clm_varcon   , only : istice_mec, lapse_glcmec
+    use clm_varcon   , only : lapse_glcmec
     use domainMod    , only : ldomain
     use clm_varctl   , only : iulog, glcmec_downscale_longwave
     use decompMod    , only : bounds_type

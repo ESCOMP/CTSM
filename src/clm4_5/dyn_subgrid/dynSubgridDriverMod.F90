@@ -40,7 +40,7 @@ contains
     ! clumps - so this routine needs to be called from outside any loops over clumps.
     !
     ! !USES:
-    use clm_varctl        , only : fpftdyn, use_cndv
+    use clm_varctl        , only : flanduse_timeseries, use_cndv
     use decompMod         , only : bounds_type, BOUNDS_LEVEL_PROC
     use dynpftFileMod     , only : dynpft_init
     use dynHarvestMod     , only : dynHarvest_init
@@ -59,12 +59,12 @@ contains
     prior_weights = prior_weights_type(bounds)
 
     ! Initialize stuff for prescribed transient PFTs
-    if (fpftdyn /= ' ') then
+    if (flanduse_timeseries /= ' ') then
        call dynpft_init(bounds)
     end if
 
-    ! Initialize stuff for harvest (currently shares the fpftdyn file)
-    if (fpftdyn /= ' ') then
+    ! Initialize stuff for harvest (currently shares the flanduse_timeseries file)
+    if (flanduse_timeseries /= ' ') then
        call dynHarvest_init(bounds)
     end if
 
@@ -90,7 +90,7 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl           , only : fpftdyn, use_cndv, use_cn, create_glacier_mec_landunit, use_ed
+    use clm_varctl           , only : flanduse_timeseries, use_cndv, use_cn, create_glacier_mec_landunit, use_ed
     use decompMod            , only : bounds_type, get_proc_clumps, get_clump_bounds, &
                                       BOUNDS_LEVEL_PROC
     use dynLandunitAreaMod   , only : update_landunit_weights
@@ -138,11 +138,11 @@ contains
     ! Do land cover change that requires I/O, and thus must be outside a threaded region
     ! ==========================================================================
 
-    if (fpftdyn /= ' ') then
+    if (flanduse_timeseries /= ' ') then
        call dynpft_interp(bounds_proc)
     end if
 
-    if (fpftdyn /= ' ') then
+    if (flanduse_timeseries /= ' ') then
        call dynHarvest_interp(bounds_proc)
     end if
 

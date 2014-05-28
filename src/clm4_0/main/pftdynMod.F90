@@ -71,7 +71,7 @@ contains
 !
 ! !USES:
     use clm_time_manager, only : get_curr_date
-    use clm_varctl  , only : fpftdyn
+    use clm_varctl  , only : flanduse_timeseries
     use clm_varpar  , only : numpft, maxpatch_pft
     use fileutils   , only : getfil
 !
@@ -146,7 +146,7 @@ contains
     end if
 
     ! Obtain file
-    call getfil (fpftdyn, locfn, 0)
+    call getfil (flanduse_timeseries, locfn, 0)
     call ncd_pio_openfile (ncid, locfn, 0)
 
     ! Obtain pft years from dynamic landuse file
@@ -167,19 +167,19 @@ contains
 
     call ncd_io(ncid=ncid, varname='PCT_WETLAND', flag='read', data=pctwet, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_WETLAND NOT on pftdyn file' )
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_WETLAND NOT on landuse_timeseries file' )
 
     call ncd_io(ncid=ncid, varname= 'PCT_LAKE', flag='read', data=pctlak, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_LAKE NOT on pftdyn file' )
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_LAKE NOT on landuse_timeseries file' )
 
     call ncd_io(ncid=ncid, varname= 'PCT_GLACIER', flag='read', data=pctgla, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_GLACIER NOT on pftdyn file' )
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_GLACIER NOT on landuse_timeseries file' )
 
     call ncd_io(ncid=ncid, varname= 'PCT_URBAN'  , flag='read', data=pcturb, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on pftdyn file' )
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on landuse_timeseries file' )
 
     ! Consistency check
     do g = begg,endg
@@ -228,7 +228,7 @@ contains
           end if   
        end do
        if (.not. found) then
-          write(iulog,*) subname//' error: model year not found in pftdyn timeseries'
+          write(iulog,*) subname//' error: model year not found in landuse_timeseries file'
           write(iulog,*)'model year = ',year
           call endrun()
        end if
@@ -529,27 +529,27 @@ contains
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_VH1', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_VH1 not on pftdyn file' )
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_VH1 not on landuse_timeseries file' )
     harvest(begg:endg) = arrayl(begg:endg)
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_VH2', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_VH2 not on pftdyn file' )
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_VH2 not on landuse_timeseries file' )
     harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_SH1', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH1 not on pftdyn file' )
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH1 not on landuse_timeseries file' )
     harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_SH2', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH2 not on pftdyn file' )
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH2 not on landuse_timeseries file' )
     harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_SH3', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH3 not on pftdyn file' )
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH3 not on landuse_timeseries file' )
     harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
 
     deallocate(arrayl)

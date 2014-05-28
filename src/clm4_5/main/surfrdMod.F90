@@ -9,7 +9,7 @@ module surfrdMod
   use shr_log_mod , only : errMsg => shr_log_errMsg
   use abortutils  , only : endrun
   use clm_varpar  , only : nlevsoifl, numpft, numcft
-  use clm_varcon  , only : numurbl
+  use landunit_varcon, only : numurbl
   use clm_varctl  , only : iulog, scmlat, scmlon, single_column
   use clm_varctl  , only : create_glacier_mec_landunit, use_cndv
   use clmtype
@@ -545,7 +545,7 @@ contains
     !
     ! !USES:
     use clm_varpar    , only : maxpatch_glcmec, nlevurb
-    use clm_varcon    , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice, istice_mec
+    use landunit_varcon, only: isturb_MIN, isturb_MAX, istdlak, istwet, istice, istice_mec
     use clm_varsur    , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec
     use UrbanInputMod , only : CheckUrban
     !
@@ -719,7 +719,7 @@ contains
     use clm_varpar  , only : natpft_lb, natpft_ub, natpft_size, cft_lb, cft_ub, cft_size, &
                              crop_prog
     use clm_varsur  , only : wt_lunit, wt_nat_pft, wt_cft
-    use clm_varcon  , only : istsoil, istcrop
+    use landunit_varcon, only : istsoil, istcrop
     use pftvarcon   , only : nc3crop, nc3irrig, npcropmin, &
                              ncorn, ncornirrig, nsoybean, nsoybeanirrig, &
                              nscereal, nscerealirrig, nwcereal, nwcerealirrig

@@ -21,8 +21,8 @@ contains
 
     my_info = time_info_type([11, 12, 13, 14], 11)
 
-    @assertEqual(1, my_info%get_nt1())
-    @assertEqual(2, my_info%get_nt2())
+    @assertEqual(1, my_info%get_time_index_lower())
+    @assertEqual(2, my_info%get_time_index_upper())
     @assertTrue(my_info%is_within_bounds())
   end subroutine test_constructor_normal_a
 
@@ -34,8 +34,8 @@ contains
     
     my_info = time_info_type([11, 12, 13, 14], 13)
 
-    @assertEqual(3, my_info%get_nt1())
-    @assertEqual(4, my_info%get_nt2())
+    @assertEqual(3, my_info%get_time_index_lower())
+    @assertEqual(4, my_info%get_time_index_upper())
     @assertTrue(my_info%is_within_bounds())
   end subroutine test_constructor_normal_b
 
@@ -46,8 +46,8 @@ contains
 
     my_info = time_info_type([11, 12, 13], 10)
 
-    @assertEqual(1, my_info%get_nt1())
-    @assertEqual(1, my_info%get_nt2())
+    @assertEqual(1, my_info%get_time_index_lower())
+    @assertEqual(1, my_info%get_time_index_upper())
     @assertFalse(my_info%is_within_bounds())
   end subroutine test_constructor_early
 
@@ -58,8 +58,8 @@ contains
 
     my_info = time_info_type([11, 12, 13], 13)
 
-    @assertEqual(3, my_info%get_nt1())
-    @assertEqual(3, my_info%get_nt2())
+    @assertEqual(3, my_info%get_time_index_lower())
+    @assertEqual(3, my_info%get_time_index_upper())
     @assertFalse(my_info%is_within_bounds())
   end subroutine test_constructor_late_a
 
@@ -70,8 +70,8 @@ contains
 
     my_info = time_info_type([11, 12, 13], 14)
 
-    @assertEqual(3, my_info%get_nt1())
-    @assertEqual(3, my_info%get_nt2())
+    @assertEqual(3, my_info%get_time_index_lower())
+    @assertEqual(3, my_info%get_time_index_upper())
     @assertFalse(my_info%is_within_bounds())
   end subroutine test_constructor_late_b
 
@@ -82,8 +82,8 @@ contains
 
     my_info = time_info_type([11, 12], 11)
 
-    @assertEqual(1, my_info%get_nt1())
-    @assertEqual(2, my_info%get_nt2())
+    @assertEqual(1, my_info%get_time_index_lower())
+    @assertEqual(2, my_info%get_time_index_upper())
     @assertTrue(my_info%is_within_bounds())
   end subroutine test_constructor_single_interval
 
@@ -94,8 +94,8 @@ contains
 
     my_info = time_info_type([11], 11)
     
-    @assertEqual(1, my_info%get_nt1())
-    @assertEqual(1, my_info%get_nt2())
+    @assertEqual(1, my_info%get_time_index_lower())
+    @assertEqual(1, my_info%get_time_index_upper())
     @assertFalse(my_info%is_within_bounds())
   end subroutine test_constructor_single_year
 
@@ -196,7 +196,7 @@ contains
 
 
   ! ----------------------------------------------------------------------
-  ! Tests of update_time_info - typical scenarios
+  ! Tests of set_current_year - typical scenarios
   ! ----------------------------------------------------------------------
 
 
@@ -206,10 +206,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 10)
-    call my_info%update_time_info(10)
+    call my_info%set_current_year(10)
     
-    @assertEqual(1, my_info%get_nt1())
-    @assertEqual(1, my_info%get_nt2())
+    @assertEqual(1, my_info%get_time_index_lower())
+    @assertEqual(1, my_info%get_time_index_upper())
     @assertFalse(my_info%is_within_bounds())
   end subroutine test_update_no_change_early
 
@@ -219,10 +219,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 11)
-    call my_info%update_time_info(11)
+    call my_info%set_current_year(11)
 
-    @assertEqual(1, my_info%get_nt1())
-    @assertEqual(2, my_info%get_nt2())
+    @assertEqual(1, my_info%get_time_index_lower())
+    @assertEqual(2, my_info%get_time_index_upper())
     @assertTrue(my_info%is_within_bounds())
   end subroutine test_update_no_change_normal
 
@@ -232,10 +232,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 14)
-    call my_info%update_time_info(14)
+    call my_info%set_current_year(14)
 
-    @assertEqual(4, my_info%get_nt1())
-    @assertEqual(4, my_info%get_nt2())
+    @assertEqual(4, my_info%get_time_index_lower())
+    @assertEqual(4, my_info%get_time_index_upper())
     @assertFalse(my_info%is_within_bounds())
   end subroutine test_update_no_change_late
 
@@ -245,10 +245,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 15)
-    call my_info%update_time_info(15)
+    call my_info%set_current_year(15)
 
-    @assertEqual(4, my_info%get_nt1())
-    @assertEqual(4, my_info%get_nt2())
+    @assertEqual(4, my_info%get_time_index_lower())
+    @assertEqual(4, my_info%get_time_index_upper())
     @assertFalse(my_info%is_within_bounds())
   end subroutine test_update_no_change_very_late
 
@@ -258,10 +258,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 9)
-    call my_info%update_time_info(10)
+    call my_info%set_current_year(10)
     
-    @assertEqual(1, my_info%get_nt1())
-    @assertEqual(1, my_info%get_nt2())
+    @assertEqual(1, my_info%get_time_index_lower())
+    @assertEqual(1, my_info%get_time_index_upper())
     @assertFalse(my_info%is_within_bounds())
   end subroutine test_update_early
 
@@ -271,10 +271,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 10)
-    call my_info%update_time_info(11)
+    call my_info%set_current_year(11)
     
-    @assertEqual(1, my_info%get_nt1())
-    @assertEqual(2, my_info%get_nt2())
+    @assertEqual(1, my_info%get_time_index_lower())
+    @assertEqual(2, my_info%get_time_index_upper())
     @assertTrue(my_info%is_within_bounds())
   end subroutine test_update_early_to_normal
 
@@ -284,10 +284,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 11)
-    call my_info%update_time_info(12)
+    call my_info%set_current_year(12)
     
-    @assertEqual(2, my_info%get_nt1())
-    @assertEqual(3, my_info%get_nt2())
+    @assertEqual(2, my_info%get_time_index_lower())
+    @assertEqual(3, my_info%get_time_index_upper())
     @assertTrue(my_info%is_within_bounds())
   end subroutine test_update_normal
 
@@ -297,10 +297,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 13)
-    call my_info%update_time_info(14)
+    call my_info%set_current_year(14)
     
-    @assertEqual(4, my_info%get_nt1())
-    @assertEqual(4, my_info%get_nt2())
+    @assertEqual(4, my_info%get_time_index_lower())
+    @assertEqual(4, my_info%get_time_index_upper())
     @assertFalse(my_info%is_within_bounds())
   end subroutine test_update_normal_to_late
 
@@ -310,10 +310,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 14)
-    call my_info%update_time_info(15)
+    call my_info%set_current_year(15)
     
-    @assertEqual(4, my_info%get_nt1())
-    @assertEqual(4, my_info%get_nt2())
+    @assertEqual(4, my_info%get_time_index_lower())
+    @assertEqual(4, my_info%get_time_index_upper())
     @assertFalse(my_info%is_within_bounds())
   end subroutine test_update_late
 
@@ -323,15 +323,15 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 15)
-    call my_info%update_time_info(16)
+    call my_info%set_current_year(16)
     
-    @assertEqual(4, my_info%get_nt1())
-    @assertEqual(4, my_info%get_nt2())
+    @assertEqual(4, my_info%get_time_index_lower())
+    @assertEqual(4, my_info%get_time_index_upper())
     @assertFalse(my_info%is_within_bounds())
   end subroutine test_update_very_late
 
   ! ----------------------------------------------------------------------
-  ! Tests of update_time_info - year decreasing
+  ! Tests of set_current_year - year decreasing
   ! ----------------------------------------------------------------------
 
   @Test
@@ -340,10 +340,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 10)
-    call my_info%update_time_info(9)
+    call my_info%set_current_year(9)
     
-    @assertEqual(1, my_info%get_nt1())
-    @assertEqual(1, my_info%get_nt2())
+    @assertEqual(1, my_info%get_time_index_lower())
+    @assertEqual(1, my_info%get_time_index_upper())
   end subroutine test_update_decreasing_early
     
   @Test
@@ -352,10 +352,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 13)
-    call my_info%update_time_info(12)
+    call my_info%set_current_year(12)
     
-    @assertEqual(2, my_info%get_nt1())
-    @assertEqual(3, my_info%get_nt2())
+    @assertEqual(2, my_info%get_time_index_lower())
+    @assertEqual(3, my_info%get_time_index_upper())
   end subroutine test_update_decreasing_normal
 
   @Test
@@ -364,14 +364,14 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 14)
-    call my_info%update_time_info(13)
+    call my_info%set_current_year(13)
     
-    @assertEqual(3, my_info%get_nt1())
-    @assertEqual(4, my_info%get_nt2())
+    @assertEqual(3, my_info%get_time_index_lower())
+    @assertEqual(4, my_info%get_time_index_upper())
   end subroutine test_update_decreasing_late
 
   ! ----------------------------------------------------------------------
-  ! Tests of update_time_info - year increasing by more than 1
+  ! Tests of set_current_year - year increasing by more than 1
   ! ----------------------------------------------------------------------
 
   @Test
@@ -380,10 +380,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 10)
-    call my_info%update_time_info(12)
+    call my_info%set_current_year(12)
     
-    @assertEqual(2, my_info%get_nt1())
-    @assertEqual(3, my_info%get_nt2())
+    @assertEqual(2, my_info%get_time_index_lower())
+    @assertEqual(3, my_info%get_time_index_upper())
   end subroutine test_update_by2_early
     
   @Test
@@ -392,10 +392,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 11)
-    call my_info%update_time_info(13)
+    call my_info%set_current_year(13)
     
-    @assertEqual(3, my_info%get_nt1())
-    @assertEqual(4, my_info%get_nt2())
+    @assertEqual(3, my_info%get_time_index_lower())
+    @assertEqual(4, my_info%get_time_index_upper())
   end subroutine test_update_by2_normal
 
   @Test
@@ -404,10 +404,10 @@ contains
     type(time_info_type) :: my_info
 
     my_info = time_info_type([11,12,13,14], 14)
-    call my_info%update_time_info(16)
+    call my_info%set_current_year(16)
     
-    @assertEqual(4, my_info%get_nt1())
-    @assertEqual(4, my_info%get_nt2())
+    @assertEqual(4, my_info%get_time_index_lower())
+    @assertEqual(4, my_info%get_time_index_upper())
   end subroutine test_update_by2_late
     
 

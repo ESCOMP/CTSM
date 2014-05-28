@@ -9,8 +9,9 @@ module dynLandunitAreaMod
   !
   ! !USES:
   use clmtype
-  use clm_varcon     , only : istsoil, istcrop, istice, istdlak, istwet, isturb_tbd, &
-                              isturb_hd, isturb_md, max_lunit, ispval
+  use landunit_varcon, only : istsoil, istcrop, istice, istdlak, istwet, isturb_tbd, &
+                              isturb_hd, isturb_md, max_lunit
+  use clm_varcon     , only : ispval
   use decompMod      , only: bounds_type
   use clm_varctl     , only : iulog
   use shr_kind_mod   , only : r8 => shr_kind_r8
