@@ -1,4 +1,88 @@
 ===============================================================
+Tag name:  clm4_5_75
+Originator(s):  muszala (Stefan Muszala,UCAR/TSS,303-497-1320)
+Date: Fri May 30 11:18:35 MDT 2014
+One-line Summary: update externals to rtm1_0_38 and esmf_wrf_timemgr_140529
+
+Purpose of changes: update externals to rtm1_0_38 and esmf_wrf_timemgr_140529.  These modifications
+are based on valgrind errors that orginated in src/riverroute.  Tested in clm4_5_72 to make sure
+everything was still BFB (at least w.r.t. CLM testing).  Retested (results below) against clm4_5_73.  
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):N/A
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): 
+
+-models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_37
++models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_38
+
+-models/utils/esmf_wrf_timemgr   https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_130213
++models/utils/esmf_wrf_timemgr   https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_140529
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes: N/A
+
+CLM testing:
+
+in addition to other clm tests I updated the rtm and esmf externals in cesm1_3_alpha09c and
+ran two B cases.
+
+Note:  There is one ED test (SMS_D_Mmpi-serial.5x5_amazon.ICLM45CNED.goldbach_nag.clm-edTestGb) that failed for me in my
+testing but passed for Bill with the same checkout.  We will keep an eye on this, but it's not super-critical at the moment.
+Differences are very small in cpl. voc fields (largest RMS difference is 1e-13).
+
+>>more TestStatus
+PASS  ERS_PT.T31_g37.B1850CN.yellowstone_gnu 
+PASS  ERS_PT.T31_g37.B1850CN.yellowstone_gnu.memleak
+
+>>more TestStatus
+PASS  ERS.ne30_g16.B1850C5CN.yellowstone_intel 
+PASS  ERS.ne30_g16.B1850C5CN.yellowstone_intel.memleak
+
+  build-namelist tests: N/A
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel - 40 OK - 45 OK - component gen comp - OK
+    yellowstone_pgi   - 40 OK - 45 OK - component gen comp - OK
+
+    goldbach_nag      - 40 OK - 45 OK
+    goldbach_intel    - 40 OK - 45 OK
+    goldbach_pgi      - 40 OK - 45 OK
+
+CLM tag used for the baseline comparisons: clm4_5_73
+
+Changes answers relative to baseline: No
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_74
 Originator(s):  sacks (sacks)
 Date: Wed May 28 16:05:36 MDT 2014
