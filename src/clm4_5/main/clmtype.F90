@@ -1350,27 +1350,27 @@ type, public :: column_pstate_type
    real(r8), pointer :: watfc(:,:)        !volumetric soil water at field capacity (nlevsoi)
 
    ! F. Li and S. Levis
-   real(r8), pointer :: nfire(:)        ! fire counts (count/km2/timestep), valid only in Reg. C
+   real(r8), pointer :: nfire(:)        ! fire counts (count/km2/sec), valid only in Reg. C
    real(r8), pointer :: fsr_pft(:)      ! fire spread rate in pft level (m/s)
    real(r8), pointer :: fsr_col(:)      ! fire spread rate at column level (m/s)
    real(r8), pointer :: fd_col(:)       ! fire duration at column level (hr)
    real(r8), pointer :: fd_pft(:)       ! fire duration in pft level    (hr)
    real(r8), pointer :: prec60_col(:)              !60-day running mean of tot. precipitation (mm/s)
    real(r8), pointer :: prec10_col(:)              !10-day running mean of tot. precipitation (mm/s)
-   real(r8), pointer :: lfc(:)         ! conversion area fraction of BET and BDT that haven't burned before (0-1)
-   real(r8), pointer :: lfc2(:)        ! conversion area fraction of BET and BDT that burned in this timestep ((timestep)-1)
+   real(r8), pointer :: lfc(:)         ! conversion area fraction of BET and BDT that haven't burned before (/timestep)
+   real(r8), pointer :: lfc2(:)        ! conversion area fraction of BET and BDT that burned (/sec)
    real(r8), pointer :: dtrotr_col(:)   ! annual decreased fraction coverage of BET on the gridcell (0-1)
    real(r8), pointer :: trotr1_col(:)   ! pft weight of BET and BDT on the gridcell(0-1)
    real(r8), pointer :: trotr2_col(:)   ! pft weight of BDT on the gridcell (0-1)
    real(r8), pointer :: cropf_col(:)    ! crop fraction in veg column (0-1)
-   real(r8), pointer :: baf_crop(:)     ! baf for cropland per time step(0-1)
-   real(r8), pointer :: baf_peatf(:)    ! baf for peatland per time step (0-1)
-   real(r8), pointer :: fbac(:)         ! total burned area out of conversion (0-1)
-   real(r8), pointer :: fbac1(:)        ! burned area out of conversion region due to land use fire (0-1)
+   real(r8), pointer :: baf_crop(:)     ! baf for cropland(/sec)
+   real(r8), pointer :: baf_peatf(:)    ! baf for peatland (/sec)
+   real(r8), pointer :: fbac(:)         ! total burned area out of conversion (/sec)
+   real(r8), pointer :: fbac1(:)        ! burned area out of conversion region due to land use fire (/sec)
    real(r8), pointer :: btran_col(:)    ! btran2 at column level (0-1)
    real(r8), pointer :: wtlf(:)         ! fractional coverage of non-crop PFTs (0-1)
    real(r8), pointer :: lfwt(:)         ! fractional coverage of non-crop and non-bare-soil PFTs (0-1)
-   real(r8), pointer :: farea_burned(:)       !timestep fractional area burned (0-1) 
+   real(r8), pointer :: farea_burned(:)       !fractional area burned (/sec) 
 
 
    real(r8), pointer :: albsnd_hst(:,:)       ! snow albedo, direct, for history files (col,bnd) [frc]

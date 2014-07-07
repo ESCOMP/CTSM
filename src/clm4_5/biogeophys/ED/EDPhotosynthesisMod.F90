@@ -476,7 +476,7 @@ if(ED_patch(p) == 1)then
         lmr25top(FT) = lmr25top(FT) * lnc(FT) / 12.e-06_r8
      else
         ! Leaf maintenance respiration in proportion to vcmax25top
-        lmr25top(FT) = vcmax25top(FT) * dr(nint(c3psn(FT)))
+        lmr25top(FT) = vcmax25top(FT) * dr(nint(c3psn(FT)+1))
      end if
   end do !FT 
 

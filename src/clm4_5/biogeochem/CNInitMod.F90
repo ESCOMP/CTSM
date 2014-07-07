@@ -76,12 +76,12 @@ contains
     !  cps%cannavg_t2m                     Output: [real(r8) (:)     ]  annual average of 2m air temperature, averaged from pft-level (K)
     !  cps%wf                              Output: [real(r8) (:)     ]  soil moisture in top 0.05 m                       
     !  cps%wf2                             Output: [real(r8) (:)     ]                                                    
-    !  cps%nfire                           Output: [real(r8) (:)     ]  fire counts/km2/timestep                          
+    !  cps%nfire                           Output: [real(r8) (:)     ]  fire counts/km2/sec                          
     !  cps%baf_crop                        Output: [real(r8) (:)     ]  burned area fraction in crop                      
     !  cps%baf_peatf                       Output: [real(r8) (:)     ]  burned area fraction in peatland                  
     !  cps%fbac                            Output: [real(r8) (:)     ]                                                    
     !  cps%fbac1                           Output: [real(r8) (:)     ]                                                    
-    !  cps%farea_burned                    Output: [real(r8) (:)     ]  timestep fractional area burned (proportion)      
+    !  cps%farea_burned                    Output: [real(r8) (:)     ]  fractional area burned (/sec)     
     !  cps%nfixation_prof                  Output: [real(r8) (:,:)   ]  (1/m) profile for N fixation additions          
     !  cps%ndep_prof                       Output: [real(r8) (:,:)   ]  (1/m) profile for N fixation additions          
     !  cps%fpi_vr                          Output: [real(r8) (:,:)   ]                                                  

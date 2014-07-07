@@ -1,4 +1,122 @@
 ===============================================================
+Tag name:  clm4_5_1_r076
+Originator(s):  erik (Erik)
+Date: Mon Jul  7 14:24:07 MDT 2014
+Orig Date: Wed Jun 25 13:49:49 MDT 2014 (Date of what was tagged as clm4_6_0, before we changed naming convention)
+One-line Summary: Answer changes for fire code from Fang Li
+
+Purpose of changes:
+
+Several changes to CN Fire model. Some fixes for non-transient, as well as limiting of fire for high tropical
+forest coverage. Change some units from per time-step to per second. Change Lightning input dataset from just
+cloud to ground to total lightning. Some fire parameters were also changed and re-tuned for Qian forcing.
+Some more documentation on fire fields was added.
+
+When -ed_mode is sent to CLM build-namelist, a particular ED params dataset is used over the default. Make
+a simple change that allows ED to run when CN is off. Add a 1850 and transient 20thC and rcp=8.5 datasets
+for 1x1_brazil.
+
+Requirements for tag: Fix bugs 1805 and 1719, lower fire amount in amazon
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+    1996 -- change cloud to ground lightning dataset to total lightning
+    1995 -- change units from per time-step to per second
+    1805 -- fire fix for non-transient
+    1719 -- remove double counting of baf in fire area
+    1992 -- allow ED to run when use_cn=.false.
+    1988 -- Add ED params dataset.
+    1991 -- transient datasets for 1x1_brazil
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+  specific rparams file for ED
+  add 1850 and 20thC, rcp8.5 datasets for 1x1_brazil
+  use lightning file that is total lightning not just cloud-to-ground
+
+Describe any substantial timing or memory changes: 
+    The test SMS.f19_g16.IRCP45CN.yellowstone_pgi showed a memory increase
+
+Code reviewed by: self, lifang
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts
+    scripts to addclm50_n06_ED_scripts_015_140305_rev
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+       M models/lnd/clm/bld/unit_testers/build-namelist_test.pl --------- Add some ED tests
+       M models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml - Different
+             params file for ED, and add 1850 and 20thC, rcp8.5 datasets for 1x1_brazil
+             and use lightning file that is total lightning not just cloud-to-ground
+       M models/lnd/clm/bld/CLMBuildNamelist.pm ------------------------- Pass use_ed
+             when getting paramfile
+       M models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90 ------------- Revisions from
+             Fang Li (2014), change parameters, add documentation, tropical forests will
+             only burn if > 60% coverage, change some fields units to per second rather than
+             per time-step, 
+       M models/lnd/clm/src/clm4_5/biogeochem/CNInitMod.F90 ------------- change units
+             for nfire, and farea_burned
+       M models/lnd/clm/src/clm4_5/main/clmtype.F90 --------------------- Change units
+             for nfire, lfc, lfc2, baf_crop, baf_peatf, fbac, fbac1, farea_burned
+       M models/lnd/clm/src/clm4_5/main/histFldsMod.F90 ----------------- Change units for:
+             LFC2, NFIRE, FAREA_BURNED, BAF_CROP, BAF_PEATF
+       M models/lnd/clm/src/clm4_5/biogeophys/ED/EDPhotosynthesisMod.F90  Allow to work
+             when use_cn is .false., use c3psn+1 in finding index for dr array.
+
+CLM testing:
+
+ build-namelist tests:  yes
+
+    NOTE: 191 of the 537 compare tests fail, compared to clm4_5_75, because of changes in the namelist.
+
+    yellowstone        yes
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel  yes
+    yellowstone_pgi    yes
+    goldbach_nag       yes
+    goldbach_intel     yes
+    goldbach_pgi       yes
+
+CLM tag used for the baseline comparisons:  clm4_5_75
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CN and BGC with CLM4.5 physics
+          CLM4.0 for all modes, and CLM4.5 with SP or ED should be identical
+    - what platforms/compilers: All
+    - nature of change: new climate
+
+   Fang Li, ran simulations with Qian forcing on yellowstone and tuned fire parameters to that forcing.
+   However, her simulations had a minor bug in the conversion of total lightning to just cloud-to-ground
+   (latitude in degree's was used for a cosine, rather than latitude in radians -- see bug 1996).
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_75
 Originator(s):  muszala (Stefan Muszala,UCAR/TSS,303-497-1320)
 Date: Fri May 30 11:18:35 MDT 2014

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r076     erik 07/07/2014 Answer changes for fire code from Fang Li
    clm4_5_75      muszala 05/30/2014 update externals to rtm1_0_38 and esmf_wrf_timemgr_140523
    clm4_5_74        sacks 05/28/2014 misc. bfb changes - see detailed summary below
    clm4_5_73         erik 05/28/2014 Add the stub ability for clm5_0 physics to CLM build system

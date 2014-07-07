@@ -45,11 +45,11 @@ EXAMPLES:
 
      To document a new tag
 
-     $ProgName clm3_7_1 "Description of this tag"
+     $ProgName clm4_5_2_r097 "Description of this tag"
 
      To document a new tag and compare expected fails to previous tag.
 
-     $ProgName clm4_0_27 "Description of this tag" -ct clm4_0_26
+     $ProgName clm4_5_r097 "Description of this tag" -ct clm4_5_2_r096
 EOF
 }
 
@@ -79,7 +79,7 @@ if ( ! $opts{'update'} ) {
    $tag = $ARGV[0];
    $sum = $ARGV[1];
 
-   if ( $tag !~ /clm[0-9]+_(expa|[0-9]+)_[0-9]+/ ) {
+   if ( $tag !~ /clm[0-9]+_([0-9]+)_[0-9]+_r[0-9]+/ ) {
      print "ERROR: bad tagname: $tag\n";
      usage();
    }
@@ -200,10 +200,10 @@ while( $_ = <CS> ) {
   # Find header line
   if ( $_ =~ /=====================/ ) {
      print FH $_;
-     my $format = "%12.12s %12.12s %10.10s %s\n";
+     my $format = "%16.16s %8.8s %10.10s %s\n";
      if ( $update ) {
        $_ = <CS>;
-       if ( /^(.{12}) (.{12}) (.{10}) (.+)$/ ) {
+       if ( /^(.{16}) (.{8}) (.{10}) (.+)$/ ) {
           $tag  = $1;
           $user = $2;
           $sum  = $4;

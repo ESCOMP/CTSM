@@ -1768,7 +1768,8 @@ sub setup_logic_params_file {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'paramfile');
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'paramfile', 
+                'use_ed'=>$nl_flags->{'use_ed'} );
   } else {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fpftcon');
   }
@@ -2384,9 +2385,20 @@ sub write_output_files {
   # CLM component
   my @groups;
   if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
-    @groups = qw(clm_inparm ndepdyn_nml);
+    @groups = qw(clm_inparm);
+    # Eventually only list namelists that are actually used when CN on
+    #if ( $nl_flags->{'bgc_mode'}  eq "cn" ) {
+      push @groups, "ndepdyn_nml";
+    #}
   } else {
-    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams clm_hydrology1_inparm clm_soilhydrology_inparm finidat_consistency_checks dynpft_consistency_checks);
+    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams clm_hydrology1_inparm 
+                 clm_soilhydrology_inparm finidat_consistency_checks dynpft_consistency_checks);
+    #@groups = qw(clm_inparm clm_hydrology1_inparm clm_soilhydrology_inparm 
+    #             finidat_consistency_checks dynpft_consistency_checks);
+    # Eventually only list namelists that are actually used when CN on
+    #if ( $nl_flags->{'bgc_mode'}  eq "cn" ) {
+    #  push @groups, qw(ndepdyn_nml popd_streams light_streams);
+    #}
     if ( $nl_flags->{'use_lch4'}  eq ".true." ) {
       push @groups, "ch4par_in";
     }

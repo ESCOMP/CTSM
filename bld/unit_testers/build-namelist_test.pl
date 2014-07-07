@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 322;
+my $ntests = 346;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 175;
+   $ntests += 191;
 }
 plan( tests=>$ntests );
 
@@ -804,6 +804,28 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
      $cfiles->copyfiles( "$options", $mode );
   }
   &cleanup();
+  # Run ED mode for several resolutions
+  $mode = "${phys}-ED";
+  system( "../configure -s -phys ".$phys );
+  my $clmoptions = "-bgc cn -envxml_dir . -ed_mode";
+  my @clmres = ( "1x1_brazil", "5x5_amazon", "10x15", "1.9x2.5" );
+  foreach my $res ( @clmres ) {
+     $options = "-res $res";
+     &make_env_run( );
+     eval{ system( "$bldnml $options $clmoptions  > $tempfile 2>&1 " ); };
+     is( $@, '', "$options" );
+     $cfiles->checkfilesexist( "$options", $mode );
+     system( "diff lnd_in lnd_in.default.standard" );
+     $cfiles->shownmldiff( "default", "standard" );
+     if ( defined($opts{'compare'}) ) {
+        $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+        $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+     }
+     if ( defined($opts{'generate'}) ) {
+        $cfiles->copyfiles( "$options", $mode );
+     }
+     &cleanup();
+  }
 }
 &cleanup();
 

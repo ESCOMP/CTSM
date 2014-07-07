@@ -5530,8 +5530,8 @@ contains
             ptr_col=cps%wf)
 
        ! add by F. Li and S. Levis  
-       call hist_addfld1d (fname='LFC2', units='per timestep', &
-            avgflag='A', long_name='conversion area fraction of BET and BDT that burned in this timestep', &
+       call hist_addfld1d (fname='LFC2', units='per sec', &
+            avgflag='A', long_name='conversion area fraction of BET and BDT that burned', &
             ptr_col=cps%lfc2)
 
        if ( nlevdecomp_full  >  1 ) then
@@ -5580,20 +5580,20 @@ contains
             avgflag='A', long_name='ground albedo (indirect)', &
             ptr_col=cps%albgri, default='inactive')
 
-       call hist_addfld1d (fname='NFIRE',  units='counts/km2/timestep', &
-            avgflag='A', long_name='timestep fire counts valid only in Reg.C', &
+       call hist_addfld1d (fname='NFIRE',  units='counts/km2/sec', &
+            avgflag='A', long_name='fire counts valid only in Reg.C', &
             ptr_col=cps%nfire)
 
-       call hist_addfld1d (fname='FAREA_BURNED',  units='proportion', &
-            avgflag='A', long_name='timestep fractional area burned', &
+       call hist_addfld1d (fname='FAREA_BURNED',  units='proportion/sec', &
+            avgflag='A', long_name='fractional area burned', &
             ptr_col=cps%farea_burned)
 
-       call hist_addfld1d (fname='BAF_CROP',  units='proportion', &
-            avgflag='A', long_name='timestep fractional area burned for crop', &
+       call hist_addfld1d (fname='BAF_CROP',  units='proportion/sec', &
+            avgflag='A', long_name='fractional area burned for crop', &
             ptr_col=cps%baf_crop)
 
-       call hist_addfld1d (fname='BAF_PEATF',  units='proportion', &
-            avgflag='A', long_name='timestep fractional area burned in peatland', &
+       call hist_addfld1d (fname='BAF_PEATF',  units='proportion/sec', &
+            avgflag='A', long_name='fractional area burned in peatland', &
             ptr_col=cps%baf_peatf)
 
        !-------------------------------
