@@ -2604,7 +2604,7 @@ contains
     cps%frac_iceold(:,:)= spval
     allocate(cps%imelt(beg:end,-nlevsno+1:nlevgrnd))
     cps%imelt(:,:)= huge(1)
-    allocate(cps%eff_porosity(beg:end,nlevgrnd))
+    allocate(cps%eff_porosity(beg:end,-nlevsno+1:nlevgrnd))
     cps%eff_porosity(:,:)= spval
     allocate(cps%emg(beg:end))
     cps%emg(:)= nanr
@@ -2974,8 +2974,11 @@ contains
     cws%h2osoi_liqice_10cm(:)= spval
     allocate(cws%h2osoi_vol(beg:end,1:nlevgrnd))
     cws%h2osoi_vol(:,:)= spval
+
     allocate(cws%bw(beg:end,-nlevsno+1:0))
     cws%bw(:,:)= spval
+    allocate(cws%h2osoi_liqvol(beg:end,-nlevsno+1:nlevgrnd))
+    cws%h2osoi_liqvol(:,:)= spval    
     allocate(cws%h2osno_old(beg:end))
     cws%h2osno_old(:)= nanr
     allocate(cws%qg(beg:end))

@@ -5,9 +5,20 @@ Author: Ben Andre <bandre@lbl.gov>
 
 """
 
+from __future__ import print_function
+
+import sys
+
+if sys.hexversion < 0x02070000:
+    print(70*"*")
+    print("ERROR: query-xFail for CLM requires python >= 2.7.x. ")
+    print("It appears that you are running python {0}.{1}.{2}".format(
+        sys.version_info[0], sys.version_info[1], sys.version_info[2]))
+    print(70*"*")
+    sys.exit(1)
+
 import argparse
 import os
-import sys
 import traceback
 import xml.etree.ElementTree as ET
 

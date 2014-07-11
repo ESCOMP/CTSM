@@ -74,6 +74,8 @@ subroutine initTimeConst(bounds)
   use fileutils            , only : getfil
   use spmdMod              , only : mpicom, MPI_INTEGER, masterproc
   use ncdio_pio       
+  use FuncPedotransferMod  , only : pedotransf, get_ipedof
+  use RootBiophysMod       , only : init_vegrootfr
   !
   ! !ARGUMENTS:
   implicit none
@@ -160,6 +162,7 @@ subroutine initTimeConst(bounds)
   real(r8)              :: d, fd, dfdd, slope0,slopebeta
   character(len=256)    :: locfn                    ! local filename
   character(len= 32)    :: subname = 'iniTimeConst' ! subroutine name
+  integer :: ipedof  
   !------------------------------------------------------------------------
 
   ! The two input arguments are calculated in initTimeConstUrban() - which must
@@ -1105,9 +1108,14 @@ subroutine initTimeConst(bounds)
 
             ! Note that the following properties are overwritten for urban impervious road 
             ! layers that are not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
-            cps%watsat(c,lev) = 0.489_r8 - 0.00126_r8*sand
-            cps%bsw(c,lev)    = 2.91 + 0.159*clay
-            cps%sucsat(c,lev) = 10._r8 * ( 10._r8**(1.88_r8-0.0131_r8*sand) )
+
+            !determine the type of pedotransfer function to be used based on soil order
+            !I will use the following implementation to further explore the ET problem, now
+            !I set soil order to 0 for all soils. Jinyun Tang, Mar 20, 2014
+            ipedof=get_ipedof(0)
+            !call pedotransfer function
+            call pedotransf(ipedof, sand, clay, cps%watsat(c,lev), cps%bsw(c,lev), cps%sucsat(c,lev), xksat)
+            
             om_watsat         = max(0.93_r8 - 0.1_r8*(zsoi(lev)/zsapric), 0.83_r8)
             om_b              = min(2.7_r8 + 9.3_r8*(zsoi(lev)/zsapric), 12.0_r8)
             om_sucsat         = min(10.3_r8 - 0.2_r8*(zsoi(lev)/zsapric), 10.1_r8)
@@ -1116,9 +1124,8 @@ subroutine initTimeConst(bounds)
             cps%bd(c,lev)     = (1._r8 - cps%watsat(c,lev))*2.7e3_r8 
             cps%watsat(c,lev) = (1._r8 - om_frac) * cps%watsat(c,lev) + om_watsat*om_frac
             tkm               = (1._r8-om_frac) * (8.80_r8*sand+2.92_r8*clay)/(sand+clay)+om_tkm*om_frac ! W/(m K)
-            cps%bsw(c,lev)    = (1._r8-om_frac) * (2.91_r8 + 0.159_r8*clay) + om_frac*om_b   
+            cps%bsw(c,lev)    = (1._r8-om_frac) * (2.91_r8 + 0.159_r8*clay) + om_frac*om_b
             cps%sucsat(c,lev) = (1._r8-om_frac) * cps%sucsat(c,lev) + om_sucsat*om_frac  
-            xksat             = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
             cps%hksat_min(c,lev) = xksat
 
             ! perc_frac is zero unless perf_frac greater than percolation threshold
@@ -1239,6 +1246,14 @@ subroutine initTimeConst(bounds)
 
    end do
 
+   ! Initialize root fraction 
+   
+   call init_vegrootfr(bounds, nlevsoi, nlevgrnd, &
+      pft%column(bounds%begp:bounds%endp),        &
+      pft%itype(bounds%begp:bounds%endp),         &
+      cps%zi(bounds%begc:bounds%endc, 0:nlevgrnd), &
+      pps%rootfr(bounds%begp:bounds%endp,1:nlevgrnd)   )
+
    ! pft level initialization
    do p = bounds%begp,bounds%endp
 
@@ -1246,61 +1261,6 @@ subroutine initTimeConst(bounds)
 
       pps%dewmx(p)  = 0.1_r8
 
-      ! Initialize root fraction (computing from surface, d is depth in meter):
-      ! Y = 1 -1/2 (exp(-ad)+exp(-bd) under the constraint that
-      ! Y(d =0.1m) = 1-beta^(10 cm) and Y(d=d_obs)=0.99 with
-      ! beta & d_obs given in Zeng et al. (1998).
-
-      c = pft%column(p)
-      if (pft%itype(p) /= noveg) then
-         do lev = 1, nlevgrnd
-            pps%rootfr(p,lev) = 0._r8
-         enddo
-         do lev = 1, nlevsoi-1
-            pps%rootfr(p,lev) = .5_r8*( exp(-roota_par(pft%itype(p)) * cps%zi(c,lev-1))  &
-                                      + exp(-rootb_par(pft%itype(p)) * cps%zi(c,lev-1))  &
-                                      - exp(-roota_par(pft%itype(p)) * cps%zi(c,lev  ))  &
-                                      - exp(-rootb_par(pft%itype(p)) * cps%zi(c,lev  )) )
-         end do
-         pps%rootfr(p,nlevsoi) = .5_r8*( exp(-roota_par(pft%itype(p)) * cps%zi(c,nlevsoi-1))  &
-                                       + exp(-rootb_par(pft%itype(p)) * cps%zi(c,nlevsoi-1)) )
-         pps%rootfr(p,nlevsoi+1:nlevgrnd) =  0.0_r8
-
-         !if (use_cn) then
-         !        ! replacing the exponential rooting distribution
-         !        ! with a linear decrease, going to zero at the bottom of the lowest
-         !        ! soil layer for woody pfts, but going to zero at the bottom of
-         !        ! layer 8 for non-woody pfts.  This corresponds to 3.43 m for woody
-         !        ! bottom, vs 1.38 m for non-woody bottom.
-         !        if (woody(pft%itype(p)) == 1) then
-         !           bottom = nlevsoi
-         !           slope = -2._r8/(zi(c,bottom)*zi(c,bottom))
-         !           intercept   = 2._r8/zi(c,bottom)
-         !           do lev = 1, bottom
-         !              rootfr(p,lev) = dz(c,lev) * 0.5_r8 * ((intercept+slope*zi(c,lev-1)) + (intercept+slope*zi(c,lev)))
-         !           end do
-         !           if (bottom < nlevsoi) then
-         !              do lev=bottom+1,nlevgrnd
-         !                 rootfr(p,lev) = 0._r8
-         !              end do
-         !           end if
-         !        else
-         !           bottom = 8
-         !           slope = -2._r8/(zi(c,bottom)*zi(c,bottom))
-         !           intercept   = 2._r8/zi(c,bottom)
-         !           do lev=1,bottom
-         !              rootfr(p,lev) = dz(c,lev) * 0.5_r8 * ((intercept+slope*zi(c,lev-1)) + (intercept+slope*zi(c,lev)))
-         !           end do
-         !           if (bottom < nlevsoi) then
-         !              do lev=bottom+1,nlevgrnd
-         !                 rootfr(p,lev) = 0._r8
-         !              end do
-         !           end if
-         !        end if
-         !endif
-      else
-         pps%rootfr(p,1:nlevsoi) = 0._r8
-      endif
       
       ! initialize rresis, for use in ecosystemdyn
       do lev = 1,nlevgrnd

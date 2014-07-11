@@ -1486,6 +1486,7 @@ type, public :: column_wstate_type
    real(r8), pointer :: h2osoi_ice(:,:)       ! ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
    real(r8), pointer :: h2osoi_liqice_10cm(:) ! liquid water + ice lens in top 10cm of soil (kg/m2)
    real(r8), pointer :: h2osoi_vol(:,:)       ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)  
+   real(r8), pointer :: h2osoi_liqvol(:,:)    ! volumetric liquid water content (v/v)
    real(r8), pointer :: bw(:,:)               ! partial density of water in the snow pack (ice + liquid) 
                                               ! [kg/m3] (-nlevsno+1:0)
    real(r8), pointer :: h2osno_old(:)         ! snow mass for previous time step (kg/m2) (new)
@@ -1506,6 +1507,7 @@ type, public :: column_wstate_type
    real(r8), pointer :: smp_l(:,:)            ! soil matric potential (mm)
    real(r8), pointer :: hk_l(:,:)             ! hydraulic conductivity (mm/s)
    real(r8), pointer :: fsat(:)               ! fractional area with water table at surface
+
    ! VICHYDRO
    real(r8), pointer :: moist(:,:)            ! soil moisture (kg/m2) for VIC soil layers
    real(r8), pointer :: ice(:,:)              ! soil ice (kg/m2) for VIC soil layers

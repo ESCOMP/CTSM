@@ -57,6 +57,7 @@ contains
     use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, nlevsoi
     use QSatMod            , only : QSat
     use shr_const_mod      , only : SHR_CONST_PI
+    use SurfaceResistanceMod, only : calc_soilevap_stress
     !
     ! !ARGUMENTS:
     implicit none
@@ -134,7 +135,6 @@ contains
    h2osoi_ice                =>    cws%h2osoi_ice               , & ! Input:  [real(r8) (:,:)] ice lens (kg/m2)                       
    h2osoi_liq                =>    cws%h2osoi_liq               , & ! Input:  [real(r8) (:,:)] liquid water (kg/m2)                   
    soilalpha                 =>    cws%soilalpha                , & ! Output: [real(r8) (:)] factor that reduces ground saturated specific humidity (-)
-   soilbeta                  =>    cws%soilbeta                 , & ! Output: [real(r8) (:)] factor that reduces ground evaporation   
    soilalpha_u               =>    cws%soilalpha_u              , & ! Output: [real(r8) (:)] Urban factor that reduces ground saturated specific humidity (-)
    sucsat                    =>    cps%sucsat                   , & ! Input:  [real(r8) (:,:)] minimum soil suction (mm)              
    t_soisno                  =>    ces%t_soisno                 , & ! Input:  [real(r8) (:,:)] soil temperature (Kelvin)              
@@ -194,7 +194,9 @@ contains
           t_h2osfc_bef(c) = t_h2osfc(c)   
        end do
     end do
-
+    ! calculate moisture stress/resistance for soil evaporation
+    call calc_soilevap_stress(bounds, num_nolakec, filter_nolakec, col, lun, cps, cws)
+    
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        l = clandunit(c)
@@ -231,18 +233,6 @@ contains
              qred = (1._r8 - frac_sno(c) - frac_h2osfc(c))*hr &
                   + frac_sno(c) + frac_h2osfc(c)
 
-             !! Lee and Pielke 1992 beta, added by K.Sakaguchi
-             if (wx < watfc(c,1) ) then  !when water content of ths top layer is less than that at F.C.
-                fac_fc  = min(1._r8, wx/watfc(c,1))  !eqn5.66 but divided by theta at field capacity
-                fac_fc  = max( fac_fc, 0.01_r8 )
-                ! modify soil beta by snow cover. soilbeta for snow surface is one
-                soilbeta(c) = (1._r8-frac_sno(c)-frac_h2osfc(c)) &
-                     *0.25_r8*(1._r8 - cos(SHR_CONST_PI*fac_fc))**2._r8 &
-                              + frac_sno(c)+ frac_h2osfc(c)
-             else   !when water content of ths top layer is more than that at F.C.
-                soilbeta(c) = 1._r8
-             end if
-
              soilalpha(c) = qred
           ! Pervious road depends on water in total soil column
           else if (ctype(c) == icol_road_perv) then
@@ -268,19 +258,15 @@ contains
                 end do
              end if
              soilalpha_u(c) = qred
-             soilbeta(c) = 0._r8
           else if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall) then
              qred = 0._r8
-             soilbeta(c) = 0._r8
              soilalpha_u(c) = spval
           else if (ctype(c) == icol_roof .or. ctype(c) == icol_road_imperv) then
              qred = 1._r8
-             soilbeta(c) = 0._r8
              soilalpha_u(c) = spval
           end if
        else
           soilalpha(c) = spval
-          soilbeta(c) =   1._r8
        end if
 
        ! compute humidities individually for snow, soil, h2osfc for vegetated landunits

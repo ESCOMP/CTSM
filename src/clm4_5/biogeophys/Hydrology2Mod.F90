@@ -53,9 +53,11 @@ contains
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
          SnowWater, BuildSnowFilter
-    use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff, WaterTable
+    use SoilHydrologyMod, only : Infiltration, Drainage, SurfaceRunoff, WaterTable
+    use SoilWaterMovementMod, only : SoilWater 
     use clm_time_manager, only : get_step_size, get_nstep
     use CLMVICMapMod    , only : CLMVICMap
+    use SoiWatRetCurveParMod, only: soil_suction
     !
     ! !ARGUMENTS:
     implicit none
@@ -191,6 +193,10 @@ contains
     nstep = get_nstep()
     dtime = get_step_size()
 
+
+    !set some hydrological fluxes to zero, so they can be turned off component by component
+    call init_hydroh2oflx(bounds, num_nolakec, filter_nolakec)
+    
     ! Determine initial snow/no-snow filters (will be modified possibly by
     ! routines CombineSnowLayers and DivideSnowLayers below
 
@@ -413,7 +419,7 @@ contains
           s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
           s_node = min(1.0_r8, s_node)
 
-          smp_l(c,j) = -sucsat(c,j)*s_node**(-bsw(c,j))
+          call soil_suction(sucsat(c,j), s_node, bsw(c,j), smp_l(c,j))
           smp_l(c,j) = max(smpmin(c), smp_l(c,j))
        end do
     end do
@@ -719,6 +725,8 @@ contains
     if (use_vichydro) then
        call CLMVICMap(bounds, num_hydrologyc, filter_hydrologyc)
     endif
+    
+    
     call Drainage(bounds, num_hydrologyc, filter_hydrologyc, &
                   num_urbanc, filter_urbanc)
 
@@ -853,4 +861,46 @@ contains
     
   end subroutine Hydrology2Drainage
 
+!------------------------------------------------------------------------------
+  subroutine init_hydroh2oflx(bounds, num_nolakec, filter_nolakec)
+  !
+  ! DESCRIPTION
+  ! set some hydrological fluxes to zero
+  ! this can be used to ensure safely turning off processes such as drainage, infiltration and runoff
+  ! History:
+  ! created by Jinyun Tang, Mar 12, 2014.
+  ! Note: right now only drainage is tested.
+  use clmtype    
+  implicit none
+  type(bounds_type), intent(in) :: bounds  ! bounds
+  integer, intent(in) :: num_nolakec              ! number of column soil points in column filter
+  integer, intent(in) :: filter_nolakec(:)! column filter for soil points
+  
+  !local variables
+  
+  integer :: fc, c
+    
+  associate(&
+   qflx_surf            => cwf%qflx_surf           , & ! Output: [real(r8) (:)]  surface runoff (mm H2O /s)
+!   qin_flx              => cwf%qin_flx             , & ! Output: [real(r8) (:,:)] interfacial water flux (m h2o/s)
+   qflx_drain           => cwf%qflx_drain          , & ! Output: [real(r8) (:)] sub-surface runoff (mm H2O/s)
+   qflx_drain_perched   => cwf%qflx_drain_perched  , & ! Output: [real(r8) (:)] sub-surface runoff from perched zwt (mm H2O/s)
+!   qflx_root        =>    cwf%qflx_root            , & ! Output: [real(r8) (:,:)] transpired water flux, m H2O/s
+   qflx_qrgwl           => cwf%qflx_qrgwl            & ! Output: [real(r8) (:)] qflx_surf at glaciers, wetlands and lakes
+  )
+
+  do fc = 1, num_nolakec
+     c = filter_nolakec(fc)
+     !qin_flx and qflx_root will be used for clm_betr
+!     qin_flx(c,:) = 0._r8       
+!     qflx_root(c,:) = 0._r8
+     qflx_surf(c) = 0._r8
+     qflx_drain(c) = 0._r8
+     qflx_drain_perched(c) = 0._r8
+     qflx_qrgwl(c) = 0._r8
+     
+
+  enddo
+  end associate
+  end subroutine init_hydroh2oflx
 end module Hydrology2Mod

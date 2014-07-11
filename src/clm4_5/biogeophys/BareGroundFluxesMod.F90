@@ -35,6 +35,7 @@ contains
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use QSatMod            , only : QSat
     use clm_varctl         , only : use_c13, use_c14, use_lch4
+    use SurfaceResistanceMod, only : do_soilevap_beta
     !
     ! !ARGUMENTS:
     implicit none
@@ -277,8 +278,10 @@ contains
        if (dqh(p)  >  0._r8) then   !dew  (beta is not applied, just like rsoil used to be)
           raiw    = forc_rho(c)/(raw)
        else
-       ! Lee and Pielke 1992 beta is applied
-          raiw    = soilbeta(c)*forc_rho(c)/(raw)
+          if(do_soilevap_beta())then
+             ! Lee and Pielke 1992 beta is applied
+             raiw    = soilbeta(c)*forc_rho(c)/(raw)
+          endif
        end if
 
        ram1(p) = ram  !pass value to global variable

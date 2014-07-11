@@ -90,6 +90,10 @@ contains
     use EDAccumulateFluxesMod,only : AccumulateFluxes_ED
     use EDBtranMod, only : BTRAN_ED
  
+    use SoilMoistStressMod , only : calc_effective_soilporosity, calc_volumetric_h2oliq
+    use SoilMoistStressMod , only : calc_root_moist_stress, set_perchroot_opt
+    use SimpleMathMod      , only : array_div_vector
+    use SurfaceResistanceMod, only : do_soilevap_beta
     !
     ! !ARGUMENTS:
     implicit none
@@ -210,8 +214,6 @@ contains
     real(r8) :: s_node                ! vol_liq/eff_porosity
     real(r8) :: smp_node              ! matrix potential
     real(r8) :: smp_node_lf           ! F. Li and S. Levis
-    real(r8) :: vol_ice               ! partial volume of ice lens in layer
-    real(r8) :: eff_porosity          ! effective porosity in layer
     real(r8) :: vol_liq               ! partial volume of liquid water in layer
     integer  :: itlef                 ! counter for leaf temperature iteration [-]
     integer  :: nmozsgn(bounds%begp:bounds%endp)      ! number of times stability changes sign
@@ -244,9 +246,7 @@ contains
     real(r8) :: elai_dl               ! exposed (dry) plant litter area index
     real(r8) :: fsno_dl               ! effective snow cover over plant litter
     real(r8) :: dayl_factor(bounds%begp:bounds%endp)  ! scalar (0-1) for daylength effect on Vcmax
-    real(r8) :: rootfr_unf(bounds%begp:bounds%endp,1:nlevgrnd) ! Rootfraction defined for unfrozen layers only.
     ! If no unfrozen layers, put all in the top layer.
-    real(r8) :: rootsum(bounds%begp:bounds%endp)
     real(r8) :: delt_snow
     real(r8) :: delt_soil
     real(r8) :: delt_h2osfc
@@ -267,6 +267,8 @@ contains
     real(r8) :: h2osoi_liq_so            ! liquid water corresponding to vol_liq_so for this layer [kg/m2]
     real(r8) :: h2osoi_liq_sat           ! liquid water corresponding to eff_porosity for this layer [kg/m2]
     real(r8) :: deficit                  ! difference between desired soil moisture level for this layer and current soil moisture level [kg/m2]
+    integer  :: jtop(bounds%begc:bounds%endc)  !lbning
+    integer  :: filterc_tmp(bounds%endp-bounds%begp+1)   !temporary variable
 
     real(r8) :: rresis_ft(numpft_ed,nlevgrnd)! resistance to water uptake per pft and soil layer.
     integer  :: ft                        ! plant functional type index
@@ -312,10 +314,12 @@ contains
    watsat                => cps%watsat                    , & ! Input:  [real(r8) (:,:)]  volumetric soil water at saturation (porosity)                      
    watdry                => cps%watdry                    , & ! Input:  [real(r8) (:,:)]  btran parameter for btran=0                                         
    watopt                => cps%watopt                    , & ! Input:  [real(r8) (:,:)]  btran parameter for btran = 1                                       
+   eff_porosity          => cps%eff_porosity              , & ! Output: [real(r8) (:,:)] effective soil porosity
    h2osoi_ice            => cws%h2osoi_ice                , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                                                    
    h2osoi_vol            => cws%h2osoi_vol                , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] by F. Li and S. Levis
    dz                    => cps%dz                        , & ! Input:  [real(r8) (:,:)]  layer depth (m)                                                     
    h2osoi_liq            => cws%h2osoi_liq                , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                                                
+   h2osoi_liqvol         => cws%h2osoi_liqvol             , & ! Output: [real(r8) (:,:)]  volumetric liquid water (v/v)
    sucsat                => cps%sucsat                    , & ! Input:  [real(r8) (:,:)]  minimum soil suction (mm)                                           
    bsw                   => cps%bsw                       , & ! Input:  [real(r8) (:,:)]  Clapp and Hornberger "b"                                            
    emg                   => cps%emg                       , & ! Input:  [real(r8) (:)]  vegetation emissivity                                                 
@@ -461,117 +465,59 @@ contains
    rb1(begp:endp) = 0._r8
 
    ! FIX(FIX(SPM,032414),032414) refactor this...
-   if ( use_ed ) then  
+   if ( use_ed ) then
        do f = 1, fn
           p = filterp(f)
           call BTRAN_ED(p)
       enddo
-   else !use_ed
-       ! Define rootfraction for unfrozen soil only
-       if (perchroot .or. perchroot_alt) then
-          if (perchroot_alt) then
-             ! use total active layer (defined ass max thaw depth for current and prior year)
-             do j = 1,nlevgrnd
-                do f = 1, fn
-                   p = filterp(f)
-                   c = pcolumn(p)
-                   if ( j <= max(altmax_lastyear_indx(c), altmax_indx(c), 1) )then
-                      rootfr_unf(p,j) = rootfr(p,j)
-                   else
-                      rootfr_unf(p,j) = 0._r8
-                   end if
-                end do
-             end do
-          else
-             ! use instantaneous temperature
-             do j = 1,nlevgrnd
-                do f = 1, fn
-                   p = filterp(f)
-                   c = pcolumn(p)
+   else !use_ed   
+     !assign the temporary filter
+     do f = 1, fn
+      p = filterp(f)
+      filterc_tmp(f)=pcolumn(p)
+     enddo
+   
+     !compute effective soil porosity
+     call calc_effective_soilporosity(bounds, &
+       ubj = nlevgrnd,                                             &
+       numf = fn,                                                  &
+       filter = filterc_tmp(1:fn),                                  &
+       watsat = watsat(bounds%begc:bounds%endc, 1:nlevgrnd),       &
+       h2osoi_ice = h2osoi_ice(bounds%begc:bounds%endc,1:nlevgrnd),&
+       dz = dz(bounds%begc:bounds%endc,1:nlevgrnd),                &
+       denice = denice,                                            &
+       eff_por=eff_porosity(bounds%begc:bounds%endc, 1:nlevgrnd) )
+      
+     !compute volumetric liquid water content
+     jtop(bounds%begc:bounds%endc) = 1
+     
+     call calc_volumetric_h2oliq(bounds, &
+      jtop = jtop(bounds%begc:bounds%endc),                             &
+      lbj = 1,                                                          &
+      ubj = nlevgrnd,                                                   &
+      numf = fn,                                                        &
+      filter = filterc_tmp(1:fn),                                        &
+      eff_porosity = eff_porosity(bounds%begc:bounds%endc, 1:nlevgrnd), &
+      h2osoi_liq = h2osoi_liq(bounds%begc:bounds%endc, 1:nlevgrnd),     &
+      dz = dz(bounds%begc:bounds%endc, 1:nlevgrnd),                     &
+      denh2o = denh2o,                                                  &
+      vol_liq = h2osoi_liqvol(bounds%begc:bounds%endc, 1:nlevgrnd) )
 
-                   if (t_soisno(c,j) >= tfrz) then
-                      rootfr_unf(p,j) = rootfr(p,j)
-                   else
-                      rootfr_unf(p,j) = 0._r8
-                   end if
-                end do
-             end do
-
-          end if ! perchroot_alt
-
-          ! sum unfrozen roots
-          do j = 1,nlevgrnd
-             do f = 1, fn
-                p = filterp(f)
-                c = pcolumn(p)
-
-                if (j == 1) rootsum(p) = 0._r8
-                rootsum(p) = rootsum(p) + rootfr_unf(p,j)
-             end do
-          end do
-
-          ! normalize rootfr to total unfrozen depth
-          do j = 1,nlevgrnd
-             do f = 1, fn
-                p = filterp(f)
-                c = pcolumn(p)
-
-                if (rootsum(p) > 0._r8) then
-                   rootfr_unf(p,j) = rootfr_unf(p,j) / rootsum(p)
-                end if
-             end do
-          end do
-
-       end if ! perchroot
-
-       ! Effective porosity of soil, partial volume of ice and liquid (needed for btran)
-       ! and root resistance factors
-
-       do j = 1,nlevgrnd
-          do f = 1, fn
-             p = filterp(f)
-             c = pcolumn(p)
-             l = plandunit(p)
-
-             ! Root resistance factors
-
-             vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
-             eff_porosity = watsat(c,j)-vol_ice
-             vol_liq = min(eff_porosity, h2osoi_liq(c,j)/(dz(c,j)*denh2o))
-             if (vol_liq  <=  0._r8 .or. t_soisno(c,j)  <=  tfrz-2._r8) then
-                rootr(p,j) = 0._r8
-             else
-                s_node = max(vol_liq/eff_porosity,0.01_r8)
-                smp_node = max(smpsc(ivt(p)), -sucsat(c,j)*s_node**(-bsw(c,j)))
-
-                rresis(p,j) = min( (eff_porosity/watsat(c,j))* &
-                     (smp_node - smpsc(ivt(p))) / (smpso(ivt(p)) - smpsc(ivt(p))), 1._r8)
-                if (.not. (perchroot .or. perchroot_alt) ) then
-                   rootr(p,j) = rootfr(p,j)*rresis(p,j)
-                else
-                   rootr(p,j) = rootfr_unf(p,j)*rresis(p,j)
-                end if
-                btran(p)    = btran(p) + rootr(p,j)
-                smp_node_lf = max(smpsc(ivt(p)), -sucsat(c,j)*(h2osoi_vol(c,j)/watsat(c,j))**(-bsw(c,j))) 
-                btran2(p)   = btran2(p) +rootfr(p,j)*min((smp_node_lf - smpsc(ivt(p))) / (smpso(ivt(p)) - smpsc(ivt(p))), 1._r8)
-             end if
-          end do
-       end do
-
-
-       ! Normalize root resistances to get layer contribution to ET
-
-       do j = 1,nlevgrnd
-          do f = 1, fn
-             p = filterp(f)
-             if (btran(p)  >  btran0) then
-                rootr(p,j) = rootr(p,j)/btran(p)
-             else
-                rootr(p,j) = 0._r8
-             end if
-          end do
-       end do
-
+     !set up perchroot options
+     call set_perchroot_opt(perchroot, perchroot_alt)
+      
+     !calculate root moisture stress
+     call calc_root_moist_stress(bounds, &
+       nlevgrnd = nlevgrnd,                                     &
+       fn = fn,                                                 &
+       filterp = filterp,                                       &
+       pft_data = pft,                                          &
+       pftcon_data = pftcon,                                    &
+       cws_data = cws,                                          &
+       cps_data = cps,                                          &
+       ces_data = ces,                                          &     
+       pps_data = pps                                           )      
+  
     end if !use_ed
 
    ! Determine if irrigation is needed (over irrigated soil columns)
@@ -621,13 +567,11 @@ contains
 
                ! Calculate vol_liq_so - i.e., vol_liq at which smp_node = smpso - by inverting the above equations 
                ! for the root resistance factors
-               vol_ice      = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))  ! this duplicates the above equation for vol_ice
-               eff_porosity = watsat(c,j)-vol_ice  ! this duplicates the above equation for eff_porosity
-               vol_liq_so   = eff_porosity * (-smpso(ivt(p))/sucsat(c,j))**(-1/bsw(c,j))
+               vol_liq_so   = eff_porosity(c,j) * (-smpso(ivt(p))/sucsat(c,j))**(-1/bsw(c,j))
 
                ! Translate vol_liq_so and eff_porosity into h2osoi_liq_so and h2osoi_liq_sat and calculate deficit
                h2osoi_liq_so  = vol_liq_so * denh2o * dz(c,j)
-               h2osoi_liq_sat = eff_porosity * denh2o * dz(c,j)
+               h2osoi_liq_sat = eff_porosity(c,j) * denh2o * dz(c,j)
                deficit        = max((h2osoi_liq_so + irrig_factor*(h2osoi_liq_sat - h2osoi_liq_so)) - h2osoi_liq(c,j), 0._r8)
 
                ! Add deficit to irrig_rate, converting units from mm to mm/sec
@@ -910,7 +854,9 @@ contains
          if (delq(p)  <  0._r8) then  !dew. Do not apply beta for negative flux (follow old rsoil)
             wtgq(p) = frac_veg_nosno(p)/(raw(p,2)+rdl)
          else
-            wtgq(p) = soilbeta(c)*frac_veg_nosno(p)/(raw(p,2)+rdl)
+            if(do_soilevap_beta())then
+               wtgq(p) = soilbeta(c)*frac_veg_nosno(p)/(raw(p,2)+rdl)
+            endif
          end if
 
          wtsqi   = 1._r8/(wtaq+wtlq+wtgq(p))
