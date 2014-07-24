@@ -196,6 +196,8 @@ contains
 
     namelist /clm_inparm / use_ed, use_ed_spit_fire
 
+    namelist /clm_inparm / use_lai_streams
+
     namelist /clm_inparm/  &
          use_c14_bombspike, atm_c14_filename
 
@@ -494,6 +496,8 @@ contains
 
     call mpi_bcast (use_ed, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_ed_spit_fire, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (use_lai_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     if (use_cn .and. use_vertsoilc) then
        ! vertical soil mixing variables

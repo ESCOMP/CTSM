@@ -1,12 +1,12 @@
 # CESM scripts, machines and driver
-scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/addclm50_tags/addclm50_n06_ED_scripts_015_140305_rev
+scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/addclm50_tags/addclm50_n09_ED_scripts_015_140305_rev
 scripts/doc                     https://svn-ccsm-models.cgd.ucar.edu/doc/trunk_tags/doc_131021
 scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/branch_tags/arfs_tags/arfs_02_mach140218
 scripts/ccsm_utils/CMake        https://github.com/quantheory/CMake_Fortran_utils/tags/CMake_Fortran_utils_140403
 models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq5_0_10
 
 # Model components: Data atmosphere, and stub components as well as land-ice model
-models/atm/datm                 https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_140312
+models/atm/datm                 https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_140723
 models/ocn/socn                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/socn
 models/ice/sice                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/sice
 models/glc/sglc                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/sglc
@@ -15,7 +15,7 @@ models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trun
 models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_140501
 
 # Utilities: csm_share, esmf, timing, MCT, PIO
-models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_140418
+models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_140723
 models/utils/esmf_wrf_timemgr   https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_140529
 models/utils/timing             https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_131108
 models/utils/mct                https://github.com/quantheory/MCT/tags/compiler_fixes_n04_MCT_2.8.3

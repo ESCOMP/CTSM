@@ -110,17 +110,25 @@ module clm_varctl
   logical, public :: use_ed = .false.            ! true => use  ED
   logical, public :: use_ed_spit_fire = .false.  ! true => use spitfire model
   !
+  ! lai streams switch for Sat. Phenology
+  !
+  logical, public :: use_lai_streams = .false. ! true => use lai streams in SatellitePhenologyMod.F90
+  !
   ! glacier_mec control variables: default values (may be overwritten by namelist)
   ! NOTE: glc_smb must have the same values for CLM and GLC
   !
   logical , public :: create_glacier_mec_landunit = .false. ! glacier_mec landunit is not created (set in controlMod)
   logical , public :: glc_smb = .true.                      ! if true, pass surface mass balance info to GLC
   ! if false, pass positive-degree-day info to GLC
-  logical , public :: glc_dyn_runoff_routing = .false.      ! true => handle snow capping & runoff appropriately for dynamic glacier areas (generally should agree with glc_do_dynglacier)
-  logical , public :: glc_do_dynglacier = .false.           ! true => CLM glacier area & topography changes dynamically (generally should agree with glc_dyn_runoff_routing)
+  logical , public :: glc_dyn_runoff_routing = .false.      ! true => handle snow capping & runoff appropriately 
+                                                            ! for dynamic glacier areas (generally should agree with
+                                                            ! glc_do_dynglacier)
+  logical , public :: glc_do_dynglacier = .false.           ! true => CLM glacier area & topography changes dynamically 
+                                                            ! (generally should agree with glc_dyn_runoff_routing)
   logical , public :: glcmec_downscale_rain_snow_convert = .false.     ! true => downscale precip division into rain & snow
   logical , public :: glcmec_downscale_longwave = .true.    ! true => downscale longwave radiation
-  integer , public :: glc_snow_persistence_max_days = 7300  ! number of days before one considers the perennially snow-covered point 'land ice'
+  integer , public :: glc_snow_persistence_max_days = 7300  ! number of days before one considers the perennially 
+                                                            ! snow-covered point 'land ice'
   character(len=256), public :: glc_grid = ' '              ! glc_grid used to determine fglcmask  
   character(len=fname_len), public :: fglcmask = ' '        ! glacier mask file name (based on glc_grid)
   !

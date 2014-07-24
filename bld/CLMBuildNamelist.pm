@@ -1453,6 +1453,10 @@ sub process_namelist_inline_logic {
   #################################
   setup_logic_megan($opts, $nl_flags, $definition, $defaults, $nl);
 
+  ##################################
+  # namelist group: lai_streams  #
+  ##################################
+  setup_logic_lai_streams($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
 #-------------------------------------------------------------------------------
@@ -2367,6 +2371,50 @@ sub setup_logic_megan {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_lai_streams {
+  # lai streams require clm4_5/clm5_0
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    if ( $nl_flags->{'use_crop'} eq ".true." && $nl_flags->{'use_lai_streams'} eq ".true." ) {
+      fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
+    }
+    if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
+          
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo', 
+                  'hgrid'=>$nl_flags->{'res'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lai', 
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lai', 
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      # Set align year, if first and last years are different
+      if ( $nl->get_value('stream_year_first_lai') != 
+           $nl->get_value('stream_year_last_lai') ) {
+           add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                       'model_year_align_lai', 'sim_year'=>$nl_flags->{'sim_year'},
+                       'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      }
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai',
+                  'hgrid'=>"360x720cru" );
+    } else {
+      # If bgc is CN/CNDV then make sure none of the LAI settings are set
+      if ( defined($nl->get_value('stream_year_first_lai')) ||
+           defined($nl->get_value('stream_year_last_lai'))  ||
+           defined($nl->get_value('model_year_align_lai'))  ||
+           defined($nl->get_value('stream_fldfilename_lai'))   ) {
+             fatal_error("When bgc is NOT SP none of the following can be set: stream_year_first_lai,\n" .
+                  "stream_year_last_lai, model_year_align_lai, nor\n" .
+                  "stream_fldfilename_lai (eg. don't use this option with BGC,CN,CNDV nor BGDCV).\n"); 
+      }
+    }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub write_output_files {
   my ($opts, $nl_flags, $defaults, $nl, $physv) = @_;
 
@@ -2391,7 +2439,7 @@ sub write_output_files {
       push @groups, "ndepdyn_nml";
     #}
   } else {
-    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams clm_hydrology1_inparm 
+    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams lai_streams clm_hydrology1_inparm 
                  clm_soilhydrology_inparm finidat_consistency_checks dynpft_consistency_checks);
     #@groups = qw(clm_inparm clm_hydrology1_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r078  muszala 07/23/2014 add lai stream capability and the ability to run with V5 cruncep data
    clm4_5_1_r077    andre 07/10/2014 Refactor from Jinyun Tang (LBL) to make hydrology more modular.
    clm4_5_1_r076     erik 07/07/2014 Answer changes for fire code from Fang Li
    clm4_5_75      muszala 05/30/2014 update externals to rtm1_0_38 and esmf_wrf_timemgr_140523

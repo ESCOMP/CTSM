@@ -391,6 +391,33 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130927.nc</fsurdat>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
+<!-- LAI streams namelist defaults -->
+<use_lai_streams        >.false.</use_lai_streams>
+<stream_year_first_lai  >2001</stream_year_first_lai>
+<stream_year_last_lai   >2013</stream_year_last_lai>
+<model_year_align_lai   >2001</model_year_align_lai>
+
+<stream_fldfilename_lai hgrid="360x720cru"       >lnd/clm2/lai_streams/MODISPFTLAI_0.5x0.5_c140711.nc</stream_fldfilename_lai>
+
+<lai_mapalgo>bilinear</lai_mapalgo>
+
+<lai_mapalgo  hgrid="1x1_brazil"          >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_mexicocityMEX"   >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_vancouverCAN"    >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_urbanc_alpha"    >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_camdenNJ"        >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_tropicAtl"       >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_brazil"          >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_mexicocityMEX"   >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_vancouverCAN"    >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_urbanc_alpha"    >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_camdenNJ"        >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="1x1_tropicAtl"       >nn</lai_mapalgo>
+<lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
+
 <!-- lightning streams namelist defaults -->
 <stream_year_first_lightng use_cn=".true."   >0001</stream_year_first_lightng>
 <stream_year_last_lightng  use_cn=".true."   >0001</stream_year_last_lightng>
