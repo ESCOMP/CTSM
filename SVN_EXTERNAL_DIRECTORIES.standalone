@@ -1,7 +1,7 @@
 # CESM scripts, machines and driver
 scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/addclm50_tags/addclm50_n09_ED_scripts_015_140305_rev
 scripts/doc                     https://svn-ccsm-models.cgd.ucar.edu/doc/trunk_tags/doc_131021
-scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/branch_tags/arfs_tags/arfs_02_mach140218
+scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/branch_tags/arfs_tags/arfs_03_mach140218
 scripts/ccsm_utils/CMake        https://github.com/quantheory/CMake_Fortran_utils/tags/CMake_Fortran_utils_140403
 models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq5_0_10
 
