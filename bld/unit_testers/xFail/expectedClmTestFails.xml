@@ -5,8 +5,10 @@
       <yellowstone>
          <INTEL>
             <compare>
+               <entry testId="153"   failType="FAIL" >No 0.125x0.125 surface dataset</entry>
             </compare>
             <generate>
+               <entry testId="214"   failType="FAIL" >No 0.125x0.125 surface dataset</entry>
             </generate>
          </INTEL>
       </yellowstone>
@@ -24,20 +26,26 @@
       <auxShortTests>
          <yellowstone>
             <INTEL>
-               <entry testId="PET_P15x2_Ly3.f10_f10.ICLM45BGCCROP.yellowstone_intel.clm-irrigOn_reduceOutput.140210-001104"
-failType="FAIL" >Negative conc. in ch4tran. c,j,deficit (mol):        6175           1</entry>
             </INTEL>
             <PGI>
-               <entry testId="SMS_Ly1.f19_g16.ICLM45BGCCROP.yellowstone_pgi" failType="FAIL" >Water balance errors followed by (negative conc. in ch4tran), then tries (-10^-12 .lt. smin_nh4 .lt. 0. resetting to zero.), then it exits at approximately 9 months.  This same test passes with yellowstone_intel and frankfurt_intel</entry>
             </PGI>
          </yellowstone>
          <goldbach>
             <INTEL>
+               <entry testId="PET_P16x2_D.f10_f10.I1850CLM45BGC.goldbach_intel.clm-ciso" failType="FAIL" bugz="2027" >Balance check error/problem</entry>
             </INTEL>
             <NAG>
+               <entry testId="PET_P16x2_D.f10_f10.I1850CLM45BGC.goldbach_nag.clm-ciso" failType="CFAIL" bugz="2027" >Problem building mct</entry>
+               <entry testId="ERI.f19_g16.ICLM45BGC.goldbach_nag.clm-reduceOutput"
+failType="FAIL"  >multi-node nag issues</entry>
+               <entry testId="ERS.f10_f10.I20TRCLM45BGC.goldbach_nag.clm-reduceOutput"
+failType="RUN"  >multi-node nag issues</entry>
+               <entry testId="SMS.f09_g16.ICRUCLM45.goldbach_nag.clm-af_bias_v5"
+failType="FAIL"  >multi-node nag issues</entry>
             </NAG>
             <PGI>
-               <entry testId="SMS_Ly1.f19_g16.ICLM45BGCCROP.frankfurt_pgi" failType="FAIL" >Water balance errors followed by (negative conc. in ch4tran), then tries (-10^-12 .lt. smin_nh4 .lt. 0. resetting to zero.), then it exits at approximately 9 months.  This same test passes with yellowstone_intel and frankfurt_intel</entry>
+               <entry testId="PET_P16x2_D.f10_f10.I1850CLM45BGC.goldbach_pgi.clm-ciso"
+failType="FAIL" bugz="2027" >get_clump_bounds ERROR: Calling from inside a non-threaded region</entry>
             </PGI>
          </goldbach>
       </auxShortTests>
@@ -87,6 +95,8 @@ failType="FAIL" >Negative conc. in ch4tran. c,j,deficit (mol):        6175      
    <PTCLM>
          <yellowstone>
             <INTEL>
+               <entry testId="no_towerdata.-d+/glade/p/cesmdata/cseg/inputdata++-s+RF-Bra+--debug+--pftgrid+--soilgrid."
+                      failType="FAIL">Doesn't check for valid values</entry>
             </INTEL>
          </yellowstone>
          <goldbach>

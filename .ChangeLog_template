@@ -63,6 +63,7 @@ CLM testing:
 
     yellowstone_intel
     yellowstone_pgi
+    yellowstone_gnu (optional)
     goldbach_nag
     goldbach_intel
     goldbach_pgi
@@ -76,7 +77,6 @@ CLM testing:
   tools testing:
 
     yellowstone interactive
-    goldbach interactive
 
 CLM tag used for the baseline comparisons: 
 

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r080     erik 08/16/2014 Update externals to trunk version, allow eighth degree as a valid resolution
    clm4_5_1_r079    andre 07/31/2014 G. Bisht (LBL) soil temperature refactor; machines update for goldbach-intel
    clm4_5_1_r078  muszala 07/23/2014 add lai stream capability and the ability to run with V5 cruncep data
    clm4_5_1_r077    andre 07/10/2014 Refactor from Jinyun Tang (LBL) to make hydrology more modular.
