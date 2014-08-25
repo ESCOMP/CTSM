@@ -10,6 +10,54 @@ module clm_time_manager
 
 contains
 
+  integer function get_step_size()
+
+    get_step_size = 1800
+
+  end function get_step_size
+
+  logical function is_first_step()
+
+    is_first_step = .false.
+
+  end function is_first_step
+
+  integer function get_driver_start_ymd
+
+    get_driver_start_ymd = 0
+
+  end function get_driver_start_ymd
+
+  integer function get_nstep
+
+    get_nstep = 0
+
+  end function get_nstep
+
+  logical function is_end_curr_day
+
+    is_end_curr_day = .false.
+
+  end function is_end_curr_day
+
+  subroutine get_start_date(yr, mon, day, tod)
+
+    ! Return date components valid at beginning of initial run.
+
+    ! Arguments
+    integer, intent(out) ::&
+         yr,    &! year
+         mon,   &! month
+         day,   &! day of month
+         tod     ! time of day (seconds past 0Z)
+
+    yr = 0
+    mon = 0
+    day = 0
+    tod = 0
+
+  end subroutine get_start_date
+
   subroutine get_curr_date(yr, mon, day, tod, offset)
     
     !-----------------------------------------------------------------------------------------

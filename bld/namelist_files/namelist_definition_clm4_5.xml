@@ -1265,7 +1265,7 @@ Set to alblak values (0.6, 0.4) to keep albedo constant for ice-covered lakes wi
 <!-- ========================================================================================  -->
 
 <entry id="oldfflag" type="integer" category="clm_physics"
-       group="clm_hydrology1_inparm" valid_values="0,1" >
+       group="clm_canopyhydrology_inparm" valid_values="0,1" >
 Use old snow cover fraction from Niu et al. 2007
 (deprecated -- will be removed)
 </entry>

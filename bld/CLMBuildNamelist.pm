@@ -2439,9 +2439,9 @@ sub write_output_files {
       push @groups, "ndepdyn_nml";
     #}
   } else {
-    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams lai_streams clm_hydrology1_inparm 
+    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams lai_streams clm_canopyhydrology_inparm 
                  clm_soilhydrology_inparm finidat_consistency_checks dynpft_consistency_checks);
-    #@groups = qw(clm_inparm clm_hydrology1_inparm clm_soilhydrology_inparm 
+    #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);
     # Eventually only list namelists that are actually used when CN on
     #if ( $nl_flags->{'bgc_mode'}  eq "cn" ) {

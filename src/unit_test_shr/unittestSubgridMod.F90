@@ -35,6 +35,10 @@ module unittestSubgridMod
 
   use shr_kind_mod , only : r8 => shr_kind_r8
   use decompMod    , only : bounds_type
+  use GridcellType , only : grc                
+  use LandunitType , only : lun                
+  use ColumnType   , only : col                
+  use PatchType    , only : pft                
 
   implicit none
   private
@@ -92,12 +96,6 @@ module unittestSubgridMod
   ! Private entities
   ! ------------------------------------------------------------------------
 
-  interface initialize_array
-     module procedure initialize_array_int
-     module procedure initialize_array_r8
-     module procedure initialize_array_logical
-  end interface initialize_array
-
 contains
   
   !-----------------------------------------------------------------------
@@ -129,7 +127,6 @@ contains
     ! Initialize other variables needed for the subgrid setup
     
     natpft_lb = 0
-    
     
   end subroutine unittest_subgrid_setup_start
 
@@ -191,32 +188,18 @@ contains
   subroutine initialize_arrays
     !
     ! !DESCRIPTION:
-    ! Allocate arrays in clmtype, and initialize them to default values. Note that we only
+    ! Allocate subgrid arrays, and initialize them to default values. Note that we only
     ! do allocation if arrays are not currently allocated; this allows us to avoid
     ! deallocating and reallocating arrays for every test - instead just reinitializing
     ! them.
     !
-    ! In principle, we should be able to use the init routines in clmtypeInitMod
-    ! (init_pft_type, init_column_type, etc.) instead of doing this all manually. But to
-    ! do that, I would want to make a few changes, which I don't want to do until
-    ! Mariana's big object-oriented refactor is on the trunk. Once it's acceptable to
-    ! make these changes, I would want to:
-    !
-    ! (1) Change the init_*_type routines to set default values (ispval or nan) in all
-    ! arrays
-    !
-    ! (2) Add destructor routines for each type
-    !
-    ! (3) Change the code here to just call init_pft_type, init_column_type, etc.
-    !
-    ! (4) Put some teardown code here that calls the destructor for pft, col, etc. Note
-    ! that this will mean that we redo the allocation for each test, but I ran some
-    ! timing tests that show this to be a minimal additional cost. 
-    !
     ! !USES:
-    use landunit_varcon, only : max_lunit
-    use clm_varcon, only : ispval
-    use clmtype, only : grc, lun, col, pft
+    use landunit_varcon , only : max_lunit
+    use clm_varcon      , only : ispval
+    use GridcellType    , only : grc
+    use LandunitType    , only : lun
+    use ColumnType      , only : col
+    use PatchType       , only : pft
     !
     ! !ARGUMENTS:
     !
@@ -225,141 +208,12 @@ contains
     character(len=*), parameter :: subname = 'initialize_arrays'
     !-----------------------------------------------------------------------
     
-    ! Do the same allocation-if-necessary for landunit_indices as is done for other
-    ! arrays... but since it is the only 2-d array, we don't have a generic subroutine
-    ! for it.
-    if (.not. associated(grc%landunit_indices)) then
-       allocate(grc%landunit_indices(1:max_lunit, begg:endg))
-    end if
-    grc%landunit_indices(1:max_lunit, begg:endg) = ispval
-
-    call initialize_array(lun%gridcell, begl, endl)
-    call initialize_array(lun%wtgcell, begl, endl)
-    call initialize_array(lun%coli, begl, endl)
-    call initialize_array(lun%colf, begl, endl)
-    call initialize_array(lun%ncolumns, begl, endl)
-    call initialize_array(lun%pfti, begl, endl)
-    call initialize_array(lun%pftf, begl, endl)
-    call initialize_array(lun%npfts, begl, endl)
-    call initialize_array(lun%itype, begl, endl)
-    call initialize_array(lun%ifspecial, begl, endl)
-    call initialize_array(lun%lakpoi, begl, endl)
-    call initialize_array(lun%urbpoi, begl, endl)
-    call initialize_array(lun%glcmecpoi, begl, endl)
-    call initialize_array(lun%active, begl, endl)
-
-    call initialize_array(col%gridcell, begc, endc)
-    call initialize_array(col%wtgcell, begc, endc)
-    call initialize_array(col%landunit, begc, endc)
-    call initialize_array(col%wtlunit, begc, endc)
-    call initialize_array(col%pfti, begc, endc)
-    call initialize_array(col%pftf, begc, endc)
-    call initialize_array(col%npfts, begc, endc)
-    call initialize_array(col%itype, begc, endc)
-    call initialize_array(col%active, begc, endc)
-
-    call initialize_array(pft%gridcell, begp, endp)
-    call initialize_array(pft%wtgcell, begp, endp)
-    call initialize_array(pft%landunit, begp, endp)
-    call initialize_array(pft%wtlunit, begp, endp)
-    call initialize_array(pft%column, begp, endp)
-    call initialize_array(pft%wtcol, begp, endp)
-    call initialize_array(pft%itype, begp, endp)
-    call initialize_array(pft%mxy, begp, endp)
-    call initialize_array(pft%active, begp, endp)
-
+    call grc%Init(begg, endg)
+    call lun%Init(begl, endl)
+    call col%Init(begc, endc)
+    call pft%init(begp, endp)
 
   end subroutine initialize_arrays
-
-
-  !-----------------------------------------------------------------------
-  subroutine initialize_array_int(arr, lb, ub)
-    !
-    ! !DESCRIPTION:
-    ! Initialize an integer array. Allocates arr if necessary, and initializes it to a
-    ! default value. Note that, if arr is already allocated, then lb and ub are ignored --
-    ! arr is NOT resized.
-    !
-    ! !USES:
-    use clm_varcon, only : ispval
-    !
-    ! !ARGUMENTS:
-    integer , intent(inout), pointer :: arr(:) ! array to initialize
-    integer , intent(in)             :: lb     ! lower bound of array, if arr needs allocation
-    integer , intent(in)             :: ub     ! upper bound of array, if arr needs allocation
-                                               !
-    ! !LOCAL VARIABLES:
-    
-    character(len=*), parameter :: subname = 'initialize_array_int'
-    !-----------------------------------------------------------------------
-    
-    if (.not. associated(arr)) then
-       allocate(arr(lb:ub))
-    end if
-
-    arr(lb:ub) = ispval
-
-  end subroutine initialize_array_int
-
-  !-----------------------------------------------------------------------
-  subroutine initialize_array_r8(arr, lb, ub)
-    !
-    ! !DESCRIPTION:
-    ! Initialize an r8 array. Allocates arr if necessary, and initializes it to a default
-    ! value. Note that, if arr is already allocated, then lb and ub are ignored -- arr is
-    ! NOT resized.
-    !
-    ! !USES:
-    use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
-    !
-    ! !ARGUMENTS:
-    real(r8) , intent(inout), pointer :: arr(:) ! array to initialize
-    integer  , intent(in)             :: lb     ! lower bound of array, if arr needs allocation
-    integer  , intent(in)             :: ub     ! upper bound of array, if arr needs allocation
-                                                !
-    ! !LOCAL VARIABLES:
-    
-    character(len=*), parameter :: subname = 'initialize_array_r8'
-    !-----------------------------------------------------------------------
-
-    if (.not. associated(arr)) then
-       allocate(arr(lb:ub))
-    end if
-
-    arr(lb:ub) = nan
-
-  end subroutine initialize_array_r8
-
-  !-----------------------------------------------------------------------
-  subroutine initialize_array_logical(arr, lb, ub)
-    !
-    ! !DESCRIPTION:
-    ! Initialize a logical array. Allocates arr if necessary, and initializes it to a default
-    ! value. Note that, if arr is already allocated, then lb and ub are ignored -- arr is
-    ! NOT resized.
-    !
-    ! !USES:
-    use shr_kind_mod   , only : r8 => shr_kind_r8
-    use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
-    !
-    ! !ARGUMENTS:
-    logical  , intent(inout), pointer :: arr(:) ! array to initialize
-    integer  , intent(in)             :: lb     ! lower bound of array, if arr needs allocation
-    integer  , intent(in)             :: ub     ! upper bound of array, if arr needs allocation
-                                                !
-    ! !LOCAL VARIABLES:
-    
-    character(len=*), parameter :: subname = 'initialize_array_logical'
-    !-----------------------------------------------------------------------
-
-    if (.not. associated(arr)) then
-       allocate(arr(lb:ub))
-    end if
-
-    arr(lb:ub) = .false.
-
-  end subroutine initialize_array_logical
-
 
   !-----------------------------------------------------------------------
   subroutine unittest_subgrid_teardown
@@ -378,6 +232,11 @@ contains
     
     ! For now, nothing is needed... we currently don't bother with deallocation, and the
     ! initialization of arrays is done in the setup routine
+
+    call grc%clean
+    call lun%clean
+    call col%clean
+    call pft%clean
 
   end subroutine unittest_subgrid_teardown
 
@@ -499,6 +358,5 @@ contains
     call add_patch(pi=pi, ci=my_ci, ptype=ptype, wtcol=wtcol)
     
   end subroutine unittest_add_patch
-
 
 end module unittestSubgridMod

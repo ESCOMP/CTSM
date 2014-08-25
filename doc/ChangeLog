@@ -1,4 +1,1012 @@
 ===============================================================
+Tag name:  clm4_5_1_r081
+Originator(s):  mvertens (Mariana Vertenstein)
+Date: Sun Aug 24 19:39:50 MDT 2014
+One-line Summary: major infrastructure changes and directory reorganization under src
+
+Purpose of changes:
+
+   Overview of previous code design
+   ==========================================
+   - data structures arranged by subgrid type (pps, cps, lps, grc)
+   - all functional categorization lumped in that one subgrid type which led to
+   - centralization rather than modularization of all data
+   - definition and instantiation in ONE big module (clmtype.F90)
+   - allocation and initialization in ONE big module (clmtypeInitMod.F90)
+   - history variables all in ONE big module (histFldsMod.F90)
+   - restart variables in effectively TWO big modules (biogeophysicsRestMod.F90 and CNRestMod.F90)
+   - time constant initialization in ONE complex module (initTimeConst.F90)
+   - time varying cold start initialization in ONE module (initColdMod.F90)
+   - accumulation variables in ONE module (accumulMod.F90)
+
+   Overview of new code design
+   ==========================================
+   data structures arranged by scientific functional categories
+     (e.g. temperature_type, waterstate_type, energyflux_type, etc)
+   - a given data structure now contains ALL subgrid levels are in the data structure -
+     and variables in the data structure are now appended with a unique suffix to
+     indicate their subgrid levels (new suffixes: _patch, _col, _lun, _grc)
+   - this does NOT effect the science code base, ONLY the associate statements
+   - there are separate module for each data type definition
+     (e.g. TemperatureType.F90, WaterstateType.F90, EnergyFluxType.F90, etc)
+   - each data type has associated methods for
+     - Allocation:
+       variables now initialized as NaNs upon allocation
+     - Cold Start Initialization:
+       cold start initialization of variables is now ALWAYS done
+       and overwritten if finidat is read in as spun up dataset (also now
+       have on line interpolation of initial conditions as part of this refactor as well)
+     - History initialization of variables
+       All history fields now initialized as spval
+     - Restart initialization of variables
+     - Accumulation Initialization 
+       initialization and accumulation update of variables
+   - Instantiation of datatypes is now separate from their declaration
+     (for now in clm_initialize.F90 - will be moved in the future)
+
+   Centralized routines that no longer exist:
+   ==========================================
+   Data types  	  : clmtype.F90, clmtypeInitMod.F90
+   Initialization : initTimeConst.F90, initCold.F90
+   History	  : histFldsMod.F90
+   Accumulation	  : accumulMod.F90
+   Restart        : biogeophysRestMod.F90, CNRestMod.F90
+   Biogeochemistry: CNSetValue.F90
+
+   New Type modules that now replace clmtype.F90
+   ==========================================
+   main/atm2lndType.F90
+   main/lnd2atmType.F90
+   main/ColumnType.F90
+   main/EcophysConType.F90
+   main/GridcellType.F90
+   main/LandunitType.F90
+   main/PatchType.F90
+
+   biogeochem/CNCarbonFluxType.F90
+   biogeochem/CNCarbonStateType.F90
+   biogeochem/CNDecompCascadeConType.F90
+   biogeochem/CNDVType.F90
+   biogeochem/CNNitrogenFluxType.F90
+   biogeochem/CNNitrogenStateType.F90
+   biogeochem/CNStateType.F90
+   biogeochem/CropType.F90
+
+   biogeophys/AerosolType.F90
+   biogeophys/CanopyStateType.F90
+   biogeophys/EnergyFluxType.F90
+   biogeophys/FrictionVelocityType.F90
+   biogeophys/LakeStateType.F90
+   biogeophys/PhotosynthesisType.F90
+   biogeophys/SoilHydrologyType.F90
+   biogeophys/SoilStateType.F90
+   biogeophys/SolarAbsorbedType.F90
+   biogeophys/SurfaceAlbedoType.F90
+   biogeophys/TemperatureType.F90
+   biogeophys/UrbanParamsType.F90
+   biogeophys/WaterfluxType.F90
+   biogeophys/WaterStateType.F90
+
+   ED/main/EDBioType.F90
+   ED/main/EDEcophysConType.F90
+   ED/main/EDVecCohortType.F90
+   ED/main/EDVecPatchType.F90
+
+
+   Instantiation of Types
+
+2) Public Types:
+
+   - the following are public types that can BE PASSED AS ARGUMENTS 
+   - the type instances FOR NOW are clm_initialized and then used by the driver
+   - this will be generalized in the future	
+
+  type(ch4_type)              :: ch4_vars
+  type(carbonstate_type)      :: carbonstate_vars
+  type(carbonstate_type)      :: c13_carbonstate_vars
+  type(carbonstate_type)      :: c14_carbonstate_vars
+  type(carbonflux_type)       :: carbonflux_vars
+  type(carbonflux_type)       :: c13_carbonflux_vars
+  type(carbonflux_type)       :: c14_carbonflux_vars
+  type(nitrogenstate_type)    :: nitrogenstate_vars
+  type(nitrogenflux_type)     :: nitrogenflux_vars
+  type(dgvs_type)             :: dgvs_vars
+  type(crop_type)             :: crop_vars
+  type(cnstate_type)          :: cnstate_vars
+  type(dust_type)             :: dust_vars
+  type(vocemis_type)          :: vocemis_vars
+  type(drydepvel_type)        :: drydepvel_vars
+  type(aerosol_type)          :: aerosol_vars
+  type(canopystate_type)      :: canopystate_vars
+  type(energyflux_type)       :: energyflux_vars
+  type(frictionvel_type)      :: frictionvel_vars
+  type(lakestate_type)        :: lakestate_vars
+  type(photosyns_type)        :: photosyns_vars
+  type(soilstate_type)        :: soilstate_vars
+  type(soilhydrology_type)    :: soilhydrology_vars
+  type(solarabs_type)         :: solarabs_vars
+  type(surfalb_type)          :: surfalb_vars
+  type(surfrad_type)          :: surfrad_vars
+  type(temperature_type)      :: temperature_vars
+  type(urbanparams_type)      :: urbanparams_vars
+  type(waterflux_type)        :: waterflux_vars
+  type(waterstate_type)       :: waterstate_vars
+  type(atm2lnd_type)          :: atm2lnd_vars
+  type(glc2lnd_type)          :: glc2lnd_vars
+  type(lnd2atm_type)          :: lnd2atm_vars
+  type(lnd2glc_type)          :: lnd2glc_vars
+  type(glc_diagnostics_type)  :: glc_diagnostics_vars
+  type(EDbio_type)            :: EDbio_vars
+
+  - private Types (now som modules have their own PRIVATE types) 
+ 
+   DUSTMod.F90       :    type(dust_type)     
+   VOCEmissionMod.F90:    type(vocemis_type)  
+   ch4Mod.F90        :    type(ch4_type)      
+
+   API Changes:
+   ==========================================
+   Original APIs:
+   clmtype was in effect a global common block and all routines had use statements into it
+   difficult to track any intent or flow through system
+   difficult to set up functional unit testing (.e.g. CanopyFluxesMod.F90, etc)
+	
+   Refactorized APIs:
+   all new datatype instances are passed as arguments
+   science code is effectively the same since only the associate statements have been modified
+
+   New Directory Structure under clm/
+   ==========================================
+   bld/
+   doc/	
+   src/biogeochem/
+   src/biogeophys/
+   src/cpl/
+   src/dyn_subgrid/
+   src/ED/
+   src/ED/biogeochem
+   src/ED/biogeophys
+   src/ED/fire
+   src/ED/main	
+   src/main/
+   src/unit_test_mocks/
+   src/unit_test_shr/
+   src/utils/
+   src_clm4_0/
+   test/
+   tools/  	
+	
+   Advantages of refactorization:
+   ==========================================
+   - Lets compiler enforce intent attributes
+   - Makes functional unit testing easier since module drivers can be
+     constructed with relevant mock data more easily
+   - Makes more sense scientifically since now easier to extend code logic as
+     to where you want to introduce new variables
+   - Easier to maintain code since code flow is easier to follow and to modify
+   - Easy to move variables around from one data type to another since now
+     know everything that is logically connected to that variable that
+     needs to be moved Offers new modularity for trading in and out new
+     formulations of targeted functionality
+
+Requirements for tag: N.A.
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): N.A.
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+    directory restructuring has been reflected in changes to configure in setting up the Filepath
+
+Describe any changes made to the namelist:
+    clm_hydrology1_inparm changed to clm_canopyhydrology_inparm
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: myself, Bill Sacks
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: 
+
+D       clm/src/clm4_5
+D       clm/src/clm4_5/biogeochem
+D       clm/src/clm4_5/biogeochem/CNCStateUpdate2Mod.F90
+D       clm/src/clm4_5/biogeochem/CNGapMortalityMod.F90
+D       clm/src/clm4_5/biogeochem/CNRestMod.F90
+D       clm/src/clm4_5/biogeochem/CropRestMod.F90
+D       clm/src/clm4_5/biogeochem/CNGRespMod.F90
+D       clm/src/clm4_5/biogeochem/CNNitrifDenitrifMod.F90
+D       clm/src/clm4_5/biogeochem/CNNStateUpdate1Mod.F90
+D       clm/src/clm4_5/biogeochem/CNBalanceCheckMod.F90
+D       clm/src/clm4_5/biogeochem/CNNStateUpdate3Mod.F90
+D       clm/src/clm4_5/biogeochem/CNFireMod.F90
+D       clm/src/clm4_5/biogeochem/CNMRespMod.F90
+D       clm/src/clm4_5/biogeochem/MEGANFactorsMod.F90
+D       clm/src/clm4_5/biogeochem/SatellitePhenologyMod.F90
+D       clm/src/clm4_5/biogeochem/CNVerticalProfileMod.F90
+D       clm/src/clm4_5/biogeochem/ch4RestMod.F90
+D       clm/src/clm4_5/biogeochem/CNPrecisionControlMod.F90
+D       clm/src/clm4_5/biogeochem/CNCIsoFluxMod.F90
+D       clm/src/clm4_5/biogeochem/CNWoodProductsMod.F90
+D       clm/src/clm4_5/biogeochem/CNSummaryMod.F90
+D       clm/src/clm4_5/biogeochem/ch4Mod.F90
+D       clm/src/clm4_5/biogeochem/DUSTMod.F90
+D       clm/src/clm4_5/biogeochem/CNDVLightMod.F90
+D       clm/src/clm4_5/biogeochem/CNInitMod.F90
+D       clm/src/clm4_5/biogeochem/CNPhenologyMod.F90
+D       clm/src/clm4_5/biogeochem/ch4varcon.F90
+D       clm/src/clm4_5/biogeochem/CNCStateUpdate1Mod.F90
+D       clm/src/clm4_5/biogeochem/CNDecompMod.F90
+D       clm/src/clm4_5/biogeochem/CNCStateUpdate3Mod.F90
+D       clm/src/clm4_5/biogeochem/CNDVMod.F90
+D       clm/src/clm4_5/biogeochem/ED
+D       clm/src/clm4_5/biogeochem/ED/EDCanopyStructureMod.F90
+D       clm/src/clm4_5/biogeochem/ED/EDSetValuesMod.F90
+D       clm/src/clm4_5/biogeochem/ED/EDGrowthFunctionsMod.F90
+D       clm/src/clm4_5/biogeochem/ED/EDPhysiologyMod.F90
+D       clm/src/clm4_5/biogeochem/ED/EDCohortDynamicsMod.F90
+D       clm/src/clm4_5/biogeochem/ED/EDPatchDynamicsMod.F90
+D       clm/src/clm4_5/biogeochem/CNSharedParamsMod.F90
+D       clm/src/clm4_5/biogeochem/VOCEmissionMod.F90
+D       clm/src/clm4_5/biogeochem/ch4InitMod.F90
+D       clm/src/clm4_5/biogeochem/CNAnnualUpdateMod.F90
+D       clm/src/clm4_5/biogeochem/CNNStateUpdate2Mod.F90
+D       clm/src/clm4_5/biogeochem/DryDepVelocity.F90
+D       clm/src/clm4_5/biogeochem/CNAllocationMod.F90
+D       clm/src/clm4_5/biogeochem/CNNDynamicsMod.F90
+D       clm/src/clm4_5/biogeochem/CNEcosystemDynMod.F90
+D       clm/src/clm4_5/biogeochem/CNDecompCascadeBGCMod.F90
+D       clm/src/clm4_5/biogeochem/CNSetValueMod.F90
+D       clm/src/clm4_5/biogeochem/CNVegStructUpdateMod.F90
+D       clm/src/clm4_5/biogeochem/CNDecompCascadeCNMod.F90
+D       clm/src/clm4_5/biogeochem/CNDVEstablishmentMod.F90
+D       clm/src/clm4_5/biogeochem/CNSoilLittVertTranspMod.F90
+D       clm/src/clm4_5/biogeochem/CNDVInitMod.F90
+D       clm/src/clm4_5/biogeochem/CNC14DecayMod.F90
+	
+D       clm/src/clm4_5/main
+D       clm/src/clm4_5/main/clm_varcon.F90
+D       clm/src/clm4_5/main/initInterp.F90
+D       clm/src/clm4_5/main/clm_varpar.F90
+D       clm/src/clm4_5/main/landunit_varcon.F90
+D       clm/src/clm4_5/main/initTimeConstMod.F90
+D       clm/src/clm4_5/main/subgridWeightsMod.F90
+D       clm/src/clm4_5/main/decompInitMod.F90
+D       clm/src/clm4_5/main/clm_initializeMod.F90
+D       clm/src/clm4_5/main/subgridRestMod.F90
+D       clm/src/clm4_5/main/clm_glclnd.F90
+D       clm/src/clm4_5/main/paramUtilMod.F90
+D       clm/src/clm4_5/main/accFldsMod.F90
+D       clm/src/clm4_5/main/subgridMod.F90
+D       clm/src/clm4_5/main/clmtypeInitMod.F90
+D       clm/src/clm4_5/main/ndepStreamMod.F90
+D       clm/src/clm4_5/main/init_hydrology.F90
+D       clm/src/clm4_5/main/initColdMod.F90
+D       clm/src/clm4_5/main/column_varcon.F90
+D       clm/src/clm4_5/main/histFileMod.F90
+D       clm/src/clm4_5/main/pft2colMod.F90
+D       clm/src/clm4_5/main/clm_atmlnd.F90
+D       clm/src/clm4_5/main/findHistFields.pl
+D       clm/src/clm4_5/main/clm_varsur.F90
+D       clm/src/clm4_5/main/restFileMod.F90
+D       clm/src/clm4_5/main/CMakeLists.txt
+D       clm/src/clm4_5/main/controlMod.F90
+D       clm/src/clm4_5/main/spitfireSF
+D       clm/src/clm4_5/main/spitfireSF/SFParamsMod.F90
+D       clm/src/clm4_5/main/spitfireSF/SFMainMod.F90
+D       clm/src/clm4_5/main/test
+D       clm/src/clm4_5/main/test/subgridWeights_test
+D       clm/src/clm4_5/main/test/subgridWeights_test/test_subgridWeights.pf
+D       clm/src/clm4_5/main/test/subgridWeights_test/CMakeLists.txt
+D       clm/src/clm4_5/main/test/clm_glclnd_test
+D       clm/src/clm4_5/main/test/clm_glclnd_test/test_clm_glclnd.pf
+D       clm/src/clm4_5/main/test/clm_glclnd_test/CMakeLists.txt
+D       clm/src/clm4_5/main/test/CMakeLists.txt
+D       clm/src/clm4_5/main/initSubgridMod.F90
+D       clm/src/clm4_5/main/filterMod.F90
+D       clm/src/clm4_5/main/clm_varctl.F90
+D       clm/src/clm4_5/main/clm_driver.F90
+D       clm/src/clm4_5/main/surfrdUtilsMod.F90
+D       clm/src/clm4_5/main/ED
+D       clm/src/clm4_5/main/ED/EDInitTimeConst.F90
+D       clm/src/clm4_5/main/ED/EDCLMLinkMod.F90
+D       clm/src/clm4_5/main/ED/EDClmType.F90
+D       clm/src/clm4_5/main/ED/EDRestVectorMod.F90
+D       clm/src/clm4_5/main/ED/EDHistFldsMod.F90
+D       clm/src/clm4_5/main/ED/EDClmTypeInitMod.F90
+D       clm/src/clm4_5/main/ED/EDPftvarcon.F90
+D       clm/src/clm4_5/main/ED/EDParamsMod.F90
+D       clm/src/clm4_5/main/ED/EDInitMod.F90
+D       clm/src/clm4_5/main/ED/EDTypesMod.F90
+D       clm/src/clm4_5/main/ED/EDMainMod.F90
+D       clm/src/clm4_5/main/subgridAveMod.F90
+D       clm/src/clm4_5/main/initGridCellsMod.F90
+D       clm/src/clm4_5/main/initSoilParVICMod.F90
+D       clm/src/clm4_5/main/pftvarcon.F90
+D       clm/src/clm4_5/main/surfrdMod.F90
+D       clm/src/clm4_5/main/decompMod.F90
+D       clm/src/clm4_5/main/FuncPedotransferMod.F90
+D       clm/src/clm4_5/main/clmtype.F90
+D       clm/src/clm4_5/main/reweightMod.F90
+D       clm/src/clm4_5/main/readParamsMod.F90
+D       clm/src/clm4_5/main/histFldsMod.F90
+	
+D       clm/src/clm4_5/biogeophys
+D       clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+D       clm/src/clm4_5/biogeophys/SLakeInitMod.F90
+D       clm/src/clm4_5/biogeophys/SoilTemperatureMod.F90
+D       clm/src/clm4_5/biogeophys/SLakeFluxesMod.F90
+D       clm/src/clm4_5/biogeophys/UrbanInputMod.F90
+D       clm/src/clm4_5/biogeophys/SnowHydrologyMod.F90
+D       clm/src/clm4_5/biogeophys/Biogeophysics1Mod.F90
+D       clm/src/clm4_5/biogeophys/FrictionVelocityMod.F90
+D       clm/src/clm4_5/biogeophys/TridiagonalMod.F90
+D       clm/src/clm4_5/biogeophys/SLakeHydrologyMod.F90
+D       clm/src/clm4_5/biogeophys/Hydrology1Mod.F90
+D       clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+D       clm/src/clm4_5/biogeophys/UrbanMod.F90
+D       clm/src/clm4_5/biogeophys/QSatMod.F90
+D       clm/src/clm4_5/biogeophys/ActiveLayerMod.F90
+D       clm/src/clm4_5/biogeophys/SurfaceResistanceMod.F90
+D       clm/src/clm4_5/biogeophys/clm_driverInitMod.F90
+D       clm/src/clm4_5/biogeophys/CLMVICMapMod.F90
+D       clm/src/clm4_5/biogeophys/SLakeTemperatureMod.F90
+D       clm/src/clm4_5/biogeophys/SNICARMod.F90
+D       clm/src/clm4_5/biogeophys/BareGroundFluxesMod.F90
+D       clm/src/clm4_5/biogeophys/CMakeLists.txt
+D       clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90
+D       clm/src/clm4_5/biogeophys/RootBiophysMod.F90
+D       clm/src/clm4_5/biogeophys/test
+D       clm/src/clm4_5/biogeophys/test/CMakeLists.txt
+D       clm/src/clm4_5/biogeophys/test/Daylength_test
+D       clm/src/clm4_5/biogeophys/test/Daylength_test/test_daylength.pf
+D       clm/src/clm4_5/biogeophys/test/Daylength_test/CMakeLists.txt
+D       clm/src/clm4_5/biogeophys/SurfaceRadiationMod.F90
+D       clm/src/clm4_5/biogeophys/SoilWaterMovementMod.F90
+D       clm/src/clm4_5/biogeophys/H2OSfcMod.F90
+D       clm/src/clm4_5/biogeophys/SoilMoistStressMod.F90
+D       clm/src/clm4_5/biogeophys/Biogeophysics2Mod.F90
+D       clm/src/clm4_5/biogeophys/SoiWatRetCurveParMod.F90
+D       clm/src/clm4_5/biogeophys/ED
+D       clm/src/clm4_5/biogeophys/ED/EDAccumulateFluxesMod.F90
+D       clm/src/clm4_5/biogeophys/ED/EDSurfaceAlbedoMod.F90
+D       clm/src/clm4_5/biogeophys/ED/EDPhotosynthesisMod.F90
+D       clm/src/clm4_5/biogeophys/ED/EDBtranMod.F90
+D       clm/src/clm4_5/biogeophys/FracWetMod.F90
+D       clm/src/clm4_5/biogeophys/UrbanInitMod.F90
+D       clm/src/clm4_5/biogeophys/SLakeRestMod.F90
+D       clm/src/clm4_5/biogeophys/SurfaceAlbedoMod.F90
+D       clm/src/clm4_5/biogeophys/SLakeCon.F90
+D       clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+D       clm/src/clm4_5/biogeophys/BandDiagonalMod.F90
+D       clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+D       clm/src/clm4_5/biogeophys/DaylengthMod.F90
+	
+D       clm/src/clm4_5/dyn_subgrid
+D       clm/src/clm4_5/dyn_subgrid/test
+D       clm/src/clm4_5/dyn_subgrid/test/dynLandunitArea_test
+D       clm/src/clm4_5/dyn_subgrid/test/dynLandunitArea_test/test_update_landunit_weights_one_gcell.pf
+D       clm/src/clm4_5/dyn_subgrid/test/dynLandunitArea_test/test_update_landunit_weights.pf
+D       clm/src/clm4_5/dyn_subgrid/test/dynLandunitArea_test/CMakeLists.txt
+D       clm/src/clm4_5/dyn_subgrid/test/dynVar_test
+D       clm/src/clm4_5/dyn_subgrid/test/dynVar_test/test_dynVarShared.F90
+D       clm/src/clm4_5/dyn_subgrid/test/dynVar_test/test_dynVarTimeInterp.pf
+D       clm/src/clm4_5/dyn_subgrid/test/dynVar_test/test_dynVarTimeUninterp.pf
+D       clm/src/clm4_5/dyn_subgrid/test/dynVar_test/CMakeLists.txt
+D       clm/src/clm4_5/dyn_subgrid/test/dynTimeInfo_test
+D       clm/src/clm4_5/dyn_subgrid/test/dynTimeInfo_test/test_dynTimeInfo.pf
+D       clm/src/clm4_5/dyn_subgrid/test/dynTimeInfo_test/CMakeLists.txt
+D       clm/src/clm4_5/dyn_subgrid/test/CMakeLists.txt
+D       clm/src/clm4_5/dyn_subgrid/test/dynInitColumns_test
+D       clm/src/clm4_5/dyn_subgrid/test/dynInitColumns_test/test_init_columns.pf
+D       clm/src/clm4_5/dyn_subgrid/test/dynInitColumns_test/CMakeLists.txt
+D       clm/src/clm4_5/dyn_subgrid/dynLandunitAreaMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynTimeInfoMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynSubgridDriverMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynHarvestMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynFileMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynConsBiogeochemMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynPriorWeightsMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynVarMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynEDMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynVarTimeInterpMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynpftFileMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynCNDVMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynConsBiogeophysMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynVarTimeUninterpMod.F90
+D       clm/src/clm4_5/dyn_subgrid/dynVarMod.F90.in
+D       clm/src/clm4_5/dyn_subgrid/dynVarTimeInterpMod.F90.in
+D       clm/src/clm4_5/dyn_subgrid/dynVarTimeUninterpMod.F90.in
+D       clm/src/clm4_5/dyn_subgrid/do_genf90
+D       clm/src/clm4_5/dyn_subgrid/dynInitColumnsMod.F90
+D       clm/src/clm4_5/dyn_subgrid/CMakeLists.txt
+	
+D       clm/src/util_share
+D       clm/src/util_share/organicFileMod.F90
+D       clm/src/util_share/spmdGathScatMod.F90
+D       clm/src/util_share/clm_time_manager.F90
+D       clm/src/util_share/clm_nlUtilsMod.F90
+D       clm/src/util_share/clm_varorb.F90
+D       clm/src/util_share/abortutils.F90
+D       clm/src/util_share/accumulMod.F90
+D       clm/src/util_share/getdatetime.F90
+D       clm/src/util_share/fileutils.F90
+D       clm/src/util_share/dtypes.h
+D       clm/src/util_share/ncdio_pio.F90
+D       clm/src/util_share/SimpleMathMod.F90
+D       clm/src/util_share/spmdMod.F90
+D       clm/src/util_share/domainMod.F90
+D       clm/src/util_share/ncdio_pio.F90.in
+D       clm/src/util_share/restUtilMod.F90
+D       clm/src/util_share/quadraticMod.F90
+D       clm/src/util_share/restUtilMod.F90.in
+D       clm/src/util_share/CMakeLists.txt
+D       clm/src/util_share/GetGlobalValuesMod.F90
+	
+D       clm/src/clm4_0
+D       clm/src/clm4_0/biogeochem
+D       clm/src/clm4_0/biogeochem/CNCStateUpdate2Mod.F90
+D       clm/src/clm4_0/biogeochem/CNC13StateUpdate2Mod.F90
+D       clm/src/clm4_0/biogeochem/CNGapMortalityMod.F90
+D       clm/src/clm4_0/biogeochem/CropRestMod.F90
+D       clm/src/clm4_0/biogeochem/CNGRespMod.F90
+D       clm/src/clm4_0/biogeochem/CNNStateUpdate1Mod.F90
+D       clm/src/clm4_0/biogeochem/CNBalanceCheckMod.F90
+D       clm/src/clm4_0/biogeochem/CNNStateUpdate3Mod.F90
+D       clm/src/clm4_0/biogeochem/CNFireMod.F90
+D       clm/src/clm4_0/biogeochem/CNMRespMod.F90
+D       clm/src/clm4_0/biogeochem/MEGANFactorsMod.F90
+D       clm/src/clm4_0/biogeochem/CNPrecisionControlMod.F90
+D       clm/src/clm4_0/biogeochem/CNWoodProductsMod.F90
+D       clm/src/clm4_0/biogeochem/CNSummaryMod.F90
+D       clm/src/clm4_0/biogeochem/DUSTMod.F90
+D       clm/src/clm4_0/biogeochem/CNDVLightMod.F90
+D       clm/src/clm4_0/biogeochem/CNPhenologyMod.F90
+D       clm/src/clm4_0/biogeochem/CNCStateUpdate1Mod.F90
+D       clm/src/clm4_0/biogeochem/CNDecompMod.F90
+D       clm/src/clm4_0/biogeochem/STATICEcosysDynMod.F90
+D       clm/src/clm4_0/biogeochem/CNCStateUpdate3Mod.F90
+D       clm/src/clm4_0/biogeochem/CNDVMod.F90
+D       clm/src/clm4_0/biogeochem/CNC13StateUpdate1Mod.F90
+D       clm/src/clm4_0/biogeochem/CNrestMod.F90
+D       clm/src/clm4_0/biogeochem/CNC13StateUpdate3Mod.F90
+D       clm/src/clm4_0/biogeochem/VOCEmissionMod.F90
+D       clm/src/clm4_0/biogeochem/CNDVEcosystemDynIniMod.F90
+D       clm/src/clm4_0/biogeochem/CNAnnualUpdateMod.F90
+D       clm/src/clm4_0/biogeochem/CNNStateUpdate2Mod.F90
+D       clm/src/clm4_0/biogeochem/C13SummaryMod.F90
+D       clm/src/clm4_0/biogeochem/DryDepVelocity.F90
+D       clm/src/clm4_0/biogeochem/CNC13FluxMod.F90
+D       clm/src/clm4_0/biogeochem/CNAllocationMod.F90
+D       clm/src/clm4_0/biogeochem/CNNDynamicsMod.F90
+D       clm/src/clm4_0/biogeochem/CNEcosystemDynMod.F90
+D       clm/src/clm4_0/biogeochem/CNSetValueMod.F90
+D       clm/src/clm4_0/biogeochem/CNVegStructUpdateMod.F90
+D       clm/src/clm4_0/biogeochem/CNDVEstablishmentMod.F90
+	
+D       clm/src/clm4_0/main
+D       clm/src/clm4_0/main/clm_varcon.F90
+D       clm/src/clm4_0/main/clm_varpar.F90
+D       clm/src/clm4_0/main/CNiniTimeVar.F90
+D       clm/src/clm4_0/main/dynlandMod.F90
+D       clm/src/clm4_0/main/decompInitMod.F90
+D       clm/src/clm4_0/main/clm_initializeMod.F90
+D       clm/src/clm4_0/main/subgridRestMod.F90
+D       clm/src/clm4_0/main/clm_glclnd.F90
+D       clm/src/clm4_0/main/accFldsMod.F90
+D       clm/src/clm4_0/main/subgridMod.F90
+D       clm/src/clm4_0/main/clmtypeInitMod.F90
+D       clm/src/clm4_0/main/ndepStreamMod.F90
+D       clm/src/clm4_0/main/pftdynMod.F90
+D       clm/src/clm4_0/main/iniTimeConst.F90
+D       clm/src/clm4_0/main/histFileMod.F90
+D       clm/src/clm4_0/main/pft2colMod.F90
+D       clm/src/clm4_0/main/clm_atmlnd.F90
+D       clm/src/clm4_0/main/findHistFields.pl
+D       clm/src/clm4_0/main/restFileMod.F90
+D       clm/src/clm4_0/main/clm_varsur.F90
+D       clm/src/clm4_0/main/controlMod.F90
+D       clm/src/clm4_0/main/initSurfAlbMod.F90
+D       clm/src/clm4_0/main/filterMod.F90
+D       clm/src/clm4_0/main/clm_driver.F90
+D       clm/src/clm4_0/main/clm_varctl.F90
+D       clm/src/clm4_0/main/subgridAveMod.F90
+D       clm/src/clm4_0/main/initGridCellsMod.F90
+D       clm/src/clm4_0/main/CNiniSpecial.F90
+D       clm/src/clm4_0/main/pftvarcon.F90
+D       clm/src/clm4_0/main/surfrdMod.F90
+D       clm/src/clm4_0/main/decompMod.F90
+D       clm/src/clm4_0/main/clmtype.F90
+D       clm/src/clm4_0/main/histFldsMod.F90
+D       clm/src/clm4_0/main/mkarbinitMod.F90
+D       clm/src/clm4_0/biogeophys
+D       clm/src/clm4_0/biogeophys/BalanceCheckMod.F90
+D       clm/src/clm4_0/biogeophys/SurfaceRadiationMod.F90
+D       clm/src/clm4_0/biogeophys/SoilTemperatureMod.F90
+D       clm/src/clm4_0/biogeophys/SnowHydrologyMod.F90
+D       clm/src/clm4_0/biogeophys/UrbanInputMod.F90
+D       clm/src/clm4_0/biogeophys/Biogeophysics1Mod.F90
+D       clm/src/clm4_0/biogeophys/Biogeophysics2Mod.F90
+D       clm/src/clm4_0/biogeophys/FracWetMod.F90
+D       clm/src/clm4_0/biogeophys/UrbanInitMod.F90
+D       clm/src/clm4_0/biogeophys/FrictionVelocityMod.F90
+D       clm/src/clm4_0/biogeophys/TridiagonalMod.F90
+D       clm/src/clm4_0/biogeophys/SurfaceAlbedoMod.F90
+D       clm/src/clm4_0/biogeophys/Hydrology1Mod.F90
+D       clm/src/clm4_0/biogeophys/Hydrology2Mod.F90
+D       clm/src/clm4_0/biogeophys/BiogeophysicsLakeMod.F90
+D       clm/src/clm4_0/biogeophys/BiogeophysRestMod.F90
+D       clm/src/clm4_0/biogeophys/UrbanMod.F90
+D       clm/src/clm4_0/biogeophys/SoilHydrologyMod.F90
+D       clm/src/clm4_0/biogeophys/QSatMod.F90
+D       clm/src/clm4_0/biogeophys/clm_driverInitMod.F90
+D       clm/src/clm4_0/biogeophys/HydrologyLakeMod.F90
+D       clm/src/clm4_0/biogeophys/BareGroundFluxesMod.F90
+D       clm/src/clm4_0/biogeophys/SNICARMod.F90
+D       clm/src/clm4_0/biogeophys/CanopyFluxesMod.F90
+	
+List all files added and what they do:
+
+A       clm/src_clm40
+A       clm/src_clm40/biogeochem
+A       clm/src_clm40/biogeochem/CNCStateUpdate2Mod.F90
+A       clm/src_clm40/biogeochem/CNC13StateUpdate2Mod.F90
+A       clm/src_clm40/biogeochem/CNGRespMod.F90
+A       clm/src_clm40/biogeochem/CNBalanceCheckMod.F90
+A       clm/src_clm40/biogeochem/CNNStateUpdate3Mod.F90
+A       clm/src_clm40/biogeochem/CNSummaryMod.F90
+A       clm/src_clm40/biogeochem/CNPhenologyMod.F90
+A       clm/src_clm40/biogeochem/STATICEcosysDynMod.F90
+A       clm/src_clm40/biogeochem/CNCStateUpdate1Mod.F90
+A       clm/src_clm40/biogeochem/CNC13StateUpdate1Mod.F90
+A       clm/src_clm40/biogeochem/CNrestMod.F90
+A       clm/src_clm40/biogeochem/VOCEmissionMod.F90
+A       clm/src_clm40/biogeochem/CNAnnualUpdateMod.F90
+A       clm/src_clm40/biogeochem/CNNStateUpdate2Mod.F90
+A       clm/src_clm40/biogeochem/C13SummaryMod.F90
+A       clm/src_clm40/biogeochem/CNAllocationMod.F90
+A       clm/src_clm40/biogeochem/DryDepVelocity.F90
+A       clm/src_clm40/biogeochem/CNNDynamicsMod.F90
+A       clm/src_clm40/biogeochem/CNSetValueMod.F90
+A       clm/src_clm40/biogeochem/CNGapMortalityMod.F90
+A       clm/src_clm40/biogeochem/CropRestMod.F90
+A       clm/src_clm40/biogeochem/CNNStateUpdate1Mod.F90
+A       clm/src_clm40/biogeochem/CNFireMod.F90
+A       clm/src_clm40/biogeochem/CNMRespMod.F90
+A       clm/src_clm40/biogeochem/MEGANFactorsMod.F90
+A       clm/src_clm40/biogeochem/CNWoodProductsMod.F90
+A       clm/src_clm40/biogeochem/CNPrecisionControlMod.F90
+A       clm/src_clm40/biogeochem/DUSTMod.F90
+A       clm/src_clm40/biogeochem/CNDVLightMod.F90
+A       clm/src_clm40/biogeochem/CNDecompMod.F90
+A       clm/src_clm40/biogeochem/CNDVMod.F90
+A       clm/src_clm40/biogeochem/CNCStateUpdate3Mod.F90
+A       clm/src_clm40/biogeochem/CNC13StateUpdate3Mod.F90
+A       clm/src_clm40/biogeochem/CNDVEcosystemDynIniMod.F90
+A       clm/src_clm40/biogeochem/CNC13FluxMod.F90
+A       clm/src_clm40/biogeochem/CNEcosystemDynMod.F90
+A       clm/src_clm40/biogeochem/CNVegStructUpdateMod.F90
+A       clm/src_clm40/biogeochem/CNDVEstablishmentMod.F90
+	
+A       clm/src_clm40/main
+A       clm/src_clm40/main/spmdGathScatMod.F90
+A       clm/src_clm40/main/organicFileMod.F90
+A       clm/src_clm40/main/clm_varcon.F90
+A       clm/src_clm40/main/clm_varpar.F90
+A       clm/src_clm40/main/CNiniTimeVar.F90
+A       clm/src_clm40/main/abortutils.F90
+A       clm/src_clm40/main/accumulMod.F90
+A       clm/src_clm40/main/decompInitMod.F90
+A       clm/src_clm40/main/clm_glclnd.F90
+A       clm/src_clm40/main/accFldsMod.F90
+A       clm/src_clm40/main/subgridMod.F90
+A       clm/src_clm40/main/pftdynMod.F90
+A       clm/src_clm40/main/pft2colMod.F90
+A       clm/src_clm40/main/clm_atmlnd.F90
+A       clm/src_clm40/main/quadraticMod.F90
+A       clm/src_clm40/main/GetGlobalValuesMod.F90
+A       clm/src_clm40/main/clm_time_manager.F90
+A       clm/src_clm40/main/filterMod.F90
+A       clm/src_clm40/main/clm_varctl.F90
+A       clm/src_clm40/main/subgridAveMod.F90
+A       clm/src_clm40/main/dtypes.h
+A       clm/src_clm40/main/CNiniSpecial.F90
+A       clm/src_clm40/main/surfrdMod.F90
+A       clm/src_clm40/main/domainMod.F90
+A       clm/src_clm40/main/lnd_import_export.F90
+A       clm/src_clm40/main/restUtilMod.F90
+A       clm/src_clm40/main/clmtype.F90
+A       clm/src_clm40/main/mkarbinitMod.F90
+A       clm/src_clm40/main/restUtilMod.F90.in
+A       clm/src_clm40/main/dynlandMod.F90
+A       clm/src_clm40/main/getdatetime.F90
+A       clm/src_clm40/main/clm_initializeMod.F90
+A       clm/src_clm40/main/subgridRestMod.F90
+A       clm/src_clm40/main/fileutils.F90
+A       clm/src_clm40/main/clmtypeInitMod.F90
+A       clm/src_clm40/main/ndepStreamMod.F90
+A       clm/src_clm40/main/SimpleMathMod.F90
+A       clm/src_clm40/main/iniTimeConst.F90
+A       clm/src_clm40/main/lnd_comp_esmf.F90
+A       clm/src_clm40/main/histFileMod.F90
+A       clm/src_clm40/main/clm_cpl_indices.F90
+A       clm/src_clm40/main/findHistFields.pl
+A       clm/src_clm40/main/restFileMod.F90
+A       clm/src_clm40/main/clm_varsur.F90
+A       clm/src_clm40/main/controlMod.F90
+A       clm/src_clm40/main/CMakeLists.txt
+A       clm/src_clm40/main/initSurfAlbMod.F90
+A       clm/src_clm40/main/clm_nlUtilsMod.F90
+A       clm/src_clm40/main/clm_driver.F90
+A       clm/src_clm40/main/clm_varorb.F90
+A       clm/src_clm40/main/initGridCellsMod.F90
+A       clm/src_clm40/main/lnd_comp_mct.F90
+A       clm/src_clm40/main/pftvarcon.F90
+A       clm/src_clm40/main/ncdio_pio.F90
+A       clm/src_clm40/main/spmdMod.F90
+A       clm/src_clm40/main/decompMod.F90
+A       clm/src_clm40/main/ncdio_pio.F90.in
+A       clm/src_clm40/main/histFldsMod.F90
+	
+A       clm/src_clm40/biogeophys
+A       clm/src_clm40/biogeophys/BalanceCheckMod.F90
+A       clm/src_clm40/biogeophys/SoilTemperatureMod.F90
+A       clm/src_clm40/biogeophys/UrbanInputMod.F90
+A       clm/src_clm40/biogeophys/SnowHydrologyMod.F90
+A       clm/src_clm40/biogeophys/Biogeophysics1Mod.F90
+A       clm/src_clm40/biogeophys/FrictionVelocityMod.F90
+A       clm/src_clm40/biogeophys/TridiagonalMod.F90
+A       clm/src_clm40/biogeophys/Hydrology1Mod.F90
+A       clm/src_clm40/biogeophys/BiogeophysRestMod.F90
+A       clm/src_clm40/biogeophys/UrbanMod.F90
+A       clm/src_clm40/biogeophys/QSatMod.F90
+A       clm/src_clm40/biogeophys/clm_driverInitMod.F90
+A       clm/src_clm40/biogeophys/HydrologyLakeMod.F90
+A       clm/src_clm40/biogeophys/BareGroundFluxesMod.F90
+A       clm/src_clm40/biogeophys/SNICARMod.F90
+A       clm/src_clm40/biogeophys/CanopyFluxesMod.F90
+A       clm/src_clm40/biogeophys/SurfaceRadiationMod.F90
+A       clm/src_clm40/biogeophys/Biogeophysics2Mod.F90
+A       clm/src_clm40/biogeophys/UrbanInitMod.F90
+A       clm/src_clm40/biogeophys/FracWetMod.F90
+A       clm/src_clm40/biogeophys/SurfaceAlbedoMod.F90
+A       clm/src_clm40/biogeophys/Hydrology2Mod.F90
+A       clm/src_clm40/biogeophys/BiogeophysicsLakeMod.F90
+A       clm/src_clm40/biogeophys/SoilHydrologyMod.F90
+	
+A       clm/src/main
+A       clm/src/main/organicFileMod.F90
+A       clm/src/main/clm_varcon.F90
+A       clm/src/main/initInterp.F90
+A       clm/src/main/landunit_varcon.F90
+A       clm/src/main/clm_varpar.F90
+A       clm/src/main/abortutils.F90
+A       clm/src/main/accumulMod.F90
+A       clm/src/main/subgridWeightsMod.F90
+A       clm/src/main/decompInitMod.F90
+A       clm/src/main/subgridMod.F90
+A       clm/src/main/atm2lndType.F90
+A       clm/src/main/lnd2atmType.F90
+A       clm/src/main/column_varcon.F90
+A       clm/src/main/EcophysConType.F90
+A       clm/src/main/GetGlobalValuesMod.F90
+A       clm/src/main/initSubgridMod.F90
+A       clm/src/main/lnd2glcMod.F90
+A       clm/src/main/glc2lndMod.F90
+A       clm/src/main/filterMod.F90
+A       clm/src/main/surfrdUtilsMod.F90
+A       clm/src/main/clm_varctl.F90
+A       clm/src/main/subgridAveMod.F90
+A       clm/src/main/initVerticalMod.F90
+A       clm/src/main/glcDiagnosticsMod.F90
+A       clm/src/main/lnd2atmMod.F90
+A       clm/src/main/atm2lndMod.F90
+A       clm/src/main/surfrdMod.F90
+A       clm/src/main/FuncPedotransferMod.F90
+A       clm/src/main/readParamsMod.F90
+A       clm/src/main/clm_initializeMod.F90
+A       clm/src/main/subgridRestMod.F90
+A       clm/src/main/paramUtilMod.F90
+A       clm/src/main/ColumnType.F90
+A       clm/src/main/PatchType.F90
+A       clm/src/main/ndepStreamMod.F90
+A       clm/src/main/init_hydrology.F90
+A       clm/src/main/histFileMod.F90
+A       clm/src/main/findHistFields.pl
+A       clm/src/main/restFileMod.F90
+A       clm/src/main/clm_varsur.F90
+A       clm/src/main/controlMod.F90
+A       clm/src/main/LandunitType.F90
+A       clm/src/main/CMakeLists.txt
+A       clm/src/main/test
+A       clm/src/main/test/subgridWeights_test
+A       clm/src/main/test/subgridWeights_test/test_subgridWeights.pf
+A       clm/src/main/test/subgridWeights_test/CMakeLists.txt
+A       clm/src/main/test/clm_glclnd_test
+A       clm/src/main/test/clm_glclnd_test/test_clm_glclnd.pf
+A       clm/src/main/test/clm_glclnd_test/CMakeLists.txt
+A       clm/src/main/test/CMakeLists.txt
+A       clm/src/main/clm_driver.F90
+A       clm/src/main/GridcellType.F90
+A       clm/src/main/initGridCellsMod.F90
+A       clm/src/main/pftvarcon.F90
+A       clm/src/main/ncdio_pio.F90
+A       clm/src/main/decompMod.F90
+A       clm/src/main/ncdio_pio.F90.in
+A       clm/src/main/reweightMod.F90
+
+A       clm/src/ED
+A       clm/src/ED/biogeochem
+A       clm/src/ED/biogeochem/EDCanopyStructureMod.F90
+A       clm/src/ED/biogeochem/EDGrowthFunctionsMod.F90
+A       clm/src/ED/biogeochem/EDPhysiologyMod.F90
+A       clm/src/ED/biogeochem/EDCohortDynamicsMod.F90
+A       clm/src/ED/biogeochem/EDPatchDynamicsMod.F90
+A       clm/src/ED/main
+A       clm/src/ED/main/EDBioType.F90
+A       clm/src/ED/main/EDEcophysConType.F90
+A       clm/src/ED/main/EDParamsMod.F90
+A       clm/src/ED/main/EDMainMod.F90
+A       clm/src/ED/main/EDCLMLinkMod.F90
+A       clm/src/ED/main/EDVecCohortType.F90
+A       clm/src/ED/main/EDVecPatchType.F90
+A       clm/src/ED/main/EDRestVectorMod.F90
+A       clm/src/ED/main/EDPftvarcon.F90
+A       clm/src/ED/main/EDInitMod.F90
+A       clm/src/ED/main/EDTypesMod.F90
+A       clm/src/ED/fire
+A       clm/src/ED/fire/SFParamsMod.F90
+A       clm/src/ED/fire/SFMainMod.F90
+A       clm/src/ED/biogeophys
+A       clm/src/ED/biogeophys/EDAccumulateFluxesMod.F90
+A       clm/src/ED/biogeophys/EDSurfaceAlbedoMod.F90
+A       clm/src/ED/biogeophys/EDPhotosynthesisMod.F90
+A       clm/src/ED/biogeophys/EDBtranMod.F90
+A       clm/src/Notes
+M       clm/src/unit_test_shr/unittestSubgridMod.F90
+
+A       clm/src/utils
+A       clm/src/utils/spmdGathScatMod.F90
+A       clm/src/utils/clm_time_manager.F90
+A       clm/src/utils/clm_nlUtilsMod.F90
+A       clm/src/utils/clm_varorb.F90
+A       clm/src/utils/accumulMod.F90
+A       clm/src/utils/getdatetime.F90
+A       clm/src/utils/fileutils.F90
+A       clm/src/utils/dtypes.h
+A       clm/src/utils/spmdMod.F90
+A       clm/src/utils/SimpleMathMod.F90
+A       clm/src/utils/domainMod.F90
+A       clm/src/utils/restUtilMod.F90
+A       clm/src/utils/quadraticMod.F90
+A       clm/src/utils/CMakeLists.txt
+A       clm/src/utils/restUtilMod.F90.in
+
+A       clm/src/biogeochem
+A       clm/src/biogeochem/CNCStateUpdate2Mod.F90
+A       clm/src/biogeochem/CNDecompCascadeConType.F90
+A       clm/src/biogeochem/CNNitrifDenitrifMod.F90
+A       clm/src/biogeochem/CNGRespMod.F90
+A       clm/src/biogeochem/CNBalanceCheckMod.F90
+A       clm/src/biogeochem/CNNStateUpdate3Mod.F90
+A       clm/src/biogeochem/CNDVDriverMod.F90
+A       clm/src/biogeochem/SatellitePhenologyMod.F90
+A       clm/src/biogeochem/CNPhenologyMod.F90
+A       clm/src/biogeochem/CNCarbonFluxType.F90
+A       clm/src/biogeochem/CNCarbonStateType.F90
+A       clm/src/biogeochem/CNCStateUpdate1Mod.F90
+A       clm/src/biogeochem/VOCEmissionMod.F90
+A       clm/src/biogeochem/CNAnnualUpdateMod.F90
+A       clm/src/biogeochem/CNNStateUpdate2Mod.F90
+A       clm/src/biogeochem/CropType.F90
+A       clm/src/biogeochem/CNAllocationMod.F90
+A       clm/src/biogeochem/CNNDynamicsMod.F90
+A       clm/src/biogeochem/DryDepVelocity.F90
+A       clm/src/biogeochem/CNDecompCascadeBGCMod.F90
+A       clm/src/biogeochem/CNSoilLittVertTranspMod.F90
+A       clm/src/biogeochem/CNDecompCascadeCNMod.F90
+A       clm/src/biogeochem/CNC14DecayMod.F90
+A       clm/src/biogeochem/CNGapMortalityMod.F90
+A       clm/src/biogeochem/CNNStateUpdate1Mod.F90
+A       clm/src/biogeochem/CNFireMod.F90
+A       clm/src/biogeochem/CNNitrogenFluxType.F90
+A       clm/src/biogeochem/CNMRespMod.F90
+A       clm/src/biogeochem/MEGANFactorsMod.F90
+A       clm/src/biogeochem/CNVerticalProfileMod.F90
+A       clm/src/biogeochem/CNCIsoFluxMod.F90
+A       clm/src/biogeochem/CNWoodProductsMod.F90
+A       clm/src/biogeochem/CNPrecisionControlMod.F90
+A       clm/src/biogeochem/ch4Mod.F90
+A       clm/src/biogeochem/DUSTMod.F90
+A       clm/src/biogeochem/CNDVLightMod.F90
+A       clm/src/biogeochem/ch4varcon.F90
+A       clm/src/biogeochem/CNDecompMod.F90
+A       clm/src/biogeochem/CNCStateUpdate3Mod.F90
+A       clm/src/biogeochem/CNSharedParamsMod.F90
+A       clm/src/biogeochem/CNDVType.F90
+A       clm/src/biogeochem/CNStateType.F90
+A       clm/src/biogeochem/CNEcosystemDynMod.F90
+A       clm/src/biogeochem/CNNitrogenStateType.F90
+A       clm/src/biogeochem/CNVegStructUpdateMod.F90
+A       clm/src/biogeochem/CNDVEstablishmentMod.F90
+	
+A       clm/src/biogeophys
+A       clm/src/biogeophys/SnowSnicarMod.F90
+A       clm/src/biogeophys/SnowHydrologyMod.F90
+A       clm/src/biogeophys/TridiagonalMod.F90
+A       clm/src/biogeophys/FrictionVelocityType.F90
+A       clm/src/biogeophys/LakeFluxesMod.F90
+A       clm/src/biogeophys/PhotosynthesisMod.F90
+A       clm/src/biogeophys/AerosolType.F90
+A       clm/src/biogeophys/ActiveLayerMod.F90
+A       clm/src/biogeophys/QSatMod.F90
+A       clm/src/biogeophys/SoilHydrologyType.F90
+A       clm/src/biogeophys/HydrologyDrainageMod.F90
+A       clm/src/biogeophys/LakeStateType.F90
+A       clm/src/biogeophys/BareGroundFluxesMod.F90
+A       clm/src/biogeophys/SolarAbsorbedType.F90
+A       clm/src/biogeophys/CanopyHydrologyMod.F90
+A       clm/src/biogeophys/UrbanFluxesMod.F90
+A       clm/src/biogeophys/SurfaceAlbedoMod.F90
+A       clm/src/biogeophys/UrbanRadiationMod.F90
+A       clm/src/biogeophys/PhotosynthesisType.F90
+A       clm/src/biogeophys/CanopyTemperatureMod.F90
+A       clm/src/biogeophys/HydrologyNoDrainageMod.F90
+A       clm/src/biogeophys/DaylengthMod.F90
+A       clm/src/biogeophys/WaterfluxType.F90
+A       clm/src/biogeophys/BalanceCheckMod.F90
+A       clm/src/biogeophys/SoilTemperatureMod.F90
+A       clm/src/biogeophys/WaterStateType.F90
+A       clm/src/biogeophys/LakeTemperatureMod.F90
+A       clm/src/biogeophys/FrictionVelocityMod.F90
+A       clm/src/biogeophys/SoilFluxesMod.F90
+A       clm/src/biogeophys/TemperatureType.F90
+A       clm/src/biogeophys/SurfaceAlbedoType.F90
+A       clm/src/biogeophys/AerosolMod.F90
+A       clm/src/biogeophys/SoilStateType.F90
+A       clm/src/biogeophys/SurfaceResistanceMod.F90
+A       clm/src/biogeophys/UrbanAlbedoMod.F90
+A       clm/src/biogeophys/CanopyFluxesMod.F90
+A       clm/src/biogeophys/CMakeLists.txt
+A       clm/src/biogeophys/RootBiophysMod.F90
+A       clm/src/biogeophys/test
+A       clm/src/biogeophys/test/CMakeLists.txt
+A       clm/src/biogeophys/test/Daylength_test
+A       clm/src/biogeophys/test/Daylength_test/test_daylength.pf
+A       clm/src/biogeophys/test/Daylength_test/CMakeLists.txt
+A       clm/src/biogeophys/SurfaceRadiationMod.F90
+A       clm/src/biogeophys/SoilWaterMovementMod.F90
+A       clm/src/biogeophys/SoilMoistStressMod.F90
+A       clm/src/biogeophys/SoiWatRetCurveParMod.F90
+A       clm/src/biogeophys/EnergyFluxType.F90
+A       clm/src/biogeophys/CanopyStateType.F90
+A       clm/src/biogeophys/BandDiagonalMod.F90
+A       clm/src/biogeophys/SoilHydrologyMod.F90
+A       clm/src/biogeophys/LakeCon.F90
+A       clm/src/biogeophys/LakeHydrologyMod.F90
+A       clm/src/biogeophys/UrbanParamsType.F90
+A       clm/src/dyn_subgrid
+A       clm/src/dyn_subgrid/dynLandunitAreaMod.F90
+A       clm/src/dyn_subgrid/dynTimeInfoMod.F90
+A       clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+A       clm/src/dyn_subgrid/dynFileMod.F90
+A       clm/src/dyn_subgrid/dynConsBiogeochemMod.F90
+A       clm/src/dyn_subgrid/dynEDMod.F90
+A       clm/src/dyn_subgrid/dynVarMod.F90
+A       clm/src/dyn_subgrid/dynVarTimeUninterpMod.F90
+A       clm/src/dyn_subgrid/dynVarMod.F90.in
+A       clm/src/dyn_subgrid/dynVarTimeInterpMod.F90.in
+A       clm/src/dyn_subgrid/dynVarTimeUninterpMod.F90.in
+A       clm/src/dyn_subgrid/do_genf90
+A       clm/src/dyn_subgrid/CMakeLists.txt
+A       clm/src/dyn_subgrid/test
+A       clm/src/dyn_subgrid/test/dynLandunitArea_test
+A       clm/src/dyn_subgrid/test/dynLandunitArea_test/test_update_landunit_weights_one_gcell.pf
+A       clm/src/dyn_subgrid/test/dynLandunitArea_test/CMakeLists.txt
+A       clm/src/dyn_subgrid/test/dynLandunitArea_test/test_update_landunit_weights.pf
+A       clm/src/dyn_subgrid/test/dynVar_test
+A       clm/src/dyn_subgrid/test/dynVar_test/test_dynVarShared.F90
+A       clm/src/dyn_subgrid/test/dynVar_test/test_dynVarTimeInterp.pf
+A       clm/src/dyn_subgrid/test/dynVar_test/test_dynVarTimeUninterp.pf
+A       clm/src/dyn_subgrid/test/dynVar_test/CMakeLists.txt
+A       clm/src/dyn_subgrid/test/dynTimeInfo_test
+A       clm/src/dyn_subgrid/test/dynTimeInfo_test/test_dynTimeInfo.pf
+A       clm/src/dyn_subgrid/test/dynTimeInfo_test/CMakeLists.txt
+A       clm/src/dyn_subgrid/test/CMakeLists.txt
+A       clm/src/dyn_subgrid/test/dynInitColumns_test
+A       clm/src/dyn_subgrid/test/dynInitColumns_test/test_init_columns.pf
+A       clm/src/dyn_subgrid/test/dynInitColumns_test/CMakeLists.txt
+A       clm/src/dyn_subgrid/dynHarvestMod.F90
+A       clm/src/dyn_subgrid/dynPriorWeightsMod.F90
+A       clm/src/dyn_subgrid/dynpftFileMod.F90
+A       clm/src/dyn_subgrid/dynVarTimeInterpMod.F90
+A       clm/src/dyn_subgrid/dynCNDVMod.F90
+A       clm/src/dyn_subgrid/dynConsBiogeophysMod.F90
+A       clm/src/dyn_subgrid/dynInitColumnsMod.F90
+A       clm/src/unit_test_mocks/util_share/restUtilMod_mock.F90
+A       clm/src/unit_test_mocks/util_share/restUtilMod_mock.F90.in
+	
+List all existing files that have been modified, and describe the changes:
+	ALL files have been modified - see the general description for an
+	overview of what was done - the following files have not had their directories
+	changed - so the summary is below
+
+M       clm/bld/configure
+	- needed to account for change in filepath
+
+M       clm/bld/CLMBuildNamelist.pm
+M       clm/bld/namelist_files/namelist_definition_clm4_5.xml
+	- see namelist changes mentioned above
+
+M       clm/src/unit_test_mocks/util_share/clm_time_manager_mock.F90
+M       clm/src/unit_test_mocks/util_share/ncdio_var.F90
+M       clm/src/unit_test_mocks/util_share/ncdio_pio_mock.F90
+M       clm/src/unit_test_mocks/util_share/do_genf90
+M       clm/src/unit_test_mocks/util_share/CMakeLists.txt
+M       clm/src/unit_test_mocks/util_share/ncdio_pio_mock.F90.in
+M       clm/src/unit_test_mocks/main/histFileMod_mock.F90
+M       clm/src/CMakeLists.txt
+	- unit test changes needed to account for introduction of new data types and
+	directory structure
+
+M       clm/src/cpl/lnd_comp_esmf.F90
+M       clm/src/cpl/lnd_import_export.F90
+M       clm/src/cpl/lnd_comp_mct.F90
+	- coupling interface changes needed to account for introduction of new data types
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone yes
+    goldbach yes
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel yes
+    yellowstone_pgi   yes
+    yellowstone_gnu   yes
+    goldbach_nag      yes
+    goldbach_intel    yes
+    goldbach_pgi      yes
+
+    NOTE for goldbach_nag - four ED compare_hist tests fail with small bit for bit differences. 
+    In fact - looking more closely, these tests are also run for pgi and intel on goldbach - and
+    values for 	LITTER_IN and LITTER_OUT are 0. for those compilers but non-zero for nag.
+    With the refactoring code - those fields are again 0. for intel and pgi - but totally different
+    and non-zero for nag. Apparently, this is known problem that will get resolved in when new ED changes
+    are brount in
+
+    ERS_D_Mmpi-serial.1x1_brazil.ICLM45CNED.goldbach_nag.clm-edTest
+    ERS_D_Mmpi-serial.1x1_brazil.ICLM45CNED.goldbach_nag.clm-edTest
+    SMS_D_Mmpi-serial.5x5_amazon.ICLM45CNED.goldbach_nag.clm-edTest
+    SMS_D_Mmpi-serial.5x5_amazon.ICLM45CNED.goldbach_nag.clm-edTest
+
+
+  short tests (aux_clm_short) (generally these are NOT used when making a tag): N/A
+
+  tools testing: N/A
+
+CLM tag used for the baseline comparisons: clm4_5_1_r080
+
+Changes answers relative to baseline: No - BFB
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r080
 Originator(s):  erik (Erik)
 Date: Sat Aug 16 15:01:35 MDT 2014

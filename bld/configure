@@ -619,10 +619,6 @@ sub write_filepath_cesmbld
     my $clm_root      = $cfg_ref->get('clm_root');
     my $phys_name     = $phys->as_filename();
 
-    # Source root
-    my $srcdir = "$clm_root/src";
-    if ( ! &is_valid_directory( "$srcdir", %opts )  ) { die "** source directory does not exist: $srcdir\n"; }
-
     # User specified source directories.
     if ($usr_src  =~ /\S+/) {
        my @dirs = split ',', $usr_src;
@@ -633,21 +629,36 @@ sub write_filepath_cesmbld
          print $fh "../SourceMods/src.clm\n";
     }
 
-    my @dirs = ( "cpl", "util_share", "$phys_name/main", "$phys_name/biogeophys", "$phys_name/biogeochem");
-    if ($phys->as_long() >= $phys->as_long("clm4_5") ) {
-       push (@dirs, "$phys_name/dyn_subgrid");
-       push (@dirs, "$phys_name/biogeophys/ED");
-       push (@dirs, "$phys_name/biogeochem/ED");
-       push (@dirs, "$phys_name/main/ED");
-       push (@dirs, "$phys_name/main/spitfireSF");
+    if ($phys->as_long() == $phys->as_long("clm4_0") ) {
+	# source root
+	my $srcdir = "$clm_root/src_clm40";
+	if ( ! &is_valid_directory( "$srcdir", %opts )  ) { die "** source directory does not exist: $srcdir\n"; }
+
+	# source directories under root
+	my @dirs = ( "main", "biogeophys", "biogeochem");
+	foreach my $dir ( @dirs ) {
+	    if ( &is_valid_directory( "$srcdir/$dir", %opts )  ) {
+		print $fh "$srcdir/$dir\n";
+	    } else {
+		die "** source directory does not exist: $srcdir/$dir\n";
+	    }
+	}
+    } else {
+	# source root
+	my $srcdir = "$clm_root/src";
+	if ( ! &is_valid_directory( "$srcdir", %opts )  ) { die "** source directory does not exist: $srcdir\n"; }
+
+	# source directories under root
+	my @dirs = ( "main", "biogeophys", "biogeochem", "dyn_subgrid", "ED", "ED/main", "ED/biogeophys", "ED/biogeochem", "ED/fire", "utils", "cpl" );
+	foreach my $dir ( @dirs ) {
+	    if ( &is_valid_directory( "$srcdir/$dir", %opts )  ) {
+		print $fh "$srcdir/$dir\n";
+	    } else {
+		die "** source directory does not exist: $srcdir/$dir\n";
+	    }
+	}
     }
-    foreach my $dir ( @dirs ) {
-       if ( &is_valid_directory( "$srcdir/$dir", %opts )  ) {
-          print $fh "$srcdir/$dir\n";
-       } else {
-          die "** source directory does not exist: $srcdir/$dir\n";
-       }
-    }
+
 
     $fh->close;
 }
