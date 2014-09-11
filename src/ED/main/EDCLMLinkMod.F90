@@ -35,6 +35,8 @@ module EDCLMLinkMod
   public :: clm_leaf_area_profile
   public :: update_ed_history_variables
 
+  logical :: DEBUG = .false.  ! for debugging this module (EDCLMLinkMod.F90)
+
   ! ============================================================================
   ! 10/30/09: Created by Rosie Fisher
   ! ============================================================================
@@ -46,7 +48,7 @@ contains
        waterstate_vars, canopystate_vars, EDbio_vars, &
        carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
 
-    use EDGrowthFunctionsMod  , only: tree_lai
+    use EDGrowthFunctionsMod  , only: tree_lai, c_area
 
     implicit none
     type(bounds_type)           , intent(in)            :: bounds  ! clump bounds
@@ -77,9 +79,16 @@ contains
          ED_bareground => EDpft%ED_bareground         , &
 
          tlai          => canopystate_vars%tlai_patch , &
+         elai          => canopystate_vars%elai_patch , &
+         tsai          => canopystate_vars%tsai_patch , &
+         esai          => canopystate_vars%esai_patch , &
          htop          => canopystate_vars%htop_patch , &
          hbot          => canopystate_vars%hbot_patch   & 
          )
+
+      if (DEBUG) then
+         write(iulog,*) 'in ed clm link'
+      endif
 
       call clm_indices( bounds, geds_local )
 
@@ -101,6 +110,9 @@ contains
       ED_patch(bounds%begp:bounds%endp)      = 0 
       ED_bareground(bounds%begp:bounds%endp) = 0 
       tlai(bounds%begp:bounds%endp)          = 0.0_r8    
+      elai(firstsoilpatch(g))                = 0.0_r8
+      tsai(firstsoilpatch(g))                = 0.0_r8
+      esai(firstsoilpatch(g))                = 0.0_r8
       htop(bounds%begp:bounds%endp)          = 0.0_r8      
       hbot(bounds%begp:bounds%endp)          = 0.0_r8   
 
@@ -137,8 +149,8 @@ contains
                   !zero cohort-summed variables. 
                   currentPatch%total_canopy_area  = 0.0_r8
                   currentPatch%total_tree_area    = 0.0_r8
-                  currentPatch%lai    = 0.0_r8
-                  canopy_leaf_area    = 0.0_r8
+                  currentPatch%lai                = 0.0_r8
+                  canopy_leaf_area                = 0.0_r8
 
                   !update cohort quantitie s                                  
                   currentCohort => currentPatch%shortest
@@ -153,9 +165,12 @@ contains
                      end if
 
                      currentCohort%livecrootn = currentCohort%br * coarse_wood_frac / ecophyscon%leafcn(ft)
-                     currentCohort%b = currentCohort%balive+currentCohort%bdead+currentCohort%bstore
-                     currentCohort%treelai = tree_lai(currentCohort)
-                     canopy_leaf_area = canopy_leaf_area + currentCohort%treelai *currentCohort%c_area
+                     currentCohort%b          = currentCohort%balive+currentCohort%bdead+currentCohort%bstore
+                     currentCohort%treelai    = tree_lai(currentCohort)
+                     ! Why is currentCohort%c_area used and then reset in the
+                     ! following line?
+                     canopy_leaf_area         = canopy_leaf_area + currentCohort%treelai *currentCohort%c_area
+                     currentCohort%c_area     = c_area(currentCohort)
 
                      if(currentCohort%canopy_layer.eq.1)then
                         currentPatch%total_canopy_area = currentPatch%total_canopy_area + currentCohort%c_area
@@ -165,17 +180,21 @@ contains
                      endif
 
                      ! Check for erroneous zero values. 
-                     if(currentCohort%dbh <= 0_r8.or.currentCohort%n == 0._r8.or.currentCohort%pft == 0.or. &
-                          currentCohort%canopy_trim <= 0_r8.or.currentCohort%balive <= 0._r8)then
-                        write(iulog,*) 'ED: something is zero in clmedlink',currentCohort%indexnumber,currentCohort%dbh, &
-                             currentCohort%n,currentCohort%pft,currentCohort%canopy_trim,currentCohort%balive
+                     if(currentCohort%dbh <= 0._r8.or.currentCohort%n == 0._r8)then
+                        write(iulog,*) 'ED: dbh or n is zero in clmedlink', currentCohort%dbh,currentCohort%n
+                     endif
+                     if(currentCohort%pft == 0.or.currentCohort%canopy_trim <= 0._r8)then
+                       write(iulog,*) 'ED: PFT or trim is zero in clmedlink',currentCohort%pft,currentCohort%canopy_trim
+                     endif
+                     if(currentCohort%balive <= 0._r8)then
+                       write(iulog,*) 'ED: balive is zero in clmedlink',currentCohort%balive
                      endif
 
                      currentCohort => currentCohort%taller
 
                   enddo ! ends 'do while(associated(currentCohort))
 
-                  if (currentPatch%total_canopy_area-currentPatch%area > 0._r8) then
+                  if ( currentPatch%total_canopy_area-currentPatch%area > 0.000001_r8 ) then
                      write(iulog,*) 'canopy area bigger than area',currentPatch%total_canopy_area ,currentPatch%area
                      currentPatch%total_canopy_area = currentPatch%area
                   endif
@@ -244,7 +263,8 @@ contains
       end do !grid loop
 
       call update_ed_history_variables( bounds, geds_local, firstsoilpatch, EDbio_vars, &
-           carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
+           carbonstate_vars, nitrogenstate_vars, carbonflux_vars, &
+           canopystate_vars )
 
     end associate
 
@@ -252,7 +272,7 @@ contains
 
   ! ============================================================================
   subroutine update_ed_history_variables( bounds, geds_local , firstsoilpatch, EDbio_vars, &
-       carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
+       carbonstate_vars, nitrogenstate_vars, carbonflux_vars, canopystate_vars ) 
 
     use filterMod
 
@@ -267,14 +287,13 @@ contains
     type(carbonstate_type)      , intent(inout)         :: carbonstate_vars
     type(nitrogenstate_type)    , intent(inout)         :: nitrogenstate_vars
     type(carbonflux_type)       , intent(inout)         :: carbonflux_vars
+    type(canopystate_type)      , intent(inout)         :: canopystate_vars
 
     integer  :: G,p,ft
     integer  :: firstsoilpatch(bounds%begg:bounds%endg)
     real(r8) :: n_density   ! individual of cohort per m2.
 
     associate(&
-         ED_patch                       => EDpft%ED_patch                               , &
-         
          trimming                       => EDbio_vars%trimming_patch             , & ! Output:
          canopy_spread                  => EDbio_vars%canopy_spread_patch        , & ! Output:
          PFTbiomass                     => EDbio_vars%PFTbiomass_patch           , & ! Output:
@@ -302,21 +321,27 @@ contains
          seed_decay                     => EDbio_vars%seed_decay_patch           , & ! Output:
          seed_germination               => EDbio_vars%seed_germination_patch     , & ! Output:
 
+         ED_biomass                     => EDbio_vars%ED_biomass_patch           , & ! InOut:
+         ED_bdead                       => EDbio_vars%ED_bdead_patch             , & ! InOut:
+         ED_bleaf                       => EDbio_vars%ED_bleaf_patch             , & ! InOut:
+         ED_balive                      => EDbio_vars%ED_balive_patch            , & ! InOut:
+         ED_bstore                      => EDbio_vars%ED_bstore_patch            , & ! InOut:
+         phen_cd_status                 => EDbio_vars%phen_cd_status_patch       , & ! InOut:
+ 
+         tlai                           => canopystate_vars%tlai_patch           , & ! InOut:
+         elai                           => canopystate_vars%elai_patch           , & ! InOut:
+         tsai                           => canopystate_vars%tsai_patch           , & ! InOut:
+         esai                           => canopystate_vars%esai_patch           , & ! InOut:
+
          gpp                            => carbonflux_vars%gpp_patch             , & ! Output: 
-         npp                            => carbonflux_vars%npp_patch             , & ! Output:
-         deadstemc                      => carbonstate_vars%deadstemc_patch      , & ! Output:
-         stor_vegc                      => carbonstate_vars%storvegc_patch       , & ! Output:
-         leafc                          => carbonstate_vars%leafc_patch          , & ! Output:
-         totvegc                        => carbonstate_vars%totvegc_patch        , & ! Output:
-         dispvegc                       => carbonstate_vars%dispvegc_patch       , & ! Output:
-         livestemn                      => nitrogenstate_vars%livestemn_patch      & ! Output:
+         npp                            => carbonflux_vars%npp_patch               & ! Output:
          )
 
       ! ============================================================================
       ! Zero the whole variable so we dont have ghost values when patch number declines.
       ! ============================================================================
 
-      trimming(:)             = 1.0_r8 !the default value of this is 1.0, so making it 0.0 means that the output is confusing. 
+      trimming(:)             = 1.0_r8 !the default value of this is 1.0, making it 0.0 means that the output is confusing. 
       canopy_spread(:)        = 0.0_r8 
       PFTbiomass(:,:)         = 0.0_r8
       PFTleafbiomass(:,:)     = 0.0_r8 
@@ -324,10 +349,8 @@ contains
       PFTnindivs(:,:)         = 0.0_r8
       gpp(:)                  = 0.0_r8
       npp(:)                  = 0.0_r8  
-      deadstemc(:)            = 0.0_r8         
       area_plant(:)           = 0.0_r8       
       area_trees(:)           = 0.0_r8        
-      livestemn(:)            = 0.0_r8           
       nesterov_fire_danger(:) = 0.0_r8
       spitfire_ROS(:)         = 0.0_r8
       effect_wspeed           = 0.0_r8
@@ -345,10 +368,12 @@ contains
       seeds_in(:)             = 0.0_r8
       seed_decay(:)           = 0.0_r8
       seed_germination(:)     = 0.0_r8
-      leafc(:)                = 0.0_r8
-      dispvegc(:)             = 0.0_r8
-      stor_vegc(:)            = 0.0_r8
-      totvegc(:)              = 0.0_r8
+      ED_biomass(:)           = 0.0_r8
+      ED_bdead(:)             = 0.0_r8
+      ED_bleaf(:)             = 0.0_r8
+      ED_bstore(:)            = 0.0_r8
+      ED_balive(:)            = 0.0_r8
+      phen_cd_status(:)       = 2
 
       do g = bounds%begg,bounds%endg
          currentSite => geds_local(g)%spnt
@@ -366,10 +391,8 @@ contains
             PFTnindivs(firstsoilpatch(g),:)         = 0.0_r8
             gpp(firstsoilpatch(g))                  = 0.0_r8
             npp(firstsoilpatch(g))                  = 0.0_r8  
-            deadstemc(firstsoilpatch(g))            = 0.0_r8         
             area_plant(firstsoilpatch(g))           = 0.0_r8       
             area_trees(firstsoilpatch(g))           = 0.0_r8        
-            livestemn(firstsoilpatch(g))            = 0.0_r8           
             nesterov_fire_danger(firstsoilpatch(g)) = 0.0_r8
             spitfire_ROS(firstsoilpatch(g))         = 0.0_r8
             TFC_ROS(firstsoilpatch(g))              = 0.0_r8
@@ -387,11 +410,19 @@ contains
             seeds_in(firstsoilpatch(g))             = 0.0_r8
             seed_decay(firstsoilpatch(g))           = 0.0_r8
             seed_germination(firstsoilpatch(g))     = 0.0_r8
-            leafc(firstsoilpatch(g))                = 0.0_r8
-            dispvegc(firstsoilpatch(g))             = 0.0_r8
-            stor_vegc(firstsoilpatch(g))            = 0.0_r8
-            totvegc(firstsoilpatch(g))              = 0.0_r8
-
+            ED_biomass(firstsoilpatch(g))           = 0.0_r8
+            ED_balive(firstsoilpatch(g))            = 0.0_r8
+            ED_bdead(firstsoilpatch(g))             = 0.0_r8
+            ED_bstore(firstsoilpatch(g))            = 0.0_r8
+            ED_bleaf(firstsoilpatch(g))             = 0.0_r8
+            elai(firstsoilpatch(g))                 = 0.0_r8
+            tlai(firstsoilpatch(g))                 = 0.0_r8
+            tsai(firstsoilpatch(g))                 = 0.0_r8
+            esai(firstsoilpatch(g))                 = 0.0_r8
+            ED_bleaf(firstsoilpatch(g))             = 0.0_r8
+            sum_fuel(firstsoilpatch(g))             = 0.0_r8
+            !this should probably be site level. 
+            phen_cd_status(firstsoilpatch(g))       = currentSite%status
 
             currentPatch => currentSite%oldest_patch
             do while(associated(currentPatch))
@@ -403,12 +434,16 @@ contains
                   do while(associated(currentCohort))
                      !accumulate into history variables. 
                      ft                    = currentCohort%pft
-                     n_density             = currentCohort%n/currentPatch%area
-                     leafc(p)              = leafc(p)              + n_density * currentCohort%bl 
-                     stor_vegc(p)          = stor_vegc(p)          + n_density * currentCohort%bstore 
-                     totvegc(p)            = totvegc(p)            + n_density * currentCohort%b 
-                     livestemn(p)          = livestemn(p)          + n_density * currentCohort%livestemn
-                     deadstemc(p)          = deadstemc(p)          + n_density * currentCohort%bdead 
+                     if(currentPatch%area.gt.0._r8)then
+                        n_density             = currentCohort%n/currentPatch%area
+                     else
+                        n_density             = 0.0_r8
+                     endif
+                     ED_bleaf(p)           = ED_bleaf(p)           + n_density * currentCohort%bl 
+                     ED_bstore(p)          = ED_bstore(p)          + n_density * currentCohort%bstore 
+                     ED_biomass(p)         = ED_biomass(p)         + n_density * currentCohort%b 
+                     ED_bdead(p)           = ED_bdead(p)           + n_density * currentCohort%bdead 
+                     ED_balive(p)          = ED_balive(p)          + n_density * currentCohort%balive
                      npp(p)                = npp(p)                + n_density * currentCohort%npp 
                      gpp(p)                = gpp(p)                + n_density * currentCohort%gpp   
                      PFTbiomass(p,ft)      = PFTbiomass(p,ft)      + n_density * currentCohort%b
@@ -442,6 +477,7 @@ contains
                   canopy_spread(p)        = currentPatch%spread(1) 
                   area_plant(p)           = currentPatch%total_canopy_area /currentPatch%area
                   area_trees(p)           = currentPatch%total_tree_area   /currentPatch%area
+                  phen_cd_status(p)       = currentSite%status
                   if(associated(currentPatch%tallest))then
                      trimming(p)             = currentPatch%tallest%canopy_trim                
                   else
@@ -499,7 +535,7 @@ contains
   ! ============================================================================
   subroutine clm_leaf_area_profile( cs_t, waterstate_vars, canopystate_vars )
 
-    use EDGrowthFunctionsMod  , only: tree_lai, c_area 
+    use EDGrowthFunctionsMod  , only: tree_lai, tree_sai, c_area 
 
     implicit none
 
@@ -587,7 +623,7 @@ contains
             currentCohort => currentPatch%shortest
             do while(associated(currentCohort)) 
                currentCohort%treelai = tree_lai(currentCohort)    
-               currentCohort%treesai = 0.0_r8 !FIX(RF,032414)
+               currentCohort%treesai = tree_sai(currentCohort)
                currentCohort%lai =  currentCohort%treelai *currentCohort%c_area/currentPatch%canopy_area 
                currentCohort%sai =  currentCohort%treesai *currentCohort%c_area/currentPatch%canopy_area  
                !Calculate the LAI plus SAI in each canopy storey. 
@@ -699,14 +735,15 @@ contains
 
             else ! smooth leaf distribution  
                !Go through all cohorts and add their leaf area and canopy area to the accumulators. 
-               currentPatch%tlai_profile         = 0._r8
-               currentPatch%tsai_profile         = 0._r8  
-               currentPatch%elai_profile         = 0._r8
-               currentPatch%esai_profile         = 0._r8  
-               currentPatch%canopy_area_profile  = 0._r8       
-               currentPatch%ncan(:,:)            = 0;
-               currentPatch%nrad(:,:)            = 0;
+               currentPatch%tlai_profile                = 0._r8
+               currentPatch%tsai_profile                = 0._r8  
+               currentPatch%elai_profile                = 0._r8
+               currentPatch%esai_profile                = 0._r8  
+               currentPatch%canopy_area_profile(:,:,:)  = 0._r8       
+               currentPatch%ncan(:,:)                   = 0 
+               currentPatch%nrad(:,:)                   = 0 
                currentCohort => currentPatch%shortest
+
                do while(associated(currentCohort))   
                   L = currentCohort%canopy_layer
                   ft = currentCohort%pft 
@@ -719,7 +756,7 @@ contains
                      fleaf = 0._r8
                      write(iulog,*) 'no stem or leaf area' ,currentCohort%pft,currentCohort%bl, &
                           currentCohort%balive,currentCohort%treelai,currentCohort%treesai,currentCohort%dbh, &
-                          currentCohort%n,currentCohort%status
+                          currentCohort%n,currentCohort%status_coh
                   endif
                   currentPatch%ncan(L,ft) = max(currentPatch%ncan(L,ft),currentCohort%NV)  
                   currentPatch%nrad(L,ft) = currentPatch%ncan(L,ft)  !fudge - this needs to be altered for snow burial
@@ -801,14 +838,17 @@ contains
                        (1.0_r8-fleaf) * currentCohort%c_area/currentPatch%total_canopy_area
                   currentPatch%elai_profile(L,ft,iv) =  currentPatch%tlai_profile(L,ft,iv) *fraction_exposed
                   currentPatch%esai_profile(L,ft,iv) =  currentPatch%tsai_profile(L,ft,iv) *fraction_exposed
-                  currentPatch%canopy_area_profile(L,ft,iv) =  currentPatch%canopy_area_profile(L,ft,iv) + &
-                       currentCohort%c_area/currentPatch%total_canopy_area
+                  currentPatch%canopy_area_profile(L,ft,iv) = min(1.0_r8,currentPatch%canopy_area_profile(L,ft,iv) + &
+                  currentCohort%c_area/currentPatch%total_canopy_area)
 
-                  if(currentCohort%dbh <= 0_r8.or.currentCohort%n == 0._r8.or.currentCohort%pft == 0.or. &
-                       currentCohort%bl <= 0_r8.or.currentCohort%balive <= 0._r8)then
-                     write(iulog,*) 'ED: something is zero in clap, clmedlink',currentCohort%indexnumber, &
-                          currentCohort%dbh,currentCohort%n,currentCohort%pft,currentCohort%canopy_trim, &
-                          currentCohort%balive
+                  if(currentCohort%dbh <= 0._r8.or.currentCohort%n == 0._r8)then
+                     write(iulog,*) 'ED: dbh or n is zero in clmedlink', currentCohort%dbh,currentCohort%n
+                  endif
+                  if(currentCohort%pft == 0.or.currentCohort%canopy_trim <= 0._r8)then
+                     write(iulog,*) 'ED: PFT or trim is zero in clmedlink',currentCohort%pft,currentCohort%canopy_trim
+                  endif
+                  if(currentCohort%balive <= 0._r8.or.currentCohort%bl < 0._r8)then
+                     write(iulog,*) 'ED: balive is zero in clmedlink',currentCohort%balive,currentCohort%bl
                   endif
 
                   currentCohort => currentCohort%taller
@@ -871,10 +911,10 @@ contains
 
                endif
 
-               elai(p) = elai_temp
-               tlai(p) = tlai_temp
-               esai(p) = esai_temp
-               tsai(p) = tsai_temp
+               elai(p) = max(0.1_r8,elai_temp)
+               tlai(p) = max(0.1_r8,tlai_temp)
+               esai(p) = max(0.1_r8,esai_temp)
+               tsai(p) = max(0.1_r8,tsai_temp)
 
                ! write(iulog,*) 'elai',elai(p),tlai(p),tlai_temp,elai_temp
                ! write(iulog,*) 'esai',esai(p),tsai(p)
@@ -902,6 +942,19 @@ contains
                      end do !iv
                   enddo !ft
 
+                  if ( L .eq. 1 .and. abs(sum(currentPatch%canopy_area_profile(1,1:numpft_ed,1))) < 0.99999  &
+                       .and. currentPatch%NCL_p .gt. 1 ) then
+                          write(iulog,*) 'canopy area too small',sum(currentPatch%canopy_area_profile(1,1:numpft_ed,1))
+                          write(iulog,*) 'cohort areas', currentPatch%canopy_area_profile(1,1:numpft_ed,:)
+                  endif
+
+                  if (L .eq. 1 .and. currentPatch%NCL_p .gt. 1 .and.  &
+                       abs(sum(currentPatch%canopy_area_profile(1,1:numpft_ed,1))) < 0.99999) then
+                          write(iulog,*) 'not enough area in the top canopy', &
+                              sum(currentPatch%canopy_area_profile(L,1:numpft_ed,1)), &
+                              currentPatch%canopy_area_profile(L,1:numpft_ed,1)
+                  endif
+
                   if(abs(sum(currentPatch%canopy_area_profile(L,1:numpft_ed,1))) > 1.00001)then
                      write(iulog,*) 'canopy-area-profile wrong',sum(currentPatch%canopy_area_profile(L,1:numpft_ed,1)), &
                           
@@ -912,10 +965,14 @@ contains
 
                      do while(associated(currentCohort))
 
-                        write(iulog,*) 'cohorts',currentCohort%pft,currentCohort%dbh,currentCohort%c_area, &
-                             currentPatch%area,currentCohort%canopy_layer
+                     if(currentCohort%canopy_layer==1)then
+                        write(iulog,*) 'cohorts',currentCohort%dbh,currentCohort%c_area, &
+                             currentPatch%total_canopy_area,currentPatch%area,currentPatch%canopy_area
+                        write(iulog,*) 'fracarea',currentCohort%pft, currentCohort%c_area/currentPatch%total_canopy_area
+                     endif
 
                         currentCohort => currentCohort%taller  
+
                      enddo !currentCohort
                   endif
                enddo ! loop over L

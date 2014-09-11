@@ -126,8 +126,9 @@ contains
    end subroutine BeginWaterBalance
 
    !-----------------------------------------------------------------------
-   subroutine BalanceCheck(bounds, num_do_smb_c, filter_do_smb_c, &
-        atm2lnd_vars, solarabs_vars, waterflux_vars, waterstate_vars, energyflux_vars) 
+   subroutine BalanceCheck( bounds, num_do_smb_c, filter_do_smb_c, &
+        atm2lnd_vars, solarabs_vars, waterflux_vars, waterstate_vars, energyflux_vars, &
+        canopystate_vars ) 
      !
      ! !DESCRIPTION:
      ! This subroutine accumulates the numerical truncation errors of the water
@@ -144,12 +145,14 @@ contains
      ! error = abs(precipitation - change of water storage - evaporation - runoff)
      !
      ! !USES:
-     use clm_varcon       , only : spval
-     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-     use column_varcon    , only : icol_road_perv, icol_road_imperv
-     use landunit_varcon  , only : istice_mec, istdlak, istsoil,istcrop,istwet
-     use clm_varctl       , only : glc_dyn_runoff_routing, create_glacier_mec_landunit
-     use clm_time_manager , only : get_step_size, get_nstep
+     use clm_varcon        , only : spval
+     use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
+     use column_varcon     , only : icol_road_perv, icol_road_imperv
+     use landunit_varcon   , only : istice_mec, istdlak, istsoil,istcrop,istwet
+     use clm_varctl        , only : glc_dyn_runoff_routing, create_glacier_mec_landunit
+     use clm_time_manager  , only : get_step_size, get_nstep
+     use clm_initializeMod , only : surfalb_vars
+     use CanopyStateType   , only : canopystate_type
      use subgridAveMod
      !
      ! !ARGUMENTS:
@@ -161,6 +164,7 @@ contains
      type(waterflux_type)  , intent(inout) :: waterflux_vars
      type(waterstate_type) , intent(inout) :: waterstate_vars
      type(energyflux_type) , intent(inout) :: energyflux_vars
+     type(canopystate_type), intent(inout) :: canopystate_vars
      !
      ! !LOCAL VARIABLES:
      integer  :: p,c,l,g,fc                             ! indices
@@ -244,6 +248,18 @@ contains
           errsol                  =>    energyflux_vars%errsol_patch            , & ! Output: [real(r8) (:)   ]  solar radiation conservation error (W/m**2)
           errseb                  =>    energyflux_vars%errseb_patch            , & ! Output: [real(r8) (:)   ]  surface energy conservation error (W/m**2)
           errlon                  =>    energyflux_vars%errlon_patch            , & ! Output: [real(r8) (:)   ]  longwave radiation conservation error (W/m**2)
+
+          fabd                    =>    surfalb_vars%fabd_patch                 , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit direct flux
+          fabi                    =>    surfalb_vars%fabi_patch                 , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit indirect flux
+          elai                    =>    canopystate_vars%elai_patch             , & ! Input:  [real(r8) (:,:)]  
+          esai                    =>    canopystate_vars%esai_patch             , & ! Input:  [real(r8) (:,:)]  
+
+          albd                    =>    surfalb_vars%albd_patch                 , & ! Output: [real(r8) (:,:)]  surface albedo (direct)
+          albi                    =>    surfalb_vars%albi_patch                 , & ! Output: [real(r8) (:,:)]  surface albedo (diffuse)
+          ftdd                    =>    surfalb_vars%ftdd_patch                , & ! Input:  [real(r8) (:,:)]  down direct flux below canopy per unit direct flux
+          ftid                    =>    surfalb_vars%ftid_patch                , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit direct flux
+          ftii                    =>    surfalb_vars%ftii_patch                 , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit diffuse flux
+
           netrad                  =>    energyflux_vars%netrad_patch              & ! Output: [real(r8) (:)   ]  net radiation (positive downward) (W/m**2)
           )
 
@@ -544,7 +560,7 @@ contains
        if ( found  .and. (nstep > 2) ) then
           write(iulog,*)'BalanceCheck: solar radiation balance error (W/m2)'
           write(iulog,*)'nstep         = ',nstep
-          write(iulog,*)'errsol        = ',errsol(p)
+          write(iulog,*)'errsol        = ',errsol(indexp)
           write(iulog,*)'fsa           = ',fsa(indexp)
           write(iulog,*)'fsr           = ',fsr(indexp)
           write(iulog,*)'forc_solad(1) = ',forc_solad(indexg,1)
@@ -589,17 +605,30 @@ contains
        end do
        if ( found  .and. (nstep > 2) ) then
           write(iulog,*)'BalanceCheck: surface flux energy balance error (W/m2)'
-          write(iulog,*)'nstep          = ',nstep
-          write(iulog,*)'errseb         = ',errseb(indexp)
-          write(iulog,*)'sabv           = ',sabv(indexp)
-          write(iulog,*)'sabg           = ',sabg(indexp), ((1._r8- frac_sno(indexc))*sabg_soil(indexp) + &
+          write(iulog,*)'nstep          = ' ,nstep
+          write(iulog,*)'errseb         = ' ,errseb(indexp)
+          write(iulog,*)'sabv           = ' ,sabv(indexp)
+
+          write(iulog,*)'sabg           = ' ,sabg(indexp), ((1._r8- frac_sno(indexc))*sabg_soil(indexp) + &
                frac_sno(indexc)*sabg_snow(indexp)),sabg_chk(indexp)
-          write(iulog,*)'eflx_lwrad_net = ',eflx_lwrad_net(indexp)
-          write(iulog,*)'eflx_sh_tot    = ',eflx_sh_tot(indexp)
-          write(iulog,*)'eflx_lh_tot    = ',eflx_lh_tot(indexp)
-          write(iulog,*)'eflx_soil_grnd = ',eflx_soil_grnd(indexp)
+
+          write(iulog,*)'forc_tot      = '  ,forc_solad(indexg,1) + forc_solad(indexg,2) + &
+               forc_solai(indexg,1) + forc_solai(indexg,2)
+
+          write(iulog,*)'eflx_lwrad_net = ' ,eflx_lwrad_net(indexp)
+          write(iulog,*)'eflx_sh_tot    = ' ,eflx_sh_tot(indexp)
+          write(iulog,*)'eflx_lh_tot    = ' ,eflx_lh_tot(indexp)
+          write(iulog,*)'eflx_soil_grnd = ' ,eflx_soil_grnd(indexp)
+          write(iulog,*)'fsa fsr = '        ,fsa(indexp),    fsr(indexp)
+          write(iulog,*)'fabd fabi = '      ,fabd(indexp,:), fabi(indexp,:)
+          write(iulog,*)'albd albi = '      ,albd(indexp,:), albi(indexp,:)
+          write(iulog,*)'ftii ftdd ftid = ' ,ftii(indexp,:), ftdd(indexp,:),ftid(indexp,:)
+          write(iulog,*)'elai esai = '      ,elai(indexp),   esai(indexp)      
           write(iulog,*)'clm model is stopping'
-          call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(__FILE__, __LINE__))
+          !
+          ! FIX(RF, 082914) - commented out in ED branch
+          !
+          ! call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(__FILE__, __LINE__))
        end if
 
        ! Soil energy balance check
@@ -619,7 +648,10 @@ contains
              write(iulog,*)'nstep         = ',nstep
              write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
              write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+             !
+             ! FIX(RF, 082914) - commented out in ED branch
+             !
+             ! call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
           end if
        end if
 

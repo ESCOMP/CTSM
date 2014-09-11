@@ -217,7 +217,7 @@ contains
     real(r8) :: cohort_biomass_store  ! remembers the biomass in the cohort for balance checking
     !-----------------------------------------------------------------------
 
-    small_no = 0.00000000001_r8       ! Obviously, this is arbitrary. 
+    small_no = 0.0000000000_r8  ! Obviously, this is arbitrary.  RF - changed to zero
 
     currentPatch => site_in%youngest_patch
     do while(associated(currentPatch))
@@ -228,9 +228,42 @@ contains
                currentPatch%patchno,currentPatch%area
        endif
 
-       !find the derivatives of the growth and litter processes. 
+       ! Find the derivatives of the growth and litter processes. 
        call canopy_derivs(currentPatch)
-       call non_canopy_derivs(currentPatch, temperature_vars, soilstate_vars, waterstate_vars)
+       
+       ! Update Canopy Biomass Pools
+       currentCohort => currentPatch%shortest
+       do while(associated(currentCohort)) 
+
+          cohort_biomass_store  = (currentCohort%balive+currentCohort%bdead+currentCohort%bstore)
+          currentCohort%dbh    = max(small_no,currentCohort%dbh    + currentCohort%ddbhdt    * udata%deltat )
+          currentCohort%balive = currentCohort%balive + currentCohort%dbalivedt * udata%deltat 
+          currentCohort%bdead  = max(small_no,currentCohort%bdead  + currentCohort%dbdeaddt  * udata%deltat )
+          currentCohort%bstore = currentCohort%bstore + currentCohort%dbstoredt * udata%deltat 
+
+          if( (currentCohort%balive+currentCohort%bdead+currentCohort%bstore)*currentCohort%n<0._r8)then
+            write(iulog,*) 'biomass is negative', currentCohort%n,currentCohort%balive, &
+                 currentCohort%bdead,currentCohort%bstore
+          endif
+
+          if(abs((currentCohort%balive+currentCohort%bdead+currentCohort%bstore+udata%deltat*(currentCohort%md+ &
+               currentCohort%seed_prod)-cohort_biomass_store)-currentCohort%npp_acc) > 1e-8_r8)then
+             write(iulog,*) 'issue with c balance in integration', abs(currentCohort%balive+currentCohort%bdead+ &
+                  currentCohort%bstore+udata%deltat* &
+                 (currentCohort%md+currentCohort%seed_prod)-cohort_biomass_store-currentCohort%npp_acc)
+          endif  
+          !do we need these any more?        
+          currentCohort%npp_acc  = 0.0_r8
+          currentCohort%gpp_acc  = 0.0_r8
+          currentCohort%resp_acc = 0.0_r8
+          
+          call allocate_live_biomass(currentCohort)
+  
+          currentCohort => currentCohort%taller
+
+       enddo
+      
+       call non_canopy_derivs( currentPatch, temperature_vars, soilstate_vars, waterstate_vars )
 
        !update state variables simultaneously according to derivatives for this time period. 
        do p = 1,numpft_ed
@@ -257,50 +290,36 @@ contains
 
        do c = 1,ncwd
           if(currentPatch%cwd_ag(c)<small_no)then
-            write(iulog,*) 'negative CWD_AG', currentPatch%cwd_ag(c)
+            write(iulog,*) 'negative CWD_AG', currentPatch%cwd_ag(c),Site_in%lat,site_In%lon
             currentPatch%cwd_ag(c) = small_no
           endif
           if(currentPatch%cwd_bg(c)<small_no)then
-            write(iulog,*) 'negative CWD_BG', currentPatch%cwd_bg(c)
+            write(iulog,*) 'negative CWD_BG', currentPatch%cwd_bg(c),Site_in%lat,Site_in%lon
             currentPatch%cwd_bg(c) = small_no
           endif
        enddo
 
        do p = 1,numpft_ed
           if(currentPatch%leaf_litter(p)<small_no)then
-            write(iulog,*) 'negative leaf litter', currentPatch%leaf_litter(p)
+            write(iulog,*) 'negative leaf litter', currentPatch%leaf_litter(p),Site_in%lat,Site_in%lon
             currentPatch%leaf_litter(p) = small_no
           endif
           if(currentPatch%root_litter(p)<small_no)then
-            write(iulog,*) 'negative root litter', currentPatch%root_litter(p)
+               write(iulog,*) 'negative root litter', currentPatch%root_litter(p), &
+               currentPatch%droot_litter_dt(p)* udata%deltat, &
+               Site_in%lat,Site_in%lon
             currentPatch%root_litter(p) = small_no
           endif
        enddo
 
+     
+       ! update cohort number. This needs to happen after the CWD_input and seed_input calculations as they 
+       ! assume the pre-mortality currentCohort%n. 
        currentCohort => currentPatch%shortest
        do while(associated(currentCohort)) 
+         currentCohort%n = max(small_no,currentCohort%n + currentCohort%dndt * udata%deltat )  
+         currentCohort => currentCohort%taller
 
-          cohort_biomass_store  = (currentCohort%balive+currentCohort%bdead+currentCohort%bstore)
-          currentCohort%n      = max(small_no,currentCohort%n      + currentCohort%dndt      * udata%deltat )
-          currentCohort%dbh    = max(small_no,currentCohort%dbh    + currentCohort%ddbhdt    * udata%deltat )
-          currentCohort%balive = currentCohort%balive + currentCohort%dbalivedt * udata%deltat 
-          currentCohort%bdead  = max(small_no,currentCohort%bdead  + currentCohort%dbdeaddt  * udata%deltat )
-          currentCohort%bstore = currentCohort%bstore + currentCohort%dbstoredt * udata%deltat 
-
-          if(abs((currentCohort%balive+currentCohort%bdead+currentCohort%bstore+udata%deltat*(currentCohort%md+ &
-               currentCohort%seed_prod)-cohort_biomass_store)-currentCohort%npp_acc) > 1e-8_r8)then
-             write(iulog,*) 'issue with c balance in integration', abs(currentCohort%balive+currentCohort%bdead+ &
-                  currentCohort%bstore+udata%deltat* &
-                 (currentCohort%md+currentCohort%seed_prod)-cohort_biomass_store-currentCohort%npp_acc)
-          endif  
-          !do we need these any more?        
-          currentCohort%npp_acc  = 0.0_r8
-          currentCohort%gpp_acc  = 0.0_r8
-          currentCohort%resp_acc = 0.0_r8
-          
-          call allocate_live_biomass(currentCohort)
-  
-          currentCohort => currentCohort%taller
 
        enddo
 
@@ -343,7 +362,9 @@ contains
        if(currentSite%istheresoil == 1)then
         
           call canopy_spread(currentSite)
+          call total_balance_check(currentSite,6)
           call canopy_structure(currentSite)
+          call total_balance_check(currentSite,7)
 
           currentPatch => currentSite%oldest_patch
           do while(associated(currentPatch))
@@ -363,7 +384,7 @@ contains
              if(currentPatch%countcohorts < 1)then
                 !write(iulog,*) 'ED: calling recruitment for no cohorts',currentPatch%siteptr%clmgcell,currentPatch%patchno
                 !call recruitment(1,currentPatch)
-                write(iulog,*) 'patch empty',currentPatch%area,currentPatch%age
+               ! write(iulog,*) 'patch empty',currentPatch%area,currentPatch%age
              endif
 
              currentPatch => currentPatch%younger    
@@ -371,8 +392,9 @@ contains
           enddo
 
           ! FIX(RF,032414). This needs to be monthly, not annual
-          if((udata%time_period == N_SUB) .and. .not. is_restart () )then 
-            call trim_canopy(currentSite)  
+          if((udata%time_period == N_SUB-1))then 
+             write(iulog,*) 'calling trim canopy' 
+             call trim_canopy(currentSite)  
           endif
 
        endif
@@ -441,16 +463,17 @@ contains
        enddo !end patch loop
 
     endif
- 
+
     total_stock     = biomass_stock + seed_stock +litter_stock
     change_in_stock = total_stock - currentSite%old_stock  
     net_flux        = currentSite%flux_in - currentSite%flux_out
     error           = abs(net_flux - change_in_stock)   
 
-    if(abs(error)>10e-12)then
+    if ( abs(error) > 10e-6 ) then
        write(iulog,*) 'total error:in,out,net,dstock,error',call_index, currentSite%flux_in, & 
             currentSite%flux_out,net_flux,change_in_stock,error
        write(iulog,*) 'biomass,litter,seeds', biomass_stock,litter_stock,seed_stock
+       write(iulog,*) 'lat lon',currentSite%lat,currentSite%lon
     endif
 
     currentSite%flux_in   = 0.0_r8

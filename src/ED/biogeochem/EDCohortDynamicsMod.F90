@@ -73,7 +73,7 @@ contains
     new_cohort%siteptr      => patchptr%siteptr
     new_cohort%patchptr     => patchptr
     new_cohort%pft          = pft     
-    new_cohort%status       = status
+    new_cohort%status_coh   = status
     new_cohort%n            = nn
     new_cohort%hite         = hite
     new_cohort%dbh          = dbh
@@ -88,6 +88,10 @@ contains
          .or.new_cohort%canopy_trim <= 0_r8.or.new_cohort%balive <= 0._r8)then
        write(iulog,*) 'ED: something is zero in create_cohort',new_cohort%indexnumber,new_cohort%dbh,new_cohort%n, &
        new_cohort%pft,new_cohort%canopy_trim,new_cohort%balive
+    endif
+
+    if(new_cohort%patchptr%siteptr%status==2)then
+      new_cohort%laimemory = 0.0_r8
     endif
 
     ! Calculate live biomass allocation
@@ -139,28 +143,55 @@ contains
 
     type (cohort), pointer                :: currentCohort
     real(r8)  :: leaf_frac               ! fraction of live biomass in leaves
+    real(r8)  :: ideal_balive            ! theoretical ideal (root and stem) biomass for deciduous trees with leaves off. 
+                                         ! accounts for the fact that live biomass may decline in the off-season, making leaf_memory unrealistic.    
+    real(r8)  :: ratio_balive            ! ratio between root+shoot biomass now and root+shoot biomass when leaves fell off. 
+                                            
     integer   :: ft                      ! functional type
 
     currentCohort       => cc_p
     ft = currentcohort%pft
     leaf_frac = 1.0_r8/(1.0_r8 + EDecophyscon%sapwood_ratio(ft) * currentcohort%hite + ecophyscon%froot_leaf(ft))     
-    currentcohort%bl = currentcohort%balive*leaf_frac    
-    
-    if(currentcohort%status == 1.and.ecophyscon%evergreen(ft) /= 1)then !no leaves
-       currentcohort%bl = 0.0_r8
-    endif
+
+    currentcohort%bl = currentcohort%balive*leaf_frac  
+    ratio_balive = 1.0_r8
+    !for deciduous trees, there are no leaves  
+
     if(ecophyscon%evergreen(ft) == 1)then
        currentcohort%laimemory = 0._r8
-       currentcohort%status = 2
+       currentcohort%status_coh    = 2      
     endif    
 
+    !diagnore the root and stem biomass from the functional balance hypothesis. This is used when the leaves are 
+    !fully on. 
     currentcohort%br  = ecophyscon%froot_leaf(ft) * (currentcohort%balive + currentcohort%laimemory) * leaf_frac
     currentcohort%bsw = EDecophyscon%sapwood_ratio(ft) * currentcohort%hite *(currentcohort%balive + &
-         currentcohort%laimemory)*leaf_frac 
+      currentcohort%laimemory)*leaf_frac 
+
+    if(currentcohort%status_coh == 1.and.ecophyscon%evergreen(ft) /= 1)then !no leaves
+    !the purpose of this section is to figure out the root and stem biomass when the leaves are off
+    !at this point, we know the former leaf mass (laimemory) and the current alive mass
+    !because balive may decline in the off-season, we need to adjust the root and stem biomass that are predicted
+    !from the laimemory, for the fact that we now might not have enough live biomass to support the hypothesized root mass
+    !thus, we use 'ratio_balive' to adjust br and bsw. Apologies that this is so complicated! RF
+       currentcohort%bl       = 0.0_r8
+       ideal_balive            = currentcohort%laimemory * ecophyscon%froot_leaf(ft) +  &
+       currentcohort%laimemory*  EDecophyscon%sapwood_ratio(ft) * currentcohort%hite
+       currentcohort%br  = ecophyscon%froot_leaf(ft) * (ideal_balive + currentcohort%laimemory) * leaf_frac
+       currentcohort%bsw = EDecophyscon%sapwood_ratio(ft) * currentcohort%hite *(ideal_balive + &
+       currentcohort%laimemory)*leaf_frac 
+     
+       ratio_balive           = currentcohort%balive / ideal_balive
+       currentcohort%br       = currentcohort%br    * ratio_balive
+       currentcohort%bsw      = currentcohort%bsw   * ratio_balive
+    endif
+
     
     if(abs(currentcohort%balive -currentcohort%bl- currentcohort%br - currentcohort%bsw)>1e-12)then
        write(iulog,*) 'issue with carbon allocation in create_cohort',&
-       currentcohort%balive -currentcohort%bl- currentcohort%br - currentcohort%bsw
+       currentcohort%balive -currentcohort%bl- currentcohort%br - currentcohort%bsw, currentcohort%status_coh,currentcohort%balive
+       write(iulog,*) 'actual vs predicted balive',ideal_balive,currentcohort%balive ,ratio_balive,leaf_frac
+       write(iulog,*) 'leaf,root,stem',currentcohort%bl,currentcohort%br,currentcohort%bsw
     endif
     currentCohort%b   = currentCohort%bdead + currentCohort%balive
 
@@ -198,7 +229,7 @@ contains
     currentCohort%indexnumber        = 999 ! unique number for each cohort. (within clump?)
     currentCohort%canopy_layer       = 999 ! canopy status of cohort (1 = canopy, 2 = understorey, etc.)   
     currentCohort%NV                 = 999 ! Number of leaf layers: -
-    currentCohort%status             = 999 ! growth status of plant  (2 = leaves on , 1 = leaves off)
+    currentCohort%status_coh         = 999 ! growth status of plant  (2 = leaves on , 1 = leaves off)
 
     currentCohort%n                  = nan ! number of individuals in cohort per 'area' (10000m2 default)     
     currentCohort%dbh                = nan ! 'diameter at breast height' in cm                            
@@ -293,7 +324,7 @@ contains
     currentCohort       => cc_p
 
     currentCohort%NV                 = 0    
-    currentCohort%status             = 0    
+    currentCohort%status_coh         = 0    
     currentCohort%rd                 = 0._r8
     currentCohort%resp_m             = 0._r8 
     currentCohort%resp_g             = 0._r8
@@ -310,7 +341,7 @@ contains
     currentcohort%resp               = 0._r8
     currentcohort%carbon_balance     = 0._r8
     currentcohort%leaf_litter        = 0._r8
-    currentcohort%year_net_uptake(:) = 0._r8
+    currentcohort%year_net_uptake(:) = 999._r8 ! this needs to be 999, or trimming of new cohorts will break.
     currentcohort%ts_net_uptake(:)   = 0._r8
     currentcohort%seed_prod          = 0._r8
     currentcohort%cfa                = 0._r8 
@@ -354,24 +385,34 @@ contains
        nextc      => currentCohort%shorter    
        terminate = 0 
 
+       ! Not enough n or dbh
        if(currentCohort%n/currentPatch%area <= 0.00001_r8.or.currentCohort%dbh <  &
             0.00001_r8.and.currentCohort%bstore < 0._r8) then
                terminate = 1
-            write(iulog,*) 'terminating cohorts 1',currentCohort%n/currentPatch%area,currentCohort%dbh
+          !  write(iulog,*) 'terminating cohorts 1',currentCohort%n/currentPatch%area,currentCohort%dbh
        endif
 
+       ! In the thrid canopy layer
        if(currentCohort%canopy_layer > NCLMAX)then 
           terminate = 1
-          write(iulog,*) 'terminating cohorts 2', currentCohort%canopy_layer
-       endif
-   
-       if(currentCohort%balive < 0._r8.and.currentCohort%bstore < 0._r8)then 
-          terminate = 1  
-          write(iulog,*) 'terminating cohorts 3', currentCohort%balive,currentCohort%bstore
+         ! write(iulog,*) 'terminating cohorts 2', currentCohort%canopy_layer
        endif
 
+       ! live biomass pools are terminally depleted
+       if(currentCohort%balive < 1e-10_r8.or.currentCohort%bstore < 1e-10_r8)then 
+          terminate = 1  
+         ! write(iulog,*) 'terminating cohorts 3', currentCohort%balive,currentCohort%bstore
+       endif
+
+      ! Total cohort biomass is negative
+      if(currentCohort%balive+currentCohort%bdead+currentCohort%bstore < 0._r8)then
+          terminate = 1
+         ! write(iulog,*) 'terminating cohorts 4', currentCohort%balive, currentCohort%bstore, currentCohort%bdead, &
+         ! currentCohort%balive+currentCohort%bdead+&
+         ! currentCohort%bstore, currentCohort%n                                                                                                                       
+      endif
+
        if(terminate == 1)then 
-          write(iulog,*) 'terminating cohorts'  
           if (.not. associated(currentCohort%taller)) then
              currentPatch%tallest => currentCohort%shorter
           else 
@@ -384,23 +425,24 @@ contains
           endif
      
          !put the litter from the terminated cohorts straight into the fragmenting pools
-         do c=1,ncwd
+         if(currentCohort%n.gt.0.0_r8)then
+	         do c=1,ncwd
 
-            currentPatch%CWD_AG(c)  = currentPatch%CWD_AG(c) + currentCohort%n*(currentCohort%bdead+currentCohort%bsw) / &
-                 currentPatch%area &
-                 * SF_val_CWD_frac(c) * ED_val_ag_biomass 
-            currentPatch%CWD_BG(c)  = currentPatch%CWD_BG(c) + currentCohort%n*(currentCohort%bdead+currentCohort%bsw) / &
-                 currentPatch%area &
-                 * SF_val_CWD_frac(c) * (1.0_r8 -  ED_val_ag_biomass) 
-          enddo
+	            currentPatch%CWD_AG(c)  = currentPatch%CWD_AG(c) + currentCohort%n*(currentCohort%bdead+currentCohort%bsw) / &
+	                 currentPatch%area &
+	                 * SF_val_CWD_frac(c) * ED_val_ag_biomass 
+	            currentPatch%CWD_BG(c)  = currentPatch%CWD_BG(c) + currentCohort%n*(currentCohort%bdead+currentCohort%bsw) / &
+	                 currentPatch%area &
+	                 * SF_val_CWD_frac(c) * (1.0_r8 -  ED_val_ag_biomass) 
+	          enddo
 
-          currentPatch%leaf_litter(currentCohort%pft) = currentPatch%leaf_litter(currentCohort%pft) + currentCohort%n* &
-               (currentCohort%bl)/currentPatch%area
-          currentPatch%root_litter(currentCohort%pft) = currentPatch%root_litter(currentCohort%pft) + currentCohort%n* &
-               (currentCohort%br+currentCohort%bstore)/currentPatch%area 
-     
-          deallocate(currentCohort)     
-
+	          currentPatch%leaf_litter(currentCohort%pft) = currentPatch%leaf_litter(currentCohort%pft) + currentCohort%n* &
+	               (currentCohort%bl)/currentPatch%area
+	          currentPatch%root_litter(currentCohort%pft) = currentPatch%root_litter(currentCohort%pft) + currentCohort%n* &
+	               (currentCohort%br+currentCohort%bstore)/currentPatch%area 
+	     
+	          deallocate(currentCohort)     
+          endif
        endif
        currentCohort => nextc
     enddo
@@ -555,7 +597,7 @@ contains
           if(nocohorts > maxcohorts)then
              iterate = 1
              dynamic_fusion_tolerance = dynamic_fusion_tolerance * 1.1_r8
-             write(iulog,*) 'maxcohorts exceeded',dynamic_fusion_tolerance
+             !write(iulog,*) 'maxcohorts exceeded',dynamic_fusion_tolerance
              !---------------------------------------------------------------------!
              ! Making profile tolerance larger means that more fusion will happen  !
              !---------------------------------------------------------------------!        
@@ -769,9 +811,8 @@ contains
     n%leaf_cost    = o%leaf_cost
     n%canopy_layer = o%canopy_layer
     n%nv           = o%nv
-    n%status       = o%status
+    n%status_coh   = o%status_coh
     n%canopy_trim  = o%canopy_trim
-    n%status       = o%status               
     n%excl_weight  = o%excl_weight               
     n%prom_weight  = o%prom_weight               
 

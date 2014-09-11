@@ -32,7 +32,7 @@ module SFMainMod
   public :: cambial_damage_kill
   public :: post_fire_mortality
 
-  integer :: write_SF = 1     ! for debugging
+  integer :: write_SF = 0     ! for debugging
   logical :: DEBUG = .false.  ! for debugging
 
   ! ============================================================================
@@ -65,7 +65,10 @@ contains
        currentPatch%fire       = 0
        currentPatch => currentPatch%older
     enddo
-    write(iulog,*) 'use_ed_spit_fire',use_ed_spit_fire
+
+    if(write_SF==1)then
+       write(iulog,*) 'use_ed_spit_fire',use_ed_spit_fire
+    endif
 
     if(use_ed_spit_fire.and.temporary_SF_switch==1)then
        call fire_danger_index(site_in, temperature_vars, atm2lnd_vars)
@@ -347,11 +350,12 @@ contains
        tree_fraction = tree_fraction + min(currentPatch%area,currentPatch%total_tree_area)/AREA
        grass_fraction = grass_fraction + min(currentPatch%area,total_grass_area)/AREA 
        
-       write(iulog,*) 'SF  currentPatch%area ',currentPatch%area
-       write(iulog,*) 'SF  currentPatch%total_area ',currentPatch%total_tree_area
-       write(iulog,*) 'SF  total_grass_area ',tree_fraction,grass_fraction
-       write(iulog,*) 'SF  AREA ',AREA
-
+       if(DEBUG)then
+         !write(iulog,*) 'SF  currentPatch%area ',currentPatch%area
+         !write(iulog,*) 'SF  currentPatch%total_area ',currentPatch%total_tree_area
+         !write(iulog,*) 'SF  total_grass_area ',tree_fraction,grass_fraction
+         !write(iulog,*) 'SF  AREA ',AREA
+       endif
        
        currentPatch => currentPatch%younger
     enddo !currentPatch loop
@@ -368,7 +372,6 @@ contains
     do while(associated(currentPatch))       
        currentPatch%total_tree_area = min(currentPatch%total_tree_area,currentPatch%area)      
        currentPatch%effect_wspeed = wind * (tree_fraction*0.6+grass_fraction*0.4+bare_fraction*1.0)
-     write(iulog,*) 'effectwspeed', currentPatch%effect_wspeed,wind, tree_fraction, grass_fraction, bare_fraction
       
        currentPatch => currentPatch%younger
     enddo !end patch loop
@@ -413,15 +416,15 @@ contains
        currentPatch%sum_fuel  = currentPatch%sum_fuel * (1.0_r8 - SF_val_miner_total) !net of minerals
 
        ! ----start spreading---
-       if (masterproc) write(iulog,*) 'SF - currentPatch%fuel_bulkd ',currentPatch%fuel_bulkd
-       if (masterproc) write(iulog,*) 'SF - SF_val_part_dens ',SF_val_part_dens
+       if (masterproc.and.DEBUG) write(iulog,*) 'SF - currentPatch%fuel_bulkd ',currentPatch%fuel_bulkd
+       if (masterproc.and.DEBUG) write(iulog,*) 'SF - SF_val_part_dens ',SF_val_part_dens
 
        beta = (currentPatch%fuel_bulkd / 0.45_r8) / SF_val_part_dens
        
        ! Equation A6 in Thonicke et al. 2010
        beta_op = 0.200395_r8 *(currentPatch%fuel_sav**(-0.8189_r8))
-       if (masterproc) write(iulog,*) 'SF - beta ',beta
-       if (masterproc) write(iulog,*) 'SF - beta_op ',beta_op
+       if (masterproc.and.DEBUG) write(iulog,*) 'SF - beta ',beta
+       if (masterproc.and.DEBUG) write(iulog,*) 'SF - beta_op ',beta_op
        bet = beta/beta_op
        if(write_sf == 1)then
           if (masterproc) write(iulog,*) 'esf ',currentPatch%fuel_eff_moist
@@ -441,13 +444,13 @@ contains
        e = 0.715_r8 * (exp(-0.01094_r8 * currentPatch%fuel_sav))
        ! Equation A5 in Thonicke et al. 2010
 
-!       if (DEBUG) then
-          if (masterproc) write(iulog,*) 'SF - c ',c
-          if (masterproc) write(iulog,*) 'SF - currentPatch%effect_wspeed ',currentPatch%effect_wspeed
-          if (masterproc) write(iulog,*) 'SF - b ',b
-          if (masterproc) write(iulog,*) 'SF - bet ',bet
-          if (masterproc) write(iulog,*) 'SF - e ',e
-!       endif
+       if (DEBUG) then
+          if (masterproc.and.DEBUG) write(iulog,*) 'SF - c ',c
+          if (masterproc.and.DEBUG) write(iulog,*) 'SF - currentPatch%effect_wspeed ',currentPatch%effect_wspeed
+          if (masterproc.and.DEBUG) write(iulog,*) 'SF - b ',b
+          if (masterproc.and.DEBUG) write(iulog,*) 'SF - bet ',bet
+          if (masterproc.and.DEBUG) write(iulog,*) 'SF - e ',e
+       endif
 
        ! convert from m/min to ft/min for Rothermel ROS eqn
        phi_wind = c * ((3.281_r8*currentPatch%effect_wspeed)**b)*(bet**(-e)) 
@@ -566,7 +569,7 @@ contains
        ! The /10 is to convert from kgC/m2 into gC/cm2, as in the Peterson and Ryan paper #Rosie,Jun 2013
         
        do c = 1,ncwd+2  
-          tau_b(dg_sf)   =  39.4_r8 *(currentPatch%fuel_frac(c)*currentPatch%sum_fuel/0.45_r8/10._r8)* &
+          tau_b(c)   =  39.4_r8 *(currentPatch%fuel_frac(c)*currentPatch%sum_fuel/0.45_r8/10._r8)* &
                (1.0_r8-((1.0_r8-currentPatch%burnt_frac_litter(c))**0.5_r8))  
        enddo
        tau_b(tr_sf)   =  0.0_r8

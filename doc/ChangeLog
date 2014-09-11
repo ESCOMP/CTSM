@@ -1,4 +1,197 @@
 ===============================================================
+Tag name:  clm4_5_1_r082
+Originator(s):  muszala (Stefan Muszala)
+Date: Thu Sep 11 14:07:58 MDT 2014
+One-line Summary: Merge in a number of ED changes to address science bugs and infrastructure (particularly restarts)
+
+Purpose of changes: Merge in ED changes.  Most of these have to do with science changes from rfisher.  There
+is also a refactor and added functionality for ED restarts.
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID): Bug 2041, 2042
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self, rfisher
+
+List any svn externals directories updated (csm_share, mct, etc.): 
+    scripts4_140814a -> scripts4_140910
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+-- add failing N2 tests (due to scripts, see below).
+
+M       models/lnd/clm/bld/build-namelist
+-- documentation at top of file should reference CLMBuildNamelist.pm
+
+M       models/lnd/clm/src/main/clm_driver.F90
+-- add call to SurfaceAlbedo for use_ed logical branch, add EDBioVars as 
+-- argument to temperature_vars%UpdateAccVars and add canopystate_vars as 
+-- argument to BalanceCheck (for ED)
+M       models/lnd/clm/src/main/decompMod.F90
+-- added openMP output...remove mods after getting ED working with openMP
+
+M       models/lnd/clm/src/ED/biogeochem/EDCanopyStructureMod.F90
+-- change handling of CWD_AG and CWD_BG
+M       models/lnd/clm/src/ED/biogeochem/EDGrowthFunctionsMod.F90
+-- added tree_sai function
+M       models/lnd/clm/src/ED/biogeochem/EDCohortDynamicsMod.F90
+-- signifcant reworking of entire module 
+M       models/lnd/clm/src/ED/biogeochem/EDPhysiologyMod.F90
+-- minor code clean up 
+M       models/lnd/clm/src/ED/biogeochem/EDPatchDynamicsMod.F90
+-- change an error check to: if (( areatot - area ) > 0._r8 ) then 
+
+M       models/lnd/clm/src/ED/main/EDBioType.F90
+-- add infrastrucutre (define, allocate, etc...) 
+M       models/lnd/clm/src/ED/main/EDMainMod.F90
+-- major update for updating canopy biomass pools 
+M       models/lnd/clm/src/ED/main/EDCLMLinkMod.F90
+-- modify calls for history file output and error checking
+M       models/lnd/clm/src/ED/main/EDRestVectorMod.F90
+-- add resp_clm as restart variable and use SHR_ASSERT instead of call assert.  major refactor
+-- of createPatchCohortStructure to handle arbitrary number of cohorts and patches
+M       models/lnd/clm/src/ED/main/EDInitMod.F90
+-- add logical to deal with different values of assignemnt dc%laimemory
+M       models/lnd/clm/src/ED/main/EDTypesMod.F90
+-- add cohort_type and change paramters: numCohortsPerPatch, cohorts_per_gcell and fire_threshold
+
+M       models/lnd/clm/src/ED/fire/SFMainMod.F90
+-- clean up write statemnts and a bug fix:  change tau_b(dg_sf) -> tau_b(c)
+
+M       models/lnd/clm/src/ED/biogeophys/EDPhotosynthesisMod.F90
+-- change  tpu25top(FT)  = 0.06_r8   * jmax25top(FT) to tpu25top(FT)  = 0.167_r8   * jmax25top(FT), some cleanup
+
+M       models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90
+-- clean up a use statement
+M       models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90
+-- remove whitespaces after a statement
+M       models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90
+-- add a use_ed block to prevent some unassigned pointer errors
+M       models/lnd/clm/src/biogeophys/BalanceCheckMod.F90
+-- add canopystate_vars as argument for elai and esai for more verbose error
+-- reporting added by rfisher
+M       models/lnd/clm/src/biogeophys/TemperatureType.F90
+-- add arg. for UpdateAccVars for new calculations, split out use_ed and use_crop
+M       models/lnd/clm/src/biogeophys/SurfaceRadiationMod.F90
+-- add associate statement to tlai for error reporting
+
+M       UpDateChangeLog.pl
+-- fix tiny typo
+
+M       SVN_EXTERNAL_DIRECTORIES
+-- for scripts update
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - N/A, no namelist changes made in this tag
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel - 45 OK , 40 OK
+
+    Changes due to update of scripts from scripts4_140814a -> scripts4_140910 (this change came with scripts4_140828)
+    FAIL namelist compare:  user_nl_clm differs
+    These should pass next time.
+
+       NEW:        flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/surfdata.pftdyn_1x1_tropicAtl_TEST_simyr1939-1943_c140108.nc'
+       BASELINE: flanduse_timeseries = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata.pftdyn_1x1_tropicAtl_TEST_simyr1939-1943_c140108.nc'
+
+          FAIL SMS_Ly3.1x1_tropicAtl.I20TRCLM45BGC.yellowstone_intel.clm-tropicAtl_subsetLate.GC.newPgi_45_intel.nlcomp
+          FAIL SMS_Ly5.1x1_tropicAtl.I20TRCLM45BGC.yellowstone_intel.clm-tropicAtl_subsetMid.GC.newPgi_45_intel.nlcomp
+          FAIL SMS_Ly8.1x1_tropicAtl.I20TRCLM45BGC.yellowstone_intel.clm-tropicAtl_subsetEarly.GC.newPgi_45_intel.nlcomp
+
+    These fail due to a bug in scripts4_140905c.  Alice is aware of this and will provide a fix for a future CLM tag (but 2041):
+       FAIL  ERI_N2.f19_g16.ICRUCLM45BGCCROP.yellowstone_intel 
+       FAIL  ERI_N2.f19_g16.ICRUCLM45BGCCROP.yellowstone_intel.clm-default 
+
+    Failure that looks like a hardware problem and that Erik is looking into (bug 2042):
+       RUN   ERI_D.ne30_g16.ICLM45BGC.yellowstone_intel.GC.newPgi_45_intel
+
+    yellowstone_pgi   - 45 OK , 40 OK
+
+    New PGI tests brought over from goldbach.  These are expected as there are no baselines for this on yellowstone
+
+       BFAIL ERI_D.f10_f10.ICLM45BGC.yellowstone_pgi.clm-reduceOutput.compare_hist.clm4_5_1_r081 
+       BFAIL ERI_D.f10_f10.ICRUCLM50BGC.yellowstone_pgi.clm-reduceOutput.compare_hist.clm4_5_1_r081 
+       BFAIL ERI_D.f19_g16.ICLM45BGC.yellowstone_pgi.clm-reduceOutput.compare_hist.clm4_5_1_r081 
+       BFAIL ERI_D.f19_g16.ICLM45.yellowstone_pgi.clm-reduceOutput.compare_hist.clm4_5_1_r081 
+       BFAIL ERI_D.f19_g16.ICRUCLM50BGC.yellowstone_pgi.clm-reduceOutput.compare_hist.clm4_5_1_r081 
+       BFAIL ERI.f10_f10.ICLM45BGC.yellowstone_pgi.clm-reduceOutput.compare_hist.clm4_5_1_r081 
+       BFAIL ERI.f10_f10.ICRUCLM50BGC.yellowstone_pgi.clm-reduceOutput.compare_hist.clm4_5_1_r081 
+       BFAIL ERI.f19_g16.ICLM45BGC.yellowstone_pgi.clm-reduceOutput.compare_hist.clm4_5_1_r081 
+       BFAIL ERI.f19_g16.ICRUCLM50BGC.yellowstone_pgi.clm-reduceOutput.compare_hist.clm4_5_1_r081 
+       BFAIL ERS_D.f10_f10.I20TRCLM45BGC.yellowstone_pgi.clm-decStart.clm2.h0.compare_hist.clm4_5_1_r081 
+       BFAIL ERS_D.f10_f10.I20TRCLM45BGC.yellowstone_pgi.clm-decStart.clm2.h1.compare_hist.clm4_5_1_r081 
+       BFAIL ERS_D.f10_f10.I20TRCLM45BGC.yellowstone_pgi.clm-decStart.compare_hist.clm4_5_1_r081 
+       BFAIL ERS_D.f10_f10.ICLM45BGC.yellowstone_pgi.clm-ciso.clm2.h0.compare_hist.clm4_5_1_r081 
+       BFAIL ERS_D.f10_f10.ICLM45BGC.yellowstone_pgi.clm-ciso.clm2.h1.compare_hist.clm4_5_1_r081 
+       BFAIL ERS_D.f10_f10.ICLM45BGC.yellowstone_pgi.clm-ciso.compare_hist.clm4_5_1_r081 
+       BFAIL ERS.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-default.clm2.h0.compare_hist.clm4_5_1_r081 
+       BFAIL ERS.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-default.clm2.h1.compare_hist.clm4_5_1_r081 
+       BFAIL ERS.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-default.compare_hist.clm4_5_1_r081 
+       BFAIL ERS_Lm3.1x1_smallvilleIA.ICLM45BGCCROP.yellowstone_pgi.clm2.h0.compare_hist.clm4_5_1_r081 
+       BFAIL ERS_Lm3.1x1_smallvilleIA.ICLM45BGCCROP.yellowstone_pgi.compare_hist.clm4_5_1_r081 
+       BFAIL SMS_D.1x1_vancouverCAN.ICLM45.yellowstone_pgi.clm-default.clm2.h0.compare_hist.clm4_5_1_r081 
+       BFAIL SMS_D.1x1_vancouverCAN.ICLM45.yellowstone_pgi.clm-default.clm2.h1.compare_hist.clm4_5_1_r081 
+       BFAIL SMS_D.1x1_vancouverCAN.ICLM45.yellowstone_pgi.clm-default.compare_hist.clm4_5_1_r081 
+       BFAIL SMS.f45_f45.ICLM45.yellowstone_pgi.clm-ptsRLB.clm2.h0.compare_hist.clm4_5_1_r081 
+       BFAIL SMS.f45_f45.ICLM45.yellowstone_pgi.clm-ptsRLB.clm2.h1.compare_hist.clm4_5_1_r081 
+       BFAIL SMS.f45_f45.ICLM45.yellowstone_pgi.clm-ptsRLB.compare_hist.clm4_5_1_r081 
+       BFAIL SMS.f45_f45.ICLM45.yellowstone_pgi.clm-ptsROA.compare_hist.clm4_5_1_r081 
+       BFAIL SMS_Ld5.f19_g16.IRCP45CLM45BGC.yellowstone_pgi.clm-decStart.clm2.h0.compare_hist.clm4_5_1_r081 
+       BFAIL SMS_Ld5.f19_g16.IRCP45CLM45BGC.yellowstone_pgi.clm-decStart.clm2.h1.compare_hist.clm4_5_1_r081 
+       BFAIL SMS_Ld5.f19_g16.IRCP45CLM45BGC.yellowstone_pgi.clm-decStart.compare_hist.clm4_5_1_r081 
+
+    goldbach_nag - 45 OK , 40 OK
+
+    Baseline missing from previous tag:
+       ERI_D.f19_g16.ICLM45BGC.goldbach_nag.clm-reduceOutput-  
+          file /fs/cgd/csm/ccsm_baselines/clm4_5_1_r081/ERI_D.f19_g16.ICLM45BGC.goldbach_nag.clm-reduceOutput/cpl.hi.nc does not exis
+       SMS.f09_g16.ICRUCLM45.goldbach_nag.clm-af_bias_v5
+          file /fs/cgd/csm/ccsm_baselines/clm4_5_1_r081/SMS.f09_g16.ICRUCLM45.goldbach_nag.clm-af_bias_v5/cpl.hi.nc does not exist
+       SMS_Ly1.f19_g16.ICLM45BGCCROP.goldbach_nag.clm-reduceOutput 
+          file /fs/cgd/csm/ccsm_baselines/clm4_5_1_r081/SMS_Ly1.f19_g16.ICLM45BGCCROP.goldbach_nag.clm-reduceOutput/cpl.hi.nc does no
+       SMS_Ly1.f19_g16.ICLM45BGCCROP.goldbach_nag.clm-reduceOutput
+          file /fs/cgd/csm/ccsm_baselines/clm4_5_1_r081/SMS_Ly1.f19_g16.ICLM45BGCCROP.goldbach_nag.clm-reduceOutput/cpl.hi.nc does no    t exist
+
+    goldbach_intel - 45 OK , 40 OK
+
+    goldbach_pgi (These have been moved to yellowstone due to PGI 14.1 throwing and ICE on goldbach)
+
+CLM tag used for the baseline comparisons: clm4_5_1_r081
+
+Changes answers relative to baseline: Only for ED compsets
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r081
 Originator(s):  mvertens (Mariana Vertenstein)
 Date: Sun Aug 24 19:39:50 MDT 2014

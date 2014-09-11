@@ -218,7 +218,9 @@ contains
 
     !------------------------------------------------------------------------------
 
+    !
     ! FIX(SPM, 040714) [I]- these should be proper functions...Jinyun might be doing this in his refactor...check.
+    !
     ! Temperature and soil water response functions
     ft1(tl,ha) = exp( ha / (rgas*1.e-3_r8*(tfrz+25._r8)) * (1._r8 - (tfrz+25._r8)/tl) )
     fth(tl,hd,se,cc2) = cc2 / ( 1._r8 + exp( (-hd+se*tl) / (rgas*1.e-3_r8*tl) ) )
@@ -237,13 +239,14 @@ contains
 
          bb_slope  => EDEcophyscon%BB_slope                 , & ! slope of BB relationship
 
-         forc_pbot => atm2lnd_vars%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ] atmospheric pressure (Pa)                                             
+         forc_pbot => atm2lnd_vars%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ] atmospheric pressure (Pa)
 
          t_soisno  => temperature_vars%t_soisno_col         , & ! Input: [real(r8)  (:,:) ] soil temperature (Kelvin)                                           
          t_veg     => temperature_vars%t_veg_patch          , & ! Input: [real(r8)  (:)   ] vegetation temperature (Kelvin)                                       
          tgcm      => temperature_vars%thm_patch            , & ! Input: [real(r8)  (:)   ] air temperature at agcm reference height (kelvin) 
 
          elai      => canopystate_vars%elai_patch           , & ! Input:  [real(r8) (:)  ]  one-sided leaf area index with burying by snow                        
+         tlai      => canopystate_vars%tlai_patch           , & ! Input:  [real(r8) (:)   ] one-sided leaf area index
          rscanopy  => canopystate_vars%rscanopy_patch       , & ! Output: [real(r8) (:,:)]  canopy resistance s/m  
 
          psncanopy => photosyns_vars%psncanopy_patch        , & ! Output: [real(r8) (:,:)]  canopy scale photosynthesis umol CO2 /m**2/ s
@@ -336,15 +339,6 @@ contains
          if(ED_patch(p) == 1)then
             g = pft%gridcell(p)
 
-            !  FIX(SPM,032414) for debugging
-            !currentPatch => gridCellEdState(g)%spnt%oldest_patch   
-            !do while (associated(currentPatch))
-            !write(iulog,*) 'EDphot ed_parsun_z ',currentPatch%ed_parsun_z
-            !write(iulog,*) 'EDphot ed_laisun_z ',currentPatch%ed_laisun_z
-            !currentPatch => currentPatch%younger
-            !enddo
-            !  FIX(SPM,032414) for debugging
-
             currentPatch => gridCellEdState(g)%spnt%oldest_patch   
             do while(p /= currentPatch%clm_pno)
                currentPatch => currentPatch%younger
@@ -388,7 +382,6 @@ contains
                bbb(FT) = max (bbbopt(ps)*currentPatch%btran_ft(FT), 1._r8)
 
                mbb(FT) = bb_slope(ft) ! mbbopt(ps)
-               !mbb(FT) = -11.0_r8* ecophyscon%wood_density(FT)+8.98_r8
             end do
 
             ! kc, ko, currentPatch, from: Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
@@ -406,9 +399,17 @@ contains
             sco  = 0.5_r8 * 0.209_r8 / (42.75_r8 / 1.e06_r8)
             cp25 = 0.5_r8 * oair(p) / sco
 
-            kc(p) = kc25 * ft1(t_veg(p), kcha)
-            ko(p) = ko25 * ft1(t_veg(p), koha)
-            co2_cp(p) = cp25 * ft1(t_veg(p), cpha)
+            if(t_veg(p).gt.150_r8.and.t_veg(p).lt.350_r8)then
+               kc(p) = kc25 * ft1(t_veg(p), kcha)
+               ko(p) = ko25 * ft1(t_veg(p), koha)
+               co2_cp(p) = cp25 * ft1(t_veg(p), cpha)
+            else
+               kc(p) = 1
+               ko(p) = 1
+               co2_cp(p) = 1
+               write(iulog,*) 'something wrong with temperature',t_veg(p),p,elai(p),tlai(p)
+            end if
+
          end if
       end do
 
@@ -450,17 +451,18 @@ contains
                lnc(FT) = 1._r8 / (slatop(FT) * leafcn(FT))
 
                !at the moment in ED we assume that there is no active N cycle. This should change, of course. FIX(RF,032414) Sep2011. 
-               !vcmax25top(FT) = lnc(FT) * flnr(FT) * fnr * act25 * dayl_factor(p) * fnitr(FT) 
                vcmax25top(FT) = fnitr(FT) !fudge - shortcut using fnitr as a proxy for vcmax... 
 
-               !vcmax25top(PFT) = 40.0_r8
                ! Parameters derived from vcmax25top. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
                ! used jmax25 = 1.97 vcmax25, from Wullschleger (1993) Journal of Experimental Botany 44:907-920.
                ! Here use a factor "1.67", from Medlyn et al (2002) Plant, Cell and Environment 25:1167-1179
 
-               jmax25top(FT) = 1.67_r8   * vcmax25top(FT)
-               tpu25top(FT)  = 0.06_r8   * jmax25top(FT)
-               kp25top(FT)   = 20000._r8 * vcmax25top(FT)
+               jmax25top(FT) = 1.67_r8    * vcmax25top(FT)
+               !
+               ! FIX(RF, 082914) - Changed to 0.167 in ED branch...should be a parameter
+               !
+               tpu25top(FT)  = 0.167_r8   * jmax25top(FT)
+               kp25top(FT)   = 20000._r8  * vcmax25top(FT)
 
                ! Nitrogen scaling factor. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593 used
                ! kn = 0.11. Here, derive kn from vcmax25 as in Lloyd et al (2010) Biogeosciences, 7, 1833-1859

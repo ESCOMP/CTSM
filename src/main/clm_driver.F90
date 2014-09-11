@@ -764,7 +764,8 @@ contains
        call t_startf('balchk')
        call BalanceCheck(bounds_clump, &
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c, &
-            atm2lnd_vars, solarabs_vars, waterflux_vars, waterstate_vars, energyflux_vars) 
+            atm2lnd_vars, solarabs_vars, waterflux_vars, &
+            waterstate_vars, energyflux_vars, canopystate_vars ) 
        call t_stopf('balchk')
 
        if(.not. use_ed)then
@@ -878,12 +879,16 @@ contains
     ! FIX(SPM,032414) double check why this isn't called for ED
 
     if (nstep > 0) then
-       if (.not. use_ed) then
+       !
+       ! FIX(SPM, 082814) - in the ED branch RF and I comment out the if(.not.
+       ! use_ed) then statement ... double check if this is required and why
+       !
+       !if (.not. use_ed) then
           call t_startf('accum')
 
           call atm2lnd_vars%UpdateAccVars(bounds_proc)
 
-          call temperature_vars%UpdateAccVars(bounds_proc)
+          call temperature_vars%UpdateAccVars(EDBio_vars, bounds_proc)
 
           call canopystate_vars%UpdateAccVars(bounds_proc)
 
@@ -896,7 +901,7 @@ contains
           end if
 
           call t_stopf('accum')
-       end if
+       !end if
     end if
 
     ! ============================================================================
@@ -966,6 +971,20 @@ contains
                   carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
 
              call setFilters( bounds_clump, glc2lnd_vars%icemask_grc )
+
+             !reset surface albedo fluxes in case there is a mismatch between elai and canopy absorbtion. 
+             call SurfaceAlbedo(bounds_clump,                      &
+                filter_inactive_and_active(nc)%num_nourbanc,       &
+                filter_inactive_and_active(nc)%nourbanc,           &
+                filter_inactive_and_active(nc)%num_nourbanp,       &
+                filter_inactive_and_active(nc)%nourbanp,           &
+                filter_inactive_and_active(nc)%num_urbanc,         &
+                filter_inactive_and_active(nc)%urbanc,             &
+                filter_inactive_and_active(nc)%num_urbanp,         & 
+                filter_inactive_and_active(nc)%urbanp,             &
+                nextsw_cday, declinp1,                             &
+                aerosol_vars, canopystate_vars, waterstate_vars,   &
+                lakestate_vars, temperature_vars, surfalb_vars)
 
           end do
           !$OMP END PARALLEL DO

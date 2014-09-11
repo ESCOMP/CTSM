@@ -485,8 +485,8 @@ contains
           !COLD LEAF ON
           if(ecophyscon%season_decid(currentCohort%pft) == 1)then
              if(currentSite%status == 2)then !we have just moved to leaves being on . 
-                if(currentCohort%status == 1)then !Are the leaves currently off?        
-                   currentCohort%status = 2    !Leaves are on, so change status to stop flow of carbon out of bstore. 
+                if(currentCohort%status_coh == 1)then !Are the leaves currently off?        
+                   currentCohort%status_coh = 2       !Leaves are on, so change status to stop flow of carbon out of bstore. 
                    if(currentCohort%laimemory <= currentCohort%bstore)then
                       currentCohort%bl = currentCohort%laimemory !extract stored carbon to make new leaves.
                       currentCohort%bl = currentCohort%bstore    !we can only put on as much carbon as there is in the store...
@@ -499,8 +499,8 @@ contains
              !COLD LEAF OFF
              currentCohort%leaf_litter = 0.0_r8 !zero leaf litter for today. 
              if(currentSite%status == 1)then !past leaf drop day? Leaves still on tree?  
-                if(currentCohort%status == 2)then ! leaves have not dropped
-                   currentCohort%status      = 1                  
+                if(currentCohort%status_coh == 2)then ! leaves have not dropped
+                   currentCohort%status_coh      = 1                  
                    !remember what the lai was this year to put the same amount back on in the spring... 
                    currentCohort%laimemory   = currentCohort%bl  
                    ! decrement balive for leaf litterfall        
@@ -516,8 +516,8 @@ contains
           !DROUGHT LEAF ON
           if(ecophyscon%stress_decid(currentCohort%pft) == 1)then
              if(currentSite%dstatus == 2)then !we have just moved to leaves being on . 
-                if(currentCohort%status == 1)then !is it the leaf-on day? Are the leaves currently off?       
-                   currentCohort%status = 2    !Leaves are on, so change status to stop flow of carbon out of bstore. 
+                if(currentCohort%status_coh == 1)then !is it the leaf-on day? Are the leaves currently off?       
+                   currentCohort%status_coh = 2    !Leaves are on, so change status to stop flow of carbon out of bstore. 
                    if(currentCohort%laimemory <= currentCohort%bstore)then
                       currentCohort%bl = currentCohort%laimemory !extract stored carbon to make new leaves.
                    else
@@ -530,8 +530,8 @@ contains
 
              !DROUGHT LEAF OFF
              if(currentSite%dstatus == 1)then        
-                if(currentCohort%status == 2)then ! leaves have not dropped
-                   currentCohort%status      = 1   
+                if(currentCohort%status_coh == 2)then ! leaves have not dropped
+                   currentCohort%status_coh      = 1   
                    currentCohort%laimemory   = currentCohort%bl
                    ! decrement balive for leaf litterfall  
                    currentCohort%balive      = currentCohort%balive - (1.0_r8 - l_fract)*currentCohort%bl   
@@ -681,7 +681,7 @@ contains
     target_balive = Bleaf(currentCohort) * (1.0_r8 + ecophyscon%froot_leaf(currentCohort%pft) + &
          EDecophyscon%sapwood_ratio(currentCohort%pft)*h)
     !target balive without leaves. 
-    if(currentCohort%status == 1)then 
+    if(currentCohort%status_coh == 1)then 
        target_balive = Bleaf(currentCohort) * (ecophyscon%froot_leaf(currentCohort%pft) + &
             EDecophyscon%sapwood_ratio(currentCohort%pft) * h)
     endif

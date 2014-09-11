@@ -22,8 +22,8 @@
                                                            ! for setting number of patches per gridcell and number of cohorts per patch
                                                            ! for I/O and converting to a vector
   integer, parameter :: numPatchesPerGridCell = 4          !
-  integer, parameter :: numCohortsPerPatch    = 6          !
-  integer, parameter :: cohorts_per_gcell     = 24         ! should be numPatchesPerGridCell*numCohortsPerPatch
+  integer, parameter :: numCohortsPerPatch    = 20         !
+  integer, parameter :: cohorts_per_gcell     = 80         ! should be numPatchesPerGridCell*numCohortsPerPatch
                                                            ! portions of the pft 
   integer, parameter :: numWaterMem           = 10         ! watermemory saved as site
                                                            ! level var
@@ -45,7 +45,7 @@
   integer,  parameter :: dg_sf                = 1          ! array index of dead grass pool for spitfire
   integer,  parameter :: tr_sf                = 5          ! array index of dead trunk pool for spitfire
   integer,  parameter :: lb_sf                = 4          ! array index of lrge branch pool for spitfire 
-  real(r8), parameter :: fire_threshold       = 50.0_r8    ! threshold for fires that spread or go out. KWm-2
+  real(r8), parameter :: fire_threshold       = 35.0_r8    ! threshold for fires that spread or go out. KWm-2
  
                                                            ! COHORT FUSION          
   real(r8), parameter :: FUSETOL              = 0.6_r8     ! min fractional difference in dbh between cohorts
@@ -93,7 +93,7 @@
      real(r8) ::  excl_weight                            ! How much of this cohort is demoted each year, as a proportion of all cohorts:-
      real(r8) ::  prom_weight                            ! How much of this cohort is promoted each year, as a proportion of all cohorts:-
      integer  ::  nv                                     ! Number of leaf layers: -
-     integer  ::  status                                 ! growth status of plant  (2 = leaves on , 1 = leaves off)
+     integer  ::  status_coh                             ! growth status of plant  (2 = leaves on , 1 = leaves off)
      real(r8) ::  c_area                                 ! areal extent of canopy (m2)
      real(r8) ::  treelai                                ! lai of tree (total leaf area (m2) / canopy area (m2)
      real(r8) ::  treesai                                ! stem area index of tree (total stem area (m2) / canopy area (m2)
@@ -108,7 +108,7 @@
      real(r8) ::  resp                                   ! Resp: kgC/indiv/year
      real(r8) ::  resp_acc                               ! Resp: kgC/indiv/day
      real(r8) ::  resp_clm                               ! Resp: kgC/indiv/timestep
-     
+
      real(r8) ::  ts_net_uptake(nlevcan_ed)              ! Net uptake of leaf layers: kgC/m2/s
      real(r8) ::  year_net_uptake(nlevcan_ed)            ! Net uptake of leaf layers: kgC/m2/year
 
@@ -256,6 +256,7 @@
      real(r8) ::  root_litter(numpft_ed)                           ! below ground fine root litter that does not respire. KgC/m2
 
      ! Fluxes of litter (non respiring) 
+     real(r8) :: fragmentation_scaler    ! Scale rate of litter fragmentation. 0 to 1.
      real(r8) :: cwd_ag_in(ncwd)                                   ! Flux into CWD_AG from turnover and mortality KgC/m2/y
      real(r8) :: cwd_bg_in(ncwd)                                   ! Flux into cwd_bg from root turnover and mortality KgC/m2/y
      real(r8) :: cwd_ag_out(ncwd)                                  ! Flux out of AG CWD into AG litter KgC/m2/y
@@ -383,6 +384,17 @@
   type gridcell_edstate_type
      type(site),pointer :: spnt  
   end type gridcell_edstate_type
+
+  !
+  ! cohortype.  mimics the types in clmtype.  For now this holds ED data that is
+  ! necessary in the rest of CLM
+  !
+
+  type cohort_type
+     integer , pointer :: gridcell(:) !index into gridcell level quantities
+  end type cohort_type
+
+  type(cohort_type)     , public :: coh
 
   !----------------------------------------------------
   ! Declare single instance of arrays

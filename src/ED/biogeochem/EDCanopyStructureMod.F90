@@ -121,7 +121,7 @@ contains
           ! Does the bottom layer have more than a full canopy? If so we need to make another layer.
           
           if(arealayer(z) > currentPatch%area)then  ! Do we have too much area in either layer?  
-              write(iulog,*) 'CANOPY CLOSURE', z
+              !write(iulog,*) 'CANOPY CLOSURE', z
              z = z + 1
           endif
 
@@ -188,24 +188,27 @@ contains
                          !kill the ones which go into canopy layers that are not allowed... (default nclmax=2) 
                          if(i+1 > nclmax)then 
                            !put the litter from the terminated cohorts into the fragmenting pools
+                          ! write(iulog,*) '3rd canopy layer'
                             do c=1,ncwd
 
-                               currentPatch%CWD_AG_in(c)  = currentPatch%CWD_AG_in(c) + currentCohort%n* &
-                                    (currentCohort%bdead+currentCohort%bsw)/currentPatch%area &
-                                    * SF_val_CWD_frac(c) * ED_val_ag_biomass
+                               currentPatch%CWD_AG(c)  = currentPatch%CWD_AG(c) + (currentCohort%bdead+currentCohort%bsw) * &
+                                    ED_val_ag_biomass * &
+                                    SF_val_CWD_frac(c)*currentCohort%n/currentPatch%area  
+         
+                               currentPatch%CWD_BG(c)  = currentPatch%CWD_BG(c) + (currentCohort%bdead+currentCohort%bsw) * &
+                                    (1.0_r8-ED_val_ag_biomass) * &
+                                    SF_val_CWD_frac(c)*currentCohort%n/currentPatch%area !litter flux per m2.
 
-                               currentPatch%CWD_BG_in(c)  = currentPatch%CWD_BG_in(c) + currentCohort%n* &
-                                    (currentCohort%bdead+currentCohort%bsw)/currentPatch%area &
-                                    * SF_val_CWD_frac(c) * (1.0_r8 -  ED_val_ag_biomass) 
                             enddo
 
-                            currentPatch%leaf_litter_in(currentCohort%pft) = &
-                                 currentPatch%leaf_litter_in(currentCohort%pft) + currentCohort%n* &
-                                 (currentCohort%bl)/currentPatch%area
-                            currentPatch%root_litter_in(currentCohort%pft) = &
-                                 currentPatch%root_litter_in(currentCohort%pft) + currentCohort%n* &
-                                 (currentCohort%br+currentCohort%bstore)/currentPatch%area 
+                                currentPatch%leaf_litter(currentCohort%pft)  = &
+                                     currentPatch%leaf_litter(currentCohort%pft) + (currentCohort%bl)* &
+                                          currentCohort%n/currentPatch%area ! leaf litter flux per m2.
 
+                                currentPatch%root_litter(currentCohort%pft)  = &
+                                     currentPatch%root_litter(currentCohort%pft) + &
+                                     (currentCohort%br+currentCohort%bstore)*currentCohort%n/currentPatch%area
+   									
                             currentCohort%n = 0.0_r8
                             currentCohort%c_area = 0._r8
                          else  
@@ -233,32 +236,32 @@ contains
                            !put the litter from the terminated cohorts into the fragmenting pools
                             do c=1,ncwd
 
-                               currentPatch%CWD_AG_in(c)  = currentPatch%CWD_AG_in(c) + currentCohort%bdead * &
+                               currentPatch%CWD_AG(c)  = currentPatch%CWD_AG(c) + (currentCohort%bdead+currentCohort%bsw) * &
                                     ED_val_ag_biomass * &
                                     SF_val_CWD_frac(c)*currentCohort%n/currentPatch%area           
-                               currentPatch%CWD_BG_in(c)  = currentPatch%CWD_BG_in(c) + currentCohort%bdead * &
+                               currentPatch%CWD_BG(c)  = currentPatch%CWD_BG(c) + (currentCohort%bdead+currentCohort%bsw) * &
                                     (1.0_r8-ED_val_ag_biomass) * &
                                     SF_val_CWD_frac(c)*currentCohort%n/currentPatch%area !litter flux per m2.
 
                             enddo
 
-                                currentPatch%leaf_litter_in(currentCohort%pft)  = &
-                                     currentPatch%leaf_litter_in(currentCohort%pft) + (currentCohort%bl)* &
+                                currentPatch%leaf_litter(currentCohort%pft)  = &
+                                     currentPatch%leaf_litter(currentCohort%pft) + currentCohort%bl* &
                                           currentCohort%n/currentPatch%area ! leaf litter flux per m2.
 
-                                currentPatch%root_litter_in(currentCohort%pft)  = &
-                                     currentPatch%root_litter_in(currentCohort%pft) + &
+                                currentPatch%root_litter(currentCohort%pft)  = &
+                                     currentPatch%root_litter(currentCohort%pft) + &
                                      (currentCohort%br+currentCohort%bstore)*currentCohort%n/currentPatch%area
-
                             currentCohort%n = 0.0_r8
                             currentCohort%c_area = 0._r8
-                            write(iulog,*) 'third canopy layer'
 
                          else  
                             currentCohort%c_area = c_area(currentCohort)       
                          endif
-                         write(iulog,*) 'demoting whole cohort', currentCohort%c_area,cc_loss, &
-                              currentCohort%canopy_layer,currentCohort%dbh
+
+                         !write(iulog,*) 'demoting whole cohort', currentCohort%c_area,cc_loss, &
+                              !currentCohort%canopy_layer,currentCohort%dbh
+
                       endif
                      ! call terminate_cohorts(currentPatch) 
 
@@ -350,7 +353,7 @@ contains
                          currentCohort%canopy_layer = i   
                          currentCohort%c_area = c_area(currentCohort)
 
-                         write(iulog,*) 'promoting very small cohort', currentCohort%c_area,currentCohort%canopy_layer
+                        ! write(iulog,*) 'promoting very small cohort', currentCohort%c_area,currentCohort%canopy_layer
                       endif
                       arealayer(currentCohort%canopy_layer) = arealayer(currentCohort%canopy_layer)+currentCohort%c_area 
                       currentCohort => currentCohort%shorter   
@@ -443,13 +446,13 @@ contains
 
                          promswitch = 1
 
-                         write(iulog,*) 'promoting whole cohort', currentCohort%c_area,cc_gain,currentCohort%canopy_layer, &
-                              currentCohort%pft,currentPatch%patchno
+                        ! write(iulog,*) 'promoting whole cohort', currentCohort%c_area,cc_gain,currentCohort%canopy_layer, &
+                              !currentCohort%pft,currentPatch%patchno
 
                       endif
                       !call terminate_cohorts(currentPatch) 
                       if(promswitch == 1)then
-                         write(iulog,*) 'cohort loop',currentCohort%pft,currentCohort%indexnumber,currentPatch%patchno
+                        ! write(iulog,*) 'cohort loop',currentCohort%pft,currentCohort%indexnumber,currentPatch%patchno
                       endif
                       !----------- End of cohort splitting ------------------------------!             
                    else
@@ -465,8 +468,8 @@ contains
                 arealayer(i + 1) = arealayer(i + 1) - sumgain !Update arealayer for diff calculations of layer below. 
 
                 if(promswitch == 1)then
-                   write(iulog,*) 'arealayer loop',arealayer(1:3),currentPatch%area,promarea,sumgain, &
-                        currentPatch%patchno,z,i,lower_cohort_switch
+                  ! write(iulog,*) 'arealayer loop',arealayer(1:3),currentPatch%area,promarea,sumgain, &
+                        !currentPatch%patchno,z,i,lower_cohort_switch
                 endif
                 if(promswitch == 1.and.associated(currentPatch%tallest))then
                    ! write(iulog,*) 'cohorts',currentCohort%pft,currentCohort%indexnumber,currentPatch%patchno, &
@@ -479,7 +482,7 @@ contains
                      !currentPatch%patchno,currentPatch%clm_pno,currentPatch%area - arealayer(i),i,missing_area,count_mi
              endif
              if(promswitch == 1)then
-                write(iulog,*) 'z loop',arealayer(1:3),currentPatch%patchno,z
+               ! write(iulog,*) 'z loop',arealayer(1:3),currentPatch%patchno,z
              endif
           enddo !z  
 
@@ -499,13 +502,13 @@ contains
                 missing_area = currentPatch%area - arealayer(j)
                 if(missing_area <= 0.000001_r8.and.missing_area > 0._r8)then
                    missing_area = 0.0_r8
-                   write(iulog,*) 'correcting MI',j,currentPatch%area - arealayer(j)
+                  ! write(iulog,*) 'correcting MI',j,currentPatch%area - arealayer(j)
                 endif
              endif
           enddo
           currentPatch%ncl_p = min(z,nclmax)
           if(promswitch == 1)then
-             write(iulog,*) 'missingarea loop',arealayer(1:3),currentPatch%patchno,missing_area,z
+            ! write(iulog,*) 'missingarea loop',arealayer(1:3),currentPatch%patchno,missing_area,z
           endif
        enddo !is there still not enough canopy area in any layer?         
 
@@ -514,7 +517,7 @@ contains
        call terminate_cohorts(currentPatch)
 
        if(promswitch == 1)then
-          write(iulog,*) 'going into cohort check',currentPatch%clm_pno
+          !write(iulog,*) 'going into cohort check',currentPatch%clm_pno
        endif
        ! ----------- Check cohort area ------------------------------!
        do i = 1,z
@@ -528,27 +531,37 @@ contains
              currentCohort => currentCohort%shorter
 
           enddo
-          if((checkarea-currentPatch%area) > 0.0001)then
-             write(iulog,*) 'problem with canopy area', checkarea,currentPatch%area,i     
+
+          if(((checkarea-currentPatch%area)) > 0.0001)then
+             write(iulog,*) 'problem with canopy area', checkarea,currentPatch%area,checkarea-currentPatch%area,i,z,missing_area 
+             currentCohort => currentPatch%tallest
+             do while (associated(currentCohort))
+             if(currentCohort%canopy_layer == i)then
+                write(iulog,*) 'c_areas in top layer', c_area(currentCohort)
+             endif
+             currentCohort => currentCohort%shorter
+
+          enddo
+                  
           endif
 
           if ( i  >  1) then
-             if ( arealayer(i)  >  arealayer(i-1) ) then
-                write(iulog,*) 'smaller top layer than bottom layer',arealayer(i),arealayer(i-1), &
+             if ( (arealayer(i)  -  arealayer(i-1) )>1e-11 ) then
+                write(iulog,*) 'smaller top layer than bottom layer ',arealayer(i),arealayer(i-1), &
                      currentPatch%area,currentPatch%spread(i-1:i)
              endif
           endif
        enddo ! 
 
        if(promswitch == 1)then 
-          write(iulog,*) 'end patch loop',currentSite%clmgcell
+         ! write(iulog,*) 'end patch loop',currentSite%clmgcell
        endif
 
        currentPatch => currentPatch%younger
     enddo !patch  
 
     if(promswitch == 1)then
-       write(iulog,*) 'end  canopy structure',currentSite%clmgcell
+      ! write(iulog,*) 'end  canopy structure',currentSite%clmgcell
     endif
 
   end subroutine canopy_structure
@@ -591,6 +604,7 @@ contains
 
        !If the canopy area is approaching closure, squash the tree canopies and make them taller and thinner
        do z = 1,nclmax  
+         
           if(arealayer(z)/currentPatch%area > 0.9_r8)then
              currentPatch%spread(z) = currentPatch%spread(z) - inc
           else 
@@ -599,12 +613,14 @@ contains
           if(currentPatch%spread(z) >= ED_val_maxspread)then 
              currentPatch%spread(z) = ED_val_maxspread
           endif
-          if(currentPatch%spread(z) <= ED_val_minspread)then
+          if(currentPatch%spread(z) <=  ED_val_minspread)then
              currentPatch%spread(z) = ED_val_minspread
           endif
         enddo !z
-        currentPatch%spread(:) = ED_val_maxspread
+        !write(iulog,*) 'spread',currentPatch%spread(1:2)
+        !currentPatch%spread(:) = ED_val_maxspread
         !FIX(RF,033114) spread is off
+        !write(iulog,*) 'canopy_spread',currentPatch%area,currentPatch%spread(1:2)
         currentPatch => currentPatch%younger
 
     enddo !currentPatch

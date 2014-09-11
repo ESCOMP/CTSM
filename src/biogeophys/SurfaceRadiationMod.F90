@@ -435,7 +435,7 @@ contains
           albgri_pur      =>    surfalb_vars%albgri_pur_col       , & ! Input:  [real(r8) (:,:) ] pure snow ground albedo (diffuse)     
           albgrd_bc       =>    surfalb_vars%albgrd_bc_col        , & ! Input:  [real(r8) (:,:) ] ground albedo without BC (direct) (col,bnd)
           albgri_bc       =>    surfalb_vars%albgri_bc_col        , & ! Input:  [real(r8) (:,:) ] ground albedo without BC (diffuse) (col,bnd)
-          
+          tlai            =>    canopystate_vars%tlai_patch       , & ! Input:  [real(r8) (:)   ] one-sided leaf area index
           elai            =>    canopystate_vars%elai_patch       , & ! Input:  [real(r8) (:)   ] one-sided leaf area index with burying by snow
           esai            =>    canopystate_vars%esai_patch       , & ! Input:  [real(r8) (:)   ] one-sided stem area index with burying by snow
           laisun          =>    canopystate_vars%laisun_patch     , & ! Output: [real(r8) (:)   ] sunlit leaf area                        
@@ -588,6 +588,10 @@ contains
                    write(iulog,*) 'too much leaf area in profile', fsun(p),currentPatch%lai,sunlai,shalai
                 endif
 
+             else ! not ed patch
+
+               fsun(p) = 0.0_r8
+
              end if !ED_patch   
 
           else ! use_ed false.  revert to normal multi-layer canopy.
@@ -681,9 +685,7 @@ contains
 
              trd(p,ib) = forc_solad(g,ib)*ftdd(p,ib)
              tri(p,ib) = forc_solad(g,ib)*ftid(p,ib) + forc_solai(g,ib)*ftii(p,ib)
-
              ! Solar radiation absorbed by ground surface
-
              ! calculate absorbed solar by soil/snow separately
              absrad  = trd(p,ib)*(1._r8-albsod(c,ib)) + tri(p,ib)*(1._r8-albsoi(c,ib))
              sabg_soil(p) = sabg_soil(p) + absrad
@@ -940,6 +942,11 @@ contains
           local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
           local_secp1 = mod(local_secp1,isecspday)
 
+        if(elai(p)==0.0_r8.and.fabd(p,1)>0._r8)then
+           ! FIX(SPM, 051314) - is this necessary ?  puts lots of info in
+           ! lnd.log
+           write(iulog,*) 'absorption without LAI',elai(p),tlai(p),fabd(p,1),p
+        endif
           ! Solar incident 
 
           fsds_vis_d(p) = forc_solad(g,1)

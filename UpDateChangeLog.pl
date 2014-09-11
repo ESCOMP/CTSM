@@ -49,7 +49,7 @@ EXAMPLES:
 
      To document a new tag and compare expected fails to previous tag.
 
-     $ProgName clm4_5_r097 "Description of this tag" -ct clm4_5_2_r096
+     $ProgName clm4_5_2_r097 "Description of this tag" -ct clm4_5_2_r096
 EOF
 }
 

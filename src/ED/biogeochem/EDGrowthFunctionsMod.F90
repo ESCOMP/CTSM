@@ -25,6 +25,7 @@ module EDGrowthFunctionsMod
   public ::  dbh
   public ::  bdead
   public ::  tree_lai
+  public ::  tree_sai
   public ::  c_area
   public ::  mortality_rates
 
@@ -159,7 +160,7 @@ contains
        write(iulog,*) 'problem in treelai',cohort_in%bl,cohort_in%pft
     endif
 
-    if( cohort_in%status  ==  2 )then ! are the leaves on? 
+    if( cohort_in%status_coh  ==  2 ) then ! are the leaves on? 
        slat = 1000.0_r8 * ecophyscon%slatop(cohort_in%pft) ! m2/g to m2/kg
        cohort_in%c_area = c_area(cohort_in) ! call the tree area 
        leafc_per_unitarea = cohort_in%bl/(cohort_in%c_area/cohort_in%n) !KgC/m2
@@ -183,6 +184,49 @@ contains
     return
 
   end function tree_lai
+  
+  ! ============================================================================
+
+  real(r8) function tree_sai( cohort_in )
+
+    ! ============================================================================
+    !  SAI of individual trees is a function of the total dead biomass per unit canopy area.   
+    ! ============================================================================
+
+    use shr_kind_mod, only : r8 => shr_kind_r8;
+    use clm_varctl  , only : iulog
+
+    implicit none
+
+    type(cohort), intent(inout) :: cohort_in       
+
+    real(r8) :: bdead_per_unitarea ! KgC of leaf per m2 area of ground.
+    real(r8) :: sai_scaler     ! This is hardwired, but should be made a parameter  - 
+             ! I need to add a new parameter to the 'standard' parameter file but don't have permission... RF 2 july.    
+
+    sai_scaler = 0.05_r8 ! here, a high biomass of 20KgC per m2 gives us a high SAI of 1.0. 
+
+    if( cohort_in%bdead  <  0._r8 .or. cohort_in%pft  ==  0 ) then
+       write(iulog,*) 'problem in treesai',cohort_in%bdead,cohort_in%pft
+    endif
+
+    cohort_in%c_area = c_area(cohort_in) ! call the tree area 
+    bdead_per_unitarea = cohort_in%bdead/(cohort_in%c_area/cohort_in%n) !KgC/m2
+    tree_sai = bdead_per_unitarea * sai_scaler !kg/m2 * m2/kg = unitless LAI 
+   
+    cohort_in%treesai = tree_sai
+
+    ! here, if the LAI exceeeds the maximum size of the possible array, then we have no way of accomodating it
+    ! at the moments nlevcan_ed default is 40, which is very large, so exceeding this would clearly illustrate a 
+    ! huge error 
+    if(cohort_in%treesai > nlevcan_ed*dinc_ed)then
+       write(iulog,*) 'too much sai' , cohort_in%treesai , cohort_in%pft , nlevcan_ed * dinc_ed
+    endif
+
+    return
+
+  end function tree_sai
+  
 
 ! ============================================================================
 
@@ -345,19 +389,20 @@ contains
     real(r8) :: smort ! stress mortality     : Fraction per year
     real(r8) :: bmort ! background mortality : Fraction per year
 
-    !density/mortality relationship from EDv1.0. 
-    bmort = 0.014_r8 !+ 0.15_r8*(1.0_r8-EDecophyscon%wood_density(cohort_in%pft))
-
-    if(cohort_in%patchptr%btran_ft(cohort_in%pft) <= 0.000001_r8)then !turned off for drought expt.
-       smort = 0.0_r8 * ED_val_stress_mort !FIX(RF,032414) - turned this off to assess the impact on the rainforest
-    else
-       smort = 0._r8
+    ! 'Background' mortality (can vary as a function of density as in ED1.0 and ED2.0, but doesn't here for tractability) 
+    bmort = 0.014_r8 
+   
+    ! Proxy for hydraulic failure induced mortality. 
+    smort = 0.0_r8
+    if(cohort_in%patchptr%btran_ft(cohort_in%pft) <= 0.000001_r8)then 
+       smort = smort + ED_val_stress_mort 
     endif
-
+    
+    ! Carbon Starvation induced mortality.
     if ( cohort_in%dbh  >  0._r8 ) then
        if(Bleaf(cohort_in) > 0._r8.and.cohort_in%bstore <= Bleaf(cohort_in))then
           frac = cohort_in%bstore/(Bleaf(cohort_in))
-          smort = smort+ max(0.0_r8,ED_val_stress_mort*(1.0_r8 - frac))
+          smort = smort + max(0.0_r8,ED_val_stress_mort*(1.0_r8 - frac))
        endif
     else
        write(iulog,*) 'dbh problem in mortality_rates', &

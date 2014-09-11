@@ -341,7 +341,7 @@ contains
     do while(associated(currentPatch))
        areatot = areatot + currentPatch%area
        currentPatch => currentPatch%younger
-       if(areatot > area)then 
+       if (( areatot - area ) > 0._r8 ) then 
           write(iulog,*) 'trimming patch area - is too big' , areatot-area
           currentSite%oldest_patch%area = currentSite%oldest_patch%area - (areatot - area)
        endif
@@ -987,10 +987,10 @@ contains
                       call fuse_cohorts(tpp)
                       call sort_cohorts(tpp)
                       currentPatch => tmpptr
-		      else
-		      write(iulog,*) 'patches not fused'
+                   else
+                     ! write(iulog,*) 'patches not fused'
                    endif
-                endif  !are both patcehs associated?        
+                endif  !are both patches associated?        
              endif    !are these different patches?   
              tpp => tpp%older
           enddo !tpp loop

@@ -58,6 +58,16 @@ module EDBioType
      real(r8), pointer :: seed_decay_patch           (:)   ! Decay of seed mass.            kGC/m2/year 
      real(r8), pointer :: seed_germination_patch     (:)   ! Germiantion rate of seed mass. kGC/m2/year
 
+     real(r8), pointer :: ED_bstore_patch            (:)   ! Total stored biomass. kGC/m2
+     real(r8), pointer :: ED_bdead_patch             (:)   ! Total dead biomass.   kGC/m2
+     real(r8), pointer :: ED_balive_patch            (:)   ! Total alive biomass.  kGC/m2
+     real(r8), pointer :: ED_bleaf_patch             (:)   ! Total leaf biomass.   kGC/m2
+     real(r8), pointer :: ED_biomass_patch           (:)   ! Total biomass.        kGC/m2
+
+     real(r8), pointer :: ED_GDD_patch               (:)   ! ED Phenology growing degree days. 
+                                                           !      This could and should be site-level. RF 
+     integer , pointer :: phen_cd_status_patch       (:)   ! ED Phenology cold deciduous status
+
      ! These variables are also in CNCarbonflux_vars and CNcarbonstate_vars and CNnitrogenstate_vars
      ! They have unique named definitions here - so this assumes currently that both use_ed and use_cn
      ! cannot both be true
@@ -80,8 +90,8 @@ contains
     class(EDbio_type) :: this
     type(bounds_type), intent(in) :: bounds  
 
-    call this%InitAllocate ( bounds)
-    call this%InitHistory ( bounds)
+    call this%InitAllocate ( bounds )
+    call this%InitHistory ( bounds )
 
   end subroutine Init
 
@@ -128,6 +138,13 @@ contains
     allocate(this%seed_decay_patch           (begp:endp))            ; this%seed_decay_patch           (:)   = 0.0_r8    
     allocate(this%seeds_in_patch             (begp:endp))            ; this%seeds_in_patch             (:)   = 0.0_r8    
     allocate(this%seed_germination_patch     (begp:endp))            ; this%seed_germination_patch     (:)   = 0.0_r8    
+    allocate(this%ED_bstore_patch            (begp:endp))            ; this%ED_bstore_patch            (:)   = 0.0_r8    
+    allocate(this%ED_bdead_patch             (begp:endp))            ; this%ED_bdead_patch             (:)   = 0.0_r8    
+    allocate(this%ED_balive_patch            (begp:endp))            ; this%ED_balive_patch            (:)   = 0.0_r8    
+    allocate(this%ED_bleaf_patch             (begp:endp))            ; this%ED_bleaf_patch             (:)   = 0.0_r8    
+    allocate(this%ED_biomass_patch           (begp:endp))            ; this%ED_biomass_patch           (:)   = 0.0_r8    
+    allocate(this%ED_GDD_patch               (begp:endp))            ; this%ED_GDD_patch               (:)   = 0.0_r8    
+    allocate(this%phen_cd_status_patch       (begp:endp))            ; this%phen_cd_status_patch       (:)   = 0.0_r8    
 
   end subroutine InitAllocate
 
@@ -184,19 +201,19 @@ contains
 
     call hist_addfld2d (fname='PFTbiomass',  units='kgC/m2', type2d='levgrnd', &
          avgflag='A', long_name='total PFT level biomass', &
-         ptr_patch=this%PFTbiomass_patch)
+         ptr_patch=this%PFTbiomass_patch, set_lake=0._r8, set_urb=0._r8)
 
     call hist_addfld2d (fname='PFTleafbiomass',  units='kgC/m2', type2d='levgrnd', &
          avgflag='A', long_name='total PFT level biomass', &
-         ptr_patch=this%PFTleafbiomass_patch)
+         ptr_patch=this%PFTleafbiomass_patch, set_lake=0._r8, set_urb=0._r8)
 
     call hist_addfld2d (fname='PFTstorebiomass',  units='kgC/m2', type2d='levgrnd', &
          avgflag='A', long_name='total PFT level biomass', &
-         ptr_patch=this%PFTstorebiomass_patch)
+         ptr_patch=this%PFTstorebiomass_patch, set_lake=0._r8, set_urb=0._r8)
 
     call hist_addfld2d (fname='PFTnindivs',  units='kgC/m2', type2d='levgrnd', &
          avgflag='A', long_name='total PFT level biomass', &
-         ptr_patch=this%PFTnindivs_patch)
+         ptr_patch=this%PFTnindivs_patch, set_lake=0._r8, set_urb=0._r8)
 
     call hist_addfld1d (fname='FIRE_NESTEROV_INDEX', units='none',  &
          avgflag='A', long_name='nesterov_fire_danger index', &
@@ -274,6 +291,30 @@ contains
          avgflag='A', long_name='Seed mass decay', &
          ptr_patch=this%seed_decay_patch, set_lake=0._r8, set_urb=0._r8)              
 
+    call hist_addfld1d (fname='ED_bstore', units=' KgC m-2',  &
+         avgflag='A', long_name='ED stored biomass', &
+         ptr_patch=this%ED_bstore_patch, set_lake=0._r8, set_urb=0._r8)
+
+    call hist_addfld1d (fname='ED_bdead', units=' KgC m-2',  &
+         avgflag='A', long_name='ED dead biomass', &
+         ptr_patch=this%ED_bdead_patch, set_lake=0._r8, set_urb=0._r8)
+
+    call hist_addfld1d (fname='ED_balive', units=' KgC m-2',  &
+         avgflag='A', long_name='ED live biomass', &
+         ptr_patch=this%ED_balive_patch, set_lake=0._r8, set_urb=0._r8)
+
+    call hist_addfld1d (fname='ED_bleaf', units=' KgC m-2',  &
+         avgflag='A', long_name='ED leaf biomass', &
+         ptr_patch=this%ED_bleaf_patch, set_lake=0._r8, set_urb=0._r8)
+
+    call hist_addfld1d (fname='ED_biomass', units=' KgC m-2',  &
+         avgflag='A', long_name='ED total biomass', &
+         ptr_patch=this%ED_biomass_patch, set_lake=0._r8, set_urb=0._r8)
+
+    call hist_addfld1d (fname='ED_GDD', units='deg C',  &
+         avgflag='A', long_name='ED phenology growing degree days', &
+         ptr_patch=this%ED_GDD_patch, set_lake=0._r8, set_urb=0._r8)
+
     call hist_addfld1d (fname='RB', units=' s m-1',  &
          avgflag='A', long_name='leaf boundary resistance', &
          ptr_patch=this%rb_patch, set_lake=0._r8, set_urb=0._r8)
@@ -292,12 +333,16 @@ contains
 
     real(r8), intent(in) :: val
 
-    this%trimming_patch        (:)   = val
-    this%canopy_spread_patch   (:)   = val
-    this%PFTbiomass_patch      (:,:) = val
-    this%PFTleafbiomass_patch  (:,:) = val
-    this%PFTstorebiomass_patch (:,:) = val
-    this%PFTnindivs_patch      (:,:) = val
+    !
+    ! FIX(SPM,082714) - commenting these lines out while merging ED branch to CLM
+    ! trunk.  Commented out by RF to work out science issues
+    !
+    !this%trimming_patch        (:)   = val
+    !this%canopy_spread_patch   (:)   = val
+    !this%PFTbiomass_patch      (:,:) = val
+    !this%PFTleafbiomass_patch  (:,:) = val
+    !this%PFTstorebiomass_patch (:,:) = val
+    !this%PFTnindivs_patch      (:,:) = val
     this%efpot_patch           (:)   = val
     this%rb_patch              (:)   = val
 

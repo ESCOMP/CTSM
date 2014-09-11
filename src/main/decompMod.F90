@@ -135,10 +135,15 @@ contains
 #ifdef _OPENMP
      integer, external :: OMP_GET_MAX_THREADS
      integer, external :: OMP_GET_NUM_THREADS
+     integer, external :: OMP_GET_THREAD_NUM
 #endif
      !------------------------------------------------------------------------------
      !    Make sure this IS being called from a threaded region
 #ifdef _OPENMP
+     ! FIX(SPM, 090314) - for debugging ED and openMP
+     !write(iulog,*) 'SPM omp debug decompMod 1 ', &
+          !OMP_GET_NUM_THREADS(),OMP_GET_MAX_THREADS(),OMP_GET_THREAD_NUM()
+
      if ( OMP_GET_NUM_THREADS() == 1 .and. OMP_GET_MAX_THREADS() > 1 )then
         call shr_sys_abort( trim(subname)//' ERROR: Calling from inside a non-threaded region)')
      end if
@@ -198,11 +203,17 @@ contains
      ! !LOCAL VARIABLES:
 #ifdef _OPENMP
      integer, external :: OMP_GET_NUM_THREADS
+     integer, external :: OMP_GET_MAX_THREADS
+     integer, external :: OMP_GET_THREAD_NUM
 #endif
      character(len=32), parameter :: subname = 'get_proc_bounds'  ! Subroutine name
      !------------------------------------------------------------------------------
      !    Make sure this is NOT being called from a threaded region
 #ifdef _OPENMP
+     ! FIX(SPM, 090314) - for debugging ED and openMP
+     !write(*,*) 'SPM omp debug decompMod 2 ', &
+          !OMP_GET_NUM_THREADS(),OMP_GET_MAX_THREADS(),OMP_GET_THREAD_NUM()
+
      if ( OMP_GET_NUM_THREADS() > 1 )then
         call shr_sys_abort( trim(subname)//' ERROR: Calling from inside  a threaded region')
      end if
@@ -288,17 +299,17 @@ contains
      ! Return number of gridcells, landunits, columns, and pfts across all processes.
      !
      ! !ARGUMENTS:
-     integer, optional, intent(out) :: ng  ! total number of gridcells across all processors
-     integer, optional, intent(out) :: nl  ! total number of landunits across all processors
-     integer, optional, intent(out) :: nc  ! total number of columns across all processors
-     integer, optional, intent(out) :: np  ! total number of pfts across all processors
+     integer, optional, intent(out) :: ng        ! total number of gridcells across all processors
+     integer, optional, intent(out) :: nl        ! total number of landunits across all processors
+     integer, optional, intent(out) :: nc        ! total number of columns across all processors
+     integer, optional, intent(out) :: np        ! total number of pfts across all processors
      integer, optional, intent(out) :: nCohorts  ! total number ED cohorts
      !------------------------------------------------------------------------------
 
-     if (present(np)) np = nump
-     if (present(nc)) nc = numc
-     if (present(nl)) nl = numl
-     if (present(ng)) ng = numg
+     if (present(np)) np             = nump
+     if (present(nc)) nc             = numc
+     if (present(nl)) nl             = numl
+     if (present(ng)) ng             = numg
      if (present(nCohorts)) nCohorts = numCohort
 
    end subroutine get_proc_global

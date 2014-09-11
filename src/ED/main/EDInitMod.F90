@@ -351,14 +351,14 @@ contains
      patch_in%tallest  => null()
      patch_in%shortest => null()
 
-     do pft =  1,2 !FIX(RF,032414) - turning off veg dynamics
+     do pft =  1,numpft_ed !FIX(RF,032414) - turning off veg dynamics
 
         allocate(dc)
 
         dc%pft                        = pft
         dc%n                          = EDecophyscon%initd(pft) * patch_in%area
         dc%hite                       = EDecophyscon%hgt_min(pft)
-        dc%dbh                        = Dbh(dc) + 0.0001_r8*pft     !seperate out PFTs a little bit...
+        dc%dbh                        = Dbh(dc) ! FIX(RF, 090314) - comment out addition of ' + 0.0001_r8*pft   '  - seperate out PFTs a little bit...
         dc%canopy_trim                = 1.0_r8
         dc%bdead                      = Bdead(dc)
         dc%balive                     = Bleaf(dc)*(1.0_r8 + ecophyscon%froot_leaf(pft) +EDecophyscon%sapwood_ratio(dc%pft)*dc%hite)
@@ -372,7 +372,11 @@ contains
 
         if( ecophyscon%season_decid(pft)  == 1 ) then !for dorment places
            dc%bstore                  = Bleaf(dc) * EDecophyscon%cushion(pft) !stored carbon in new seedlings.
-           dc%laimemory               = Bleaf(dc)
+           if(patch_in%siteptr%status==2)then 
+             dc%laimemory             = 0.0_r8
+           else
+             dc%laimemory             = Bleaf(dc)
+           endif
            ! reduce biomass according to size of store, this will be recovered when elaves com on.
            dc%balive                  = dc%balive - dc%laimemory
            cstatus                    = patch_in%siteptr%status

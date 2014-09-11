@@ -85,7 +85,7 @@ contains
     !
     ! !USES:
     use clm_varcon        , only : denh2o, denice, wimp, ssi
-    use landunit_varcon   , only : istsoil,istdlak
+    use landunit_varcon   , only : istsoil
     use clm_time_manager  , only : get_step_size
     use AerosolMod        , only : AerosolFluxes
     !
