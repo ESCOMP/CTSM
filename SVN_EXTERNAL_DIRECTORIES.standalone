@@ -1,5 +1,5 @@
 # CESM scripts, machines and driver
-scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_140910
+scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_140916b
 scripts/doc                     https://svn-ccsm-models.cgd.ucar.edu/doc/trunk_tags/doc_140519
 scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_140811
 scripts/ccsm_utils/CMake        https://github.com/quantheory/CMake_Fortran_utils/tags/CMake_Fortran_utils_140715

@@ -1,4 +1,91 @@
 ===============================================================
+Tag name:  clm4_5_1_r083
+Originator(s):  muszala (Stefan Muszala)
+Date: Wed Sep 17 09:21:31 MDT 2014
+One-line Summary: only update scripts and run new baselines.  this due to an error in yellowstone pgi test naming (clm_aux45 changed to aux_clm45)
+
+Purpose of changes: Update scripts due to an error in a previous scripts tag in which I named pgi tests as clm_aux45 instead
+of aux_clm45.  These were for tests moved from goldbach to yellowstone.
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID): N/A
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts4_140910 -> scripts4_140916b
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes: N/A
+
+- update test list failures
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+CLM testing:
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel - 40 OK 
+    yellowstone_pgi
+
+    goldbach_nag      - 40 OK, 45 OK 
+    goldbach_intel    - 40 OK, 45 OK
+
+Note 1:  Due to the fact that in older baselines component_gen_comp was failing due to a scripts error (now fixed)
+some older baselines don't have the clm history files.  As one example:
+
+   BFAIL ERI_D.f10_f10.ICRUCLM50BGC.goldbach_intel.clm-reduceOutput.compare_hist.clm4_5_1_r082 
+   - rerun.  compare against clm4_5_1_r081, then it passes.
+   PASS  ERI_D.f10_f10.ICRUCLM50BGC.goldbach_intel.clm-reduceOutput 
+   PASS  ERI_D.f10_f10.ICRUCLM50BGC.goldbach_intel.clm-reduceOutput.memleak
+   PASS  ERI_D.f10_f10.ICRUCLM50BGC.goldbach_intel.clm-reduceOutput.compare_hist.clm4_5_1_r082_oldPgi 
+   PASS  ERI_D.f10_f10.ICRUCLM50BGC.goldbach_intel.clm-reduceOutput.memcomp.clm4_5_1_r082_oldPgi 
+   PASS  ERI_D.f10_f10.ICRUCLM50BGC.goldbach_intel.clm-reduceOutput.tputcomp.clm4_5_1_r082_oldPgi 
+   PASS ERI_D.f10_f10.ICRUCLM50BGC.goldbach_intel.clm-reduceOutput.C.140917-082253.nlcomp
+
+   For these tests, I made sure that clm2 history files were in the clm4_5_1_r083 baseline dirs.  They
+   should pass going forward.
+
+   ERI_D.f10_f10.ICRUCLM50BGC.goldbach_intel.clm-reduceOutput
+   PEM.f10_f10.ICLM45BGCCROP.goldbach_intel.clm-crop
+   SSP.f19_g16.I1850CLM45BGC.yellowstone_pgi.clm-default
+
+Note 2: For these N2 tests, there was a scripts problem with st_archiver in the previous tag.  These should pass next time.
+   BFAIL ERI_N2.f19_g16.ICRUCLM45BGCCROP.yellowstone_intel.compare_hist.clm4_5_1_r082 
+   BFAIL ERI_N2.f19_g16.ICRUCLM45BGCCROP.yellowstone_intel.clm-default.compare_hist.clm4_5_1_r082 
+   BFAIL ERI_N2.f19_g16.ICRUCLM45BGCCROP.yellowstone_intel.clm-default.clm2.h0.compare_hist.clm4_5_1_r082 
+   BFAIL ERI_N2.f19_g16.ICRUCLM45BGCCROP.yellowstone_intel.clm-default.clm2.h1.compare_hist.clm4_5_1_r082
+
+CLM tag used for the baseline comparisons: clm4_5_1_r082
+
+Changes answers relative to baseline: No
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r082
 Originator(s):  muszala (Stefan Muszala)
 Date: Thu Sep 11 14:07:58 MDT 2014
