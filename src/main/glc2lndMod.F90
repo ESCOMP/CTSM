@@ -45,6 +45,22 @@ module glc2lndMod
      ! guess available at initialization)
      real(r8), pointer :: icemask_grc (:)   => null()
 
+     ! icemask_coupled_fluxes_grc is like icemask_grc, but the mask only contains icesheet
+     ! points that potentially send non-zero fluxes to the coupler. i.e., it does not
+     ! contain icesheets that are diagnostic only, because for those diagnostic ice sheets
+     ! (which do not send calving fluxes to the coupler), we need to use the non-dynamic
+     ! form of runoff routing in CLM in order to conserve water properly.
+     !
+     ! (However, note that this measure of "diagnostic-only" does not necessarily
+     ! correspond to whether CLM is updating its glacier areas there - for example, we
+     ! could theoretically have an icesheet whose areas are evolving, and CLM is updating
+     ! its glacier areas to match, but where we're zeroing out the fluxes sent to the
+     ! coupler, and so we're using the non-dynamic form of runoff routing in CLM.)
+     real(r8), pointer :: icemask_coupled_fluxes_grc (:)  => null()
+
+     ! Where we should do runof routing that is appropriate for having a dynamic icesheet underneath.
+     logical , pointer :: glc_dyn_runoff_routing_grc (:) => null()
+
    contains
 
      procedure, public  :: Init
@@ -55,6 +71,8 @@ module glc2lndMod
      procedure, private :: InitHistory
      procedure, private :: InitCold
      procedure, private :: check_glc2lnd_icemask  ! sanity-check icemask from GLC
+     procedure, private :: check_glc2lnd_icemask_coupled_fluxes ! sanity-check icemask_coupled_fluxes from GLC
+     procedure, private :: update_glc2lnd_dyn_runoff_routing ! update glc_dyn_runoff_routing field based on input from GLC
      procedure, private :: update_glc2lnd_fracs   ! update subgrid fractions based on input from GLC
      procedure, private :: update_glc2lnd_topo    ! update column-level topographic heights based on input from GLC
 
@@ -96,6 +114,8 @@ contains
     allocate(this%topo_grc    (begg:endg,0:maxpatch_glcmec)) ;   this%topo_grc    (:,:) = nan
     allocate(this%hflx_grc    (begg:endg,0:maxpatch_glcmec)) ;   this%hflx_grc    (:,:) = nan
     allocate(this%icemask_grc (begg:endg))                   ;   this%icemask_grc (:)   = nan
+    allocate(this%icemask_coupled_fluxes_grc (begg:endg))    ;   this%icemask_coupled_fluxes_grc (:)   = nan
+    allocate(this%glc_dyn_runoff_routing_grc (begg:endg))    ;   this%glc_dyn_runoff_routing_grc (:)   = .false.
 
   end subroutine InitAllocate
 
@@ -155,7 +175,13 @@ contains
     ! initialization, set icemask equal to glcmask; icemask will later get updated at
     ! the start of the run loop, as soon as we have data from CISM
     this%icemask_grc(begg:endg) = ldomain%glcmask(begg:endg)
+
+    ! initialize icemask_coupled_fluxes to 0; this seems safest in case we aren't coupled
+    ! to CISM (to ensure that we use the uncoupled form of runoff routing)
+    this%icemask_coupled_fluxes_grc(begg:endg) = 0.0_r8
     
+    call this%update_glc2lnd_dyn_runoff_routing(bounds)
+
   end subroutine InitCold
 
 
@@ -196,27 +222,31 @@ contains
     ! !DESCRIPTION:
     ! Update values to derived-type CLM variables based on input from GLC (via the coupler)
     !
-    ! icemask and topo are always updated (although note that this routine should only be
-    ! called when create_glacier_mec_landunit is true, or some similar condition; this
-    ! should be controlled in a conditional around the call to this routine); fracs are
-    ! updated if glc_do_dynglacier is true
+    ! icemask, icemask_coupled_fluxes, glc_dyn_runoff_routing, and topo are always updated
+    ! (although note that this routine should only be called when
+    ! create_glacier_mec_landunit is true, or some similar condition; this should be
+    ! controlled in a conditional around the call to this routine); fracs are updated if
+    ! glc_do_dynglacier is true
     !
     ! !USES:
     use clm_varctl , only : glc_do_dynglacier
     !
     ! !ARGUMENTS:
-    class(glc2lnd_type), intent(in) :: this
-    type(bounds_type)  , intent(in) :: bounds ! bounds
+    class(glc2lnd_type), intent(inout) :: this
+    type(bounds_type)  , intent(in)    :: bounds ! bounds
     !
     ! !LOCAL VARIABLES:
 
     character(len=*), parameter :: subname = 'update_glc2lnd'
     !-----------------------------------------------------------------------
 
-    ! Note that nothing is needed to update the icemask here, because the only icemask
-    ! value used in the code is the one in the glc2lnd_type, which has already been set.
-    ! However, we do some sanity-checking of that field here.
+    ! Note that nothing is needed to update icemask or icemask_coupled_fluxes here,
+    ! because these values have already been set in lnd_import_export. However, we do
+    ! some sanity-checking of those fields here.
     call this%check_glc2lnd_icemask(bounds)
+    call this%check_glc2lnd_icemask_coupled_fluxes(bounds)
+
+    call this%update_glc2lnd_dyn_runoff_routing(bounds)
 
     if (glc_do_dynglacier) then
        call this%update_glc2lnd_fracs(bounds)
@@ -262,6 +292,77 @@ contains
     end do
 
   end subroutine check_glc2lnd_icemask
+
+  !-----------------------------------------------------------------------
+  subroutine check_glc2lnd_icemask_coupled_fluxes(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Do a sanity check on the icemask_coupled_fluxes field received from CISM via coupler.
+    !
+    ! !USES:
+    use clm_varcon, only : nameg
+    !
+    ! !ARGUMENTS:
+    class(glc2lnd_type), intent(in) :: this
+    type(bounds_type)  , intent(in) :: bounds ! bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g  ! grid cell index
+    
+    character(len=*), parameter :: subname = 'check_glc2lnd_icemask_coupled_fluxes'
+    !-----------------------------------------------------------------------
+
+    do g = bounds%begg, bounds%endg
+
+       ! Ensure that icemask_coupled_fluxes is a subset of icemask. Although there
+       ! currently is no code in CLM that depends on this relationship, it seems helpful
+       ! to ensure that this intuitive relationship holds, so that code developed in the
+       ! future can rely on it.
+
+       if (this%icemask_coupled_fluxes_grc(g) > 0._r8 .and. this%icemask_grc(g) == 0._r8) then
+          write(iulog,*) subname//' ERROR: icemask_coupled_fluxes must be a subset of icemask.'
+          call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+       end if
+    end do
+
+  end subroutine check_glc2lnd_icemask_coupled_fluxes
+
+  !-----------------------------------------------------------------------
+  subroutine update_glc2lnd_dyn_runoff_routing(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Update glc_dyn_runoff_routing field based on updated icemask_coupled_fluxes field
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(glc2lnd_type), intent(inout) :: this
+    type(bounds_type)  , intent(in) :: bounds ! bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g  ! grid cell index
+    
+    character(len=*), parameter :: subname = 'update_glc2lnd_dyn_runoff_routing'
+    !-----------------------------------------------------------------------
+
+    ! Wherever we have an icesheet that is computing and sending fluxes to the coupler -
+    ! which particularly means it is computing a calving flux - we will use the
+    ! "glc_dyn_runoff_routing" scheme. In other places - including places where CISM is
+    ! not running at all, as well as places where CISM is running in diagnostic-only mode
+    ! and therefore is not sending a calving flux - we use the alternative
+    ! glc_dyn_runoff_routing=false scheme. This is needed to conserve water correctly in
+    ! the absence of a calving flux.
+
+    do g = bounds%begg, bounds%endg
+       if (this%icemask_coupled_fluxes_grc(g) > 0._r8) then
+          this%glc_dyn_runoff_routing_grc(g) = .true.
+       else
+          this%glc_dyn_runoff_routing_grc(g) = .false.
+       end if
+    end do
+
+  end subroutine update_glc2lnd_dyn_runoff_routing
+
 
 
   !-----------------------------------------------------------------------

@@ -200,12 +200,7 @@ module clm_varctl
 
   ! if false, pass positive-degree-day info to GLC
 
-  ! true => handle snow capping & runoff appropriately for dynamic glacier areas 
-  ! (generally should agree with glc_do_dynglacier)
-  logical , public :: glc_dyn_runoff_routing = .false.      
-  
   ! true => CLM glacier area & topography changes dynamically 
-  ! (generally should agree with glc_dyn_runoff_routing)
   logical , public :: glc_do_dynglacier = .false.           
 
   ! true => downscale precip division into rain & snow

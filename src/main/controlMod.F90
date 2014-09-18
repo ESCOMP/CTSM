@@ -171,7 +171,7 @@ contains
 
     ! Glacier_mec info
     namelist /clm_inparm/ &    
-         maxpatch_glcmec, glc_smb, glc_dyn_runoff_routing, glc_do_dynglacier, glcmec_downscale_rain_snow_convert, &
+         maxpatch_glcmec, glc_smb, glc_do_dynglacier, glcmec_downscale_rain_snow_convert, &
          glcmec_downscale_longwave, glc_snow_persistence_max_days, glc_grid, fglcmask 
 
     ! Other options
@@ -551,7 +551,6 @@ contains
     call mpi_bcast (create_glacier_mec_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (glc_smb, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (glc_dyn_runoff_routing, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_do_dynglacier, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glcmec_downscale_rain_snow_convert, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glcmec_downscale_longwave, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -728,11 +727,6 @@ contains
           write(iulog,*) '   Longwave radiation will be downscaled'
        else
           write(iulog,*) '   Longwave radiation will NOT be downscaled'
-       endif
-       if (glc_dyn_runoff_routing) then
-          write(iulog,*) '   glc snow capping and runoff handled appropriately for evolving glacier areas'
-       else
-          write(iulog,*) '   glc snow capping and runoff handled appropriately for NON-evolving glacier areas'
        endif
        if (glc_do_dynglacier) then
           write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'

@@ -730,7 +730,7 @@ contains
             filter(nc)%num_hydrologyc, filter(nc)%hydrologyc, &
             filter(nc)%num_urbanc, filter(nc)%urbanc,         &                 
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,     &                
-            atm2lnd_vars, temperature_vars,                   &
+            atm2lnd_vars, glc2lnd_vars, temperature_vars,     &
             soilhydrology_vars, soilstate_vars, waterstate_vars, waterflux_vars)
 
        call t_stopf('hydro2 drainage')     
@@ -764,8 +764,8 @@ contains
        call t_startf('balchk')
        call BalanceCheck(bounds_clump, &
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c, &
-            atm2lnd_vars, solarabs_vars, waterflux_vars, &
-            waterstate_vars, energyflux_vars, canopystate_vars ) 
+            atm2lnd_vars, glc2lnd_vars, solarabs_vars, waterflux_vars, &
+            waterstate_vars, energyflux_vars, canopystate_vars)
        call t_stopf('balchk')
 
        if(.not. use_ed)then

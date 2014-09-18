@@ -215,6 +215,7 @@ contains
              glc2lnd_vars%hflx_grc(g,num)  = x2l(index_x2l_Flgg_hflx(num),i)
           end do
           glc2lnd_vars%icemask_grc(g)  = x2l(index_x2l_Sg_icemask,i)
+          glc2lnd_vars%icemask_coupled_fluxes_grc(g)  = x2l(index_x2l_Sg_icemask_coupled_fluxes,i)
        end if
 
     end do

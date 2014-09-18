@@ -108,6 +108,7 @@ module clm_cpl_indices
   integer, public ::index_x2l_Flgg_hflx(0:glc_nec_max) = 0   ! Heat flux from glc model
   
   integer, public ::index_x2l_Sg_icemask
+  integer, public ::index_x2l_Sg_icemask_coupled_fluxes
   
   integer, public :: nflds_x2l = 0
 
@@ -273,6 +274,7 @@ contains
     end do
     
     index_x2l_Sg_icemask = mct_avect_indexra(x2l,'Sg_icemask',perrwith='quiet')
+    index_x2l_Sg_icemask_coupled_fluxes = mct_avect_indexra(x2l,'Sg_icemask_coupled_fluxes',perrwith='quiet')
     
     if (glc_nec == glc_nec_max) then
        call shr_sys_abort (subname // 'error: glc_nec_cpl cannot equal glc_nec_max')

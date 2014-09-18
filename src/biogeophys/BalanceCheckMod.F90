@@ -13,6 +13,7 @@ module BalanceCheckMod
   use clm_varcon         , only : namep, namec
   use GetGlobalValuesMod , only : GetGlobalIndex
   use atm2lndType        , only : atm2lnd_type
+  use glc2lndMod         , only : glc2lnd_type
   use EnergyFluxType     , only : energyflux_type
   use SolarAbsorbedType  , only : solarabs_type
   use SoilHydrologyType  , only : soilhydrology_type  
@@ -127,8 +128,8 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, num_do_smb_c, filter_do_smb_c, &
-        atm2lnd_vars, solarabs_vars, waterflux_vars, waterstate_vars, energyflux_vars, &
-        canopystate_vars ) 
+        atm2lnd_vars, glc2lnd_vars, solarabs_vars, waterflux_vars, waterstate_vars, &
+        energyflux_vars, canopystate_vars)
      !
      ! !DESCRIPTION:
      ! This subroutine accumulates the numerical truncation errors of the water
@@ -149,7 +150,7 @@ contains
      use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
      use column_varcon     , only : icol_road_perv, icol_road_imperv
      use landunit_varcon   , only : istice_mec, istdlak, istsoil,istcrop,istwet
-     use clm_varctl        , only : glc_dyn_runoff_routing, create_glacier_mec_landunit
+     use clm_varctl        , only : create_glacier_mec_landunit
      use clm_time_manager  , only : get_step_size, get_nstep
      use clm_initializeMod , only : surfalb_vars
      use CanopyStateType   , only : canopystate_type
@@ -160,6 +161,7 @@ contains
      integer               , intent(in)    :: num_do_smb_c        ! number of columns in filter_do_smb_c
      integer               , intent(in)    :: filter_do_smb_c (:) ! column filter for points where SMB calculations are done
      type(atm2lnd_type)    , intent(in)    :: atm2lnd_vars
+     type(glc2lnd_type)    , intent(in)    :: glc2lnd_vars
      type(solarabs_type)   , intent(in)    :: solarabs_vars
      type(waterflux_type)  , intent(inout) :: waterflux_vars
      type(waterstate_type) , intent(inout) :: waterstate_vars
@@ -183,6 +185,8 @@ contains
           forc_rain               =>    atm2lnd_vars%forc_rain_downscaled_col   , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]
           forc_snow               =>    atm2lnd_vars%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]
           forc_lwrad              =>    atm2lnd_vars%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
+
+          glc_dyn_runoff_routing  =>    glc2lnd_vars%glc_dyn_runoff_routing_grc , & ! Input:  [real(r8) (:)   ]  whether we're doing runoff routing appropriate for having a dynamic icesheet
 
           do_capsnow              =>    waterstate_vars%do_capsnow_col          , & ! Input:  [logical (:)    ]  true => do snow capping                  
           h2osno                  =>    waterstate_vars%h2osno_col              , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
@@ -314,13 +318,14 @@ contains
        !     has to be added back to the column, as far as the error correction is concerned, by
        !     adding back the equivalent flux*timestep.
        
-       if (glc_dyn_runoff_routing) then
-          do fc = 1,num_do_smb_c
-             c = filter_do_smb_c(fc)
+       do fc = 1,num_do_smb_c
+          c = filter_do_smb_c(fc)
+          g = col%gridcell(c)
+          if (glc_dyn_runoff_routing(g)) then
              errh2o(c) = errh2o(c) + qflx_glcice_frz(c)*dtime
              errh2o(c) = errh2o(c) - qflx_glcice_melt(c)*dtime
-          end do
-       endif
+          endif
+       end do
 
        found = .false.
        do c = bounds%begc, bounds%endc
@@ -436,7 +441,7 @@ contains
                    endif
                 endif
 
-                if (glc_dyn_runoff_routing) then
+                if (glc_dyn_runoff_routing(g)) then
                    ! Need to add qflx_glcice_frz to snow_sinks for the same reason as it is
                    ! added to errh2o above - see the comment above for details.
                    snow_sinks(c) = snow_sinks(c) + qflx_glcice_frz(c)

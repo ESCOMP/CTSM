@@ -139,14 +139,6 @@ Only works when glc_nec is greater than 0.
        group="clm_inparm" valid_values="" >
 If TRUE, dynamically change areas and topographic heights over glacier points.
 Only works when glc_nec is greater than zero, and when coupled to CISM.
-Generally should agree with glc_dyn_runoff_routing.
-</entry>
-
-<entry id="glc_dyn_runoff_routing" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
-If TRUE, handle snow capping and runoff appropriately for dynamic glacier areas.
-Only works when glc_nec is greater than zero.
-Generally should agree with glc_do_dynglacier.
 </entry>
 
 <entry id="glc_snow_persistence_max_days" type="integer" category="clm_physics"

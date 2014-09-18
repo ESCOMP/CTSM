@@ -1,4 +1,154 @@
 ===============================================================
+Tag name:  clm4_5_1_r084
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Sep 18 14:39:44 MDT 2014
+One-line Summary: make glc_dyn_runoff_routing spatially-varying, based on input from glc
+
+Purpose of changes:
+
+Dave Lawrence, Bill Lipscomb and Jeremy Fyke have pointed out that
+glc_dyn_runoff_routing needs to be spatially-varying: Even when we're coupling
+to CISM, we should continue to use the old scheme in regions that don't have an
+active icesheet model underneath (which currently includes Antarctica and all of
+the world's smaller glaciers - i.e., everything except Greenland). Furthermore,
+we have introduced a new ability into CISM to run in diagnostic mode, without
+sending calving/runoff fluxes to the coupler. In this case, too, CLM should
+revert to using the old scheme (glc_dyn_runoff_routing = .false.).
+
+To accomplish both of these things, I have introduced a new coupling field,
+through which GLC tells CLM which areas have an icesheet that is "active" in the
+sense of sending fluxes to the coupler. In this CLM tag, CLM sets a
+spatially-varying version of glc_dyn_runoff_routing based on this new coupler
+field - replacing the old, namelist-settable version of this flag.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist:
+
+  - removed glc_dyn_runoff_routing
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+  drv: drvseq5_0_15 -> drvseq5_0_17
+    - fix for some multi-instance runs
+    - add icemask_coupled_fluxes field
+
+  cism: cism1_140602 -> cism1_140914
+    - Add zero_gcm_fluxes option; send icemask_coupled_fluxes field to coupler
+
+  scripts: scripts4_140916b -> scripts4_140916c
+    - Rename CLM_UPDATE_GLC_AREAS to GLC_TWO_WAY_COUPLING
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Rename CLM_UPDATE_GLC_AREAS xml variable to GLC_TWO_WAY_COUPLING.
+          Remove glc_dyn_runoff_routing namelist variable (this is now a
+          spatially-varying field, tied more tightly to CISM).
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       models/lnd/clm/bld/CLMBuildNamelist.pm
+M       models/lnd/clm/bld/unit_testers/build-namelist_test.pl
+M       models/lnd/clm/bld/user_nl_clm
+M       models/lnd/clm/bld/env_run.xml
+
+========= Receive icemask_coupled_fluxes from CISM
+M       models/lnd/clm/src/cpl/lnd_import_export.F90
+M       models/lnd/clm/src/cpl/clm_cpl_indices.F90
+
+========= Set spatially-varying glc_dyn_runoff_routing field based on
+          icemask_coupled_fluxes, and use this in place of the old scalar
+          glc_dyn_runoff_routing flag
+M       models/lnd/clm/src/main/glc2lndMod.F90
+M       models/lnd/clm/src/main/clm_driver.F90
+M       models/lnd/clm/src/main/clm_varctl.F90
+M       models/lnd/clm/src/main/controlMod.F90
+M       models/lnd/clm/src/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/biogeophys/HydrologyDrainageMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+
+========= Add write statement to workaround a pgi compiler problem
+M       models/lnd/clm/src/main/restFileMod.F90
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok (baseline comparisons fail for clm45 & clm50, as expected)
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu: NOT RUN
+    goldbach_nag: ok
+    goldbach_intel: ok
+
+    Note: Most testing was run on glc_runoff_routing_n06_clm4_5_1_r083. After
+    that tag, I added the following write statement in restFileMod, as a
+    workaround for a PGI compiler bug:
+
+       write(iulog,*) 'about to call aerosol_vars%restart: ', ubound(waterstate_vars%h2osoi_ice_col)    
+
+    After that addition, I just reran a subset of tests: 6 yellowstone-intel
+    tests, 10 yellowstone-pgi tests (including the 2 that had failed due to the
+    compiler bug), and 5 goldbach-nag tests. 
+
+NOTE: Unit test build is currently failing due to a change in r082. Stefan is
+working on a fix.
+
+CLM tag used for the baseline comparisons: clm4_5_1_r083
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45 with CISM (i.e., IG)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+    (1) Large changes in runoff from glaciers in IG compsets, due to setting
+    glc_dyn_runoff_routing to .false. outside of Greenland.
+
+    (2) Roundoff-level changes in icemask for some resolutions and compilers,
+    due to changes in the cism external.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? For icemask changes: examined cprnc RMS errors. For other
+   changes, diffs are greater than roundoff.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r083
 Originator(s):  muszala (Stefan Muszala)
 Date: Wed Sep 17 09:21:31 MDT 2014
@@ -48,6 +198,9 @@ M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
 CLM testing:
 
   regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    WJS: note: Stef told me that he actually ran all the yellowstone tests, and
+    all were okay
 
     yellowstone_intel - 40 OK 
     yellowstone_pgi

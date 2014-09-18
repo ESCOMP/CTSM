@@ -148,7 +148,7 @@ contains
     type(carbonflux_type)    , intent(inout) :: c14_carbonflux_vars
     type(nitrogenstate_type) , intent(inout) :: nitrogenstate_vars
     type(nitrogenflux_type)  , intent(inout) :: nitrogenflux_vars
-    type(glc2lnd_type)       , intent(in)    :: glc2lnd_vars
+    type(glc2lnd_type)       , intent(inout) :: glc2lnd_vars
     !
     ! !LOCAL VARIABLES:
     integer           :: nclumps      ! number of clumps on this processor

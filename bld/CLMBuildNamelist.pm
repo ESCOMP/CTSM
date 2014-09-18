@@ -1651,11 +1651,11 @@ sub setup_logic_glacier {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref, $physv) = @_;
 
-  my $clm_upvar = "CLM_UPDATE_GLC_AREAS";
+  my $clm_upvar = "GLC_TWO_WAY_COUPLING";
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-     # glc_do_dynglacier is set via CLM_UPDATE_GLC_AREAS; it cannot be set via
+     # glc_do_dynglacier is set via GLC_TWO_WAY_COUPLING; it cannot be set via
      # user_nl_clm (this is because we might eventually want the coupler and glc
-     # to also respond to CLM_UPDATE_GLC_AREAS, by not bothering to send / map
+     # to also respond to GLC_TWO_WAY_COUPLING, by not bothering to send / map
      # these fields - so we want to ensure that CLM is truly listening to this
      # shared xml variable and not overriding it)
      my $var = "glc_do_dynglacier";
@@ -1665,12 +1665,8 @@ sub setup_logic_glacier {
         fatal_error("glc_do_dynglacier can only be set via the env variable $clm_upvar: it can NOT be set in user_nl_clm\n");
      }
 
-     # glc_dyn_runoff_routing is also set via CLM_UPDATE_GLC_AREAS by default,
-     # but unlike glc_do_dynglacier, it can be overridden via user_nl_clm
-     $var = "glc_dyn_runoff_routing";
-     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'val'=>$val);     
   } else {
-     # Otherwise if CLM4.0 physics and CLM_UPDATE_GLC_AREAS is TRUE -- trigger an error
+     # Otherwise if CLM4.0 physics and GLC_TWO_WAY_COUPLING is TRUE -- trigger an error
      if ( logical_to_fortran($envxml_ref->{$clm_upvar})  =~ /$TRUE/i ) {
         fatal_error( "clm4_0 physics are being used, but $clm_upvar variable is set to true. $clm_upvar can ONLY be set for physics after clm4_5" );
      }
@@ -1745,13 +1741,7 @@ sub setup_logic_glacier {
     my $glc_do_dynglacier= $nl->get_value('glc_do_dynglacier');
     if ( defined($glc_do_dynglacier) ) {
       if ( $glc_do_dynglacier =~ /$TRUE/i ) {
-        fatal_error("glc_do_dynglacier (set from CLM_UPDATE_GLC_AREAS env variable) is true, but glc_nec is equal to zero");
-      }
-    }
-    my $glc_dyn_runoff_routing= $nl->get_value('glc_dyn_runoff_routing');
-    if ( defined($glc_dyn_runoff_routing) ) {
-      if ( $glc_dyn_runoff_routing =~ /$TRUE/i ) {
-        fatal_error("glc_dyn_runoff_routing is true, but glc_nec is equal to zero");
+        fatal_error("glc_do_dynglacier (set from GLC_TWO_WAY_COUPLING env variable) is true, but glc_nec is equal to zero");
       }
     }
     my $fglcmask = $nl->get_value('fglcmask');
