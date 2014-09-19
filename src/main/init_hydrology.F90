@@ -12,7 +12,6 @@ subroutine init_hydrology( NLFilename )
   use shr_mpi_mod   , only : shr_mpi_bcast
     
   use FuncPedotransferMod,  only : init_pedof
-  use SoiWatRetCurveParMod, only : init_soil_WatRetCurve
   use RootBiophysMod,       only : init_rootprof
   use SoilWaterMovementMod, only : init_soilwater_movement
   use SurfaceResistanceMod, only : init_soil_stress
@@ -25,8 +24,6 @@ implicit none
   !set up options for different sub-models, the namelist file
   !will also be passed into this different initializing methods
   !to read in their local parameters, Jinyun Tang, Mar 29, 2014
-  
-  call init_soil_WatRetCurve
   
   call init_pedof
 

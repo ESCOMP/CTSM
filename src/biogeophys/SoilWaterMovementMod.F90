@@ -37,7 +37,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SoilWater(bounds, num_hydrologyc, filter_hydrologyc, &
        num_urbanc, filter_urbanc, soilhydrology_vars, soilstate_vars, &
-       waterflux_vars, waterstate_vars, temperature_vars)
+       waterflux_vars, waterstate_vars, temperature_vars, soil_water_retention_curve)
     !
     ! DESCRIPTION
     ! select one subroutine to do the soil and root water coupling
@@ -50,6 +50,7 @@ contains
     use TemperatureType   , only : temperature_type
     use WaterFluxType     , only : waterflux_type
     use WaterStateType    , only : waterstate_type
+    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     !
     ! !ARGUMENTS:
     implicit none     
@@ -63,6 +64,7 @@ contains
     type(waterflux_type)     , intent(inout) :: waterflux_vars
     type(waterstate_type)    , intent(inout) :: waterstate_vars
     type(temperature_type)   , intent(in)    :: temperature_vars
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
     character(len=32)              :: subname = 'SoilWater' ! subroutine name   
@@ -74,7 +76,7 @@ contains
 
        call soilwater_zengdecker2009(bounds, num_hydrologyc, filter_hydrologyc, &
             num_urbanc, filter_urbanc, soilhydrology_vars, soilstate_vars, &
-            waterflux_vars, waterstate_vars, temperature_vars)
+            waterflux_vars, waterstate_vars, temperature_vars, soil_water_retention_curve)
 
     case default
 
@@ -87,7 +89,7 @@ contains
   !-----------------------------------------------------------------------   
   subroutine soilwater_zengdecker2009(bounds, num_hydrologyc, filter_hydrologyc, &
        num_urbanc, filter_urbanc, soilhydrology_vars, soilstate_vars, &
-       waterflux_vars, waterstate_vars, temperature_vars)
+       waterflux_vars, waterstate_vars, temperature_vars, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
     ! Soil hydrology
@@ -161,13 +163,13 @@ contains
     use clm_time_manager     , only : get_step_size
     use column_varcon        , only : icol_roof, icol_road_imperv
     use TridiagonalMod       , only : Tridiagonal
-    use SoiWatRetCurveParMod , only : soil_hk, soil_suction
     use abortutils           , only : endrun     
     use SoilStateType        , only : soilstate_type
     use SoilHydrologyType    , only : soilhydrology_type
     use TemperatureType      , only : temperature_type
     use WaterFluxType        , only : waterflux_type
     use WaterStateType       , only : waterstate_type
+    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use PatchType            , only : pft
     use ColumnType           , only : col
     !
@@ -183,6 +185,7 @@ contains
     type(waterflux_type)    , intent(inout) :: waterflux_vars
     type(waterstate_type)   , intent(inout) :: waterstate_vars
     type(temperature_type)  , intent(in)    :: temperature_vars
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
     integer  :: p,c,fc,j                                     ! do loop indices
@@ -453,7 +456,7 @@ contains
                  (1._r8/(watsat(c,j)+watsat(c,min(nlevsoi, j+1))))
 
             !compute un-restricted hydraulic conductivity
-            !call soil_hk(hksat(c,j), imped(c,j), s1, bsw(c,j), hktmp, dhkds)
+            !call soil_water_retention_curve%soil_hk(hksat(c,j), imped(c,j), s1, bsw(c,j), hktmp, dhkds)
             !if(hktmp/=hk(c,j))write(10,*)'diff',hktmp,hk(c,j)
             !    call endrun('bad in hk')
             !endif    
@@ -470,7 +473,7 @@ contains
             endif
             s_node = min(1.0_r8, s_node)
 
-            !call soil_suction(sucsat(c,j), s_node, bsw(c,j), smp(c,j), dsmpds)
+            !call soil_water_retention_curve%soil_suction(sucsat(c,j), s_node, bsw(c,j), smp(c,j), dsmpds)
 
             smp(c,j) = -sucsat(c,j)*s_node**(-bsw(c,j))
             smp(c,j) = max(smpmin(c), smp(c,j))
@@ -579,7 +582,7 @@ contains
             s_node = min(1.0_r8, s_node)
 
             ! compute smp for aquifer layer
-            !call soil_suction(sucsat(c,j), s_node, bsw(c,j), smp1, dsmpds)
+            !call soil_water_retention_curve%soil_suction(sucsat(c,j), s_node, bsw(c,j), smp1, dsmpds)
             smp1 = -sucsat(c,j)*s_node**(-bsw(c,j))
             smp1 = max(smpmin(c), smp1)
 
@@ -655,7 +658,7 @@ contains
 
             !compute unsaturated hk, this shall be tested later, because it
             !is not bit for bit
-            !call soil_hk(hksat(c,jwt(c)+1), s1, bsw(c,jwt(c)+1), ka)
+            !call soil_water_retention_curve%soil_hk(hksat(c,jwt(c)+1), s1, bsw(c,jwt(c)+1), ka)
             !apply ice impedance
             !ka = imped(c,jwt(c)+1) * ka 
             ! Recharge rate qcharge to groundwater (positive to aquifer)

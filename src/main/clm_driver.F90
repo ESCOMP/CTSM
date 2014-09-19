@@ -107,6 +107,7 @@ module clm_driver
   use clm_initializeMod      , only : glc2lnd_vars
   use clm_initializeMod      , only : lnd2glc_vars
   use clm_initializeMod      , only : EDbio_vars
+  use clm_initializeMod      , only : soil_water_retention_curve
   use GridcellType           , only : grc                
   use LandunitType           , only : lun                
   use ColumnType             , only : col                
@@ -444,7 +445,7 @@ contains
             atm2lnd_vars, canopystate_vars, cnstate_vars, energyflux_vars,               &
             frictionvel_vars, soilstate_vars, solarabs_vars, surfalb_vars,               &
             temperature_vars, waterflux_vars, waterstate_vars, ch4_vars, photosyns_vars, &
-            EDbio_vars) 
+            EDbio_vars, soil_water_retention_curve) 
        call t_stopf('canflux')
 
        ! Fluxes for all urban landunits
@@ -555,7 +556,8 @@ contains
             filter(nc)%num_snowc, filter(nc)%snowc,                          &
             filter(nc)%num_nosnowc, filter(nc)%nosnowc,                      &
             atm2lnd_vars, soilstate_vars, energyflux_vars, temperature_vars, &
-            waterflux_vars, waterstate_vars, soilhydrology_vars, aerosol_vars)
+            waterflux_vars, waterstate_vars, soilhydrology_vars, aerosol_vars, &
+            soil_water_retention_curve)
 
        !  Calculate column-integrated aerosol masses, and
        !  mass concentrations for radiative calculations and output

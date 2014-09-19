@@ -52,6 +52,7 @@ module clm_initializeMod
   use lnd2glcMod             , only : lnd2glc_type 
   use glc2lndMod             , only : glc2lnd_type
   use glcDiagnosticsMod      , only : glc_diagnostics_type
+  use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
   use UrbanParamsType        , only : urbanparams_type   ! Constants 
   use CNDecompCascadeConType , only : decomp_cascade_con ! Constants 
   use CNDVType               , only : dgv_ecophyscon     ! Constants 
@@ -108,6 +109,7 @@ module clm_initializeMod
   type(lnd2atm_type)          :: lnd2atm_vars
   type(lnd2glc_type)          :: lnd2glc_vars
   type(glc_diagnostics_type)  :: glc_diagnostics_vars
+  class(soil_water_retention_curve_type), allocatable :: soil_water_retention_curve
   type(EDbio_type)            :: EDbio_vars
   !
   public :: initialize1  ! Phase one initialization
@@ -395,6 +397,7 @@ contains
     use lnd2atmMod            , only : lnd2atm_minimal
     use glc2lndMod            , only : glc2lnd_type
     use lnd2glcMod            , only : lnd2glc_type 
+    use SoilWaterRetentionCurveFactoryMod, only : create_soil_water_retention_curve
     !
     ! !ARGUMENTS    
     implicit none
@@ -644,6 +647,12 @@ contains
     call dust_vars%Init(bounds_proc)
 
     call glc_diagnostics_vars%Init(bounds_proc)
+
+    ! Once namelist options are added to control the soil water retention curve method,
+    ! we'll need to either pass the namelist file as an argument to this routine, or pass
+    ! the namelist value itself (if the namelist is read elsewhere).
+    allocate(soil_water_retention_curve, &
+         source=create_soil_water_retention_curve())
 
     call SnowOptics_init( ) ! SNICAR optical parameters:
 

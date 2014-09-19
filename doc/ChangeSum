@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r085    sacks 09/19/2014 replace conditionals with polymorphism for soil water retention curve
    clm4_5_1_r084    sacks 09/18/2014 make glc_dyn_runoff_routing spatially-varying, based on input from glc
    clm4_5_1_r083  muszala 09/17/2014 only update scripts and run new baselines.  this due to an error in yellowstone pgi test naming (clm_aux45 changed to aux_clm45)
    clm4_5_1_r082  muszala 09/11/2014 Merge in a number of ED changes to address science bugs and infrastructure (partiulararly restarts)

@@ -1,4 +1,106 @@
 ===============================================================
+Tag name:  clm4_5_1_r085
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Sep 19 10:22:30 MDT 2014
+One-line Summary: replace conditionals with polymorphism for soil water retention curve
+
+Purpose of changes:
+
+The main motivation for this tag was the need to introduce a
+soil_suction_inverse routine, which will be used for irrigation. It is important
+that soil_suction_inverse remains consistent with soil_suction for every soil
+water retention curve method. In talking with Ben Andre and Erik, we felt the
+best way to ensure this consistency was to have a separate, small module for
+each soil retention curve method. We felt the best way to implement this was via
+polymorphism. Polymorphism is arguably overkill in this simple case, but we
+thought it would be good to convert it to polymorphism partly as an example that
+we and others can follow in more complex cases where it will provide greater
+benefit.
+
+To add a new soil retention curve method:
+
+   (1) Create a module similar to
+   SoilWaterRetentionCurveClappHornberg1978Mod.F90
+   
+   (2) Modify the select case statement in SoilWaterRetentionCurveFactoryMod.F90
+   so that it is able to create an instance of your new type
+
+Note that this refactor also combines the soil_suction and soil_hk
+parameterization options into a single option. Dave Lawrence and Rosie Fisher
+felt that was preferable, and Jinyun Tang was okay with this.
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: andre, muszala, Jinyun Tang
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated:
+
+========= Replaced with the 3 new files noted below
+D       models/lnd/clm/src/biogeophys/SoiWatRetCurveParMod.F90
+
+List all files added and what they do:
+
+========= Replacement for SoiWatRetCurveParMod, implemented using
+          polymorphism. Note that I have also added a soil_suction_inverse
+          routine, which is not yet used or tested. I'll be using (and testing)
+          this in an upcoming tag, where I refactor the irrigation code to use this.
+A       models/lnd/clm/src/biogeophys/SoilWaterRetentionCurveMod.F90
+A       models/lnd/clm/src/biogeophys/SoilWaterRetentionCurveFactoryMod.F90
+A       models/lnd/clm/src/biogeophys/SoilWaterRetentionCurveClappHornberg1978Mod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+========= Minor changes to accommodate the refactored code
+M       models/lnd/clm/src/main/clm_initializeMod.F90
+M       models/lnd/clm/src/main/init_hydrology.F90
+M       models/lnd/clm/src/main/clm_driver.F90
+M       models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90
+M       models/lnd/clm/src/biogeophys/SoilWaterMovementMod.F90
+M       models/lnd/clm/src/biogeophys/SoilMoistStressMod.F90
+M       models/lnd/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+
+
+CLM testing:
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu: NOT RUN
+    goldbach_nag: ok
+    goldbach_intel: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r084
+
+Changes answers relative to baseline: NO - bfb
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r084
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Sep 18 14:39:44 MDT 2014

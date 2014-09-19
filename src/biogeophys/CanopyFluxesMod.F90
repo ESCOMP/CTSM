@@ -69,7 +69,7 @@ contains
        atm2lnd_vars, canopystate_vars, cnstate_vars, energyflux_vars, &
        frictionvel_vars, soilstate_vars, solarabs_vars, surfalb_vars, &
        temperature_vars, waterflux_vars, waterstate_vars, ch4_vars, photosyns_vars, &
-       EDbio_vars) 
+       EDbio_vars, soil_water_retention_curve) 
     !
     ! !DESCRIPTION:
     ! 1. Calculates the leaf temperature:
@@ -109,6 +109,7 @@ contains
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
+    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     !
     ! !ARGUMENTS:
     type(bounds_type)         , intent(in)    :: bounds 
@@ -128,6 +129,7 @@ contains
     type(ch4_type)            , intent(inout) :: ch4_vars
     type(photosyns_type)      , intent(inout) :: photosyns_vars
     type(EDbio_type)          , intent(inout) :: EDbio_vars
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: btran0 = 0.0_r8  ! initial value
@@ -558,7 +560,8 @@ contains
               energyflux_vars=energyflux_vars,   &
               soilstate_vars=soilstate_vars,     &
               temperature_vars=temperature_vars, &
-              waterstate_vars=waterstate_vars)
+              waterstate_vars=waterstate_vars,   &
+              soil_water_retention_curve=soil_water_retention_curve)
 
       end if !use_ed
 

@@ -39,7 +39,8 @@ contains
        num_nosnowc, filter_nosnowc, &
        atm2lnd_vars, soilstate_vars, energyflux_vars, temperature_vars, &
        waterflux_vars, waterstate_vars, &
-       soilhydrology_vars, aerosol_vars)
+       soilhydrology_vars, aerosol_vars, &
+       soil_water_retention_curve)
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
@@ -67,6 +68,7 @@ contains
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
     use SoilHydrologyMod     , only : CLMVICMap, SurfaceRunoff, Infiltration, WaterTable
     use SoilWaterMovementMod , only : SoilWater 
+    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
@@ -88,6 +90,7 @@ contains
     type(waterstate_type)    , intent(inout) :: waterstate_vars
     type(aerosol_type)       , intent(inout) :: aerosol_vars
     type(soilhydrology_type) , intent(inout) :: soilhydrology_vars
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
     integer  :: g,l,c,j,fc                    ! indices
@@ -177,7 +180,8 @@ contains
            waterflux_vars, waterstate_vars)
 
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-            soilhydrology_vars, soilstate_vars, waterflux_vars, waterstate_vars, temperature_vars)
+            soilhydrology_vars, soilstate_vars, waterflux_vars, waterstate_vars, temperature_vars, &
+            soil_water_retention_curve)
 
       if (use_vichydro) then
          ! mapping soilmoist from CLM to VIC layers for runoff calculations
