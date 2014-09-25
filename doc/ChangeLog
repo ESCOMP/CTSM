@@ -1,4 +1,93 @@
 ===============================================================
+Tag name:  clm4_5_1_r086
+Originator(s):  muszala (Stefan Muszala)
+Date: Thu Sep 25 09:04:08 MDT 2014
+One-line Summary: critical ED modifications from r fisher, fix bug 2043
+
+Purpose of changes:  add modifications to ED, particularly for cold deciduous.  add
+                     fix for bug 2043.  Consider these ED baselines as fixed (ie.
+                     unless you are modifying ED science, these should now be BFB).
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 2043
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self, r fisher 
+
+List any svn externals directories updated (csm_share, mct, etc.): N/A
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/main/lnd2atmMod.F90
+-- change intent of waterstate_vars to inout (fixes bug 2043)
+
+M       models/lnd/clm/src/main/clm_driver.F90
+-- add EDbio_vars to edmodel actual argument list
+
+M       models/lnd/clm/src/ED/biogeochem/EDCohortDynamicsMod.F90
+-- change leaves_off_switch and laimemory handling
+
+M       models/lnd/clm/src/ED/biogeochem/EDPhysiologyMod.F90
+-- rework cold deciduous and threshold code.  add fragmentation_scaler routine
+
+M       models/lnd/clm/src/ED/main/EDMainMod.F90
+-- change argument lists to include EDbio_vars for ecosystem_dynamics and phenology
+
+M       models/lnd/clm/src/ED/biogeophys/EDSurfaceAlbedoMod.F90
+-- overhaul ED norman radiation code
+
+M       models/lnd/clm/src/ED/biogeophys/EDPhotosynthesisMod.F90
+-- tweak calculation of jmax25top and tpu25top
+
+M       models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90
+-- clean up two comments
+
+CLM testing:
+
+  ED compsets change values.
+
+  For bug 2043.  Confirmed that a gnu compile on yellowstone gets passed the intent problem.
+
+  build-namelist tests: N/A
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel - 40 OK - 45 OK
+    yellowstone_pgi   - 40 OK - 45 OK
+    goldbach_nag      - 40 OK - 45 OK
+    goldbach_intel    - 40 OK - 45 OK
+
+CLM tag used for the baseline comparisons: clm4_5_1_r085
+
+Changes answers relative to baseline: Only for ED compsets
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r085
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Sep 19 10:22:30 MDT 2014

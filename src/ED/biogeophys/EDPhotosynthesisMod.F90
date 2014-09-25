@@ -457,12 +457,13 @@ contains
                ! used jmax25 = 1.97 vcmax25, from Wullschleger (1993) Journal of Experimental Botany 44:907-920.
                ! Here use a factor "1.67", from Medlyn et al (2002) Plant, Cell and Environment 25:1167-1179
 
-               jmax25top(FT) = 1.67_r8    * vcmax25top(FT)
-               !
-               ! FIX(RF, 082914) - Changed to 0.167 in ED branch...should be a parameter
-               !
-               tpu25top(FT)  = 0.167_r8   * jmax25top(FT)
-               kp25top(FT)   = 20000._r8  * vcmax25top(FT)
+	       !RF - copied this from the CLM trunk code, but where did it come from, and how can we make these consistant? 
+	       !jmax25top(FT) = (2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top(FT)
+	       jmax25top(FT) = 0.167_r8 * vcmax25top(FT)
+	       tpu25top(FT)  = 0.167_r8 * vcmax25top(FT)
+	       kp25top(FT)   = 20000._r8 * vcmax25top(FT)
+
+	       
 
                ! Nitrogen scaling factor. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593 used
                ! kn = 0.11. Here, derive kn from vcmax25 as in Lloyd et al (2010) Biogeosciences, 7, 1833-1859

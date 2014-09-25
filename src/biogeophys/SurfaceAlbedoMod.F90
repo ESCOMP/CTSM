@@ -929,27 +929,24 @@ contains
     end do
 
     ! Calculate surface albedos and fluxes
-       ! Only perform on vegetated patches where coszen > 0
-
-    ! Calculate surface albedos and fluxes
     ! Only perform on vegetated pfts where coszen > 0
 
-    if(use_ed)then
+    if (use_ed) then
           
-          call ED_Norman_Radiation (bounds, filter_vegsol, num_vegsol,&
-               coszen_patch(bounds%begp:bounds%endp), surfalb_vars)      
+       call ED_Norman_Radiation (bounds, filter_vegsol, num_vegsol,&
+            coszen_patch(bounds%begp:bounds%endp), surfalb_vars)      
 
     else
 
-      call TwoStream (bounds, filter_vegsol, num_vegsol, &
-               coszen_patch(bounds%begp:bounds%endp), &
-         rho(bounds%begp:bounds%endp, :), &
-               tau(bounds%begp:bounds%endp, :), &
-               canopystate_vars, temperature_vars, waterstate_vars, surfalb_vars)
+       call TwoStream (bounds, filter_vegsol, num_vegsol, &
+            coszen_patch(bounds%begp:bounds%endp), &
+            rho(bounds%begp:bounds%endp, :), &
+            tau(bounds%begp:bounds%endp, :), &
+            canopystate_vars, temperature_vars, waterstate_vars, surfalb_vars)
 
-    endif	 
+    endif
 
-       ! Determine values for non-vegetated patches where coszen > 0
+    ! Determine values for non-vegetated patches where coszen > 0
 
     do ib = 1,numrad
        do fp = 1,num_novegsol

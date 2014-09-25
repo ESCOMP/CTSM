@@ -965,7 +965,7 @@ contains
              call get_clump_bounds(nc, bounds_clump)
 
              call edmodel( bounds_clump, & 
-                  atm2lnd_vars, soilstate_vars, temperature_vars, waterstate_vars )
+                  atm2lnd_vars, soilstate_vars, temperature_vars, waterstate_vars, EDbio_vars )
 
              ! link to CLM structures
              call clm_ed_link( bounds_clump, gridCellEdState, &
