@@ -64,7 +64,7 @@ failType="FAIL" bugz="2027" >get_clump_bounds ERROR: Calling from inside a non-t
                <entry testId="ERI_D.ne30_g16.ICLM45BGC.yellowstone_intel"                    failType="RUN" bugz="2042" >potentially bad pe layout, introduced between r079 and r080</entry>
             </INTEL>
             <PGI>
-               <entry testId="ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default"     failType="RUN" > </entry>
+               <entry testId="ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default"     failType="RUN" >Seems to be an issue with scripts for ERH tests, trying to compare same restart and hybrid log file that points to same file</entry>
                <entry testId="ERS.f09_g16.ICLM45VIC.yellowstone_pgi.clm-vrtlay"           failType="RUN" >core dump when writing h1 history file</entry>
             </PGI>
          </yellowstone>

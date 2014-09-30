@@ -1,4 +1,106 @@
 ===============================================================
+Tag name:  clm4_5_1_r087
+Originator(s):  erik (Erik)
+Date: Tue Sep 30 12:07:10 MDT 2014
+One-line Summary: Fix two balance check errors, and turn abort for balance check back on to appropriate levels
+
+Purpose of changes:
+
+Fix two balance check errors that were causing problems for simulations. Also some of the balance check aborts
+were turned off in clm4_5_1_r082, so turn them back on again. Tighten water balance error from 1.e-4 to 1.e-5.
+Tighten LW, surface-flux and solar radiation balance errors from 1.e-3 to 1.e-5 and add warning for 1.e-7.
+Turn surface-flux balance and soil balance check errors abort back on. Soil balance tightened to 1.e-4 (from 1.e-3)
+with warnings shown at 1.e-6.
+
+Also bring in an update to PTCLM, and allow tools tester to be submitted to geyser or caldera. Just as an aside
+as something that was already done.
+
+Requirements for tag: Fix bugs: 2026 and 1941
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+    2026 Soil balance error
+    1941 snowdp balance error
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, swensosc
+
+List any svn externals directories updated (csm_share, mct, etc.): Update PTCLMmkdata version
+
+   Update PTCLM to PTCLM2_140816
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/test/tools/test_driver.sh ------ Allow to run in caldera and geyser as well
+
+M       models/lnd/clm/src/biogeophys/BalanceCheckMod.F90 ---- Add aborts back as well as warnings
+            and tighten some error conditions and warnings.
+M       models/lnd/clm/src/biogeophys/SoilTemperatureMod.F90 - Remove calculation and use of the 
+              heat capacity of frozen h2osfc layer but use the  heat capacity of the liquid layer
+              as balance check doesn't know about the frozen, and the discrepency causes balance
+              check errors.
+M       models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90 --- snow includes dew.
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone YES
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel           YES
+    yellowstone_pgi             YES
+    yellowstone_gnu (optional)  YES
+    goldbach_nag                YES
+    goldbach_intel              YES
+
+CLM tag used for the baseline comparisons:  clm4_5_1_r086
+
+Changes answers relative to baseline: YES!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM4.5
+    - what platforms/compilers: ALL
+    - nature of change: same climate (some shorter simulations are still exact)
+
+Simulations that Keith ran to test the snowdp change are:
+
+/glade/p/work/oleson/urb2dev_n00_clm4_5_52/scripts/urb2dev_n03_clm4_5_64_V2DomLam_I20TRCRUCLM45
+
+/glade/p/work/oleson/urb2dev_n00_clm4_5_52/scripts/urb2dev_n03_clm4_5_64_V2DomLam_IRCP85CRUCLM45
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+   For soil balance error...
+
+http://www.cgd.ucar.edu/staff/swensosc/public/diagnostics/ColdtestTRENDYspinupf091850CRU-ColdtestTRENDYspinupf091850CRU_control/setsIndex.html
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r086
 Originator(s):  muszala (Stefan Muszala)
 Date: Thu Sep 25 09:04:08 MDT 2014

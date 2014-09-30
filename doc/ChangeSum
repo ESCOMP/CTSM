@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r087     erik 09/30/2014 Fix two balance check errors, and turn abort for balance check back on to appropriate levels
    clm4_5_1_r086  muszala 09/25/2014 critical ED modifications from r fisher, fix bug 2043
    clm4_5_1_r085    sacks 09/19/2014 replace conditionals with polymorphism for soil water retention curve
    clm4_5_1_r084    sacks 09/18/2014 make glc_dyn_runoff_routing spatially-varying, based on input from glc
