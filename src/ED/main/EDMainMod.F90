@@ -18,6 +18,7 @@ module EDMainMod
   use EDtypesMod           , only : site, patch, cohort, gridcell_edstate_type, ncwd, gridCellEdState, n_sub, numpft_ed, udata
   use SFMainMod            , only : fire_model
   use EDBioType            , only : EDbio_type
+  use EDPhenologyMod       , only : EDPhenologyType
 
   implicit none
   save
@@ -37,7 +38,8 @@ module EDMainMod
 
 contains
 
-  subroutine edmodel( bounds, atm2lnd_vars, soilstate_vars, temperature_vars, waterstate_vars, EDbio_vars )
+  subroutine edmodel( bounds, atm2lnd_vars, soilstate_vars, temperature_vars, waterstate_vars, &
+       EDbio_vars, EDphenology_inst )
     ! ============================================================================
     !        Main ed model routine containing gridcell loop   
     ! ============================================================================
@@ -55,6 +57,9 @@ contains
     type(temperature_type) , intent(in)    :: temperature_vars
     type(waterstate_type)  , intent(in)    :: waterstate_vars
     type(EDbio_type)       , intent(inout) :: EDbio_vars
+    type(EDPhenologyType)  , intent(inout) :: EDphenology_inst
+
+
     !
     ! !LOCAL VARIABLES:
     type(site),pointer :: currentSite
@@ -94,7 +99,8 @@ contains
        currentSite=> gridCellEdState(g)%spnt  
        if (currentSite%istheresoil == 1) then
           call ecosystem_dynamics(currentSite, &
-               atm2lnd_vars, soilstate_vars, temperature_vars, waterstate_vars, EDbio_vars)
+               atm2lnd_vars, soilstate_vars, temperature_vars, waterstate_vars, &
+               EDbio_vars, EDphenology_inst)
        endif
     enddo
 
@@ -103,13 +109,12 @@ contains
 
     write(iulog,*) 'leaving ed model',bounds%begg,bounds%endg,dayDiffInt
 
-    ! FIX(SPM,032414) debug npp_acc exit
-
   end subroutine edmodel
 
   !-------------------------------------------------------------------------------!
   subroutine ecosystem_dynamics(site_in, &
-       atm2lnd_vars, soilstate_vars, temperature_vars, waterstate_vars, EDbio_vars)
+       atm2lnd_vars, soilstate_vars, temperature_vars, waterstate_vars, &
+       EDbio_vars, EDphenology_inst)
   
     ! ============================================================================
     !  Core of ed model, calling all subsequent vegetation dynamics routines         
@@ -123,6 +128,7 @@ contains
     type(soilstate_type)   , intent(in)             :: soilstate_vars
     type(temperature_type) , intent(in)             :: temperature_vars
     type(waterstate_type)  , intent(in)             :: waterstate_vars
+    type(EDPhenologyType)  , intent(in)             :: EDphenology_inst
     type(EDbio_type)       , intent(in)             :: EDbio_vars
     !
     !*******************************************************************************************************/
@@ -134,7 +140,7 @@ contains
    
     call total_balance_check(site_in,0)
     
-    call phenology(site_in%clmgcell, temperature_vars, waterstate_vars, EDbio_vars)
+    call phenology(site_in%clmgcell, temperature_vars, waterstate_vars, EDbio_vars, EDphenology_inst)
 
     call fire_model(site_in, atm2lnd_vars, temperature_vars)
 

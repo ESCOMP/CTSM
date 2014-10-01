@@ -1,5 +1,7 @@
 module EDPhysiologyMod
 
+#include "shr_assert.h"
+
   ! ============================================================================
   ! Miscellaneous physiology routines from ED. 
   ! ============================================================================
@@ -16,6 +18,7 @@ module EDPhysiologyMod
   use EDtypesMod          , only : site, patch, cohort, DG_SF, DINC_ED, EXTERNAL_RECRUITMENT, GRIDCELLEDSTATE
   use EDtypesMod          , only : NCWD, NLEVCAN_ED, N_SUB, NUMPFT_ED, SENES, UDATA
   use EDBioType           , only : EDbio_type
+  use EDPhenologyMod      , only : EDPhenologyType
 
   implicit none
   save
@@ -247,7 +250,7 @@ contains
   ! ============================================================================/
   !                     Phenology. 
   ! ============================================================================
-  subroutine phenology( g, temperature_vars, waterstate_vars, EDbio_vars )
+  subroutine phenology( g, temperature_vars, waterstate_vars, EDbio_vars, EDphenology_inst )
 
     use clm_varcon,   only :  tfrz
 
@@ -255,6 +258,7 @@ contains
     type(temperature_type) , intent(in) :: temperature_vars
     type(waterstate_type)  , intent(in) :: waterstate_vars
     type(EDbio_type)       , intent(in) :: EDbio_vars
+    type(EDPhenologyType)  , intent(in) :: EDphenology_inst
 
     type(site), pointer  :: currentSite
     integer  :: t      !day of year
@@ -275,7 +279,7 @@ contains
     real(r8) :: mindayson 
 
     t_veg24       => temperature_vars%t_veg24_patch ! Input:  [real(r8) (:)]  avg pft vegetation temperature for last 24 hrs    
-    ED_GDD_patch  => EDbio_vars%ED_GDD_patch        ! Input:  [real(r8) (:)]  growing deg. days base 0 deg C (ddays)
+    ED_GDD_patch  => EDphenology_inst%ED_GDD_patch        ! Input:  [real(r8) (:)]  growing deg. days base 0 deg C (ddays)
 
     ! Parameter of drought decid leaf loss in mm in top layer...FIX(RF,032414) 
     ! - this is arbitrary and poorly understood. Needs work. ED_

@@ -15,7 +15,7 @@ models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trun
 models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_140914
 
 # Utilities: csm_share, esmf, timing, MCT, PIO
-models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_140723
+models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/branch_tags/share_ece_tags/share_ece_01_140723
 models/utils/esmf_wrf_timemgr   https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_140529
 models/utils/timing             https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_140416
 models/utils/mct                https://github.com/quantheory/MCT/tags/compiler_fixes_n04_MCT_2.8.3

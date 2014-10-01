@@ -22,6 +22,7 @@ module EDCLMLinkMod
   use EDVecPatchtype        , only : EDpft
   use EDBioType             , only : EDbio_type
   use EDEcophysConType      , only : EDecophyscon
+  use EDPhenologyMod        , only : EDPhenologyType
   use EDPhysiologyMod       , only : root_fraction
   use EDtypesMod            , only : site, patch, cohort, gridcell_edstate_type
   use EDtypesMod            , only : area, dinc_ed, hitemax, numpft_ed, n_hite_bins
@@ -45,7 +46,7 @@ contains
 
   ! ============================================================================
   subroutine clm_ed_link( bounds, geds_local, &
-       waterstate_vars, canopystate_vars, EDbio_vars, &
+       waterstate_vars, canopystate_vars, EDbio_vars, EDphenology_inst, &
        carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
 
     use EDGrowthFunctionsMod  , only: tree_lai, c_area
@@ -56,6 +57,7 @@ contains
     type(waterstate_type)       , intent(inout)         :: waterstate_vars
     type(canopystate_type)      , intent(inout)         :: canopystate_vars
     type(EDbio_type)            , intent(inout)         :: EDbio_vars
+    type(EDPhenologyType)       , intent(inout)         :: EDphenology_inst
     type(carbonstate_type)      , intent(inout)         :: carbonstate_vars
     type(nitrogenstate_type)    , intent(inout)         :: nitrogenstate_vars
     type(carbonflux_type)       , intent(inout)         :: carbonflux_vars
@@ -263,7 +265,7 @@ contains
       end do !grid loop
 
       call update_ed_history_variables( bounds, geds_local, firstsoilpatch, EDbio_vars, &
-           carbonstate_vars, nitrogenstate_vars, carbonflux_vars, &
+           EDphenology_inst, carbonstate_vars, nitrogenstate_vars, carbonflux_vars, &
            canopystate_vars )
 
     end associate
@@ -272,7 +274,7 @@ contains
 
   ! ============================================================================
   subroutine update_ed_history_variables( bounds, geds_local , firstsoilpatch, EDbio_vars, &
-       carbonstate_vars, nitrogenstate_vars, carbonflux_vars, canopystate_vars ) 
+       EDphenology_inst, carbonstate_vars, nitrogenstate_vars, carbonflux_vars, canopystate_vars )
 
     use filterMod
 
@@ -284,6 +286,7 @@ contains
     type (patch)                , pointer               :: currentPatch
     type (cohort)               , pointer               :: currentCohort
     type(EDbio_type)            , intent(inout)         :: EDbio_vars
+    type(EDPhenologyType)       , intent(inout)         :: EDphenology_inst
     type(carbonstate_type)      , intent(inout)         :: carbonstate_vars
     type(nitrogenstate_type)    , intent(inout)         :: nitrogenstate_vars
     type(carbonflux_type)       , intent(inout)         :: carbonflux_vars
@@ -326,7 +329,8 @@ contains
          ED_bleaf                       => EDbio_vars%ED_bleaf_patch             , & ! InOut:
          ED_balive                      => EDbio_vars%ED_balive_patch            , & ! InOut:
          ED_bstore                      => EDbio_vars%ED_bstore_patch            , & ! InOut:
-         phen_cd_status                 => EDbio_vars%phen_cd_status_patch       , & ! InOut:
+
+         phen_cd_status                 => EDphenology_inst%phen_cd_status_patch , & ! InOut:
  
          tlai                           => canopystate_vars%tlai_patch           , & ! InOut:
          elai                           => canopystate_vars%elai_patch           , & ! InOut:

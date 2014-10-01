@@ -1,4 +1,120 @@
 ===============================================================
+Tag name:  clm4_5_1_r088
+Originator(s):  muszala (Stefan Muszala)
+Date: Wed Oct  1 09:24:43 MDT 2014
+One-line Summary: Pull out ED deps. in TemperatureTypeMod, can now compile with pgi 14.7
+
+Purpose of changes:  Pull out the dependency on EDBioType in TemperatureType.F90.  The ED
+variables related to phenology now reside in EDPhenologyMod.F90.  This refactor also had
+the effect of getting past a PGI 14.7 ICE which looks like it was due to the use of EDbio_vars
+in TemperatureType.F90.  When I pulled out lines 1227 and 1226 of biogeophys/TemperatureType.F90
+(in clm4_5_1_r087) and passed the two EDbio_vars variables through the argument list the ICE 
+went away.
+
+This tag breaks ED restart tests.  We went ahead with the tag because we had to fix a more 
+general problem with the CESM and CAM builds and PGI 14.7.  the ED v0.1.0 branch does not
+have these modifications and may be used as an alternative.  A new clm tag will shortly
+follow that addresses any remaining problems.
+
+Requirements for tag: None
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID): N/A
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): 
+
+Temporary addition of a cal parameter type in a branch tag.  Will be merged into csm_share trunk shortly. 
+
+-models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_140723
++models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/branch_tags/share_ece_tags/share_ece_01_140723
+
+List all files eliminated: N/A
+
+List all files added and what they do:
+
+! new home for ED phenology variables and type-bound procedures that
+! allow for accumulation of buffers
+A  +    models/lnd/clm/src/ED/biogeophys/EDPhenologyMod.F90
+! put some CMakeLists.txt in place for ED unittests
+A  +    models/lnd/clm/src/ED/main/CMakeLists.txt
+A  +    models/lnd/clm/src/ED/biogeophys/CMakeLists.txt
+A  +    models/lnd/clm/src/ED/CMakeLists.txt
+
+List all existing files that have been modified, and describe the changes:
+
+! pull out deps. on EDBioType
+M       models/lnd/clm/src/biogeophys/TemperatureType.F90
+! add code for new class instance, EDphenology_inst
+M       models/lnd/clm/src/main/clm_initializeMod.F90
+! add code for new class instance, EDphenology_inst
+M       models/lnd/clm/src/main/restFileMod.F90
+! add code for new class instance, EDphenology_inst
+M       models/lnd/clm/src/main/clm_driver.F90
+
+! add code for new class instance, EDphenology_inst
+M       models/lnd/clm/src/ED/biogeochem/EDPhysiologyMod.F90
+! pull out ED_GDD_patch and phen_cd_status_patch
+M       models/lnd/clm/src/ED/main/EDBioType.F90
+! add code for new class instance, EDphenology_inst
+M       models/lnd/clm/src/ED/biogeochem/EDPhysiologyMod.F90
+! add code for new class instance, EDphenology_inst
+M       models/lnd/clm/src/ED/main/EDMainMod.F90
+! add code for new class instance, EDphenology_inst
+M       models/lnd/clm/src/ED/main/EDCLMLinkMod.F90
+! add code for new class instance, EDphenology_inst
+M       models/lnd/clm/src/ED/main/EDRestVectorMod.F90
+! add code for new class instance, EDphenology_inst
+M       models/lnd/clm/src/ED/main/EDInitMod.F90
+
+! for ED unit tests
+M       models/lnd/clm/src/CMakeLists.txt
+
+! update CNED failures
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+CLM testing:
+
+ERS CNED tests are failing in this tag.  It is expected.  expectedClmTestFails.xml is updated to reflect this.
+
+  build-namelist tests: N/A
+
+    yellowstone
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel 40-OK, 45-OK
+    yellowstone_pgi   40-OK, 45-OK
+    goldbach_nag      40-OK, 45-OK
+    goldbach_intel    40-OK, 45-OK
+
+CLM tag used for the baseline comparisons: clm4_5_1_r087
+
+Changes answers relative to baseline: No
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r087
 Originator(s):  erik (Erik)
 Date: Tue Sep 30 12:07:10 MDT 2014

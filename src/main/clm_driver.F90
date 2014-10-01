@@ -107,6 +107,7 @@ module clm_driver
   use clm_initializeMod      , only : glc2lnd_vars
   use clm_initializeMod      , only : lnd2glc_vars
   use clm_initializeMod      , only : EDbio_vars
+  use clm_initializeMod      , only : EDphenology_inst
   use clm_initializeMod      , only : soil_water_retention_curve
   use GridcellType           , only : grc                
   use LandunitType           , only : lun                
@@ -878,19 +879,19 @@ contains
     ! Update accumulators
     ! ============================================================================
 
-    ! FIX(SPM,032414) double check why this isn't called for ED
-
     if (nstep > 0) then
-       !
-       ! FIX(SPM, 082814) - in the ED branch RF and I comment out the if(.not.
-       ! use_ed) then statement ... double check if this is required and why
-       !
-       !if (.not. use_ed) then
-          call t_startf('accum')
 
+          call t_startf('accum')
+          call get_curr_date(yr, mon, day, sec)
           call atm2lnd_vars%UpdateAccVars(bounds_proc)
 
-          call temperature_vars%UpdateAccVars(EDBio_vars, bounds_proc)
+          call temperature_vars%UpdateAccVars(bounds_proc)
+
+          if (use_ed) then
+               call EDphenology_inst%accumulateAndExtract(bounds_proc, temperature_vars%t_ref2m_patch, &
+                                                          pft%gridcell, grc%latdeg, &
+                                                          mon, day, sec)
+          endif
 
           call canopystate_vars%UpdateAccVars(bounds_proc)
 
@@ -903,7 +904,7 @@ contains
           end if
 
           call t_stopf('accum')
-       !end if
+
     end if
 
     ! ============================================================================
@@ -965,11 +966,12 @@ contains
              call get_clump_bounds(nc, bounds_clump)
 
              call edmodel( bounds_clump, & 
-                  atm2lnd_vars, soilstate_vars, temperature_vars, waterstate_vars, EDbio_vars )
+                  atm2lnd_vars, soilstate_vars, temperature_vars, waterstate_vars, &
+                  EDbio_vars, EDphenology_inst )
 
              ! link to CLM structures
              call clm_ed_link( bounds_clump, gridCellEdState, &
-                  waterstate_vars, canopystate_vars, EDbio_vars, &
+                  waterstate_vars, canopystate_vars, EDbio_vars, EDphenology_inst, &
                   carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
 
              call setFilters( bounds_clump, glc2lnd_vars%icemask_grc )
@@ -1033,7 +1035,7 @@ contains
                ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
                nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
                soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-               waterflux_vars, waterstate_vars, EDbio_vars, rdate=rdate )
+               waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst, rdate=rdate )
 
           call t_stopf('clm_drv_io_wrest')
        end if

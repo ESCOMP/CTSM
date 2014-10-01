@@ -64,10 +64,6 @@ module EDBioType
      real(r8), pointer :: ED_bleaf_patch             (:)   ! Total leaf biomass.   kGC/m2
      real(r8), pointer :: ED_biomass_patch           (:)   ! Total biomass.        kGC/m2
 
-     real(r8), pointer :: ED_GDD_patch               (:)   ! ED Phenology growing degree days. 
-                                                           !      This could and should be site-level. RF 
-     integer , pointer :: phen_cd_status_patch       (:)   ! ED Phenology cold deciduous status
-
      ! These variables are also in CNCarbonflux_vars and CNcarbonstate_vars and CNnitrogenstate_vars
      ! They have unique named definitions here - so this assumes currently that both use_ed and use_cn
      ! cannot both be true
@@ -142,9 +138,7 @@ contains
     allocate(this%ED_bdead_patch             (begp:endp))            ; this%ED_bdead_patch             (:)   = 0.0_r8    
     allocate(this%ED_balive_patch            (begp:endp))            ; this%ED_balive_patch            (:)   = 0.0_r8    
     allocate(this%ED_bleaf_patch             (begp:endp))            ; this%ED_bleaf_patch             (:)   = 0.0_r8    
-    allocate(this%ED_biomass_patch           (begp:endp))            ; this%ED_biomass_patch           (:)   = 0.0_r8    
-    allocate(this%ED_GDD_patch               (begp:endp))            ; this%ED_GDD_patch               (:)   = 0.0_r8    
-    allocate(this%phen_cd_status_patch       (begp:endp))            ; this%phen_cd_status_patch       (:)   = 0.0_r8    
+    allocate(this%ED_biomass_patch           (begp:endp))            ; this%ED_biomass_patch           (:)   = 0.0_r8
 
   end subroutine InitAllocate
 
@@ -310,10 +304,6 @@ contains
     call hist_addfld1d (fname='ED_biomass', units=' KgC m-2',  &
          avgflag='A', long_name='ED total biomass', &
          ptr_patch=this%ED_biomass_patch, set_lake=0._r8, set_urb=0._r8)
-
-    call hist_addfld1d (fname='ED_GDD', units='deg C',  &
-         avgflag='A', long_name='ED phenology growing degree days', &
-         ptr_patch=this%ED_GDD_patch, set_lake=0._r8, set_urb=0._r8)
 
     call hist_addfld1d (fname='RB', units=' s m-1',  &
          avgflag='A', long_name='leaf boundary resistance', &

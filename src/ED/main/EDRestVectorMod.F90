@@ -13,6 +13,7 @@ module EDRestVectorMod
    use WaterStateType      , only : waterstate_type
    use EcophysconType      , only : ecophyscon
    use EDBioType           , only : EDbio_type
+   use EDPhenologyMod      , only : EDPhenologyType
    use EDtypesMod          , only : site, patch, cohort, ncwd, invalidValue, gridcell_edstate_type
    use EDtypesMod          , only : AREA, cohorts_per_gcell, numpft_ed, numWaterMem, nclmax, numCohortsPerPatch
 
@@ -414,9 +415,8 @@ contains
    ! implement getVectors
    !
    subroutine getVectors( this, bounds, geds_local, &
-        waterstate_vars, canopystate_vars, EDbio_vars, &
+        waterstate_vars, canopystate_vars, EDbio_vars, EDphenology_inst, &
         carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
-     
 
       use clm_time_manager , only : get_nstep
       use clm_varctl       , only : iulog
@@ -433,6 +433,7 @@ contains
       type(waterstate_type)       , intent(inout)         :: waterstate_vars
       type(canopystate_type)      , intent(inout)         :: canopystate_vars
       type(EDbio_type)            , intent(inout)         :: EDbio_vars
+      type(EDPhenologyType)       , intent(inout)         :: EDphenology_inst
       type(carbonstate_type)      , intent(inout)         :: carbonstate_vars
       type(nitrogenstate_type)    , intent(inout)         :: nitrogenstate_vars
       type(carbonflux_type)       , intent(inout)         :: carbonflux_vars
@@ -450,7 +451,7 @@ contains
 
       call ed_update_sites( bounds, geds_local )
 
-      call clm_ed_link( bounds, geds_local, waterstate_vars, canopystate_vars, EDbio_vars, &
+      call clm_ed_link( bounds, geds_local, waterstate_vars, canopystate_vars, EDbio_vars, EDphenology_inst, &
            carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
 
       if (this%DEBUG) then
@@ -1594,7 +1595,7 @@ contains
    !
    ! EDRest called from restFileMod.F90
    !
-   subroutine EDRest ( bounds, ncid, flag, waterstate_vars, canopystate_vars, EDbio_vars, & 
+   subroutine EDRest ( bounds, ncid, flag, waterstate_vars, canopystate_vars, EDbio_vars, EDphenology_inst, &
        carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
       !
       ! Read/write ED restart data
@@ -1609,6 +1610,7 @@ contains
       type(waterstate_type)    , intent(inout) :: waterstate_vars
       type(canopystate_type)   , intent(inout) :: canopystate_vars
       type(EDbio_type)         , intent(inout) :: EDbio_vars
+      type(EDPhenologyType)    , intent(inout) :: EDphenology_inst
       type(carbonstate_type)   , intent(inout) :: carbonstate_vars
       type(nitrogenstate_type) , intent(inout) :: nitrogenstate_vars
       type(carbonflux_type)    , intent(inout) :: carbonflux_vars
@@ -1633,7 +1635,7 @@ contains
          !
          allocate (gridCellEdState(bounds%begg:bounds%endg))
 
-         call ervc%getVectors( bounds, gridCellEdState, waterstate_vars, canopystate_vars, EDbio_vars, & 
+         call ervc%getVectors( bounds, gridCellEdState, waterstate_vars, canopystate_vars, EDbio_vars, EDphenology_inst, &
               carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
 
       endif

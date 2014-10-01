@@ -63,6 +63,7 @@ module clm_initializeMod
   use PatchType              , only : pft                
   use EDEcophysConType       , only : EDecophyscon       ! ED Constants
   use EDBioType              , only : EDbio_type         ! ED type used to interact with CLM variables
+  use EDPhenologyMod         , only : EDPhenologyType    ! ED type used to interact with CLM variables
   use EDVecPatchType         , only : EDpft                   
   use EDVecCohortType        , only : coh                ! unique to ED, used for domain decomp
   !
@@ -111,6 +112,7 @@ module clm_initializeMod
   type(glc_diagnostics_type)  :: glc_diagnostics_vars
   class(soil_water_retention_curve_type), allocatable :: soil_water_retention_curve
   type(EDbio_type)            :: EDbio_vars
+  type(EDPhenologyType)       :: EDphenology_inst
   !
   public :: initialize1  ! Phase one initialization
   public :: initialize2  ! Phase two initialization
@@ -725,6 +727,7 @@ contains
 
     if ( use_ed ) then
        call EDbio_vars%Init(bounds_proc)
+       call EDphenology_inst%init(bounds_proc)
     end if
 
     call hist_printflds()
@@ -744,6 +747,10 @@ contains
     call atm2lnd_vars%initAccBuffer(bounds_proc)
 
     call temperature_vars%initAccBuffer(bounds_proc)
+
+    if (use_ed) then
+       call EDphenology_inst%initAccBuffer(bounds_proc)
+    endif
 
     call canopystate_vars%initAccBuffer(bounds_proc)
 
@@ -825,7 +832,7 @@ contains
                ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
                nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
                soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-               waterflux_vars, waterstate_vars, EDbio_vars )
+               waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst)
        end if
 
     else if ((nsrest == nsrContinue) .or. (nsrest == nsrBranch)) then
@@ -838,7 +845,7 @@ contains
             ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
             nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
             soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-            waterflux_vars, waterstate_vars, EDbio_vars)
+            waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst)
 
     end if
 
@@ -877,7 +884,7 @@ contains
             ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
             nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
             soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-            waterflux_vars, waterstate_vars, EDbio_vars)
+            waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst)
 
        ! Interpolate finidat onto new template file
        call getfil( finidat_interp_source, fnamer,  0 )
@@ -890,7 +897,7 @@ contains
             ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
             nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
             soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-            waterflux_vars, waterstate_vars, EDbio_vars)
+            waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst)
 
        ! Reset finidat to now be finidat_interp_dest 
        ! (to be compatible with routines still using finidat)
@@ -939,10 +946,17 @@ contains
 
     call atm2lnd_vars%initAccVars(bounds_proc)
     call temperature_vars%initAccVars(bounds_proc)
+
+    if (use_ed) then
+       call EDphenology_inst%initAccVars(bounds_proc)
+    endif
+
     call canopystate_vars%initAccVars(bounds_proc)
+
     if (use_cndv) then
        call dgvs_vars%initAccVars(bounds_proc)
     end if
+
     if (crop_prog) then
        call crop_vars%initAccVars(bounds_proc)
     end if
@@ -1011,7 +1025,7 @@ contains
        do nc = 1, nclumps
           call get_clump_bounds(nc, bounds_clump)
           call ed_init( bounds_clump, waterstate_vars, canopystate_vars, EDbio_vars, &
-               carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
+               EDphenology_inst, carbonstate_vars, nitrogenstate_vars, carbonflux_vars)
        end do
     endif ! use_ed
 

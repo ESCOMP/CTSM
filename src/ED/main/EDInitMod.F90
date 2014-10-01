@@ -16,6 +16,7 @@ module EDInitMod
   use GridcellType          , only : grc
   use EcophysConType        , only : ecophyscon
   use EDBioType             , only : EDbio_type
+  use EDPhenologyMod        , only : EDPhenologyType
   use EDEcophysConType      , only : EDecophyscon
   use EDGrowthFunctionsMod  , only : bdead, bleaf, dbh
   use EDCohortDynamicsMod   , only : create_cohort, fuse_cohorts, sort_cohorts
@@ -43,7 +44,7 @@ module EDInitMod
 contains
 
   ! ============================================================================
-  subroutine ed_init( bounds, waterstate_vars, canopystate_vars, EDbio_vars, & 
+  subroutine ed_init( bounds, waterstate_vars, canopystate_vars, EDbio_vars, EDphenology_inst, &
        carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
      !
      ! use gridCellEdState at the top level, then pass it through arg. list.  then we can
@@ -57,6 +58,7 @@ contains
      type(waterstate_type)    , intent(inout) :: waterstate_vars
      type(canopystate_type)   , intent(inout) :: canopystate_vars
      type(EDbio_type)         , intent(inout) :: EDbio_vars
+     type(EDPhenologyType)    , intent(inout) :: EDphenology_inst
      type(carbonstate_type)   , intent(inout) :: carbonstate_vars
      type(nitrogenstate_type) , intent(inout) :: nitrogenstate_vars
      type(carbonflux_type)    , intent(inout) :: carbonflux_vars
@@ -79,7 +81,8 @@ contains
 
         call ed_update_sites( bounds, gridCellEdState )
 
-        call clm_ed_link( bounds, gridCellEdState, waterstate_vars, canopystate_vars, EDbio_vars, &
+        call clm_ed_link( bounds, gridCellEdState, waterstate_vars, canopystate_vars, &
+             EDbio_vars, EDphenology_inst, &
              carbonstate_vars, nitrogenstate_vars, carbonflux_vars) 
 
      endif

@@ -22,6 +22,7 @@ module restFileMod
   use ch4Mod               , only : ch4_type
   use EDRestVectorMod      , only : EDRest
   use EDBioType            , only : EDbio_type
+  use EDPhenologyMod       , only : EDphenologyType
   use CNCarbonFluxType     , only : carbonflux_type
   use CNCarbonStateType    , only : carbonstate_type
   use CNDVType             , only : dgvs_type
@@ -89,7 +90,7 @@ contains
        ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
        nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
        soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-       waterflux_vars, waterstate_vars, EDbio_vars, rdate, noptr)
+       waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst, rdate, noptr)
     !
     ! !DESCRIPTION:
     ! Define/write CLM restart file.
@@ -121,6 +122,7 @@ contains
     type(waterstate_type)    , intent(inout) :: waterstate_vars  ! due to EDrest call
     type(waterflux_type)     , intent(in)    :: waterflux_vars
     type(EDbio_type)         , intent(inout) :: EDbio_vars       ! due to EDrest call
+    type(EDphenologyType)    , intent(inout) :: EDphenology_inst ! due to EDrest call
     character(len=*)         , intent(in), optional :: rdate     ! restart file time stamp for name
     logical                  , intent(in), optional :: noptr     ! if should NOT write to the restart pointer file
     !
@@ -220,6 +222,7 @@ contains
             waterstate_vars=waterstate_vars, &
             canopystate_vars=canopystate_vars, &
             EDbio_vars=EDbio_vars, &
+            EDphenology_inst=EDphenology_inst, &
             carbonstate_vars=carbonstate_vars, &
             nitrogenstate_vars=nitrogenstate_vars, &
             carbonflux_vars=carbonflux_vars) 
@@ -305,7 +308,8 @@ contains
        call EDRest( bounds, ncid, flag='write', & 
             waterstate_vars=waterstate_vars, &
             canopystate_vars=canopystate_vars, &
-            EDbio_vars=EDbio_vars, & 
+            EDbio_vars=EDbio_vars, &
+            EDphenology_inst=EDphenology_inst, &
             carbonstate_vars=carbonstate_vars, &
             nitrogenstate_vars=nitrogenstate_vars, &
             carbonflux_vars=carbonflux_vars) 
@@ -340,7 +344,7 @@ contains
        ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
        nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
        soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-       waterflux_vars, waterstate_vars, EDbio_vars)
+       waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst)
     !
     ! !DESCRIPTION:
     ! Read a CLM restart file.
@@ -377,6 +381,7 @@ contains
     type(waterstate_type)    , intent(inout) :: waterstate_vars
     type(waterflux_type)     , intent(inout) :: waterflux_vars
     type(EDbio_type)         , intent(inout) :: EDbio_vars
+    type(EDphenologyType)    , intent(inout) :: EDphenology_inst
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid ! netcdf id
@@ -467,7 +472,8 @@ contains
        call EDRest( bounds, ncid, flag='read', & 
             waterstate_vars=waterstate_vars, &
             canopystate_vars=canopystate_vars, &
-            EDbio_vars=EDbio_vars, & 
+            EDbio_vars=EDbio_vars, &
+            EDphenology_inst=EDphenology_inst, &
             carbonstate_vars=carbonstate_vars, &
             nitrogenstate_vars=nitrogenstate_vars, &
             carbonflux_vars=carbonflux_vars) 

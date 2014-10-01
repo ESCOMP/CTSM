@@ -18,6 +18,8 @@ add_subdirectory(${CLM_ROOT}/src/utils clm_utils)
 add_subdirectory(${CLM_ROOT}/src/biogeophys clm_biogeophys)
 add_subdirectory(${CLM_ROOT}/src/dyn_subgrid clm_dyn_subgrid)
 add_subdirectory(${CLM_ROOT}/src/main clm_main)
+add_subdirectory(${CLM_ROOT}/src/ED/main ed_main)
+add_subdirectory(${CLM_ROOT}/src/ED/biogeophys ed_biogeophys)
 
 # Add general unit test directories (mocked out files, etc.)
 add_subdirectory(unit_test_mocks)
