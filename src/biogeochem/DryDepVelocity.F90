@@ -446,6 +446,7 @@ CONTAINS
                ! no deposition on snow, ice, desert, and water
                !-------------------------------------------------------------------------------------
                if( wesveg == 1 .or. wesveg == 7 .or. wesveg == 8 .or. index_season == 4 ) then 
+                  rs=0.0_r8
                   rclx(ispec)=1.e36_r8
                   rsmx(ispec)=1.e36_r8
                   rlux(ispec)=1.e36_r8

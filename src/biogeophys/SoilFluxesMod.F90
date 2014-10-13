@@ -111,7 +111,7 @@ contains
          c_h2osfc                => temperature_vars%c_h2osfc_col           , & ! Input:  [real(r8) (:)   ]  
 
          htvp                    => energyflux_vars%htvp_col                , & ! Input:  [real(r8) (:)   ]  latent heat of vapor of water (or sublimation) [j/kg]
-         eflx_building_heat      => energyflux_vars%eflx_building_heat_col  , & ! Input:  [real(r8) (:)   ]  heat flux from urban building interior to walls, roof
+         eflx_building_heat_errsoi=> energyflux_vars%eflx_building_heat_errsoi_col  , & ! Input: [real(r8) (:)] heat flux to interior surface of walls and roof for errsoi check (W m-2)
          eflx_wasteheat_patch    => energyflux_vars%eflx_wasteheat_patch    , & ! Input:  [real(r8) (:)   ]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
          eflx_heat_from_ac_patch => energyflux_vars%eflx_heat_from_ac_patch , & ! Input:  [real(r8) (:)   ]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
          eflx_traffic_patch      => energyflux_vars%eflx_traffic_patch      , & ! Input:  [real(r8) (:)   ]  traffic sensible heat flux (W/m**2)     
@@ -373,7 +373,7 @@ contains
          ! For urban sunwall, shadewall, and roof columns, the "soil" energy balance check
          ! must include the heat flux from the interior of the building.
          if (col%itype(c)==icol_sunwall .or. col%itype(c)==icol_shadewall .or. col%itype(c)==icol_roof) then
-            errsoi_patch(p) = errsoi_patch(p) + eflx_building_heat(c) 
+            errsoi_patch(p) = errsoi_patch(p) + eflx_building_heat_errsoi(c) 
          end if
       end do
       do j = -nlevsno+1,nlevgrnd

@@ -27,6 +27,8 @@ module controlMod
   use LakeCon                 , only: deepmixing_depthcrit, deepmixing_mixfact 
   use CNAllocationMod         , only: suplnitro
   use CNCarbonFluxType        , only: nfix_timeconst
+  use UrbanParamsType         , only: UrbanReadNML
+  use HumanIndexMod           , only: HumanIndexReadNML
   use CNNitrifDenitrifMod     , only: no_frozen_nitrif_denitrif
   use CNC14DecayMod           , only: use_c14_bombspike, atm_c14_filename
   use CNAllocationMod         , only: suplnitro
@@ -180,10 +182,6 @@ contains
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
          albice, more_vertlayers, subgridflag, irrigate, all_active
-    ! Urban options
-
-    namelist /clm_inparm/  &
-         urban_hac, urban_traffic
 
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -265,11 +263,6 @@ contains
 
        call set_timemgr_init( dtime_in=dtime )
 
-       if (urban_traffic) then
-          write(iulog,*)'Urban traffic fluxes are not implemented currently'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
-       end if
-
        ! History and restart files
 
        do i = 1, max_tapes
@@ -342,6 +335,8 @@ contains
     call init_hydrology( NLFilename )
     
     call CanopyHydrology_readnl( NLFilename )
+    call UrbanReadNML(           NLFilename )
+    call HumanIndexReadNML(      NLFilename )
 
     ! ----------------------------------------------------------------------
     ! Broadcast all control information if appropriate
@@ -535,8 +530,6 @@ contains
     call mpi_bcast (lake_melt_icealb, numrad, MPI_REAL8, 0, mpicom, ier)
 
     ! physics variables
-    call mpi_bcast (urban_hac, len(urban_hac), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (urban_traffic , 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (subgridflag , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (wrtdia, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -757,8 +750,6 @@ contains
     end if
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
-    write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
-    write(iulog,*) '   urban traffic flux   = ', urban_traffic
     write(iulog,*) '   more vertical layers = ', more_vertlayers
     if (nsrest == nsrContinue) then
        write(iulog,*) 'restart warning:'

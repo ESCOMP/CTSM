@@ -17,6 +17,7 @@ module BareGroundFluxesMod
   use TemperatureType      , only : temperature_type
   use WaterfluxType        , only : waterflux_type
   use WaterstateType       , only : waterstate_type
+  use HumanIndexMod        , only : humanindex_type
   use LandunitType         , only : lun                
   use ColumnType           , only : col                
   use PatchType            , only : pft                
@@ -35,7 +36,7 @@ contains
   subroutine BareGroundFluxes(bounds, num_nolakeurbanp, filter_nolakeurbanp, &
        atm2lnd_vars, canopystate_vars, soilstate_vars, &
        frictionvel_vars, ch4_vars, energyflux_vars, temperature_vars, &
-       waterflux_vars, waterstate_vars)
+       waterflux_vars, waterstate_vars, humanindex_vars)
     !
     ! !DESCRIPTION:
     ! Compute sensible and latent fluxes and their derivatives with respect
@@ -50,6 +51,9 @@ contains
     use FrictionVelocityMod  , only : FrictionVelocity, MoninObukIni
     use QSatMod              , only : QSat
     use SurfaceResistanceMod , only : do_soilevap_beta
+    use HumanIndexMod        , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
+                                      swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
+                                      SwampCoolEff, KtoC, VaporPres
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -64,6 +68,7 @@ contains
     type(temperature_type) , intent(inout) :: temperature_vars
     type(waterflux_type)   , intent(inout) :: waterflux_vars
     type(waterstate_type)  , intent(inout) :: waterstate_vars
+    type(humanindex_type)  , intent(inout) :: humanindex_vars
     !
     ! !LOCAL VARIABLES:
     integer, parameter  :: niters = 3      ! maximum number of iterations for surface temperature
@@ -112,6 +117,37 @@ contains
          dz               =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                                     
          zii              =>    col%zii                               , & ! Input:  [real(r8) (:)   ]  convective boundary height [m]                                        
 
+         tc_ref2m         =>    humanindex_vars%tc_ref2m_patch        , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (C)
+         vap_ref2m        =>    humanindex_vars%vap_ref2m_patch       , & ! Output: [real(r8) (:)   ]  2 m height vapor pressure (Pa)
+         appar_temp_ref2m    => humanindex_vars%appar_temp_ref2m_patch, & ! Output: [real(r8) (:)   ]  2 m apparent temperature (C)
+         appar_temp_ref2m_r  => humanindex_vars%appar_temp_ref2m_r_patch, & ! Output: [real(r8) (:)   ]  Rural 2 m apparent temperature (C)
+         swbgt_ref2m      =>    humanindex_vars%swbgt_ref2m_patch     , & ! Output: [real(r8) (:)   ]  2 m Simplified Wetbulb Globe temperature (C)
+         swbgt_ref2m_r    =>    humanindex_vars%swbgt_ref2m_r_patch   , & ! Output: [real(r8) (:)   ]  Rural 2 m Simplified Wetbulb Globe temperature (C)
+         humidex_ref2m    =>    humanindex_vars%humidex_ref2m_patch   , & ! Output: [real(r8) (:)   ]  2 m Humidex (C)
+         humidex_ref2m_r  =>    humanindex_vars%humidex_ref2m_r_patch , & ! Output: [real(r8) (:)   ]  Rural 2 m Humidex (C)
+         wbt_ref2m        =>    humanindex_vars%wbt_ref2m_patch       , & ! Output: [real(r8) (:)   ]  2 m Stull Wet Bulb temperature (C)
+         wbt_ref2m_r      =>    humanindex_vars%wbt_ref2m_r_patch     , & ! Output: [real(r8) (:)   ]  Rural 2 m Stull Wet Bulb temperature (C)
+         wb_ref2m         =>    humanindex_vars%wb_ref2m_patch        , & ! Output: [real(r8) (:)   ]  2 m Wet Bulb temperature (C)
+         wb_ref2m_r       =>    humanindex_vars%wb_ref2m_r_patch      , & ! Output: [real(r8) (:)   ]  Rural 2 m Wet Bulb temperature (C)
+         teq_ref2m        =>    humanindex_vars%teq_ref2m_patch       , & ! Output: [real(r8) (:)   ]  2 m height Equivalent temperature (K)
+         teq_ref2m_r      =>    humanindex_vars%teq_ref2m_r_patch     , & ! Output: [real(r8) (:)   ]  Rural 2 m Equivalent temperature (K)
+         ept_ref2m        =>    humanindex_vars%ept_ref2m_patch       , & ! Output: [real(r8) (:)   ]  2 m height Equivalent Potential temperature (K)
+         ept_ref2m_r      =>    humanindex_vars%ept_ref2m_r_patch     , & ! Output: [real(r8) (:)   ]  Rural 2 m height Equivalent Potential temperature (K)
+         discomf_index_ref2m    =>    humanindex_vars%discomf_index_ref2m_patch    , & ! Output: [real(r8) (:)   ]  2 m Discomfort Index temperature (C)
+         discomf_index_ref2m_r  =>    humanindex_vars%discomf_index_ref2m_r_patch  , & ! Output: [real(r8) (:)   ]  Rural 2 m Discomfort Index temperature (C)
+         discomf_index_ref2mS   =>    humanindex_vars%discomf_index_ref2mS_patch   , & ! Output: [real(r8) (:)   ]  2 m height Discomfort Index Stull temperature (C)
+         discomf_index_ref2mS_r =>    humanindex_vars%discomf_index_ref2mS_r_patch , & ! Output: [real(r8) (:)   ]  Rural 2 m Discomfort Index Stull temperature (K)
+         nws_hi_ref2m     =>    humanindex_vars%nws_hi_ref2m_patch    , & ! Output: [real(r8) (:)   ]  2 m NWS Heat Index (C)
+         nws_hi_ref2m_r   =>    humanindex_vars%nws_hi_ref2m_r_patch  , & ! Output: [real(r8) (:)   ]  Rural 2 m NWS Heat Index (C)
+         thip_ref2m       =>    humanindex_vars%thip_ref2m_patch      , & ! Output: [real(r8) (:)   ]  2 m Temperature Humidity Index Physiology (C)
+         thip_ref2m_r     =>    humanindex_vars%thip_ref2m_r_patch    , & ! Output: [real(r8) (:)   ]  Rural 2 m Temperature Humidity Index Physiology (C)
+         thic_ref2m       =>    humanindex_vars%thic_ref2m_patch      , & ! Output: [real(r8) (:)   ]  2 m Temperature Humidity Index Comfort (C)
+         thic_ref2m_r     =>    humanindex_vars%thic_ref2m_r_patch    , & ! Output: [real(r8) (:)   ]  Rural 2 m Temperature Humidity Index Comfort (C)
+         swmp65_ref2m     =>    humanindex_vars%swmp65_ref2m_patch    , & ! Output: [real(r8) (:)   ]  2 m Swamp Cooler temperature 65% effi (C)
+         swmp65_ref2m_r   =>    humanindex_vars%swmp65_ref2m_r_patch  , & ! Output: [real(r8) (:)   ]  Rural 2 m Swamp Cooler temperature 65% effi (C)
+         swmp80_ref2m     =>    humanindex_vars%swmp80_ref2m_patch    , & ! Output: [real(r8) (:)   ]  2 m Swamp Cooler temperature 80% effi (C)
+         swmp80_ref2m_r   =>    humanindex_vars%swmp80_ref2m_r_patch  , & ! Output: [real(r8) (:)   ]  Rural 2 m Swamp Cooler temperature 80% effi (C)
+
          forc_u           =>    atm2lnd_vars%forc_u_grc               , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in east direction (m/s)                        
          forc_v           =>    atm2lnd_vars%forc_v_grc               , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in north direction (m/s)                       
          forc_th          =>    atm2lnd_vars%forc_th_downscaled_col   , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (Kelvin)                            
@@ -120,11 +156,8 @@ contains
          forc_rho         =>    atm2lnd_vars%forc_rho_downscaled_col  , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                                     
          forc_q           =>    atm2lnd_vars%forc_q_downscaled_col    , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
 
-         forc_hgt_u_patch =>    frictionvel_vars%forc_hgt_u_patch     , & ! Input:
 
          frac_veg_nosno   =>    canopystate_vars%frac_veg_nosno_patch , & ! Input:  [logical  (:)   ]  true=> pft is bare ground (elai+esai = zero)
-
-         htvp             =>    energyflux_vars%htvp_col              , & ! Input:  [real(r8) (:)   ]  latent heat of evaporation (/sublimation) [J/kg]                      
 
          watsat           =>    soilstate_vars%watsat_col             , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)                      
          soilbeta         =>    soilstate_vars%soilbeta_col           , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
@@ -144,7 +177,6 @@ contains
          dqgdT            =>    waterstate_vars%dqgdT_col             , & ! Input:  [real(r8) (:)   ]  temperature derivative of "qg"                                        
          h2osoi_ice       =>    waterstate_vars%h2osoi_ice_col        , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                                    
          h2osoi_liq       =>    waterstate_vars%h2osoi_liq_col        , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                                                
-         
          grnd_ch4_cond    =>    ch4_vars%grnd_ch4_cond_patch          , & ! Output: [real(r8) (:)   ]  tracer conductance for boundary layer [m/s]
 
          eflx_sh_snow     =>    energyflux_vars%eflx_sh_snow_patch    , & ! Output: [real(r8) (:)   ]  sensible heat flux from snow (W/m**2) [+ to atm]                      
@@ -167,11 +199,14 @@ contains
          rh_ref2m_r       =>    waterstate_vars%rh_ref2m_r_patch      , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface relative humidity (%)                        
          rh_ref2m         =>    waterstate_vars%rh_ref2m_patch        , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)                              
 
+         forc_hgt_u_patch =>    frictionvel_vars%forc_hgt_u_patch     , & ! Input:
+         u10_clm          =>    frictionvel_vars%u10_clm_patch        , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
          z0mg_col         =>    frictionvel_vars%z0mg_col             , & ! Output: [real(r8) (:)   ]  roughness length, momentum [m]                                        
          z0hg_col         =>    frictionvel_vars%z0hg_col             , & ! Output: [real(r8) (:)   ]  roughness length, sensible heat [m]                                   
          z0qg_col         =>    frictionvel_vars%z0qg_col             , & ! Output: [real(r8) (:)   ]  roughness length, latent heat [m]                                     
          ram1             =>    frictionvel_vars%ram1_patch           , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                                        
 
+         htvp             =>    energyflux_vars%htvp_col              , & ! Input:  [real(r8) (:)   ]  latent heat of evaporation (/sublimation) [J/kg]                      
          qflx_ev_snow     =>    waterflux_vars%qflx_ev_snow_patch     , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (W/m**2) [+ to atm]                        
          qflx_ev_soil     =>    waterflux_vars%qflx_ev_soil_patch     , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (W/m**2) [+ to atm]                        
          qflx_ev_h2osfc   =>    waterflux_vars%qflx_ev_h2osfc_patch   , & ! Output: [real(r8) (:)   ]  evaporation flux from h2osfc (W/m**2) [+ to atm]                      
@@ -302,6 +337,9 @@ contains
          cgrndl(p) = raiw*dqgdT(c)
          cgrnd(p)  = cgrnds(p) + htvp(c)*cgrndl(p)
 
+
+         ! Variables needed by history tape
+
          ! Surface fluxes of momentum, sensible and latent heat
          ! using ground temperatures from previous time step
          taux(p)          = -forc_rho(c)*forc_u(g)/ram
@@ -339,6 +377,39 @@ contains
             t_ref2m_r(p) = t_ref2m(p)
          end if
 
+         ! Human Heat Stress
+         if ( calc_human_stress_indices )then
+            call KtoC(t_ref2m(p), tc_ref2m(p))
+            call VaporPres(rh_ref2m(p), e_ref2m, vap_ref2m(p))
+            call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), q_ref2m(p), &
+                            teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
+            call Wet_BulbS(tc_ref2m(p),rh_ref2m(p), wbt_ref2m(p))
+            call HeatIndex(tc_ref2m(p), rh_ref2m(p), nws_hi_ref2m(p))
+            call AppTemp(tc_ref2m(p), vap_ref2m(p), u10_clm(p), appar_temp_ref2m(p))
+            call swbgt(tc_ref2m(p), vap_ref2m(p), swbgt_ref2m(p))
+            call hmdex(tc_ref2m(p), vap_ref2m(p), humidex_ref2m(p))
+            call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
+            call dis_coiS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p), discomf_index_ref2mS(p))
+            call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
+            call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+  
+            if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+              teq_ref2m_r(p)            = teq_ref2m(p)
+              ept_ref2m_r(p)            = ept_ref2m(p)
+              wb_ref2m_r(p)             = wb_ref2m(p)
+              wbt_ref2m_r(p)            = wbt_ref2m(p)
+              nws_hi_ref2m_r(p)         = nws_hi_ref2m(p)
+              appar_temp_ref2m_r(p)     = appar_temp_ref2m(p)
+              swbgt_ref2m_r(p)          = swbgt_ref2m(p)
+              humidex_ref2m_r(p)        = humidex_ref2m(p)
+              discomf_index_ref2m_r(p)  = discomf_index_ref2m(p)
+              discomf_index_ref2mS_r(p) = discomf_index_ref2mS(p)
+              thic_ref2m_r(p)           = thic_ref2m(p)
+              thip_ref2m_r(p)           = thip_ref2m(p)
+              swmp80_ref2m_r(p)         = swmp80_ref2m(p)
+              swmp65_ref2m_r(p)         = swmp65_ref2m(p)
+            end if
+         end if
       end do
 
     end associate

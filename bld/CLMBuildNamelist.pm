@@ -1413,14 +1413,27 @@ sub process_namelist_inline_logic {
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref, $physv);
   setup_logic_params_file($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_create_crop_landunit($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
-  setup_logic_urban($opts->{'test'}, $nl_flags, $definition, $defaults, $nl);
   setup_logic_more_vertlayers($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_surface_dataset($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_bgc_spinup($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_supplemental_nitrogen($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #########################################
+  # namelist group: clm_humanindex_inparm #
+  #########################################
+  setup_logic_humanindex($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #######################################################################
+  # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
+  #######################################################################
   setup_logic_hydrology_switches($nl);
+
+  ###############################
+  # namelist group: clmu_inparm #
+  ###############################
+  setup_logic_urban($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   ###############################
   # namelist group: ch4par_in   #
@@ -1787,9 +1800,26 @@ sub setup_logic_create_crop_landunit {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_urban {
-  my ($test_files, $nl_flags, $definition, $defaults, $nl) = @_;
+sub setup_logic_humanindex {
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'calc_human_stress_indices');
+  } else {
+     if ( defined($nl->get_value('calc_human_stress_indices')) ) {
+        fatal_error( "calc_human_stress_indices can NOT be set, for physics versions less than clm4_5" );
+     }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_urban {
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'building_temp_method');
+  }
   add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_hac');
   add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_traffic');
 }
@@ -2430,7 +2460,8 @@ sub write_output_files {
     #}
   } else {
     @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams lai_streams clm_canopyhydrology_inparm 
-                 clm_soilhydrology_inparm finidat_consistency_checks dynpft_consistency_checks);
+                 clm_soilhydrology_inparm finidat_consistency_checks dynpft_consistency_checks 
+                 clmu_inparm );
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);
     # Eventually only list namelists that are actually used when CN on
@@ -2439,6 +2470,9 @@ sub write_output_files {
     #}
     if ( $nl_flags->{'use_lch4'}  eq ".true." ) {
       push @groups, "ch4par_in";
+    }
+    if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+      push @groups, "clm_humanindex_inparm";
     }
   }
 

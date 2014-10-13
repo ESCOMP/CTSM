@@ -1,4 +1,239 @@
 ===============================================================
+Tag name:  clm4_5_1_r089
+Originator(s):  erik (Erik)
+Date: Mon Oct 13 13:46:43 MDT 2014
+One-line Summary: Bring new urban building temperature to trunk as a clm5.0 feature 
+                  as well as human-stress index calculations
+
+Purpose of changes:
+
+New prognostic internal building air temperature methodology for CLM5.0. Retain the older simpler method
+for CLM4.5. The namelist toggle to switch between them is: building_temp_method. By default for clm4_5 physics
+the older method is used and for clm5_0 the newer one is used. Also add in a package of human-stress index
+calculations. Again this is by default on for clm5_0 and off for clm4_5. 
+
+The new building air temperature methodology, solves the system of equations for internal: air, roof, floor, 
+and wall (shade and sunlit) Temperatures. It uses the LAPACK subroutine DGESV to solve the system. It also
+figures out the energy flux needed to either cool the building air temperature to a maximum allowed temperature
+or to heat it to the minimum allowed temperature.
+
+Add in the new load balancing tool and the PyReshaper tool (changes multi-variable 
+monthly history files into single-variable time-series files).
+
+Remove the now unneeded clm4_5 interpinic as well as the mkmapgrids FORTRAN program.
+
+Requirements for tag: Bring in new clm5_0 building temperature as option, Fix scripts bugs, bug 2053/2032
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+            2053 Problems with dry-deposition for fully coupled cases with CLM4.5 in cesm1_3_beta13
+            2032 rtm.buildnml.csh kills cesm_setup if GET_REFCASE is FALSE
+            1685 Drydeposition potentially using "rs" variable before it's defined (over water)
+                 (was fixed but came back)
+            Fix bugs: 2024, 2035, 2037 in scripts SBN and namelistcompare issues
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: new namelists and namelist items
+    add: clmu_inparm and clm_humanindex_inparm namelists
+    move: urban_hac and urban_traffic to clmu_inparm
+    add: calc_human_stress_indices to clm_humanindex_inparm
+          building_temp_method to clmu_inparm
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes:
+   clm5_0 memory use is greater than clm4_5 due to human_stress_indices calculations
+   and output on history (I've seen it make up to a 20% difference)
+
+Code reviewed by: self, oleson, sacks, mvertens, andre
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, Machines, rtm, cism, csm_share
+   Update to cesm1_3_alpha13c externals.
+   Also add in load_balancing_tool and pyReshaper
+
+    scripts             to scripts4_141009
+    Machines            to Machines_141001
+    rtm                 to rtm1_0_39
+    cism                to cism1_140916
+    csm_share           to share3_141003
+    load_balancing_tool to load_balancing_tool_140818
+    pyReshaper          to v0.9.1
+
+List all files eliminated:
+
+--------- Remove clm4_5 interpinic, online interpinic supersedes it
+D       models/lnd/clm/tools/clm4_5/interpinic
+D       models/lnd/clm/tools/clm4_5/interpinic/*
+D       models/lnd/clm/tools/clm4_5/interpinic/src/*
+
+--------- Remove mkmapgrids program
+D       models/lnd/clm/tools/shared/mkmapgrids/src
+D       models/lnd/clm/tools/shared/mkmapgrids/src/*
+D       models/lnd/clm/tools/shared/mkmapgrids/mkmapgrids.namelist
+D       models/lnd/clm/tools/shared/mkmapgrids/mkmapgrids.csh
+
+--------- shr_sys_mod was mocked only because of it's use of shr_mpi_mod
+--------- mock shr_mpi_mod instead and standard shr_sys_mod can be used
+D       models/lnd/clm/src/unit_test_mocks/csm_share/shr_sys_mod_mock.F90
+
+List all files added and what they do:
+
+A       models/lnd/clm/src/biogeophys/HumanIndexMod.F90 -- New module to
+           calculate a bunch of human stress index values.
+
+A       models/lnd/clm/src/biogeophys/UrbBuildTempOleson2015Mod.F90 --- New module
+           for calculating the prognostic internal building air temperature.
+
+--------- New simple unit tester for humanstress indices module
+A       models/lnd/clm/src/biogeophys/test/HumanStress_test/test_humanstress.pf
+A       models/lnd/clm/src/biogeophys/test/HumanStress_test/CMakeLists.txt
+A       models/lnd/clm/src/biogeophys/test/HumanStress_test
+
+A       models/lnd/clm/src/unit_test_mocks/csm_share/shr_mpi_mod_mock.F90 -- shell
+           for most shr_mpi_ calls that do nothing (so assumes MPI is NOT being done)
+           shr_mpi_abort does a stop
+
+List all existing files that have been modified, and describe the changes:
+
+--------- remove the mkgriddata and clm4_5 interpinic tools from testing
+M       models/lnd/clm/test/tools/input_tests_master
+M       models/lnd/clm/test/tools/tests_posttag_yong
+M       models/lnd/clm/test/tools/tests_posttag_nompi_regression
+M       models/lnd/clm/test/tools/tests_pretag_yellowstone_nompi
+
+--------- remove documentation of mkgriddata and clm4_5 interpinic tools
+--------- but add documentation on ncl script
+M       models/lnd/clm/tools/shared/mkmapgrids/README
+M       models/lnd/clm/tools/README
+
+--------- Add new namelists: clmu_inparm and clm_humanindex_inparm
+M       models/lnd/clm/bld/configure ---- use same configuration for clm4_5 AND clm5_0
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Set
+           calc_human_stress_indices, and building_temp_method by clm4_5/clm5_0
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Move 
+           urban_hac and urban_traffic to new clmu_inparm namelist and
+           add building_temp_method and add calc_human_stress_indices to
+           clm_humanindex_inparm namelist
+M       models/lnd/clm/bld/CLMBuildNamelist.pm -------- Handle new namelists:
+           clmu_inparm and clm_humanindex_inparm
+
+--------- Get unit tests working again, and add a simple humanindex test
+M       models/lnd/clm/src/utils/CMakeLists.txt
+M       models/lnd/clm/src/ED/main/CMakeLists.txt
+M       models/lnd/clm/src/ED/biogeophys/CMakeLists.txt
+M       models/lnd/clm/src/README.unit_testing
+M       models/lnd/clm/src/biogeophys/CMakeLists.txt
+M       models/lnd/clm/src/biogeophys/test/CMakeLists.txt
+M       models/lnd/clm/src/unit_test_mocks/util_share/spmdMod_mock.F90 - set mpicom
+M       models/lnd/clm/src/unit_test_mocks/csm_share/CMakeLists.txt
+M       models/lnd/clm/src/CMakeLists.txt
+
+--------- Fix so can work with drydeposition namelist and without megan namelist
+M       models/lnd/clm/src/biogeochem/VOCEmissionMod.F90 - Don't initialize if
+           megan namelist is turned off (bug 2053)
+M       models/lnd/clm/src/biogeochem/DryDepVelocity.F90 - Make sure rs is set 
+           before used (bug 1685)
+
+--------- Handle new building temperature options, add new constants
+MM      models/lnd/clm/src/main/clm_varcon.F90 -------- Bunch of new constants 
+            for urban-building (should be moved to modules that use them). 
+            Also pass is_simple_buildtemp into init method
+MM      models/lnd/clm/src/main/clm_initializeMod.F90 - Pass building temp type 
+            down to relevent init methods add initialization for humanindex_vars, 
+            initialize drydepvel_vars (bug 2053)
+M       models/lnd/clm/src/main/restFileMod.F90 ------- Pass building temp type 
+            logicals down to energyflux_vars and temperature_vars restart methods
+M       models/lnd/clm/src/main/LandunitType.F90 ------ Add documentation, correct 
+            error in documentation 
+MM      models/lnd/clm/src/main/controlMod.F90 -------- Move urban namelist items to 
+            UrbanReadNML, add HumanIndexReadNML
+M       models/lnd/clm/src/main/clm_driver.F90 -------- Pass humanindex_vars down as needed
+
+--------- Change for new shr_cal_mod names
+M       models/lnd/clm/src/ED/biogeophys/EDPhenologyMod.F90 - Use full name of month 
+            "january" instead of "jan"
+
+--------- Add new building temperature module and add capability to do old clm4_5
+--------- method as well as new method, also do human_stress_indices calculations
+MM      models/lnd/clm/src/biogeophys/SoilTemperatureMod.F90 --- Add BuildingHAC for 
+           simple building temp method (should move to it's own module) add if 
+           statements for building_temp_method type, call BuildingTemperature
+           when prognostic method used
+M       models/lnd/clm/src/biogeophys/SoilFluxesMod.F90 -------- Change name of 
+           eflx_building_heat to eflx_building_heat_errsoi
+M       models/lnd/clm/src/biogeophys/TemperatureType.F90 ------ Add building
+           temperature variables (should move to urbBuildTemp module), pass building_temp
+           method logical down for initialization, add documentation headers
+           hist, cold, and restart init depends on building temp method logical
+M       models/lnd/clm/src/biogeophys/LakeFluxesMod.F90 -------- calc_human_stress_indices
+           (should move to method in humanIndexMod)
+MM      models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90 -- calc_human_stress_indices
+           (should move to method in humanIndexMod)
+MM      models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90 ------ calc_human_stress_indices
+           (should move to method in humanIndexMod)
+M       models/lnd/clm/src/biogeophys/EnergyFluxType.F90 ---- change name of eflx_building_heat_col
+           to eflx_building_heat_errsoi_col, add some new building temperature flux terms
+           add documentation, alloc, hist, restart and cold initialization depends on 
+           building temperature method type (should move to urban building module)
+M       models/lnd/clm/src/biogeophys/UrbanFluxesMod.F90 ---- Add private functions: 
+           wasteheat, simple_wasteheatfromac, calc_simple_internal_building_temp 
+           (should move to building_temp modules). 
+           calc_human_stress_indices (should move to method in humanIndexMod)
+M       models/lnd/clm/src/biogeophys/UrbanParamsType.F90 --- Add methods: UrbanReadNML, 
+           IsSimpleBuildTemp, IsProgBuildTemp, add clmu_inparm namelist, and move urban_* items
+           there and add building_temp_method to it.
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone        yes
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone        yes
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel  yes
+    yellowstone_pgi    yes
+    yellowstone_gnu    yes
+    goldbach_nag       yes
+    goldbach_intel     yes
+
+  short tests (aux_clm_short):
+
+    yellowstone_intel yes
+    yellowstone_pgi   yes
+    goldbach_nag      yes
+
+  tools testing:      
+
+    yellowstone interactive                                     yes
+    PTCLM (models/lnd/clm/tools/shared/PTCLM/test) yellowstone  yes
+
+CLM tag used for the baseline comparisons:  clm4_5_1_r088
+
+Changes answers relative to baseline: No for CLM40 and CLM45
+       But, answers DO change for CLM50
+       (except scripts tag update changes history files for IG and irrigation compsets/tests)
+
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r088
 Originator(s):  muszala (Stefan Muszala)
 Date: Wed Oct  1 09:24:43 MDT 2014

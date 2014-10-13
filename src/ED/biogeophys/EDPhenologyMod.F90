@@ -92,7 +92,7 @@ contains
         g = gridcell(p)
 
         if (latdeg(g) >= 0._r8) then
-           m = calParams%jan
+           m = calParams%january
         else
            m = calParams%june
         endif

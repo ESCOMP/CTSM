@@ -25,14 +25,14 @@ add_subdirectory(${CLM_ROOT}/src/ED/biogeophys ed_biogeophys)
 add_subdirectory(unit_test_mocks)
 add_subdirectory(unit_test_shr)
 
-# Remove shr_sys_mod from share_sources.
-# This is needed because we want to use the mock shr_sys_mod in place of the real one
+# Remove shr_mpi_mod from share_sources.
+# This is needed because we want to use the mock shr_mpi_mod in place of the real one
 #
 # TODO: this should be moved into a general-purpose function in Sourcelist_utils.
 # Then this block of code could be replaced with a single call, like:
-# remove_source_file(${share_sources} "shr_sys_mod.F90")
+# remove_source_file(${share_sources} "shr_mpi_mod.F90")
 foreach (sourcefile ${share_sources})
-  string(REGEX MATCH "shr_sys_mod.F90" match_found ${sourcefile})
+  string(REGEX MATCH "shr_mpi_mod.F90" match_found ${sourcefile})
   if(match_found)
     list(REMOVE_ITEM share_sources ${sourcefile})
   endif()

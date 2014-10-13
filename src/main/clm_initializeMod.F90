@@ -46,6 +46,7 @@ module clm_initializeMod
   use WaterfluxType          , only : waterflux_type
   use WaterstateType         , only : waterstate_type
   use UrbanParamsType        , only : urbanparams_type
+  use HumanIndexMod          , only : humanindex_type
   use VOCEmissionMod         , only : vocemis_type
   use atm2lndType            , only : atm2lnd_type
   use lnd2atmType            , only : lnd2atm_type
@@ -103,6 +104,7 @@ module clm_initializeMod
   type(surfrad_type)          :: surfrad_vars
   type(temperature_type)      :: temperature_vars
   type(urbanparams_type)      :: urbanparams_vars
+  type(humanindex_type)       :: humanindex_vars
   type(waterflux_type)        :: waterflux_vars
   type(waterstate_type)       :: waterstate_vars
   type(atm2lnd_type)          :: atm2lnd_vars
@@ -141,6 +143,7 @@ contains
     use initGridCellsMod , only: initGridCells
     use ch4varcon        , only: ch4conrd
     use UrbanParamsType  , only: UrbanInput
+    use UrbanParamsType  , only: IsSimpleBuildTemp, IsProgBuildTemp
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
@@ -170,7 +173,7 @@ contains
 
     call control_init()
     call clm_varpar_init()
-    call clm_varcon_init()
+    call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
     call ncd_pio_init()
 
@@ -399,6 +402,7 @@ contains
     use lnd2atmMod            , only : lnd2atm_minimal
     use glc2lndMod            , only : glc2lnd_type
     use lnd2glcMod            , only : lnd2glc_type 
+    use UrbanParamsType       , only : IsSimpleBuildTemp, IsProgBuildTemp
     use SoilWaterRetentionCurveFactoryMod, only : create_soil_water_retention_curve
     !
     ! !ARGUMENTS    
@@ -563,6 +567,7 @@ contains
     ! Initialize urban constants
 
     call urbanparams_vars%Init(bounds_proc)
+    call humanindex_vars%Init(bounds_proc)
 
     ! Initialize ecophys constants
 
@@ -611,7 +616,8 @@ contains
          urbanparams_vars%em_roof(begl:endl),    &
          urbanparams_vars%em_wall(begl:endl),    &
          urbanparams_vars%em_improad(begl:endl), &
-         urbanparams_vars%em_perroad(begl:endl))
+         urbanparams_vars%em_perroad(begl:endl), &
+         IsSimpleBuildTemp(), IsProgBuildTemp() )
 
     call canopystate_vars%init(bounds_proc)
 
@@ -628,7 +634,8 @@ contains
     ! WJS (6-24-14): Without the following write statement, the assertion in
     ! energyflux_vars%init fails with pgi 13.9 on yellowstone. So for now, I'm leaving
     ! this write statement in place as a workaround for this problem.
-    call energyflux_vars%init(bounds_proc, temperature_vars%t_grnd_col(begc:endc))
+    call energyflux_vars%init(bounds_proc, temperature_vars%t_grnd_col(begc:endc), &
+                              IsSimpleBuildTemp(), IsProgBuildTemp() )
 
     call aerosol_vars%Init(bounds_proc)
 
@@ -669,6 +676,8 @@ contains
     if (use_voc ) then
        call vocemis_vars%Init(bounds_proc)
     end if
+
+    call drydepvel_vars%Init(bounds_proc)
 
     if (use_cn) then
 

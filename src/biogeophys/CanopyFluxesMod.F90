@@ -39,6 +39,7 @@ module CanopyFluxesMod
   use TemperatureType       , only : temperature_type
   use WaterfluxType         , only : waterflux_type
   use WaterstateType        , only : waterstate_type
+  use HumanIndexMod         , only : humanindex_type
   use ch4Mod                , only : ch4_type
   use PhotosynthesisType    , only : photosyns_type
   use GridcellType          , only : grc                
@@ -69,7 +70,7 @@ contains
        atm2lnd_vars, canopystate_vars, cnstate_vars, energyflux_vars, &
        frictionvel_vars, soilstate_vars, solarabs_vars, surfalb_vars, &
        temperature_vars, waterflux_vars, waterstate_vars, ch4_vars, photosyns_vars, &
-       EDbio_vars, soil_water_retention_curve) 
+       EDbio_vars, soil_water_retention_curve, humanindex_vars) 
     !
     ! !DESCRIPTION:
     ! 1. Calculates the leaf temperature:
@@ -109,6 +110,9 @@ contains
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
+    use HumanIndexMod      , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
+                                    swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
+                                    SwampCoolEff, KtoC, VaporPres
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     !
     ! !ARGUMENTS:
@@ -129,6 +133,7 @@ contains
     type(ch4_type)            , intent(inout) :: ch4_vars
     type(photosyns_type)      , intent(inout) :: photosyns_vars
     type(EDbio_type)          , intent(inout) :: EDbio_vars
+    type(humanindex_type)     , intent(inout) :: humanindex_vars
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
@@ -337,7 +342,36 @@ contains
          smpso                => ecophyscon%smpso                          , & ! Input:  [real(r8) (:)   ]  soil water potential at full stomatal opening (mm)                    
          smpsc                => ecophyscon%smpsc                          , & ! Input:  [real(r8) (:)   ]  soil water potential at full stomatal closure (mm)                    
 
-         htvp                 => energyflux_vars%htvp_col                  , & ! Input:  [real(r8) (:)   ]  latent heat of evaporation (/sublimation) [J/kg] (constant)                      
+         tc_ref2m             => humanindex_vars%tc_ref2m_patch            , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (C)
+         vap_ref2m            => humanindex_vars%vap_ref2m_patch           , & ! Output: [real(r8) (:)   ]  2 m height vapor pressure (Pa)
+         appar_temp_ref2m     => humanindex_vars%appar_temp_ref2m_patch    , & ! Output: [real(r8) (:)   ]  2 m apparent temperature (C)
+         appar_temp_ref2m_r   => humanindex_vars%appar_temp_ref2m_r_patch  , & ! Output: [real(r8) (:)   ]  Rural 2 m apparent temperature (C)
+         swbgt_ref2m          => humanindex_vars%swbgt_ref2m_patch         , & ! Output: [real(r8) (:)   ]  2 m Simplified Wetbulb Globe temperature (C)
+         swbgt_ref2m_r        => humanindex_vars%swbgt_ref2m_r_patch       , & ! Output: [real(r8) (:)   ]  Rural 2 m Simplified Wetbulb Globe temperature (C)
+         humidex_ref2m        => humanindex_vars%humidex_ref2m_patch       , & ! Output: [real(r8) (:)   ]  2 m Humidex (C)
+         humidex_ref2m_r      => humanindex_vars%humidex_ref2m_r_patch     , & ! Output: [real(r8) (:)   ]  Rural 2 m Humidex (C)
+         wbt_ref2m            => humanindex_vars%wbt_ref2m_patch           , & ! Output: [real(r8) (:)   ]  2 m Stull Wet Bulb temperature (C)
+         wbt_ref2m_r          => humanindex_vars%wbt_ref2m_r_patch         , & ! Output: [real(r8) (:)   ]  Rural 2 m Stull Wet Bulb temperature (C)
+         wb_ref2m             => humanindex_vars%wb_ref2m_patch            , & ! Output: [real(r8) (:)   ]  2 m Wet Bulb temperature (C)
+         wb_ref2m_r           => humanindex_vars%wb_ref2m_r_patch          , & ! Output: [real(r8) (:)   ]  Rural 2 m Wet Bulb temperature (C)
+         teq_ref2m            => humanindex_vars%teq_ref2m_patch           , & ! Output: [real(r8) (:)   ]  2 m height Equivalent temperature (K)
+         teq_ref2m_r          => humanindex_vars%teq_ref2m_r_patch         , & ! Output: [real(r8) (:)   ]  Rural 2 m Equivalent temperature (K)
+         ept_ref2m            => humanindex_vars%ept_ref2m_patch           , & ! Output: [real(r8) (:)   ]  2 m height Equivalent Potential temperature (K)
+         ept_ref2m_r          => humanindex_vars%ept_ref2m_r_patch         , & ! Output: [real(r8) (:)   ]  Rural 2 m height Equivalent Potential temperature (K)
+         discomf_index_ref2m  => humanindex_vars%discomf_index_ref2m_patch , & ! Output: [real(r8) (:)   ]  2 m Discomfort Index temperature (C)
+         discomf_index_ref2m_r=> humanindex_vars%discomf_index_ref2m_r_patch, & ! Output: [real(r8) (:)   ]  Rural 2 m Discomfort Index temperature (C)
+         discomf_index_ref2mS => humanindex_vars%discomf_index_ref2mS_patch, & ! Output: [real(r8) (:)   ]  2 m height Discomfort Index Stull temperature (C)
+         discomf_index_ref2mS_r=> humanindex_vars%discomf_index_ref2mS_r_patch, & ! Output: [real(r8) (:)   ]  Rural 2 m Discomfort Index Stull temperature (K)
+         nws_hi_ref2m         => humanindex_vars%nws_hi_ref2m_patch        , & ! Output: [real(r8) (:)   ]  2 m NWS Heat Index (C)
+         nws_hi_ref2m_r       => humanindex_vars%nws_hi_ref2m_r_patch      , & ! Output: [real(r8) (:)   ]  Rural 2 m NWS Heat Index (C)
+         thip_ref2m           => humanindex_vars%thip_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m Temperature Humidity Index Physiology (C)
+         thip_ref2m_r         => humanindex_vars%thip_ref2m_r_patch        , & ! Output: [real(r8) (:)   ]  Rural 2 m Temperature Humidity Index Physiology (C)
+         thic_ref2m           => humanindex_vars%thic_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m Temperature Humidity Index Comfort (C)
+         thic_ref2m_r         => humanindex_vars%thic_ref2m_r_patch        , & ! Output: [real(r8) (:)   ]  Rural 2 m Temperature Humidity Index Comfort (C)
+         swmp65_ref2m         => humanindex_vars%swmp65_ref2m_patch        , & ! Output: [real(r8) (:)   ]  2 m Swamp Cooler temperature 65% effi (C)
+         swmp65_ref2m_r       => humanindex_vars%swmp65_ref2m_r_patch      , & ! Output: [real(r8) (:)   ]  Rural 2 m Swamp Cooler temperature 65% effi (C)
+         swmp80_ref2m         => humanindex_vars%swmp80_ref2m_patch        , & ! Output: [real(r8) (:)   ]  2 m Swamp Cooler temperature 80% effi (C)
+         swmp80_ref2m_r       => humanindex_vars%swmp80_ref2m_r_patch      , & ! Output: [real(r8) (:)   ]  Rural 2 m Swamp Cooler temperature 80% effi (C)
 
          sabv                 => solarabs_vars%sabv_patch                  , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by vegetation (W/m**2)                       
 
@@ -350,6 +384,7 @@ contains
          htop                 => canopystate_vars%htop_patch               , & ! Input:  [real(r8) (:)   ]  canopy top(m)                                                         
          altmax_lastyear_indx => canopystate_vars%altmax_lastyear_indx_col , & ! Input:  [integer  (:)   ]  prior year maximum annual depth of thaw                                
          altmax_indx          => canopystate_vars%altmax_indx_col          , & ! Input:  [integer  (:)   ]  maximum annual depth of thaw                                           
+         rscanopy             => canopystate_vars%rscanopy_patch           ,  & ! Output: [real(r8) (:,:)]   canopy resistance s/m (ED)
          
          watsat               => soilstate_vars%watsat_col                 , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)   (constant)                     
          watdry               => soilstate_vars%watdry_col                 , & ! Input:  [real(r8) (:,:) ]  btran parameter for btran=0                      (constant)                                        
@@ -362,6 +397,7 @@ contains
          soilbeta             => soilstate_vars%soilbeta_col               , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
          rootr                => soilstate_vars%rootr_patch                , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer                      
 
+         u10_clm              => frictionvel_vars%u10_clm_patch            , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
          forc_hgt_u_patch     => frictionvel_vars%forc_hgt_u_patch         , & ! Input:  [real(r8) (:)   ]  observational height of wind at pft level [m]                          
          z0mg                 => frictionvel_vars%z0mg_col                 , & ! Input:  [real(r8) (:)   ]  roughness length of ground, momentum [m]                              
          ram1                 => frictionvel_vars%ram1_patch               , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                                        
@@ -395,7 +431,6 @@ contains
          h2osoi_vol           => waterstate_vars%h2osoi_vol_col            , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] by F. Li and S. Levis
          h2osoi_liq           => waterstate_vars%h2osoi_liq_col            , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                                                
          h2osoi_liqvol        => waterstate_vars%h2osoi_liqvol_col         , & ! Output: [real(r8) (:,:) ]  volumetric liquid water (v/v) 
-
          h2ocan               => waterstate_vars%h2ocan_patch              , & ! Output: [real(r8) (:)   ]  canopy water (mm H2O)                                                 
          q_ref2m              => waterstate_vars%q_ref2m_patch             , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)                          
          rh_ref2m_r           => waterstate_vars%rh_ref2m_r_patch          , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface relative humidity (%)                        
@@ -416,6 +451,7 @@ contains
 
          grnd_ch4_cond        => ch4_vars%grnd_ch4_cond_patch              , & ! Output: [real(r8) (:)   ]  tracer conductance for boundary layer [m/s] 
 
+         htvp                 => energyflux_vars%htvp_col                  , & ! Input:  [real(r8) (:)   ]  latent heat of evaporation (/sublimation) [J/kg] (constant)                      
          btran2               => energyflux_vars%btran2_patch              , & ! Output: [real(r8) (:)   ]  F. Li and S. Levis                                                     
          btran                => energyflux_vars%btran_patch               , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1)                                 
          rresis               => energyflux_vars%rresis_patch              , & ! Output: [real(r8) (:,:) ]  root resistance by layer (0-1)  (nlevgrnd)                          
@@ -432,8 +468,6 @@ contains
          eflx_sh_soil         => energyflux_vars%eflx_sh_soil_patch        , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
          eflx_sh_veg          => energyflux_vars%eflx_sh_veg_patch         , & ! Output: [real(r8) (:)   ]  sensible heat flux from leaves (W/m**2) [+ to atm]                    
          eflx_sh_grnd         => energyflux_vars%eflx_sh_grnd_patch        , & ! Output: [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]                    
-
-         rscanopy             => canopystate_vars%rscanopy_patch           ,  & ! Output: [real(r8) (:,:)]   canopy resistance s/m (ED)
 
          begp                 => bounds%begp                               , &
          endp                 => bounds%endp                                 &
@@ -1168,6 +1202,39 @@ contains
          call QSat(t_ref2m(p), forc_pbot(c), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
          rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
          rh_ref2m_r(p) = rh_ref2m(p)
+
+         ! Human Heat Stress
+         if ( calc_human_stress_indices )then
+
+            call KtoC(t_ref2m(p), tc_ref2m(p))
+            call VaporPres(rh_ref2m(p), e_ref2m, vap_ref2m(p))
+            call Wet_Bulb(t_ref2m(p), vap_ref2m(p), forc_pbot(c), rh_ref2m(p), q_ref2m(p), &
+                          teq_ref2m(p), ept_ref2m(p), wb_ref2m(p))
+            call Wet_BulbS(tc_ref2m(p),rh_ref2m(p), wbt_ref2m(p))
+            call HeatIndex(tc_ref2m(p), rh_ref2m(p), nws_hi_ref2m(p))
+            call AppTemp(tc_ref2m(p), vap_ref2m(p), u10_clm(p), appar_temp_ref2m(p))
+            call swbgt(tc_ref2m(p), vap_ref2m(p), swbgt_ref2m(p))
+            call hmdex(tc_ref2m(p), vap_ref2m(p), humidex_ref2m(p))
+            call dis_coi(tc_ref2m(p), wb_ref2m(p), discomf_index_ref2m(p))
+            call dis_coiS(tc_ref2m(p), rh_ref2m(p), wbt_ref2m(p), discomf_index_ref2mS(p))
+            call THIndex(tc_ref2m(p), wb_ref2m(p), thic_ref2m(p), thip_ref2m(p))
+            call SwampCoolEff(tc_ref2m(p), wb_ref2m(p), swmp80_ref2m(p), swmp65_ref2m(p))
+
+            teq_ref2m_r(p)            = teq_ref2m(p)
+            ept_ref2m_r(p)            = ept_ref2m(p)
+            wb_ref2m_r(p)             = wb_ref2m(p)
+            wbt_ref2m_r(p)            = wbt_ref2m(p)
+            nws_hi_ref2m_r(p)         = nws_hi_ref2m(p)
+            appar_temp_ref2m_r(p)     = appar_temp_ref2m(p)
+            swbgt_ref2m_r(p)          = swbgt_ref2m(p)
+            humidex_ref2m_r(p)        = humidex_ref2m(p)
+            discomf_index_ref2m_r(p)  = discomf_index_ref2m(p)
+            discomf_index_ref2mS_r(p) = discomf_index_ref2mS(p)
+            thic_ref2m_r(p)           = thic_ref2m(p)
+            thip_ref2m_r(p)           = thip_ref2m(p)
+            swmp80_ref2m_r(p)         = swmp80_ref2m(p)
+            swmp65_ref2m_r(p)         = swmp65_ref2m(p)
+         end if
 
          ! Downward longwave radiation below the canopy
 

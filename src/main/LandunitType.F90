@@ -54,10 +54,11 @@ module LandunitType
 
    contains
 
-     procedure, public :: Init
-     procedure, public :: Clean
+     procedure, public :: Init    ! Allocate and initialize
+     procedure, public :: Clean   ! Clean up memory
      
   end type landunit_type
+  ! Singleton instance of the landunitType
   type(landunit_type), public, target :: lun  !geomorphological landunits
   !------------------------------------------------------------------------
 
@@ -65,6 +66,10 @@ contains
   
   !------------------------------------------------------------------------
   subroutine Init(this, begl, endl)
+    !-----------------------------------------------------------------------
+    ! !DESCRIPTION:
+    ! Allocate memory and initialize to signalling NaN to require
+    ! data be properly initialized somewhere else.
     !
     ! !ARGUMENTS:
     class(landunit_type) :: this
@@ -89,7 +94,7 @@ contains
     ! The following is initialized in routine setActive in module reweightMod
     allocate(this%active       (begl:endl))
 
-    ! The following is set in routine urbanparams_vars%Init in module UrbanParamsMod
+    ! The following is set in routine urbanparams_vars%Init in module UrbanParamsType
     allocate(this%canyon_hwr   (begl:endl)); this%canyon_hwr   (:) = nan
     allocate(this%wtroad_perv  (begl:endl)); this%wtroad_perv  (:) = nan
     allocate(this%ht_roof      (begl:endl)); this%ht_roof      (:) = nan
@@ -101,6 +106,9 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Clean(this)
+    !-----------------------------------------------------------------------
+    ! !DESCRIPTION:
+    ! Clean up memory use
     !
     ! !ARGUMENTS:
     class(landunit_type) :: this

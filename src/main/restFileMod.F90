@@ -49,6 +49,7 @@ module restFileMod
   use ncdio_pio            , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
   use ncdio_pio            , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim
   use ncdio_pio            , only : check_att, ncd_getatt
+  use UrbanParamsType      , only : IsSimpleBuildTemp, IsProgBuildTemp
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -162,7 +163,8 @@ contains
 
     call canopystate_vars%restart (bounds, ncid, flag='define')
 
-    call energyflux_vars%restart (bounds, ncid, flag='define')
+    call energyflux_vars%restart (bounds, ncid, flag='define', &
+           is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp())
 
     call frictionvel_vars% restart (bounds, ncid, flag='define')
 
@@ -174,7 +176,8 @@ contains
 
     call solarabs_vars%restart (bounds, ncid, flag='define')
 
-    call temperature_vars%restart (bounds, ncid, flag='define')
+    call temperature_vars%restart (bounds, ncid, flag='define', &
+           is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp())
 
     call waterflux_vars%restart (bounds, ncid, flag='define')
 
@@ -248,7 +251,8 @@ contains
 
     call canopystate_vars%restart (bounds, ncid, flag='write')
 
-    call energyflux_vars%restart (bounds, ncid, flag='write')
+    call energyflux_vars%restart (bounds, ncid, flag='write', &
+           is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp())
 
     call frictionvel_vars% restart (bounds, ncid, flag='write')
 
@@ -260,7 +264,8 @@ contains
 
     call solarabs_vars%restart (bounds, ncid, flag='write')
 
-    call temperature_vars%restart (bounds, ncid, flag='write')
+    call temperature_vars%restart (bounds, ncid, flag='write', &
+           is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp())
 
     call waterflux_vars%restart (bounds, ncid, flag='write')
 
@@ -404,7 +409,8 @@ contains
 
     call canopystate_vars%restart (bounds, ncid, flag='read')
 
-    call energyflux_vars%restart (bounds, ncid, flag='read')
+    call energyflux_vars%restart (bounds, ncid, flag='read', &
+           is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp())
 
     call frictionvel_vars% restart (bounds, ncid, flag='read')
 
@@ -416,7 +422,8 @@ contains
 
     call solarabs_vars%restart (bounds, ncid, flag='read')
 
-    call temperature_vars%restart (bounds, ncid, flag='read')
+    call temperature_vars%restart (bounds, ncid, flag='read', &
+           is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp())
 
     call waterflux_vars%restart (bounds, ncid, flag='read')
 

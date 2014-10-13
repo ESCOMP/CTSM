@@ -33,7 +33,11 @@ module TemperatureType
      real(r8), pointer :: t_grnd_col               (:)   ! col ground temperature (Kelvin)
      real(r8), pointer :: t_grnd_r_col             (:)   ! col rural ground temperature (Kelvin)
      real(r8), pointer :: t_grnd_u_col             (:)   ! col urban ground temperature (Kelvin) (needed by Hydrology2Mod)
-     real(r8), pointer :: t_building_lun           (:)   ! lun internal building temperature (K)
+     real(r8), pointer :: t_building_lun           (:)   ! lun internal building air temperature (K)
+     real(r8), pointer :: t_roof_inner_lun         (:)   ! lun roof inside surface temperature (K)
+     real(r8), pointer :: t_sunw_inner_lun         (:)   ! lun sunwall inside surface temperature (K)
+     real(r8), pointer :: t_shdw_inner_lun         (:)   ! lun shadewall inside surface temperature (K)
+     real(r8), pointer :: t_floor_lun              (:)   ! lun floor temperature (K)
      real(r8), pointer :: snot_top_col             (:)   ! col temperature of top snow layer [K]
      real(r8), pointer :: dTdz_top_col             (:)   ! col temperature gradient in top layer  [K m-1]
      real(r8), pointer :: dt_veg_patch             (:)   ! patch change in t_veg, last iteration (Kelvin)
@@ -118,22 +122,31 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, &
-       em_roof_lun,  em_wall_lun, em_improad_lun, em_perroad_lun)
-
+       em_roof_lun,  em_wall_lun, em_improad_lun, em_perroad_lun, &
+       is_simple_buildtemp, is_prog_buildtemp)
+    !
+    ! !DESCRIPTION:
+    !
+    ! Initialization of the data type. Allocate data, setup variables
+    ! for history output, and initialize values needed for a cold-start.
+    !
     class(temperature_type)        :: this
     type(bounds_type) , intent(in) :: bounds  
     real(r8)          , intent(in) :: em_roof_lun(bounds%begl:)
     real(r8)          , intent(in) :: em_wall_lun(bounds%begl:)
     real(r8)          , intent(in) :: em_improad_lun(bounds%begl:)
     real(r8)          , intent(in) :: em_perroad_lun(bounds%begl:)
+    logical           , intent(in) :: is_simple_buildtemp  ! Simple building temp is being used
+    logical           , intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
 
     call this%InitAllocate ( bounds )
-    call this%InitHistory ( bounds )
+    call this%InitHistory ( bounds, is_simple_buildtemp, is_prog_buildtemp )
     call this%InitCold ( bounds,                  &
          em_roof_lun(bounds%begl:bounds%endl),    &
          em_wall_lun(bounds%begl:bounds%endl),    &
          em_improad_lun(bounds%begl:bounds%endl), &
-         em_perroad_lun(bounds%begl:bounds%endl))
+         em_perroad_lun(bounds%begl:bounds%endl), &
+         is_simple_buildtemp, is_prog_buildtemp)
 
   end subroutine Init
 
@@ -141,7 +154,7 @@ contains
   subroutine InitAllocate(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Initialize module data structure
+    ! Initialize and allocate data structure
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
@@ -173,6 +186,10 @@ contains
     allocate(this%t_grnd_r_col             (begc:endc))                      ; this%t_grnd_r_col             (:)   = nan
     allocate(this%t_grnd_u_col             (begc:endc))                      ; this%t_grnd_u_col             (:)   = nan
     allocate(this%t_building_lun           (begl:endl))                      ; this%t_building_lun           (:)   = nan
+    allocate(this%t_roof_inner_lun         (begl:endl))                      ; this%t_roof_inner_lun         (:)   = nan
+    allocate(this%t_sunw_inner_lun         (begl:endl))                      ; this%t_sunw_inner_lun         (:)   = nan
+    allocate(this%t_shdw_inner_lun         (begl:endl))                      ; this%t_shdw_inner_lun         (:)   = nan
+    allocate(this%t_floor_lun              (begl:endl))                      ; this%t_floor_lun              (:)   = nan
     allocate(this%snot_top_col             (begc:endc))                      ; this%snot_top_col             (:)   = nan
     allocate(this%dTdz_top_col             (begc:endc))                      ; this%dTdz_top_col             (:)   = nan
     allocate(this%dt_veg_patch             (begp:endp))                      ; this%dt_veg_patch             (:)   = nan
@@ -236,10 +253,10 @@ contains
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
-  subroutine InitHistory(this, bounds)
+  subroutine InitHistory(this, bounds, is_simple_buildtemp, is_prog_buildtemp )
     !
     ! !DESCRIPTION:
-    ! Initialize module data structure
+    ! Setup the fields that can be output on history files.
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
@@ -249,6 +266,8 @@ contains
     ! !ARGUMENTS:
     class(temperature_type) :: this
     type(bounds_type), intent(in) :: bounds  
+    logical          , intent(in) :: is_simple_buildtemp  ! Simple building temp is being used
+    logical          , intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
@@ -256,6 +275,7 @@ contains
     integer           :: begl, endl
     integer           :: begg, endg
     character(10)     :: active
+    character(100)    :: lname
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
@@ -385,9 +405,36 @@ contains
     end if
 
     this%t_building_lun(begl:endl) = spval
+    if (      is_simple_buildtemp )then
+       lname = 'internal urban building temperature'
+    else if ( is_prog_buildtemp   )then
+       lname = 'internal urban building air temperature'
+    end if
     call hist_addfld1d(fname='TBUILD', units='K',  &
-         avgflag='A', long_name='internal urban building temperature', &
+         avgflag='A', long_name=lname, &
          ptr_lunit=this%t_building_lun, set_nourb=spval, l2g_scale_type='unity')
+
+    if ( is_prog_buildtemp )then
+       this%t_roof_inner_lun(begl:endl) = spval
+       call hist_addfld1d(fname='TROOF_INNER', units='K',  &
+            avgflag='A', long_name='roof inside surface temperature', &
+            ptr_lunit=this%t_roof_inner_lun, set_nourb=spval, l2g_scale_type='unity')
+
+       this%t_sunw_inner_lun(begl:endl) = spval
+       call hist_addfld1d(fname='TSUNW_INNER', units='K',  &
+            avgflag='A', long_name='sunwall inside surface temperature', &
+            ptr_lunit=this%t_sunw_inner_lun, set_nourb=spval, l2g_scale_type='unity')
+
+       this%t_shdw_inner_lun(begl:endl) = spval
+       call hist_addfld1d(fname='TSHDW_INNER', units='K',  &
+            avgflag='A', long_name='shadewall inside surface temperature', &
+            ptr_lunit=this%t_shdw_inner_lun, set_nourb=spval, l2g_scale_type='unity')
+
+       this%t_floor_lun(begl:endl) = spval
+       call hist_addfld1d(fname='TFLOOR', units='K',  &
+            avgflag='A', long_name='floor temperature', &
+            ptr_lunit=this%t_floor_lun, set_nourb=spval, l2g_scale_type='unity')
+    end if
 
     this%hc_soi_col(begc:endc) = spval
     call hist_addfld1d (fname='HCSOI',  units='MJ/m2',  &
@@ -498,7 +545,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds, &
-       em_roof_lun,  em_wall_lun, em_improad_lun, em_perroad_lun)
+       em_roof_lun,  em_wall_lun, em_improad_lun, em_perroad_lun, &
+       is_simple_buildtemp, is_prog_buildtemp)
     !
     ! !DESCRIPTION:
     ! Initialize cold start conditions for module variables
@@ -519,6 +567,8 @@ contains
     real(r8)          , intent(in) :: em_wall_lun(bounds%begl:)
     real(r8)          , intent(in) :: em_improad_lun(bounds%begl:)
     real(r8)          , intent(in) :: em_perroad_lun(bounds%begl:)
+    logical           , intent(in) :: is_simple_buildtemp  ! Simple building temp is being used
+    logical           , intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
     !
     ! !LOCAL VARIABLES:
     integer  :: j,l,c,p ! indices
@@ -603,6 +653,24 @@ contains
             endif
          endif
       end do
+
+      ! Initialize internal building temperature, inner temperatures of building
+      ! surfaces, and floor temperature
+      if ( is_prog_buildtemp )then
+         do l = bounds%begl, bounds%endl
+           do  c = lun%coli(l),lun%colf(l)
+             if (col%itype(c) == icol_roof)  then
+               this%t_roof_inner_lun(l) = this%t_soisno_col(c,nlevurb)
+               this%t_building_lun(l)   = this%t_soisno_col(c,nlevurb)        ! arbitrarily set to roof temperature
+               this%t_floor_lun(l)      = this%t_soisno_col(c,nlevurb)        ! arbitrarily set to roof temperature
+             else if (col%itype(c) == icol_sunwall) then
+               this%t_sunw_inner_lun(l) = this%t_soisno_col(c,nlevurb)
+             else if (col%itype(c) == icol_shadewall) then
+               this%t_shdw_inner_lun(l) = this%t_soisno_col(c,nlevurb)
+             end if
+           end do
+         end do
+      end if
 
       ! Set Ground temperatures
 
@@ -702,16 +770,16 @@ contains
   end subroutine InitCold
 
   !------------------------------------------------------------------------
-  subroutine Restart(this, bounds, ncid, flag)
+  subroutine Restart(this, bounds, ncid, flag, is_simple_buildtemp, is_prog_buildtemp)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use shr_log_mod, only : errMsg => shr_log_errMsg
-    use spmdMod    , only : masterproc
-    use abortutils , only : endrun
-    use ncdio_pio  , only : file_desc_t, ncd_double
+    use shr_log_mod     , only : errMsg => shr_log_errMsg
+    use spmdMod         , only : masterproc
+    use abortutils      , only : endrun
+    use ncdio_pio       , only : file_desc_t, ncd_double
     use restUtilMod
     !
     ! !ARGUMENTS:
@@ -719,6 +787,8 @@ contains
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   
     character(len=*) , intent(in)    :: flag   
+    logical          , intent(in)    :: is_simple_buildtemp  ! Simple building temp is being used
+    logical          , intent(in)    :: is_prog_buildtemp    ! Prognostic building temp is being used
     !
     ! !LOCAL VARIABLES:
     integer :: j,c       ! indices
@@ -852,6 +922,63 @@ contains
             dim1name='pft', long_name='20 year average of growing degree-days base 0C from planting', units='ddays', &
             interpinic_flag='interp', readvar=readvar, data=this%gdd020_patch)
     end if
+    if ( is_prog_buildtemp )then
+       ! landunit type physical state variable - t_building
+       call restartvar(ncid=ncid, flag=flag, varname='t_building', xtype=ncd_double,  & 
+            dim1name='landunit', &
+            long_name='internal building air temperature', units='K', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_building_lun)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "can't find t_building in initial file..."
+          if (masterproc) write(iulog,*) "Initialize t_building to taf"
+          this%t_building_lun(bounds%begl:bounds%endl) = this%taf_lun(bounds%begl:bounds%endl)
+       end if
+
+       ! landunit type physical state variable - t_roof_inner
+       call restartvar(ncid=ncid, flag=flag, varname='t_roof_inner', xtype=ncd_double,  & 
+            dim1name='landunit', &
+            long_name='roof inside surface temperature', units='K', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_roof_inner_lun)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "can't find t_roof_inner in initial file..."
+          if (masterproc) write(iulog,*) "Initialize t_roof_inner to taf"
+          this%t_roof_inner_lun(bounds%begl:bounds%endl) = this%taf_lun(bounds%begl:bounds%endl)
+       end if
+
+       ! landunit type physical state variable - t_sunw_inner
+       call restartvar(ncid=ncid, flag=flag, varname='t_sunw_inner', xtype=ncd_double,  & 
+            dim1name='landunit', &
+            long_name='sunwall inside surface temperature', units='K', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_sunw_inner_lun)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "can't find t_sunw_inner in initial file..."
+          if (masterproc) write(iulog,*) "Initialize t_sunw_inner to taf"
+          this%t_sunw_inner_lun(bounds%begl:bounds%endl) = this%taf_lun(bounds%begl:bounds%endl)
+       end if
+
+       ! landunit type physical state variable - t_shdw_inner
+       call restartvar(ncid=ncid, flag=flag, varname='t_shdw_inner', xtype=ncd_double,  & 
+            dim1name='landunit', &
+            long_name='shadewall inside surface temperature', units='K', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_shdw_inner_lun)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "can't find t_shdw_inner in initial file..."
+          if (masterproc) write(iulog,*) "Initialize t_shdw_inner to taf"
+          this%t_shdw_inner_lun(bounds%begl:bounds%endl) = this%taf_lun(bounds%begl:bounds%endl)
+       end if
+
+       ! landunit type physical state variable - t_floor
+       call restartvar(ncid=ncid, flag=flag, varname='t_floor', xtype=ncd_double,  & 
+            dim1name='landunit', &
+            long_name='floor temperature', units='K', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_floor_lun)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "can't find t_floor in initial file..."
+          if (masterproc) write(iulog,*) "Initialize t_floor to taf"
+          this%t_floor_lun(bounds%begl:bounds%endl) = this%taf_lun(bounds%begl:bounds%endl)
+       end if
+    end if
+   
 
   end subroutine Restart
 

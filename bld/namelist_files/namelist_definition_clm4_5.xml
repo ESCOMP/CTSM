@@ -358,7 +358,7 @@ If FALSE, don't write any restart files.
 </entry>
 
 <entry id="urban_hac" type="char*16" category="clm_physics"
-       group="clm_inparm" valid_values="OFF,ON,ON_WASTEHEAT" >
+       group="clmu_inparm" valid_values="OFF,ON,ON_WASTEHEAT" >
 Turn urban air conditioning/heating ON or OFF and add wasteheat:
     OFF          = Air conditioning/heating is OFF in buildings, internal temperature allowed to float freely
     ON           = Air conditioning/heating is ON in buildings, internal temperature constrained
@@ -366,8 +366,19 @@ Turn urban air conditioning/heating ON or OFF and add wasteheat:
 </entry>
 
 <entry id="urban_traffic" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
+       group="clmu_inparm" valid_values="" >
 If TRUE, urban traffic flux will be activated (Currently NOT implemented).
+</entry>
+
+<entry id="building_temp_method" type="integer" category="clm_physics"
+       group="clmu_inparm" valid_values="0,1" >
+0 = simpler method (clm4_5)
+1 = prognostic calculation of interior building temp (clm5_0)
+</entry>
+
+<entry id="calc_human_stress_indices" type="logical" category="clm_physics"
+       group="clm_humanindex_inparm" valid_values="" >
+If TRUE, human stress indices will be calculated
 </entry>
 
 <entry id="wrtdia" type="logical" category="history"
