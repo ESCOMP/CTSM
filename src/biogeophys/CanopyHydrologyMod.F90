@@ -23,6 +23,7 @@ module CanopyHydrologyMod
   use TemperatureType , only : temperature_type
   use WaterfluxType   , only : waterflux_type
   use WaterstateType  , only : waterstate_type
+  use IrrigationMod   , only : irrigation_type
   use ColumnType      , only : col                
   use PatchType       , only : pft                
   !
@@ -95,7 +96,7 @@ contains
    subroutine CanopyHydrology(bounds, &
         num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
         atm2lnd_vars, canopystate_vars, temperature_vars, &
-        aerosol_vars, waterstate_vars, waterflux_vars)
+        aerosol_vars, waterstate_vars, waterflux_vars, irrigation_vars)
      !
      ! !DESCRIPTION:
      ! Calculation of
@@ -128,6 +129,7 @@ contains
      type(aerosol_type)     , intent(inout) :: aerosol_vars
      type(waterstate_type)  , intent(inout) :: waterstate_vars
      type(waterflux_type)   , intent(inout) :: waterflux_vars
+     type(irrigation_type)  , intent(in)    :: irrigation_vars
      !
      ! !LOCAL VARIABLES:
      integer  :: f                                            ! filter index
@@ -207,8 +209,6 @@ contains
           h2osoi_liq           => waterstate_vars%h2osoi_liq_col           , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
           swe_old              => waterstate_vars%swe_old_col              , & ! Output: [real(r8) (:,:) ]  snow water before update              
 
-          irrig_rate           => waterflux_vars%irrig_rate_patch          , & ! Input:  [real(r8) (:)   ]  current irrigation rate (applied if n_irrig_steps_left > 0) [mm/s]
-          n_irrig_steps_left   => waterflux_vars%n_irrig_steps_left_patch  , & ! Output: [integer  (:)   ]  number of time steps for which we still need to irrigate today
           qflx_floodc          => waterflux_vars%qflx_floodc_col           , & ! Output: [real(r8) (:)   ]  column flux of flood water from RTM     
           qflx_snow_melt       => waterflux_vars%qflx_snow_melt_col        , & ! Output: [real(r8) (:)   ]  snow melt from previous time step       
           qflx_snow_h2osfc     => waterflux_vars%qflx_snow_h2osfc_col      , & ! Output: [real(r8) (:)   ]  snow falling on surface water (mm/s)     
@@ -219,7 +219,8 @@ contains
           qflx_prec_intr       => waterflux_vars%qflx_prec_intr_patch      , & ! Output: [real(r8) (:)   ]  interception of precipitation [mm/s]    
           qflx_prec_grnd       => waterflux_vars%qflx_prec_grnd_patch      , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
           qflx_rain_grnd       => waterflux_vars%qflx_rain_grnd_patch      , & ! Output: [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
-          qflx_irrig           => waterflux_vars%qflx_irrig_patch            & ! Output: [real(r8) (:)   ]  irrigation amount (mm/s)                
+
+          qflx_irrig           => irrigation_vars%qflx_irrig_patch           & ! Input: [real(r8) (:)   ]  irrigation amount (mm/s)                
           )
 
        ! Compute time step
@@ -321,19 +322,9 @@ contains
              qflx_prec_grnd_rain(p) = 0.
           end if
 
-          ! Determine whether we're irrigating here; set qflx_irrig appropriately
-          if (n_irrig_steps_left(p) > 0) then
-             qflx_irrig(p)         = irrig_rate(p)
-             n_irrig_steps_left(p) = n_irrig_steps_left(p) - 1
-          else
-             qflx_irrig(p) = 0._r8
-          end if
-
           ! Add irrigation water directly onto ground (bypassing canopy interception)
           ! Note that it's still possible that (some of) this irrigation water will runoff (as runoff is computed later)
           qflx_prec_grnd_rain(p) = qflx_prec_grnd_rain(p) + qflx_irrig(p)
-
-          ! Done irrigation
 
           qflx_prec_grnd(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
 

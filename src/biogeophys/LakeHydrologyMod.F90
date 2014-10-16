@@ -189,8 +189,6 @@ contains
          qflx_infl            =>  waterflux_vars%qflx_infl_col          , & ! Output: [real(r8) (:)   ]  infiltration (mm H2O /s)                
          qflx_qrgwl           =>  waterflux_vars%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ]  qflx_surf at glaciers, wetlands, lakes  
          qflx_runoff          =>  waterflux_vars%qflx_runoff_col        , & ! Output: [real(r8) (:)   ]  total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-         qflx_irrig           =>  waterflux_vars%qflx_irrig_patch       , & ! Output: [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
-         qflx_irrig_col       =>  waterflux_vars%qflx_irrig_col         , & ! Output: [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
          qflx_top_soil        =>  waterflux_vars%qflx_top_soil_col      , & ! Output: [real(r8) (:)   ]  net water input into soil from top (mm/s)
          qflx_sl_top_soil     =>  waterflux_vars%qflx_sl_top_soil_col   , & ! Output: [real(r8) (:)   ]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
 
@@ -649,8 +647,6 @@ contains
          qflx_infl(c)          = 0._r8
          qflx_surf(c)          = 0._r8
          qflx_drain(c)         = 0._r8
-         qflx_irrig(p)         = 0._r8
-         qflx_irrig_col(c)     = 0._r8
 
          ! Insure water balance using qflx_qrgwl
          qflx_qrgwl(c)     = forc_rain(c) + forc_snow(c) - qflx_evap_tot(p) - qflx_snwcp_ice(p) - &

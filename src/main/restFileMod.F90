@@ -33,6 +33,7 @@ module restFileMod
   use CanopyStateType      , only : canopystate_type
   use EnergyFluxType       , only : energyflux_type
   use FrictionVelocityType , only : frictionvel_type
+  use IrrigationMod        , only : irrigation_type
   use LakeStateType        , only : lakestate_type
   use PhotosynthesisType   , only : photosyns_type
   use SoilHydrologyType    , only : soilhydrology_type  
@@ -91,7 +92,7 @@ contains
        ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
        nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
        soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-       waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst, rdate, noptr)
+       waterflux_vars, waterstate_vars, irrigation_vars, EDbio_vars, EDphenology_inst, rdate, noptr)
     !
     ! !DESCRIPTION:
     ! Define/write CLM restart file.
@@ -122,6 +123,7 @@ contains
     type(temperature_type)   , intent(in)    :: temperature_vars
     type(waterstate_type)    , intent(inout) :: waterstate_vars  ! due to EDrest call
     type(waterflux_type)     , intent(in)    :: waterflux_vars
+    type(irrigation_type)    , intent(in)    :: irrigation_vars
     type(EDbio_type)         , intent(inout) :: EDbio_vars       ! due to EDrest call
     type(EDphenologyType)    , intent(inout) :: EDphenology_inst ! due to EDrest call
     character(len=*)         , intent(in), optional :: rdate     ! restart file time stamp for name
@@ -183,6 +185,8 @@ contains
 
     call waterstate_vars%restart (bounds, ncid, flag='define', &
          watsat_col=soilstate_vars%watsat_col(bounds%begc:bounds%endc,:)) 
+
+    call irrigation_vars%restart (bounds, ncid, flag='define')
 
     call aerosol_vars%restart (bounds, ncid,  flag='define', &
          h2osoi_ice_col=waterstate_vars%h2osoi_ice_col(bounds%begc:bounds%endc,:), &
@@ -272,6 +276,8 @@ contains
     call waterstate_vars%restart (bounds, ncid, flag='write',  &
          watsat_col=soilstate_vars%watsat_col(bounds%begc:bounds%endc,:) )
 
+    call irrigation_vars%restart (bounds, ncid, flag='write')
+
     call aerosol_vars%restart (bounds, ncid,  flag='write', &
          h2osoi_ice_col=waterstate_vars%h2osoi_ice_col(bounds%begc:bounds%endc,:), &
          h2osoi_liq_col=waterstate_vars%h2osoi_liq_col(bounds%begc:bounds%endc,:) )
@@ -349,7 +355,7 @@ contains
        ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
        nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
        soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-       waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst)
+       waterflux_vars, waterstate_vars, irrigation_vars, EDbio_vars, EDphenology_inst)
     !
     ! !DESCRIPTION:
     ! Read a CLM restart file.
@@ -385,6 +391,7 @@ contains
     type(surfalb_type)       , intent(inout) :: surfalb_vars
     type(waterstate_type)    , intent(inout) :: waterstate_vars
     type(waterflux_type)     , intent(inout) :: waterflux_vars
+    type(irrigation_type)    , intent(inout) :: irrigation_vars
     type(EDbio_type)         , intent(inout) :: EDbio_vars
     type(EDphenologyType)    , intent(inout) :: EDphenology_inst
     !
@@ -429,6 +436,8 @@ contains
 
     call waterstate_vars%restart (bounds, ncid,  flag='read', &
          watsat_col=soilstate_vars%watsat_col(bounds%begc:bounds%endc,:) )
+
+    call irrigation_vars%restart (bounds, ncid, flag='read')
 
     ! The following write statement is needed for some tests to pass with pgi 13.9 on
     ! yellowstone, presumably due to a compiler bug. Without this, the following two

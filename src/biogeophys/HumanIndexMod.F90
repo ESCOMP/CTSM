@@ -833,7 +833,7 @@ end subroutine InitHistory
     real(r8) :: pi                  ! Non dimensional Pressure
     real(r8) :: X                   ! Ratio of equivalent temperature to freezing scaled by Heat Capacity
 
-    real(r8) :: j                   ! Iteration Step Number
+    integer  :: j                   ! Iteration Step Number
 !-----------------------------------------------------------------------
 
     C = SHR_CONST_TKFRZ             ! Freezing Temperature

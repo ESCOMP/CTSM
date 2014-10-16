@@ -4,6 +4,11 @@ module clm_time_manager
   ! rather than going through all the time manager stuff (which would be awkward from a
   ! unit test).
 
+  ! TODO(wjs, 2014-10-15) Make this more configurable by individual tests, by defining
+  ! public module-level variables that give the return values for each function. These
+  ! could still have default values, but that way tests could change, e.g., the return
+  ! value of get_step_size to be whatever they want.
+
   use shr_kind_mod, only : r8 => shr_kind_r8
 
   implicit none
@@ -22,19 +27,19 @@ contains
 
   end function is_first_step
 
-  integer function get_driver_start_ymd
+  integer function get_driver_start_ymd()
 
     get_driver_start_ymd = 0
 
   end function get_driver_start_ymd
 
-  integer function get_nstep
+  integer function get_nstep()
 
     get_nstep = 0
 
   end function get_nstep
 
-  logical function is_end_curr_day
+  logical function is_end_curr_day()
 
     is_end_curr_day = .false.
 

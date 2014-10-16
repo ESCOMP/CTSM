@@ -4,7 +4,7 @@
 !===================================================
 module ncdio_pio
 
-  ! This is a mock replacement for ncdio_pio. It does not interact with external files
+  ! This is a fake replacement for ncdio_pio. It does not interact with external files
   ! (or pio for that matter) at all! Instead it essentially provides setters and getters
   ! for module-level variables, in order to fake i/o.
 
@@ -20,8 +20,8 @@ module ncdio_pio
 
   public :: file_desc_t
   
-  ! Mock replacement for file_desc_t. Instead of relating to a netcdf file, this mock
-  ! object contains the data mocking the file.
+  ! Fake replacement for file_desc_t. Instead of relating to a netcdf file, this fake
+  ! object contains the data faking the file.
   type :: file_desc_t
      private
      ! all of the variables in the file (a linked list would be a more efficient
@@ -36,14 +36,17 @@ module ncdio_pio
   !
   ! !PUBLIC MEMBER FUNCTIONS:
 
-  public :: ncd_io                ! do mock i/o (currently only set up to read)
+  public :: ncd_io                ! do fake i/o (currently only set up to read)
   public :: ncd_set_var           ! set data on "file" for one variable
   public :: ncd_reset_read_times  ! reset the "read_times" sensor variable for a given variable
   public :: ncd_get_read_times    ! get the value of the "read_times" sensor variable for a given variable
+  public :: ncd_pio_openfile      ! stub: open file
+  public :: ncd_pio_closefile     ! stub: close file
+  public :: ncd_inqdid            ! stub: inquire dimension id
   public :: ncd_inqvdlen          ! stub: inquire size of a dimension
   public :: ncd_inqdlen           ! stub: inquire size of a dimension
 
-# 42 "ncdio_pio_mock.F90.in"
+# 45 "ncdio_pio_fake.F90.in"
   interface file_desc_t
      module procedure constructor  ! initialize a new file_desc_t object
   end interface file_desc_t
@@ -58,15 +61,51 @@ module ncdio_pio
   
   private :: ncd_get_variable_index  ! return the index of a given variable
 
-# 56 "ncdio_pio_mock.F90.in"
+# 59 "ncdio_pio_fake.F90.in"
   interface ncd_io
      module procedure ncd_io_1d_double
      module procedure ncd_io_2d_double
      module procedure ncd_io_1d_int
      module procedure ncd_io_1d_logical
+
+     !TYPE int,double
+     !DIMS 0,1,2,3
+     module procedure ncd_io_0d_int_glob
+     !TYPE int,double
+     !DIMS 0,1,2,3
+     module procedure ncd_io_1d_int_glob
+     !TYPE int,double
+     !DIMS 0,1,2,3
+     module procedure ncd_io_2d_int_glob
+     !TYPE int,double
+     !DIMS 0,1,2,3
+     module procedure ncd_io_3d_int_glob
+     !TYPE int,double
+     !DIMS 0,1,2,3
+     module procedure ncd_io_0d_double_glob
+     !TYPE int,double
+     !DIMS 0,1,2,3
+     module procedure ncd_io_1d_double_glob
+     !TYPE int,double
+     !DIMS 0,1,2,3
+     module procedure ncd_io_2d_double_glob
+     !TYPE int,double
+     !DIMS 0,1,2,3
+     module procedure ncd_io_3d_double_glob
+
+     !TYPE text
+     !DIMS 0,1,2
+     module procedure ncd_io_0d_text_glob
+     !TYPE text
+     !DIMS 0,1,2
+     module procedure ncd_io_1d_text_glob
+     !TYPE text
+     !DIMS 0,1,2
+     module procedure ncd_io_2d_text_glob
+
   end interface ncd_io
 
-# 63 "ncdio_pio_mock.F90.in"
+# 75 "ncdio_pio_fake.F90.in"
 contains
 
   ! ======================================================================
@@ -74,7 +113,7 @@ contains
   ! ======================================================================
 
   !-----------------------------------------------------------------------
-# 70 "ncdio_pio_mock.F90.in"
+# 82 "ncdio_pio_fake.F90.in"
   type(file_desc_t) function constructor()
     !
     ! !DESCRIPTION:
@@ -89,21 +128,21 @@ contains
     
     allocate(constructor%vars(0))
     
-# 84 "ncdio_pio_mock.F90.in"
+# 96 "ncdio_pio_fake.F90.in"
   end function constructor
   
   
   ! ======================================================================
-  ! Mocks for the actual ncdio_pio functionality
+  ! Fakes for the actual ncdio_pio functionality
   ! ======================================================================
 
   ! DIMS 1,2
   !-----------------------------------------------------------------------
-# 93 "ncdio_pio_mock.F90.in"
+# 105 "ncdio_pio_fake.F90.in"
   subroutine ncd_io_1d_double(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
-    ! Mock for the non-glob form of ncd_io_1d_double.
+    ! Fake for the non-glob form of ncd_io_1d_double.
     !
     ! Note that this assumes we are working with a single time slice (I'm not sure
     ! whether the true ncd_io routines carry that assumption)
@@ -111,7 +150,7 @@ contains
     ! !ARGUMENTS:
     character(len=*)   , intent(in)    :: varname      ! variable name
     real(r8)           , pointer       :: data(:) ! local decomposition data (no time dimension)
-    character(len=*)   , intent(in)    :: dim1name     ! dimension name (unused for the mock)
+    character(len=*)   , intent(in)    :: dim1name     ! dimension name (unused for the fake)
     character(len=*)   , intent(in)    :: flag         ! 'read' or 'write' (currently only 'read' is supported)
     class(file_desc_t) , intent(inout) :: ncid         ! netcdf file id
     integer, optional  , intent(in)    :: nt           ! time sample index
@@ -147,15 +186,15 @@ contains
        end if
     end if
        
-# 140 "ncdio_pio_mock.F90.in"
+# 152 "ncdio_pio_fake.F90.in"
   end subroutine ncd_io_1d_double
   ! DIMS 1,2
   !-----------------------------------------------------------------------
-# 93 "ncdio_pio_mock.F90.in"
+# 105 "ncdio_pio_fake.F90.in"
   subroutine ncd_io_2d_double(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
-    ! Mock for the non-glob form of ncd_io_2d_double.
+    ! Fake for the non-glob form of ncd_io_2d_double.
     !
     ! Note that this assumes we are working with a single time slice (I'm not sure
     ! whether the true ncd_io routines carry that assumption)
@@ -163,7 +202,7 @@ contains
     ! !ARGUMENTS:
     character(len=*)   , intent(in)    :: varname      ! variable name
     real(r8)           , pointer       :: data(:,:) ! local decomposition data (no time dimension)
-    character(len=*)   , intent(in)    :: dim1name     ! dimension name (unused for the mock)
+    character(len=*)   , intent(in)    :: dim1name     ! dimension name (unused for the fake)
     character(len=*)   , intent(in)    :: flag         ! 'read' or 'write' (currently only 'read' is supported)
     class(file_desc_t) , intent(inout) :: ncid         ! netcdf file id
     integer, optional  , intent(in)    :: nt           ! time sample index
@@ -199,19 +238,47 @@ contains
        end if
     end if
        
-# 140 "ncdio_pio_mock.F90.in"
+# 152 "ncdio_pio_fake.F90.in"
   end subroutine ncd_io_2d_double
 
   ! ======================================================================
   ! Stubs for the actual ncdio_pio functionality (do nothing)
   ! ======================================================================
 
+  !-----------------------------------------------------------------------
+# 159 "ncdio_pio_fake.F90.in"
+  subroutine ncd_pio_openfile(file, fname, mode)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: Open a NetCDF PIO file
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout) :: file   ! Output PIO file handle
+    character(len=*)   , intent(in)    :: fname  ! Input filename to open
+    integer            , intent(in)    :: mode   ! file mode
+
+# 169 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_pio_openfile
+
+  !-----------------------------------------------------------------------
+# 172 "ncdio_pio_fake.F90.in"
+  subroutine ncd_pio_closefile(file)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: Close a NetCDF PIO file
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t), intent(inout) :: file   ! PIO file handle to close
+
+# 180 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_pio_closefile
+
   !TYPE int,logical
-# 147 "ncdio_pio_mock.F90.in"
+# 183 "ncdio_pio_fake.F90.in"
   subroutine ncd_io_1d_int(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
-    ! netcdf I/O for 1d 
+    ! Stub replacement: netcdf I/O for 1d 
     !
     ! !ARGUMENTS:
     class(file_desc_t), intent(inout)        :: ncid          ! netcdf file id
@@ -227,14 +294,14 @@ contains
        readvar = .false.
     end if
 
-# 166 "ncdio_pio_mock.F90.in"
+# 202 "ncdio_pio_fake.F90.in"
   end subroutine ncd_io_1d_int
   !TYPE int,logical
-# 147 "ncdio_pio_mock.F90.in"
+# 183 "ncdio_pio_fake.F90.in"
   subroutine ncd_io_1d_logical(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
-    ! netcdf I/O for 1d 
+    ! Stub replacement: netcdf I/O for 1d 
     !
     ! !ARGUMENTS:
     class(file_desc_t), intent(inout)        :: ncid          ! netcdf file id
@@ -250,11 +317,287 @@ contains
        readvar = .false.
     end if
 
-# 166 "ncdio_pio_mock.F90.in"
+# 202 "ncdio_pio_fake.F90.in"
   end subroutine ncd_io_1d_logical
 
+  !------------------------------------------------------------------------
+  !DIMS 0,1,2,3
+  !TYPE int,double
+# 207 "ncdio_pio_fake.F90.in"
+  subroutine ncd_io_0d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: netcdf I/O of global variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
+    character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
+    character(len=*),           intent(in)    :: varname      ! variable name
+    integer(i4)         ,           intent(inout) :: data ! raw data
+    logical         , optional, intent(out)   :: readvar      ! was var read?
+    integer         , optional, intent(in)    :: nt           ! time sample index
+    logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
+
+    if (present(readvar)) then
+       readvar = .false.
+    end if
+
+# 225 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_io_0d_int_glob
+  !DIMS 0,1,2,3
+  !TYPE int,double
+# 207 "ncdio_pio_fake.F90.in"
+  subroutine ncd_io_1d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: netcdf I/O of global variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
+    character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
+    character(len=*),           intent(in)    :: varname      ! variable name
+    integer(i4)         ,           intent(inout) :: data(:) ! raw data
+    logical         , optional, intent(out)   :: readvar      ! was var read?
+    integer         , optional, intent(in)    :: nt           ! time sample index
+    logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
+
+    if (present(readvar)) then
+       readvar = .false.
+    end if
+
+# 225 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_io_1d_int_glob
+  !DIMS 0,1,2,3
+  !TYPE int,double
+# 207 "ncdio_pio_fake.F90.in"
+  subroutine ncd_io_2d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: netcdf I/O of global variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
+    character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
+    character(len=*),           intent(in)    :: varname      ! variable name
+    integer(i4)         ,           intent(inout) :: data(:,:) ! raw data
+    logical         , optional, intent(out)   :: readvar      ! was var read?
+    integer         , optional, intent(in)    :: nt           ! time sample index
+    logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
+
+    if (present(readvar)) then
+       readvar = .false.
+    end if
+
+# 225 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_io_2d_int_glob
+  !DIMS 0,1,2,3
+  !TYPE int,double
+# 207 "ncdio_pio_fake.F90.in"
+  subroutine ncd_io_3d_int_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: netcdf I/O of global variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
+    character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
+    character(len=*),           intent(in)    :: varname      ! variable name
+    integer(i4)         ,           intent(inout) :: data(:,:,:) ! raw data
+    logical         , optional, intent(out)   :: readvar      ! was var read?
+    integer         , optional, intent(in)    :: nt           ! time sample index
+    logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
+
+    if (present(readvar)) then
+       readvar = .false.
+    end if
+
+# 225 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_io_3d_int_glob
+  !DIMS 0,1,2,3
+  !TYPE int,double
+# 207 "ncdio_pio_fake.F90.in"
+  subroutine ncd_io_0d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: netcdf I/O of global variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
+    character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
+    character(len=*),           intent(in)    :: varname      ! variable name
+    real(r8)         ,           intent(inout) :: data ! raw data
+    logical         , optional, intent(out)   :: readvar      ! was var read?
+    integer         , optional, intent(in)    :: nt           ! time sample index
+    logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
+
+    if (present(readvar)) then
+       readvar = .false.
+    end if
+
+# 225 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_io_0d_double_glob
+  !DIMS 0,1,2,3
+  !TYPE int,double
+# 207 "ncdio_pio_fake.F90.in"
+  subroutine ncd_io_1d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: netcdf I/O of global variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
+    character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
+    character(len=*),           intent(in)    :: varname      ! variable name
+    real(r8)         ,           intent(inout) :: data(:) ! raw data
+    logical         , optional, intent(out)   :: readvar      ! was var read?
+    integer         , optional, intent(in)    :: nt           ! time sample index
+    logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
+
+    if (present(readvar)) then
+       readvar = .false.
+    end if
+
+# 225 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_io_1d_double_glob
+  !DIMS 0,1,2,3
+  !TYPE int,double
+# 207 "ncdio_pio_fake.F90.in"
+  subroutine ncd_io_2d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: netcdf I/O of global variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
+    character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
+    character(len=*),           intent(in)    :: varname      ! variable name
+    real(r8)         ,           intent(inout) :: data(:,:) ! raw data
+    logical         , optional, intent(out)   :: readvar      ! was var read?
+    integer         , optional, intent(in)    :: nt           ! time sample index
+    logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
+
+    if (present(readvar)) then
+       readvar = .false.
+    end if
+
+# 225 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_io_2d_double_glob
+  !DIMS 0,1,2,3
+  !TYPE int,double
+# 207 "ncdio_pio_fake.F90.in"
+  subroutine ncd_io_3d_double_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile) 
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: netcdf I/O of global variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
+    character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
+    character(len=*),           intent(in)    :: varname      ! variable name
+    real(r8)         ,           intent(inout) :: data(:,:,:) ! raw data
+    logical         , optional, intent(out)   :: readvar      ! was var read?
+    integer         , optional, intent(in)    :: nt           ! time sample index
+    logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
+
+    if (present(readvar)) then
+       readvar = .false.
+    end if
+
+# 225 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_io_3d_double_glob
+
+  !------------------------------------------------------------------------
+  !DIMS 0,1,2
+  !TYPE text
+# 230 "ncdio_pio_fake.F90.in"
+  subroutine ncd_io_0d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: netcdf I/O of global variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
+    character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
+    character(len=*),           intent(in)    :: varname      ! variable name
+    character(len=*)         ,           intent(inout) :: data ! raw data
+    logical         , optional, intent(out)   :: readvar      ! was var read?
+    integer         , optional, intent(in)    :: nt           ! time sample index
+    logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
+
+    if (present(readvar)) then
+       readvar = .false.
+    end if
+# 247 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_io_0d_text_glob
+  !DIMS 0,1,2
+  !TYPE text
+# 230 "ncdio_pio_fake.F90.in"
+  subroutine ncd_io_1d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: netcdf I/O of global variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
+    character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
+    character(len=*),           intent(in)    :: varname      ! variable name
+    character(len=*)         ,           intent(inout) :: data(:) ! raw data
+    logical         , optional, intent(out)   :: readvar      ! was var read?
+    integer         , optional, intent(in)    :: nt           ! time sample index
+    logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
+
+    if (present(readvar)) then
+       readvar = .false.
+    end if
+# 247 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_io_1d_text_glob
+  !DIMS 0,1,2
+  !TYPE text
+# 230 "ncdio_pio_fake.F90.in"
+  subroutine ncd_io_2d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement: netcdf I/O of global variable
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),         intent(inout) :: ncid         ! netcdf file id
+    character(len=*),           intent(in)    :: flag         ! 'read' or 'write'
+    character(len=*),           intent(in)    :: varname      ! variable name
+    character(len=*)         ,           intent(inout) :: data(:,:) ! raw data
+    logical         , optional, intent(out)   :: readvar      ! was var read?
+    integer         , optional, intent(in)    :: nt           ! time sample index
+    logical         , optional, intent(in)    :: posNOTonfile ! position is NOT on this file
+
+    if (present(readvar)) then
+       readvar = .false.
+    end if
+# 247 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_io_2d_text_glob
+
   !-----------------------------------------------------------------------
-# 169 "ncdio_pio_mock.F90.in"
+# 250 "ncdio_pio_fake.F90.in"
+  subroutine ncd_inqdid(ncid,name,dimid,dimexist)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement for ncd_inqdid. This does nothing useful, but just satisfies the
+    ! interface.
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid   ! netcdf file id
+    character(len=*) , intent(in) :: name      ! dimension name
+    integer          , intent(out):: dimid     ! dimension id
+    logical,optional , intent(out):: dimexist  ! if this dimension exists or not
+
+    dimid = 0
+    if (present(dimexist)) then
+       dimexist = .false.
+    end if
+
+# 267 "ncdio_pio_fake.F90.in"
+  end subroutine ncd_inqdid
+
+  !-----------------------------------------------------------------------
+# 270 "ncdio_pio_fake.F90.in"
   subroutine ncd_inqvdlen(ncid,varname,dimnum,dlen,err_code)
     !
     ! !DESCRIPTION:
@@ -272,11 +615,11 @@ contains
     dlen = 0
     err_code = 0
 
-# 186 "ncdio_pio_mock.F90.in"
+# 287 "ncdio_pio_fake.F90.in"
   end subroutine ncd_inqvdlen
 
   !-----------------------------------------------------------------------
-# 189 "ncdio_pio_mock.F90.in"
+# 290 "ncdio_pio_fake.F90.in"
   subroutine ncd_inqdlen(ncid,dimid,len,name)
     !
     ! !DESCRIPTION:
@@ -291,15 +634,15 @@ contains
 
     len = 0
 
-# 203 "ncdio_pio_mock.F90.in"
+# 304 "ncdio_pio_fake.F90.in"
   end subroutine ncd_inqdlen
 
   ! ======================================================================
-  ! Public routines to aid unit testing, specific to this mock replacement
+  ! Public routines to aid unit testing, specific to this fake replacement
   ! ======================================================================
 
   !-----------------------------------------------------------------------
-# 210 "ncdio_pio_mock.F90.in"
+# 311 "ncdio_pio_fake.F90.in"
   subroutine ncd_set_var(ncid, varname, data, data_shape)
     !
     ! !DESCRIPTION:
@@ -343,12 +686,12 @@ contains
     new_var_list(size(ncid%vars)+1) = newvar
     call move_alloc(new_var_list, ncid%vars)
 
-# 253 "ncdio_pio_mock.F90.in"
+# 354 "ncdio_pio_fake.F90.in"
   end subroutine ncd_set_var
   
 
   !-----------------------------------------------------------------------
-# 257 "ncdio_pio_mock.F90.in"
+# 358 "ncdio_pio_fake.F90.in"
   subroutine ncd_reset_read_times(ncid, varname)
     !
     ! !DESCRIPTION:
@@ -375,12 +718,12 @@ contains
        stop
     end if
     
-# 283 "ncdio_pio_mock.F90.in"
+# 384 "ncdio_pio_fake.F90.in"
   end subroutine ncd_reset_read_times
 
 
   !-----------------------------------------------------------------------
-# 287 "ncdio_pio_mock.F90.in"
+# 388 "ncdio_pio_fake.F90.in"
   function ncd_get_read_times(ncid, varname)
     !
     ! !DESCRIPTION:
@@ -408,7 +751,7 @@ contains
        stop
     end if
 
-# 314 "ncdio_pio_mock.F90.in"
+# 415 "ncdio_pio_fake.F90.in"
   end function ncd_get_read_times
 
 
@@ -417,7 +760,7 @@ contains
   ! ======================================================================
 
   !-----------------------------------------------------------------------
-# 322 "ncdio_pio_mock.F90.in"
+# 423 "ncdio_pio_fake.F90.in"
   integer function ncd_get_variable_index(ncid, varname)
     ! Return the index of the variable whose name is 'varname' in the ncid structure. If
     ! varname is not present, return var_not_found
@@ -441,7 +784,7 @@ contains
     else
        ncd_get_variable_index = var_not_found
     end if
-# 345 "ncdio_pio_mock.F90.in"
+# 446 "ncdio_pio_fake.F90.in"
   end function ncd_get_variable_index
 
 end module ncdio_pio

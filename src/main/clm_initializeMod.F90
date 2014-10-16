@@ -34,6 +34,7 @@ module clm_initializeMod
   use DUSTMod                , only : dust_type
   use EnergyFluxType         , only : energyflux_type
   use FrictionVelocityType   , only : frictionvel_type
+  use IrrigationMod          , only : irrigation_type
   use LakeStateType          , only : lakestate_type
   use PhotosynthesisType     , only : photosyns_type
   use SoilHydrologyType      , only : soilhydrology_type  
@@ -95,6 +96,7 @@ module clm_initializeMod
   type(canopystate_type)      :: canopystate_vars
   type(energyflux_type)       :: energyflux_vars
   type(frictionvel_type)      :: frictionvel_vars
+  type(irrigation_type)       :: irrigation_vars
   type(lakestate_type)        :: lakestate_vars
   type(photosyns_type)        :: photosyns_vars
   type(soilstate_type)        :: soilstate_vars
@@ -439,6 +441,7 @@ contains
     integer               :: begc, endc
     integer               :: begl, endl
     real(r8), pointer     :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
+    integer               :: dummy_for_pgi
     character(len=32)     :: subname = 'initialize2' 
     !----------------------------------------------------------------------
 
@@ -663,6 +666,8 @@ contains
     allocate(soil_water_retention_curve, &
          source=create_soil_water_retention_curve())
 
+    call irrigation_vars%init(bounds_proc, soilstate_vars, soil_water_retention_curve)
+
     call SnowOptics_init( ) ! SNICAR optical parameters:
 
     call SnowAge_init( )    ! SNICAR aging   parameters:
@@ -716,6 +721,14 @@ contains
           call c14_carbonflux_vars%Init(bounds_proc, carbon_type='c14')
        end if
 
+       ! NOTE(wjs, 2014-10-15) The following line is a workaround for
+       !  an ICE with pgi14.7 when compiling with mpi-serial
+       dummy_for_pgi = size(carbonstate_vars%leafc_patch) + &
+            size(carbonstate_vars%leafc_storage_patch) + &
+            size(carbonstate_vars%deadstemc_patch) + &
+            size(carbonstate_vars%decomp_cpools_vr_col) + &
+            size(carbonstate_vars%decomp_cpools_col) + &
+            size(carbonstate_vars%decomp_cpools_1m_col)
        call nitrogenstate_vars%Init(bounds_proc,                      &
             carbonstate_vars%leafc_patch(begp:endp),                  &
             carbonstate_vars%leafc_storage_patch(begp:endp),          &
@@ -841,7 +854,7 @@ contains
                ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
                nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
                soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-               waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst)
+               waterflux_vars, waterstate_vars, irrigation_vars, EDbio_vars, EDphenology_inst)
        end if
 
     else if ((nsrest == nsrContinue) .or. (nsrest == nsrBranch)) then
@@ -854,7 +867,7 @@ contains
             ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
             nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
             soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-            waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst)
+            waterflux_vars, waterstate_vars, irrigation_vars, EDbio_vars, EDphenology_inst)
 
     end if
 
@@ -893,7 +906,7 @@ contains
             ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
             nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
             soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-            waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst)
+            waterflux_vars, waterstate_vars, irrigation_vars, EDbio_vars, EDphenology_inst)
 
        ! Interpolate finidat onto new template file
        call getfil( finidat_interp_source, fnamer,  0 )
@@ -906,7 +919,7 @@ contains
             ch4_vars, dgvs_vars, energyflux_vars, frictionvel_vars, lakestate_vars,        &
             nitrogenstate_vars, nitrogenflux_vars, photosyns_vars, soilhydrology_vars,     &
             soilstate_vars, solarabs_vars, surfalb_vars, temperature_vars,   &
-            waterflux_vars, waterstate_vars, EDbio_vars, EDphenology_inst)
+            waterflux_vars, waterstate_vars, irrigation_vars, EDbio_vars, EDphenology_inst)
 
        ! Reset finidat to now be finidat_interp_dest 
        ! (to be compatible with routines still using finidat)

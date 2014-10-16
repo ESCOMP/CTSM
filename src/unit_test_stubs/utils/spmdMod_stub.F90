@@ -1,5 +1,5 @@
 module spmdMod
-  ! Mock of spmdMod, which just defines masterproc
+  ! Stub of spmdMod, which just defines masterproc
 
   implicit none
   save

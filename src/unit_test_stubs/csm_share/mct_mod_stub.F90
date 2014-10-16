@@ -1,6 +1,6 @@
 module mct_mod
 
-  ! This is a mock of mct_mod, which only includes the bare minimum needed to build CLM
+  ! This is a stub of mct_mod, which only includes the bare minimum needed to build CLM
   ! unit tests
 
   implicit none

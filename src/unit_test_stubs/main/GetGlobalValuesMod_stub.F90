@@ -1,6 +1,6 @@
 module GetGlobalValuesMod
 
-  ! Mock of GetGlobalValuesMod, which satisfies routine signatures with minimal
+  ! Stub of GetGlobalValuesMod, which satisfies routine signatures with minimal
   ! dependencies
 
   implicit none

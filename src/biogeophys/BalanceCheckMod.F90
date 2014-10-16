@@ -19,6 +19,7 @@ module BalanceCheckMod
   use SoilHydrologyType  , only : soilhydrology_type  
   use WaterstateType     , only : waterstate_type
   use WaterfluxType      , only : waterflux_type
+  use IrrigationMod      , only : irrigation_type
   use GridcellType       , only : grc                
   use LandunitType       , only : lun                
   use ColumnType         , only : col                
@@ -129,7 +130,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, num_do_smb_c, filter_do_smb_c, &
         atm2lnd_vars, glc2lnd_vars, solarabs_vars, waterflux_vars, waterstate_vars, &
-        energyflux_vars, canopystate_vars)
+        irrigation_vars, energyflux_vars, canopystate_vars)
      !
      ! !DESCRIPTION:
      ! This subroutine accumulates the numerical truncation errors of the water
@@ -165,6 +166,7 @@ contains
      type(solarabs_type)   , intent(in)    :: solarabs_vars
      type(waterflux_type)  , intent(inout) :: waterflux_vars
      type(waterstate_type) , intent(inout) :: waterstate_vars
+     type(irrigation_type) , intent(in)    :: irrigation_vars
      type(energyflux_type) , intent(inout) :: energyflux_vars
      type(canopystate_type), intent(inout) :: canopystate_vars
      !
@@ -201,7 +203,6 @@ contains
           qflx_rain_grnd_col      =>    waterflux_vars%qflx_rain_grnd_col       , & ! Input:  [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
           qflx_snow_grnd_col      =>    waterflux_vars%qflx_snow_grnd_col       , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
           qflx_evap_soi           =>    waterflux_vars%qflx_evap_soi_col        , & ! Input:  [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
-          qflx_irrig              =>    waterflux_vars%qflx_irrig_col           , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
           qflx_snwcp_ice          =>    waterflux_vars%qflx_snwcp_ice_col       , & ! Input:  [real(r8) (:)   ]  excess snowfall due to snow capping (mm H2O /s) [+]`
           qflx_evap_tot           =>    waterflux_vars%qflx_evap_tot_col        , & ! Input:  [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
           qflx_dew_snow           =>    waterflux_vars%qflx_dew_snow_col        , & ! Input:  [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
@@ -229,6 +230,8 @@ contains
           qflx_ice_dynbal         =>    waterflux_vars%qflx_ice_dynbal_grc      , & ! Input:  [real(r8) (:)   ]  ice runoff due to dynamic land cover change (mm H2O /s)
           snow_sources            =>    waterflux_vars%snow_sources_col         , & ! Output: [real(r8) (:)   ]  snow sources (mm H2O /s)  
           snow_sinks              =>    waterflux_vars%snow_sinks_col           , & ! Output: [real(r8) (:)   ]  snow sinks (mm H2O /s)    
+
+          qflx_irrig              =>    irrigation_vars%qflx_irrig_col          , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
 
           eflx_lwrad_out          =>    energyflux_vars%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)
           eflx_lwrad_net          =>    energyflux_vars%eflx_lwrad_net_patch    , & ! Input:  [real(r8) (:)   ]  net infrared (longwave) rad (W/m**2) [+ = to atm]

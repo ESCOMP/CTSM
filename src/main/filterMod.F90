@@ -57,6 +57,11 @@ module filterMod
      integer, pointer :: lakenosnowc(:)  ! non-snow filter (columns) 
      integer :: num_lakenosnowc          ! number of columns in non-snow filter 
 
+     integer, pointer :: exposedvegp(:)  ! patches where frac_veg_nosno is non-zero
+     integer :: num_exposedvegp          ! number of patches in exposedvegp filter
+     integer, pointer :: noexposedvegp(:)! patches where frac_veg_nosno is 0 (does NOT include lake or urban)
+     integer :: num_noexposedvegp        ! number of patches in noexposedvegp filter
+
      integer, pointer :: hydrologyc(:)   ! hydrology filter (columns)
      integer :: num_hydrologyc           ! number of columns in hydrology filter 
 
@@ -96,9 +101,10 @@ module filterMod
   ! This is a separate set of filters that contains both inactive and active points. It is
   ! rarely appropriate to use these, but they are needed in a few places, e.g., where
   ! quantities are computed before weights, active flags and filters are updated due to
-  ! landuse change. Note that, for the handful of filters that are computed elsewhere
-  ! (including the CNDV natvegp filter and the snow filters), these filters are NOT
-  ! included in this variable - so they can only be used from the main 'filter' variable.
+  ! landuse change. Note that, for the handful of filters that are computed outside of
+  ! setFiltersOneGroup (including the CNDV natvegp filter and the snow filters), these
+  ! filters are NOT included in this variable - so they can only be used from the main
+  ! 'filter' variable.
   !
   ! Ideally, we would like to restructure the initialization code and driver ordering so
   ! that this version of the filters is never needed. At that point, we could remove this
@@ -107,9 +113,10 @@ module filterMod
   !
   type(clumpfilter), allocatable, public :: filter_inactive_and_active(:)
   !
-  public allocFilters   ! allocate memory for filters
-  public setFilters     ! set filters
-
+  public allocFilters         ! allocate memory for filters
+  public setFilters           ! set filters
+  public setExposedvegpFilter ! set the exposedvegp and noexposedvegp filters
+  
   private allocFiltersOneGroup  ! allocate memory for one group of filters
   private setFiltersOneGroup    ! set one group of filters
   !
@@ -192,6 +199,9 @@ contains
        allocate(this_filter(nc)%lakesnowc(bounds%endc-bounds%begc+1))
        allocate(this_filter(nc)%lakenosnowc(bounds%endc-bounds%begc+1))
 
+       allocate(this_filter(nc)%exposedvegp(bounds%endp-bounds%begp+1))
+       allocate(this_filter(nc)%noexposedvegp(bounds%endp-bounds%begp+1))
+
        allocate(this_filter(nc)%natvegp(bounds%endp-bounds%begp+1))
 
        allocate(this_filter(nc)%hydrologyc(bounds%endc-bounds%begc+1))
@@ -261,6 +271,11 @@ contains
     ! "Standard" filters only include active points. However, this routine can be used to set
     ! alternative filters that also apply over inactive points, by setting include_inactive =
     ! .true.
+    !
+    ! This routine sets filters that are determined by subgrid type, "active" status of
+    ! patch, col or landunit, and the like. Filters based on model state (e.g., snow
+    ! cover) should generally be set elsewhere, to ensure that the routine that sets them
+    ! is called at the right time in the driver loop.
     !
     ! !USES:
     use decompMod , only : BOUNDS_LEVEL_CLUMP
@@ -485,5 +500,62 @@ contains
     ! Note: CNDV "pft present" filter is reconstructed each time CNDV is run
 
   end subroutine setFiltersOneGroup
+
+  !-----------------------------------------------------------------------
+  subroutine setExposedvegpFilter(bounds, frac_veg_nosno)
+    !
+    ! !DESCRIPTION:
+    ! Sets the exposedvegp and noexposedvegp filters for one clump.
+    !
+    ! The exposedvegp filter includes points for which frac_veg_nosno > 0. noexposedvegp
+    ! includes points for which frac_veg_nosno <= 0. However, note that neither filter
+    ! includes urban or lake points!
+    !
+    ! Should be called from within a loop over clumps.
+    !
+    ! Only sets this filter in the main 'filter' variable, NOT in
+    ! filter_inactive_and_active.
+    ! 
+    ! Note that this is done separately from the main setFilters routine, because it may
+    ! need to be called at a different time in the driver loop. 
+    !
+    ! !USES:
+    use decompMod , only : BOUNDS_LEVEL_CLUMP
+    !
+    ! !ARGUMENTS:
+    type(bounds_type) , intent(in) :: bounds  
+    integer           , intent(in) :: frac_veg_nosno( bounds%begp: ) ! fraction of vegetation not covered by snow [patch]
+    !
+    ! !LOCAL VARIABLES:
+    integer :: nc     ! clump index
+    integer :: fp     ! filter index
+    integer :: p      ! patch index
+    integer :: fe, fn ! filter counts
+    
+    character(len=*), parameter :: subname = 'setExposedvegpFilter'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(frac_veg_nosno) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+
+    nc = bounds%clump_index
+
+    fe = 0
+    fn = 0
+    do fp = 1, filter(nc)%num_nolakeurbanp
+       p = filter(nc)%nolakeurbanp(fp)
+       if (frac_veg_nosno(p) > 0) then
+          fe = fe + 1
+          filter(nc)%exposedvegp(fe) = p
+       else
+          fn = fn + 1
+          filter(nc)%noexposedvegp(fn) = p
+       end if
+    end do
+    filter(nc)%num_exposedvegp = fe
+    filter(nc)%num_noexposedvegp = fn
+
+  end subroutine setExposedvegpFilter
+
 
 end module filterMod

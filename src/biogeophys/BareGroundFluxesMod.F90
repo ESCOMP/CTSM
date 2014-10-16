@@ -10,13 +10,13 @@ module BareGroundFluxesMod
   use decompMod            , only : bounds_type
   use ch4Mod               , only : ch4_type
   use atm2lndType          , only : atm2lnd_type
-  use CanopyStateType      , only : canopystate_type
   use EnergyFluxType       , only : energyflux_type
   use FrictionVelocityType , only : frictionvel_type
   use SoilStateType        , only : soilstate_type
   use TemperatureType      , only : temperature_type
   use WaterfluxType        , only : waterflux_type
   use WaterstateType       , only : waterstate_type
+  use PhotosynthesisType   , only : photosyns_type
   use HumanIndexMod        , only : humanindex_type
   use LandunitType         , only : lun                
   use ColumnType           , only : col                
@@ -33,10 +33,10 @@ module BareGroundFluxesMod
 contains
 
   !------------------------------------------------------------------------------
-  subroutine BareGroundFluxes(bounds, num_nolakeurbanp, filter_nolakeurbanp, &
-       atm2lnd_vars, canopystate_vars, soilstate_vars, &
+  subroutine BareGroundFluxes(bounds, num_noexposedvegp, filter_noexposedvegp, &
+       atm2lnd_vars, soilstate_vars, &
        frictionvel_vars, ch4_vars, energyflux_vars, temperature_vars, &
-       waterflux_vars, waterstate_vars, humanindex_vars)
+       waterflux_vars, waterstate_vars, photosyns_vars, humanindex_vars)
     !
     ! !DESCRIPTION:
     ! Compute sensible and latent fluxes and their derivatives with respect
@@ -57,25 +57,23 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
-    integer                , intent(in)    :: num_nolakeurbanp          ! number of pft non-lake, non-urban points in pft filter
-    integer                , intent(in)    :: filter_nolakeurbanp(:)    ! patch filter for non-lake, non-urban points
+    integer                , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
+                                                                      ! (but does NOT include lake or urban)
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_vars
-    type(canopystate_type) , intent(in)    :: canopystate_vars
-    type(soilstate_type)   , intent(in)    :: soilstate_vars
+    type(soilstate_type)   , intent(inout) :: soilstate_vars
     type(frictionvel_type) , intent(inout) :: frictionvel_vars
     type(ch4_type)         , intent(inout) :: ch4_vars
     type(energyflux_type)  , intent(inout) :: energyflux_vars
     type(temperature_type) , intent(inout) :: temperature_vars
     type(waterflux_type)   , intent(inout) :: waterflux_vars
     type(waterstate_type)  , intent(inout) :: waterstate_vars
+    type(photosyns_type)   , intent(inout) :: photosyns_vars
     type(humanindex_type)  , intent(inout) :: humanindex_vars
     !
     ! !LOCAL VARIABLES:
     integer, parameter  :: niters = 3      ! maximum number of iterations for surface temperature
     integer  :: p,c,g,f,j,l                ! indices
-    integer  :: filterp(bounds%endp-bounds%begp+1) ! patch filter for vegetated patches
-    integer  :: fn                               ! number of values in local pft filter
-    integer  :: fp                               ! lake filter pft index
     integer  :: iter                             ! iteration index
     real(r8) :: zldis(bounds%begp:bounds%endp)   ! reference height "minus" zero displacement height [m]
     real(r8) :: displa(bounds%begp:bounds%endp)  ! displacement height [m]
@@ -95,7 +93,7 @@ contains
     real(r8) :: tstar                            ! temperature scaling parameter
     real(r8) :: qstar                            ! moisture scaling parameter
     real(r8) :: thvstar                          ! virtual potential temperature scaling parameter
-    real(r8) :: cf                               ! heat transfer coefficient from leaves [-]
+    real(r8) :: cf_bare                          ! heat transfer coefficient from bare ground [-]
     real(r8) :: ram                              ! aerodynamical resistance [s/m]
     real(r8) :: rah                              ! thermal resistance [s/m]
     real(r8) :: raw                              ! moisture resistance [s/m]
@@ -157,10 +155,9 @@ contains
          forc_q           =>    atm2lnd_vars%forc_q_downscaled_col    , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
 
 
-         frac_veg_nosno   =>    canopystate_vars%frac_veg_nosno_patch , & ! Input:  [logical  (:)   ]  true=> pft is bare ground (elai+esai = zero)
-
          watsat           =>    soilstate_vars%watsat_col             , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)                      
          soilbeta         =>    soilstate_vars%soilbeta_col           , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
+         rootr            =>    soilstate_vars%rootr_patch            , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer                      
 
          t_soisno         =>    temperature_vars%t_soisno_col         , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                                           
          t_grnd           =>    temperature_vars%t_grnd_col           , & ! Input:  [real(r8) (:)   ]  ground surface temperature [K]                                        
@@ -191,9 +188,12 @@ contains
          cgrnds           =>    energyflux_vars%cgrnds_patch          , & ! Output: [real(r8) (:)   ]  deriv, of soil sensible heat flux wrt soil temp [w/m2/k]              
          cgrndl           =>    energyflux_vars%cgrndl_patch          , & ! Output: [real(r8) (:)   ]  deriv of soil latent heat flux wrt soil temp [w/m**2/k]               
          cgrnd            =>    energyflux_vars%cgrnd_patch           , & ! Output: [real(r8) (:)   ]  deriv. of soil energy flux wrt to soil temp [w/m2/k]                  
+         btran            =>    energyflux_vars%btran_patch           , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1)                                 
+         rresis           =>    energyflux_vars%rresis_patch          , & ! Output: [real(r8) (:,:) ]  root resistance by layer (0-1)  (nlevgrnd)                          
 
          t_ref2m          =>    temperature_vars%t_ref2m_patch        , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (Kelvin)                           
          t_ref2m_r        =>    temperature_vars%t_ref2m_r_patch      , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface air temperature (Kelvin)                     
+         t_veg            =>    temperature_vars%t_veg_patch          , & ! Output: [real(r8) (:)   ]  vegetation temperature (Kelvin)                                       
 
          q_ref2m          =>    waterstate_vars%q_ref2m_patch         , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)                          
          rh_ref2m_r       =>    waterstate_vars%rh_ref2m_r_patch      , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface relative humidity (%)                        
@@ -213,28 +213,35 @@ contains
          qflx_evap_soi    =>    waterflux_vars%qflx_evap_soi_patch    , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)                              
          qflx_evap_tot    =>    waterflux_vars%qflx_evap_tot_patch    , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg                         
 
+         rssun            =>    photosyns_vars%rssun_patch             , & ! Output: [real(r8) (:)   ]  leaf sunlit stomatal resistance (s/m) (output from Photosynthesis)
+         rssha            =>    photosyns_vars%rssha_patch             , & ! Output: [real(r8) (:)   ]  leaf shaded stomatal resistance (s/m) (output from Photosynthesis)
+
          begp             =>    bounds%begp                           , &
          endp             =>    bounds%endp                             &
          )
 
-      !--------------------------------------------------- 
-      ! Filter patches where frac_veg_nosno IS ZERO
-      !--------------------------------------------------- 
+      ! First do some simple settings of values over points where frac vegetation covered
+      ! by snow is zero
 
-      fn = 0
-      do fp = 1,num_nolakeurbanp
-         p = filter_nolakeurbanp(fp)
-         if (frac_veg_nosno(p) == 0) then
-            fn = fn + 1
-            filterp(fn) = p
-         end if
+      do f = 1, num_noexposedvegp
+         p = filter_noexposedvegp(f)
+         c = pft%column(p)
+         btran(p) = 0._r8     
+         t_veg(p) = forc_t(c) 
+         cf_bare  = forc_pbot(c)/(SHR_CONST_RGAS*0.001_r8*thm(p))*1.e06_r8
+         rssun(p) = 1._r8/1.e15_r8 * cf_bare
+         rssha(p) = 1._r8/1.e15_r8 * cf_bare
+         do j = 1, nlevgrnd
+            rootr(p,j)  = 0._r8
+            rresis(p,j) = 0._r8
+         end do
       end do
 
       ! Compute sensible and latent fluxes and their derivatives with respect
       ! to ground temperature using ground temperatures from previous time step
 
-      do f = 1, fn
-         p = filterp(f)
+      do f = 1, num_noexposedvegp
+         p = filter_noexposedvegp(f)
          c = pft%column(p)
          g = pft%gridcell(p)
 
@@ -268,14 +275,14 @@ contains
 
       do iter = 1, niters
 
-         call FrictionVelocity(begp, endp, fn, filterp, &
+         call FrictionVelocity(begp, endp, num_noexposedvegp, filter_noexposedvegp, &
               displa(begp:endp), z0mg_patch(begp:endp), z0hg_patch(begp:endp), z0qg_patch(begp:endp), &
               obu(begp:endp), iter, ur(begp:endp), um(begp:endp), ustar(begp:endp), &
               temp1(begp:endp), temp2(begp:endp), temp12m(begp:endp), temp22m(begp:endp), fm(begp:endp), &
               frictionvel_vars)
 
-         do f = 1, fn
-            p = filterp(f)
+         do f = 1, num_noexposedvegp
+            p = filter_noexposedvegp(f)
             c = pft%column(p)
             g = pft%gridcell(p)
 
@@ -299,8 +306,8 @@ contains
 
       end do ! end stability iteration
 
-      do f = 1, fn
-         p = filterp(f)
+      do f = 1, num_noexposedvegp
+         p = filter_noexposedvegp(f)
          c = pft%column(p)
          g = pft%gridcell(p)
          l = pft%landunit(p)

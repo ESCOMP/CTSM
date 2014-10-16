@@ -15,7 +15,7 @@ module restUtilMod
   private
   save
 
-# 14 "restUtilMod_mock.F90.in"
+# 14 "restUtilMod_stub.F90.in"
   interface restartvar
      !TYPE text,int,double
      !DIMS 0,1,2
@@ -49,13 +49,13 @@ module restUtilMod
 
   public :: restartvar
 
-# 23 "restUtilMod_mock.F90.in"
+# 23 "restUtilMod_stub.F90.in"
 contains
 
   !-----------------------------------------------------------------------
   !DIMS 0
   !TYPE text,int,double
-# 28 "restUtilMod_mock.F90.in"
+# 28 "restUtilMod_stub.F90.in"
   subroutine restartvar_0d_text(&
        ncid, flag, varname, xtype, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -85,11 +85,11 @@ contains
 
     readvar = .false.
 
-# 57 "restUtilMod_mock.F90.in"
+# 57 "restUtilMod_stub.F90.in"
   end subroutine restartvar_0d_text
   !DIMS 0
   !TYPE text,int,double
-# 28 "restUtilMod_mock.F90.in"
+# 28 "restUtilMod_stub.F90.in"
   subroutine restartvar_0d_int(&
        ncid, flag, varname, xtype, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -119,11 +119,11 @@ contains
 
     readvar = .false.
 
-# 57 "restUtilMod_mock.F90.in"
+# 57 "restUtilMod_stub.F90.in"
   end subroutine restartvar_0d_int
   !DIMS 0
   !TYPE text,int,double
-# 28 "restUtilMod_mock.F90.in"
+# 28 "restUtilMod_stub.F90.in"
   subroutine restartvar_0d_double(&
        ncid, flag, varname, xtype, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -153,13 +153,13 @@ contains
 
     readvar = .false.
 
-# 57 "restUtilMod_mock.F90.in"
+# 57 "restUtilMod_stub.F90.in"
   end subroutine restartvar_0d_double
 
   !-----------------------------------------------------------------------
   !DIMS 1,2
   !TYPE text,int,double
-# 62 "restUtilMod_mock.F90.in"
+# 62 "restUtilMod_stub.F90.in"
   subroutine restartvar_1d_text(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -188,11 +188,11 @@ contains
     integer           , intent(in), optional :: flag_values(:)   ! attribute for int
     integer           , intent(in), optional :: nvalid_range(2)  ! attribute for int
 
-# 90 "restUtilMod_mock.F90.in"
+# 90 "restUtilMod_stub.F90.in"
   end subroutine restartvar_1d_text
   !DIMS 1,2
   !TYPE text,int,double
-# 62 "restUtilMod_mock.F90.in"
+# 62 "restUtilMod_stub.F90.in"
   subroutine restartvar_2d_text(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -221,11 +221,11 @@ contains
     integer           , intent(in), optional :: flag_values(:)   ! attribute for int
     integer           , intent(in), optional :: nvalid_range(2)  ! attribute for int
 
-# 90 "restUtilMod_mock.F90.in"
+# 90 "restUtilMod_stub.F90.in"
   end subroutine restartvar_2d_text
   !DIMS 1,2
   !TYPE text,int,double
-# 62 "restUtilMod_mock.F90.in"
+# 62 "restUtilMod_stub.F90.in"
   subroutine restartvar_1d_int(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -254,11 +254,11 @@ contains
     integer           , intent(in), optional :: flag_values(:)   ! attribute for int
     integer           , intent(in), optional :: nvalid_range(2)  ! attribute for int
 
-# 90 "restUtilMod_mock.F90.in"
+# 90 "restUtilMod_stub.F90.in"
   end subroutine restartvar_1d_int
   !DIMS 1,2
   !TYPE text,int,double
-# 62 "restUtilMod_mock.F90.in"
+# 62 "restUtilMod_stub.F90.in"
   subroutine restartvar_2d_int(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -287,11 +287,11 @@ contains
     integer           , intent(in), optional :: flag_values(:)   ! attribute for int
     integer           , intent(in), optional :: nvalid_range(2)  ! attribute for int
 
-# 90 "restUtilMod_mock.F90.in"
+# 90 "restUtilMod_stub.F90.in"
   end subroutine restartvar_2d_int
   !DIMS 1,2
   !TYPE text,int,double
-# 62 "restUtilMod_mock.F90.in"
+# 62 "restUtilMod_stub.F90.in"
   subroutine restartvar_1d_double(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -320,11 +320,11 @@ contains
     integer           , intent(in), optional :: flag_values(:)   ! attribute for int
     integer           , intent(in), optional :: nvalid_range(2)  ! attribute for int
 
-# 90 "restUtilMod_mock.F90.in"
+# 90 "restUtilMod_stub.F90.in"
   end subroutine restartvar_1d_double
   !DIMS 1,2
   !TYPE text,int,double
-# 62 "restUtilMod_mock.F90.in"
+# 62 "restUtilMod_stub.F90.in"
   subroutine restartvar_2d_double(&
        ncid, flag, varname, xtype, dim1name, dim2name, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -353,12 +353,12 @@ contains
     integer           , intent(in), optional :: flag_values(:)   ! attribute for int
     integer           , intent(in), optional :: nvalid_range(2)  ! attribute for int
 
-# 90 "restUtilMod_mock.F90.in"
+# 90 "restUtilMod_stub.F90.in"
   end subroutine restartvar_2d_double
 
   !-----------------------------------------------------------------------
 
-# 94 "restUtilMod_mock.F90.in"
+# 94 "restUtilMod_stub.F90.in"
   subroutine restartvar_2d_double_bounds(ncid, flag, varname, xtype, &
        dim1name, dim2name, switchdim, lowerb2, upperb2, &
        long_name, units, interpinic_flag, data, readvar, &
@@ -392,7 +392,7 @@ contains
 
     readvar = .false.
 
-# 127 "restUtilMod_mock.F90.in"
+# 127 "restUtilMod_stub.F90.in"
   end subroutine restartvar_2d_double_bounds
 
 end module restUtilMod

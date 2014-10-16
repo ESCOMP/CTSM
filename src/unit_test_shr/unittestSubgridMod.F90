@@ -267,8 +267,8 @@ contains
   subroutine unittest_add_landunit(my_gi, ltype, wtgcell)
     !
     ! !DESCRIPTION:
-    ! Add a landunit. The index of the just-added landunit can be obtained from the
-    ! module-level variable, li.
+    ! Add a landunit, and make it active. The index of the just-added landunit can be
+    ! obtained from the module-level variable, li.
     !
     ! This is simply a wrapper to the routine in initSubgridMod. We provide this for two
     ! reasons:
@@ -292,6 +292,7 @@ contains
     !-----------------------------------------------------------------------
 
     call add_landunit(li=li, gi=my_gi, ltype=ltype, wtgcell=wtgcell)
+    lun%active(li) = .true.
     
   end subroutine unittest_add_landunit
 
@@ -299,8 +300,8 @@ contains
   subroutine unittest_add_column(my_li, ctype, wtlunit)
     !
     ! !DESCRIPTION:
-    ! Add a column. The index of the just-added column can be obtained from the
-    ! module-level variable, ci.
+    ! Add a column, and make it active. The index of the just-added column can be obtained
+    ! from the module-level variable, ci.
     !
     ! This is simply a wrapper to the routine in initSubgridMod. We provide this for two
     ! reasons:
@@ -324,6 +325,7 @@ contains
     !-----------------------------------------------------------------------
 
     call add_column(ci=ci, li=my_li, ctype=ctype, wtlunit=wtlunit)
+    col%active(ci) = .true.
     
   end subroutine unittest_add_column
 
@@ -331,8 +333,8 @@ contains
   subroutine unittest_add_patch(my_ci, ptype, wtcol)
     !
     ! !DESCRIPTION:
-    ! Add a patch. The index of the just-added patch can be obtained from the
-    ! module-level variable, pi.
+    ! Add a patch, and make it active. The index of the just-added patch can be obtained
+    ! from the module-level variable, pi.
     !
     ! This is simply a wrapper to the routine in initSubgridMod. We provide this for two
     ! reasons:
@@ -356,7 +358,8 @@ contains
     !-----------------------------------------------------------------------
 
     call add_patch(pi=pi, ci=my_ci, ptype=ptype, wtcol=wtcol)
-    
+    pft%active(pi) = .true.
+
   end subroutine unittest_add_patch
 
 end module unittestSubgridMod

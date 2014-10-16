@@ -1,4 +1,319 @@
 ===============================================================
+Tag name:  clm4_5_1_r090
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Oct 16 06:39:52 MDT 2014
+One-line Summary: modularize irrigation; do some unit test rework
+
+Purpose of changes:
+
+(1) Pull irrigation code out of CanopyFluxes and CanopyHydrology, into its
+    own module
+
+(2) Pull out the locally-created filters from CanopyFluxes and BareGroundFluxes
+    into filterMod, in order to support pulling irrigation out of
+    CanopyFluxes. This will also be needed to support pulling other hydrology
+    stuff out of CanopyFluxes.
+
+(3) Add unit tests for irrigation
+
+(4) Rework some irrigation infrastruture, and add some more unit test utility
+    routines
+
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 2063 (HumanIndexMod fails to compile with gfortran)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: muszala
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated:
+
+========= Renamed to unit_test_stubs
+D       models/lnd/clm/src/unit_test_mocks/util_share/ncdio_var.F90
+D       models/lnd/clm/src/unit_test_mocks/util_share/restUtilMod_mock.F90
+D       models/lnd/clm/src/unit_test_mocks/util_share/GetGlobalValuesMod_mock.F90
+D       models/lnd/clm/src/unit_test_mocks/util_share/ncdio_var.F90.in
+D       models/lnd/clm/src/unit_test_mocks/util_share/restUtilMod_mock.F90.in
+D       models/lnd/clm/src/unit_test_mocks/util_share/clm_time_manager_mock.F90
+D       models/lnd/clm/src/unit_test_mocks/util_share/ncdio_pio_mock.F90
+D       models/lnd/clm/src/unit_test_mocks/util_share/spmdMod_mock.F90
+D       models/lnd/clm/src/unit_test_mocks/util_share/do_genf90
+D       models/lnd/clm/src/unit_test_mocks/util_share/CMakeLists.txt
+D       models/lnd/clm/src/unit_test_mocks/util_share/ncdio_pio_mock.F90.in
+D       models/lnd/clm/src/unit_test_mocks/util_share
+D       models/lnd/clm/src/unit_test_mocks/csm_share/shr_mpi_mod_mock.F90
+D       models/lnd/clm/src/unit_test_mocks/csm_share/mct_mod_mock.F90
+D       models/lnd/clm/src/unit_test_mocks/csm_share/CMakeLists.txt
+D       models/lnd/clm/src/unit_test_mocks/csm_share
+D       models/lnd/clm/src/unit_test_mocks/main/CMakeLists.txt
+D       models/lnd/clm/src/unit_test_mocks/main/histFileMod_mock.F90
+D       models/lnd/clm/src/unit_test_mocks/main
+D       models/lnd/clm/src/unit_test_mocks/dyn_subgrid/dynFileMod_mock.F90
+D       models/lnd/clm/src/unit_test_mocks/dyn_subgrid/CMakeLists.txt
+D       models/lnd/clm/src/unit_test_mocks/dyn_subgrid
+D       models/lnd/clm/src/unit_test_mocks/CMakeLists.txt
+D       models/lnd/clm/src/unit_test_mocks
+
+========= Remove unnecessary files
+D       models/lnd/clm/src/ED/CMakeLists.txt
+D       models/lnd/clm/src/ED/biogeophys/CMakeLists.txt
+
+List all files added and what they do:
+
+========= Pull out irrigation code into its own module
+A       models/lnd/clm/src/biogeophys/IrrigationMod.F90
+
+========= Add some unit test utility code (and some tests for the utility code)
+A       models/lnd/clm/src/unit_test_shr/unittestFilterBuilderMod.F90
+A       models/lnd/clm/src/unit_test_shr/unittestSimpleSubgridSetupsMod.F90
+A       models/lnd/clm/src/unit_test_shr/test/unittestFilterBuilder_test/test_filterBuilder.pf
+A       models/lnd/clm/src/unit_test_shr/test/unittestFilterBuilder_test/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_shr/test/unittestFilterBuilder_test
+A       models/lnd/clm/src/unit_test_shr/test/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_shr/test
+
+========= Renamed from unit_test_mocks to unit_test_stubs; also renamed
+          individual files from mock to stub (or 'fake' for ncdio_pio, because
+          it does more than a stub); also, moved some stubs to match the current
+          organization of the main source tree
+A       models/lnd/clm/src/unit_test_stubs/utils/restUtilMod_stub.F90
+A       models/lnd/clm/src/unit_test_stubs/utils/do_genf90
+A       models/lnd/clm/src/unit_test_stubs/utils/restUtilMod_stub.F90.in
+A       models/lnd/clm/src/unit_test_stubs/utils/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_stubs/utils/clm_time_manager_stub.F90
+A       models/lnd/clm/src/unit_test_stubs/utils/spmdMod_stub.F90
+A       models/lnd/clm/src/unit_test_stubs/utils
+A       models/lnd/clm/src/unit_test_stubs/csm_share/shr_mpi_mod_stub.F90
+A       models/lnd/clm/src/unit_test_stubs/csm_share/mct_mod_stub.F90
+A       models/lnd/clm/src/unit_test_stubs/csm_share/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_stubs/csm_share
+A       models/lnd/clm/src/unit_test_stubs/main/histFileMod_stub.F90
+A       models/lnd/clm/src/unit_test_stubs/main/ncdio_var.F90
+A       models/lnd/clm/src/unit_test_stubs/main/ncdio_pio_fake.F90
+A       models/lnd/clm/src/unit_test_stubs/main/ncdio_var.F90.in
+A       models/lnd/clm/src/unit_test_stubs/main/GetGlobalValuesMod_stub.F90
+A       models/lnd/clm/src/unit_test_stubs/main/do_genf90
+A       models/lnd/clm/src/unit_test_stubs/main/ncdio_pio_fake.F90.in
+A       models/lnd/clm/src/unit_test_stubs/main/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_stubs/main
+A       models/lnd/clm/src/unit_test_stubs/dyn_subgrid/dynFileMod_stub.F90
+A       models/lnd/clm/src/unit_test_stubs/dyn_subgrid/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_stubs/dyn_subgrid
+A       models/lnd/clm/src/unit_test_stubs/CMakeLists.txt
+A       models/lnd/clm/src/unit_test_stubs
+
+========= Add dependencies (direct & indirect) of IrrigationMod
+A       models/lnd/clm/src/biogeochem/CMakeLists.txt
+
+========= Add unit tests for irrigation (see README file for some design notes)
+A       models/lnd/clm/src/biogeophys/test/Irrigation_test/test_irrigation_deficit.pf
+A       models/lnd/clm/src/biogeophys/test/Irrigation_test/test_irrigation_multipatch.pf
+A       models/lnd/clm/src/biogeophys/test/Irrigation_test/IrrigationWrapperMod.F90
+A       models/lnd/clm/src/biogeophys/test/Irrigation_test/test_irrigation_singlepatch.pf
+A       models/lnd/clm/src/biogeophys/test/Irrigation_test/CMakeLists.txt
+A       models/lnd/clm/src/biogeophys/test/Irrigation_test/README
+A       models/lnd/clm/src/biogeophys/test/Irrigation_test
+
+List all existing files that have been modified, and describe the changes:
+
+========= Pull irrigation out of CanopyFluxes into its own routine, and also
+          pull out the filters that used to be created locally in CanopyFluxes
+          and BareGroundFluxes
+M       models/lnd/clm/src/main/clm_driver.F90
+
+========= Pull out filters that used to be created locally in CanopyFluxes and
+          BareGroundFluxes, so that they can be reused in irrigation and
+          elsewhere
+M       models/lnd/clm/src/main/filterMod.F90
+
+========= Add calls to irrigation init & restart routines
+MM      models/lnd/clm/src/main/clm_initializeMod.F90
+M       models/lnd/clm/src/main/restFileMod.F90
+
+========= Irrigation computations are now done in the irrigation module; also,
+          the relevant filter is now created outside CanopyFluxes
+MM      models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90
+
+========= Irrigation computations are now done in the irrigation module
+M       models/lnd/clm/src/biogeophys/CanopyHydrologyMod.F90
+M       models/lnd/clm/src/biogeophys/LakeHydrologyMod.F90
+
+========= Irrigation variables are now defined in the irrigation module
+M       models/lnd/clm/src/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/biogeophys/WaterfluxType.F90
+M       models/lnd/clm/src/biogeophys/HydrologyDrainageMod.F90
+
+========= Filter is now created outside BareGroundFluxes; also, moved some bare
+          ground initialization from CanopyFluxes (needed because the filters
+          are no longer created locally, so CanopyFluxes does not know what
+          points it would need to set for bare ground)
+MM      models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90
+
+========= Remove some dependencies to aid unit testing (this includes combining
+          two branches of a conditional (allowlakeprod) that were doing the same
+          thing
+M       models/lnd/clm/src/biogeophys/SoilStateType.F90
+
+
+========= Add dependencies (direct & indirect) of IrrigationMod for unit testing
+M       models/lnd/clm/src/utils/CMakeLists.txt
+M       models/lnd/clm/src/main/CMakeLists.txt
+M       models/lnd/clm/src/ED/main/CMakeLists.txt
+M       models/lnd/clm/src/CMakeLists.txt
+M       models/lnd/clm/src/biogeophys/CMakeLists.txt
+M       models/lnd/clm/src/biogeophys/test/CMakeLists.txt
+
+========= Add new unit test utilities
+M       models/lnd/clm/src/unit_test_shr/CMakeLists.txt
+
+========= Make newly-added subgrid units active by default
+M       models/lnd/clm/src/unit_test_shr/unittestSubgridMod.F90
+
+========= Unrelated fix for gfortran
+MM      models/lnd/clm/src/biogeophys/HumanIndexMod.F90
+
+========= Change whitespace
+M       models/lnd/clm/src/dyn_subgrid/CMakeLists.txt
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: not run
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: fail due to two issues:
+
+      (1) The unit tests currently won't build on yellowstone due to an ICE that
+      will probably be fixed when we remove dependencies of SoilStateType.
+
+      (2) In addition, even once that's fixed, the yellowstone unit tests either
+      need (a) a bump in the unit testing external (unit_testing_0_08) and
+      Machines external (Machines_141007) (I didn't do that for my tag because
+      it pulls in a bump in the intel compiler version to 14 rather than 13.1),
+      or (b) the following diffs:
+
+      Index: tools/unit_testing/python/machine_setup.py
+      ===================================================================
+      --- tools/unit_testing/python/machine_setup.py	(revision 64421)
+      +++ tools/unit_testing/python/machine_setup.py	(working copy)
+      @@ -52,7 +52,7 @@
+               mod.load("ncarenv/1.0")
+               mod.load("ncarbinlibs/1.0")
+               if compiler == "intel":
+      -            mod.load("intel/13.1.2")
+      +            mod.load("intel/14.0.2")
+               elif compiler == "pgi":
+                   mod.load("pgi/13.9")
+               mod.load("ncarcompilers/1.0")
+      Index: scripts/ccsm_utils/Machines/config_compilers.xml
+      ===================================================================
+      --- scripts/ccsm_utils/Machines/config_compilers.xml	(revision 64421)
+      +++ scripts/ccsm_utils/Machines/config_compilers.xml	(working copy)
+      @@ -547,7 +547,7 @@
+         <ADD_FFLAGS>  -xHost </ADD_FFLAGS>
+         <ADD_CFLAGS>  -xHost </ADD_CFLAGS>
+         <TRILINOS_PATH>$(TRILINOS_PATH)</TRILINOS_PATH>
+      -  <PFUNIT_PATH>/glade/u/home/santos/pFUnit/pFUnit_Intel</PFUNIT_PATH>
+      +  <PFUNIT_PATH>/glade/u/home/sacks/pFUnit/pFUnit3.0.1_Intel14.0.2_Serial</PFUNIT_PATH>
+       </compiler>
+       
+       <compiler MACH="yellowstone" COMPILER="pgi">
+
+
+
+       However, I have run the unit tests on my mac, with gfortran, and they all
+       pass
+
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu: NOT RUN
+    goldbach_nag: ok
+    goldbach_intel: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r089
+
+Changes answers relative to baseline: YES (but only because of bug 1998)
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: irrigation
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff, not investigated closely
+
+    The changes are entirely due to the btran bug (bug 1998): The old flow was:
+      - compute btran
+      - calculate irrigation (depends on btran)
+      - hack btran for soybeans
+
+    whereas the new flow is:
+      - call CanopyFluxes: computes btran and hacks btran for soybeans
+      - calculate irrigation (depends on btran)
+
+    I have confirmed that answers are bit-for-bit for both irrigation tests (for
+    both cpl and clm hist files), when I introduce the following diffs in both
+    the trunk and the branch:
+
+    Index: src/biogeophys/CanopyFluxesMod.F90
+    ===================================================================
+    --- src/biogeophys/CanopyFluxesMod.F90	(revision 64406)
+    +++ src/biogeophys/CanopyFluxesMod.F90	(working copy)
+    @@ -842,9 +842,6 @@
+                       btran(p) = min(1._r8, btran(p) * 3.33_r8)
+                    end if
+                 end if
+    -            if (pft%itype(p) == nsoybean .or. pft%itype(p) == nsoybeanirrig) then
+    -               btran(p) = min(1._r8, btran(p) * 1.25_r8)
+    -            end if
+              end do
+     
+              if ( use_ed ) then      
+    @@ -894,9 +891,6 @@
+                          btran(p) = min(1._r8, btran(p) * 3.33_r8)
+                       end if
+                    end if
+    -               if (pft%itype(p) == nsoybean .or. pft%itype(p) == nsoybeanirrig) then
+    -                  btran(p) = min(1._r8, btran(p) * 1.25_r8)
+    -               end if
+                 end do
+     
+                 call Photosynthesis (bounds, fn, filterp, &
+
+
+
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r089
 Originator(s):  erik (Erik)
 Date: Mon Oct 13 13:46:43 MDT 2014

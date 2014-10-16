@@ -15,14 +15,14 @@ add_subdirectory(${CESM_ROOT}/models/csm_share/shr csm_share)
 
 # Add CLM source directories (these add their own test directories)
 add_subdirectory(${CLM_ROOT}/src/utils clm_utils)
+add_subdirectory(${CLM_ROOT}/src/biogeochem clm_biogeochem)
 add_subdirectory(${CLM_ROOT}/src/biogeophys clm_biogeophys)
 add_subdirectory(${CLM_ROOT}/src/dyn_subgrid clm_dyn_subgrid)
 add_subdirectory(${CLM_ROOT}/src/main clm_main)
 add_subdirectory(${CLM_ROOT}/src/ED/main ed_main)
-add_subdirectory(${CLM_ROOT}/src/ED/biogeophys ed_biogeophys)
 
-# Add general unit test directories (mocked out files, etc.)
-add_subdirectory(unit_test_mocks)
+# Add general unit test directories (stubbed out files, etc.)
+add_subdirectory(unit_test_stubs)
 add_subdirectory(unit_test_shr)
 
 # Remove shr_mpi_mod from share_sources.
@@ -58,6 +58,7 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR})
 # has tests in it. However, it appears that the order needs to be done
 # carefully: for example, include_directories and link_directories needs to be
 # done before adding the tests themselves.
+add_subdirectory(${CLM_ROOT}/src/unit_test_shr/test clm_unit_test_shr_test)
 add_subdirectory(${CLM_ROOT}/src/biogeophys/test clm_biogeophys_test)
 add_subdirectory(${CLM_ROOT}/src/dyn_subgrid/test clm_dyn_subgrid_test)
 add_subdirectory(${CLM_ROOT}/src/main/test clm_main_test)
