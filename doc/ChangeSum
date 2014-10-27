@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r091  muszala 10/27/2014 update externals.  fix bug so CLM runs with Intel 14x. 
    clm4_5_1_r090    sacks 10/16/2014 modularize irrigation; do some unit test rework
    clm4_5_1_r089     erik 10/13/2014 Bring new urban building temperature to trunk as a clm5.0 feature as well as human-stress index calculations
    clm4_5_1_r088  muszala 10/01/2014 pull out ED deps. in TemperatureTypeMod, can now compile with pgi 14.7

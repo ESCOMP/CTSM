@@ -67,7 +67,7 @@ CLM testing:
 
     yellowstone_intel
     yellowstone_pgi
-    yellowstone_gnu (optional)
+    yellowstone_gnu
     goldbach_nag
     goldbach_intel
 
