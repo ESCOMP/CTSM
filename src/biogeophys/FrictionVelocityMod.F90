@@ -374,9 +374,9 @@ contains
             fm10 = -5.0_r8 * zeta10
          end if
          if (present(landunit_index)) then
-            tmp4 = log( max( 1.0_8, forc_hgt_u_patch(pfti(n)) / 10._r8) )
+            tmp4 = log( max( 1.0_r8, forc_hgt_u_patch(pfti(n)) / 10._r8) )
          else 
-            tmp4 = log( max( 1.0_8, forc_hgt_u_patch(n) / 10._r8) )
+            tmp4 = log( max( 1.0_r8, forc_hgt_u_patch(n) / 10._r8) )
          end if
          if (present(landunit_index)) then
             do pp = pfti(n),pftf(n)
