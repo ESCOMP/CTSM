@@ -212,10 +212,7 @@ module clm_varctl
   ! number of days before one considers the perennially snow-covered point 'land ice'
   integer , public :: glc_snow_persistence_max_days = 7300  
 
-  ! glc_grid used to determine fglcmask  
-  character(len=256), public :: glc_grid = ' '              
-
-  ! glacier mask file name (based on glc_grid)
+  ! glacier mask file name
   character(len=fname_len), public :: fglcmask = ' '        
   !
   !----------------------------------------------------------

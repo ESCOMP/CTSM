@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r094    sacks 11/07/2014 misc. glacier-related updates
    clm4_5_1_r093    sacks 11/07/2014 change cold-start snow initialization, update cism external
    clm4_5_1_r092  muszala 11/04/2014  bug fixes from santos that address valgrind problems.  update rtm external 
    clm4_5_1_r091  muszala 10/27/2014 update externals.  fix bug so CLM runs with Intel 14x. 

@@ -1,4 +1,163 @@
 ===============================================================
+Tag name:  clm4_5_1_r094
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Fri Nov  7 13:43:38 MST 2014
+One-line Summary: misc. glacier-related updates
+
+Purpose of changes:
+
+(1) Add dlnd, satm and srof externals, so that TG compsets (CISM-only, forced by
+    dlnd) can be run from a CLM tag. This will facilitate CISM development and
+    testing.
+
+(2) Remove CLM's dependence on the CISM grid. Previously, CLM used the CISM grid
+    to determine which fglcmask file to use. But the differences between the
+    fglcmask files were inconsequential (all of them included the full area of
+    Greenland, which is what was important). I have created a new set of
+    fglcmask files that are independent of the CISM grid, and point CLM to these
+    new files. This will make it easier to add new CISM grids in the future,
+    because no changes will be needed in CLM for this purpose. However, note
+    that the use of these new files means that the number of virtual landunits &
+    columns changes for glcmec runs.
+
+(3) In subgridAveMod, fix c2l routines: change pft%wtlunit to col%wtlunit (bugz
+    2077)
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+- 2077 (c2l references pft instead of col)
+- 2085 (listDefaultNamelist is broken)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: change fglcmask
+
+List any changes to the defaults for the boundary datasets: change fglcmask
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+========= Added new externals for the sake of running TG compsets (CISM-only)
+          from a CLM tag
++models/lnd/dlnd                 https://svn-ccsm-models.cgd.ucar.edu/dlnd7/trunk_tags/dlnd8_131201
++models/atm/satm                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/satm
++models/rof/srof                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/srof
+
+========= Other externals updates
+-tools/unit_testing              https://svn-ccsm-models.cgd.ucar.edu/unit_testing/trunk_tags/unit_testing_0_07
++tools/unit_testing              https://svn-ccsm-models.cgd.ucar.edu/unit_testing/trunk_tags/unit_testing_0_08
+
+
+List all files eliminated:
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+========= Remove dependence on CISM grid
+M       models/lnd/clm/bld/listDefaultNamelist.pl
+          - also fix bug 2085
+M       models/lnd/clm/bld/unit_testers/build-namelist_test.pl
+M       models/lnd/clm/bld/test_build_namelist/t/input/namelist_defaults_clm4_5_test.xml
+M       models/lnd/clm/bld/test_build_namelist/t/input/namelist_definition_clm4_5_test.xml
+M       models/lnd/clm/bld/clm.buildnml.csh
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_0.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults.xsl
+M       models/lnd/clm/bld/user_nl_clm
+M       models/lnd/clm/bld/CLMBuildNamelist.pm
+M       models/lnd/clm/doc/UsersGuide/custom.xml
+M       models/lnd/clm/src_clm40/main/controlMod.F90
+M       models/lnd/clm/src_clm40/main/clm_varctl.F90
+M       models/lnd/clm/src/main/controlMod.F90
+M       models/lnd/clm/src/main/clm_varctl.F90
+
+========= Change pft%wtlunit to col%wtlunit in c2l routines (which currently
+          aren't called from anywhere in the code) (bugz 2077)
+M       models/lnd/clm/src/main/subgridAveMod.F90
+
+========= fix numbers of build-namelist unit test failures, due to removal of a test
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+
+      expected failure in 23, due to change in fglcmask
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: still broken, due to internal compiler error
+    roo2 (mac laptop): ok
+
+    See notes in clm4_5_1_r090. Point (2) has been fixed, but point (1) remains.
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu: ok
+    goldbach_nag: ok
+    goldbach_intel: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r093
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: IG compsets - both CLM40 and CLM45
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+        only changes diagnostic cpl hist fields - no change in the simulation
+
+        The changes arise from the new glcmask files, which exclude a few points
+        from the glcmask that used to be included. These points are all outside
+        of Greenland, so they are not important for coupling to CISM. However,
+        it means that a few virtual columns have been removed. This, in turn,
+        changes the values of some l2x topo, tsrf and qice fields sent to the
+        coupler. But this does NOT feed back on the simulation in any way.
+    
+        Some tests also exhibit diffs in the CLM diagnostic fields PCT_GLC_MEC
+        and QICE_FORC. Again, these are due to changes in where we have virtual
+        columns, and do not affect the simulation.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r093
 Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
 Date: Fri Nov  7 13:17:47 MST 2014

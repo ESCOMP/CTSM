@@ -174,7 +174,7 @@ contains
     ! Glacier_mec info
     namelist /clm_inparm/ &    
          maxpatch_glcmec, glc_smb, glc_do_dynglacier, glcmec_downscale_rain_snow_convert, &
-         glcmec_downscale_longwave, glc_snow_persistence_max_days, glc_grid, fglcmask 
+         glcmec_downscale_longwave, glc_snow_persistence_max_days, fglcmask 
 
     ! Other options
 
@@ -548,7 +548,6 @@ contains
     call mpi_bcast (glcmec_downscale_rain_snow_convert, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glcmec_downscale_longwave, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_snow_persistence_max_days, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (glc_grid, len(glc_grid), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fglcmask, len(fglcmask), MPI_CHARACTER, 0, mpicom, ier)
 
     ! history file variables
@@ -707,7 +706,6 @@ contains
 
     if (create_glacier_mec_landunit) then
        write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
-       write(iulog,*) '   glc grid for glacier mask file = ',trim(glc_grid)
        write(iulog,*) '   glc glacier mask file = ',trim(fglcmask)
        
        write(iulog,*) '   Max snow depth (mm) =', h2osno_max

@@ -6,10 +6,15 @@ scripts/ccsm_utils/CMake        https://github.com/quantheory/CMake_Fortran_util
 models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq5_0_17
 
 # Model components: Data atmosphere, and stub components as well as land-ice model
+# Note that dlnd, satm and srof are not needed for CLM runs, but are included to allow
+# running TG compsets (CISM-only, forced by data land) from a CLM tag.
 models/atm/datm                 https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_140723
+models/lnd/dlnd                 https://svn-ccsm-models.cgd.ucar.edu/dlnd7/trunk_tags/dlnd8_131201
+models/atm/satm                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/satm
 models/ocn/socn                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/socn
 models/ice/sice                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/sice
 models/glc/sglc                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/sglc
+models/rof/srof                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/srof
 models/wav/swav                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/swav
 models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_40
 models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism2_0_02
@@ -29,4 +34,4 @@ models/lnd/clm/tools/shared/gen_domain https://svn-ccsm-models.cgd.ucar.edu/tool
 # Other tools:
 tools/load_balancing_tool       https://svn-ccsm-models.cgd.ucar.edu/tools/load_balancing_tool/trunk_tags/load_balancing_tool_140818/
 tools/pyReshaper                https://subversion.ucar.edu/asap/pyReshaper/tags/v0.9.1/
-tools/unit_testing              https://svn-ccsm-models.cgd.ucar.edu/unit_testing/trunk_tags/unit_testing_0_07
+tools/unit_testing              https://svn-ccsm-models.cgd.ucar.edu/unit_testing/trunk_tags/unit_testing_0_08

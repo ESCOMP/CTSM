@@ -5,10 +5,10 @@
       <yellowstone>
          <INTEL>
             <compare>
-               <entry testId="153"   failType="FAIL" >No 0.125x0.125 surface dataset</entry>
+               <entry testId="213"   failType="FAIL" >No 0.125x0.125 surface dataset</entry>
             </compare>
             <generate>
-               <entry testId="214"   failType="FAIL" >No 0.125x0.125 surface dataset</entry>
+               <entry testId="152"   failType="FAIL" >No 0.125x0.125 surface dataset</entry>
             </generate>
          </INTEL>
       </yellowstone>
