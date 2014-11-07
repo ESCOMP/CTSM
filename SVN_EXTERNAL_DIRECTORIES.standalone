@@ -12,7 +12,7 @@ models/ice/sice                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk
 models/glc/sglc                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/sglc
 models/wav/swav                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_04/swav
 models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_40
-models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_140916
+models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism2_0_02
 
 # Utilities: csm_share, esmf, timing, MCT, PIO
 models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_141022

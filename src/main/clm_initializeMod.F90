@@ -375,7 +375,6 @@ contains
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart
     use controlMod            , only : nlfilename
     use decompMod             , only : get_proc_clumps, get_proc_bounds, get_clump_bounds, bounds_type
-    use domainMod             , only : ldomain
     use initInterpMod         , only : initInterp
     use DaylengthMod          , only : InitDaylength, daylength
     use fileutils             , only : getfil
@@ -556,10 +555,13 @@ contains
        if (lun%itype(l)==istice) then
           h2osno_col(c) = h2osno_max
        elseif (lun%itype(l)==istice_mec .or. &
-              (lun%itype(l)==istsoil .and. ldomain%glcmask(g) > 0._r8)) then 
-          ! Initialize a non-zero snow thickness where the ice sheet can/potentially operate.
-          ! Using glcmask to capture all potential vegetated points around GrIS (ideally
-          ! we would use icemask from CISM, but that isn't available until after initialization.)
+              (lun%itype(l)==istsoil .and. abs(grc%latdeg(g)) >= 60._r8)) then 
+          ! In order to speed equilibration of the snow pack, initialize non-zero snow
+          ! thickness in some places. This is mainly of interest for glacier spinup.
+          ! However, putting in an explicit dependence on glcmask is problematic, because
+          ! that means that answers change simply due to changing glcmask (which may be
+          ! done simply to have additional virtual columns for the sake of diagnostics).
+          ! Thus, we apply this non-zero initialization at all high latitude soil points.
           h2osno_col(c) = 0.5_r8 * h2osno_max   ! 50 cm if h2osno_max = 1 m
        else
           h2osno_col(c) = 0._r8

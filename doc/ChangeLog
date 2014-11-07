@@ -1,14 +1,23 @@
 ===============================================================
-Tag name:  clm4_5_1_r092
-Originator(s):  muszala (Stefan Muszala)
-Date:  Tue Nov  4 06:10:16 MST 2014
-One-line Summary:  bug fixes from santos that address valgrind problems.  update rtm external 
+Tag name:  clm4_5_1_r093
+Originator(s):  sacks (Bill Sacks,UCAR/CSEG,303-497-1762)
+Date: Fri Nov  7 13:17:47 MST 2014
+One-line Summary: change cold-start snow initialization, update cism external
 
 Purpose of changes:
 
+(1) Change cold-start snow initialization logic. The original logic did
+different snow initialization depending on whether we are inside or outside the
+glcmask. That's a problem in that answers change depending on the glcmask. The
+new logic instead uses a latitude threshold for determining where to initialize
+a non-zero snow pack. Note that this will change answers for all cold-start
+cases, including non-glcmec cases.
+
+(2) Update CISM to version 2.
+
 Requirements for tag:
 
-Test level of tag: regular, short, tools, build_namelist, doc
+Test level of tag: regular
 
 Bugs fixed (include bugzilla ID):
 
@@ -23,17 +32,20 @@ Known Limitations:
                                   701 (svn keyword)
                                   452 (Problem with support of soil-colors != 8 or 20)
 
-Describe any changes made to build system:
+Describe any changes made to build system: none
 
-Describe any changes made to the namelist:
+Describe any changes made to the namelist: none
 
-List any changes to the defaults for the boundary datasets:
+List any changes to the defaults for the boundary datasets: none
 
-Describe any substantial timing or memory changes:
+Describe any substantial timing or memory changes: none
 
-Code reviewed by:
+Code reviewed by: self; Dave Lawrence agreed with the change to snow initialization
 
 List any svn externals directories updated (csm_share, mct, etc.):
+-models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_140916
++models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism2_0_02
+
 
 List all files eliminated:
 
@@ -41,68 +53,135 @@ List all files added and what they do:
 
 List all existing files that have been modified, and describe the changes:
 
+M       models/lnd/clm/src/main/clm_initializeMod.F90
+
 CLM testing:
-
-[... Remove before making trunk_tag.  Available test levels:
-
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CLM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
-
-... ]
-
-  build-namelist tests:
-
-    yellowstone
-
-  unit-tests (models/lnd/clm/src):
-
-    yellowstone
 
   regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
 
-    yellowstone_intel
-    yellowstone_pgi
-    yellowstone_gnu
-    goldbach_nag
-    goldbach_intel
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu: ok
+    goldbach_nag: ok
+    goldbach_intel: ok
 
-  short tests (aux_clm_short) (generally these are NOT used when making a tag):
+CLM tag used for the baseline comparisons: clm4_5_1_r092
 
-    yellowstone_intel
-    yellowstone_pgi
-    goldbach_nag
-
-  tools testing: (when tools modified or scripts updated (for PTCLM))
-
-    yellowstone interactive
-    PTCLM (models/lnd/clm/tools/shared/PTCLM/test) yellowstone 
-
-CLM tag used for the baseline comparisons: 
-
-Changes answers relative to baseline:
+Changes answers relative to baseline: YES
 
   If a tag changes answers relative to baseline comparison the
   following should be filled in (otherwise remove this section):
 
   Summarize any changes to answers, i.e.,
     - what code configurations:
-    - what platforms/compilers:
+      (1) any CLM4.5 case with cold start initialization, due to change in snow
+          initialization
+
+      (2) any case that includes CISM, due to answer changes in the CISM external
+
+      I carefully checked the yellowstone-intel clm4.5 tests to ensure that:
+        (a) FAILed compare_hist all had finidat = ' '
+        (b) PASSed compare_hist either had non-blank finidat OR were single-point
+
+    - what platforms/compilers: ALL
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated, but expected to be larger than roundoff/same climate
 
    If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
+   than roundoff? N/A
 
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)
-       - casename: 
+       - casename: N/A
 
-   URL for LMWG diagnostics output used to validate new climate:
+   URL for LMWG diagnostics output used to validate new climate: N/A
 	
+===============================================================
+===============================================================
+Tag name:  clm4_5_1_r092
+Originator(s):  muszala (Stefan Muszala)
+Date:  Tue Nov  4 06:10:16 MST 2014
+One-line Summary:  bug fixes from santos that address valgrind problems.  update rtm external 
+
+Purpose of changes: Addresses issues found with Valgrind by Santos.  Update RTM.
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: santos, self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+-models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_39
++models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_40
+
+List all files eliminated: N/A
+
+List all files added and what they do:
+
+A  +    models/lnd/clm/src/main/dtypes.h
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+-- update failures
+
+M       SVN_EXTERNAL_DIRECTORIES
+-- rtm update to 40
+
+M       models/lnd/clm/src_clm40/main/ncdio_pio.F90
+M       models/lnd/clm/src_clm40/main/ncdio_pio.F90.in
+M       models/lnd/clm/src/main/ncdio_pio.F90
+M       models/lnd/clm/src/main/ncdio_pio.F90.in
+-- example changes:
+-       status = pio_inq_vardimid(ncid, vardesc , dids)
++       status = pio_inq_vardimid(ncid, vardesc , dids(1:ndims))
+
+M       models/lnd/clm/src_clm40/biogeophys/FrictionVelocityMod.F90
+M       models/lnd/clm/src/biogeophys/FrictionVelocityMod.F90
+-- change 1.0_8 to  1.0_r8
+
+CLM testing:
+
+  build-namelist tests: N/A
+
+  unit-tests (models/lnd/clm/src): N/A
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel 40- OK  45- OK
+    yellowstone_pgi   40- OK  45- OK
+    yellowstone_gnu   40- N/A 45- OK
+    goldbach_nag      40- OK  45- OK
+    goldbach_intel    40- OK  45- OK
+
+  tools testing: (when tools modified or scripts updated (for PTCLM)) N/A
+
+CLM tag used for the baseline comparisons:  clm4_5_1_r091
+
+Changes answers relative to baseline: No
+
 ===============================================================
 ===============================================================
 Tag name:  clm4_5_1_r091
