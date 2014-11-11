@@ -45,7 +45,7 @@ module CNEcosystemDynMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNEcosystemDynInit(bounds)
+  subroutine CNEcosystemDynInit(bounds, nutrient_competition_method)
     !
     ! !DESCRIPTION:
     ! Initialzation of the CN Ecosystem dynamics.
@@ -55,13 +55,15 @@ contains
     use CNPhenologyMod , only : CNPhenologyInit
     use CNFireMod      , only : CNFireInit
     use CNC14DecayMod  , only : C14_init_BombSpike
+    use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
     !
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds      
+    class(nutrient_competition_method_type), intent(in) :: nutrient_competition_method
     !-----------------------------------------------------------------------
 
-    call CNAllocationInit (bounds)
+    call CNAllocationInit (bounds, nutrient_competition_method)
     call CNPhenologyInit  (bounds)
     call CNFireInit       (bounds)
     
@@ -81,7 +83,7 @@ contains
        nitrogenflux_vars, nitrogenstate_vars, &
        atm2lnd_vars, waterstate_vars, waterflux_vars, &
        canopystate_vars, soilstate_vars, temperature_vars, crop_vars, ch4_vars, &
-       dgvs_vars, photosyns_vars, soilhydrology_vars, energyflux_vars)
+       dgvs_vars, photosyns_vars, soilhydrology_vars, energyflux_vars, nutrient_competition_method)
     !
     ! !DESCRIPTION:
     ! The core CN code is executed here. Calculates fluxes for maintenance
@@ -111,6 +113,8 @@ contains
     use CropType               , only: crop_type
     use dynHarvestMod          , only: CNHarvest
     use clm_varpar             , only: crop_prog
+    use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
+    
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds  
@@ -142,6 +146,8 @@ contains
     type(photosyns_type)     , intent(in)    :: photosyns_vars
     type(soilhydrology_type) , intent(in)    :: soilhydrology_vars
     type(energyflux_type)    , intent(in)    :: energyflux_vars
+    class(nutrient_competition_method_type), intent(in) :: nutrient_competition_method
+
     !-----------------------------------------------------------------------
 
     ! Call the main CN routines
@@ -219,7 +225,7 @@ contains
             photosyns_vars, canopystate_vars, soilstate_vars, temperature_vars, waterstate_vars, &
             cnstate_vars, ch4_vars, &
             carbonstate_vars, carbonflux_vars, c13_carbonflux_vars, c14_carbonflux_vars, &
-            nitrogenstate_vars, nitrogenflux_vars, crop_vars)
+            nitrogenstate_vars, nitrogenflux_vars, crop_vars, nutrient_competition_method)
 
        call t_stopf('CNDecompAlloc')
 

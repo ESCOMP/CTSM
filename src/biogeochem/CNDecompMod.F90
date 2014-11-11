@@ -82,10 +82,12 @@ contains
        photosyns_vars, canopystate_vars, soilstate_vars, temperature_vars, waterstate_vars, &
        cnstate_vars, ch4_vars, &
        carbonstate_vars, carbonflux_vars, c13_carbonflux_vars, c14_carbonflux_vars, &
-       nitrogenstate_vars, nitrogenflux_vars, crop_vars)
+       nitrogenstate_vars, nitrogenflux_vars, crop_vars, nutrient_competition_method)
     !
     ! !USES:
     use CNAllocationMod , only: CNAllocation
+    use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
+
     !
     ! !ARGUMENT:
     type(bounds_type)        , intent(in)    :: bounds   
@@ -107,6 +109,8 @@ contains
     type(nitrogenstate_type) , intent(inout) :: nitrogenstate_vars
     type(nitrogenflux_type)  , intent(inout) :: nitrogenflux_vars
     type(crop_type)          , intent(in)    :: crop_vars
+    class(nutrient_competition_method_type), intent(in) :: nutrient_competition_method
+
     !
     ! !LOCAL VARIABLES:
     integer :: c,j,k,l,m                                                                               !indices
@@ -286,7 +290,7 @@ contains
            num_soilc, filter_soilc, num_soilp, filter_soilp, &
            photosyns_vars, crop_vars, canopystate_vars, cnstate_vars,             &
            carbonstate_vars, carbonflux_vars, c13_carbonflux_vars, c14_carbonflux_vars,  &
-           nitrogenstate_vars, nitrogenflux_vars)
+           nitrogenstate_vars, nitrogenflux_vars, nutrient_competition_method)
 
       ! column loop to calculate actual immobilization and decomp rates, following
       ! resolution of plant/heterotroph  competition for mineral N

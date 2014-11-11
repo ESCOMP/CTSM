@@ -18,12 +18,13 @@ module readParamsMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine readParameters ()
+  subroutine readParameters (nutrient_competition_method)
     !
+    use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
     implicit none
     !-----------------------------------------------------------------------
-
-    call CNParamsReadFile()
+    class(nutrient_competition_method_type), intent(in) :: nutrient_competition_method
+    call CNParamsReadFile(nutrient_competition_method)
     ! calls for ED parameters
     call EDParamsReadFile()
 
@@ -74,10 +75,11 @@ contains
   end subroutine EDParamsReadFile
 
   !-----------------------------------------------------------------------
-  subroutine CNParamsReadFile ()
+  subroutine CNParamsReadFile (nutrient_competition_method)
     !
     ! read CN and BGC shared parameters
     !
+    use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
     use CNAllocationMod         , only : readCNAllocParams
     use CNDecompMod             , only : readCNDecompParams
     use CNDecompCascadeBGCMod   , only : readCNDecompBgcParams
@@ -98,6 +100,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
+    class(nutrient_competition_method_type), intent(in) :: nutrient_competition_method
     !
     ! !OTHER LOCAL VARIABLES:
     character(len=32)  :: subname = 'CNParamsReadShared'
@@ -126,7 +129,7 @@ contains
        !
        ! populate each module with private parameters
        !
-       call readCNAllocParams(ncid)
+       call readCNAllocParams(ncid, nutrient_competition_method)
        call readCNDecompParams(ncid)
        if (use_century_decomp) then
           call readCNDecompBgcParams(ncid)

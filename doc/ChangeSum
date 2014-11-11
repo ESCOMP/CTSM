@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r095    andre 11/10/2014 N comp refactoring by Jinyun Tang (LBL) and transpiration sink isolation by Gautam Bisht (LBL)
    clm4_5_1_r094    sacks 11/07/2014 misc. glacier-related updates
    clm4_5_1_r093    sacks 11/07/2014 change cold-start snow initialization, update cism external
    clm4_5_1_r092  muszala 11/04/2014  bug fixes from santos that address valgrind problems.  update rtm external 

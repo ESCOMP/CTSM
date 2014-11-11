@@ -1,4 +1,7 @@
 module CropType
+
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module containing variables needed for the crop model
@@ -32,7 +35,12 @@ module CropType
      procedure, private :: InitHistory
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
-     procedure, public  :: UpdateAccVars
+
+     ! NOTE(wjs, 2014-09-29) need to rename this from UpdateAccVars to CropUpdateAccVars
+     ! to prevent cryptic error messages with pgi (v. 13.9 on yellowstone)
+     ! This is probably related to this bug
+     ! <http://www.pgroup.com/userforum/viewtopic.php?t=4285>, which was fixed in pgi 14.7.
+     procedure, public  :: CropUpdateAccVars
 
   end type crop_type
 
@@ -200,7 +208,7 @@ contains
   end subroutine InitAccVars
 
   !-----------------------------------------------------------------------
-  subroutine UpdateAccVars(this, bounds, temperature_vars, cnstate_vars)
+  subroutine CropUpdateAccVars(this, bounds, t_ref2m_patch, t_soisno_col, cnstate_vars)
     !
     ! !DESCRIPTION:
     ! Update accumulated variables. Should be called every time step.
@@ -212,7 +220,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep
     use pftvarcon        , only : nwcereal, nwcerealirrig, mxtmp, baset
-    use TemperatureType  , only : temperature_type
+    use clm_varpar       , only : nlevsno, nlevgrnd
     use CNStateType      , only : cnstate_type
     use PatchType        , only : pft                
     use ColumnType       , only : col
@@ -220,7 +228,8 @@ contains
     ! !ARGUMENTS:
     class(crop_type)       , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
-    type(temperature_type) , intent(in)    :: temperature_vars
+    real(r8)               , intent(in)    :: t_ref2m_patch( bounds%begp:)
+    real(r8)               , intent(inout) :: t_soisno_col(bounds%begc:, -nlevsno+1:)
     type(cnstate_type)     , intent(in) :: cnstate_vars
     !
     ! !LOCAL VARIABLES:
@@ -232,9 +241,13 @@ contains
     integer :: begp, endp
     real(r8), pointer :: rbufslp(:)      ! temporary single level - pft level
     
-    character(len=*), parameter :: subname = 'UpdateAccVars'
+    character(len=*), parameter :: subname = 'CropUpdateAccVars'
     !-----------------------------------------------------------------------
     
+    ! Enforce expected array sizes
+    SHR_ASSERT_ALL((ubound(t_ref2m_patch)     == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno_col)      == (/bounds%endc,nlevgrnd/)) , errMsg(__FILE__, __LINE__))
+
     begp = bounds%begp; endp = bounds%endp
 
     dtime = get_step_size()
@@ -254,7 +267,7 @@ contains
        if (cnstate_vars%croplive_patch(p)) then ! relative to planting date
           ivt = pft%itype(p)
           rbufslp(p) = max(0._r8, min(mxtmp(ivt), &
-               temperature_vars%t_ref2m_patch(p)-(SHR_CONST_TKFRZ + baset(ivt)))) &
+               t_ref2m_patch(p)-(SHR_CONST_TKFRZ + baset(ivt)))) &
                * dtime/SHR_CONST_CDAY
           if (ivt == nwcereal .or. ivt == nwcerealirrig) then
              rbufslp(p) = rbufslp(p)*cnstate_vars%vf_patch(p)
@@ -275,8 +288,8 @@ contains
           ivt = pft%itype(p)
           c = pft%column(p)
           rbufslp(p) = max(0._r8, min(mxtmp(ivt), &
-               ((temperature_vars%t_soisno_col(c,1)*col%dz(c,1) + &
-               temperature_vars%t_soisno_col(c,2)*col%dz(c,2))/(col%dz(c,1)+col%dz(c,2))) - &
+               ((t_soisno_col(c,1)*col%dz(c,1) + &
+               t_soisno_col(c,2)*col%dz(c,2))/(col%dz(c,1)+col%dz(c,2))) - &
                (SHR_CONST_TKFRZ + baset(ivt)))) * dtime/SHR_CONST_CDAY
           if (ivt == nwcereal .or. ivt == nwcerealirrig) then
              rbufslp(p) = rbufslp(p)*cnstate_vars%vf_patch(p)
@@ -290,7 +303,7 @@ contains
 
     deallocate(rbufslp)
 
-  end subroutine UpdateAccVars
+  end subroutine CropUpdateAccVars
 
 end module CropType
 

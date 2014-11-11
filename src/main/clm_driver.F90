@@ -113,6 +113,7 @@ module clm_driver
   use clm_initializeMod      , only : EDbio_vars
   use clm_initializeMod      , only : EDphenology_inst
   use clm_initializeMod      , only : soil_water_retention_curve
+  use clm_initializeMod      , only : nutrient_competition_method
   use GridcellType           , only : grc                
   use LandunitType           , only : lun                
   use ColumnType             , only : col                
@@ -704,7 +705,8 @@ contains
                   nitrogenflux_vars, nitrogenstate_vars,                        &
                   atm2lnd_vars, waterstate_vars, waterflux_vars,                &
                   canopystate_vars, soilstate_vars, temperature_vars, crop_vars, ch4_vars, &
-                  dgvs_vars, photosyns_vars, soilhydrology_vars, energyflux_vars)
+                  dgvs_vars, photosyns_vars, soilhydrology_vars, energyflux_vars, &
+                  nutrient_competition_method)
 
              call CNAnnualUpdate(bounds_clump,            &
                   filter(nc)%num_soilc, filter(nc)%soilc, &
@@ -942,7 +944,9 @@ contains
           end if
 
           if (crop_prog) then
-             call crop_vars%UpdateAccVars(bounds_proc, temperature_vars, cnstate_vars)
+             call crop_vars%CropUpdateAccVars(bounds_proc, &
+                  temperature_vars%t_ref2m_patch, temperature_vars%t_soisno_col, &
+                  cnstate_vars)
           end if
 
           call t_stopf('accum')

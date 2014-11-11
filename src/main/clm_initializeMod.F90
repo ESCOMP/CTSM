@@ -68,6 +68,7 @@ module clm_initializeMod
   use EDPhenologyMod         , only : EDPhenologyType    ! ED type used to interact with CLM variables
   use EDVecPatchType         , only : EDpft                   
   use EDVecCohortType        , only : coh                ! unique to ED, used for domain decomp
+  use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
   !
   implicit none
   save
@@ -117,6 +118,7 @@ module clm_initializeMod
   class(soil_water_retention_curve_type), allocatable :: soil_water_retention_curve
   type(EDbio_type)            :: EDbio_vars
   type(EDPhenologyType)       :: EDphenology_inst
+  class(nutrient_competition_method_type), allocatable :: nutrient_competition_method
   !
   public :: initialize1  ! Phase one initialization
   public :: initialize2  ! Phase two initialization
@@ -402,7 +404,8 @@ contains
     use initVerticalMod       , only : initVertical
     use lnd2atmMod            , only : lnd2atm_minimal
     use glc2lndMod            , only : glc2lnd_type
-    use lnd2glcMod            , only : lnd2glc_type 
+    use lnd2glcMod            , only : lnd2glc_type
+    use NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
     use UrbanParamsType       , only : IsSimpleBuildTemp, IsProgBuildTemp
     use SoilWaterRetentionCurveFactoryMod, only : create_soil_water_retention_curve
     !
@@ -456,8 +459,10 @@ contains
     ! ------------------------------------------------------------------------
     ! Read in parameters files
     ! ------------------------------------------------------------------------
+    allocate(nutrient_competition_method, &
+       source=create_nutrient_competition_method())
 
-    call readParameters()
+    call readParameters(nutrient_competition_method)
 
     ! ------------------------------------------------------------------------
     ! Initialize time manager
@@ -806,7 +811,7 @@ contains
     ! ------------------------------------------------------------------------
 
     if (use_cn) then
-       call CNEcosystemDynInit(bounds_proc)
+       call CNEcosystemDynInit(bounds_proc, nutrient_competition_method)
     else
        call SatellitePhenologyInit(bounds_proc)
     end if
