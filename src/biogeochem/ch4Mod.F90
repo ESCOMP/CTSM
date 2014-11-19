@@ -200,16 +200,17 @@ module ch4Mod
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init( this, bounds, cellorg_col )
+  subroutine Init( this, bounds, cellorg_col, fsurdat )
 
     class(ch4_type)               :: this
     type(bounds_type), intent(in) :: bounds  
     real(r8)         , intent(in) :: cellorg_col (bounds%begc:, 1:)
+    character(len=*) , intent(in) :: fsurdat                         ! surface data file name
 
     call this%InitAllocate (bounds)
     if (use_lch4) then
        call this%InitHistory (bounds)
-       call this%InitCold (bounds, cellorg_col)
+       call this%InitCold (bounds, cellorg_col, fsurdat)
     end if
 
   end subroutine Init
@@ -659,7 +660,7 @@ contains
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine InitCold(this, bounds, cellorg_col)
+  subroutine InitCold(this, bounds, cellorg_col, fsurdat)
     !
     ! !DESCRIPTION:
     ! - Sets cold start values for time varying values.
@@ -685,6 +686,7 @@ contains
     class(ch4_type) :: this
     type(bounds_type) , intent(in) :: bounds  
     real(r8)          , intent(in) :: cellorg_col (bounds%begc:, 1:)
+    character(len=*)  , intent(in) :: fsurdat                         ! surface data file name
     !
     ! !LOCAL VARIABLES:
     integer               :: j ,g, l,c,p ! indices
@@ -693,7 +695,8 @@ contains
     real(r8)     ,pointer :: f0_in (:)   ! read in - f0 
     real(r8)     ,pointer :: p3_in (:)   ! read in - p3 
     real(r8)     ,pointer :: pH_in (:)   ! read in - pH 
-    logical               :: readvar 
+    character(len=256)    :: locfn       ! local file name
+    logical               :: readvar     ! If read variable from file or not
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(cellorg_col) == (/bounds%endc, nlevsoi/)), errMsg(__FILE__, __LINE__))
@@ -709,6 +712,8 @@ contains
 
     ! Methane code parameters for finundated
 
+    call getfil( fsurdat, locfn, 0 ) 
+    call ncd_pio_openfile (ncid, trim(locfn), 0)
     if (.not. fin_use_fsat) then
        call ncd_io(ncid=ncid, varname='ZWT0', flag='read', data=zwt0_in, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
@@ -735,6 +740,7 @@ contains
                'but pH is not on surfdata file'//errMsg(__FILE__, __LINE__))
        end if
     end if
+    call ncd_pio_closefile(ncid)
 
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)

@@ -426,7 +426,8 @@ contains
                    endif
                 endif
 
-                if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop .or. lun%itype(l) == istwet ) then
+                if (col%itype(c) == icol_road_perv .or. lun%itype(l) == istsoil .or. &
+                    lun%itype(l) == istcrop .or. lun%itype(l) == istwet ) then
                    if ( do_capsnow(c) ) then
                       snow_sources(c) = frac_sno_eff(c) * (qflx_dew_snow(c) + qflx_dew_grnd(c) ) &
                            + qflx_h2osfc_to_ice(c) + qflx_prec_grnd(c)

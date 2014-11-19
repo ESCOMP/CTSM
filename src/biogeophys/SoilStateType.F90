@@ -76,27 +76,82 @@ module SoilStateType
 
    contains
 
-     procedure, public  :: Init         
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure, public  :: Init           ! Initialization
+     procedure, private :: ReadNL         ! Private read soil-state namelist
+     procedure, private :: InitAllocate   ! Private allocate variables at initialization
+     procedure, private :: InitHistory    ! Private setup history fields
+     procedure, private :: InitCold       ! Private setup cold start for variables
 
   end type soilstate_type
   !------------------------------------------------------------------------
+  ! Control variables (from namelist)
+  logical, private :: organic_frac_squared ! If organic fraction should be squared (as was in CLM4.5)
 
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, NLFilename)
 
     class(soilstate_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
+    character(len=*), intent(IN) :: NLFilename ! Namelist filename
 
+    call this%ReadNL( NLFilename )
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
     call this%InitCold(bounds)
 
   end subroutine Init
+
+  !-----------------------------------------------------------------------
+  subroutine ReadNL( this, NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read namelist for SoilStateType
+    !
+    ! !USES:
+    use shr_mpi_mod          , only : shr_mpi_bcast
+    use fileutils            , only : getavu, relavu, opnfil
+    use clm_nlUtilsMod       , only : find_nlgroup_name
+    use spmdMod              , only : mpicom
+    !
+    ! !ARGUMENTS:
+    class(soilstate_type) :: this              ! Not used at this time
+    character(len=*), intent(IN) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+    character(len=32) :: subname = 'SoilState_readnl'  ! subroutine name
+    !-----------------------------------------------------------------------
+
+    character(len=*), parameter :: nl_name  = 'clm_soilstate_inparm'  ! Namelist name
+                                                                      ! MUST agree with name in namelist and read
+    namelist / clm_soilstate_inparm / organic_frac_squared
+
+    ! preset values
+
+    organic_frac_squared = .false.
+
+    if ( masterproc )then
+
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nl_name//' namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call find_nlgroup_name(unitn, nl_name, status=ierr)
+       if (ierr == 0) then
+          read(unit=unitn, nml=clm_soilstate_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading '//nl_name//' namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       end if
+       call relavu( unitn )
+
+    end if
+
+    call shr_mpi_bcast(organic_frac_squared, mpicom)
+
+  end subroutine ReadNL
 
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds)
@@ -580,7 +635,11 @@ contains
                 if (lev <= nlevsoi) then ! duplicate clay and sand values from 10th soil layer
                    clay = clay3d(g,lev)
                    sand = sand3d(g,lev)
-                   om_frac = (organic3d(g,lev)/organic_max)**2._r8
+                   if ( organic_frac_squared )then
+                      om_frac = (organic3d(g,lev)/organic_max)**2._r8
+                   else
+                      om_frac = organic3d(g,lev)/organic_max
+                   end if
                 else
                    clay = clay3d(g,nlevsoi)
                    sand = sand3d(g,nlevsoi)
@@ -706,7 +765,11 @@ contains
              if ( lev <= nlevsoi )then
                 clay    =  this%cellclay_col(c,lev)
                 sand    =  this%cellsand_col(c,lev)
-                om_frac = (this%cellorg_col(c,lev)/organic_max)**2._r8
+                if ( organic_frac_squared )then
+                   om_frac = (this%cellorg_col(c,lev)/organic_max)**2._r8
+                else
+                   om_frac = this%cellorg_col(c,lev)/organic_max
+                end if
              else
                 clay    = this%cellclay_col(c,nlevsoi)
                 sand    = this%cellsand_col(c,nlevsoi)

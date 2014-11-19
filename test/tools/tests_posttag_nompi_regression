@@ -8,6 +8,10 @@ smi54             bli54
 smi74             bli74
 smi78             bli78
 smiS4             bliS4
+smiS8             bliS8
+smiS9             bliS9
+smiS0             bliS0
+smiS0             bliS0
 sm684             bl684
 smf84             blf84
 smfc4             blfc4

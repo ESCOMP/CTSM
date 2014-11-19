@@ -32,10 +32,10 @@
          </yellowstone>
          <goldbach>
             <INTEL>
-               <entry testId="PET_P16x2_D.f10_f10.I1850CLM45BGC.goldbach_intel.clm-ciso" failType="FAIL" bugz="2027" >Balance check error/problem</entry>
+               <entry testId="PET_P15x2_D.f10_f10.I1850CLM45BGC.goldbach_intel.clm-ciso" failType="FAIL" bugz="2027" >Balance check error/problem</entry>
             </INTEL>
             <NAG>
-               <entry testId="PET_P16x2_D.f10_f10.I1850CLM45BGC.goldbach_nag.clm-ciso" failType="CFAIL" bugz="2027" >Problem building mct</entry>
+               <entry testId="PET_P15x2_D.f10_f10.I1850CLM45BGC.goldbach_nag.clm-ciso" failType="CFAIL" bugz="2027" >Problem building mct</entry>
                <entry testId="ERI.f19_g16.ICLM45BGC.goldbach_nag.clm-reduceOutput"
 failType="FAIL"  >multi-node nag issues</entry>
                <entry testId="ERS.f10_f10.I20TRCLM45BGC.goldbach_nag.clm-reduceOutput"
@@ -59,7 +59,6 @@ failType="FAIL" bugz="2027" >get_clump_bounds ERROR: Calling from inside a non-t
          </edison>
          <yellowstone>
             <INTEL>
-               <entry testId=" SMS.f09_g16.ICRUCLM45.yellowstone_intel.clm-af_bias_v5"                       failType="FAIL" >v5 files deleted </entry>
             </INTEL>
             <GNU>
                <entry testId="SMS.f19_g16.ICLM45CNED.yellowstone_gnu.clm-edTest"                             failType="FAIL"  bugz="2070" >error writing h0 file? looks like gnu is croaking on what looks like an implicit cast to double</entry>
@@ -107,5 +106,13 @@ failType="FAIL" bugz="2027" >get_clump_bounds ERROR: Calling from inside a non-t
             </PGI>
          </goldbach>
    </PTCLM>
+
+   <unit_tests>
+         <yellowstone>
+            <INTEL>
+                <entry failType="CFAIL">Internal compiler error</entry>
+            </INTEL>
+         </yellowstone>
+   </unit_tests>
 
 </expectedFails> 

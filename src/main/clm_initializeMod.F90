@@ -631,7 +631,7 @@ contains
 
     call canopystate_vars%init(bounds_proc)
 
-    call soilstate_vars%init(bounds_proc)
+    call soilstate_vars%init(bounds_proc, nlfilename)
 
     call waterstate_vars%init(bounds_proc,         &
          h2osno_col(begc:endc),                    &
@@ -680,7 +680,8 @@ contains
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Note - always initialize the memory for ch4_vars
-    call ch4_vars%Init(bounds_proc, soilstate_vars%cellorg_col(begc:endc, 1:))
+    call ch4_vars%Init(bounds_proc, soilstate_vars%cellorg_col(begc:endc, 1:), &
+                       fsurdat)
 
     ! Note - always initialize the memory for cnstate_vars (used in biogeophys/)
     call cnstate_vars%Init(bounds_proc)

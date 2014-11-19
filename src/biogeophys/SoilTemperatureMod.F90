@@ -479,13 +479,7 @@ contains
          l = col%landunit(c)
          if (lun%urbpoi(l)) then
             if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. col%itype(c) == icol_roof) then
-               if ( IsSimpleBuildTemp() )then
-                  ! Should just be a minor issue, make sure doesn't change answers
-                  ! than reduce to same line
-                  eflx_building_heat_errsoi(c) = cnfac*fn(c,nlevurb) + (1-cnfac)*fn1(c,nlevurb)
-               else
-                  eflx_building_heat_errsoi(c) = cnfac*fn(c,nlevurb) + (1._r8-cnfac)*fn1(c,nlevurb)
-               end if
+               eflx_building_heat_errsoi(c) = cnfac*fn(c,nlevurb) + (1._r8-cnfac)*fn1(c,nlevurb)
             else
                eflx_building_heat_errsoi(c) = 0._r8
             end if

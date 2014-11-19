@@ -1,4 +1,177 @@
 ===============================================================
+Tag name:  clm4_5_1_r096
+Originator(s):  erik (Erik)
+Date: Wed Nov 19 02:11:09 MST 2014
+One-line Summary: Several answer changing bug-fixes: snow grain size, lake hydrology, default settings, organic soil
+
+Purpose of changes:
+
+Bring in several bug-fixes most of which change answers.
+
+Snow grain size bug that Mark Flanner discovered under snow layer combination. 
+Lake hydrology fix from Zack Subin that would rarely cause the code to abort. Snow depth fix from
+Sean Swenson. Use Priglent inversion as recommended by Charlie Koven. Correct population density for 2000 conditions
+from 1850 to peroperly be 2000. Modify all Carbon on spinup from Dave Lawrenece. Add option to square or not square
+the organic fraction (default is to square for clm4_5 and to NOT for clm5_0). Bug with pervious road that Keith
+Oleson found. Simplify an if for urban to consistently use a double precision constant. Point to the new CLMNCEP_V5
+dataset.
+
+For clm4_0 rcp6 and rcp8.5 pftdyn datasets are updated for after 2005.
+
+Some fixes that don't change answers. Get the Prigilent inversion and usephfact options working again.
+Fix a bug in interp_source option that Sean Swenson found. Split out test datasets for getregional script since
+the datasets all have to be at the same resolution as the domain file. Also read filelist rather than use env 
+variables.
+
+Requirements for tag: Fix the bugs below
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+                1934 -- snow grain size (both clm4_0 and clm4_5). Just fix on clm4_5 side.
+                1717 -- lake hydrology fix (clm4_5 only)
+                1941 -- snowdp fix from Sean (both clm4_0 and clm4_5) (fix in clm4_5_1_r087)
+                1759 -- ngwh for clm4_0 datasets (apply cesm1_2_x_n10_clm4_5_10)
+                1772 -- use Priglent inversion
+                1838 -- pop dens is 1850 for 2000 compsets
+                1774 -- modify all Carbon on spinup
+                1765 -- remove duplicate setting of bd and tkdry
+                1764 -- Bug with pervious road
+                2066 -- getregional_datasets.pl bug for long lists of files
+                2067 -- get Prigilent inversion and usephfact options working.
+                2081 -- point to new CLMNCEP_V5 version
+                2061 -- make constant consistently double precision rather than have an if around it
+                2089 -- bug in interp_source that Sean Swenson found
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Add organic_frac_squared=.false. logical as a clm5_0 default feature
+   The old behavior organic_frac_squared=.true. is on as before for clm4_5.
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, dlawren, swensosc, mflanner, subin
+
+List any svn externals directories updated (csm_share, mct, etc.): datm
+   update datm to datm8_141113 update CRUNCEP_V5 dataset version used
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+=========== Split out getregional lists (all files in list MUST be at same res as domain file)
+A       models/lnd/clm/test/tools/nl_files/getregional_05popd
+A       models/lnd/clm/test/tools/nl_files/getregional_T62
+A       models/lnd/clm/test/tools/nl_files/getregional_ndep
+A       models/lnd/clm/tools/shared/ncl_scripts/sample_inlist_0.5popd
+A       models/lnd/clm/tools/shared/ncl_scripts/sample_inlist_ndep
+A       models/lnd/clm/tools/shared/ncl_scripts/sample_outlist_0.5popd
+A       models/lnd/clm/tools/shared/ncl_scripts/sample_outlist_ndep
+A       models/lnd/clm/tools/shared/ncl_scripts/sample_inlist_T62
+A       models/lnd/clm/tools/shared/ncl_scripts/sample_outlist_T62
+
+List all existing files that have been modified, and describe the changes:
+
+=========== Change getregional tests
+M       models/lnd/clm/test/tools/input_tests_master
+M       models/lnd/clm/test/tools/tests_posttag_nompi_regression
+
+=========== Bring in 
+M       models/lnd/clm/tools/shared/ncl_scripts/getregional_datasets.pl
+M       models/lnd/clm/tools/shared/ncl_scripts/getregional_datasets.ncl
+M       models/lnd/clm/tools/shared/ncl_scripts/sample_inlist
+M       models/lnd/clm/tools/shared/ncl_scripts/sample_outlist
+
+M       models/lnd/clm/bld/unit_testers/build-namelist_test.pl ------------ correct number of tests
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml ---- Update rcp6 and rcp8.5 pftdyn datasets
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ---- Add organic_frac_squared,
+             set fin_use_fsat=.false. by default
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml -- Add organic_frac_squared
+M       models/lnd/clm/bld/namelist_files/use_cases/2000_control.xml ------ Correct year for popd from 1850 to 2000
+M       models/lnd/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml - Correct year for popd from 1850 to 2000
+
+M       models/lnd/clm/bld/CLMBuildNamelist.pm - Add organic_frac_squared and change setup_logic_more_vertlayers to
+                                                 setup_logic_soilstate
+
+M       models/lnd/clm/src/utils/CMakeLists.txt - Add namelist util to source list
+
+M       models/lnd/clm/src/biogeochem/ch4Mod.F90 ------------- Pass fsurdat to initCold
+M       models/lnd/clm/src/biogeochem/CNCarbonStateType.F90 -- Use nlevdecomp_full in place of nlevdecomp
+M       models/lnd/clm/src/main/initInterp.F90 --------------- Change use of rbufsli to rbufslo
+M       models/lnd/clm/src/main/clm_initializeMod.F90 -------- Pass nlfilename into soilstate_vars init
+M       models/lnd/clm/src/biogeophys/BalanceCheckMod.F90 ---- Add col%itype(c) == icol_road_perv to an if condition
+M       models/lnd/clm/src/biogeophys/SoilTemperatureMod.F90 - Use 1.0_r8 constant always, rather than integer 1
+                                                               for clm4_5
+M       models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90 --- Use Mass-weighted combination of radius for combo
+M       models/lnd/clm/src/biogeophys/SoilStateType.F90 ------ Add organic_frac_squared logical and namelist read
+                                                               for it. Add two if's that determine if organic_frac
+                                                               should be squared or not.
+M       models/lnd/clm/src/biogeophys/LakeHydrologyMod.F90 --- Break apart if-condition for snl==-1
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone    yes
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone    yes (although still fails)
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel  yes
+    yellowstone_pgi    yes
+    yellowstone_gnu    yes
+    goldbach_nag       yes
+    goldbach_intel     yes
+
+  short tests (aux_clm_short) (generally these are NOT used when making a tag):
+
+    yellowstone_intel yes
+    yellowstone_pgi   yes
+    goldbach_nag      yes
+
+  tools testing: (when tools modified or scripts updated (for PTCLM))
+
+    yellowstone interactive   yes
+    PTCLM (models/lnd/clm/tools/shared/PTCLM/test) yellowstone  yes
+
+CLM tag used for the baseline comparisons: 
+
+Changes answers relative to baseline:  Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:   clm4_5 and clm5_0
+    - what platforms/compilers:   all
+    - nature of change (similar climate, except new clm5_0 feature)
+
+   clm4_0 for rcp6 and rcp8.5 changes answers by using the new good wood harvest
+   datasets for after 2005.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+
+   /home/erik/noorg_clm451r092_I1850CRUCLM45BGC -- clm4_5 default version
+   /home/erik/clm451r092_I1850CRUCLM45BGC -------- clm4_5 with organic_frac_squared=.false.
+                                                   (clm5_0 default version)
+
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r095
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Mon Nov 10 17:54:18 MST 2014
@@ -49,7 +222,7 @@ Nutrient Competition
 
   List all existing files that have been modified, and describe the changes:
     M       clm/src/biogeochem/CNDecompMod.F90 - add nutrient competition method to function parameters
-    M       clm/src/biogeochem/CropType.F90 - rename UpdateAccVars() to work around pgi compiler error
+    M       clm/src/biogeochem/CropType.F90 - rename UpdateAccVars() to work around pgi compiler error, remove dependency on temperature_type
     M       clm/src/biogeochem/CNAllocationMod.F90 - move code into clm45 default nutrient competition module
     M       clm/src/biogeochem/CNEcosystemDynMod.F90 - add nutrient competition method to function parameters
     MM      clm/src/main/clm_initializeMod.F90 - add nutrient competition method to function parameters

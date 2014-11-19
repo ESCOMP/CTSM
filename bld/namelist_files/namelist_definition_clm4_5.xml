@@ -107,6 +107,12 @@ Interpolate the soil layers on the surface dataset to the soil layers specified 
 (EXPERIMENTAL)
 </entry>
 
+<entry id="organic_frac_squared" type="logical" category="clm_physics"
+       group="clm_soilstate_inparm" valid_values="" >
+If TRUE, square the organic fraction when it's used (as was done in CLM4.5)
+Otherwise use the fraction straight up              (the default for CLM5.0)
+</entry>
+
 <entry id="irrigate" type="logical" category="clm_physics"
        group="clm_inparm"  >
 If TRUE, irrigation will be active.

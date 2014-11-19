@@ -495,23 +495,36 @@ contains
 
          j = 0
 
-         if (snl(c) == -1 .and. h2osoi_ice(c,j) == 0._r8) then
-            ! Remove layer
-            ! Take extra heat of layer and release to sensible heat in order to maintain energy conservation.
-            heatrem             = cpliq*h2osoi_liq(c,j)*(t_soisno(c,j) - tfrz)
-            eflx_sh_tot(p)      = eflx_sh_tot(p)    + heatrem/dtime
-            eflx_sh_grnd(p)     = eflx_sh_grnd(p)   + heatrem/dtime  ! Added this line 7/22/11 for consistency.
-            eflx_soil_grnd(p)   = eflx_soil_grnd(p) - heatrem/dtime
-            eflx_gnet(p)        = eflx_gnet(p)      - heatrem/dtime
-
-            eflx_grnd_lake(p)   = eflx_gnet(p) - heatrem/dtime
-            qflx_sl_top_soil(c) = qflx_sl_top_soil(c) + h2osno(c)
-            snl(c)              = 0
-            h2osno(c)           = 0._r8
-            snow_depth(c)       = 0._r8
-            ! Rest of snow layer book-keeping will be done below.
-         else
-            eflx_grnd_lake(p) = eflx_gnet(p)
+         if (snl(c) == -1) then 
+            if (h2osoi_ice(c,j) > 0._r8 .and. t_soisno(c,j) > tfrz) then
+    
+               ! Take extra heat of layer and release to sensible heat in order 
+               ! to maintain energy conservation.
+               heatrem           = (cpliq*h2osoi_liq(c,j))*(t_soisno(c,j) - tfrz)
+               t_soisno(c,j)     = tfrz
+               eflx_sh_tot(p)    = eflx_sh_tot(p) + heatrem/dtime
+               eflx_sh_grnd(p)   = eflx_sh_grnd(p) + heatrem/dtime
+               eflx_soil_grnd(p) = eflx_soil_grnd(p) - heatrem/dtime
+               eflx_gnet(p)      = eflx_gnet(p) - heatrem/dtime
+               eflx_grnd_lake(p) = eflx_grnd_lake(p) - heatrem/dtime
+            else if (h2osoi_ice(c,j) == 0._r8) then
+               ! Remove layer
+               ! Take extra heat of layer and release to sensible heat in order 
+               ! to maintain energy conservation.
+               heatrem             = cpliq*h2osoi_liq(c,j)*(t_soisno(c,j) - tfrz)
+               eflx_sh_tot(p)      = eflx_sh_tot(p) + heatrem/dtime
+               eflx_sh_grnd(p)     = eflx_sh_grnd(p) + heatrem/dtime
+               eflx_soil_grnd(p)   = eflx_soil_grnd(p) - heatrem/dtime
+               eflx_gnet(p)        = eflx_gnet(p) - heatrem/dtime
+               eflx_grnd_lake(p)   = eflx_grnd_lake(p) - heatrem/dtime
+               qflx_sl_top_soil(c) = qflx_sl_top_soil(c) + h2osno(c)/dtime
+               snl(c)              = 0
+               h2osno(c)           = 0._r8
+               snow_depth(c)       = 0._r8
+               ! Rest of snow layer book-keeping will be done below.
+            else
+               eflx_grnd_lake(p) = eflx_gnet(p)
+            end if
          end if
       end do
 

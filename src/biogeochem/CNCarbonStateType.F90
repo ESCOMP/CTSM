@@ -2572,7 +2572,7 @@ contains
                  m = 1. / decomp_cascade_con%spinup_factor(k)
               end if
               do c = bounds%begc, bounds%endc
-                 do j = 1, nlevdecomp
+                 do j = 1, nlevdecomp_full
                     this%decomp_cpools_vr_col(c,j,k) = this%decomp_cpools_vr_col(c,j,k) * m
                  end do
               end do

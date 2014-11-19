@@ -63,8 +63,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Default urban traffic flux -->
 <urban_traffic>.false.</urban_traffic>
 
+<!-- Soil state settings -->
 <more_vertlayers                          >.false.</more_vertlayers>
 <more_vertlayers hgrid="1x1_tropicAtl"    >.true.</more_vertlayers>
+
+<organic_frac_squared phys="clm4_5" >.true.</organic_frac_squared>
+<organic_frac_squared phys="clm5_0" >.false.</organic_frac_squared>
 
 <!-- Determine whether to perform certain downscaling operations over glc_mec landunits -->
 <glcmec_downscale_rain_snow_convert>.false.</glcmec_downscale_rain_snow_convert>
@@ -1549,7 +1553,7 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130927.nc</fsurdat>
 <!-- Defaults for ch4par_in namelist            -->
 <!-- =========================================  -->
 
-<fin_use_fsat use_cn=".true.">.true.</fin_use_fsat>
+<fin_use_fsat use_cn=".true.">.false.</fin_use_fsat>
 
 <use_aereoxid_prog use_cn=".true.">.true.</use_aereoxid_prog>
 
