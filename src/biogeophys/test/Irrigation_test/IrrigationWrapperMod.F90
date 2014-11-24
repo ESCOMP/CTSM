@@ -11,12 +11,12 @@ module IrrigationWrapperMod
   ! Finally, it provides a routine that does the setup needed for most tests of
   ! irrigation, and a complementary routine to do the teardown.
   
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use IrrigationMod, only : irrigation_type, irrigation_params_type
-  use clm_varpar, only : nlevgrnd
-  use PatchType, only : pft
-  use ColumnType, only : col
-  use GridcellType, only : grc
+  use shr_kind_mod  , only : r8 => shr_kind_r8
+  use IrrigationMod , only : irrigation_type, irrigation_params_type
+  use clm_varpar    , only : nlevgrnd
+  use PatchType     , only : patch
+  use ColumnType    , only : col
+  use GridcellType  , only : grc
   use unittestSubgridMod
 
   implicit none
@@ -148,7 +148,7 @@ contains
     allocate(deficits(bounds%begp:bounds%endp, nlevgrnd))
     do j = 1, nlevgrnd
        do p = bounds%begp, bounds%endp
-          c = pft%column(p)
+          c = patch%column(p)
           deficits(p,j) = irrigation%IrrigationDeficit(&
                relsat_so = this%relsat_so(p,j), &
                h2osoi_liq = this%h2osoi_liq(c,j), &
@@ -266,14 +266,15 @@ contains
     ! completed.
     !
     ! !USES:
-    use pftvarcon, only : irrigated
+    use pftconMod , only : pftcon
+    use clm_varpar, only : mxpft
     !
     ! !ARGUMENTS:
     integer, intent(in) :: maxpft  ! max pft type that needs to be supported
     !
     !-----------------------------------------------------------------------
 
-    allocate(irrigated(maxpft), source=1.0_r8)
+    allocate(pftcon%irrigated(0:mxpft), source=1.0_r8)
 
     col%dz(:,1:nlevgrnd) = 1.0_r8
 
@@ -291,11 +292,11 @@ contains
     ! needs to be done separately.
     !
     ! !USES:
-    use pftvarcon, only : irrigated
+    use pftconMod, only : pftcon
     !
     !-----------------------------------------------------------------------
     
-    deallocate(irrigated)
+    deallocate(pftcon%irrigated)
 
   end subroutine teardownEnvironment
 

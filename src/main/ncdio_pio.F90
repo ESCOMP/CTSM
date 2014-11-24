@@ -3689,7 +3689,7 @@ contains
     ! !LOCAL VARIABLES:
     integer              :: cc,i,ii           ! index variable
     integer              :: data_offset       ! offset into land array 1st column 
-    integer              :: ndata             ! number of column (or pft points to read)
+    integer              :: ndata             ! number of column (or patch points to read)
     real(r8) , pointer   :: cols1dlon(:)      ! holds cols1d_ixy var
     real(r8) , pointer   :: cols1dlat(:)      ! holds cols1d_jxy var
     real(r8) , pointer   :: pfts1dlon(:)      ! holds pfts1d_ixy var

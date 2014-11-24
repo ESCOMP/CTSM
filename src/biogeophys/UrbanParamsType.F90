@@ -724,7 +724,7 @@ contains
     ! true, abort with a message.
     !
     ! !USES:
-    use clm_varsur      , only : urban_valid
+    use clm_instur      , only : urban_valid
     use landunit_varcon , only : numurbl
     !
     ! !ARGUMENTS:

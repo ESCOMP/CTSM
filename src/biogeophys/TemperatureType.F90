@@ -13,7 +13,7 @@ module TemperatureType
   use GridcellType    , only : grc
   use LandunitType    , only : lun                
   use ColumnType      , only : col                
-  use PatchType       , only : pft                
+  use PatchType       , only : patch                
   !
   implicit none
   save
@@ -700,8 +700,8 @@ contains
       ! Set t_veg, t_ref2m, t_ref2m_u and tref2m_r 
 
       do p = bounds%begp, bounds%endp
-         c = pft%column(p)
-         l = pft%landunit(p)
+         c = patch%column(p)
+         l = patch%landunit(p)
 
          if (use_vancouver) then
             this%t_veg_patch(p)   = 297.56
@@ -1279,7 +1279,7 @@ contains
     call update_accum_field  ('TREFAV_U', this%t_ref2m_u_patch, nstep)
     call extract_accum_field ('TREFAV_U', rbufslp, nstep)
     do p = begp,endp
-       l = pft%landunit(p)
+       l = patch%landunit(p)
        if (rbufslp(p) /= spval) then
           this%t_ref2m_max_inst_u_patch(p) = max(rbufslp(p), this%t_ref2m_max_inst_u_patch(p))
           this%t_ref2m_min_inst_u_patch(p) = min(rbufslp(p), this%t_ref2m_min_inst_u_patch(p))
@@ -1307,7 +1307,7 @@ contains
     call update_accum_field  ('TREFAV_R', this%t_ref2m_r_patch, nstep)
     call extract_accum_field ('TREFAV_R', rbufslp, nstep)
     do p = begp,endp
-       l = pft%landunit(p)
+       l = patch%landunit(p)
        if (rbufslp(p) /= spval) then
           this%t_ref2m_max_inst_r_patch(p) = max(rbufslp(p), this%t_ref2m_max_inst_r_patch(p))
           this%t_ref2m_min_inst_r_patch(p) = min(rbufslp(p), this%t_ref2m_min_inst_r_patch(p))
@@ -1347,14 +1347,10 @@ contains
        call update_accum_field  ('TDM5', rbufslp, nstep)
        call extract_accum_field ('TDM5', this%t_a5min_patch, nstep)
 
-    end if
-
-    if ( crop_prog )then
-
        ! Accumulate and extract GDD0
 
        do p = begp,endp
-          g = pft%gridcell(p)
+          g = patch%gridcell(p)
           if (month==1 .and. day==1 .and. secs==dtime) then
              rbufslp(p) = accumResetVal ! reset gdd
           else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
@@ -1370,7 +1366,7 @@ contains
        ! Accumulate and extract GDD8
 
        do p = begp,endp
-          g = pft%gridcell(p)
+          g = patch%gridcell(p)
           if (month==1 .and. day==1 .and. secs==dtime) then
              rbufslp(p) = accumResetVal ! reset gdd
           else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
@@ -1387,7 +1383,7 @@ contains
        ! Accumulate and extract GDD10
 
        do p = begp,endp
-          g = pft%gridcell(p)
+          g = patch%gridcell(p)
           if (month==1 .and. day==1 .and. secs==dtime) then
              rbufslp(p) = accumResetVal ! reset gdd
           else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &

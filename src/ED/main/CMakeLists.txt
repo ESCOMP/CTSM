@@ -2,7 +2,6 @@
 # source files that are currently used in unit tests
 
 list(APPEND clm_sources
-  EDBioType.F90 
   EDPftvarcon.F90
   )
 

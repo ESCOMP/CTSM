@@ -1,41 +1,31 @@
-module CNVerticalProfileMod
+module SoilBiogeochemVerticalProfileMod
+
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Module holding routines for vertical discretization of C and N inputs into deocmposing pools
+  !  Calculate vertical profiles for distributing soil and litter C and N
   !
   ! !USES:
-  use shr_kind_mod    , only: r8 => shr_kind_r8
-  use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use decompMod       , only : bounds_type
-  use abortutils      , only : endrun
-  use subgridAveMod   , only : p2c
-  use SoilStateType   , only : soilstate_type
-  use CanopyStateType , only : canopystate_type
-  use CNStateType     , only : cnstate_type
-  use ColumnType      , only : col                
-  use PatchType       , only : pft                
+  use shr_kind_mod, only: r8 => shr_kind_r8
   !
   implicit none
-  save
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public:: decomp_vertprofiles
+  public:: SoilBiogeochemVerticalProfile
   !
   logical , public :: exponential_rooting_profile = .true.
   logical , public :: pftspecific_rootingprofile = .true.
-  ! how steep profile is for root C inputs (1/ e-folding depth) (1/m)
-  real(r8), public :: rootprof_exp  = 3.       
-  ! how steep profile is for surface components (1/ e_folding depth) (1/m)
-  real(r8), public :: surfprof_exp  = 10.      
+  real(r8), public :: rootprof_exp  = 3.  ! how steep profile is for root C inputs (1/ e-folding depth) (1/m)      
+  real(r8), public :: surfprof_exp  = 10. ! how steep profile is for surface components (1/ e_folding depth) (1/m)      
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine decomp_vertprofiles(bounds, &
-       num_soilc,filter_soilc,num_soilp,filter_soilp, &
-       soilstate_vars, canopystate_vars, cnstate_vars)
+  subroutine SoilBiogeochemVerticalProfile(bounds, num_soilc,filter_soilc,num_soilp,filter_soilp, &
+       canopystate_inst, soilstate_inst, soilbiogeochem_state_inst)
     !
     ! !DESCRIPTION:
     !  calculate vertical profiles for distributing soil and litter C and N
@@ -51,20 +41,28 @@ contains
     !  CNDecompMod uses the standard filters that just apply over active points
     ! 
     ! !USES:
-    use clm_varcon  , only : zsoi, dzsoi, zisoi, dzsoi_decomp
-    use clm_varpar  , only : nlevdecomp, nlevgrnd, nlevdecomp_full, maxpatch_pft
-    use clm_varctl  , only : use_vertsoilc, iulog
-    use pftvarcon   , only : rootprof_beta, noveg
+    use shr_log_mod             , only : errMsg => shr_log_errMsg
+    use decompMod               , only : bounds_type
+    use abortutils              , only : endrun
+    use clm_varcon              , only : zsoi, dzsoi, zisoi, dzsoi_decomp
+    use clm_varpar              , only : nlevdecomp, nlevgrnd, nlevdecomp_full, maxpatch_pft
+    use clm_varctl              , only : use_vertsoilc, iulog
+    use pftconMod               , only : noveg, pftcon
+    use SoilBiogeochemStateType , only : soilbiogeochem_state_type
+    use CanopyStateType         , only : canopystate_type
+    use SoilStateType           , only : soilstate_type
+    use ColumnType              , only : col                
+    use PatchType               , only : patch                
     !
     ! !ARGUMENTS:
-    type(bounds_type)      , intent(in)    :: bounds  
-    integer                , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                , intent(in)    :: filter_soilc(:) ! filter for soil columns
-    integer                , intent(in)    :: num_soilp       ! number of soil patches in filter
-    integer                , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    type(soilstate_type)   , intent(in)    :: soilstate_vars
-    type(canopystate_type) , intent(in)    :: canopystate_vars
-    type(cnstate_type)     , intent(inout) :: cnstate_vars
+    type(bounds_type)               , intent(in)    :: bounds  
+    integer                         , intent(in)    :: num_soilc                               ! number of soil columns in filter
+    integer                         , intent(in)    :: filter_soilc(:)                         ! filter for soil columns
+    integer                         , intent(in)    :: num_soilp                               ! number of soil patches in filter
+    integer                         , intent(in)    :: filter_soilp(:)                         ! filter for soil patches
+    type(canopystate_type)          , intent(in)    :: canopystate_inst
+    type(soilstate_type)            , intent(in)    :: soilstate_inst				    
+    type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
     !
     ! !LOCAL VARIABLES:
     real(r8) :: surface_prof(1:nlevdecomp)
@@ -82,26 +80,25 @@ contains
     real(r8) :: ndep_prof_sum
     real(r8) :: nfixation_prof_sum
     real(r8) :: delta = 1.e-10
-    character(len=32) :: subname = 'decomp_vertprofiles'
+    integer  :: begp, endp
+    integer  :: begc, endc
+    character(len=32) :: subname = 'SoilBiogeochemVerticalProfile'
     !-----------------------------------------------------------------------
 
-    associate(                                                               & 
-         rootfr               => soilstate_vars%rootfr_patch               , & ! Input:  [real(r8)  (:,:) ]  fraction of roots in each soil layer  (nlevgrnd)
+    begp = bounds%begp; endp= bounds%endp
+    begc = bounds%begc; endc= bounds%endc
+
+    associate(                                                                  & 
+         altmax_lastyear_indx => canopystate_inst%altmax_lastyear_indx_col    , & ! Input:  [integer   (:)   ]  frost table depth (m)                              
+
+         rootfr               => soilstate_inst%rootfr_patch                  , & ! Input:  [real(r8)  (:,:) ]  fraction of roots in each soil layer  (nlevgrnd)
          
-         altmax_lastyear_indx => canopystate_vars%altmax_lastyear_indx_col , & ! Input:  [integer   (:)   ]  frost table depth (m)                              
-         
-         nfixation_prof       => cnstate_vars%nfixation_prof_col           , & ! Input:  [real(r8)  (:,:) ]  (1/m) profile for N fixation additions          
-         ndep_prof            => cnstate_vars%ndep_prof_col                , & ! Input:  [real(r8)  (:,:) ]  (1/m) profile for N fixation additions          
-         
-         leaf_prof            => cnstate_vars%leaf_prof_patch              , & ! Output:  [real(r8) (:,:) ]  (1/m) profile of leaves                         
-         froot_prof           => cnstate_vars%froot_prof_patch             , & ! Output:  [real(r8) (:,:) ]  (1/m) profile of fine roots                     
-         croot_prof           => cnstate_vars%croot_prof_patch             , & ! Output:  [real(r8) (:,:) ]  (1/m) profile of coarse roots                   
-         stem_prof            => cnstate_vars%stem_prof_patch              , & ! Output:  [real(r8) (:,:) ]  (1/m) profile of stems                          
-         
-         begp                 => bounds%begp                               , &
-         endp                 => bounds%endp                               , &
-         begc                 => bounds%begc                               , &
-         endc                 => bounds%endc                                 &
+         nfixation_prof       => soilbiogeochem_state_inst%nfixation_prof_col , & ! Input  :  [real(r8) (:,:) ]  (1/m) profile for N fixation additions          
+         ndep_prof            => soilbiogeochem_state_inst%ndep_prof_col      , & ! Input  :  [real(r8) (:,:) ]  (1/m) profile for N fixation additions          
+         leaf_prof            => soilbiogeochem_state_inst%leaf_prof_patch    , & ! Output :  [real(r8) (:,:) ]  (1/m) profile of leaves                         
+         froot_prof           => soilbiogeochem_state_inst%froot_prof_patch   , & ! Output :  [real(r8) (:,:) ]  (1/m) profile of fine roots                     
+         croot_prof           => soilbiogeochem_state_inst%croot_prof_patch   , & ! Output :  [real(r8) (:,:) ]  (1/m) profile of coarse roots                   
+         stem_prof            => soilbiogeochem_state_inst%stem_prof_patch      & ! Output :  [real(r8) (:,:) ]  (1/m) profile of stems                          
          )
 
       if (use_vertsoilc) then
@@ -136,10 +133,10 @@ contains
                ! use beta distribution parameter from Jackson et al., 1996
                do fp = 1,num_soilp
                   p = filter_soilp(fp)
-                  if (pft%itype(p) /= noveg) then
+                  if (patch%itype(p) /= noveg) then
                      do j = 1, nlevdecomp
-                        cinput_rootfr(p,j) = ( rootprof_beta(pft%itype(p)) ** (zisoi(j-1)*100._r8) - &
-                             rootprof_beta(pft%itype(p)) ** (zisoi(j)*100._r8) ) &
+                        cinput_rootfr(p,j) = ( pftcon%rootprof_beta(patch%itype(p)) ** (zisoi(j-1)*100._r8) - &
+                             pftcon%rootprof_beta(patch%itype(p)) ** (zisoi(j)*100._r8) ) &
                              / dzsoi_decomp(j)
                      end do
                   else
@@ -159,7 +156,7 @@ contains
 
          do fp = 1,num_soilp
             p = filter_soilp(fp)
-            c = pft%column(p)
+            c = patch%column(p)
             ! integrate rootfr over active layer of soil column
             rootfr_tot = 0._r8
             surface_prof_tot = 0._r8
@@ -195,10 +192,10 @@ contains
          do pi = 1,maxpatch_pft
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               if (pi <=  col%npfts(c)) then
-                  p = col%pfti(c) + pi - 1
+               if (pi <=  col%npatches(c)) then
+                  p = col%patchi(c) + pi - 1
                   do j = 1,nlevdecomp
-                     col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * pft%wtcol(p)
+                     col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
                   end do
                end if
             end do
@@ -256,9 +253,9 @@ contains
             write(iulog, *) 'cinput_rootfr: ', cinput_rootfr(c,:)
             write(iulog, *) 'dzsoi_decomp: ', dzsoi_decomp(:)
             write(iulog, *) 'surface_prof: ', surface_prof(:)
-            write(iulog, *) 'npfts(c): ', col%npfts(c)
-            do p = col%pfti(c), col%pfti(c) + col%npfts(c) -1
-               write(iulog, *) 'p, itype(p), wtcol(p): ', p, pft%itype(p), pft%wtcol(p)
+            write(iulog, *) 'npfts(c): ', col%npatches(c)
+            do p = col%patchi(c), col%patchi(c) + col%npatches(c) -1
+               write(iulog, *) 'p, itype(p), wtcol(p): ', p, patch%itype(p), patch%wtcol(p)
                write(iulog, *) 'cinput_rootfr(p,:): ', cinput_rootfr(p,:)
             end do
             call endrun(msg=" ERROR: _prof_sum-1>delta"//errMsg(__FILE__, __LINE__))
@@ -284,8 +281,8 @@ contains
          endif
       end do
 
-    end associate 
+    end associate
 
-  end subroutine decomp_vertprofiles
+  end subroutine SoilBiogeochemVerticalProfile
   
-end module CNVerticalProfileMod
+end module SoilBiogeochemVerticalProfileMod

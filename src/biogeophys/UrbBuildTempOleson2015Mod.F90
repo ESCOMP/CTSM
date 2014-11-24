@@ -38,8 +38,8 @@ contains
 !
 ! !INTERFACE:
   subroutine BuildingTemperature (bounds, num_urbanl, filter_urbanl, num_nolakec, &
-                                  filter_nolakec, tk, urbanparams_vars, temperature_vars, &
-                                  energyflux_vars )
+                                  filter_nolakec, tk, urbanparams_inst, temperature_inst, &
+                                  energyflux_inst )
 !
 ! !DESCRIPTION:
 ! Solve for t_building, inner surface temperatures of roof, sunw, shdw, and floor temperature
@@ -217,9 +217,9 @@ contains
     integer , intent(in)  :: num_urbanl                       ! number of urban landunits in clump
     integer , intent(in)  :: filter_urbanl(:)                 ! urban landunit filter
     real(r8), intent(in)  :: tk(bounds%begc: , -nlevsno+1: )  ! thermal conductivity (W m-1 K-1) [col, j]
-    type(urbanparams_type), intent(in)    :: urbanparams_vars ! urban parameters
-    type(temperature_type), intent(inout) :: temperature_vars ! temperature variables
-    type(energyflux_type) , intent(inout) :: energyflux_vars  ! energy flux variables
+    type(urbanparams_type), intent(in)    :: urbanparams_inst ! urban parameters
+    type(temperature_type), intent(inout) :: temperature_inst ! temperature variables
+    type(energyflux_type) , intent(inout) :: energyflux_inst  ! energy flux variables
 !
 ! !LOCAL VARIABLES:
     integer, parameter :: neq = 5          ! number of equation/unknowns
@@ -310,21 +310,21 @@ contains
     wtlunit_roof      => lun%wtlunit_roof                  , & ! Input:  [real(r8) (:)]  weight of roof with respect to landunit
     urbpoi            => lun%urbpoi                        , & ! Input:  [logical (:)]  true => landunit is an urban point
 
-    taf               => temperature_vars%taf_lun          , & ! Input:  [real(r8) (:)]  urban canopy air temperature (K)
-    tssbef            => temperature_vars%t_ssbef_col      , & ! Input:  [real(r8) (:,:)]  temperature at previous time step (K)
-    t_soisno          => temperature_vars%t_soisno_col     , & ! Input:  [real(r8) (:,:)]  soil temperature (K)
-    t_roof_inner      => temperature_vars%t_roof_inner_lun , & ! InOut:  [real(r8) (:)]  roof inside surface temperature (K)
-    t_sunw_inner      => temperature_vars%t_sunw_inner_lun , & ! InOut:  [real(r8) (:)]  sunwall inside surface temperature (K)
-    t_shdw_inner      => temperature_vars%t_shdw_inner_lun , & ! InOut:  [real(r8) (:)]  shadewall inside surface temperature (K)
-    t_floor           => temperature_vars%t_floor_lun      , & ! InOut:  [real(r8) (:)]  floor temperature (K)
-    t_building        => temperature_vars%t_building_lun   , & ! InOut:  [real(r8) (:)]  internal building air temperature (K)
+    taf               => temperature_inst%taf_lun          , & ! Input:  [real(r8) (:)]  urban canopy air temperature (K)
+    tssbef            => temperature_inst%t_ssbef_col      , & ! Input:  [real(r8) (:,:)]  temperature at previous time step (K)
+    t_soisno          => temperature_inst%t_soisno_col     , & ! Input:  [real(r8) (:,:)]  soil temperature (K)
+    t_roof_inner      => temperature_inst%t_roof_inner_lun , & ! InOut:  [real(r8) (:)]  roof inside surface temperature (K)
+    t_sunw_inner      => temperature_inst%t_sunw_inner_lun , & ! InOut:  [real(r8) (:)]  sunwall inside surface temperature (K)
+    t_shdw_inner      => temperature_inst%t_shdw_inner_lun , & ! InOut:  [real(r8) (:)]  shadewall inside surface temperature (K)
+    t_floor           => temperature_inst%t_floor_lun      , & ! InOut:  [real(r8) (:)]  floor temperature (K)
+    t_building        => temperature_inst%t_building_lun   , & ! InOut:  [real(r8) (:)]  internal building air temperature (K)
 
-    t_building_max    => urbanparams_vars%t_building_max   , & ! Input:  [real(r8) (:)]  maximum internal building air temperature (K)
-    t_building_min    => urbanparams_vars%t_building_min   , & ! Input:  [real(r8) (:)]  minimum internal building air temperature (K)
+    t_building_max    => urbanparams_inst%t_building_max   , & ! Input:  [real(r8) (:)]  maximum internal building air temperature (K)
+    t_building_min    => urbanparams_inst%t_building_min   , & ! Input:  [real(r8) (:)]  minimum internal building air temperature (K)
 
-    eflx_building     => energyflux_vars%eflx_building_lun , & ! Output:  [real(r8) (:)]  building heat flux from change in interior building air temperature (W/m**2)
-    eflx_urban_ac     => energyflux_vars%eflx_urban_ac_lun , & ! Output:  [real(r8) (:)]  urban air conditioning flux (W/m**2)
-    eflx_urban_heat   => energyflux_vars%eflx_urban_heat_lun & ! Output:  [real(r8) (:)]  urban heating flux (W/m**2)
+    eflx_building     => energyflux_inst%eflx_building_lun , & ! Output:  [real(r8) (:)]  building heat flux from change in interior building air temperature (W/m**2)
+    eflx_urban_ac     => energyflux_inst%eflx_urban_ac_lun , & ! Output:  [real(r8) (:)]  urban air conditioning flux (W/m**2)
+    eflx_urban_heat   => energyflux_inst%eflx_urban_heat_lun & ! Output:  [real(r8) (:)]  urban heating flux (W/m**2)
     )
 
     ! Get step size

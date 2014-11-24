@@ -154,6 +154,18 @@ module clm_varctl
   ! Set in CNAllocationInit (TODO - had to move it here to avoid circular dependency)
   logical, private:: carbon_only      
 
+  ! Set in CNNDynamicsInit 
+  ! NOTE (mvertens, 2014-9 had to move it here to avoid confusion when carbon data types
+  ! wehre split - TODO - should move it our of this module) 
+  ! NOTE(bandre, 2013-10) according to Charlie Koven, nfix_timeconst
+  ! is currently used as a flag and rate constant. 
+  ! Rate constant: time over which to exponentially relax the npp flux for N fixation term
+  ! (days) time over which to exponentially relax the npp flux for N fixation term
+  ! flag: (if  <=  0. or  >=  365; use old annual method). 
+  ! Default value is junk that should always be overwritten by the namelist or init function!
+  !
+  real(r8), public :: nfix_timeconst = -1.2345_r8 
+
   !----------------------------------------------------------
   ! Physics
   !----------------------------------------------------------

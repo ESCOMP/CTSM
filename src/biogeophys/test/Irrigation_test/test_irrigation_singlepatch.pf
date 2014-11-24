@@ -71,14 +71,14 @@ contains
 
   @Test
   subroutine no_irrigation_for_unirrigated_pfts(this)
-    use pftvarcon, only : irrigated
-    use PatchType, only : pft
+    use pftconMod, only : pftcon
+    use PatchType, only : patch
     class(TestIrrigation), intent(inout) :: this
 
     ! Setup
     call setupIrrigation(this%irrigation_inputs, this%irrigation, maxpft=2)
-    pft%itype(bounds%begp) = 2
-    irrigated(:) = [1.0, 0.0]
+    patch%itype(bounds%begp) = 2
+    pftcon%irrigated(1:2) = [1.0, 0.0]
 
     ! Call irrigation routines
     call this%irrigation_inputs%calculateAndApplyIrrigation(this%irrigation, this%numf, this%filter)

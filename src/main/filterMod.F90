@@ -17,7 +17,7 @@ module filterMod
   use GridcellType   , only : grc
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
-  use PatchType      , only : pft                
+  use PatchType      , only : patch                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -278,10 +278,10 @@ contains
     ! is called at the right time in the driver loop.
     !
     ! !USES:
-    use decompMod , only : BOUNDS_LEVEL_CLUMP
-    use pftvarcon , only : npcropmin
-    use landunit_varcon, only : istsoil, istcrop, istice_mec
-    use column_varcon, only : icol_road_perv
+    use decompMod       , only : BOUNDS_LEVEL_CLUMP
+    use pftconMod       , only : npcropmin
+    use landunit_varcon , only : istsoil, istcrop, istice_mec
+    use column_varcon   , only : icol_road_perv
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds  
@@ -291,7 +291,7 @@ contains
     !
     ! LOCAL VARAIBLES:
     integer :: nc          ! clump index
-    integer :: c,l,p       ! column, landunit, pft indices
+    integer :: c,l,p       ! column, landunit, patch indices
     integer :: fl          ! lake filter index
     integer :: fnl,fnlu    ! non-lake filter index
     integer :: fs          ! soil filter index
@@ -323,14 +323,14 @@ contains
     this_filter(nc)%num_lakec = fl
     this_filter(nc)%num_nolakec = fnl
 
-    ! Create lake and non-lake filters at pft-level 
+    ! Create lake and non-lake filters at patch-level 
 
     fl = 0
     fnl = 0
     fnlu = 0
     do p = bounds%begp,bounds%endp
-       if (pft%active(p) .or. include_inactive) then
-          l =pft%landunit(p)
+       if (patch%active(p) .or. include_inactive) then
+          l =patch%landunit(p)
           if (lun%lakpoi(l) ) then
              fl = fl + 1
              this_filter(nc)%lakep(fl) = p
@@ -362,12 +362,12 @@ contains
     end do
     this_filter(nc)%num_soilc = fs
 
-    ! Create soil filter at pft-level
+    ! Create soil filter at patch-level
 
     fs = 0
     do p = bounds%begp,bounds%endp
-       if (pft%active(p) .or. include_inactive) then
-          l =pft%landunit(p)
+       if (patch%active(p) .or. include_inactive) then
+          l =patch%landunit(p)
           if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
              fs = fs + 1
              this_filter(nc)%soilp(fs) = p
@@ -391,18 +391,18 @@ contains
     end do
     this_filter(nc)%num_hydrologyc = f
 
-    ! Create prognostic crop and soil w/o prog. crop filters at pft-level
+    ! Create prognostic crop and soil w/o prog. crop filters at patch-level
     ! according to where the crop model should be used
 
     fl  = 0
     fnl = 0
     do p = bounds%begp,bounds%endp
-       if (pft%active(p) .or. include_inactive) then
-          if (pft%itype(p) >= npcropmin) then !skips 2 generic crop types
+       if (patch%active(p) .or. include_inactive) then
+          if (patch%itype(p) >= npcropmin) then !skips 2 generic crop types
              fl = fl + 1
              this_filter(nc)%pcropp(fl) = p
           else
-             l =pft%landunit(p)
+             l =patch%landunit(p)
              if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                 fnl = fnl + 1
                 this_filter(nc)%soilnopcropp(fnl) = p
@@ -450,13 +450,13 @@ contains
     this_filter(nc)%num_urbanc = f
     this_filter(nc)%num_nourbanc = fn
 
-    ! Create pft-level urban and non-urban filters
+    ! Create patch-level urban and non-urban filters
 
     f = 0
     fn = 0
     do p = bounds%begp,bounds%endp
-       if (pft%active(p) .or. include_inactive) then
-          l = pft%landunit(p)
+       if (patch%active(p) .or. include_inactive) then
+          l = patch%landunit(p)
           if (lun%urbpoi(l)) then
              f = f + 1
              this_filter(nc)%urbanp(f) = p

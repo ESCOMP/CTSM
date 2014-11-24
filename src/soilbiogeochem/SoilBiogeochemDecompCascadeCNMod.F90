@@ -1,4 +1,4 @@
-module CNDecompCascadeCNMod
+module SoilBiogeochemDecompCascadeCNMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,35 +6,34 @@ module CNDecompCascadeCNMod
   ! This uses the CN parameters as in CLMCN 4.0
   !
   ! !USES:
-  use shr_kind_mod           , only : r8 => shr_kind_r8
-  use shr_const_mod          , only : SHR_CONST_TKFRZ
-  use shr_log_mod            , only : errMsg => shr_log_errMsg
-  use clm_varpar             , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar             , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-  use clm_varctl             , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc
-  use clm_varcon             , only : zsoi
-  use decompMod              , only : bounds_type
-  use abortutils             , only : endrun
-  use CNSharedParamsMod      , only : CNParamsShareInst, anoxia_wtsat, nlev_soildecomp_standard 
-  use CNDecompCascadeConType , only : decomp_cascade_con
-  use CNStateType            , only : cnstate_type
-  use CNCarbonFluxType       , only : carbonflux_type
-  use SoilStateType          , only : soilstate_type
-  use CanopyStateType        , only : canopystate_type
-  use TemperatureType        , only : temperature_type 
-  use ch4Mod                 , only : ch4_type
-  use ColumnType             , only : col                
+  use shr_kind_mod                       , only : r8 => shr_kind_r8
+  use shr_const_mod                      , only : SHR_CONST_TKFRZ
+  use shr_log_mod                        , only : errMsg => shr_log_errMsg
+  use clm_varpar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
+  use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc
+  use clm_varcon                         , only : zsoi
+  use decompMod                          , only : bounds_type
+  use abortutils                         , only : endrun
+  use CNSharedParamsMod                  , only : CNParamsShareInst, anoxia_wtsat, nlev_soildecomp_standard 
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
+  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
+  use SoilStateType                      , only : soilstate_type
+  use CanopyStateType                    , only : canopystate_type
+  use TemperatureType                    , only : temperature_type 
+  use ch4Mod                             , only : ch4_type
+  use ColumnType                         , only : col                
   !
   implicit none
-  save
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: readCNDecompCnParams
+  public :: readParams
   public :: init_decompcascade_cn
   public :: decomp_rate_constants_cn
 
-  type, private :: CNDecompCnParamsType
+  type, private :: params_type
      real(r8):: cn_s1_cn        !C:N for SOM 1
      real(r8):: cn_s2_cn        !C:N for SOM 2
      real(r8):: cn_s3_cn        !C:N for SOM 3
@@ -63,17 +62,16 @@ module CNDecompCascadeCNMod
 
      integer  :: nsompools = 4 
      real(r8), allocatable :: spinup_vector(:) ! multipliers for soil decomp during accelerated spinup
-     
-  end type CNDecompCnParamsType
 
-  type(CNDecompCnParamsType),private ::  CNDecompCnParamsInst
-
+  end type params_type
+  !
+  type(params_type), private :: params_inst
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine readCNDecompCnParams ( ncid )
+  subroutine readParams ( ncid )
     !
     ! !USES:
     use ncdio_pio , only : file_desc_t,ncd_io
@@ -88,7 +86,7 @@ contains
     !  Dec 3 2012 : Created by S. Muszala
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNDecompCnParamsType'
+    character(len=32)  :: subname = 'SoilBiogeochemDecompCnParamsType'
     character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
     real(r8)           :: tempr ! temporary to read in constant
@@ -98,127 +96,127 @@ contains
     !-----------------------------------------------------------------------
 
     ! These are not read off of netcdf file
-    allocate(CNDecompCNParamsInst%spinup_vector(CNDecompCNParamsInst%nsompools))
-    CNDecompCNParamsInst%spinup_vector(:) = (/ 1.0_r8, 1.0_r8, 5.0_r8, 70.0_r8 /)
+    allocate(params_inst%spinup_vector(params_inst%nsompools))
+    params_inst%spinup_vector(:) = (/ 1.0_r8, 1.0_r8, 5.0_r8, 70.0_r8 /)
 
     ! Read off of netcdf file
     tString='cn_s1'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%cn_s1_cn=tempr
+    params_inst%cn_s1_cn=tempr
 
     tString='cn_s2'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%cn_s2_cn=tempr
+    params_inst%cn_s2_cn=tempr
 
     tString='cn_s3'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%cn_s3_cn=tempr
+    params_inst%cn_s3_cn=tempr
 
     tString='cn_s4'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%cn_s4_cn=tempr
+    params_inst%cn_s4_cn=tempr
 
     tString='rf_l1s1'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%rf_l1s1_cn=tempr
+    params_inst%rf_l1s1_cn=tempr
 
     tString='rf_l2s2'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%rf_l2s2_cn=tempr
+    params_inst%rf_l2s2_cn=tempr
 
     tString='rf_l3s3'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%rf_l3s3_cn=tempr
+    params_inst%rf_l3s3_cn=tempr
 
     tString='rf_s1s2'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%rf_s1s2_cn=tempr
+    params_inst%rf_s1s2_cn=tempr
 
     tString='rf_s2s3'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%rf_s2s3_cn=tempr
+    params_inst%rf_s2s3_cn=tempr
 
     tString='rf_s3s4'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%rf_s3s4_cn=tempr
+    params_inst%rf_s3s4_cn=tempr
 
     tString='cwd_fcel'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%cwd_fcel_cn=tempr
+    params_inst%cwd_fcel_cn=tempr
 
     tString='k_l1'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%k_l1_cn=tempr
+    params_inst%k_l1_cn=tempr
 
     tString='k_l2'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%k_l2_cn=tempr
+    params_inst%k_l2_cn=tempr
 
     tString='k_l3'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%k_l3_cn=tempr
+    params_inst%k_l3_cn=tempr
 
     tString='k_s1'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%k_s1_cn=tempr
+    params_inst%k_s1_cn=tempr
 
     tString='k_s2'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%k_s2_cn=tempr
+    params_inst%k_s2_cn=tempr
 
     tString='k_s3'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%k_s3_cn=tempr
+    params_inst%k_s3_cn=tempr
 
     tString='k_s4'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%k_s4_cn=tempr
+    params_inst%k_s4_cn=tempr
 
     tString='k_frag'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%k_frag_cn=tempr
+    params_inst%k_frag_cn=tempr
 
     tString='minpsi_hr'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%minpsi_cn=tempr 
+    params_inst%minpsi_cn=tempr 
 
     tString='cwd_flig'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNDecompCnParamsInst%cwd_flig_cn=tempr
+    params_inst%cwd_flig_cn=tempr
 
-  end subroutine readCNDecompCnParams
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine init_decompcascade_cn(bounds, cnstate_vars)
+  subroutine init_decompcascade_cn(bounds, soilbiogeochem_state_inst)
     !
     ! !DESCRIPTION:
     !  initialize rate constants and decomposition pathways for the BGC model originally implemented in CLM-CN
     !  written by C. Koven based on original CLM4 decomposition cascade by P. Thornton
     !
     ! !ARGUMENTS:
-    type(bounds_type) , intent(in)    :: bounds  
-    type(cnstate_type), intent(inout) :: cnstate_vars
+    type(bounds_type)               , intent(in)    :: bounds  
+    type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
     !
     !-- properties of each pathway along decomposition cascade 
     !-- properties of each decomposing pool
@@ -254,48 +252,48 @@ contains
     integer :: i_cwdl3
     !-----------------------------------------------------------------------
 
-    associate(&
-         rf_decomp_cascade              =>    cnstate_vars%rf_decomp_cascade_col                , & ! Output:  [real(r8)           (:,:,:) ]  respired fraction in decomposition step (frac)       
-         pathfrac_decomp_cascade        =>    cnstate_vars%pathfrac_decomp_cascade_col          , & ! Output:  [real(r8)           (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
+    associate(                                                                                        &
+         rf_decomp_cascade              =>    soilbiogeochem_state_inst%rf_decomp_cascade_col       , & ! Output:  [real(r8)           (:,:,:) ]  respired fraction in decomposition step (frac)       
+         pathfrac_decomp_cascade        =>    soilbiogeochem_state_inst%pathfrac_decomp_cascade_col , & ! Output:  [real(r8)           (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
          
-         cascade_step_name              =>    decomp_cascade_con%cascade_step_name              , & ! Output:   [character(len=8)  (:)     ]  name of transition                               
-         cascade_donor_pool             =>    decomp_cascade_con%cascade_donor_pool             , & ! Output:   [integer           (:)     ]  which pool is C taken from for a given decomposition step 
-         cascade_receiver_pool          =>    decomp_cascade_con%cascade_receiver_pool          , & ! Output:   [integer           (:)     ]  which pool is C added to for a given decomposition step   
-         floating_cn_ratio_decomp_pools =>    decomp_cascade_con%floating_cn_ratio_decomp_pools , & ! Output:   [logical           (:)     ]  TRUE => pool has fixed C:N ratio                          
-         decomp_pool_name_restart       =>    decomp_cascade_con%decomp_pool_name_restart       , & ! Output:   [character(len=8)  (:)     ]  name of pool for restart files                   
-         decomp_pool_name_history       =>    decomp_cascade_con%decomp_pool_name_history       , & ! Output:   [character(len=8)  (:)     ]  name of pool for history files                   
-         decomp_pool_name_long          =>    decomp_cascade_con%decomp_pool_name_long          , & ! Output:   [character(len=20) (:)     ]  name of pool for netcdf long names              
-         decomp_pool_name_short         =>    decomp_cascade_con%decomp_pool_name_short         , & ! Output:   [character(len=8)  (:)     ]  name of pool for netcdf short names              
-         is_litter                      =>    decomp_cascade_con%is_litter                      , & ! Output:   [logical           (:)     ]  TRUE => pool is a litter pool                             
-         is_soil                        =>    decomp_cascade_con%is_soil                        , & ! Output:   [logical           (:)     ]  TRUE => pool is a soil pool                               
-         is_cwd                         =>    decomp_cascade_con%is_cwd                         , & ! Output:   [logical           (:)     ]  TRUE => pool is a cwd pool                                
-         initial_cn_ratio               =>    decomp_cascade_con%initial_cn_ratio               , & ! Output:   [real(r8)          (:)     ]  c:n ratio for initialization of pools                    
-         initial_stock                  =>    decomp_cascade_con%initial_stock                  , & ! Output:   [real(r8)          (:)     ]  initial concentration for seeding at spinup              
-         is_metabolic                   =>    decomp_cascade_con%is_metabolic                   , & ! Output:   [logical           (:)     ]  TRUE => pool is metabolic material                        
-         is_cellulose                   =>    decomp_cascade_con%is_cellulose                   , & ! Output:   [logical           (:)     ]  TRUE => pool is cellulose                                 
-         is_lignin                      =>    decomp_cascade_con%is_lignin                      , & ! Output:   [logical           (:)     ]  TRUE => pool is lignin                                    
-         spinup_factor                  =>    decomp_cascade_con%spinup_factor                    & ! Output:   [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
+         cascade_step_name              =>    decomp_cascade_con%cascade_step_name                  , & ! Output:   [character(len=8)  (:)     ]  name of transition                               
+         cascade_donor_pool             =>    decomp_cascade_con%cascade_donor_pool                 , & ! Output:   [integer           (:)     ]  which pool is C taken from for a given decomposition step 
+         cascade_receiver_pool          =>    decomp_cascade_con%cascade_receiver_pool              , & ! Output:   [integer           (:)     ]  which pool is C added to for a given decomposition step   
+         floating_cn_ratio_decomp_pools =>    decomp_cascade_con%floating_cn_ratio_decomp_pools     , & ! Output:   [logical           (:)     ]  TRUE => pool has fixed C:N ratio                          
+         decomp_pool_name_restart       =>    decomp_cascade_con%decomp_pool_name_restart           , & ! Output:   [character(len=8)  (:)     ]  name of pool for restart files                   
+         decomp_pool_name_history       =>    decomp_cascade_con%decomp_pool_name_history           , & ! Output:   [character(len=8)  (:)     ]  name of pool for history files                   
+         decomp_pool_name_long          =>    decomp_cascade_con%decomp_pool_name_long              , & ! Output:   [character(len=20) (:)     ]  name of pool for netcdf long names              
+         decomp_pool_name_short         =>    decomp_cascade_con%decomp_pool_name_short             , & ! Output:   [character(len=8)  (:)     ]  name of pool for netcdf short names              
+         is_litter                      =>    decomp_cascade_con%is_litter                          , & ! Output:   [logical           (:)     ]  TRUE => pool is a litter pool                             
+         is_soil                        =>    decomp_cascade_con%is_soil                            , & ! Output:   [logical           (:)     ]  TRUE => pool is a soil pool                               
+         is_cwd                         =>    decomp_cascade_con%is_cwd                             , & ! Output:   [logical           (:)     ]  TRUE => pool is a cwd pool                                
+         initial_cn_ratio               =>    decomp_cascade_con%initial_cn_ratio                   , & ! Output:   [real(r8)          (:)     ]  c:n ratio for initialization of pools                    
+         initial_stock                  =>    decomp_cascade_con%initial_stock                      , & ! Output:   [real(r8)          (:)     ]  initial concentration for seeding at spinup              
+         is_metabolic                   =>    decomp_cascade_con%is_metabolic                       , & ! Output:   [logical           (:)     ]  TRUE => pool is metabolic material                        
+         is_cellulose                   =>    decomp_cascade_con%is_cellulose                       , & ! Output:   [logical           (:)     ]  TRUE => pool is cellulose                                 
+         is_lignin                      =>    decomp_cascade_con%is_lignin                          , & ! Output:   [logical           (:)     ]  TRUE => pool is lignin                                    
+         spinup_factor                  =>    decomp_cascade_con%spinup_factor                        & ! Output:   [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
       
       !------- time-constant coefficients ---------- !
       ! set soil organic matter compartment C:N ratios (from Biome-BGC v4.2.0)
-      cn_s1=CNDecompCnParamsInst%cn_s1_cn
-      cn_s2=CNDecompCnParamsInst%cn_s2_cn
-      cn_s3=CNDecompCnParamsInst%cn_s3_cn
-      cn_s4=CNDecompCnParamsInst%cn_s4_cn
+      cn_s1=params_inst%cn_s1_cn
+      cn_s2=params_inst%cn_s2_cn
+      cn_s3=params_inst%cn_s3_cn
+      cn_s4=params_inst%cn_s4_cn
 
       ! set respiration fractions for fluxes between compartments
       ! (from Biome-BGC v4.2.0)
-      rf_l1s1=CNDecompCnParamsInst%rf_l1s1_cn
-      rf_l2s2=CNDecompCnParamsInst%rf_l2s2_cn
-      rf_l3s3=CNDecompCnParamsInst%rf_l3s3_cn
-      rf_s1s2=CNDecompCnParamsInst%rf_s1s2_cn
-      rf_s2s3=CNDecompCnParamsInst%rf_s2s3_cn
-      rf_s3s4=CNDecompCnParamsInst%rf_s3s4_cn
+      rf_l1s1=params_inst%rf_l1s1_cn
+      rf_l2s2=params_inst%rf_l2s2_cn
+      rf_l3s3=params_inst%rf_l3s3_cn
+      rf_s1s2=params_inst%rf_s1s2_cn
+      rf_s2s3=params_inst%rf_s2s3_cn
+      rf_s3s4=params_inst%rf_s3s4_cn
 
       ! set the cellulose and lignin fractions for coarse woody debris
-      cwd_fcel=CNDecompCnParamsInst%cwd_fcel_cn
-      cwd_flig=CNDecompCnParamsInst%cwd_flig_cn
+      cwd_fcel=params_inst%cwd_fcel_cn
+      cwd_flig=params_inst%cwd_flig_cn
 
       !-------------------  list of pools and their attributes  ------------
 
@@ -438,10 +436,10 @@ contains
       spinup_factor(i_litr2) = 1._r8
       spinup_factor(i_litr3) = 1._r8
       spinup_factor(i_cwd) = 1._r8
-      spinup_factor(i_soil1) = CNDecompCnParamsInst%spinup_vector(1)
-      spinup_factor(i_soil2) = CNDecompCnParamsInst%spinup_vector(2)
-      spinup_factor(i_soil3) = CNDecompCnParamsInst%spinup_vector(3)
-      spinup_factor(i_soil4) = CNDecompCnParamsInst%spinup_vector(4)
+      spinup_factor(i_soil1) = params_inst%spinup_vector(1)
+      spinup_factor(i_soil2) = params_inst%spinup_vector(2)
+      spinup_factor(i_soil3) = params_inst%spinup_vector(3)
+      spinup_factor(i_soil4) = params_inst%spinup_vector(4)
 
 
       !----------------  list of transitions and their time-independent coefficients  ---------------!
@@ -516,7 +514,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine decomp_rate_constants_cn(bounds, &
         num_soilc, filter_soilc, &
-        canopystate_vars, soilstate_vars, temperature_vars, ch4_vars, carbonflux_vars)
+        canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
      !
      ! !DESCRIPTION:
      ! calculate rate constants and decomposition pathways for the BGC model 
@@ -529,14 +527,14 @@ contains
      use clm_varpar      , only : i_cwd
      !
      ! !ARGUMENTS:
-     type(bounds_type)      , intent(in)    :: bounds          
-     integer                , intent(in)    :: num_soilc       ! number of soil columns in filter
-     integer                , intent(in)    :: filter_soilc(:) ! filter for soil columns
-     type(canopystate_type) , intent(in)    :: canopystate_vars
-     type(soilstate_type)   , intent(in)    :: soilstate_vars
-     type(temperature_type) , intent(in)    :: temperature_vars 
-     type(ch4_type)         , intent(in)    :: ch4_vars
-     type(carbonflux_type)  , intent(inout) :: carbonflux_vars
+     type(bounds_type)                    , intent(in)    :: bounds          
+     integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
+     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
+     type(canopystate_type)               , intent(in)    :: canopystate_inst
+     type(soilstate_type)                 , intent(in)    :: soilstate_inst
+     type(temperature_type)               , intent(in)    :: temperature_inst 
+     type(ch4_type)                       , intent(in)    :: ch4_inst
+     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
      !
      ! !LOCAL VARIABLES:
      real(r8):: dt                           ! decomp timestep (seconds)   
@@ -580,24 +578,24 @@ contains
      ! fraction of potential aerobic rate
      !-----------------------------------------------------------------------
 
-     associate(                                             &
-          dz             => col%dz                        , & ! Input:  [real(r8) (:,:)   ]  soil layer thickness (m)                               
+     associate(                                                           &
+          dz             => col%dz                                      , & ! Input:  [real(r8) (:,:)   ]  soil layer thickness (m)                               
 
-          sucsat         => soilstate_vars%sucsat_col     , & ! Input:  [real(r8) (:,:)   ]  minimum soil suction (mm)                              
-          soilpsi        => soilstate_vars%soilpsi_col    , & ! Input:  [real(r8) (:,:)   ]  soil water potential in each soil layer (MPa)          
+          sucsat         => soilstate_inst%sucsat_col                   , & ! Input:  [real(r8) (:,:)   ]  minimum soil suction (mm)                              
+          soilpsi        => soilstate_inst%soilpsi_col                  , & ! Input:  [real(r8) (:,:)   ]  soil water potential in each soil layer (MPa)          
 
-          alt_indx       => canopystate_vars%alt_indx_col , & ! Input:  [integer  (:)     ]  current depth of thaw                                     
+          alt_indx       => canopystate_inst%alt_indx_col               , & ! Input:  [integer  (:)     ]  current depth of thaw                                     
 
-          t_soisno       => temperature_vars%t_soisno_col , & ! Input:  [real(r8) (:,:)   ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)       
+          t_soisno       => temperature_inst%t_soisno_col               , & ! Input:  [real(r8) (:,:)   ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)       
 
-          o2stress_sat   => ch4_vars%o2stress_sat_col     , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
-          o2stress_unsat => ch4_vars%o2stress_unsat_col   , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
-          finundated     => ch4_vars%finundated_col       , & ! Input:  [real(r8) (:)     ]  fractional inundated area (excluding dedicated wetland columns)
+          o2stress_sat   => ch4_inst%o2stress_sat_col                   , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
+          o2stress_unsat => ch4_inst%o2stress_unsat_col                 , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
+          finundated     => ch4_inst%finundated_col                     , & ! Input:  [real(r8) (:)     ]  fractional inundated area (excluding dedicated wetland columns)
           
-          t_scalar       => carbonflux_vars%t_scalar_col  , & ! Output: [real(r8) (:,:)   ]  soil temperature scalar for decomp                     
-          w_scalar       => carbonflux_vars%w_scalar_col  , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
-          o_scalar       => carbonflux_vars%o_scalar_col  , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
-          decomp_k       => carbonflux_vars%decomp_k_col    & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)             
+          t_scalar       => soilbiogeochem_carbonflux_inst%t_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil temperature scalar for decomp                     
+          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
+          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
+          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col   & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)             
           )
 
        mino2lim = CNParamsShareInst%mino2lim
@@ -612,16 +610,16 @@ contains
        ! daily time step model, and the result of the log function is
        ! the corresponding continuous-time decay rate (1/day), following
        ! Olson, 1963.
-       k_l1=CNDecompCnParamsInst%k_l1_cn
-       k_l2=CNDecompCnParamsInst%k_l2_cn
-       k_l3=CNDecompCnParamsInst%k_l3_cn
+       k_l1=params_inst%k_l1_cn
+       k_l2=params_inst%k_l2_cn
+       k_l3=params_inst%k_l3_cn
 
-       k_s1=CNDecompCnParamsInst%k_s1_cn
-       k_s2=CNDecompCnParamsInst%k_s2_cn
-       k_s3=CNDecompCnParamsInst%k_s3_cn
-       k_s4=CNDecompCnParamsInst%k_s4_cn
+       k_s1=params_inst%k_s1_cn
+       k_s2=params_inst%k_s2_cn
+       k_s3=params_inst%k_s3_cn
+       k_s4=params_inst%k_s4_cn
 
-       k_frag=CNDecompCnParamsInst%k_frag_cn
+       k_frag=params_inst%k_frag_cn
 
        ! calculate the new discrete-time decay rate for model timestep
        k_l1 = 1.0_r8-exp(-k_l1*dtd)
@@ -635,7 +633,7 @@ contains
 
        k_frag = 1.0_r8-exp(-k_frag*dtd)
 
-       minpsi=CNDecompCnParamsInst%minpsi_cn
+       minpsi = params_inst%minpsi_cn
 
        Q10 = CNParamsShareInst%Q10
 
@@ -651,10 +649,10 @@ contains
        ! algorithm, by multiplying all of the SOM decomposition base rates by 10.0.
 
        if ( spinup_state .eq. 1 ) then
-          k_s1 = k_s1 * CNDecompCnParamsInst%spinup_vector(1)
-          k_s2 = k_s2 * CNDecompCnParamsInst%spinup_vector(2)
-          k_s3 = k_s3 * CNDecompCnParamsInst%spinup_vector(3)
-          k_s4 = k_s4 * CNDecompCnParamsInst%spinup_vector(4)
+          k_s1 = k_s1 * params_inst%spinup_vector(1)
+          k_s2 = k_s2 * params_inst%spinup_vector(2)
+          k_s3 = k_s3 * params_inst%spinup_vector(3)
+          k_s4 = k_s4 * params_inst%spinup_vector(4)
        endif
 
        i_litr1 = 1
@@ -900,6 +898,7 @@ contains
        end if
 
      end associate
+
    end subroutine decomp_rate_constants_cn
 
-end module CNDecompCascadeCNMod
+ end module SoilBiogeochemDecompCascadeCNMod

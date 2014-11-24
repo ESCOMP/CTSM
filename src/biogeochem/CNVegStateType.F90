@@ -1,4 +1,4 @@
-module CNStateType
+module CNVegStateType
 
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
@@ -8,28 +8,25 @@ module CNStateType
   use spmdMod        , only : masterproc
   use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoifl, nlevsoi, crop_prog
   use clm_varpar     , only : ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full, more_vertlayers  
+  use clm_varctl     , only : use_vertsoilc, use_c14, use_cn, iulog, fsurdat 
   use clm_varcon     , only : spval, ispval, c14ratio, grlnd
   use landunit_varcon, only : istsoil, istcrop
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, crop_prog 
-  use clm_varctl     , only : use_vertsoilc, use_c14, use_cn 
-  use clm_varctl     , only : iulog, fsurdat
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
-  use PatchType      , only : pft                
+  use PatchType      , only : patch                
   ! 
   ! !PUBLIC TYPES:
   implicit none
-  save
   private
   !
   ! !PRIVATE MEMBER FUNCTIONS: 
   private :: checkDates
   ! 
   ! !PUBLIC TYPES:
-  type, public :: cnstate_type
+  type, public :: cnveg_state_type
 
      integer  , pointer :: burndate_patch              (:)     ! patch crop burn date
-     real(r8) , pointer :: lfpftd_patch                (:)     ! patch decrease of pft weight (0-1) on the column for the timestep 
+     real(r8) , pointer :: lfpftd_patch                (:)     ! patch decrease of patch weight (0-1) on the column for the timestep 
 
      ! Prognostic crop model -  Note that cropplant and harvdate could be 2D to facilitate rotation
      real(r8) , pointer :: hdidx_patch                 (:)     ! patch cold hardening index?
@@ -49,10 +46,6 @@ module CNStateType
      integer  , pointer :: peaklai_patch               (:)     ! patch 1: max allowed lai; 0: not at max
 
      integer  , pointer :: idop_patch                  (:)     ! patch date of planting
-     real(r8) , pointer :: leaf_prof_patch             (:,:)   ! patch (1/m) profile of leaves (vertical profiles for calculating fluxes)
-     real(r8) , pointer :: froot_prof_patch            (:,:)   ! patch (1/m) profile of fine roots (vertical profiles for calculating fluxes)
-     real(r8) , pointer :: croot_prof_patch            (:,:)   ! patch (1/m) profile of coarse roots (vertical profiles for calculating fluxes)
-     real(r8) , pointer :: stem_prof_patch             (:,:)   ! patch (1/m) profile of stems (vertical profiles for calculating fluxes)
 
      real(r8) , pointer :: gdp_lf_col                  (:)     ! col global real gdp data (k US$/capita)
      real(r8) , pointer :: peatf_lf_col                (:)     ! col global peatland fraction data (0-1)
@@ -62,20 +55,9 @@ module CNStateType
      real(r8) , pointer :: lgdp1_col                   (:)     ! col gdp limitation factor for fire spreading (0-1)
      real(r8) , pointer :: lpop_col                    (:)     ! col pop limitation factor for fire spreading (0-1)
 
-     real(r8) , pointer :: fpi_vr_col                  (:,:)   ! col fraction of potential immobilization (no units) 
-     real(r8) , pointer :: fpi_col                     (:)     ! col fraction of potential immobilization (no units) 
-     real(r8),  pointer :: fpg_col                     (:)     ! col fraction of potential gpp (no units)
-
-     real(r8) , pointer :: rf_decomp_cascade_col       (:,:,:) ! col respired fraction in decomposition step (frac)
-     real(r8) , pointer :: pathfrac_decomp_cascade_col (:,:,:) ! col what fraction of C leaving a given pool passes through a given transition (frac) 
-     real(r8) , pointer :: nfixation_prof_col          (:,:)   ! col (1/m) profile for N fixation additions 
-     real(r8) , pointer :: ndep_prof_col               (:,:)   ! col (1/m) profile for N fixation additions 
-     real(r8) , pointer :: som_adv_coef_col            (:,:)   ! col SOM advective flux (m/s) 
-     real(r8) , pointer :: som_diffus_coef_col         (:,:)   ! col SOM diffusivity due to bio/cryo-turbation (m2/s) 
-
      real(r8) , pointer :: tempavg_t2m_patch           (:)     ! patch temporary average 2m air temperature (K)
      real(r8) , pointer :: annavg_t2m_patch            (:)     ! patch annual average 2m air temperature (K)
-     real(r8) , pointer :: annavg_t2m_col              (:)     ! col annual average of 2m air temperature, averaged from pft-level (K)
+     real(r8) , pointer :: annavg_t2m_col              (:)     ! col annual average of 2m air temperature, averaged from patch-level (K)
      real(r8) , pointer :: annsum_counter_col          (:)     ! col seconds since last annual accumulator turnover
 
      ! Fire
@@ -112,15 +94,14 @@ module CNStateType
      real(r8), pointer :: lgsf_patch                   (:)     ! patch long growing season factor [0-1]
      real(r8), pointer :: bglfr_patch                  (:)     ! patch background litterfall rate (1/s)
      real(r8), pointer :: bgtr_patch                   (:)     ! patch background transfer growth rate (1/s)
-     real(r8), pointer :: alloc_pnow_patch             (:)     ! patch fraction of current allocation to display as new growth (DIM)
      real(r8), pointer :: c_allometry_patch            (:)     ! patch C allocation index (DIM)
      real(r8), pointer :: n_allometry_patch            (:)     ! patch N allocation index (DIM)
+
      real(r8), pointer :: tempsum_potential_gpp_patch  (:)     ! patch temporary annual sum of potential GPP
      real(r8), pointer :: annsum_potential_gpp_patch   (:)     ! patch annual sum of potential GPP
      real(r8), pointer :: tempmax_retransn_patch       (:)     ! patch temporary annual max of retranslocated N pool (gN/m2)
      real(r8), pointer :: annmax_retransn_patch        (:)     ! patch annual max of retranslocated N pool (gN/m2)
      real(r8), pointer :: downreg_patch                (:)     ! patch fractional reduction in GPP due to N limitation (DIM)
-     real(r8), pointer :: rc14_atm_patch               (:)     ! patch C14O2/C12O2 in atmosphere
 
      integer           :: CropRestYear                        ! restart year from initial conditions file - increment as time elapses
 
@@ -133,7 +114,7 @@ module CNStateType
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
 
-  end type cnstate_type
+  end type cnveg_state_type
   !------------------------------------------------------------------------
 
 contains
@@ -141,7 +122,7 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds)
 
-    class(cnstate_type) :: this
+    class(cnveg_state_type) :: this
     type(bounds_type), intent(in) :: bounds  
 
     call this%InitAllocate ( bounds )
@@ -162,7 +143,7 @@ contains
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    class(cnstate_type) :: this
+    class(cnveg_state_type) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -193,10 +174,6 @@ contains
     allocate(this%peaklai_patch       (begp:endp))                   ; this%peaklai_patch       (:)   = 0
 
     allocate(this%idop_patch          (begp:endp))                   ; this%idop_patch          (:)   = huge(1)
-    allocate(this%leaf_prof_patch     (begp:endp,1:nlevdecomp_full)) ; this%leaf_prof_patch     (:,:) = spval
-    allocate(this%froot_prof_patch    (begp:endp,1:nlevdecomp_full)) ; this%froot_prof_patch    (:,:) = spval
-    allocate(this%croot_prof_patch    (begp:endp,1:nlevdecomp_full)) ; this%croot_prof_patch    (:,:) = spval
-    allocate(this%stem_prof_patch     (begp:endp,1:nlevdecomp_full)) ; this%stem_prof_patch     (:,:) = spval
 
     allocate(this%gdp_lf_col          (begc:endc))                   ;
     allocate(this%peatf_lf_col        (begc:endc))                   ; 
@@ -205,21 +182,6 @@ contains
     allocate(this%lgdp_col            (begc:endc))                   ; 
     allocate(this%lgdp1_col           (begc:endc))                   ; 
     allocate(this%lpop_col            (begc:endc))                   ;  
-
-    allocate(this%fpi_vr_col          (begc:endc,1:nlevdecomp_full)) ; this%fpi_vr_col          (:,:) = nan
-    allocate(this%fpi_col             (begc:endc))                   ; this%fpi_col             (:)   = nan
-    allocate(this%fpg_col             (begc:endc))                   ; this%fpg_col             (:)   = nan
-
-    allocate(this%rf_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions)); 
-    this%rf_decomp_cascade_col(:,:,:) = nan
-
-    allocate(this%pathfrac_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions));     
-    this%pathfrac_decomp_cascade_col(:,:,:) = nan
-
-    allocate(this%nfixation_prof_col  (begc:endc,1:nlevdecomp_full)) ; this%nfixation_prof_col  (:,:) = spval
-    allocate(this%ndep_prof_col       (begc:endc,1:nlevdecomp_full)) ; this%ndep_prof_col       (:,:) = spval
-    allocate(this%som_adv_coef_col    (begc:endc,1:nlevdecomp_full)) ; this%som_adv_coef_col    (:,:) = spval
-    allocate(this%som_diffus_coef_col (begc:endc,1:nlevdecomp_full)) ; this%som_diffus_coef_col (:,:) = spval
 
     allocate(this%tempavg_t2m_patch   (begp:endp))                   ; this%tempavg_t2m_patch   (:)   = nan
     allocate(this%annsum_counter_col  (begc:endc))                   ; this%annsum_counter_col  (:)   = nan
@@ -261,7 +223,6 @@ contains
     allocate(this%lgsf_patch                  (begp:endp)) ;    this%lgsf_patch                  (:) = nan
     allocate(this%bglfr_patch                 (begp:endp)) ;    this%bglfr_patch                 (:) = nan
     allocate(this%bgtr_patch                  (begp:endp)) ;    this%bgtr_patch                  (:) = nan
-    allocate(this%alloc_pnow_patch            (begp:endp)) ;    this%alloc_pnow_patch            (:) = nan
     allocate(this%c_allometry_patch           (begp:endp)) ;    this%c_allometry_patch           (:) = nan
     allocate(this%n_allometry_patch           (begp:endp)) ;    this%n_allometry_patch           (:) = nan
     allocate(this%tempsum_potential_gpp_patch (begp:endp)) ;    this%tempsum_potential_gpp_patch (:) = nan
@@ -269,7 +230,6 @@ contains
     allocate(this%tempmax_retransn_patch      (begp:endp)) ;    this%tempmax_retransn_patch      (:) = nan
     allocate(this%annmax_retransn_patch       (begp:endp)) ;    this%annmax_retransn_patch       (:) = nan
     allocate(this%downreg_patch               (begp:endp)) ;    this%downreg_patch               (:) = nan
-    allocate(this%rc14_atm_patch              (begp:endp)) ;    this%rc14_atm_patch              (:) = nan
 
   end subroutine InitAllocate
 
@@ -284,7 +244,7 @@ contains
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp, no_snow_normal
     !
     ! !ARGUMENTS:
-    class(cnstate_type) :: this
+    class(cnveg_state_type) :: this
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
@@ -305,72 +265,10 @@ contains
             ptr_patch=this%gddmaturity_patch, default='inactive')
     end if
 
-    this%croot_prof_patch(begp:endp,:) = spval
-    call hist_addfld_decomp (fname='CROOT_PROF', units='1/m',  type2d='levdcmp', &
-         avgflag='A', long_name='profile for litter C and N inputs from coarse roots', &
-         ptr_patch=this%croot_prof_patch, default='inactive')
-
-    this%froot_prof_patch(begp:endp,:) = spval
-    call hist_addfld_decomp (fname='FROOT_PROF', units='1/m',  type2d='levdcmp', &
-         avgflag='A', long_name='profile for litter C and N inputs from fine roots', &
-         ptr_patch=this%froot_prof_patch, default='inactive')
-
-    this%leaf_prof_patch(begp:endp,:) = spval
-    call hist_addfld_decomp (fname='LEAF_PROF', units='1/m',  type2d='levdcmp', &
-         avgflag='A', long_name='profile for litter C and N inputs from leaves', &
-         ptr_patch=this%leaf_prof_patch, default='inactive')
-
-    this%stem_prof_patch(begp:endp,:) = spval
-    call hist_addfld_decomp (fname='STEM_PROF', units='1/m',  type2d='levdcmp', &
-         avgflag='A', long_name='profile for litter C and N inputs from stems', &
-         ptr_patch=this%stem_prof_patch, default='inactive')
-
-    this%nfixation_prof_col(begc:endc,:) = spval
-    call hist_addfld_decomp (fname='NFIXATION_PROF', units='1/m',  type2d='levdcmp', &
-         avgflag='A', long_name='profile for biological N fixation', &
-         ptr_col=this%nfixation_prof_col, default='inactive')
-
-    this%ndep_prof_col(begc:endc,:) = spval
-    call hist_addfld_decomp (fname='NDEP_PROF', units='1/m',  type2d='levdcmp', &
-         avgflag='A', long_name='profile for atmospheric N  deposition', &
-         ptr_col=this%ndep_prof_col, default='inactive')
-
-    this%som_adv_coef_col(begc:endc,:) = spval
-    call hist_addfld_decomp (fname='SOM_ADV_COEF', units='m/s',  type2d='levdcmp', &
-         avgflag='A', long_name='advection term for vertical SOM translocation', &
-         ptr_col=this%som_adv_coef_col, default='inactive')
-
-    this%som_diffus_coef_col(begc:endc,:) = spval
-    call hist_addfld_decomp (fname='SOM_DIFFUS_COEF', units='m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='diffusion coefficient for vertical SOM translocation', &
-         ptr_col=this%som_diffus_coef_col, default='inactive')
-
     this%lfc2_col(begc:endc) = spval
     call hist_addfld1d (fname='LFC2', units='per sec', &
          avgflag='A', long_name='conversion area fraction of BET and BDT that burned', &
          ptr_col=this%lfc2_col)
-
-    if ( nlevdecomp_full > 1 ) then
-       this%fpi_col(begc:endc) = spval
-       call hist_addfld1d (fname='FPI', units='proportion', &
-            avgflag='A', long_name='fraction of potential immobilization', &
-            ptr_col=this%fpi_col)
-    endif
-
-    if (nlevdecomp > 1) then
-       vr_suffix = "_vr"
-    else 
-       vr_suffix = ""
-    endif
-    this%fpi_vr_col(begc:endc,:) = spval
-    call hist_addfld_decomp (fname='FPI'//trim(vr_suffix), units='proportion', type2d='levdcmp', & 
-         avgflag='A', long_name='fraction of potential immobilization', &
-         ptr_col=this%fpi_vr_col)
-
-    this%fpg_col(begc:endc) = spval
-    call hist_addfld1d (fname='FPG', units='proportion', &
-         avgflag='A', long_name='fraction of potential gpp', &
-         ptr_col=this%fpg_col)
 
     this%annsum_counter_col(begc:endc) = spval
     call hist_addfld1d (fname='ANNSUM_COUNTER', units='s', &
@@ -487,11 +385,6 @@ contains
          avgflag='A', long_name='background transfer growth rate', &
          ptr_patch=this%bgtr_patch, default='inactive')
 
-    this%alloc_pnow_patch(begp:endp) = spval
-    call hist_addfld1d (fname='ALLOC_PNOW', units='proportion', &
-         avgflag='A', long_name='fraction of current allocation to display as new growth', &
-         ptr_patch=this%alloc_pnow_patch, default='inactive')
-
     this%c_allometry_patch(begp:endp) = spval
     call hist_addfld1d (fname='C_ALLOMETRY', units='none', &
          avgflag='A', long_name='C allocation index', &
@@ -539,7 +432,7 @@ contains
     use ncdio_pio
     !
     ! !ARGUMENTS:
-    class(cnstate_type) :: this
+    class(cnveg_state_type) :: this
     type(bounds_type), intent(in) :: bounds   
     !
     ! !LOCAL VARIABLES:
@@ -652,11 +545,6 @@ contains
           this%fbac_col           (c) = spval
           this%fbac1_col          (c) = spval
           this%farea_burned_col   (c) = spval
-          this%fpi_col            (c) = spval
-          this%fpg_col            (c) = spval
-          do j = 1,nlevdecomp_full
-             this%fpi_vr_col(c,j) = spval
-          end do
        end if
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -671,24 +559,13 @@ contains
           this%farea_burned_col(c)   = 0._r8 
 
           if (nsrest == nsrStartup) this%nfire_col(c) = 0._r8
-
-          ! initialize fpi_vr so that levels below nlevsoi are not nans
-          this%fpi_vr_col(c,1:nlevdecomp_full)          = 0._r8 
-          this%som_adv_coef_col(c,1:nlevdecomp_full)    = 0._r8 
-          this%som_diffus_coef_col(c,1:nlevdecomp_full) = 0._r8 
-
-          ! initialize the profiles for converting to vertically resolved carbon pools
-          this%nfixation_prof_col(c,1:nlevdecomp_full)  = 0._r8 
-          this%ndep_prof_col(c,1:nlevdecomp_full)       = 0._r8 
        end if
     end do
 
-    ! ecophysiological variables
-    ! phenology variables
+    ! ecophysiological and phenology variables
 
     do p = bounds%begp,bounds%endp
-       l = pft%landunit(p)
-       this%rc14_atm_patch(p)              = c14ratio 
+       l = patch%landunit(p)
 
        if (lun%ifspecial(l)) then
           this%annavg_t2m_patch  (p)          = spval
@@ -709,7 +586,6 @@ contains
           this%lgsf_patch(p)                  = spval
           this%bglfr_patch(p)                 = spval
           this%bgtr_patch(p)                  = spval
-          this%alloc_pnow_patch(p)            = spval
           this%c_allometry_patch(p)           = spval
           this%n_allometry_patch(p)           = spval
           this%tempsum_potential_gpp_patch(p) = spval
@@ -718,16 +594,8 @@ contains
           this%annmax_retransn_patch(p)       = spval
           this%downreg_patch(p)               = spval
        end if
-    end do
-       
-    ! ecophysiological variables
 
-    do p = bounds%begp,bounds%endp
-       l = pft%landunit(p)
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-
-          this%rc14_atm_patch(p) = c14ratio
-
           ! phenology variables
           this%dormant_flag_patch(p)   = 1._r8
           this%days_active_patch(p)    = 0._r8
@@ -749,7 +617,6 @@ contains
           this%grain_flag_patch(p)     = 0._r8
 
           ! non-phenology variables
-          this%alloc_pnow_patch(p)            = 1._r8
           this%c_allometry_patch(p)           = 0._r8
           this%n_allometry_patch(p)           = 0._r8
           this%tempsum_potential_gpp_patch(p) = 0._r8
@@ -758,6 +625,7 @@ contains
           this%annmax_retransn_patch(p)       = 0._r8
           this%downreg_patch(p)               = 0._r8
        end if
+
     end do
 
     ! fire variables
@@ -779,7 +647,7 @@ contains
     use ncdio_pio
     !
     ! !ARGUMENTS:
-    class(cnstate_type) :: this
+    class(cnveg_state_type) :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   
     character(len=*) , intent(in)    :: flag   
@@ -877,11 +745,6 @@ contains
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%tempavg_t2m_patch) 
 
-    call restartvar(ncid=ncid, flag=flag, varname='alloc_pnow', xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%alloc_pnow_patch) 
-
     call restartvar(ncid=ncid, flag=flag, varname='c_allometry', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
@@ -916,41 +779,6 @@ contains
          dim1name='pft', &
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%downreg_patch) 
-
-    if (use_vertsoilc) then
-       ptr2d => this%fpi_vr_col
-       call restartvar(ncid=ncid, flag=flag, varname='fpi_vr', xtype=ncd_double,  &
-            dim1name='column',dim2name='levgrnd', switchdim=.true., &
-            long_name='fraction of potential immobilization',  units='unitless', &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d)
-    else
-       ptr1d => this%fpi_vr_col(:,1) ! nlevdecomp = 1; so treat as 1D variable
-       call restartvar(ncid=ncid, flag=flag, varname='fpi', xtype=ncd_double,  &
-            dim1name='column', &
-            long_name='fraction of potential immobilization',  units='unitless', &
-            interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-    end if
-
-    if (use_vertsoilc) then
-       ptr2d => this%som_adv_coef_col
-       call restartvar(ncid=ncid, flag=flag, varname='som_adv_coef_vr', xtype=ncd_double,  &
-            dim1name='column',dim2name='levgrnd', switchdim=.true., &
-            long_name='SOM advective flux', units='m/s', fill_value=spval, &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d)
-    end if
-    
-    if (use_vertsoilc) then
-       ptr2d => this%som_diffus_coef_col
-       call restartvar(ncid=ncid, flag=flag, varname='som_diffus_coef_vr', xtype=ncd_double,  &
-            dim1name='column',dim2name='levgrnd', switchdim=.true., &
-            long_name='SOM diffusivity due to bio/cryo-turbation',  units='m^2/s', fill_value=spval, &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d)
-    end if
-
-    call restartvar(ncid=ncid, flag=flag, varname='fpg', xtype=ncd_double,  &
-         dim1name='column', &
-         long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%fpg_col) 
 
     call restartvar(ncid=ncid, flag=flag, varname='annsum_counter', xtype=ncd_double,  &
          dim1name='column', &
@@ -1094,18 +922,6 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%grain_flag_patch)
     end if
 
-    if (use_c14) then
-       call restartvar(ncid=ncid, flag=flag, varname='rc14_atm', xtype=ncd_double,  &
-            dim1name='pft',    long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%rc14_atm_patch) 
-       if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%rc14_atm with atmospheric c14 value'
-          do i = bounds%begp, bounds%endp
-             this%rc14_atm_patch(i) = c14ratio
-          end do
-       end if
-    end if
-
   end subroutine Restart
 
   !-----------------------------------------------------------------------
@@ -1118,11 +934,10 @@ contains
     ! inadvertently updating nyrs multiple times)
     !
     ! !USES:
-    use clm_varpar       , only : crop_prog
     use clm_time_manager , only : get_curr_date, is_first_step
     !
     ! !ARGUMENTS:
-    class(cnstate_type) :: this
+    class(cnveg_state_type) :: this
     !
     ! !LOCAL VARIABLES:
     integer kyr   ! current year
@@ -1199,4 +1014,4 @@ contains
 
   end subroutine checkDates
 
-end module CNStateType
+end module CNVegStateType

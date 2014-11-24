@@ -4,15 +4,16 @@ module WaterfluxType
   ! !DESCRIPTION:
   !
   ! !USES:
-  use shr_kind_mod , only: r8 => shr_kind_r8
-  use decompMod    , only : bounds_type
-  use clm_varcon   , only : spval
-  use LandunitType , only : lun                
-  use ColumnType   , only : col                
-  use PatchType    , only : pft                
+  use shr_kind_mod   , only: r8 => shr_kind_r8
+  use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
+  use clm_varpar     , only : nlevsno
+  use clm_varcon     , only : spval
+  use decompMod      , only : bounds_type
+  use LandunitType   , only : lun                
+  use ColumnType     , only : col                
+  use PatchType      , only : patch                
   !
   implicit none
-  save
   private
   !
   ! !PUBLIC TYPES:
@@ -120,8 +121,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar     , only : nlevsno, nlevgrnd
     !
     ! !ARGUMENTS:
     class(waterflux_type) :: this
@@ -212,10 +211,8 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl     , only : create_glacier_mec_landunit, use_cn, use_lch4
-    use clm_varpar     , only : nlevsno, crop_prog 
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
+    use clm_varctl  , only : create_glacier_mec_landunit, use_cn
+    use histFileMod , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(waterflux_type) :: this
@@ -482,16 +479,11 @@ contains
   subroutine Restart(this, bounds, ncid, flag)
     ! 
     ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : denice, denh2o, pondmx, watmin
-    use landunit_varcon  , only : istcrop, istdlak, istsoil 
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar       , only : nlevgrnd, nlevurb, nlevsno   
-    use ncdio_pio        , only : file_desc_t, ncd_double
+    use ncdio_pio, only : file_desc_t, ncd_double
     use restUtilMod
     !
     ! !ARGUMENTS:
-    class(waterflux_type) :: this
+    class(waterflux_type)            :: this
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'

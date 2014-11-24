@@ -32,9 +32,9 @@ module LandunitType
      integer , pointer :: coli         (:) ! beginning column index per landunit
      integer , pointer :: colf         (:) ! ending column index for each landunit
      integer , pointer :: ncolumns     (:) ! number of columns for each landunit
-     integer , pointer :: pfti         (:) ! beginning pft index for each landunit
-     integer , pointer :: pftf         (:) ! ending pft index for each landunit
-     integer , pointer :: npfts        (:) ! number of patches for each landunit
+     integer , pointer :: patchi       (:) ! beginning patch index for each landunit
+     integer , pointer :: patchf       (:) ! ending patch index for each landunit
+     integer , pointer :: npatches     (:) ! number of patches for each landunit
 
      ! topological mapping functionality
      integer , pointer :: itype        (:) ! landunit type
@@ -82,9 +82,9 @@ contains
     allocate(this%coli         (begl:endl)); this%coli      (:) = ispval
     allocate(this%colf         (begl:endl)); this%colf      (:) = ispval
     allocate(this%ncolumns     (begl:endl)); this%ncolumns  (:) = ispval
-    allocate(this%pfti         (begl:endl)); this%pfti      (:) = ispval
-    allocate(this%pftf         (begl:endl)); this%pftf      (:) = ispval
-    allocate(this%npfts        (begl:endl)); this%npfts     (:) = ispval
+    allocate(this%patchi       (begl:endl)); this%patchi    (:) = ispval
+    allocate(this%patchf       (begl:endl)); this%patchf    (:) = ispval
+    allocate(this%npatches     (begl:endl)); this%npatches  (:) = ispval
     allocate(this%itype        (begl:endl)); this%itype     (:) = ispval 
     allocate(this%ifspecial    (begl:endl)); this%ifspecial (:) = .false.
     allocate(this%lakpoi       (begl:endl)); this%lakpoi    (:) = .false.
@@ -94,7 +94,7 @@ contains
     ! The following is initialized in routine setActive in module reweightMod
     allocate(this%active       (begl:endl))
 
-    ! The following is set in routine urbanparams_vars%Init in module UrbanParamsType
+    ! The following is set in routine urbanparams_inst%Init in module UrbanParamsType
     allocate(this%canyon_hwr   (begl:endl)); this%canyon_hwr   (:) = nan
     allocate(this%wtroad_perv  (begl:endl)); this%wtroad_perv  (:) = nan
     allocate(this%ht_roof      (begl:endl)); this%ht_roof      (:) = nan
@@ -119,9 +119,9 @@ contains
     deallocate(this%coli         )
     deallocate(this%colf         )
     deallocate(this%ncolumns     )
-    deallocate(this%pfti         )
-    deallocate(this%pftf         )
-    deallocate(this%npfts        )
+    deallocate(this%patchi       )
+    deallocate(this%patchf       )
+    deallocate(this%npatches     )
     deallocate(this%itype        )
     deallocate(this%ifspecial    )
     deallocate(this%lakpoi       )

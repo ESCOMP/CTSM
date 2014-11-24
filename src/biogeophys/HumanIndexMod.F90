@@ -145,7 +145,7 @@ subroutine Init(this, bounds )
        call this%InitAllocate ( bounds )
        call this%InitHistory (  bounds )
     else
-       ! Associate statements need humanindex_vars to be allocated
+       ! Associate statements need humanindex_inst to be allocated
        ! So allocate with size 1 when not being used
        bounds_tmp%begp = 1
        bounds_tmp%endp = 1

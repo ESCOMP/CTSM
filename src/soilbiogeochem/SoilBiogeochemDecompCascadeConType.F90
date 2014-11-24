@@ -1,17 +1,15 @@
-module CNDecompCascadeConType
+module SoilBiogeochemDecompCascadeConType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Decomposition Cascade Type
   !
   ! !USES:
-  use shr_kind_mod   , only: r8 => shr_kind_r8
-  use decompMod      , only : bounds_type
+  use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar     , only : ndecomp_cascade_transitions, ndecomp_pools
   !
   implicit none
-  save
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -96,4 +94,4 @@ contains
 
   end subroutine init_decomp_cascade_constants
 
-end module CNDecompCascadeConType
+end module SoilBiogeochemDecompCascadeConType

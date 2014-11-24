@@ -1,4 +1,378 @@
 ===============================================================
+Tag name:  clm4_5_2_r097
+Originator(s): mvertens mvertens (Mariana Vertenstein,UCAR/CSEG,303-497-1349)
+Date:  Mon Nov 24 11:06:30 MST 2014
+One-line Summary: major refactorization to introduce new soilbiogeochem data
+	types and routines that are independent of either ED or CN datatypes
+
+Purpose of changes: Major refactorization to introduce new soilbiogeochem
+  data types and permit ED and CN vegetation to be independent of each other
+  AND both work with either the same soilbiogeochem or in the future 
+  potentially different soilbiogeochem modules
+
+Requirements for tag: None
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+    1147 (mkgriddata can't straddle over Greenwich)
+    1025 (SCM mode can NOT use a global finidat file)
+    1017 (SCM mode can NOT restart)
+     896 (T62 mode does not work)
+     701 (svn keyword)
+     452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: bld/configure modified to
+  accomodate new directory structure - introduction of soilbiogeochem/ 
+  directory
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: Since use_cn and use_ed
+  are now mutually exclusive, CN memory is not longer allocated when ED is run
+  and the memory reduction (for f19_g16) seems to be about 50%.
+
+Code reviewed by: mvertens, muszala, sacks
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts branch is used
+  https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/refactor_koven_tags/refactor_koven_n01_scripts4_141023
+
+List all files eliminated, added and modified: (see below)
+List all files added and what they do: (see below)
+List all existing files that have been modified, and describe the changes: (see below)
+
+These are all grouped together here - since splitting the items up simply did
+not make sense in this case
+
+---------------------------------------------------
+New module where all instances are now declared (moved from clm_initializeMod)
+- all calls to instance restarts are here as well - so restFileMod
+  is greatly simplified
+---------------------------------------------------
+A       models/lnd/clm/src/main/clm_instMod.F90
+
+---------------------------------------------------
+New soilbiogeochem/ directory introduced (new modules and data types)
+---------------------------------------------------
+A       models/lnd/clm/src/soilbiogeochem
+
+---------------------------------------------------
+CN state and flux types split into: 
+SoilBiogeoChem[Carbon|Nitrogen][State|Flux]Type and SoilBiogoechemStateType 
+CNVeg[Carbon|Nitrogen][State|Flux]Type and CNVegStateType
+---------------------------------------------------
+D       models/lnd/clm/src/biogeochem/CNStateType.F90
+D       models/lnd/clm/src/biogeochem/CNCarbonFluxType.F90
+D       models/lnd/clm/src/biogeochem/CNCarbonStateType.F90
+D       models/lnd/clm/src/biogeochem/CNNitrogenFluxType.F90
+D       models/lnd/clm/src/biogeochem/CNNitrogenStateType.F90
+A       models/lnd/clm/src/biogeochem/CNVegStateType.F90
+A       models/lnd/clm/src/biogeochem/CNVegCarbonFluxType.F90
+A       models/lnd/clm/src/biogeochem/CNVegCarbonStateType.F90
+A       models/lnd/clm/src/biogeochem/CNVegNitrogenStateType.F90
+A       models/lnd/clm/src/biogeochem/CNVegNitrogenFluxType.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemCarbonFluxType.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemStateType.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemNitrogenFluxType.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90
+
+---------------------------------------------------
+New modules in soilbiogeochem/ directory that are independent of CNVeg or ED types
+---------------------------------------------------
+D       models/lnd/clm/src/biogeochem/CNDecompCascadeConType.F90
+D       models/lnd/clm/src/biogeochem/CNNitrifDenitrifMod.F90
+D       models/lnd/clm/src/biogeochem/CNVerticalProfileMod.F90
+D       models/lnd/clm/src/biogeochem/CNDecompMod.F90
+D       models/lnd/clm/src/biogeochem/CNAllocationMod.F90
+D       models/lnd/clm/src/biogeochem/CNDecompCascadeBGCMod.F90
+D       models/lnd/clm/src/biogeochem/CNDecompCascadeCNMod.F90
+D       models/lnd/clm/src/biogeochem/CNSoilLittVertTranspMod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeConType.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemNitrifDenitrifMod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemNStateUpdate1Mod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeBGCMod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemNLeachingMod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemVerticalProfileMod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemCompetitionMod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeCNMod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemPrecisionControlMod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemNitrogenUptakeMod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemPotentialMod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemLittVertTranspMod.F90
+A       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemDecompMod.F90
+
+---------------------------------------------------
+Moved CNEcosystemDynMod to CNDRiverMod
+---------------------------------------------------
+D       models/lnd/clm/src/biogeochem/CNEcosystemDynMod.F90
+A       models/lnd/clm/src/biogeochem/CNDriverMod.F90 
+
+---------------------------------------------------
+Changes to modules in biogeochem/ directory to now use new datatypes (see above)
+---------------------------------------------------
+A       models/lnd/clm/src/biogeochem/C14BompbSpikeMod.F90
+M       models/lnd/clm/src/biogeochem/CNCStateUpdate2Mod.F90
+M       models/lnd/clm/src/biogeochem/CNGapMortalityMod.F90
+M       models/lnd/clm/src/biogeochem/CNGRespMod.F90
+M       models/lnd/clm/src/biogeochem/CNNStateUpdate1Mod.F90
+M       models/lnd/clm/src/biogeochem/CNBalanceCheckMod.F90
+M       models/lnd/clm/src/biogeochem/CNNStateUpdate3Mod.F90
+M       models/lnd/clm/src/biogeochem/CNFireMod.F90
+M       models/lnd/clm/src/biogeochem/CNDVDriverMod.F90
+M       models/lnd/clm/src/biogeochem/CNMRespMod.F90
+M       models/lnd/clm/src/biogeochem/MEGANFactorsMod.F90
+M       models/lnd/clm/src/biogeochem/SatellitePhenologyMod.F90
+M       models/lnd/clm/src/biogeochem/CNWoodProductsMod.F90
+M       models/lnd/clm/src/biogeochem/CNPrecisionControlMod.F90
+M       models/lnd/clm/src/biogeochem/CNCIsoFluxMod.F90
+M       models/lnd/clm/src/biogeochem/ch4Mod.F90
+M       models/lnd/clm/src/biogeochem/DUSTMod.F90
+M       models/lnd/clm/src/biogeochem/CNDVLightMod.F90
+M       models/lnd/clm/src/biogeochem/NutrientCompetitionMethodMod.F90
+M       models/lnd/clm/src/biogeochem/CNPhenologyMod.F90
+M       models/lnd/clm/src/biogeochem/ch4varcon.F90
+M       models/lnd/clm/src/biogeochem/CNCStateUpdate1Mod.F90
+M       models/lnd/clm/src/biogeochem/CNCStateUpdate3Mod.F90
+M       models/lnd/clm/src/biogeochem/CNSharedParamsMod.F90
+M       models/lnd/clm/src/biogeochem/CNDVType.F90
+M       models/lnd/clm/src/biogeochem/NutrientCompetitionCLM45defaultMod.F90
+M       models/lnd/clm/src/biogeochem/VOCEmissionMod.F90
+M       models/lnd/clm/src/biogeochem/CNAnnualUpdateMod.F90
+M       models/lnd/clm/src/biogeochem/CNNStateUpdate2Mod.F90
+M       models/lnd/clm/src/biogeochem/CropType.F90
+M       models/lnd/clm/src/biogeochem/CNNDynamicsMod.F90
+M       models/lnd/clm/src/biogeochem/DryDepVelocity.F90
+M       models/lnd/clm/src/biogeochem/CNVegStructUpdateMod.F90
+M       models/lnd/clm/src/biogeochem/CNDVEstablishmentMod.F90
+M       models/lnd/clm/src/biogeochem/CNC14DecayMod.F90
+
+---------------------------------------------------
+Moved frictionvel_type to FrictionVelocityMod
+---------------------------------------------------
+D       models/lnd/clm/src/biogeophys/FrictionVelocityType.F90
+
+---------------------------------------------------
+Moved aerosol_type to AerosolMod
+---------------------------------------------------
+D       models/lnd/clm/src/biogeophys/AerosolType.F90
+
+---------------------------------------------------
+Moved photosyns_type to PhotosynthesisMod
+---------------------------------------------------
+D       models/lnd/clm/src/biogeophys/PhotosynthesisType.F90
+
+---------------------------------------------------
+Moved soilstate cold start initialization to a new module
+---------------------------------------------------
+A       models/lnd/clm/src/biogeophys/SoilStateInitTimeConstMod.F90
+
+---------------------------------------------------
+Moved soilhydrology time constant initialization to a new module
+---------------------------------------------------
+A       models/lnd/clm/src/biogeophys/SoilHydrologyInitTimeConstMod.F90
+
+---------------------------------------------------
+ED Refactorization1
+(1) EDPhenologyMod changed to EDPhenologyType 
+(2) EDBioType moved as a module type (ed_clm_type) in EDCLMLINKMod.F90
+(3) EDVecPatchType no longer needed (for now is_veg, is_bareground and wt_ed are in PatchType.F90)
+---------------------------------------------------
+D       models/lnd/clm/src/ED/main/EDBioType.F90
+M       models/lnd/clm/src/ED/main/EDCLMLinkMod.F90
+D       models/lnd/clm/src/ED/main/EDVecPatchType.F90 
+D       models/lnd/clm/src/ED/biogeophys/EDPhenologyMod.F90
+A       models/lnd/clm/src/ED/biogeochem/EDPhenologyType.F90
+A       models/lnd/clm/src/ED/biogeochem/EDSharedParamsMod.F90
+
+---------------------------------------------------
+ED Refactorization2
+(1) Modified EDTypesMod.F90 
+    Removed gridcell_edstate_type (array of pointers) and instance 
+    gridcelledstate  - now have the following ED types and instance
+    defined in clm_instMod.F90 and passed down in clm_initialize and clm_driver (top level)
+       type(ed_site_type), allocatable, target :: ed_allsites_inst(:)
+       type(ed_phenology_type)                 :: ed_phenology_inst
+       type(ed_clm_type)                       :: ed_clm_inst
+    so now have ed_allsites_inst which is an array of sites (at this point allocated at the
+    gridcell level - but that could easily be modified to be at some other level like the
+    column level
+(2) In EDTypesMod.F90 added method map_clmpatch_to_edpatch that
+    maps a CLM vector patch to an ED linked-list patch - there is still 
+    a one to one correspondence between an ED patch and a CLM vector patch. The
+    call looks like the following
+       currentPatch => map_clmpatch_to_edpatch(ed_allsites_inst(g), p) 
+
+(3) In EDTypesMod.F90 added a ED Patch type-bound method set_root_fraction that computes
+    the root fraction for an ED patch
+(4) In EDTypes.F90 eliminated the following components of userdata
+      type (site)  , pointer :: firstsite_pnt => null()         ! pointer to the first site in the system
+      type (cohort), pointer :: storesmallcohort => null()      ! storage of the smallest cohort for insertion routine
+      type (cohort), pointer :: storebigcohort => null()        ! storage of the largest cohort for insertion routine 
+    These are no longer needed since the above pointers are now local variables 
+    in EDCohortDynamics and EDPatchDynamics   
+---------------------------------------------------
+M       models/lnd/clm/src/ED/main/EDVecCohortType.F90
+M       models/lnd/clm/src/ED/main/EDRestVectorMod.F90
+M       models/lnd/clm/src/ED/main/EDInitMod.F90
+M       models/lnd/clm/src/ED/main/EDMainMod.F90
+M       models/lnd/clm/src/ED/main/EDTypesMod.F90
+M       models/lnd/clm/src/ED/fire/SFMainMod.F90
+M       models/lnd/clm/src/ED/biogeochem/EDGrowthFunctionsMod.F90
+M       models/lnd/clm/src/ED/biogeochem/EDCohortDynamicsMod.F90
+M       models/lnd/clm/src/ED/biogeochem/EDPhysiologyMod.F90
+M       models/lnd/clm/src/ED/biogeochem/EDPatchDynamicsMod.F90
+M       models/lnd/clm/src/ED/biogeochem/EDCanopyStructureMod.F90
+M       models/lnd/clm/src/ED/biogeophys/EDAccumulateFluxesMod.F90
+M       models/lnd/clm/src/ED/biogeophys/EDSurfaceAlbedoMod.F90
+M       models/lnd/clm/src/ED/biogeophys/EDPhotosynthesisMod.F90
+M       models/lnd/clm/src/ED/biogeophys/EDBtranMod.F90
+
+---------------------------------------------------
+The following changes are implemented below (and in the above routines)
+(1) _vars% changed to _inst%
+(2)  pft% changed to patch%
+(3)  merged ecophyscon and pftvarcon into single derived type pftcon (in pftconMod)
+     "use EcophysConType, only : ecophyscon" changed to "use pftconMod, only : pftcon"
+(4)  module save statements removed in majority of routines
+---------------------------------------------------
+D       models/lnd/clm/src/main/EcophysConType.F90
+D       models/lnd/clm/src/main/pftvarcon.F90
+A       models/lnd/clm/src/main/pftconMod.F90
+M       models/lnd/clm/src/main/initInterp.F90
+M       models/lnd/clm/src/main/clm_varpar.F90
+M       models/lnd/clm/src/main/landunit_varcon.F90
+M       models/lnd/clm/src/main/accumulMod.F90
+M       models/lnd/clm/src/main/subgridWeightsMod.F90
+M       models/lnd/clm/src/main/decompInitMod.F90
+M       models/lnd/clm/src/main/clm_initializeMod.F90
+M       models/lnd/clm/src/main/subgridRestMod.F90
+M       models/lnd/clm/src/main/ColumnType.F90
+M       models/lnd/clm/src/main/subgridMod.F90
+M       models/lnd/clm/src/main/PatchType.F90
+M       models/lnd/clm/src/main/ndepStreamMod.F90
+M       models/lnd/clm/src/main/lnd2atmType.F90
+M       models/lnd/clm/src/main/atm2lndType.F90
+M       models/lnd/clm/src/main/histFileMod.F90
+M       models/lnd/clm/src/main/restFileMod.F90
+M       models/lnd/clm/src/main/clm_varsur.F90
+M       models/lnd/clm/src/main/LandunitType.F90
+M       models/lnd/clm/src/main/GetGlobalValuesMod.F90
+M       models/lnd/clm/src/main/controlMod.F90
+M       models/lnd/clm/src/main/initSubgridMod.F90
+M       models/lnd/clm/src/main/filterMod.F90
+M       models/lnd/clm/src/main/lnd2glcMod.F90
+M       models/lnd/clm/src/main/clm_driver.F90
+M       models/lnd/clm/src/main/clm_varctl.F90
+M       models/lnd/clm/src/main/subgridAveMod.F90
+M       models/lnd/clm/src/main/initGridCellsMod.F90
+M       models/lnd/clm/src/main/atm2lndMod.F90
+M       models/lnd/clm/src/main/lnd2atmMod.F90
+M       models/lnd/clm/src/main/ncdio_pio.F90
+M       models/lnd/clm/src/main/surfrdMod.F90
+M       models/lnd/clm/src/main/decompMod.F90
+M       models/lnd/clm/src/main/reweightMod.F90
+M       models/lnd/clm/src/main/readParamsMod.F90
+M       models/lnd/clm/src/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/biogeophys/WaterfluxType.F90
+M       models/lnd/clm/src/biogeophys/SoilTemperatureMod.F90
+M       models/lnd/clm/src/biogeophys/SnowSnicarMod.F90
+M       models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90
+M       models/lnd/clm/src/biogeophys/LakeTemperatureMod.F90
+M       models/lnd/clm/src/biogeophys/FrictionVelocityMod.F90
+M       models/lnd/clm/src/biogeophys/SoilFluxesMod.F90
+M       models/lnd/clm/src/biogeophys/TemperatureType.F90
+M       models/lnd/clm/src/biogeophys/HumanIndexMod.F90
+M       models/lnd/clm/src/biogeophys/PhotosynthesisMod.F90
+M       models/lnd/clm/src/biogeophys/LakeFluxesMod.F90
+M       models/lnd/clm/src/biogeophys/AerosolMod.F90
+M       models/lnd/clm/src/biogeophys/ActiveLayerMod.F90
+M       models/lnd/clm/src/biogeophys/SurfaceResistanceMod.F90
+M       models/lnd/clm/src/biogeophys/SoilStateType.F90
+M       models/lnd/clm/src/biogeophys/SoilHydrologyType.F90
+M       models/lnd/clm/src/biogeophys/HydrologyDrainageMod.F90
+M       models/lnd/clm/src/biogeophys/UrbanAlbedoMod.F90
+M       models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90
+M       models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90
+M       models/lnd/clm/src/biogeophys/RootBiophysMod.F90
+M       models/lnd/clm/src/biogeophys/SurfaceRadiationMod.F90
+M       models/lnd/clm/src/biogeophys/SoilWaterMovementMod.F90
+M       models/lnd/clm/src/biogeophys/SoilMoistStressMod.F90
+M       models/lnd/clm/src/biogeophys/UrbBuildTempOleson2015Mod.F90
+M       models/lnd/clm/src/biogeophys/CanopyHydrologyMod.F90
+M       models/lnd/clm/src/biogeophys/EnergyFluxType.F90
+M       models/lnd/clm/src/biogeophys/CanopyStateType.F90
+M       models/lnd/clm/src/biogeophys/UrbanFluxesMod.F90
+M       models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90
+M       models/lnd/clm/src/biogeophys/UrbanRadiationMod.F90
+M       models/lnd/clm/src/biogeophys/SoilHydrologyMod.F90
+M       models/lnd/clm/src/biogeophys/IrrigationMod.F90
+M       models/lnd/clm/src/biogeophys/CanopyTemperatureMod.F90
+M       models/lnd/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       models/lnd/clm/src/biogeophys/LakeHydrologyMod.F90
+M       models/lnd/clm/src/biogeophys/UrbanParamsType.F90
+M       models/lnd/clm/src/dyn_subgrid/dynLandunitAreaMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynTimeInfoMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynHarvestMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynFileMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynConsBiogeochemMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynPriorWeightsMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynVarMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynEDMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynVarTimeInterpMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynpftFileMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynCNDVMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynConsBiogeophysMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynVarMod.F90.in
+M       models/lnd/clm/src/dyn_subgrid/dynVarTimeInterpMod.F90.in
+M       models/lnd/clm/src/dyn_subgrid/dynInitColumnsMod.F90
+M       models/lnd/clm/src/cpl/lnd_comp_esmf.F90
+M       models/lnd/clm/src/cpl/lnd_import_export.F90
+M       models/lnd/clm/src/cpl/lnd_comp_mct.F90
+M       models/lnd/clm/src/utils/accumulMod.F90
+M       models/lnd/clm/src/utils/domainMod.F90
+
+---------------------------------------------------
+Changes for Unit testing
+---------------------------------------------------
+R       models/lnd/clm/src/ED/main/CMakeLists.txt
+M       models/lnd/clm/src/unit_test_shr/unittestSubgridMod.F90
+M       models/lnd/clm/src/CMakeLists.txt
+
+---------------------------------------------------
+Configuration changes for new soilbiogeochem/
+---------------------------------------------------
+M       models/lnd/clm/bld/configure
+
+CLM testing:
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone - okay 
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel - okay
+    yellowstone_pgi - okay
+    yellowstone_gnu - okay
+    goldbach_nag - okay
+
+    goldbach_intel (moved these to yellowstone_intel for future tests)
+
+CLM tag used for the baseline comparisons: clm4_5_1_r096
+
+Changes answers relative to baseline: NO (bit-for-bit)
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r096
 Originator(s):  erik (Erik)
 Date: Wed Nov 19 02:11:09 MST 2014

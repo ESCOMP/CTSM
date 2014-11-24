@@ -52,9 +52,9 @@ module IrrigationMod
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
   use GridcellType     , only : grc                
   use ColumnType       , only : col                
-  use PatchType        , only : pft                
+  use PatchType        , only : patch                
+  !
   implicit none
-  save
   private
 
   ! !PUBLIC TYPES:
@@ -180,17 +180,17 @@ contains
   ! ========================================================================
   
   !------------------------------------------------------------------------
-  subroutine IrrigationInit(this, bounds, soilstate_vars, soil_water_retention_curve)
+  subroutine IrrigationInit(this, bounds, soilstate_inst, soil_water_retention_curve)
     use SoilStateType , only : soilstate_type
 
     class(irrigation_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
-    type(soilstate_type)   , intent(in)    :: soilstate_vars
+    type(soilstate_type)   , intent(in)    :: soilstate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
 
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
-    call this%InitCold(bounds, soilstate_vars, soil_water_retention_curve)
+    call this%InitCold(bounds, soilstate_inst, soil_water_retention_curve)
   end subroutine IrrigationInit
 
   !-----------------------------------------------------------------------
@@ -285,20 +285,20 @@ contains
   end subroutine IrrigationInitHistory
 
   !-----------------------------------------------------------------------
-  subroutine IrrigationInitCold(this, bounds, soilstate_vars, soil_water_retention_curve)
+  subroutine IrrigationInitCold(this, bounds, soilstate_inst, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
     ! Do cold-start initialization for irrigation data structure
     !
     ! !USES:
-    use EcophysConType, only : ecophyscon
+    use pftconMod     , only : pftcon
     use SoilStateType , only : soilstate_type
-    use pftvarcon     , only : noveg
+    use pftconMod     , only : noveg
     !
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
-    type(soilstate_type)   , intent(in)    :: soilstate_vars
+    type(soilstate_type)   , intent(in)    :: soilstate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
@@ -310,26 +310,26 @@ contains
     !-----------------------------------------------------------------------
 
     associate( &
-         sucsat => soilstate_vars%sucsat_col , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)                        (constant)                                        
-         bsw    => soilstate_vars%bsw_col    , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"                         (constant)                                        
-         smpso  => ecophyscon%smpso            & ! Input:  [real(r8) (:)   ]  soil water potential at full stomatal opening (mm)                    
+         sucsat => soilstate_inst%sucsat_col , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm) (constant)
+         bsw    => soilstate_inst%bsw_col    , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"  (constant)
+         smpso  => pftcon%smpso                & ! Input:  soil water potential at full stomatal opening (mm) (constant)
          )
     
-    do j = 1, nlevgrnd
-       do p = bounds%begp, bounds%endp
-          c = pft%column(p)
-          if (pft%itype(p) /= noveg) then
-             call soil_water_retention_curve%soil_suction_inverse( &
-                  smp_target = smpso(pft%itype(p)), &
-                  smpsat = sucsat(c,j), &
-                  bsw = bsw(c,j), &
-                  s_target = this%relsat_so_patch(p,j))
-          end if
-       end do
-    end do
+      do j = 1, nlevgrnd
+         do p = bounds%begp, bounds%endp
+            c = patch%column(p)
+            if (patch%itype(p) /= noveg) then
+               call soil_water_retention_curve%soil_suction_inverse( &
+                    smp_target = smpso(patch%itype(p)), &
+                    smpsat = sucsat(c,j), &
+                    bsw = bsw(c,j), &
+                    s_target = this%relsat_so_patch(p,j))
+            end if
+         end do
+      end do
 
-    this%dtime = get_step_size()
-    this%irrig_nsteps_per_day = this%CalcIrrigNstepsPerDay(this%dtime)
+      this%dtime = get_step_size()
+      this%irrig_nsteps_per_day = this%CalcIrrigNstepsPerDay(this%dtime)
 
     end associate
 
@@ -378,7 +378,7 @@ contains
     ! !LOCAL VARIABLES:
     logical :: do_io
     integer :: dimlen       ! dimension length
-    integer :: nump_global  ! total number of pfts, globally
+    integer :: nump_global  ! total number of patchs, globally
     integer :: err_code     ! error code
     logical :: readvar      ! determine if variable is on initial file
 
@@ -579,9 +579,9 @@ contains
     
     do f = 1, num_exposedvegp
        p = filter_exposedvegp(f)
-       g = pft%gridcell(p)
+       g = patch%gridcell(p)
        check_for_irrig(p) = this%PointNeedsCheckForIrrig( &
-            pft_type=pft%itype(p), elai=elai(p), btran=btran(p), &
+            pft_type=patch%itype(p), elai=elai(p), btran=btran(p), &
             time_prev=time_prev, londeg=grc%londeg(g))
 
        if (check_for_irrig(p)) then
@@ -598,7 +598,7 @@ contains
     do j = 1,nlevgrnd
        do f = 1, num_exposedvegp
           p = filter_exposedvegp(f)
-          c = pft%column(p)
+          c = patch%column(p)
           if (check_for_irrig(p) .and. .not. frozen_soil(p)) then
              ! if level L was frozen, then we don't look at any levels below L
              if (t_soisno(c,j) <= SHR_CONST_TKFRZ) then
@@ -631,7 +631,7 @@ contains
     ! Determine whether a given patch needs to be checked for irrigation now.
     !
     ! !USES:
-    use pftvarcon          , only : irrigated
+    use pftconMod, only : pftcon
     !
     ! !ARGUMENTS:
     logical :: check_for_irrig  ! function result
@@ -652,7 +652,7 @@ contains
     character(len=*), parameter :: subname = 'PointNeedsCheckForIrrig'
     !-----------------------------------------------------------------------
     
-    if (irrigated(pft_type) == 1._r8 .and. &
+    if (pftcon%irrigated(pft_type) == 1._r8 .and. &
          elai > this%params%irrig_min_lai .and. &
          btran < this%params%irrig_btran_thresh) then
        ! see if it's the right time of day to start irrigating:

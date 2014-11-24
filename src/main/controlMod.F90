@@ -10,41 +10,36 @@ module controlMod
   !       Display the file in a browser to see it neatly formatted in html.
   !
   ! !USES:
-  use clm_varctl   
-  use shr_kind_mod            , only: r8 => shr_kind_r8, SHR_KIND_CL
-  use shr_nl_mod              , only: shr_nl_find_group_name
-  use shr_const_mod           , only: SHR_CONST_CDAY
-  use shr_log_mod             , only: errMsg => shr_log_errMsg
-  use abortutils              , only: endrun
-  use spmdMod                 , only: masterproc
-  use decompMod               , only: clump_pproc
-  use clm_varpar              , only: maxpatch_pft, maxpatch_glcmec, more_vertlayers
-  use histFileMod             , only: max_tapes, max_namlen 
-  use histFileMod             , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
-  use histFileMod             , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
-  use histFileMod             , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fexcl1, hist_fexcl2, hist_fexcl3
-  use histFileMod             , only: hist_fexcl4, hist_fexcl5, hist_fexcl6
-  use LakeCon                 , only: deepmixing_depthcrit, deepmixing_mixfact 
-  use CNAllocationMod         , only: suplnitro
-  use CNCarbonFluxType        , only: nfix_timeconst
-  use UrbanParamsType         , only: UrbanReadNML
-  use HumanIndexMod           , only: HumanIndexReadNML
-  use CNNitrifDenitrifMod     , only: no_frozen_nitrif_denitrif
-  use CNC14DecayMod           , only: use_c14_bombspike, atm_c14_filename
-  use CNAllocationMod         , only: suplnitro
-  use CNSoilLittVertTranspMod , only: som_adv_flux, max_depth_cryoturb
-  use CNVerticalProfileMod    , only: exponential_rooting_profile, rootprof_exp 
-  use CNVerticalProfileMod    , only: surfprof_exp, pftspecific_rootingprofile  
-  use CNSharedParamsMod       , only: anoxia_wtsat
-  use CanopyfluxesMod         , only: perchroot, perchroot_alt
-  use CanopyHydrologyMod      , only: CanopyHydrology_readnl
-  use SurfaceAlbedoMod        , only: albice, lake_melt_icealb
-  use UrbanParamsType         , only: urban_hac, urban_traffic
-  use clm_varcon              , only: h2osno_max
+  use shr_kind_mod                     , only: r8 => shr_kind_r8, SHR_KIND_CL
+  use shr_nl_mod                       , only: shr_nl_find_group_name
+  use shr_const_mod                    , only: SHR_CONST_CDAY
+  use shr_log_mod                      , only: errMsg => shr_log_errMsg
+  use abortutils                       , only: endrun
+  use spmdMod                          , only: masterproc
+  use decompMod                        , only: clump_pproc
+  use clm_varcon                       , only: h2osno_max
+  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, more_vertlayers, numrad
+  use histFileMod                      , only: max_tapes, max_namlen 
+  use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
+  use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
+  use histFileMod                      , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fexcl1, hist_fexcl2, hist_fexcl3
+  use histFileMod                      , only: hist_fexcl4, hist_fexcl5, hist_fexcl6
+  use LakeCon                          , only: deepmixing_depthcrit, deepmixing_mixfact 
+  use CanopyfluxesMod                  , only: perchroot, perchroot_alt
+  use CanopyHydrologyMod               , only: CanopyHydrology_readnl
+  use SurfaceAlbedoMod                 , only: albice, lake_melt_icealb
+  use UrbanParamsType                  , only: UrbanReadNML
+  use HumanIndexMod                    , only: HumanIndexReadNML
+  use CNSharedParamsMod                , only: anoxia_wtsat
+  use C14BombSpikeMod                  , only: use_c14_bombspike, atm_c14_filename
+  use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
+  use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
+  use SoilBiogeochemVerticalProfileMod , only: exponential_rooting_profile, rootprof_exp, surfprof_exp, pftspecific_rootingprofile 
+  use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
+  use clm_varctl                       
   !
   ! !PUBLIC TYPES:
   implicit none
-  save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: control_setNL ! Set namelist filename
@@ -70,7 +65,6 @@ contains
     ! Set the namelist filename to use
     !
     ! !ARGUMENTS:
-    implicit none
     character(len=*), intent(IN) :: NLFile ! Namelist filename
     !
     ! !LOCAL VARIABLES:
@@ -102,19 +96,15 @@ contains
     ! Initialize CLM run control information
     !
     ! !USES:
-    use clm_time_manager , only : set_timemgr_init, get_timemgr_defaults
+    use clm_time_manager , only : set_timemgr_init
     use fileutils        , only : getavu, relavu
-    use shr_string_mod   , only : shr_string_getParentDir
-    implicit none
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: starttype ! infodata start type
-    integer :: i,j,n                ! loop indices
+    integer :: i                    ! loop indices
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
     integer :: dtime                ! Integer time-step
     integer :: override_nsrest      ! If want to override the startup type sent from driver
-    character(len=32) :: subname = 'control_init'  ! subroutine name
     !------------------------------------------------------------------------
 
     ! ----------------------------------------------------------------------
@@ -324,6 +314,25 @@ contains
           use_voc = .false.
        end if
 
+       ! ----------------------------------------------------------------------
+       ! ABORT if use_cn AND use_ed are both true
+       if (use_ed .and. use_cn) then
+          call endrun(msg=' ERROR: use_cn and use_ed cannot both be set to true.'//&
+               errMsg(__FILE__, __LINE__))
+       end if
+
+       ! If nfix_timeconst is equal to the junk default value, then it was not specified
+       ! by the user namelist and we need to assign it the correct default value. If the 
+       ! user specified it in the namelist, we leave it alone.
+
+       if (nfix_timeconst == -1.2345_r8) then
+          if (use_nitrif_denitrif) then
+             nfix_timeconst = 10._r8
+          else
+             nfix_timeconst = 0._r8
+          end if
+       end if
+
     endif   ! end of if-masterproc if-block
 
     ! ----------------------------------------------------------------------
@@ -334,9 +343,9 @@ contains
     !own modules, which are called from their own initializing methods
     call init_hydrology( NLFilename )
     
-    call CanopyHydrology_readnl( NLFilename )
-    call UrbanReadNML(           NLFilename )
-    call HumanIndexReadNML(      NLFilename )
+    call CanopyHydrology_readnl ( NLFilename )
+    call UrbanReadNML           ( NLFilename )
+    call HumanIndexReadNML      ( NLFilename )
 
     ! ----------------------------------------------------------------------
     ! Broadcast all control information if appropriate
@@ -417,12 +426,9 @@ contains
     ! all processors and writes it to disk.
     !
     ! !USES:
-    !
     use spmdMod,    only : mpicom, MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
-    use clm_varpar, only : numrad
     !
     ! !ARGUMENTS:
-    implicit none
     !
     ! !LOCAL VARIABLES:
     integer ier       !error code
@@ -592,14 +598,10 @@ contains
     !
     ! !USES:
     !
-    use CNAllocationMod, only : suplnitro, suplnNon
-    !
     ! !ARGUMENTS:
-    implicit none
     !
     ! !LOCAL VARIABLES:
     integer i  !loop index
-    character(len=32) :: subname = 'control_print'  ! subroutine name
     !------------------------------------------------------------------------
 
     write(iulog,*) 'define run:'

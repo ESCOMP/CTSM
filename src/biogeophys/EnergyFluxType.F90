@@ -11,7 +11,7 @@ module EnergyFluxType
   use decompMod      , only : bounds_type
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
-  use PatchType      , only : pft                
+  use PatchType      , only : patch                
   !
   implicit none
   save
@@ -644,8 +644,8 @@ contains
 
     ! Patches
     do p = bounds%begp, bounds%endp 
-       c = pft%column(p)
-       l = pft%landunit(p)
+       c = patch%column(p)
+       l = patch%landunit(p)
 
        if (.not. lun%urbpoi(l)) then ! non-urban
           this%eflx_lwrad_net_u_patch(p) = spval
@@ -660,7 +660,7 @@ contains
 
     ! patches
     do p = bounds%begp, bounds%endp 
-       l = pft%landunit(p)
+       l = patch%landunit(p)
 
        if (.not. lun%urbpoi(l)) then
           this%eflx_traffic_lun(l)        = spval
