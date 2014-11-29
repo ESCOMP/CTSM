@@ -67,20 +67,8 @@ CLM testing:
 
     yellowstone_intel
     yellowstone_pgi
-    yellowstone_gnu
+    yellowstone_gnu (clm45 only)
     goldbach_nag
-    goldbach_intel
-
-  short tests (aux_clm_short) (generally these are NOT used when making a tag):
-
-    yellowstone_intel
-    yellowstone_pgi
-    goldbach_nag
-
-  tools testing: (when tools modified or scripts updated (for PTCLM))
-
-    yellowstone interactive
-    PTCLM (models/lnd/clm/tools/shared/PTCLM/test) yellowstone 
 
 CLM tag used for the baseline comparisons: 
 

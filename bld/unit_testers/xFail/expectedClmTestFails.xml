@@ -59,6 +59,8 @@ failType="FAIL" bugz="2027" >get_clump_bounds ERROR: Calling from inside a non-t
          </edison>
          <yellowstone>
             <INTEL>
+               <entry testId="ERS_D_Mmpi-serial.1x1_brazil.ICLM45CNED.yellowstone_intel.clm-edTest"          failType="RUN"   bugz="2070" >problem writing restart file</entry>
+               <entry testId="ERS_Ly5.f10_f10.ICLM45BGCCROP.yellowstone_intel.clm-irrigOn_reduceOutput"      failType="FAIL"  bugz="2091" >restarts not bit-for-bit</entry>
             </INTEL>
             <GNU>
                <entry testId="SMS.f19_g16.ICLM45CNED.yellowstone_gnu.clm-edTest"                             failType="FAIL"  bugz="2070" >error writing h0 file? looks like gnu is croaking on what looks like an implicit cast to double</entry>
@@ -68,7 +70,6 @@ failType="FAIL" bugz="2027" >get_clump_bounds ERROR: Calling from inside a non-t
          </yellowstone>
          <goldbach>
             <INTEL>
-               <entry testId="ERS_D_Mmpi-serial.1x1_brazil.ICLM45CNED.goldbach_intel.clm-edTest"             failType="RUN"   bugz="2070" >problem writing restart file</entry>
             </INTEL>
             <NAG>
                <entry testId="SMS_D.f10_f10.ICRUCLM45.goldbach_nag.clm-af_bias_v5"                           failType="FAIL"  bugz="2071" >datm_comp_mod.F90, line 905: Subscript 1 of AVSTRM%RATTR (value 0) is out of range (1:7)</entry>

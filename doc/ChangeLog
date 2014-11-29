@@ -1,5 +1,167 @@
 ===============================================================
-Tag name:  clm4_5_2_r097
+Tag name:  clm4_5_1_r098
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Nov 29 06:18:59 MST 2014
+One-line Summary: update externals to cesm1_3_beta14 or beyond
+
+Purpose of changes:
+
+   Update most externals to cesm1_3_beta14 or beyond. The one exception is mct,
+   for which I had trouble accessing the tag at the location used in beta14, so
+   I am sticking with the previous mct tag.
+
+   Some notable changes:
+
+   (1) update in intel compiler on yellowstone to intel15
+
+   (2) robust fix for number of datm streams, using Sean Santos's dynamic vector
+
+   (3) testmods reworked to use recursive testmods
+
+   (4) unit_testing, CMake & Machines updated so that unit tests now work on
+   yellowstone
+
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+-scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/refactor_koven_tags/refactor_koven_n02_scripts4_141023
++scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/append_nl_value_tags/append_nl_value_n02_scripts4_141129
+-scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_141017a
++scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_141125
+-scripts/ccsm_utils/CMake        https://github.com/quantheory/CMake_Fortran_utils/tags/CMake_Fortran_utils_140715
++scripts/ccsm_utils/CMake        https://github.com/quantheory/CMake_Fortran_utils/tags/CMake_Fortran_utils_141122
+-models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq5_0_17
++models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq5_0_18
+-models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_141022
++models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_141121
+-models/utils/esmf_wrf_timemgr   https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_140529
++models/utils/esmf_wrf_timemgr   https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_141028
+-models/utils/pio                http://parallelio.googlecode.com/svn/trunk_tags/pio1_8_12/pio
++models/utils/pio                http://parallelio.googlecode.com/svn/trunk_tags/pio1_8_13/pio
+-tools/load_balancing_tool       https://svn-ccsm-models.cgd.ucar.edu/tools/load_balancing_tool/trunk_tags/load_balancing_tool_140818/
++tools/load_balancing_tool       https://svn-ccsm-models.cgd.ucar.edu/tools/load_balancing_tool/trunk_tags/load_balancing_tool_141008
+-tools/pyReshaper                https://subversion.ucar.edu/asap/pyReshaper/tags/v0.9.1/
++tools/pyReshaper                https://proxy.subversion.ucar.edu/pubasap/pyReshaper/tags/v0.9.1
+-tools/unit_testing              https://svn-ccsm-models.cgd.ucar.edu/unit_testing/trunk_tags/unit_testing_0_08
++tools/unit_testing              https://svn-ccsm-models.cgd.ucar.edu/unit_testing/trunk_tags/unit_testing_0_12
+
+
+List all files eliminated:
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+========= Workaround for pgi internal compiler error
+M       models/lnd/clm/src/main/clm_driver.F90
+
+========= Rework README, mainly to remove the need for using '--clean'
+M       models/lnd/clm/src/README.unit_testing
+
+========= Move an xfail from goldbach to yellowstone; add xfail for ERS_Ly5 test
+          (bug 2091)
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+========= Update what machine-comiler combos we test
+M       .ChangeLog_template
+
+CLM testing:
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok
+
+    Other than xFails, note that the following failed:
+
+    *** presumably this failed in the previous tag, so baselines didn't exist
+    BFAIL SMS_D.1x1_mexicocityMEX.I.goldbach_nag.compare_hist.clm4_5_1_r097 
+
+    *** ozone tests that won't work until an upcoming tag that brings ozone in
+    SFAIL ERS_D.f10_f10.I1850CLM45.goldbach_nag.clm-o3.GC.1128-0838.45.n
+    SFAIL PET_P15x2_Ly3.f10_f10.ICLM45BGCCROP.yellowstone_pgi.clm-irrig_o3_reduceOutput.GC.1128-0838.45.p
+    SFAIL ERS_Ly5.f10_f10.ICLM45BGCCROP.yellowstone_intel.clm-irrig_o3_reduceOutput.GC.1128-0838.45.i
+
+    Also, note that the following test failed:
+
+    FAIL  ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-drydepnomegan 
+
+    This appears to be a scripts problem. Since Mariana wants to do away with
+    ERH tests anyway, I just replaced this with:
+
+    PASS  ERI_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-drydepnomegan 
+
+
+    Also ran the following two tests, which have been replaced with
+    (currently-failing) o3 tests:
+
+    ERS_Ly5.f10_f10.ICLM45BGCCROP.yellowstone_intel.clm-irrigOn_reduceOutput
+    PET_P15x2_Ly3.f10_f10.ICLM45BGCCROP.yellowstone_pgi.clm-irrigOn_reduceOutput
+
+    The PET test passed, but the ERS test failed (see bug 2091)
+
+CLM tag used for the baseline comparisons: clm4_5_1_r097
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: yellowstone-intel
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+       NOT INVESTIGATED
+
+       These diffs are presumably due to the yellowstone-intel compiler upgrade
+       to v15.
+
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
+Tag name:  clm4_5_1_r097
 Originator(s): mvertens mvertens (Mariana Vertenstein,UCAR/CSEG,303-497-1349)
 Date:  Mon Nov 24 11:06:30 MST 2014
 One-line Summary: major refactorization to introduce new soilbiogeochem data

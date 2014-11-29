@@ -1,6 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-   clm4_5_2_r097 mvertens 11/24/2014 major refactorization to introduce new soilbiogeochem data types and routines that are independent of either ED or CN datatypes
+   clm4_5_1_r098    sacks 11/29/2014 update externals to cesm1_3_beta14 or beyond
+   clm4_5_1_r097 mvertens 11/24/2014 major refactorization to introduce new soilbiogeochem data types and routines that are independent of either ED or CN datatypes
    clm4_5_1_r096     erik 11/19/2014 Several answer changing bug-fixes: snow grain size, lake hydrology, default settings, organic soil
    clm4_5_1_r095    andre 11/10/2014 N comp refactoring by Jinyun Tang (LBL) and transpiration sink isolation by Gautam Bisht (LBL)
    clm4_5_1_r094    sacks 11/07/2014 misc. glacier-related updates
