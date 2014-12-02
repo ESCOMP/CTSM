@@ -27,6 +27,7 @@ module  PhotosynthesisMod
   use SolarAbsorbedType   , only : solarabs_type
   use SurfaceAlbedoType   , only : surfalb_type
   use CNvegStateType      , only : cnveg_state_type
+  use OzoneBaseMod        , only : ozone_base_type
   use LandunitType        , only : lun
   use PatchType           , only : patch                
   !
@@ -509,7 +510,7 @@ contains
   subroutine Photosynthesis ( bounds, fn, filterp, &
        esat_tv, eair, oair, cair, rb, btran, &
        dayl_factor, atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
-       canopystate_inst, photosyns_inst, phase)
+       canopystate_inst, ozone_inst, photosyns_inst, phase)
     !
     ! !DESCRIPTION:
     ! Leaf photosynthesis and stomatal conductance calculation as described by
@@ -537,6 +538,7 @@ contains
     type(surfalb_type)     , intent(in)    :: surfalb_inst
     type(solarabs_type)    , intent(in)    :: solarabs_inst
     type(canopystate_type) , intent(in)    :: canopystate_inst
+    class(ozone_base_type) , intent(in)    :: ozone_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     character(len=*)       , intent(in)    :: phase                          ! 'sun' or 'sha'
     !
@@ -649,6 +651,8 @@ contains
     real(r8) , pointer :: rs          (:)         
     real(r8) , pointer :: rs_z        (:,:)     
     real(r8) , pointer :: ci_z        (:,:)     
+    real(r8) , pointer :: o3coefv     (:)  ! o3 coefficient used in photo calculation
+    real(r8) , pointer :: o3coefg     (:)  ! o3 coefficient used in rs calculation
     real(r8) , pointer :: alphapsnsun (:)  
     real(r8) , pointer :: alphapsnsha (:) 
     !------------------------------------------------------------------------------
@@ -711,6 +715,8 @@ contains
          lai_z     =>    canopystate_inst%laisun_z_patch     ! Input:  [real(r8) (:,:) ]  leaf area index for canopy layer, sunlit or shaded                  
          vcmaxcint =>    surfalb_inst%vcmaxcintsun_patch     ! Input:  [real(r8) (:)   ]  leaf to canopy scaling coefficient                                     
          alphapsn  =>    photosyns_inst%alphapsnsun_patch    ! Input:  [real(r8) (:)   ]  13C fractionation factor for PSN ()                                   
+         o3coefv   =>    ozone_inst%o3coefvsun_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in photosynthesis calculation
+         o3coefg   =>    ozone_inst%o3coefgsun_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in rs calculation
          ci_z      =>    photosyns_inst%cisun_z_patch        ! Output: [real(r8) (:,:) ]  intracellular leaf CO2 (Pa)                                         
          rs        =>    photosyns_inst%rssun_patch          ! Output: [real(r8) (:)   ]  leaf stomatal resistance (s/m)                                        
          rs_z      =>    photosyns_inst%rssun_z_patch        ! Output: [real(r8) (:,:) ]  canopy layer: leaf stomatal resistance (s/m)                        
@@ -726,6 +732,8 @@ contains
          lai_z     =>    canopystate_inst%laisha_z_patch     ! Input:  [real(r8) (:,:) ]  leaf area index for canopy layer, sunlit or shaded                  
          vcmaxcint =>    surfalb_inst%vcmaxcintsha_patch     ! Input:  [real(r8) (:)   ]  leaf to canopy scaling coefficient                                    
          alphapsn  =>    photosyns_inst%alphapsnsha_patch    ! Input:  [real(r8) (:)   ]  13C fractionation factor for PSN ()
+         o3coefv   =>    ozone_inst%o3coefvsha_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in photosynthesis calculation
+         o3coefg   =>    ozone_inst%o3coefgsha_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in rs calculation
          ci_z      =>    photosyns_inst%cisha_z_patch        ! Output: [real(r8) (:,:) ]  intracellular leaf CO2 (Pa)                                         
          rs        =>    photosyns_inst%rssha_patch          ! Output: [real(r8) (:)   ]  leaf stomatal resistance (s/m)                                        
          rs_z      =>    photosyns_inst%rssha_z_patch        ! Output: [real(r8) (:,:) ]  canopy layer: leaf stomatal resistance (s/m)                        
@@ -1070,10 +1078,12 @@ contains
 
                gs = gs_mol(p,iv) / cf
                rs_z(p,iv) = min(1._r8/gs, rsmax0)
+               rs_z(p,iv) = rs_z(p,iv) / o3coefg(p)
 
                ! Photosynthesis. Save rate-limiting photosynthesis
 
                psn_z(p,iv) = ag(p,iv)
+               psn_z(p,iv) = psn_z(p,iv) * o3coefv(p)
 
                psn_wc_z(p,iv) = 0._r8
                psn_wj_z(p,iv) = 0._r8
@@ -1172,7 +1182,7 @@ contains
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: f,fp,p,l,g               ! indices
+    integer :: f,fp,p,l,g               ! indices
     real(r8) :: rc14_atm
     !-----------------------------------------------------------------------
 
@@ -1183,7 +1193,7 @@ contains
 
          laisun      => canopystate_inst%laisun_patch    , & ! Input:  [real(r8) (:) ]  sunlit leaf area                                                      
          laisha      => canopystate_inst%laisha_patch    , & ! Input:  [real(r8) (:) ]  shaded leaf area                                                      
-         
+
          psnsun      => photosyns_inst%psnsun_patch      , & ! Input:  [real(r8) (:) ]  sunlit leaf photosynthesis (umol CO2 /m**2/ s)                        
          psnsha      => photosyns_inst%psnsha_patch      , & ! Input:  [real(r8) (:) ]  shaded leaf photosynthesis (umol CO2 /m**2/ s)                        
          rc13_canair => photosyns_inst%rc13_canair_patch , & ! Output: [real(r8) (:) ]  C13O2/C12O2 in canopy air
@@ -1206,7 +1216,7 @@ contains
          fpsn_wj     => photosyns_inst%fpsn_wj_patch     , & ! Output: [real(r8) (:) ]  RuBP-limited photosynthesis (umol CO2 /m**2 /s)                       
          fpsn_wp     => photosyns_inst%fpsn_wp_patch       & ! Output: [real(r8) (:) ]  product-limited photosynthesis (umol CO2 /m**2 /s)                    
          )
-
+         
       if ( use_c14 ) then
          if (use_c14_bombspike) then
             !call C14BombSpike(rc14_atm)

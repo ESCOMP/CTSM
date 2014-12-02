@@ -113,7 +113,7 @@ module IrrigationMod
      
    contains
      ! Public routines
-     ! NOTE(wjs, 2014-10-15) Workaround for pgi bug (pgi 14.7): Add an "Irrigation" prefix to some  generic routines like "Init"
+     ! COMPILER_BUG(wjs, 2014-10-15, pgi 14.7) Add an "Irrigation" prefix to some  generic routines like "Init"
      ! (without this workaround, pgi compilation fails in restFileMod)
      procedure, public :: Init => IrrigationInit
      procedure, public :: InitForTesting ! version of Init meant for unit testing

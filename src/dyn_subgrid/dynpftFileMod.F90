@@ -257,6 +257,7 @@ contains
 
     ! Get pft weights for this time step
 
+    ! COMPILER_BUG(wjs, 2014-??-??, intel 13.1.2) 
     ! As a workaround for an internal compiler error with ifort 13.1.2 on goldbach, call
     ! the specific name of this procedure rather than using its generic name
     call dynpft_file%time_info%set_current_year_get_year()

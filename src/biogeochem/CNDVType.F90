@@ -442,8 +442,13 @@ contains
     ! !ARGUMENTS:
     class(dgvs_type)  , intent(inout) :: this
     type(bounds_type) , intent(in)    :: bounds
-    real(r8)          , intent(in)    :: t_a10_patch( bounds%begp:)      ! 10-day running mean of the 2 m temperature (K)
-    real(r8)          , intent(in)    :: t_ref2m_patch( bounds%begp:)    ! 2 m height surface air temperature (K)
+    ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) These arrays get resized to 0 when running
+    ! with threading with pgi 14.7 on yellowstone. My standard workarounds weren't
+    ! working; the only thing that I can find that works is to change them to pointers
+!    real(r8)          , intent(in)    :: t_a10_patch( bounds%begp:)      ! 10-day running mean of the 2 m temperature (K)
+!    real(r8)          , intent(in)    :: t_ref2m_patch( bounds%begp:)    ! 2 m height surface air temperature (K)
+    real(r8), pointer , intent(in)    :: t_a10_patch(:)      ! 10-day running mean of the 2 m temperature (K)
+    real(r8), pointer , intent(in)    :: t_ref2m_patch(:)    ! 2 m height surface air temperature (K)
     !
     ! !LOCAL VARIABLES:
     integer           :: p          ! index

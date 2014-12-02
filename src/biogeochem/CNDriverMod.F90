@@ -172,6 +172,8 @@ contains
     real(r8):: aroot(bounds%begp:bounds%endp) ! root allocation coefficient (only used for crop_prog)
     integer :: begp,endp
     integer :: begc,endc
+
+    integer :: dummy_to_make_pgi_happy
     !-----------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
@@ -215,6 +217,9 @@ contains
             num_soilc, filter_soilc, 0._r8)
     end if
 
+    ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Without this, the filter is full of garbage
+    ! in some situations
+    dummy_to_make_pgi_happy = ubound(filter_soilc, 1)
     call soilbiogeochem_carbonflux_inst%SetValues( &
          num_soilc, filter_soilc, 0._r8)
     if ( use_c13 ) then

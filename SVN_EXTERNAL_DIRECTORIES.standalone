@@ -1,5 +1,5 @@
 # CESM scripts, machines and driver
-scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/append_nl_value_tags/append_nl_value_n02_scripts4_141129
+scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/append_nl_value_tags/append_nl_value_n02_scripts4_141201
 scripts/doc                     https://svn-ccsm-models.cgd.ucar.edu/doc/trunk_tags/doc_140519
 scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_141125
 scripts/ccsm_utils/CMake        https://github.com/quantheory/CMake_Fortran_utils/tags/CMake_Fortran_utils_141122

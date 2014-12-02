@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r099    sacks 12/02/2014 add ozone stress code from Danica Lombardozzi
    clm4_5_1_r098    sacks 11/29/2014 update externals to cesm1_3_beta14 or beyond
    clm4_5_1_r097 mvertens 11/24/2014 major refactorization to introduce new soilbiogeochem data types and routines that are independent of either ED or CN datatypes
    clm4_5_1_r096     erik 11/19/2014 Several answer changing bug-fixes: snow grain size, lake hydrology, default settings, organic soil

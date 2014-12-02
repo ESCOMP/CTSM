@@ -449,6 +449,11 @@ Toggle to turn on the VIC hydrologic parameterizations
 Toggle to turn on the prognostic crop model
 </entry>
 
+<entry id="use_ozone" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on ozone stress
+</entry>
+
 <entry id="use_snicar_frc" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) radiative forcing

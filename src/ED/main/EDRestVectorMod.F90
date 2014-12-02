@@ -496,6 +496,8 @@ contains
     integer, pointer,dimension(:) :: gsmOP   ! gsmap ordered points
     !-----------------------------------------------------------------------
 
+    ! TODO(wjs, 2014-11-25) gsmap and gsmOP are computed here, but never used. Are these
+    ! place-holders that are intended to be used at some point, or can they be removed?
     call get_clmlevel_gsmap(clmlevel='cohort', gsmap=gsmap)
     call mct_gsmap_OP(gsmap, iam, gsmOP)
 
@@ -713,6 +715,8 @@ contains
          long_name='ed cohort - old_stock', units='unitless', &
          interpinic_flag='interp', data=this%old_stock, &
          readvar=readvar)
+
+    deallocate(gsmOP)
 
   end subroutine doVectorIO
 

@@ -31,6 +31,7 @@ module CanopyFluxesMod
   use CNVegStateType        , only : cnveg_state_type
   use EnergyFluxType        , only : energyflux_type
   use FrictionvelocityMod   , only : frictionvel_type
+  use OzoneBaseMod          , only : ozone_base_type
   use SoilStateType         , only : soilstate_type
   use SolarAbsorbedType     , only : solarabs_type
   use SurfaceAlbedoType     , only : surfalb_type
@@ -67,7 +68,7 @@ contains
   subroutine CanopyFluxes(bounds,  num_exposedvegp, filter_exposedvegp, &
        ed_allsites_inst,  atm2lnd_inst, canopystate_inst, cnveg_state_inst,            &
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst, &
-       temperature_inst, waterflux_inst, waterstate_inst, ch4_inst, photosyns_inst,    &
+       temperature_inst, waterflux_inst, waterstate_inst, ch4_inst, ozone_inst, photosyns_inst, &
        humanindex_inst, soil_water_retention_curve) 
     !
     ! !DESCRIPTION:
@@ -112,7 +113,7 @@ contains
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     !
     ! !ARGUMENTS:
-    type(bounds_type)                      , intent(in)            :: bounds 
+    type(bounds_type)         , intent(in)    :: bounds 
     integer                                , intent(in)            :: num_exposedvegp        ! number of points in filter_exposedvegp
     integer                                , intent(in)            :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
     type(ed_site_type)                     , intent(inout), target :: ed_allsites_inst( bounds%begg: )
@@ -128,6 +129,7 @@ contains
     type(waterstate_type)                  , intent(inout)         :: waterstate_inst
     type(waterflux_type)                   , intent(inout)         :: waterflux_inst
     type(ch4_type)                         , intent(inout)         :: ch4_inst
+    class(ozone_base_type)                 , intent(inout)         :: ozone_inst
     type(photosyns_type)                   , intent(inout)         :: photosyns_inst
     type(humanindex_type)                  , intent(inout)         :: humanindex_inst
     class(soil_water_retention_curve_type) , intent(in)            :: soil_water_retention_curve
@@ -276,12 +278,14 @@ contains
     real(r8) :: temprootr                 
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
     integer  :: iv
+
+    integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
 
-    associate(                                                                    & 
-         snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
-         dayl                   => grc%dayl                                     , & ! Input:  [real(r8) (:)   ]  daylength (s)
-         max_dayl               => grc%max_dayl                                 , & ! Input:  [real(r8) (:)   ]  maximum daylength for this grid cell (s)
+    associate(                                                               & 
+         snl                  => col%snl                                   , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
+         dayl                 => grc%dayl                                  , & ! Input:  [real(r8) (:)   ]  daylength (s)
+         max_dayl             => grc%max_dayl                              , & ! Input:  [real(r8) (:)   ]  maximum daylength for this grid cell (s)
 
          dleaf                  => pftcon%dleaf                                 , & ! Input:  characteristic leaf dimension (m)                                     
 
@@ -418,7 +422,7 @@ contains
          eflx_sh_veg            => energyflux_inst%eflx_sh_veg_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from leaves (W/m**2) [+ to atm]                    
          eflx_sh_grnd           => energyflux_inst%eflx_sh_grnd_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]                    
 
-         begp                   => bounds%begp                                  , &
+         begp                 => bounds%begp                               , &
          endp                   => bounds%endp                                  , &
          begg                   => bounds%begg                                  , &
          endg                   => bounds%endg                                    &
@@ -739,7 +743,7 @@ contains
             call Photosynthesis (bounds, fn, filterp, &
                  svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
                  dayl_factor(begp:endp), atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
-                 canopystate_inst, photosyns_inst, phase='sun')
+                 canopystate_inst, ozone_inst, photosyns_inst, phase='sun')
 
             if ( use_cn .and. use_c13 ) then
                call Fractionation (bounds, fn, filterp, &
@@ -763,7 +767,7 @@ contains
             call Photosynthesis (bounds, fn, filterp, &
                  svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
                  dayl_factor(begp:endp), atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
-                 canopystate_inst, photosyns_inst, phase='sha')
+                 canopystate_inst, ozone_inst, photosyns_inst, phase='sha')
 
             if ( use_cn .and. use_c13 ) then
                call Fractionation (bounds, fn, filterp,  &
@@ -1127,6 +1131,25 @@ contains
 
       call PhotosynthesisTotal(fn, filterp, &
            atm2lnd_inst, canopystate_inst, photosyns_inst)
+
+      ! Calculate ozone stress. This needs to be done after rssun and rsshade are
+      ! computed by the Photosynthesis routine. However, Photosynthesis also uses the
+      ! ozone stress computed here. Thus, the ozone stress computed in timestep i is
+      ! applied in timestep (i+1).
+      
+      ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) The following dummy variable assignment is
+      ! needed with pgi 14.7 on yellowstone; without it, forc_pbot_downscaled_col gets
+      ! resized inappropriately in the following subroutine call, due to a compiler bug.
+      dummy_to_make_pgi_happy = ubound(atm2lnd_inst%forc_pbot_downscaled_col, 1)
+      call ozone_inst%CalcOzoneStress( &
+           bounds, fn, filterp, &
+           forc_pbot = atm2lnd_inst%forc_pbot_downscaled_col(bounds%begc:bounds%endc), &
+           forc_th   = atm2lnd_inst%forc_th_downscaled_col(bounds%begc:bounds%endc), &
+           rssun     = photosyns_inst%rssun_patch(bounds%begp:bounds%endp), &
+           rssha     = photosyns_inst%rssha_patch(bounds%begp:bounds%endp), &
+           rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
+           ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
+           tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp))
 
       ! Filter out patches which have small energy balance errors; report others
 

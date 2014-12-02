@@ -278,6 +278,7 @@ module clm_varctl
   logical, public :: use_cn              = .false.
   logical, public :: use_cndv            = .false.
   logical, public :: use_crop            = .false.
+  logical, public :: use_ozone           = .false.
   logical, public :: use_snicar_frc      = .false.
   logical, public :: use_vancouver       = .false.
   logical, public :: use_mexicocity      = .false.

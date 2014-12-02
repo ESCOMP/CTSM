@@ -135,6 +135,7 @@ contains
 
     SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
+    ! COMPILER_BUG(wjs, 2014-??-??, intel 13.1.2) 
     ! As a workaround for an internal compiler error with ifort 13.1.2 on goldbach, call
     ! the specific name of this procedure rather than using its generic name
     call dynHarvest_file%time_info%set_current_year_get_year()

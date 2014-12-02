@@ -142,10 +142,9 @@ contains
     type(bounds_type)    :: bounds_clump    
     type(bounds_type)    :: bounds_proc     
 
-    ! NOTE(wjs, 2014-11-28) Workaround for internal compiler error with pgi 14.7
-    ! ('normalize_forall_array: non-conformable'), which appears in the call to
-    ! CalcIrrigationNeeded.
-    ! Simply declaring this variable makes the ICE go away.
+    ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Workaround for internal compiler error with
+    ! pgi 14.7 ('normalize_forall_array: non-conformable'), which appears in the call to
+    ! CalcIrrigationNeeded. Simply declaring this variable makes the ICE go away.
     real(r8), allocatable :: dummy1_to_make_pgi_happy(:)
     !-----------------------------------------------------------------------
 
@@ -226,9 +225,9 @@ contains
     ! ============================================================================
 
     if (use_cn) then
-       !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
-       do nc = 1,nclumps
-          call get_clump_bounds(nc, bounds_clump)
+    !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
 
           call t_startf('begcnbal')
 
@@ -255,8 +254,8 @@ contains
           end if
 
           call t_stopf('begcnbal')
-       end do
-       !$OMP END PARALLEL DO
+    end do
+    !$OMP END PARALLEL DO
     end if
 
     ! ============================================================================
@@ -266,7 +265,7 @@ contains
     ! ============================================================================
 
     call t_startf('dyn_subgrid')
-    call dynSubgrid_driver(bounds_proc,                                                  &
+    call dynSubgrid_driver(bounds_proc,                                      &
          urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,           &
          waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,             &
          canopystate_inst, photosyns_inst, dgvs_inst, glc2lnd_inst, cnveg_state_inst,    &
@@ -381,10 +380,10 @@ contains
 
        ! Surface Radiation primarily for non-urban columns 
 
-       call SurfaceRadiation(bounds_clump,                           &
-            filter(nc)%num_nourbanp, filter(nc)%nourbanp,            &
+       call SurfaceRadiation(bounds_clump,                                 &
+            filter(nc)%num_nourbanp, filter(nc)%nourbanp,                  &
             filter(nc)%num_urbanp, filter(nc)%urbanp,                &
-            filter(nc)%num_urbanc, filter(nc)%urbanc,                &
+            filter(nc)%num_urbanc, filter(nc)%urbanc,                      &
             ed_allsites_inst(bounds_clump%begg:bounds_clump%endg), atm2lnd_inst, &
             waterstate_inst, canopystate_inst, surfalb_inst, solarabs_inst, surfrad_inst)
 
@@ -433,23 +432,23 @@ contains
        ! and leaf water change by evapotranspiration
 
        call t_startf('canflux')
-       call CanopyFluxes(bounds_clump,                                                      &
+       call CanopyFluxes(bounds_clump,                                                   &
             filter(nc)%num_exposedvegp, filter(nc)%exposedvegp,                             &
             ed_allsites_inst(bounds_clump%begg:bounds_clump%endg),                          &
             atm2lnd_inst, canopystate_inst, cnveg_state_inst,                               &
             energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst, &
-            temperature_inst, waterflux_inst, waterstate_inst, ch4_inst, photosyns_inst,    &
+            temperature_inst, waterflux_inst, waterstate_inst, ch4_inst, ozone_inst, photosyns_inst, &
             humanindex_inst, soil_water_retention_curve) 
        call t_stopf('canflux')
 
        ! Fluxes for all urban landunits
 
        call t_startf('uflux')
-       call UrbanFluxes(bounds_clump,                                           &
-            filter(nc)%num_nourbanl, filter(nc)%nourbanl,                       &
-            filter(nc)%num_urbanl, filter(nc)%urbanl,                           &
-            filter(nc)%num_urbanc, filter(nc)%urbanc,                           &
-            filter(nc)%num_urbanp, filter(nc)%urbanp,                           &
+       call UrbanFluxes(bounds_clump,                                         &
+            filter(nc)%num_nourbanl, filter(nc)%nourbanl,                     &
+            filter(nc)%num_urbanl, filter(nc)%urbanl,                         &
+            filter(nc)%num_urbanc, filter(nc)%urbanc,                         &
+            filter(nc)%num_urbanp, filter(nc)%urbanp,                         &
             atm2lnd_inst, urbanparams_inst, soilstate_inst, temperature_inst,   &
             waterstate_inst, frictionvel_inst, energyflux_inst, waterflux_inst, &
             humanindex_inst)
@@ -563,12 +562,12 @@ contains
 
        call t_startf('hydro without drainage')
 
-       call HydrologyNoDrainage(bounds_clump,                                  &
-            filter(nc)%num_nolakec, filter(nc)%nolakec,                        &
-            filter(nc)%num_hydrologyc, filter(nc)%hydrologyc,                  &
-            filter(nc)%num_urbanc, filter(nc)%urbanc,                          &
-            filter(nc)%num_snowc, filter(nc)%snowc,                            &
-            filter(nc)%num_nosnowc, filter(nc)%nosnowc,                        &
+       call HydrologyNoDrainage(bounds_clump,                                &
+            filter(nc)%num_nolakec, filter(nc)%nolakec,                      &
+            filter(nc)%num_hydrologyc, filter(nc)%hydrologyc,                &
+            filter(nc)%num_urbanc, filter(nc)%urbanc,                        &
+            filter(nc)%num_snowc, filter(nc)%snowc,                          &
+            filter(nc)%num_nosnowc, filter(nc)%nosnowc,                      &
             atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst,   &
             waterflux_inst, waterstate_inst, soilhydrology_inst, aerosol_inst, &
             soil_water_retention_curve)
@@ -659,16 +658,16 @@ contains
 
        ! FIX(SPM,032414)  push these checks into the routines below and/or make this consistent.
 
-       ! fully prognostic canopy structure and C-N biogeochemistry
-       ! - CNDV defined: prognostic biogeography; else prescribed
+             ! fully prognostic canopy structure and C-N biogeochemistry
+             ! - CNDV defined: prognostic biogeography; else prescribed
        ! - crop model:  crop algorithms called from within CNDriver
-
+             
        if (use_cn) then 
           call t_startf('ecosysdyn')
           call CNDriverNoLeaching(bounds_clump,                                         &
-               filter(nc)%num_soilc, filter(nc)%soilc,                                  &
-               filter(nc)%num_soilp, filter(nc)%soilp,                                  &
-               filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,                         &
+                  filter(nc)%num_soilc, filter(nc)%soilc,                       &
+                  filter(nc)%num_soilp, filter(nc)%soilp,                       &
+                  filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,              &
                cnveg_state_inst,                                                        &
                cnveg_carbonflux_inst, cnveg_carbonstate_inst,                           &
                c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,                   &
@@ -684,29 +683,29 @@ contains
                dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,          &
                nutrient_competition_method)
 
-          call CNAnnualUpdate(bounds_clump,            &
-               filter(nc)%num_soilc, filter(nc)%soilc, &
-               filter(nc)%num_soilp, filter(nc)%soilp, &
+             call CNAnnualUpdate(bounds_clump,            &
+                  filter(nc)%num_soilc, filter(nc)%soilc, &
+                  filter(nc)%num_soilp, filter(nc)%soilp, &
                cnveg_state_inst, cnveg_carbonflux_inst)
           call t_stopf('ecosysdyn')
 
        end if
 
-       ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
+                ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
 
        if ((.not. use_cn) .and. (.not. use_ed) .and. (doalb)) then 
           call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                waterstate_inst, canopystate_inst)
-       end if  
-          
+             end if
+
        ! Ecosystem demography
 
        if (use_ed) then
           call ed_clm_inst%SetValues( bounds_clump, 0._r8 )
-       end if  
+          end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
-
+          
        call t_startf('depvel')
        call depvel_compute(bounds_clump, &
             atm2lnd_inst, canopystate_inst, waterstate_inst, frictionvel_inst, &
@@ -753,7 +752,7 @@ contains
        !   vegetation structure (LAI, SAI, height)
        ! ============================================================================
 
-       if (use_cn) then
+          if (use_cn) then
 
           ! Update the nitrogen leaching rate as a function of soluble mineral N 
           ! and total soil water outflow.
@@ -768,8 +767,8 @@ contains
           ! Call to all CN summary routines
           
           call  CNDriverSummary(bounds_clump,                                           &
-               filter(nc)%num_soilc, filter(nc)%soilc,                                  &
-               filter(nc)%num_soilp, filter(nc)%soilp,                                  &
+                  filter(nc)%num_soilc, filter(nc)%soilc,               &
+                  filter(nc)%num_soilp, filter(nc)%soilp,               &
                cnveg_state_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
                c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
                c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
@@ -782,13 +781,13 @@ contains
           ! On the radiation time step, use C state variables to calculate
           ! vegetation structure (LAI, SAI, height)
 
-          if (doalb) then   
-             call CNVegStructUpdate(filter(nc)%num_soilp, filter(nc)%soilp, &
+             if (doalb) then   
+                call CNVegStructUpdate(filter(nc)%num_soilp, filter(nc)%soilp, &
                   waterstate_inst, frictionvel_inst, dgvs_inst, cnveg_state_inst, &
                   cnveg_carbonstate_inst, canopystate_inst)
-          end if
+             end if
 
-       end if
+          end if
 
        ! ============================================================================
        ! Check the energy and water balance and also carbon and nitrogen balance
@@ -805,14 +804,14 @@ contains
        ! Check the carbon and nitrogen balance
        ! ============================================================================
 
-       if (use_cn) then
-          nstep = get_nstep()
-          if (nstep < 2 )then
-             if (masterproc) then
-                write(iulog,*) '--WARNING-- skipping CN balance check for first timestep'
-             end if
-          else
-             call t_startf('cnbalchk')
+          if (use_cn) then
+             nstep = get_nstep()
+             if (nstep < 2 )then
+                if (masterproc) then
+                   write(iulog,*) '--WARNING-- skipping CN balance check for first timestep'
+                end if
+             else
+                call t_startf('cnbalchk')
 
              call CBalanceCheck(bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
                   soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst)
@@ -820,9 +819,9 @@ contains
              call NBalanceCheck(bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
                   soilbiogeochem_nitrogenflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst)
 
-             call t_stopf('cnbalchk')
+                call t_stopf('cnbalchk')
+             end if
           end if
-       end if
 
        ! ============================================================================
        ! Determine albedos for next time step
@@ -916,7 +915,7 @@ contains
     ! use_ed) then statement ... double check if this is required and why
 
     if (nstep > 0) then
-       call t_startf('accum')
+          call t_startf('accum')
 
        call atm2lnd_inst%UpdateAccVars(bounds_proc)
 
@@ -932,18 +931,24 @@ contains
                mon, day, sec)
        endif
 
-       if (use_cndv) then
-          call dgvs_inst%UpdateAccVars(bounds_proc, &
-               t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
-               t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
-       end if
+          if (use_cndv) then
+             ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
+             ! compiling this threaded, I needed to change the dummy arguments to be
+             ! pointers, and get rid of the explicit bounds in the subroutine call.
+             ! call dgvs_inst%UpdateAccVars(bounds_proc, &
+             !      t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
+             !      t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
+             call dgvs_inst%UpdateAccVars(bounds_proc, &
+                  t_a10_patch=temperature_inst%t_a10_patch, &
+                  t_ref2m_patch=temperature_inst%t_ref2m_patch)
+          end if
 
-       if (crop_prog) then
+          if (crop_prog) then
           call crop_inst%CropUpdateAccVars(bounds_proc, &
                temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col, cnveg_state_inst)
-       end if
+          end if
 
-       call t_stopf('accum')
+          call t_stopf('accum')
     end if
 
     ! ============================================================================
@@ -1002,7 +1007,7 @@ contains
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1, nclumps
 
-          call get_clump_bounds(nc, bounds_clump)
+             call get_clump_bounds(nc, bounds_clump)
 
           call ed_driver( bounds_clump,                               &
                ed_allsites_inst(bounds_clump%begg:bounds_clump%endg), &
@@ -1012,23 +1017,23 @@ contains
 
           call setFilters( bounds_clump, glc2lnd_inst%icemask_grc )
 
-          !reset surface albedo fluxes in case there is a mismatch between elai and canopy absorbtion. 
-          call SurfaceAlbedo(bounds_clump,                        &
-               filter_inactive_and_active(nc)%num_nourbanc,       &
-               filter_inactive_and_active(nc)%nourbanc,           &
-               filter_inactive_and_active(nc)%num_nourbanp,       &
-               filter_inactive_and_active(nc)%nourbanp,           &
-               filter_inactive_and_active(nc)%num_urbanc,         &
-               filter_inactive_and_active(nc)%urbanc,             &
-               filter_inactive_and_active(nc)%num_urbanp,         & 
-               filter_inactive_and_active(nc)%urbanp,             &
-               nextsw_cday, declinp1,                             &
+             !reset surface albedo fluxes in case there is a mismatch between elai and canopy absorbtion. 
+             call SurfaceAlbedo(bounds_clump,                      &
+                filter_inactive_and_active(nc)%num_nourbanc,       &
+                filter_inactive_and_active(nc)%nourbanc,           &
+                filter_inactive_and_active(nc)%num_nourbanp,       &
+                filter_inactive_and_active(nc)%nourbanp,           &
+                filter_inactive_and_active(nc)%num_urbanc,         &
+                filter_inactive_and_active(nc)%urbanc,             &
+                filter_inactive_and_active(nc)%num_urbanp,         & 
+                filter_inactive_and_active(nc)%urbanp,             &
+                nextsw_cday, declinp1,                             &
                ed_allsites_inst(bounds_clump%begg:bounds_clump%endg), &
                aerosol_inst, canopystate_inst, waterstate_inst, &
                lakestate_inst, temperature_inst, surfalb_inst)
 
-       end do
-       !$OMP END PARALLEL DO
+          end do
+          !$OMP END PARALLEL DO
 
     end if ! use_ed branch
 

@@ -49,6 +49,8 @@ module clm_instMod
   use FrictionVelocityMod             , only : frictionvel_type
   use IrrigationMod                   , only : irrigation_type
   use LakeStateType                   , only : lakestate_type
+  use OzoneBaseMod                    , only : ozone_base_type
+  use OzoneFactoryMod                 , only : create_and_init_ozone_type
   use PhotosynthesisMod               , only : photosyns_type
   use SoilHydrologyType               , only : soilhydrology_type  
   use SoilStateType                   , only : soilstate_type
@@ -95,6 +97,7 @@ module clm_instMod
   type(frictionvel_type)                  :: frictionvel_inst
   type(irrigation_type)                   :: irrigation_inst
   type(lakestate_type)                    :: lakestate_inst
+  class(ozone_base_type), allocatable     :: ozone_inst
   type(photosyns_type)                    :: photosyns_inst
   type(soilstate_type)                    :: soilstate_inst
   type(soilhydrology_type)                :: soilhydrology_inst
@@ -181,6 +184,8 @@ contains
     integer               :: begl, endl
     real(r8), allocatable :: h2osno_col(:)
     real(r8), allocatable :: snow_depth_col(:)
+
+    integer :: dummy_to_make_pgi_happy
     !----------------------------------------------------------------------
 
     ! Note: h2osno_col and snow_depth_col are initialized as local variable 
@@ -265,9 +270,10 @@ contains
 
     call waterflux_inst%Init(bounds)
 
-    ! WJS (6-24-14): Without the following write statement, the assertion in
-    ! energyflux_inst%Init fails with pgi 13.9 on yellowstone. So for now, I'm leaving
-    ! this write statement in place as a workaround for this problem.
+    ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Without the following assignment, the
+    ! assertion in energyflux_inst%Init fails with pgi 14.7 on yellowstone, presumably due
+    ! to a compiler bug.
+    dummy_to_make_pgi_happy = ubound(temperature_inst%t_grnd_col, 1)
     call energyflux_inst%Init(bounds, temperature_inst%t_grnd_col(begc:endc), &
          IsSimpleBuildTemp(), IsProgBuildTemp() )
 
@@ -277,6 +283,8 @@ contains
 
     call lakestate_inst%Init(bounds)
     call LakeConInit()
+
+    allocate(ozone_inst, source = create_and_init_ozone_type(bounds))
 
     call photosyns_inst%Init(bounds)
 
@@ -474,6 +482,8 @@ contains
 
     call lakestate_inst%restart (bounds, ncid, flag=flag)
 
+    call ozone_inst%restart (bounds, ncid, flag=flag)
+
     call photosyns_inst%restart (bounds, ncid, flag=flag)
 
     call soilhydrology_inst%restart (bounds, ncid, flag=flag)
@@ -504,6 +514,7 @@ contains
 
     if (use_cn) then
 
+       call soilbiogeochem_state_inst%restart(bounds, ncid, flag=flag)
        call soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12')
        if (use_c13) then
           call c13_soilbiogeochem_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c13', &
