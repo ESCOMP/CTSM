@@ -22,8 +22,7 @@ module ncdio_pio
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use spmdMod        , only : masterproc, mpicom, iam, npes
   use spmdMod        , only : MPI_REAL8, MPI_INTEGER, MPI_LOGICAL
-  use clm_varcon     , only : grlnd, nameg, namel, namec, namep
-  use clm_varcon     , only : spval,ispval
+  use clm_varcon     , only : spval,ispval, grlnd, nameg, namel, namec, namep
   use clm_varctl     , only : single_column, iulog
   use shr_sys_mod    , only : shr_sys_flush
   use decompMod      , only : get_clmlevel_gsize,get_clmlevel_gsmap
@@ -35,9 +34,10 @@ module ncdio_pio
   use pio            , only : pio_def_var, pio_double, pio_enddef, pio_get_att, pio_get_var, pio_global, pio_initdecomp
   use pio            , only : pio_inq_att, pio_inq_dimid, pio_inq_dimlen, pio_inq_dimname, pio_inq_vardimid, pio_inq_varid
   use pio            , only : pio_inq_varname, pio_inq_varndims, pio_inquire, pio_int, pio_internal_error
-  use pio            , only : pio_noclobber, pio_noerr, pio_nofill, pio_nowrite, pio_offset, pio_openfile
+  use pio            , only : pio_noclobber, pio_noerr, pio_nofill, pio_nowrite, pio_offset_kind, pio_openfile
   use pio            , only : pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling
   use pio            , only : pio_setframe, pio_unlimited, pio_write, pio_write_darray, var_desc_t
+  use pio            , only : pio_iotask_rank, PIO_REARR_SUBSET, PIO_REARR_BOX
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -184,7 +184,7 @@ module ncdio_pio
   private :: ncd_getiodesc      ! obtain iodesc
   private :: scam_field_offsets ! get offset to proper lat/lon gridcell for SCAM
 
-  integer,parameter,private :: debug = 0             ! local debug level
+  integer,parameter,private :: debug = 0            ! local debug level
 
   integer , parameter  , public  :: max_string_len = 256     ! length of strings
   real(r8), parameter  , public  :: fillvalue = 1.e36_r8     ! fill value for netcdf fields
@@ -247,7 +247,7 @@ contains
 
     if(ierr/= PIO_NOERR) then
        call shr_sys_abort('ncd_pio_openfile ERROR: Failed to open file')
-    else if(pio_subsystem%io_rank==0) then
+    else if(pio_iotask_rank(pio_subsystem)==0) then
        write(iulog,*) 'Opened existing file ', trim(fname), file%fh
     end if
 
@@ -278,7 +278,7 @@ contains
     ! Create a new NetCDF file with PIO
     !
     ! !USES:
-    use pio, only : pio_iotype_pnetcdf, pio_iotype_netcdf
+    use pio, only : pio_iotype_pnetcdf, pio_iotype_netcdf,pio_iotask_rank
     !
     ! !ARGUMENTS:
     class(file_desc_t), intent(inout) :: file    ! PIO file descriptor
@@ -303,7 +303,7 @@ contains
     if (l_avoid_pnetcdf) then
        if (my_io_type == pio_iotype_pnetcdf) then
           my_io_type = pio_iotype_netcdf
-          if (pio_subsystem%io_rank==0) then
+          if(pio_iotask_rank(pio_subsystem)==0) then
              write(iulog,*) 'Workaround for bugz 1730: creating'
              write(iulog,*) trim(fname)
              write(iulog,*) 'with type netcdf instead of pnetcdf'
@@ -315,7 +315,7 @@ contains
 
     if(ierr/= PIO_NOERR) then
        call shr_sys_abort( ' ncd_pio_createfile ERROR: Failed to open file to write: '//trim(fname))
-    else if(pio_subsystem%io_rank==0) then
+    else if(pio_iotask_rank(pio_subsystem)==0) then
        write(iulog,*) 'Opened file ', trim(fname),  ' to write', file%fh
     end if
 
@@ -378,7 +378,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: att_type  ! attribute type
-    integer :: att_len   ! attribute length
+    integer(pio_offset_kind) :: att_len   ! attribute length
     integer :: status
 
     character(len=*), parameter :: subname = 'check_att'
@@ -1158,7 +1158,7 @@ contains
        status = pio_get_var(ncid, vardesc, start, data )
 
     elseif (flag == 'write') then
-
+       
        status = pio_put_var(ncid, vardesc, start, data )
 
     endif
@@ -1377,7 +1377,7 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: m
     integer           :: varid              ! netCDF variable id
-    integer           :: start(4), count(4) ! output bounds
+    integer           :: start(0+1), count(0+1) ! output bounds
     integer           :: status             ! error code
     logical           :: varpresent         ! if true, variable is on tape
     logical           :: found              ! if true, found lat/lon dims on file
@@ -1386,6 +1386,7 @@ contains
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
     integer(i4) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_0d_int_glob'
+    integer :: ndims
     !-----------------------------------------------------------------------
 
     start(:) = 0
@@ -1423,32 +1424,32 @@ contains
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = 0
+       if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
-
 #if (0==0) 
        start(1) = 1  ; count(1) = 1
        if (present(nt)) start(1) = nt ; count(1) = 1
        temp(1) = data
-       status = pio_put_var(ncid, varid, start, count, temp)
+       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
 #elif (0==1) 
        start(1) = 1 ; count(1) = size(data) 
        start(2) = 1 ; count(2) = 1
        if (present(nt)) start(2) = nt
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (0==2) 
        start(1) = 1  ; count(1) = size(data, dim=1)
        start(2) = 1  ; count(2) = size(data, dim=2)
        start(3) = 1  ; count(3) = 1
        if (present(nt)) start(3) = nt 
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (0==3) 
        if (present(nt)) then
           start(1) = 1  ; count(1) = size(data,dim=1)
           start(2) = 1  ; count(2) = size(data,dim=2)
           start(3) = 1  ; count(3) = size(data,dim=3)
           start(4) = nt ; count(4) = 1
-          status = pio_put_var(ncid, varid, start, count, data)
+          status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
        else
           status = pio_put_var(ncid, varid, data)
        end if
@@ -1456,7 +1457,7 @@ contains
 
     endif
 
-# 1255 "ncdio_pio.F90.in"
+# 1256 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
@@ -1478,7 +1479,7 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: m
     integer           :: varid              ! netCDF variable id
-    integer           :: start(4), count(4) ! output bounds
+    integer           :: start(1+1), count(1+1) ! output bounds
     integer           :: status             ! error code
     logical           :: varpresent         ! if true, variable is on tape
     logical           :: found              ! if true, found lat/lon dims on file
@@ -1487,6 +1488,7 @@ contains
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
     integer(i4) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_1d_int_glob'
+    integer :: ndims
     !-----------------------------------------------------------------------
 
     start(:) = 0
@@ -1524,32 +1526,32 @@ contains
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = 1
+       if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
-
 #if (1==0) 
        start(1) = 1  ; count(1) = 1
        if (present(nt)) start(1) = nt ; count(1) = 1
        temp(1) = data
-       status = pio_put_var(ncid, varid, start, count, temp)
+       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
 #elif (1==1) 
        start(1) = 1 ; count(1) = size(data) 
        start(2) = 1 ; count(2) = 1
        if (present(nt)) start(2) = nt
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (1==2) 
        start(1) = 1  ; count(1) = size(data, dim=1)
        start(2) = 1  ; count(2) = size(data, dim=2)
        start(3) = 1  ; count(3) = 1
        if (present(nt)) start(3) = nt 
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (1==3) 
        if (present(nt)) then
           start(1) = 1  ; count(1) = size(data,dim=1)
           start(2) = 1  ; count(2) = size(data,dim=2)
           start(3) = 1  ; count(3) = size(data,dim=3)
           start(4) = nt ; count(4) = 1
-          status = pio_put_var(ncid, varid, start, count, data)
+          status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
        else
           status = pio_put_var(ncid, varid, data)
        end if
@@ -1557,7 +1559,7 @@ contains
 
     endif
 
-# 1255 "ncdio_pio.F90.in"
+# 1256 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
@@ -1579,7 +1581,7 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: m
     integer           :: varid              ! netCDF variable id
-    integer           :: start(4), count(4) ! output bounds
+    integer           :: start(2+1), count(2+1) ! output bounds
     integer           :: status             ! error code
     logical           :: varpresent         ! if true, variable is on tape
     logical           :: found              ! if true, found lat/lon dims on file
@@ -1588,6 +1590,7 @@ contains
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
     integer(i4) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_2d_int_glob'
+    integer :: ndims
     !-----------------------------------------------------------------------
 
     start(:) = 0
@@ -1625,32 +1628,32 @@ contains
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = 2
+       if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
-
 #if (2==0) 
        start(1) = 1  ; count(1) = 1
        if (present(nt)) start(1) = nt ; count(1) = 1
        temp(1) = data
-       status = pio_put_var(ncid, varid, start, count, temp)
+       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
 #elif (2==1) 
        start(1) = 1 ; count(1) = size(data) 
        start(2) = 1 ; count(2) = 1
        if (present(nt)) start(2) = nt
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (2==2) 
        start(1) = 1  ; count(1) = size(data, dim=1)
        start(2) = 1  ; count(2) = size(data, dim=2)
        start(3) = 1  ; count(3) = 1
        if (present(nt)) start(3) = nt 
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (2==3) 
        if (present(nt)) then
           start(1) = 1  ; count(1) = size(data,dim=1)
           start(2) = 1  ; count(2) = size(data,dim=2)
           start(3) = 1  ; count(3) = size(data,dim=3)
           start(4) = nt ; count(4) = 1
-          status = pio_put_var(ncid, varid, start, count, data)
+          status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
        else
           status = pio_put_var(ncid, varid, data)
        end if
@@ -1658,7 +1661,7 @@ contains
 
     endif
 
-# 1255 "ncdio_pio.F90.in"
+# 1256 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
@@ -1680,7 +1683,7 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: m
     integer           :: varid              ! netCDF variable id
-    integer           :: start(4), count(4) ! output bounds
+    integer           :: start(3+1), count(3+1) ! output bounds
     integer           :: status             ! error code
     logical           :: varpresent         ! if true, variable is on tape
     logical           :: found              ! if true, found lat/lon dims on file
@@ -1689,6 +1692,7 @@ contains
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
     integer(i4) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_3d_int_glob'
+    integer :: ndims
     !-----------------------------------------------------------------------
 
     start(:) = 0
@@ -1726,32 +1730,32 @@ contains
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = 3
+       if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
-
 #if (3==0) 
        start(1) = 1  ; count(1) = 1
        if (present(nt)) start(1) = nt ; count(1) = 1
        temp(1) = data
-       status = pio_put_var(ncid, varid, start, count, temp)
+       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
 #elif (3==1) 
        start(1) = 1 ; count(1) = size(data) 
        start(2) = 1 ; count(2) = 1
        if (present(nt)) start(2) = nt
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (3==2) 
        start(1) = 1  ; count(1) = size(data, dim=1)
        start(2) = 1  ; count(2) = size(data, dim=2)
        start(3) = 1  ; count(3) = 1
        if (present(nt)) start(3) = nt 
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (3==3) 
        if (present(nt)) then
           start(1) = 1  ; count(1) = size(data,dim=1)
           start(2) = 1  ; count(2) = size(data,dim=2)
           start(3) = 1  ; count(3) = size(data,dim=3)
           start(4) = nt ; count(4) = 1
-          status = pio_put_var(ncid, varid, start, count, data)
+          status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
        else
           status = pio_put_var(ncid, varid, data)
        end if
@@ -1759,7 +1763,7 @@ contains
 
     endif
 
-# 1255 "ncdio_pio.F90.in"
+# 1256 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_int_glob
   !DIMS 0,1,2,3
   !TYPE int,double
@@ -1781,7 +1785,7 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: m
     integer           :: varid              ! netCDF variable id
-    integer           :: start(4), count(4) ! output bounds
+    integer           :: start(0+1), count(0+1) ! output bounds
     integer           :: status             ! error code
     logical           :: varpresent         ! if true, variable is on tape
     logical           :: found              ! if true, found lat/lon dims on file
@@ -1790,6 +1794,7 @@ contains
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
     real(r8) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_0d_double_glob'
+    integer :: ndims
     !-----------------------------------------------------------------------
 
     start(:) = 0
@@ -1827,32 +1832,32 @@ contains
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = 0
+       if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
-
 #if (0==0) 
        start(1) = 1  ; count(1) = 1
        if (present(nt)) start(1) = nt ; count(1) = 1
        temp(1) = data
-       status = pio_put_var(ncid, varid, start, count, temp)
+       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
 #elif (0==1) 
        start(1) = 1 ; count(1) = size(data) 
        start(2) = 1 ; count(2) = 1
        if (present(nt)) start(2) = nt
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (0==2) 
        start(1) = 1  ; count(1) = size(data, dim=1)
        start(2) = 1  ; count(2) = size(data, dim=2)
        start(3) = 1  ; count(3) = 1
        if (present(nt)) start(3) = nt 
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (0==3) 
        if (present(nt)) then
           start(1) = 1  ; count(1) = size(data,dim=1)
           start(2) = 1  ; count(2) = size(data,dim=2)
           start(3) = 1  ; count(3) = size(data,dim=3)
           start(4) = nt ; count(4) = 1
-          status = pio_put_var(ncid, varid, start, count, data)
+          status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
        else
           status = pio_put_var(ncid, varid, data)
        end if
@@ -1860,7 +1865,7 @@ contains
 
     endif
 
-# 1255 "ncdio_pio.F90.in"
+# 1256 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
@@ -1882,7 +1887,7 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: m
     integer           :: varid              ! netCDF variable id
-    integer           :: start(4), count(4) ! output bounds
+    integer           :: start(1+1), count(1+1) ! output bounds
     integer           :: status             ! error code
     logical           :: varpresent         ! if true, variable is on tape
     logical           :: found              ! if true, found lat/lon dims on file
@@ -1891,6 +1896,7 @@ contains
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
     real(r8) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_1d_double_glob'
+    integer :: ndims
     !-----------------------------------------------------------------------
 
     start(:) = 0
@@ -1928,32 +1934,32 @@ contains
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = 1
+       if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
-
 #if (1==0) 
        start(1) = 1  ; count(1) = 1
        if (present(nt)) start(1) = nt ; count(1) = 1
        temp(1) = data
-       status = pio_put_var(ncid, varid, start, count, temp)
+       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
 #elif (1==1) 
        start(1) = 1 ; count(1) = size(data) 
        start(2) = 1 ; count(2) = 1
        if (present(nt)) start(2) = nt
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (1==2) 
        start(1) = 1  ; count(1) = size(data, dim=1)
        start(2) = 1  ; count(2) = size(data, dim=2)
        start(3) = 1  ; count(3) = 1
        if (present(nt)) start(3) = nt 
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (1==3) 
        if (present(nt)) then
           start(1) = 1  ; count(1) = size(data,dim=1)
           start(2) = 1  ; count(2) = size(data,dim=2)
           start(3) = 1  ; count(3) = size(data,dim=3)
           start(4) = nt ; count(4) = 1
-          status = pio_put_var(ncid, varid, start, count, data)
+          status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
        else
           status = pio_put_var(ncid, varid, data)
        end if
@@ -1961,7 +1967,7 @@ contains
 
     endif
 
-# 1255 "ncdio_pio.F90.in"
+# 1256 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
@@ -1983,7 +1989,7 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: m
     integer           :: varid              ! netCDF variable id
-    integer           :: start(4), count(4) ! output bounds
+    integer           :: start(2+1), count(2+1) ! output bounds
     integer           :: status             ! error code
     logical           :: varpresent         ! if true, variable is on tape
     logical           :: found              ! if true, found lat/lon dims on file
@@ -1992,6 +1998,7 @@ contains
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
     real(r8) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_2d_double_glob'
+    integer :: ndims
     !-----------------------------------------------------------------------
 
     start(:) = 0
@@ -2029,32 +2036,32 @@ contains
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = 2
+       if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
-
 #if (2==0) 
        start(1) = 1  ; count(1) = 1
        if (present(nt)) start(1) = nt ; count(1) = 1
        temp(1) = data
-       status = pio_put_var(ncid, varid, start, count, temp)
+       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
 #elif (2==1) 
        start(1) = 1 ; count(1) = size(data) 
        start(2) = 1 ; count(2) = 1
        if (present(nt)) start(2) = nt
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (2==2) 
        start(1) = 1  ; count(1) = size(data, dim=1)
        start(2) = 1  ; count(2) = size(data, dim=2)
        start(3) = 1  ; count(3) = 1
        if (present(nt)) start(3) = nt 
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (2==3) 
        if (present(nt)) then
           start(1) = 1  ; count(1) = size(data,dim=1)
           start(2) = 1  ; count(2) = size(data,dim=2)
           start(3) = 1  ; count(3) = size(data,dim=3)
           start(4) = nt ; count(4) = 1
-          status = pio_put_var(ncid, varid, start, count, data)
+          status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
        else
           status = pio_put_var(ncid, varid, data)
        end if
@@ -2062,7 +2069,7 @@ contains
 
     endif
 
-# 1255 "ncdio_pio.F90.in"
+# 1256 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_double_glob
   !DIMS 0,1,2,3
   !TYPE int,double
@@ -2084,7 +2091,7 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: m
     integer           :: varid              ! netCDF variable id
-    integer           :: start(4), count(4) ! output bounds
+    integer           :: start(3+1), count(3+1) ! output bounds
     integer           :: status             ! error code
     logical           :: varpresent         ! if true, variable is on tape
     logical           :: found              ! if true, found lat/lon dims on file
@@ -2093,6 +2100,7 @@ contains
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
     real(r8) :: temp(1)
     character(len=*),parameter :: subname='ncd_io_3d_double_glob'
+    integer :: ndims
     !-----------------------------------------------------------------------
 
     start(:) = 0
@@ -2130,32 +2138,32 @@ contains
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = 3
+       if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
-
 #if (3==0) 
        start(1) = 1  ; count(1) = 1
        if (present(nt)) start(1) = nt ; count(1) = 1
        temp(1) = data
-       status = pio_put_var(ncid, varid, start, count, temp)
+       status = pio_put_var(ncid, varid, start(1:1), count(1:1), temp)
 #elif (3==1) 
        start(1) = 1 ; count(1) = size(data) 
        start(2) = 1 ; count(2) = 1
        if (present(nt)) start(2) = nt
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (3==2) 
        start(1) = 1  ; count(1) = size(data, dim=1)
        start(2) = 1  ; count(2) = size(data, dim=2)
        start(3) = 1  ; count(3) = 1
        if (present(nt)) start(3) = nt 
-       status = pio_put_var(ncid, varid, start, count, data)
+       status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
 #elif (3==3) 
        if (present(nt)) then
           start(1) = 1  ; count(1) = size(data,dim=1)
           start(2) = 1  ; count(2) = size(data,dim=2)
           start(3) = 1  ; count(3) = size(data,dim=3)
           start(4) = nt ; count(4) = 1
-          status = pio_put_var(ncid, varid, start, count, data)
+          status = pio_put_var(ncid, varid, start(1:ndims), count(1:ndims), data)
        else
           status = pio_put_var(ncid, varid, data)
        end if
@@ -2163,13 +2171,13 @@ contains
 
     endif
 
-# 1255 "ncdio_pio.F90.in"
+# 1256 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_double_glob
 
   !------------------------------------------------------------------------
   !DIMS 0,1,2
   !TYPE text
-# 1260 "ncdio_pio.F90.in"
+# 1261 "ncdio_pio.F90.in"
   subroutine ncd_io_0d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2193,7 +2201,8 @@ contains
     character(len=1)  :: tmpString(128)     ! temp for manipulating output string
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_0d_text_glob'
-    !-----------------------------------------------------------------------
+    integer :: ndims 
+   !-----------------------------------------------------------------------
 
     start(:) = 0
     count(:) = 0
@@ -2209,7 +2218,8 @@ contains
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = 0
+       if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 
 #if (0==0) 
@@ -2249,11 +2259,11 @@ contains
 
     endif
 
-# 1339 "ncdio_pio.F90.in"
+# 1342 "ncdio_pio.F90.in"
   end subroutine ncd_io_0d_text_glob 
   !DIMS 0,1,2
   !TYPE text
-# 1260 "ncdio_pio.F90.in"
+# 1261 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2277,7 +2287,8 @@ contains
     character(len=1)  :: tmpString(128)     ! temp for manipulating output string
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_1d_text_glob'
-    !-----------------------------------------------------------------------
+    integer :: ndims 
+   !-----------------------------------------------------------------------
 
     start(:) = 0
     count(:) = 0
@@ -2293,7 +2304,8 @@ contains
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = 1
+       if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 
 #if (1==0) 
@@ -2333,11 +2345,11 @@ contains
 
     endif
 
-# 1339 "ncdio_pio.F90.in"
+# 1342 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_text_glob 
   !DIMS 0,1,2
   !TYPE text
-# 1260 "ncdio_pio.F90.in"
+# 1261 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_text_glob(varname, data, flag, ncid, readvar, nt, posNOTonfile)
     !
     ! !DESCRIPTION:
@@ -2361,7 +2373,8 @@ contains
     character(len=1)  :: tmpString(128)     ! temp for manipulating output string
     type(var_desc_t)  :: vardesc            ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_2d_text_glob'
-    !-----------------------------------------------------------------------
+    integer :: ndims 
+   !-----------------------------------------------------------------------
 
     start(:) = 0
     count(:) = 0
@@ -2377,7 +2390,8 @@ contains
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
-
+       ndims = 2
+       if(present(nt)) ndims=ndims+1
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 
 #if (2==0) 
@@ -2417,13 +2431,13 @@ contains
 
     endif
 
-# 1339 "ncdio_pio.F90.in"
+# 1342 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_text_glob 
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double,logical
-# 1344 "ncdio_pio.F90.in"
+# 1347 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_int(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2454,7 +2468,6 @@ contains
     integer                          :: status     ! error code  
     logical                          :: varpresent ! if true, variable is on tape
     integer                , pointer :: idata(:)   ! Temporary integer data to send to file
-    integer                , pointer :: compDOF(:)
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter       :: subname='ncd_io_1d_int' ! subroutine name
@@ -2486,24 +2499,28 @@ contains
              start(:) = 1 ; count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
              if (trim(clmlevel) == grlnd) then
+                n=2
                 if (present(nt)) then
                    start(3) = nt ; count(3) = 1
+                   n=3
                 end if
              else
+                n=1
                 if (present(nt)) then
+                   n=2
                    start(2) = nt ; count(2) = 1
                 end if
              end if
 #if (103==TYPELOGICAL)
              allocate(idata(size(data))) 
-             status = pio_get_var(ncid, varid, start, count, idata)
+             status = pio_get_var(ncid, varid, start(1:n), count(1:n), idata)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
                 call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
              end if
              deallocate( idata )
 #else
-             status = pio_get_var(ncid, varid, start, count, data)
+             status = pio_get_var(ncid, varid, start(1:n), count(1:n), data)
 #endif
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
@@ -2526,7 +2543,7 @@ contains
 #endif
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
-                call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+                call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
 #if (103==TYPELOGICAL)
              allocate(idata(size(data))) 
@@ -2566,7 +2583,7 @@ contains
 #endif
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
-          call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+          call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
        end if
 #if (103==TYPELOGICAL)
        allocate( idata(size(data)) ) 
@@ -2591,10 +2608,10 @@ contains
 
     endif
 
-# 1511 "ncdio_pio.F90.in"
+# 1517 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_int
   !TYPE int,double,logical
-# 1344 "ncdio_pio.F90.in"
+# 1347 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_double(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2625,7 +2642,6 @@ contains
     integer                          :: status     ! error code  
     logical                          :: varpresent ! if true, variable is on tape
     integer                , pointer :: idata(:)   ! Temporary integer data to send to file
-    integer                , pointer :: compDOF(:)
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter       :: subname='ncd_io_1d_double' ! subroutine name
@@ -2657,24 +2673,28 @@ contains
              start(:) = 1 ; count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
              if (trim(clmlevel) == grlnd) then
+                n=2
                 if (present(nt)) then
                    start(3) = nt ; count(3) = 1
+                   n=3
                 end if
              else
+                n=1
                 if (present(nt)) then
+                   n=2
                    start(2) = nt ; count(2) = 1
                 end if
              end if
 #if (102==TYPELOGICAL)
              allocate(idata(size(data))) 
-             status = pio_get_var(ncid, varid, start, count, idata)
+             status = pio_get_var(ncid, varid, start(1:n), count(1:n), idata)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
                 call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
              end if
              deallocate( idata )
 #else
-             status = pio_get_var(ncid, varid, start, count, data)
+             status = pio_get_var(ncid, varid, start(1:n), count(1:n), data)
 #endif
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
@@ -2697,7 +2717,7 @@ contains
 #endif
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
-                call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+                call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
 #if (102==TYPELOGICAL)
              allocate(idata(size(data))) 
@@ -2737,7 +2757,7 @@ contains
 #endif
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
-          call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+          call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
        end if
 #if (102==TYPELOGICAL)
        allocate( idata(size(data)) ) 
@@ -2762,10 +2782,10 @@ contains
 
     endif
 
-# 1511 "ncdio_pio.F90.in"
+# 1517 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_double
   !TYPE int,double,logical
-# 1344 "ncdio_pio.F90.in"
+# 1347 "ncdio_pio.F90.in"
   subroutine ncd_io_1d_logical(varname, data, dim1name, flag, ncid, nt, readvar, cnvrtnan2fill)
     !
     ! !DESCRIPTION:
@@ -2796,7 +2816,6 @@ contains
     integer                          :: status     ! error code  
     logical                          :: varpresent ! if true, variable is on tape
     integer                , pointer :: idata(:)   ! Temporary integer data to send to file
-    integer                , pointer :: compDOF(:)
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter       :: subname='ncd_io_1d_logical' ! subroutine name
@@ -2828,24 +2847,28 @@ contains
              start(:) = 1 ; count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
              if (trim(clmlevel) == grlnd) then
+                n=2
                 if (present(nt)) then
                    start(3) = nt ; count(3) = 1
+                   n=3
                 end if
              else
+                n=1
                 if (present(nt)) then
+                   n=2
                    start(2) = nt ; count(2) = 1
                 end if
              end if
 #if (105==TYPELOGICAL)
              allocate(idata(size(data))) 
-             status = pio_get_var(ncid, varid, start, count, idata)
+             status = pio_get_var(ncid, varid, start(1:n), count(1:n), idata)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
                 call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
              end if
              deallocate( idata )
 #else
-             status = pio_get_var(ncid, varid, start, count, data)
+             status = pio_get_var(ncid, varid, start(1:n), count(1:n), data)
 #endif
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
@@ -2868,7 +2891,7 @@ contains
 #endif
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
-                call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+                call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
 #if (105==TYPELOGICAL)
              allocate(idata(size(data))) 
@@ -2908,7 +2931,7 @@ contains
 #endif
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
-          call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+          call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
        end if
 #if (105==TYPELOGICAL)
        allocate( idata(size(data)) ) 
@@ -2933,13 +2956,13 @@ contains
 
     endif
 
-# 1511 "ncdio_pio.F90.in"
+# 1517 "ncdio_pio.F90.in"
   end subroutine ncd_io_1d_logical
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double
-# 1516 "ncdio_pio.F90.in"
+# 1522 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_int(varname, data, dim1name, lowerb2, upperb2, &
        flag, ncid, nt, readvar, switchdim, cnvrtnan2fill)
     !
@@ -3023,24 +3046,28 @@ contains
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              if (trim(clmlevel) == grlnd) then
                 count(3) = size(data,dim=2)
+                n=3
                 if (present(nt)) then
                    start(4) = nt; count(4) = 1
+                   n=4
                 end if
              else
                 count(2) = size(data,dim=2)
+                n=2
                 if (present(nt)) then
                    start(3) = nt ; count(3) = 1
+                   n=3
                 end if
              end if
              if (present(switchdim)) then
-                status = pio_get_var(ncid, vardesc, start, count, temp)
+                status = pio_get_var(ncid, vardesc, start(1:n), count(1:n), temp)
                 do j = lb2,ub2
                    do i = lb1,ub1
                       data(i,j) = temp(j,i) 
                    end do
                 end do
              else
-                status = pio_get_var(ncid, vardesc, start, count, data)
+                status = pio_get_var(ncid, vardesc, start(1:n), count(1:n), data)
              endif
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
@@ -3067,7 +3094,7 @@ contains
              end if
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
-                call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+                call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
              if (present(switchdim)) then
                 call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status)
@@ -3121,7 +3148,7 @@ contains
        end if
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
-          call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+          call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
        end if
        if (present(switchdim)) then
           do j = lb2,ub2
@@ -3166,10 +3193,10 @@ contains
        deallocate(temp)
     end if
 
-# 1742 "ncdio_pio.F90.in"
+# 1752 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_int
   !TYPE int,double
-# 1516 "ncdio_pio.F90.in"
+# 1522 "ncdio_pio.F90.in"
   subroutine ncd_io_2d_double(varname, data, dim1name, lowerb2, upperb2, &
        flag, ncid, nt, readvar, switchdim, cnvrtnan2fill)
     !
@@ -3253,24 +3280,28 @@ contains
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              if (trim(clmlevel) == grlnd) then
                 count(3) = size(data,dim=2)
+                n=3
                 if (present(nt)) then
                    start(4) = nt; count(4) = 1
+                   n=4
                 end if
              else
                 count(2) = size(data,dim=2)
+                n=2
                 if (present(nt)) then
                    start(3) = nt ; count(3) = 1
+                   n=3
                 end if
              end if
              if (present(switchdim)) then
-                status = pio_get_var(ncid, vardesc, start, count, temp)
+                status = pio_get_var(ncid, vardesc, start(1:n), count(1:n), temp)
                 do j = lb2,ub2
                    do i = lb1,ub1
                       data(i,j) = temp(j,i) 
                    end do
                 end do
              else
-                status = pio_get_var(ncid, vardesc, start, count, data)
+                status = pio_get_var(ncid, vardesc, start(1:n), count(1:n), data)
              endif
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
@@ -3297,7 +3328,7 @@ contains
              end if
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
-                call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+                call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
              if (present(switchdim)) then
                 call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status)
@@ -3351,7 +3382,7 @@ contains
        end if
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
-          call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+          call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
        end if
        if (present(switchdim)) then
           do j = lb2,ub2
@@ -3396,13 +3427,13 @@ contains
        deallocate(temp)
     end if
 
-# 1742 "ncdio_pio.F90.in"
+# 1752 "ncdio_pio.F90.in"
   end subroutine ncd_io_2d_double
 
   !-----------------------------------------------------------------------
 
   !TYPE int,double
-# 1747 "ncdio_pio.F90.in"
+# 1757 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_int(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
@@ -3454,19 +3485,23 @@ contains
              if (trim(clmlevel) == grlnd) then
                 count(3) = size(data,dim=2); 
                 count(4) = size(data,dim=3)
+                n=4
                 if (present(nt)) then
                    start(5) = nt
                    count(5) = 1
+                   n=5
                 end if
              else
                 count(2) = size(data,dim=2)
                 count(3) = size(data,dim=3)
+                n=3
                 if (present(nt)) then
                    start(4) = nt
                    count(4) = 1
+                   n=4
                 end if
              end if
-             status = pio_get_var(ncid, vardesc, start, count, data)
+             status = pio_get_var(ncid, vardesc, start(1:n), count(1:n), data)
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
              status = pio_inq_vardimid(ncid,vardesc, dids(1:ndims))
@@ -3487,7 +3522,7 @@ contains
                   PIO_int, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
-                call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+                call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
              call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
           end if
@@ -3516,7 +3551,7 @@ contains
             PIO_int, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
-          call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+          call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
        end if
        call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
 
@@ -3529,10 +3564,10 @@ contains
 
     endif
 
-# 1873 "ncdio_pio.F90.in"
+# 1887 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_int
   !TYPE int,double
-# 1747 "ncdio_pio.F90.in"
+# 1757 "ncdio_pio.F90.in"
   subroutine ncd_io_3d_double(varname, data, dim1name, flag, ncid, nt, readvar)
     !
     ! !DESCRIPTION:
@@ -3584,19 +3619,23 @@ contains
              if (trim(clmlevel) == grlnd) then
                 count(3) = size(data,dim=2); 
                 count(4) = size(data,dim=3)
+                n=4
                 if (present(nt)) then
                    start(5) = nt
                    count(5) = 1
+                   n=5
                 end if
              else
                 count(2) = size(data,dim=2)
                 count(3) = size(data,dim=3)
+                n=3
                 if (present(nt)) then
                    start(4) = nt
                    count(4) = 1
+                   n=4
                 end if
              end if
-             status = pio_get_var(ncid, vardesc, start, count, data)
+             status = pio_get_var(ncid, vardesc, start(1:n), count(1:n), data)
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
              status = pio_inq_vardimid(ncid,vardesc, dids(1:ndims))
@@ -3617,7 +3656,7 @@ contains
                   PIO_double, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
-                call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+                call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
              call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
           end if
@@ -3646,7 +3685,7 @@ contains
             PIO_double, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
-          call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+          call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
        end if
        call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
 
@@ -3659,12 +3698,12 @@ contains
 
     endif
 
-# 1873 "ncdio_pio.F90.in"
+# 1887 "ncdio_pio.F90.in"
   end subroutine ncd_io_3d_double
 
   !------------------------------------------------------------------------
 
-# 1877 "ncdio_pio.F90.in"
+# 1891 "ncdio_pio.F90.in"
   subroutine scam_field_offsets( ncid, dim1name, vardesc, start, count, &
        found, posNOTonfile)
     !
@@ -3680,8 +3719,8 @@ contains
     class(file_desc_t), intent(inout) :: ncid         ! netcdf file id
     character(len=*)  , intent(in)    :: dim1name     ! dimension 1 name
     type(Var_desc_t)  , intent(inout) :: vardesc      ! variable descriptor
-    integer           , intent(inout) :: start(:)     ! start index
-    integer           , intent(inout) :: count(:)     ! count to retrieve
+    integer           , intent(out) :: start(:)     ! start index
+    integer           , intent(out) :: count(:)     ! count to retrieve
     logical, optional , intent(out)   :: found        ! if present return true if found
     ! dimensions on file else false if NOT present abort if can't find
     logical, optional , intent(in)    :: posNOTonfile ! Position is NOT on this file
@@ -3689,7 +3728,7 @@ contains
     ! !LOCAL VARIABLES:
     integer              :: cc,i,ii           ! index variable
     integer              :: data_offset       ! offset into land array 1st column 
-    integer              :: ndata             ! number of column (or patch points to read)
+    integer              :: ndata             ! number of column (or pft points to read)
     real(r8) , pointer   :: cols1dlon(:)      ! holds cols1d_ixy var
     real(r8) , pointer   :: cols1dlat(:)      ! holds cols1d_jxy var
     real(r8) , pointer   :: pfts1dlon(:)      ! holds pfts1d_ixy var
@@ -3709,13 +3748,13 @@ contains
     character(len=32)    :: subname = 'scam_field_offsets'
     !------------------------------------------------------------------------
 
-    start(:)=0
-    count(:)=0
+    start(:)=1
+    count(:)=1
 
     if ( present(posNOTonfile) )then
        if ( posNOTonfile )then
           if ( .not. present(found) )then
-# 1927 "ncdio_pio.F90.in"
+# 1941 "ncdio_pio.F90.in"
              call shr_sys_abort('ERROR: Bad subroutine calling structure posNOTonfile sent, but found was NOT!'//&
                   errMsg(__FILE__, __LINE__))
           end if
@@ -3861,12 +3900,12 @@ contains
     enddo
     deallocate(dids)
 
-# 2072 "ncdio_pio.F90.in"
+# 2086 "ncdio_pio.F90.in"
   end subroutine scam_field_offsets
 
   !------------------------------------------------------------------------
 
-# 2076 "ncdio_pio.F90.in"
+# 2090 "ncdio_pio.F90.in"
   subroutine ncd_getiodesc(ncid, clmlevel, ndims, dims, dimids, &
        xtype, iodnum, switchdim) 
     !
@@ -3899,12 +3938,11 @@ contains
     character(len=64) dimname_iodesc         ! dimension name from io descriptor
     type(mct_gsMap),pointer       :: gsmap   ! global seg map
     integer, pointer,dimension(:) :: gsmOP   ! gsmap ordered points
-    integer, pointer  :: compDOF(:)
+    integer(pio_offset_kind), pointer  :: compDOF(:)
     character(len=32) :: subname = 'ncd_getiodesc'
     !------------------------------------------------------------------------
 
     ! Determining if need to create a new io descriptor
-
     n = 1
     found = .false.
     do while (n <= num_iodesc .and. .not.found)
@@ -3920,15 +3958,15 @@ contains
           ! dimension ids in iodescriptor are only used to query dimension
           ! names associated with that iodescriptor
           if (found) then
+             status = PIO_inquire(ncid, ndimensions=ndims_file)
              do m = 1,ndims
                 status = PIO_inq_dimname(ncid,dimids(m),dimname_file)
-                status = PIO_inquire(ncid, ndimensions=ndims_file)
                 if (iodesc_list(n)%dimids(m) > ndims_file) then 
                    found = .false.
                    exit
                 else
                    status = PIO_inq_dimname(ncid,iodesc_list(n)%dimids(m),dimname_iodesc)
-                   if (trim(dimname_file) /= trim(dimname_iodesc)) then
+                   if (trim(dimname_file)  /=  trim(dimname_iodesc)) then
                       found = .false.
                       exit
                    end if
@@ -3968,6 +4006,9 @@ contains
        basetype  = PIO_DOUBLE
     else if (xtype == pio_int) then
        basetype = PIO_INT
+    else
+       write(iulog,*) trim(subname),'ERROR: no match for xtype = ',xtype
+       call shr_sys_abort(errMsg(__FILE__,__LINE__))
     end if
 
     call get_clmlevel_gsmap(clmlevel,gsmap)
@@ -4045,7 +4086,9 @@ contains
 
     deallocate(gsmOP)
 
-    call pio_initdecomp(pio_subsystem, baseTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc)
+!    call pio_initdecomp(pio_subsystem, baseTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc, rearr=PIO_REARR_SUBSET)
+    call pio_initdecomp(pio_subsystem, baseTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc, rearr=PIO_REARR_BOX)
+
 
     deallocate(compDOF)
 
@@ -4055,7 +4098,7 @@ contains
     iodesc_list(iodnum)%dims(1:ndims)   = dims(1:ndims)
     iodesc_list(iodnum)%dimids(1:ndims) = dimids(1:ndims)
 
-# 2264 "ncdio_pio.F90.in"
+# 2282 "ncdio_pio.F90.in"
   end subroutine ncd_getiodesc
 
 end module ncdio_pio
