@@ -27,6 +27,12 @@ contains
 
   end function is_first_step
 
+  logical function is_first_step_of_this_run_segment()
+    
+    is_first_step_of_this_run_segment = .false.
+
+  end function is_first_step_of_this_run_segment
+
   integer function get_driver_start_ymd()
 
     get_driver_start_ymd = 0

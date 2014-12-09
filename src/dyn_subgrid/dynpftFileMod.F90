@@ -48,8 +48,6 @@ contains
     ! Initialize dynamic pft dataset (position it to the right time samples
     ! that bound the initial model date)
     !
-    ! This also calls dynpft_interp for the initial time
-    !
     ! !USES:
     use clm_varctl  , only : flanduse_timeseries
     use clm_varpar  , only : numpft, maxpatch_pft, natpft_size
@@ -96,8 +94,6 @@ contains
          dyn_file=dynpft_file, varname=varname, &
          dim1name=grlnd, conversion_factor=100._r8, &
          do_check_sums_equal_1=.true., data_shape=wtpatch_shape)
-
-    call dynpft_interp(bounds)
 
   end subroutine dynpft_init
 

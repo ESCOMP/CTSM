@@ -34,6 +34,7 @@ module clm_varctl
 
   ! Type of run
   integer, public :: nsrest             = iundef                         
+  logical, public :: is_cold_start      = .false.
 
   ! Startup from initial conditions
   integer, public, parameter :: nsrStartup  = 0                          

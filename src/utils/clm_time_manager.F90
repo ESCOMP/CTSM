@@ -42,6 +42,7 @@ module clm_time_manager
         set_nextsw_cday,          &! set the next radiation calendar day
         is_first_step,            &! return true on first step of initial run
         is_first_restart_step,    &! return true on first step of restart or branch run
+        is_first_step_of_this_run_segment, &! return true on first step of any run segment (initial, restart or branch run)
         is_beg_curr_day,          &! return true on first timestep in current day
         is_end_curr_day,          &! return true on last timestep in current day
         is_end_curr_month,        &! return true on last timestep in current month
@@ -1487,11 +1488,22 @@ contains
 
   logical function is_first_restart_step()
 
-    ! Return true on first step of restart run only.
+    ! Return true on first step of restart or branch run only.
 
     is_first_restart_step = tm_first_restart_step
 
   end function is_first_restart_step
+
+  !=========================================================================================
+  
+  logical function is_first_step_of_this_run_segment()
+
+    ! Return true if this is the first step of this run segment. This will be true for
+    ! the first step of a startup, restart or branch run.
+
+    is_first_step_of_this_run_segment = (is_first_step() .or. is_first_restart_step())
+
+  end function is_first_step_of_this_run_segment
 
   !=========================================================================================
 

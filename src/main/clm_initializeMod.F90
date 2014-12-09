@@ -9,7 +9,7 @@ module clm_initializeMod
   use spmdMod         , only : masterproc
   use decompMod       , only : bounds_type, get_proc_bounds 
   use abortutils      , only : endrun
-  use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, is_cold_start
   use clm_varctl      , only : create_glacier_mec_landunit, iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_voc, use_c13, use_c14, use_ed
   use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, wt_glc_mec, topo_glc_mec
@@ -494,10 +494,13 @@ contains
     ! Read restart/initial info 
     ! ------------------------------------------------------------------------
 
+    is_cold_start = .false.
+
     if (nsrest == nsrStartup) then
 
        if (finidat == ' ') then
           if (finidat_interp_source == ' ') then
+             is_cold_start = .true.
              if (masterproc) then
                 write(iulog,*)'Using cold start initial conditions '
              end if

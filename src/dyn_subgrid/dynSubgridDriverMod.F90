@@ -47,13 +47,24 @@ contains
   subroutine dynSubgrid_init(bounds, dgvs_inst)
     !
     ! !DESCRIPTION:
-    ! Determine initial subgrid weights for prescribed transient Patches, CNDV, and/or
-    ! dynamic landunits. Note that these weights will be overwritten in a restart run.
+    ! Initialize objects needed for prescribed transient PFTs, CNDV, and/or dynamic
+    ! landunits. 
     !
     ! This should be called from initialization. 
     !
-    ! Note that dynpft_init / dynpft_interp need to be called from outside any loops over
-    ! clumps - so this routine needs to be called from outside any loops over clumps.
+    ! Note that no subgrid weights are updated here - so in initialization, weights will
+    ! stay at the values read from the surface dataset, then there will be a potentially
+    ! large adjustment of weights in the first time step. The reason why no weights are
+    ! updated here is that prognostic subgrid weight information (e.g., glacier cover
+    ! from CISM) is not available in initialization; thus, for consistency, we also avoid
+    ! applying prescribed transient weights in initialization.
+    !
+    ! However, the above note is only relevant for a cold start run: For a restart run or
+    ! a run with initial conditions, subgrid weights will be read from the restart file
+    ! after this routine is called.
+    !
+    ! Note that dynpft_init needs to be called from outside any loops over clumps - so
+    ! this routine needs to be called from outside any loops over clumps.
     !
     ! !USES:
     use clm_varctl        , only : flanduse_timeseries, use_cndv
@@ -61,7 +72,6 @@ contains
     use dynpftFileMod     , only : dynpft_init
     use dynHarvestMod     , only : dynHarvest_init
     use dynCNDVMod        , only : dynCNDV_init
-    use subgridWeightsMod , only : compute_higher_order_weights
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds  ! processor-level bounds
@@ -89,8 +99,6 @@ contains
        call dynCNDV_init(bounds, dgvs_inst)
     end if
 
-    call compute_higher_order_weights(bounds)
-    
   end subroutine dynSubgrid_init
 
   !-----------------------------------------------------------------------
@@ -104,7 +112,7 @@ contains
        soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
-    ! Update subgrid weights for prescribed transient Patches, CNDV, and/or dynamic
+    ! Update subgrid weights for prescribed transient PFTs, CNDV, and/or dynamic
     ! landunits. Also do related adjustments (water & energy, carbon & nitrogen).
     !
     ! This should be called every time step in CLM's run loop.
@@ -114,7 +122,9 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl           , only : flanduse_timeseries, use_cndv, use_cn, create_glacier_mec_landunit, use_ed
+    use clm_time_manager     , only : is_first_step
+    use clm_varctl           , only : flanduse_timeseries, is_cold_start
+    use clm_varctl           , only : use_cndv, use_cn, create_glacier_mec_landunit, use_ed
     use decompMod            , only : bounds_type, get_proc_clumps, get_clump_bounds
     use decompMod            , only : BOUNDS_LEVEL_PROC
     use dynLandunitAreaMod   , only : update_landunit_weights
@@ -158,6 +168,7 @@ contains
     integer           :: nclumps      ! number of clumps on this processor
     integer           :: nc           ! clump index
     type(bounds_type) :: bounds_clump ! clump-level bounds
+    logical           :: first_step_cold_start ! true if this is the first step since cold start
 
     character(len=*), parameter :: subname = 'dynSubgrid_driver'
     !-----------------------------------------------------------------------
@@ -165,7 +176,8 @@ contains
     SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     nclumps = get_proc_clumps()
-    
+    first_step_cold_start = (is_first_step() .and. is_cold_start)
+
     ! ==========================================================================
     ! Do initialization, prior to land cover change
     ! ==========================================================================
@@ -233,12 +245,12 @@ contains
             prior_weights%cactive(bounds_clump%begc:bounds_clump%endc), &
             temperature_inst)
 
-       call dyn_hwcontent_final(bounds_clump, &
+       call dyn_hwcontent_final(bounds_clump, first_step_cold_start, &
             urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst, &
             waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
 
        if (use_cn) then
-          call dyn_cnbal_patch(bounds_clump, prior_weights,                                       &
+          call dyn_cnbal_patch(bounds_clump, prior_weights, first_step_cold_start,                           &
                canopystate_inst, photosyns_inst, cnveg_state_inst,                                &
                cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst,    &
                cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,       &

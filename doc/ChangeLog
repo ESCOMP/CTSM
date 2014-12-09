@@ -1,4 +1,123 @@
 ===============================================================
+Tag name:  clm4_5_1_r101
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Dec  9 06:27:39 MST 2014
+One-line Summary: rework cold start initialization for transient runs
+
+Purpose of changes:
+
+  (1) Do not adjust subgrid weights (or set harvest variables) in cold start
+      initialization. Instead, wait to do this until the first run step. The
+      motivation for this is (a) this is consistent with what is done for
+      glacier (for which prognostic weights aren't available until the run
+      phase), and (b) it simplifies what needs to be done in initialization,
+      particularly for transient crops (which are coming soon).
+
+  (2) Do not run the biogeophys & biogeochem dyn subgrid conservation code in
+      the first step of a cold start run. This affects the current operation of
+      glacier, and is important in conjunction with (1): this avoids doing a
+      large adjustment of physics or BGC caused by a fictitious change in area
+      in the first time step after cold start.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: mvertens reviewed conceptual changes to clm_time_manager and
+  DaylengthMod; other changes only reviewed by self
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated:
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as documented above
+M       models/lnd/clm/src/main/clm_initializeMod.F90
+M       models/lnd/clm/src/main/clm_varctl.F90
+M       models/lnd/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynHarvestMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynConsBiogeochemMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynpftFileMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynConsBiogeophysMod.F90
+
+========= Unrelated change: Fix a possible threading bug in DaylengthMod
+          (although this would rarely cause problems: I think this would only
+          cause a problem if you started / restarted exactly on the solstice)
+M       models/lnd/clm/src/utils/clm_time_manager.F90
+M       models/lnd/clm/src/biogeophys/DaylengthMod.F90
+
+
+
+CLM testing:
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r100
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM4.5 cold start runs with glacier and/or
+  transient PFTs
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      
+      Changes answers only in initialization. This shows up as changes in the
+      fields set to the coupler in initialization, and/or changes in the initial
+      history file. In offline runs (I compsets), this change does not affect
+      the simulation beyond initialization, but it is expected to change the
+      evolution of the system in coupled runs. However, again note that this
+      only affects cold start runs wth glacier and/or transient PFTs, which
+      would not be typical for production runs.
+
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r100
 Originator(s):  sacks (Bill Sacks); most changes from Jim Edwards
 Date: Wed Dec  3 06:21:13 MST 2014

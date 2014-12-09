@@ -17,9 +17,6 @@ module DaylengthMod
   public :: InitDaylength     ! initialize daylength for all grid cells
   public :: UpdateDaylength   ! update daylength for all grid cells
   !
-  ! !PRIVATE DATA MEMBERS:
-  logical :: first_step       ! is this the first step since initialization?
-  !
   !-----------------------------------------------------------------------
 
 contains
@@ -109,8 +106,6 @@ contains
     prev_dayl(begg:endg) = daylength(lat(begg:endg), declinm1)
     dayl(begg:endg) = daylength(lat(begg:endg), declin)
 
-    first_step = .true.
-
     end associate
 
   end subroutine InitDaylength
@@ -125,6 +120,9 @@ contains
     !
     ! Assumes that InitDaylength has been called in initialization. This Update routine
     ! should NOT be called in initialization.
+    !
+    ! !USES:
+    use clm_time_manager, only : is_first_step_of_this_run_segment
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -141,12 +139,13 @@ contains
     endg      => bounds%endg    & ! ending grid cell index
     )
 
-    ! In the first time step, we simply use dayl & prev_dayl that were set in
-    ! initialization. (We do NOT want to run the normal code in that case, because that
-    ! would incorrectly set prev_dayl to be the same as the current dayl in the first
-    ! time step, because of the way prev_dayl is initialized.)
-    if (first_step) then
-       first_step = .false.
+    if (is_first_step_of_this_run_segment()) then
+       ! DO NOTHING
+       !
+       ! In the first time step, we simply use dayl & prev_dayl that were set in
+       ! initialization. (We do NOT want to run the normal code in that case, because that
+       ! would incorrectly set prev_dayl to be the same as the current dayl in the first
+       ! time step, because of the way prev_dayl is initialized.)
     else 
        prev_dayl(begg:endg) = dayl(begg:endg)
        dayl(begg:endg) = daylength(lat(begg:endg), declin)

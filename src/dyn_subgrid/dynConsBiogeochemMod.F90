@@ -35,7 +35,7 @@ module dynConsBiogeochemMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine dyn_cnbal_patch(bounds, prior_weights,                                       &
+  subroutine dyn_cnbal_patch(bounds, prior_weights, first_step_cold_start,                           &
        canopystate_inst, photosyns_inst, cnveg_state_inst,                                &
        cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst,    &
        cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,       &
@@ -57,6 +57,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds        
     type(prior_weights_type)             , intent(in)    :: prior_weights ! weights prior to the subgrid weight updates
+    logical                              , intent(in)    :: first_step_cold_start ! true if this is the first step since cold start
     type(canopystate_type)               , intent(inout) :: canopystate_inst
     type(photosyns_type)                 , intent(inout) :: photosyns_inst
     type(cnveg_state_type)               , intent(inout) :: cnveg_state_inst
@@ -351,7 +352,16 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           
           ! calculate the change in weight for the timestep
-          dwt = patch%wtcol(p)-prior_weights%pwtcol(p)
+          !
+          ! If this is the first time step since cold start, then we set dwt to 0 to avoid
+          ! doing any adjustments on the first time step after cold start. This is because
+          ! we expect big transients in the first time step, since transient subgrid
+          ! weights aren't updated in initialization.
+          if (first_step_cold_start) then
+             dwt = 0._r8
+          else
+             dwt = patch%wtcol(p)-prior_weights%pwtcol(p)
+          end if
           CNveg_state_inst%lfpftd_patch(p) = -dwt
 
           ! Patches for which weight increases on this timestep

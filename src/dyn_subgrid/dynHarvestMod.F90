@@ -66,8 +66,6 @@ contains
     ! Initialize data structures for harvest information.
     ! This should be called once, during model initialization.
     ! 
-    ! This also calls dynHarvest_interp for the initial time
-    !
     ! !USES:
     use clm_varctl            , only : use_cn, flanduse_timeseries
     use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
@@ -101,7 +99,6 @@ contains
                dim1name=grlnd, conversion_factor=1.0_r8, &
                do_check_sums_equal_1=.false., data_shape=[num_points])
        end do
-       call dynHarvest_interp(bounds)
     end if
     
   end subroutine dynHarvest_init
