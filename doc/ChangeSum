@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r102    sacks 12/27/2014 make new input datasets to support transient crops
    clm4_5_1_r101    sacks 12/09/2014 rework cold start initialization for transient runs
    clm4_5_1_r100    sacks 12/03/2014 update pio calls to pio2 API
    clm4_5_1_r099    sacks 12/02/2014 add ozone stress code from Danica Lombardozzi

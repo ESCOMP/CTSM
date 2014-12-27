@@ -1,0 +1,2 @@
+add_subdirectory(mkpctPftType_test)
+add_subdirectory(mkpftUtils_test)

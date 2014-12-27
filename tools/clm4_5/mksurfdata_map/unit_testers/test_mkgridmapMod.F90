@@ -590,7 +590,7 @@ contains
          dst_array_t(gridmap%nb))
     testname = 'single overlap'
     src_array = (/0.1_r8,0.2_r8,0.5_r8,0.3_r8,0.4_r8/)
-    dst_array_t = (/0.04330127018922193_r8, 0.0, 0.04330127018922195_r8/)
+    dst_array_t = (/0.04330127018922193_r8, 0.0_r8, 0.04330127018922195_r8/)
     call gridmap_areastddev(gridmap, src_array, dst_array, nodata)
     call test_close(dst_array, dst_array_t, eps, modname//' -- '//subname//' -- '//trim(testname))
     deallocate(gridmap%src_indx, gridmap%dst_indx, gridmap%wovr, gridmap%frac_dst)
@@ -624,7 +624,7 @@ contains
    
     testname='multiple overlaps, all the same value'
     src_array = (/0.1_r8, 0.5_r8, 0.5_r8, 0.5_r8, 0.5_r8, 0.5_r8, 0.5_r8, 0.5_r8, 0.6_r8/)
-    dst_array_t = (/0.1732050807568877_r8, 0.0, 0.04330127018922193_r8/)
+    dst_array_t = (/0.1732050807568877_r8, 0.0_r8, 0.04330127018922193_r8/)
     call gridmap_areastddev(gridmap, src_array, dst_array, nodata)
     call test_close(dst_array, dst_array_t, eps, modname//' -- '//subname//' -- '//trim(testname))
 

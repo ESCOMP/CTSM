@@ -1308,7 +1308,7 @@ subroutine mksoilAtt( ncid, dynlanduse, xtype )
 !
 ! !USES:
   use fileutils  , only : get_filename
-  use mkncdio    , only : check_ret, ncd_defvar
+  use mkncdio    , only : check_ret, ncd_defvar, ncd_def_spatial_var
   use mkvarpar   
   use mkvarctl   
 
@@ -1381,57 +1381,24 @@ subroutine mksoilAtt( ncid, dynlanduse, xtype )
      call ncd_defvar(ncid=ncid, varname='mxsoil_color', xtype=nf_int, &
           long_name='maximum numbers of soil colors', units='unitless')
      
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='SOIL_COLOR', xtype=nf_int, &
-             dim1name='gridcell',&
-             long_name='soil color', units='unitless')
-     else
-        call ncd_defvar(ncid=ncid, varname='SOIL_COLOR', xtype=nf_int, &
-             dim1name='lsmlon', dim2name='lsmlat', &
-             long_name='soil color', units='unitless')
-     end if
+     call ncd_def_spatial_var(ncid=ncid, varname='SOIL_COLOR', xtype=nf_int, &
+          long_name='soil color', units='unitless')
 
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='PCT_SAND', xtype=xtype, &
-             dim1name='gridcell', dim2name='nlevsoi', &
-             long_name='percent sand', units='unitless')
-     else
-        call ncd_defvar(ncid=ncid, varname='PCT_SAND', xtype=xtype, &
-             dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
-             long_name='percent sand', units='unitless')
-     end if
+     call ncd_def_spatial_var(ncid=ncid, varname='PCT_SAND', xtype=xtype, &
+          lev1name='nlevsoi', &
+          long_name='percent sand', units='unitless')
 
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='PCT_CLAY', xtype=xtype, &
-             dim1name='gridcell', dim2name='nlevsoi', &
-             long_name='percent clay', units='unitless')
-     else
-        call ncd_defvar(ncid=ncid, varname='PCT_CLAY', xtype=xtype, &
-             dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
-             long_name='percent clay', units='unitless')
-     end if
+     call ncd_def_spatial_var(ncid=ncid, varname='PCT_CLAY', xtype=xtype, &
+          lev1name='nlevsoi', &
+          long_name='percent clay', units='unitless')
 
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='ORGANIC', xtype=xtype, &
-             dim1name='gridcell', dim2name='nlevsoi', &
-             long_name='organic matter density at soil levels', &
-             units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
-     else
-        call ncd_defvar(ncid=ncid, varname='ORGANIC', xtype=xtype, &
-             dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
-             long_name='organic matter density at soil levels', &
-             units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
-     end if
+     call ncd_def_spatial_var(ncid=ncid, varname='ORGANIC', xtype=xtype, &
+          lev1name='nlevsoi', &
+          long_name='organic matter density at soil levels', &
+          units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
 
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='FMAX', xtype=xtype, &
-             dim1name='gridcell', &
-             long_name='maximum fractional saturated area', units='unitless')
-     else
-        call ncd_defvar(ncid=ncid, varname='FMAX', xtype=xtype, &
-             dim1name='lsmlon', dim2name='lsmlat', &
-             long_name='maximum fractional saturated area', units='unitless')
-     end if
+     call ncd_def_spatial_var(ncid=ncid, varname='FMAX', xtype=xtype, &
+          long_name='maximum fractional saturated area', units='unitless')
 
   end if
 

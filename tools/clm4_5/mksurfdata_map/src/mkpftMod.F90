@@ -17,6 +17,7 @@ module mkpftMod
   use shr_sys_mod , only : shr_sys_flush
   use mkvarctl    , only : numpft
   use mkdomainMod , only : domain_checksame
+  use mkpftConstantsMod
 
   implicit none
 
@@ -27,7 +28,6 @@ module mkpftMod
   public mkpftInit          ! Initialization
   public mkpft              ! Set PFT
   public mkpft_parse_oride  ! Parse the string with PFT fraction/index info to override
-  public mkpft_normalize    ! Rescale pctpft
   public mkpftAtt           ! Write out attributes to output file on pft
 !
 ! !PUBLIC DATA MEMBERS: 
@@ -40,20 +40,10 @@ module mkpftMod
   ! the fraction in pft_frc. Only the first few points are used until pft_frc = 0.0.
   !
   integer            :: m                     ! index
-  integer, parameter :: maxpft = 24           ! maximum # of PFT
-  integer, public    :: num_natpft            ! number of PFTs on the natural vegetation landunit, NOT including bare ground (includes generic crops for runs with create_crop_landunit=false)
-  integer, public    :: num_cft               ! number of CFTs on the crop landunit
-  integer, public    :: natpft_lb             ! lower bound for natural pft arrays
-  integer, public    :: natpft_ub             ! upper bound for natural pft arrays
-  integer, public    :: cft_lb                ! lower bound for cft arrays
-  integer, public    :: cft_ub                ! upper bound for cft arrays
   integer, public    :: pft_idx(0:maxpft) = & ! PFT vegetation index to override with
                              (/ ( -1,  m = 0, maxpft )   /)
   real(r8), public   :: pft_frc(0:maxpft) = & ! PFT vegetation fraction to override with
                              (/ ( 0.0, m = 0, maxpft ) /)
-  integer, public :: baregroundindex = 0      ! index of bare ground in a natural pft array
-  integer, public :: c3cropindex = 15
-  integer, public :: c3irrcropindex = 16
 !
 ! !PRIVATE DATA MEMBERS:
 !
@@ -170,10 +160,13 @@ end subroutine mkpftInit
 ! !IROUTINE: mkpft
 !
 ! !INTERFACE:
-subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
+subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
+     pctlnd_o, pctnatpft_o, pctcft_o, &
+     pctcft_o_saved)
 !
 ! !DESCRIPTION:
 ! Make PFT data
+!
 ! This dataset consists of the %cover of the [numpft]+1 PFTs used by
 ! the model. The input %cover pertains to the "vegetated" portion of the
 ! grid cell and sums to 100. The real portion of each grid cell
@@ -181,12 +174,25 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
 ! grid cell that is land. This is the quantity preserved when
 ! area-averaging from the input (1/2 degree) grid to the models grid.
 !
+! Upon return from this routine, the % cover of the natural veg + crop landunits is
+! generally 100% everywhere; this will be normalized later to account for special landunits.
+!
+! If allow_no_crops is true, then we allow the input dataset to have no prognostic crop
+! information (i.e., only contain information about the "standard" PFTs). In this case,
+! pctcft_o_saved MUST be given. If the input dataset is found to not have information
+! about the prognostic crops, then we take the generic c3 crop cover from the input
+! dataset to specify the crop landunit area, and we take the individual crop breakdown
+! from pctcft_o_saved (which will generally have come from some other input dataset that
+! DID contain prognostic crop information).
+!
 ! !USES:
   use mkdomainMod, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkvarctl    
   use mkncdio
+  use mkpctPftTypeMod, only : pct_pft_type
+  use mkpftUtilsMod, only : convert_from_p2g
 !
 ! !ARGUMENTS:
   implicit none
@@ -194,8 +200,13 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
   character(len=*)  , intent(in) :: mapfname              ! input mapping file name
   character(len=*)  , intent(in) :: fpft                  ! input pft dataset file name
   integer           , intent(in) :: ndiag                 ! unit number for diag out
+  logical           , intent(in) :: allow_no_crops        ! if it's okay to not have prognostic crops in the input file
   real(r8)          , intent(out):: pctlnd_o(:)           ! output grid:%land/gridcell
-  real(r8)          , pointer    :: pctpft_o(:,:)         ! PFT cover (% of vegetated area)
+  type(pct_pft_type), intent(out):: pctnatpft_o(:)        ! natural PFT cover
+  type(pct_pft_type), intent(out):: pctcft_o(:)           ! crop (CFT) cover
+
+! saved crop cover information, in case the input dataset does not contain information about prognostic crops
+  type(pct_pft_type), intent(in), optional :: pctcft_o_saved(:)
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
@@ -209,18 +220,19 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
   type(domain_type)    :: tdomain            ! local domain
   type(gridmap_type)    :: tgridmap           ! local gridmap
   real(r8), allocatable :: pctpft_i(:,:)      ! input grid: PFT percent
+  real(r8), allocatable :: pctpft_o(:,:)      ! output grid: PFT percent (% of grid cell)
   integer  :: numpft_i                        ! num of plant types input data
   real(r8) :: sum_fldo                        ! global sum of dummy output fld
   real(r8) :: sum_fldi                        ! global sum of dummy input fld
-  real(r8) :: wst(0:numpft)                   ! as pft_o at specific no
   real(r8) :: wst_sum                         ! sum of %pft
-  real(r8) :: gpft_o(0:numpft)                ! output grid: global area pfts
+  real(r8), allocatable :: gpft_o(:)          ! output grid: global area pfts
   real(r8) :: garea_o                         ! output grid: global area
-  real(r8) :: gpft_i(0:numpft)                ! input grid: global area pfts
+  real(r8), allocatable :: gpft_i(:)          ! input grid: global area pfts
   real(r8) :: garea_i                         ! input grid: global area
   integer  :: k,n,m,ni,no,ns_i,ns_o           ! indices
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
+  logical  :: missing_crops                   ! if we need prognostic crop info, but the input dataset is missing this crop info
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
 
   character(len=35)  veg(0:maxpft)            ! vegetation types
@@ -230,6 +242,16 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
   write (6,*)
   write (6,*) 'Attempting to make PFTs .....'
   call shr_sys_flush(6)
+
+  if (allow_no_crops) then
+     if (.not. present(pctcft_o_saved)) then
+        write(6,*) subname, ' ERROR: when allow_no_crops is true, pctcft_o_saved must be given'
+        call abort()
+     end if
+  end if
+
+  ! Start by assuming the input dataset is NOT missing crop info
+  missing_crops = .false.
 
   ! -----------------------------------------------------------------
   ! Set the vegetation types
@@ -289,13 +311,33 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
      call check_ret(nf_inq_dimid  (ncid, 'pft', dimid), subname)
      call check_ret(nf_inq_dimlen (ncid, dimid, numpft_i), subname)
 
+     ! Check if the number of pfts on the input matches the expected number. A mismatch
+     ! is okay in the case that the input has the standard number of pfts (i.e., no
+     ! prognostic crop info), if allow_no_crops is true. Otherwise, a mismatch is an error.
      if (numpft_i .ne. numpft+1) then
-        write(6,*) subname//': parameter numpft+1= ',numpft+1, &
-             'does not equal input dataset numpft= ',numpft_i
-        call abort()
+        if (numpft_i .eq. numstdpft+1) then
+           if (allow_no_crops) then
+              write(6,*) subname//': using non-crop input file for a surface dataset with crops'
+              write(6,*) "(this is okay: we'll use the saved crop breakdown from the non-transient input file)"
+              missing_crops = .true.
+           else
+              write(6,*) subname//' ERROR: trying to use non-crop input file'
+              write(6,*) 'for a surface dataset with crops, but allow_no_crops is false'
+              write(6,*) "(This can happen if you're trying to use a non-crop input file"
+              write(6,*) "for the surface dataset itself: a non-crop input file is only"
+              write(6,*) "allowed for the transient PFT information.)"
+              call abort()
+           end if
+        else
+           write(6,*) subname//': parameter numpft+1= ',numpft+1, &
+                'does not equal input dataset numpft= ',numpft_i
+           call abort()
+        end if
      endif
 
-     allocate(pctpft_i(ns_i,0:numpft), stat=ier)
+     allocate(pctpft_i(ns_i,0:(numpft_i-1)), &
+              pctpft_o(ns_o,0:(numpft_i-1)), &
+              stat=ier)
      if (ier/=0) call abort()
 
      call check_ret(nf_inq_varid (ncid, 'PCT_PFT', varid), subname)
@@ -305,6 +347,9 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
 
   else
      ns_i = 1
+     numpft_i = numpft+1
+     allocate(pctpft_o(ns_o,0:numpft), stat=ier)
+     if (ier/=0) call abort()
   end if
 
   ! Determine pctpft_o on output grid
@@ -347,7 +392,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
         ldomain%frac(no) = tgridmap%frac_dst(no) 
      end do
 
-     do m = 0,numpft
+     do m = 0, numpft_i - 1
         call gridmap_areaave(tgridmap, pctpft_i(:,m), pctpft_o(:,m), nodata=0._r8)
         do no = 1,ns_o
            if (pctlnd_o(no) < 1.0e-6) then
@@ -362,20 +407,29 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
 
   end if
 
-  ! Error check: percents should sum to 100 for land grid cells
+  ! Error check: percents should sum to 100 for land grid cells, within roundoff
+  ! Also correct sums so that if they differ slightly from 100, they are corrected to
+  ! equal 100 more exactly.
 
   if ( .not. zero_out) then
      do no = 1,ns_o
         wst_sum = 0.
-        do m = 0,numpft
+        do m = 0, numpft_i - 1
            wst_sum = wst_sum + pctpft_o(no,m)
         enddo
         if (abs(wst_sum-100._r8) > 0.00001_r8) then
            write (6,*) subname//'error: pft = ', &
-                (pctpft_o(no,m), m = 0, numpft), &
+                (pctpft_o(no,m), m = 0, numpft_i-1), &
                 ' do not sum to 100. at no = ',no,' but to ', wst_sum
            stop
         end if
+
+        ! Correct sum so that if it differs slightly from 100, it is corrected to equal
+        ! 100 more exactly
+        do m = 0, numpft_i - 1
+           pctpft_o(no,m) = pctpft_o(no,m) * 100._r8 / wst_sum
+        end do
+
      end do
   end if
 
@@ -386,13 +440,16 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
 
   if ( .not. (zero_out .or. use_input_pft) ) then
 
+     allocate(gpft_i(0:numpft_i-1))
+     allocate(gpft_o(0:numpft_i-1))
+
      ! input grid
 
      gpft_i(:) = 0.
      garea_i   = 0.
      do ni = 1,ns_i
         garea_i = garea_i + tgridmap%area_src(ni)*re**2
-        do m = 0, numpft
+        do m = 0, numpft_i - 1
            gpft_i(m) = gpft_i(m) + pctpft_i(ni,m)*tgridmap%area_src(ni)*&
                                                   tgridmap%frac_src(ni)*re**2
         end do
@@ -405,7 +462,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
      garea_o   = 0.
      do no = 1,ns_o
         garea_o = garea_o + tgridmap%area_dst(no)*re**2
-        do m = 0, numpft
+        do m = 0, numpft_i - 1
            gpft_o(m) = gpft_o(m) + pctpft_o(no,m)*tgridmap%area_dst(no)*&
                                                   tgridmap%frac_dst(no)*re**2
         end do
@@ -425,16 +482,34 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
              1x,33x,'     10**6 km**2','      10**6 km**2')
      write (ndiag,'(1x,70a1)') ('.',k=1,70)
      write (ndiag,*)
-     do m = 0, numpft
+     do m = 0, numpft_i - 1
         write (ndiag,1002) veg(m), gpft_i(m)*1.e-06/100.,gpft_o(m)*1.e-06/100.
      end do
 1002 format (1x,a35,f16.3,f17.3)
      call shr_sys_flush(ndiag)
 
+     deallocate(gpft_i, gpft_o)
+
+  end if
+
+
+  ! Convert % pft as % of grid cell to % pft on the landunit and % of landunit on the
+  ! grid cell
+  if (missing_crops) then
+     do no = 1,ns_o
+        call convert_from_p2g(pct_p2g=pctpft_o(no,:), pctcft_saved=pctcft_o_saved(no), &
+             pctnatpft=pctnatpft_o(no), pctcft=pctcft_o(no))
+     end do
+  else
+     do no = 1,ns_o
+        call convert_from_p2g(pct_p2g=pctpft_o(no,:), &
+             pctnatpft=pctnatpft_o(no), pctcft=pctcft_o(no))
+     end do
   end if
 
   ! Deallocate dynamic memory
 
+  deallocate(pctpft_o)
   call domain_clean(tdomain) 
   if ( .not. zero_out .and. .not. use_input_pft ) then
      call gridmap_clean(tgridmap)
@@ -447,7 +522,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
 end subroutine mkpft
 
 !-----------------------------------------------------------------------
- 
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -586,131 +661,6 @@ end subroutine mkpft_check_oride
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: mkpft_normalize
-!
-! !INTERFACE:
-subroutine mkpft_normalize( pctpft_full, pctspecial, pctnatveg, pctcrop, pctnatpft, pctcft )
-!
-! !DESCRIPTION:
-! Separate full pctpft array into arrays giving natural pft cover (% of natural veg
-! landunit) and cft (crop functional type) cover (% of crop landunit). Also derive
-! pctnatveg (grid cell coverage of natural veg landunit) and pctcrop (grid cell
-! coverage of crop landunit). 
-!
-! pctpft_full gives the % cover of each pft and cft, adding up to 100% - so it does not
-! account for pctspecial (EXCEPTION: It DOES account for urban area, so sometimes may not
-! actually add up to 100% - see below.)
-!
-! Note that, in its current usage, pctpft_full has already been adjusted to account for
-! urban area, so pctspecial does NOT include pcturban, and pctpft_full does not add up
-! to 100%. That convention could change without changing any code of this routine. The
-! important consistency to maintain is: If pctpft_full has already been adjusted downwards
-! to account for landunits X, Y and Z, then landunits X, Y and Z should not be included in
-! pctspecial.
-!
-! For example, if pctpft_full adds up to 80%, all of which is in natural vegetation, then
-! the resulting pctnatveg will be 80% * (100 - pctspecial)/100
-!
-! !USES:
-!
-! !ARGUMENTS:
-  implicit none
-  real(r8), intent(in) :: pctpft_full(0:numpft)           ! % cover of each pft and cft, not accounting for pctspecial
-  real(r8), intent(in) :: pctspecial                      ! % cover of special landunits, by which pctpft_full needs to be downweighted
-  real(r8), intent(out):: pctnatveg                       ! % of natural vegetation landunit w.r.t. grid cell
-  real(r8), intent(out):: pctcrop                         ! % of crop landunit w.r.t. grid cell
-  real(r8), intent(out):: pctnatpft(natpft_lb:natpft_ub)  ! % of each natural pft w.r.t. natural veg landunit; sum will always equal 100%
-  real(r8), intent(out):: pctcft(cft_lb:cft_ub)           ! % of each cft w.r.t. crop landunit; sum will always equal 100%
-!
-! !CALLED FROM:
-! subroutine normalizencheck_landuse in mksurfdat.F90
-!
-! !REVISION HISTORY:
-! Author: Bill Sacks
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-  character(len=*), parameter :: subname = 'mkpft_normalize'
-!-----------------------------------------------------------------------
-
-  ! -----------------------------------------------------------------
-  ! Error checking
-  ! -----------------------------------------------------------------
-
-  if (pctspecial > 100._r8) then
-     write(6,*) subname//' ERROR: pctspecial > 100: ', pctspecial
-     call abort()
-  end if
-
-  ! -----------------------------------------------------------------
-  ! Determine pctnatpft and pctcft - weights with respect to landunits
-  ! -----------------------------------------------------------------
-
-  ! Note that these are temporary values, which still need to be normalized according to
-  ! pctspecial
-  pctnatveg = sum(pctpft_full(natpft_lb:natpft_ub))
-  pctcrop   = sum(pctpft_full(cft_lb:cft_ub))
-
-  if (pctnatveg > 0._r8) then
-     pctnatpft(natpft_lb:natpft_ub) = pctpft_full(natpft_lb:natpft_ub) / pctnatveg * 100._r8
-  else
-     ! pctnatveg == 0 - e.g., if only crops are present here - so natural veg landunit
-     ! will have 0% cover
-     ! In this case, arbitrarily assign bare ground to 100% of landunit
-     pctnatpft(natpft_lb:natpft_ub) = 0._r8
-     pctnatpft(baregroundindex) = 100._r8
-  end if
-
-  if (pctcrop > 0._r8) then
-     pctcft(cft_lb:cft_ub) = pctpft_full(cft_lb:cft_ub) / pctcrop * 100._r8
-  else
-     ! pctcrop == 0 - e.g., if only natural vegetation is present here - so crop
-     ! landunit will have 0% cover
-     ! In this case, arbitrarily assign c3 crop to 100% of landunit
-     pctcft(cft_lb:cft_ub) = 0._r8
-     if (size(pctcft) > 0) then
-        if (cft_lb <= c3cropindex .and. c3cropindex <= cft_ub) then
-           pctcft(c3cropindex) = 100._r8
-        else
-           write(6,*) subname//' ERROR: c3cropindex outside bounds:'
-           write(6,*) 'cft_lb, cft_ub, c3cropindex = '
-           write(6,*) cft_lb, cft_ub, c3cropindex
-           call abort()
-        end if
-     end if
-     ! Note that we don't explicitly handle the case size(pctcft) == 0, because nothing
-     ! needs to be done in that case
-  end if
-
-  ! -----------------------------------------------------------------
-  ! Renormalize pctnatveg and pctcrop based on pctspecial
-  ! -----------------------------------------------------------------
-
-  pctnatveg = 0.01_r8 * pctnatveg * (100._r8 - pctspecial)
-  pctcrop   = 0.01_r8 * pctcrop   * (100._r8 - pctspecial)
-
-  ! -----------------------------------------------------------------
-  ! Check post-conditions
-  ! -----------------------------------------------------------------
-
-  if (size(pctnatpft) > 0 .and. abs(sum(pctnatpft) - 100._r8) > 1.e-12_r8) then
-     write(6,*) subname//' ERROR: sum(pctnatpft) != 100'
-     write(6,*) 'pctnatpft = ', pctnatpft
-     write(6,*) 'sum = ', sum(pctnatpft)
-  end if
-
-  if (size(pctcft) > 0 .and. abs(sum(pctcft) - 100._r8) > 1.e-12_r8) then
-     write(6,*) subname//' ERROR: sum(pctcft) != 100'
-     write(6,*) 'pctcft = ', pctcft
-     write(6,*) 'sum = ', sum(pctcft)
-  end if
-end subroutine mkpft_normalize
-
-
-!-----------------------------------------------------------------------
-!BOP
-!
 ! !IROUTINE: mkpftAtt
 !
 ! !INTERFACE:
@@ -719,9 +669,9 @@ subroutine mkpftAtt( ncid, dynlanduse, xtype )
 ! !DESCRIPTION:
 ! make PFT attributes on the output file
 !
-  use mkncdio    , only : check_ret, ncd_defvar
+  use mkncdio    , only : check_ret, ncd_defvar, ncd_def_spatial_var
   use fileutils  , only : get_filename
-  use mkvarctl   , only : mksrf_fvegtyp, mksrf_flai, outnc_1d
+  use mkvarctl   , only : mksrf_fvegtyp, mksrf_flai
   use mkvarpar   
 
 ! !ARGUMENTS:
@@ -797,128 +747,68 @@ subroutine mkpftAtt( ncid, dynlanduse, xtype )
           dim1name='cft', long_name='indices of CFTs', units='index')
   end if
 
-  ! LANDFRAC_PFT
-  if (outnc_1d) then
-     call ncd_defvar(ncid=ncid, varname='LANDFRAC_PFT', xtype=nf_double, &
-          dim1name='gridcell',&
-          long_name='land fraction from pft dataset', units='unitless')
-  else
-     call ncd_defvar(ncid=ncid, varname='LANDFRAC_PFT', xtype=nf_double, &
-          dim1name='lsmlon', dim2name='lsmlat', &
-          long_name='land fraction from pft dataset', units='unitless')
-  end if
+  call ncd_def_spatial_var(ncid=ncid, varname='LANDFRAC_PFT', xtype=nf_double, &
+       long_name='land fraction from pft dataset', units='unitless')
   
-  ! PFTDATA_MASK
-  if (outnc_1d) then
-     call ncd_defvar(ncid=ncid, varname='PFTDATA_MASK', xtype=nf_int, &
-          dim1name='gridcell',&
-          long_name='land mask from pft dataset, indicative of real/fake points', units='unitless')
-  else
-     call ncd_defvar(ncid=ncid, varname='PFTDATA_MASK', xtype=nf_int, &
-          dim1name='lsmlon', dim2name='lsmlat', &
-          long_name='land mask from pft dataset, indicative of real/fake points', units='unitless')
-  end if
+  call ncd_def_spatial_var(ncid=ncid, varname='PFTDATA_MASK', xtype=nf_int, &
+       long_name='land mask from pft dataset, indicative of real/fake points', units='unitless')
   
-  ! PCT_NATVEG
-  if (outnc_1d) then
-     call ncd_defvar(ncid=ncid, varname='PCT_NATVEG', xtype=xtype, &
-          dim1name='gridcell', &
+  if (.not. dynlanduse) then
+     call ncd_def_spatial_var(ncid=ncid, varname='PCT_NATVEG', xtype=xtype, &
           long_name='total percent natural vegetation landunit', units='unitless')
-  else
-     call ncd_defvar(ncid=ncid, varname='PCT_NATVEG', xtype=xtype, &
-          dim1name='lsmlon', dim2name='lsmlat', &
-          long_name='total percent natural vegetation landunit', units='unitless')
-  end if
+  end  if
 
   ! PCT_CROP
-  if (outnc_1d) then
-     call ncd_defvar(ncid=ncid, varname='PCT_CROP', xtype=xtype, &
-          dim1name='gridcell', &
+  if (.not. dynlanduse) then
+     call ncd_def_spatial_var(ncid=ncid, varname='PCT_CROP', xtype=xtype, &
           long_name='total percent crop landunit', units='unitless')
   else
-     call ncd_defvar(ncid=ncid, varname='PCT_CROP', xtype=xtype, &
-          dim1name='lsmlon', dim2name='lsmlat', &
+     call ncd_def_spatial_var(ncid=ncid, varname='PCT_CROP', xtype=xtype, &
+          lev1name='time', &
           long_name='total percent crop landunit', units='unitless')
   end if
 
   ! PCT_NAT_PFT
   if (.not. dynlanduse) then
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='PCT_NAT_PFT', xtype=xtype, &
-             dim1name='gridcell', dim2name='natpft', &
-             long_name='percent plant functional type on the natural veg landunit (% of landunit)', units='unitless')
-     else
-        call ncd_defvar(ncid=ncid, varname='PCT_NAT_PFT', xtype=xtype, &
-             dim1name='lsmlon', dim2name='lsmlat', dim3name='natpft', &
-             long_name='percent plant functional type on the natural veg landunit (% of landunit)', units='unitless')
-     end if
+     call ncd_def_spatial_var(ncid=ncid, varname='PCT_NAT_PFT', xtype=xtype, &
+          lev1name='natpft', &
+          long_name='percent plant functional type on the natural veg landunit (% of landunit)', units='unitless')
   else
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='PCT_NAT_PFT', xtype=xtype, &
-             dim1name='gridcell', dim2name='natpft', dim3name='time', &
-             long_name='percent plant functional type on the natural veg landunit (% of landunit)', units='unitless')
-     else
-        call ncd_defvar(ncid=ncid, varname='PCT_NAT_PFT', xtype=xtype, &
-             dim1name='lsmlon', dim2name='lsmlat', dim3name='natpft', dim4name='time', &
-             long_name='percent plant functional type on the natural veg landunit (% of landunit)', units='unitless')
-     end if
+     call ncd_def_spatial_var(ncid=ncid, varname='PCT_NAT_PFT', xtype=xtype, &
+          lev1name='natpft', lev2name='time', &
+          long_name='percent plant functional type on the natural veg landunit (% of landunit)', units='unitless')
   end if
 
   ! PCT_CFT
   if (num_cft > 0) then
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='PCT_CFT', xtype=xtype, &
-             dim1name='gridcell', dim2name='cft', &
+     if (.not. dynlanduse) then
+        call ncd_def_spatial_var(ncid=ncid, varname='PCT_CFT', xtype=xtype, &
+             lev1name='cft', &
              long_name='percent crop functional type on the crop landunit (% of landunit)', units='unitless')
      else
-        call ncd_defvar(ncid=ncid, varname='PCT_CFT', xtype=xtype, &
-             dim1name='lsmlon', dim2name='lsmlat', dim3name='cft', &
+        call ncd_def_spatial_var(ncid=ncid, varname='PCT_CFT', xtype=xtype, &
+             lev1name='cft', lev2name='time', &
              long_name='percent crop functional type on the crop landunit (% of landunit)', units='unitless')
      end if
   end if
 
   ! LAI,SAI,HTOP,HBOT
   if (.not. dynlanduse) then
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='MONTHLY_LAI', xtype=xtype,  &
-             dim1name='gridcell', dim2name='lsmpft', dim3name='time', &
-             long_name='monthly leaf area index', units='unitless')
-     else
-        call ncd_defvar(ncid=ncid, varname='MONTHLY_LAI', xtype=xtype,  &
-             dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
-             long_name='monthly leaf area index', units='unitless')
-     end if
+     call ncd_def_spatial_var(ncid=ncid, varname='MONTHLY_LAI', xtype=xtype,  &
+          lev1name='lsmpft', lev2name='time', &
+          long_name='monthly leaf area index', units='unitless')
 
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='MONTHLY_SAI', xtype=xtype,  &
-             dim1name='gridcell', dim2name='lsmpft', dim3name='time', &
-             long_name='monthly stem area index', units='unitless')
-     else
-        call ncd_defvar(ncid=ncid, varname='MONTHLY_SAI', xtype=xtype,  &
-             dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
-             long_name='monthly stem area index', units='unitless')
-     end if
+     call ncd_def_spatial_var(ncid=ncid, varname='MONTHLY_SAI', xtype=xtype,  &
+          lev1name='lsmpft', lev2name='time', &
+          long_name='monthly stem area index', units='unitless')
 
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_TOP', xtype=xtype,  &
-             dim1name='gridcell', dim2name='lsmpft', dim3name='time', &
-             long_name='monthly height top', units='meters')
-     else
-        call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_TOP', xtype=xtype,  &
-             dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
-             long_name='monthly height top', units='meters')
-     end if
+     call ncd_def_spatial_var(ncid=ncid, varname='MONTHLY_HEIGHT_TOP', xtype=xtype,  &
+          lev1name='lsmpft', lev2name='time', &
+          long_name='monthly height top', units='meters')
 
-     if (outnc_1d) then
-        call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_BOT', xtype=xtype,  &
-             dim1name='gridcell', dim2name='lsmpft', dim3name='time', &
-             long_name='monthly height bottom', units='meters')
-     else
-        call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_BOT', xtype=xtype,  &
-             dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
-             long_name='monthly height bottom', units='meters')
-     end if
-
+     call ncd_def_spatial_var(ncid=ncid, varname='MONTHLY_HEIGHT_BOT', xtype=xtype,  &
+          lev1name='lsmpft', lev2name='time', &
+          long_name='monthly height bottom', units='meters')
   end if
 
   ! OTHER

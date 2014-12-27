@@ -45,7 +45,7 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
   use mkvarpar    , only : re
   use mkvarctl    
   use mkncdio
-  use mkpftMod    , only : c3cropindex, c3irrcropindex
+  use mkpftConstantsMod, only : c3cropindex, c3irrcropindex
 !
 ! !ARGUMENTS:
   implicit none

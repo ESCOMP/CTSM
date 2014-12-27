@@ -137,7 +137,7 @@ contains
 ! This subroutine reads in the map file
 !
 ! !USES:
-    use mkutilsMod, only : convert_latlon
+    use mkncdio, only : convert_latlon
 !
 ! !ARGUMENTS:
     implicit none

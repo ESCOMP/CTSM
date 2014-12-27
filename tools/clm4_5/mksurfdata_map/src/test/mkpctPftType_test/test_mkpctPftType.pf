@@ -1,0 +1,253 @@
+module test_mkpctPftType
+
+  ! Tests of pct_pft_type
+
+  use pfunit_mod
+
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use mkpctPftTypeMod
+
+  implicit none
+  save
+
+  real(r8), parameter :: tol = 1.e-12_r8
+
+contains
+  
+  @Test
+  subroutine test_constructor_nonzero()
+    ! Tests constructor with non-zero area
+    type(pct_pft_type) :: pct_pft
+    
+    pct_pft = pct_pft_type([5._r8, 20._r8, 25._r8], 11, [0._r8, 100._r8, 0._r8])
+    
+    @assertEqual([10._r8, 40._r8, 50._r8], pct_pft%get_pct_p2l(), tolerance=tol)
+    @assertEqual(50._r8, pct_pft%get_pct_l2g(), tolerance=tol)
+    @assertEqual(11, pct_pft%get_first_pft_index())
+
+  end subroutine test_constructor_nonzero
+
+  @Test
+  subroutine test_constructor_zero()
+    ! Tests constructor with zero area
+    type(pct_pft_type) :: pct_pft
+    real(r8) :: default_pct_p2l(3)
+
+    default_pct_p2l = [0._r8, 100._r8, 0._r8]
+
+    pct_pft = pct_pft_type([0._r8, 0._r8, 0._r8], 11, default_pct_p2l)
+    @assertEqual(default_pct_p2l, pct_pft%get_pct_p2l())
+    @assertEqual(0._r8, pct_pft%get_pct_l2g())
+  end subroutine test_constructor_zero
+
+  @Test
+  subroutine test_constructor_empty()
+    ! Tests version of constructor with an empty landunit
+    type(pct_pft_type) :: pct_pft
+    
+    pct_pft = pct_pft_type()
+    @assertEqual(0._r8, pct_pft%get_pct_l2g())
+  end subroutine test_constructor_empty
+
+  @Test
+  subroutine test_assignment()
+    ! Tests assignment of one object to another
+    !
+    ! Currently there is no defined assignment operator, so the point of this is to
+    ! ensure that intrinsic assignment works properly, particularly with respect to
+    ! maintaining the correct lower bound (get_first_pft_index).
+    type(pct_pft_type) :: source, dest
+
+    source = pct_pft_type([5._r8, 20._r8, 25._r8], 11, [0._r8, 100._r8, 0._r8])
+    dest = source
+
+    @assertEqual([10._r8, 40._r8, 50._r8], dest%get_pct_p2l(), tolerance=tol)
+    @assertEqual(50._r8, dest%get_pct_l2g(), tolerance=tol)
+    @assertEqual(11, dest%get_first_pft_index())
+  end subroutine test_assignment
+
+  @Test
+  subroutine test_get_pct_p2g()
+    ! Test the get_pct_p2g routine
+    type(pct_pft_type) :: pct_pft
+
+    pct_pft = pct_pft_type([5._r8, 20._r8, 25._r8], 11, [0._r8, 100._r8, 0._r8])
+    
+    @assertEqual([5._r8, 20._r8, 25._r8], pct_pft%get_pct_p2g())
+  end subroutine test_get_pct_p2g
+
+  @Test
+  subroutine test_get_one_pct_p2g()
+    ! Test the get_one_pct_p2g routine
+    type(pct_pft_type) :: pct_pft
+
+    pct_pft = pct_pft_type([5._r8, 20._r8, 25._r8], 11, [0._r8, 100._r8, 0._r8])
+    
+    @assertEqual(20._r8, pct_pft%get_one_pct_p2g(12))
+  end subroutine test_get_one_pct_p2g
+    
+
+  @Test
+  subroutine test_set_pct_l2g()
+    ! Test the set_pct_l2g routine
+    type(pct_pft_type) :: pct_pft
+
+    pct_pft = pct_pft_type([5._r8, 20._r8, 25._r8], 11, [0._r8, 100._r8, 0._r8])
+    
+    call pct_pft%set_pct_l2g(60._r8)
+    @assertEqual([10._r8, 40._r8, 50._r8], pct_pft%get_pct_p2l(), tolerance=tol)
+    @assertEqual(60._r8, pct_pft%get_pct_l2g(), tolerance=tol)
+  end subroutine test_set_pct_l2g
+
+
+  @Test
+  subroutine test_set_one_pct_p2g()
+    ! Test the set_one_pct_p2g routine
+    type(pct_pft_type) :: pct_pft
+    
+    pct_pft = pct_pft_type([5._r8, 20._r8, 25._r8], 11, [0._r8, 100._r8, 0._r8])
+
+    call pct_pft%set_one_pct_p2g(12, 10._r8)
+    @assertEqual(40._r8, pct_pft%get_pct_l2g(), tolerance=tol)
+    @assertEqual([12.5_r8, 25._r8, 62.5_r8], pct_pft%get_pct_p2l(), tolerance=tol)
+
+  end subroutine test_set_one_pct_p2g
+
+  @Test
+  subroutine test_set_one_pct_p2g_to_zero()
+    ! Test the set_one_pct_p2g routine, when we go to a total area of 0
+    type(pct_pft_type) :: pct_pft
+
+    pct_pft = pct_pft_type([20._r8, 0._r8, 0._r8], 11, [0._r8, 100._r8, 0._r8])
+    
+    call pct_pft%set_one_pct_p2g(11, 0._r8)
+    @assertEqual(0._r8, pct_pft%get_pct_l2g())
+    ! note that pct_p2l stays at its original value
+    @assertEqual([100._r8, 0._r8, 0._r8], pct_pft%get_pct_p2l(), tolerance=tol)
+
+  end subroutine test_set_one_pct_p2g_to_zero
+
+  @Test
+  subroutine test_set_one_pct_p2g_from_zero()
+    ! Test the set_one_pct_p2g routine, when we start from a total area of 0
+    type(pct_pft_type) :: pct_pft
+
+    pct_pft = pct_pft_type([0._r8, 0._r8, 0._r8], 11, [0._r8, 100._r8, 0._r8])
+
+    call pct_pft%set_one_pct_p2g(13, 5._r8)
+    @assertEqual(5._r8, pct_pft%get_pct_l2g())
+    @assertEqual([0._r8, 0._r8, 100._r8], pct_pft%get_pct_p2l(), tolerance=tol)
+
+  end subroutine test_set_one_pct_p2g_from_zero
+
+  @Test
+  subroutine test_merge_pfts()
+    ! Test the merge_pfts routine
+    type(pct_pft_type) :: pct_pft
+
+    pct_pft = pct_pft_type([5._r8, 20._r8, 25._r8], 11, [0._r8, 100._r8, 0._r8])
+    
+    call pct_pft%merge_pfts(source=12, dest=13)
+    @assertEqual(50._r8, pct_pft%get_pct_l2g())
+    @assertEqual([10._r8, 0._r8, 90._r8], pct_pft%get_pct_p2l(), tolerance=tol)
+  end subroutine test_merge_pfts
+
+  @Test
+  subroutine test_remove_small_cover_no_small()
+    ! Test the remove_small_cover routine with no small pfts
+    type(pct_pft_type) :: pct_pft, pct_pft_orig
+    integer :: nsmall
+
+    pct_pft = pct_pft_type([5._r8, 20._r8, 0._r8], 11, [0._r8, 100._r8, 0._r8])
+    pct_pft_orig = pct_pft
+
+    call pct_pft%remove_small_cover(1._r8, nsmall)
+    @assertEqual(pct_pft_orig%get_pct_l2g(), pct_pft%get_pct_l2g())
+    @assertEqual(pct_pft_orig%get_pct_p2l(), pct_pft%get_pct_p2l())
+    @assertEqual(0, nsmall)
+  end subroutine test_remove_small_cover_no_small
+
+  @Test
+  subroutine test_remove_small_cover_all_small()
+    ! Test the remove_small_cover routine with all small (or zero) pfts
+    type(pct_pft_type) :: pct_pft, pct_pft_orig
+    integer :: nsmall
+
+    pct_pft = pct_pft_type([5._r8, 20._r8, 0._r8], 11, [0._r8, 100._r8, 0._r8])
+    pct_pft_orig = pct_pft
+
+    call pct_pft%remove_small_cover(30._r8, nsmall)
+    @assertEqual(0._r8, pct_pft%get_pct_l2g())
+    @assertEqual(pct_pft_orig%get_pct_p2l(), pct_pft%get_pct_p2l())
+    @assertEqual(2, nsmall)
+  end subroutine test_remove_small_cover_all_small
+
+  @Test
+  subroutine test_remove_small_cover_some_small()
+    ! Test the remove_small_cover routine with some (but not all) small pfts
+    type(pct_pft_type) :: pct_pft
+    integer :: nsmall
+
+    pct_pft = pct_pft_type([5._r8, 20._r8, 0._r8, 25._r8], 11, [0._r8, 100._r8, 0._r8, 0._r8])
+
+    call pct_pft%remove_small_cover(10._r8, nsmall)
+    @assertEqual(45._r8, pct_pft%get_pct_l2g())
+    @assertEqual([0._r8, 20._r8, 0._r8, 25._r8]/45._r8 * 100._r8, pct_pft%get_pct_p2l(), tolerance=tol)
+    @assertEqual(1, nsmall)
+  end subroutine test_remove_small_cover_some_small
+
+  @Test
+  subroutine test_remove_small_cover_zero_area()
+    ! Test the remove_small_cover routine with a starting area of 0
+    type(pct_pft_type) :: pct_pft
+    integer :: nsmall
+    
+    pct_pft = pct_pft_type([0._r8, 0._r8, 0._r8], 11, [0._r8, 100._r8, 0._r8])
+    
+    call pct_pft%remove_small_cover(1._r8, nsmall)
+    @assertEqual(0._r8, pct_pft%get_pct_l2g())
+    @assertEqual([0._r8, 100._r8, 0._r8], pct_pft%get_pct_p2l())
+    @assertEqual(0, nsmall)
+  end subroutine test_remove_small_cover_zero_area
+
+  @Test
+  subroutine test_remove_small_cover_no_landunit()
+    ! Test the remove_small_cover routine when there are no pfts on this landunit
+    type(pct_pft_type) :: pct_pft
+    integer :: nsmall
+
+    pct_pft = pct_pft_type()
+    call pct_pft%remove_small_cover(1._r8, nsmall)
+    @assertEqual(0._r8, pct_pft%get_pct_l2g())
+    @assertEqual(0, nsmall)
+  end subroutine test_remove_small_cover_no_landunit
+
+  @Test
+  subroutine test_get_pct_p2l_array()
+    ! Test the get_pct_p2l_array routine
+    type(pct_pft_type) :: pct_pft(2)
+    real(r8) :: expected(2, 3)
+
+    pct_pft(1) = pct_pft_type([10._r8, 40._r8, 50._r8], 11, [0._r8, 100._r8, 0._r8])
+    pct_pft(2) = pct_pft_type([5._r8, 30._r8, 65._r8], 11, [0._r8, 100._r8, 0._r8])
+
+    expected(1,:) = [10._r8, 40._r8, 50._r8]
+    expected(2,:) = [5._r8, 30._r8, 65._r8]
+
+    @assertEqual(expected, get_pct_p2l_array(pct_pft))
+
+  end subroutine test_get_pct_p2l_array
+
+  @Test
+  subroutine test_get_pct_l2g_array()
+    ! Test the get_pct_l2g_array routine
+    type(pct_pft_type) :: pct_pft(2)
+
+    pct_pft(1) = pct_pft_type([5._r8, 25._r8, 20._r8], 11, [0._r8, 100._r8, 0._r8])
+    pct_pft(2) = pct_pft_type([1._r8, 2._r8, 3._r8], 11, [0._r8, 100._r8, 0._r8])
+
+    @assertEqual([50._r8, 6._r8], get_pct_l2g_array(pct_pft), tolerance=tol)
+
+  end subroutine test_get_pct_l2g_array
+
+end module test_mkpctPftType

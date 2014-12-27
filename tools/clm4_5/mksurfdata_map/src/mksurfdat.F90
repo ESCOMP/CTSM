@@ -15,8 +15,9 @@ program mksurfdat
     use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4
     use fileutils          , only : opnfil, getavu
     use mklaiMod           , only : mklai
-    use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride, &
-                                    natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
+    use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array
+    use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
+    use mkpftMod           , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
     use mksoilMod          , only : soil_sand, soil_clay, mksoiltex, mksoilInit, &
                                     soil_color, mksoilcol, mkorganic, &
                                     soil_fmax, mkfmax
@@ -32,7 +33,7 @@ program mksurfdat
     use mkvarpar           , only : nlevsoi, elev_thresh
     use mkvarctl
     use nanMod             , only : nan, bigint
-    use mkncdio            , only : check_ret
+    use mkncdio            , only : check_ret, ncd_put_time_slice
     use mkdomainMod        , only : domain_type, domain_read_map, domain_read, &
                                     domain_write
     use mkgdpMod           , only : mkgdp
@@ -65,8 +66,6 @@ program mksurfdat
     integer  :: ncid                        ! netCDF id
     integer  :: omode                       ! netCDF output mode
     integer  :: varid                       ! netCDF variable id
-    integer  :: ndims                       ! netCDF number of dimensions
-    integer  :: beg(4),len(4),dimids(4)     ! netCDF dimension sizes 
     integer  :: ret                         ! netCDF return status
     integer  :: ntim                        ! time sample for dynamic land use
     integer  :: year                        ! year for dynamic land use
@@ -86,12 +85,9 @@ program mksurfdat
     real(r8), allocatable  :: pctlnd_pft(:)      ! PFT data: % of gridcell for PFTs
     real(r8), allocatable  :: pctlnd_pft_dyn(:)  ! PFT data: % of gridcell for dyn landuse PFTs
     integer , allocatable  :: pftdata_mask(:)    ! mask indicating real or fake land type
-    real(r8), pointer      :: pctpft_full(:,:)   ! PFT data: % cover of each pft and cft on the vegetated landunits
-                                                 ! ('full' denotes inclusion of CFTs as well as natural PFTs in this array)
-    real(r8), allocatable  :: pctnatveg(:)       ! percent of grid cell that is natural veg landunit
-    real(r8), allocatable  :: pctcrop(:)         ! percent of grid cell that is crop landunit
-    real(r8), allocatable  :: pctnatpft(:,:)     ! % of each pft on the natural veg landunit (adds to 100%)
-    real(r8), allocatable  :: pctcft(:,:)        ! % of each cft on the crop landunit (adds to 100%)
+    type(pct_pft_type), allocatable :: pctnatpft(:) ! % of grid cell that is nat veg, and breakdown into PFTs
+    type(pct_pft_type), allocatable :: pctcft(:)    ! % of grid cell that is crop, and breakdown into CFTs
+    type(pct_pft_type), allocatable :: pctcft_saved(:) ! version of pctcft saved from the initial call to mkpft
     real(r8), pointer      :: harvest(:,:)       ! harvest data: normalized harvesting
     real(r8), allocatable  :: pctgla(:)          ! percent of grid cell that is glacier  
     real(r8), allocatable  :: pctglc_gic(:)      ! percent of grid cell that is gic (% of glc landunit)
@@ -378,11 +374,9 @@ program mksurfdat
     allocate ( landfrac_pft(ns_o)                 , &
                pctlnd_pft(ns_o)                   , & 
                pftdata_mask(ns_o)                 , & 
-               pctpft_full(ns_o,0:numpft)         , & 
-               pctnatveg(ns_o)                    , &
-               pctcrop(ns_o)                      , &
-               pctnatpft(ns_o,natpft_lb:natpft_ub), &
-               pctcft(ns_o,cft_lb:cft_ub)         , &
+               pctnatpft(ns_o)                    , &
+               pctcft(ns_o)                       , &
+               pctcft_saved(ns_o)                 , &
                pctgla(ns_o)                       , & 
                pctlak(ns_o)                       , & 
                pctwet(ns_o)                       , & 
@@ -409,11 +403,6 @@ program mksurfdat
     landfrac_pft(:)       = spval 
     pctlnd_pft(:)         = spval
     pftdata_mask(:)       = -999
-    pctpft_full(:,:)      = spval
-    pctnatveg(:)          = spval
-    pctcrop(:)            = spval
-    pctnatpft(:,:)        = spval
-    pctcft(:,:)           = spval
     pctgla(:)             = spval
     pctlak(:)             = spval
     pctwet(:)             = spval
@@ -507,10 +496,15 @@ program mksurfdat
     ! Make surface dataset fields
     ! ----------------------------------------------------------------------
 
-    ! Make PFTs [pctpft_full] from dataset [fvegtyp]
+    ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
 
     call mkpft(ldomain, mapfname=map_fpft, fpft=mksrf_fvegtyp, &
-         ndiag=ndiag, pctlnd_o=pctlnd_pft, pctpft_o=pctpft_full )
+         ndiag=ndiag, allow_no_crops=.false., &
+         pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
+
+    ! Save the version of pctcft before any corrections are made. In particular, we want
+    ! to save the version before remove_small_cover is called.
+    pctcft_saved = pctcft
 
     ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
 
@@ -669,16 +663,15 @@ program mksurfdat
        ! Assume wetland and/or lake when dataset landmask implies ocean 
        ! (assume medium soil color (15) and loamy texture).
        ! Also set pftdata_mask here
-       ! Note that pctpft_full is NOT adjusted here, so that we still have information
-       ! about the landunit breakdown into PFTs (pctnatveg and pctcrop will later become 0
-       ! due to wetland and lake adding to 100%).
-       
+
        if (pctlnd_pft(n) < 1.e-6_r8) then
           pftdata_mask(n)  = 0
           soicol(n)        = 15
           pctwet(n)        = 100._r8 - pctlak(n)
           pcturb(n)        = 0._r8
           pctgla(n)        = 0._r8
+          call pctnatpft(n)%set_pct_l2g(0._r8)
+          call pctcft(n)%set_pct_l2g(0._r8)
           pctsand(n,:)     = 43._r8
           pctclay(n,:)     = 18._r8
           organic(n,:)   = 0._r8
@@ -724,7 +717,7 @@ program mksurfdat
     do k = natpft_lb,natpft_ub
        suma = 0._r8
        do n = 1,ns_o
-          suma = suma + pctnatpft(n,k)*pctnatveg(n)/100._r8
+          suma = suma + pctnatpft(n)%get_one_pct_p2g(k)
        enddo
        write(6,*) 'sum over domain of pft ',k,suma
     enddo
@@ -733,7 +726,7 @@ program mksurfdat
     do k = cft_lb,cft_ub
        suma = 0._r8
        do n = 1,ns_o
-          suma = suma + pctcft(n,k)*pctcrop(n)/100._r8
+          suma = suma + pctcft(n)%get_one_pct_p2g(k)
        enddo
        write(6,*) 'sum over domain of cft ',k,suma
     enddo
@@ -863,17 +856,17 @@ program mksurfdat
     call check_ret(nf_put_var_double(ncid, varid, urbn_classes_g), subname)
 
     call check_ret(nf_inq_varid(ncid, 'PCT_NATVEG', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, pctnatveg), subname)
+    call check_ret(nf_put_var_double(ncid, varid, get_pct_l2g_array(pctnatpft)), subname)
 
     call check_ret(nf_inq_varid(ncid, 'PCT_CROP', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, pctcrop), subname)
+    call check_ret(nf_put_var_double(ncid, varid, get_pct_l2g_array(pctcft)), subname)
 
     call check_ret(nf_inq_varid(ncid, 'PCT_NAT_PFT', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, pctnatpft), subname)
+    call check_ret(nf_put_var_double(ncid, varid, get_pct_p2l_array(pctnatpft)), subname)
 
     if (num_cft > 0) then
        call check_ret(nf_inq_varid(ncid, 'PCT_CFT', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctcft), subname)
+       call check_ret(nf_put_var_double(ncid, varid, get_pct_p2l_array(pctcft)), subname)
     end if
 
     call check_ret(nf_inq_varid(ncid, 'FMAX', varid), subname)
@@ -1029,29 +1022,6 @@ program mksurfdat
        call check_ret(nf_inq_varid(ncid, 'LANDFRAC_PFT', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, landfrac_pft), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'PCT_WETLAND', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctwet), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_LAKE', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctlak), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLACIER', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctgla), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, urbn_classes_g), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_NATVEG', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctnatveg), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_CROP', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctcrop), subname)
-
-       if (num_cft > 0) then
-          call check_ret(nf_inq_varid(ncid, 'PCT_CFT', varid), subname)
-          call check_ret(nf_put_var_double(ncid, varid, pctcft), subname)
-       end if
-
        ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 
        call check_ret(nf_sync(ncid), subname)
@@ -1083,14 +1053,12 @@ program mksurfdat
           end if
           ntim = ntim + 1
 
-          ! Re-allocate pctpft_full, because it is deallocated in normalizencheck_landuse
-          ! for safety
-          allocate(pctpft_full(ns_o,0:numpft))
-
           ! Create pctpft data at model resolution
           
           call mkpft(ldomain, mapfname=map_fpft, fpft=fname, &
-               ndiag=ndiag, pctlnd_o=pctlnd_pft_dyn, pctpft_o=pctpft_full )
+               ndiag=ndiag, allow_no_crops=.true., &
+               pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft, &
+               pctcft_o_saved=pctcft_saved)
 
           ! Create harvesting data at model resolution
 
@@ -1117,30 +1085,22 @@ program mksurfdat
 
           call normalizencheck_landuse(ldomain)
 
-          ! Output pctpft data for current year
+          ! Output time-varying data for current year
 
           call check_ret(nf_inq_varid(ncid, 'PCT_NAT_PFT', varid), subname)
-          call check_ret(nf_inq_varndims(ncid, varid, ndims), subname)
-          call check_ret(nf_inq_vardimid(ncid, varid, dimids), subname)
-          beg(1:ndims-1) = 1
-          do n = 1,ndims-1
-             call check_ret(nf_inq_dimlen(ncid, dimids(n), len(n)), subname)
-          end do
-          len(ndims) = 1
-          beg(ndims) = ntim
-          call check_ret(nf_put_vara_double(ncid, varid, beg, len, pctnatpft), subname)
+          call ncd_put_time_slice(ncid, varid, ntim, get_pct_p2l_array(pctnatpft))
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_CROP', varid), subname)
+          call ncd_put_time_slice(ncid, varid, ntim, get_pct_l2g_array(pctcft))
+
+          if (num_cft > 0) then
+             call check_ret(nf_inq_varid(ncid, 'PCT_CFT', varid), subname)
+             call ncd_put_time_slice(ncid, varid, ntim, get_pct_p2l_array(pctcft))
+          end if
 
           do k = 1, mkharvest_numtypes()
              call check_ret(nf_inq_varid(ncid, trim(mkharvest_fieldname(k)), varid), subname)
-             call check_ret(nf_inq_varndims(ncid, varid, ndims), subname)
-             call check_ret(nf_inq_vardimid(ncid, varid, dimids), subname)
-             beg(1:ndims-1) = 1
-             do n = 1,ndims-1
-                call check_ret(nf_inq_dimlen(ncid, dimids(n), len(n)), subname)
-             end do
-             len(ndims) = 1
-             beg(ndims) = ntim
-             call check_ret(nf_put_vara_double(ncid, varid, beg, len, harvest(:,k)), subname)
+             call ncd_put_time_slice(ncid, varid, ntim, harvest(:,k))
           end do
 
           call check_ret(nf_inq_varid(ncid, 'YEAR', varid), subname)
@@ -1221,15 +1181,13 @@ subroutine change_landuse( ldomain, dynpft )
        ! Set pfts 7 and 10 to 6 in the tropics to avoid lais > 1000
        ! Using P. Thornton's method found in surfrdMod.F90 in clm3.5
        
-       if (abs(ldomain%latc(n))<troplat .and. pctpft_full(n,bdtemptree)>0._r8) then
-          pctpft_full(n,bdtroptree) = pctpft_full(n,bdtroptree) + pctpft_full(n,bdtemptree)
-          pctpft_full(n,bdtemptree) = 0._r8
+       if (abs(ldomain%latc(n))<troplat .and. pctnatpft(n)%get_one_pct_p2g(bdtemptree) > 0._r8) then
+          call pctnatpft(n)%merge_pfts(source=bdtemptree, dest=bdtroptree)
           if ( first_time ) write (6,*) subname, ' Warning: all wgt of pft ', &
                bdtemptree, ' now added to pft ', bdtroptree
        end if
-       if (abs(ldomain%latc(n))<troplat .and. pctpft_full(n,bdtempshrub)>0._r8) then
-          pctpft_full(n,bdtroptree) = pctpft_full(n,bdtroptree) + pctpft_full(n,bdtempshrub)
-          pctpft_full(n,bdtempshrub) = 0._r8
+       if (abs(ldomain%latc(n))<troplat .and. pctnatpft(n)%get_one_pct_p2g(bdtempshrub) > 0._r8) then
+          call pctnatpft(n)%merge_pfts(source=bdtempshrub, dest=bdtroptree)
           if ( first_time ) write (6,*) subname, ' Warning: all wgt of pft ', &
                bdtempshrub, ' now added to pft ', bdtroptree
        end if
@@ -1237,15 +1195,14 @@ subroutine change_landuse( ldomain, dynpft )
        
        ! If have pole points on grid - set south pole to glacier
        ! north pole is assumed as non-land
-       ! Note that pctpft_full is NOT adjusted here, so that we still have information
-       ! about the landunit breakdown into PFTs (pctnatveg and pctcrop will later become 0
-       ! due to glacier adding to 100%).
        
        if (abs((ldomain%latc(n) - 90._r8)) < 1.e-6_r8) then
           pctlak(n)   = 0._r8
           pctwet(n)   = 0._r8
           pcturb(n)   = 0._r8
           pctgla(n)   = 100._r8
+          call pctnatpft(n)%set_pct_l2g(0._r8)
+          call pctcft(n)%set_pct_l2g(0._r8)
           if ( .not. dynpft )then
              organic(n,:)   = 0._r8
              ef1_btr(n)     = 0._r8
@@ -1274,11 +1231,11 @@ subroutine normalizencheck_landuse(ldomain)
 ! Normalize land use and make sure things add up to 100% as well as
 ! checking that things are as they should be.
 !
-! Note: this deallocates pctpft_full
+! Precondition: pctlak + pctwet + pcturb + pctgla <= 100 (within roundoff)
 !
 ! !USES:
-    use mkutilsMod, only : remove_small_cover
-    use mkpftMod  , only : mkpft_normalize
+    use mkpftConstantsMod , only : baregroundindex
+    use mkpftUtilsMod     , only : adjust_total_veg_area
     implicit none
 ! !ARGUMENTS:
     type(domain_type)   :: ldomain
@@ -1294,128 +1251,137 @@ subroutine normalizencheck_landuse(ldomain)
     integer  :: nsmall_tot                  ! total number of small PFT values in all grid cells
     real(r8) :: suma                        ! sum for error check
     real(r8) :: suma2                       ! another sum for error check
-    real(r8) :: pcturb_rescaled             ! % urban normalized as if it were on the veg landunit
+    real(r8) :: new_total_veg_pct           ! new % veg (% of grid cell, total of natural veg & crop)
+    real(r8) :: bare_pct_p2g                ! % of bare soil, as % of grid cell
     real(r8) :: bare_urb_diff               ! difference between bare soil and urban %
     real(r8) :: pcturb_excess               ! excess urban % not accounted for by bare soil
-    real(r8) :: sumpft                      ! sum of non-baresoil pfts
     real(r8) :: sum8, sum8a                 ! sum for error check
     real(r4) :: sum4a                       ! sum for error check
+    real(r8), parameter :: tol_loose = 1.e-4_r8               ! tolerance for some 'loose' error checks
     real(r8), parameter :: toosmallPFT = 1.e-10_r8            ! tolerance for PFT's to ignore
     character(len=32) :: subname = 'normalizencheck_landuse'  ! subroutine name
 !-----------------------------------------------------------------------
 
+    ! ------------------------------------------------------------------------
+    ! Normalize vegetated area so that vegetated + special area is 100%
+    ! ------------------------------------------------------------------------
+
     ns_o = ldomain%ns
     do n = 1,ns_o
 
-       ! The following corrects pctpft_full to account for urban area. Urban needs to be
-       ! handled specially because we replace bare soil preferentially with urban, rather
-       ! than rescaling all PFTs equally. To accomplish this, we first rescale urban to
-       ! the value it would have if it were in the pctpft_full array (pcturb_rescaled), which
-       ! gives the fraction of each pft on the (vegetated + crop) landunits. Before
-       ! (conceptually) adding urban to this array, pctpft_full added up to 100% of the
-       ! (vegetated + crop) landunits, so we preserve this concept by adjusting pctpft_full so
-       ! that sum(pctpft_full) + pcturb_rescaled = 100%. After doing this, we can rescale
-       ! pctpft_full so it accounts for the other special landunits - but since we have already
-       ! accounted for urban, note that that final rescaling only considers the sum of the
-       ! non-urban special landunits.
+       ! Check preconditions
 
-       if (pcturb(n) .gt. 0._r8) then
-          
-          suma = pctlak(n)+pctwet(n)+pctgla(n)
+       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
+       if (suma > (100._r8 + tol_loose)) then
+          write(6,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla must be'
+          write(6,*) '<= 100% before calling this subroutine'
+          write(6,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
+               n, pctlak(n), pctwet(n), pcturb(n), pctgla(n)
+          call abort()
+       end if
+
+       ! First normalize vegetated (natural veg + crop) cover so that the total of
+       ! (vegetated + (special excluding urban)) is 100%. We'll deal with urban later.
+       !
+       ! Note that, in practice, the total area of natural veg + crop is typically 100%
+       ! going into this routine. However, the following code does NOT rely on this, and
+       ! will work properly regardless of the initial area of natural veg + crop (even if
+       ! that initial area is 0%).
        
-          if (suma >= 100._r8) then
-             write(6,*) 'ERROR: pcturb > 0 and other special landunits add to >= 100'
-             write(6,*) 'n, pcturb, suma = ', n, pcturb(n), suma
-             call abort()
-          end if
+       suma = pctlak(n)+pctwet(n)+pctgla(n)
+       new_total_veg_pct = 100._r8 - suma
+       ! correct for rounding error:
+       new_total_veg_pct = max(new_total_veg_pct, 0._r8)
 
-          ! Rescale pcturb as if it were going on the (vegetated + crop) landunits
-          pcturb_rescaled = pcturb(n)/(0.01_r8*(100._r8 - suma))
+       call adjust_total_veg_area(new_total_veg_pct, pctnatpft=pctnatpft(n), pctcft=pctcft(n))
 
+       ! Make sure we did the above rescaling correctly
+
+       suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
+       if (abs(suma - 100._r8) > tol_loose) then
+          write(6,*) subname, ' ERROR in rescaling veg based on (special excluding urban'
+          write(6,*) 'suma = ', suma
+          call abort()
+       end if
+
+       ! Now decrease the vegetated area to account for urban area. Urban needs to be
+       ! handled specially because we replace bare soil preferentially with urban, rather
+       ! than rescaling all PFTs equally.
+
+       if (pcturb(n) > 0._r8) then
+          
           ! Replace bare soil preferentially with urban
-          bare_urb_diff = pctpft_full(n,0) - pcturb_rescaled
-          pctpft_full(n,0) = max(0._r8,bare_urb_diff)
+          bare_pct_p2g = pctnatpft(n)%get_one_pct_p2g(baregroundindex)
+          bare_urb_diff = bare_pct_p2g - pcturb(n)
+          bare_pct_p2g = max(0._r8, bare_urb_diff)
+          call pctnatpft(n)%set_one_pct_p2g(baregroundindex, bare_pct_p2g)
           pcturb_excess = abs(min(0._r8,bare_urb_diff))
           
           ! For any urban not accounted for by bare soil, replace other PFTs
           ! proportionally
-          sumpft = sum(pctpft_full(n,1:numpft))
-          if (pcturb_excess > 0._r8 .and. sumpft > 0._r8) then
-             do m = 1, numpft
-                pctpft_full(n,m) = pctpft_full(n,m) - pcturb_excess*pctpft_full(n,m)/sumpft
-                if ( pctpft_full(n,m) < 0.0_r8 )then
-                   write (6,*)'pctpft_full < 0.0 = ', pctpft_full(n,m), &
-                   ' n, m, suma, pcturb_excess, sumpft = ',  n, m, suma, pcturb_excess, sumpft
-                   if ( abs(pctpft_full(n,m)) > 1.e-12_r8 )then
-                      call abort()
-                   end if
-                   pctpft_full(n,m) = 0.0_r8
+          if (pcturb_excess > 0._r8) then
+             ! Note that, in this case, we will have already reduced bare ground to 0%
+
+             new_total_veg_pct = pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g() - pcturb_excess
+             if (new_total_veg_pct < 0._r8) then
+                if (abs(new_total_veg_pct) < tol_loose) then
+                   ! only slightly less than 0; correct it
+                   new_total_veg_pct = 0._r8
+                else
+                   write(6,*) subname, ' ERROR: trying to replace veg with urban,'
+                   write(6,*) 'but pcturb_excess exceeds current vegetation percent'
+                   call abort()
                 end if
-             end do
+             end if
+
+             call adjust_total_veg_area(new_total_veg_pct, pctnatpft=pctnatpft(n), pctcft=pctcft(n))
           end if
 
-          ! Confirm that we have done the rescaling correctly: 
-          ! make sure sum(pctpft_full) + pcturb_rescaled = 100%
-          ! Note that the tolerance here (0.00001_r8) matches the tolerance for the error
-          ! check on the sum in mkpftMod: mkpft
-          if (abs( (sum(pctpft_full(n,0:numpft)) + pcturb_rescaled) - 100._r8 ) > 0.00001_r8) then
-             write(6,*) 'ERROR: pctpft_full + pcturb_rescaled not equal to 100'
-             write(6,*) 'n, sum(pctpft_full), pcturb_rescaled, diff = '
-             write(6,*) n, sum(pctpft_full(n,0:numpft)), pcturb_rescaled, abs( (sum(pctpft_full(n,0:numpft)) + pcturb_rescaled) - 100._r8 )
-             call abort()
-          end if
+       end if ! pcturb(n) > 0
+
+       ! Confirm that we have done the rescaling correctly: now the sum of all landunits
+       ! should be 100%
+       suma = pctlak(n)+pctwet(n)+pctgla(n)+pcturb(n)
+       suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
+       if (abs(suma - 100._r8) > tol_loose) then
+          write(6,*) subname, ' ERROR: landunits do not sum to 100%'
+          write(6,*) 'n, suma, pctlak, pctwet, pctgla, pcturb, pctnatveg, pctcrop = '
+          write(6,*) n, suma, pctlak(n), pctwet(n), pctgla(n), pcturb(n), &
+               pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
+          call abort()
        end if
           
-       ! Normalize pctpft_full to be the remainder of [100 - (special landunits)]
-       ! Note that we have already accounted for pcturb, above, so here we just account
-       ! for the other special landunits
-       suma = pctlak(n) + pctwet(n) + pctgla(n)
-       call mkpft_normalize (pctpft_full(n,:), suma, pctnatveg(n), pctcrop(n), pctnatpft(n,:), pctcft(n,:))
     end do
 
-    ! Deallocate no-longer-needed pctpft_full so it won't accidentally be updated further
-    deallocate(pctpft_full)
+    ! ------------------------------------------------------------------------
+    ! Do other corrections and error checks
+    ! ------------------------------------------------------------------------
 
     nsmall_tot = 0
 
     do n = 1,ns_o
-
-       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctnatveg(n) + pctcrop(n)
        
-       if (suma < 90._r8) then
-          write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-               'pcturb, pctgla, pctnatveg and pctcrop is less than 90'
-          write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop= ', &
-               n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n)
-          call abort()
-       else if (suma > 100._r8 + 1.e-4_r8) then
-          write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-               'pcturb, pctgla, pctnatveg and pctcrop is greater than 100'
-          write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,sum= ', &
-               n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n),suma
-          call abort()
-       else
-          ! If the coverage of any PFT or CFT is too small at the gridcell level, set its
-          ! % cover to 0, then renormalize everything else as needed
-          call remove_small_cover(pctnatveg(n), pctnatpft(n,:), nsmall, toosmallPFT, suma)
-          nsmall_tot = nsmall_tot + nsmall
-          call remove_small_cover(pctcrop(n), pctcft(n,:), nsmall, toosmallPFT, suma)
-          nsmall_tot = nsmall_tot + nsmall
-          
-          suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n) + pctnatveg(n) + pctcrop(n)
-          if ( abs(suma - 100.0_r8) > 2.0*epsilon(suma) )then
-             pctlak(n)    = pctlak(n)    * 100._r8/suma
-             pctwet(n)    = pctwet(n)    * 100._r8/suma
-             pcturb(n)    = pcturb(n)    * 100._r8/suma
-             pctgla(n)    = pctgla(n)    * 100._r8/suma
-             pctnatveg(n) = pctnatveg(n) * 100._r8/suma
-             pctcrop(n)   = pctcrop(n)   * 100._r8/suma
-          end if
+       ! If the coverage of any PFT or CFT is too small at the gridcell level, set its
+       ! % cover to 0, then renormalize everything else as needed
+       call pctnatpft(n)%remove_small_cover(toosmallPFT, nsmall)
+       nsmall_tot = nsmall_tot + nsmall
+       call pctcft(n)%remove_small_cover(toosmallPFT, nsmall)
+       nsmall_tot = nsmall_tot + nsmall
+
+       suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
+       suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
+       if ( abs(suma - 100.0_r8) > 2.0*epsilon(suma) )then
+          pctlak(n)    = pctlak(n)    * 100._r8/suma
+          pctwet(n)    = pctwet(n)    * 100._r8/suma
+          pcturb(n)    = pcturb(n)    * 100._r8/suma
+          pctgla(n)    = pctgla(n)    * 100._r8/suma
+          call pctnatpft(n)%set_pct_l2g(pctnatpft(n)%get_pct_l2g() * 100._r8/suma)
+          call pctcft(n)%set_pct_l2g(pctcft(n)%get_pct_l2g() * 100._r8/suma)
        end if
        
        ! Roundoff error fix
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-       suma2 = pctnatveg(n) + pctcrop(n)
+       suma2 = pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
        if ( (suma < 100._r8 .and. suma > (100._r8 - 1.e-6_r8)) .or. &
             (suma2 > 0.0_r8 .and. suma2 <  1.e-6_r8) ) then
           write (6,*) 'Special land units near 100%, but not quite for n,suma =',n,suma
@@ -1431,35 +1397,37 @@ subroutine normalizencheck_landuse(ldomain)
           else
              write (6,*) subname, 'Error: sum of special land units nearly 100% but none is >= 25% at ', &
                   'n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n),suma = ', &
-                  n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n),suma
+                  n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
+                  pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(),suma
              call abort()
           end if
-          pctnatveg(n) = 0._r8
-          pctcrop(n) = 0._r8
+          call pctnatpft(n)%set_pct_l2g(0._r8)
+          call pctcft(n)%set_pct_l2g(0._r8)
        end if
-       if ( any(pctnatpft(n,:)*pctnatveg(n) > 0.0_r8 .and. pctnatpft(n,:)*pctnatveg(n) < toosmallPFT ) .or. &
-            any(pctcft(n,:)*pctcrop(n)   > 0.0_r8 .and. pctcft(n,:)*pctcrop(n)   < toosmallPFT )) then
+       if ( any(pctnatpft(n)%get_pct_p2g() > 0.0_r8 .and. pctnatpft(n)%get_pct_p2g() < toosmallPFT ) .or. &
+            any(pctcft(n)%get_pct_p2g()    > 0.0_r8 .and. pctcft(n)%get_pct_p2g()    < toosmallPFT )) then
           write (6,*) 'pctnatpft or pctcft is small at n=', n
-          write (6,*) 'pctnatpft = ', pctnatpft(n,:)
-          write (6,*) 'pctcft = ', pctcft(n,:)
-          write (6,*) 'pctnatveg = ', pctnatveg
-          write (6,*) 'pctcrop = ', pctcrop
+          write (6,*) 'pctnatpft%pct_p2l = ', pctnatpft(n)%get_pct_p2l()
+          write (6,*) 'pctcft%pct_p2l = ', pctcft(n)%get_pct_p2l()
+          write (6,*) 'pctnatpft%pct_l2g = ', pctnatpft(n)%get_pct_l2g()
+          write (6,*) 'pctcft%pct_l2g = ', pctcft(n)%get_pct_l2g()
           call abort()
        end if
        
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
        if (suma < 100._r8-epsilon(suma) .and. suma > (100._r8 - 4._r8*epsilon(suma))) then
           write (6,*) subname, 'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop= ', &
-               n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n)
+               n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
+               pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
           call abort()
        end if
-       suma = suma + pctnatveg(n) + pctcrop(n)
+       suma = suma + pctnatpft(n)%get_pct_l2g() + pctcft(n)%get_pct_l2g()
        if ( abs(suma-100._r8) > 1.e-10_r8) then
           write (6,*) subname, ' error: sum of pctlak, pctwet,', &
                'pcturb, pctgla, pctnatveg and pctcrop is NOT equal to 100'
           write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,sum= ', &
                n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
-               pctnatveg(n),pctcrop(n), suma
+               pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(), suma
           call abort()
        end if
        
@@ -1473,13 +1441,14 @@ subroutine normalizencheck_landuse(ldomain)
           sum8  = sum8  + real(pctwet(n),r4)
           sum8  = sum8  + real(pcturb(n),r4)
           sum8  = sum8  + real(pctgla(n),r4)
-          sum4a =         real(pctnatveg(n),r4)
-          sum4a = sum4a + real(pctcrop(n),r4)
+          sum4a =         real(pctnatpft(n)%get_pct_l2g(),r4)
+          sum4a = sum4a + real(pctcft(n)%get_pct_l2g(),r4)
           if ( sum4a==0.0_r4 .and. sum8 < 100._r4-2._r4*epsilon(sum4a) )then
              write (6,*) subname, ' error: sum of pctlak, pctwet,', &
                   'pcturb, pctgla is < 100% when pctnatveg+pctcrop==0 sum = ', sum8
              write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop= ', &
-                  n,pctlak(n),pctwet(n),pcturb(n),pctgla(n), pctnatveg(n),pctcrop(n)
+                  n,pctlak(n),pctwet(n),pcturb(n),pctgla(n), &
+                  pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g()
              call abort()
           end if
        end do
@@ -1489,38 +1458,25 @@ subroutine normalizencheck_landuse(ldomain)
           sum8  = sum8  + pctwet(n)
           sum8  = sum8  + pcturb(n)
           sum8  = sum8  + pctgla(n)
-          sum8a =         pctnatveg(n)
-          sum8a = sum8a + pctcrop(n)
+          sum8a =         pctnatpft(n)%get_pct_l2g()
+          sum8a = sum8a + pctcft(n)%get_pct_l2g()
           if ( sum8a==0._r8 .and. sum8 < (100._r8-4._r8*epsilon(sum8)) )then
              write (6,*) subname, ' error: sum of pctlak, pctwet,', &
                   'pcturb, pctgla is < 100% when pctnatveg+pctcrop==0 sum = ', sum8
              write (6,*) 'Total error, error/epsilon = ',100._r8-sum8, ((100._r8-sum8)/epsilon(sum8))
              write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctnatveg,pctcrop,epsilon= ', &
-                  n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctnatveg(n),pctcrop(n), epsilon(sum8)
+                  n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),&
+                  pctnatpft(n)%get_pct_l2g(),pctcft(n)%get_pct_l2g(), epsilon(sum8)
              call abort()
           end if
        end do
     end if
-    do n = 1,ns_o
-       do k = natpft_lb,natpft_ub
-          if ( pctnatpft(n,k)*pctnatveg(n) < 0.0_r8 )then
-             write (6,*)'pctnatpft*pctnatveg < 0.0 = ', pctnatpft(n,k)*pctnatveg(n)
-             call abort()
-          end if
-       end do
-       do k = cft_lb,cft_ub
-          if ( pctcft(n,k)*pctcrop(n) < 0.0_r8 )then
-             write (6,*)'pctcft*pctcrop < 0.0 = ', pctcft(n,k)*pctcrop(n)
-             call abort()
-          end if
-       end do
-    end do
 
     ! Make sure that there is no vegetation outside the pft mask
     do n = 1,ns_o
-       if (pftdata_mask(n) == 0 .and. (pctnatveg(n) > 0 .or. pctcrop(n) > 0)) then
+       if (pftdata_mask(n) == 0 .and. (pctnatpft(n)%get_pct_l2g() > 0 .or. pctcft(n)%get_pct_l2g() > 0)) then
           write (6,*)'vegetation found outside the pft mask at n=',n
-          write (6,*)'pctnatveg,pctcrop=', pctnatveg, pctcrop
+          write (6,*)'pctnatveg,pctcrop=', pctnatpft(n)%get_pct_l2g(), pctcft(n)%get_pct_l2g()
           call abort()
        end if
     end do
@@ -1529,17 +1485,9 @@ subroutine normalizencheck_landuse(ldomain)
     ! (Note that we don't check pctglcmec here, because it isn't computed at the point
     ! that this subroutine is called -- but the check of sum(pctglcmec) is done in
     ! mkglcmecMod)
+    ! (Also note that we don't need to check pctnatpft or pctcft, because a similar check
+    ! is done internally by the pct_pft_type routines.)
     do n = 1,ns_o
-       if (abs(sum(pctnatpft(n,:)) - 100._r8) > 1.e-12_r8) then
-          write(6,*) 'sum(pctnatpft(n,:)) != 100: ', n, sum(pctnatpft(n,:))
-          call abort()
-       end if
-       if (size(pctcft,2) > 0) then
-          if (abs(sum(pctcft(n,:)) - 100._r8) > 1.e-12_r8) then
-             write(6,*) 'sum(pctcft(n,:)) != 100: ', n, sum(pctcft(n,:))
-             call abort()
-          end if
-       end if
        if (abs(sum(urbn_classes(n,:)) - 100._r8) > 1.e-12_r8) then
           write(6,*) 'sum(urbn_classes(n,:)) != 100: ', n, sum(urbn_classes(n,:))
           call abort()

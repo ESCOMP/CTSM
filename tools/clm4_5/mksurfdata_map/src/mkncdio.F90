@@ -19,15 +19,32 @@ module mkncdio
 
   private
 
-  public :: check_ret       ! checks return status of netcdf calls
-  public :: ncd_defvar      ! define netCDF input variable
-  public :: get_dim_lengths ! get dimension lengths of a netcdf variable
+  public :: check_ret           ! checks return status of netcdf calls
+  public :: ncd_defvar          ! define netCDF input variable
+  public :: ncd_def_spatial_var ! define spatial netCDF variable (convenience wrapper to ncd_defvar)
+  public :: ncd_put_time_slice  ! write a single time slice of a variable
+  public :: get_dim_lengths     ! get dimension lengths of a netcdf variable
+
+  interface ncd_def_spatial_var
+     module procedure ncd_def_spatial_var_0lev
+     module procedure ncd_def_spatial_var_1lev
+     module procedure ncd_def_spatial_var_2lev
+  end interface ncd_def_spatial_var
+
+  interface ncd_put_time_slice
+     module procedure ncd_put_time_slice_1d
+     module procedure ncd_put_time_slice_2d
+  end interface ncd_put_time_slice
+
+  public :: convert_latlon  ! convert a latitude or longitude variable to degrees E / N
 !
 ! !REVISION HISTORY:
 !
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
+  private :: get_time_slice_beg_and_len  ! determine beg and len vectors for writing a time slice
+
   logical  :: masterproc = .true. ! always use 1 proc
   real(r8) :: spval = 1.e36       ! special value
 
@@ -193,6 +210,229 @@ contains
 
   end subroutine ncd_defvar
 
+  ! ========================================================================
+  ! ncd_def_spatial_var routines: define a spatial netCDF variable (convenience wrapper to
+  ! ncd_defvar)
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_def_spatial_var_0lev(ncid, varname, xtype, long_name, units)
+    !
+    ! !DESCRIPTION:
+    ! Define a spatial netCDF variable (convenience wrapper to ncd_defvar)
+    !
+    ! The variable in question has ONLY spatial dimensions (no level or time dimensions)
+    !
+    ! !USES:
+    use mkvarctl, only : outnc_1d
+    !
+    ! !ARGUMENTS:
+    integer          , intent(in) :: ncid      ! input unit
+    character(len=*) , intent(in) :: varname   ! variable name
+    integer          , intent(in) :: xtype     ! external type
+    character(len=*) , intent(in) :: long_name ! attribute
+    character(len=*) , intent(in) :: units     ! attribute
+    !
+    ! !LOCAL VARIABLES:
+    
+    character(len=*), parameter :: subname = 'ncd_def_spatial_var_0lev'
+    !-----------------------------------------------------------------------
+    
+    if (outnc_1d) then
+       call ncd_defvar(ncid=ncid, varname=varname, xtype=xtype, &
+            dim1name='gridcell', &
+            long_name=long_name, units=units)
+    else
+       call ncd_defvar(ncid=ncid, varname=varname, xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name=long_name, units=units)
+    end if
+
+  end subroutine ncd_def_spatial_var_0lev
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_def_spatial_var_1lev(ncid, varname, xtype, lev1name, long_name, units)
+    !
+    ! !DESCRIPTION:
+    ! Define a spatial netCDF variable (convenience wrapper to ncd_defvar)
+    !
+    ! The variable in question has one level (or time) dimension in addition to its
+    ! spatial dimensions
+    !
+    ! !USES:
+    use mkvarctl, only : outnc_1d
+    !
+    ! !ARGUMENTS:
+    integer          , intent(in) :: ncid      ! input unit
+    character(len=*) , intent(in) :: varname   ! variable name
+    integer          , intent(in) :: xtype     ! external type
+    character(len=*) , intent(in) :: lev1name  ! name of level (or time) dimension
+    character(len=*) , intent(in) :: long_name ! attribute
+    character(len=*) , intent(in) :: units     ! attribute
+    !
+    ! !LOCAL VARIABLES:
+    
+    character(len=*), parameter :: subname = 'ncd_def_spatial_var_1lev'
+    !-----------------------------------------------------------------------
+    
+    if (outnc_1d) then
+       call ncd_defvar(ncid=ncid, varname=varname, xtype=xtype, &
+            dim1name='gridcell', dim2name=lev1name, &
+            long_name=long_name, units=units)
+    else
+       call ncd_defvar(ncid=ncid, varname=varname, xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat',dim3name=lev1name, &
+            long_name=long_name, units=units)
+    end if
+
+  end subroutine ncd_def_spatial_var_1lev
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_def_spatial_var_2lev(ncid, varname, xtype, lev1name, lev2name, long_name, units)
+    !
+    ! !DESCRIPTION:
+    ! Define a spatial netCDF variable (convenience wrapper to ncd_defvar)
+    !
+    ! The variable in question has two level (or time) dimensions in addition to its
+    ! spatial dimensions
+    !
+    ! !USES:
+    use mkvarctl, only : outnc_1d
+    !
+    ! !ARGUMENTS:
+    integer          , intent(in) :: ncid      ! input unit
+    character(len=*) , intent(in) :: varname   ! variable name
+    integer          , intent(in) :: xtype     ! external type
+    character(len=*) , intent(in) :: lev1name  ! name of first level (or time) dimension
+    character(len=*) , intent(in) :: lev2name  ! name of second level (or time) dimension
+    character(len=*) , intent(in) :: long_name ! attribute
+    character(len=*) , intent(in) :: units     ! attribute
+    !
+    ! !LOCAL VARIABLES:
+    
+    character(len=*), parameter :: subname = 'ncd_def_spatial_var_2lev'
+    !-----------------------------------------------------------------------
+    
+    if (outnc_1d) then
+       call ncd_defvar(ncid=ncid, varname=varname, xtype=xtype, &
+            dim1name='gridcell', dim2name=lev1name, dim3name=lev2name, &
+            long_name=long_name, units=units)
+    else
+       call ncd_defvar(ncid=ncid, varname=varname, xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name=lev1name, dim4name=lev2name, &
+            long_name=long_name, units=units)
+    end if
+
+  end subroutine ncd_def_spatial_var_2lev
+
+  ! ========================================================================
+  ! ncd_put_time_slice routines: write a single time slice of a variable
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_put_time_slice_1d(ncid, varid, time_index, data)
+    !
+    ! !DESCRIPTION:
+    ! Write a single time slice of a 1-d variable
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    integer , intent(in) :: ncid       ! netCDF id
+    integer , intent(in) :: varid      ! variable id
+    integer , intent(in) :: time_index ! time index in file
+    real(r8), intent(in) :: data(:)    ! data to write (a single time slice)
+    !
+    ! !LOCAL VARIABLES:
+    integer, allocatable :: beg(:) ! begin indices for each dimension
+    integer, allocatable :: len(:) ! length along each dimension
+
+    character(len=*), parameter :: subname = 'ncd_put_time_slice_1d'
+    !-----------------------------------------------------------------------
+    
+    call get_time_slice_beg_and_len(ncid, varid, time_index, beg, len)
+    call check_ret(nf_put_vara_double(ncid, varid, beg, len, data), subname)
+
+    deallocate(beg, len)
+
+  end subroutine ncd_put_time_slice_1d
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_put_time_slice_2d(ncid, varid, time_index, data)
+    !
+    ! !DESCRIPTION:
+    ! Write a single time slice of a 2-d variable
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    integer , intent(in) :: ncid       ! netCDF id
+    integer , intent(in) :: varid      ! variable id
+    integer , intent(in) :: time_index ! time index in file
+    real(r8), intent(in) :: data(:,:)  ! data to write (a single time slice)
+    !
+    ! !LOCAL VARIABLES:
+    integer, allocatable :: beg(:) ! begin indices for each dimension
+    integer, allocatable :: len(:) ! length along each dimension
+
+    character(len=*), parameter :: subname = 'ncd_put_time_slice_2d'
+    !-----------------------------------------------------------------------
+    
+    call get_time_slice_beg_and_len(ncid, varid, time_index, beg, len)
+    call check_ret(nf_put_vara_double(ncid, varid, beg, len, data), subname)
+
+    deallocate(beg, len)
+
+  end subroutine ncd_put_time_slice_2d
+
+  
+  !-----------------------------------------------------------------------
+  subroutine get_time_slice_beg_and_len(ncid, varid, time_index, beg, len)
+    !
+    ! !DESCRIPTION:
+    ! Determine beg and len vectors for writing a time slice.
+    !
+    ! Assumes time is the last dimension of the given variable.
+    !
+    ! Allocates memory for beg & len.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    integer , intent(in) :: ncid       ! netcdf ID
+    integer , intent(in) :: varid      ! variable ID
+    integer , intent(in) :: time_index ! time index in file
+    integer, allocatable, intent(out) :: beg(:)  ! begin indices for each dimension
+    integer, allocatable, intent(out) :: len(:)  ! length along each dimension 
+    !
+    ! !LOCAL VARIABLES:
+    integer              :: n         ! index
+    integer              :: ndims     ! number of dimensions
+    integer, allocatable :: dimids(:) ! dimension IDs
+    
+    character(len=*), parameter :: subname = 'get_time_slice_beg_and_len'
+    !-----------------------------------------------------------------------
+
+    call check_ret(nf_inq_varndims(ncid, varid, ndims), subname)
+    allocate(beg(ndims))
+    allocate(len(ndims))
+    allocate(dimids(ndims))
+
+    call check_ret(nf_inq_vardimid(ncid, varid, dimids), subname)
+    beg(1:ndims-1) = 1
+    do n = 1,ndims-1
+       call check_ret(nf_inq_dimlen(ncid, dimids(n), len(n)), subname)
+    end do
+    len(ndims) = 1
+    beg(ndims) = time_index
+    
+    deallocate(dimids)
+
+  end subroutine get_time_slice_beg_and_len
+
+
+
+
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -245,5 +485,67 @@ subroutine get_dim_lengths(ncid, varname, ndims, dim_lengths)
       call check_ret(nf_inq_dimlen(ncid, dimids(i), dim_lengths(i)), subname)
    end do
  end subroutine get_dim_lengths
+
+!----------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: convert_latlon
+!
+! !INTERFACE:
+  subroutine convert_latlon(ncid, varname, data)
+!
+! !DESCRIPTION:
+! Convert a latitude or longitude variable from its units in the input file to degrees E /
+! degrees N. Currently, this just handles conversions from radians to degrees.
+!
+! Assumes that the longitude / latitude variable has already been read from file, into
+! the variable given by 'data'. ncid & varname give the file ID and variable name from
+! which this variable was read (needed to obtain the variable's units).
+!
+! !USES:
+    use shr_const_mod, only : SHR_CONST_PI
+!
+! !ARGUMENTS:
+    implicit none
+    integer         , intent(in)   :: ncid      ! ID of open netcdf file
+    character(len=*), intent(in)   :: varname   ! name of lat or lon variable that was read into 'data'
+    real(r8)        , intent(inout):: data(:)   ! latitude or longitude data
+!
+! !REVISION HISTORY:
+! Author: Bill Sacks
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    integer :: ier                             ! error return code
+    integer :: varid                           ! netCDF variable id
+    integer :: units_len                       ! length of units attribute on file
+    character(len=256) :: units                ! units attribute
+    character(len= 32) :: subname = 'convert_latlon'
+!-----------------------------------------------------------------
+
+    call check_ret(nf_inq_varid (ncid, varname, varid), subname)
+    ier = nf_inq_attlen(ncid, varid, 'units', units_len)
+
+    ! Only do the following processing if there is no error; if ier /= NF_NOERR, that
+    ! probably means there isn't a units attribute -- in that case, assume units are
+    ! degrees and need no conversion
+    if (ier == NF_NOERR) then
+       if (units_len > len(units)) then
+          write(6,*) trim(subname), ' ERROR: units variable not long enough to hold attributue'
+          call abort()
+       end if
+
+       call check_ret(nf_get_att_text(ncid, varid, 'units', units), subname)
+       
+       if (units(1:7) == 'radians') then
+          ! convert from radians to degrees
+          data(:) = data(:) * 180._r8 / SHR_CONST_PI
+       end if
+    end if
+
+  end subroutine convert_latlon
+!------------------------------------------------------------------------------
+
 
 end module mkncdio

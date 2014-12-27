@@ -1,4 +1,289 @@
 ===============================================================
+Tag name:  clm4_5_1_r102
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Dec 27 06:52:20 MST 2014
+One-line Summary: make new input datasets to support transient crops
+
+Purpose of changes:
+
+While the main purpose of this tag was to make new input datasets to support
+transient crops, it also includes a number of reworks of mksurfdata_map, which
+were either central or tangential to this overall goal. Specifically:
+
+(1) Update mksurfdata_map to be able to generate datasets with transient
+    crops. Currently the logic uses the non-prognostic-crop raw data for the
+    transient time series: It takes the area of the generic crop from that
+    timeseries to specify the transient PCT_CROP area, and sets the PCT_CFT
+    areas based on the year-2000 areas.
+
+(2) Rewrite mksurfdata_map code that normalizes pct_pft to account for special
+    landunits. The code to handle urban was very confusing, and I hope this new
+    code is at least astep towards being less confusing. Note that this
+    introduces roundoff-level differences.
+
+(3) Introduce new mksurfdata_map utility routines: ncd_def_spatial_var and
+    ncd_put_time_slice. These encapsulate behavior that used to be duplicated in
+    the code.
+
+(4) Add mksurfdata_map unit tests using the new pfunit-based unit testing
+    framework. However, I have NOT done a full migration of the mksurfdata_map
+    unit tests. Thus, there are still some tests that use the old unit testing
+    framework that I put in place (which leveraged the test stuff that Erik set
+    up for csm_share a while ago). These tests can be migrated to pfunit
+    incrementally: as someone touches code that is under test using the old
+    framework, they could move the relevant tests into the new pfunit-based
+    framework.
+
+(5) Create new input datasets, based on the above changes:
+
+    - new flanduse_timeseries files created because I have changed the
+      information on these files
+
+    - new surface datasets created because I introduced roundoff-level changes
+      in the surface datasets, and so regenerated all surface datasets now in
+      order to save someone a headache later.
+
+    - new initial conditions files created so that out-of-the-box initial
+      conditions will be compatible with the surface datasets, according to
+      various consistency checks.
+
+    See the following files in inputdata for documentation of how the new
+    datasets were created:
+
+    lnd/clm2/surfdata_map/README_c141219
+    lnd/clm2/initdata_map/README_c141226
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist:
+- new surface datasets
+- new flanduse_timeseries files
+- new initial conditions files
+
+List any changes to the defaults for the boundary datasets:
+- new surface datasets
+- new flanduse_timeseries files
+- new initial conditions files
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Most changes sent to Erik for review, although I can't
+remember how much he actually reviewed.
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+  scripts: append_nl_value_n02_scripts4_141201 -> append_nl_value_n03_scripts4_141201
+  - point tropicAtl_subset tests to new file
+
+List all files eliminated:
+
+========= Move tests elsewhere
+D       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkpftMod.F90
+
+
+List all files added and what they do:
+
+========= New object-oriented class for storing and operating on pct_pft
+          data. Encapsulating a bunch of behavior in here allowed me to simplify
+          other code. Before this, I was keeping track of two separate
+          representations of pct_pft: First it was stored as % of grid cell,
+          then it was later converted into % of landunit together with the
+          landunit's % of grid cell. This was starting to get hard to manage,
+          because certain operations could only be done on the first
+          representation, and other operations could only be done on the second
+          representation – and at some point in the processing pipeline, the
+          conversion happened and the first representation was no longer
+          usable. Now there is a single representation, and the class allows any
+          desired operation to be performed on that single representation. This
+          adds some complexity within the class, but removes complexity from the
+          rest of the code, particularly mksurfdat.F90.
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkpctPftTypeMod.F90
+
+========= This new module contains routines that operate on both instances of
+          pct_pft_type (pctnatpft and pctcft) at once. Thus, this contains
+          higher-level logic than was appropriate for mkpctPftTypeMod. Yet, I
+          wanted these routines in a separate module from mkpftMod as an aid to
+          testing, since mkpftMod has a bunch of dependencies.
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkpftUtilsMod.F90
+
+========= Moved constants from other places into here, partly to centralize
+          them, and partly to remove problems with circular dependencies
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkpftConstantsMod.F90
+
+========= Add automated test of making a transient crop surface dataset
+A       models/lnd/clm/test/tools/nl_files/mksrfdt_10x15_crp_1850-2000
+
+========= Add input file for creating a transient smallville dataset for testing
+          transient crops
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/single_point_dynpft_files/README.landuse_timeseries_smallvilleIA_hist_simyr1850-1855
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/single_point_dynpft_files/landuse_timeseries_smallvilleIA_hist_simyr1850-1855.txt
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/single_point_dynpft_files/README
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/single_point_dynpft_files
+
+========= Add pfunit-based unit tests for mksurfdata_map
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/CMakeLists.txt
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/test/mkpftUtils_test/test_adjust_total_veg_area.pf
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/test/mkpftUtils_test/CMakeLists.txt
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/test/mkpftUtils_test/test_convert_from_p2g.pf
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/test/mkpftUtils_test
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/test/mkpctPftType_test/CMakeLists.txt
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/test/mkpctPftType_test/test_mkpctPftType.pf
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/test/mkpctPftType_test
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/test/CMakeLists.txt
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/test
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/README.unit_testing
+
+
+List all existing files that have been modified, and describe the changes:
+
+========= Changes that take advantage of some of the other refactoring described
+          here, plus add logic to allow input dataset to not contain crops even
+          when generating a transient dataset for crops; also add PCT_CROP and
+          PCT_CFT on the landuse_timeseries output file
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkpftMod.F90
+
+========= Changes that take advantage of some of the other refactoring described
+          here, especially making use of the new pct_pft_type methods. Plus: (a)
+          save pctcft from the initial input file so it can be used when
+          generating landuse_timeseries, (b) remove unwanted landunit percents
+          from the landuse_timeseries file, (c) add transient PCT_CROP and
+          PCT_CFT, (d) complete rewrite of the code that normalizes pct_pft to
+          account for special landunits: the code to handle urban was very
+          confusing, and I hope this new code is at least a step towards being
+          less confusing [this change introduces roundoff-level differences],
+          (e) remove some error-checking code that is now embedded in the
+          pct_pft_type routines
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mksurfdat.F90
+
+========= Updated for new files
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/Srcfiles
+
+========= Added two new routines: ncd_def_spatial_var and
+          ncd_put_time_slice. These encapsulate behavior that used to be
+          duplicated in the code. Also, moved convert_latlon from mkutilsMod to
+          here, since it is really related to netcdf stuff.
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkncdio.F90
+
+========= Simplify this module significantly by using the new
+          ncd_def_spatial_var. Also change what fields are present on the
+          transient landuse file: remove some no-longer-desired fields (% of
+          special landunits, etc.).
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkfileMod.F90
+
+========= Use new ncd_def_spatial_var
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mksoilMod.F90
+
+========= Delete routines that have been moved to a more appropriate place
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkutilsMod.F90
+
+========= Remove tests from old test framework for code that I have deleted or
+          migrated to my new modules; and fix some minor errors that appeared
+          when runnng the old unit tests with gfortran.
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkchecksMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkutilsMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkgridmapMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/Srcfiles
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mksurfdata_map.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkdomainMod.F90
+
+========= Trivial changes (change 'use' statements to reflect migrated code, add
+          comments, etc.)
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mklaiMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkdomainMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkurbanparMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkgridmapMod.F90
+
+========= Add logic needed for creating transient crop datasets. The main
+          differences are (a) for crop, we create a year-2000 surface dataset
+          together with the transient dataset (rather than a year-1850 surface
+          dataset), and (b) we always use the non-crop transient raw data, even
+          when creating a transient crop dataset.
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl
+
+========= New fsurdat, flanduse_timeseries and finidat files
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+========= Add automated test of making a transient crop surface dataset
+M       models/lnd/clm/test/tools/input_tests_master
+M       models/lnd/clm/test/tools/tests_pretag_yellowstone_nompi
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+
+  tools tests:
+
+    yellowstone: ok
+
+    Note that there were diffs in baseline comparisons for mksurfdata_map tests
+    (and the PTCLM test, which uses mksurfdata_map). See below for details
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r101
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: most clm4_5 runs
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     Note that there were no source code changes in this tag, so the only
+     differences come from differences in datasets (fsurdat,
+     flanduse_timeseries, finidat).
+
+     I confirmed that differences in fsurdat and flanduse_timeseries are
+     generally roundoff-level. There are greater than roundoff-level diffs in
+     PCT_NAT_PFT at a small number of points, but all of these points have
+     PCT_NATVEG = 0 (this is due to a fix in how PCT_NAT_PFT is determined for
+     points with 0% vegetated landunit, and > 0% urban); this would only affect
+     dynamic landunit runs. Other than that, max normalized RMS diffs are 2e-8,
+     and most are considerbly smaller.
+
+     finidat files were created as one-offs to ensure that the only differences
+     are in the subgrid weights, arising from these surface dataset differences.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r101
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Dec  9 06:27:39 MST 2014

@@ -224,7 +224,7 @@ end subroutine domain_check
 ! Read a grid file
 !
 ! !USES:
-    use mkutilsMod, only : convert_latlon
+    use mkncdio, only : convert_latlon
 !
 ! !ARGUMENTS:
     implicit none
@@ -347,7 +347,7 @@ end subroutine domain_check
 ! Read a grid file
 !
 ! !USES:
-    use mkutilsMod, only : convert_latlon
+    use mkncdio, only : convert_latlon
 !
 ! !ARGUMENTS:
     implicit none

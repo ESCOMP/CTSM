@@ -7,6 +7,9 @@ mkglcmecMod.F90
 mkharvestMod.F90
 mklaiMod.F90
 mklanwatMod.F90
+mkpftConstantsMod.F90
+mkpftUtilsMod.F90
+mkpctPftTypeMod.F90
 mkpftMod.F90
 mksoilMod.F90
 mkvocefMod.F90

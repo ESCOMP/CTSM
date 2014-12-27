@@ -79,14 +79,14 @@ contains
   contains
     subroutine check_results_1d
       call test_is(domain%ns, ns_t, modname//' -- '//subname//' -- '//trim(testname)//' -- ns')
-      call test_is((domain%is_2d == is_2d_t), modname//' -- '//subname//' -- '//trim(testname)//' -- is_2d')
+      call test_is((domain%is_2d .eqv. is_2d_t), modname//' -- '//subname//' -- '//trim(testname)//' -- is_2d')
     end subroutine check_results_1d
 
     subroutine check_results_2d
       call test_is(domain%ns, ns_t, modname//' -- '//subname//' -- '//trim(testname)//' -- ns')
       call test_is(domain%ni, ni_t, modname//' -- '//subname//' -- '//trim(testname)//' -- ni')
       call test_is(domain%nj, nj_t, modname//' -- '//subname//' -- '//trim(testname)//' -- nj')
-      call test_is((domain%is_2d == is_2d_t), modname//' -- '//subname//' -- '//trim(testname)//' -- is_2d')
+      call test_is((domain%is_2d .eqv. is_2d_t), modname//' -- '//subname//' -- '//trim(testname)//' -- is_2d')
     end subroutine check_results_2d
   end subroutine test_domain_read_dims
 end module test_mkdomainMod

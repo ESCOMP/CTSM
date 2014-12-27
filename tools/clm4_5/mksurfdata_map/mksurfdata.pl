@@ -380,6 +380,10 @@ EOF
    my $svnmesg = "Update fsurdat files with mksurfdata_map";
    my $surfdir = "lnd/clm2/surfdata";
 
+   # string to add to options for crop off or on
+   my $mkcrop_off = ",crop='off'";
+   my $mkcrop_on  = ",crop='on'";
+
    #
    # Loop over all resolutions listed
    #
@@ -394,10 +398,10 @@ EOF
 	  $queryopts = "-res $res -csmdata $CSMDATA -silent -justvalue";
       }
       $queryfilopts = "$queryopts -onlyfiles -phys clm4_5 ";
-      my $mkcrop = ",crop='off'";
+      my $mkcrop = $mkcrop_off;
       my $setnumpft = "";
       if ( defined($opts{'crop'}) ) {
-         $mkcrop    = ",crop='on'";
+         $mkcrop    = $mkcrop_on;
          $setnumpft = "numpft = $numpft"
       }
       my $usrnam    = "";
@@ -461,7 +465,7 @@ EOF
          }
       }
       my $desc;
-      my $desc_yr0;
+      my $desc_surfdat;
       #
       # Check if all urban single point dataset
       #
@@ -556,22 +560,34 @@ EOF
             my $resol = "-res $hgrd{'veg'}";
             my $sim_yr0 = $sim_year;
             my $sim_yrn = $sim_year;
+            my $transient = 0;
             if ( $sim_year =~ /([0-9]+)-([0-9]+)/ ) {
                $sim_yr0 = $1;
                $sim_yrn = $2;
+               $transient = 1;
             }
-            my $cmd    = "$scrdir/../../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=${sim_yr0}$mkcrop -var mksrf_fvegtyp -namelist clmexp";
+            # determine simulation year to use for the surface dataset:
+            my $sim_yr_surfdat = $sim_yr0;
+            if ($transient && defined($opts{'crop'})) {
+               # For transient crop, we currently can only generate a year-2000 surface
+               # dataset - not a year-1850 surface dataset as is typically done for
+               # transient cases. See http://bugs.cgd.ucar.edu/show_bug.cgi?id=2010
+               print "For transient crop, generating a year-2000 surface dataset rather than the typical year-1850 surface dataset\n";
+               $sim_yr_surfdat = 2000;
+            }
+            
+            my $cmd    = "$scrdir/../../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=${sim_yr_surfdat}$mkcrop -var mksrf_fvegtyp -namelist clmexp";
             my $vegtyp = `$cmd`;
             chomp( $vegtyp );
             if ( $vegtyp eq "" ) {
                die "** trouble getting vegtyp file with: $cmd\n";
             }
             if ( $rcp == -999.9 ) {
-               $desc     = sprintf( "hist_simyr%4.4d-%4.4d", $sim_yr0, $sim_yrn );
-               $desc_yr0 = sprintf( "simyr%4.4d",            $sim_yr0  );
+               $desc         = sprintf( "hist_simyr%4.4d-%4.4d", $sim_yr0, $sim_yrn );
+               $desc_surfdat = sprintf( "simyr%4.4d",            $sim_yr_surfdat  );
             } else {
-               $desc     = sprintf( "%s%2.1f_simyr%4.4d-%4.4d", "rcp", $rcp, $sim_yr0, $sim_yrn );
-               $desc_yr0 = sprintf( "%s%2.1f_simyr%4.4d",       "rcp", $rcp, $sim_yr0  );
+               $desc         = sprintf( "%s%2.1f_simyr%4.4d-%4.4d", "rcp", $rcp, $sim_yr0, $sim_yrn );
+               $desc_surfdat = sprintf( "%s%2.1f_simyr%4.4d",       "rcp", $rcp, $sim_yr_surfdat  );
             }
             my $strlen = 195;
             my $dynpft_format = "%-${strlen}.${strlen}s %4.4d\n";
@@ -582,14 +598,18 @@ EOF
                $crpdes  = "mp24_";
             }
             my $landuse_timeseries_text_file;
-	    if ( $sim_year ne $sim_yr0 ) {
+	    if ( $transient ) {
 		if ( ! defined($opts{'dynpft'}) && ! $opts{'pft_override'} ) {
 		    $landuse_timeseries_text_file = "landuse_timeseries_$desc.txt";
 		    my $fh_landuse_timeseries = IO::File->new;
 		    $fh_landuse_timeseries->open( ">$landuse_timeseries_text_file" ) or die "** can't open file: $landuse_timeseries_text_file\n";
 		    print "Writing out landuse_timeseries text file: $landuse_timeseries_text_file\n";
 		    for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
-                        my $vegtypyr = `$scrdir/../../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,rcp=${rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
+                        # Note that, in the options in this query, we always use
+                        # ${mkcrop_off}, even if we're generating datasets for crop. This
+                        # is because, for now, we're using the non-crop transient raw data
+                        # even when creating transient crop datasets. (See bug 2097.)
+                        my $vegtypyr = `$scrdir/../../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,rcp=${rcp}${mkcrop_off} -var mksrf_fvegtyp -namelist clmexp`;
 			chomp( $vegtypyr );
 			printf $fh_landuse_timeseries $dynpft_format, $vegtypyr, $yr;
 			if ( $yr % 100 == 0 ) {
@@ -611,7 +631,10 @@ EOF
 		    if ( (my $len = length($frstpft)) > $strlen ) {
 			die "ERROR PFT line is too long ($len): $frstpft\n";
 		    }
-		    printf $fh_landuse_timeseries $dynpft_format, $frstpft, $sim_yr0;
+                    # NOTE(wjs, 2014-12-04) Using sim_yr_surfdat here rather than
+                    # sim_yr0. As far as I can tell, it seems somewhat arbitrary which one
+                    # we use, but sim_yr_surfdat seems more like what's intended.
+		    printf $fh_landuse_timeseries $dynpft_format, $frstpft, $sim_yr_surfdat;
 		    $fh_landuse_timeseries->close;
 		    print "Done writing file\n";
 		}
@@ -635,14 +658,14 @@ EOF
  mksrf_fsoicol  = '$datfil{'col'}'
  mksrf_flai     = '$datfil{'lai'}'
 EOF
-	    my $ofile = "surfdata_${res}_${desc_yr0}_${sdate}";
+	    my $ofile = "surfdata_${res}_${desc_surfdat}_${sdate}";
 	    print $fh <<"EOF";
  fsurdat        = '$ofile.nc'
  fsurlog        = '$ofile.log'     
 EOF
 
 	    my $ofile_ts = "landuse.timeseries_${res}_${desc}_${sdate}";
-	    if ( $sim_year ne $sim_yr0 ) {
+	    if ( $transient ) {
 	        print $fh <<"EOF";
  mksrf_fdynuse  = '$landuse_timeseries_text_file'
  fdyndat        = '$ofile_ts.nc'
@@ -728,7 +751,7 @@ EOF
             my $lsvnmesg = "'$svnmesg $urbdesc $desc'";
             if ( -f "$ncfiles[0]" && -f "$lfiles[0]" ) {
                my $outdir = "$CSMDATA/$surfdir";
-               my $ofile = "surfdata_${res}_${crpdes}${desc_yr0}_${sdate}";
+               my $ofile = "surfdata_${res}_${crpdes}${desc_surfdat}_${sdate}";
                my $mvcmd = "/bin/mv -f $ncfiles[0]  $outdir/$ofile.nc";
                if ( ! $opts{'debug'} && $opts{'mv'} ) {
                   print "$mvcmd\n";
@@ -750,7 +773,7 @@ EOF
                              "$svnrepo/$surfdir/$ofile.log\n";
                }
                # If running a transient case
-               if ( $sim_year ne $sim_yr0 ) {
+               if ( $transient ) {
                   $ofile = "landuse.timeseries_${res}_${desc}_${sdate}";
                   $mvcmd = "/bin/mv -f $tsfiles[0] $outdir/$ofile.nc";
                   if ( ! $opts{'debug'} && $opts{'mv'} ) {

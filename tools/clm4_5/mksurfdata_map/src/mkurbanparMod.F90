@@ -107,6 +107,15 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
 ! also applies when all_urban=.true., for points that have 0 urban according to the input
 ! data.
 !
+! TODO (WJS 6-12-14): I think this could be rewritten slightly to take advantage of the
+! new mkpctPftTypeMod (which should then be renamed to something more general; or maybe
+! better, in terms of maintaining helpful abstractions, there could be a new type to
+! handle urban, and both that and pct_pft_type could be build on a single set of shared
+! code - either as a single base class or through a "has-a" mechanism). This would allow
+! us to combine urbn_o and urbn_classes_o into a single derived type variable. I think
+! this would also replace the use of normalize_classes_by_gcell, and maybe some other
+! urban-specific code.
+!
 ! !USES:
    use mkdomainMod , only : domain_type, domain_clean, domain_read
    use mkgridmapMod

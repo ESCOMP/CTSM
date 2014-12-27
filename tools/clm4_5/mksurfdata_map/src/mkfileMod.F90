@@ -15,7 +15,7 @@ contains
     use mkpftMod     , only : mkpftAtt
     use mksoilMod    , only : mksoilAtt
     use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname
-    use mkncdio      , only : check_ret, ncd_defvar
+    use mkncdio      , only : check_ret, ncd_defvar, ncd_def_spatial_var
     use mkdomainMod  
 
     implicit none
@@ -290,654 +290,238 @@ contains
 
     call mkpftAtt(  ncid, dynlanduse, xtype )
 
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='AREA' , xtype=nf_double, &
-            dim1name='gridcell',&
-            long_name='area', units='km^2')
-    else
-       call ncd_defvar(ncid=ncid, varname='AREA' , xtype=nf_double, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='area', units='km^2')
-    end if
+    call ncd_def_spatial_var(ncid=ncid, varname='AREA' , xtype=nf_double, &
+         long_name='area', units='km^2')
 
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='LONGXY', xtype=nf_double, &
-            dim1name='gridcell',&
-            long_name='longitude', units='degrees east')
-    else
-       call ncd_defvar(ncid=ncid, varname='LONGXY', xtype=nf_double, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='longitude', units='degrees east')
-    end if
+    call ncd_def_spatial_var(ncid=ncid, varname='LONGXY', xtype=nf_double, &
+         long_name='longitude', units='degrees east')
 
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='LATIXY', xtype=nf_double, &
-            dim1name='gridcell',&
-            long_name='latitude', units='degrees north')
-    else
-       call ncd_defvar(ncid=ncid, varname='LATIXY', xtype=nf_double, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='latitude', units='degrees north')
-    end if
+    call ncd_def_spatial_var(ncid=ncid, varname='LATIXY', xtype=nf_double, &
+         long_name='latitude', units='degrees north')
 
     if (.not. dynlanduse) then
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='EF1_BTR', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='EF btr (isoprene)', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='EF1_BTR', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='EF btr (isoprene)', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='EF1_BTR', xtype=xtype, &
+            long_name='EF btr (isoprene)', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='EF1_FET', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='EF fet (isoprene)', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='EF1_FET', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='EF fet (isoprene)', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='EF1_FET', xtype=xtype, &
+            long_name='EF fet (isoprene)', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='EF1_FDT', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='EF fdt (isoprene)', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='EF1_FDT', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='EF fdt (isoprene)', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='EF1_FDT', xtype=xtype, &
+            long_name='EF fdt (isoprene)', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='EF1_SHR', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='EF shr (isoprene)', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='EF1_SHR', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='EF shr (isoprene)', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='EF1_SHR', xtype=xtype, &
+            long_name='EF shr (isoprene)', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='EF1_GRS', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='EF grs (isoprene)', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='EF1_GRS', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='EF grs (isoprene)', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='EF1_GRS', xtype=xtype, &
+            long_name='EF grs (isoprene)', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='EF1_CRP', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='EF crp (isoprene)', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='EF1_CRP', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='EF crp (isoprene)', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='EF1_CRP', xtype=xtype, &
+            long_name='EF crp (isoprene)', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='CANYON_HWR', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='canyon height to width ratio', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='CANYON_HWR', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='canyon height to width ratio', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='CANYON_HWR', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='canyon height to width ratio', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='EM_IMPROAD', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='emissivity of impervious road', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='EM_IMPROAD', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='emissivity of impervious road', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='EM_IMPROAD', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='emissivity of impervious road', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='EM_PERROAD', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='emissivity of pervious road', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='EM_PERROAD', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='emissivity of pervious road', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='EM_PERROAD', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='emissivity of pervious road', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='EM_ROOF', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='emissivity of roof', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='EM_ROOF', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='emissivity of roof', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='EM_ROOF', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='emissivity of roof', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='EM_WALL', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='emissivity of wall', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='EM_WALL', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='emissivity of wall', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='EM_WALL', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='emissivity of wall', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='HT_ROOF', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='height of roof', units='meters')
-       else
-          call ncd_defvar(ncid=ncid, varname='HT_ROOF', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='height of roof', units='meters')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='HT_ROOF', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='height of roof', units='meters')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='THICK_ROOF', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='thickness of roof', units='meters')
-       else
-          call ncd_defvar(ncid=ncid, varname='THICK_ROOF', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='thickness of roof', units='meters')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='THICK_ROOF', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='thickness of roof', units='meters')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='THICK_WALL', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='thickness of wall', units='meters')
-       else
-          call ncd_defvar(ncid=ncid, varname='THICK_WALL', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='thickness of wall', units='meters')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='THICK_WALL', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='thickness of wall', units='meters')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='T_BUILDING_MAX', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='maximum interior building temperature', units='K')
-       else
-          call ncd_defvar(ncid=ncid, varname='T_BUILDING_MAX', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='maximum interior building temperature', units='K')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='T_BUILDING_MAX', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='maximum interior building temperature', units='K')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='T_BUILDING_MIN', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='minimum interior building temperature', units='K')
-       else
-          call ncd_defvar(ncid=ncid, varname='T_BUILDING_MIN', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='minimum interior building temperature', units='K')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='T_BUILDING_MIN', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='minimum interior building temperature', units='K')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='WIND_HGT_CANYON', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='height of wind in canyon', units='meters')
-       else
-          call ncd_defvar(ncid=ncid, varname='WIND_HGT_CANYON', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='height of wind in canyon', units='meters')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='WIND_HGT_CANYON', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='height of wind in canyon', units='meters')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='WTLUNIT_ROOF', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='fraction of roof', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='WTLUNIT_ROOF', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='fraction of roof', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='WTLUNIT_ROOF', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='fraction of roof', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='WTROAD_PERV', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='fraction of pervious road', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='WTROAD_PERV', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='fraction of pervious road', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='WTROAD_PERV', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='fraction of pervious road', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='ALB_IMPROAD_DIR', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='numrad', &
-               long_name='direct albedo of impervious road', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='ALB_IMPROAD_DIR', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='numrad', &
-               long_name='direct albedo of impervious road', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='ALB_IMPROAD_DIR', xtype=xtype, &
+            lev1name='numurbl', lev2name='numrad', &
+            long_name='direct albedo of impervious road', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='ALB_IMPROAD_DIF', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='numrad', &
-               long_name='diffuse albedo of impervious road', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='ALB_IMPROAD_DIF', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='numrad', &
-               long_name='diffuse albedo of impervious road', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='ALB_IMPROAD_DIF', xtype=xtype, &
+            lev1name='numurbl', lev2name='numrad', &
+            long_name='diffuse albedo of impervious road', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='ALB_PERROAD_DIR', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='numrad', &
-               long_name='direct albedo of pervious road', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='ALB_PERROAD_DIR', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='numrad', &
-               long_name='direct albedo of pervious road', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='ALB_PERROAD_DIR', xtype=xtype, &
+            lev1name='numurbl', lev2name='numrad', &
+            long_name='direct albedo of pervious road', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='ALB_PERROAD_DIF', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='numrad', &
-               long_name='diffuse albedo of pervious road', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='ALB_PERROAD_DIF', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='numrad', &
-               long_name='diffuse albedo of pervious road', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='ALB_PERROAD_DIF', xtype=xtype, &
+            lev1name='numurbl', lev2name='numrad', &
+            long_name='diffuse albedo of pervious road', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='ALB_ROOF_DIR', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='numrad', &
-               long_name='direct albedo of roof', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='ALB_ROOF_DIR', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='numrad',&
-               long_name='direct albedo of roof', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='ALB_ROOF_DIR', xtype=xtype, &
+            lev1name='numurbl', lev2name='numrad', &
+            long_name='direct albedo of roof', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='ALB_ROOF_DIF', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='numrad', &
-               long_name='diffuse albedo of roof', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='ALB_ROOF_DIF', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='numrad',&
-               long_name='diffuse albedo of roof', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='ALB_ROOF_DIF', xtype=xtype, &
+            lev1name='numurbl', lev2name='numrad', &
+            long_name='diffuse albedo of roof', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='ALB_WALL_DIR', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='numrad', &
-               long_name='direct albedo of wall', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='ALB_WALL_DIR', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='numrad', &
-               long_name='direct albedo of wall', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='ALB_WALL_DIR', xtype=xtype, &
+            lev1name='numurbl', lev2name='numrad', &
+            long_name='direct albedo of wall', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='ALB_WALL_DIF', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='numrad', &
-               long_name='diffuse albedo of wall', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='ALB_WALL_DIF', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='numrad', &
-               long_name='diffuse albedo of wall', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='ALB_WALL_DIF', xtype=xtype, &
+            lev1name='numurbl', lev2name='numrad', &
+            long_name='diffuse albedo of wall', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='TK_ROOF', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='nlevurb', &
-               long_name='thermal conductivity of roof', units='W/m*K')
-       else
-          call ncd_defvar(ncid=ncid, varname='TK_ROOF', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='nlevurb', &
-               long_name='thermal conductivity of roof', units='W/m*K')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='TK_ROOF', xtype=xtype, &
+            lev1name='numurbl', lev2name='nlevurb', &
+            long_name='thermal conductivity of roof', units='W/m*K')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='TK_WALL', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='nlevurb', &
-               long_name='thermal conductivity of wall', units='W/m*K')
-       else
-          call ncd_defvar(ncid=ncid, varname='TK_WALL', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='nlevurb', &
-               long_name='thermal conductivity of wall', units='W/m*K')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='TK_WALL', xtype=xtype, &
+            lev1name='numurbl', lev2name='nlevurb', &
+            long_name='thermal conductivity of wall', units='W/m*K')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='TK_IMPROAD', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='nlevurb', &
-               long_name='thermal conductivity of impervious road', units='W/m*K')
-       else
-          call ncd_defvar(ncid=ncid, varname='TK_IMPROAD', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='nlevurb', &
-               long_name='thermal conductivity of impervious road', units='W/m*K')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='TK_IMPROAD', xtype=xtype, &
+            lev1name='numurbl', lev2name='nlevurb', &
+            long_name='thermal conductivity of impervious road', units='W/m*K')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='CV_ROOF', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='nlevurb', &
-               long_name='volumetric heat capacity of roof', units='J/m^3*K')
-       else
-          call ncd_defvar(ncid=ncid, varname='CV_ROOF', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='nlevurb', &
-               long_name='volumetric heat capacity of roof', units='J/m^3*K')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='CV_ROOF', xtype=xtype, &
+            lev1name='numurbl', lev2name='nlevurb', &
+            long_name='volumetric heat capacity of roof', units='J/m^3*K')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='CV_WALL', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='nlevurb', &
-               long_name='volumetric heat capacity of wall', units='J/m^3*K')
-       else
-          call ncd_defvar(ncid=ncid, varname='CV_WALL', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='nlevurb', &
-               long_name='volumetric heat capacity of wall', units='J/m^3*K')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='CV_WALL', xtype=xtype, &
+            lev1name='numurbl', lev2name='nlevurb', &
+            long_name='volumetric heat capacity of wall', units='J/m^3*K')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='CV_IMPROAD', xtype=xtype, &
-               dim1name='gridcell', dim2name='numurbl', dim3name='nlevurb', &
-               long_name='volumetric heat capacity of impervious road', units='J/m^3*K')
-       else
-          call ncd_defvar(ncid=ncid, varname='CV_IMPROAD', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', dim4name='nlevurb', &
-               long_name='volumetric heat capacity of impervious road', units='J/m^3*K')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='CV_IMPROAD', xtype=xtype, &
+            lev1name='numurbl', lev2name='nlevurb', &
+            long_name='volumetric heat capacity of impervious road', units='J/m^3*K')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='NLEV_IMPROAD', xtype=nf_int, &
-               dim1name='gridcell', dim2name='numurbl', &
-               long_name='number of impervious road layers', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='NLEV_IMPROAD', xtype=nf_int, &
-               dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-               long_name='number of impervious road layers', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='NLEV_IMPROAD', xtype=nf_int, &
+            lev1name='numurbl', &
+            long_name='number of impervious road layers', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='peatf', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='peatland fraction', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='peatf', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='peatland fraction', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='peatf', xtype=xtype, &
+            long_name='peatland fraction', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='abm', xtype=nf_int, &
-               dim1name='gridcell',&
-               long_name='agricultural fire peak month', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='abm', xtype=nf_int, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='agricultural fire peak month', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='abm', xtype=nf_int, &
+            long_name='agricultural fire peak month', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='gdp', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='gdp', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='gdp', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='gdp', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='gdp', xtype=xtype, &
+            long_name='gdp', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='SLOPE', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='mean topographic slope', units='degrees')
-       else
-          call ncd_defvar(ncid=ncid, varname='SLOPE', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='mean topographic slope', units='degrees')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='SLOPE', xtype=xtype, &
+            long_name='mean topographic slope', units='degrees')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='STD_ELEV', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='standard deviation of elevation', units='m')
-       else
-          call ncd_defvar(ncid=ncid, varname='STD_ELEV', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='standard deviation of elevation', units='m')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='STD_ELEV', xtype=xtype, &
+            long_name='standard deviation of elevation', units='m')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='binfl', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='VIC b parameter for the Variable Infiltration Capacity Curve', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='binfl', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='VIC b parameter for the Variable Infiltration Capacity Curve', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='binfl', xtype=xtype, &
+            long_name='VIC b parameter for the Variable Infiltration Capacity Curve', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='Ws', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='VIC Ws parameter for the ARNO curve', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='Ws', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='VIC Ws parameter for the ARNO Curve', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='Ws', xtype=xtype, &
+            long_name='VIC Ws parameter for the ARNO curve', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='Dsmax', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='VIC Dsmax parameter for the ARNO curve', units='mm/day')
-       else
-          call ncd_defvar(ncid=ncid, varname='Dsmax', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='VIC Dsmax parameter for the ARNO curve', units='mm/day')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='Dsmax', xtype=xtype, &
+            long_name='VIC Dsmax parameter for the ARNO curve', units='mm/day')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='Ds', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='VIC Ds parameter for the ARNO curve', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='Ds', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='VIC Ds parameter for the ARNO curve', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='Ds', xtype=xtype, &
+            long_name='VIC Ds parameter for the ARNO curve', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='LAKEDEPTH', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='lake depth', units='m')
-       else
-          call ncd_defvar(ncid=ncid, varname='LAKEDEPTH', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='lake depth', units='m')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='LAKEDEPTH', xtype=xtype, &
+            long_name='lake depth', units='m')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='F0', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='maximum gridcell fractional inundated area', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='F0', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='maximum gridcell fractional inundated area', units='unitless')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='F0', xtype=xtype, &
+            long_name='maximum gridcell fractional inundated area', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='P3', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='coefficient for qflx_surf_lag for finundated', units='s/mm')
-       else
-          call ncd_defvar(ncid=ncid, varname='P3', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='coefficient for qflx_surf_lag for finundated', units='s/mm')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='P3', xtype=xtype, &
+            long_name='coefficient for qflx_surf_lag for finundated', units='s/mm')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='ZWT0', xtype=xtype, &
-               dim1name='gridcell',&
-               long_name='decay factor for finundated', units='m')
-       else
-          call ncd_defvar(ncid=ncid, varname='ZWT0', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='decay factor for finundated', units='m')
-       end if
+       call ncd_def_spatial_var(ncid=ncid, varname='ZWT0', xtype=xtype, &
+            long_name='decay factor for finundated', units='m')
 
-    endif
-
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='PCT_WETLAND', xtype=xtype, &
-            dim1name='gridcell',&
+       call ncd_def_spatial_var(ncid=ncid, varname='PCT_WETLAND', xtype=xtype, &
             long_name='percent wetland', units='unitless')
-    else
-       call ncd_defvar(ncid=ncid, varname='PCT_WETLAND', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='percent wetland', units='unitless')
-    end if
 
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='PCT_LAKE', xtype=xtype, &
-            dim1name='gridcell',&
+       call ncd_def_spatial_var(ncid=ncid, varname='PCT_LAKE', xtype=xtype, &
             long_name='percent lake', units='unitless')
-    else
-       call ncd_defvar(ncid=ncid, varname='PCT_LAKE', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='percent lake', units='unitless')
-    end if
 
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='PCT_GLACIER', xtype=xtype, &
-            dim1name='gridcell',&
+       call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLACIER', xtype=xtype, &
             long_name='percent glacier', units='unitless')
-    else
-       call ncd_defvar(ncid=ncid, varname='PCT_GLACIER', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='percent glacier', units='unitless')
-    end if
 
-    if (.not. dynlanduse) then
        if ( nglcec > 0 )then
           call ncd_defvar(ncid=ncid, varname='GLC_MEC', xtype=xtype, &
                dim1name='nglcecp1', long_name='Glacier elevation class', units='m')
           
-          if (outnc_1d) then
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
-                  dim1name='gridcell', dim2name='nglcec', &
-                  long_name='percent glacier for each glacier elevation class (% of landunit)', units='unitless')
-          else
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
-                  dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-                  long_name='percent glacier for each glacier elevation class (% of landunit)', units='unitless')
-          end if
+          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
+               lev1name='nglcec', &
+               long_name='percent glacier for each glacier elevation class (% of landunit)', units='unitless')
           
-          if (outnc_1d) then
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
-                  dim1name='gridcell', dim2name='nglcec', &
-                  long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', units='unitless')
-          else
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
-                  dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-                  long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', units='unitless')
-          end if
+          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
+               lev1name='nglcec', &
+               long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', units='unitless')
           
-          if (outnc_1d) then
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
-                  dim1name='gridcell', dim2name='nglcec', &
-                  long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
-          else
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
-                  dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-                  long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
-          end if
+          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
+               lev1name='nglcec', &
+               long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
           
-          if (outnc_1d) then
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_GIC', xtype=xtype, &
-                  dim1name='gridcell', &
-                  long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
-          else
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_GIC', xtype=xtype, &
-                  dim1name='lsmlon', dim2name='lsmlat', &
-                  long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
-          end if
+          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_GIC', xtype=xtype, &
+               long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
           
-          if (outnc_1d) then
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
-                  dim1name='gridcell', &
-                  long_name='percent ice sheet (% of landunit)', units='unitless')
-          else
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
-                  dim1name='lsmlon', dim2name='lsmlat', &
-                  long_name='percent ice sheet (% of landunit)', units='unitless')
-          end if
+          call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
+               long_name='percent ice sheet (% of landunit)', units='unitless')
           
-          if (outnc_1d) then
-             call ncd_defvar(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
-                  dim1name='gridcell', dim2name='nglcec', &
-                  long_name='mean elevation on glacier elevation classes', units='m')
-          else
-             call ncd_defvar(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
-                  dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-                  long_name='mean elevation on glacier elevation classes', units='m')
-          end if
-          
+          call ncd_def_spatial_var(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
+               lev1name='nglcec', &
+               long_name='mean elevation on glacier elevation classes', units='m')
        end if
-    end if
 
-    if (.not. dynlanduse) then
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='TOPO', xtype=xtype, &
-               dim1name='gridcell', &
-               long_name='mean elevation on land', units='m')
-       else
-          call ncd_defvar(ncid=ncid, varname='TOPO', xtype=xtype, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='mean elevation on land', units='m')
-       end if
-    end if
+       call ncd_def_spatial_var(ncid=ncid, varname='TOPO', xtype=xtype, &
+            long_name='mean elevation on land', units='m')
 
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
-            dim1name='gridcell', dim2name='numurbl', &
+       call ncd_def_spatial_var(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
+            lev1name='numurbl', &
             long_name='percent urban for each density type', units='unitless')
-    else
-       call ncd_defvar(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
-            long_name='percent urban for each density type', units='unitless')
-    end if
 
-    if (.not. dynlanduse) then
+       call ncd_def_spatial_var(ncid=ncid, varname='URBAN_REGION_ID', xtype=nf_int, &
+            long_name='urban region ID', units='unitless')
 
-       if (outnc_1d) then
-          call ncd_defvar(ncid=ncid, varname='URBAN_REGION_ID', xtype=nf_int, &
-               dim1name='gridcell',&
-               long_name='urban region ID', units='unitless')
-       else
-          call ncd_defvar(ncid=ncid, varname='URBAN_REGION_ID', xtype=nf_int, &
-               dim1name='lsmlon', dim2name='lsmlat', &
-               long_name='urban region ID', units='unitless')
-       end if
-
-    end if
+    end if  ! .not. dynlanduse
 
     if (dynlanduse) then
        do j = 1, mkharvest_numtypes()
-          if (outnc_1d) then
-             call ncd_defvar(ncid=ncid, varname=mkharvest_fieldname(j), xtype=xtype, &
-                  dim1name='gridcell', dim2name='time', &
-                  long_name=mkharvest_longname(j), units='unitless')
-          else
-             call ncd_defvar(ncid=ncid, varname=mkharvest_fieldname(j), xtype=xtype, &
-                  dim1name='lsmlon', dim2name='lsmlat', dim3name='time', &
-                  long_name=mkharvest_longname(j), units='unitless')
-          end if
+          call ncd_def_spatial_var(ncid=ncid, varname=mkharvest_fieldname(j), xtype=xtype, &
+               lev1name='time', &
+               long_name=mkharvest_longname(j), units='unitless')
        end do
     end if
 

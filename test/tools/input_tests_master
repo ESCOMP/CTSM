@@ -53,6 +53,8 @@ smi54 TSMscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^
 bli54 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__ds
 smi57 TSMscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__do
 bli57 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__do
+smi58 TSMscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_crp_1850-2000^tools__do
+bli58 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_crp_1850-2000^tools__do
 
 smi74 TSMscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
 bli74 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds

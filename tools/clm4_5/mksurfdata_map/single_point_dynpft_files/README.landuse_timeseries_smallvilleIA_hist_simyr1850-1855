@@ -1,0 +1,23 @@
+The file landuse_timeseries_smallvilleIA_hist_simyr1850-1855.txt is meant for
+use with the 1x1_smallvilleIA test case. It tests a number of aspects of
+transient crops:
+
+- It starts with two years of 100% natural veg (1850 & 1851)
+
+- It then transitions to 100% crop (1852)
+
+- It then shifts PCT_CFT while keeping PCT_CROP at 100% (1853)
+
+- It then increases natural veg to > 0, while also shifting PCT_CFT (1854)
+
+- It then adjusts both PCT_CROP and PCT_CFT (1855)
+
+To create a surface dataset and transient dataset that use this file:
+
+mksurfdata.pl -crop -y 1850-2000 -r 1x1_smallvilleIA -pft_idx 13 -pft_frc 100 -dynpft single_point_dynpft_files/landuse_timeseries_smallvilleIA_hist_simyr1850-1855.txt
+mv landuse.timeseries_1x1_smallvilleIA_hist_simyr1850-2005_cYYMMDD.nc landuse.timeseries_1x1_smallvilleIA_hist_simyr1850-1855_cYYMMDD.nc
+
+
+This should be run with a transient crop case that starts in 1850 and runs for
+at least 6 years.
+
