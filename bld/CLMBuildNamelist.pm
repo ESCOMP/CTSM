@@ -1416,6 +1416,7 @@ sub process_namelist_inline_logic {
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_surface_dataset($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_dynamic_subgrid($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_bgc_spinup($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_supplemental_nitrogen($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
@@ -2032,6 +2033,199 @@ sub setup_logic_initial_conditions {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_dynamic_subgrid {
+   #
+   # Options controlling which parts of flanduse_timeseries to use
+   #
+   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   setup_logic_do_transient_pfts($test_files, $nl_flags, $definition, $defaults, $nl, $physv);
+   setup_logic_do_transient_crops($test_files, $nl_flags, $definition, $defaults, $nl, $physv);
+   setup_logic_do_harvest($test_files, $nl_flags, $definition, $defaults, $nl, $physv);
+   
+}
+
+sub setup_logic_do_transient_pfts {
+   #
+   # Set do_transient_pfts default value, and perform error checking on do_transient_pfts
+   #
+   # Assumes the following are already set in the namelist (although it's okay
+   # for them to be unset if that will be their final state):
+   # - flanduse_timeseries
+   # - use_cndv
+   # - use_ed
+   # 
+   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   my $var = 'do_transient_pfts';
+   
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      # Start by assuming a default value of '.true.'. Then check a number of
+      # conditions under which do_transient_pfts cannot be true. Under these
+      # conditions: (1) set default value to '.false.'; (2) make sure that the
+      # value is indeed false (e.g., that the user didn't try to set it to true).
+
+      my $default_val = ".true.";
+
+      # cannot_be_true will be set to a non-empty string in any case where
+      # do_transient_pfts should not be true; if it turns out that
+      # do_transient_pfts IS true in any of these cases, a fatal error will be
+      # generated
+      my $cannot_be_true = "";
+
+      if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+         $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
+      }
+      elsif (value_is_true($nl->get_value('use_cndv'))) {
+         $cannot_be_true = "$var cannot be combined with use_cndv";
+      }
+      elsif (value_is_true($nl->get_value('use_ed'))) {
+         $cannot_be_true = "$var cannot be combined with use_ed";
+      }
+      
+      if ($cannot_be_true) {
+         $default_val = ".false.";
+      }
+
+      if (!$cannot_be_true) {
+         # Note that, if the variable cannot be true, we don't call add_default
+         # - so that we don't clutter up the namelist with variables that don't
+         # matter for this case
+         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, val=>$default_val);
+      }
+
+      # Make sure the value is false when it needs to be false - i.e., that the
+      # user hasn't tried to set a true value at an inappropriate time.
+
+      if (value_is_true($nl->get_value($var)) && $cannot_be_true) {
+         fatal_error($cannot_be_true);
+      }
+
+   }
+}
+
+sub setup_logic_do_transient_crops {
+   #
+   # Set do_transient_crops default value, and perform error checking on do_transient_crops
+   #
+   # Assumes the following are already set in the namelist (although it's okay
+   # for them to be unset if that will be their final state):
+   # - flanduse_timeseries
+   # - use_crop
+   # - use_ed
+   # 
+   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   my $var = 'do_transient_crops';
+
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      # Start by assuming a default value of '.true.'. Then check a number of
+      # conditions under which do_transient_crops cannot be true. Under these
+      # conditions: (1) set default value to '.false.'; (2) make sure that the
+      # value is indeed false (e.g., that the user didn't try to set it to true).
+
+      my $default_val = ".true.";
+
+      # cannot_be_true will be set to a non-empty string in any case where
+      # do_transient_crops should not be true; if it turns out that
+      # do_transient_crops IS true in any of these cases, a fatal error will be
+      # generated
+      my $cannot_be_true = "";
+
+      if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+         $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
+      }
+      elsif (!value_is_true($nl->get_value('use_crop'))) {
+         $cannot_be_true = "$var can only be set to true when running with use_crop = true";
+      }
+      elsif (value_is_true($nl->get_value('use_ed'))) {
+         # In principle, use_ed should be compatible with
+         # do_transient_crops. However, this hasn't been tested, so to be safe,
+         # we are not allowing this combination for now.
+         $cannot_be_true = "$var has not been tested with ED, so for now these two options cannot be combined";
+      }
+
+      if ($cannot_be_true) {
+         $default_val = ".false.";
+      }
+
+      if (!$cannot_be_true) {
+         # Note that, if the variable cannot be true, we don't call add_default
+         # - so that we don't clutter up the namelist with variables that don't
+         # matter for this case
+         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, val=>$default_val);
+      }
+
+      # Make sure the value is false when it needs to be false - i.e., that the
+      # user hasn't tried to set a true value at an inappropriate time.
+
+      if (value_is_true($nl->get_value($var)) && $cannot_be_true) {
+         fatal_error($cannot_be_true);
+      }
+
+   }
+}
+
+sub setup_logic_do_harvest {
+   #
+   # Set do_harvest default value, and perform error checking on do_harvest
+   #
+   # Assumes the following are already set in the namelist (although it's okay
+   # for them to be unset if that will be their final state):
+   # - flanduse_timeseries
+   # - use_cn
+   # - use_ed
+   #
+   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+   
+   my $var = 'do_harvest';
+
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      # Start by assuming a default value of '.true.'. Then check a number of
+      # conditions under which do_harvest cannot be true. Under these
+      # conditions: (1) set default value to '.false.'; (2) make sure that the
+      # value is indeed false (e.g., that the user didn't try to set it to true).
+
+      my $default_val = ".true.";
+
+      # cannot_be_true will be set to a non-empty string in any case where
+      # do_harvest should not be true; if it turns out that do_harvest IS true
+      # in any of these cases, a fatal error will be generated
+      my $cannot_be_true = "";
+
+      if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+         $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
+      }
+      elsif (!value_is_true($nl->get_value('use_cn'))) {
+         $cannot_be_true = "$var can only be set to true when running with CN (use_cn = true)";
+      }
+      elsif (value_is_true($nl->get_value('use_ed'))) {
+         $cannot_be_true = "$var currently doesn't work with ED";
+      }
+
+      if ($cannot_be_true) {
+         $default_val = ".false.";
+      }
+
+      if (!$cannot_be_true) {
+         # Note that, if the variable cannot be true, we don't call add_default
+         # - so that we don't clutter up the namelist with variables that don't
+         # matter for this case
+         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, val=>$default_val);
+      }
+
+      # Make sure the value is false when it needs to be false - i.e., that the
+      # user hasn't tried to set a true value at an inappropriate time.
+
+      if (value_is_true($nl->get_value($var)) && $cannot_be_true) {
+         fatal_error($cannot_be_true);
+      }
+      
+   }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_bgc_spinup {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
@@ -2459,7 +2653,7 @@ sub write_output_files {
     #}
   } else {
     @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams lai_streams clm_canopyhydrology_inparm 
-                 clm_soilhydrology_inparm finidat_consistency_checks dynpft_consistency_checks 
+                 clm_soilhydrology_inparm dynamic_subgrid finidat_consistency_checks dynpft_consistency_checks 
                  clmu_inparm clm_soilstate_inparm );
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);
@@ -2988,6 +3182,38 @@ sub logical_to_fortran {
    }
 
    return $result;
+}
+
+#-------------------------------------------------------------------------------
+
+sub string_is_undef_or_empty {
+   # Return true if the given string is undefined or only spaces, false otherwise
+   my ($str) = @_;
+   if (!defined($str)) {
+      return 1;
+   }
+   elsif ($str =~ /^ *$/) {
+      return 1;
+   }
+   else {
+      return 0;
+   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub value_is_true {
+   # Return true if the given namelist value is .true.
+   # An undefined value is treated as false (with the assumption that false is the default in the code)
+   my ($val) = @_;
+   my $is_true = 0;
+   if (defined($val)) {
+      if ($val =~ /$TRUE/i) {
+         $is_true = 1;
+      }
+   }
+
+   return $is_true;
 }
 
 #-------------------------------------------------------------------------------

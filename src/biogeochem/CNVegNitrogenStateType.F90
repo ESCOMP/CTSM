@@ -65,8 +65,6 @@ module CNVegNitrogenStateType
      real(r8), pointer :: totn_patch               (:) ! (gN/m2) total patch-level nitrogen
      real(r8), pointer :: totn_col                 (:) ! (gN/m2) total column nitrogen, incl veg   
      real(r8), pointer :: totecosysn_col           (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
-     real(r8), pointer :: begnb_col                (:) ! (gN/m2) nitrogen mass, beginning of time step 
-     real(r8), pointer :: endnb_col                (:) ! (gN/m2) nitrogen mass, end of time step 
 
    contains
 
@@ -152,8 +150,6 @@ contains
     allocate(this%totvegn_col              (begc:endc)) ; this%totvegn_col              (:) = nan
     allocate(this%totn_col                 (begc:endc)) ; this%totn_col                 (:) = nan
     allocate(this%totecosysn_col           (begc:endc)) ; this%totecosysn_col           (:) = nan
-    allocate(this%begnb_col                (begc:endc)) ; this%begnb_col                (:) = nan
-    allocate(this%endnb_col                (begc:endc)) ; this%endnb_col                (:) = nan
 
   end subroutine InitAllocate
 

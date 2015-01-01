@@ -30,7 +30,8 @@ contains
     ! !DESCRIPTION:
     !  calculate vertical profiles for distributing soil and litter C and N
     !
-    !  Note (WJS, 6-12-13): Because of this routine's placement in the driver sequence (it is
+    !  BUG(wjs, 2014-12-15, bugz 2107) 
+    !  Because of this routine's placement in the driver sequence (it is
     !  called very early in each timestep, before weights are adjusted and filters are
     !  updated), it may be necessary for this routine to compute values over inactive as well
     !  as active points (since some inactive points may soon become active) - so that's what

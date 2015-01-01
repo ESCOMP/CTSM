@@ -13,7 +13,7 @@ module test_dynVarShared
 
 contains
   
-  function create_dyn_file(cur_year) result(dyn_file)
+  function create_dyn_file() result(dyn_file)
     ! Set up a dyn_file variable for tests. Assumes we're using the mock version of
     ! dynFileMod.
     !
@@ -24,13 +24,11 @@ contains
     ! level dimension)
 
     type(dyn_file_type) :: dyn_file
-    integer, intent(in) :: cur_year  ! current model year
 
     real(r8) :: data1d(3,4)   ! space & time only
     real(r8) :: data2d(6,4)   ! space & level & time; first two dimensions are [2,3]
-    integer :: i, lev, time
 
-    dyn_file = dyn_file_type([11,12,13,14], cur_year)
+    dyn_file = dyn_file_type([11,12,13,14])
     
     data1d = reshape([1._r8, 2._r8, 3._r8, &   ! year 11
                     4._r8, 5._r8, 6._r8, &     ! year 12

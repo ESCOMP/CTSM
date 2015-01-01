@@ -31,6 +31,7 @@ module clm_instMod
   use AerosolMod                      , only : aerosol_type
   use CanopyStateType                 , only : canopystate_type
   use ch4Mod                          , only : ch4_type
+  use CNBalanceCheckMod               , only : cn_balance_type
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
@@ -126,6 +127,7 @@ module clm_instMod
   type(cnveg_carbonflux_type)             :: c14_cnveg_carbonflux_inst
   type(cnveg_nitrogenstate_type)          :: cnveg_nitrogenstate_inst
   type(cnveg_nitrogenflux_type)           :: cnveg_nitrogenflux_inst
+  type(cn_balance_type)                   :: cn_balance_inst
   class(nutrient_competition_method_type), allocatable :: nutrient_competition_method
 
   ! Soil biogeochem types 
@@ -395,6 +397,8 @@ contains
             cnveg_carbonstate_inst%leafc_storage_patch(begp:endp), &
             cnveg_carbonstate_inst%deadstemc_patch(begp:endp))
        call cnveg_nitrogenflux_inst%Init(bounds) 
+
+       call cn_balance_inst%Init(bounds)
 
        ! Note - always initialize the memory for the dgvs_inst data structure so
        ! that it can be used in associate statements (nag compiler complains otherwise)

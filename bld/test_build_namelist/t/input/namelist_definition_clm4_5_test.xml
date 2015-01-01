@@ -8,6 +8,27 @@
 <!-- CLM Namelist -->
 <!-- ========================================================================================  -->
 
+<entry id="finidat_interp_source" 
+       type="char*256" 
+       category="datasets"
+       input_pathname="abs" 
+       group="clm_inparm" 
+       valid_values="" >
+If non-blank, then interpinic will be called to interpolate finidat_interp_source and 
+create output file specified by finidat_interp_dest.
+For this to be used finidat MUST BE blank.
+</entry>
+
+<entry id="finidat_interp_dest" 
+       type="char*256" 
+       category="datasets"
+       input_pathname="abs" 
+       group="clm_inparm" 
+       valid_values="" >
+If finidat_interp_source is set to non-blank, then interpinic will be called 
+to interpolate finidat_interp_source and create output file finidat_interp_dest.
+</entry>
+
 <entry id="finidat" 
        type="char*256" 
        category="datasets"
@@ -105,11 +126,25 @@ Only works when glc_nec is greater than 0.
 (Only tested with glc_smb=.true., setting it to .false. is NOT tested)
 </entry>
 
-<entry id="glc_dyntopo" type="logical" category="clm_physics"
+<entry id="glc_do_dynglacier" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
-If TRUE, dynamically change topographic height over glacier points.
+If TRUE, dynamically change areas and topographic heights over glacier points.
+Only works when glc_nec is greater than zero, and when coupled to CISM.
+Generally should agree with glc_dyn_runoff_routing.
+</entry>
+
+<entry id="glc_dyn_runoff_routing" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, handle snow capping and runoff appropriately for dynamic glacier areas.
 Only works when glc_nec is greater than zero.
-(EXPERIMENTAL AND NOT FUNCTIONAL!)
+Generally should agree with glc_do_dynglacier.
+</entry>
+
+<entry id="glc_snow_persistence_max_days" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+Number of days before one considers the perennially snow-covered point 'land ice'
+(and thus capable of generating a positive surface mass balance for CISM).
+Default: 7300 (20 years)
 </entry>
 
 <entry id="albice" type="real(2)" category="clm_physics"
@@ -153,16 +188,21 @@ This downscaling is conservative.
 <default>Default: .true.</default>
 </entry>
 
+<entry id="use_ed" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the ED
+(ED = 'on' is EXPERIMENTAL NOT SUPPORTED!)
+</entry>
+
+<entry id="use_ed_spit_fire" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on spit fire (only relevant if ED is being used).
+</entry>
+
 <entry id="paramfile" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname datafile with plant function type (PFT) constants combined with
 constants for biogeochem modules
-</entry>
-
-<entry id="flanduse_timeseries" type="char*256" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of time varying PFT data file. This causes the land-use types of
-the initial surface dataset to vary over time.
 </entry>
 
 <entry id="fsurdat" type="char*256"     category="datasets"
@@ -913,7 +953,7 @@ CLM run type.
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,wus12,us20,1km-merge-10min">
+"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,1km-merge-10min">
 Horizontal resolutions
 Note: 0.1x0.1, 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 
@@ -927,7 +967,7 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v7,gx1v6,navy,test,tx0.1v2,tx1v1,T62,cruncep,us20,wus12">
+       valid_values="USGS,gx3v7,gx1v6,navy,test,tx0.1v2,tx1v1,T62,cruncep">
 Land mask description
 </entry> 
 
@@ -968,6 +1008,18 @@ Description of the use case selected.
 <entry id="bgc_spinup" type="char*3" category="default_settings"
        group="default_settings" valid_values="on,off" >
 Command line arguement for turning on CN spinup mode.
+</entry>
+
+<entry id="bgc_mode" type="char*4" category="default_settings"
+       group="default_settings" valid_values="sp,cn,bgc" >
+Command line arguement for biogeochemistry mode for CLM4.5
+   sp  = Satellitte Phenology
+   cn  = Carbon Nitrogen model
+   bgc = CLM4.5 BGC model with: 
+        CENTURY model pools 
+        Nitrification/De-nitrification
+        Methane model
+        Vertically resolved Carbon
 </entry>
 
 <!-- ========================================================================================  -->
@@ -1267,5 +1319,67 @@ If TRUE then use mapped MEGAN emissions factors for isoprene.
 List of possible MEGAN compounds to use
   (the list used by the simulation is on the megan_factors_file as the Comp_Name)
 </entry> 
+
+<!-- ========================================================================================  -->
+<!-- Namelist options controlling prescribed subgrid dynamics                                  -->
+<!-- ========================================================================================  -->
+
+<entry id="flanduse_timeseries" type="char*256" category="datasets"
+       input_pathname="abs" group="dynamic_subgrid" valid_values="" >
+Full pathname of time varying landuse data file. This causes the land-use types of
+the initial surface dataset to vary over time.
+</entry>
+
+<entry id="do_transient_pfts" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply transient natural PFTs from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+</entry>
+
+<entry id="do_transient_crops" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply transient crops from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+(Also, only valid for use_crop = true.)
+</entry>
+
+<entry id="do_harvest" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply harvest from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+(Also, only valid for use_cn = true.)
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- Namelist options related to finidat consistency checks                                    -->
+<!-- ========================================================================================  -->
+
+<entry id="check_finidat_fsurdat_consistency" type="logical" category="clm_restart"
+       group="finidat_consistency_checks" valid_values="" >
+If TRUE (which is the default), check consistency between surface dataset used to create the finidat file
+and the current fsurdat. This check is only done for a transient run.
+</entry>
+
+<entry id="check_finidat_year_consistency" type="logical" category="clm_restart"
+       group="finidat_consistency_checks" valid_values="" >
+If TRUE (which is the default), check consistency between year on the finidat file
+and the current model year. This check is only done for a transient run.
+</entry>
+
+<entry id="check_finidat_pct_consistency" type="logical" category="clm_restart"
+       group="finidat_consistency_checks" valid_values="" >
+If TRUE (which is the default), check consistency between pct_pft on the finidat file
+and pct_pft read from the surface dataset. This check is only done for a NON-transient run.
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- Namelist options related to dynpft consistency checks                                     -->
+<!-- ========================================================================================  -->
+
+<entry id="check_dynpft_consistency" type="logical" category="datasets"
+       group="dynpft_consistency_checks" valid_values="" >
+If TRUE (which is the default), check consistency between pct_nat_pft on the flanduse_timeseries file
+and pct_nat_pft read from the surface dataset.
+</entry>
 
 </namelist_definition>

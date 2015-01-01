@@ -204,12 +204,6 @@ Full pathname datafile with plant function type (PFT) constants combined with
 constants for biogeochem modules
 </entry>
 
-<entry id="flanduse_timeseries" type="char*256" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of time varying PFT data file. This causes the land-use types of
-the initial surface dataset to vary over time.
-</entry>
-
 <entry id="fsurdat" type="char*256"     category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of surface data file.
@@ -1382,6 +1376,36 @@ If TRUE then use mapped MEGAN emissions factors for isoprene.
 List of possible MEGAN compounds to use
   (the list used by the simulation is on the megan_factors_file as the Comp_Name)
 </entry> 
+
+<!-- ========================================================================================  -->
+<!-- Namelist options controlling prescribed subgrid dynamics                                  -->
+<!-- ========================================================================================  -->
+
+<entry id="flanduse_timeseries" type="char*256" category="datasets"
+       input_pathname="abs" group="dynamic_subgrid" valid_values="" >
+Full pathname of time varying landuse data file. This causes the land-use types of
+the initial surface dataset to vary over time.
+</entry>
+
+<entry id="do_transient_pfts" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply transient natural PFTs from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+</entry>
+
+<entry id="do_transient_crops" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply transient crops from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+(Also, only valid for use_crop = true.)
+</entry>
+
+<entry id="do_harvest" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply harvest from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+(Also, only valid for use_cn = true.)
+</entry>
 
 <!-- ========================================================================================  -->
 <!-- Namelist options related to finidat consistency checks                                    -->

@@ -42,19 +42,20 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine dynpft_init(bounds)
+  subroutine dynpft_init(bounds, dynpft_filename)
     !
     ! !DESCRIPTION:
     ! Initialize dynamic pft dataset (position it to the right time samples
     ! that bound the initial model date)
     !
     ! !USES:
-    use clm_varctl  , only : flanduse_timeseries
-    use clm_varpar  , only : numpft, maxpatch_pft, natpft_size
+    use clm_varpar     , only : numpft, maxpatch_pft, natpft_size
     use ncdio_pio
+    use dynTimeInfoMod , only : YEAR_POSITION_END_OF_TIMESTEP
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds  ! proc-level bounds
+    type(bounds_type) , intent(in) :: bounds          ! proc-level bounds
+    character(len=*)  , intent(in) :: dynpft_filename ! name of file containing transient pft information
     !
     ! !LOCAL VARIABLES:
     integer  :: wtpatch_shape(2)                  ! shape of the wtpatch data
@@ -75,7 +76,9 @@ contains
        write(iulog,*) 'Attempting to read pft dynamic landuse data .....'
     end if
 
-    dynpft_file = dyn_file_type(flanduse_timeseries)
+    ! Get the year from the END of the timestep for compatibility with how things were
+    ! done before, even though that doesn't necessarily make the most sense conceptually.
+    dynpft_file = dyn_file_type(dynpft_filename, YEAR_POSITION_END_OF_TIMESTEP)
 
     ! Consistency checks
     call check_dim(dynpft_file, 'natpft', natpft_size)
@@ -128,7 +131,7 @@ contains
 
     if (check_dynpft_consistency) then
 
-       ! Read first time slice of PCT_NAT_PATCH
+       ! Read first time slice of PCT_NAT_PFT
 
        allocate(wtpatch_time1(bounds%begg:bounds%endg, natpft_size))
        call ncd_io(ncid=dynpft_file, varname=varname, flag='read', data=wtpatch_time1, &
@@ -144,7 +147,7 @@ contains
        ! Compare with values read from surface dataset
        do g = bounds%begg, bounds%endg
           if (any(abs(wtpatch_time1(g,:) - wt_nat_patch(g,:)) > tol)) then
-             write(iulog,*) subname//' mismatch between PCT_NAT_PATCH at initial time and that obtained from surface dataset'
+             write(iulog,*) subname//' mismatch between PCT_NAT_PFT at initial time and that obtained from surface dataset'
              write(iulog,*) 'On landuse_timeseries file: ', wtpatch_time1(g,:)
              write(iulog,*) 'On surface dataset: ', wt_nat_patch(g,:)
              write(iulog,*) ' '
@@ -229,7 +232,9 @@ contains
   subroutine dynpft_interp(bounds)
     !
     ! !DESCRIPTION:
-    ! Time interpolate dynamic pft data to get pft weights for model time
+    ! Time interpolate dynamic pft data to get pft weights for model time.
+    !
+    ! Sets pft%wtcol
     !
     ! !USES:
     use landunit_varcon , only : istsoil
@@ -244,19 +249,17 @@ contains
     character(len=32) :: subname='dynpft_interp' ! subroutine name
     !-----------------------------------------------------------------------
 
-    ! Interpolate pctpft to current time step - output in pctpft_intp
-    ! Map interpolated pctpft to subgrid weights
     ! assumes that maxpatch_pft = numpft + 1, that each landunit has only 1 column, 
-    ! SCAM and CNDV have not been defined, and create_croplandunit = .false.
+    ! and SCAM and CNDV have not been defined
+    !
+    ! NOTE(wjs, 2014-12-10) I'm not sure if there is still the requirement that SCAM
+    ! hasn't been defined
 
     SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     ! Get pft weights for this time step
 
-    ! COMPILER_BUG(wjs, 2014-??-??, intel 13.1.2) 
-    ! As a workaround for an internal compiler error with ifort 13.1.2 on goldbach, call
-    ! the specific name of this procedure rather than using its generic name
-    call dynpft_file%time_info%set_current_year_get_year()
+    call dynpft_file%time_info%set_current_year()
 
     allocate(wtpatch_cur(bounds%begg:bounds%endg, natpft_lb:natpft_ub))
     call wtpatch%get_current_data(wtpatch_cur)
@@ -265,10 +268,6 @@ contains
        g = patch%gridcell(p)
        l = patch%landunit(p)
 
-       ! Note that we only deal with the istsoil landunit here, NOT the istcrop landunit
-       ! (if there is one)
-       ! (However, currently [as of 5-9-13] the code won't let you run with transient
-       ! Patches combined with create_crop_landunit anyway, so it's a moot point.)
        if (lun%itype(l) == istsoil) then
           m = patch%itype(p)
 

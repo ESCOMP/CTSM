@@ -6,7 +6,8 @@ module CNDriverMod
   !
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use clm_varctl                      , only : flanduse_timeseries, use_c13, use_c14, use_ed
+  use clm_varctl                      , only : use_c13, use_c14, use_ed
+  use dynSubgridControlMod            , only : get_do_harvest
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif
@@ -554,7 +555,7 @@ contains
     !--------------------------------------------
 
     ! Set harvest mortality routine 
-    if (flanduse_timeseries /= ' ') then
+    if (get_do_harvest()) then
        call CNHarvest(num_soilc, filter_soilc, num_soilp, filter_soilp, &
             soilbiogeochem_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
             cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)

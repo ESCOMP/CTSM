@@ -123,13 +123,14 @@ contains
     ! underlying dyn_file variable
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_yearfrac
+    use dynFileMod     , only : dyn_file_type
     !
     ! !ARGUMENTS:
     class(dyn_var_time_interp_type) , intent(inout) :: this             ! this object
     real(r8)                        , intent(out)   :: cur_data{DIMSTR} ! current value of data
     !
     ! !LOCAL VARIABLES:
+    type(dyn_file_type), pointer :: dyn_file ! the dyn_file of this object
     integer               :: ndims          ! ndims of data in 'this'
     real(r8)              :: wt1            ! weight of time1 (the left-hand time point)
     real(r8), allocatable :: cur_data_1d(:) ! 1-d version of data at the current time
@@ -145,7 +146,10 @@ contains
     ! time 2
     call this%read_data_if_needed()
     allocate(cur_data_1d(size(this%data_at_tlower)))
-    wt1 = 1.0_r8 - get_curr_yearfrac()
+
+    dyn_file => this%get_dyn_file()
+    wt1 = 1.0_r8 - dyn_file%time_info%get_yearfrac()
+
     cur_data_1d(:) = this%data_at_tupper(:) + wt1*(this%data_at_tlower(:) - this%data_at_tupper(:))
     cur_data = reshape(cur_data_1d, shape(cur_data))
     deallocate(cur_data_1d)

@@ -9,4 +9,4 @@ set (extra_sources
 create_pfUnit_test(dynVar test_dynVar_exe
   "${pfunit_sources}" "${extra_sources}")
 
-target_link_libraries(test_dynVar_exe clm csm_share)
+target_link_libraries(test_dynVar_exe clm csm_share esmf_wrf_timemgr)

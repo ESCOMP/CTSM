@@ -1,0 +1,1 @@
+add_subdirectory(clm_time_manager_test)

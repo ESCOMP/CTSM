@@ -51,7 +51,6 @@ module clm_driver
   use CNDriverMod            , only : CNDriverNoLeaching, CNDriverLeaching, CNDriverSummary
   use CNVegStructUpdateMod   , only : CNVegStructUpdate 
   use CNAnnualUpdateMod      , only : CNAnnualUpdate
-  use CNBalanceCheckMod      , only : BeginCNBalance, CBalanceCheck, NBalanceCheck
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
   use CNFireMod              , only : CNFireInterp
   use CNDVDriverMod          , only : CNDVDriver, CNDVHIST
@@ -196,19 +195,20 @@ contains
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
+       ! BUG(wjs, 2014-12-15, bugz 2107) Because of the placement of the following
+       ! routines (alt_calc and SoilBiogeochemVerticalProfile) in the driver sequence -
+       ! they are called very early in each timestep, before weights are adjusted and
+       ! filters are updated - it may be necessary for these routines to compute values
+       ! over inactive as well as active points (since some inactive points may soon
+       ! become active) - so that's what is done now. Currently, it seems to be okay to do
+       ! this, because the variables computed here seem to only depend on quantities that
+       ! are valid over inactive as well as active points.
+
        call t_startf("decomp_vert")
-       call alt_calc(filter(nc)%num_soilc, filter(nc)%soilc, &
+       call alt_calc(filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc, &
             temperature_inst, canopystate_inst) 
 
        if (use_cn) then
-          !  Note (WJS, 6-12-13): Because of this routine's placement in the driver sequence
-          !  (it is called very early in each timestep, before weights are adjusted and
-          !  filters are updated), it may be necessary for this routine to compute values over
-          !  inactive as well as active points (since some inactive points may soon become
-          !  active) - so that's what is done now. Currently, it seems to be okay to do this,
-          !  because the variables computed here seem to only depend on quantities that are
-          !  valid over inactive as well as active points.
-
           call SoilBiogeochemVerticalProfile(bounds_clump                                       , &
                filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc   , &
                filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp   , &
@@ -231,7 +231,8 @@ contains
 
           call t_startf('begcnbal')
 
-          call BeginCNBalance(bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
+          call cn_balance_inst%BeginCNBalance( &
+               bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
                cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
 
           call cnveg_carbonflux_inst%ZeroDWT(bounds_clump)
@@ -813,10 +814,12 @@ contains
              else
                 call t_startf('cnbalchk')
 
-             call CBalanceCheck(bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
+             call cn_balance_inst%CBalanceCheck( &
+                  bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
                   soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst)
 
-             call NBalanceCheck(bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
+             call cn_balance_inst%NBalanceCheck( &
+                  bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
                   soilbiogeochem_nitrogenflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst)
 
                 call t_stopf('cnbalchk')

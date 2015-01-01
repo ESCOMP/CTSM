@@ -7,11 +7,15 @@ include(CESM_utils)
 set(CLM_ROOT "..")
 set(CESM_ROOT "${CLM_ROOT}/../../..")
 
+# This definition is needed to avoid having ESMF depend on mpi
+add_definitions(-DHIDE_MPI)
+
 # Add source directories from other models (csm_share, etc.). This should be
 # done first, so that in case of name collisions, the CLM versions take
 # precedence (when there are two files with the same name, the one added later
 # wins).
 add_subdirectory(${CESM_ROOT}/models/csm_share/shr csm_share)
+add_subdirectory(${CESM_ROOT}/models/utils/esmf_wrf_timemgr esmf_wrf_timemgr)
 
 # Add CLM source directories (these add their own test directories)
 add_subdirectory(${CLM_ROOT}/src/utils clm_utils)
@@ -43,11 +47,17 @@ endforeach()
 # Build libraries containing stuff needed for the unit tests. 
 # Eventually, these add_library calls should probably be distributed into the correct location, rather than being in this top-level CMakeLists.txt file.
 add_library(csm_share ${share_sources})
+add_library(esmf_wrf_timemgr ${esmf_wrf_timemgr_sources})
 add_library(clm ${clm_sources})
-add_dependencies(clm csm_share)
+add_dependencies(esmf_wrf_timemgr csm_share)
+add_dependencies(clm csm_share esmf_wrf_timemgr)
 
 # We need to look for header files here, in order to pick up shr_assert.h
 include_directories(${CESM_ROOT}/models/csm_share/shr)
+
+# And we need to look for header files here, for some include files needed by
+# the esmf_wrf_timemgr code
+include_directories(${CESM_ROOT}/models/utils/esmf_wrf_timemgr)
 
 # Tell cmake to look for libraries & mod files here, because this is where we built libraries
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -59,6 +69,7 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR})
 # carefully: for example, include_directories and link_directories needs to be
 # done before adding the tests themselves.
 add_subdirectory(${CLM_ROOT}/src/unit_test_shr/test clm_unit_test_shr_test)
+add_subdirectory(${CLM_ROOT}/src/utils/test clm_utils_test)
 add_subdirectory(${CLM_ROOT}/src/biogeophys/test clm_biogeophys_test)
 add_subdirectory(${CLM_ROOT}/src/dyn_subgrid/test clm_dyn_subgrid_test)
 add_subdirectory(${CLM_ROOT}/src/main/test clm_main_test)

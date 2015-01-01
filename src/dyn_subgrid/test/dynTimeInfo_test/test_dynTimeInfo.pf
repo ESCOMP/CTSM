@@ -4,22 +4,54 @@ module test_dynTimeInfo
 
   use pfunit_mod
   use dynTimeInfoMod
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use unittestTimeManagerMod, only : set_date => unittest_timemgr_set_curr_date
+  use unittestTimeManagerMod, only : set_year => unittest_timemgr_set_curr_year
 
   implicit none
   save
 
+  integer, parameter :: dtime = 1800
+
+  @TestCase
+  type, extends(TestCase) :: TestDynTimeInfo
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestDynTimeInfo
+
 contains
+
+  subroutine setUp(this)
+    class(TestDynTimeInfo), intent(inout) :: this
+    
+    call unittest_timemgr_setup(dtime=dtime)
+
+    ! Make sure the date is set to the start of the year (such that the year differs
+    ! between the start and end of the timestep), to make sure that the appropriate
+    ! year_position is being used.
+    call set_date(yr=1, mon=1, day=1, tod=0)
+  end subroutine setUp
   
+  subroutine tearDown(this)
+    class(TestDynTimeInfo), intent(inout) :: this
+
+    call unittest_timemgr_teardown()
+  end subroutine tearDown
+
   ! ----------------------------------------------------------------------
   ! Tests of the constructor
   ! ----------------------------------------------------------------------
 
   @Test
-  subroutine test_constructor_normal_a()
+  subroutine test_constructor_normal_a(this)
     ! test constructor in the normal case that cur_year is within the time bounds
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11, 12, 13, 14], 11)
+    call set_year(11)
+    my_info = time_info_type([11, 12, 13, 14], YEAR_POSITION_END_OF_TIMESTEP)
 
     @assertEqual(1, my_info%get_time_index_lower())
     @assertEqual(2, my_info%get_time_index_upper())
@@ -27,12 +59,14 @@ contains
   end subroutine test_constructor_normal_a
 
   @Test
-  subroutine test_constructor_normal_b()
+  subroutine test_constructor_normal_b(this)
     ! another test of the constructor in the normal case that cur_year is within the time
     ! bounds; this one tests the last interval
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
     
-    my_info = time_info_type([11, 12, 13, 14], 13)
+    call set_year(13)
+    my_info = time_info_type([11, 12, 13, 14], YEAR_POSITION_END_OF_TIMESTEP)
 
     @assertEqual(3, my_info%get_time_index_lower())
     @assertEqual(4, my_info%get_time_index_upper())
@@ -40,11 +74,13 @@ contains
   end subroutine test_constructor_normal_b
 
   @Test
-  subroutine test_constructor_early()
+  subroutine test_constructor_early(this)
     ! test constructor in the case when cur_year is prior to the first interval
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11, 12, 13], 10)
+    call set_year(10)
+    my_info = time_info_type([11, 12, 13], YEAR_POSITION_END_OF_TIMESTEP)
 
     @assertEqual(1, my_info%get_time_index_lower())
     @assertEqual(1, my_info%get_time_index_upper())
@@ -52,11 +88,13 @@ contains
   end subroutine test_constructor_early
 
   @Test
-  subroutine test_constructor_late_a()
+  subroutine test_constructor_late_a(this)
     ! test constructor in the case when cur_year is just barely past the last interval
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11, 12, 13], 13)
+    call set_year(13)
+    my_info = time_info_type([11, 12, 13], YEAR_POSITION_END_OF_TIMESTEP)
 
     @assertEqual(3, my_info%get_time_index_lower())
     @assertEqual(3, my_info%get_time_index_upper())
@@ -64,11 +102,13 @@ contains
   end subroutine test_constructor_late_a
 
   @Test
-  subroutine test_constructor_late_b()
-    ! test constructor in the case when cur_year is more than a yearpast the last interval
+  subroutine test_constructor_late_b(this)
+    ! test constructor in the case when cur_year is more than a year past the last interval
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11, 12, 13], 14)
+    call set_year(14)
+    my_info = time_info_type([11, 12, 13], YEAR_POSITION_END_OF_TIMESTEP)
 
     @assertEqual(3, my_info%get_time_index_lower())
     @assertEqual(3, my_info%get_time_index_upper())
@@ -76,11 +116,13 @@ contains
   end subroutine test_constructor_late_b
 
   @Test
-  subroutine test_constructor_single_interval()
+  subroutine test_constructor_single_interval(this)
     ! test constructor with a single interval (2 years)
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11, 12], 11)
+    call set_year(11)
+    my_info = time_info_type([11, 12], YEAR_POSITION_END_OF_TIMESTEP)
 
     @assertEqual(1, my_info%get_time_index_lower())
     @assertEqual(2, my_info%get_time_index_upper())
@@ -88,11 +130,13 @@ contains
   end subroutine test_constructor_single_interval
 
   @Test
-  subroutine test_constructor_single_year()
+  subroutine test_constructor_single_year(this)
     ! test constructor with a single year
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11], 11)
+    call set_year(11)
+    my_info = time_info_type([11], YEAR_POSITION_END_OF_TIMESTEP)
     
     @assertEqual(1, my_info%get_time_index_lower())
     @assertEqual(1, my_info%get_time_index_upper())
@@ -101,15 +145,43 @@ contains
 
 
   ! ----------------------------------------------------------------------
+  ! Tests of get_yearfrac
+  ! ----------------------------------------------------------------------
+
+  @Test
+  subroutine test_getYearfrac_positionEnd_returnsCorrectValue(this)
+    class(TestDynTimeInfo), intent(inout) :: this
+    type(time_info_type) :: my_info
+    
+    call set_date(yr=11, mon=1, day=1, tod=0)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    
+    @assertEqual(0._r8, my_info%get_yearfrac())
+  end subroutine test_getYearfrac_positionEnd_returnsCorrectValue
+
+  @Test
+  subroutine test_getYearfrac_positionStart_returnsCorrectValue(this)
+    class(TestDynTimeInfo), intent(inout) :: this
+    type(time_info_type) :: my_info
+
+    call set_date(yr=11, mon=1, day=1, tod=dtime)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_START_OF_TIMESTEP)
+    
+    @assertEqual(0._r8, my_info%get_yearfrac())
+  end subroutine test_getYearfrac_positionStart_returnsCorrectValue
+
+  ! ----------------------------------------------------------------------
   ! Tests of get_year
   ! ----------------------------------------------------------------------
 
   @Test
-  subroutine test_get_year()
+  subroutine test_get_year(this)
     ! Test the get_year routine
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
     
-    my_info = time_info_type([11,12,13,14], 11)
+    call set_year(11)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
 
     @assertEqual(11, my_info%get_year(1))
     @assertEqual(12, my_info%get_year(2))
@@ -122,72 +194,84 @@ contains
   ! ----------------------------------------------------------------------
 
   @Test
-  subroutine test_is_before_after_early()
+  subroutine test_is_before_after_early(this)
     ! Test is_before_time_series and is_after_time_series, when year is before the time
     ! series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 10)
+    call set_year(10)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
     
     @assertTrue(my_info%is_before_time_series())
     @assertFalse(my_info%is_after_time_series())
   end subroutine test_is_before_after_early
 
   @Test
-  subroutine test_is_before_after_first()
+  subroutine test_is_before_after_first(this)
     ! Test is_before_time_series and is_after_time_series, when year is the first year in
     ! the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 11)
+    call set_year(11)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
     
     @assertFalse(my_info%is_before_time_series())
     @assertFalse(my_info%is_after_time_series())
   end subroutine test_is_before_after_first
 
   @Test
-  subroutine test_is_before_after_mid()
+  subroutine test_is_before_after_mid(this)
     ! Test is_before_time_series and is_after_time_series, when year is in the middle of
     ! the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 12)
+    call set_year(12)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
     
     @assertFalse(my_info%is_before_time_series())
     @assertFalse(my_info%is_after_time_series())
   end subroutine test_is_before_after_mid
 
   @Test
-  subroutine test_is_before_after_last()
+  subroutine test_is_before_after_last(this)
     ! Test is_before_time_series and is_after_time_series, when year is in the last
     ! interval of the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 13)
+    call set_year(13)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
     
     @assertFalse(my_info%is_before_time_series())
     @assertFalse(my_info%is_after_time_series())
   end subroutine test_is_before_after_last
 
   @Test
-  subroutine test_is_before_after_late()
+  subroutine test_is_before_after_late(this)
     ! Test is_before_time_series and is_after_time_series, when year is just past the end
     ! of the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 14)
+    call set_year(14)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
     
     @assertFalse(my_info%is_before_time_series())
     @assertTrue(my_info%is_after_time_series())
   end subroutine test_is_before_after_late
 
   @Test
-  subroutine test_is_before_after_very_late()
+  subroutine test_is_before_after_very_late(this)
     ! Test is_before_time_series and is_after_time_series, when year is far past the end
     ! of the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 15)
+    call set_year(15)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
     
     @assertFalse(my_info%is_before_time_series())
     @assertTrue(my_info%is_after_time_series())
@@ -201,12 +285,14 @@ contains
 
 
   @Test
-  subroutine test_update_no_change_early()
+  subroutine test_update_no_change_early(this)
     ! Test an update with no change in years, prior to start of time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 10)
-    call my_info%set_current_year(10)
+    call set_year(10)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call my_info%set_current_year()
     
     @assertEqual(1, my_info%get_time_index_lower())
     @assertEqual(1, my_info%get_time_index_upper())
@@ -214,12 +300,14 @@ contains
   end subroutine test_update_no_change_early
 
   @Test
-  subroutine test_update_no_change_normal()
+  subroutine test_update_no_change_normal(this)
     ! Test a normal update, no change in years
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 11)
-    call my_info%set_current_year(11)
+    call set_year(11)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call my_info%set_current_year()
 
     @assertEqual(1, my_info%get_time_index_lower())
     @assertEqual(2, my_info%get_time_index_upper())
@@ -227,12 +315,14 @@ contains
   end subroutine test_update_no_change_normal
 
   @Test
-  subroutine test_update_no_change_late()
+  subroutine test_update_no_change_late(this)
     ! Test an update with no change in years, just past the end of the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 14)
-    call my_info%set_current_year(14)
+    call set_year(14)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call my_info%set_current_year()
 
     @assertEqual(4, my_info%get_time_index_lower())
     @assertEqual(4, my_info%get_time_index_upper())
@@ -240,12 +330,14 @@ contains
   end subroutine test_update_no_change_late
 
   @Test
-  subroutine test_update_no_change_very_late()
+  subroutine test_update_no_change_very_late(this)
     ! Test an update with no change in years, significantly past the end of the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 15)
-    call my_info%set_current_year(15)
+    call set_year(15)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call my_info%set_current_year()
 
     @assertEqual(4, my_info%get_time_index_lower())
     @assertEqual(4, my_info%get_time_index_upper())
@@ -253,12 +345,15 @@ contains
   end subroutine test_update_no_change_very_late
 
   @Test
-  subroutine test_update_early()
+  subroutine test_update_early(this)
     ! Test an update, with a change in years, both before the start of the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 9)
-    call my_info%set_current_year(10)
+    call set_year(9)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(10)
+    call my_info%set_current_year()
     
     @assertEqual(1, my_info%get_time_index_lower())
     @assertEqual(1, my_info%get_time_index_upper())
@@ -266,12 +361,15 @@ contains
   end subroutine test_update_early
 
   @Test
-  subroutine test_update_early_to_normal()
+  subroutine test_update_early_to_normal(this)
     ! Test an update, with a change in years, from before the time series to inside it
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 10)
-    call my_info%set_current_year(11)
+    call set_year(10)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(11)
+    call my_info%set_current_year()
     
     @assertEqual(1, my_info%get_time_index_lower())
     @assertEqual(2, my_info%get_time_index_upper())
@@ -279,12 +377,15 @@ contains
   end subroutine test_update_early_to_normal
 
   @Test
-  subroutine test_update_normal()
+  subroutine test_update_normal(this)
     ! Test an update, with a change in years, both within the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 11)
-    call my_info%set_current_year(12)
+    call set_year(11)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(12)
+    call my_info%set_current_year()
     
     @assertEqual(2, my_info%get_time_index_lower())
     @assertEqual(3, my_info%get_time_index_upper())
@@ -292,12 +393,15 @@ contains
   end subroutine test_update_normal
 
   @Test
-  subroutine test_update_normal_to_late()
+  subroutine test_update_normal_to_late(this)
     ! Test an update, with a change in years, from within the time series to after it
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 13)
-    call my_info%set_current_year(14)
+    call set_year(13)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(14)
+    call my_info%set_current_year()
     
     @assertEqual(4, my_info%get_time_index_lower())
     @assertEqual(4, my_info%get_time_index_upper())
@@ -305,12 +409,15 @@ contains
   end subroutine test_update_normal_to_late
 
   @Test
-  subroutine test_update_late()
+  subroutine test_update_late(this)
     ! Test an update, with a change in years, starting just after the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 14)
-    call my_info%set_current_year(15)
+    call set_year(14)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(15)
+    call my_info%set_current_year()
     
     @assertEqual(4, my_info%get_time_index_lower())
     @assertEqual(4, my_info%get_time_index_upper())
@@ -318,12 +425,15 @@ contains
   end subroutine test_update_late
 
   @Test
-  subroutine test_update_very_late()
+  subroutine test_update_very_late(this)
     ! Test an update, with a change in years, both significantly after the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 15)
-    call my_info%set_current_year(16)
+    call set_year(15)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(16)
+    call my_info%set_current_year()
     
     @assertEqual(4, my_info%get_time_index_lower())
     @assertEqual(4, my_info%get_time_index_upper())
@@ -335,36 +445,45 @@ contains
   ! ----------------------------------------------------------------------
 
   @Test
-  subroutine test_update_decreasing_early()
+  subroutine test_update_decreasing_early(this)
     ! Test an update with decreasing years, starting before the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 10)
-    call my_info%set_current_year(9)
+    call set_year(10)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(9)
+    call my_info%set_current_year()
     
     @assertEqual(1, my_info%get_time_index_lower())
     @assertEqual(1, my_info%get_time_index_upper())
   end subroutine test_update_decreasing_early
     
   @Test
-  subroutine test_update_decreasing_normal()
+  subroutine test_update_decreasing_normal(this)
     ! Test an update with decreasing years, starting within the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 13)
-    call my_info%set_current_year(12)
+    call set_year(13)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(12)
+    call my_info%set_current_year()
     
     @assertEqual(2, my_info%get_time_index_lower())
     @assertEqual(3, my_info%get_time_index_upper())
   end subroutine test_update_decreasing_normal
 
   @Test
-  subroutine test_update_decreasing_late()
+  subroutine test_update_decreasing_late(this)
     ! Test an update with decreasing years, starting after the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 14)
-    call my_info%set_current_year(13)
+    call set_year(14)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(13)
+    call my_info%set_current_year()
     
     @assertEqual(3, my_info%get_time_index_lower())
     @assertEqual(4, my_info%get_time_index_upper())
@@ -375,42 +494,66 @@ contains
   ! ----------------------------------------------------------------------
 
   @Test
-  subroutine test_update_by2_early()
+  subroutine test_update_by2_early(this)
     ! Test an update by 2 years, starting before the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 10)
-    call my_info%set_current_year(12)
+    call set_year(10)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(12)
+    call my_info%set_current_year()
     
     @assertEqual(2, my_info%get_time_index_lower())
     @assertEqual(3, my_info%get_time_index_upper())
   end subroutine test_update_by2_early
     
   @Test
-  subroutine test_update_by2_normal()
+  subroutine test_update_by2_normal(this)
     ! Test an update by 2 years, starting within the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 11)
-    call my_info%set_current_year(13)
+    call set_year(11)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(13)
+    call my_info%set_current_year()
     
     @assertEqual(3, my_info%get_time_index_lower())
     @assertEqual(4, my_info%get_time_index_upper())
   end subroutine test_update_by2_normal
 
   @Test
-  subroutine test_update_by2_late()
+  subroutine test_update_by2_late(this)
     ! Test an update by 2 years, starting after the time series
+    class(TestDynTimeInfo), intent(inout) :: this
     type(time_info_type) :: my_info
 
-    my_info = time_info_type([11,12,13,14], 14)
-    call my_info%set_current_year(16)
+    call set_year(14)
+    my_info = time_info_type([11,12,13,14], YEAR_POSITION_END_OF_TIMESTEP)
+    call set_year(16)
+    call my_info%set_current_year()
     
     @assertEqual(4, my_info%get_time_index_lower())
     @assertEqual(4, my_info%get_time_index_upper())
   end subroutine test_update_by2_late
-    
 
-    
+  ! ----------------------------------------------------------------------
+  ! Tests of alternative values of year_position
+  ! ----------------------------------------------------------------------
+
+  @Test
+  subroutine test_year_position_start_of_timestep(this)
+    ! make sure that, for year_position = YEAR_POSITION_START_OF_TIMESTEP, we truly get
+    ! the year from the start of the timestep
+    class(TestDynTimeInfo), intent(inout) :: this
+    type(time_info_type) :: my_info
+
+    call set_year(13)
+    my_info = time_info_type([11, 12, 13, 14], YEAR_POSITION_START_OF_TIMESTEP)
+
+    @assertEqual(2, my_info%get_time_index_lower())
+    @assertEqual(3, my_info%get_time_index_upper())
+  end subroutine test_year_position_start_of_timestep
 
 end module test_dynTimeInfo

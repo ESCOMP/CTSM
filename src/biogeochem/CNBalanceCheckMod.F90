@@ -23,58 +23,100 @@ module CNBalanceCheckMod
   !
   implicit none
   private
+  ! 
+  ! !PUBLIC TYPES:
+  type, public :: cn_balance_type
+     private
+     real(r8), pointer :: begcb_col(:)        ! (gC/m2) carbon mass, beginning of time step 
+     real(r8), pointer :: endcb_col(:)        ! (gC/m2) carbon mass, end of time step
+     real(r8), pointer :: begnb_col(:)        ! (gN/m2) nitrogen mass, beginning of time step 
+     real(r8), pointer :: endnb_col(:)        ! (gN/m2) nitrogen mass, end of time step 
+     logical , pointer :: beg_vals_set_col(:) ! Whether begcb/begnb have been set for this column in this time step
+   contains
+     procedure , public  :: Init
+     procedure , public  :: BeginCNBalance
+     procedure , public  :: CBalanceCheck
+     procedure , public  :: NBalanceCheck
+     procedure , private :: InitAllocate 
+  end type cn_balance_type
   !
-  ! !PUBLIC MEMBER FUNCTIONS:
-  public :: BeginCNBalance
-  public :: CBalanceCheck
-  public :: NBalanceCheck
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine BeginCNBalance(bounds, num_soilc, filter_soilc, &
+  subroutine Init(this, bounds)
+    class(cn_balance_type)         :: this
+    type(bounds_type) , intent(in) :: bounds  
+
+    call this%InitAllocate(bounds)
+  end subroutine Init
+
+  !-----------------------------------------------------------------------
+  subroutine InitAllocate(this, bounds)
+    class(cn_balance_type)         :: this
+    type(bounds_type) , intent(in) :: bounds  
+
+    integer :: begc, endc
+
+    begc = bounds%begc; endc= bounds%endc
+
+    allocate(this%begcb_col(begc:endc)) ; this%begcb_col(:) = nan
+    allocate(this%endcb_col(begc:endc)) ; this%endcb_col(:) = nan
+    allocate(this%begnb_col(begc:endc)) ; this%begnb_col(:) = nan
+    allocate(this%endnb_col(begc:endc)) ; this%endnb_col(:) = nan
+    allocate(this%beg_vals_set_col(begc:endc)) ; this%beg_vals_set_col(:) = .false.
+  end subroutine InitAllocate
+
+  !-----------------------------------------------------------------------
+  subroutine BeginCNBalance(this, bounds, num_soilc, filter_soilc, &
        cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
     !
     ! !DESCRIPTION:
     ! Calculate beginning column-level carbon/nitrogen balance, for mass conservation check
     !
     ! !ARGUMENTS:
+    class(cn_balance_type)         , intent(inout) :: this
     type(bounds_type)              , intent(in)    :: bounds          
     integer                        , intent(in)    :: num_soilc       ! number of soil columns filter
     integer                        , intent(in)    :: filter_soilc(:) ! filter for soil columns
-    type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
-    type(cnveg_nitrogenstate_type) , intent(inout) :: cnveg_nitrogenstate_inst
+    type(cnveg_carbonstate_type)   , intent(in)    :: cnveg_carbonstate_inst
+    type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
     !
     ! !LOCAL VARIABLES:
     integer :: fc,c
     !-----------------------------------------------------------------------
 
     associate(                                            & 
-         totcolc   => cnveg_carbonstate_inst%totc_col   , & ! Input:  [real(r8) (:)]  (gC/m2) total column carbon, incl veg and cpool
-         totcoln   => cnveg_nitrogenstate_inst%totn_col , & ! Input:  [real(r8) (:)]  (gN/m2) total column nitrogen, incl veg 
-         col_begcb => cnveg_carbonstate_inst%begcb_col  , & ! Output: [real(r8) (:)]  (gC/m2) carbon mass, beginning of time step
-         col_begnb => cnveg_nitrogenstate_inst%begnb_col  & ! Output: [real(r8) (:)]  (gN/m2) nitrogen mass, beginning of time step 
+         col_begcb    => this%begcb_col                  , & ! Output: [real(r8) (:)]  (gC/m2) carbon mass, beginning of time step
+         col_begnb    => this%begnb_col                  , & ! Output: [real(r8) (:)]  (gN/m2) nitrogen mass, beginning of time step 
+         beg_vals_set => this%beg_vals_set_col           , & ! Output: [logical  (:)]  Whether begcb/begnb have been set
+         totcolc      => cnveg_carbonstate_inst%totc_col , & ! Input:  [real(r8) (:)]  (gC/m2) total column carbon, incl veg and cpool
+         totcoln      => cnveg_nitrogenstate_inst%totn_col & ! Input:  [real(r8) (:)]  (gN/m2) total column nitrogen, incl veg 
          )
+    
+    beg_vals_set(bounds%begc:bounds%endc) = .false.
 
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         col_begcb(c) = totcolc(c)
-         col_begnb(c) = totcoln(c)
-      end do
+    do fc = 1,num_soilc
+       c = filter_soilc(fc)
+       col_begcb(c) = totcolc(c)
+       col_begnb(c) = totcoln(c)
+       beg_vals_set(c) = .true.
+    end do
 
     end associate
 
   end subroutine BeginCNBalance
  
   !-----------------------------------------------------------------------
-  subroutine CBalanceCheck(bounds, num_soilc, filter_soilc, &
+  subroutine CBalanceCheck(this, bounds, num_soilc, filter_soilc, &
        soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Perform carbon mass conservation check for column and patch
     !
     ! !ARGUMENTS:
+    class(cn_balance_type)               , intent(inout) :: this
     type(bounds_type)                    , intent(in)    :: bounds          
     integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
@@ -93,6 +135,9 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                            & 
+         col_begcb               =>    this%begcb_col                                   , & ! Input:  [real(r8) (:) ]  (gC/m2) carbon mass, beginning of time step 
+         col_endcb               =>    this%endcb_col                                   , & ! Output: [real(r8) (:) ]  (gC/m2) carbon mass, end of time step 
+         beg_vals_set            =>    this%beg_vals_set_col                            , & ! Input:  [logical  (:) ]  Whether begcb/begnb have been set in this time step
          dwt_closs               =>    cnveg_carbonflux_inst%dwt_closs_col              , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total carbon loss from product pools and conversion
          product_closs           =>    cnveg_carbonflux_inst%product_closs_col          , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total wood product carbon loss
          gpp                     =>    cnveg_carbonflux_inst%gpp_col                    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) gross primary production      
@@ -102,9 +147,7 @@ contains
 
          som_c_leached           =>    soilbiogeochem_carbonflux_inst%som_c_leached_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total SOM C loss from vertical transport 
 
-         totcolc                 =>    cnveg_carbonstate_inst%totc_col                  , & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
-         col_begcb               =>    cnveg_carbonstate_inst%begcb_col                 , & ! Input:  [real(r8) (:) ]  (gC/m2) carbon mass, beginning of time step 
-         col_endcb               =>    cnveg_carbonstate_inst%endcb_col                   & ! Output: [real(r8) (:) ]  (gC/m2) carbon mass, end of time step 
+         totcolc                 =>    cnveg_carbonstate_inst%totc_col                    & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
          )
 
       ! set time steps
@@ -113,6 +156,12 @@ contains
       err_found = .false.
       do fc = 1,num_soilc
          c = filter_soilc(fc)
+
+         if (.not. beg_vals_set(c)) then
+            ! Skip the check if the beginning values weren't set for this column. This
+            ! can happen, for example, if this is a newly-active column.
+            cycle
+         end if
 
          ! calculate the total column-level carbon storage, for mass conservation check
          col_endcb(c) = totcolc(c)
@@ -153,7 +202,7 @@ contains
   end subroutine CBalanceCheck
 
   !-----------------------------------------------------------------------
-  subroutine NBalanceCheck(bounds, num_soilc, filter_soilc, &
+  subroutine NBalanceCheck(this, bounds, num_soilc, filter_soilc, &
        soilbiogeochem_nitrogenflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst)
     !
     ! !DESCRIPTION:
@@ -163,6 +212,7 @@ contains
     use clm_varpar, only : crop_prog
     !
     ! !ARGUMENTS:
+    class(cn_balance_type)                  , intent(inout) :: this
     type(bounds_type)                       , intent(in)    :: bounds          
     integer                                 , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                                 , intent(in)    :: filter_soilc                                      (:) ! filter for soil columns
@@ -181,6 +231,9 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                             & 
+         col_begnb           => this%begnb_col                                           , & ! Input:  [real(r8) (:) ]  (gN/m2) nitrogen mass, beginning of time step   
+         col_endnb           => this%endnb_col                                           , & ! Output: [real(r8) (:) ]  (gN/m2) nitrogen mass, end of time step         
+         beg_vals_set        => this%beg_vals_set_col                                    , & ! Input:  [logical  (:) ]  Whether begcb/begnb have been set in this time step
          ndep_to_sminn       => soilbiogeochem_nitrogenflux_inst%ndep_to_sminn_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) atmospheric N deposition to soil mineral N        
          nfix_to_sminn       => soilbiogeochem_nitrogenflux_inst%nfix_to_sminn_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) symbiotic/asymbiotic N fixation to soil mineral N 
          fert_to_sminn       => soilbiogeochem_nitrogenflux_inst%fert_to_sminn_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s)                                         
@@ -197,9 +250,7 @@ contains
          dwt_nloss           => cnveg_nitrogenflux_inst%dwt_nloss_col                    , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total nitrogen loss from product pools and conversion
          product_nloss       => cnveg_nitrogenflux_inst%product_nloss_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total wood product nitrogen loss
 
-         totcoln             => cnveg_nitrogenstate_inst%totn_col                        , & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
-         col_begnb           => cnveg_nitrogenstate_inst%begnb_col                       , & ! Input:  [real(r8) (:) ]  (gN/m2) nitrogen mass, beginning of time step   
-         col_endnb           => cnveg_nitrogenstate_inst%endnb_col                         & ! Output: [real(r8) (:) ]  (gN/m2) nitrogen mass, end of time step         
+         totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
          )
 
       ! set time steps
@@ -208,6 +259,12 @@ contains
       err_found = .false.
       do fc = 1,num_soilc
          c=filter_soilc(fc)
+
+         if (.not. beg_vals_set(c)) then
+            ! Skip the check if the beginning values weren't set for this column. This
+            ! can happen, for example, if this is a newly-active column.
+            cycle
+         end if
 
          ! calculate the total column-level nitrogen storage, for mass conservation check
          col_endnb(c) = totcoln(c)

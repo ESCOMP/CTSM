@@ -7,10 +7,6 @@ module dynHarvestMod
   ! Handle reading of the harvest data, as well as the state updates that happen as a
   ! result of harvest.
   !
-  ! Currently, it is assumed that the harvest data are on the flanduse_timeseries file. However, this
-  ! could theoretically be changed so that the harvest data were separated from the
-  ! pftdyn data, allowing them to differ in the years over which they apply.
-  !
   ! !USES:
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_log_mod             , only : errMsg => shr_log_errMsg
@@ -60,18 +56,19 @@ module dynHarvestMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine dynHarvest_init(bounds)
+  subroutine dynHarvest_init(bounds, harvest_filename)
     !
     ! !DESCRIPTION:
     ! Initialize data structures for harvest information.
     ! This should be called once, during model initialization.
     ! 
     ! !USES:
-    use clm_varctl            , only : use_cn, flanduse_timeseries
     use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
+    use dynTimeInfoMod        , only : YEAR_POSITION_END_OF_TIMESTEP
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds  ! proc-level bounds
+    type(bounds_type) , intent(in) :: bounds           ! proc-level bounds
+    character(len=*)  , intent(in) :: harvest_filename ! name of file containing harvest information
     !
     ! !LOCAL VARIABLES:
     integer :: varnum     ! counter for harvest variables
@@ -88,18 +85,18 @@ contains
        call endrun(msg=' allocation error for harvest'//errMsg(__FILE__, __LINE__))
     end if
 
-    dynHarvest_file = dyn_file_type(flanduse_timeseries)
+    ! Get the year from the END of the timestep for compatibility with how things were
+    ! done before, even though that doesn't necessarily make the most sense conceptually.
+    dynHarvest_file = dyn_file_type(harvest_filename, YEAR_POSITION_END_OF_TIMESTEP)
     
     ! Get initial harvest data
-    if (use_cn) then
-       num_points = (bounds%endg - bounds%begg + 1)
-       do varnum = 1, num_harvest_inst
-          harvest_inst(varnum) = dyn_var_time_uninterp_type( &
-               dyn_file=dynHarvest_file, varname=harvest_varnames(varnum), &
-               dim1name=grlnd, conversion_factor=1.0_r8, &
-               do_check_sums_equal_1=.false., data_shape=[num_points])
-       end do
-    end if
+    num_points = (bounds%endg - bounds%begg + 1)
+    do varnum = 1, num_harvest_inst
+       harvest_inst(varnum) = dyn_var_time_uninterp_type( &
+            dyn_file=dynHarvest_file, varname=harvest_varnames(varnum), &
+            dim1name=grlnd, conversion_factor=1.0_r8, &
+            do_check_sums_equal_1=.false., data_shape=[num_points])
+    end do
     
   end subroutine dynHarvest_init
 
@@ -117,7 +114,6 @@ contains
     ! year, with abrupt changes in the rate at annual boundaries.
     !
     ! !USES:
-    use clm_varctl     , only : use_cn
     use dynTimeInfoMod , only : time_info_type
     !
     ! !ARGUMENTS:
@@ -132,31 +128,26 @@ contains
 
     SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
-    ! COMPILER_BUG(wjs, 2014-??-??, intel 13.1.2) 
-    ! As a workaround for an internal compiler error with ifort 13.1.2 on goldbach, call
-    ! the specific name of this procedure rather than using its generic name
-    call dynHarvest_file%time_info%set_current_year_get_year()
+    call dynHarvest_file%time_info%set_current_year()
 
     ! Get total harvest for this time step
-    if (use_cn) then
-       harvest(bounds%begg:bounds%endg) = 0._r8
+    harvest(bounds%begg:bounds%endg) = 0._r8
 
-       if (dynHarvest_file%time_info%is_before_time_series()) then
-          ! Turn off harvest before the start of the harvest time series
-          do_harvest = .false.
-       else
-          ! Note that do_harvest stays true even past the end of the time series. This
-          ! means that harvest rates will be maintained at the rate given in the last
-          ! year of the file for all years past the end of this specified time series.
-          do_harvest = .true.
-          allocate(this_data(bounds%begg:bounds%endg))
-          do varnum = 1, num_harvest_inst
-             call harvest_inst(varnum)%get_current_data(this_data)
-             harvest(bounds%begg:bounds%endg) = harvest(bounds%begg:bounds%endg) + &
-                                                this_data(bounds%begg:bounds%endg)
-          end do
-          deallocate(this_data)
-       end if
+    if (dynHarvest_file%time_info%is_before_time_series()) then
+       ! Turn off harvest before the start of the harvest time series
+       do_harvest = .false.
+    else
+       ! Note that do_harvest stays true even past the end of the time series. This
+       ! means that harvest rates will be maintained at the rate given in the last
+       ! year of the file for all years past the end of this specified time series.
+       do_harvest = .true.
+       allocate(this_data(bounds%begg:bounds%endg))
+       do varnum = 1, num_harvest_inst
+          call harvest_inst(varnum)%get_current_data(this_data)
+          harvest(bounds%begg:bounds%endg) = harvest(bounds%begg:bounds%endg) + &
+               this_data(bounds%begg:bounds%endg)
+       end do
+       deallocate(this_data)
     end if
 
   end subroutine dynHarvest_interp

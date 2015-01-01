@@ -75,8 +75,6 @@ module CNVegCarbonStateType
      ! Total C pools       
      real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool 
      real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
-     real(r8), pointer :: begcb_col                (:) ! (gC/m2) carbon mass, beginning of time step 
-     real(r8), pointer :: endcb_col                (:) ! (gC/m2) carbon mass, end of time step
 
    contains
 
@@ -178,8 +176,6 @@ contains
 
     allocate(this%totc_col                 (begc:endc)) ; this%totc_col                 (:) = nan
     allocate(this%totecosysc_col           (begc:endc)) ; this%totecosysc_col           (:) = nan
-    allocate(this%begcb_col                (begc:endc)) ; this%begcb_col                (:) = nan
-    allocate(this%endcb_col                (begc:endc)) ; this%endcb_col                (:) = nan
 
   end subroutine InitAllocate
 

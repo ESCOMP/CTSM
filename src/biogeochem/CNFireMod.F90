@@ -116,12 +116,13 @@ contains
     ! Computes column-level burned area 
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size, get_days_per_year, get_curr_date, get_nstep
-    use clm_varpar      , only: max_patch_per_col
-    use clm_varcon      , only: secspday
-    use clm_varctl      , only: flanduse_timeseries, use_nofire
-    use pftconMod       , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
-    use pftconMod       , only: nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
+    use clm_time_manager     , only: get_step_size, get_days_per_year, get_curr_date, get_nstep
+    use clm_varpar           , only: max_patch_per_col
+    use clm_varcon           , only: secspday
+    use clm_varctl           , only: use_nofire
+    use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
+    use pftconMod            , only: nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
+    use dynSubgridControlMod , only : get_do_transient_pfts
     !
     ! !ARGUMENTS:
     type(bounds_type)                     , intent(in)    :: bounds 
@@ -174,6 +175,7 @@ contains
     real(r8) :: ig       ! total ignitions (count/km2/hr)
     real(r8) :: hdmlf    ! human density
     real(r8) :: btran_col(bounds%begc:bounds%endc)
+    logical  :: do_transient_pfts ! whether transient pfts are active in this run
     real(r8), target  :: prec60_col_target(bounds%begc:bounds%endc)
     real(r8), target  :: prec10_col_target(bounds%begc:bounds%endc)
     real(r8), pointer :: prec60_col(:)
@@ -251,6 +253,8 @@ contains
          fuelc_crop         => cnveg_carbonstate_inst%fuelc_crop_col             & ! Output: [real(r8) (:)     ]  fuel avalability factor for Reg.A                 
          )
  
+      do_transient_pfts = get_do_transient_pfts()
+
       !pft to column average 
       prec10_col =>prec10_col_target
       call p2c(bounds, num_soilc, filter_soilc, &
@@ -353,7 +357,7 @@ contains
         wtlf(c)      = 0._r8
         trotr1_col(c)= 0._r8
         trotr2_col(c)= 0._r8
-        if (flanduse_timeseries /= ' ') then    !true when landuse data is used
+        if (do_transient_pfts) then
            dtrotr_col(c)=0._r8
         end if
      end do
@@ -378,7 +382,7 @@ contains
                  if( patch%itype(p) == nbrdlf_dcd_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
                     trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)*col%wtgcell(c)
                  end if
-                 if ( flanduse_timeseries /= ' ' ) then    !true when landuse data is used
+                 if (do_transient_pfts) then
                     if( patch%itype(p) == nbrdlf_evr_trp_tree .or. patch%itype(p) == nbrdlf_dcd_trp_tree )then
                        if(lfpftd(p) > 0._r8)then
                           dtrotr_col(c)=dtrotr_col(c)+lfpftd(p)*col%wtgcell(c)
@@ -449,7 +453,7 @@ contains
      ! estimate annual decreased fractional coverage of BET+BDT
      ! land cover conversion in CLM4.5 is the same for each timestep except for the beginning  
 
-     if (flanduse_timeseries /= ' ') then    !true when landuse data is used
+     if (do_transient_pfts) then
         do fc = 1,num_soilc
            c = filter_soilc(fc)
            if( dtrotr_col(c)  >  0._r8 )then
@@ -584,7 +588,7 @@ contains
            ! if landuse change data is used, calculate deforestation fires and 
            ! add it in the total of burned area fraction
            !
-           if (flanduse_timeseries /= ' ') then    !true when landuse change data is used
+           if (do_transient_pfts) then
               if( trotr1_col(c)+trotr2_col(c) > 0.6_r8 )then
                  if(( kmo == 1 .and. kda == 1 .and. mcsec == 0) .or. &
                       dtrotr_col(c) <=0._r8 )then
@@ -647,11 +651,12 @@ contains
    ! seconds_per_year is the number of seconds in a year.
    !
    ! !USES:
-   use clm_time_manager , only: get_step_size,get_days_per_year,get_curr_date
-   use clm_varpar       , only: max_patch_per_col
-   use clm_varctl       , only: flanduse_timeseries, use_cndv
-   use clm_varcon       , only: secspday
-   use pftconMod        , only: nc3crop
+   use clm_time_manager     , only: get_step_size,get_days_per_year,get_curr_date
+   use clm_varpar           , only: max_patch_per_col
+   use clm_varctl           , only: use_cndv
+   use clm_varcon           , only: secspday
+   use pftconMod            , only: nc3crop
+   use dynSubgridControlMod , only: get_do_transient_pfts
    !
    ! !ARGUMENTS:
     type(bounds_type)             , intent(in)    :: bounds  
@@ -680,6 +685,7 @@ contains
    real(r8):: f                    ! rate for fire effects (1/s)
    real(r8):: dt                   ! time step variable (s)
    real(r8):: dayspyr              ! days per year
+   logical :: do_transient_pfts    ! whether transient pfts are active in this run
    !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(leaf_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , errMsg(__FILE__, __LINE__))
@@ -885,6 +891,8 @@ contains
          m_n_to_litr_lig_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_lig_fire_col                    & ! Output: [real(r8) (:,:)   ]                                                  
          )
 
+     do_transient_pfts = get_do_transient_pfts()
+
      ! Get model step size
      ! calculate burned area fraction per sec
      dt = real( get_step_size(), r8 )
@@ -899,7 +907,7 @@ contains
 
         if( patch%itype(p) < nc3crop .and. cropf_col(c) < 1.0_r8)then
            ! For non-crop (bare-soil and natural vegetation)
-           if (flanduse_timeseries /= ' ') then    !true when landuse data is used
+           if (do_transient_pfts) then
               f = (fbac(c)-baf_crop(c))/(1.0_r8-cropf_col(c))
            else
               f = (farea_burned(c)-baf_crop(c))/(1.0_r8-cropf_col(c))
@@ -1198,7 +1206,7 @@ contains
 
      ! carbon loss due to deforestation fires
 
-     if (flanduse_timeseries /= ' ') then    !true when landuse data is used
+     if (do_transient_pfts) then
         call get_curr_date (kyr, kmo, kda, mcsec)
         do fc = 1,num_soilc
            c = filter_soilc(fc)

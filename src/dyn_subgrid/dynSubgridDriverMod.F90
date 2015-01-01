@@ -9,6 +9,9 @@ module dynSubgridDriverMod
   ! dynamic landunits).
   !
   ! !USES:
+  use dynSubgridControlMod         , only : dynSubgridControl_init, get_flanduse_timeseries
+  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops
+  use dynSubgridControlMod         , only : get_do_harvest
   use dynPriorWeightsMod           , only : prior_weights_type
   use UrbanParamsType              , only : urbanparams_type
   use CNDVType                     , only : dgvs_type
@@ -67,9 +70,10 @@ contains
     ! this routine needs to be called from outside any loops over clumps.
     !
     ! !USES:
-    use clm_varctl        , only : flanduse_timeseries, use_cndv
+    use clm_varctl        , only : use_cndv
     use decompMod         , only : bounds_type, BOUNDS_LEVEL_PROC
     use dynpftFileMod     , only : dynpft_init
+    use dyncropFileMod    , only : dyncrop_init
     use dynHarvestMod     , only : dynHarvest_init
     use dynCNDVMod        , only : dynCNDV_init
     !
@@ -83,16 +87,25 @@ contains
 
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
+    call dynSubgridControl_init
     prior_weights = prior_weights_type(bounds)
 
     ! Initialize stuff for prescribed transient Patches
-    if (flanduse_timeseries /= ' ') then
-       call dynpft_init(bounds)
+    if (get_do_transient_pfts()) then
+       call dynpft_init(bounds, dynpft_filename=get_flanduse_timeseries())
     end if
 
-    ! Initialize stuff for harvest (currently shares the flanduse_timeseries file)
-    if (flanduse_timeseries /= ' ') then
-       call dynHarvest_init(bounds)
+    ! Initialize stuff for prescribed transient crops
+    if (get_do_transient_crops()) then
+       call dyncrop_init(bounds, dyncrop_filename=get_flanduse_timeseries())
+    end if
+
+    ! Initialize stuff for harvest. Note that, currently, the harvest data are on the
+    ! flanduse_timeseries file. However, this could theoretically be changed so that the
+    ! harvest data were separated from the pftdyn data, allowing them to differ in the
+    ! years over which they apply.
+    if (get_do_harvest()) then
+       call dynHarvest_init(bounds, harvest_filename=get_flanduse_timeseries())
     end if
 
     if (use_cndv) then
@@ -123,7 +136,7 @@ contains
     !
     ! !USES:
     use clm_time_manager     , only : is_first_step
-    use clm_varctl           , only : flanduse_timeseries, is_cold_start
+    use clm_varctl           , only : is_cold_start
     use clm_varctl           , only : use_cndv, use_cn, create_glacier_mec_landunit, use_ed
     use decompMod            , only : bounds_type, get_proc_clumps, get_clump_bounds
     use decompMod            , only : BOUNDS_LEVEL_PROC
@@ -132,6 +145,7 @@ contains
     use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
     use dynConsBiogeochemMod , only : dyn_cnbal_patch
     use dynpftFileMod        , only : dynpft_interp
+    use dynCropFileMod       , only : dyncrop_interp
     use dynHarvestMod        , only : dynHarvest_interp
     use dynCNDVMod           , only : dynCNDV_interp
     use dynEDMod             , only : dyn_ED
@@ -198,11 +212,15 @@ contains
     ! Do land cover change that requires I/O, and thus must be outside a threaded region
     ! ==========================================================================
 
-    if (flanduse_timeseries /= ' ') then
+    if (get_do_transient_pfts()) then
        call dynpft_interp(bounds_proc)
     end if
 
-    if (flanduse_timeseries /= ' ') then
+    if (get_do_transient_crops()) then
+       call dyncrop_interp(bounds_proc)
+    end if
+
+    if (get_do_harvest()) then
        call dynHarvest_interp(bounds_proc)
     end if
 

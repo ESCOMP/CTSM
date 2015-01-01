@@ -1,0 +1,104 @@
+module test_clm_time_manager
+
+  ! Tests of clm_time_manager
+
+  use pfunit_mod
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use clm_time_manager
+  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use unittestTimeManagerMod, only : set_date => unittest_timemgr_set_curr_date
+
+  implicit none
+  save
+
+  real(r8), parameter :: tol = 1.e-13_r8
+  integer, parameter :: dtime = 1800
+
+  @TestCase
+  type, extends(TestCase) :: TestTimeManager
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestTimeManager
+
+contains
+  
+  subroutine setUp(this)
+    class(TestTimeManager), intent(inout) :: this
+    
+    call unittest_timemgr_setup(dtime=dtime)
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestTimeManager), intent(inout) :: this
+
+    call unittest_timemgr_teardown()
+  end subroutine tearDown
+
+  @Test
+  subroutine getStepSize_returnsCorrectValue(this)
+    class(TestTimeManager), intent(inout) :: this
+    integer :: step_size
+
+    step_size = get_step_size()
+
+    @assertEqual(dtime, step_size)
+  end subroutine getStepSize_returnsCorrectValue
+
+  @Test
+  subroutine getCurrYearfrac_atYearBoundary_returns0(this)
+    class(TestTimeManager), intent(inout) :: this
+    real(r8) :: yearfrac
+
+    call set_date(yr=2, mon=1, day=1, tod=0)
+    
+    yearfrac = get_curr_yearfrac()
+
+    @assertEqual(0._r8, yearfrac)
+  end subroutine getCurrYearfrac_atYearBoundary_returns0
+
+  @Test
+  subroutine getCurrYearfrac_inMiddleOfYear_returnsCorrectValue(this)
+    class(TestTimeManager), intent(inout) :: this
+    real(r8) :: yearfrac
+    real(r8) :: yearfrac_expected
+    
+    call set_date(yr=2, mon=3, day=1, tod=43200)
+
+    yearfrac = get_curr_yearfrac()
+
+    yearfrac_expected = 59.5_r8 / 365._r8
+    @assertEqual(yearfrac_expected, yearfrac)
+  end subroutine getCurrYearfrac_inMiddleOfYear_returnsCorrectValue
+
+  @Test
+  subroutine getPrevYearfrac_atYearBoundary_returnsLargeValue(this)
+    class(TestTimeManager), intent(inout) :: this
+    real(r8) :: yearfrac
+    integer, parameter :: secs_in_day = 86400
+    real(r8) :: yearfrac_expected
+
+    call set_date(yr=2, mon=1, day=1, tod=0)
+    
+    yearfrac = get_prev_yearfrac()
+
+    yearfrac_expected = (365._r8 - real(dtime, r8) / real(secs_in_day, r8)) / 365._r8
+    @assertEqual(yearfrac_expected, yearfrac)
+  end subroutine getPrevYearfrac_atYearBoundary_returnsLargeValue
+
+  @Test
+  subroutine getPrevYearfrac_inMiddleOfYear_returnsCorrectValue(this)
+    class(TestTimeManager), intent(inout) :: this
+    real(r8) :: yearfrac
+    integer, parameter :: secs_in_day = 86400
+    real(r8) :: yearfrac_expected
+    
+    call set_date(yr=2, mon=3, day=1, tod=43200)
+
+    yearfrac = get_prev_yearfrac()
+
+    yearfrac_expected = (59.5_r8 - real(dtime, r8) / real(secs_in_day, r8)) / 365._r8
+    @assertEqual(yearfrac_expected, yearfrac)
+  end subroutine getPrevYearfrac_inMiddleOfYear_returnsCorrectValue
+
+end module test_clm_time_manager

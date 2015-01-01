@@ -1,4 +1,192 @@
 ===============================================================
+Tag name:  clm4_5_1_r103
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Jan  1 06:15:57 MST 2015
+One-line Summary: enable transient crops
+
+Purpose of changes:
+
+(1) Allow transient crops! Note that carbon and nitrogen conservation still is
+    not done, but this at least allows crop areas to evolve in time.
+
+(2) Add control flags for which pieces of the transient dynamics should be done:
+    transient natural PFTs, transient crops, and/or harvest.
+
+(3) Reworked both source code and unit tests to be able to use the true CLM time
+    manager in unit tests rather than a stub version. Also added functionality
+    to time_info_type to be able to take the date from the end of the current
+    time step or the beginning of the time step. This flexibility was needed
+    because: (a) for crops, with an annual update, I wanted the update time to
+    be consistent with the glacier update time: the first time step after
+    crossing the year boundary (so take time from the start of the time step);
+    (b) for transient PFTs and harvest, for consistency with what was being done
+    before, we need to take the time from the end of the time step.
+
+(4) Make CNBalanceCheck more modular and object-oriented. Also, bypass the
+    balance check for newly-active columns, which is needed to avoid balance
+    check errors with transient crops.
+
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: New control flags that control which
+aspects of transient subgrid dynamics (and harvest) are turned on/off. This lets
+you turn on/off transient natural PFTs, transient crops, and/or harvest
+independently.
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: some pieces reviewed by Erik
+
+   scripts: append_nl_value_n03_scripts4_141201 -> append_nl_value_n07_scripts4_141201
+   esmf_wrf_timemgr: esmf_wrf_timemgr_141028 -> esmf_wrf_timemgr_141217
+
+List all files eliminated:
+
+========= No longer use stub time manager - use true time manager instead
+D       models/lnd/clm/src/unit_test_stubs/utils/clm_time_manager_stub.F90
+
+List all files added and what they do:
+
+========= Add transient crops
+A       models/lnd/clm/src/dyn_subgrid/dyncropFileMod.F90
+
+========= Reads and stores namelist items controlling transient dynamics. This
+          allows turning off select pieces of the transient subgrid behavior.
+A       models/lnd/clm/src/dyn_subgrid/dynSubgridControlMod.F90
+
+========= Add unit test utilities that wrap the clm time manager
+A       models/lnd/clm/src/unit_test_shr/unittestTimeManagerMod.F90
+
+========= Start adding unit tests for the clm time manager
+A       models/lnd/clm/src/utils/test/clm_time_manager_test/test_clm_time_manager.pf
+A       models/lnd/clm/src/utils/test/clm_time_manager_test/CMakeLists.txt
+A       models/lnd/clm/src/utils/test/clm_time_manager_test
+A       models/lnd/clm/src/utils/test/CMakeLists.txt
+A       models/lnd/clm/src/utils/test
+
+========= Test logic for new control flags
+A       models/lnd/clm/bld/test_build_namelist/t/test_do_transient_pfts.pm
+A       models/lnd/clm/bld/test_build_namelist/t/test_do_harvest.pm
+A       models/lnd/clm/bld/test_build_namelist/t/test_do_transient_crops.pm
+
+List all existing files that have been modified, and describe the changes:
+
+========= Reworked both source code and unit tests to be able to use the true
+          CLM time manager in unit tests rather than a stub version. Also added
+          functionality to time_info_type to be able to take the date from the
+          end of the current time step or the beginning of the time step. Note
+          that some unit test builds now need to link against the
+          esmf_wrf_timemgr library, if they use the time manager either directly
+          or indirectly.
+M       models/lnd/clm/src/utils/clm_time_manager.F90
+M       models/lnd/clm/src/dyn_subgrid/dynTimeInfoMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynVarTimeInterpMod.F90.in
+M       models/lnd/clm/src/dyn_subgrid/dynVarTimeInterpMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynFileMod.F90
+M       models/lnd/clm/src/unit_test_stubs/dyn_subgrid/dynFileMod_stub.F90
+M       models/lnd/clm/src/unit_test_stubs/utils/CMakeLists.txt
+M       models/lnd/clm/src/CMakeLists.txt
+M       models/lnd/clm/src/unit_test_shr/CMakeLists.txt
+M       models/lnd/clm/src/dyn_subgrid/test/dynTimeInfo_test/test_dynTimeInfo.pf
+M       models/lnd/clm/src/dyn_subgrid/test/dynTimeInfo_test/CMakeLists.txt
+M       models/lnd/clm/src/dyn_subgrid/test/dynVar_test/test_dynVarShared.F90
+M       models/lnd/clm/src/dyn_subgrid/test/dynVar_test/test_dynVarTimeInterp.pf
+M       models/lnd/clm/src/dyn_subgrid/test/dynVar_test/test_dynVarTimeUninterp.pf
+M       models/lnd/clm/src/dyn_subgrid/test/dynVar_test/CMakeLists.txt
+M       models/lnd/clm/src/biogeophys/test/Daylength_test/CMakeLists.txt
+M       models/lnd/clm/src/biogeophys/test/Irrigation_test/CMakeLists.txt
+M       models/lnd/clm/src/utils/CMakeLists.txt
+
+========= Changes related to new control flags, as well as the rework of the
+          time_info%set_current_year interface
+M       models/lnd/clm/src/dyn_subgrid/dynpftFileMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynHarvestMod.F90
+
+========= Changes related to new control flags and addition of transient crops
+M       models/lnd/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+
+========= Moved flanduse_timeseries and other control flags into dynSubgridControlMod
+M       models/lnd/clm/src/main/clm_varctl.F90
+M       models/lnd/clm/src/main/controlMod.F90
+M       models/lnd/clm/src/main/restFileMod.F90
+M       models/lnd/clm/src/main/subgridRestMod.F90
+M       models/lnd/clm/src/main/clm_varpar.F90
+M       models/lnd/clm/src/biogeochem/CNDriverMod.F90
+M       models/lnd/clm/src/biogeochem/CNFireMod.F90
+
+========= Make CNBalanceCheck more modular and object-oriented
+M       models/lnd/clm/src/biogeochem/CNBalanceCheckMod.F90
+          - also, bypass balance checks for newly-active columns (needed to
+            avoid balance check errors for newly-active crop columns)
+M       models/lnd/clm/src/biogeochem/CNVegNitrogenStateType.F90
+M       models/lnd/clm/src/biogeochem/CNVegCarbonStateType.F90
+M       models/lnd/clm/src/main/clm_instMod.F90
+M       models/lnd/clm/src/main/clm_driver.F90
+          - also make alt_calc operate over inactive as well as active points
+
+========= Added new control flags
+M       models/lnd/clm/bld/CLMBuildNamelist.pm
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+
+========= Make test files (more) consistent with actual files. This may not have
+          been necessary.
+M       models/lnd/clm/bld/test_build_namelist/t/input/namelist_defaults_clm4_5_test.xml
+M       models/lnd/clm/bld/test_build_namelist/t/input/namelist_definition_clm4_5_test.xml
+
+========= Minor changes (e.g., changes to comments and other small changes)
+M       models/lnd/clm/src/unit_test_stubs/utils/spmdMod_stub.F90
+M       models/lnd/clm/src/dyn_subgrid/do_genf90
+M       models/lnd/clm/src/dyn_subgrid/dynVarTimeUninterpMod.F90
+M       models/lnd/clm/src/dyn_subgrid/dynVarMod.F90
+M       models/lnd/clm/src/soilbiogeochem/SoilBiogeochemVerticalProfileMod.F90
+M       models/lnd/clm/src/biogeophys/ActiveLayerMod.F90
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+
+      Note that there are differences from baseline due to new control flags
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r102
+
+Changes answers relative to baseline: NO
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r102
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Dec 27 06:52:20 MST 2014
