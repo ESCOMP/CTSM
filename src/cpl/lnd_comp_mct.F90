@@ -11,7 +11,7 @@ module lnd_comp_mct
   use shr_sys_mod      , only : shr_sys_flush
   use mct_mod          , only : mct_avect, mct_gsmap
   use decompmod        , only : bounds_type, ldecomp
-  use lnd_import_export
+  use lnd_import_export, only : lnd_import, lnd_export
   !
   ! !public member functions:
   implicit none

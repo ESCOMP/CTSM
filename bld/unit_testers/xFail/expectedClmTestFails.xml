@@ -5,10 +5,8 @@
       <yellowstone>
          <INTEL>
             <compare>
-               <entry testId="213"   failType="FAIL" >No 0.125x0.125 surface dataset</entry>
             </compare>
             <generate>
-               <entry testId="152"   failType="FAIL" >No 0.125x0.125 surface dataset</entry>
             </generate>
          </INTEL>
       </yellowstone>
@@ -72,6 +70,7 @@ failType="FAIL" bugz="2027" >get_clump_bounds ERROR: Calling from inside a non-t
             <INTEL>
             </INTEL>
             <NAG>
+               <entry testId="PET_P15x2_D.f10_f10.I1850CLM45BGC.goldbach_nag.clm-ciso" failType="CFAIL" bugz="2027" >Problem building mct</entry>
                <entry testId="SMS_D.f10_f10.ICRUCLM45.goldbach_nag.clm-af_bias_v5"                           failType="FAIL"  bugz="2071" >datm_comp_mod.F90, line 905: Subscript 1 of AVSTRM%RATTR (value 0) is out of range (1:7)</entry>
             </NAG>
             <PGI>

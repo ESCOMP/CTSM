@@ -14,6 +14,5 @@
   
 ! fatmlndfrc is REQUIRED! MUST BE ON THE SAME GRID AS ALL OF THE DATAFILES BELOW!!!!
 
- fatmlndfrc = '/glade/p/cesmdata/cseg/inputdata/share/domains/domain.lnd.fv1.9x2.5_gx1v6.090206.nc'
- fsurdat = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_1.9x2.5_simyr2000_c130927.nc'
- flanduse_timeseries = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata.pftdyn_1.9x2.5_rcp8.5_simyr1850-2100_c130524.nc'
+ fatmlndfrc = '/glade/p/cesmdata/cseg/inputdata/share/domains/domain.clm/domain.lnd.0.125x0.125_tx0.1v2.140704.nc'
+ fsurdat = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_0.125x0.125_simyr2000_c150114.nc'

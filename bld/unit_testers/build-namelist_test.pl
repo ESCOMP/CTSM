@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 348;
+my $ntests = 351;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 193;
+   $ntests += 195;
 }
 plan( tests=>$ntests );
 
@@ -539,12 +539,12 @@ foreach my $key ( keys(%failtest) ) {
 }
 
 print "\n==================================================\n";
-print "Test ALL resolutions with CN \n";
+print "Test ALL resolutions with CLM4.0 and CN \n";
 print "==================================================\n";
 
 # Check for ALL resolutions with CN
 my $mode = "CN";
-system( "../configure -s -bgc cn" );
+system( "../configure -s -bgc cn -phys clm4_0" );
 my $reslist = `../queryDefaultNamelist.pl -res list -s`;
 my @resolutions = split( / /, $reslist );
 my @regional;
@@ -563,10 +563,43 @@ foreach my $res ( @resolutions ) {
              $res eq "3x3min"      ||
              $res eq "5x5min"      ||
              $res eq "10x10min"    ||
+             $res eq "0.125x0.125" ||
              $res eq "0.33x0.33"   ||
              $res eq "1km-merge-10min" ) {
       next;
    }
+
+   &make_env_run();
+   eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+   is( $@, '', "$options" );
+
+   $cfiles->checkfilesexist( "$options", $mode );
+   system( "diff lnd_in lnd_in.default.standard" );
+
+   $cfiles->shownmldiff( "default", "standard" );
+   if ( defined($opts{'compare'}) ) {
+      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+   }
+
+   if ( defined($opts{'generate'}) ) {
+      $cfiles->copyfiles( "$options", $mode );
+   }
+   &cleanup(); print "\n";
+}
+
+print "\n==================================================\n";
+print " Test important resolutions for CLM4.5 and BGC\n";
+print "==================================================\n";
+
+system( "../configure -s -phys clm4_5" );
+my @resolutions = ( "10x15", "ne30np4", "ne120np4", "ne16np4", "0.125x0.125", "1.9x2.5", "0.9x1.25" );
+my @regional;
+my $mode = "clm45-bgc";
+foreach my $res ( @resolutions ) {
+   chomp($res);
+   print "=== Test $res === \n";
+   my $options  = "-res $res -envxml_dir . -bgc $mode";
 
    &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
@@ -672,7 +705,7 @@ print "==================================================\n";
 
 # Check for glc_mec resolutions
 my $mode = "standard";
-system( "../configure -s" );
+system( "../configure -s -phys clm4_5 -bgc bgc" );
 my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" );
 my @use_cases = ( "1850-2100_rcp2.6_glacierMEC_transient",
                   "1850-2100_rcp4.5_glacierMEC_transient",
@@ -762,7 +795,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
   }
   system( "../configure -s -phys ".$phys );
   my $clmoptions = "-bgc bgc -envxml_dir .";
-  my @clmres = ( "10x15", "48x96", "0.9x1.25", "1.9x2.5", "360x720cru" );
+  my @clmres = ( "ne16np4", "ne120np4", "10x15", "48x96", "0.9x1.25", "1.9x2.5", "360x720cru" );
   foreach my $res ( @clmres ) {
      $options = "-res $res -envxml_dir . ";
      &make_env_run( );

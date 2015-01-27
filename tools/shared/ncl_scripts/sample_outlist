@@ -10,6 +10,5 @@
 !
 ! Lines (such as these) with "!" are ignored.
 ! 
- fatmlndfrc = 'domain.lnd.13x12pt_f19_alaskaUSA_gx1v6_c131122.nc'
- fsurdat = 'surfdata_13x12pt_f19_alaskaUSA_simyr2000_c131122.nc'
- flanduse_timeseries = 'surfdata.pftdyn_13x12pt_f19_alaskaUSA_rcp8.5_simyr1850-2100_c131122.nc'
+ fatmlndfrc = 'domain.lnd.184x256pt_0.125x0.125_alaskaUSA_tx0.1v2_c150114.nc'
+ fsurdat = 'surfdata_184x256pt_0.125x0.125_alaskaUSA_simyr2000_c150114.nc'

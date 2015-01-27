@@ -519,7 +519,9 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 
 <!-- GLC mask datasets (relative to {csmdata}) -->
 <fglcmask hgrid="48x96"    >glc/cism/griddata/glcmaskdata_48x96_gland_c141105.nc</fglcmask>
-<fglcmask hgrid="0.9x1.25" >glc/cism/griddata/glcmaskdata_0.9x1.25_gland_c141105.nc</fglcmask>
+<!-- for f09, use the old version of this file, for compatibility with
+     the hybrid initial conditions that are used for B1850CN at f09_g16 -->
+<fglcmask hgrid="0.9x1.25" >glc/cism/griddata/glcmaskdata_0.9x1.25_Gland5km.nc</fglcmask>
 <fglcmask hgrid="1.9x2.5"  >glc/cism/griddata/glcmaskdata_1.9x2.5_gland_c141105.nc</fglcmask>
 
 <!-- Land topo datasets (when running glc_nec) (relative to {csmdata}) -->

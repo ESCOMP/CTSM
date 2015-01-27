@@ -22,7 +22,7 @@ A sample file is: sample_outlist
 
 3.) Run getregional
 
-setenv DIR=`pwd`
+set DIR=`pwd`
 ./getregional_datasets.pl -ne 74,221 -sw 51,189 -i sample_inlist -o sample_outlist
 
 4.) Make sure the user_nl_clm and xmlchange_cmnds files are correct.

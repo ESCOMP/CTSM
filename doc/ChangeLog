@@ -1,4 +1,148 @@
 ===============================================================
+Tag name:  clm4_5_1_r104
+Originator(s):  erik (Erik)
+Date: Tue Jan 27 11:22:48 MST 2015
+One-line Summary: Update externals to latest cesm beta tag + bring in shared build for clm4_5/clm5_0 for testing
+
+Purpose of changes:
+
+* Update externals to cesm1_3_beta15+ shared clm4_5/clm5_0 library build for testing.
+* Fix BG1850CN @ f09 by changing fglcmask (Bill Sacks)
+* Update more prealpha/prebeta tests to test with clm4_5
+* Create datasets for clm4_5 at ne16 and ne120 resolution
+  (for ne120 create rcp8.5 and rcp4.5 transient datasets)
+* Create eighth degree resolution datasets that getregional_datasets.pl can use to subset
+
+This primarily effects the use of "create_test" test suites. But, it does effect the behavior of all
+cases. Now the CLM library for clm4_5 and clm5_0 will be shared between builds which saves at least
+30% of the wallclock time and half the CPU. It does still need to make seperate builds, depending on
+the use of ESMF or MCT, and DEBUG on or off.
+
+Bring in changes that Bill Sacks put into cesm1_3_alpha15e (which became cesm1_3_beta15). A BG1850 compset
+was NOT working at f09, so the old fglcmask needed to be used to make this consistent (this is for clm4_0).
+
+Eighth degree surface datasets for crop on and off were created that getregional_datasets.pl can use 
+to subset from for high resolution regional studies.
+
+Add some more datasets for clm4_5 for ne120 and ne16 for additional testing with clm4_5.
+
+Requirements for tag:
+   Bring CLM tag from cesm1_3_beta15 to trunk, bring clm4_5 shared library build to trunk, fix 
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+    2120 (Create ne120 and ne16 datasets for clm4.5)
+    2012 (Problem with mksurfdata_map for eighth degree grid)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: shared clm4_5/clm5_0 library build
+    On create_test the clm4_5/clm5_0 library is now shared between tests
+
+    NOTE: Now to clean the shared library you NEED to specify the "all" option to the clean_build
+          script so that the library is properly cleaned.
+
+          As in..
+
+        ./$CASENAME.clean_build all
+
+    If you have trouble building after you do a clean_build -- redo with the "all" option and you should be good.
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+   Add in 0.125x0.125 datasets
+   Add in ne16 and ne120 datasets for CLM4.5/5.0
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): update to cesm1_3_beta15+
+   scripts   to scripts4_150108
+   drv       to drvseq5_1_07
+   Machines  to Machines_150113b
+   rtm       to rtm1_0_41
+   cism      to cism2_0_05
+   csm_share to share3_141219
+   timing    to timing_141202
+   pio       to pio1_9_9
+   cprnc     to cprnc_141222
+   mapping   to mapping_141106
+   PTCLM     to PTCLM2_150126
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M models/lnd/clm/bld/clm.buildexe.csh --- Changes for shared library
+   M models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml --
+      for f09, use the old version of this file, for compatibility with
+      the hybrid initial conditions that are used for B1850CN at f09_g16
+   M models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+      0.125x0.125 surface datasets for 2000 with and without crop
+      ne120np4 surface datasets for 1850, 2000 and transient: rcp8.5 and rcp4.5 (without crop)
+
+   M models/lnd/clm/bld/unit_testers/build-namelist_test.pl -- Add more clm4_5 tests
+
+   M models/lnd/clm/src/cpl/lnd_comp_mct.F90 ----------- Add only for lnd_import_export use statement
+
+------------ Change so sample subsetting uses the high resolution datasets
+   M models/lnd/clm/tools/shared/ncl_scripts/README.getregional
+   M models/lnd/clm/tools/shared/ncl_scripts/sample_inlist
+   M models/lnd/clm/tools/shared/ncl_scripts/sample_outlist
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone   yes
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone   yes
+
+  tools testing:
+
+    yellowstone   yes
+
+  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+
+    yellowstone_intel              yes
+    yellowstone_pgi                yes
+    yellowstone_gnu (clm45 only)   yes
+    goldbach_nag                   yes
+    goldbach_intel                 yes
+    goldbach_pgi                   yes
+
+CLM tag used for the baseline comparisons:  clm4_5_1_r103
+
+Changes answers relative to baseline: YES!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: time-change all, roundoff-intel
+    - nature of change: roundoff
+
+    Small change in driver changes time-stamps on history files by roundoff (drvseq5_1_05). 
+    Normal cprnc comparison then does NOT compare fields and calls files different. Changes 
+    in the intel build (on yellowstone) change answers to roundoff for intel on yellowstone 
+    (Machines update between Machines_141125 and Machines_150106a causes answers to change)
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r103
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Jan  1 06:15:57 MST 2015
