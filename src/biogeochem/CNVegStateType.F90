@@ -557,8 +557,7 @@ contains
           this%fbac_col(c)           = 0._r8 
           this%fbac1_col(c)          = 0._r8 
           this%farea_burned_col(c)   = 0._r8 
-
-          if (nsrest == nsrStartup) this%nfire_col(c) = 0._r8
+          this%nfire_col(c)          = 0._r8
        end if
     end do
 

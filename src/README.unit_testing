@@ -10,4 +10,4 @@ unit_test_dir=/glade/scratch/$USER/unit_tests
 rm -rf $unit_test_dir
 
 # Here is the main command
-CTEST_OUTPUT_ON_FAILURE=1 ../../../../tools/unit_testing/run_tests.py --build-dir=$unit_test_dir --test-spec-dir=. --compiler=intel  --build-type=CESM_DEBUG
+CTEST_OUTPUT_ON_FAILURE=1 ../../../cime/tools/unit_testing/run_tests.py --build-dir=$unit_test_dir --test-spec-dir=. --compiler=intel  --build-type=CESM_DEBUG

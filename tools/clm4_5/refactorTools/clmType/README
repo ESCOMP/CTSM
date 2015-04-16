@@ -1,6 +1,6 @@
 README for refactoring the use of clmtype.
 PERTAINS to: renameClmType.pl
-CWD: models/lnd/clm/tools/clm4_5/refactorTools/clmType
+CWD: components/clm/tools/clm4_5/refactorTools/clmType
 
 Contents:
 
@@ -25,7 +25,7 @@ In order to convert code in a semi-automated way, we used a script, renameClmTyp
 piece of source code and does this conversion automatically.  There were a few areas where we had to 
 modify things by hand.  After creating a branch from clm4_5_09, I applied the script to my code as follows:
 
-cd models/lnd/clm/src/clm4_5/
+cd commponents/clm/src
 find . -name "*.F90" -exec {addYourPathTo}/renameClmType.pl -file {} \;
 find . -name "*.temp1" -exec rm -rf {} \;
 

@@ -5,17 +5,17 @@ list(APPEND CMAKE_MODULE_PATH ${CESM_CMAKE_MODULE_DIRECTORY})
 include(CESM_utils)
 
 set(CLM_ROOT "..")
-set(CESM_ROOT "${CLM_ROOT}/../../..")
+set(CESM_ROOT "${CLM_ROOT}/../../")
 
 # This definition is needed to avoid having ESMF depend on mpi
 add_definitions(-DHIDE_MPI)
 
-# Add source directories from other models (csm_share, etc.). This should be
+# Add source directories from other share code (csm_share, etc.). This should be
 # done first, so that in case of name collisions, the CLM versions take
 # precedence (when there are two files with the same name, the one added later
 # wins).
-add_subdirectory(${CESM_ROOT}/models/csm_share/shr csm_share)
-add_subdirectory(${CESM_ROOT}/models/utils/esmf_wrf_timemgr esmf_wrf_timemgr)
+add_subdirectory(${CESM_ROOT}/cime/share/csm_share/shr csm_share)
+add_subdirectory(${CESM_ROOT}/cime/share/esmf_wrf_timemgr esmf_wrf_timemgr)
 
 # Add CLM source directories (these add their own test directories)
 add_subdirectory(${CLM_ROOT}/src/utils clm_utils)
@@ -53,11 +53,11 @@ add_dependencies(esmf_wrf_timemgr csm_share)
 add_dependencies(clm csm_share esmf_wrf_timemgr)
 
 # We need to look for header files here, in order to pick up shr_assert.h
-include_directories(${CESM_ROOT}/models/csm_share/shr)
+include_directories(${CESM_ROOT}/cime/share/csm_share/shr)
 
 # And we need to look for header files here, for some include files needed by
 # the esmf_wrf_timemgr code
-include_directories(${CESM_ROOT}/models/utils/esmf_wrf_timemgr)
+include_directories(${CESM_ROOT}/cime/share/esmf_wrf_timemgr)
 
 # Tell cmake to look for libraries & mod files here, because this is where we built libraries
 include_directories(${CMAKE_CURRENT_BINARY_DIR})

@@ -791,6 +791,11 @@ contains
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%btran2_patch) 
 
+    call restartvar(ncid=ncid, flag=flag, varname='eflx_grnd_lake', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='net heat flux into lake/snow surface, excluding light transmission', units='W/m^2', &
+         interpinic_flag='interp', readvar=readvar, data=this%eflx_grnd_lake_patch)
+
   end subroutine Restart
 
 end module EnergyFluxType

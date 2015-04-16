@@ -207,7 +207,7 @@
 <p>
 </p>
     <h2>Namelist items for CLM Tools</h2>
-    <p>These are namelist items that appear in the CLM Tools under models/lnd/clm/tools.
+    <p>These are namelist items that appear in the CLM Tools under components/clm/tools.
     </p>
     <table border="1" cellpadding="10">
     <caption>CLM mksurfdata</caption>

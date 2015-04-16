@@ -113,7 +113,7 @@ Single column mode (or PTS_MODE turned on using the -pts_lat and -pts_lon option
 scripts/create_newcase) can NOT read restart files or global finidat initial condition
 files.
 
-The workaround is to use the models/lnd/clm/tools/ncl_scripts/getregional_datasets.pl 
+The workaround is to use the compoennts/clm/tools/ncl_scripts/getregional_datasets.pl 
 script to create datasets from the global datasets. See the CLM User's Guide and the
 README documentation in the ncl_scripts directory as well as in the script itself.
 

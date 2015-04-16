@@ -1,4 +1,4 @@
-models/lnd/clm/tools/interpinic/README				May/25/2011
+components/clm/tools/interpinic/README				May/25/2011
 
 Tool to interpolate initial datasets to a different resolution or
 mask.
@@ -32,7 +32,7 @@ If SMP is TRUE, then should invoke interpic as follows:
 
 env OMP_NUM_THREADS <numthreads> interpinic -i <input initial data file>  -o <output initial data file>
 
-See Also: See the models/lnd/clm/tools/README file for more notes about setting
+See Also: See the components/clm/tools/README file for more notes about setting
           the path for NetCDF and running with shared-memory parallelism.
 
 Files:

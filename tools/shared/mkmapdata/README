@@ -1,4 +1,4 @@
-models/lnd/clm/tools/mkmapdata/README		Feb/28/2014
+components/clm/tools/mkmapdata/README		Feb/28/2014
 
 The routines in this directory create a mapping dataset from
 SCRIP grid files to map from one grid to another. These mapping files

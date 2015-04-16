@@ -1,15 +1,15 @@
-models/lnd/clm/tools/README.filecopies			      May/26/2011
+components/clm/tools/README.filecopies			      May/26/2011
 
 There are several files that are copies of the original files from
-either models/lnd/clm/src/main, models/csm_share/shr,
-models/csm_share/unit_testers, or copies from other tool
+either components/clm/src/main, cime/share/csm_share/shr,
+cime/share/csm_share/unit_testers, or copies from other tool
 directories. By having copies the tools can all be made stand-alone,
 but any changes to the originals will have to be put into the tool
 directories as well.
 
 I. Files that are IDENTICAL:
 
-   1. csm_share files copied that should be identical to models/csm_share/shr:
+   1. csm_share files copied that should be identical to cime/share/csm_share/shr:
 
        shr_kind_mod.F90
        shr_const_mod.F90
@@ -18,11 +18,11 @@ I. Files that are IDENTICAL:
        shr_string_mod.F90
        shr_file_mod.F90
        
-   2. csm_share files copied that should be identical to models/csm_share/unit_testers:
+   2. csm_share files copied that should be identical to cime/share/csm_share/unit_testers:
 
        test_mod.F90
 
-   3. clm/src files copied that should be identical to models/lnd/clm/src/main:
+   3. clm/src files copied that should be identical to components/clm/src/main:
 
        clm_varctl.F90
        nanMod.F90

@@ -31,7 +31,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm/tools/$1/$2`
+cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1/$2`
 blddir=${CLM_TESTDIR}/${test_name}/src
 if [ -d ${blddir} ]; then
     rm -r ${blddir}
@@ -85,7 +85,7 @@ while [ $still_compiling = "TRUE" ]; do
       HOSTNAME=`uname -n | cut -c 1-2`
       if [ "$HOSTNAME" = "be" ]; then
          echo "TCBtools.sh: run configure for gen_domain on bluefire"
-         env CCSMROOT=${CLM_ROOT} ${CLM_ROOT}/scripts/ccsm_utils/Machines/configure -mach bluefire >> test.log 2>&1
+         env CIMEROOT=${CLM_ROOT}/cime ${CLM_ROOT}/cime/machines/configure -mach bluefire >> test.log 2>&1
          rc=$?
       fi
    fi

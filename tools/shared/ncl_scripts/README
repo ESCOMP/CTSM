@@ -1,4 +1,4 @@
-models/lnd/clm/tools/ncl_scripts					Nov/06/2012
+components/clm/tools/ncl_scripts					Nov/06/2012
 
 CLM NCL script tools for analysis of CLM history files -- or for creation or
 modification of CLM input files.

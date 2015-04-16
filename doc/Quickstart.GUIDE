@@ -11,7 +11,7 @@ Process:
 
    # Create the case
 
-   cd scripts
+   cd cime/scripts
 
    ./create_newcase -case <testcase> -mach yellowstone_intel -res f09_g16 -compset I4804 
    (./create_newcase -help -- to get help on the script)

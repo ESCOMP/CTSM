@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r105     erik 04/16/2015 Move test lists to beneath active components, change build scripts from cshell to perl, move to new cime directory structure
    clm4_5_1_r104     erik 01/27/2015 Update externals to latest cesm beta tag + bring in shared build for clm4_5/clm5_0 for testing
    clm4_5_1_r103    sacks 01/01/2015 enable transient crops
    clm4_5_1_r102    sacks 12/27/2014 make new input datasets to support transient crops

@@ -1,6 +1,6 @@
 README for refactoring the use of associate.
 PERTAINS to: refactor_new.pl
-CWD: models/lnd/clm/tools/clm4_5/refactorTools/associate
+CWD: components/clm/tools/clm4_5/refactorTools/associate
 
 Contents:
 
@@ -77,7 +77,7 @@ eclipse, etc...)
 
    - Ideally, make your branch and branch-tags from at least clm4_5_15.  If you have a sandbox based on 
       an older trunk-tag you will have to merge in the changes yourself.  If you have to do this:
-         1) Update branch to clm4_5_10 and run test suite.  Use models/lnd/clm/tools/clm4_5/refactorTools/clmType/README as a guide
+         1) Update branch to clm4_5_10 and run test suite.  Use components/clm/tools/clm4_5/refactorTools/clmType/README as a guide
             the refactor_new.pl script we provide and try to apply the refactoring in a semi-automated way.
          2) Update to clm4_5_14 and run test suite.  clm4_5_14 is a prepatory step to the clm4_5_15 refactor.  
          3) Update to clm4_5_15 and run test suite.  There are many ways to approach this, among them...

@@ -94,11 +94,11 @@ Process:
 
        3.a) Create datasets using the standard tools valid for any specific points
 
-       Use the tools in models/lnd/clm/tools to create new datasets. Tools
+       Use the tools in components/clm/tools to create new datasets. Tools
        such as: mkgriddata, mksurfdata, mkdatadomain, and the regridding tools
        in ncl_scripts 
 
-       (see the models/lnd/clm/bld/namelist_files/namelist_defaults_usr_files.xml 
+       (see the components/clm/bld/namelist_files/namelist_defaults_usr_files.xml 
         for the exact syntax for all files).
 
        surfdata:    copy files into: 
@@ -113,7 +113,7 @@ Process:
        For example, Run the extraction for data from 52-73 North latitude, 190-220 longitude
        that creates 13x12 gridcell region from the f19 (1.9x2.5) global resolution over Alaska.
 
-                cd models/lnd/clm/tools/ncl_scripts
+                cd components/clm/tools/ncl_scripts
                 ./getregional_datasets.pl -sw 52,190 -ne 73,220 -id $MYDATAID \
                 -mycsmdata $MYCSMDATA
 
@@ -121,7 +121,7 @@ Process:
 
        4.) Setup your case
 
-       Follow the standard steps for executing "scripts/create_newcase" and customize
+       Follow the standard steps for executing "cime/scripts/create_newcase" and customize
        your case as appropriate.
 
        i.e.

@@ -1,4 +1,4 @@
-models/lnd/clm/tools/mkprocdata_map/clm/README                Oct 30, 2012
+components/clm/tools/mkprocdata_map/clm/README                Oct 30, 2012
 
 This directory contains scripts for regridding CLM output from an
 unstructured grid (1-d output using the lndgrid dimension) to a 2-d
@@ -61,7 +61,7 @@ the output.
    to use the debugger, with bounds-checking, and float trapping on do the 
    following:
       gmake OPT=FALSE
-   See Also: See the models/lnd/clm/tools/README file for notes about setting
+   See Also: See the components/clm/tools/README file for notes about setting
    the path for NetCDF.
 
    This builds the mkprocdata_map executable. However, you generally

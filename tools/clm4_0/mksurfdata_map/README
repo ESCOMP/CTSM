@@ -1,4 +1,4 @@
-models/lnd/clm/tools/mksurfdata_map/README    Jan 13, 2012
+components/clm/tools/mksurfdata_map/README    Jan 13, 2012
 
 The routines in this directory create a surface dataset.
 The output grid is read in from the input namelist and
@@ -20,7 +20,7 @@ and generate the surface dataset:
    to use the debugger, with bounds-checking, and float trapping on do the 
    following:
       gmake OPT=FALSE
-   See Also: See the models/lnd/clm/tools/README file for notes about setting
+   See Also: See the components/clm/tools/README file for notes about setting
    the path for NetCDF and running with shared-memory parallelism.
 
 2) For supported model resolutions - skip this step

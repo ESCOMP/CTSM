@@ -1,10 +1,10 @@
-models/lnd/clm/bld/README                            May/26/2011 
+components/clm/bld/README                            May/26/2011 
 
 CLM build and configure directory and scripts. Scripts to help
 you prepare to build CLM as a component within CESM, and setup
 a namelist for it. There is also functionality only used for CLM
 stand-alone testing to build and run the complete system (in conjuction
-with the scripts in the models/lnd/clm/test/system directory).
+with the scripts in the components/clm/test/system directory).
 
 Important files/directories:
 
@@ -22,15 +22,11 @@ config_files/config_definition.xml --- XML file definining all CLM configuration
 --------- (These scripts are also used by the cpl7 scripts)
 build-namelist --- Build the namelists needed
 
---------- CPL7 Script to create namelist and clm library
-clm.cpl7.template ------- Script used by CPL7 scripts to create namelist and the build
-                          for CLM as a component of CESM.
-
 --------- Scripts to query namelist defaults
 listDefaultNamelist.pl -- List the files needed, for a list of resolutions,
                           to run CLM that are currently NOT on your machine.
                           This file can then be used by 
-                            scripts/ccsm_utils/Tools/check_input_data
+                            scripts/Tools/check_input_data
                           to retreive them from the inputdata repository.
                           Setting up cases with create_newcase also does
                           this -- but only for the exact configuration

@@ -35,7 +35,7 @@ if ($ProgDir) {
 }
 # The namelist definition file contains entries for all namelist variables that
 # can be output by build-namelist.
-my $nl_definition_file = "$cfgdir/../../../bld/namelist_files/namelist_definition_clm4_5.xml";
+my $nl_definition_file = "$cfgdir/../../bld/namelist_files/namelist_definition_clm4_5.xml";
 (-f "$nl_definition_file")  or  die <<"EOF";
 ** $ProgName - Cannot find namelist definition file \"$nl_definition_file\" **
 EOF
@@ -45,7 +45,7 @@ print "Using namelist definition file $nl_definition_file\n";
 # megan compounds
 
 #The root directory to cesm utils Tools
-my $cesm_tools = "$cfgdir/../../../../../../scripts/ccsm_utils/Tools";
+my $cesm_tools = "$cfgdir/../../../../cime/utils/";
 
 (-f "$cesm_tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory 
@@ -214,7 +214,49 @@ sub XML_Footer {
 my $pwd = `pwd`;
 chomp( $pwd );
 my @megcmpds  =  $definition->get_valid_values( "megan_cmpds", 'noquotes'=>1 );
-my @filenames = ( "$pwd/histFldsMod.F90", "$pwd/../biogeochem/CNFireMod.F90" );
+my @filenames = ( 
+                    "$pwd/../biogeochem/ch4Mod.F90",
+                    "$pwd/../biogeochem/CNDVType.F90",
+                    "$pwd/../biogeochem/CNFireMod.F90",
+                    "$pwd/../biogeochem/CNVegCarbonFluxType.F90",
+                    "$pwd/../biogeochem/CNVegCarbonStateType.F90",
+                    "$pwd/../biogeochem/CNVegNitrogenFluxType.F90",
+                    "$pwd/../biogeochem/CNVegNitrogenStateType.F90",
+                    "$pwd/../biogeochem/CNVegStateType.F90",
+                    "$pwd/../biogeochem/CropType.F90",
+                    "$pwd/../biogeochem/DUSTMod.F90",
+                    "$pwd/../biogeochem/VOCEmissionMod.F90",
+                    "$pwd/../biogeophys/AerosolMod.F90",
+                    "$pwd/../biogeophys/CanopyStateType.F90",
+                    "$pwd/../biogeophys/EnergyFluxType.F90",
+                    "$pwd/../biogeophys/FrictionVelocityMod.F90",
+                    "$pwd/../biogeophys/HumanIndexMod.F90",
+                    "$pwd/../biogeophys/IrrigationMod.F90",
+                    "$pwd/../biogeophys/LakeStateType.F90",
+                    "$pwd/../biogeophys/OzoneMod.F90",
+                    "$pwd/../biogeophys/PhotosynthesisMod.F90",
+                    "$pwd/../biogeophys/SoilHydrologyType.F90",
+                    "$pwd/../biogeophys/SoilStateType.F90",
+                    "$pwd/../biogeophys/SolarAbsorbedType.F90",
+                    "$pwd/../biogeophys/SurfaceAlbedoType.F90",
+                    "$pwd/../biogeophys/SurfaceRadiationMod.F90",
+                    "$pwd/../biogeophys/TemperatureType.F90",
+                    "$pwd/../biogeophys/WaterfluxType.F90",
+                    "$pwd/../biogeophys/WaterStateType.F90",
+                    "$pwd/atm2lndType.F90",
+                    "$pwd/clm_initializeMod.F90",
+                    "$pwd/glc2lndMod.F90",
+                    "$pwd/glcDiagnosticsMod.F90",
+                    "$pwd/histFileMod.F90",
+                    "$pwd/lnd2atmType.F90",
+                    "$pwd/lnd2glcMod.F90",
+                    "$pwd/subgridWeightsMod.F90",
+                    "$pwd/../soilbiogeochem/SoilBiogeochemCarbonFluxType.F90",
+                    "$pwd/../soilbiogeochem/SoilBiogeochemCarbonStateType.F90",
+                    "$pwd/../soilbiogeochem/SoilBiogeochemNitrogenFluxType.F90",
+                    "$pwd/../soilbiogeochem/SoilBiogeochemNitrogenStateType.F90",
+                    "$pwd/../soilbiogeochem/SoilBiogeochemStateType.F90",
+                );
 
 #
 # Loop over all files that have hist_addfld calls in them
@@ -480,7 +522,7 @@ $rcvr\n";
 # List the fields in a neatly ordered list
 # And Output to an XML file
 #
-my $outfilename = "$pwd/../../../bld/namelist_files/history_fields_clm4_5.xml";
+my $outfilename = "$pwd/../../bld/namelist_files/history_fields_clm4_5.xml";
 
 my $outfh = IO::File->new($outfilename, '>') or die "** $ProgName - can't open output history Fields XML file: $outfilename\n";
 foreach my $filename ( @filenames ) {

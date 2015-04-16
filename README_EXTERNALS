@@ -18,7 +18,7 @@ view the property set for clm's external definitions
 > svn propget svn:externals clm_trunk_head_wc
 
 view revision, URL and other useful information specific to external files
-> cd clm_trunk_head_wc/models/lnd/clm/src
+> cd clm_trunk_head_wc/components/clm/src
 > svn info main
 
 create new clm branch for mods required of clm

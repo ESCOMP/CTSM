@@ -1,7 +1,7 @@
-models/lnd/clm/tools/README.testing				May/23/2011
+components/clm/tools/README.testing				May/23/2011
 
 There is automated testing for all of the tools and scripts under this tools directory.
-The tests are in the models/lnd/clm/test/system directory and are any of the scripts
+The tests are in the components/clm/test/system directory and are any of the scripts
 that have "tools" in the name. There are several assumptions made in order for the 
 testing to work.
 

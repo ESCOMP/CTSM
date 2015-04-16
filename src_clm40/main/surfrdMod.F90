@@ -429,7 +429,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='LATIXY', flag='read', data=latc, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: LONGXY  NOT on topodata file' )
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: LATIXY  NOT on topodata file' )
 
     do n = beg,end
        if (abs(latc(n)-domain%latc(n)) > eps .or. &
@@ -442,7 +442,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='TOPO', flag='read', data=domain%topo, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: LONGXY  NOT on topodata file' )
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: TOPO  NOT on topodata file' )
 
     deallocate(latc,lonc)
 

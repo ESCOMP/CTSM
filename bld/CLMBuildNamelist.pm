@@ -138,7 +138,7 @@ OPTIONS
                               (default=do the default type for this configuration)
                               (cold=always start with arbitrary initial conditions)
                               (arb_ic=start with arbitrary initial conditions if
-                               initial conditions don't exist)
+                               initial conditions do not exist)
                               (startup=ensure that initial conditions are being used)
      -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets.
                               Default: not used
@@ -154,7 +154,7 @@ OPTIONS
      -drydep                  Produce a drydep_inparm namelist that will go into the
                               "drv_flds_in" file for the driver to pass dry-deposition to the atm.
                               Default: -no-drydep
-                              (Note: buildnml.csh copies the file for use by the driver)
+                              (Note: buildnml copies the file for use by the driver)
      -dynamic_vegetation      Toggle for dynamic vegetation model. (default is off)
                               (can ONLY be turned on when BGC type is 'cn' or 'bgc')
                               This turns on the namelist variable: use_cndv
@@ -201,7 +201,7 @@ OPTIONS
      -no-megan                DO NOT PRODUCE a megan_emis_nl namelist that will go into the
                               "drv_flds_in" file for the driver to pass VOCs to the atm.
                               MEGAN (Model of Emissions of Gases and Aerosols from Nature)
-                              (Note: buildnml.csh copies the file for use by the driver)
+                              (Note: buildnml copies the file for use by the driver)
      -[no-]note               Add note to output namelist  [do NOT add note] about the
                               arguments to build-namelist.
      -rcp "value"             Representative concentration pathway (rcp) to use for
@@ -348,47 +348,51 @@ sub set_print_level {
 #-------------------------------------------------------------------------------
 
 sub check_for_perl_utils {
+
   my $cfgdir = shift;
-  # Make sure we can find required perl modules, definition, and defaults files.
-  # Look for them under the directory that contains the configure script.
 
-  # The root directory for the input data files must be specified.
+  # Determine CESM root directory and perl5lib root directory
+  my $cesmroot = abs_path( "$cfgdir/../../../");
+  my $perl5lib_dir = "$cesmroot/cime/utils/perl5lib";
 
-  #The root directory to cesm utils Tools
-  my $cesm_tools = abs_path( "$cfgdir/../../../../scripts/ccsm_utils/Tools" );
+  # The root diretory for the perl SetupTools.pm module
+  my $SetupTools_dir = "$cesmroot/cime/scripts/Tools";
+  (-f "$SetupTools_dir/SetupTools.pm")  or
+      fatal_error("Cannot find perl module \"SetupTools.pm\" in directory\n" .
+		  "\"$SetupTools_dir\" \n");
 
   # The XML::Lite module is required to parse the XML files.
-  (-f "$cesm_tools/perl5lib/XML/Lite.pm")  or
-    fatal_error("Cannot find perl module \"XML/Lite.pm\" in directory\n" .
-                "\"$cesm_tools/perl5lib\"");
+  (-f "$perl5lib_dir/XML/Lite.pm")  or
+      fatal_error("Cannot find perl module \"XML/Lite.pm\" in directory\n" .
+                "\"$perl5lib_dir\"");
 
   # The Build::Config module provides utilities to access the configuration information
   # in the config_cache.xml file
-  (-f "$cesm_tools/perl5lib/Build/Config.pm")  or
-    fatal_error("Cannot find perl module \"Build/Config.pm\" in directory\n" .
-                "\"$cesm_tools/perl5lib\"");
+  (-f "$perl5lib_dir/Build/Config.pm")  or
+      fatal_error("Cannot find perl module \"Build/Config.pm\" in directory\n" .
+                "\"$perl5lib_dir\"");
 
   # The Build::NamelistDefinition module provides utilities to validate that the output
   # namelists are consistent with the namelist definition file
-  (-f "$cesm_tools/perl5lib/Build/NamelistDefinition.pm")  or
-    fatal_error("Cannot find perl module \"Build/NamelistDefinition.pm\" in directory\n" .
-                "\"$cesm_tools/perl5lib\"");
+  (-f "$perl5lib_dir/Build/NamelistDefinition.pm")  or
+      fatal_error("Cannot find perl module \"Build/NamelistDefinition.pm\" in directory\n" .
+		  "\"$perl5lib_dir\"");
 
   # The Build::NamelistDefaults module provides a utility to obtain default values of namelist
   # variables based on finding a best fit with the attributes specified in the defaults file.
-  (-f "$cesm_tools/perl5lib/Build/NamelistDefaults.pm")  or
-    fatal_error("Cannot find perl module \"Build/NamelistDefaults.pm\" in directory\n" .
-                "\"$cesm_tools//perl5lib\"");
+  (-f "$perl5lib_dir/Build/NamelistDefaults.pm")  or
+      fatal_error("Cannot find perl module \"Build/NamelistDefaults.pm\" in directory\n" .
+		  "\"$perl5lib_dir\"");
 
   # The Build::Namelist module provides utilities to parse input namelists, to query and modify
   # namelists, and to write output namelists.
-  (-f "$cesm_tools/perl5lib/Build/Namelist.pm")  or
-    fatal_error("Cannot find perl module \"Build/Namelist.pm\" in directory\n" .
-                "\"$cesm_tools/perl5lib\"");
+  (-f "$perl5lib_dir/Build/Namelist.pm")  or
+      fatal_error("Cannot find perl module \"Build/Namelist.pm\" in directory\n" .
+		  "\"$perl5lib_dir\"");
 
   #-----------------------------------------------------------------------------
-  # Add $cesm_tools/perl5lib to the list of paths that Perl searches for modules
-  my @dirs = ( $ProgDir, $cfgdir, "$cesm_tools/perl5lib");
+  # Add $perl5lib_dir to the list of paths that Perl searches for modules
+  my @dirs = ( $ProgDir, $cfgdir, "$perl5lib_dir", "$SetupTools_dir");
   unshift @INC, @dirs;
 
   # required cesm perl modules
@@ -397,9 +401,8 @@ sub check_for_perl_utils {
   require Build::NamelistDefinition;
   require Build::NamelistDefaults;
   require Build::Namelist;
-  require Streams::TemplateGeneric;
   require config_files::clm_phys_vers;
-
+  require SetupTools;
 }
 
 #-------------------------------------------------------------------------------
@@ -480,7 +483,7 @@ sub read_envxml_case_files {
       }
       foreach my $attr (keys %envxml) {
           if ( $envxml{$attr} =~ m/\$/ ) {
-             $envxml{$attr} = &Streams::TemplateGeneric::expandXMLVar( $envxml{$attr}, \%envxml );
+             $envxml{$attr} = SetupTools::expand_xml_var( $envxml{$attr}, \%envxml );
           }
       }
   } else {
@@ -987,7 +990,7 @@ sub setup_cmdl_irrigation {
                   "Irrigation is only applied to generic crop currently,\n" .
                   "which negates it's practical usage.\n." .
                   "We also have a known problem when both are on " .
-                  "(see bug 1326 in the models/lnd/clm/doc/KnownBugs file)\n" .
+                  "(see bug 1326 in the components/clm/doc/KnownBugs file)\n" .
                   "both irrigation and crop can NOT be on.\n");
     }
   } else {
@@ -1233,7 +1236,7 @@ sub process_namelist_commandline_namelist {
       fatal_error("Invalid namelist variable in commandline arg '-namelist'.\n $@");
     }
     # Go through all variables and expand any XML env settings in them
-    expand_env_variables_in_namelist( $nl_arg_valid, $envxml_ref );
+    expand_xml_variables_in_namelist( $nl_arg_valid, $envxml_ref );
 
     # Merge input values into namelist.  Previously specified values have higher precedence
     # and are not overwritten.
@@ -1266,7 +1269,7 @@ sub process_namelist_commandline_infile {
         fatal_error("Invalid namelist variable in '-infile' $infile.\n $@");
       }
       # Go through all variables and expand any XML env settings in them
-      expand_env_variables_in_namelist( $nl_infile_valid, $envxml_ref );
+      expand_xml_variables_in_namelist( $nl_infile_valid, $envxml_ref );
 
       # Merge input values into namelist.  Previously specified values have higher precedence
       # and are not overwritten.
@@ -1320,7 +1323,7 @@ sub process_namelist_commandline_clm_usr_name {
       warning("setting clm_usr_name -- but did NOT find any user datasets: $opts->{'clm_usr_name'}\n");
     }
     # Go through all variables and expand any XML env settings in them
-    expand_env_variables_in_namelist( $nl_usrfile, $envxml_ref );
+    expand_xml_variables_in_namelist( $nl_usrfile, $envxml_ref );
     # Merge input values into namelist.  Previously specified values have higher precedence
     # and are not overwritten.
     $nl->merge_nl($nl_usrfile);
@@ -1365,7 +1368,7 @@ sub process_namelist_commandline_use_case {
       }
     }
     # Go through all variables and expand any XML env settings in them
-    expand_env_variables_in_namelist( $nl_usecase, $envxml_ref );
+    expand_xml_variables_in_namelist( $nl_usecase, $envxml_ref );
 
     # Merge input values into namelist.  Previously specified values have higher precedence
     # and are not overwritten.
@@ -1525,7 +1528,7 @@ sub setup_logic_lnd_frac {
       fatal_error("Can NOT set both -lnd_frac option (set via LND_DOMAIN_PATH/LND_DOMAIN_FILE " .
                   "env variables) AND fatmlndfrac on namelist\n");
     }
-    my $lnd_frac = &Streams::TemplateGeneric::expandXMLVar( $opts->{$var}, $envxml_ref);
+    my $lnd_frac = SetupTools::expand_xml_var( $opts->{$var}, $envxml_ref);
     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fatmlndfrc','val'=>$lnd_frac );
   }
 
@@ -2814,13 +2817,14 @@ sub add_default {
 
 #-------------------------------------------------------------------------------
 
-sub expand_env_variables_in_namelist {
+sub expand_xml_variables_in_namelist {
    # Go through all variables in the namelist and expand any XML env settings in them
-   my ($nl, $envxml_ref) = @_;
+   my ($nl, $xmlvar_ref) = @_;
+
    foreach my $group ( $nl->get_group_names() ) {
        foreach my $var ( $nl->get_variable_names($group) ) {
           my $val    = $nl->get_variable_value($group, $var);
-          my $newval = &Streams::TemplateGeneric::expandXMLVar( $val, $envxml_ref );
+          my $newval = SetupTools::expand_xml_var( $val, $xmlvar_ref );
           if ( $newval ne $val ) {
              $nl->set_variable_value($group, $var, $newval);
           }
@@ -3291,8 +3295,8 @@ sub main {
   my $cfg = read_configure_definition($nl_flags{'cfgdir'}, \%opts);
 
   my $physv = config_files::clm_phys_vers->new( $cfg->get('phys') );
-
-  my $drvblddir  = abs_path( "$nl_flags{'cfgdir'}/../../../../models/drv/bld" );
+  my $cesmroot   = abs_path( "$nl_flags{'cfgdir'}/../../../");
+  my $drvblddir  = "$cesmroot/cime/driver_cpl/bld";
   my $definition = read_namelist_definition($drvblddir, \%opts, \%nl_flags, $physv);
   my $defaults   = read_namelist_defaults($drvblddir, \%opts, \%nl_flags, $cfg, $physv);
 

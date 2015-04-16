@@ -1,4 +1,4 @@
-models/lnd/clm/tools/README					May/07/2013
+components/clm/tools/README					May/07/2013
 
 CLM tools for analysis of CLM history files -- or for creation or
 modification of CLM input files.

@@ -427,9 +427,8 @@ sub _readXml
    #-----------------------------------------------------------------------------------------------
    # Add $cfgdir to the list of paths that Perl searches for modules
    my @dirs = ( $cfgdir, "$cfgdir/perl5lib",
-               "$cfgdir/../../../../../scripts/ccsm_utils/Tools/perl5lib",
-               "$cfgdir/../../../../../models/utils/perl5lib",
-            );
+               "$cfgdir/../../../../cime/utils/perl5lib"
+       );
    unshift @INC, @dirs;
    my $result = eval "require XML::Lite";
    if ( ! defined($result) ) {

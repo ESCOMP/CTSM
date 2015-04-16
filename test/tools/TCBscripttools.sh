@@ -31,7 +31,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm/tools/$1/$2`
+cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1/$2`
 blddir=${CLM_TESTDIR}/${test_name}
 if [ -d ${blddir} ]; then
     rm -r ${blddir}

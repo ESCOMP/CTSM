@@ -228,10 +228,10 @@ if ( ! $opts{'update'} ) {
   system( "$EDITOR $changelog" );
   system( "$EDITOR $changesum" );
 }
-system( "/bin/cp -fp $changelog models/lnd/clm/doc/." );
-system( "/bin/cp -fp $changesum models/lnd/clm/doc/." );
-system( "/bin/chmod 0444 models/lnd/clm/doc/$changelog" );
-system( "/bin/chmod 0444 models/lnd/clm/doc/$changesum" );
+system( "/bin/cp -fp $changelog components/clm/doc/." );
+system( "/bin/cp -fp $changesum components/clm/doc/." );
+system( "/bin/chmod 0444 components/clm/doc/$changelog" );
+system( "/bin/chmod 0444 components/clm/doc/$changesum" );
 
 sub AddExpectedFailDiff {
 #

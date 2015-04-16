@@ -595,11 +595,12 @@ print "==================================================\n";
 system( "../configure -s -phys clm4_5" );
 my @resolutions = ( "10x15", "ne30np4", "ne120np4", "ne16np4", "0.125x0.125", "1.9x2.5", "0.9x1.25" );
 my @regional;
-my $mode = "clm45-bgc";
+my $nlbgcmode = "bgc";
+my $mode = "clm45-$nlbgcmode";
 foreach my $res ( @resolutions ) {
    chomp($res);
    print "=== Test $res === \n";
-   my $options  = "-res $res -envxml_dir . -bgc $mode";
+   my $options  = "-res $res -envxml_dir . -bgc $nlbgcmode";
 
    &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };

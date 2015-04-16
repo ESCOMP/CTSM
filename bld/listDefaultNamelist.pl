@@ -17,19 +17,18 @@
 #
 # To then get the files from the CESM SVN repository:
 #
-# ../../../../scripts/ccsm_utils/Tools/check_input_data -datalistdir . -export
+# ../../cime/scripts/Tools/check_input_data -datalistdir . -export
 #
 #=======================================================================
 
-use Cwd;
 use strict;
-#use diagnostics;
+use Cwd qw(getcwd abs_path);
 use Getopt::Long;
 use English;
+#use diagnostics;
 
 #-----------------------------------------------------------------------------------------------
 
-#Figure out where configure directory is and where can use the XML/Lite module from
 my $ProgName;
 ($ProgName = $PROGRAM_NAME) =~ s!(.*)/!!; # name of program
 my $ProgDir = $1;                         # name of directory where program lives
@@ -44,22 +43,16 @@ else { $cfgdir = $cwd; }
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir to the list of paths that Perl searches for modules
-my @dirs = ( $cfgdir, "$cfgdir/perl5lib",
-             "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib",
-             "$cfgdir/../../../../models/utils/perl5lib",
-           );
+
+my @dirs = ( "$cfgdir", "../../../cime/utils/perl5lib" );
 unshift @INC, @dirs;
-my $result = eval "require XML::Lite";
-if ( ! defined($result) ) {
-   die <<"EOF";
-** Cannot find perl module \"XML/Lite.pm\" from directories: @dirs **
-EOF
-}
+
 require queryDefaultXML;
 
 # Defaults
-my $datmblddir  = "$cfgdir/../../../../models/atm/datm/bld";
-my $drvblddir   = "$cfgdir/../../../../models/drv/bld";
+my $cesmroot    = abs_path( "$cfgdir/../../../");
+my $datmblddir  = "$cesmroot/cime/components/data_comps/datm/bld";
+my $drvblddir   = "$cesmroot/cime/driver_cpl/bld";
 
 # The namelist defaults file contains default values for all required namelist variables.
 my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml",
@@ -94,7 +87,7 @@ EXAMPLES
 
   to then read the resulting clm.input_data_list file and retreive the files
 
-  ../../../../scripts/ccsm_utils/Tools/check_input_data -datalistdir . -export
+  ../../cime/scripts/Tools/check_input_data -datalistdir . -export
 
 EOF
 }
@@ -199,7 +192,7 @@ sub GetListofNeededFiles {
      }
   }
   my %inputopts;
-  my $datmblddir             = "$cfgdir/../../../../models/atm/datm/bld";
+  my $datmblddir             = "$cfgdir/../../../cime/components/data_comps/datm/bld";
   my @nl_definition_files    = (
                                  "$datmblddir/namelist_files/namelist_definition_datm.xml",
                                  "$cfgdir/namelist_files/namelist_definition_$opts{'phys'}.xml"

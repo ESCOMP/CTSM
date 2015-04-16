@@ -50,20 +50,32 @@ failType="FAIL" bugz="2027" >get_clump_bounds ERROR: Calling from inside a non-t
       <auxTests>
          <edison>
             <INTEL>
-               <entry testId="ERH_D.f19_g16.I1850CLM45CN.edison_intel.clm-default"               failType="FAIL" >See (ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default</entry>
-               <entry testId="ERI_D.ne30_g16.ICLM45BGC.edison_intel.clm-vrtlay"                  failType="FAIL" >Seg fault while writing h1 file</entry>
-               <entry testId="ERS_Ld211_D_P144x1.f10_f10.ICNCROP.edison_intel.clm-crop"          failType="FAIL" bugz="1696" >See ERS_Ld211_D_P112x1.f10_f10.ICNCROP in yellowstone intel list</entry>
+               <entry testId="ERP_P15x2_Lm36.f10_f10.ICLM45BGCCROP.yellowstone_pgi.clm-irrig_o3_reduceOutput" failType="RUN" bugz="2095" >PGI currently doesn't work with Ozone</entry>
+               <entry testId="ERH_D.f19_g16.I1850CLM45CN.edison_intel.clm-default"                            failType="FAIL" >See ERH_D.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-default</entry>
+               <entry testId="ERI_D.ne30_g16.ICLM45BGC.edison_intel.clm-vrtlay"                               failType="FAIL" >Seg fault while writing h1 file</entry>
+               <entry testId="ERS_Ld211_D_P144x1.f10_f10.ICNCROP.edison_intel.clm-crop"                       failType="FAIL" bugz="1696" >See ERS_Ld211_D_P112x1.f10_f10.ICNCROP in yellowstone intel list</entry>
             </INTEL>
          </edison>
          <yellowstone>
             <INTEL>
                <entry testId="ERS_D_Mmpi-serial.1x1_brazil.ICLM45CNED.yellowstone_intel.clm-edTest"          failType="RUN"   bugz="2070" >problem writing restart file</entry>
+               <entry testId="ERS_E_Ld9.f45_g37.I.yellowstone_intel.clm-default"                             failType="FAIL"  bugz="2165" >Change in fill pattern for building heat</entry>
+               <entry testId="ERS_Lm3.f19_g16.IGRCP60CN.yellowstone_intel"                                   failType="FAIL"  bugz="2165" >Change in fill pattern for building heat</entry>
+               <entry testId="ERS_D_P112x1_Ld211.f10_f10.ICNCROP.yellowstone_intel.clm-crop"                 failType="FAIL"  bugz="2165" >Change in fill pattern for building heat</entry>
+               <entry testId="ERS_P192x1_Ld211.f19_g16.ICNDVCROP.yellowstone_intel.clm-crop"                 failType="FAIL"  bugz="2165" >Change in fill pattern for building heat</entry>
             </INTEL>
             <GNU>
-               <entry testId="SMS.f19_g16.ICLM45CNED.yellowstone_gnu.clm-edTest"                             failType="FAIL"  bugz="2070" >error writing h0 file? looks like gnu is croaking on what looks like an implicit cast to double</entry>
+               <entry testId="SMS_Ld5.f19_g16.ICLM45CNED.yellowstone_gnu.clm-edTest"                         failType="FAIL"  bugz="2070" >error writing h0 file? looks like gnu is croaking on what looks like an implicit cast to double</entry>
+               <entry testId="ERS_D_Mmpi-serial_Ld5.1x1_brazil.ICLM45ED.yellowstone_gnu.clm-edTest"          failType="FAIL"  bugz="2070" >GPP and NPP are different</entry>
             </GNU>
             <PGI>
-               <entry testId="PET_P15x2_Ly3.f10_f10.ICLM45BGCCROP.yellowstone_pgi.clm-irrig_o3_reduceOutput" failType="FAIL" bugz="2094" >compiler bug in PGI's handling of polymorphism</entry>
+               <entry testId="ERP_P15x2_Lm36.f10_f10.ICLM45BGCCROP.yellowstone_pgi.clm-irrig_o3_reduceOutput" failType="FAIL" bugz="2094" >compiler bug in PGI's handling of polymorphism</entry>
+               <entry testId="ERP_P15x2_D_Ld5.f10_f10.I1850CLM45BGC.yellowstone_pgi.clm-ciso"                 failType="RUN"  bugz="2165" >Fails after initialization</entry>
+               <entry testId="ERP_D_Ld5.f10_f10.ICLM45BGC.yellowstone_pgi.clm-ciso"                           failType="RUN"  bugz="2165" >Fails after initialization</entry>
+               <entry testId="ERP_D_Ld5.hcru_hcru.ICRUCN.yellowstone_pgi.clm-default"                         failType="RUN"  bugz="2165" >Fails after initialization</entry>
+               <entry testId="ERI_Ld9.ne30_g16.I4804.yellowstone_pgi.clm-default"                             failType="RUN"              >Soil balance error in ref2 case</entry>
+               <entry testId="ERP_D_Ld5.f10_f10.I.yellowstone_pgi.clm-default"                                failType="FAIL" bugz="2165" >Change in fill pattern for building heat</entry>
+               <entry testId="PET_P15x2_Ly3.f10_f10.ICLM45BGCCROP.yellowstone_pgi.clm-irrig_o3_reduceOutput"  failType="FAIL" bugz="2094" >compiler bug in PGI's handling of polymorphism</entry>
             </PGI>
          </yellowstone>
          <goldbach>
@@ -71,7 +83,7 @@ failType="FAIL" bugz="2027" >get_clump_bounds ERROR: Calling from inside a non-t
             </INTEL>
             <NAG>
                <entry testId="PET_P15x2_D.f10_f10.I1850CLM45BGC.goldbach_nag.clm-ciso" failType="CFAIL" bugz="2027" >Problem building mct</entry>
-               <entry testId="SMS_D.f10_f10.ICRUCLM45.goldbach_nag.clm-af_bias_v5"                           failType="FAIL"  bugz="2071" >datm_comp_mod.F90, line 905: Subscript 1 of AVSTRM%RATTR (value 0) is out of range (1:7)</entry>
+               <entry testId="SMS_D_Ld1.f10_f10.ICRUCLM45.goldbach_nag.clm-af_bias_v5"                       failType="FAIL"  bugz="2071" >datm_comp_mod.F90, line 905: Subscript 1 of AVSTRM%RATTR (value 0) is out of range (1:7)</entry>
             </NAG>
             <PGI>
             </PGI>

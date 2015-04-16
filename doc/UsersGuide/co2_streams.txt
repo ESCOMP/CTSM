@@ -2,7 +2,7 @@
       <general_comment>
       This is a streams file to pass historical CO2 from datm8 to the other
       surface models. It reads in a historical dataset derived from data used
-      by CAM. The getco2_historical.ncl script in models/lnd/clm2/tools/ncl_scripts
+      by CAM. The getco2_historical.ncl script in components/clm/tools/ncl_scripts
       was used to convert the CAM file to a streams compatible format (adding domain
       information and making CO2 have latitude/longitude even if only for a single 
       point.

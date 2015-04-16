@@ -2211,60 +2211,48 @@ contains
        end if
        if (ldomain%isgrid2d) then
           call ncd_defvar(varname='area', xtype=tape(t)%ncprec, &
-              dim1name='lon', dim2name='lat',&
-              long_name='grid cell areas', units='km^2', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+               dim1name='lon', dim2name='lat',&
+               long_name='grid cell areas', units='km^2', ncid=nfid(t), &
+               missing_value=spval, fill_value=spval)
        else
           call ncd_defvar(varname='area', xtype=tape(t)%ncprec, &
-              dim1name=grlnd, &
-              long_name='grid cell areas', units='km^2', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       end if
-       if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='topo', xtype=tape(t)%ncprec, &
-              dim1name='lon', dim2name='lat',&
-              long_name='grid cell topography', units='m', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       else
-          call ncd_defvar(varname='topo', xtype=tape(t)%ncprec, &
-              dim1name=grlnd, &
-              long_name='grid cell topography', units='m', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+               dim1name=grlnd, &
+               long_name='grid cell areas', units='km^2', ncid=nfid(t), &
+               missing_value=spval, fill_value=spval)
        end if
        if (ldomain%isgrid2d) then
           call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
-              dim1name='lon', dim2name='lat', &
-              long_name='land fraction', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+               dim1name='lon', dim2name='lat', &
+               long_name='land fraction', ncid=nfid(t), &
+               missing_value=spval, fill_value=spval)
        else
           call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
-              dim1name=grlnd, &
-              long_name='land fraction', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+               dim1name=grlnd, &
+               long_name='land fraction', ncid=nfid(t), &
+               missing_value=spval, fill_value=spval)
        end if
        if (ldomain%isgrid2d) then
           call ncd_defvar(varname='landmask', xtype=ncd_int, &
-              dim1name='lon', dim2name='lat', &
-              long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
+               dim1name='lon', dim2name='lat', &
+               long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
+               imissing_value=ispval, ifill_value=ispval)
        else
           call ncd_defvar(varname='landmask', xtype=ncd_int, &
-              dim1name=grlnd, &
-              long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
+               dim1name=grlnd, &
+               long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
+               imissing_value=ispval, ifill_value=ispval)
        end if
        if (ldomain%isgrid2d) then
           call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
-              dim1name='lon', dim2name='lat', &
-              long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
+               dim1name='lon', dim2name='lat', &
+               long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
+               imissing_value=ispval, ifill_value=ispval)
        else
           call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
-              dim1name=grlnd, &
-              long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
+               dim1name=grlnd, &
+               long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
+               imissing_value=ispval, ifill_value=ispval)
        end if
-
     else if (mode == 'write') then
 
        ! Most of this is constant and only needs to be done on tape(t)%ntimes=1
@@ -2287,7 +2275,6 @@ contains
        call ncd_io(varname='landfrac', data=ldomain%frac, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='landmask', data=ldomain%mask, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='pftmask' , data=ldomain%pftm, dim1name=grlnd, ncid=nfid(t), flag='write')
-
     end if  ! (define/write mode
 
   end subroutine htape_timeconst

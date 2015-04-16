@@ -31,7 +31,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm/tools/$1/$2`
+cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1/$2`
 blddir=${CLM_TESTDIR}/${test_name}/src
 if [ -d ${blddir} ]; then
     rm -r ${blddir}
@@ -75,8 +75,8 @@ done < ${CLM_SCRIPTDIR}/config_files/$2
 if [ "$TOOLSLIBS" != "" ]; then
    export SLIBS=$TOOLSLIBS
 fi
-echo "env CCSMROOT=$CLM_ROOT $config_string $CLM_ROOT/scripts/ccsm_utils/Machines/configure -mach $CESM_MACH -compiler $CESM_COMP $TOOLS_CONF_STRING"
-env CCSMROOT=$CLM_ROOT $config_string $CLM_ROOT/scripts/ccsm_utils/Machines/configure -mach $CESM_MACH -compiler $CESM_COMP  $TOOLS_CONF_STRING >> test.log 2>&1
+echo "env CIMEROOT=$CLM_ROOT/cime $config_string $CLM_ROOT/cime/machines/configure -mach $CESM_MACH -compiler $CESM_COMP $TOOLS_CONF_STRING"
+env CIMEROOT=$CLM_ROOT/cime $config_string $CLM_ROOT/cime/machines/configure -mach $CESM_MACH -compiler $CESM_COMP  $TOOLS_CONF_STRING >> test.log 2>&1
 rc=$?
 if [ $rc -ne 0 ]; then
    echo "TCBCFGtools.sh: configure failed, error from configure= $rc" 
