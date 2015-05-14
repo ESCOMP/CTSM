@@ -1,4 +1,151 @@
 ===============================================================
+Tag name:  clm4_5_1_r106
+Originator(s):  erik/fvitt
+Date: Thu May 14 13:22:51 MDT 2015
+One-line Summary: Fix CO2 forcing for MEGAN
+
+Purpose of changes:
+
+Bring in changes from Francis Vitt, and Louisa Emmons to correct CO2 forcing
+for MEGAN and dry-deposition. Previously, the fixed value of CO2 was being used
+rather than using the CO2 forcing sent in from the atmosphere model.
+
+Also fix some issues with clm4_0 code where some urban diagnostic fields have
+a different fill-value pattern on restart from startup. Fill-value is now only
+set over non-land, and areas without urban, are set to zero.
+
++M    models/lnd/clm/src_clm40/biogeochem/VOCEmissionMod.F90
++ - use time-dependent atmospheric CO2 concentrations rather than
++   the CCSM_CO2_PPMV constant value
++
++M    models/lnd/clm/src_clm40/biogeochem/DryDepVelocity.F90
++ - science updates and bug fixes provided by Maria Val Martin
++
++M    models/lnd/clm/src/biogeochem/VOCEmissionMod.F90
++ - use time-dependent atmospheric CO2 concentrations rather than
++   the CCSM_CO2_PPMV constant value
++ - use 10-day average of LAI rather than 1-day average
++
++M    models/lnd/clm/src/biogeochem/DryDepVelocity.F90
++ - science updates and bug fixes provided by Maria Val Martin
++
++M    models/lnd/clm/src/biogeophys/CanopyStateType.F90
++ - get 10-day average of LAI rather than 1-day average
+
+Requirements for tag: Fix 2177 and some 2165 clm40 tests
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+     2177 (MEGAN improperly uses constant CO2 rather than time varying)
+     2176 (ED doesn't work with MEGAN -- partial just turn MEGAN off when ED on)
+     2165 (some clm40 tests have history files differ on restart in urban fillvalue)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Turn MEGAN off when ED on
+    Have build-namelist make sure MEGAN is off when ED is on
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self,fvitt,simone,emmons
+
+List any svn externals directories updated (cime, rtm, cism, etc.): cime, cism
+    cime   up to cime0_3_21 (bring in optional orbital calculation)
+    cism   up to cism2_0_09 (just bring the branch to the trunk)
+
+List all files eliminated: None
+
+List all files added and what they do: Turn MEGAN off for ED tests
+
+A    components/clm/cimetest/testmods_dirs/clm/edTest/shell_commands
+
+List all existing files that have been modified, and describe the changes:
+
+---------- 
+   M  components/clm/src_clm40/biogeophys/UrbanInitMod.F90 -- Initialize to
+         zero over land
+   M  components/clm/src_clm40/main/clm_initializeMod.F90 --- Call urbanInit
+         before reading restart files
+   M  components/clm/src_clm40/main/accFldsMod.F90 ---------- Change running mean
+         from 1 day to 10 days
+   M  components/clm/src_clm40/main/clmtypeInitMod.F90 ------ Initilize to spval
+
+---------- 
+   M  components/clm/src_clm40/biogeochem/VOCEmissionMod.F90
++ - use time-dependent atmospheric CO2 concentrations rather than
++   the CCSM_CO2_PPMV constant value
++ - use 10-day average of LAI rather than 1-day average
+   M  components/clm/src_clm40/biogeochem/DryDepVelocity.F90
++ - science updates and bug fixes provided by Maria Val Martin
+
+---------- 
+   M  components/clm/src/biogeochem/VOCEmissionMod.F90
++ - use time-dependent atmospheric CO2 concentrations rather than
++   the CCSM_CO2_PPMV constant value
++ - use 10-day average of LAI rather than 1-day average
+   M  components/clm/src/biogeochem/DryDepVelocity.F90
++ - science updates and bug fixes provided by Maria Val Martin
+   M  components/clm/src/biogeophys/CanopyStateType.F90
++ - get 10-day average of LAI rather than 1-day average
+
+   M  README_cime --- Update documentation
+
+   M  components/clm/bld/CLMBuildNamelist.pm -- Check that MEGAN off when ED on
+   M  components/clm/bld/unit_testers/build-namelist_test.pl - Add check for
+         MEGAN off when ED on
+   M  components/clm/bld/clm.buildnml --- only copy drv_flds_in over if it
+         was actually created.
+
+   M  components/clm/tools/README ---- Have documentation point to gen_domain
+        under cime/tools/mapping
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone  yes
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone  yes
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel  yes
+    yellowstone_pgi    yes
+    yellowstone_gnu    yes
+    goldbach_nag       yes
+    goldbach_intel     yes
+    goldbach_pgi       yes
+
+CLM tag used for the baseline comparisons:  clm4_5_1_r105
+
+Changes answers relative to baseline:  Yes -- MEGAN diagnostic fields only!
+    as well as dry-deposition because of science update
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All with MEGAN on
+    - what platforms/compilers: All
+    - nature of change: Diagnostic fields change
+
+    VOC emissions change 
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r105
 Originator(s):  erik (Erik)
 Date: Thu Apr 16 13:23:19 MDT 2015
@@ -12,102 +159,6 @@ Purpose of changes:
    * Change build scripts from cshell to perl
       cshell is buggy with arbitrary problems with line lengths and number of arguments
       cshell doesn't allow long scripts to be broken up into subroutine -- perl does
-      perl allows for more complex data patterns and analysis.
-      perl has a built in debugger
-      perl does a first pass "syntax checking" to find problems earlier
-      allows moving away from massive lists of environment variables and make variable use
-         more explicit
-   * Move to new cime directory structure
-      cime is the infrastructure part of CESM, so includes scripts, driver code,
-      data and stub models.
-
-   Rename from old names to new...
-
-   Old dir names          New
-
-     scripts              cime/scripts
-     tools                cime/tools
-     scripts/Machines     cime/machines
-     models/lnd/clm       components/clm
-     models/rof/rtm       components/rtm
-     models/csm_share     cime/share/csm_share
-     models/drv           cime/driver_cpl
-     models/utils/pio     cime/externals/pio
-     models/atm/datm      cime/components/data_comps/datm
-     models/ice/sice      cime/components/stub_comps/sice
-
-   * A few bug fixes
-       Fix a restart problem for irrigation, and add eflx_grnd_lake to
-       restart file, as needed for history output.
-   * Update to latest cime version
-
-Requirements for tag: Get all testing working
-
-Test level of tag: regular
-
-Bugs fixed (include bugzilla ID):
-   2170 (eflx_grnd_lake needed on restart file as output for history)
-   2168 (irrigation does not restart properly)
-
-Known bugs (include bugzilla ID):
-    http://bugs.cgd.ucar.edu/
-
-Known Limitations:
-                                 1147 (mkgriddata can't straddle over Greenwich)
-                                 1025 (SCM mode can NOT use a global finidat file)
-                                 1017 (SCM mode can NOT restart)
-                                  896 (T62 mode does not work)
-                                  701 (svn keyword)
-                                  452 (Problem with support of soil-colors != 8 or 20)
-
-Describe any changes made to build system: Update to cime
-
-Describe any changes made to the namelist: None to CLM, some to driver defaults
-
-List any changes to the defaults for the boundary datasets: None
-
-Describe any substantial timing or memory changes: None
-
-Code reviewed by: self, mvertens
-
-List any svn externals directories updated (csm_share, mct, etc.): All
-
-cime	      cime0_3_20
-cism          newdirs_n03_cism2_0_08
-rtm	      rtm1_0_47
-PTCLM         PTCLM2_150414
-
-List all files eliminated:
-
-  Delete old c-shell scripts and move to perl based ones.
-
- R     bld/clm.buildexe.csh
- R     bld/clm.cpl7.template
- R     bld/clm.buildnml.csh
-
-List all files added and what they do:
-
-  Add in cime test list and testmods_dirs directory.
-  Add in new perl based scripts to build CLM library and namelist.
-
- A     cimetest/testlist_clm.xml
- A     cimetest/testmods_dirs/*
- A     bld/clm.buildlib
- A     bld/clm.buildnml
-
-List all existing files that have been modified, and describe the changes:
-
- M     src_clm40/main/histFileMod.F90 --- Formatting changes remove write of topo field
- M     src_clm40/main/surfrdMod.F90 ----- Correct output names for error statements
- M     src_clm40/main/findHistFields.pl - Update script to figure out history field names
-
- M     src/biogeochem/CNVegStateType.F90 - Always set nfire to zero on initialization and NOT
-           just when "if (nsrest == nsrStartup)". This changes the missing value pattern.
-           For example, nfire will be zero over amazon rather than missing value.
- M     src/biogeophys/EnergyFluxType.F90 - Add eflx_grnd_lake to restart (bug 2170)
- M     src/biogeophys/IrrigationMod.F90 -- Fix irrigation restart issue (bug 2168)
- M     src/main/findHistFields.pl - Update script to figure out history field names
-
 :::::::::: Get unit-testing working with directory structure change
  M     src/CMakeLists.txt
  M     src/README.unit_testing
@@ -10576,202 +10627,6 @@ Test level of tag: regular
 
 Bugs fixed (include bugzilla ID): 1752
 
-Known bugs (include bugzilla ID):
-    http://bugs.cgd.ucar.edu/
-
-Known Limitations:
-                                 1147 (mkgriddata can't straddle over Greenwich)
-                                 1025 (SCM mode can NOT use a global finidat file)
-                                 1017 (SCM mode can NOT restart)
-                                  896 (T62 mode does not work)
-                                  701 (svn keyword)
-                                  452 (Problem with support of soil-colors != 8 or 20)
-
-Describe any changes made to build system: N/A
-
-Describe any changes made to the namelist: N/A
-
-List any changes to the defaults for the boundary datasets: N/A
-
-Describe any substantial timing or memory changes: N/A
-
-Code reviewed by: oleson, sacks, self
-
-List any svn externals directories updated (csm_share, mct, etc.): N/A
-
-List all files eliminated: N/A
-
-List all files added and what they do: N/A
-
-List all existing files that have been modified, and describe the changes:
-
-M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
-M       models/lnd/clm/src/clm4_5/main/clmtype.F90
-M       models/lnd/clm/src/clm4_5/main/histFldsMod.F90
-M       models/lnd/clm/src/clm4_5/biogeophys/SoilTemperatureMod.F90
-M       models/lnd/clm/src/clm4_5/biogeophys/UrbanMod.F90
-M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics2Mod.F90
-M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInitMod.F90
-
-CLM testing:
-
-  regular tests (aux_clm):
-
-Note: compare_hist fails for all clm4_5 compsets, but this is expected.
-
-    yellowstone_intel - OK
-    yellowstone_pgi  - OK
-    frankfurt_intel - OK
-    frankfurt_pgi - OK
-    frankfurt_nag - OK
-
-  history file comparison with component_gen_comp and summarize_cprnc_diffs:
-
-    yellowstone_intel
-
-CLM tag used for the baseline comparisons:  clm4_5_39
-
-Changes answers relative to baseline: Yes.  
-
-These modifications have been verified in a single simulation
-(clm4_5_20_wsth_deriv_spin).  All of these affect urban areas only and typical
-changes in TSA_U are less than 0.1 K.  Gridcell average (e.g., TSA) differences
-are much smaller due to small urban fractions.
-
-Fields that changed are:
-
-BUILDHEAT, EFLX_LH_TOT, EFLX_LH_TOT_U, ERRH2O, ERRH2OSNO, ERRSEB, ERRSOI, FCTR, 
-FGEV, FGR, FGR12, FGR_U, FIRA, FIRA_U, FIRE, FSA, FSA_U, FSH, FSH_G, FSH_NODYNLNDUSE, 
-FSH_U, FSM, FSM_U, FSNO, FSNO_EFF, FSR, FSRND, FSRNDLN, FSRNI, FSRVD, FSRVDLN, FSRVI, 
-GC_HEAT1, GC_ICE1, GC_LIQ1, H2OSNO, H2OSNO_TOP, H2OSOI, HEAT_FROM_AC, LWup, Q2M, 
-Qanth, QDRAI, QDRAI_PERCH, QDRAI_XS, QFLX_LIQ_DYNBAL, QINFL, QOVER, QRUNOFF, 
-QRUNOFF_NODYNLND, QSNOMELT, QSNWCPICE, QSOIL, QVEGT, RH2M, RH2M_U, SABG, SNOBCMCL, 
-SNOBCMSL, SNODSTMCL, SNODSTMSL, SNOOCMCL, SNOOCMSL, SNOW_DEPTH, SNOWDP, SNOWICE, 
-    frankfurt_intel: OK
-    frankfurt_pgi: OK
-    frankfurt_nag: OK
-
-  history file comparison with component_gen_comp and summarize_cprnc_diffs:
-
-    yellowstone_intel: OK
-    yellowstone_pgi: OK
-
-CLM tag used for the baseline comparisons: clm4_5_37
-
-Changes answers relative to baseline: NO
-
-===============================================================
-===============================================================
-Tag name:  clm4_5_37
-Originator(s):  muszala (Stefan Muszala)
-Date: Thu Oct 10 09:48:50 MDT 2013
-One-line Summary: Modifications to bring clm up to date with major driver refactoring in drvseq5_0_01
-
-Purpose of changes:
-
-Modifications to bring clm up to date with major driver refactoring in drvseq5_0_01.
-Mods. by mvertens, tested and tagged by muszala.
-
-Requirements for tag: N/A
-
-Test level of tag: regular
-
-Bugs fixed (include bugzilla ID): N/A
-
-Known bugs (include bugzilla ID):
-    http://bugs.cgd.ucar.edu/
-
-Known Limitations:
-                                 1147 (mkgriddata can't straddle over Greenwich)
-                                 1025 (SCM mode can NOT use a global finidat file)
-                                 1017 (SCM mode can NOT restart)
-                                  896 (T62 mode does not work)
-                                  701 (svn keyword)
-                                  452 (Problem with support of soil-colors != 8 or 20)
-
-Describe any changes made to build system: N/A
-
-Describe any changes made to the namelist: N/A
-
-List any changes to the defaults for the boundary datasets: N/A
-
-Describe any substantial timing or memory changes: N/A
-
-Code reviewed by: mvertens
-
-List any svn externals directories updated (csm_share, mct, etc.):
-
--models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq4_3_03
-+models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq5_0_02
--models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_32
-+models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_34 
--models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_130905
-+models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_130924 
-
-List all files eliminated: 
-
-D       models/lnd/clm/src/cpl_share
-D       models/lnd/clm/src/cpl_share/clm_cpl_indices.F90
-D       models/lnd/clm/src/cpl_mct
-D       models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90
-D       models/lnd/clm/src/cpl_esmf
-D       models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90
-D       models/lnd/clm/src/cpl_esmf/lnd_comp_mct.F90
-
-List all files added and what they do:
-
-A  +    models/lnd/clm/src/cpl
-A  +    models/lnd/clm/src/cpl/lnd_comp_esmf.F90
-A  +    models/lnd/clm/src/cpl/clm_cpl_indices.F90
-A  +    models/lnd/clm/src/cpl/lnd_import_export.F90
-A  +    models/lnd/clm/src/cpl/lnd_comp_mct.F90
-
-List all existing files that have been modified, and describe the changes:
-
-M       models/lnd/clm/bld/configure
-M       SVN_EXTERNAL_DIRECTORIES
-
-CLM testing:
-
-  build-namelist tests: N/A
-
-  regular tests (aux_clm):
-
-    yellowstone_intel - run on edison - OK
-    yellowstone_pgi - run on edison - OK
-    frankfurt_intel - OK
-    frankfurt_pgi - OK
-    frankfurt_nag - OK
-
-  history file comparison with component_gen_comp and summarize_cprnc_diffs:
-
-    yellowstone_intel - run on edison - OK
-
-CLM tag used for the baseline comparisons:  clm4_5_36
-
-Changes answers relative to baseline: No
-
-===============================================================
-===============================================================
-Tag name:  clm4_5_36
-Originator(s):  sacks (Bill Sacks)
-Date: Fri Oct  4 09:40:54 PDT 2013
-One-line Summary: new surface datasets, and other minor fixes
-
-Purpose of changes:
-
-(1) New surface datasets for CLM4.5 at all resolutions, generated with a version
-    of mksurfdata_map that doesn't zero out soil properties under points
-    believed to be 100% glacier (note that this can change answers, because some
-    of these points ended up not being 100% glacier, and so this can affect soil
-    properties under lakes)
-
-(2) For CLM4.5, distinguish between irrigate=.true. and irrigate=.false. when
-    determining finidat with crop=on. Also add an initial conditions file for
-    irrigate=.true. at f10 resolution.
-
-(3) Update scripts to get a slightly reworked test list, in particular fixing
-    the clm-default testmods directory for multi-instance tests, and adding a
     long test with irrigate=.true. (because irrigation likely never took effect
     in the old test).
 
@@ -20804,274 +20659,6 @@ CLM tag used for the baseline comparison tests if applicable:
 -              <entry testId="SBN.1x1_mexicocityMEX.I1PT"     failType="SFAIL">datm namelist issue</entry>
 -              <entry testId="SBN.1x1_vancouverCAN.I1PT"      failType="SFAIL">datm namelist issue</entry>
 -              <entry testId="SBN.1x1_urbanc_alpha.I1PT"      failType="SFAIL">datm namelist issue</entry>
--              <entry testId="SBN.1x1_asphalt_jungle.ICNTEST" failType="TFAIL">datm namelist issue</entry>
--              <entry testId="SBN.T42_g16.I1850"              failType="SFAIL">missing datasets</entry>
--              <entry testId="SBN.T31_g16.I1850"              failType="SFAIL">missing datasets</entry>
--              <entry testId="SBN.f05_g16.I20TR"              failType="SFAIL">missing datasets</entry>
-               <entry testId="SBN.1x1_tropicAtl.I20TR"        failType="SFAIL">missing datasets</entry>
--              <entry testId="SBN.ne30_g16.I20TR"             failType="SFAIL">missing datasets</entry>
--              <entry testId="SBN.ne120_g16.I20TRCN"          failType="SFAIL">missing datasets</entry>
--              <entry testId="SBN.f05_g16.IRCP26CN"           failType="SFAIL">missing datasets</entry>
--              <entry testId="SBN.f05_g16.IRCP45CN"           failType="SFAIL">missing datasets</entry>
--              <entry testId="SBN.f05_g16.IRCP60CN"           failType="SFAIL">missing datasets</entry>
--              <entry testId="SBN.f05_g16.IRCP85CN"           failType="SFAIL">missing datasets</entry>
--              <entry testId="SMS.1x1_mexicocityMEX.I1PT"     failType="SFAIL">missing datasets</entry>
--              <entry testId="ERP.1x1_vancouverCAN.I1PT"      failType="SFAIL">missing datasets</entry>
-+              <entry testId="SBN.ne16_g16.I20TR"             failType="TFAIL">missing datasets</entry>
-+              <entry testId="SBN.ne60_g16.I20TR"             failType="TFAIL">missing datasets</entry>
-          </IBM>
-       </bluefire>
-    </cesm>
-
-
-CLM tag used for the baseline comparison tests if applicable: clm4_0_51
-
-Changes answers relative to baseline:  Yes, for resolutions with new datasets
-   All T31 cases are different
-   T31/f19/f09 cases with GLC are different
-   f05/T31/ne30/ne120 now have initial condition files (or different from before)
-
-===============================================================
-===============================================================
-Tag name:  clm4_0_52
-Originator(s):  sacks (sacks)
-Date: Thu Sep 27 21:30:15 MDT 2012
-One-line Summary: new pct_glacier raw data file
-
-Purpose of changes:
-
-Add new pct_glacier raw data file. Update mksurfdata_map to support this
-file, and to change some of the glc_mec-related fields on the surface
-dataset (these fields currently are not used by CLM).
-
-Rename fglctopo -> furbtopo, to denote its current use
-
-Delete Ross ice shelf correction from mksurfdata_map, since this seems
-unnecessary (because this area is already called glacier by the
-glacier raw data files) and has the potential to break things with the
-new pct_glacier raw data file (because the raw data file has a few
-points south of -79 N with 0% glacier, which means there is no
-information about the separation into elevation classes at those
-points). One possible problem with deleting this correction is the
-deletion of the code that sets various parameters specially over this
-area (in the 'if (.not. dynpft)' block of the deleted code) - but it
-looks like those settings are unnecessary, too.
-
-Fix typo in name of scrip grid file for 1x1_urbanc_alpha
-
-Requirements for tag: Only need to test tools (test_driver.sh -i on
-bluefire & lynx)
-
-Test level of tag: critical (tools only)
-
-Bugs fixed (include bugzilla ID):
-
-Known bugs (include bugzilla ID):
-    http://bugs.cgd.ucar.edu/
-
-Known Limitations:
-                                 1147 (mkgriddata can't straddle over Greenwich)
-                                 1025 (SCM mode can NOT use a global finidat file)
-                                 1017 (SCM mode can NOT restart)
-                                  896 (T62 mode does not work)
-                                  701 (svn keyword)
-                                  452 (Problem with support of soil-colors != 8 or 20)
-
-Describe any changes made to build system:
-
-Describe any changes made to the namelist:
-
-List any changes to the defaults for the boundary datasets:
-
-    Use new pct_glacier raw data file; now use same raw topo file for urban
-    screen in mksurfdata_map regardless of glc_nec
-
-Describe any substantial timing or memory changes:
-
-    mksurfdata_map takes longer now for glc_mec; increase of 1-2 minutes
-    for f09
-
-Code reviewed by: Self
-
-List any svn externals directories updated (csm_share, mct, etc.):
-
-List all files eliminated:
-
-List all files added and what they do:
-
->>>>>>> unit tester for new get_dim_lengths routine
-A       models/lnd/clm/tools/mksurfdata_map/unit_testers/test_mkncdio.F90
-
-List all existing files that have been modified, and describe the changes:
-
->>>>>>> Changes to mksurfdata_map for new format of input pct_glacier file
->>>>>>> and reworking of glc_mec-related output fields.
-M       models/lnd/clm/tools/mksurfdata_map/src/mksurfdat.F90
-        - Also remove Ross ice shelf correction
-        - Also rename mksrf_fglctopo -> mksrf_furbtopo
-M       models/lnd/clm/tools/mksurfdata_map/src/mkglcmecMod.F90
-        - Substantially reworked
-M       models/lnd/clm/tools/mksurfdata_map/src/mkncdio.F90
-        - New get_dim_lengths routine
-M       models/lnd/clm/tools/mksurfdata_map/src/mkfileMod.F90
-
->>>>>>> Rename mksrf_fglctopo -> mksrf_furbtopo
-M       models/lnd/clm/tools/mksurfdata_map/src/mkvarctl.F90
-M       models/lnd/clm/tools/mksurfdata_map/mksurfdata.pl
-M       models/lnd/clm/tools/mksurfdata_map/mksurfdata_map.namelist
-
->>>>>>> Add tests of mkncdio
-M       models/lnd/clm/tools/mksurfdata_map/unit_testers/Srcfiles
-M       models/lnd/clm/tools/mksurfdata_map/unit_testers/test_mksurfdata_map.F90
-
->>>>>>> Remove scrip grid file for 10x10min_IGBPmergeICESatGIS, add grid
->>>>>>> files for 3x3min_GLOBE-Gardner and 3x3min_GLOBE-Gardner-mergeGIS;
->>>>>>> point to new raw datasets; rename mksrf_fglctopo -> mksrf_furbtopo
->>>>>>> (same file now used for this regardless of glc_nec); fix grid file
->>>>>>> for 1x1_urbanc_alpha
-M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml
-
->>>>>>> Remove mapping files for 10x10min_IGBPmergeICESatGIS, add mapping
->>>>>>> files for 3x3min_GLOBE-Gardner and 3x3min_GLOBE-Gardner-mergeGIS
-M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
-
->>>>>>> Remove references to 10x10min_IGBPmergeICESatGIS, add references to
->>>>>>> 2 new grids
-M       models/lnd/clm/tools/mkmapdata/mkmapdata.sh
-M       models/lnd/clm/bld/namelist_files/checkmapfiles.ncl
-M       models/lnd/clm/bld/namelist_files/namelist_definition.xml
-        - Also rename mksrf_fglctopo -> mksrf_furbtopo
-
-Machines testing ran on:
-
-  build-namelist unit tester: YES, all PASS or xFAIL
-
-  CESM test lists: NOT RUN!
-
-    bluefire/CESM
-    lynx/CESM
-
-  bluefire/PTCLM: NOT RUN!
-
-  test_system testing: NOT RUN!
-
-    bluefire batch:
-    bluefire interactive:
-    lynx/pgi batch:
-    lynx/pgi interactive:
-    mirage,storm/ifort interactive:
-
-  test_driver -i testing:
-
-    bluefire interactive: all PASS or xFAIL except:
-
->>> These are all mksurfdata_map baseline tests that were expected to fail
->>> due to new pct_glacier raw dataset
-015/031 < FAIL> <Test Id: bl924> <Desc: TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds ..... rc=7>  
-017/031 < FAIL> <Test Id: bl953> <Desc: TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__o ....... rc=7>  
-019/031 < FAIL> <Test Id: bl954> <Desc: TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds ...... rc=7>  
-021/031 < FAIL> <Test Id: bl957> <Desc: TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__do ...... rc=7>  
-
-    lynx interactive: all PASS
-
-CLM tag used for the baseline comparison tests if applicable: clm4_0_51
-
-Difference in expected fails from testing:
-
-    No change in expected failures in testing
-
-Changes answers relative to baseline: No, bfb
-
-===============================================================
-===============================================================
-Tag name:  clm4_0_51
-Originator(s):  muszala (Muszala Stefan 303-497-1320 CGD)
-Date: Wed Sep 26 15:37:41 MDT 2012
-One-line Summary: bug fixes, pio performance and SCRIP files
-
-Purpose of changes:
-
-Add 3x3min_USGS and 3x3min_LandScan2004 back in for mkmapdata.sh.  Namelist
-mods for F05 SCRIP file bug. Changes from Jim for PIO performance issue.
-Bills clm.buildnml.csh fix.
-
-Requirements for tag:
-
-Test level of tag: doc, critical, standard, std-test, reg-test
-
-critical: build namelist unit tests and cesm/clm tests out of scripts
-
-Bugs fixed (include bugzilla ID):
-
-1506,1518
-
-Known bugs (include bugzilla ID):
-    http://bugs.cgd.ucar.edu/
-
-Known Limitations:
-                                 1147 (mkgriddata can't straddle over Greenwich)
-                                 1025 (SCM mode can NOT use a global finidat file)
-                                 1017 (SCM mode can NOT restart)
-                                  896 (T62 mode does not work)
-                                  701 (svn keyword)
-                                  452 (Problem with support of soil-colors != 8 or 20)
-
-Describ changes made to build system:
-
-Describe any changes made to the namelist:
-
-List any changes to the defaults for the boundary datasets:
-
-Describe any substantial timing or memory changes:
-
-Code reviewed by:
-
-myself and Erik
-
-List any svn externals directories updated (csm_share, mct, etc.):
-
-List all files eliminated:
-
-List all files added and what they do:
-
-List all existing files that have been modified, and describe the changes:
-
-M SVN_EXTERNAL_DIRECTORIES
-	update externals to
-	https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_120924a
-	https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_120921
-M models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
-  report cesm/clm expected failures even though not hooked up
-M models/lnd/clm/tools/mksurfdata_map/src/mkgridmapMod.F90
-  put LandScan back in
-M models/lnd/clm/tools/mksurfdata_map/src/mkgridmapMod.F90
-  change tolerance for checking map bounds
-M models/lnd/clm/bld/unit_testers/build-namelist_test.pl
-  take out -rtm and -rtm_tstep options 
-M models/lnd/clm/bld/clm.buildnml.csh
-  puts back gls options
-M models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
-  new f05 mapping files and some cleanup of maps files in general
-M models/lnd/clm/bld/namelist_files/createMapEntry.pl
-  output for this script is not consistent so modified to get
-  valid output
-M models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml
-  new scrip grid entries
-M models/lnd/clm/src/main/histFileMod.F90
-  modification from J. Edwards for io performance
-
-Machines testing ran on:
-
-%%%%%% testing reporting start
-
-%%build namelist tests
-
-	OK
-
-  >>tail out_unit_092212.lg
-  274/277 < PASS> <Test Id: 274> <Desc: lnd_in file exists>  
-  275/277 < PASS> <Test Id: 275> <Desc: temp_file.txt file exists>  
-  276/277 < PASS> <Test Id: 276> <Desc: lnd_in file the same as expected for crop>  
   277/277 < PASS> <Test Id: 277> <Desc: temp_file.txt different as expected for crop>  
   Successully ran all testing for build-namelist
 
@@ -29227,261 +28814,6 @@ the previous version and with restarts. The problem was that in the downscaling 
 asca needed to be copied from adomain into ldomain is no downscaling is taking place.
 
 Bugs fixed (include bugzilla ID):
-                                 1230 (Subtle roundoff level difference with clm4_0_15 in scaling of fields when samegrids is on)
-
-Known bugs (include bugzilla ID):
-                                  701 (svn keyword)
-                                  722 (threading slow)
-                                  789 (1pt sims 2.5X slow)
-                                  794 (hist avg strange)
-                                  896 (T62 mode does not work)
-                                  935 (RTM warning NOT an error)
-                                 1063 (Problem in restarts for CCSM spinup data)
-                                 1124 (Reported energy for pftdyn grid-cell not right)
-                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
-                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
-                                 1163 (finidat file has a bunch of NaN's in it)
-                                 1164 (Restart trouble for CN13 on mirage...)
-                                 1165 (Restart trouble for scaled harvest test on mirage)
-                                 1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
-                                 1249 (problem in mksurfdata for PFT override mode)
-                                 1258 (runinit_ibm.csh needs to be updated)
-                                 1264 (Incorrect doc of qflx_evap_tot in the code)
-                                 1265 (Fix ndep/aerdepregrid.ncl)
-                                 1266 (Threading problem with CNDV)
-                                 1318 (interpinic has trouble with new restart files)
-                                 1372 (pio problem writing out CLM history files for CRU
-                                 1381 (Can't change monthly average files to NOT be one per month)
-    http://bugs.cgd.ucar.edu/
-
-Known Limitations:
-                                 1147 (mkgriddata can't straddle over Greenwich)
-                                 1025 (SCM mode can NOT use a global finidat file)
-                                 1017 (SCM mode can NOT restart)
-                                  452 (Problem with support of soil-colors != 8 or 20)
-
-Type of tag: critical
-
-Describe any changes made to build system: None
-
-Describe any changes made to the namelist: None
-
-List any changes to the defaults for the boundary datasets: None
-
-Describe any substantial timing or memory changes: None
-
-Code reviewed by: self,mvertens
-  fix comes from mvertens
-
-List any svn externals directories updated (csm_share, mct, etc.): None
-
-List all files eliminated: None
-
-List all files added and what they do: None
-
-List all existing files that have been modified, and describe the changes:
-
-M       models/lnd/clm/src/main/clm_initializeMod.F90 ------ Move local samegrids variable to clm_varctl
-M       models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 --- If samegrids copy adomain scale factor to ldomain
-M       models/lnd/clm/src/main/clm_varctl.F90 ------------- Add samegrids variable in
-M       models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90 - If samegrids copy adomain scale factor to ldomain
-
-Summary of testing:
-
-  bluefire interactive testing: All PASS up to...
-041 smV63 TSM.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 96 arb_ic ..............PASS
-  bluefire/CESM testing: All PASS except...
-BFAIL ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_15
-
-CLM tag used for the baseline comparison tests if applicable: clm4_0_15
-
-Changes answers relative to baseline: Potentially roundoff level different
-
-===============================================================
-===============================================================
-Tag name:  clm4_0_15
-Originator(s):  mvertens (Mariana Vertenstein), erik (Erik Kluzek)
-Date: Sun Oct 24 19:16:06 MDT 2010
-One-line Summary: Move pio branch to trunk
-
-Purpose of changes: 
-
-Move Mariana's pio branch to trunk. Update driver to pass U10 field to. Remove the 
-separate creation of clm.i files (always use clm.r files for initial conditions. 
-Move the finemesh downscale methods to it's own module. Remove unused modules, and
-move the close_dispose method to inside of the history module. Change history 
-restart files to NetCDF.
-
-Bugs fixed (include bugzilla ID): 1219 (remove clm.i files)
-
-Known bugs (include bugzilla ID):
-                                  701 (svn keyword)
-                                  722 (threading slow)
-                                  789 (1pt sims 2.5X slow)
-                                  794 (hist avg strange)
-                                  896 (T62 mode does not work)
-                                  935 (RTM warning NOT an error)
-                                 1063 (Problem in restarts for CCSM spinup data)
-                                 1124 (Reported energy for pftdyn grid-cell not right)
-                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
-                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
-                                 1163 (finidat file has a bunch of NaN's in it)
-                                 1164 (Restart trouble for CN13 on mirage...)
-                                 1165 (Restart trouble for scaled harvest test on mirage)
-                                 1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
-                                 1230 (Subtle roundoff level difference with clm4_0_15 in scaling of fields when samegrids is on)
-                                 1249 (problem in mksurfdata for PFT override mode)
-                                 1258 (runinit_ibm.csh needs to be updated)
-                                 1264 (Incorrect doc of qflx_evap_tot in the code)
-                                 1265 (Fix ndep/aerdepregrid.ncl)
-                                 1266 (Threading problem with CNDV)
-                                 1318 (interpinic has trouble with new restart files)
-                                 1372 (pio problem writing out CLM history files for CRU
-                                 1381 (Can't change monthly average files to NOT be one per month)
-    http://bugs.cgd.ucar.edu/
-
-Known Limitations:
-                                 1147 (mkgriddata can't straddle over Greenwich)
-                                 1025 (SCM mode can NOT use a global finidat file)
-                                 1017 (SCM mode can NOT restart)
-                                  452 (Problem with support of soil-colors != 8 or 20)
-
-Type of tag: critical
-
-Describe any changes made to build system: None
-
-Describe any changes made to the namelist: Remove old PIO namelist items (there is a new clm namelist to control PIO)
-   We aren't supporting the new clm PIO namelist until we move the PIO control to the driver and the drv_in namelist.
-   So there is no support to handle the namelist in build-namelist nor in the buildnml template.
-
-
-Describe any substantial timing or memory changes: none with PIO off
-
-Code reviewed by: self, mvertens (mvertens created the original work on the branch)
-
-List any svn externals directories updated (csm_share, mct, etc.): scripts, pio and drv
-
-    scripts   to mpiserial06_scripts4_101022
-    pio       to pio1_1_2
-    drv       to drvseq3_1_38
-
-List all files eliminated:
-
-    R  models/lnd/clm/src/main/ncdio.F90 --- Old NetCDF I/O interface
-    R  models/lnd/clm/src/main/system_messages.F90
-    R  models/lnd/clm/src/main/iobinary.F90
-    R  models/lnd/clm/src/main/do_close_dispose.F90
-
-List all files added and what they do:
-
-    A  models/lnd/clm/src/main/ncdio_pio.F90 ----- New PIO I/O interface
-    A  models/lnd/clm/src/main/downscaleMod.F90 -- New module with downscaling methods for fine-mesh
-
-List all existing files that have been modified, and describe the changes:
-
->>>>>>>>>>> Remove setting of hist_crtinic
-    M  models/lnd/clm/test/system/mknamelist
-    M  models/lnd/clm/test/system/nl_files/nl_urb
-    M  models/lnd/clm/test/system/nl_files/nl_noicertm_sclharv
-    M  models/lnd/clm/test/system/nl_files/nl_cn_conly
-    M  models/lnd/clm/test/system/nl_files/nl_urb_br
-
-    M  models/lnd/clm/bld/configure ------- Remove USEPIO
-    M  models/lnd/clm/bld/build-namelist -- Remove hist_crtinic
-    M  models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Remove hist_crtinic and old PIO options, 
-               increase datm_file_aero string length from 80 to 256
-    M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Remove hist_crtinic
-
-    M  models/lnd/clm/doc/UsersGuide/preface.xml - Remove old PIO options
-
->>>>>>>>>>> Remove ncdio calls to ncdio_pio, add in downscale module, remove do_close_dispose, handle history restarts as NetCDF
->>>>>>>>>>> rather than binary. Remove some of the misc.h/preproc.h includes
-    M  models/lnd/clm/src/biogeochem/CASAMod.F90 ------------ Update ncdio calls to ncdio_pio calls
-    M  models/lnd/clm/src/biogeochem/STATICEcosysDynMod.F90 - Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/biogeochem/CNDVMod.F90 ---- Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/biogeochem/CNrestMod.F90 -- Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/main/inicFileMod.F90 ------ Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/main/organicFileMod.F90 --- Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/main/spmdGathScatMod.F90 -- Remove allgather_data, and scatter/gather_2darray_int/real
-    M  models/lnd/clm/src/main/accumulMod.F90 -- Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/main/clm_comp.F90 ---- Change format
-    M  models/lnd/clm/src/main/decompInitMod.F90 - Remove misc.h/preproc.h
-    M  models/lnd/clm/src/main/getdatetime.F90 --- Remove misc.h/preproc.h
-    M  models/lnd/clm/src/main/clm_initializeMod.F90 - Update ncdio to ncdio_pio, add in downscale module
-    M  models/lnd/clm/src/main/subgridRestMod.F90 ---- Update ncdio to ncdio_pio
-                      NOTE: mcdate and mcsec are NOT on output files
-    M  models/lnd/clm/src/main/clm_glclnd.F90 -------- Move map_maparrayl, map1dl_a2l, map1dl_l2a, map_setptrs
-                      to downscale module
-    M  models/lnd/clm/src/main/fileutils.F90 --------- Add "if masterproc" to error write statements
-    M  models/lnd/clm/src/main/pftdynMod.F90 --------- Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/main/iniTimeConst.F90 ------ Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/main/histFileMod.F90 ------- Update ncdio to ncdio_pio, add if_disphist to keep track of if saving file
-                      add hist_do_disp, and strip_null methods
-                      (remove external do_close_dispose and do it in here) add history restart files, improve indenting 
-    M  models/lnd/clm/src/main/clm_atmlnd.F90 -------- Add u10 in, and change name of calls to include downscale in names
-    M  models/lnd/clm/src/main/restFileMod.F90 ------- Update ncdio to ncdio_pio, add netCDF history restart, remove binary read/write
-    M  models/lnd/clm/src/main/scam_setlatlonidx.F90 - Update to using pio calls
-    M  models/lnd/clm/src/main/controlMod.F90 -------- Remove old PIO namelist items
-    M  models/lnd/clm/src/main/clm_time_manager.F90 -- Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/main/clm_driver.F90 -------- Remove do_inicwrite, restFile_write_binary
-    M  models/lnd/clm/src/main/clm_varctl.F90 -------- Remove hist_crtinic and old PIO control, add downscale flag
-    M  models/lnd/clm/src/main/surfrdMod.F90 --------- Update ncdio to ncdio_pio and use a mix of ncdio_pio and PIO calls for reads
-                      also work with file formatting
-    M  models/lnd/clm/src/main/decompMod.F90 --------- Add a blank line
-    M  models/lnd/clm/src/main/areaMod.F90 ----------- Move some of this to the downscale module
-    M  models/lnd/clm/src/main/histFldsMod.F90 ------- Change RAINATM/SNOWATM depending on downscale or not
-    M  models/lnd/clm/src/riverroute/RtmMod.F90 ------ Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/biogeophys/UrbanInputMod.F90 ----- Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 - Update ncdio to ncdio_pio
-    M  models/lnd/clm/src/biogeophys/SNICARMod.F90 --------- Update ncdio to ncdio_pio, remove check_ret
-
-    M  models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 ---- Add u10, change some finemesh calls to downscale module
-    M  models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90 -- Add u10, change some finemesh calls to downscale module
-
-Summary of testing:
-
-  bluefire interactive testing: All PASS up to...
-037 smK74 TSM.sh 17p_cndvsc_s clm_std 19971231:NONE:1800 1x1_brazil navy -670 arb_ic ............PASS
-  bluefire/PTCLM testing: All PASS
-  bluefire/CESM testing: All PASS except...
-BFAIL SMS_RLA.f45_f45.I.bluefire.compare.clm4_0_14 
-BFAIL SMS_RLB.f45_f45.I.bluefire.compare.clm4_0_14 
-BFAIL SMS_ROA.f45_f45.I.bluefire.compare.clm4_0_14 
-BFAIL ERS_D.f45_g37.I.bluefire.compare.clm4_0_14 
-BFAIL PST.f45_g37.I1850.bluefire.compare.clm4_0_14 
-BFAIL PET_PT.f45_g37.I1850.bluefire.compare.clm4_0_14 
-BFAIL ERS_E.f19_g16.I1850.bluefire.compare.clm4_0_14 
-BFAIL ERB.f09_g16.I_1948-2004.bluefire.compare.clm4_0_14 
-BFAIL ERI.f19_g16.IG.bluefire.compare.clm4_0_14 
-BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_14 
-BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_14 
-BFAIL ERH_D.f10_f10.I1850CN.bluefire.compare.clm4_0_14 
-BFAIL ERH_D.f10_f10.I1850CN.bluefire.compare.clm4_0_14 
-BFAIL PST.f10_f10.I8520CN.bluefire.compare.clm4_0_14 
-BFAIL PET_PT.f10_f10.I8520CN.bluefire.compare.clm4_0_14 
-BFAIL ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_14 
-  lynx/pgi interactive testing: All PASS
-  jaguar interactive testing: Up to following PASS
-007 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
-  edinburgh/lf95 testing: All FAIL except...
-001 smA92 TSM.sh _sc_dm clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v7 -6 arb_ic ...................PASS
-002 erA92 TER.sh _sc_dm clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic ................PASS
-003 brA92 TBR.sh _sc_dm clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic .............PASS
-017 smH52 TSM.sh 17p_cnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 96 cold ..........PASS
-021 smJ92 TSM.sh 4p_casasc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 96 cold ...............PASS
-022 erJ92 TER.sh 4p_casasc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 10+38 cold ............PASS
-023 brJ92 TBR.sh 4p_casasc_dm clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v7 72+72 cold .........PASS
-  edinburgh/lf95 interactive testing: All PASS
-  edinburgh/PTCLM testing: Up to following PASS
-myPTCLMtests_US-Ha1_I_1850.PTCLM          FAIL 0
-  mirage,storm/ifort interactive testing: up to following PASS
-017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@1850 10+38 cold ....FAIL! rc= 13
-
-CLM tag used for the baseline comparison tests if applicable: clm4_0_14
-
-Changes answers relative to baseline: no bit-for-bit
-
-===============================================================
 ===============================================================
 Tag name:  clm4_0_14
 Originator(s):  erik (Erik Kluzek)
@@ -37123,342 +36455,6 @@ PASS  PET.f10_f10.ICN8520.bluefire.glc
 011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
 012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
   breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
-020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
-
-CLM tag used for the baseline comparison tests if applicable: clm3_6_51
-
-Changes answers relative to baseline: bit-for-bit
-
-===============================================================
-===============================================================
-Tag name:  clm3_6_51
-Originator(s):  erik (erik)
-Date: Tue Sep  1 10:46:16 MDT 2009
-One-line Summary: Update fndepdyn and aerdep datasets (f02,f05,f09,f10) (1850,2000) and f09, f10 transient (1850-2000)
-
-Purpose of changes:
-
-Update fndepdyn and aerdep datasets (f02,f05,f09,f10) (1850,2000) and f09, f10 transient.
-Turn on CCSM_BLD for dublin. Update scripts and get Macro's for dublin, have PTS_MODE 
-auto flip 1-PE and USE_MPISERIAL.
-
-Bugs fixed (include bugzilla ID):
-                                 1007 (interpinic error with Linux/lahey)
-                                 1031 (Can't run SMS_D.f09_g16.ICN8520)
-
-Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
-                                  701 (svn keyword)
-                                  717 (archiving bug -- only archive 1000 files at a time)
-                                  722 (threading slow)
-                                  789 (1pt sims 2.5X slow)
-                                  794 (hist avg strange)
-                                  883 (aerosol deposition not from atm)
-                                  896 (T62 mode does not work)
-                                  920 (glacier_mec problems in mksurfdata)
-                                  926 (pftdyn code needs to be shared in mksurfdata)
-                                  935 (RTM warning NOT an error)
-                                  990 (CN transient blowup)
-                                  994 (finidat files on jaguar for pftdyn fail)
-                                 1017 (SCM mode can NOT restart)
-                                 1025 (SCM  mode can NOT use a global finidat file)
-                                 1068 (Problems interpolated deposition datasets to high res)
-                                 1069 (Nitrogen Deposition datasets have wrong units)
-                                 1077 (Slow leak of land aquifer to Ocean runoff)
-                                 1079 (rpointer file updated with clm.i files)
-                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
-                                 1087 (let weights come from fsurdat file NOT finidat)
-                                 1102 (OpenMP problem with pftdyn mode)
-    http://bugs.cgd.ucar.edu/
-
-Describe any changes made to build system: Small change to configure
-
-    If ccsmbld=on and -nospmd send blank for mpi_lib/mpi_inc, also set
-    nc_inc as wasn't set before.
-
-Describe any changes made to the namelist: None
-
-List any changes to the defaults for the boundary datasets: New f02,f05,f09,f10 datasets
-    New aerdep   datasets for 2000:      f02, f04, f09, f10
-    New aerdep   datasets for 1850:      f02, f04, f09, f10
-    New aerdep   datasets for 1850-2000:           f09, f10 (f02 and f04 datasets too large)
-    New fndepdat datasets for 2000:      f02, f04, f09, f10
-    New fndepdat datasets for 1850:      f02, f04, f09, f10
-    New fndepdyn datasets for 1850-2000:           f09, f10
-
-  The quarter and half degree aerdep transient datasets for 1850-2000 are too large being
-  many tens of GB. Hence I did not create transient datasets for either of these.
-
-Describe any substantial timing or memory changes: None
-
-Code reviewed by: self
-
-List any svn externals directories updated (csm_share, mct, etc.): scripts
-
-    scripts to scripts4_090829 --- pts_mode now automatically flips #pes=1,
-                                   and USE_MPISERIAL to TRUE
-
-List all files eliminated: None
-
-List all files added and what they do: None
-
-List all existing files that have been modified, and describe the changes:
-
-M    models/lnd/clm/test/system/test_driver.sh ------------------- Check for dublin
-             node names, and set CLM_CCSMBLD to TRUE on dublin.
-M    models/lnd/clm/bld/queryDefaultNamelist.pl ------------------ Set notest option
-            for get_usr_files based on setting from -test.
-M    models/lnd/clm/bld/configure -------------------------------- For -nospmd
-            do NOT write out mpi_inc, mpi_lib to Macros file for CCSMBLD.
-M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - New f02,f05,f09,f10 datasets
-         new aerdep, fndepdat, and fndepdyn datasets for f02,f05,f09, and f10 resolutions
-M    models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 ------------ If noland set
-            rof_present to .false. and set lnd_prognostic to .false.
-
-Summary of testing:
-
-  bluefire: All PASS except...
-022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
-023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
-024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
-025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
-026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
-051 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
-052 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
-  (Also tested f09 1850-2000 case)
-  bluefire interactive testing: All PASS except...
-021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
-022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
-026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
-027 blAK8 TBL.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -10 cold ........FAIL! rc= 6
-051 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
-  bluefire/CCSM testing: All PASS...
-PASS  ERS_D.f45_g35.I_2000.bluefire 
-PASS  PET.f45_g35.I_1850.bluefire.cpl 
-PASS  PET.f45_g35.I_1850.bluefire.atm 
-PASS  PET.f45_g35.I_1850.bluefire.lnd 
-PASS  PET.f45_g35.I_1850.bluefire.ice 
-PASS  PET.f45_g35.I_1850.bluefire.ocn 
-PASS  PET.f45_g35.I_1850.bluefire.glc 
-PASS  ERS.f19_g16.I_1850.bluefire 
-PASS  ERS.f19_g16.I_1850-2000.bluefire 
-PASS  ERB.f09_g16.I_1948_2004.bluefire 
-PASS  ERB.f09_g16.I1850SPINUPCN.bluefire 
-PASS  ERH_D.f10_f10.I_1850_CN.bluefire 
-PASS  PET.f10_f10.ICN8520.bluefire.cpl 
-PASS  PET.f10_f10.ICN8520.bluefire.atm 
-PASS  PET.f10_f10.ICN8520.bluefire.lnd 
-PASS  PET.f10_f10.ICN8520.bluefire.ice 
-PASS  PET.f10_f10.ICN8520.bluefire.ocn 
-PASS  PET.f10_f10.ICN8520.bluefire.glc 
-  jaguar interactive testing: All PASS up to TER ptsmode test
-  lightning/ifort interactive testing: All PASS
-  dublin/lf95 interactive testing: All PASS up to ...
-006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
-  dublin/lf95: All PASS except...
-004 blA92 TBL.sh _sc_dm clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 5
-007 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v5 144 cold .................FAIL! rc= 5
-008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
-009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
-010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
-011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
-012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
-016 blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 arb_ic ............FAIL! rc= 5
-020 blH52 TBL.sh 17p_cnnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 48 cold .........FAIL! rc= 5
-024 blJ92 TBL.sh 4p_casasc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 cold ...............FAIL! rc= 5
-028 blL51 TBL.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 48 arb_ic ..................FAIL! rc= 5
-030 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48 .......................FAIL! rc= 7
- (TBL tests fail because clm3_6_50 did NOT have macros files available in scripts for dublin)
-  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
-020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
-........FAIL! rc= 10
-
-CLM tag used for the baseline comparison tests if applicable: clm3_6_50
-
-Changes answers relative to baseline: Code bit-for-bit, but new datasets change answers
-
-    f02,f05, and f10 change answers for all configurations
-    other resolutions (including f09) do NOT change answers
-
-===============================================================
-===============================================================
-Tag name:  clm3_6_50
-Originator(s):  erik (erik)
-Date: Fri Aug 28 14:38:53 MDT 2009
-One-line Summary: Fix ncl regridding scripts so that NO missing values are allowed for aerosol and nitrogen deposition
-
-Purpose of changes:
-
- Fix aer and n deposition dataset regridder. Get CN to work for SCM mode. New half
-(2000), 10x15 (2000) and qtr (1850,2000) degree surf dataset. Fix interpinic lahey error.
-
-Bugs fixed (include bugzilla ID):
-                                1033 (SCM mode does NOT work with CN)
-
-Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
-                                  701 (svn keyword)
-                                  717 (archiving bug -- only archive 1000 files at a time)
-                                  722 (threading slow)
-                                  789 (1pt sims 2.5X slow)
-                                  794 (hist avg strange)
-                                  851 (abort when files non-exist on jaguar)
-                                  883 (aerosol deposition not from atm)
-                                  896 (T62 mode does not work)
-                                  903 (problems in driver with open-MP on PGI)
-                                  920 (glacier_mec problems in mksurfdata)
-                                  926 (pftdyn code needs to be shared in mksurfdata)
-                                  935 (RTM warning NOT an error)
-                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
-                                  971 (abort on lahey with MPI)
-                                  972 (abort on intel with MPI)
-                                  990 (CN transient blowup)
-                                  994 (finidat files on jaguar for pftdyn fail)
-                                 1007 (interpinic error with Linux/lahey)
-                                 1017 (SCM mode can NOT restart)
-                                 1025 (SCM  mode can NOT use a global finidat file)
-                                 1031 (Can't run SMS_D.f09_g16.ICN8520)
-                                 1068 (Problems interpolated deposition datasets to high res)
-                                 1069 (Nitrogen Deposition datasets have wrong units)
-                                 1077 (Slow leak of land aquifer to Ocean runoff)
-                                 1079 (rpointer file updated with clm.i files)
-                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
-                                 1087 (let weights come from fsurdat file NOT finidat)
-                                 1102 (OpenMP problem with pftdyn mode)
-    http://bugs.cgd.ucar.edu/
-
-Describe any changes made to build system: None
-
-Describe any changes made to the namelist: None
-
-List any changes to the defaults for the boundary datasets: 
-   1.9x2.5 new transient pftdyn dataset for 1850-2005 with new data from Jean-Francois
-   10x15, half-degree, and qtr-degree 2000 surface datasets
-   qtr-degree 1850 surface dataset
-
-Describe any substantial timing or memory changes: None
-
-Code reviewed by: self
-
-List any svn externals directories updated (csm_share, mct, etc.): None
-
-List all files eliminated: None
-
-List all files added and what they do: None
-
-List all existing files that have been modified, and describe the changes:
-
-M    models/lnd/clm/test/system/input_tests_master - Add tests: 
-               fmesh-qtr-deg@1850, 1-degree transient
-             
-
-M    models/lnd/clm/tools/mksurfdata/mksurfdata.pl ----- Set sim-year for pft data
-M    models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl - Reorder dims, don't allow 
-         missing values, correct Cyclic, and copy last latitude up
-M    models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl --- Reorder dims, don't allow 
-         missing values, correct Cyclic, and copy last latitude up
-M    models/lnd/clm/tools/interpinic/interpinic.F90 ---- Initialize dimids so will work with lahey
-
-M    models/lnd/clm/bld/queryDefaultNamelist.pl --- Add -usrname argument
-M    models/lnd/clm/bld/queryDefaultXML.pm -------- If clm_usr_name set use get_usr_file
-          method.
-M    models/lnd/clm/bld/listDefaultNamelist.pl ---- Automatically search both clm_inparm
-        AND the datm_dshr_nml namelists, remove namelist option
-M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml -- New datasets:
-        1.9x2.5 new transient pftdyn dataset for 1850-2005 with new data from Jean-Francois
-        10x15, half-degree, and qtr-degree 2000 surface datasets
-        qtr-degree 1850 surface dataset
-
-M    models/lnd/clm/src/main/ndepFileMod.F90 --- Don't stop if single_column set.
-
-Summary of testing: Limited
-
-  bluefire:
-  dublin/lf95 interactive testing:
-  dublin/lf95:
-
-CLM tag used for the baseline comparison tests if applicable: clm3_6_49
-
-Changes answers relative to baseline: No bit-for-bit
-
-===============================================================
-===============================================================
-Tag name:  clm3_6_49
-Originator(s):  erik (Kluzek Erik 1326 CGD)
-Date: Tue Aug 25 15:17:18 MDT 2009
-One-line Summary: Fix ncl interpolation scripts, update externals, turn on CLM_CCSM_BLD for bluefire,jaguar, ESMF3 compliance
-
-Purpose of changes:
-
-Fix fndepdyn ncl interpolation scripts. Use old clm3_6_47 fndepdyn datasets (until updated in next tag). 
-Update scripts, drv, and csm_share to latest. Turn on CLM_CCSM_BLD mode for bluefire, and jaguar. 
-Add scm-mode tests to test lists. Update Makefile to fix pio ifort bug. Changes from Dani Coleman 
-to clm_time_manager to make compatible with ESMF3. Fix lahey compiler problem for scm_mode.
-
-Bugs fixed (include bugzilla ID):
-                                  966 (Hybrid restart problem on bluefire) -- works with CCSM build
-                                 1031 (Can't run SMS_D.f09_g16.ICN8520) -- partial -- using old datasets
-                                 1029 (ifort compilation error in pio)
-                                 1032 (Problem running SCM mode on Lahey)
-
-Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
-                                  701 (svn keyword)
-                                  717 (archiving bug -- only archive 1000 files at a time)
-                                  722 (threading slow)
-                                  789 (1pt sims 2.5X slow)
-                                  794 (hist avg strange)
-                                  851 (abort when files non-exist on jaguar)
-                                  883 (aerosol deposition not from atm)
-                                  896 (T62 mode does not work)
-                                  903 (problems in driver with open-MP on PGI)
-                                  920 (glacier_mec problems in mksurfdata)
-                                  926 (pftdyn code needs to be shared in mksurfdata)
-                                  935 (RTM warning NOT an error)
-                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
-                                  971 (abort on lahey with MPI)
-                                  972 (abort on intel with MPI)
-                                  990 (CN transient blowup)
-                                  994 (finidat files on jaguar for pftdyn fail)
-                                 1007 (interpinic error with Linux/lahey)
-                                 1017 (SCM mode can NOT restart)
-                                 1025 (SCM  mode can NOT use a global finidat file)
-                                 1031 (Can't run SMS_D.f09_g16.ICN8520)
-                                 1033 (SCM mode does NOT work with CN)
-                                 1068 (Problems interpolated deposition datasets to high res)
-                                 1069 (Nitrogen Deposition datasets have wrong units)
-                                 1077 (Slow leak of land aquifer to Ocean runoff)
-                                 1079 (rpointer file updated with clm.i files)
-                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
-                                 1087 (let weights come from fsurdat file NOT finidat)
-                                 1102 (OpenMP problem with pftdyn mode)
-    http://bugs.cgd.ucar.edu/
-
-Describe any changes made to build system:  Local Makefile changed for ifort
-
-	local Makefile changed for ifort changed so that -132 only added to fixed-form code.
-
-Describe any changes made to the namelist: None
-
-List any changes to the defaults for the boundary datasets: None
-
-Describe any substantial timing or memory changes: None
-
-Code reviewed by: Self, bundy (clm_time_manager code)
-
-List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, csm_share
-
-   scripts   to scripts4_090806
-   drv       to vocemis-drydep12_drvseq3_0_27
-   csm_share to share3_090825
-
-List all files eliminated: None
-
-List all files added and what they do: None
-
-List all existing files that have been modified, and describe the changes:
-
-M      models/lnd/clm/test/system/tests_pretag_bluefire_nompi ----- Add single-column tests
-M      models/lnd/clm/test/system/tests_pretag_jaguar_nompi ------- Add single-column tests
-M      models/lnd/clm/test/system/test_driver.sh ------------------ Update seqvers to beta21, set 
-                                                           CLM_CCSMBLD to true for bluefire/jaguar, 
                                                            change path for cprnc on jaguar
 M      models/lnd/clm/test/system/input_tests_master -------------- single-column tests are cold-starts
 M      models/lnd/clm/test/system/tests_pretag_dublin_nompi ------- Add single-column tests
@@ -46024,548 +45020,6 @@ None
 Describe any changes made to build system:
 None	
 	
-Describe any changes made to the namelist:
-None	
-	
-List any changes to the defaults for the input datasets:
-None	
-	
-Describe any substantial timing or memory changes:
-None	
-	
-Code reviewed by:
-Mariana Vertenstein	
-	
-List all subroutines eliminated:
-None
-	
-List all subroutines added and what they do:
-None
-	
-List all existing files that have been modified, and describe the changes:
-- Allowed coexistence of OpenMP and CSD's on Cray-X1E provided they do not operate
-  on same loop index
-- Removed nested OpenMP capability
-	
-src/main: 
-   areaMod.F90
-   driver.F90
-   histFileMod.F90
-   atmdrvMod.F90
-	
-src/riverroute: 
-   RtmMod.F90
-	
-tools/mksurfdata
-   mkdynpftMod.F90 
-   mklaiMod.F90 
-   mkpftMod.F90 
-   mksoitex.F90
-   mkglacier.F90
-   mklanwat.F90
-   mksoicol.F90
-   mkurban.F90
-	
-Summary of testing:
-
-bluesky:
-test-model.pl -res T31      
-test-model.pl -res T31cn    
-test-model.pl -res T31cnall 
-test-model.pl -res T31casa  
-test-model.pl -res T31dgvm  
-	
-tempest: No testing
-
-bangkok/lf95: No testing
-
-CLM tag used for the baseline comparison tests if applicable:
-clm3_expa_48 (results were bfb)	
-	
-IF tag changes answers relative to baseline comparison the
-following should be filled in:
-	
-Summarize any changes to answers, i.e.,
- - what code configurations:
- - what platforms/compilers:
- - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-	
-If bitwise differences were observed, how did you show they were no worse
-than roundoff?
-
-If this tag changes climate describe the run(s) done to evaluate the new
-climate in enough detail that it(they) could be reproduced, i.e.,
-  - source tag (all code used must be in the repository):
-  - platform/compilers:
-  - configuration (CPP ifdefs):
-  - build-namelist command (or complete namelist):
-  - MSS location of output:
-	
-MSS location of control simulations used to validate new climate:
-	
-URL for LMWG diagnostics output used to validate new climate:
-	
-===============================================================
-
-clm3_expa_48
-Originator: forrest (Forrest Hoffman)
-Date: Fri Dec  2 06:50:57 MST 2005
-Model: CLM
-Version: CLM3.expa.48
-One-line Summary: Added bug fix for reading TpoolC in CASA, split long line in DGVM, and modified Makefiles for Cray X1E
-Requires change in build system: yes
-Modified Makefile for the Cray X1E and the newcprnc build
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: IBM (cheetah)
-Tested that restarts are bit-for-bit: yes
-Tested that different domain decompositions match bit-for-bit: yes
-Code reviewed by: myself
-Changes answers: no (bit-for-bit)
-Name of tests cases on NCAR Mass-Store: (For changes that change answers)
-Changes made:
-
-1. Fixed TpoolC initialization not to overwrite pools if they were read from
-   initial dataset.
-2. Split a long line in DGVMEstablishmentMod.F90
-3. Updated Makefile for Cray X1E
-4. Updated test system for use on Cray X1E and changed netCDF path for ORNL IBM
-5. Replaced cprnc.f90 with cprnc.F90 in newcprnc and modified its Makefile to
-   use CPP for this file.  NOTE: This was tested only on the IBM and Cray X1E,
-   and may require minor Makefile modifications for other platforms.
-
-Ran the following tests on IBM (cheetah):
-./test-model.pl -res T31      -c $HOME/CCSM/clm3_expa_47
-./test-model.pl -res T31cn    -c $HOME/CCSM/clm3_expa_47
-./test-model.pl -res T31cnall -c $HOME/CCSM/clm3_expa_47
-./test-model.pl -res T31casa  -c $HOME/CCSM/clm3_expa_47
-
-===============================================================
-
-clm3_expa_47
-Originator: mvertens ( Mariana Vertenstein)
-Date: Fri Nov 25 10:26:47 MST 2005
-Model: CLM
-Version: CLM3.expa.47
-One-line Summary: updated to wrf esmf time manager interfaces
-Requires change in build system: yes
-Makefile is modified	
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: IBM
-Tested that restarts are bit-for-bit: yes
-Tested that different domain decompositions match bit-for-bit: no
-Code reviewed by: myself
-Changes answers: no (bit-for-bit) 
-Changes made:
-1) Update offline clm to new wrf esmf time manager interfaces.
-   This change has already been made in the cam code base.
-   This change also implies that the ESMF prototye time manager code
-   is no longer needed. The new time manager interfaces are identical
-   to the latest ESMF library. 	   
-2) Testing done:
-   Verified that the following tests passed and were also bfb 
-   with clm3_expa_46.
-   ./test-model.pl -res T31      
-   ./test-model.pl -res T31cn    
-   ./test-model.pl -res T31cnall 
-   ./test-model.pl -res T31casa  
-   Note - CCSM testing with this code base must still be done.	
-===============================================================
-	
-===============================================================
-
-clm3_expa_46
-Originator: mvertens ( Mariana Vertenstein)
-Date: Fri Nov 11 12:50:40 MST 2005
-Model: CLM
-Version: CLM3.expa.46
-One-line Summary: put in change to csoilc and change in CanopyFluxesMod.F90
-Requires change in build system: no
-Tested to wood.F90 so that RSSHA, RSSUN are now time averaged fields
-      and TSNOW, SNOWLIQ and SNOWICE are now instantaneous fields.
- 
-   o) Modified inicFileMod.F90 so that T_REF2M was added. 
-
-   o) Modified initSubGridMod so that npfts_per_lunit = numpft+1 if allocate_all_vegpfts
-      is true.
-
-   o) Modified mlai.F90, mkpft.F90 and mksrfdatMod.F90 so that only new surface data format
-      is created.
-
-6) Testing Done:
-
-   incorporated allocate_all_pfts=.true. as default in test-model.pl
-
-   linux (lf95) (anchorage)
-      ran test-model.pl               successfully (CN on , full alloc on )
-      ran test-model.pl -res T42cnoff successfully (CN off, full alloc on )
-      ran test-model.noalloc.pl       successfully (CN on , full alloc off)
-
-      Comparing the diagnostic output from for alloc-on and alloc-off for CN on,
-      the output was the same for first 5 time steps and then started diverging. 
-      A climate simulation needs to be done to verify that the roundoff level 
-      differences results in the same climate.
-
-   ibm-sp (blackforest)
-      ran test-model.noalloc.pl and test-model.pl (CN is on)
-         diagnostic output was the same for the first 3 timesteps and then started diverging
-      ran test-model.noalloc.pl -res T42cnoff and test-model.pl -res T42CNoff (CN is off)
-         diagnostic output was the same for the first 8 timesteps and then started diverging
-      ran test-model.noalloc.pl -res T42cnoff compared with clm3_expa_12
-         verified that only roundoff differences appeared in the history file fields accept
-         for RSSHA, RSSUN, TSNOW, SNOWLIQ, SNOWICE (see above)
-      ran test-model.hist1d.pl 
-      ran test-model.noalloc.hist1d.pl compared with clm3_expa_12 
-	 1d history file output was identical except for TSNOW, SNOWLIQ and SNOWICE 
-	
-   sgi-irix64 (tempest)
-      ran test-model.noalloc.pl and test-model.pl (CN is on)
-         diagnostic output was the same for the first 3 timesteps and then started diverging
-      ran test-model.pl -res T42cnoff (CN is off)
-      ran test-model.noalloc.pl -res DGVM 
-
-   ***Note*** testing must still be done for COUP_CSM and COUP_CAM model
-   ***Note*** more testing needs to be done with DGVM to validate answers 
-   ***Note*** did not test generation of surface datasets, this must also be done
-	
-===============================================================
-===============================================================
-
-clm3_expa_12
-Originator: thornton ( Peter Thornton)
-Date: Mon Oct 18 13:03:57 MDT 2004
-Model: CLM
-Version: CLM3.expa.12
-One-line Summary: Moved surface albedo call to end of driver loop.
-Requires change in build system: no
-(one-line description of changes: Makefile, include files, directories, etc.)
-(Detailed description below)
-Tested to work coupled with CCSM: yes
-Tested to work with CAM: no
-Machines tested: IBM
-Tested that restarts are bit-for-bit: Yes
-Tested that different domain decompositions match bit-for-bit: no
-Code reviewed by: Mariana Vertenstein, Peter Thornton
-Changes answers: Yes (new-physics)
-Name of tests cases on NCAR Mass-Store: (For changes that change answers)
-ccsm3_K_sa1, ccsm3_K_sa2, ccsm3_K_cnsa1, ccsm3_K_cnsa2
-Changes made:
-
-Merged loop1 and loop2 in clm driver. Now surface albedo is called at the
-end of the loop, and csm_send is called after the loop. This change is the
-first step in getting all updates to prognostic variables moved to the end
-of the timestep, in preparation for water and carbon isotope code.
-
-===============================================================
-===============================================================
-
-clm3_expa_11
-Originator: forrest (Forrest Hoffman)
-Date: Mon Sep 20 11:49:36 MDT 2004
-Model: CLM
-Version: CLM3.expa.11
-One-line Summary: Added experimental CASA' carbon cycle model to CLM.  Renamed *_transfer* variables in CN code to *_xfer* and modified history field names to match.
-Requires change in build system: no
-Tested to work coupled with CCSM: no
-Tested to work with CAM: yes
-Machines tested: IBM (cheetah and blackforest), x86 Linux (anchorage), Cray X1 (phoenix)
-Tested that restarts are bit-for-bit: yes
-Tested that different domain decompositions match bit-for-bit: yes
-Code reviewed by: myself, Jasmin John
-Changes answers: no (bit-for-bit)
-Changes made:
-
-Added the CASA' carbon cycle model to the CLM code.  CASA' can be used by
-compiling with the CASA and SUNSHA cpp variables set.  It can not be used
-with either DGVM or CN enabled.
-
-Renamed all *_transfer* variable in the CN code to *_xfer* and modified
-history field names consistently, so *_TRANSFER* fields became *_XFER* fields.
-
-Ran test-model on cheetah, blackforest, anchorage, and phoenix.
-
-===============================================================
-===============================================================
-	
-clm3_expa_10
-Originator: mvertens ( Mariana Vertenstein)
-Date: Wed Aug 25 11:10:34 MDT 2004
-Model: CLM
-Version: CLM3.expa.10
-One-line Summary: put in new subgrid initialization interface
-Requires change in build system: no (unless a new crop landunit is desired)
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: IBM
-Tested that restarts are bit-for-bit: yes
-Tested that different domain decompositions match bit-for-bit: yes
-Code reviewed by: myself
-Changes answers: no (bit-for-bit) (except for roundoff on 2d history files)
-Changes made:
-1) Removed cpp variable NOCOMPETE from code.
-2) Added namelist variable create_crop_landunit.  
-   This permits the user to decide if a separate crop landunit is to
-   be created with the new surface dataset format (where all pfts appear).
-   By default create_crop_andunit is set to .false.
-   Removed logic that tied the use of new surface dataset format to the presence
-   of a separate crop landunit.
-   modified files:
-     main/controlMod.F90
-     main/surfFileMod.F90
-     min/clm_varctl.F90.
-3) Unified interface to create gridcells and landunits.
-   modified files:
-     main/Attic/decompMod.F90
-     main/histFileMod.F90
-     main/inicFileMod.F90
-     main/Attic/initGridCellsMod.F90
-   added files:
-     main/initGridIndexMod.F90
-     main/initSubgridMod.F90
-   - all logic to create new landunits now goes in module initSubGridMod.F90.
-   - If a new landunit (landunit_xxx) is to be created
-      o subroutine get_gcell_info should be modified to contain logic for landunit_xxx
-      o a new subroutine set_landunit_xxx should be added to the module
-      o a new call to set_landunit_xxx should be added in subroutine initGridCells in 
-        module subroutine initGridCellsMod.F90
-
-       call set_landunit_veg_compete( &
-            ltype=xxx, wtxy=wtxy, vegxy=vegxy, &
-            i=i      , j=j      , gi=gi      , li=li      , ci=ci      , pi=pi, &
-            i_sn=i_sn, j_sn=j_sn, gi_sn=gi_sn, li_sn=li_sn, ci_sn=ci_sn, pi_sn=pi_sn, &
-            nump=nump, numc=numc, numl=numl, &
-            land1d_sn_gi=land1d_sn_gi, cols1d_sn_li=cols1d_sn_li, cols1d_sn_gi=cols1d_sn_gi, &
-            pfts1d_sn_ci=pfts1d_sn_ci, pfts1d_sn_li=pfts1d_sn_li, pfts1d_sn_gi=pfts1d_sn_gi)
-
-       note - the only thing that is unique about this call is the setting of ltype.
-4) Testing done
-   a) ran test-model.pl (with CN on) and verified that code is bfb with clm3_expa_9.
-      Note, however, that the 2d history output will have roundoff differences with 
-      respect to clm3_expa_9 due to the new calculation of the weights in initSubGridMod.F90.
-      Also verified that the initial datasets created with clm3_exap_10 were bfb with clm3_expa_9.
-   b) verified that clm3_expa_10 is bfb with clm3_expa_9 when create_crop_landunit=.true..
-      and a new format surface dataset is used 
-      (fsurdat = '/fs/cgd/csm/inputdata/lnd/clm2/srfdata/csm/surface-data.128x064_atm.gx1v3_ocn.allpfts_c040426.nc).
-===============================================================
-===============================================================
-
-clm3_expa_9
-Originator: thornton ( Peter Thornton)
-Date: Sat Aug 14 01:09:21 MDT 2004
-Model: CLM
-Version: CLM3.expa.9
-One-line Summary: Added constraint preventing zero height in CNVegStructUpdateMod.F90
-Requires change in build system: no
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: IBM
-Tested that restarts are bit-for-bit: yes
-Tested that different domain decompositions match bit-for-bit: no
-Code reviewed by: myself
-Changes answers: Yes (new-physics)
-Name of tests cases on NCAR Mass-Store: (For changes that change answers)
-Changes made:
-Fixed a bug in CNVegStructUpdateMod.F90 that caused divide-by-zero in
-FrictionVelocity when htop -> 0.0, causing z0m -> 0.0. Added constraint so that
-htop is always greater than 0. Bug only appeared in fire simulation when deadstemc
-was forced very low by fire.
-===============================================================
-===============================================================
-
-clm3_expa_8
-Originator: mvertens ( Mariana Vertenstein)
-Date: Thu Aug 12 15:35:51 MDT 2004
-Model: CLM
-Version: CLM3.expa.8
-One-line Summary: merged in changes from clm3_deva_10 to clm3_deva_21 except for removal of DUST code
-Requires change in build system: no
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: IBM
-Tested that restarts are bit-for-bit: yes
-Tested that different domain decompositions match bit-for-bit: yes
-Code reviewed by: myself
-Changes answers: no (bit-for-bit)
-Changes made:
-1) Brought clm_exp branch up to date with clm3_deva_21
-   (branch was created starting from clm3_deva_10)
-2) Testing done:
-   Ran test-model.pl at T42 on IBM and verified that it was 
-   bfb with clm3_expa_7
-===============================================================
-===============================================================
-
-clm3_expa_7
-Originator: thornton ( Peter Thornton)
-Date: Wed Aug  4 13:29:18 MDT 2004
-Model: CLM
-Version: CLM3.expa.7
-One-line Summary: Added fire to CN code, other minor mods
-Requires change in build system: no
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: IBM
-Tested that different domain decompositions match bit-for-bit: no
-Code reviewed by: myself
-Changes answers: Yes (new-physics)
-Changes made:
-1. Added Thonicke fire algorithm, working mainly from 2001 paper. Modifications
-   to that algorithm made to represent fire occurrence on every timestep, instead of
-   as an annual process. Set cpp variable NOFIRE in job script to eliminate the 
-   effects of fire algorithm (results bit-for-bit with previous code).
-2. Modified CNPrecisionControlMod.F90 to truncate C and N state variables when they
-   go below a specified threshold value.  Tracking these modifications in new
-   truncation state variables, which accumulate the net changes over a run.
-3. Moved CN state update calls and summary call into CNEcosysdyn, from driver.
-   (bit-for-bit)
-===============================================================
-===============================================================
-
-clm3_expa_6
-Originator: thornton ( Peter Thornton)
-Date: Fri Jul 16 13:17:43 MDT 2004
-Model: CLM
-Version: CLM3.expa.6
-One-line Summary: Added initial file capability for CN code
-Requires change in build system: no
-(one-line description of changes: Makefile, include files, directories, etc.)
-(Detailed description below)
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: IBM
-Tested that restarts are bit-for-bit: yes
-Tested that different domain decompositions match bit-for-bit: yes
-Code reviewed by: myself
-Changes answers: yes (some bug fixes)
-Changes made:
-
-1. Added all required fields on initial file for CN start from spunup values
-2. (bug fix) Added pepv%tampsum_npp and pepv%annsum_npp to CNSetPepv()
-3. (bug fix) Added pepv%prev_leafc_to_litter and pepv%prev_frootc_to_litter
-   to CNiniTimeVar().
-4. Added totlitn, totsomn, totecosysn, totcoln to column loop of
-   CNiniTimeVar(). Added dispvegn, storvegn, totvegn, totpftn to 
-   pft loop of CNiniTimeVar().
-5. set all c and n state and flux variables to 0.0 on special landunits, instead of spval.  
-6. (bug fix) Added missing (p) to frac_veg_nosno in CNiniSpecial().
-7. Modified treatment of AGNPP and BGNPP so that they correspond better to
-   likely measurements of above and belowground NPP, in CSummary().
-8. modified setting for noveg pft rootfr from spval to 0.0
-
-===============================================================
-===============================================================
-
-clm3_expa_5
-Originator: thornton ( Peter Thornton)
-Date: Thu Jul  1 15:37:19 MDT 2004
-Model: CLM
-Version: CLM3.expa.5
-One-line Summary: added two files that were omitted from clm3_expa_4 tag
-Requires change in build system: no
-(one-line description of changes: Makefile, include files, directories, etc.)
-(Detailed description below)
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: IBM, SGI, Compaq
-Tested that restarts are bit-for-bit: no
-Tested that different domain decompositions match bit-for-bit: no
-Code reviewed by: myself
-Changes answers: no (bit-for-bit) 
-Changes made:
-added two files (CNNdynamicsMod.F90 and ndepFileMof.F90) that
-were omitted from the clm3_expa_4 tag
-
-===============================================================
-===============================================================
-
-clm3_expa_4
-Originator: thornton ( Peter Thornton)
-Date: Tue Jun 29 09:30:18 MDT 2004
-Model: CLM
-Version: CLM3.expa.4
-One-line Summary: Added NDep input, NFix, NLeaching, NSummary
-Requires change in build system: no
-Modifications to finish the N cycle
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: IBM
-Tested that restarts are bit-for-bit: yes
-Tested that different domain decompositions match bit-for-bit: yes
-Code reviewed by: myself
-Changes answers: Yes 
-Changes made:
-1. Added routine to read a new surface dataset for N deposition (optional)
-2. Added routine to estimate biological N fixation as a function of annual NPP
-3. Added N leaching routine, function of mineral N concentration and drainage flow
-4. Added new N cycle summary variables as standard history file outputs (with CN on)
-5. Turned on bulk denitrification (previously implemented, but constant set to 0)
-6. Fixed problem with current datasets where temperate deciduous forest was being assigned
-   in the tropics - the phenology algorithm for temperate deciduous doesn't work in this case
-   because of daylength constraints.  These pfts are now set on initialization to seasonal
-   deciduous types.  Solves high-LAI problem in tropics.
-7. Fixed bug in calculation of diagnostic total carbon (previously excluded coarse woody debris).
-8. Added coarse woody debris decomposition fluxes (previously turned off).
-===============================================================
-===============================================================
-
-clm3_expa_3
-Originator: thornton ( Peter Thornton)
-Date: Thu May 27 15:01:39 MDT 2004
-Model: CLM
-Version: CLM3.expa.3
-One-line Summary: Merged Thornton's CN code onto clm_exp branch
-Requires change in build system: no
-(one-line description of changes: Makefile, include files, directories, etc.)
-(Detailed description below)
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: IBM, SGI, Compaq
-Tested that restarts are bit-for-bit: no
-Tested that different domain decompositions match bit-for-bit: no
-Code reviewed by: myself
-Changes answers: no (bit-for-bit)
-Changes made:
-Merged Thornton's CN code from branch clm2_deva_41_brnch_cn onto the new
-clm_exp branch.  Tested that the results are BFB for 1-day run against 
-clm3_expa_2 with all CN options turned off, and tested that results are
-BFB for 1-day run against the final tag on the original CN branch
-(clm3_expa_2_brnchT_cn3_9) with all CN options turned on.
-
-===============================================================
-===============================================================
-
-clm3_expa_2
-Originator: mvertens ( Mariana Vertenstein)
-Date: Fri Apr 30 10:21:42 MDT 2004
-Model: CLM
-Version: CLM3.expa.2
-One-line Summary: removed cpl/ code directory from csm_share/ 
-Requires change in build system: no
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: none
-Tested that restarts are bit-for-bit: no
-Tested that different domain decompositions match bit-for-bit: no
-Code reviewed by: myself
-Changes answers: no (bit-for-bit) 
-Name of tests cases on NCAR Mass-Store: (For changes that change answers)
-Changes made:
-Removed cpl/ code directory from csm_share/ - this is never needed
-	
-===============================================================
-===============================================================
-
-clm3_expa_1
-Originator: erik ( Erik Kluzek)
-Date: Wed Apr 28 14:33:52 MDT 2004
-Model: CLM
-Version: CLM3.expa.1
-One-line Summary: Start of clm_exp experimental development branch -- same as clm3_deva_10
-Requires change in build system: no
-Tested to work coupled with CCSM: no
-Tested to work with CAM: no
-Machines tested: IBM, SGI, Linux
 Tested that restarts are bit-for-bit: yes
 Tested that different domain decompositions match bit-for-bit: yes
 Code reviewed by: myself

@@ -441,6 +441,7 @@ contains
     character(len=16)                  :: mech_name
     type(shr_megan_megcomp_t), pointer :: meg_cmp
     real(r8)                           :: cp, alpha,  Eopt, topt  ! for history output
+    real(r8)                           :: co2_ppmv
 
     real(r8)                           :: vocflx_meg(shr_megan_megcomps_n)
 
@@ -479,6 +480,7 @@ contains
          forc_solad    => atm2lnd_inst%forc_solad_grc           , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (visible only)            
          forc_solai    => atm2lnd_inst%forc_solai_grc           , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (visible only)            
          forc_pbot     => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  downscaled atmospheric pressure (Pa)                          
+         forc_pco2     => atm2lnd_inst%forc_pco2_grc            , & ! Input:  [real(r8) (:)   ]  partial pressure co2 (Pa)                                             
          forc_solad24  => atm2lnd_inst%fsd24_patch              , & ! Input:  [real(r8) (:)   ]  direct beam radiation last 24hrs  (visible only)  
          forc_solad240 => atm2lnd_inst%fsd240_patch             , & ! Input:  [real(r8) (:)   ]  direct beam radiation last 240hrs (visible only)  
          forc_solai24  => atm2lnd_inst%fsi24_patch              , & ! Input:  [real(r8) (:)   ]  diffuse radiation  last 24hrs     (visible only)  
@@ -488,7 +490,7 @@ contains
          fsun24        => canopystate_inst%fsun24_patch         , & ! Input:  [real(r8) (:)   ]  sunlit fraction of canopy last 24 hrs             
          fsun240       => canopystate_inst%fsun240_patch        , & ! Input:  [real(r8) (:)   ]  sunlit fraction of canopy last 240 hrs            
          elai          => canopystate_inst%elai_patch           , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow
-         elai_p        => canopystate_inst%elai_p_patch         , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index from previous timestep  
+         elai240       => canopystate_inst%elai240_patch        , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow last 240 hrs
 
          cisun_z       => photosyns_inst%cisun_z_patch          , & ! Input:  [real(r8) (:,:) ]  sunlit intracellular CO2 (Pa)
          cisha_z       => photosyns_inst%cisha_z_patch          , & ! Input:  [real(r8) (:,:) ]  shaded intracellular CO2 (Pa)
@@ -592,11 +594,12 @@ contains
                                    betaT(class_num),LDF(class_num), Ceo(class_num), Eopt, topt)
 
              ! Activity factor for Leaf Age
-             gamma_a = get_gamma_A(patch%itype(p), elai_p(p),elai(p),class_num)
+             gamma_a = get_gamma_A(patch%itype(p), elai240(p),elai(p),class_num)
 
              ! Activity factor for CO2 (only for isoprene)
              if (trim(meg_cmp%name) == 'isoprene') then 
-                gamma_c = get_gamma_C(cisun_z(p,1),cisha_z(p,1),forc_pbot(c),fsun(p))
+                co2_ppmv = 1.e6*forc_pco2(g)/forc_pbot(c)
+                gamma_c = get_gamma_C(cisun_z(p,1),cisha_z(p,1),forc_pbot(c),fsun(p), co2_ppmv)
              else
                 gamma_c = 1._r8
              end if
@@ -941,7 +944,7 @@ contains
   end function get_gamma_T
 
   !-----------------------------------------------------------------------
-  function get_gamma_A(ivt_in, elai_p_in,elai_in,nclass_in)
+  function get_gamma_A(ivt_in, elai240_in, elai_in, nclass_in)
 
     ! Activity factor for leaf age (Guenther et al., 2006)
     !-----------------------------
@@ -955,7 +958,7 @@ contains
     implicit none
     integer,intent(in)  :: ivt_in
     integer,intent(in)  :: nclass_in
-    real(r8),intent(in) :: elai_p_in
+    real(r8),intent(in) :: elai240_in
     real(r8),intent(in) :: elai_in
     !
     ! !LOCAL VARIABLES:
@@ -964,9 +967,9 @@ contains
     real(r8) :: fnew, fgro, fmat, fold  ! fractions of leaves at different phenological stages
     !-----------------------------------------------------------------------
     if ( (ivt_in == ndllf_dcd_brl_tree) .or. (ivt_in >= nbrdlf_dcd_trp_tree) ) then  ! non-evergreen
-       
-       if ( (elai_p_in > 0.0_r8) .and. (elai_p_in < 1.e30_r8) )then 
-          elai_prev = 2._r8*elai_p_in-elai_in  ! have accumulated average lai over last timestep
+
+       if ( (elai240_in > 0.0_r8) .and. (elai240_in < 1.e30_r8) )then 
+          elai_prev = 2._r8*elai240_in-elai_in  ! have accumulated average lai over last 10 days
           if (elai_prev == elai_in) then
              fnew = 0.0_r8
              fgro = 0.0_r8
@@ -998,88 +1001,96 @@ contains
   end function get_gamma_A
 
   !-----------------------------------------------------------------------
-  function get_gamma_C(cisun_in,cisha_in,forc_pbot_in,fsun_in)
-    !
+  function get_gamma_C(cisun_in,cisha_in,forc_pbot_in,fsun_in, co2_ppmv)
+    
     ! Activity factor for instantaneous CO2 changes (Heald et al., 2009)
     !-------------------------
-    ! With distinction between sunlit and shaded leafs, weight scalings by
+    ! With distinction between sunlit and shaded leaves, weight scalings by
     ! fsun and fshade 
+    !
+    ! !CALLED FROM: VOCEmission
     !
     ! !REVISION HISTORY:
     ! Author: Colette L. Heald (11/30/11)
+    !         Louisa K. Emmons (16/03/2015) - implement Colette's intended code
+    !                                         and use atmosphere CO2 (not nml setting)
     !
     ! !USES:
-    use clm_varctl,    only : co2_ppmv      ! corresponds to CCSM_CO2_PPMV set in env_conf.xml
+    !    use clm_varctl,    only : co2_ppmv      ! corresponds to CCSM_CO2_PPMV set in env_conf.xml
     !
     ! !ARGUMENTS:
     implicit none
+    ! !LOCAL VARIABLES:
+
+    ! varibles in
     real(r8),intent(in) :: cisun_in
     real(r8),intent(in) :: cisha_in
     real(r8),intent(in) :: forc_pbot_in
     real(r8),intent(in) :: fsun_in
-    !
-    ! !LOCAL VARIABLES:
+    real(r8),intent(in) :: co2_ppmv
+
     real(r8)            :: get_gamma_C
-    real(r8)            :: IEmin            ! empirical coeff for CO2 
-    real(r8)            :: IEmax            ! empirical coeff for CO2 
-    real(r8)            :: ECi50            ! empirical coeff for CO2 
-    real(r8)            :: Cislope          ! empirical coeff for CO2 
+
+    ! local variables
+    real(r8)            :: Ismax            ! empirical coeff for CO2 
+    real(r8)            :: h                ! empirical coeff for CO2 
+    real(r8)            :: Cstar            ! empirical coeff for CO2 
     real(r8)            :: fint             ! interpolation fraction for CO2
     real(r8)            :: ci               ! temporary sunlight/shade weighted cisun & cisha (umolCO2/mol)
+    real(r8)            :: gamma_ci         ! short-term exposure gamma
+    real(r8)            :: gamma_ca         ! long-term exposure gamma
+    real(r8), parameter :: Ismax_ca   = 1.344_r8  ! Estimated asymptote at which further decreases in intercellular CO2 have a negligible effect on isoprene emission
+    real(r8), parameter :: h_ca       = 1.4614_r8 ! Exponential scalar
+    real(r8), parameter :: Cstar_ca   = 585._r8   ! Scaling coefficient
+    real(r8), parameter :: CiCa_ratio = 0.7_r8    ! Ratio of intercellular CO2 to atmospheric CO2
     !-----------------------------------------------------------------------
 
+
+    ! LONG-TERM EXPOSURE (based on ambient CO2, Ca)
+    !-----------------------------------------------------------------------------
+    gamma_ca = Ismax_ca - ((Ismax_ca * (CiCa_ratio*co2_ppmv)**h_ca) / (Cstar_ca**h_ca + (CiCa_ratio*co2_ppmv)**h_ca) )
+
+
+    ! SHORT-TERM EXPOSURE (based on intercellular CO2, Ci)
+    !-----------------------------------------------------------------------------
     ! Determine long-term CO2 growth environment (ie. ambient CO2) and interpolate
     ! parameters
     if ( co2_ppmv < 400._r8 ) then
-       IEmin   = 0.7301_r8
-       IEmax   = 1.0542_r8
-       ECi50   = 457._r8
-       Cislope = 3.1665_r8
-    else if ( (co2_ppmv > 400._r8) .and. (co2_ppmv < 500._r8) ) then
-       fint    = (co2_ppmv - 400._r8)/100._r8
-       IEmin   = fint*0.7301_r8 + (1._r8 - fint)*0.7034_r8
-       IEmax   = fint*1.0542_r8 + (1._r8 - fint)*0.9897_r8
-       ECi50   = fint*457._r8 + (1._r8 - fint)*472._r8
-       Cislope = fint*3.1665_r8 + (1._r8 - fint)*3.0652_r8
-    else if ( (co2_ppmv > 500._r8) .and. (co2_ppmv < 600._r8) ) then
-       fint = (co2_ppmv - 500._r8)/100._r8
-       IEmin   = fint*0.7034_r8 + (1._r8 - fint)*0.6768_r8
-       IEmax   = fint*0.9897_r8 + (1._r8 - fint)*0.9253_r8
-       ECi50   = fint*472._r8 + (1._r8 - fint)*488._r8
-       Cislope = fint*3.0652_r8 + (1._r8 - fint)*2.9321_r8
-    else if ( (co2_ppmv > 600._r8) .and. (co2_ppmv < 700._r8) ) then
-       fint = (co2_ppmv - 600._r8)/100._r8
-       IEmin   = fint*0.6768_r8 + (1._r8 - fint)*0.6500_r8
-       IEmax   = fint*0.9253_r8 + (1._r8 - fint)*0.8611_r8
-       ECi50   = fint*488._r8 + (1._r8 - fint)*508._r8
-       Cislope = fint*2.9321_r8 + (1._r8 - fint)*2.7497_r8
-    else if ( (co2_ppmv > 700._r8) .and. (co2_ppmv < 800._r8) ) then
-       fint = (co2_ppmv - 700._r8)/100._r8
-       IEmin   = fint*0.6500_r8 + (1._r8 - fint)*0.6063_r8
-       IEmax   = fint*0.8611_r8 + (1._r8 - fint)*0.7976_r8
-       ECi50   = fint*508._r8 + (1._r8 - fint)*575._r8
-       Cislope = fint*2.7497_r8 + (1._r8 - fint)*2.3643_r8
+       Ismax   = 1.072_r8
+       h       = 1.70_r8
+       Cstar   = 1218._r8
+    else if ( (co2_ppmv > 400._r8) .and. (co2_ppmv < 600._r8) ) then
+       fint    = (co2_ppmv - 400._r8)/200._r8
+       Ismax   = fint*1.036_r8 + (1.- fint)*1.072_r8
+       h       = fint*2.0125_r8 + (1.- fint)*1.70_r8
+       Cstar   = fint*1150._r8 + (1.- fint)*1218._r8
+    else if ( (co2_ppmv > 600._r8) .and. (co2_ppmv < 800._r8) ) then
+       fint    = (co2_ppmv - 600._r8)/200._r8
+       Ismax   = fint*1.046_r8 + (1.- fint)*1.036_r8
+       h       = fint*1.5380_r8 + (1.- fint)*2.0125_r8
+       Cstar   = fint*2025._r8 + (1.- fint)*1150._r8
     else if ( co2_ppmv > 800._r8 ) then
-       IEmin   = 0.6063_r8
-       IEmax   = 0.7976_r8
-       ECi50   = 575._r8
-       Cislope = 2.3643_r8
+       Ismax   = 1.014_r8
+       h       = 2.861_r8
+       Cstar   = 1525._r8
     end if
 
-    ! Intracellular CO2 concentrations (ci) given in Pa, divide by atmos
+    ! Intercellular CO2 concentrations (ci) given in Pa, divide by atmos
     ! pressure to get mixing ratio (umolCO2/mol)
-    if ( (cisun_in > 0._r8) .and. (cisha_in > 0._r8) .and. (forc_pbot_in > 0._r8) .and. (fsun_in > 0._r8) ) then
+    if ( (cisun_in .eq. cisun_in) .and. (cisha_in .eq. cisha_in) .and. (forc_pbot_in > 0._r8) .and. (fsun_in > 0._r8) ) then
        ci = ( fsun_in*cisun_in + (1._r8-fsun_in)*cisha_in )/forc_pbot_in * 1.e6_r8
-       get_gamma_C = IEmin + ( (IEmax-IEmin)/(1._r8+(ci/ECi50)**Cislope) )
-    else if ( (cisha_in > 0._r8) .and. (forc_pbot_in > 0._r8) ) then
-       ci = cisha_in/forc_pbot_in * 1.e6_r8
-       get_gamma_C = IEmin + ( (IEmax-IEmin)/(1._r8+(ci/ECi50)**Cislope) )
-    else if ( (cisun_in > 0._r8) .and. (forc_pbot_in > 0._r8) ) then
+       gamma_ci = Ismax - ( (Ismax*ci**h)/(Cstar**h+ci**h) ) 
+    else if ( (cisun_in > 0.0_r8) .and. (cisun_in < 1.e30_r8) .and. (forc_pbot_in > 0._r8) .and. (fsun_in .eq. 1._r8) ) then
        ci = cisun_in/forc_pbot_in * 1.e6_r8
-       get_gamma_C = IEmin + ( (IEmax-IEmin)/(1._r8+(ci/ECi50)**Cislope) )
+       gamma_ci = Ismax - ( (Ismax*ci**h)/(Cstar**h+ci**h) ) 
+    else if ( (cisha_in > 0.0_r8) .and. (cisha_in < 1.e30_r8)  .and. (forc_pbot_in > 0._r8) .and. (fsun_in .eq. 0._r8) ) then
+       ci = cisha_in/forc_pbot_in * 1.e6_r8
+       gamma_ci = Ismax - ( (Ismax*ci**h)/(Cstar**h+ci**h) ) 
     else
-       get_gamma_C = 1._r8
+       gamma_ci = 1._r8
     end if
+
+    get_gamma_C = gamma_ci * gamma_ca
 
   end function get_gamma_C
 

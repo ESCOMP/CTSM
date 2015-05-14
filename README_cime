@@ -1,3 +1,5 @@
+For the trunk:
+
 1.) Start at the top level directory of your sandbox
 
   cd $clm_root
@@ -26,5 +28,35 @@
 
   svn resolved models
 
-7.) Commit these changes to your branch
+
+For branches:
+
+0.) Make sure ALL your changes are checked into your branch.
+
+1.) Checkout your branch WITHOUT externals
+
+  svn co --ignore-externals $SVN_MOD_URL/clm2/branches/<branchname>
+
+2.) Move any changes you have under clm on your branch
+
+  svn mkdir components
+  svn mv models/lnd/clm/ components/clm
+
+3.) Merge the top level
+
+  svn merge --depth immediates $SVN_MOD_URL/clm2/trunk_tags/clm4_5_1_r104 $SVN_MOD_URL/clm2/trunk_tags/clm4_5_1_r105
+
+4.) Merge changes in the clm directory
+
+  svn merge $SVN_MOD_URL/clm2/trunk_tags/clm4_5_1_r104/models/lnd/clm $SVN_MOD_URL/clm2/trunk_tags/clm4_5_1_r105/components/clm
+
+5.) Bring in updated externals and updates to clm source files
+
+  svn update
+
+6.) Mark changes to models and components/clm directories as resolved
+
+  svn resolved models
+  svn resolved components
+  svn resolved components/clm
 

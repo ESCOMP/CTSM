@@ -2574,6 +2574,10 @@ sub setup_logic_megan {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   if ($opts->{'megan'} ) {
+    if ( value_is_true( $nl_flags->{'use_ed'} ) ) {
+       fatal_error("MEGAN can NOT be on when ED is also on.\n" . 
+                   "   Use the '-no-megan' option when '-ed_mode' is activated");
+    }
     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_specifier');
     check_megan_spec( $nl, $definition );
     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_factors_file');

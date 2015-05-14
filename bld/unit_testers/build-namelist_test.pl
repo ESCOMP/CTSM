@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 351;
+my $ntests = 352;
 if ( defined($opts{'compare'}) ) {
    $ntests += 195;
 }
@@ -514,6 +514,11 @@ my %failtest = (
                                    },
      "usespitfireButNOTED"       =>{ options=>"-envxml_dir .",
                                      namelst=>"use_ed_spit_fire=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm4_5",
+                                   },
+     "useMEGANwithED"            =>{ options=>"-ed_mode -envxml_dir . -megan",
+                                     namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },

@@ -16,12 +16,13 @@ I.  General directory structure:
     shared
         mkmapgrids ------- Create regular lat/lon SCRIP grid files needed by mkmapdata 
         mkmapdata -------- Create SCRIP mapping data from SCRIP grid files (uses ESMF)
-        gen_domain ------- Create data model domain datasets from SCRIP mapping datasets.
-                           (also in the top level mapping directory [../../../../mapping])
         mkprocdata_map --- Convert output unstructured grids into a 2D format that
                            can be plotted easily
         ncl_scripts ------ NCL post or pre processing scripts.
 
+    cime-tools (../../../cime/tools/) (CIMEROOT is ../../../cime)
+        $CIMEROOT/mapping/gen_domain_files
+            gen_domain ------- Create data model domain datasets from SCRIP mapping datasets.
 
     Note that there are different versions of mksurfdata_map CLM4.0 vs. CLM4.5. 
     Other tools are shared between the two model versions. 
@@ -162,12 +163,13 @@ use CLM4.0, you will need to do the following:
 
         c.) New atmosphere or ocean resolution
 
-        If the region DOES include ocean, use gen_domain/gen_maps.sh to create a 
+        If the region DOES include ocean, use $CIMEROOT/tools/mapping/gen_domain_files/gen_maps.sh to create a 
         mapping file for it.
 
     Example:
 
-    cd shared/gen_domain
+    setenv CIMEROOT ../../../cime
+    cd $CIMEROOT/tools/mapping/gen_domain_files
     ./gen_maps.sh -focn <ocngrid> -fatm <atmgrid> -nocn <ocnname> -natm <atmname>
 
 
@@ -206,13 +208,13 @@ use CLM4.0, you will need to do the following:
        and file creation dates to mksurfdata_map in step (5) below.
 
     6.) Convert map of ocean to atm for use by DATM and CLM with gen_domain
-        (See mapping/README for more help on doing this)
+        (See $CIMEROOT/tools/mapping/README for more help on doing this)
 
        - gen_domain uses the map from step (2) (or previously created CESM maps)
 
        Example:
 
-        cd ../../../../mapping/src
+        cd $CIMEROOT/tools/mapping/gen_domain_files/src
         gmake
         cd ..
         setenv CDATE       090206
@@ -276,10 +278,11 @@ IV. Example of creating single-point datasets without entering into XML database
        cd shared/mkmapdata
        setenv GRIDFILE ../mkmapgrids/SCRIPgrid_${GRIDNAME}_nomask_${CDATE}.nc
        ./mkmapdata.sh -r $GRIDNAME -f $GRIDFILE -t regional
-       cd ..
+       cd ../..
     5.) skip
     6.) Generate domain file for datm and CLM
-        cd ../../../../../../mapping/src
+        setenv CIMEROOT ../../../cime
+        cd $CIMEROOT/tools/mapping/gen_domain_files/src
         gmake
         cd ..
         setenv OCNDOM domain.ocn_noocean.nc

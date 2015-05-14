@@ -147,9 +147,10 @@ contains
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
     ! Average of LAI from previous and current timestep (heald, 04/06)
+    ! corrected to be 10-day average (LKE, 2014-12-5)
     call init_accum_field (name='LAIP', units='m2/m2', &
          desc='leaf area index average over timestep', &
-         accum_type='runmean', accum_period=1, &
+         accum_type='runmean', accum_period=-10, &
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
     if (use_cndv .or. use_crop) then

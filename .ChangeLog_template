@@ -33,7 +33,7 @@ Describe any substantial timing or memory changes:
 
 Code reviewed by:
 
-List any svn externals directories updated (csm_share, mct, etc.):
+List any svn externals directories updated (cime, rtm, cism, etc.):
 
 List all files eliminated:
 
@@ -63,7 +63,7 @@ CLM testing:
 
     yellowstone
 
-  regular tests (aux_clm40, aux_clm45, with '-model_gen_comp clm2'):
+  regular tests (aux_clm40, aux_clm45):
 
     yellowstone_intel
     yellowstone_pgi
