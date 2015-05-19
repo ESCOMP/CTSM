@@ -1,4 +1,66 @@
 ===============================================================
+Tag name:  clm4_5_1_r107
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Tue May 19 10:05:49 MDT 2015
+One-line Summary: Update externals to use github version of cime1.0.7.
+
+Purpose of changes: Switch the cime external from using svn to github. Update cime to cime1.0.7.
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.): cime 1.0.7
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes: N/A
+
+CLM testing: regular
+
+  build-namelist tests:
+    unit-tests: ok
+    system-tests: not run
+
+  unit-tests (models/lnd/clm/src):
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel 40 - ok; 45 - ok
+    yellowstone_pgi 40 - ok; 45 - ok
+    yellowstone_gnu (clm45 only) 45 - ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r106
+
+Changes answers relative to baseline: none
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r106
 Originator(s):  erik/fvitt
 Date: Thu May 14 13:22:51 MDT 2015
@@ -75,7 +137,6 @@ A    components/clm/cimetest/testmods_dirs/clm/edTest/shell_commands
 
 List all existing files that have been modified, and describe the changes:
 
----------- 
    M  components/clm/src_clm40/biogeophys/UrbanInitMod.F90 -- Initialize to
          zero over land
    M  components/clm/src_clm40/main/clm_initializeMod.F90 --- Call urbanInit
@@ -84,7 +145,6 @@ List all existing files that have been modified, and describe the changes:
          from 1 day to 10 days
    M  components/clm/src_clm40/main/clmtypeInitMod.F90 ------ Initilize to spval
 
----------- 
    M  components/clm/src_clm40/biogeochem/VOCEmissionMod.F90
 + - use time-dependent atmospheric CO2 concentrations rather than
 +   the CCSM_CO2_PPMV constant value
@@ -92,7 +152,6 @@ List all existing files that have been modified, and describe the changes:
    M  components/clm/src_clm40/biogeochem/DryDepVelocity.F90
 + - science updates and bug fixes provided by Maria Val Martin
 
----------- 
    M  components/clm/src/biogeochem/VOCEmissionMod.F90
 + - use time-dependent atmospheric CO2 concentrations rather than
 +   the CCSM_CO2_PPMV constant value
