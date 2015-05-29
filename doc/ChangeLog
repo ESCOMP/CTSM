@@ -1,4 +1,138 @@
 ===============================================================
+Tag name:  clm4_5_1_r108
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Fri May 29 15:14:26 MDT 2015
+One-line Summary: Crop changes from Sam Levis
+
+Purpose of changes: Crop model changes from Sam Levis. Increases the number of
+crops to 64, with 78 total pfts. Requires new parameters file, surface dataset,
+and land use timeseries files.
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 2146, 2155
+
+Known bugs (include bugzilla ID): 2180, 2182
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: n/a
+
+Describe any changes made to the namelist: n/a
+
+List any changes to the defaults for the boundary datasets:
+    Regenerate surface data sets and land use timeseries to increase the number of
+    pfts and crops with data from Levis. New raw datasets:
+        rawdata/pftlanduse.3minx3min.simyr2000.c110913/mksrf_78pft_landuse_rc2000_c130927.nc
+        rawdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_78pft_landuse_rc2000_c150130.nc
+
+Describe any substantial timing or memory changes:
+    Increased memory usage for all crop runs. Exact consequences requires further study.
+
+Code reviewed by: andre, levis
+
+List any svn externals directories updated (cime, rtm, cism, etc.): n/a
+
+List all files eliminated: n/a
+
+List all files added and what they do:
+    components/clm/cimetest/ExpectedTestFails.xml - new expected fails file for upcoming cime xfail integration
+    components/clm/tools/clm4_5/mksurfdata_map/Makefile.data - automate generating all surface data sets 
+
+List all existing files that have been modified, and describe the changes:
+	clm/bld/CLMBuildNamelist.pm - increase max pft, add info to error message, fix quoted empty string processing (bug 2146)
+	clm/bld/namelist_files/namelist_defaults_clm4_5.xml - point to new datasets
+	clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - update rawdata sets
+	clm/bld/namelist_files/namelist_definition_clm4_5.xml - update sim year range to avoid special cases for testing
+	clm/bld/test_build_namelist/t/test_do_harvest.pm - update test (bug 2146)
+	clm/bld/test_build_namelist/t/test_do_transient_crops.pm - update test (bug 2146)
+	clm/bld/test_build_namelist/t/test_do_transient_pfts.pm - update test (bug 2146)
+
+	clm/cimetest/testmods_dirs/clm/crop_trans_f10/user_nl_clm - point to new datafiles
+	clm/cimetest/testmods_dirs/clm/crop_trans_sville/user_nl_clm - point to new datafiles
+
+	clm/src/biogeophys/WaterStateType.F90 - workaround for pgi compiler bug
+
+	clm/src/biogeochem/CNNDynamicsMod.F90 - new crop model
+	clm/src/biogeochem/CNPhenologyMod.F90
+	clm/src/biogeochem/CNVegStructUpdateMod.F90
+	clm/src/biogeochem/CropType.F90
+	clm/src/biogeochem/NutrientCompetitionCLM45defaultMod.F90
+	clm/src/biogeochem/VOCEmissionMod.F90
+	clm/src/biogeophys/CanopyFluxesMod.F90
+	clm/src/biogeophys/PhotosynthesisMod.F90
+	clm/src/main/PatchType.F90
+	clm/src/main/clm_varpar.F90
+	clm/src/main/pftconMod.F90
+	clm/src/main/subgridRestMod.F90
+	clm/src/main/surfrdMod.F90
+
+	clm/tools/clm4_5/mksurfdata_map/README
+	clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl - move file writes into functions. write to __dataset_name__.namelist
+	clm/tools/clm4_5/mksurfdata_map/src/mklaiMod.F90 - update for new crops
+	clm/tools/clm4_5/mksurfdata_map/src/mkpftConstantsMod.F90
+	clm/tools/clm4_5/mksurfdata_map/src/mkpftMod.F90 - update for new crops, fix bug 2155.
+
+	clm/tools/clm4_5/mksurfdata_map/src/mksurfdat.F90 - work around for an issue causing abort during urban dataset generation
+	clm/tools/clm4_5/mksurfdata_map/src/mkurbanparMod.F90
+
+
+CLM testing: regular
+
+	build-namelist tests:
+
+    yellowstone unit tests - ok
+
+  unit-tests (components/clm/src):
+
+    yellowstone_intel - ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    - yellowstone aux clm40 intel - ok
+    - yellowstone aux clm40 pgi - ok
+    - yellowstone aux clm45 intel - ok
+      - all namelist fail - new datasets and parameters
+      - crop - new crop model - baseline failures expected
+      - ed - new parameters file - baseline failures expected, ok'd by rfisher
+      - ERP_D_Ld5.f19_g16.ICLM45GLCMEC.yellowstone_intel.clm-glcMEC_changeFlags - baseline compare fails, roundoff level, unknown cause, ok'd by sacks
+      - ERP_E_Ld5.f19_g16.I1850CRUCLM45CN.yellowstone_intel.clm-default - baseline compare fails, only occurs with esmf - ok'd by mvertens
+    - yellowstone aux clm45 gnu - ok
+      - all namelist fail - new datasets and parameters
+      - crop - new crop model - baseline failures expected
+    - yellowstone aux clm45 pgi -
+      - all namelist fail - new datasets and parameters
+      - crop - new crop model - baseline failures expected
+      - ed - new parameters file - baseline failures expected, ok'd by rfisher
+      - ERI_D_Ld9.f19_g16.I1850CLM45CN.yellowstone_pgi - roundoff in cpl baseline
+      - ERI_D_Ld9.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-drydepnomegan - roundoff in baseline
+      - ERP_P15x2_Lm13.f10_f10.IHISTCLM45BGC.yellowstone_pgi.clm-monthly - new xfail, #2182, dies at runtime in optimized, threaded pgi builds only.
+    - yellowstone mksurfdata_map unit_testers - ok
+    - yellowstone tools tests - ok, known issues with PTCLMmkdata (bug 2180)
+
+CLM tag used for the baseline comparisons: clm4_5_1_r106 (bit for bit with clm4_5_1_r107)
+
+Changes answers relative to baseline: yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: crop, ed
+    - what platforms/compilers: all
+    - nature of change : answer changes updated crop model. approved by levis.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - simulations with all pfts everywhere were run with merged code. Levis compared current runs with his archived runs.
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r107
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Tue May 19 10:05:49 MDT 2015

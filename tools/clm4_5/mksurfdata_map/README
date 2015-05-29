@@ -1,5 +1,10 @@
 components/clm/tools/mksurfdata_map/README    Jan 13, 2012
 
+slevis comments:
+See additional info for how I created the new surface data in slevis notes
+at the top of this file:
+surfdata_74pft_360x720cru_simyr2000_c130920.log
+
 The routines in this directory create a surface dataset.
 The output grid is read in from the input namelist and
 can correspond to either a global or regional grid. 

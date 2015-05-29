@@ -16,7 +16,9 @@ module CanopyFluxesMod
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_ed
   use clm_varpar            , only : nlevgrnd, nlevsno
   use clm_varcon            , only : namep 
-  use pftconMod             , only : nbrdlf_dcd_tmp_shrub, nsoybean , nsoybeanirrig, pftcon
+  use pftconMod             , only : nbrdlf_dcd_tmp_shrub, pftcon
+  use pftconMod             , only : ntmp_soybean, nirrig_tmp_soybean
+  use pftconMod             , only : ntrp_soybean, nirrig_trp_soybean
   use decompMod             , only : bounds_type
   use PhotosynthesisMod     , only : Photosynthesis, PhotosynthesisTotal, Fractionation
   use EDPhotosynthesisMod   , only : Photosynthesis_ED
@@ -711,7 +713,8 @@ contains
                   btran(p) = min(1._r8, btran(p) * 3.33_r8)
                end if
             end if
-            if (patch%itype(p) == nsoybean .or. patch%itype(p) == nsoybeanirrig) then
+            if (patch%itype(p) == ntmp_soybean .or. patch%itype(p) == nirrig_tmp_soybean .or. &
+                patch%itype(p) == ntrp_soybean .or. patch%itype(p) == nirrig_trp_soybean) then
                btran(p) = min(1._r8, btran(p) * 1.25_r8)
             end if
          end do
@@ -759,7 +762,8 @@ contains
                      btran(p) = min(1._r8, btran(p) * 3.33_r8)
                   end if
                end if
-               if (patch%itype(p) == nsoybean .or. patch%itype(p) == nsoybeanirrig) then
+            if (patch%itype(p) == ntmp_soybean .or. patch%itype(p) == nirrig_tmp_soybean .or. &
+                patch%itype(p) == ntrp_soybean .or. patch%itype(p) == nirrig_trp_soybean) then
                   btran(p) = min(1._r8, btran(p) * 1.25_r8)
                end if
             end do

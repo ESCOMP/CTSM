@@ -74,7 +74,8 @@ sub set_nontransient {
    # Set up flanduse_timeseries for a non-transient case
    my $self = shift;
 
-   $self->set_value('flanduse_timeseries', ' ');
+   # Include single quotes in the variable's value, as would be the case in practice
+   $self->set_value('flanduse_timeseries', "' '");
 }
 
 sub set_transient {

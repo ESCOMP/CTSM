@@ -716,9 +716,7 @@ contains
     use clm_varpar      , only : crop_prog
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft
     use landunit_varcon , only : istsoil, istcrop
-    use pftconMod       , only : nc3crop, nc3irrig, npcropmin
-    use pftconMod       , only : ncorn, ncornirrig, nsoybean, nsoybeanirrig
-    use pftconMod       , only : nscereal, nscerealirrig, nwcereal, nwcerealirrig
+    use pftconMod       , only : nc3crop, nc3irrig, npcropmax, pftcon
     !
     ! !ARGUMENTS:
     integer, intent(in) :: begg, endg
@@ -726,7 +724,7 @@ contains
     integer          ,intent(in)    :: ns     ! domain size
     !
     ! !LOCAL VARIABLES:
-    integer  :: nl                             ! index
+    integer  :: nl, m                          ! index
     integer  :: dimid,varid                    ! netCDF id's
     integer  :: ier                            ! error status	
     logical  :: readvar                        ! is variable on dataset
@@ -807,16 +805,45 @@ contains
        end if
 
        do nl = begg,endg
-          wt_cft(nl,nc3crop)       = wt_cft(nl,nc3crop)  + wt_cft(nl,nc3irrig)
-          wt_cft(nl,nc3irrig)      = 0._r8
-          wt_cft(nl,ncorn)         = wt_cft(nl,ncorn)    + wt_cft(nl,ncornirrig)
-          wt_cft(nl,ncornirrig)    = 0._r8
-          wt_cft(nl,nscereal)      = wt_cft(nl,nscereal) + wt_cft(nl,nscerealirrig)
-          wt_cft(nl,nscerealirrig) = 0._r8
-          wt_cft(nl,nwcereal)      = wt_cft(nl,nwcereal) + wt_cft(nl,nwcerealirrig)
-          wt_cft(nl,nwcerealirrig) = 0._r8
-          wt_cft(nl,nsoybean)      = wt_cft(nl,nsoybean) + wt_cft(nl,nsoybeanirrig)
-          wt_cft(nl,nsoybeanirrig) = 0._r8
+          ! Left Hand Side: merged rainfed+irrigated crop pfts from nc3crop to
+          !                 npcropmax-1, stride 2
+          ! Right Hand Side: rainfed crop pfts from nc3crop to npcropmax-1,
+          !                  stride 2
+          ! plus             irrigated crop pfts from nc3irrig to npcropmax,
+          !                  stride 2
+          ! where stride 2 means "every other"
+          wt_cft(nl, nc3crop:npcropmax-1:2) = &
+               wt_cft(nl, nc3crop:npcropmax-1:2) + wt_cft(nl, nc3irrig:npcropmax:2)
+          wt_cft(nl, nc3irrig:npcropmax:2)  = 0._r8
+       end do
+
+       call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
+    end if
+
+    ! Now merge CFTs into the list of crops that the CLM knows how to model
+    if (crop_prog) then
+       if (masterproc) then
+          write(iulog, *) trim(subname) // ' merging wheat, barley, and rye into temperate cereals'
+          write(iulog, *) trim(subname) // ' clm knows how to model corn, temperate cereals, and soybean'
+          write(iulog, *) trim(subname) // ' all other crops are lumped with the generic crop pft'
+       end if
+
+       if (cft_size <= 0) then
+          call endrun( msg=trim(subname) // &
+               'ERROR: Trying to manipulate CFT list, but cft_size <= 0' // &
+               errMsg(__FILE__, __LINE__))
+       end if
+
+       do nl = begg, endg
+          do m = 1, npcropmax
+             if (m /= pftcon%mergetoclmpft(m)) then
+                ! merge wt_cft(nl,m) into wt_cft(nl,mergetoclmpft(m)) and
+                ! reset wt_cft(nl,m) to zero
+                wt_cft(nl, pftcon%mergetoclmpft(m)) = wt_cft(nl, pftcon%mergetoclmpft(m)) + wt_cft(nl, m)
+                wt_cft(nl, m) = 0._r8
+             end if
+          end do
+
        end do
 
        call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)

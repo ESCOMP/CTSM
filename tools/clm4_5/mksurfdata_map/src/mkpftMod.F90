@@ -43,7 +43,7 @@ module mkpftMod
   integer, public    :: pft_idx(0:maxpft) = & ! PFT vegetation index to override with
                              (/ ( -1,  m = 0, maxpft )   /)
   real(r8), public   :: pft_frc(0:maxpft) = & ! PFT vegetation fraction to override with
-                             (/ ( 0.0, m = 0, maxpft ) /)
+                             (/ ( 0.0_r8, m = 0, maxpft ) /)
 !
 ! !PRIVATE DATA MEMBERS:
 !
@@ -88,9 +88,9 @@ subroutine mkpftInit( zero_out_l, all_veg )
 ! !LOCAL VARIABLES:
 !EOP
   real(r8), parameter :: hndrd = 100.0_r8  ! A hundred percent
-  character(len=32) :: subname = 'mkpftInit:: '
+  character(len=32) :: subname = 'mkpftMod::mkpftInit() '
 !-----------------------------------------------------------------------
-
+  write (6, '(a, a, a)') "In ", trim(subname), "..."
   call mkpft_check_oride( )
   if ( use_input_pft ) then
      if ( maxpft < numpft ) then
@@ -236,10 +236,11 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
 
   character(len=35)  veg(0:maxpft)            ! vegetation types
-  character(len=32) :: subname = 'mkpft'
+  character(len=32) :: subname = 'mkpftMod::mkpft()'
 !-----------------------------------------------------------------------
 
   write (6,*)
+  write (6, '(a, a, a)') "In ", trim(subname), "..."
   write (6,*) 'Attempting to make PFTs .....'
   call shr_sys_flush(6)
 
@@ -275,14 +276,68 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
                    'c4 grass                           ', &
                    'c3_crop                            ', &
                    'c3_irrigated                       ', &
-                   'corn                               ', &
-                   'irrigated_corn                     ', &
-                   'spring_temperate_cereal            ', &
-                   'irrigated_spring_temperate_cereal  ', &
-                   'winter_temperate_cereal            ', &
-                   'irrigated_winter_temperate_cereal  ', &
-                   'soybean                            ', &
-                   'irrigated_soybean                  ' /)
+                   'temperate_corn                     ', &
+                   'irrigated_temperate_corn           ', &
+                   'spring_wheat                       ', &
+                   'irrigated_spring_wheat             ', &
+                   'winter_wheat                       ', &
+                   'irrigated_winter_wheat             ', &
+                   'temperate_soybean                  ', &
+                   'irrigated_temperate_soybean        ', &
+                   'barley                             ', &
+                   'irrigated_barley                   ', &
+                   'winter_barley                      ', &
+                   'irrigated_winter_barley            ', &
+                   'rye                                ', &
+                   'irrigated_rye                      ', &
+                   'winter_rye                         ', &
+                   'irrigated_winter_rye               ', &
+                   'cassava                            ', &
+                   'irrigated_cassava                  ', &
+                   'citrus                             ', &
+                   'irrigated citrus                   ', &
+                   'cocoa                              ', &
+                   'irrigated_cocoa                    ', &
+                   'coffee                             ', &
+                   'irrigated_coffee                   ', &
+                   'cotton                             ', &
+                   'irrigated_cotton                   ', &
+                   'datepalm                           ', &
+                   'irrigated_datepalm                 ', &
+                   'foddergrass                        ', &
+                   'irrigated_foddergrass              ', &
+                   'grapes                             ', &
+                   'irrigated_grapes                   ', &
+                   'groundnuts                         ', &
+                   'irrigated_groundnuts               ', &
+                   'millet                             ', &
+                   'irrigated_millet                   ', &
+                   'oilpalm                            ', &
+                   'irrigated_oilpalm                  ', &
+                   'potatoes                           ', &
+                   'irrigated_potatoes                 ', &
+                   'pulses                             ', &
+                   'irrigated_pulses                   ', &
+                   'rapeseed                           ', &
+                   'irrigated_rapeseed                 ', &
+                   'rice                               ', &
+                   'irrigated_rice                     ', &
+                   'sorghum                            ', &
+                   'irrigated_sorghum                  ', &
+                   'sugarbeet                          ', &
+                   'irrigated_sugarbeet                ', &
+                   'sugarcane                          ', &
+                   'irrigated_sugarcane                ', &
+                   'sunflower                          ', &
+                   'irrigated_sunflower                ', &
+                   'miscanthus                         ', &
+                   'irrigated_miscanthus               ', &
+                   'switchgrass                        ', &
+                   'irrigated_switchgrass              ', &
+                   'tropical_corn                      ', &
+                   'irrigated_tropical_corn            ', &
+                   'tropical_soybean                   ', &
+                   'irrigated_tropical_soybean         ' /)
   end if
   if (      numpft == numstdpft )then
      write(6,*)'Creating surface datasets with the standard # of PFTs =', numpft
@@ -558,7 +613,15 @@ subroutine mkpft_parse_oride( string )
   character(len=*), parameter :: idx_start = "<pft_i>"
   character(len=*), parameter :: idx_end   = "</pft_i>"
   character(len=*), parameter :: subname = 'mkpft_parse_oride'
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+
+  ! NOTE(bja, 2015-02) pft_frc and pft_index can be reset multiple
+  ! times by calls to this function. If the number of elements being
+  ! set is different each time, then we are working with out of date
+  ! information, and the sums may not sum to 100%.
+  pft_frc = 0.0_r8
+  pft_idx = -1
+  
   call shr_string_betweenTags( string, frc_start, frc_end, substring, rc )
   if ( rc /= 0 )then
      write(6,*) subname//'Trouble finding pft_frac start end tags'
@@ -606,7 +669,7 @@ subroutine mkpft_check_oride( )
   integer  :: i, j                         ! indices
   real(r8) :: sumpft                       ! Sum of pft_frc
   real(r8), parameter :: hndrd = 100.0_r8  ! A hundred percent
-  character(len=32) :: subname = 'mkpft_check_oride:: '
+  character(len=32) :: subname = 'mkpftMod::mkpft_check_oride() '
 !-----------------------------------------------------------------------
 
   sumpft = sum(pft_frc)
@@ -614,7 +677,9 @@ subroutine mkpft_check_oride( )
     ! PFT fraction is NOT used
     use_input_pft = .false.
   else if ( abs(sumpft - hndrd) > 1.e-6 )then
-    write(6,*) subname//'Sum of PFT fraction is NOT equal to 100% =', sumpft
+    write(6, '(a, a, f15.12)') trim(subname), 'Sum of PFT fraction is NOT equal to 100% =', sumpft
+    write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero-1)
+    write(6,*) 'With PFT index      : ', pft_idx(0:nzero-1)
     call abort()
   else
     use_input_pft = .true.

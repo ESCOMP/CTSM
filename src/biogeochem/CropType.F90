@@ -222,7 +222,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep
     use clm_varpar       , only : nlevsno, nlevgrnd
-    use pftconMod        , only : nwcereal, nwcerealirrig, pftcon 
+    use pftconMod        , only : nwwheat, nirrig_wwheat, pftcon 
     use CNVegStateType   , only : cnveg_state_type
     use ColumnType       , only : col
     use PatchType        , only : patch
@@ -272,7 +272,7 @@ contains
           rbufslp(p) = max(0._r8, min(pftcon%mxtmp(ivt), &
                t_ref2m_patch(p)-(SHR_CONST_TKFRZ + pftcon%baset(ivt)))) &
                * dtime/SHR_CONST_CDAY
-          if (ivt == nwcereal .or. ivt == nwcerealirrig) then
+          if (ivt == nwwheat .or. ivt == nirrig_wwheat) then
              rbufslp(p) = rbufslp(p) * cnveg_state_inst%vf_patch(p)
           end if
        else
@@ -294,7 +294,7 @@ contains
                ((t_soisno_col(c,1)*col%dz(c,1) + &
                t_soisno_col(c,2)*col%dz(c,2))/(col%dz(c,1)+col%dz(c,2))) - &
                (SHR_CONST_TKFRZ + pftcon%baset(ivt)))) * dtime/SHR_CONST_CDAY
-          if (ivt == nwcereal .or. ivt == nwcerealirrig) then
+          if (ivt == nwwheat .or. ivt == nwwheat) then
              rbufslp(p) = rbufslp(p) * cnveg_state_inst%vf_patch(p)
           end if
        else

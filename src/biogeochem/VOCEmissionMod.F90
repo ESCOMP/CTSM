@@ -195,7 +195,7 @@ contains
 
           call hist_addfld1d ( fname='MEG_'//trim(meg_cmp%name), units='kg/m2/sec',  &
                avgflag='A', long_name='MEGAN flux', &
-               ptr_patch=meg_out(imeg)%flux_out, set_lake=0._r8, set_urb=0._r8 )
+               ptr_patch=meg_out(imeg)%flux_out, set_lake=0._r8, set_urb=0._r8, default='inactive' )
 
           meg_cmp => meg_cmp%next_megcomp
        enddo
@@ -203,7 +203,7 @@ contains
        this%vocflx_tot_patch(begp:endp)= spval
        call hist_addfld1d (fname='VOCFLXT', units='moles/m2/sec',  &
             avgflag='A', long_name='total VOC flux into atmosphere', &
-            ptr_patch=this%vocflx_tot_patch, set_lake=0._r8, set_urb=0._r8)
+            ptr_patch=this%vocflx_tot_patch, set_lake=0._r8, set_urb=0._r8, default='inactive')
 
        this%gamma_out_patch(begp:endp)   = spval
        call hist_addfld1d (fname='GAMMA', units='non',  &

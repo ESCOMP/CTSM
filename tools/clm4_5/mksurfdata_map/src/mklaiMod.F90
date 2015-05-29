@@ -130,9 +130,18 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
   call check_ret(nf_inq_dimlen(ncidi, dimid, ntim), subname)
 
   if (numpft_i /= numpft+1) then
-     write(6,*)'MKLAI: parameter numpft+1= ',numpft+1, &
-          'does not equal input dataset numpft= ',numpft_i
-     stop
+     write(6,*) 'WARNING: ' // trim(subname) // '(): parameter numpft+1 = ', numpft+1, &
+          'does not equal input dataset numpft = ', numpft_i
+     write(6,*)'This inconsistency used to stop the program. Now we allow it '
+     write(6,*)'because crop pfts 17-last are assumed to never use satellite lai data.'
+!     stop
+     if (numpft_i > numpft + 1) then
+        ! NOTE(bja, 2015-01) If this error check is determined to be
+        ! invalid, all the loop bounds over output data in this
+        ! routine will need to be double checked!
+        write(6, *) "ERROR:" // trim(subname) // "(): input numpft must be less than or equal to output numpft+1."
+        stop
+     end if
   endif
   if (ntim /= 12) then
      write(6,*)'MKLAI: must have 12 time samples on input data'
@@ -143,10 +152,10 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
 
   ! Dynamic allocation of variables
 
-  allocate(mlai_i(ns_i,0:numpft),  &
-           msai_i(ns_i,0:numpft),  &
-           mhgtt_i(ns_i,0:numpft), &
-           mhgtb_i(ns_i,0:numpft), &
+  allocate(mlai_i(ns_i,0:numpft_i),  &
+           msai_i(ns_i,0:numpft_i),  &
+           mhgtt_i(ns_i,0:numpft_i), &
+           mhgtb_i(ns_i,0:numpft_i), &
            mask_src(ns_i),         &
            mlai_o(ns_o,0:numpft),  &
            msai_o(ns_o,0:numpft),  &
@@ -220,7 +229,7 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
 
      call check_ret(nf_inq_varid (ncidi, 'MONTHLY_SAI', varid), subname)
      call check_ret(nf_get_vara_double (ncidi, varid, begi(1:ndimsi), leni(1:ndimsi), &
-          msai_i(:,0:numpft)), subname)
+          msai_i), subname)
 
      call check_ret(nf_inq_varid (ncidi, 'MONTHLY_HEIGHT_TOP', varid), subname)
      call check_ret(nf_get_vara_double (ncidi, varid, begi(1:ndimsi), leni(1:ndimsi), &
@@ -237,7 +246,7 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
   
      ! Loop over pft types to do mapping
 
-     do l = 0,numpft
+     do l = 0, numpft_i - 1
         mask_src(:) = 1._r8 
         call gridmap_areaave(tgridmap, mlai_i(:,l) , mlai_o(:,l) , nodata=0._r8, mask_src=mask_src)
         call gridmap_areaave(tgridmap, msai_i(:,l) , msai_o(:,l) , nodata=0._r8, mask_src=mask_src)
@@ -299,7 +308,7 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
      gsai_i(:)  = 0.
      ghgtt_i(:) = 0.
      ghgtb_i(:) = 0.
-     do l  = 0, numpft
+     do l = 0, numpft_i - 1
      do ni = 1, ns_i
         glai_i(l)  = glai_i(l) + mlai_i(ni,l) *tgridmap%area_src(ni)*&
              tgridmap%frac_src(ni)*re**2
@@ -323,7 +332,7 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
      gsai_o(:)  = 0.
      ghgtt_o(:) = 0.
      ghgtb_o(:) = 0.
-     do l  = 0, numpft
+     do l = 0, numpft_i - 1
      do no = 1,ns_o
         glai_o(l)  = glai_o(l) + mlai_o(no,l)*tgridmap%area_dst(no)* &
              tgridmap%frac_dst(no)*re**2
@@ -368,9 +377,17 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
   !call pft_laicheck( ni_s, pft_i, laimask )
 
   ! Deallocate dynamic memory
+  deallocate(mlai_i)
+  deallocate(msai_i)
+  deallocate(mhgtt_i)
+  deallocate(mhgtb_i)
+  deallocate(mask_src)
+  deallocate(mlai_o)
+  deallocate(msai_o)
+  deallocate(mhgtt_o)
+  deallocate(mhgtb_o)
+  deallocate(laimask)
 
-  deallocate(mlai_i,msai_i,mhgtt_i,mhgtb_i,&
-             mask_src,mlai_o,msai_o,mhgtt_o,mhgtb_o,laimask)
   call gridmap_clean(tgridmap)
   call domain_clean(tdomain) 
 

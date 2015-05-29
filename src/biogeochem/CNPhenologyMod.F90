@@ -239,7 +239,7 @@ contains
          cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
     call CNOffsetLitterfall(num_soilp, filter_soilp, &
-         cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+         cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
     call CNBackgroundLitterfall(num_soilp, filter_soilp, &
          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
@@ -1192,8 +1192,11 @@ contains
     
     ! !USES:
     use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year
-    use pftconMod        , only : ncorn, nscereal, nwcereal, nsoybean
-    use pftconmod        , only : nwcerealirrig, nsoybeanirrig, ncornirrig, nscerealirrig
+    use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
+    use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
+    use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
+    use pftconMod        , only : nirrig_trp_corn, nirrig_sugarcane, nirrig_trp_soybean
+    use pftconMod        , only : nirrig_cotton, nirrig_rice
     use clm_varcon       , only : spval, secspday
     !
     ! !ARGUMENTS:
@@ -1312,18 +1315,20 @@ contains
          if ( jday == jdayyrstart(h) .and. mcsec == 0 )then
 
             ! make sure variables aren't changed at beginning of the year
-            ! for a crop that is currently planted (e.g. winter temperate cereal)
+            ! for a crop that is currently planted, such as
+            ! WINTER TEMPERATE CEREAL = winter (wheat + barley + rye)
+            ! represented here by the winter wheat pft
 
             if (.not. croplive(p))  then
                cropplant(p) = .false.
                idop(p)      = NOT_Planted
 
-               ! keep next for continuous, annual winter temperate cereal type crop;
+               ! keep next for continuous, annual winter temperate cereal crop;
                ! if we removed elseif,
                ! winter cereal grown continuously would amount to a cereal/fallow
                ! rotation because cereal would only be planted every other year
 
-            else if (croplive(p) .and. (ivt(p) == nwcereal .or. ivt(p) == nwcerealirrig)) then
+            else if (croplive(p) .and. (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat)) then
                cropplant(p) = .false.
                !           else ! not possible to have croplive and ivt==cornORsoy? (slevis)
             end if
@@ -1349,7 +1354,7 @@ contains
 
             ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
 
-            if (ivt(p) == nwcereal .or. ivt(p) == nwcerealirrig) then
+            if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
 
                ! add check to only plant winter cereal after other crops (soybean, maize)
                ! have been harvested
@@ -1429,12 +1434,21 @@ contains
 
                   ! go a specified amount of time before/after
                   ! climatological date
-                  if (ivt(p)==nsoybean .or. ivt(p) == nsoybeanirrig) gddmaturity(p)=min(gdd1020(p),hybgdd(ivt(p)))
-                  if (ivt(p)==ncorn .or. ivt(p)==ncornirrig) then
-                     gddmaturity(p)=max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
-                     gddmaturity(p)=max(950._r8, min(gddmaturity(p)+150._r8,1850._r8))
+                  if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
+                       ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
+                     gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
                   end if
-                  if (ivt(p)==nscereal .or. ivt(p) == nscerealirrig) gddmaturity(p)=min(gdd020(p),hybgdd(ivt(p)))
+                  if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
+                      ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
+                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane) then
+                     gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
+                     gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
+                  end if
+                  if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
+                      ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
+                      ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
+                     gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
+                  end if
 
                   leafc_xfer(p) = 1._r8 ! initial seed at planting to appear
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
@@ -1449,9 +1463,20 @@ contains
                   idop(p)      = jday
                   harvdate(p)  = NOT_Harvested
 
-                  if (ivt(p)==nsoybean .or. ivt(p) == nsoybeanirrig) gddmaturity(p)=min(gdd1020(p),hybgdd(ivt(p)))
-                  if (ivt(p)==ncorn .or. ivt(p)==ncornirrig) gddmaturity(p)=max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
-                  if (ivt(p)==nscereal .or. ivt(p) == nscerealirrig) gddmaturity(p)=min(gdd020(p),hybgdd(ivt(p)))
+                  if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
+                      ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
+                     gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
+                  end if
+                  if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
+                      ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
+                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane) then
+                     gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
+                  end if
+                  if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
+                      ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
+                      ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
+                     gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
+                  end if
 
                   leafc_xfer(p) = 1._r8 ! initial seed at planting to appear
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
@@ -1484,7 +1509,9 @@ contains
             ! calculate linear relationship between huigrain fraction and relative
             ! maturity rating for maize
 
-            if (ivt(p) == ncorn .or. ivt(p)==ncornirrig) then
+            if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
+                ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
+                ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane) then
                ! the following estimation of crmcorn from gddmaturity is based on a linear
                ! regression using data from Pioneer-brand corn hybrids (Kucharik, 2003,
                ! Earth Interactions 7:1-33: fig. 2)
@@ -1552,7 +1579,8 @@ contains
             ! vernalization factor is not 1;
             ! vf affects the calculation of gddtsoi & gddplant
 
-            if (t_ref2m_min(p) < 1.e30_r8 .and. vf(p) /= 1._r8 .and. (ivt(p) == nwcereal .or. ivt(p) == nwcerealirrig)) then
+            if (t_ref2m_min(p) < 1.e30_r8 .and. vf(p) /= 1._r8 .and. &
+               (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat)) then
                call vernalization(p, &
                     canopystate_inst, temperature_inst, waterstate_inst, cnveg_state_inst)
             end if
@@ -1649,7 +1677,7 @@ contains
     ! initialized, and after pftcon file is read in.
     !
     ! !USES:
-    use pftconMod       , only: npcropmin, npcropmax
+    use pftconMod       , only: npcropmin, npcropmax, npcropmaxknown
     use clm_time_manager, only: get_calday
     !
     ! !ARGUMENTS:
@@ -1671,13 +1699,14 @@ contains
     ! Convert planting dates into julian day
     minplantjday(:,:) = huge(1)
     maxplantjday(:,:) = huge(1)
-    do n = npcropmin, npcropmax
-       minplantjday(n,inNH) = int( get_calday( pftcon%mnnHplantdate(n), 0 ) )
-       maxplantjday(n,inNH) = int( get_calday( pftcon%mxNHplantdate(n), 0 ) )
-    end do
-    do n = npcropmin, npcropmax
-       minplantjday(n,inSH) = int( get_calday( pftcon%mnSHplantdate(n), 0 ) )
-       maxplantjday(n,inSH) = int( get_calday( pftcon%mxSHplantdate(n), 0 ) )
+    do n = npcropmin, npcropmaxknown
+       if (pftcon%mergetoclmpft(n) >= npcropmin) then
+          minplantjday(n, inNH) = int( get_calday( pftcon%mnNHplantdate(n), 0 ) )
+          maxplantjday(n, inNH) = int( get_calday( pftcon%mxNHplantdate(n), 0 ) )
+
+          minplantjday(n, inSH) = int( get_calday( pftcon%mnSHplantdate(n), 0 ) )
+          maxplantjday(n, inSH) = int( get_calday( pftcon%mxSHplantdate(n), 0 ) )
+       end if
     end do
 
     ! Figure out what hemisphere each PATCH is in
@@ -1970,7 +1999,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNOffsetLitterfall (num_soilp, filter_soilp, &
-       cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+       cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
     ! Determines the flux of C and N from displayed pools to litter
@@ -1984,6 +2013,7 @@ contains
     integer                       , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(cnveg_state_type)            , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)  , intent(in)    :: cnveg_carbonstate_inst
+    type(cnveg_nitrogenstate_type), intent(in)    :: cnveg_nitrogenstate_inst
     type(cnveg_carbonflux_type)   , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type) , intent(inout) :: cnveg_nitrogenflux_inst
     !
@@ -1999,7 +2029,6 @@ contains
          leafcn                =>    pftcon%leafcn                                     , & ! Input:  leaf C:N (gC/gN)                                  
          lflitcn               =>    pftcon%lflitcn                                    , & ! Input:  leaf litter C:N (gC/gN)                           
          frootcn               =>    pftcon%frootcn                                    , & ! Input:  fine root C:N (gC/gN)                             
-         livewdcn              =>    pftcon%livewdcn                                   , & ! Input:  live wood C:N (gC/gN)                             
          graincn               =>    pftcon%graincn                                    , & ! Input:  grain C:N (gC/gN)                                 
 
          offset_flag           =>    cnveg_state_inst%offset_flag_patch                , & ! Input:  [real(r8) (:) ]  offset flag                                       
@@ -2009,6 +2038,7 @@ contains
          frootc                =>    cnveg_carbonstate_inst%frootc_patch               , & ! Input:  [real(r8) (:) ]  (gC/m2) fine root C                               
          grainc                =>    cnveg_carbonstate_inst%grainc_patch               , & ! Input:  [real(r8) (:) ]  (gC/m2) grain C                                   
          livestemc             =>    cnveg_carbonstate_inst%livestemc_patch            , & ! Input:  [real(r8) (:) ]  (gC/m2) livestem C                                
+         livestemn             =>    cnveg_nitrogenstate_inst%livestemn_patch          , & ! Input:  [real(r8) (:) ]  (gN/m2) livestem N
 
          cpool_to_grainc       =>    cnveg_carbonflux_inst%cpool_to_grainc_patch       , & ! Input:  [real(r8) (:) ]  allocation to grain C (gC/m2/s)                   
          cpool_to_livestemc    =>    cnveg_carbonflux_inst%cpool_to_livestemc_patch    , & ! Input:  [real(r8) (:) ]  allocation to live stem C (gC/m2/s)               
@@ -2061,7 +2091,10 @@ contains
             frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
 
             if (ivt(p) >= npcropmin) then
-               livestemn_to_litter(p) = livestemc_to_litter(p) / livewdcn(ivt(p))
+               ! NOTE(slevis, 2014-12) results in -ve livestemn and -ve totpftn
+               !X! livestemn_to_litter(p) = livestemc_to_litter(p) / livewdcn(ivt(p))
+               ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
+               livestemn_to_litter(p) = livestemn(p) / dt
                grainn_to_food(p) = grainc_to_food(p) / graincn(ivt(p))
             end if
 

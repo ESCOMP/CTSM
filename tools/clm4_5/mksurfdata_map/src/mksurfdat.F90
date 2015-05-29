@@ -130,6 +130,9 @@ program mksurfdat
     real(r8), allocatable  :: p3(:)              ! coefficient for qflx_surf_lag for finundated (s/mm)
     real(r8), allocatable  :: zwt0(:)            ! decay factor for finundated (m)
 
+    ! NOTE(bja, 2015-01) added to work around a ?bug? causing 1x1_urbanc_alpha to abort. See
+    !/glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
+    logical :: urban_skip_abort_on_invalid_data_check
 
     type(domain_type) :: ldomain
 
@@ -193,7 +196,8 @@ program mksurfdat
          outnc_dims,               &
          fsurdat,                  &
          fdyndat,                  &   
-         fsurlog     
+         fsurlog,                  &
+         urban_skip_abort_on_invalid_data_check
 
 !-----------------------------------------------------------------------
 
@@ -268,6 +272,10 @@ program mksurfdat
     !    pft_frc ----------- Fractions that correspond to the pft_idx above
     ! ==================
     !    numpft            (if different than default of 16)
+    ! ======================================
+    ! Optional settings to work around urban bug?
+    ! ======================================
+    !    urban_skip_abort_on_invalid_data_check
     ! ======================================================================
 
     write(6,*) 'Attempting to initialize control settings .....'
@@ -277,6 +285,9 @@ program mksurfdat
     outnc_double      = .true.
     all_urban         = .false.
     no_inlandwet      = .true.
+
+    ! default value for bug work around
+    urban_skip_abort_on_invalid_data_check = .false.
 
     read(5, clmexp, iostat=ier)
     if (ier /= 0) then
@@ -290,6 +301,11 @@ program mksurfdat
     ! ----------------------------------------------------------------------
     ! Error check namelist input
     ! ----------------------------------------------------------------------
+    
+    if (urban_skip_abort_on_invalid_data_check) then
+       write(6, *) "WARNING: aborting on invalid data check in urban has been disabled!"
+       write(6, *) "WARNING: urban data may be invalid!"
+    end if
     
     if (mksrf_fgrid /= ' ')then
        fgrddat = mksrf_fgrid
@@ -319,6 +335,7 @@ program mksurfdat
     if ( no_inlandwet )then
        write(6,*) 'Set wetland to 0% over land'
     end if
+
     !
     ! Call module initialization routines
     !
@@ -436,6 +453,11 @@ program mksurfdat
        stop
     else
        ndiag = getavu(); call opnfil (fsurlog, ndiag, 'f')
+    end if
+    
+    if (urban_skip_abort_on_invalid_data_check) then
+       write(ndiag, *) "WARNING: aborting on invalid data check in urban has been disabled!"
+       write(ndiag, *) "WARNING: urban data may be invalid!"
     end if
     
     if (mksrf_fgrid /= ' ')then
@@ -962,7 +984,8 @@ program mksurfdat
 
     write(6,*)'calling mkurbanpar'
     call mkurbanpar(datfname=mksrf_furban, ncido=ncid, region_o=urban_region, &
-         urbn_classes_gcell_o=urbn_classes_g)
+         urbn_classes_gcell_o=urbn_classes_g, &
+         urban_skip_abort_on_invalid_data_check=urban_skip_abort_on_invalid_data_check)
 
     ! ----------------------------------------------------------------------
     ! Make LAI and SAI from 1/2 degree data and write to surface dataset 
@@ -1043,13 +1066,14 @@ program mksurfdat
              fname = ' '
              call mkpft_parse_oride(string)
              call mkharvest_parse_oride(string)
-	     write(6,*)'PFT and harvesting values are ',trim(string),' year is ',year
+	     write(6, '(a, i4, a)') 'PFT and harvesting values for year ', year, ' :'
+             write(6, '(a, a)') '    ', trim(string)
           !
           ! Otherwise intrepret string as a filename with PFT and harvesting values in it
           !
           else
              fname = string
-	     write(6,*)'input pft dynamic dataset is  ',trim(fname),' year is ',year
+	     write(6,*)'input pft dynamic dataset for year ', year, ' is : ', trim(fname)
           end if
           ntim = ntim + 1
 

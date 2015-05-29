@@ -23,6 +23,8 @@ my $scrdir;
 if ($ProgDir) { $scrdir = $ProgDir; }
 else { $scrdir = $cwd; }
 
+my $debug = 0;
+
 #-----------------------------------------------------------------------------------------------
 # Add $scrdir to the list of paths that Perl searches for modules
 my @dirs = ( $scrdir, "$scrdir/../../../../../cime/utils/perl5lib",
@@ -74,6 +76,7 @@ my %opts = (
                usr_mapdir=>"../../shared/mkmapdata",
                dynpft=>undef,
                csmdata=>$CSMDATA,
+               urban_skip_abort_on_invalid_data_check=>undef,
            );
 
 my $numpft = 16;
@@ -145,6 +148,12 @@ OPTIONS to override the mapping of the input gridded data with hardcoded input
      -soil_col "soil color"        Soil color (1 [light] to 20 [dark])
      -soil_fmx "soil fmax"         Soil maximum saturated fraction (0-1)
      -soil_snd "% of sand"         % of soil that is sand
+
+OPTIONS to work around bugs?
+     -urban_skip_abort_on_invalid_data_check
+                                   do not abort on an invalid data check in urban.
+                                   Added 2015-01 to avoid recompiling as noted in
+                                   /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
 
 EOF
 }
@@ -238,6 +247,175 @@ sub trim($)
     return $string;
 }
 
+sub write_transient_timeseries_file {
+  my ($transient, $desc, $sim_yr0, $sim_yrn, $queryfilopts, $resol, $rcp, $mkcrop_off, $sim_yr_surfdat) = @_;
+
+  my $strlen = 195;
+  my $dynpft_format = "%-${strlen}.${strlen}s %4.4d\n";
+  my $landuse_timeseries_text_file;
+  if ( $transient ) {
+    if ( ! defined($opts{'dynpft'}) && ! $opts{'pft_override'} ) {
+      $landuse_timeseries_text_file = "landuse_timeseries_$desc.txt";
+      my $fh_landuse_timeseries = IO::File->new;
+      $fh_landuse_timeseries->open( ">$landuse_timeseries_text_file" ) or die "** can't open file: $landuse_timeseries_text_file\n";
+      print "Writing out landuse_timeseries text file: $landuse_timeseries_text_file\n";
+      for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
+        # Note that, in the options in this query, we always use
+        # ${mkcrop_off}, even if we're generating datasets for crop. This
+        # is because, for now, we're using the non-crop transient raw data
+        # even when creating transient crop datasets. (See bug 2097.)
+        my $vegtypyr = `$scrdir/../../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,rcp=${rcp}${mkcrop_off} -var mksrf_fvegtyp -namelist clmexp`;
+        chomp( $vegtypyr );
+        printf $fh_landuse_timeseries $dynpft_format, $vegtypyr, $yr;
+        if ( $yr % 100 == 0 ) {
+          print "year: $yr\n";
+        }
+      }
+      $fh_landuse_timeseries->close;
+      print "Done writing file\n";
+    } elsif ( $opts{'pft_override'} && defined($opts{'dynpft'}) ) {
+      $landuse_timeseries_text_file = $opts{'dynpft'};
+    } else {
+      $landuse_timeseries_text_file = "landuse_timeseries_override_$desc.txt";
+      my $fh_landuse_timeseries = IO::File->new;
+      $fh_landuse_timeseries->open( ">$landuse_timeseries_text_file" ) or die "** can't open file: $landuse_timeseries_text_file\n";
+      my $frstpft = "<pft_f>$opts{'pft_frc'}</pft_f>" . 
+        "<pft_i>$opts{'pft_idx'}</pft_i>" .
+        "<harv>0,0,0,0,0</harv><graz>0</graz>";
+      print "Writing out landuse_timeseries text file: $landuse_timeseries_text_file\n";
+      if ( (my $len = length($frstpft)) > $strlen ) {
+        die "ERROR PFT line is too long ($len): $frstpft\n";
+      }
+      # NOTE(wjs, 2014-12-04) Using sim_yr_surfdat here rather than
+      # sim_yr0. As far as I can tell, it seems somewhat arbitrary which one
+      # we use, but sim_yr_surfdat seems more like what's intended.
+      printf $fh_landuse_timeseries $dynpft_format, $frstpft, $sim_yr_surfdat;
+      $fh_landuse_timeseries->close;
+      print "Done writing file\n";
+    }
+  }
+  return $landuse_timeseries_text_file;
+}
+
+sub write_namelist_file {
+  my ($ofile, $glc_nec, $griddata, $map, $datfil, $double,
+      $all_urb, $no_inlandwet, $vegtyp, $res, $desc, $sdate,
+      $transient, $landuse_timeseries_text_file, $setnumpft,
+      $res, $rcp, $sim_year, $nl) = @_;
+
+
+  my $fh = IO::File->new;
+  my $nl = "${ofile}.namelist";
+  $fh->open( ">$nl" ) or die "** can't open file: $nl\n";
+  print "CSMDATA is $CSMDATA \n";
+  print $fh <<"EOF";
+&clmexp
+ nglcec           = $glc_nec
+ mksrf_fgrid      = '$griddata'
+ map_fpft         = '$map->{'veg'}'
+ map_fglacier     = '$map->{'glc'}'
+ map_fsoicol      = '$map->{'col'}'
+ map_furban       = '$map->{'urb'}'
+ map_fmax         = '$map->{'fmx'}'
+ map_forganic     = '$map->{'org'}'
+ map_flai         = '$map->{'lai'}'
+ map_fharvest     = '$map->{'lai'}'
+ map_flakwat      = '$map->{'lak'}'
+ map_fwetlnd      = '$map->{'wet'}'
+ map_fvocef       = '$map->{'voc'}'
+ map_fsoitex      = '$map->{'tex'}'
+ map_furbtopo     = '$map->{'utp'}'
+ map_flndtopo     = '$map->{'top'}'
+ map_fgdp         = '$map->{'gdp'}'
+ map_fpeat        = '$map->{'peat'}'
+ map_fabm         = '$map->{'abm'}'
+ map_ftopostats   = '$map->{'topostats'}'
+ map_fvic         = '$map->{'vic'}'
+ map_fch4         = '$map->{'ch4'}'
+ mksrf_fsoitex    = '$datfil->{'tex'}'
+ mksrf_forganic   = '$datfil->{'org'}'
+ mksrf_flakwat    = '$datfil->{'lak'}'
+ mksrf_fwetlnd    = '$datfil->{'wet'}'
+ mksrf_fmax       = '$datfil->{'fmx'}'
+ mksrf_fglacier   = '$datfil->{'glc'}'
+ mksrf_fvocef     = '$datfil->{'voc'}'
+ mksrf_furbtopo   = '$datfil->{'utp'}'
+ mksrf_flndtopo   = '$datfil->{'top'}'
+ mksrf_fgdp       = '$datfil->{'gdp'}'
+ mksrf_fpeat      = '$datfil->{'peat'}'
+ mksrf_fabm       = '$datfil->{'abm'}'
+ mksrf_ftopostats = '$datfil->{'topostats'}'
+ mksrf_fvic       = '$datfil->{'vic'}'
+ mksrf_fch4       = '$datfil->{'ch4'}'
+ outnc_double   = $double
+ all_urban      = $all_urb
+ no_inlandwet   = $no_inlandwet
+ mksrf_furban   = '$datfil->{'urb'}'
+EOF
+  if ( defined($opts{'soil_override'}) ) {
+    print $fh <<"EOF";
+ soil_clay     = $opts{'soil_cly'}
+ soil_sand     = $opts{'soil_snd'}
+EOF
+  }
+  if ( defined($opts{'pft_override'}) ) {
+    print $fh <<"EOF";
+ pft_frc      = $opts{'pft_frc'}
+ pft_idx      = $opts{'pft_idx'}
+EOF
+  }
+
+  print $fh <<"EOF";
+ mksrf_fvegtyp  = '$vegtyp'
+ mksrf_fsoicol  = '$datfil->{'col'}'
+ mksrf_flai     = '$datfil->{'lai'}'
+EOF
+  print $fh <<"EOF";
+ fsurdat        = '$ofile.nc'
+ fsurlog        = '$ofile.log'     
+EOF
+
+  my $ofile_ts = "landuse.timeseries_${res}_${desc}_${sdate}";
+  if ( $transient ) {
+    print $fh <<"EOF";
+ mksrf_fdynuse  = '$landuse_timeseries_text_file'
+ fdyndat        = '$ofile_ts.nc'
+EOF
+  } else {
+    print $fh <<"EOF";
+ mksrf_fdynuse  = ' '
+ fdyndat        = ' '
+EOF
+  }
+  if ( $setnumpft ) {
+    print $fh <<"EOF";
+ $setnumpft
+EOF
+  }
+
+  if ( $opts{'urban_skip_abort_on_invalid_data_check'} ) {
+    print $fh <<"EOF";
+ urban_skip_abort_on_invalid_data_check = .true.
+EOF
+  }
+  # end the namelist
+  print $fh <<"EOF";
+/
+EOF
+
+  $fh->close;
+  print "resolution: $res rcp=$rcp sim_year = $sim_year\n";
+  print "namelist: $nl\n";
+  # 
+  # Print namelist file 
+  $fh->open( "<$nl" ) or die "** can't open file: $nl\n";
+  while( $_ = <$fh> ) {
+    print $_;
+  }
+  $fh->close;
+  return $nl, $ofile_ts;
+}
+
 #-----------------------------------------------------------------------------------------------
 
    my $cmdline = "@ARGV";
@@ -267,7 +445,8 @@ sub trim($)
         "soil_fmx=f"   => \$opts{'soil_fmx'},
         "soil_cly=f"   => \$opts{'soil_cly'},
         "soil_snd=f"   => \$opts{'soil_snd'},
-   ) or usage();
+        "urban_skip_abort_on_invalid_data_check" => \$opts{'urban_skip_abort_on_invalid_data_check'},
+     ) or usage();
 
    # Check for unparsed arguments
    if (@ARGV) {
@@ -316,12 +495,19 @@ sub trim($)
    my @years   = split( ",", $opts{'years'} );
    # Check that resolutions are valid
    foreach my $sim_year ( @years ) {
-      if ( ! $definition->is_valid_value( "sim_year", $sim_year ) ) {
-         if ( ! $definition->is_valid_value( "sim_year_range", "'$sim_year'" ) ) {
-            print "** Invalid simulation year or simulation year range: $sim_year\n";
-            usage();
-         }
-      }
+     if ("-" eq substr($sim_year, 4, 1)) {
+       # range of years for transient run
+       if ( ! $definition->is_valid_value( "sim_year_range", "'$sim_year'" ) ) {
+         print "** Invalid simulation simulation year range: $sim_year\n";
+         usage();
+       }
+     } else {
+       # single year.
+       if ( ! $definition->is_valid_value( "sim_year", $sim_year ) ) {
+         print "** Invalid simulation year: $sim_year\n";
+         usage();
+       }
+     }
    }
    #
    # Set rcp to use
@@ -343,7 +529,7 @@ sub trim($)
        $opts{'soil_override'} = 1;
    }
    # Check if pft set
-   if ( defined($opts{'crop'}) ) { $numpft = 24; }   # First set numpft if crop is on
+   if ( defined($opts{'crop'}) ) { $numpft = 78; }   # First set numpft if crop is on
    if ( defined($opts{'pft_frc'}) || defined($opts{'pft_idx'}) ) {
        &check_pft( );
        $opts{'pft_override'} = 1;
@@ -356,7 +542,6 @@ sub trim($)
        }
    }
 
-   my $nl = "namelist";
    my $sdate = "c" . `date +%y%m%d`;
    chomp( $sdate );
 
@@ -427,7 +612,11 @@ EOF
 		        "gdp", "peat","abm", "topostats" , "vic", "ch4") {
          my $lmask = `$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,mergeGIS=$merge_gis,hirespft=$hirespft -var lmask`;
          $lmask = trim($lmask);
-         my $hgrid = `$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,hirespft=$hirespft -var hgrid`;
+         my $hgrid_cmd = "$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,hirespft=$hirespft -var hgrid";
+         my $hgrid = `$hgrid_cmd`;
+         if ($debug) {
+           print "query to determine hgrid:\n    $hgrid_cmd \n\n";
+         }
          $hgrid = trim($hgrid);
          my $filnm = `$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ -var mksrf_filename`;
          $filnm = trim($filnm);
@@ -444,11 +633,12 @@ EOF
          }
          if ( ! defined($opts{'allownofile'}) && ! -f $map{$typ} ) {
             die "ERROR: mapping file for this resolution does NOT exist ($map{$typ}).\n";
-         }
-         $datfil{$typ} = `$scrdir/../../../bld/queryDefaultNamelist.pl $mkopts -options hgrid=$hgrid,lmask=$lmask,mergeGIS=$merge_gis$mkcrop -var $filnm`;
+          }
+         my $typ_cmd = "$scrdir/../../../bld/queryDefaultNamelist.pl $mkopts -options hgrid=$hgrid,lmask=$lmask,mergeGIS=$merge_gis$mkcrop -var $filnm";
+         $datfil{$typ} = `$typ_cmd`;
          $datfil{$typ} = trim($datfil{$typ});
          if ( $datfil{$typ} !~ /[^ ]+/ ) {
-            die "ERROR: could NOT find a $filnm data file for this resolution: $hgrid and type: $typ and $lmask.\n";
+            die "ERROR: could NOT find a $filnm data file for this resolution: $hgrid and type: $typ and $lmask.\n$typ_cmd\n\n";
          }
          if ( ! defined($opts{'allownofile'}) && ! -f $datfil{$typ} ) {
             die "ERROR: data file for this resolution does NOT exist ($datfil{$typ}).\n";
@@ -505,58 +695,7 @@ EOF
                print "For $sim_year actually run $actual\n";
                $sim_year = $actual;
             }
-            #
-            # Create namelist file
-            #
-            my $fh = IO::File->new;
-            $fh->open( ">$nl" ) or die "** can't open file: $nl\n";
-	    print "CSMDATA is $CSMDATA \n";
-            print $fh <<"EOF";
-&clmexp
- nglcec           = $glc_nec
- mksrf_fgrid      = '$griddata'
- map_fpft         = '$map{'veg'}'
- map_fglacier     = '$map{'glc'}'
- map_fsoicol      = '$map{'col'}'
- map_furban       = '$map{'urb'}'
- map_fmax         = '$map{'fmx'}'
- map_forganic     = '$map{'org'}'
- map_flai         = '$map{'lai'}'
- map_fharvest     = '$map{'lai'}'
- map_flakwat      = '$map{'lak'}'
- map_fwetlnd      = '$map{'wet'}'
- map_fvocef       = '$map{'voc'}'
- map_fsoitex      = '$map{'tex'}'
- map_furbtopo     = '$map{'utp'}'
- map_flndtopo     = '$map{'top'}'
- map_fgdp         = '$map{'gdp'}'
- map_fpeat        = '$map{'peat'}'
- map_fabm         = '$map{'abm'}'
- map_ftopostats   = '$map{'topostats'}'
- map_fvic         = '$map{'vic'}'
- map_fch4         = '$map{'ch4'}'
- mksrf_fsoitex    = '$datfil{'tex'}'
- mksrf_forganic   = '$datfil{'org'}'
- mksrf_flakwat    = '$datfil{'lak'}'
- mksrf_fwetlnd    = '$datfil{'wet'}'
- mksrf_fmax       = '$datfil{'fmx'}'
- mksrf_fglacier   = '$datfil{'glc'}'
- mksrf_fvocef     = '$datfil{'voc'}'
- mksrf_furbtopo   = '$datfil{'utp'}'
- mksrf_flndtopo   = '$datfil{'top'}'
- mksrf_fgdp       = '$datfil{'gdp'}'
- mksrf_fpeat      = '$datfil{'peat'}'
- mksrf_fabm       = '$datfil{'abm'}'
- mksrf_ftopostats = '$datfil{'topostats'}'
- mksrf_fvic       = '$datfil{'vic'}'
- mksrf_fch4       = '$datfil{'ch4'}'
- outnc_double   = $double
- all_urban      = $all_urb
- no_inlandwet   = $no_inlandwet
- mksrf_furban   = '$datfil{'urb'}'
-EOF
             my $urbdesc = "urb3den";
-
             my $resol = "-res $hgrd{'veg'}";
             my $sim_yr0 = $sim_year;
             my $sim_yrn = $sim_year;
@@ -582,114 +721,34 @@ EOF
             if ( $vegtyp eq "" ) {
                die "** trouble getting vegtyp file with: $cmd\n";
             }
-            if ( $rcp == -999.9 ) {
-               $desc         = sprintf( "hist_simyr%4.4d-%4.4d", $sim_yr0, $sim_yrn );
-               $desc_surfdat = sprintf( "simyr%4.4d",            $sim_yr_surfdat  );
-            } else {
-               $desc         = sprintf( "%s%2.1f_simyr%4.4d-%4.4d", "rcp", $rcp, $sim_yr0, $sim_yrn );
-               $desc_surfdat = sprintf( "%s%2.1f_simyr%4.4d",       "rcp", $rcp, $sim_yr_surfdat  );
-            }
-            my $strlen = 195;
-            my $dynpft_format = "%-${strlen}.${strlen}s %4.4d\n";
             my $options = "";
             my $crpdes  = "";
-            if ( $mkcrop ne "" ) { 
+            if ( $mkcrop ne "" ) {
                $options = "-options $mkcrop";
-               $crpdes  = "mp24_";
+               $crpdes  = sprintf("%2.2dpfts_", $numpft);
             }
-            my $landuse_timeseries_text_file;
-	    if ( $transient ) {
-		if ( ! defined($opts{'dynpft'}) && ! $opts{'pft_override'} ) {
-		    $landuse_timeseries_text_file = "landuse_timeseries_$desc.txt";
-		    my $fh_landuse_timeseries = IO::File->new;
-		    $fh_landuse_timeseries->open( ">$landuse_timeseries_text_file" ) or die "** can't open file: $landuse_timeseries_text_file\n";
-		    print "Writing out landuse_timeseries text file: $landuse_timeseries_text_file\n";
-		    for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
-                        # Note that, in the options in this query, we always use
-                        # ${mkcrop_off}, even if we're generating datasets for crop. This
-                        # is because, for now, we're using the non-crop transient raw data
-                        # even when creating transient crop datasets. (See bug 2097.)
-                        my $vegtypyr = `$scrdir/../../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,rcp=${rcp}${mkcrop_off} -var mksrf_fvegtyp -namelist clmexp`;
-			chomp( $vegtypyr );
-			printf $fh_landuse_timeseries $dynpft_format, $vegtypyr, $yr;
-			if ( $yr % 100 == 0 ) {
-			    print "year: $yr\n";
-			}
-		    }
-		    $fh_landuse_timeseries->close;
-		    print "Done writing file\n";
-		} elsif ( $opts{'pft_override'} && defined($opts{'dynpft'}) ) {
-		    $landuse_timeseries_text_file = $opts{'dynpft'};
-		} else {
-		    $landuse_timeseries_text_file = "landuse_timeseries_override_$desc.txt";
-		    my $fh_landuse_timeseries = IO::File->new;
-		    $fh_landuse_timeseries->open( ">$landuse_timeseries_text_file" ) or die "** can't open file: $landuse_timeseries_text_file\n";
-		    my $frstpft = "<pft_f>$opts{'pft_frc'}</pft_f>" . 
-			"<pft_i>$opts{'pft_idx'}</pft_i>" .
-			"<harv>0,0,0,0,0</harv><graz>0</graz>";
-		    print "Writing out landuse_timeseries text file: $landuse_timeseries_text_file\n";
-		    if ( (my $len = length($frstpft)) > $strlen ) {
-			die "ERROR PFT line is too long ($len): $frstpft\n";
-		    }
-                    # NOTE(wjs, 2014-12-04) Using sim_yr_surfdat here rather than
-                    # sim_yr0. As far as I can tell, it seems somewhat arbitrary which one
-                    # we use, but sim_yr_surfdat seems more like what's intended.
-		    printf $fh_landuse_timeseries $dynpft_format, $frstpft, $sim_yr_surfdat;
-		    $fh_landuse_timeseries->close;
-		    print "Done writing file\n";
-		}
-	    }
-
-            if ( defined($opts{'soil_override'}) ) {
-               print $fh <<"EOF";
- soil_clay     = $opts{'soil_cly'}
- soil_sand     = $opts{'soil_snd'}
-EOF
-            }
-            if ( defined($opts{'pft_override'}) ) {
-               print $fh <<"EOF";
- pft_frc      = $opts{'pft_frc'}
- pft_idx      = $opts{'pft_idx'}
-EOF
-            }
-
-            print $fh <<"EOF";
- mksrf_fvegtyp  = '$vegtyp'
- mksrf_fsoicol  = '$datfil{'col'}'
- mksrf_flai     = '$datfil{'lai'}'
-EOF
-	    my $ofile = "surfdata_${res}_${desc_surfdat}_${sdate}";
-	    print $fh <<"EOF";
- fsurdat        = '$ofile.nc'
- fsurlog        = '$ofile.log'     
-EOF
-
-	    my $ofile_ts = "landuse.timeseries_${res}_${desc}_${sdate}";
-	    if ( $transient ) {
-	        print $fh <<"EOF";
- mksrf_fdynuse  = '$landuse_timeseries_text_file'
- fdyndat        = '$ofile_ts.nc'
-EOF
+            if ( $rcp != -999.9 ) {
+               $desc         = sprintf( "%s%2.1f_simyr%4.4d-%4.4d", "rcp", $rcp, $sim_yr0, $sim_yrn );
+               $desc_surfdat = sprintf( "%s%2.1f_simyr%4.4d",       "rcp", $rcp, $sim_yr_surfdat  );
+            } elsif ( $crpdes ne "") {
+               $desc         = sprintf( "hist_%ssimyr%4.4d-%4.4d", $crpdes, $sim_yr0, $sim_yrn );
+               $desc_surfdat = sprintf( "%ssimyr%4.4d",            $crpdes, $sim_yr_surfdat  );
             } else {
-		print $fh <<"EOF";
- mksrf_fdynuse  = ' '
- fdyndat        = ' '
-EOF
+               $desc         = sprintf( "hist_simyr%4.4d-%4.4d", $sim_yr0, $sim_yrn );
+               $desc_surfdat = sprintf( "simyr%4.4d",            $sim_yr_surfdat  );
             }
-            print $fh <<"EOF";
- $setnumpft
-/
-EOF
-            $fh->close;
-	    print "resolution: $res rcp=$rcp sim_year = $sim_year\n";
- 	    print "namelist: $nl\n";
-	    # 
-	    # Print namelist file 
-            $fh->open( "<$nl" ) or die "** can't open file: $nl\n";
-            while( $_ = <$fh> ) {
-              print $_;
-            }
-            $fh->close;
+	    my $ofile = "surfdata_${res}_${desc_surfdat}_${sdate}";
+
+            my ($landuse_timeseries_text_file) = write_transient_timeseries_file(
+                 $transient, $desc, $sim_yr0, $sim_yrn,
+                 $queryfilopts, $resol, $rcp, $mkcrop_off,
+                 $sim_yr_surfdat);
+            my ($nl, $ofile_ts) = write_namelist_file(
+                 $ofile, $glc_nec, $griddata, \%map, \%datfil, $double,
+                 $all_urb, $no_inlandwet, $vegtyp, $res, $desc, $sdate,
+                 $transient, $landuse_timeseries_text_file, $setnumpft,
+                 $res, $rcp, $sim_year);
+
             #
             # Delete previous versions of files that will be created
             #

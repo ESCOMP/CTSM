@@ -895,7 +895,7 @@ sub setup_cmdl_maxpft {
     # NOTE: maxpatchpft sizes already checked for clm4_0 by configure.
   } else {
     my %maxpatchpft;
-    $maxpatchpft{'.true.'}   = 25;
+    $maxpatchpft{'.true.'}   = 79;
     $maxpatchpft{'.false.'} = 17;
     if ( $opts->{$var} ne "default") {
       $val = $opts->{$var};
@@ -998,7 +998,8 @@ sub setup_cmdl_irrigation {
       fatal_error("The -irrig=.true. option requires -crop");
     }
     if ( defined($nl->get_value("irrigate")) && $nl->get_value("irrigate") ne $nl_flags->{'irrig'} ) {
-      fatal_error("The namelist value irrigate contradicts the command line option -irrig");
+      my $irrigate = $nl->get_value("irrigate");
+      fatal_error("The namelist value 'irrigate=$irrigate' contradicts the command line option '-irrig=$val'");
     }
   }
 }
@@ -2922,17 +2923,11 @@ sub set_abs_filepath {
 
     my ($filepath, $rootdir) = @_;
 
-    # strip any leading/trailing whitespace
-    $filepath =~ s/^\s+//;
-    $filepath =~ s/\s+$//;
-    $rootdir  =~ s/^\s+//;
-    $rootdir  =~ s/\s+$//;
-
-    # strip any leading/trailing quotes
-    $filepath =~ s/^['"]+//;
-    $filepath =~ s/["']+$//;
-    $rootdir =~ s/^['"]+//;
-    $rootdir =~ s/["']+$//;
+    # strip any leading/trailing whitespace and quotes
+    $filepath = trim($filepath);
+    $filepath = remove_leading_and_trailing_quotes($filepath);
+    $rootdir  = trim($rootdir);
+    $rootdir = remove_leading_and_trailing_quotes($rootdir);
 
     my $out = $filepath;
     unless ( $filepath =~ /^\// ) {  # unless $filepath starts with a /
@@ -2949,8 +2944,8 @@ sub valid_option {
 
     my $expect;
 
-    $val =~ s/^\s+//;
-    $val =~ s/\s+$//;
+    $val = trim($val);
+
     foreach $expect (@expect) {
         if ($val =~ /^$expect$/i) { return $expect; }
     }
@@ -3160,15 +3155,42 @@ sub check_megan_spec {
 
 #-------------------------------------------------------------------------------
 
+sub trim {
+   # remove leading and trailing whitespace from a string.
+   my ($str) = @_;
+   $str =~ s/^\s+//;
+   $str =~ s/\s+$//;
+   return $str;
+}
+
+#-------------------------------------------------------------------------------
+
 sub quote_string {
-    # Add quotes around a string, unless they are already there
-    my ($str) = @_;
-    $str =~ s/^\s+//;
-    $str =~ s/\s+$//;
-    unless ($str =~ /^['"]/) {        #"'
-        $str = "\'$str\'";
-    }
-    return $str;
+   # Add quotes around a string, unless they are already there
+   my ($str) = @_;
+   $str = trim($str);
+   unless ($str =~ /^['"]/) {        #"'
+      $str = "\'$str\'";
+   }
+   return $str;
+ }
+
+#-------------------------------------------------------------------------------
+
+sub remove_leading_and_trailing_quotes {
+   # Remove leading and trailing single and double quotes from a string. Also
+   # removes leading spaces before the leading quotes, and trailing spaces after
+   # the trailing quotes.
+
+   my ($str) = @_;
+
+   $str = trim($str);
+
+   # strip any leading/trailing quotes
+   $str =~ s/^['"]+//;
+   $str =~ s/["']+$//;
+
+   return $str;
 }
 
 #-------------------------------------------------------------------------------
@@ -3195,16 +3217,20 @@ sub logical_to_fortran {
 #-------------------------------------------------------------------------------
 
 sub string_is_undef_or_empty {
-   # Return true if the given string is undefined or only spaces, false otherwise
+   # Return true if the given string is undefined or only spaces, false otherwise.
+   # A quoted empty string (' ' or " ") is treated as being empty.
    my ($str) = @_;
    if (!defined($str)) {
       return 1;
    }
-   elsif ($str =~ /^ *$/) {
-      return 1;
-   }
    else {
-      return 0;
+      $str = remove_leading_and_trailing_quotes($str);
+      if ($str =~ /^\s*$/) {
+         return 1;
+      }
+      else {
+         return 0;
+      }
    }
 }
 

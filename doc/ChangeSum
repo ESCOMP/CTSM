@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r108    andre 05/29/2015 Crop changes from Sam Levis
    clm4_5_1_r107    andre 05/19/2015 Update externals to use github version of cime1.0.7.
    clm4_5_1_r106     erik 05/14/2015 Fix CO2 forcing for MEGAN
    clm4_5_1_r105     erik 04/16/2015 Move test lists to beneath active components, change build scripts from cshell to perl, move to new cime directory structure

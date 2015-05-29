@@ -433,7 +433,7 @@ end subroutine normalize_urbn_by_tot
 ! !IROUTINE: mkurbanpar
 !
 ! !INTERFACE:
-subroutine mkurbanpar(datfname, ncido, region_o, urbn_classes_gcell_o)
+subroutine mkurbanpar(datfname, ncido, region_o, urbn_classes_gcell_o, urban_skip_abort_on_invalid_data_check)
 !
 ! !DESCRIPTION:
 ! Make Urban Parameter data
@@ -459,6 +459,7 @@ subroutine mkurbanpar(datfname, ncido, region_o, urbn_classes_gcell_o)
    integer           , intent(in) :: region_o(:)               ! output grid: region ID (length: ns_o)
    real(r8)          , intent(in) :: urbn_classes_gcell_o(:,:) ! output grid: percent urban in each density class
                                                                ! (% of total grid cell area) (dimensions: ns_o, numurbl)
+   logical           , intent(in) :: urban_skip_abort_on_invalid_data_check
 
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
@@ -611,7 +612,8 @@ subroutine mkurbanpar(datfname, ncido, region_o, urbn_classes_gcell_o)
    
    do p = 1, size(params_scalar)
       call lookup_and_check_err(params_scalar(p)%name, params_scalar(p)%fill_val, &
-                                params_scalar(p)%check_invalid, data_scalar_o, 0)
+           params_scalar(p)%check_invalid, urban_skip_abort_on_invalid_data_check, &
+           data_scalar_o, 0)
 
       call check_ret(nf_inq_varid(ncido, params_scalar(p)%name, varid), subname)
       ! In the following, note that type conversion occurs if we're writing to a variable of type
@@ -639,8 +641,9 @@ subroutine mkurbanpar(datfname, ncido, region_o, urbn_classes_gcell_o)
             extra_dims(1)%val = n
 
             call lookup_and_check_err(params_rad(p)%name, params_rad(p)%fill_val, &
-                                      params_rad(p)%check_invalid, data_rad_o(:,:,n,m), &
-                                      2, extra_dims)
+                 params_rad(p)%check_invalid, urban_skip_abort_on_invalid_data_check, &
+                 data_rad_o(:,:,n,m), &
+                 2, extra_dims)
          end do
       end do
 
@@ -678,8 +681,9 @@ subroutine mkurbanpar(datfname, ncido, region_o, urbn_classes_gcell_o)
          extra_dims(1)%val = n
 
          call lookup_and_check_err(params_levurb(p)%name, params_levurb(p)%fill_val, &
-                                   params_levurb(p)%check_invalid, data_levurb_o(:,:,n), &
-                                   1, extra_dims)
+              params_levurb(p)%check_invalid, &
+              urban_skip_abort_on_invalid_data_check, data_levurb_o(:,:,n), &
+              1, extra_dims)
       end do
 
       call check_ret(nf_inq_varid(ncido, params_levurb(p)%name, varid), subname)
@@ -703,7 +707,9 @@ subroutine mkurbanpar(datfname, ncido, region_o, urbn_classes_gcell_o)
 
 contains
 !------------------------------------------------------------------------------
-   subroutine lookup_and_check_err(varname, fill_val, check_invalid, data, n_extra_dims, extra_dims)
+  subroutine lookup_and_check_err(varname, fill_val, check_invalid, &
+       urban_skip_abort_on_invalid_data_check, data, n_extra_dims, extra_dims)
+
    ! Wrapper to lookup_2d_netcdf: Loops over each density class, calling lookup_2d_netcdf
    ! with that density class and filling the appropriate slice of the data array. Also
    ! checks for any errors, aborting if there were any.
@@ -720,6 +726,8 @@ contains
       character(len=*), intent(in) :: varname       ! name of lookup table
       real(r8)        , intent(in) :: fill_val      ! value to put where we have no data in output variables
       logical         , intent(in) :: check_invalid ! should we check whether there are any invalid data in the output?
+      logical         , intent(in) :: urban_skip_abort_on_invalid_data_check
+
       real(r8)        , intent(out):: data(:,:)     ! output from lookup_2d_netcdf
       integer         , intent(in) :: n_extra_dims  ! number of extra dimensions in the lookup table
 
@@ -763,7 +771,11 @@ contains
                   write(6,*) 'n: ', n
                   write(6,*) 'region: ', region_o(n)
                   write(6,*) 'urbn_classes_gcell_o(n,k): ', urbn_classes_gcell_o(n,k)
-                  call abort()
+                  if (.not. urban_skip_abort_on_invalid_data_check) then
+                     ! NOTE(bja, 2015-01) added to work around a ?bug? noted in
+                     ! /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219
+                     call abort()
+                  end if
                end if
             end do
          end if

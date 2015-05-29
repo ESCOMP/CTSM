@@ -618,9 +618,12 @@ contains
          l = patch%landunit(p)
          if (lun%itype(l) == istsoil) then
             diff = abs(patch%wtlunit(p) - pft_wtlunit_before_rest_read(p))
-            if (diff > tol) then
-               write(iulog,*) 'ERROR: PATCH weights are SIGNIFICANTLY different between the restart (finidat) file'
-               write(iulog,*) 'and the surface dataset (fsurdat).'
+            if (diff > tol .and. patch%wtgcell(p) > 1.0e-16_r8) then
+               write(iulog,*) 'ERROR: PATCH weights are SIGNIFICANTLY different between :'
+               write(iulog,*) 'the restart (finidat) file : ', patch%wtlunit(p)
+               write(iulog,*) 'and the surface dataset (fsurdat): ', pft_wtlunit_before_rest_read(p)
+               write(iulog,*) 'weight gridcell: ', patch%wtgcell(p)
+               write(iulog,*)
                write(iulog,*) 'Maximum allowed difference: ', tol
                write(iulog,*) 'Difference found: ', diff
                write(iulog,*) 'This match is a requirement for non-transient runs'

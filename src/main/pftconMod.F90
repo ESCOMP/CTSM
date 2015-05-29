@@ -33,15 +33,70 @@ module pftconMod
   integer :: nc3_nonarctic_grass    ! value for C3 non-arctic grass
   integer :: nc4_grass              ! value for C4 grass
   integer :: npcropmin              ! value for first crop
-  integer :: ncorn                  ! value for corn, rain fed (rf)
-  integer :: ncornirrig             ! value for corn, irrigated (ir)
-  integer :: nscereal               ! value for spring temperate cereal (rf)
-  integer :: nscerealirrig          ! value for spring temperate cereal (ir)
-  integer :: nwcereal               ! value for winter temperate cereal (rf)
-  integer :: nwcerealirrig          ! value for winter temperate cereal (ir)
-  integer :: nsoybean               ! value for soybean (rf)
-  integer :: nsoybeanirrig          ! value for soybean (ir)
+  integer :: ntmp_corn              ! value for temperate corn, rain fed (rf)
+  integer :: nirrig_tmp_corn        ! value for temperate corn, irrigated (ir)
+  integer :: nswheat                ! value for spring temperate cereal (rf)
+  integer :: nirrig_swheat          ! value for spring temperate cereal (ir)
+  integer :: nwwheat                ! value for winter temperate cereal (rf)
+  integer :: nirrig_wwheat          ! value for winter temperate cereal (ir)
+  integer :: ntmp_soybean           ! value for temperate soybean (rf)
+  integer :: nirrig_tmp_soybean     ! value for temperate soybean (ir)
+  integer :: nbarley                ! value for spring barley (rf)
+  integer :: nirrig_barley          ! value for spring barley (ir)
+  integer :: nwbarley               ! value for winter barley (rf)
+  integer :: nirrig_wbarley         ! value for winter barley (ir)
+  integer :: nrye                   ! value for spring rye (rf)
+  integer :: nirrig_rye             ! value for spring rye (ir)
+  integer :: nwrye                  ! value for winter rye (rf)
+  integer :: nirrig_wrye            ! value for winter rye (ir)
+  integer :: ncassava               ! ...and so on
+  integer :: nirrig_cassava
+  integer :: ncitrus
+  integer :: nirrig_citrus
+  integer :: ncocoa
+  integer :: nirrig_cocoa
+  integer :: ncoffee
+  integer :: nirrig_coffee
+  integer :: ncotton
+  integer :: nirrig_cotton
+  integer :: ndatepalm
+  integer :: nirrig_datepalm
+  integer :: nfoddergrass
+  integer :: nirrig_foddergrass
+  integer :: ngrapes
+  integer :: nirrig_grapes
+  integer :: ngroundnuts
+  integer :: nirrig_groundnuts
+  integer :: nmillet
+  integer :: nirrig_millet
+  integer :: noilpalm
+  integer :: nirrig_oilpalm
+  integer :: npotatoes
+  integer :: nirrig_potatoes
+  integer :: npulses
+  integer :: nirrig_pulses
+  integer :: nrapeseed
+  integer :: nirrig_rapeseed
+  integer :: nrice
+  integer :: nirrig_rice
+  integer :: nsorghum
+  integer :: nirrig_sorghum
+  integer :: nsugarbeet
+  integer :: nirrig_sugarbeet
+  integer :: nsugarcane
+  integer :: nirrig_sugarcane
+  integer :: nsunflower
+  integer :: nirrig_sunflower
+  integer :: nmiscanthus
+  integer :: nirrig_miscanthus
+  integer :: nswitchgrass
+  integer :: nirrig_switchgrass
+  integer :: ntrp_corn              !value for tropical corn (rf)
+  integer :: nirrig_trp_corn        !value for tropical corn (ir)
+  integer :: ntrp_soybean           !value for tropical soybean (rf)
+  integer :: nirrig_trp_soybean     !value for tropical soybean (ir)
   integer :: npcropmax              ! value for last prognostic crop in list
+  integer :: npcropmaxknown         ! value for last one clm knows how to model
   integer :: nc3crop                ! value for generic crop (rf)
   integer :: nc3irrig               ! value for irrigated generic crop (ir)
 
@@ -102,6 +157,7 @@ module pftconMod
      real(r8), allocatable :: hybgdd        (:)   ! parameter used in CNPhenology
      real(r8), allocatable :: lfemerg       (:)   ! parameter used in CNPhenology
      real(r8), allocatable :: grnfill       (:)   ! parameter used in CNPhenology
+     integer , allocatable :: mergetoclmpft (:)   ! parameter used in surfrdMod
      integer , allocatable :: mxmat         (:)   ! parameter used in CNPhenology
      integer , allocatable :: mnNHplantdate (:)   ! minimum planting date for NorthHemisphere (YYYYMMDD)
      integer , allocatable :: mxNHplantdate (:)   ! maximum planting date for NorthHemisphere (YYYYMMDD)
@@ -219,6 +275,7 @@ contains
     allocate( this%roota_par     (0:mxpft) )   
     allocate( this%rootb_par     (0:mxpft) )   
     allocate( this%crop          (0:mxpft) )        
+    allocate( this%mergetoclmpft (0:mxpft) )   
     allocate( this%irrigated     (0:mxpft) )   
     allocate( this%smpso         (0:mxpft) )       
     allocate( this%smpsc         (0:mxpft) )       
@@ -334,12 +391,13 @@ contains
     logical            :: readv                ! read variable in or not
     character(len=32)  :: subname = 'InitRead' ! subroutine name
     character(len=pftname_len) :: expected_pftnames(0:mxpft) 
+    character(len=512) :: msg
     !-----------------------------------------------------------------------
     !
     ! Expected PFT names: The names expected on the paramfile file and the order they are expected to be in.
     ! NOTE: similar types are assumed to be together, first trees (ending with broadleaf_deciduous_boreal_tree
     !       then shrubs, ending with broadleaf_deciduous_boreal_shrub, then grasses starting with c3_arctic_grass
-    !       and finally crops, ending with soybean
+    !       and finally crops, ending with irrigated_tropical_soybean
     ! DO NOT CHANGE THE ORDER -- WITHOUT MODIFYING OTHER PARTS OF THE CODE WHERE THE ORDER MATTERS!
 
     expected_pftnames( 0) = 'not_vegetated                      '
@@ -359,14 +417,68 @@ contains
     expected_pftnames(14) = 'c4_grass                           '
     expected_pftnames(15) = 'c3_crop                            '
     expected_pftnames(16) = 'c3_irrigated                       '
-    expected_pftnames(17) = 'corn                               '
-    expected_pftnames(18) = 'irrigated_corn                     '
-    expected_pftnames(19) = 'spring_temperate_cereal            '
-    expected_pftnames(20) = 'irrigated_spring_temperate_cereal  '
-    expected_pftnames(21) = 'winter_temperate_cereal            '
-    expected_pftnames(22) = 'irrigated_winter_temperate_cereal  '
-    expected_pftnames(23) = 'soybean                            '
-    expected_pftnames(24) = 'irrigated_soybean                  '
+    expected_pftnames(17) = 'temperate_corn                     '
+    expected_pftnames(18) = 'irrigated_temperate_corn           '
+    expected_pftnames(19) = 'spring_wheat                       '
+    expected_pftnames(20) = 'irrigated_spring_wheat             '
+    expected_pftnames(21) = 'winter_wheat                       '
+    expected_pftnames(22) = 'irrigated_winter_wheat             '
+    expected_pftnames(23) = 'temperate_soybean                  '
+    expected_pftnames(24) = 'irrigated_temperate_soybean        '
+    expected_pftnames(25) = 'barley                             '
+    expected_pftnames(26) = 'irrigated_barley                   '
+    expected_pftnames(27) = 'winter_barley                      '
+    expected_pftnames(28) = 'irrigated_winter_barley            '
+    expected_pftnames(29) = 'rye                                '
+    expected_pftnames(30) = 'irrigated_rye                      '
+    expected_pftnames(31) = 'winter_rye                         '
+    expected_pftnames(32) = 'irrigated_winter_rye               '
+    expected_pftnames(33) = 'cassava                            '
+    expected_pftnames(34) = 'irrigated_cassava                  '
+    expected_pftnames(35) = 'citrus                             '
+    expected_pftnames(36) = 'irrigated_citrus                   '
+    expected_pftnames(37) = 'cocoa                              '
+    expected_pftnames(38) = 'irrigated_cocoa                    '
+    expected_pftnames(39) = 'coffee                             '
+    expected_pftnames(40) = 'irrigated_coffee                   '
+    expected_pftnames(41) = 'cotton                             '
+    expected_pftnames(42) = 'irrigated_cotton                   '
+    expected_pftnames(43) = 'datepalm                           '
+    expected_pftnames(44) = 'irrigated_datepalm                 '
+    expected_pftnames(45) = 'foddergrass                        '
+    expected_pftnames(46) = 'irrigated_foddergrass              '
+    expected_pftnames(47) = 'grapes                             '
+    expected_pftnames(48) = 'irrigated_grapes                   '
+    expected_pftnames(49) = 'groundnuts                         '
+    expected_pftnames(50) = 'irrigated_groundnuts               '
+    expected_pftnames(51) = 'millet                             '
+    expected_pftnames(52) = 'irrigated_millet                   '
+    expected_pftnames(53) = 'oilpalm                            '
+    expected_pftnames(54) = 'irrigated_oilpalm                  '
+    expected_pftnames(55) = 'potatoes                           '
+    expected_pftnames(56) = 'irrigated_potatoes                 '
+    expected_pftnames(57) = 'pulses                             '
+    expected_pftnames(58) = 'irrigated_pulses                   '
+    expected_pftnames(59) = 'rapeseed                           '
+    expected_pftnames(60) = 'irrigated_rapeseed                 '
+    expected_pftnames(61) = 'rice                               '
+    expected_pftnames(62) = 'irrigated_rice                     '
+    expected_pftnames(63) = 'sorghum                            '
+    expected_pftnames(64) = 'irrigated_sorghum                  '
+    expected_pftnames(65) = 'sugarbeet                          '
+    expected_pftnames(66) = 'irrigated_sugarbeet                '
+    expected_pftnames(67) = 'sugarcane                          '
+    expected_pftnames(68) = 'irrigated_sugarcane                '
+    expected_pftnames(69) = 'sunflower                          '
+    expected_pftnames(70) = 'irrigated_sunflower                '
+    expected_pftnames(71) = 'miscanthus                         '
+    expected_pftnames(72) = 'irrigated_miscanthus               '
+    expected_pftnames(73) = 'switchgrass                        '
+    expected_pftnames(74) = 'irrigated_switchgrass              '
+    expected_pftnames(75) = 'tropical_corn                      '
+    expected_pftnames(76) = 'irrigated_tropical_corn            '
+    expected_pftnames(77) = 'tropical_soybean                   '
+    expected_pftnames(78) = 'irrigated_tropical_soybean         '
 
     ! Set specific vegetation type values
 
@@ -377,6 +489,17 @@ contains
     call ncd_pio_openfile (ncid, trim(locfn), 0)
     call ncd_inqdid(ncid, 'pft', dimid)
     call ncd_inqdlen(ncid, dimid, npft)
+
+    if (npft - 1 /= mxpft) then
+       ! NOTE(bja, 201503) need to subtract 1 because of indexing.
+       ! NOTE(bja, 201503) fail early because one of the io libs
+       ! throws a useless abort error message deep inside the stack
+       ! instead of returning readv so we can get a useful line
+       ! number.
+       write(msg, '(a, i4, a, i4, a)') "ERROR: The number of pfts in the input netcdf file (", &
+            npft, ") does not equal the expected number of pfts (", mxpft, "). "
+       call endrun(msg=trim(msg)//errMsg(__FILE__, __LINE__))
+    end if
 
     call ncd_io('pftname',pftname, 'read', ncid, readvar=readv, posNOTonfile=.true.) 
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
@@ -599,6 +722,11 @@ contains
     call ncd_io('crop', this%crop, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
 
+    call ncd_io('mergetoclmpft', this%mergetoclmpft, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) then
+       call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+    end if
+
     call ncd_io('irrigated', this%irrigated, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
 
@@ -728,19 +856,74 @@ contains
        if ( trim(pftname(i)) == 'c4_grass'                            ) nc4_grass            = i
        if ( trim(pftname(i)) == 'c3_crop'                             ) nc3crop              = i
        if ( trim(pftname(i)) == 'c3_irrigated'                        ) nc3irrig             = i
-       if ( trim(pftname(i)) == 'corn'                                ) ncorn                = i
-       if ( trim(pftname(i)) == 'irrigated_corn'                      ) ncornirrig           = i
-       if ( trim(pftname(i)) == 'spring_temperate_cereal'             ) nscereal             = i
-       if ( trim(pftname(i)) == 'irrigated_spring_temperate_cereal'   ) nscerealirrig        = i
-       if ( trim(pftname(i)) == 'winter_temperate_cereal'             ) nwcereal             = i
-       if ( trim(pftname(i)) == 'irrigated_winter_temperate_cereal'   ) nwcerealirrig        = i
-       if ( trim(pftname(i)) == 'soybean'                             ) nsoybean             = i
-       if ( trim(pftname(i)) == 'irrigated_soybean'                   ) nsoybeanirrig        = i
+       if ( trim(pftname(i)) == 'temperate_corn'                      ) ntmp_corn            = i
+       if ( trim(pftname(i)) == 'irrigated_temperate_corn'            ) nirrig_tmp_corn      = i
+       if ( trim(pftname(i)) == 'spring_wheat'                        ) nswheat              = i
+       if ( trim(pftname(i)) == 'irrigated_spring_wheat'              ) nirrig_swheat        = i
+       if ( trim(pftname(i)) == 'winter_wheat'                        ) nwwheat              = i
+       if ( trim(pftname(i)) == 'irrigated_winter_wheat'              ) nirrig_wwheat        = i
+       if ( trim(pftname(i)) == 'temperate_soybean'                   ) ntmp_soybean         = i
+       if ( trim(pftname(i)) == 'irrigated_temperate_soybean'         ) nirrig_tmp_soybean   = i
+       if ( trim(pftname(i)) == 'barley'                              ) nbarley              = i
+       if ( trim(pftname(i)) == 'irrigated_barley'                    ) nirrig_barley        = i
+       if ( trim(pftname(i)) == 'winter_barley'                       ) nwbarley             = i
+       if ( trim(pftname(i)) == 'irrigated_winter_barley'             ) nirrig_wbarley       = i
+       if ( trim(pftname(i)) == 'rye'                                 ) nrye                 = i
+       if ( trim(pftname(i)) == 'irrigated_rye'                       ) nirrig_rye           = i
+       if ( trim(pftname(i)) == 'winter_rye'                          ) nwrye                = i
+       if ( trim(pftname(i)) == 'irrigated_winter_rye'                ) nirrig_wrye          = i
+       if ( trim(pftname(i)) == 'cassava'                             ) ncassava             = i
+       if ( trim(pftname(i)) == 'irrigated_cassava'                   ) nirrig_cassava       = i
+       if ( trim(pftname(i)) == 'citrus'                              ) ncitrus              = i
+       if ( trim(pftname(i)) == 'irrigated_citrus'                    ) nirrig_citrus        = i
+       if ( trim(pftname(i)) == 'cocoa'                               ) ncocoa               = i
+       if ( trim(pftname(i)) == 'irrigated_cocoa'                     ) nirrig_cocoa         = i
+       if ( trim(pftname(i)) == 'coffee'                              ) ncoffee              = i
+       if ( trim(pftname(i)) == 'irrigated_coffee'                    ) nirrig_coffee        = i
+       if ( trim(pftname(i)) == 'cotton'                              ) ncotton              = i
+       if ( trim(pftname(i)) == 'irrigated_cotton'                    ) nirrig_cotton        = i
+       if ( trim(pftname(i)) == 'datepalm'                            ) ndatepalm            = i
+       if ( trim(pftname(i)) == 'irrigated_datepalm'                  ) nirrig_datepalm      = i
+       if ( trim(pftname(i)) == 'foddergrass'                         ) nfoddergrass         = i
+       if ( trim(pftname(i)) == 'irrigated_foddergrass'               ) nirrig_foddergrass   = i
+       if ( trim(pftname(i)) == 'grapes'                              ) ngrapes              = i
+       if ( trim(pftname(i)) == 'irrigated_grapes'                    ) nirrig_grapes        = i
+       if ( trim(pftname(i)) == 'groundnuts'                          ) ngroundnuts          = i
+       if ( trim(pftname(i)) == 'irrigated_groundnuts'                ) nirrig_groundnuts    = i
+       if ( trim(pftname(i)) == 'millet'                              ) nmillet              = i
+       if ( trim(pftname(i)) == 'irrigated_millet'                    ) nirrig_millet        = i
+       if ( trim(pftname(i)) == 'oilpalm'                             ) noilpalm             = i
+       if ( trim(pftname(i)) == 'irrigated_oilpalm'                   ) nirrig_oilpalm       = i
+       if ( trim(pftname(i)) == 'potatoes'                            ) npotatoes            = i
+       if ( trim(pftname(i)) == 'irrigated_potatoes'                  ) nirrig_potatoes      = i
+       if ( trim(pftname(i)) == 'pulses'                              ) npulses              = i
+       if ( trim(pftname(i)) == 'irrigated_pulses'                    ) nirrig_pulses        = i
+       if ( trim(pftname(i)) == 'rapeseed'                            ) nrapeseed            = i
+       if ( trim(pftname(i)) == 'irrigated_rapeseed'                  ) nirrig_rapeseed      = i
+       if ( trim(pftname(i)) == 'rice'                                ) nrice                = i
+       if ( trim(pftname(i)) == 'irrigated_rice'                      ) nirrig_rice          = i
+       if ( trim(pftname(i)) == 'sorghum'                             ) nsorghum             = i
+       if ( trim(pftname(i)) == 'irrigated_sorghum'                   ) nirrig_sorghum       = i
+       if ( trim(pftname(i)) == 'sugarbeet'                           ) nsugarbeet           = i
+       if ( trim(pftname(i)) == 'irrigated_sugarbeet'                 ) nirrig_sugarbeet     = i
+       if ( trim(pftname(i)) == 'sugarcane'                           ) nsugarcane           = i
+       if ( trim(pftname(i)) == 'irrigated_sugarcane'                 ) nirrig_sugarcane     = i
+       if ( trim(pftname(i)) == 'sunflower'                           ) nsunflower           = i
+       if ( trim(pftname(i)) == 'irrigated_sunflower'                 ) nirrig_sunflower     = i
+       if ( trim(pftname(i)) == 'miscanthus'                          ) nmiscanthus          = i
+       if ( trim(pftname(i)) == 'irrigated_miscanthus'                ) nirrig_miscanthus    = i
+       if ( trim(pftname(i)) == 'switchgrass'                         ) nswitchgrass         = i
+       if ( trim(pftname(i)) == 'irrigated_switchgrass'               ) nirrig_switchgrass   = i
+       if ( trim(pftname(i)) == 'tropical_corn'                       ) ntrp_corn            = i
+       if ( trim(pftname(i)) == 'irrigated_tropical_corn'             ) nirrig_trp_corn      = i
+       if ( trim(pftname(i)) == 'tropical_soybean'                    ) ntrp_soybean         = i
+       if ( trim(pftname(i)) == 'irrigated_tropical_soybean'          ) nirrig_trp_soybean   = i
     end do
 
     ntree                = nbrdlf_dcd_brl_tree  ! value for last type of tree
-    npcropmin            = ncorn                ! first prognostic crop
-    npcropmax            = nsoybeanirrig        ! last prognostic crop in list
+    npcropmin            = ntmp_corn            ! first prognostic crop
+    npcropmax            = mxpft                ! last prognostic crop in list
+    npcropmaxknown = maxval(this%mergetoclmpft) ! & last one that clm knows how to model
 
     if (use_cndv) then
        this%fcur(:) = this%fcurdv(:)
@@ -755,12 +938,30 @@ contains
           call endrun(msg=' ERROR: npcropmax is NOT the last value'//errMsg(__FILE__, __LINE__))
        end if
        do i = 0, mxpft
-          if ( this%irrigated(i) == 1.0_r8  .and. &
-               (i == nc3irrig      .or. &
-                i == ncornirrig    .or. &
-                i == nscerealirrig .or. &
-                i == nwcerealirrig .or. &
-                i == nsoybeanirrig) )then
+          if ( this%irrigated(i) == 1.0_r8 .and.                              &
+               (i == nc3irrig               .or.                              &
+                i == nirrig_tmp_corn        .or.                              &
+                i == nirrig_swheat          .or. i == nirrig_wwheat      .or. &
+                i == nirrig_tmp_soybean     .or.                              &
+                i == nirrig_barley          .or. i == nirrig_wbarley     .or. &
+                i == nirrig_rye             .or. i == nirrig_wrye        .or. &
+                i == nirrig_cassava         .or.                              &
+                i == nirrig_citrus          .or.                              &
+                i == nirrig_cocoa           .or. i == nirrig_coffee      .or. &
+                i == nirrig_cotton          .or.                              &
+                i == nirrig_datepalm        .or.                              &
+                i == nirrig_foddergrass     .or.                              &
+                i == nirrig_grapes          .or. i == nirrig_groundnuts  .or. &
+                i == nirrig_millet          .or.                              &
+                i == nirrig_oilpalm         .or.                              &
+                i == nirrig_potatoes        .or. i == nirrig_pulses      .or. &
+                i == nirrig_rapeseed        .or. i == nirrig_rice        .or. &
+                i == nirrig_sorghum         .or.                              &
+                i == nirrig_sugarbeet       .or. i == nirrig_sugarcane   .or. &
+                i == nirrig_sunflower       .or.                              &
+                i == nirrig_miscanthus      .or. i == nirrig_switchgrass .or. &
+                i == nirrig_trp_corn        .or.                              &
+                i == nirrig_trp_soybean) )then
              ! correct
           else if ( this%irrigated(i) == 0.0_r8 )then
              ! correct

@@ -520,7 +520,8 @@ contains
     ! !USES:
     use clm_varcon     , only : rgas, tfrz
     use clm_varctl     , only : cnallocate_carbon_only 
-    use pftconMod      , only : nbrdlf_dcd_tmp_shrub, nsoybean, nsoybeanirrig, npcropmin
+    use pftconMod      , only : nbrdlf_dcd_tmp_shrub, npcropmin
+    
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                         

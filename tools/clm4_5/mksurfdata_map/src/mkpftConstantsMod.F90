@@ -21,8 +21,13 @@ module mkpftConstantsMod
   ! !PUBLIC DATA MEMBERS: 
   !
   
-  integer, parameter, public :: maxpft = 24           ! maximum # of PFT
-  integer, public    :: num_natpft            ! number of PFTs on the natural vegetation landunit, NOT including bare ground (includes generic crops for runs with create_crop_landunit=false)
+  integer, parameter, public :: maxpft = 78   ! maximum # of PFT
+
+  integer, public    :: num_natpft            ! number of PFTs on the natural vegetation
+                                              ! landunit, NOT including bare ground
+                                              ! (includes generic crops for runs with
+                                              ! create_crop_landunit=false)
+
   integer, public    :: num_cft               ! number of CFTs on the crop landunit
   integer, public    :: natpft_lb             ! lower bound for natural pft arrays
   integer, public    :: natpft_ub             ! upper bound for natural pft arrays

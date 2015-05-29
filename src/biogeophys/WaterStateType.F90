@@ -115,6 +115,15 @@ contains
     real(r8)          , intent(inout) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(inout) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
 
+#ifdef __PGI
+# if __PGIC__ == 14 && __PGIC_MINOR__ == 7
+    ! COMPILER_BUG(bja, 2015-04, pgi 14.7-?) occurs at: call this%InitCold(...)
+    ! PGF90-F-0000-Internal compiler error. normalize_forall_array: non-conformable
+    ! not sure why this fixes things....
+    real(r8), allocatable :: workaround_for_pgi_internal_compiler_error(:)
+# endif
+#endif
+
     call this%InitAllocate(bounds) 
 
     call this%InitHistory(bounds)

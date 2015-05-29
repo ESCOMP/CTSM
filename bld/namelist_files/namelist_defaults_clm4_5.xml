@@ -80,8 +80,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile                 >lnd/clm2/paramdata/clm_params.c140423.nc</paramfile>
-<paramfile use_ed=".true." >lnd/clm2/paramdata/clm_params.ED.c140115.nc</paramfile>
+<paramfile                 >lnd/clm2/paramdata/clm_params.c141205.nc</paramfile>
+<paramfile use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c150317.nc</paramfile>
 
 <!--
 
@@ -168,20 +168,20 @@ ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map
 
 <!-- 2 degree resolution -->
 
-<finidat hgrid="1.9x2.5"    maxpft="25"  mask="gx1v6" use_cn=".true." use_cndv=".false." ic_ymd="00010101" more_vertlayers=".false." use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24.0241-01-01.1.9x2.5_g1v6_simyr2000_c141226.nc
+<finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v6" use_cn=".true." use_cndv=".false." ic_ymd="00010101" more_vertlayers=".false." use_nitrif_denitrif=".true." use_vertsoilc=".true."
+ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis_reinterp.1.9x2.5_g1v6_simyr2000_c150116.nc
 </finidat>
 
 <!-- f10 resolution -->
 
-<finidat hgrid="10x15"    maxpft="25"  mask="USGS" use_cn=".true." use_cndv=".false." ic_ymd="00010101" more_vertlayers=".false." use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24.0241-01-01.10x15_USGS_simyr2000_c131028.nc
+<finidat hgrid="10x15"    maxpft="79"  mask="USGS" use_cn=".true." use_cndv=".false." ic_ymd="00010101" more_vertlayers=".false." use_nitrif_denitrif=".true." use_vertsoilc=".true."
+ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis.10x15_USGS_simyr2000_c150116.nc
 </finidat>
 
 <!-- f10 resolution, with irrigation on -->
 
-<finidat hgrid="10x15"    maxpft="25"  mask="USGS" use_cn=".true." use_cndv=".false." ic_ymd="00010101" more_vertlayers=".false." use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".true." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24Irrig.0241-01-01.10x15_USGS_simyr2000_c141226.nc
+<finidat hgrid="10x15"    maxpft="79"  mask="USGS" use_cn=".true." use_cndv=".false." ic_ymd="00010101" more_vertlayers=".false." use_nitrif_denitrif=".true." use_vertsoilc=".true."
+ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".true." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.Irrig.levis.10x15_USGS_simyr2000_c150116.nc
 </finidat>
 
 <!-- for present day simulations - year 2000 -->
@@ -197,7 +197,7 @@ lnd/clm2/surfdata_map/surfdata_0.9x1.25_simyr2000_c141219.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".false." >
 lnd/clm2/surfdata_map/surfdata_1.9x2.5_simyr2000_c141219.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_4x5_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_4x5_16pfts_simyr2000_c150116.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" use_crop=".false." >
 lnd/clm2/surfdata_map/surfdata_10x15_simyr2000_c141219.nc</fsurdat>
 
@@ -211,15 +211,15 @@ lnd/clm2/surfdata_map/surfdata_ne16np4_simyr2000_c150114.nc</fsurdat>
 
 <!-- Crop surface datasets -->
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1.9x2.5_mp24_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_simyr2000_c150116.nc</fsurdat>
 <fsurdat hgrid="0.125x0.125"  sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_0.125x0.125_mp24_simyr2000_c150114.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_10x15_mp24_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_10x15_78pfts_simyr2000_c150116.nc</fsurdat>
 <fsurdat hgrid="1x1_numaIA"       sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1x1_numaIA_mp24_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_numaIA_78pfts_simyr2000_c150116.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_mp24_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr2000_c150116.nc</fsurdat>
 
 <fsurdat hgrid="5x5_amazon"    sim_year="2000" use_crop=".false." >
 lnd/clm2/surfdata_map/surfdata_5x5_amazon_simyr2000_c141219.nc</fsurdat>
@@ -279,7 +279,7 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c141219.nc</fsurdat>
 <flanduse_timeseries hgrid="48x96"         sim_year_range="1850-2000"
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_48x96_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
 
-<flanduse_timeseries hgrid="1x1_tropicAtl" sim_year_range="1850-2000"
+<flanduse_timeseries hgrid="1x1_tropicAtl" sim_year_range="1850-2005"
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_tropicAtl_hist_simyr1850-2005_c141219.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2000"
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
