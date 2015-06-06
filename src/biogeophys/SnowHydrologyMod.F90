@@ -1172,6 +1172,7 @@ contains
 
                 call Combo (dzsno(c,2), swliq(c,2), swice(c,2), tsno(c,2), drr, &
                      zwliq, zwice, tsno(c,1))
+             end if
 
                 ! Subdivide a new layer
                 if (is_lake) then
@@ -1179,6 +1180,7 @@ contains
                 else
                    offset = 0._r8
                 end if
+
                 if (msno <= 2 .and. dzsno(c,2) > 0.07_r8 + offset) then
                    msno = 3
                    dtdz = (tsno(c,1) - tsno(c,2))/((dzsno(c,1)+dzsno(c,2))/2._r8) 
@@ -1214,7 +1216,6 @@ contains
                    rds(c,3) = rds(c,2)
 
                 end if
-             end if
           end if
 
           if (msno > 2) then
@@ -1279,6 +1280,7 @@ contains
 
                 call Combo (dzsno(c,3), swliq(c,3), swice(c,3), tsno(c,3), drr, &
                      zwliq, zwice, tsno(c,2))
+             end if
 
                 ! Subdivided a new layer
                 if (is_lake) then
@@ -1321,7 +1323,6 @@ contains
                    rds(c,4) = rds(c,3)
 
                 end if
-             end if
           end if
 
           if (msno > 3) then
@@ -1386,6 +1387,7 @@ contains
 
                 call Combo (dzsno(c,4), swliq(c,4), swice(c,4), tsno(c,4), drr, &
                      zwliq, zwice, tsno(c,3))
+             end if
 
                 ! Subdivided a new layer
                 if (is_lake) then
@@ -1428,7 +1430,6 @@ contains
                    rds(c,5) = rds(c,4)
 
                 end if
-             end if
           end if
 
           if (msno > 4) then

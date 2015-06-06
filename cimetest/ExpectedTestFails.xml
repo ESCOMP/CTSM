@@ -27,7 +27,7 @@
    <entry             >RUN ERS.f10_f10.I20TRCLM45BGC.goldbach_nag.clm-reduceOutput</entry>
    <entry             >FAIL SMS.f09_g16.ICRUCLM45.goldbach_nag.clm-af_bias_v5</entry>
    <entry bugz="2027" >CFAIL PET_P15x2_D.f10_f10.I1850CLM45BGC.goldbach_nag.clm-ciso</entry>
-   <entry bugz="2071" >FAIL SMS_D_Ld1.f10_f10.ICRUCLM45.goldbach_nag.clm-af_bias_v5</entry>
+   <entry bugz="2071" >RUN SMS_D_Ld1.f10_f10.ICRUCLM45.goldbach_nag.clm-af_bias_v5</entry>
 
    <entry bugz="2027" >FAIL PET_P16x2_D.f10_f10.I1850CLM45BGC.goldbach_pgi.clm-ciso</entry>
 
