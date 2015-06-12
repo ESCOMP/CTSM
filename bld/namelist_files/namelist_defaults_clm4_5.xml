@@ -70,6 +70,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <organic_frac_squared phys="clm4_5" >.true.</organic_frac_squared>
 <organic_frac_squared phys="clm5_0" >.false.</organic_frac_squared>
 
+<!-- Snow pack settings-->
+<nlevsno phys="clm5_0" >5</nlevsno>
+<nlevsno phys="clm4_5" >5</nlevsno>
+<h2osno_max phys="clm5_0" >1000.0</h2osno_max>
+<h2osno_max phys="clm4_5" >1000.0</h2osno_max>
+
 <!-- Determine whether to perform certain downscaling operations over glc_mec landunits -->
 <glcmec_downscale_rain_snow_convert>.false.</glcmec_downscale_rain_snow_convert>
 <glcmec_downscale_longwave>.true.</glcmec_downscale_longwave>

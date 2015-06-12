@@ -1,3 +1,4 @@
 add_subdirectory(Daylength_test)
 add_subdirectory(Irrigation_test)
 add_subdirectory(HumanStress_test)
+add_subdirectory(SnowHydrology_test)

@@ -18,7 +18,7 @@ module controlMod
   use spmdMod                          , only: masterproc
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max
-  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, more_vertlayers, numrad
+  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, more_vertlayers, numrad, nlevsno
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
@@ -164,7 +164,8 @@ contains
     ! Glacier_mec info
     namelist /clm_inparm/ &    
          maxpatch_glcmec, glc_smb, glc_do_dynglacier, glcmec_downscale_rain_snow_convert, &
-         glcmec_downscale_longwave, glc_snow_persistence_max_days, fglcmask 
+         glcmec_downscale_longwave, glc_snow_persistence_max_days, fglcmask, &
+         nlevsno, h2osno_max
 
     ! Other options
 
@@ -327,6 +328,19 @@ contains
              nfix_timeconst = 0._r8
           end if
        end if
+
+       ! If nlevsno, h2osno_max are equal to their junk default value, then they were not specified
+       ! by the user namelist and we generate an error message. Also check nlevsno for bounds.
+       if (nlevsno < 3 .or. nlevsno > 12)  then
+          write(iulog,*)'ERROR: nlevsno = ',nlevsno,' is not supported, must be in range 3-12.'
+          call endrun(msg=' ERROR: invalid value for nlevsno in CLM namelist. '//&
+               errMsg(__FILE__, __LINE__))
+       endif
+       if (h2osno_max <= 0.0_r8) then
+          write(iulog,*)'ERROR: h2osno_max = ',h2osno_max,' is not supported, must be greater than 0.0.'
+          call endrun(msg=' ERROR: invalid value for h2osno_max in CLM namelist. '//&
+               errMsg(__FILE__, __LINE__))
+       endif
 
     endif   ! end of if-masterproc if-block
 
@@ -532,6 +546,10 @@ contains
     call mpi_bcast (albice, 2, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (more_vertlayers,1, MPI_LOGICAL, 0, mpicom, ier)
 
+    ! snow pack variables
+    call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (h2osno_max, 1, MPI_REAL8, 0, mpicom, ier)
+
     ! glacier_mec variables
     call mpi_bcast (create_glacier_mec_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -693,11 +711,12 @@ contains
        write(iulog,*) '   snow aging parameters file = ',trim(fsnowaging)
     endif
 
+    write(iulog,*) '   Number of snow layers =', nlevsno
+    write(iulog,*) '   Max snow depth (mm) =', h2osno_max
+
     if (create_glacier_mec_landunit) then
        write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
        write(iulog,*) '   glc glacier mask file = ',trim(fglcmask)
-       
-       write(iulog,*) '   Max snow depth (mm) =', h2osno_max
        if (glcmec_downscale_rain_snow_convert) then
           write(iulog,*) '   Rain and snow will be converted based on surface temperature'
        else

@@ -1,0 +1,4 @@
+The unit tests of InitSnowLayers were put here largely for the sake of working
+out some bugs in the initial implementation. Since this code is only used during
+cold start (and thus is not critical), these unit tests can be removed if they
+become a maintenance problem.

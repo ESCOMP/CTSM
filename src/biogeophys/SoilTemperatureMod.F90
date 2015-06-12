@@ -50,7 +50,7 @@ module SoilTemperatureMod
   !     o Boundary conditions:
   !       F = Rnet - Hg - LEg (top),  F= 0 (base of the soil column).
   !     o Soil / snow temperature is predicted from heat conduction
-  !       in 10 soil layers and up to 5 snow layers.
+  !       in 10 soil layers and up to nlevsno snow layers.
   !       The thermal conductivities at the interfaces between two
   !       neighboring layers (j, j+1) are derived from an assumption that
   !       the flux across the interface is equal to that from the node j
@@ -127,7 +127,7 @@ contains
     ! o Boundary conditions:
     !   F = Rnet - Hg - LEg (top),  F= 0 (base of the soil column).
     ! o Soil / snow temperature is predicted from heat conduction
-    !   in 10 soil layers and up to 5 snow layers.
+    !   in 10 soil layers and up to nlevsno snow layers.
     !   The thermal conductivities at the interfaces between two
     !   neighboring layers (j, j+1) are derived from an assumption that
     !   the flux across the interface is equal to that from the node j
@@ -213,7 +213,6 @@ contains
 
          
          frac_sno_eff            => waterstate_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
-         frac_sno                => waterstate_inst%frac_sno_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
          snow_depth              => waterstate_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
          h2osfc                  => waterstate_inst%h2osfc_col              , & ! Input:  [real(r8) (:)   ]  surface water (mm)                      
          frac_h2osfc             => waterstate_inst%frac_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
@@ -1078,7 +1077,6 @@ contains
          watsat           =>    soilstate_inst%watsat_col           , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)
          
          frac_sno_eff     =>    waterstate_inst%frac_sno_eff_col    , & ! Input:  [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)
-         frac_sno         =>    waterstate_inst%frac_sno_col        , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
          frac_h2osfc      =>    waterstate_inst%frac_h2osfc_col     , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
          snow_depth       =>    waterstate_inst%snow_depth_col      , & ! Input:  [real(r8) (:)   ] snow height (m)                         
          h2osno           =>    waterstate_inst%h2osno_col          , & ! Output: [real(r8) (:)   ] snow water (mm H2O)                     
@@ -2323,7 +2321,7 @@ contains
     real(r8), intent(out) :: fn_h2osfc (bounds%begc: )           ! heat diffusion through standing-water/soil interface [W/m2]
     real(r8), intent(in)  :: t_soisno(bounds%begc:, -nlevsno+1:) ! soil temperature (Kelvin) 
     real(r8), intent(in)  :: t_h2osfc(bounds%begc:)              ! surface water temperature temperature (Kelvin) 
-    real(r8), intent(out) :: rt(bounds%begc:bounds%endc, 1:1 )   ! rhs vector entries
+    real(r8), intent(out) :: rt(bounds%begc: , 1: )              ! rhs vector entries
     !
     ! !LOCAL VARIABLES:
     integer  :: j,c                                             ! indices
@@ -3022,7 +3020,7 @@ contains
     ! !DESCRIPTION:
     ! Assemble the full matrix from submatrices.
     !
-    ! Non-zero pattern of bmatrix:
+    ! Non-zero pattern of bmatrix (assuming 5 snow layers):
     !
     !        SNOW-LAYERS
     !            |
@@ -3067,18 +3065,18 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds                                                 ! bounds
-    integer , intent(in)  :: num_nolakec                                                    ! number of column non-lake points in column filter
-    integer , intent(in)  :: filter_nolakec(:)                                              ! column filter for non-lake points
-    integer , intent(in)  :: nband                                                          ! number of bands of the tridigonal matrix
-    real(r8), intent(in)  :: bmatrix_snow(bounds%begc:bounds%endc,nband,-nlevsno:-1      )  ! block-diagonal matrix for snow layers
-    real(r8), intent(in)  :: bmatrix_ssw(bounds%begc:bounds%endc,nband,       0:0       )   ! block-diagonal matrix for standing surface water
-    real(r8), intent(in)  :: bmatrix_soil(bounds%begc:bounds%endc,nband,       1:nlevgrnd)  ! block-diagonal matrix for soil layers
-    real(r8), intent(in)  :: bmatrix_snow_soil(bounds%begc:bounds%endc,nband,-1:-1)         ! off-diagonal matrix for snow-soil interaction
-    real(r8), intent(in)  :: bmatrix_ssw_soil(bounds%begc:bounds%endc,nband, 0:0 )          ! off-diagonal matrix for standing surface water-soil interaction
-    real(r8), intent(in)  :: bmatrix_soil_snow(bounds%begc:bounds%endc,nband, 1:1 )         ! off-diagonal matrix for soil-snow interaction
-    real(r8), intent(in)  :: bmatrix_soil_ssw(bounds%begc:bounds%endc,nband, 1:1 )          ! off-diagonal matrix for soil-standing surface water interaction
-    real(r8), intent(out) :: bmatrix(bounds%begc: , 1:,-nlevsno: )                          ! full matrix used in numerical solution of temperature
+    type(bounds_type), intent(in) :: bounds                               ! bounds
+    integer , intent(in)  :: num_nolakec                                  ! number of column non-lake points in column filter
+    integer , intent(in)  :: filter_nolakec(:)                            ! column filter for non-lake points
+    integer , intent(in)  :: nband                                        ! number of bands of the tridigonal matrix
+    real(r8), intent(in)  :: bmatrix_snow(bounds%begc: , 1: , -nlevsno: ) ! block-diagonal matrix for snow layers [col, nband, nlevsno]
+    real(r8), intent(in)  :: bmatrix_ssw(bounds%begc: , 1: , 0: )         ! block-diagonal matrix for standing surface water [col, nband, 0:0]
+    real(r8), intent(in)  :: bmatrix_soil(bounds%begc: , 1: , 1: )        ! block-diagonal matrix for soil layers [col, nband, nlevgrnd]
+    real(r8), intent(in)  :: bmatrix_snow_soil(bounds%begc: , 1: , -1: )  ! off-diagonal matrix for snow-soil interaction [col, nband, -1:-1]
+    real(r8), intent(in)  :: bmatrix_ssw_soil(bounds%begc: , 1: , 0: )    ! off-diagonal matrix for standing surface water-soil interaction [col, nband, 0:0]
+    real(r8), intent(in)  :: bmatrix_soil_snow(bounds%begc: , 1: , 1: )   ! off-diagonal matrix for soil-snow interaction [col, nband, 1:1]
+    real(r8), intent(in)  :: bmatrix_soil_ssw(bounds%begc: , 1: , 1: )    ! off-diagonal matrix for soil-standing surface water interaction [col, nband, 1:1]
+    real(r8), intent(out) :: bmatrix(bounds%begc: , 1: , -nlevsno: )      ! full matrix used in numerical solution of temperature [col, nband, -nlevsno:nlevgrnd]
     !
     ! !LOCAL VARIABLES:
     integer  :: j,c                                                                         ! indices
@@ -3102,9 +3100,9 @@ contains
        c = filter_nolakec(fc)
 
        ! Snow
-       bmatrix(c,2:3,-5   ) = bmatrix_snow(c,2:3,-5   )
-       bmatrix(c,2:4,-4:-2) = bmatrix_snow(c,2:4,-4:-2)
-       bmatrix(c,3:4,-1   ) = bmatrix_snow(c,3:4,-1   )
+       bmatrix(c,2:3,-nlevsno   )   = bmatrix_snow(c,2:3,-nlevsno   )
+       bmatrix(c,2:4,-nlevsno+1:-2) = bmatrix_snow(c,2:4,-nlevsno+1:-2)
+       bmatrix(c,3:4,-1   )         = bmatrix_snow(c,3:4,-1   )
 
        ! Snow-Soil
        bmatrix(c,1,-1) = bmatrix_snow_soil(c,1,-1)

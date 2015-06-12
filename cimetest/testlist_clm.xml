@@ -528,11 +528,17 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">goldbach</machine>
         <machine compiler="intel" testtype="aux_testsystem" testmods="clm/default">yellowstone</machine>
       </test>
+      <test name="ERP_P15x2_D">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/snowlayers_12" comment="Can be removed once we change the CLM5 default to have more than 5 snow layers (at which point we will be testing 5 layers with CLM45 and more than 5 with CLM5)">yellowstone</machine>
+      </test>
       <test name="PEM_Ld1">
         <machine compiler="intel" testtype="aux_testsystem" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/oldhyd">goldbach</machine>
+      </test>
+      <test name="SMS_Lm1_D">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/snowlayers_3_monthly" comment="nlevsno less than 5 is not important scientifically, but is useful for making sure no code assumes that there are 5 snow layers (because this should result in an array bounds exception); this test can be removed once CLM5 is released and most new branches are based off of CLM5 (which will have a runtime-set number of snow layers, rather than assuming 5 snow layers)... until then, I want this test to catch any new code that assumes 5 snow layers">yellowstone</machine>
       </test>
       <test name="SSP_Ld10">
         <machine compiler="intel" testtype="aux_scripts" testmods="clm/default">yellowstone</machine>
@@ -1387,16 +1393,14 @@
       </test>
     </grid>
     <grid name="5x5_amazon">
+      <test name="SBN">
+        <machine compiler="null" testtype="null">null</machine>
+      </test>
       <test name="SMS_D_Ld1">
         <machine compiler="intel" testtype="prebeta" testmods="clm/default">janus</machine>
         <machine compiler="gnu" testtype="prebeta" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/default">yellowstone</machine>
-      </test>
-    </grid>
-    <grid name="5x5_amazon">
-      <test name="SBN">
-        <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
     <grid name="f19_g16">

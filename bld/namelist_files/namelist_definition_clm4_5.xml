@@ -1439,4 +1439,20 @@ If TRUE (which is the default), check consistency between pct_nat_pft on the fla
 and pct_nat_pft read from the surface dataset.
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- Namelist options related to the snow pack                                                 -->
+<!-- ========================================================================================  -->
+
+<entry id="nlevsno" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="3,4,5,6,7,8,9,10,11,12" >
+Number of snow layers.
+Values less than 5 are mainly useful for testing, and should not be used for science.
+</entry>
+
+<entry id="h2osno_max" type="real" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+Maximum snow depth in mm H2O equivalent. Additional mass gains will be capped when this depth 
+is exceeded.
+</entry>
+
 </namelist_definition>

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r110    sacks 06/12/2015 Add flexibility to have more snow layers
    clm4_5_1_r109    sacks 06/06/2015 Fix bug in DivideSnowLayers
    clm4_5_1_r108    andre 05/29/2015 Crop changes from Sam Levis
    clm4_5_1_r107    andre 05/19/2015 Update externals to use github version of cime1.0.7.

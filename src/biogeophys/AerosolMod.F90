@@ -295,7 +295,7 @@ contains
     use clm_varctl , only : iulog  
     use clm_varpar , only : nlevsno
     use spmdMod    , only : masterproc
-    use ncdio_pio  , only : file_desc_t, ncd_defvar, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
+    use ncdio_pio  , only : file_desc_t, ncd_double
     use restUtilMod
     !
     ! !ARGUMENTS:

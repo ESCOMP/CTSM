@@ -1,4 +1,136 @@
 ===============================================================
+Tag name:  clm4_5_1_r110
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Jun 12 15:30:11 MDT 2015
+One-line Summary: Add flexibility to have more snow layers
+
+Purpose of changes:
+
+   Generalize snow code so that it no longer assumes 5 snow layers. Instead,
+   make the number of snow layers (and the maximum SWE in the snow pack) a
+   runtime parameter, allowing 3 - 12 snow layers.
+
+   Most changes were made by Leo van Kampenhout (l.vankampenhout@uu.nl).
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+   - 2182 (possible threading issue with optimized pgi builds)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist:
+   - new namelist parameters: nlevsno, h2osno_max
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Add tests with different number of snow layers
+A       components/clm/cimetest/testmods_dirs/clm/snowlayers_12/user_nl_clm
+A       components/clm/cimetest/testmods_dirs/clm/snowlayers_12/include_user_mods
+A       components/clm/cimetest/testmods_dirs/clm/snowlayers_12
+A       components/clm/cimetest/testmods_dirs/clm/snowlayers_3_monthly/user_nl_clm
+A       components/clm/cimetest/testmods_dirs/clm/snowlayers_3_monthly/include_user_mods
+A       components/clm/cimetest/testmods_dirs/clm/snowlayers_3_monthly
+
+========= Add unit tests for snow pack initialization (note: these were added
+          mainly to facilitate debugging InitSnowLayers; since this routine is
+          only used in cold-start, these are not critical unit tests, and can be
+          removed if the maintenance cost proves too high)
+A       components/clm/src/biogeophys/test/SnowHydrology_test/CMakeLists.txt
+A       components/clm/src/biogeophys/test/SnowHydrology_test/README
+A       components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology.pf
+A       components/clm/src/biogeophys/test/SnowHydrology_test
+
+List all existing files that have been modified, and describe the changes:
+
+========= Major rework to remove assumption of 5 snow layers - instead allow
+          runtime-setable number of snow layers, between 3 and 12.
+          Also, clean up white space throughout file, and add mode/indentation
+          emacs line.
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+
+========= Minor changes to remove assumption of 5 snow layers
+M       components/clm/src/biogeophys/SurfaceRadiationMod.F90
+M       components/clm/src/biogeophys/SoilTemperatureMod.F90
+          - also: remove unused variables, fix array argument declarations to
+            conform to conventions
+M       components/clm/src/main/initVerticalMod.F90
+          - also: clean up some white space
+
+========= Add namelist variables to control number of snow layers and maximum SWE
+M       components/clm/src/main/clm_varcon.F90
+M       components/clm/src/main/clm_varpar.F90
+M       components/clm/src/main/controlMod.F90
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+
+========= Minor changes needed for unit testing of SnowHydrologyMod
+M       components/clm/src/biogeophys/CMakeLists.txt
+M       components/clm/src/biogeophys/test/CMakeLists.txt
+M       components/clm/src/biogeophys/SnowSnicarMod.F90
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+M       components/clm/src/biogeophys/AerosolMod.F90
+M       components/clm/src/main/CMakeLists.txt
+M       components/clm/src/unit_test_stubs/main/histFileMod_stub.F90
+
+========= Add tests with different number of snow layers
+M       components/clm/cimetest/testlist_clm.xml
+
+========= Unrelated change: remove unused variables in associate statements
+M       components/clm/src/biogeophys/SoilFluxesMod.F90
+
+========= Remove a test that now passes (hooray for weird compiler bugs!)
+M       components/clm/cimetest/ExpectedTestFails.xml
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+      All CLM45 and CLM50 tests have namelist differences; this is expected due
+      to addition of 2 new namelist items.
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r109
+
+Changes answers relative to baseline: NO
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r109
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Jun  6 06:12:02 MDT 2015

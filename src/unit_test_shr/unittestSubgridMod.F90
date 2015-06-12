@@ -6,6 +6,8 @@ module unittestSubgridMod
   ! In the setup for a test, the following should be done:
   !
   ! (1) call unittest_subgrid_setup_start
+  !     Note: if explicitly setting nlevsno, that must be done *before* the call to
+  !     unittest_subgrid_setup_start
   ! (2) add grid cells, landunits, columns & pfts as desired, using the routines defined in
   !     this module (i.e., using unittest_add_landunit, etc. - NOT directly via add_landunit, etc.)
   ! (3) call unittest_subgrid_setup_end
@@ -95,6 +97,9 @@ module unittestSubgridMod
   ! ------------------------------------------------------------------------
   ! Private entities
   ! ------------------------------------------------------------------------
+
+  integer, private :: nlevsno_orig ! original value of nlevsno, saved so we can restore it later
+  logical, private :: nlevsno_set  ! whether we set nlevsno here
 
 contains
   
@@ -188,10 +193,7 @@ contains
   subroutine initialize_arrays
     !
     ! !DESCRIPTION:
-    ! Allocate subgrid arrays, and initialize them to default values. Note that we only
-    ! do allocation if arrays are not currently allocated; this allows us to avoid
-    ! deallocating and reallocating arrays for every test - instead just reinitializing
-    ! them.
+    ! Allocate subgrid arrays, and initialize them to default values.
     !
     ! !USES:
     use landunit_varcon , only : max_lunit
@@ -207,7 +209,11 @@ contains
     
     character(len=*), parameter :: subname = 'initialize_arrays'
     !-----------------------------------------------------------------------
-    
+
+    ! column initialization depends on the nlevsno runtime parameter, so we first need to
+    ! set that
+    call init_nlevsno()
+
     call grc%Init(begg, endg)
     call lun%Init(begl, endl)
     call col%Init(begc, endc)
@@ -230,13 +236,12 @@ contains
     character(len=*), parameter :: subname = 'unittest_subgrid_teardown'
     !-----------------------------------------------------------------------
     
-    ! For now, nothing is needed... we currently don't bother with deallocation, and the
-    ! initialization of arrays is done in the setup routine
-
     call grc%clean
     call lun%clean
     call col%clean
     call patch%clean
+
+    call reset_nlevsno()
 
   end subroutine unittest_subgrid_teardown
 
@@ -361,5 +366,29 @@ contains
     patch%active(pi) = .true.
 
   end subroutine unittest_add_patch
+
+  subroutine init_nlevsno()
+    ! Initialize nlevsno to a reasonable value, if it is not already set
+
+    use clm_varpar, only : nlevsno
+
+    if (nlevsno <= 0) then
+       nlevsno_orig = nlevsno
+       nlevsno = 5
+       nlevsno_set = .true.
+    else
+       nlevsno_set = .false.
+    end if
+  end subroutine init_nlevsno
+
+  subroutine reset_nlevsno
+    ! If we set nlevsno in init_nlevsno, then reset it to its original value
+
+    use clm_varpar, only : nlevsno
+
+    if (nlevsno_set) then
+       nlevsno = nlevsno_orig
+    end if
+  end subroutine reset_nlevsno
 
 end module unittestSubgridMod

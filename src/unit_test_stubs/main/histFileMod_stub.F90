@@ -11,6 +11,7 @@ module histFileMod
   save
 
   integer , public , parameter :: no_snow_normal = 1              ! normal treatment, which should be used for most fields (use spval when snow layer not present)
+  integer , public , parameter :: no_snow_zero = 2                ! average in a 0 value for times when the snow layer isn't present
 
   public :: hist_addfld1d
   public :: hist_addfld2d

@@ -30,7 +30,7 @@ module clm_varpar
   integer            :: nlevdecomp            ! number of biogeochemically active soil layers
   integer            :: nlevdecomp_full       ! number of biogeochemical layers 
                                               ! (includes lower layers that are biogeochemically inactive)
-  integer, parameter :: nlevsno     =   5     ! maximum number of snow layers
+  integer            :: nlevsno     =  -1     ! maximum number of snow layers
   integer, parameter :: ngases      =   3     ! CH4, O2, & CO2
   integer, parameter :: nlevcan     =   1     ! number of leaf layers in canopy layer
   !ED variables
