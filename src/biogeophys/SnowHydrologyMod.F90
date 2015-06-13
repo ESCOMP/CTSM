@@ -1291,7 +1291,6 @@ contains
     ! LOCAL VARAIBLES:
     integer               :: c,l,j              ! indices
     real(r8)              :: minbound, maxbound ! helper variables
-    real(r8)              :: eps
     !------------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(snow_depth)  == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
@@ -1366,17 +1365,6 @@ contains
           else
              dz(c,-1) = dzmax_u(-snl(c)-1)
              dz(c,0)  = snow_depth(c) - sum(dzmax_u(1:-snl(c)-1))
-             eps = 1e-9_r8
-             if (abs(dz(c,0)-3.59_r8) < eps) then ! TODO remove
-                col%dz(c, 0) = snow_depth(c)-col%dz(c,-4)-col%dz(c,-3)-col%dz(c,-2)-col%dz(c,-1)
-                if (abs(dz(c,0)-3.59_r8) > eps) &
-                   call endrun(msg=errmsg(__FILE__, __LINE__))
-             endif 
-             if (abs(dz(c,0)-1.59_r8) < eps) then ! TODO remove
-                col%dz(c, 0) = snow_depth(c)-col%dz(c,-4)-col%dz(c,-3)-col%dz(c,-2)-col%dz(c,-1)
-                if (abs(dz(c,0)-1.59_r8) > eps) &
-                   call endrun(msg=errmsg(__FILE__, __LINE__))
-             endif 
           endif
        endif
 

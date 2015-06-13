@@ -1,4 +1,100 @@
 ===============================================================
+Tag name:  clm4_5_1_r111
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Jun 12 20:19:25 MDT 2015
+One-line Summary: Remove temporary hack to get bfb results in InitSnowLayers
+
+Purpose of changes:
+
+   In order to get bit-for-bit results in clm4_5_1_r110 (relative to r109), we
+   put in place a temporary hack in InitSnowLayers that set dz based on the old
+   equations rather than the new, more general ones - thus avoiding
+   roundoff-level changes. This looked like:
+
+             if (abs(dz(c,0)-3.59_r8) < eps) then ! TODO remove
+                col%dz(c, 0) = snow_depth(c)-col%dz(c,-4)-col%dz(c,-3)-col%dz(c,-2)-col%dz(c,-1)
+                if (abs(dz(c,0)-3.59_r8) > eps) &
+                   call endrun(msg=errmsg(__FILE__, __LINE__))
+             endif 
+
+   This tag removes that temporary hack.
+
+   In this way, we have separated the answer-changing from non-answer-changing
+   parts of the r110 refactor. Note that the above code confirms that the
+   differences are no larger than roundoff (eps was 1e-9 in the above case, but
+   some tests showed that it could have been much smaller - e.g., ~ 1e-15).
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+
+CLM testing:
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r110
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM4.5 / CLM5 cold start
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+         roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+      See above code sample, which confirms that the changes were no greater
+      than roundoff-level.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r110
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Jun 12 15:30:11 MDT 2015
