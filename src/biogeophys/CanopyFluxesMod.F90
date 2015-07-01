@@ -40,6 +40,7 @@ module CanopyFluxesMod
   use TemperatureType       , only : temperature_type
   use WaterfluxType         , only : waterflux_type
   use WaterstateType        , only : waterstate_type
+  use CanopyHydrologyMod    , only : IsSnowvegFlagOn, IsSnowvegFlagOnRad
   use HumanIndexMod         , only : humanindex_type
   use ch4Mod                , only : ch4_type
   use PhotosynthesisMod     , only : photosyns_type
@@ -62,6 +63,11 @@ module CanopyFluxesMod
   ! true  => btran is based on active layer (defined over two years); 
   ! false => btran is based on currently unfrozen levels
   logical,  public :: perchroot_alt = .false.  
+  !
+  ! !PRIVATE DATA MEMBERS:
+  ! Snow in vegetation canopy namelist options.
+  logical, private :: snowveg_on     = .false.  ! snowveg_flag = 'ON'
+  logical, private :: snowveg_onrad  = .true.   ! snowveg_flag = 'ON_RAD'
   !------------------------------------------------------------------------------
 
 contains
@@ -389,6 +395,10 @@ contains
          h2osoi_liq             => waterstate_inst%h2osoi_liq_col               , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                                                
          h2osoi_liqvol          => waterstate_inst%h2osoi_liqvol_col            , & ! Output: [real(r8) (:,:) ]  volumetric liquid water (v/v) 
          h2ocan                 => waterstate_inst%h2ocan_patch                 , & ! Output: [real(r8) (:)   ]  canopy water (mm H2O)                                                 
+         snocan                 => waterstate_inst%snocan_patch                 , & ! Output: [real(r8) (:)   ]  canopy snow (mm H2O)                                                 
+         liqcan                 => waterstate_inst%liqcan_patch                 , & ! Output: [real(r8) (:)   ]  canopy liquid (mm H2O)                                                 
+         snounload              => waterstate_inst%snounload_patch              , & ! Output: [real(r8) (:)   ]  canopy snow unloading mass (mm H2O)
+
          q_ref2m                => waterstate_inst%q_ref2m_patch                , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)                          
          rh_ref2m_r             => waterstate_inst%rh_ref2m_r_patch             , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface relative humidity (%)                        
          rh_ref2m               => waterstate_inst%rh_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)                              
@@ -1013,6 +1023,10 @@ contains
       fn = fnorig
       filterp(1:fn) = fporig(1:fn)
 
+      ! Set status of snowveg_flag
+      snowveg_on    = IsSnowvegFlagOn()
+      snowveg_onrad = IsSnowvegFlagOnRad()
+
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
@@ -1122,8 +1136,24 @@ contains
          cgrnd(p)  = cgrnds(p) + cgrndl(p)*htvp(c)
 
          ! Update dew accumulation (kg/m2)
-
          h2ocan(p) = max(0._r8,h2ocan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
+
+         if (snowveg_on .or. snowveg_onrad) then
+            if (t_veg(p) > tfrz ) then ! above freezing, update accumulation in liqcan
+               if ((qflx_evap_veg(p)-qflx_tran_veg(p))*dtime > liqcan(p)) then ! all liq evap
+                  ! In this case, all liqcan will evap. Take remainder from snocan
+                  snocan(p)=snocan(p)+liqcan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime	 
+               end if
+               liqcan(p) = max(0._r8,liqcan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
+
+            else if (t_veg(p) <= tfrz) then ! below freezing, update accumulation in snocan
+               if ((qflx_evap_veg(p)-qflx_tran_veg(p))*dtime > snocan(p)) then ! all sno evap
+                  ! In this case, all snocan will evap. Take remainder from liqcan
+                  liqcan(p)=liqcan(p)+snocan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime
+               end if
+               snocan(p) = max(0._r8,snocan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
+            end if
+         end if
 
          if ( use_ed ) then
             call AccumulateFluxes_ED(bounds, p, ed_allsites_inst(begg:endg), photosyns_inst)

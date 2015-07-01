@@ -51,6 +51,10 @@ module WaterfluxType
      real(r8), pointer :: qflx_dew_grnd_col        (:)   ! col ground surface dew formation (mm H2O /s) [+] (+ = to atm); usually eflx_bot >= 0)
      real(r8), pointer :: qflx_prec_intr_patch     (:)   ! patch interception of precipitation [mm/s]
      real(r8), pointer :: qflx_prec_intr_col       (:)   ! col interception of precipitation [mm/s]
+     real(r8), pointer :: qflx_snowindunload_patch (:)   ! patch canopy snow wind unloading (mm H2O /s)
+     real(r8), pointer :: qflx_snowindunload_col   (:)   ! col canopy snow wind unloading (mm H2O /s)
+     real(r8), pointer :: qflx_snotempunload_patch (:)   ! patch canopy snow temp unloading (mm H2O /s) 
+     real(r8), pointer :: qflx_snotempunload_col   (:)   ! col canopy snow temp unloading (mm H2O /s) 
 
      real(r8), pointer :: qflx_ev_snow_patch       (:)   ! patch evaporation heat flux from snow       (W/m**2) [+ to atm]
      real(r8), pointer :: qflx_ev_snow_col         (:)   ! col evaporation heat flux from snow         (W/m**2) [+ to atm]
@@ -145,6 +149,11 @@ contains
     allocate(this%qflx_snwcp_ice_patch     (begp:endp))              ; this%qflx_snwcp_ice_patch     (:)   = nan
     allocate(this%qflx_tran_veg_patch      (begp:endp))              ; this%qflx_tran_veg_patch      (:)   = nan
 
+    allocate(this%qflx_snowindunload_patch (begp:endp))              ; this%qflx_snowindunload_patch (:)   = nan
+    allocate(this%qflx_snowindunload_col   (begp:endp))              ; this%qflx_snowindunload_col   (:)   = nan
+    allocate(this%qflx_snotempunload_patch (begp:endp))              ; this%qflx_snotempunload_patch (:)   = nan
+    allocate(this%qflx_snotempunload_col   (begp:endp))              ; this%qflx_snotempunload_col   (:)   = nan
+	
     allocate(this%qflx_dew_grnd_patch      (begp:endp))              ; this%qflx_dew_grnd_patch      (:)   = nan
     allocate(this%qflx_dew_snow_patch      (begp:endp))              ; this%qflx_dew_snow_patch      (:)   = nan
 
@@ -343,6 +352,16 @@ contains
          avgflag='A', long_name='excess rainfall due to snow capping', &
          ptr_patch=this%qflx_snwcp_liq_patch, c2l_scale_type='urbanf', default='inactive')
 
+    this%qflx_snowindunload_patch(begp:endp) = spval
+    call hist_addfld1d (fname='QSNOWINDUNLOAD', units='mm/s',  &
+         avgflag='A', long_name='canopy snow wind unloading', &
+         ptr_patch=this%qflx_snowindunload_patch, set_lake=0._r8, c2l_scale_type='urbanf')
+
+    this%qflx_snotempunload_patch(begp:endp) = spval
+    call hist_addfld1d (fname='QSNOTEMPUNLOAD', units='mm/s',  &
+         avgflag='A', long_name='canopy snow temp unloading', &
+         ptr_patch=this%qflx_snotempunload_patch, set_lake=0._r8, c2l_scale_type='urbanf')
+		 
     ! Use qflx_snwcp_ice_col rather than qflx_snwcp_ice_patch, because the column version 
     ! is the final version, which includes some  additional corrections beyond the patch-level version
     this%qflx_snwcp_ice_patch(begp:endp) = spval

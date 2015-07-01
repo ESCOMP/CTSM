@@ -34,6 +34,9 @@ module CanopyHydrologyMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyHydrology_readnl ! Read namelist
   public :: CanopyHydrology        ! Run
+  public :: IsSnowvegFlagOff       ! Returns true if snowveg_flag is OFF
+  public :: IsSnowvegFlagOn        ! Returns true if snowveg_flag is ON
+  public :: IsSnowvegFlagOnRad     ! Returns true if snowveg_flag is ON_RAD
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: FracWet    ! Determine fraction of vegetated surface that is wet
@@ -41,6 +44,12 @@ module CanopyHydrologyMod
   !
   ! !PRIVATE DATA MEMBERS:
   integer :: oldfflag=0  ! use old fsno parameterization (N&Y07) 
+  ! Snow in vegetation canopy namelist options.
+  logical, private :: snowveg_off    = .false.  ! snowveg_flag = 'OFF'
+  logical, private :: snowveg_on     = .false.  ! snowveg_flag = 'ON'
+  logical, private :: snowveg_onrad  = .true.   ! snowveg_flag = 'ON_RAD'
+  ! for now, all mods on by default:
+  character(len= 10), public           :: snowveg_flag = 'ON_RAD'
   !-----------------------------------------------------------------------
 
 contains
@@ -67,6 +76,7 @@ contains
     !-----------------------------------------------------------------------
 
     namelist / clm_canopyhydrology_inparm / oldfflag
+    namelist / clm_canopyhydrology_inparm / snowveg_flag
 
     ! ----------------------------------------------------------------------
     ! Read namelist from standard input. 
@@ -86,9 +96,21 @@ contains
        end if
        call relavu( unitn )
 
+       snowveg_off   = IsSnowvegFlagOff()
+       snowveg_on    = IsSnowvegFlagOn()
+       snowveg_onrad = IsSnowvegFlagOnRad()
+       write(iulog,*) 'snowveg_off = ',snowveg_off
+       write(iulog,*) 'snowveg_on = ',snowveg_on
+       write(iulog,*) 'snowveg_onrad = ',snowveg_onrad
+       if (snowveg_off .or. snowveg_on .or. snowveg_onrad) then
+          write(iulog,*) 'snowveg_flag = ',snowveg_flag
+       else
+          call endrun(msg="snowveg_flag is set incorrectly (not ON, ON_RAD, or OFF)"//errmsg(__FILE__, __LINE__))
+       end if
     end if
     ! Broadcast namelist variables read in
     call shr_mpi_bcast(oldfflag, mpicom)
+    call shr_mpi_bcast(snowveg_flag, mpicom)
 
    end subroutine CanopyHydrology_readnl
 
@@ -141,7 +163,14 @@ contains
      integer  :: newnode                                      ! flag when new snow node is set, (1=yes, 0=no)
      real(r8) :: dtime                                        ! land model time step (sec)
      real(r8) :: h2ocanmx                                     ! maximum allowed water on canopy [mm]
+     real(r8) :: snocanmx                                     ! maximum allowed snow on canopy [mm equiv. water]
+     real(r8) :: liqcanmx                                     ! maximum allowed snowliquid water on canopy [mm equiv. water]
+     real(r8) :: xsnorun                                      ! excess snow that exceeds the leaf capacity [mm/s]
+     real(r8) :: xliqrun                                      ! excess liquid water 
+     real(r8) :: qflx_snocanfall(bounds%begp:bounds%endp)     ! rate of excess canopy snow falling off canopy
+     real(r8) :: qflx_liqcanfall(bounds%begp:bounds%endp)     ! rate of excess canopy liquid falling off canopy
      real(r8) :: fpi                                          ! coefficient of interception
+     real(r8) :: fpisnow                                      ! coefficient of interception for snowfall
      real(r8) :: xrun                                         ! excess water that exceeds the leaf capacity [mm/s]
      real(r8) :: dz_snowf                                     ! layer thickness rate change due to precipitation [mm/s]
      real(r8) :: bifall                                       ! bulk density of newly fallen dry snow [kg/m3]
@@ -176,7 +205,7 @@ contains
           forc_snow            => atm2lnd_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                        
           forc_t               => atm2lnd_inst%forc_t_downscaled_col      , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)        
           qflx_floodg          => atm2lnd_inst%forc_flood_grc             , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM   
-
+          forc_wind            => atm2lnd_inst%forc_wind_grc              , & ! Input:  [real(r8) (:)    ]  atmospheric wind speed (m/s)
           dewmx                => canopystate_inst%dewmx_patch            , & ! Input:  [real(r8) (:)   ]  Maximum allowed dew [mm]                
           frac_veg_nosno       => canopystate_inst%frac_veg_nosno_patch   , & ! Input:  [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
           elai                 => canopystate_inst%elai_patch             , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow
@@ -187,6 +216,9 @@ contains
 
           do_capsnow           => waterstate_inst%do_capsnow_col          , & ! Output: [logical  (:)   ]  true => do snow capping                  
           h2ocan               => waterstate_inst%h2ocan_patch            , & ! Output: [real(r8) (:)   ]  total canopy water (mm H2O)             
+          snocan               => waterstate_inst%snocan_patch            , & ! Output: [real(r8) (:)   ]  canopy snow (mm H2O)             
+          liqcan               => waterstate_inst%liqcan_patch            , & ! Output: [real(r8) (:)   ]  canopy liquid (mm H2O)   
+          snounload            => waterstate_inst%snounload_patch         , & ! Output: [real(r8) (:)   ]  canopy snow unloading (mm H2O)
           h2osfc               => waterstate_inst%h2osfc_col              , & ! Output: [real(r8) (:)   ]  surface water (mm)                      
           h2osno               => waterstate_inst%h2osno_col              , & ! Output: [real(r8) (:)   ]  snow water (mm H2O)                     
           snow_depth           => waterstate_inst%snow_depth_col          , & ! Output: [real(r8) (:)   ]  snow height (m)                         
@@ -210,12 +242,18 @@ contains
           qflx_prec_grnd       => waterflux_inst%qflx_prec_grnd_patch     , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
           qflx_rain_grnd       => waterflux_inst%qflx_rain_grnd_patch     , & ! Output: [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
 
-          qflx_irrig           => irrigation_inst%qflx_irrig_patch          & ! Input: [real(r8) (:)    ]  irrigation amount (mm/s)           
+          qflx_irrig           => irrigation_inst%qflx_irrig_patch        , & ! Input: [real(r8) (:)    ]  irrigation amount (mm/s)           
+          qflx_snowindunload   => waterflux_inst%qflx_snowindunload_patch , & ! Output: [real(r8) (:)   ]  canopy snow unloading from wind [mm/s]    
+          qflx_snotempunload   => waterflux_inst%qflx_snotempunload_patch   & ! Output: [real(r8) (:)   ]  canopy snow unloading from temp. [mm/s]    
           )
 
        ! Compute time step
        
        dtime = get_step_size()
+
+       ! Set status of snowveg_flag
+       snowveg_on    = IsSnowvegFlagOn()
+       snowveg_onrad = IsSnowvegFlagOnRad()
 
        ! Start patch loop
 
@@ -232,6 +270,11 @@ contains
                lun%itype(l)==istcrop) then
 
              qflx_candrip(p) = 0._r8      ! rate of canopy runoff
+             qflx_snocanfall(p) = 0._r8      ! rate of just snow canopy fall
+             qflx_liqcanfall(p) = 0._r8
+             qflx_snowindunload(p) = 0._r8
+             qflx_snotempunload(p) = 0._r8
+             snounload(p)=0._r8
              qflx_through_snow(p) = 0._r8 ! rain precipitation direct through canopy
              qflx_through_rain(p) = 0._r8 ! snow precipitation direct through canopy
              qflx_prec_intr(p) = 0._r8    ! total intercepted precipitation
@@ -253,34 +296,74 @@ contains
                    ! lower temperature.  Hence, it is reasonable to assume that
                    ! vegetation storage of solid water is the same as liquid water.
                    h2ocanmx = dewmx(p) * (elai(p) + esai(p))
-
                    ! Coefficient of interception
                    ! set fraction of potential interception to max 0.25
                    fpi = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
 
+                   if (snowveg_on .or. snowveg_onrad) then
+                      snocanmx = 60._r8*dewmx(p) * (elai(p) + esai(p))  ! 6*(LAI+SAI)
+                      liqcanmx = h2ocanmx
+
+                      fpisnow = (1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))  ! max interception of 1 
+                      ! Direct throughfall
+                      qflx_through_snow(p) = forc_snow(c) * (1._r8-fpisnow)
+                   else
+                      ! Direct throughfall
+                      qflx_through_snow(p) = forc_snow(c) * (1._r8-fpi)
+                   end if
+
                    ! Direct throughfall
-                   qflx_through_snow(p) = forc_snow(c) * (1._r8-fpi)
                    qflx_through_rain(p) = forc_rain(c) * (1._r8-fpi)
 
-                   ! Intercepted precipitation [mm/s]
-                   qflx_prec_intr(p) = (forc_snow(c) + forc_rain(c)) * fpi
+                   if (snowveg_on .or. snowveg_onrad) then
+                      ! Intercepted precipitation [mm/s]
+                      qflx_prec_intr(p) = forc_snow(c)*fpisnow + forc_rain(c)*fpi
+                      ! storage of intercepted snowfall, rain, and dew
+                      snocan(p) = max(0._r8, snocan(p) + dtime*forc_snow(c)*fpisnow)    
+                      liqcan(p) = max(0._r8, liqcan(p) + dtime*forc_rain(c)*fpi)
+                   else
+                      ! Intercepted precipitation [mm/s]
+                      qflx_prec_intr(p) = (forc_snow(c) + forc_rain(c)) * fpi
+                   end if
 
                    ! Water storage of intercepted precipitation and dew
                    h2ocan(p) = max(0._r8, h2ocan(p) + dtime*qflx_prec_intr(p))
 
                    ! Initialize rate of canopy runoff and snow falling off canopy
                    qflx_candrip(p) = 0._r8
+                   qflx_snocanfall(p) = 0._r8
+                   qflx_liqcanfall(p) = 0._r8
+                   qflx_snowindunload(p) = 0._r8
+                   qflx_snotempunload(p) = 0._r8
+                   snounload(p)=0._r8
 
-                   ! Excess water that exceeds the leaf capacity
-                   xrun = (h2ocan(p) - h2ocanmx)/dtime
+                   if (snowveg_on .or. snowveg_onrad) then
+                      if (forc_t(c) > tfrz) then ! Above freezing (Use t_veg?)
+                         xliqrun = (liqcan(p) - liqcanmx)/dtime
+                         if (xliqrun > 0._r8) then
+                            qflx_liqcanfall(p) = xliqrun
+                            liqcan(p) = liqcanmx
+                         end if
+                      else ! Below freezing
+                         xsnorun = (snocan(p) - snocanmx)/dtime
+                         if (xsnorun > 0._r8) then ! exceeds snow capacity
+                            qflx_snocanfall(p) = xsnorun
+                            snocan(p) = snocanmx
+                         end if
+                      end if
+                      qflx_candrip(p) = qflx_snocanfall(p) + qflx_liqcanfall(p)
+                      h2ocan(p) = snocan(p) + liqcan(p)
+                   else 
+                      ! Excess water that exceeds the leaf capacity
+                      xrun = (h2ocan(p) - h2ocanmx)/dtime
 
-                   ! Test on maximum dew on leaf
-                   ! Note if xrun > 0 then h2ocan must be at least h2ocanmx
-                   if (xrun > 0._r8) then
-                      qflx_candrip(p) = xrun
-                      h2ocan(p) = h2ocanmx
+                      ! Test on maximum dew on leaf
+                      ! Note if xrun > 0 then h2ocan must be at least h2ocanmx
+                      if (xrun > 0._r8) then
+                         qflx_candrip(p) = xrun
+                         h2ocan(p) = h2ocanmx
+                      end if
                    end if
-
                 end if
              end if
 
@@ -293,6 +376,13 @@ contains
              qflx_prec_intr(p)    = 0._r8
              fracsnow(p)          = 0._r8
              fracrain(p)          = 0._r8
+             snocan(p)            = 0._r8
+             liqcan(p)            = 0._r8
+             qflx_snocanfall(p)    = 0._r8
+             qflx_liqcanfall(p)    = 0._r8
+             qflx_snowindunload(p) = 0._r8 
+             qflx_snotempunload(p) = 0._r8 
+             snounload(p)=0._r8
 
           end if
 
@@ -303,8 +393,28 @@ contains
                 qflx_prec_grnd_snow(p) = forc_snow(c)
                 qflx_prec_grnd_rain(p) = forc_rain(c)
              else
-                qflx_prec_grnd_snow(p) = qflx_through_snow(p) + (qflx_candrip(p) * fracsnow(p))
-                qflx_prec_grnd_rain(p) = qflx_through_rain(p) + (qflx_candrip(p) * fracrain(p))
+                if (snowveg_on .or. snowveg_onrad) then
+                   qflx_snowindunload(p)=0._r8 
+                   qflx_snotempunload(p)=0._r8 
+                   snounload(p)=0._r8
+                   if (snocan(p) > 0._r8) then
+                      qflx_snotempunload(p) = max(0._r8,snocan(p)*(forc_t(c)-270.15_r8)/1.87e5_r8) 
+                      qflx_snowindunload(p) = 0.5_r8*snocan(p)*forc_wind(g)/1.56e5_r8 
+                      snounload(p) = (qflx_snowindunload(p)+qflx_snotempunload(p))*dtime ! total canopy unloading in timestep
+                      if ( snounload(p) > snocan(p) ) then ! Limit unloading to snow in canopy
+                         snounload(p) = snocan(p)
+                         write(iulog,"(A,I2.2,A,ES13.4E2)") "snocan",p,": ",snocan(p)
+                      end if
+                      snocan(p) = snocan(p) - snounload(p)
+                      h2ocan(p) = h2ocan(p) - snounload(p)
+                   endif
+                   qflx_prec_grnd_snow(p) = qflx_through_snow(p) + qflx_snocanfall(p)  + snounload(p)/dtime
+                   qflx_prec_grnd_rain(p) = qflx_through_rain(p) + qflx_liqcanfall(p) 
+
+                else
+                   qflx_prec_grnd_snow(p) = qflx_through_snow(p) + (qflx_candrip(p) * fracsnow(p))
+                   qflx_prec_grnd_rain(p) = qflx_through_rain(p) + (qflx_candrip(p) * fracrain(p))
+                end if
              end if
              ! Urban sunwall and shadewall have no intercepted precipitation
           else
@@ -567,6 +677,8 @@ contains
      ! is the fraction of elai which is dry because only leaves
      ! can transpire.  Adjusted for stem area which does not transpire.
      !
+     ! ! USES:
+     use clm_varcon         , only : tfrz
      ! !ARGUMENTS:
      integer                , intent(in)    :: numf                  ! number of filter non-lake points
      integer                , intent(in)    :: filter(numf)          ! patch filter for non-lake points
@@ -586,10 +698,16 @@ contains
           esai           => canopystate_inst%esai_patch           , & ! Input:  [real(r8) (:) ]  one-sided stem area index with burying by snow
 
           h2ocan         => waterstate_inst%h2ocan_patch          , & ! Input:  [real(r8) (:) ]  total canopy water (mm H2O)             
-          
+          snocan         => waterstate_inst%snocan_patch          , & ! Output: [real(r8) (:)   ]  canopy snow (mm H2O)             
+          liqcan         => waterstate_inst%liqcan_patch          , & ! Output: [real(r8) (:)   ]  canopy liquid (mm H2O)
+
           fwet           => waterstate_inst%fwet_patch            , & ! Output: [real(r8) (:) ]  fraction of canopy that is wet (0 to 1) 
+          fcansno        => waterstate_inst%fcansno_patch         , & ! Output: [real(r8) (:) ]  fraction of canopy that is snow covered (0 to 1) 
           fdry           => waterstate_inst%fdry_patch              & ! Output: [real(r8) (:) ]  fraction of foliage that is green and dry [-] (new)
           )
+
+       ! Set status of snowveg_flag
+       snowveg_onrad = IsSnowvegFlagOnRad()
 
        do fp = 1,numf
           p = filter(fp)
@@ -599,8 +717,20 @@ contains
                 dewmxi  = 1.0_r8/dewmx(p)
                 fwet(p) = ((dewmxi/vegt)*h2ocan(p))**0.666666666666_r8
                 fwet(p) = min (fwet(p),1.0_r8)   ! Check for maximum limit of fwet
+                if (snowveg_onrad) then
+                   if (snocan(p) > 0._r8) then
+                      dewmxi  = 1.0_r8/dewmx(p)
+                      fcansno(p) = ((dewmxi/(vegt*6.0_r8*10.0_r8))*snocan(p))**0.15_r8 ! must match snocanmx 
+                      fcansno(p) = min (fcansno(p),1.0_r8)
+                   else
+                      fcansno(p) = 0._r8
+                   end if
+                else
+                   fcansno(p) = 0._r8
+                end if
              else
                 fwet(p) = 0._r8
+                fcansno(p) = 0._r8
              end if
              fdry(p) = (1._r8-fwet(p))*elai(p)/(elai(p)+esai(p))
           else
@@ -715,5 +845,71 @@ contains
      end associate
 
    end subroutine FracH2OSfc
+
+   !-----------------------------------------------------------------------
+   !BOP
+   !
+   ! !IROUTINE: IsSnowvegFlagOff
+   !
+   ! !INTERFACE:
+   !
+   logical function IsSnowvegFlagOff( )
+     !
+     ! !DESCRIPTION:
+     !
+     ! Return true if snowveg_flag is OFF
+     !
+     ! !USES:
+     implicit none
+     !EOP
+     !-----------------------------------------------------------------------
+
+     IsSnowvegFlagOff = (trim(snowveg_flag) == 'OFF')
+
+   end function IsSnowvegFlagOff
+
+   !-----------------------------------------------------------------------
+   !BOP
+   !
+   ! !IROUTINE: IsSnowvegFlagOn
+   !
+   ! !INTERFACE:
+   !
+   logical function IsSnowvegFlagOn( )
+     !
+     ! !DESCRIPTION:
+     !
+     ! Return true if snowveg_flag is ON
+     !
+     ! !USES:
+     implicit none
+     !EOP
+     !-----------------------------------------------------------------------
+
+     IsSnowvegFlagOn = (trim(snowveg_flag) == 'ON')
+
+   end function IsSnowvegFlagOn
+
+   !-----------------------------------------------------------------------
+   !BOP
+   !
+   ! !IROUTINE: IsSnowvegFlagOnRad
+   !
+   ! !INTERFACE:
+   !
+   logical function IsSnowvegFlagOnRad( )
+     !
+     ! !DESCRIPTION:
+     !
+     ! Return true if snowveg_flag is ON_RAD
+     !
+     ! !USES:
+     implicit none
+     !EOP
+     !-----------------------------------------------------------------------
+
+     IsSnowvegFlagOnRad = (trim(snowveg_flag) == 'ON_RAD')
+
+   end function IsSnowvegFlagOnRad
 
 end module CanopyHydrologyMod

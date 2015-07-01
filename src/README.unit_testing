@@ -1,4 +1,5 @@
 # To run all unit tests on yellowstone, run the following commands:
+# (syntax assumes bash shell)
 
 # Do this once per login
 module load cmake

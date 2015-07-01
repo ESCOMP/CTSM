@@ -1,4 +1,102 @@
 ===============================================================
+Tag name:  clm4_5_1_r112
+Originator(s):  oleson (Keith Oleson,UCAR/TSS,303-497-1332)
+Date: Wed Jul  1 10:14:11 MDT 2015
+One-line Summary: Justin Perket snow on vegetation
+
+Purpose of changes: Incorporate Justin Perket's snow on vegetation changes
+
+Requirements for tag:
+
+Test level of tag: regular, build-namelist, unit_tests
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: Add snowveg_flag item
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Keith Oleson, Justin Perket, Erik Kluzek
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+M components/clm/src/README.unit_testing               Add note that instructions are for bash shell
+M components/clm/src/biogeophys/CanopyFluxesMod.F90    snow/liq on vegetation
+M components/clm/src/biogeophys/WaterStateType.F90     history/restart handling for snow/liq on vegetation
+M components/clm/src/biogeophys/BalanceCheckMod.F90    line spaces only
+M components/clm/src/biogeophys/WaterfluxType.F90      history handling for snow on vegetation
+M components/clm/src/biogeophys/CanopyHydrologyMod.F90 snow/liq on vegetation and snowveg_flag handling
+M components/clm/src/biogeophys/SurfaceAlbedoMod.F90   snow on vegetation optical properties
+M components/clm/src/main/controlMod.F90               line spaces only
+M components/clm/bld/test_build_namelist/t/input/namelist_defaults_clm4_5_test.xml snowveg_flag handling
+M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml                   snowveg_flag handling
+M components/clm/bld/namelist_files/namelist_definition_clm4_5.xml                 snowveg_flag handling
+M components/clm/bld/CLMBuildNamelist.pm                                           snowveg_flag handling
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+    All CLM45 and CLM50 tests have namelist differences; this is expected due
+     to addition of new namelist item
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok
+
+CLM tag used for the baseline comparisons:  clm4_5_1_r111
+
+Changes answers relative to baseline: Yes, for CLM50
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM50
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+    New climate.  See Justin Perket (perketj@umich.edu)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? NA
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: NA
+
+   URL for LMWG diagnostics output used to validate new climate: NA
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r111
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Jun 12 20:19:25 MDT 2015

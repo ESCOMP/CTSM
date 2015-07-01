@@ -78,7 +78,6 @@ contains
 
          zwt          =>    soilhydrology_inst%zwt_col     , & ! Input:  [real(r8) (:)   ]  water table depth (m)                   
          wa           =>    soilhydrology_inst%wa_col      , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)    
-         
          h2ocan_col   =>    waterstate_inst%h2ocan_col     , & ! Output: [real(r8) (:)   ]  canopy water (mm H2O) (column level)    
          begwb        =>    waterstate_inst%begwb_col        & ! Output: [real(r8) (:)   ]  water mass begining of the time step    
          )
@@ -509,6 +508,7 @@ contains
                 write(iulog,*)'qflx_glcice_frz  = ',qflx_glcice_frz(indexc)*dtime
              end if
              write(iulog,*)'clm model is stopping'
+
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
           end if
        end if

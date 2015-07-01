@@ -192,7 +192,7 @@ contains
 
     namelist /clm_inparm/  &
          use_c14_bombspike, atm_c14_filename
-
+		 
     ! All old cpp-ifdefs are below and have been converted to namelist variables 
 
     ! max number of plant functional types in naturally vegetated landunit

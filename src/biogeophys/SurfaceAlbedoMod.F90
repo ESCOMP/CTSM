@@ -27,6 +27,7 @@ module SurfaceAlbedoMod
   use ColumnType        , only : col                
   use PatchType         , only : patch                
   use EDSurfaceAlbedoMod, only : ED_Norman_Radiation
+  use CanopyHydrologyMod, only : IsSnowvegFlagOn, IsSnowvegFlagOnRad
   !
   implicit none
   !
@@ -62,6 +63,11 @@ module SurfaceAlbedoMod
   ! Coefficient for calculating ice "fraction" for lake surface albedo
   ! From D. Mironov (2010) Boreal Env. Research
   real(r8), parameter :: calb = 95.6_r8   
+
+  !
+  ! !PRIVATE DATA MEMBERS:
+  ! Snow in vegetation canopy namelist options.
+  logical, private :: snowveg_onrad  = .true.   ! snowveg_flag = 'ON_RAD'
 
   !
   ! !PRIVATE DATA FUNCTIONS:
@@ -1161,6 +1167,7 @@ contains
           t_veg        =>    temperature_inst%t_veg_patch        , & ! Input:  [real(r8) (:)   ]  vegetation temperature (Kelvin)         
 
           fwet         =>    waterstate_inst%fwet_patch          , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is wet (0 to 1) 
+          fcansno      =>    waterstate_inst%fcansno_patch       , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is snow-covered (0 to 1) 
 
           elai         =>    canopystate_inst%elai_patch         , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow
           esai         =>    canopystate_inst%esai_patch         , & ! Input:  [real(r8) (:)   ]  one-sided stem area index with burying by snow
@@ -1241,6 +1248,9 @@ contains
    ! fabi_sun_z - absorbed sunlit leaf diffuse PAR (per unit sunlit lai+sai) for each canopy layer
    ! fabi_sha_z - absorbed shaded leaf diffuse PAR (per unit shaded lai+sai) for each canopy layer
 
+   ! Set status of snowveg_flag
+   snowveg_onrad = IsSnowvegFlagOnRad()
+
     do ib = 1, numrad
        do fp = 1,num_vegsol
           p = filter_vegsol(fp)
@@ -1261,15 +1271,22 @@ contains
 
           ! Adjust omega, betad, and betai for intercepted snow
 
-          if (t_veg(p) > tfrz) then                             !no snow
-             tmp0 = omegal
-             tmp1 = betadl
-             tmp2 = betail
+          if (snowveg_onrad) then
+             tmp0 =   (1._r8-fcansno(p))*omegal        + fcansno(p)*omegas(ib)
+             tmp1 = ( (1._r8-fcansno(p))*omegal*betadl + fcansno(p)*omegas(ib)*betads ) / tmp0
+             tmp2 = ( (1._r8-fcansno(p))*omegal*betail + fcansno(p)*omegas(ib)*betais ) / tmp0
           else
-             tmp0 =   (1._r8-fwet(p))*omegal        + fwet(p)*omegas(ib)
-             tmp1 = ( (1._r8-fwet(p))*omegal*betadl + fwet(p)*omegas(ib)*betads ) / tmp0
-             tmp2 = ( (1._r8-fwet(p))*omegal*betail + fwet(p)*omegas(ib)*betais ) / tmp0
+             if (t_veg(p) > tfrz) then                             !no snow
+                tmp0 = omegal
+                tmp1 = betadl
+                tmp2 = betail
+             else
+                tmp0 =   (1._r8-fwet(p))*omegal        + fwet(p)*omegas(ib)
+                tmp1 = ( (1._r8-fwet(p))*omegal*betadl + fwet(p)*omegas(ib)*betads ) / tmp0
+                tmp2 = ( (1._r8-fwet(p))*omegal*betail + fwet(p)*omegas(ib)*betais ) / tmp0
+             end if
           end if
+
           omega(p,ib) = tmp0
           betad = tmp1
           betai = tmp2

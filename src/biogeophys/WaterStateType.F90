@@ -43,6 +43,9 @@ module WaterstateType
      real(r8), pointer :: h2ocan_patch           (:)   ! patch canopy water (mm H2O)
      real(r8), pointer :: h2ocan_col             (:)   ! col canopy water (mm H2O)
      real(r8), pointer :: h2osfc_col             (:)   ! col surface water (mm H2O)
+     real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
+     real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
+     real(r8), pointer :: snounload_patch        (:)   ! Canopy snow unloading (mm H2O)
      real(r8), pointer :: swe_old_col            (:,:) ! col initial snow water
      real(r8), pointer :: liq1_grc               (:)   ! grc initial gridcell total h2o liq content
      real(r8), pointer :: liq2_grc               (:)   ! grc post land cover change total liq content
@@ -75,6 +78,7 @@ module WaterstateType
      real(r8), pointer :: wf_col                 (:)   ! col soil water as frac. of whc for top 0.05 m (0-1) 
      real(r8), pointer :: wf2_col                (:)   ! col soil water as frac. of whc for top 0.17 m (0-1) 
      real(r8), pointer :: fwet_patch             (:)   ! patch canopy fraction that is wet (0 to 1)
+     real(r8), pointer :: fcansno_patch          (:)   ! patch canopy fraction that is snow covered (0 to 1)
      real(r8), pointer :: fdry_patch             (:)   ! patch canopy fraction of foliage that is green and dry [-] (new)
 
      ! Balance Checks
@@ -100,7 +104,7 @@ module WaterstateType
 
   ! minimum allowed snow effective radius (also "fresh snow" value) [microns]
   real(r8), public, parameter :: snw_rds_min = 54.526_r8    
-  !------------------------------------------------------------------------
+ !------------------------------------------------------------------------
 
 contains
 
@@ -176,7 +180,10 @@ contains
     allocate(this%h2osoi_ice_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_ice_col         (:,:) = nan
     allocate(this%h2osoi_liq_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liq_col         (:,:) = nan
     allocate(this%h2ocan_patch           (begp:endp))                     ; this%h2ocan_patch           (:)   = nan  
-    allocate(this%h2ocan_col             (begc:endc))                     ; this%h2ocan_col             (:)   = nan  
+    allocate(this%h2ocan_col             (begc:endc))                     ; this%h2ocan_col             (:)   = nan
+    allocate(this%snocan_patch           (begp:endp))                     ; this%snocan_patch           (:)   = nan  
+    allocate(this%liqcan_patch           (begp:endp))                     ; this%liqcan_patch           (:)   = nan  
+    allocate(this%snounload_patch        (begp:endp))                     ; this%snounload_patch        (:)   = nan  
     allocate(this%h2osfc_col             (begc:endc))                     ; this%h2osfc_col             (:)   = nan   
     allocate(this%swe_old_col            (begc:endc,-nlevsno+1:0))        ; this%swe_old_col            (:,:) = nan   
     allocate(this%liq1_grc               (begg:endg))                     ; this%liq1_grc               (:)   = nan
@@ -209,6 +216,7 @@ contains
     allocate(this%wf_col                 (begc:endc))                     ; this%wf_col                 (:)   = nan
     allocate(this%wf2_col                (begc:endc))                     ; 
     allocate(this%fwet_patch             (begp:endp))                     ; this%fwet_patch             (:)   = nan
+    allocate(this%fcansno_patch          (begp:endp))                     ; this%fcansno_patch          (:)   = nan
     allocate(this%fdry_patch             (begp:endp))                     ; this%fdry_patch             (:)   = nan
 
     allocate(this%begwb_patch            (begp:endp))                     ; this%begwb_patch            (:)   = nan
@@ -287,6 +295,21 @@ contains
     call hist_addfld1d (fname='H2OCAN', units='mm',  &
          avgflag='A', long_name='intercepted water', &
          ptr_patch=this%h2ocan_patch, set_lake=0._r8)
+
+    this%snocan_patch(begp:endp) = spval 
+    call hist_addfld1d (fname='SNOCAN', units='mm',  &
+         avgflag='A', long_name='intercepted snow', &
+         ptr_patch=this%snocan_patch, set_lake=0._r8)
+
+    this%liqcan_patch(begp:endp) = spval 
+    call hist_addfld1d (fname='LIQCAN', units='mm',  &
+         avgflag='A', long_name='intercepted liquid water', &
+         ptr_patch=this%liqcan_patch, set_lake=0._r8)
+
+    this%snounload_patch(begp:endp) = spval 
+    call hist_addfld1d (fname='SNOUNLOAD', units='mm',  &
+         avgflag='A', long_name='Canopy snow unloading', &
+         ptr_patch=this%snounload_patch, set_lake=0._r8)
 
     call hist_addfld1d (fname='H2OSNO',  units='mm',  &
          avgflag='A', long_name='snow depth (liquid water)', &
@@ -371,6 +394,13 @@ contains
        call hist_addfld1d (fname='FWET', units='proportion', &
             avgflag='A', long_name='fraction of canopy that is wet', &
             ptr_patch=this%fwet_patch, default='inactive')
+    end if
+
+    if (use_cn) then
+       this%fcansno_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FCANSNO', units='proportion', &
+            avgflag='A', long_name='fraction of canopy that is wet', &
+            ptr_patch=this%fcansno_patch, default='inactive')
     end if
 
     if (use_cn) then
@@ -556,12 +586,14 @@ contains
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
       this%h2ocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%h2ocan_col(bounds%begc:bounds%endc) = 0._r8
-
+      this%snocan_patch(bounds%begp:bounds%endp) = 0._r8
+      this%liqcan_patch(bounds%begp:bounds%endp) = 0._r8
+      this%snounload_patch(bounds%begp:bounds%endp) = 0._r8
       this%frac_h2osfc_col(bounds%begc:bounds%endc) = 0._r8
 
       this%fwet_patch(bounds%begp:bounds%endp) = 0._r8
       this%fdry_patch(bounds%begp:bounds%endp) = 0._r8
-
+      this%fcansno_patch(bounds%begp:bounds%endp) = 0._r8
       !--------------------------------------------
       ! Set snow water
       !--------------------------------------------
@@ -804,6 +836,29 @@ contains
          long_name='canopy water', units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%h2ocan_patch)
 
+    call restartvar(ncid=ncid, flag=flag, varname='SNOCAN', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='canopy snow water', units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%snocan_patch)
+    ! If not in history (debug for now):
+    if (flag=='read' .and. .not. readvar) then
+       this%snocan_patch(:) = 0.0_r8
+    end if
+
+    call restartvar(ncid=ncid, flag=flag, varname='LIQCAN', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='canopy liquid water', units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%liqcan_patch)
+    ! If not in history (debug for now):
+    if (flag=='read' .and. .not. readvar) then
+       this%liqcan_patch(:) = this%h2ocan_patch(:)
+    end if
+
+    call restartvar(ncid=ncid, flag=flag, varname='SNOUNLOAD', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='Canopy snow unloading', units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%snounload_patch)
+
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then
        do c = bounds%begc, bounds%endc
@@ -905,6 +960,10 @@ contains
          long_name='fraction of canopy that is wet (0 to 1)', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%fwet_patch)
 
+    call restartvar(ncid=ncid, flag=flag, varname='FCANSNO', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='fraction of canopy that is snow covered (0 to 1)', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%fcansno_patch)
 
     ! column type physical state variable - snw_rds
     call restartvar(ncid=ncid, flag=flag, varname='snw_rds', xtype=ncd_double,  &

@@ -382,6 +382,11 @@ If TRUE, write diagnostic of global radiative temperature written to CLM log fil
 Subgrid fluxes for snow
 </entry>
 
+<entry id="snowveg_flag" type="char*10" category="clm_physics"
+       group="clm_canopyhydrology_inparm" valid_values="OFF,ON,ON_RAD" >
+Turn vegetation snow canopy ON, OFF, or ON with albedo influence (ON_RAD)
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
 <!-- ========================================================================================  -->
