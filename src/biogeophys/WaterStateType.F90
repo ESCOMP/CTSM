@@ -840,19 +840,14 @@ contains
          dim1name='pft', &
          long_name='canopy snow water', units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%snocan_patch)
-    ! If not in history (debug for now):
-    if (flag=='read' .and. .not. readvar) then
-       this%snocan_patch(:) = 0.0_r8
-    end if
 
-    call restartvar(ncid=ncid, flag=flag, varname='LIQCAN', xtype=ncd_double,  &
+    ! NOTE(wjs, 2015-07-01) In old restart files, there was no LIQCAN variable. However,
+    ! H2OCAN had similar meaning. So if we can't find LIQCAN, use H2OCAN to initialize
+    ! liqcan_patch.
+    call restartvar(ncid=ncid, flag=flag, varname='LIQCAN:H2OCAN', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='canopy liquid water', units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%liqcan_patch)
-    ! If not in history (debug for now):
-    if (flag=='read' .and. .not. readvar) then
-       this%liqcan_patch(:) = this%h2ocan_patch(:)
-    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='SNOUNLOAD', xtype=ncd_double,  &
          dim1name='pft', &

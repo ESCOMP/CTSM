@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r113    sacks 07/09/2015 Support backwards compatibility of restart variable names
    clm4_5_1_r112   oleson 07/01/2015 Justin Perket snow on vegetation
    clm4_5_1_r111    sacks 06/12/2015 Remove temporary hack to get bfb results in InitSnowLayers
    clm4_5_1_r110    sacks 06/12/2015 Add flexibility to have more snow layers

@@ -10,11 +10,13 @@ module initInterpMod
   use shr_sys_mod    , only: shr_sys_flush
   use shr_infnan_mod , only: shr_infnan_isnan
   use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use shr_string_mod , only: shr_string_listGetName
   use clm_varctl     , only: iulog
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
   use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip
   use restUtilMod    , only: iflag_noswitchdim, iflag_switchdim
+  use ncdio_utils    , only: find_var_on_file
   use clm_varcon     , only: spval, re
   use ncdio_pio
   use pio
@@ -97,6 +99,8 @@ contains
     integer            :: dimleni,dimleno ! input/output dimension length       
     integer            :: nvars           ! number of variables
     character(len=256) :: varname         ! variable name
+    character(len=256) :: varname_i_options ! possible variable names on input file
+    character(len=256) :: varname_i       ! variable name on input file
     character(len=16)  :: vec_dimname     ! subgrid dimension name
     character(len=16)  :: lev_dimname     ! level dimension name
     type(Var_desc_t)   :: vardesc         ! pio variable descriptor
@@ -289,12 +293,48 @@ contains
        end if
 
        !---------------------------------------------------          
+       ! Read metadata telling us possible variable names on input file;
+       ! determine which of these is present on the input file
+       !---------------------------------------------------          
+
+       ! 'varnames_on_old_files' is a colon-delimited list of possible variable names,
+       ! enabling backwards compatibility with old input files
+       status = pio_get_att(ncido, vardesc, 'varnames_on_old_files', varname_i_options)
+
+       ! We expect the first name in the list to match the current variable name. If that
+       ! isn't true, abort. This check is mainly to catch behavior changes in the code to
+       ! write this attribute in restUtilMod: Significant changes in behavior there need
+       ! to be matched by corresponding changes in this module. For example, if
+       ! restUtilMod changes this attribute to exclude the first name (which, after all,
+       ! is available via the variable name itself), then code in this module should
+       ! change accordingly.
+       call shr_string_listGetName(varname_i_options, 1, varname_i)
+       if (varname_i /= varname) then
+          if (masterproc) then
+             write(iulog,*) 'ERROR: expect first element in varnames_on_old_files to match varname'
+             write(iulog,*) 'varname = ', trim(varname)
+             write(iulog,*) 'varnames_on_old_files = ', trim(varname_i_options)
+             write(iulog,*) 'This likely indicates that the code to write the'
+             write(iulog,*) 'varnames_on_old_files attribute list has changed behavior.'
+          end if
+          call endrun(msg='ERROR: expect first element in varnames_on_old_files to match varname'// &
+               errMsg(__FILE__, __LINE__))
+       end if
+
+       ! Find which of the list of possible variables actually exists on the input file.
+       call find_var_on_file(ncidi, varname_i_options, varname_i)
+
+       ! Note that, if none of the options are found, varname_i will be set to the first
+       ! variable in the list, in which case the following code will determine that we
+       ! should skip this variable.
+
+       !---------------------------------------------------
        ! If variable is on output file - but not on input file
        ! SKIP this variable
        !---------------------------------------------------          
 
        call pio_seterrorhandling(ncidi, PIO_BCAST_ERROR)
-       status = pio_inq_varid(ncidi, name=varname, vardesc=vardesc)
+       status = pio_inq_varid(ncidi, name=varname_i, vardesc=vardesc)
        call pio_seterrorhandling(ncidi, PIO_INTERNAL_ERROR)
        if (status /= PIO_noerr) then
           if (masterproc) then
@@ -313,25 +353,27 @@ contains
 
              ! since we are copying soil variables, need to also copy spinup state 
              ! since otherwise if they are different then it will break the spinup procedure
-             status = pio_inq_varid(ncidi, trim(varname), vardesc)
+             status = pio_inq_varid(ncidi, trim(varname_i), vardesc)
              status = pio_get_var(ncidi, vardesc, spinup_state_i)
              status = pio_inq_varid(ncido, trim(varname), vardesc)
              status = pio_get_var(ncido, vardesc, spinup_state_o)
              if ( spinup_state_i  /=  spinup_state_o ) then
                 if (masterproc) then
-                   write (iulog,*) 'Spinup states are different: Copying: ', trim(varname)
+                   write (iulog,*) 'Spinup states are different: Copying: ', &
+                        trim(varname_i), ' => ', trim(varname)
                 end if
                 status = pio_put_var(ncido, vardesc, spinup_state_i)
              else
                 if (masterproc) then
-                   write (iulog,*) 'Spinup states match: Skipping: ', trim(varname)
+                   write (iulog,*) 'Spinup states match: Skipping: ', &
+                        trim(varname_i), ' => ', trim(varname)
                 end if
              endif
              
           else if  ( trim(varname) .eq. 'decomp_cascade_state' ) then
 
              ! ditto for the decomposition cascade
-             status = pio_inq_varid(ncidi, trim(varname), vardesc)
+             status = pio_inq_varid(ncidi, trim(varname_i), vardesc)
              status = pio_get_var(ncidi, vardesc, decomp_cascade_state_i)
              status = pio_inq_varid(ncido, trim(varname), vardesc)
              status = pio_get_var(ncido, vardesc, decomp_cascade_state_o)
@@ -339,13 +381,14 @@ contains
                 call endrun(msg='ERROR: Decomposition cascade states are different'//errMsg(__FILE__, __LINE__))
              else
                 if (masterproc) then
-                   write (iulog,*) 'Decomposition cascade states match: Skipping: ', trim(varname)
+                   write (iulog,*) 'Decomposition cascade states match: Skipping: ', &
+                        trim(varname_i), ' => ', trim(varname)
                 end if
              endif
 
           else if (iflag_interpinic == iflag_copy) then
 
-             call interp_0d_copy(varname, xtypeo, ncidi, ncido)
+             call interp_0d_copy(varname, varname_i, xtypeo, ncidi, ncido)
 
           else if (iflag_interpinic == iflag_skip) then
 
@@ -393,10 +436,10 @@ contains
           end if
 
           if ( xtypeo == pio_int )then
-             call interp_1d_int ( varname, vec_dimname, begi, endi, bego, endo, &
+             call interp_1d_int ( varname, varname_i, vec_dimname, begi, endi, bego, endo, &
                   ncidi, ncido, activei, activeo, sgridindex )
           else if ( xtypeo == pio_double )then                                 
-             call interp_1d_double( varname, vec_dimname, begi, endi, bego, endo, &
+             call interp_1d_double( varname, varname_i, vec_dimname, begi, endi, bego, endo, &
                   ncidi, ncido, activei, activeo, sgridindex )
           else
              call endrun(msg='ERROR interpinic: 1D variable with unknown type: '//&
@@ -414,7 +457,7 @@ contains
                   trim(varname)//errMsg(__FILE__, __LINE__))
           end if
           ! Determine order of level and subgrid dimension in restart file
-          status = pio_inq_varid (ncidi, trim(varname), vardesc)
+          status = pio_inq_varid (ncidi, trim(varname_i), vardesc)
           status = pio_inquire_variable(ncidi, vardesc=vardesc, dimids=dimidsi)
           status = pio_get_att(ncidi, vardesc, 'switchdim_flag', switchdim_flag)
           if (switchdim_flag > 0) then
@@ -471,7 +514,7 @@ contains
              call endrun(msg='ERROR interpinic: 2D variable with unknown subgrid dimension: '//&
                   trim(varname)//errMsg(__FILE__, __LINE__))
           end if
-          call interp_2d_double(varname, vec_dimname, lev_dimname, &
+          call interp_2d_double(varname, varname_i, vec_dimname, lev_dimname, &
                begi, endi, bego, endo, nlevi, nlevo, switchdimi, switchdimo, &
                ncidi, ncido, activei, activeo, sgridindex)
 
@@ -877,11 +920,12 @@ contains
 
   !=======================================================================
 
-  subroutine interp_0d_copy (varname, xtype, ncidi, ncido)
+  subroutine interp_0d_copy (varname, varname_i, xtype, ncidi, ncido)
 
     ! --------------------------------------------------------------------
     ! arguments
-    character(len=*)   , intent(inout) :: varname
+    character(len=*)   , intent(inout) :: varname   ! variable name on output file
+    character(len=*)   , intent(in)    :: varname_i ! variable name on input file
     integer            , intent(in)    :: xtype
     type(file_desc_t)  , intent(inout) :: ncidi
     type(file_desc_t)  , intent(inout) :: ncido
@@ -892,14 +936,14 @@ contains
     ! --------------------------------------------------------------------
  
     if (masterproc) then
-       write(iulog,*) 'Copying      : ',trim(varname)
+       write(iulog,*) 'Copying      : ',trim(varname_i), ' => ', trim(varname)
     end if
 
     if (xtype == pio_int) then
-       call ncd_io(ncid=ncidi, varname=trim(varname), flag='read' , data=ivalue)
+       call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read' , data=ivalue)
        call ncd_io(ncid=ncido, varname=trim(varname), flag='write', data=ivalue)
     else if (xtype == pio_double) then
-       call ncd_io(ncid=ncidi, varname=trim(varname), flag='read' , data=rvalue)
+       call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read' , data=rvalue)
        call ncd_io(ncid=ncido, varname=trim(varname), flag='write', data=rvalue)
     else
        if (masterproc) then
@@ -912,11 +956,12 @@ contains
 
   !=======================================================================
 
-  subroutine interp_1d_double (varname, dimname, begi, endi, bego, endo, ncidi, ncido, &
+  subroutine interp_1d_double (varname, varname_i, dimname, begi, endi, bego, endo, ncidi, ncido, &
        activei, activeo, sgridindex)
 
     ! ------------------------ arguments ---------------------------------
-    character(len=*)  , intent(inout) :: varname 
+    character(len=*)  , intent(inout) :: varname   ! variable name on output file
+    character(len=*)  , intent(in)    :: varname_i ! variable name on input file
     character(len=*)  , intent(inout) :: dimname
     integer           , intent(in)    :: begi, endi
     integer           , intent(in)    :: bego, endo
@@ -934,11 +979,11 @@ contains
     ! --------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*) 'Interpolating: ',trim(varname)
+       write(iulog,*) 'Interpolating: ',trim(varname_i), ' => ', trim(varname)
     end if
 
     allocate (rbufsli(begi:endi), rbufslo(bego:endo))
-    call ncd_io(ncid=ncidi, varname=trim(varname), flag='read', data=rbufsli)
+    call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read', data=rbufsli)
     call ncd_io(ncid=ncido, varname=trim(varname), flag='read', data=rbufslo, &
          dim1name=dimname)
 
@@ -970,11 +1015,12 @@ contains
 
   !=======================================================================
 
-  subroutine interp_1d_int (varname, dimname, begi, endi, bego, endo, ncidi, ncido, &
+  subroutine interp_1d_int (varname, varname_i, dimname, begi, endi, bego, endo, ncidi, ncido, &
        activei, activeo, sgridindex)
 
     ! ------------------------ arguments ---------------------------------
-    character(len=*)  , intent(inout) :: varname 
+    character(len=*)  , intent(inout) :: varname   ! variable name on output file
+    character(len=*)  , intent(in)    :: varname_i ! variable name on input file
     character(len=*)  , intent(inout) :: dimname
     integer           , intent(in)    :: begi, endi
     integer           , intent(in)    :: bego, endo
@@ -992,12 +1038,12 @@ contains
     ! --------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*) 'Interpolating: ',trim(varname)
+       write(iulog,*) 'Interpolating: ',trim(varname_i), ' => ', trim(varname)
     end if
 
     allocate (ibufsli(begi:endi), ibufslo(bego:endo))
 
-    call ncd_io(ncid=ncidi, varname=trim(varname), flag='read', &
+    call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read', &
          data=ibufsli)
     call ncd_io(ncid=ncido, varname=trim(varname), flag='read', &
          data=ibufslo, dim1name=dimname)
@@ -1020,13 +1066,14 @@ contains
 
   !=======================================================================
 
-  subroutine interp_2d_double (varname, vec_dimname, lev_dimname, &
+  subroutine interp_2d_double (varname, varname_i, vec_dimname, lev_dimname, &
        begi, endi, bego, endo, nlevi, nlevo, &
        switchdimi, switchdimo, ncidi, ncido, activei, activeo, sgridindex)
 
     ! --------------------------------------------------------------------
     ! arguments
-    character(len=*)  , intent(inout) :: varname     
+    character(len=*)  , intent(inout) :: varname   ! variable name on output file   
+    character(len=*)  , intent(in)    :: varname_i ! variable name on input file
     character(len=*)  , intent(inout) :: vec_dimname
     character(len=*)  , intent(inout) :: lev_dimname
     integer           , intent(in)    :: begi, endi
@@ -1056,7 +1103,7 @@ contains
     ! --------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*) 'Interpolating: ',trim(varname)
+       write(iulog,*) 'Interpolating: ',trim(varname_i), ' => ', trim(varname)
     end if
 
     allocate(rbuf2do(bego:endo, nlevo))
@@ -1067,7 +1114,7 @@ contains
 
        ! Read in 1 level of input array at a time and do interpolation for just that level
 
-       status = pio_inq_varid(ncidi, trim(varname), vardesc)
+       status = pio_inq_varid(ncidi, trim(varname_i), vardesc)
        allocate(rbuf1di(begi:endi))
        do lev = 1,nlevo
           if (switchdimi) then
@@ -1110,7 +1157,7 @@ contains
        else
           allocate(rbuf2di(begi:endi, nlevi))
        end if
-       call ncd_io(ncid=ncidi, varname=trim(varname), flag='read', data=rbuf2di)
+       call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read', data=rbuf2di)
 
        if ( ( nlevi .eq. 15) .and. (nlevo .eq. 30) ) then
           !!! this is the case for variables on the levgrnd grid

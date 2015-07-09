@@ -15,6 +15,7 @@ module ncdio_pio
   private
 
   public :: file_desc_t
+  public :: var_desc_t
   
   ! Fake replacement for file_desc_t. Instead of relating to a netcdf file, this fake
   ! object contains the data faking the file.
@@ -25,6 +26,10 @@ module ncdio_pio
      type(ncdio_var_type), allocatable :: vars(:)
   end type file_desc_t
 
+  ! Stub replacement for var_desc_t, to satisfy interfaces that need it
+  type :: var_desc_t
+  end type var_desc_t
+
   integer, parameter, public :: ncd_double = 1
   integer, parameter, public :: ncd_int = 2
   integer, parameter, public :: ncd_log = 3
@@ -33,6 +38,7 @@ module ncdio_pio
   ! !PUBLIC MEMBER FUNCTIONS:
 
   public :: ncd_io                ! do fake i/o (currently only set up to read)
+  public :: ncd_inqvid            ! inquire on a variable id
   public :: ncd_set_var           ! set data on "file" for one variable
   public :: ncd_reset_read_times  ! reset the "read_times" sensor variable for a given variable
   public :: ncd_get_read_times    ! get the value of the "read_times" sensor variable for a given variable
@@ -150,6 +156,32 @@ contains
     end if
        
   end subroutine ncd_io_{DIMS}d_double
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_inqvid(ncid, name, varid, vardesc, readvar)
+    ! Fake to inquire on a variable ID
+    !
+    ! Unlike the true implementation, this one never aborts. It is meant to be called
+    ! with readvar present (in which case the true implementation doesn't abort, either.)
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t), intent(inout) :: ncid      ! netcdf file id
+    character(len=*)  , intent(in)    :: name      ! variable name
+    integer           , intent(out)   :: varid     ! variable id
+    type(Var_desc_t)  , intent(out)   :: vardesc   ! variable descriptor (not set in this implementation)
+    logical, optional , intent(out)   :: readvar   ! does variable exist
+    !-----------------------------------------------------------------------
+
+    varid = ncd_get_variable_index(ncid, name)
+
+    if (present(readvar)) then
+       if (varid /= var_not_found) then
+          readvar = .true.
+       else
+          readvar = .false.
+       end if
+    end if
+  end subroutine ncd_inqvid
 
   ! ======================================================================
   ! Stubs for the actual ncdio_pio functionality (do nothing)

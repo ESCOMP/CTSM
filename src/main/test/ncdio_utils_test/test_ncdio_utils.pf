@@ -1,0 +1,131 @@
+module test_ncdio_utils
+  
+  ! Tests of ncdio_utils
+  
+  use pfunit_mod
+  use ncdio_utils
+  use ncdio_pio   ! use the fake version of this module
+  use shr_kind_mod, only : r8 => shr_kind_r8
+
+  implicit none
+  
+  @TestCase
+  type, extends(TestCase) :: TestNcdioUtils
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestNcdioUtils
+  
+contains
+  
+  subroutine setUp(this)
+    class(TestNcdioUtils), intent(inout) :: this
+  end subroutine setUp
+  
+  subroutine tearDown(this)
+    class(TestNcdioUtils), intent(inout) :: this
+  end subroutine tearDown
+
+  ! ========================================================================
+  ! Test helpers
+  ! ========================================================================
+
+  subroutine add_vars_to_file(ncid, varnames)
+    !  Add one or more variables to the file, with irrelevant data
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*), intent(in) :: varnames(:)
+
+    integer :: n
+
+    do n = 1, size(varnames)
+       call ncd_set_var(ncid, varnames(n), reshape([1._r8], [1,1]), [1,1])
+    end do
+  end subroutine add_vars_to_file
+
+  ! ------------------------------------------------------------------------
+  ! Tests of find_var_on_file
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine test_find_var_on_file_oneElement_found(this)
+    class(TestNcdioUtils), intent(inout) :: this
+    character(len=256) :: actual
+    type(file_desc_t) :: ncid
+
+    ncid = file_desc_t()
+    call add_vars_to_file(ncid, ['foo'])
+
+    call find_var_on_file(ncid, 'foo', actual)
+
+    @assertEqual('foo', actual)
+  end subroutine test_find_var_on_file_oneElement_found
+
+  @Test
+  subroutine test_find_var_on_file_oneElement_notFound(this)
+    class(TestNcdioUtils), intent(inout) :: this
+    character(len=256) :: actual
+    type(file_desc_t) :: ncid
+
+    ncid = file_desc_t()
+
+    call find_var_on_file(ncid, 'foo', actual)
+
+    @assertEqual('foo', actual)
+  end subroutine test_find_var_on_file_oneElement_notFound
+  
+  @Test
+  subroutine test_find_var_on_file_3Elements_first(this)
+    class(TestNcdioUtils), intent(inout) :: this
+    character(len=256) :: actual
+    type(file_desc_t) :: ncid
+
+    ncid = file_desc_t()
+    call add_vars_to_file(ncid, ['foo', 'bar', 'baz'])
+
+    call find_var_on_file(ncid, 'foo:bar:baz', actual)
+
+    @assertEqual('foo', actual)
+  end subroutine test_find_var_on_file_3Elements_first
+
+  @Test
+  subroutine test_find_var_on_file_3Elements_second(this)
+    class(TestNcdioUtils), intent(inout) :: this
+    character(len=256) :: actual
+    type(file_desc_t) :: ncid
+
+    ncid = file_desc_t()
+    call add_vars_to_file(ncid, ['bar', 'baz'])
+
+    call find_var_on_file(ncid, 'foo:bar:baz', actual)
+
+    @assertEqual('bar', actual)
+  end subroutine test_find_var_on_file_3Elements_second
+
+  @Test
+  subroutine test_find_var_on_file_3Elements_third(this)
+    class(TestNcdioUtils), intent(inout) :: this
+    character(len=256) :: actual
+    type(file_desc_t) :: ncid
+
+    ncid = file_desc_t()
+    call add_vars_to_file(ncid, ['baz'])
+
+    call find_var_on_file(ncid, 'foo:bar:baz', actual)
+
+    @assertEqual('baz', actual)
+  end subroutine test_find_var_on_file_3Elements_third
+
+  @Test
+  subroutine test_find_var_on_file_3Elements_noneFound(this)
+    class(TestNcdioUtils), intent(inout) :: this
+    character(len=256) :: actual
+    type(file_desc_t) :: ncid
+
+    ncid = file_desc_t()
+
+    call find_var_on_file(ncid, 'foo:bar:baz', actual)
+
+    @assertEqual('foo', actual)
+  end subroutine test_find_var_on_file_3Elements_noneFound
+
+end module test_ncdio_utils

@@ -1,4 +1,115 @@
 ===============================================================
+Tag name:  clm4_5_1_r113
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Jul  9 10:01:13 MDT 2015
+One-line Summary: Support backwards compatibility of restart variable names
+
+Purpose of changes:
+
+   Previously, if a restart variable was renamed, backwards compatibility was
+   implemented in an ad-hoc manner. A key point is taht none of these ad-hoc
+   solutions allowed backwards compatibility when running
+   initInterp. (initInterp would just skip any variable if it could not find an
+   exact match on the input [template] file.)
+
+   This tag provides a standard mechanism for putting in place backwards
+   compatibility when renaming a restart variable. This backwards compatibility
+   carries over to initInterp, by communicating the necessary metadata through a
+   new attribute on the restart file: 'varnames_on_old_files'.
+
+   In order to use this new mechanism, give a colon-delimited list of variable
+   names in the varname argument to restartvar. For example, if a restart
+   variable FOO has been renamed to BAR, then specify varname='BAR:FOO'. Note
+   that this list is searched in order, and the first item should be the current
+   restart variable name.
+
+   Also, applied this new mechanism to the recently-added LIQCAN
+   variable. Previously, backwards compatibility of this variable was handled in
+   an ad-hoc manner, which did not work when running initInterp.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Erik
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Add module for higher-level netcdf utilities. Currently contains
+          routine for finding a variable on a netcdf file from a list of
+          possible variables. Also add unit tests for this routine.
+A       components/clm/src/main/ncdio_utils.F90
+A       components/clm/src/main/test/ncdio_utils_test/test_ncdio_utils.pf
+A       components/clm/src/main/test/ncdio_utils_test/CMakeLists.txt
+A       components/clm/src/main/test/ncdio_utils_test
+
+List all existing files that have been modified, and describe the changes:
+
+========= Allow multiple possible names in reading restart files and in reading
+          the 'input' file in initInterp
+M       components/clm/src/utils/restUtilMod.F90.in
+M       components/clm/src/utils/restUtilMod.F90
+M       components/clm/src/main/initInterp.F90
+
+========= Apply new mechanism to recently-added LIQCAN restart field. Also
+          remove redundant setting of snocan_patch to 0 if it isn't found on the
+          restart file - not needed since initCold is always called.
+M       components/clm/src/biogeophys/WaterStateType.F90
+
+========= Changes to support unit testing of ncdio_utils
+M       components/clm/src/main/CMakeLists.txt
+M       components/clm/src/main/test/CMakeLists.txt
+M       components/clm/src/unit_test_stubs/main/ncdio_pio_fake.F90.in
+M       components/clm/src/unit_test_stubs/main/ncdio_pio_fake.F90
+
+========= Fix path to genf90 for new cime organization
+M       components/clm/src/unit_test_stubs/main/do_genf90
+M       components/clm/src/unit_test_stubs/main/ncdio_var.F90
+
+CLM testing:
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r112
+
+Changes answers relative to baseline: NO
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r112
 Originator(s):  oleson (Keith Oleson,UCAR/TSS,303-497-1332)
 Date: Wed Jul  1 10:14:11 MDT 2015

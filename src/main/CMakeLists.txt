@@ -20,6 +20,7 @@ list(APPEND clm_sources
   initSubgridMod.F90
   landunit_varcon.F90
   lnd2glcMod.F90
+  ncdio_utils.F90
   organicFileMod.F90
   subgridAveMod.F90
   subgridWeightsMod.F90
