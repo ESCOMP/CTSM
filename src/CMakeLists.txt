@@ -42,18 +42,18 @@ foreach (sourcefile ${share_sources})
   endif()
 endforeach()
 
-# TODO: Figure out where to put declare_generated_dependencies, or whether to just leave that out
-
 # Build libraries containing stuff needed for the unit tests. 
 # Eventually, these add_library calls should probably be distributed into the correct location, rather than being in this top-level CMakeLists.txt file.
 add_library(csm_share ${share_sources})
+declare_generated_dependencies(csm_share "${share_genf90_sources}")
 add_library(esmf_wrf_timemgr ${esmf_wrf_timemgr_sources})
 add_library(clm ${clm_sources})
+declare_generated_dependencies(clm "${clm_genf90_sources}")
 add_dependencies(esmf_wrf_timemgr csm_share)
 add_dependencies(clm csm_share esmf_wrf_timemgr)
 
 # We need to look for header files here, in order to pick up shr_assert.h
-include_directories(${CESM_ROOT}/cime/share/csm_share/shr)
+include_directories(${CESM_ROOT}/cime/share/csm_share/include)
 
 # And we need to look for header files here, for some include files needed by
 # the esmf_wrf_timemgr code
