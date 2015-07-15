@@ -75,7 +75,7 @@ module WaterfluxType
      real(r8), pointer :: qflx_floodc_col          (:)   ! col flood water flux at column level
      real(r8), pointer :: qflx_sl_top_soil_col     (:)   ! col liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
      real(r8), pointer :: qflx_snomelt_col         (:)   ! col snow melt (mm H2O /s)
-     real(r8), pointer :: qflx_snow_melt_col       (:)   ! col snow melt (net)
+     real(r8), pointer :: qflx_snow_drain_col      (:)   ! col drainage from snow pack
      real(r8), pointer :: qflx_qrgwl_col           (:)   ! col qflx_surf at glaciers, wetlands, lakes
      real(r8), pointer :: qflx_runoff_col          (:)   ! col total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
      real(r8), pointer :: qflx_runoff_r_col        (:)   ! col Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
@@ -193,7 +193,7 @@ contains
     allocate(this%qflx_h2osfc_surf_col     (begc:endc))              ; this%qflx_h2osfc_surf_col     (:)   = nan
     allocate(this%qflx_snow_h2osfc_col     (begc:endc))              ; this%qflx_snow_h2osfc_col     (:)   = nan
     allocate(this%qflx_snomelt_col         (begc:endc))              ; this%qflx_snomelt_col         (:)   = nan
-    allocate(this%qflx_snow_melt_col       (begc:endc))              ; this%qflx_snow_melt_col       (:)   = nan
+    allocate(this%qflx_snow_drain_col      (begc:endc))              ; this%qflx_snow_drain_col      (:)   = nan
     allocate(this%qflx_snofrz_col          (begc:endc))              ; this%qflx_snofrz_col          (:)   = nan
     allocate(this%qflx_snofrz_lyr_col      (begc:endc,-nlevsno+1:0)) ; this%qflx_snofrz_lyr_col      (:,:) = nan
     allocate(this%qflx_qrgwl_col           (begc:endc))              ; this%qflx_qrgwl_col           (:)   = nan
@@ -290,10 +290,10 @@ contains
          avgflag='A', long_name='Rural total runoff', &
          ptr_col=this%qflx_runoff_r_col, set_spec=spval)
 
-    this%qflx_snow_melt_col(begc:endc) = spval
+    this%qflx_snow_drain_col(begc:endc) = spval
     call hist_addfld1d (fname='QSNOMELT',  units='mm/s',  &
          avgflag='A', long_name='snow melt', &
-         ptr_col=this%qflx_snow_melt_col, c2l_scale_type='urbanf')
+         ptr_col=this%qflx_snow_drain_col, c2l_scale_type='urbanf')
 
     this%qflx_snofrz_col(begc:endc) = spval
     call hist_addfld1d (fname='QSNOFRZ', units='kg/m2/s', &
@@ -481,7 +481,7 @@ contains
     this%qflx_dew_snow_col (bounds%begc:bounds%endc) = 0.0_r8
 
     this%qflx_h2osfc_surf_col(bounds%begc:bounds%endc) = 0._r8
-    this%qflx_snow_melt_col(bounds%begc:bounds%endc)   = 0._r8
+    this%qflx_snow_drain_col(bounds%begc:bounds%endc)  = 0._r8
 
     ! needed for CNNLeaching 
     do c = bounds%begc, bounds%endc
@@ -521,13 +521,13 @@ contains
        this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,-nlevsno+1:0) = 0._r8
     endif
 
-    call restartvar(ncid=ncid, flag=flag, varname='qflx_snow_melt', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, varname='qflx_snow_drain:qflx_snow_melt', xtype=ncd_double,  &
          dim1name='column', &
-         long_name='net snow melt', units='mm/s', &
-         interpinic_flag='interp', readvar=readvar, data=this%qflx_snow_melt_col)
+         long_name='drainage from snow column', units='mm/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%qflx_snow_drain_col)
     if (flag == 'read' .and. .not. readvar) then
-       ! initial run, not restart: initialize qflx_snow_melt to zero
-       this%qflx_snow_melt_col(bounds%begc:bounds%endc) = 0._r8
+       ! initial run, not restart: initialize qflx_snow_drain to zero
+       this%qflx_snow_drain_col(bounds%begc:bounds%endc) = 0._r8
     endif
 
   end subroutine Restart

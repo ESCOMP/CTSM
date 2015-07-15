@@ -166,7 +166,7 @@ contains
          qflx_dew_snow  => waterflux_inst%qflx_dew_snow_col  , & ! Input:  [real(r8) (:)   ] surface dew added to snow pack (mm H2O /s) [+]
          qflx_evap_grnd => waterflux_inst%qflx_evap_grnd_col , & ! Input:  [real(r8) (:)   ] ground surface evaporation rate (mm H2O/s) [+]
          qflx_dew_grnd  => waterflux_inst%qflx_dew_grnd_col  , & ! Input:  [real(r8) (:)   ] ground surface dew formation (mm H2O /s) [+]
-         qflx_snow_melt => waterflux_inst%qflx_snow_melt_col , & ! Output: [real(r8) (:)   ] net snow melt
+         qflx_snow_drain => waterflux_inst%qflx_snow_drain_col,& ! Output: [real(r8) (:)   ] net snow melt
          qflx_top_soil  => waterflux_inst%qflx_top_soil_col  , & ! Output: [real(r8) (:)   ] net water input into soil from top (mm/s)
 
          mss_bcphi      => aerosol_inst%mss_bcphi_col        , & ! Output: [real(r8) (:,:) ] hydrophillic BC mass in snow (col,lyr) [kg]
@@ -413,7 +413,7 @@ contains
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        ! Qout from snow bottom
-       qflx_snow_melt(c) = qflx_snow_melt(c) + (qout(c) / dtime)
+       qflx_snow_drain(c) = qflx_snow_drain(c) + (qout(c) / dtime)
 
        qflx_top_soil(c) = (qout(c) / dtime) &
             + (1.0_r8 - frac_sno_eff(c)) * qflx_rain_grnd(c)
@@ -423,7 +423,7 @@ contains
 
     do fc = 1, num_nosnowc
        c = filter_nosnowc(fc)
-       qflx_snow_melt(c) = qflx_snomelt(c)
+       qflx_snow_drain(c) = qflx_snomelt(c)
 
        qflx_top_soil(c) = qflx_rain_grnd(c) + qflx_snomelt(c)
        ! reset accumulated snow when no snow present
@@ -523,13 +523,6 @@ contains
              wx = (h2osoi_ice(c,j) + h2osoi_liq(c,j))
              void = 1._r8 - (h2osoi_ice(c,j)/denice + h2osoi_liq(c,j)/denh2o)&
                   /(frac_sno(c) * dz(c,j))
-             ! If void is negative, then increase dz such that void = 0.
-             ! This should be done for any landunit, but for now is done only for glacier_mec 1andunits.
-             l = col%landunit(c)
-             if (ltype(l)==istice_mec .and. void < 0._r8) then
-                dz(c,j) = h2osoi_ice(c,j)/denice + h2osoi_liq(c,j)/denh2o
-                void = 0._r8
-             endif
 
              ! Allow compaction only for non-saturated node and higher ice lens node.
              if (void > 0.001_r8 .and. h2osoi_ice(c,j) > .1_r8) then

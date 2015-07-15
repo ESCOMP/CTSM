@@ -125,7 +125,7 @@ contains
          tsoi17             => temperature_inst%t_soi17cm_col         , & ! Output: [real(r8) (:)   ]  soil temperature in top 17cm of soil (Kelvin) 
 
          snow_depth         => waterstate_inst%snow_depth_col         , & ! Input:  [real(r8) (:)   ]  snow height of snow covered area (m)     
-         snowdp             => waterstate_inst%snowdp_col             , & ! Input:  [real(r8) (:)   ]  gridcell averaged snow height (m)       
+         snowdp             => waterstate_inst%snowdp_col             , & ! Input:  [real(r8) (:)   ]  area-averaged snow height (m)       
          frac_sno_eff       => waterstate_inst%frac_sno_eff_col       , & ! Input:  [real(r8) (:)   ]  eff.  snow cover fraction (col) [frc]    
          frac_h2osfc        => waterstate_inst%frac_h2osfc_col        , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
          begwb              => waterstate_inst%begwb_col              , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    

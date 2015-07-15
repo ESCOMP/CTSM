@@ -1304,7 +1304,7 @@ contains
           lake_icefrac    => lakestate_inst%lake_icefrac_col    , & ! Input:  [real(r8)  (:,:) ] mass fraction of lake layer that is frozen
           
           qflx_snofrz_lyr => waterflux_inst%qflx_snofrz_lyr_col , & ! Input:  [real(r8)  (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
-          qflx_snow_melt  => waterflux_inst%qflx_snow_melt_col  , & ! Output: [real(r8)  (:)   ] net snow melt                           
+          qflx_snow_drain => waterflux_inst%qflx_snow_drain_col , & ! Output: [real(r8)  (:)   ] drainage from snow column                           
           qflx_snomelt    => waterflux_inst%qflx_snomelt_col    , & ! Output: [real(r8)  (:)   ] snow melt (mm H2O /s)                   
           qflx_snofrz_col => waterflux_inst%qflx_snofrz_col     , & ! Output: [real(r8)  (:)   ] column-integrated snow freezing rate (kg m-2 s-1) [+]
 
@@ -1327,7 +1327,7 @@ contains
           qflx_snomelt(c)   = 0._r8
           eflx_snomelt(c)   = 0._r8
           lhabs(c)          = 0._r8
-          qflx_snow_melt(c) = 0._r8
+          qflx_snow_drain(c) = 0._r8
        end do
 
        do j = -nlevsno+1,0
@@ -1355,7 +1355,7 @@ contains
              h2osno(c) = h2osno(c) - melt
              lhabs(c) = lhabs(c) + melt*hfus
              qflx_snomelt(c)   = qflx_snomelt(c)   + melt/dtime
-             qflx_snow_melt(c) = qflx_snow_melt(c) + melt/dtime
+             qflx_snow_drain(c) = qflx_snow_drain(c) + melt/dtime
              ! Prevent tiny residuals
              if (h2osno(c) < smallnumber) h2osno(c) = 0._r8
              if (snow_depth(c) < smallnumber) snow_depth(c) = 0._r8

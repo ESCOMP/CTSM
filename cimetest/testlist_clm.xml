@@ -616,9 +616,6 @@
       <test name="PEM_Lm25">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput">yellowstone</machine>
       </test>
-      <test name="SMS_Lm25">
-        <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">goldbach</machine>
-      </test>
       <test name="SMS_Ly3">
         <machine compiler="intel" testtype="aux_clm_short" testmods="clm/irrigOn_reduceOutput" comment="note that this has an initial conditions file">goldbach</machine>
         <machine compiler="nag" testtype="aux_clm_short" testmods="clm/irrigOn_reduceOutput" comment="note that this has an initial conditions file">goldbach</machine>

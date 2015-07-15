@@ -1,4 +1,100 @@
 ===============================================================
+Tag name:  clm4_5_1_r115
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Jul 15 05:26:37 MDT 2015
+One-line Summary: Remove redundant code, rename a variable
+
+Purpose of changes:
+
+   (1) Remove some redundant code in SnowHydrologyMod, related to 'void'. This
+   was supposed to be removed a long time ago. (Apparently the issue this was
+   trying to fix was fixed in a different, more robust way.)
+
+   (2) Remove redundant, unused copy of accumulMod in utils/ (newer copy is in
+   main/)
+
+   (3) Rename qflx_snow_melt to qflx_snow_drain, to avoid confusion with the
+   existing qflx_snomelt.
+
+   (4) Clarify documentation of snowdp_col
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated:
+
+========= Redundant and unused (copy in main/ is used)
+D       components/clm/src/utils/accumulMod.F90
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+========= Rename qflx_snow_melt to qflx_snow_drain
+M       components/clm/src/biogeophys/CanopyHydrologyMod.F90
+M       components/clm/src/biogeophys/LakeHydrologyMod.F90
+M       components/clm/src/biogeophys/BalanceCheckMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeophys/SoilTemperatureMod.F90
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+          - also remove redundant lines of code related to 'void' (see above)
+M       components/clm/src/biogeophys/LakeTemperatureMod.F90
+
+========= Clarify documentation for snowdp_col
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/biogeophys/WaterStateType.F90
+
+========= Remove SMS_Lm25.f10_f10.ICLM45BGCCROP.goldbach_nag.clm-reduceOutput
+          (runs out of wall-clock time, and we have sufficient test coverage of
+          that configuration)
+M       components/clm/cimetest/testlist_clm.xml
+
+
+CLM testing:
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r114
+
+Changes answers relative to baseline: NO
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r114
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Jul 10 19:34:57 MDT 2015

@@ -26,7 +26,7 @@ module WaterstateType
      logical , pointer :: do_capsnow_col         (:)   ! col true => do snow capping
      real(r8), pointer :: snow_depth_col         (:)   ! col snow height of snow covered area (m)
      real(r8), pointer :: snow_persistence_col   (:)   ! col length of time that ground has had non-zero snow thickness (sec)
-     real(r8), pointer :: snowdp_col             (:)   ! col gridcell averaged snow height (m)
+     real(r8), pointer :: snowdp_col             (:)   ! col area-averaged snow height (m)
      real(r8), pointer :: snowice_col            (:)   ! col average snow ice lens
      real(r8), pointer :: snowliq_col            (:)   ! col average snow liquid water
      real(r8), pointer :: int_snow_col           (:)   ! col integrated snowfall (mm H2O)

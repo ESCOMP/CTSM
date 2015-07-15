@@ -232,7 +232,7 @@ contains
           swe_old              => waterstate_inst%swe_old_col             , & ! Output: [real(r8) (:,:) ]  snow water before update              
 
           qflx_floodc          => waterflux_inst%qflx_floodc_col          , & ! Output: [real(r8) (:)   ]  column flux of flood water from RTM     
-          qflx_snow_melt       => waterflux_inst%qflx_snow_melt_col       , & ! Output: [real(r8) (:)   ]  snow melt from previous time step       
+          qflx_snow_drain       => waterflux_inst%qflx_snow_drain_col     , & ! Input: [real(r8) (:)   ]  drainage from snow pack from previous time step       
           qflx_snow_h2osfc     => waterflux_inst%qflx_snow_h2osfc_col     , & ! Output: [real(r8) (:)   ]  snow falling on surface water (mm/s)     
           qflx_snwcp_liq       => waterflux_inst%qflx_snwcp_liq_patch     , & ! Output: [real(r8) (:)   ]  excess rainfall due to snow capping (mm H2O /s) [+]
           qflx_snwcp_ice       => waterflux_inst%qflx_snwcp_ice_patch     , & ! Output: [real(r8) (:)   ]  excess snowfall due to snow capping (mm H2O /s) [+]
@@ -509,7 +509,7 @@ contains
              int_snow(c) = max(int_snow(c),h2osno(c)) !h2osno could be larger due to frost
 
              ! snowmelt from previous time step * dtime
-             snowmelt(c) = qflx_snow_melt(c) * dtime
+             snowmelt(c) = qflx_snow_drain(c) * dtime
 
              ! set shape factor for accumulation of snow
              accum_factor=0.1

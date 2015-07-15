@@ -215,7 +215,7 @@ contains
           qflx_drain_perched      =>    waterflux_inst%qflx_drain_perched_col   , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
           qflx_floodc             =>    waterflux_inst%qflx_floodc_col          , & ! Input:  [real(r8) (:)   ]  total runoff due to flooding            
           qflx_h2osfc_surf        =>    waterflux_inst%qflx_h2osfc_surf_col     , & ! Input:  [real(r8) (:)   ]  surface water runoff (mm/s)              
-          qflx_snow_melt          =>    waterflux_inst%qflx_snow_melt_col       , & ! Input:  [real(r8) (:)   ]  snow melt (net)                         
+          qflx_snow_drain         =>    waterflux_inst%qflx_snow_drain_col      , & ! Input:  [real(r8) (:)   ]  drainage from snow pack                         
           qflx_surf               =>    waterflux_inst%qflx_surf_col            , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)              
           qflx_qrgwl              =>    waterflux_inst%qflx_qrgwl_col           , & ! Input:  [real(r8) (:)   ]  qflx_surf at glaciers, wetlands, lakes  
           qflx_drain              =>    waterflux_inst%qflx_drain_col           , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
@@ -412,7 +412,7 @@ contains
 
              if (col%snl(c) < 0) then
                 snow_sources(c) = qflx_prec_grnd(c) + qflx_dew_snow(c) + qflx_dew_grnd(c)
-                snow_sinks(c)  = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_snow_melt(c) &
+                snow_sinks(c)  = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_snow_drain(c) &
                      + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) + qflx_sl_top_soil(c)
 
                 if (lun%itype(l) == istdlak) then 
@@ -422,14 +422,14 @@ contains
 
                       snow_sinks(c)   = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c) ) &
                            + (qflx_snwcp_ice(c) + qflx_snwcp_liq(c) - qflx_prec_grnd(c))  &
-                           + qflx_snow_melt(c)  + qflx_sl_top_soil(c)
+                           + qflx_snow_drain(c)  + qflx_sl_top_soil(c)
                    else
                       snow_sources(c) = qflx_snow_grnd_col(c) &
                            + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
                            +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) 
 
                       snow_sinks(c)  = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c) ) &
-                           + qflx_snow_melt(c)  + qflx_sl_top_soil(c)
+                           + qflx_snow_drain(c)  + qflx_sl_top_soil(c)
                    endif
                 endif
 
@@ -441,14 +441,14 @@ contains
 
                       snow_sinks(c) = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c)) &
                            + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
-                           + qflx_snow_melt(c) + qflx_sl_top_soil(c)
+                           + qflx_snow_drain(c) + qflx_sl_top_soil(c)
                    else
                       snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
                            + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
                            +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) + qflx_h2osfc_to_ice(c)
 
                       snow_sinks(c) = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c)) &
-                           + qflx_snow_melt(c) + qflx_sl_top_soil(c)
+                           + qflx_snow_drain(c) + qflx_sl_top_soil(c)
                    endif
                 endif
 

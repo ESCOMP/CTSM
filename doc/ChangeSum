@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r115    sacks 07/15/2015 Remove redundant code, rename a variable
    clm4_5_1_r114    sacks 07/10/2015 Update cime external, remove genf90-generated files
    clm4_5_1_r113    sacks 07/09/2015 Support backwards compatibility of restart variable names
    clm4_5_1_r112   oleson 07/01/2015 Justin Perket snow on vegetation

@@ -182,7 +182,7 @@ contains
          qflx_snwcp_liq_col   =>  waterflux_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ]  excess rainfall due to snow capping (mm H2O /s) [+]
          qflx_drain_perched   =>  waterflux_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ]  perched wt sub-surface runoff (mm H2O /s) !TODO - move this to somewhere else
          qflx_h2osfc_surf     =>  waterflux_inst%qflx_h2osfc_surf_col   , & ! Output: [real(r8) (:)   ]  surface water runoff (mm H2O /s)        
-         qflx_snow_melt       =>  waterflux_inst%qflx_snow_melt_col     , & ! Output: [real(r8) (:)   ]  net snow melt                           
+         qflx_snow_drain      =>  waterflux_inst%qflx_snow_drain_col    , & ! Output: [real(r8) (:)   ]  drainage from snow pack                          
          qflx_rsub_sat        =>  waterflux_inst%qflx_rsub_sat_col      , & ! Output: [real(r8) (:)   ]  soil saturation excess [mm h2o/s]        
          qflx_surf            =>  waterflux_inst%qflx_surf_col          , & ! Output: [real(r8) (:)   ]  surface runoff (mm H2O /s)              
          qflx_drain           =>  waterflux_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
@@ -575,8 +575,8 @@ contains
 
                eflx_snomelt(c) = eflx_snomelt(c) + h2osno(c)*hfus/dtime 
 
-               ! update snow melt for this case
-               qflx_snow_melt(c)     = qflx_snow_melt(c)  + qflx_snomelt(c)
+               ! update drainage from snow pack for this case
+               qflx_snow_drain(c)     = qflx_snow_drain(c)  + qflx_snomelt(c)
 
                qflx_sl_top_soil(c) = qflx_sl_top_soil(c) + h2osno(c)
 

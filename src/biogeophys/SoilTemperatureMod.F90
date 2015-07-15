@@ -1083,7 +1083,7 @@ contains
          h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2) (new)             
          h2osoi_ice       =>    waterstate_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
          
-         qflx_snow_melt   =>    waterflux_inst%qflx_snow_melt_col   , & ! Output: [real(r8) (:)   ] net snow melt                           
+         qflx_snow_drain  =>    waterflux_inst%qflx_snow_drain_col  , & ! Output: [real(r8) (:)   ] drainage from snow pack                           
          qflx_snofrz_lyr  =>    waterflux_inst%qflx_snofrz_lyr_col  , & ! Output: [real(r8) (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
          qflx_snofrz_col  =>    waterflux_inst%qflx_snofrz_col      , & ! Output: [real(r8) (:)   ] column-integrated snow freezing rate (positive definite) [kg m-2 s-1]
          qflx_glcice      =>    waterflux_inst%qflx_glcice_col      , & ! Output: [real(r8) (:)   ] flux of new glacier ice (mm H2O/s) [+ = ice grows]
@@ -1116,7 +1116,7 @@ contains
          qflx_snofrz_lyr(c,-nlevsno+1:0) = 0._r8
          qflx_snofrz_col(c) = 0._r8
          qflx_glcice_melt(c) = 0._r8
-         qflx_snow_melt(c) = 0._r8
+         qflx_snow_drain(c) = 0._r8
       end do
 
       do j = -nlevsno+1,nlevgrnd       ! all layers
@@ -1279,7 +1279,7 @@ contains
                            endif
                            qflx_snomelt(c) = max(0._r8,(temp1-h2osno(c)))/dtime   ! kg/(m2 s)
                            xmf(c) = hfus*qflx_snomelt(c)
-                           qflx_snow_melt(c) = qflx_snomelt(c) 
+                           qflx_snow_drain(c) = qflx_snomelt(c) 
                         endif
                      endif
 
