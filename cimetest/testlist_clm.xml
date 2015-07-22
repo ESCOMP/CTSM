@@ -35,8 +35,8 @@
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/ptsRLA">edison</machine>
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/ptsROA">edison</machine>
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/ptsRLB">edison</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/ptsRLA">goldbach</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/ptsRLA">goldbach</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/ptsRLA">hobart</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/ptsRLA">janus</machine>
         <machine compiler="intel" testtype="aux_clm40" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm40" testmods="clm/ptsROA">yellowstone</machine>
@@ -194,7 +194,7 @@
       </test>
       <test name="SSP_Ld10">
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/reduceOutput">goldbach</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/reduceOutput">hobart</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta">yellowstone</machine>
       </test>
@@ -214,14 +214,14 @@
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/drydepnomegan">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld1">
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">goldbach</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">hobart</machine>
       </test>
     </grid>
   </compset>
   <compset name="I1850CLM45CNF">
     <grid name="f19_g16">
       <test name="ERP_Ld5">
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">goldbach</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">hobart</machine>
       </test>
     </grid>
   </compset>
@@ -327,7 +327,7 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/default">goldbach</machine>
       </test>
       <test name="ERS_Mmpi-serial_Ld5">
-        <machine compiler="nag" testtype="prealpha" testmods="clm/default">goldbach</machine>
+        <machine compiler="nag" testtype="prealpha" testmods="clm/default">hobart</machine>
       </test>
       <test name="SMS_Ld1">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/default">edison</machine>
@@ -469,7 +469,7 @@
       </test>
       <test name="SMS_Mmpi-serial_Ld1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/ptsRLA">goldbach</machine>
-        <machine compiler="nag" testtype="prealpha" testmods="clm/ptsRLA">goldbach</machine>
+        <machine compiler="nag" testtype="prealpha" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="intel" testtype="prealpha" testmods="clm/ptsRLA">yellowstone</machine>
@@ -519,7 +519,7 @@
       <test name="ERP_D_Ld5">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/rootlit">edison</machine>
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">goldbach</machine>
-        <machine compiler="nag" testtype="prebeta" testmods="clm/reduceOutput">goldbach</machine>
+        <machine compiler="nag" testtype="prebeta" testmods="clm/reduceOutput">hobart</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/NoVSNoNI">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/rootlit">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ciso">yellowstone</machine>
@@ -568,7 +568,7 @@
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/vrtlay">yellowstone</machine>
       </test>
       <test name="ERP_D_Ld5">
-        <machine compiler="nag" testtype="prealpha" testmods="clm/default">goldbach</machine>
+        <machine compiler="nag" testtype="prealpha" testmods="clm/default">hobart</machine>
       </test>
       <test name="PEM_D_Ld5">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -611,7 +611,7 @@
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/irrigOn_reduceOutput">edison</machine>
       </test>
       <test name="PEM_Ld1">
-        <machine compiler="intel" testtype="prebeta" testmods="clm/crop">goldbach</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/crop">hobart</machine>
       </test>
       <test name="PEM_Lm25">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput">yellowstone</machine>
@@ -1093,7 +1093,7 @@
   <compset name="IHIST">
     <grid name="T31_g37">
       <test name="SMS_Ld2">
-        <machine compiler="intel" testtype="prealpha">goldbach</machine>
+        <machine compiler="intel" testtype="prealpha">hobart</machine>
       </test>
     </grid>
     <grid name="f05_g16">
@@ -1151,7 +1151,7 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/decStart">goldbach</machine>
         <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">goldbach</machine>
         <machine compiler="nag" testtype="aux_clm_short" testmods="clm/default">goldbach</machine>
-        <machine compiler="nag" testtype="prealpha" testmods="clm/default">goldbach</machine>
+        <machine compiler="nag" testtype="prealpha" testmods="clm/default">hobart</machine>
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/decStart">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/decStart">yellowstone</machine>
         <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
@@ -1159,7 +1159,7 @@
         <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="ERP_P15x2_Lm13">
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16">
@@ -1403,8 +1403,8 @@
     <grid name="f19_g16">
       <test name="ERI_Ld5">
         <machine compiler="intel" testtype="prebeta" testmods="clm/default">edison</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">goldbach</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">goldbach</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/default">hobart</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">hobart</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/default">hopper</machine>
       </test>
       <test name="ERP_Ld5">
@@ -1426,8 +1426,8 @@
     </grid>
     <grid name="f45_g37">
       <test name="ERI_Ld5">
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">goldbach</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">goldbach</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/default">hobart</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">hobart</machine>
         <machine compiler="intel" testtype="prealpha" testmods="clm/default">janus</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/default">janus</machine>
       </test>

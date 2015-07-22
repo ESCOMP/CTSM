@@ -340,8 +340,8 @@ contains
          ptr_patch=this%eflx_lh_grnd_patch, c2l_scale_type='urbanf') 
 
     this%eflx_sh_tot_patch(begp:endp) = spval
-    call hist_addfld1d (fname='FSH_NODYNLNDUSE', units='W/m^2',  &
-         avgflag='A', long_name='sensible heat not including correction for land use change', &
+    call hist_addfld1d (fname='FSH', units='W/m^2',  &
+         avgflag='A', long_name='sensible heat not including correction for land use change and rain/snow conversion', &
          ptr_patch=this%eflx_sh_tot_patch, c2l_scale_type='urbanf')
 
     this%eflx_sh_tot_r_patch(begp:endp) = spval

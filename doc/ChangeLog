@@ -1,4 +1,104 @@
 ===============================================================
+Tag name:  clm4_5_1_r116
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Jul 22 06:39:28 EDT 2015
+One-line Summary: Rename some history fields
+
+Purpose of changes:
+
+   (1) Make QSNOMELT point to qflx_snomelt, as it does in CLM4.0, rather than
+   qflx_snow_drain (previously qflx_snow_melt)
+
+   (2) Turn on QSNOFRZ by default (parallels QSNOMELT)
+
+   (3) For the 3 history fields that have FOO and FOO_NODYNLNDUSE versions:
+   Rename FOO to FOO_TO_COUPLER and FOO_NODYNLNDUSE to FOO. This is at Sean
+   Swenson's suggestion: He points out that the version without the dyn landuse
+   adjustment (and, soon, the sensible heat adjustment from rain/snow
+   conversion) is the one most people will be interested in, so should be the
+   one without the suffix.
+
+   (4) Tweak test lists:
+
+   (a) Move prealpha & prebeta goldbach tests to hobart
+
+   (b) Move an aux_clm45 pgi test to intel: With recent versions of cime
+   (starting with cime1.1.0), threading tests with pgi take a very long time. So
+   this test took 3 hours with pgi, vs 20 min with intel.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+   - 2178 (QSNOMELT incorrect in clm4.5)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= See summary above
+M       components/clm/src/main/lnd2atmType.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeophys/EnergyFluxType.F90
+M       components/clm/cimetest/testlist_clm.xml
+
+
+CLM testing:
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: NOT RUN
+    mac: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r115
+
+Changes answers relative to baseline: YES
+
+  Just changes a few diagnostic fields, for CLM4.5 and CLM5:
+
+  - QSNOMELT: changed to qflx_snomelt rather than qflx_snow_drain
+
+  - QRUNOFF: differs for cases with transient landcover
+
+  - FSH: differs for cases with CISM
+
+  - QSNWCPICE: differs for cases with CISM
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r115
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Jul 15 05:26:37 MDT 2015

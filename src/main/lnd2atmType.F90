@@ -141,18 +141,21 @@ contains
     begg = bounds%begg; endg= bounds%endg
 
     this%eflx_sh_tot_grc(begg:endg) = 0._r8
-    call hist_addfld1d (fname='FSH', units='W/m^2',  &
-         avgflag='A', long_name='sensible heat', &
+    call hist_addfld1d (fname='FSH_TO_COUPLER', units='W/m^2',  &
+         avgflag='A', &
+         long_name='sensible heat sent to coupler (includes corrections for land use change and rain/snow conversion)', &
          ptr_lnd=this%eflx_sh_tot_grc)
        
     this%qflx_rofliq_grc(begg:endg) = 0._r8
-    call hist_addfld1d (fname='QRUNOFF',  units='mm/s',  &
-         avgflag='A', long_name='total liquid runoff (does not include QSNWCPICE)', &
+    call hist_addfld1d (fname='QRUNOFF_TO_COUPLER',  units='mm/s',  &
+         avgflag='A', &
+         long_name='total liquid runoff sent to coupler (does not include QSNWCPICE) (includes corrections for land use change)', &
          ptr_lnd=this%qflx_rofliq_grc)
 
     this%qflx_rofice_grc(begg:endg) = 0._r8
-    call hist_addfld1d (fname='QSNWCPICE',  units='mm/s',  &
-         avgflag='A', long_name='excess snowfall due to snow capping', &
+    call hist_addfld1d (fname='QSNWCPICE_TO_COUPLER',  units='mm/s',  &
+         avgflag='A', &
+         long_name='excess snowfall due to snow capping sent to coupler (includes corrections for land use change)', &
          ptr_lnd=this%qflx_rofice_grc)
 
     if (use_lch4) then

@@ -275,7 +275,7 @@ contains
          ptr_lnd=this%qflx_ice_dynbal_grc)
 
     this%qflx_runoff_col(begc:endc) = spval
-    call hist_addfld1d (fname='QRUNOFF_NODYNLNDUSE',  units='mm/s',  &
+    call hist_addfld1d (fname='QRUNOFF',  units='mm/s',  &
          avgflag='A', &
          long_name='total liquid runoff (does not include QSNWCPICE) not including correction for land use change', &
          ptr_col=this%qflx_runoff_col, c2l_scale_type='urbanf')
@@ -291,15 +291,19 @@ contains
          ptr_col=this%qflx_runoff_r_col, set_spec=spval)
 
     this%qflx_snow_drain_col(begc:endc) = spval
+    call hist_addfld1d (fname='QFLX_SNOW_DRAIN',  units='mm/s',  &
+         avgflag='A', long_name='drainage from snow pack', &
+         ptr_col=this%qflx_snow_drain_col, c2l_scale_type='urbanf')
+
+    this%qflx_snomelt_col(begc:endc) = spval
     call hist_addfld1d (fname='QSNOMELT',  units='mm/s',  &
          avgflag='A', long_name='snow melt', &
-         ptr_col=this%qflx_snow_drain_col, c2l_scale_type='urbanf')
+         ptr_col=this%qflx_snomelt_col, c2l_scale_type='urbanf')
 
     this%qflx_snofrz_col(begc:endc) = spval
     call hist_addfld1d (fname='QSNOFRZ', units='kg/m2/s', &
          avgflag='A', long_name='column-integrated snow freezing rate', &
-         ptr_col=this%qflx_snofrz_col, set_lake=spval, c2l_scale_type='urbanf', &
-         default='inactive')
+         ptr_col=this%qflx_snofrz_col, set_lake=spval, c2l_scale_type='urbanf')
 
     if (create_glacier_mec_landunit) then
        this%qflx_glcice_col(begc:endc) = spval
@@ -365,7 +369,7 @@ contains
     ! Use qflx_snwcp_ice_col rather than qflx_snwcp_ice_patch, because the column version 
     ! is the final version, which includes some  additional corrections beyond the patch-level version
     this%qflx_snwcp_ice_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QSNWCPICE_NODYNLNDUSE', units='mm H2O/s', &
+    call hist_addfld1d (fname='QSNWCPICE', units='mm H2O/s', &
          avgflag='A', long_name='excess snowfall due to snow capping not including correction for land use change', &
          ptr_col=this%qflx_snwcp_ice_col, c2l_scale_type='urbanf')
 
