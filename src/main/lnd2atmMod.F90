@@ -201,8 +201,13 @@ contains
          energyflux_inst%eflx_sh_tot_patch (bounds%begp:bounds%endp), &
          lnd2atm_inst%eflx_sh_tot_grc      (bounds%begg:bounds%endg), &
          p2c_scale_type='unity',c2l_scale_type='urbanf',l2g_scale_type='unity')
+    call c2g( bounds, &
+         energyflux_inst%eflx_sh_precip_conversion_col (bounds%begc:bounds%endc), &
+         lnd2atm_inst%eflx_sh_precip_conversion_grc    (bounds%begg:bounds%endg), &
+         c2l_scale_type='urbanf', l2g_scale_type='unity')
     do g = bounds%begg, bounds%endg
-       lnd2atm_inst%eflx_sh_tot_grc(g) =  lnd2atm_inst%eflx_sh_tot_grc(g) - &
+       lnd2atm_inst%eflx_sh_tot_grc(g) =  lnd2atm_inst%eflx_sh_tot_grc(g) + &
+            lnd2atm_inst%eflx_sh_precip_conversion_grc(g) - &
             energyflux_inst%eflx_dynbal_grc(g) 
     enddo
 

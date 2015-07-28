@@ -133,7 +133,6 @@ module clm_varcon
   real(r8) :: h2osno_max   = -999.0_r8            ! max allowed snow thickness (mm H2O)
   real(r8), parameter :: lapse_glcmec = 0.006_r8  ! surface temperature lapse rate (deg m-1)
                                                   ! Pritchard et al. (GRL, 35, 2008) use 0.006  
-  real(r8), parameter :: glcmec_rain_snow_threshold = SHR_CONST_TKFRZ  ! temperature dividing rain & snow in downscaling (K)
 
   integer, private :: i  ! loop index
 

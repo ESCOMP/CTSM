@@ -960,6 +960,13 @@
       </test>
     </grid>
   </compset>
+  <compset name="IG1850CLM50">
+    <grid name="T31_g37">
+      <test name="ERP_D_Ld5">
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/glcMEC" comment="basic IG test with CLM5 options">yellowstone</machine>
+      </test>
+    </grid>
+  </compset>
   <compset name="IG1850CN">
     <grid name="f19_g16">
       <test name="ERI_D">

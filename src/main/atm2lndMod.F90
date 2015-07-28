@@ -10,11 +10,9 @@ module atm2lndMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use shr_megan_mod  , only : shr_megan_mechcomps_n
   use clm_varpar     , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
-  use clm_varcon     , only : rair, grav, cpair, hfus, tfrz, spval
+  use clm_varcon     , only : rair, grav, cpair, hfus, tfrz, denh2o, spval
   use clm_varctl     , only : iulog, use_c13, use_cn, use_lch4, iulog
-  use seq_drydep_mod , only : n_drydep, drydep_method, DD_XLND
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
   use atm2lndType    , only : atm2lnd_type
@@ -28,8 +26,14 @@ module atm2lndMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: downscale_forcings           ! Downscale atm forcing fields from gridcell to column
+
+  ! The following routines are public for the sake of unit testing; they should not be
+  ! called by production code outside this module
+  public :: partition_precip              ! Partition precipitation into rain/snow
+  public :: sens_heat_from_precip_conversion  ! Compute sensible heat flux needed to compensate for rain-snow conversion
   !
   ! !PRIVATE MEMBER FUNCTIONS:
+  private :: repartition_rain_snow_one_col ! Re-partition precipitation for a single column
   private :: downscale_longwave          ! Downscale longwave radiation from gridcell to column
   private :: build_normalization         ! Compute normalization factors so that downscaled fields are conservative
   private :: check_downscale_consistency ! Check consistency of downscaling
@@ -38,19 +42,24 @@ module atm2lndMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine downscale_forcings(bounds,num_do_smb_c,filter_do_smb_c, atm2lnd_inst)
+  subroutine downscale_forcings(bounds,num_do_smb_c,filter_do_smb_c, &
+       atm2lnd_inst, eflx_sh_precip_conversion)
     !
     ! !DESCRIPTION:
-    ! Downscale atmospheric forcing fields from gridcell to column
+    ! Downscale atmospheric forcing fields from gridcell to column.
     !
-    ! Downscaling is done over columns defined by filter_do_smb_c. But we also do direct copies
-    ! of gridcell-level forcings into column-level forcings over all other active columns.
+    ! Note that the downscaling procedure can result in changes in grid cell mean values
+    ! compared to what was provided by the atmosphere. We conserve fluxes of mass and
+    ! energy, but allow states such as temperature to differ.
+    !
+    ! For most variables, downscaling is done over columns defined by filter_do_smb_c. But
+    ! we also do direct copies of gridcell-level forcings into column-level forcings over
+    ! all other active columns. In addition, precipitation (rain vs. snow partitioning)
+    ! is adjusted everywhere.
     !
     ! !USES:
     use clm_varcon      , only : rair, cpair, grav, lapse_glcmec
-    use clm_varcon      , only : glcmec_rain_snow_threshold
     use landunit_varcon , only : istice_mec 
-    use clm_varctl      , only : glcmec_downscale_rain_snow_convert
     use domainMod       , only : ldomain
     use QsatMod         , only : Qsat
     !
@@ -59,6 +68,7 @@ contains
     integer            , intent(in)    :: num_do_smb_c       ! number of columns in filter_do_smb_c
     integer            , intent(in)    :: filter_do_smb_c(:) ! filter_do_smb_c giving columns over which downscaling should be done   
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
+    real(r8)           , intent(out)   :: eflx_sh_precip_conversion(bounds%begc:) ! sensible heat flux from precipitation conversion (W/m**2) [+ to atm]
     !
     ! !LOCAL VARIABLES:
     integer :: g, l, c, fc         ! indices
@@ -74,6 +84,8 @@ contains
     character(len=*), parameter :: subname = 'downscale_forcings'
     !-----------------------------------------------------------------------
 
+    SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+
     associate(&
          ! Gridcell-level non-downscaled fields:
          forc_t_g     => atm2lnd_inst%forc_t_not_downscaled_grc    , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
@@ -81,17 +93,13 @@ contains
          forc_q_g     => atm2lnd_inst%forc_q_not_downscaled_grc    , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
          forc_pbot_g  => atm2lnd_inst%forc_pbot_not_downscaled_grc , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)               
          forc_rho_g   => atm2lnd_inst%forc_rho_not_downscaled_grc  , & ! Input:  [real(r8) (:)]  atmospheric density (kg/m**3)           
-         forc_rain_g  => atm2lnd_inst%forc_rain_not_downscaled_grc , & ! Input:  [real(r8) (:)]  rain rate [mm/s]
-         forc_snow_g  => atm2lnd_inst%forc_snow_not_downscaled_grc , & ! Input:  [real(r8) (:)]  snow rate [mm/s]
          
          ! Column-level downscaled fields:
          forc_t_c     => atm2lnd_inst%forc_t_downscaled_col        , & ! Output: [real(r8) (:)]  atmospheric temperature (Kelvin)        
          forc_th_c    => atm2lnd_inst%forc_th_downscaled_col       , & ! Output: [real(r8) (:)]  atmospheric potential temperature (Kelvin)
          forc_q_c     => atm2lnd_inst%forc_q_downscaled_col        , & ! Output: [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
          forc_pbot_c  => atm2lnd_inst%forc_pbot_downscaled_col     , & ! Output: [real(r8) (:)]  atmospheric pressure (Pa)               
-         forc_rho_c   => atm2lnd_inst%forc_rho_downscaled_col      , & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
-         forc_rain_c  => atm2lnd_inst%forc_rain_downscaled_col     , & ! Output: [real(r8) (:)]  rain rate [mm/s]
-         forc_snow_c  => atm2lnd_inst%forc_snow_downscaled_col       & ! Output: [real(r8) (:)]  snow rate [mm/s]
+         forc_rho_c   => atm2lnd_inst%forc_rho_downscaled_col        & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
          )
       
       ! Initialize column forcing (needs to be done for ALL active columns)
@@ -104,8 +112,6 @@ contains
             forc_q_c(c)     = forc_q_g(g)
             forc_pbot_c(c)  = forc_pbot_g(g)
             forc_rho_c(c)   = forc_rho_g(g)
-            forc_rain_c(c)  = forc_rain_g(g)
-            forc_snow_c(c)  = forc_snow_g(g)
          end if
       end do
 
@@ -164,21 +170,10 @@ contains
          forc_pbot_c(c) = pbot_c
          forc_rho_c(c)  = rhos_c
 
-         ! Optionally, convert rain to snow or vice versa based on tbot_c
-         ! Note: This conversion does not conserve energy.
-         !       It would be better to compute the net latent energy associated
-         !        with the conversion and to apply it as a pseudo-flux.
-         if (glcmec_downscale_rain_snow_convert) then
-            if (tbot_c > glcmec_rain_snow_threshold) then  ! too warm for snow
-               forc_rain_c(c) = forc_rain_c(c) + forc_snow_c(c)
-               forc_snow_c(c) = 0._r8
-            else                                           ! too cold for rain
-               forc_snow_c(c) = forc_rain_c(c) + forc_snow_c(c)
-               forc_rain_c(c) = 0._r8
-            endif
-         endif   ! glcmec_downscale_rain_snow_convert
-
       end do
+
+      call partition_precip(bounds, atm2lnd_inst, &
+           eflx_sh_precip_conversion(bounds%begc:bounds%endc))
 
       call downscale_longwave(bounds, num_do_smb_c, filter_do_smb_c, atm2lnd_inst)
 
@@ -187,6 +182,148 @@ contains
     end associate
 
   end subroutine downscale_forcings
+
+  !-----------------------------------------------------------------------
+  subroutine partition_precip(bounds, atm2lnd_inst, eflx_sh_precip_conversion)
+    !
+    ! !DESCRIPTION:
+    ! Partition precipitation into rain/snow based on temperature.
+    !
+    ! Note that, unlike the other downscalings done here, this is currently applied over
+    ! all points - not just those within the do_smb filter.
+    !
+    ! !USES:
+    use clm_varctl      , only : repartition_rain_snow
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)  , intent(in)    :: bounds  
+    type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
+    real(r8), intent(inout) :: eflx_sh_precip_conversion(bounds%begc:) ! sensible heat flux from precipitation conversion (W/m**2) [+ to atm]
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: c,g       ! indices
+    real(r8) :: rain_old  ! rain before conversion
+    real(r8) :: snow_old  ! snow before conversion
+
+    character(len=*), parameter :: subname = 'partition_precip'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+
+    associate(&
+         ! Gridcell-level non-downscaled fields:
+         forc_rain_g  => atm2lnd_inst%forc_rain_not_downscaled_grc , & ! Input:  [real(r8) (:)]  rain rate [mm/s]
+         forc_snow_g  => atm2lnd_inst%forc_snow_not_downscaled_grc , & ! Input:  [real(r8) (:)]  snow rate [mm/s]
+         
+         ! Column-level downscaled fields:
+         forc_t_c     => atm2lnd_inst%forc_t_downscaled_col        , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
+         forc_rain_c  => atm2lnd_inst%forc_rain_downscaled_col     , & ! Output: [real(r8) (:)]  rain rate [mm/s]
+         forc_snow_c  => atm2lnd_inst%forc_snow_downscaled_col       & ! Output: [real(r8) (:)]  snow rate [mm/s]
+         )
+
+    ! Initialize column forcing
+    do c = bounds%begc,bounds%endc
+       if (col%active(c)) then
+          g = col%gridcell(c)
+          forc_rain_c(c)  = forc_rain_g(g)
+          forc_snow_c(c)  = forc_snow_g(g)
+          eflx_sh_precip_conversion(c) = 0._r8
+       end if
+    end do
+
+    ! Optionally, convert rain to snow or vice versa based on forc_t_c
+    if (repartition_rain_snow) then
+       do c = bounds%begc, bounds%endc
+          if (col%active(c)) then
+             rain_old = forc_rain_c(c)
+             snow_old = forc_snow_c(c)
+             call repartition_rain_snow_one_col(&
+                  temperature = forc_t_c(c), &
+                  rain = forc_rain_c(c), &
+                  snow = forc_snow_c(c))
+             call sens_heat_from_precip_conversion(&
+                  rain_old = rain_old, &
+                  snow_old = snow_old, &
+                  rain_new = forc_rain_c(c), &
+                  snow_new = forc_snow_c(c), &
+                  sens_heat_flux = eflx_sh_precip_conversion(c))
+          end if
+       end do
+    end if
+
+    end associate
+
+  end subroutine partition_precip
+
+  !-----------------------------------------------------------------------
+  subroutine repartition_rain_snow_one_col(temperature, rain, snow)
+    !
+    ! !DESCRIPTION:
+    ! Re-partition precipitation into rain/snow for a single column.
+    !
+    ! Rain and snow variables should be set initially, and are updated here
+    !
+    ! !USES:
+    use shr_precip_mod, only : shr_precip_partition_rain_snow_ramp
+    !
+    ! !ARGUMENTS:
+    real(r8) , intent(in)    :: temperature ! near-surface temperature (K)
+    real(r8) , intent(inout) :: rain        ! atm rain rate [mm/s]
+    real(r8) , intent(inout) :: snow        ! atm snow rate [(mm water equivalent)/s]
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: frac_rain     ! fraction of precipitation that should become rain
+    real(r8) :: total_precip
+
+    character(len=*), parameter :: subname = 'repartition_rain_snow_one_col'
+    !-----------------------------------------------------------------------
+
+    call shr_precip_partition_rain_snow_ramp(temperature, frac_rain)
+
+    total_precip = rain + snow
+    rain = total_precip * frac_rain
+    snow = total_precip - rain
+
+  end subroutine repartition_rain_snow_one_col
+
+  !-----------------------------------------------------------------------
+  subroutine sens_heat_from_precip_conversion(rain_old, snow_old, rain_new, snow_new, &
+       sens_heat_flux)
+    !
+    ! !DESCRIPTION:
+    ! Given old and new rain and snow amounts, compute the sensible heat flux needed to
+    ! compensate for the rain-snow conversion.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(in)  :: rain_old        ! [mm/s]
+    real(r8), intent(in)  :: snow_old        ! [(mm water equivalent)/s]
+    real(r8), intent(in)  :: rain_new        ! [mm/s]
+    real(r8), intent(in)  :: snow_new        ! [(mm water equivalent)/s]
+    real(r8), intent(out) :: sens_heat_flux  ! [W/m^2]
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: total_old
+    real(r8) :: total_new
+    real(r8) :: rain_to_snow  ! net conversion of rain to snow
+
+    real(r8), parameter :: mm_to_m = 1.e-3_r8  ! multiply by this to convert from mm to m
+    real(r8), parameter :: tol = 1.e-13_r8     ! relative tolerance for error checks
+
+    character(len=*), parameter :: subname = 'sens_heat_from_precip_conversion'
+    !-----------------------------------------------------------------------
+
+    total_old = rain_old + snow_old
+    total_new = rain_new + snow_new
+    SHR_ASSERT(abs(total_new - total_old) <= (tol * total_old), subname//' ERROR: mismatch between old and new totals')
+
+    ! rain to snow releases energy, so results in a positive heat flux to atm
+    rain_to_snow = snow_new - snow_old
+    sens_heat_flux = rain_to_snow * mm_to_m * denh2o * hfus
+
+  end subroutine sens_heat_from_precip_conversion
+
 
   !-----------------------------------------------------------------------
   subroutine downscale_longwave(bounds, num_do_smb_c, filter_do_smb_c, atm2lnd_inst)
@@ -416,32 +553,34 @@ contains
          forc_lwrad_c => atm2lnd_inst%forc_lwrad_downscaled_col       & ! Input:  [real(r8) (:)]  downward longwave (W/m**2)
          )
     
-      ! Make sure that, for urban points, the column-level forcing fields are identical to
-      ! the gridcell-level forcing fields. This is needed because the urban-specific code
-      ! sometimes uses the gridcell-level forcing fields (and it would take a large
-      ! refactor to change this to use column-level fields).
-      
-      do c = bounds%begc, bounds%endc
-         if (col%active(c)) then
-            l = col%landunit(c)
-            g = col%gridcell(c)
+    ! Make sure that, for urban points, the column-level forcing fields are identical to
+    ! the gridcell-level forcing fields. This is needed because the urban-specific code
+    ! sometimes uses the gridcell-level forcing fields (and it would take a large
+    ! refactor to change this to use column-level fields).
+    !
+    ! However, do NOT check rain & snow: these ARE downscaled for urban points (as for
+    ! all other points), and the urban code does not refer to the gridcell-level versions
+    ! of these fields.
+    
+    do c = bounds%begc, bounds%endc
+       if (col%active(c)) then
+          l = col%landunit(c)
+          g = col%gridcell(c)
 
-            if (lun%urbpoi(l)) then
-               if (forc_t_c(c)     /= forc_t_g(g)    .or. &
-                    forc_th_c(c)    /= forc_th_g(g)   .or. &
-                    forc_q_c(c)     /= forc_q_g(g)    .or. &
-                    forc_pbot_c(c)  /= forc_pbot_g(g) .or. &
-                    forc_rho_c(c)   /= forc_rho_g(g)  .or. &
-                    forc_rain_c(c)  /= forc_rain_g(g) .or. &
-                    forc_snow_c(c)  /= forc_snow_g(g) .or. &
-                    forc_lwrad_c(c) /= forc_lwrad_g(g)) then
-                  write(iulog,*) subname//' ERROR: column-level forcing differs from gridcell-level forcing for urban point'
-                  write(iulog,*) 'c, g = ', c, g
-                  call endrun(msg=errMsg(__FILE__, __LINE__))
-               end if  ! inequal
-            end if  ! urbpoi
-         end if  ! active
-      end do
+          if (lun%urbpoi(l)) then
+             if (forc_t_c(c)     /= forc_t_g(g)    .or. &
+                  forc_th_c(c)    /= forc_th_g(g)   .or. &
+                  forc_q_c(c)     /= forc_q_g(g)    .or. &
+                  forc_pbot_c(c)  /= forc_pbot_g(g) .or. &
+                  forc_rho_c(c)   /= forc_rho_g(g)  .or. &
+                  forc_lwrad_c(c) /= forc_lwrad_g(g)) then
+                write(iulog,*) subname//' ERROR: column-level forcing differs from gridcell-level forcing for urban point'
+                write(iulog,*) 'c, g = ', c, g
+                call endrun(msg=errMsg(__FILE__, __LINE__))
+             end if  ! inequal
+          end if  ! urbpoi
+       end if  ! active
+    end do
 
     end associate
 

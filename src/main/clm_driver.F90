@@ -343,7 +343,8 @@ contains
 
        call downscale_forcings(bounds_clump, &
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c, &
-            atm2lnd_inst)
+            atm2lnd_inst, &
+            eflx_sh_precip_conversion = energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc))
 
        call t_stopf('drvinit')
 

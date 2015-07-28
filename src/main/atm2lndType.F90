@@ -113,6 +113,7 @@ module atm2lndType
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
      procedure, public  :: Restart
+     procedure, public  :: Clean
 
   end type atm2lnd_type
   !----------------------------------------------------
@@ -236,10 +237,12 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: begg, endg
+    integer  :: begc, endc
     integer  :: begp, endp
     !---------------------------------------------------------------------
 
     begg = bounds%begg; endg= bounds%endg
+    begc = bounds%begc; endc= bounds%endc
     begp = bounds%begp; endp= bounds%endp
 
     this%forc_flood_grc(begg:endg) = spval
@@ -322,6 +325,16 @@ contains
     call hist_addfld1d (fname='SNOW', units='mm/s',  &
          avgflag='A', long_name='atmospheric snow', &
          ptr_lnd=this%forc_snow_not_downscaled_grc)
+
+    this%forc_rain_downscaled_col(begc:endc) = spval
+    call hist_addfld1d (fname='RAIN_REPARTITIONED', units='mm/s',  &
+         avgflag='A', long_name='atmospheric rain, after rain/snow repartitioning based on temperature', &
+         ptr_col=this%forc_rain_downscaled_col)
+
+    this%forc_snow_downscaled_col(begc:endc) = spval
+    call hist_addfld1d (fname='SNOW_REPARTITIONED', units='mm/s',  &
+         avgflag='A', long_name='atmospheric snow, after rain/snow repartitioning based on temperature', &
+         ptr_col=this%forc_snow_downscaled_col)
 
     this%forc_t_not_downscaled_grc(begg:endg) = spval
     call hist_addfld1d (fname='TBOT', units='K',  &
@@ -677,5 +690,95 @@ contains
     end if
 
   end subroutine Restart
+
+  !-----------------------------------------------------------------------
+  subroutine Clean(this)
+    !
+    ! !DESCRIPTION:
+    ! Finalize this instance
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(atm2lnd_type), intent(inout) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'Clean'
+    !-----------------------------------------------------------------------
+
+    ! atm->lnd
+    deallocate(this%forc_u_grc)
+    deallocate(this%forc_v_grc)
+    deallocate(this%forc_wind_grc)
+    deallocate(this%forc_rh_grc)
+    deallocate(this%forc_hgt_grc)
+    deallocate(this%forc_hgt_u_grc)
+    deallocate(this%forc_hgt_t_grc)
+    deallocate(this%forc_hgt_q_grc)
+    deallocate(this%forc_vp_grc)
+    deallocate(this%forc_psrf_grc)
+    deallocate(this%forc_pco2_grc)
+    deallocate(this%forc_solad_grc)
+    deallocate(this%forc_solai_grc)
+    deallocate(this%forc_solar_grc)
+    deallocate(this%forc_ndep_grc)
+    deallocate(this%forc_pc13o2_grc)
+    deallocate(this%forc_po2_grc)
+    deallocate(this%forc_aer_grc)
+    deallocate(this%forc_pch4_grc)
+
+    ! atm->lnd not downscaled
+    deallocate(this%forc_t_not_downscaled_grc)
+    deallocate(this%forc_q_not_downscaled_grc)
+    deallocate(this%forc_pbot_not_downscaled_grc)
+    deallocate(this%forc_th_not_downscaled_grc)
+    deallocate(this%forc_rho_not_downscaled_grc)
+    deallocate(this%forc_lwrad_not_downscaled_grc)
+    deallocate(this%forc_rain_not_downscaled_grc)
+    deallocate(this%forc_snow_not_downscaled_grc)
+    
+    ! atm->lnd downscaled
+    deallocate(this%forc_t_downscaled_col)
+    deallocate(this%forc_q_downscaled_col)
+    deallocate(this%forc_pbot_downscaled_col)
+    deallocate(this%forc_th_downscaled_col)
+    deallocate(this%forc_rho_downscaled_col)
+    deallocate(this%forc_lwrad_downscaled_col)
+    deallocate(this%forc_rain_downscaled_col)
+    deallocate(this%forc_snow_downscaled_col)
+
+    ! rof->lnd
+    deallocate(this%forc_flood_grc)
+    deallocate(this%volr_grc)
+
+    ! anomaly forcing
+    deallocate(this%bc_precip_grc)
+    deallocate(this%af_precip_grc)
+    deallocate(this%af_uwind_grc)
+    deallocate(this%af_vwind_grc)
+    deallocate(this%af_tbot_grc)
+    deallocate(this%af_pbot_grc)
+    deallocate(this%af_shum_grc)
+    deallocate(this%af_swdn_grc)
+    deallocate(this%af_lwdn_grc)
+
+    deallocate(this%fsd24_patch)
+    deallocate(this%fsd240_patch)
+    deallocate(this%fsi24_patch)
+    deallocate(this%fsi240_patch)
+    deallocate(this%prec10_patch)
+    deallocate(this%prec60_patch)
+    deallocate(this%prec365_patch)
+    if (use_ed) then
+       deallocate(this%prec24_patch)
+       deallocate(this%rh24_patch)
+       deallocate(this%wind24_patch)
+    end if
+    deallocate(this%t_mo_patch)
+    deallocate(this%t_mo_min_patch)
+
+  end subroutine Clean
+
 
 end module atm2lndType

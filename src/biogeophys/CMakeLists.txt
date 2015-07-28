@@ -7,6 +7,7 @@ list(APPEND clm_sources
   HumanIndexMod.F90
   IrrigationMod.F90
   LakeCon.F90
+  QSatMod.F90
   RootBiophysMod.F90
   SnowHydrologyMod.F90
   SnowSnicarMod.F90

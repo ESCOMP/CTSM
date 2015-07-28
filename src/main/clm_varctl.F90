@@ -173,6 +173,9 @@ module clm_varctl
   ! use subgrid fluxes
   integer,  public :: subgridflag = 1                   
 
+  ! true => repartition rain/snow from atm based on temperature
+  logical,  public :: repartition_rain_snow = .false.
+
   ! true => write global average diagnostics to std out
   logical,  public :: wrtdia       = .false.            
 
@@ -214,9 +217,6 @@ module clm_varctl
 
   ! true => CLM glacier area & topography changes dynamically 
   logical , public :: glc_do_dynglacier = .false.           
-
-  ! true => downscale precip division into rain & snow
-  logical , public :: glcmec_downscale_rain_snow_convert = .false.     
 
   ! true => downscale longwave radiation
   logical , public :: glcmec_downscale_longwave = .true.    

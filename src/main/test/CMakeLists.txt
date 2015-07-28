@@ -1,3 +1,4 @@
 add_subdirectory(subgridWeights_test)
+add_subdirectory(atm2lnd_test)
 add_subdirectory(clm_glclnd_test)
 add_subdirectory(ncdio_utils_test)

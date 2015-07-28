@@ -1424,6 +1424,7 @@ sub process_namelist_inline_logic {
   setup_logic_bgc_spinup($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_supplemental_nitrogen($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_snowpack($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_atm_forcing($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #########################################
   # namelist group: clm_humanindex_inparm #
@@ -1728,7 +1729,6 @@ sub setup_logic_glacier {
     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fglcmask'  , 'hgrid'=>$nl_flags->{'res'});
 
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-      add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glcmec_downscale_rain_snow_convert');
       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glcmec_downscale_longwave');
       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glc_snow_persistence_max_days');
     }
@@ -2650,6 +2650,19 @@ sub setup_logic_snowpack {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nlevsno');
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'h2osno_max');
   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_atm_forcing {
+   #
+   # Options related to atmospheric forcings
+   #
+   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+   
+   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'repartition_rain_snow');
+   }
 }
 
 #-------------------------------------------------------------------------------

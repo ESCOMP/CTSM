@@ -9,6 +9,7 @@ list(APPEND clm_sources
   LandunitType.F90
   PatchType.F90 
   abortutils.F90
+  atm2lndMod.F90
   atm2lndType.F90
   accumulMod.F90
   clm_varcon.F90

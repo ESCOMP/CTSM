@@ -163,7 +163,7 @@ contains
 
     ! Glacier_mec info
     namelist /clm_inparm/ &    
-         maxpatch_glcmec, glc_smb, glc_do_dynglacier, glcmec_downscale_rain_snow_convert, &
+         maxpatch_glcmec, glc_smb, glc_do_dynglacier, &
          glcmec_downscale_longwave, glc_snow_persistence_max_days, fglcmask, &
          nlevsno, h2osno_max
 
@@ -172,7 +172,8 @@ contains
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
-         albice, more_vertlayers, subgridflag, irrigate, all_active
+         albice, more_vertlayers, subgridflag, irrigate, all_active, &
+         repartition_rain_snow
 
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -538,6 +539,7 @@ contains
     ! physics variables
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (subgridflag , 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (repartition_rain_snow, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (wrtdia, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (scmlat, 1, MPI_REAL8,0, mpicom, ier)
@@ -555,7 +557,6 @@ contains
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (glc_smb, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_do_dynglacier, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (glcmec_downscale_rain_snow_convert, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glcmec_downscale_longwave, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_snow_persistence_max_days, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fglcmask, len(fglcmask), MPI_CHARACTER, 0, mpicom, ier)
@@ -713,15 +714,15 @@ contains
 
     write(iulog,*) '   Number of snow layers =', nlevsno
     write(iulog,*) '   Max snow depth (mm) =', h2osno_max
+    if (repartition_rain_snow) then
+       write(iulog,*) 'Rain vs. snow will be repartitioned based on surface temperature'
+    else
+       write(iulog,*) 'Rain vs. snow will NOT be repartitioned based on surface temperature'
+    end if
 
     if (create_glacier_mec_landunit) then
        write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
        write(iulog,*) '   glc glacier mask file = ',trim(fglcmask)
-       if (glcmec_downscale_rain_snow_convert) then
-          write(iulog,*) '   Rain and snow will be converted based on surface temperature'
-       else
-          write(iulog,*) '   Rain and snow will NOT be converted based on surface temperature'
-       endif
        if (glcmec_downscale_longwave) then
           write(iulog,*) '   Longwave radiation will be downscaled'
        else

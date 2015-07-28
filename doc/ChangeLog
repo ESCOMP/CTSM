@@ -1,4 +1,172 @@
 ===============================================================
+Tag name:  clm4_5_1_r117
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Jul 28 06:01:04 MDT 2015
+One-line Summary: Repartition rain vs. snow from atmosphere
+
+Purpose of changes:
+
+   Add an option to repartition rain vs. snow from atmosphere based on
+   near-surface temperature. This repartitioning uses a ramp-based partitioning
+   that is also used in datm: we ignore the rain vs. snow partitioning sent from
+   the atmosphere, and generate our own rain vs. snow partitioning. A sensible
+   heat flux is generated to conserve energy with this repartitioning.
+
+   The motivation for this is two-fold:
+
+   (1) There are biases in CAM which cause rain to be generated in cold
+       conditions. This is particularly a problem for glacier surface mass
+       balance in Greenland. Andrew Gettelman has suggested putting in place
+       this workaround in CLM until CAM can find a robust fix.
+
+   (2) With the downscaling to glacier elevation classes, it is useful to have
+       a different rain/snow partitioning in each elevation class. 
+
+   This repartitioning is on by default in CLM5, off by default in CLM4.5.
+
+   If / when the CAM bias is fixed, we could potentially change this code so
+   that it just does the repartitioning over the do_smb filter, similarly to the
+   other downscaling in atm2lndMod. (Rather than doing this correction
+   everywhere - which we do now in order to correct the rain vs. snow
+   partitioning bias in CAM.)
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist:
+
+   Removed glcmec_downscale_rain_snow_convert option, added
+   repartition_rian_snow option
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Sean Swenson reviewed the calculation of the sensible heat
+flux correction
+
+List any svn externals directories updated (cime, rtm, cism, etc.):
+
+   cime1.1.10 -> cime1.1.11
+   This creates a new shared routine for partitioning rain vs. snow, now shared
+   between datm and CLM.
+
+List all files eliminated:
+
+List all files added and what they do:
+
+========= Add unit tests for repartitioning of rain vs snow, and supporting
+          utility code
+A       components/clm/src/main/test/atm2lnd_test/test_sens_heat_from_precip_conversion.pf
+A       components/clm/src/main/test/atm2lnd_test/CMakeLists.txt
+A       components/clm/src/main/test/atm2lnd_test/test_partition_precip.pf
+A       components/clm/src/main/test/atm2lnd_test
+A       components/clm/src/unit_test_shr/unittestArrayMod.F90
+A       components/clm/src/unit_test_shr/test/unittestArray_test/CMakeLists.txt
+A       components/clm/src/unit_test_shr/test/unittestArray_test/test_unittestArray.pf
+A       components/clm/src/unit_test_shr/test/unittestArray_test
+
+List all existing files that have been modified, and describe the changes:
+
+========= Repartition rain vs snow from atmosphere, and add a sensible heat flux
+          correction for energy conservation
+M       components/clm/src/biogeophys/EnergyFluxType.F90
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/main/clm_varctl.F90
+M       components/clm/src/main/controlMod.F90
+M       components/clm/src/main/atm2lndType.F90
+M       components/clm/src/main/lnd2atmType.F90
+M       components/clm/src/main/atm2lndMod.F90
+M       components/clm/src/main/lnd2atmMod.F90
+
+========= Remove glcmec_rain_snow_threshold
+M       components/clm/src/main/clm_varcon.F90
+
+========= Remove glcmec_downscale_rain_snow_convert option, add
+          repartition_rain_snow option
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+
+========= Add an IG CLM5 test
+M       components/clm/cimetest/testlist_clm.xml
+
+========= Remove glcmec_downscale_rain_snow_convert setting (which no longer exists)
+M       components/clm/cimetest/testmods_dirs/clm/glcMEC_changeFlags/user_nl_clm
+
+========= Add unit tests for repartitioning of rain vs snow, and supporting
+          utility code
+M       components/clm/src/main/CMakeLists.txt
+M       components/clm/src/main/test/CMakeLists.txt
+M       components/clm/src/biogeophys/CMakeLists.txt
+M       components/clm/src/unit_test_shr/test/CMakeLists.txt
+M       components/clm/src/unit_test_shr/unittestSimpleSubgridSetupsMod.F90
+M       components/clm/src/unit_test_shr/CMakeLists.txt
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok (changes namelists, as expected)
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_1_r116
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM5 cases
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Likely new climate, but not investigated closely
+
+   Answer changes are due to new rain vs. snow partitioning, which is on by
+   default in CLM5.
+
+   Also changes answers for
+   ERP_D_Ld5.f19_g16.ICLM45GLCMEC.yellowstone_intel.clm-glcMEC_changeFlags
+   (expected, since it no longer downscales precip).
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r116
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Jul 22 06:39:28 EDT 2015

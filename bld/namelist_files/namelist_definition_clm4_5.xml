@@ -172,13 +172,6 @@ Full pathname of topography data file. Only required when
 land-ice model is active.
 </entry>
 
-<entry id="glcmec_downscale_rain_snow_convert" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
-If TRUE, downscale precipitation division into rain vs. snow over glc_mec landunits.
-WARNING: THIS BREAKS ENERGY CONSERVATION, SO SHOULD NOT BE USED IN COUPLED SIMULATIONS
-<default>Default: .false.</default>
-</entry>
-
 <entry id="glcmec_downscale_longwave" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, downscale longwave radiation over glc_mec landunits.
@@ -380,6 +373,11 @@ If TRUE, write diagnostic of global radiative temperature written to CLM log fil
 <entry id="subgridflag" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="0,1" >
 Subgrid fluxes for snow
+</entry>
+
+<entry id="repartition_rain_snow" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, repartition rain/snow from atmosphere based on temperature.
 </entry>
 
 <entry id="snowveg_flag" type="char*10" category="clm_physics"

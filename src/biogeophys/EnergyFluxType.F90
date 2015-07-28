@@ -28,6 +28,7 @@ module EnergyFluxType
      real(r8), pointer :: eflx_sh_tot_patch       (:)   ! patch total sensible heat flux (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_sh_tot_u_patch     (:)   ! patch urban total sensible heat flux (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_sh_tot_r_patch     (:)   ! patch rural total sensible heat flux (W/m**2) [+ to atm]
+     real(r8), pointer :: eflx_sh_precip_conversion_col(:) ! col sensible heat flux from precipitation conversion (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_lh_tot_patch       (:)   ! patch total latent heat flux (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_lh_tot_u_patch     (:)   ! patch urban total latent heat flux (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_lh_tot_r_patch     (:)   ! patch rural total latent heat flux (W/m**2) [+ to atm]
@@ -174,6 +175,7 @@ contains
     allocate( this%eflx_sh_tot_r_patch     (begp:endp))             ; this%eflx_sh_tot_r_patch     (:)   = nan
     allocate( this%eflx_sh_grnd_patch      (begp:endp))             ; this%eflx_sh_grnd_patch      (:)   = nan
     allocate( this%eflx_sh_veg_patch       (begp:endp))             ; this%eflx_sh_veg_patch       (:)   = nan
+    allocate( this%eflx_sh_precip_conversion_col(begc:endc))        ; this%eflx_sh_precip_conversion_col(:) = nan
     allocate( this%eflx_lh_tot_u_patch     (begp:endp))             ; this%eflx_lh_tot_u_patch     (:)   = nan
     allocate( this%eflx_lh_tot_patch       (begp:endp))             ; this%eflx_lh_tot_patch       (:)   = nan
     allocate( this%eflx_lh_tot_r_patch     (begp:endp))             ; this%eflx_lh_tot_r_patch     (:)   = nan
@@ -415,6 +417,11 @@ contains
     call hist_addfld1d (fname='FSH_U', units='W/m^2',  &
          avgflag='A', long_name='Urban sensible heat', &
          ptr_patch=this%eflx_sh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
+
+    this%eflx_sh_precip_conversion_col(begc:endc) = spval
+    call hist_addfld1d (fname = 'FSH_PRECIP_CONVERSION', units='W/m^2', &
+         avgflag='A', long_name='Sensible heat flux from conversion of rain/snow atm forcing', &
+         ptr_col=this%eflx_sh_precip_conversion_col, c2l_scale_type='urbanf')
 
     this%eflx_lh_tot_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_LH_TOT_U', units='W/m^2',  &

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r117    sacks 07/28/2015 Repartition rain vs. snow from atmosphere
    clm4_5_1_r116    sacks 07/22/2015 Rename some history fields
    clm4_5_1_r115    sacks 07/15/2015 Remove redundant code, rename a variable
    clm4_5_1_r114    sacks 07/10/2015 Update cime external, remove genf90-generated files
