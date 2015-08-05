@@ -1,4 +1,137 @@
 ===============================================================
+Tag name:  clm4_5_1_r118
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Aug  5 16:22:33 MDT 2015
+One-line Summary: Minor rework of glc coupling fields
+
+Purpose of changes:
+
+   This makes CLM compatible with recent CIME changes.
+
+   (1) Use renamed coupler field, in both clm40 and clm45
+
+   (2) In clm45 code, rework clm_cpl_indices to use glc_elevclass_mod (simpler
+   and more robust than the earlier code)
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.):
+
+   cime1.1.11 -> cime2.0.0
+   cism2_0_09 -> cism2_1_02
+
+List all files eliminated:
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes
+M       components/clm/src/cpl/clm_cpl_indices.F90
+M       components/clm/src/cpl/lnd_import_export.F90
+M       components/clm/src_clm40/main/clm_cpl_indices.F90
+M       components/clm/src_clm40/main/lnd_import_export.F90
+
+========= Document new unit testing method needed for yellowstone, due to cime update
+M       components/clm/src/README.unit_testing
+
+========= Rework test mods due to a fundamental change in how the forced
+          decrease / increase in glc area works
+M       components/clm/cimetest/testmods_dirs/clm/glcMEC_decrease/user_nl_cism
+M       components/clm/cimetest/testmods_dirs/clm/glcMEC_increase/user_nl_cism
+
+========= New failures, which seem to be attributable to the cime update,
+          unrelated to my changes. However, the NCK and CME test failures seem
+          dependent on the order in which tests are run, so these problems are
+          hard to reproduce. Running them as single tests leads to PASSes.
+M       components/clm/cimetest/ExpectedTestFails.xml
++   <entry bugz="cime-115" >CFAIL CME_Ld5.f10_f10.ICN.yellowstone_intel</entry>
++   <entry bugz="cime-116" >FAIL NCK_Ld1.f10_f10.ICRUCLM45.yellowstone_intel.clm-default</entry>
++   <entry bugz="2197" >RUN ERS_D_Mmpi-serial_Ld5.1x1_brazil.ICLM45ED.yellowstone_gnu.clm-edTest</entry>
+
+
+CLM testing:
+
+  unit-tests (models/lnd/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    goldbach_nag: ok - but see caveat below!
+
+As noted above, there are three new test failures. The ERS_D ICLM45ED failure
+seems to be a legitimate bug in CLM. The other two (CFAIL
+CME_Ld5.f10_f10.ICN.yellowstone_intel and FAIL
+NCK_Ld1.f10_f10.ICRUCLM45.yellowstone_intel.clm-default) seem to be intermittent
+failures, likely due to a bug in the test system or elsewhere in cime. These
+sometimes pass and sometimes fail. They always seem to pass when run as single
+tests, but sometimes fail when run as part of a test suite. It's not clear if
+the new cime is to blame directly, or if these are arising now simply because
+tests are being run in a different order.
+
+golbach-nag does not run out-of-the-box with this tag. However, it should run
+out-of-the-box if you merge in the next commit in cime master
+(4b52ec73086a4290323dddfde6087a6d6d12ab96). I did my changes with that commit
+merged in, but this hadn't come to master in time for me to include it in this
+CLM tag.
+
+CLM tag used for the baseline comparisons: clm4_5_1_r117
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Configurations with CISM (IG), both CLM4 and CLM45
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Likely larger than roundoff/same climate (but not investigated closely)
+
+      These changes are due to a complete rework of the coupling between CISM
+      and CLM, manifested as major changes in the CIME and CISM externals. (The
+      changes in CLM are not directly responsible for the answer changes.)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r117
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Jul 28 06:01:04 MDT 2015

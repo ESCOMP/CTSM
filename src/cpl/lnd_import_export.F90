@@ -210,7 +210,7 @@ contains
 
        if (create_glacier_mec_landunit) then
           do num = 0,glc_nec
-             glc2lnd_inst%frac_grc(g,num)  = x2l(index_x2l_Sg_frac(num),i)
+             glc2lnd_inst%frac_grc(g,num)  = x2l(index_x2l_Sg_ice_covered(num),i)
              glc2lnd_inst%topo_grc(g,num)  = x2l(index_x2l_Sg_topo(num),i)
              glc2lnd_inst%hflx_grc(g,num)  = x2l(index_x2l_Flgg_hflx(num),i)
           end do
