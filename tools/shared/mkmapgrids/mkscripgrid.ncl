@@ -89,6 +89,21 @@ begin
      print( "output file: "+outfilename );
   end if
 
+function fspan1up( fbegin [*]:double, fend [*]:double, number:integer )
+;
+; An "fspan" that can handle size of 1 and up.
+; Do fspan for arrays of two or more, or average of end points for array of one.
+;
+local farray;
+begin
+   if ( number .eq. 1) then
+      farray = (/ (fbegin + fend) / 2.0d00 /);
+   else
+      farray = fspan( fbegin, fend, number );
+   end if
+   return( farray );
+end
+
   ;
   ; Compute derived quantities
   ;
@@ -96,8 +111,8 @@ begin
   delX       = (lonE - lonW) / int2dble(nx);
   delY       = (latN - latS) / int2dble(ny);
 
-  lonCenters = fspan( (lonW + delX/2.d0), (lonE - delX/2.d0), nx)
-  latCenters = fspan( (latS + delY/2.d0), (latN - delY/2.d0), ny)
+  lonCenters = fspan1up( (lonW + delX/2.d0), (lonE - delX/2.d0), nx)
+  latCenters = fspan1up( (latS + delY/2.d0), (latN - delY/2.d0), ny)
   lon = new( (/ny, nx/), "double" );
   lat = new( (/ny, nx/), "double" );
   lonCorners = new( (/ny, nx, 4/), "double" );

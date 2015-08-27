@@ -26,7 +26,7 @@ hostname=`hostname`
 case $hostname in
 
     ##yellowstone
-     ys* | caldera* | geyser*)
+     ys* | caldera* | geyser* | pronghorn*)
     submit_script="test_driver_yellowstone${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -51,6 +51,7 @@ module load pnetcdf/1.3.0
 
 module load nco
 module load ncl
+module load python
 
 
 ##omp threads
@@ -80,9 +81,9 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ## goldbach
-    goldbach* ) 
-    submit_script="test_driver_goldbach_${cur_time}.sh"
+    ## hobart
+    hobart* ) 
+    submit_script="test_driver_hobart_${cur_time}.sh"
     export PATH=/cluster/torque/bin:${PATH}
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -93,7 +94,7 @@ cat > ./${submit_script} << EOF
 # Name of the queue (CHANGE THIS if needed)
 #PBS -q long
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l nodes=1:ppn=8
+#PBS -l nodes=1:ppn=24
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
@@ -109,10 +110,10 @@ fi
 
 if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
     interactive="NO"
-    input_file="tests_posttag_goldbach"
+    input_file="tests_posttag_hobart"
 else
     interactive="YES"
-    input_file="tests_posttag_goldbach_nompi"
+    input_file="tests_posttag_hobart_nompi"
 fi
 
 ##omp threads
@@ -122,47 +123,31 @@ fi
 export CLM_RESTART_THREADS=1
 
 ##mpi tasks
-export CLM_TASKS=8
-export CLM_RESTART_TASKS=7
+export CLM_TASKS=24
+export CLM_RESTART_TASKS=20
 
-export PGI=/usr/local/pgi
-export INTEL=/usr/local/intel-cluster
 export P4_GLOBMEMSIZE=500000000
 
 
-export CESM_MACH="goldbach"
+export CESM_MACH="hobart"
 
-if [ "\$CLM_FC" = "PGI" ]; then
-   export NETCDF_PATH=/usr/local/netcdf-pgi
-   export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
-   export LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LIBRARY_PATH}
-   export PATH=\${PGI}/linux86/bin:\${PATH}
-   export CESM_COMP="pgi"
-   export TOOLS_MAKE_STRING=""
-   export TOOLS_CONF_STRING=""
-   export CFG_STRING=""
-else
-   export OMPI_INTEL_PATH=/cluster/openmpi-qlc-intel
-    # Runtime environment variables
-   export PATH=\${OMPI_INTEL_PATH}/bin:\${INTEL}/bin:\${PATH}
+limit stacksize unlimited
+limit coredumpsize unlimited
 
-   export NETCDF_PATH=/usr/local/netcdf-intel-cluster
-   export LD_LIBRARY_PATH=\$INTEL/composer_xe_2011_sp1.6.233/compiler/lib/intel64:\$OMPI_INTEL_PATH/lib64:/usr/mpi/intel/openmpi-1.4.3-qlc/lib64:/usr/local/intel-cluster-2013.4.183/compiler/lib/intel64
-   export LIBRARY_PATH=\$INTEL/composer_xe_2011_sp1.6.233/compiler/lib/intel64:\$OMPI_INTEL_PATH/lib64:/usr/mpi/intel/openmpi-1.4.3-qlc/lib64:/usr/local/intel-cluster-2013.4.183/compiler/lib/intel64
-   export CESM_COMP="intel"
-   export TOOLS_MAKE_STRING="USER_FC=ifort USER_CC=icc "
-   export TOOLS_CONF_STRING=""
-   export CFG_STRING=""
-fi
+module purge
+module load compiler/intel/15.0.2.164
 
-export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH}:\${NETCDF_PATH}/lib
-export LIBRARY_PATH=\${LIBRARY_PATH}:\${NETCDF_PATH}/lib
+export CESM_COMP="intel"
+export TOOLS_MAKE_STRING="USER_FC=ifort USER_CC=icc "
+export TOOLS_CONF_STRING=""
+export CFG_STRING=""
+
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\${NETCDF_PATH}/include
 export LIB_NETCDF=\${NETCDF_PATH}/lib
-export MAKE_CMD="gmake -j 5"   ##using hyper-threading on goldbach
+export MAKE_CMD="gmake -j 5"   ##using hyper-threading on hobart
 export MACH_WORKSPACE="/scratch/cluster"
-export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_64/cprnc
+export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_hobart/cprnc
 export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 export TOOLSSLIBS=""
@@ -227,7 +212,7 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
     * )
-    echo "Only setup to work on: yellowstone, goldbach, and yong"
+    echo "Only setup to work on: yellowstone, hobart, and yong"
     exit
  
 
@@ -536,7 +521,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on yellowstone, goldbach, and yongi: "
+    echo "usage on yellowstone, hobart, and yongi: "
     echo "./test_driver.sh -i"
     echo ""
     echo "valid arguments: "

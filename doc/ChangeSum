@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_1_r119     erik 08/26/2015 Bring hobart/nag bug fixes to trunk, and fix a few bugs
    clm4_5_1_r118    sacks 08/05/2015 Minor rework of glc coupling fields
    clm4_5_1_r117    sacks 07/28/2015 Repartition rain vs. snow from atmosphere
    clm4_5_1_r116    sacks 07/22/2015 Rename some history fields

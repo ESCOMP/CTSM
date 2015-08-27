@@ -1687,7 +1687,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog) 'initializing this%deadcrootc_xfer_patch with atmospheric c14 value'
+          write(iulog,*) 'initializing this%deadcrootc_xfer_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%deadcrootc_xfer_patch(i) /= spval .and. .not. isnan(this%deadcrootc_xfer_patch(i)) ) then
                 this%deadcrootc_xfer_patch(i) = c12_cnveg_carbonstate_inst%deadcrootc_xfer_patch(i) * c14ratio

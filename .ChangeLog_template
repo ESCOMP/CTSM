@@ -59,16 +59,24 @@ CLM testing:
 
     yellowstone
 
-  unit-tests (models/lnd/clm/src):
+  unit-tests (components/clm/src):
 
     yellowstone
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone
 
   regular tests (aux_clm40, aux_clm45):
 
     yellowstone_intel
     yellowstone_pgi
     yellowstone_gnu (clm45 only)
-    goldbach_nag
+    hobart_nag
 
 CLM tag used for the baseline comparisons: 
 

@@ -88,8 +88,8 @@ contains
     new_cohort%balive       = balive
     new_cohort%bstore       = bstore
 
-    if (new_cohort%dbh <= 0_r8 .or. new_cohort%n == 0._r8 .or. new_cohort%pft == 0 &
-          .or. new_cohort%canopy_trim <= 0_r8 .or. new_cohort%balive <= 0._r8) then
+    if (new_cohort%dbh <= 0.0_r8 .or. new_cohort%n == 0._r8 .or. new_cohort%pft == 0 &
+          .or. new_cohort%canopy_trim <= 0.0_r8 .or. new_cohort%balive <= 0._r8) then
        write(iulog,*) 'ED: something is zero in create_cohort',new_cohort%indexnumber,new_cohort%dbh,new_cohort%n, &
        new_cohort%pft,new_cohort%canopy_trim,new_cohort%balive
     endif

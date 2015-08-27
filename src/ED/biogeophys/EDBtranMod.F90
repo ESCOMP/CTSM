@@ -219,7 +219,7 @@ contains
                   s1 = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
                   s1 = min(1.0_r8,s1)  
                   smp_node = -sucsat(c,j)*s1**(-bsw(c,j))
-                  swp_mpa(j)  = smp_node *10_r8/1000000_r8  !convert from mm to Mpa 
+                  swp_mpa(j)  = smp_node *10.0_r8/1000000.0_r8  !convert from mm to Mpa 
 
                   ! CLM hydraulic conductivity curve. 
                   ! As opposed to the Richard's equation solution in SoilHydrology.Mod 

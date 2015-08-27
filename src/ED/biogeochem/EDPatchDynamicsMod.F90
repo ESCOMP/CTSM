@@ -565,7 +565,7 @@ contains
           else
              burned_leaves = (currentCohort%bl+currentCohort%bsw) * currentPatch%burnt_frac_litter(6)
           endif
-          if (burned_leaves > 0_r8) then
+          if (burned_leaves > 0.0_r8) then
 
              currentCohort%balive = max(currentCohort%br,currentCohort%balive - burned_leaves)
              currentCohort%bl     = max(0.00001_r8,   currentCohort%bl - burned_leaves)

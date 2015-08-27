@@ -1349,9 +1349,9 @@ contains
 
                ! Fraction of vegetation free of snow. What does this do? Is it right? 
                if ((elai(p) + esai(p)) > 0._r8) then
-                  frac_veg_nosno_alb(p) = 1_r8
+                  frac_veg_nosno_alb(p) = 1.0_r8
                else
-                  frac_veg_nosno_alb(p) = 0_r8
+                  frac_veg_nosno_alb(p) = 0.0_r8
                end if
                ! write(iulog,*) 'frac nosno',frac_veg_nosno_alb(p)
 

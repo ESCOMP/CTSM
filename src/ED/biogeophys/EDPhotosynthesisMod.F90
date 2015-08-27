@@ -893,7 +893,7 @@ contains
                         currentCohort%froot_mr = currentCohort%froot_mr + (1.0_r8 - coarse_wood_frac) * &
                              currentCohort%br*br*tcsoi * currentPatch%rootfr_ft(ft,j)/leafcn(currentCohort%pft) 
                         ! convert from gC/indiv/s-1 to kgC/indiv/s-1
-                        currentCohort%froot_mr  =  currentCohort%froot_mr /1000_r8
+                        currentCohort%froot_mr  =  currentCohort%froot_mr /1000.0_r8
                      enddo
 
                      call t_stopf('edfluxunpack2')

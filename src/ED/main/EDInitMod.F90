@@ -207,9 +207,9 @@ contains
        !initial guess numbers for site condition.
        do i = bounds%begg,bounds%endg
           NCD(i)      = 0.0_r8
-          GDD(i)      = 30_r8
-          leafon(i)   = 100_r8
-          leafoff(i)  = 300_r8
+          GDD(i)      = 30.0_r8
+          leafon(i)   = 100.0_r8
+          leafoff(i)  = 300.0_r8
           stat(i)     = 2
           acc_NI(i)   = 0.0_r8
           dstat(i)    = 2

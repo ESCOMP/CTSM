@@ -117,7 +117,7 @@ contains
       ! which probably won't have much inpact, unless we decide to ever calculated the NI for each patch.  
 
       temp_in_C  = t_veg24(currentSite%oldest_patch%clm_pno) - tfrz
-      rainfall   = prec24(currentSite%oldest_patch%clm_pno) *24_r8*3600_r8
+      rainfall   = prec24(currentSite%oldest_patch%clm_pno) *24.0_r8*3600._r8
       rh         = rh24(currentSite%oldest_patch%clm_pno)
 
       if (rainfall > 3.0_r8) then !rezero NI if it rains... 
@@ -220,7 +220,7 @@ contains
           endif
           ! FIX(RF,032414): needs refactoring. 
           ! average water content !is this the correct metric?         
-          timeav_swc                  = sum(currentSite%water_memory(1:10)) / 10_r8 
+          timeav_swc                  = sum(currentSite%water_memory(1:10)) / 10._r8 
           ! Equation B2 in Thonicke et al. 2010
           fuel_moisture(dg_sf)        = max(0.0_r8, 10.0_r8/9._r8 * timeav_swc - 1.0_r8/9.0_r8)           
  
@@ -315,7 +315,7 @@ contains
 
     wind24  => atm2lnd_inst%wind24_patch  ! Input:  [real(r8) (:)]  avg pft windspeed (m/s)
 
-    wind = wind24(currentSite%oldest_patch%clm_pno) * 60_r8             ! Convert to m/min for SPITFIRE units.
+    wind = wind24(currentSite%oldest_patch%clm_pno) * 60._r8             ! Convert to m/min for SPITFIRE units.
     if(write_SF == 1)then
        if (masterproc) write(iulog,*) 'wind24', wind24(currentSite%oldest_patch%clm_pno)
     endif
@@ -684,7 +684,7 @@ contains
           ! --- calculate area burnt---
           if(lb > 0.0_r8) then
              g = currentSite%clmgcell
-             gridarea = ldomain%area(g) *1000000_r8 !convert from km2 into m2
+             gridarea = ldomain%area(g) *1000000.0_r8 !convert from km2 into m2
              currentPatch%NF = ldomain%area(g) * ED_val_nfires * currentPatch%area/area /365
              ! If there are 15  lightening strickes per year, per km2. (approx from NASA product) 
              ! then there are 15/365 s/km2 each day. 

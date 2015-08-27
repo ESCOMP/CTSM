@@ -104,7 +104,7 @@ contains
 
     type(ed_cohort_type), intent(in) :: cohort_in       
 
-    if(cohort_in%dbh < 0._r8.or.cohort_in%pft == 0.or.cohort_in%dbh > 1000_r8)then
+    if(cohort_in%dbh < 0._r8.or.cohort_in%pft == 0.or.cohort_in%dbh > 1000.0_r8)then
        write(iulog,*) 'problems in bleaf',cohort_in%dbh,cohort_in%pft
     endif
 

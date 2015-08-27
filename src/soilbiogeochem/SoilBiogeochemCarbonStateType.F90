@@ -543,8 +543,8 @@ contains
                   interpinic_flag='interp' , readvar=readvar, data=ptr1d)
           end if
           if (flag=='read' .and. .not. readvar) then
-             write(iulog,*) 'initializing soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col with atmospheric c13 value for: &
-                  '//varname
+             write(iulog,*) 'initializing soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col' &
+                  // ' with atmospheric c13 value for: '//trim(varname)
              do i = bounds%begc,bounds%endc
                 do j = 1, nlevdecomp
                    if (this%decomp_cpools_vr_col(i,j,k) /= spval .and. .not. isnan(this%decomp_cpools_vr_col(i,j,k)) ) then

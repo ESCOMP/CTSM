@@ -225,82 +225,82 @@ contains
       allocate(new%balive &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%balive(:) = 0_r8
+      new%balive(:) = 0.0_r8
 
       allocate(new%bdead &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%bdead(:) = 0_r8
+      new%bdead(:) = 0.0_r8
 
       allocate(new%bl &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%bl(:) = 0_r8
+      new%bl(:) = 0.0_r8
 
       allocate(new%br &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%br(:) = 0_r8
+      new%br(:) = 0.0_r8
 
       allocate(new%bstore &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%bstore(:) = 0_r8
+      new%bstore(:) = 0.0_r8
 
       allocate(new%canopy_layer &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%canopy_layer(:) = 0_r8
+      new%canopy_layer(:) = 0.0_r8
 
       allocate(new%canopy_trim &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%canopy_trim(:) = 0_r8
+      new%canopy_trim(:) = 0.0_r8
 
       allocate(new%dbh &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%dbh(:) = 0_r8
+      new%dbh(:) = 0.0_r8
 
       allocate(new%hite &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%hite(:) = 0_r8
+      new%hite(:) = 0.0_r8
 
       allocate(new%laimemory &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%laimemory(:) = 0_r8
+      new%laimemory(:) = 0.0_r8
 
       allocate(new%leaf_md &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%leaf_md(:) = 0_r8
+      new%leaf_md(:) = 0.0_r8
 
       allocate(new%root_md &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%root_md(:) = 0_r8
+      new%root_md(:) = 0.0_r8
 
       allocate(new%n &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%n(:) = 0_r8
+      new%n(:) = 0.0_r8
 
       allocate(new%gpp_acc &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%gpp_acc(:) = 0_r8
+      new%gpp_acc(:) = 0.0_r8
 
       allocate(new%npp_acc &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%npp_acc(:) = 0_r8
+      new%npp_acc(:) = 0.0_r8
 
       allocate(new%resp_clm &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%resp_clm(:) = 0_r8
+      new%resp_clm(:) = 0.0_r8
 
       allocate(new%pft &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
@@ -318,57 +318,57 @@ contains
       allocate(new%cwd_ag &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%cwd_ag(:) = 0_r8
+      new%cwd_ag(:) = 0.0_r8
 
       allocate(new%cwd_bg &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%cwd_bg(:) = 0_r8
+      new%cwd_bg(:) = 0.0_r8
 
       allocate(new%leaf_litter &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%leaf_litter(:) = 0_r8
+      new%leaf_litter(:) = 0.0_r8
 
       allocate(new%root_litter &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%root_litter(:) = 0_r8
+      new%root_litter(:) = 0.0_r8
 
       allocate(new%leaf_litter_in &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%leaf_litter_in(:) = 0_r8
+      new%leaf_litter_in(:) = 0.0_r8
 
       allocate(new%root_litter_in &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%root_litter_in(:) = 0_r8
+      new%root_litter_in(:) = 0.0_r8
 
       allocate(new%seed_bank &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%seed_bank(:) = 0_r8
+      new%seed_bank(:) = 0.0_r8
 
       allocate(new%spread &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%spread(:) = 0_r8
+      new%spread(:) = 0.0_r8
 
       allocate(new%livegrass &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%livegrass(:) = 0_r8
+      new%livegrass(:) = 0.0_r8
 
       allocate(new%age &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%age(:) = 0_r8
+      new%age(:) = 0.0_r8
 
       allocate(new%areaRestart &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%areaRestart(:) = 0_r8
+      new%areaRestart(:) = 0.0_r8
 
       !
       ! site level variable
@@ -377,12 +377,12 @@ contains
       allocate(new%water_memory &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%water_memory(:) = 0_r8
+      new%water_memory(:) = 0.0_r8
 
       allocate(new%old_stock &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
       SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
-      new%old_stock(:) = 0_r8
+      new%old_stock(:) = 0.0_r8
 
     end associate
 
@@ -1260,8 +1260,8 @@ contains
        ed_allsites_inst(g)%istheresoil = .true. ! if we are dealing with ED data there will always be soil
        ed_allsites_inst(g)%lat = grc%latdeg(g)
        ed_allsites_inst(g)%lon = grc%londeg(g)
-       ed_allsites_inst(g)%gdd = 0_r8
-       ed_allsites_inst(g)%ncd = 0_r8
+       ed_allsites_inst(g)%gdd = 0.0_r8
+       ed_allsites_inst(g)%ncd = 0.0_r8
 
        ! then this site has soil and should be set here
        do patchIdx = 1,this%numPatchesPerCell(g)
@@ -1289,13 +1289,13 @@ contains
 
              allocate(temp_cohort)
 
-             temp_cohort%n = 700_r8
-             temp_cohort%balive = 0_r8
-             temp_cohort%bdead = 0_r8
-             temp_cohort%bstore = 0_r8
-             temp_cohort%laimemory = 0_r8
-             temp_cohort%canopy_trim = 0_r8
-             temp_cohort%canopy_layer = 1_r8
+             temp_cohort%n = 700.0_r8
+             temp_cohort%balive = 0.0_r8
+             temp_cohort%bdead = 0.0_r8
+             temp_cohort%bstore = 0.0_r8
+             temp_cohort%laimemory = 0.0_r8
+             temp_cohort%canopy_trim = 0.0_r8
+             temp_cohort%canopy_layer = 1.0_r8
 
              ! set the pft (only 2 used in ed) based on odd/even cohort
              ! number

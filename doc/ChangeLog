@@ -1,4 +1,132 @@
 ===============================================================
+Tag name:  clm4_5_1_r119
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Aug 26 22:29:10 MDT 2015
+One-line Summary: Bring hobart/nag bug fixes to trunk, and fix a few bugs
+
+Purpose of changes:
+
+Bring hobart/nag bug fixes to trunk. Fix ncl6.3.0 bug for getregional script. 
+Fix use_c13 bug. Update RTM to handle regional direction files. Make sure _r8
+constants in ED have a decimal point, so the NAG compiler will treat them as
+double-precision rather than as integer*2.
+
+Move testing from goldbach to hobart. For hobart_nag make all of the tests
+on just one node (24 processors).
+
+Requirements for tag: compile run with hobart/nag (fix bugs 2205 and 2199)
+                      move testing from goldbach to hobart
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+     2206 (PTCLM stopped working with pft number in surface dataset filenames for mksurfdata.pl)
+     2205 (Problems with some constants in ED for NAG compiler)
+     2199 (crayftn compiler issue with continuation in middle of string)
+     2180 (ncl6.3.0 bug for getregional script)
+     2174 (use_c13 bug, unformatted write caused model to die)
+     2156 (Update RTM to handle regional direction files)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, klindsay
+
+List any svn externals directories updated (cime, rtm, cism, etc.): PTCLM, cime and rtm
+     cime  to cime2.0.07
+     rtm   to rtm1_0_52
+     PTCLM to PTCLM2_150826
+
+List all files eliminated: Move goldbach to hobart
+
+D    components/clm/test/tools/tests_posttag_goldbach_nompi
+
+List all files added and what they do: Move goldbach to hobart
+
+A    components/clm/test/tools/tests_posttag_hobart_nompi
+
+List all existing files that have been modified, and describe the changes:
+
+------------ Move goldbach to hobart, remove PGI option for hobart
+M    components/clm/test/tools/test_driver.sh
+
+M       components/clm/bld/unit_testers/build-namelist_test.pl -- Fix ED tests so megan off
+
+M       components/clm/cimetest/testlist_clm.xml --- Move goldbach tests to hobart
+            Make 2-node hobart_nag tests on a single node
+
+M       components/clm/tools/shared/mkmapgrids/mkscripgrid.ncl -- Fix so will
+            work with ncl6.3.0, bug 2180
+
+M       components/clm/src/README.unit_testing --- add some notes about unit-testing
+
+------------ Bug 2205, some _r8 constants in ED don't have a decimal point
+------------ and the NAG compiler then treats them as integer*2.
+M       components/clm/src/ED/main/EDCLMLinkMod.F90
+M       components/clm/src/ED/main/EDRestVectorMod.F90
+M       components/clm/src/ED/main/EDInitMod.F90
+M       components/clm/src/ED/fire/SFMainMod.F90
+M       components/clm/src/ED/biogeophys/EDPhotosynthesisMod.F90
+M       components/clm/src/ED/biogeophys/EDBtranMod.F90
+M       components/clm/src/ED/biogeochem/EDGrowthFunctionsMod.F90
+M       components/clm/src/ED/biogeochem/EDCohortDynamicsMod.F90
+M       components/clm/src/ED/biogeochem/EDPhysiologyMod.F90
+M       components/clm/src/ED/biogeochem/EDPatchDynamicsMod.F90
+
+------------ Bug 2199, write to iulog was unformatted, which caused the model
+------------ to die after it had already done formatted writes.
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone  yes
+
+  unit-tests (components/clm/src):
+
+    yellowstone  yes
+
+  tools testing (components/clm/test/tools):
+
+     yellowstone yes
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone yes
+
+  regular tests (aux_clm40, aux_clm45, aux_clm_short):
+
+    yellowstone_intel             yes
+    yellowstone_pgi               yes
+    yellowstone_gnu (clm45 only)  yes
+    hobart_nag                    yes
+    hobart_pgi                    yes
+    hobart_intel                  yes
+
+CLM tag used for the baseline comparisons:  clm4_5_1_r118
+
+Changes answers relative to baseline: no
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_1_r118
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Aug  5 16:22:33 MDT 2015

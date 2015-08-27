@@ -841,7 +841,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
   # Run ED mode for several resolutions
   $mode = "${phys}-ED";
   system( "../configure -s -phys ".$phys );
-  my $clmoptions = "-bgc cn -envxml_dir . -ed_mode";
+  my $clmoptions = "-bgc cn -envxml_dir . -ed_mode -no-megan";
   my @clmres = ( "1x1_brazil", "5x5_amazon", "10x15", "1.9x2.5" );
   foreach my $res ( @clmres ) {
      $options = "-res $res";
