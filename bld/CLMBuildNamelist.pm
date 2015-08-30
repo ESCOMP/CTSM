@@ -1414,6 +1414,8 @@ sub process_namelist_inline_logic {
   setup_logic_decomp_performance($opts->{'test'}, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snow($opts->{'test_files'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref, $physv);
+  setup_logic_dynamic_plant_nitrogen_alloc($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_luna($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_create_crop_landunit($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_soilstate($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -1783,7 +1785,8 @@ sub setup_logic_params_file {
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'paramfile', 
-                'use_ed'=>$nl_flags->{'use_ed'} );
+                'use_ed'=>$nl_flags->{'use_ed'},
+                'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
   } else {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fpftcon');
   }
@@ -2368,6 +2371,72 @@ sub setup_logic_methane {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_dynamic_plant_nitrogen_alloc {
+  #
+  # dynamic plant nitrogen allocation model, bgc=bgc
+  #
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") &&
+       $nl_flags->{'bgc_mode'} eq "bgc" ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_flexibleCN' );
+    $nl_flags->{'use_flexibleCN'} = $nl->get_value('use_flexibleCN');
+
+    if ( $nl_flags->{'use_flexibleCN'} eq '.true.' ) {
+      # TODO(bja, 2015-04) make this depend on > clm 5.0 and bgc mode at some point.
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'MM_Nuptake_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dynamic_plant_alloc_opt' ,
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'downreg_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'plant_ndemand_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'substrate_term_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nscalar_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'temp_scalar_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CNratio_floating',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lnc_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reduce_dayl_factor',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vcmax_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_residual_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_partition_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'carbon_excess_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'carbon_storage_excess_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_evergreen_phenology_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+    }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_luna {
+  #
+  # LUNA model to calculate photosynthetic capacities based on environmental conditions
+  #
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    $nl_flags->{'use_luna'} = $nl->get_value('use_luna');
+    # TODO(bja, 2015-04) make this depend on > clm 5.0 and bgc mode at some point.
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_luna' );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_c_isotope {
   #
   # Error checking for C-isotope options
@@ -2693,7 +2762,7 @@ sub write_output_files {
   } else {
     @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams lai_streams clm_canopyhydrology_inparm 
                  clm_soilhydrology_inparm dynamic_subgrid finidat_consistency_checks dynpft_consistency_checks 
-                 clmu_inparm clm_soilstate_inparm );
+                 clmu_inparm clm_soilstate_inparm clm_nitrogen );
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);
     # Eventually only list namelists that are actually used when CN on

@@ -72,7 +72,6 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNAllocParamsType'
     character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
     real(r8)           :: tempr ! temporary to read in parameter
@@ -89,18 +88,25 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine calc_plant_nutrient_competition (this, bounds, num_soilp, filter_soilp, &
-       cnveg_state_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
-       c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                 &
+  subroutine calc_plant_nutrient_competition (this, &
+       bounds, num_soilp, filter_soilp, &
+       cnveg_state_inst, cnveg_carbonflux_inst, &
+       c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
+       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+       soilbiogeochem_nitrogenstate_inst, &
        aroot, arepr, fpg_col)                                              
     !
     ! !USES:
+    use shr_kind_mod          , only : r8 => shr_kind_r8
+    use decompMod             , only : bounds_type       
     use CNVegStateType        , only : cnveg_state_type
     use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
+    use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
     use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
+    use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
     !
     ! !ARGUMENTS:
-    class(nutrient_competition_clm45default_type), intent(in) :: this
+    class(nutrient_competition_clm45default_type), intent(inout) :: this
     type(bounds_type)               , intent(in)    :: bounds
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
@@ -108,7 +114,9 @@ contains
     type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
+    type(cnveg_nitrogenstate_type)  , intent(inout) :: cnveg_nitrogenstate_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
+    type(soilbiogeochem_nitrogenstate_type), intent(in)    :: soilbiogeochem_nitrogenstate_inst
     real(r8)                        , intent(in)    :: aroot(bounds%begp:)
     real(r8)                        , intent(in)    :: arepr(bounds%begp:)
     real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
@@ -129,6 +137,7 @@ contains
        aroot, arepr, fpg_col)                                              
     !
     ! !USES:
+    use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
     use pftconMod             , only : pftcon, npcropmin
     use clm_varctl            , only : use_c13, use_c14
     use CNVegStateType        , only : cnveg_state_type
@@ -150,7 +159,7 @@ contains
     real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
-    integer :: c,p,l,j            ! indices
+    integer :: c,p            ! indices
     integer :: fp                 ! lake filter patch index
     real(r8):: f1,f2,f3,f4,g1,g2  ! allocation parameters
     real(r8):: cnl,cnfr,cnlw,cndw ! C:N ratios for leaf, fine root, and wood
@@ -235,6 +244,7 @@ contains
          npool_to_deadcrootn_storage  => cnveg_nitrogenflux_inst%npool_to_deadcrootn_storage_patch   & ! Output: [real(r8) (:)   ]                                          
          )
 
+      f5 = nan
       ! patch loop to distribute the available N between the competing patches 
       ! on the basis of relative demand, and allocate C and N to new growth and storage
 
@@ -415,7 +425,10 @@ contains
        photosyns_inst, crop_inst, canopystate_inst,                            &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,        &
        c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                   &
-       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, aroot, arepr)
+       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+       soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
+       energyflux_inst, &
+       aroot, arepr)
     !
     ! !USES:
     use CanopyStateType        , only : canopystate_type
@@ -423,12 +436,15 @@ contains
     use CropType               , only : crop_type
     use CNVegStateType         , only : cnveg_state_type
     use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
     use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
+    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
     use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
+    use SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
+    use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+    use EnergyFluxType         , only : energyflux_type
     !
     ! !ARGUMENTS:
-    class(nutrient_competition_clm45default_type), intent(in) :: this
+    class(nutrient_competition_clm45default_type), intent(inout) :: this
     type(bounds_type)               , intent(in)    :: bounds
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
@@ -442,6 +458,9 @@ contains
     type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
     type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
+    type(soilbiogeochem_carbonflux_type)   , intent(in) :: soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_nitrogenstate_type), intent(in)    :: soilbiogeochem_nitrogenstate_inst
+    type(energyflux_type)           , intent(in)    :: energyflux_inst   
     real(r8)                        , intent(out)   :: aroot(bounds%begp:)
     real(r8)                        , intent(out)   :: arepr(bounds%begp:)
     !-----------------------------------------------------------------------
@@ -461,7 +480,8 @@ contains
        photosyns_inst, crop_inst, canopystate_inst,                             &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,         &
        c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                    &
-       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, aroot, arepr)
+       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+       aroot, arepr)
     !
     ! !USES:
     use pftconMod              , only : npcropmin, pftcon
@@ -475,8 +495,8 @@ contains
     use CropType               , only : crop_type
     use CNVegStateType         , only : cnveg_state_type
     use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
     use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
+    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
     use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
     !
     ! !ARGUMENTS:
@@ -498,7 +518,7 @@ contains
     real(r8)                        , intent(out)   :: arepr(bounds%begp:)
     !
     ! !LOCAL VARIABLES:
-    integer :: c,p,l,j            ! indices
+    integer :: p            ! indices
     integer :: fp                 ! lake filter patch index
     real(r8):: mr                 ! maintenance respiration (gC/m2/s)
     real(r8):: f1,f2,f3,f4,g1,g2  ! allocation parameters

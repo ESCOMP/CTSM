@@ -12,7 +12,7 @@ module FrictionVelocityMod
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   use clm_varcon   , only : spval
-  use clm_varctl   , only: use_cn
+  use clm_varctl   , only : use_cn, use_luna
   use LandunitType , only : lun                
   use ColumnType   , only : col
   use PatchType    , only : patch                
@@ -42,6 +42,7 @@ module FrictionVelocityMod
      real(r8), pointer, public :: vds_patch        (:)   ! patch deposition velocity term (m/s) (for dry dep SO4, NH4NO3)
      real(r8), pointer, public :: fv_patch         (:)   ! patch friction velocity (m/s) (for dust model)
      real(r8), pointer, public :: rb1_patch        (:)   ! patch aerodynamical resistance (s/m) (for dry deposition of chemical tracers)
+     real(r8), pointer, public :: rb10_patch       (:)   ! 10-day mean patch aerodynamical resistance (s/m) (for LUNA model)
      real(r8), pointer, public :: ram1_patch       (:)   ! patch aerodynamical resistance (s/m)
      real(r8), pointer, public :: z0m_patch        (:)   ! patch momentum roughness length (m)
      real(r8), pointer, public :: z0mv_patch       (:)   ! patch roughness length over vegetation, momentum [m]
@@ -109,6 +110,7 @@ contains
     allocate(this%vds_patch        (begp:endp)) ; this%vds_patch        (:)   = nan
     allocate(this%fv_patch         (begp:endp)) ; this%fv_patch         (:)   = nan
     allocate(this%rb1_patch        (begp:endp)) ; this%rb1_patch        (:)   = nan
+    allocate(this%rb10_patch       (begp:endp)) ; this%rb10_patch       (:)   = spval
     allocate(this%ram1_patch       (begp:endp)) ; this%ram1_patch       (:)   = nan
     allocate(this%z0m_patch        (begp:endp)) ; this%z0m_patch        (:)   = nan
     allocate(this%z0mv_patch       (begp:endp)) ; this%z0mv_patch       (:)   = nan
@@ -215,6 +217,12 @@ contains
             ptr_patch=this%z0qv_patch, default='inactive')
     end if
 
+    if (use_luna) then
+       call hist_addfld1d (fname='RB10', units='s/m', &
+            avgflag='A', long_name='10 day running mean boundary layer resistance', &
+            ptr_patch=this%rb10_patch, default='inactive')
+    end if
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -278,6 +286,12 @@ contains
          dim1name='column', &
          long_name='ground momentum roughness length', units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%z0mg_col)
+
+    if(use_luna)then
+       call restartvar(ncid=ncid, flag=flag, varname='rb10', xtype=ncd_double,  &
+            dim1name='pft', long_name='10-day mean boundary layer resistance at the pacth', units='s/m', &
+            interpinic_flag='interp', readvar=readvar, data=this%rb10_patch)
+    endif
 
   end subroutine Restart
 

@@ -12,10 +12,10 @@ module CNDriverMod
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif
   use CNVegStateType                  , only : cnveg_state_type
-  use CNVegCarbonStateType	      , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType	      , only : cnveg_carbonflux_type
-  use CNVegNitrogenStateType	      , only : cnveg_nitrogenstate_type
-  use CNVegNitrogenFluxType	      , only : cnveg_nitrogenflux_type
+  use CNVegCarbonStateType            , only : cnveg_carbonstate_type
+  use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
+  use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
+  use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
@@ -163,7 +163,7 @@ contains
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
     type(soilhydrology_type)                , intent(in)    :: soilhydrology_inst
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
-    class(nutrient_competition_method_type) , intent(in)    :: nutrient_competition_method
+    class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     !
     ! !LOCAL VARIABLES:
     real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
@@ -331,12 +331,14 @@ contains
     ! do_nutrient_competition should be modified, but that modification should not significantly change 
     ! the current interface.
 
-    call nutrient_competition_method%calc_plant_nutrient_demand (bounds,  &
-         num_soilp, filter_soilp,                                         &
+    call nutrient_competition_method%calc_plant_nutrient_demand ( &
+         bounds, num_soilp, filter_soilp,                                 &
          photosyns_inst, crop_inst, canopystate_inst,                     &
          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,            &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,               &
+         soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
+         energyflux_inst, &
          aroot=aroot(begp:endp), arepr=arepr(begp:endp))
 
     ! get the column-averaged plant_ndemand (needed for following call to SoilBiogeochemCompetition)
@@ -353,12 +355,14 @@ contains
     ! distribute the available N between the competing patches  on the basis of 
     ! relative demand, and allocate C and N to new growth and storage
 
-    call nutrient_competition_method%calc_plant_nutrient_competition (bounds,&
-         num_soilp, filter_soilp,                                            &
-         cnveg_state_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
-         c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                 &
-         aroot=aroot(begp:endp),                                             &
-         arepr=arepr(begp:endp),                                             &
+    call nutrient_competition_method%calc_plant_nutrient_competition ( &
+         bounds, num_soilp, filter_soilp, &
+         cnveg_state_inst, cnveg_carbonflux_inst, &
+         c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
+         cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+         soilbiogeochem_nitrogenstate_inst, &
+         aroot=aroot(begp:endp), &
+         arepr=arepr(begp:endp), &
          fpg_col=soilbiogeochem_state_inst%fpg_col(begc:endc))
 
     call t_stopf('CNDecompAlloc')
@@ -406,8 +410,8 @@ contains
     call t_startf('CNGResp')
 
     call CNGResp(num_soilp, filter_soilp,&
-         cnveg_carbonflux_inst)
-
+         cnveg_carbonflux_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)  
+         
     call t_stopf('CNGResp')
 
     !--------------------------------------------
@@ -504,11 +508,12 @@ contains
 
     call CNGapMortality (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                &
          dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,                                             &
-         cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                                                          &
+         cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,  canopystate_inst,                                       &   
+         !cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                                                         &  
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),   &
          froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp, 1:nlevdecomp_full), & 
          croot_prof_patch=soilbiogeochem_state_inst%croot_prof_patch(begp:endp, 1:nlevdecomp_full), &
-         stem_prof_patch=soilbiogeochem_state_inst%stem_prof_patch(begp:endp, 1:nlevdecomp_full))
+         stem_prof_patch=soilbiogeochem_state_inst%stem_prof_patch(begp:endp, 1:nlevdecomp_full))   
 
     call t_stopf('CNGapMortality')
 

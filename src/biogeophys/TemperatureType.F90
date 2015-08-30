@@ -7,9 +7,9 @@ module TemperatureType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varctl      , only : use_ed, use_cndv, iulog
+  use clm_varctl      , only : use_ed, use_cndv, iulog ,use_luna
   use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevlak, nlevurb, crop_prog 
-  use clm_varcon      , only : spval
+  use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
   use LandunitType    , only : lun                
   use ColumnType      , only : col                
@@ -23,6 +23,12 @@ module TemperatureType
 
      ! Temperatures
      real(r8), pointer :: t_veg_patch              (:)   ! patch vegetation temperature (Kelvin)
+     real(r8), pointer :: t_veg_day_patch          (:)   ! patch daytime  accumulative vegetation temperature (Kelvinx*nsteps), LUNA specific, from midnight to current step
+     real(r8), pointer :: t_veg_night_patch        (:)   ! patch night-time accumulative vegetation temperature (Kelvin*nsteps), LUNA specific, from midnight to current step
+     real(r8), pointer :: t_veg10_day_patch        (:)   ! 10 day running mean of patch daytime time vegetation temperature (Kelvin), LUNA specific, but can be reused
+     real(r8), pointer :: t_veg10_night_patch      (:)   ! 10 day running mean of patch night time vegetation temperature (Kelvin), LUNA specific, but can be reused
+     integer,  pointer :: ndaysteps_patch          (:)   ! number of daytime steps accumulated from mid-night, LUNA specific
+     integer,  pointer :: nnightsteps_patch        (:)   ! number of nighttime steps accumulated from mid-night, LUNA specific
      real(r8), pointer :: t_h2osfc_col             (:)   ! col surface water temperature
      real(r8), pointer :: t_h2osfc_bef_col         (:)   ! col surface water temperature from time-step before  
      real(r8), pointer :: t_ssbef_col              (:,:) ! col soil/snow temperature before update (-nlevsno+1:nlevgrnd) 
@@ -177,6 +183,14 @@ contains
 
     ! Temperatures
     allocate(this%t_veg_patch              (begp:endp))                      ; this%t_veg_patch              (:)   = nan
+    if(use_luna) then
+     allocate(this%t_veg_day_patch         (begp:endp))                      ; this%t_veg_day_patch          (:)   = spval
+     allocate(this%t_veg_night_patch       (begp:endp))                      ; this%t_veg_night_patch        (:)   = spval
+     allocate(this%t_veg10_day_patch       (begp:endp))                      ; this%t_veg10_day_patch        (:)   = spval
+     allocate(this%t_veg10_night_patch     (begp:endp))                      ; this%t_veg10_night_patch      (:)   = spval
+     allocate(this%ndaysteps_patch         (begp:endp))                      ; this%ndaysteps_patch          (:)   = ispval
+     allocate(this%nnightsteps_patch       (begp:endp))                      ; this%nnightsteps_patch        (:)   = ispval
+    endif
     allocate(this%t_h2osfc_col             (begc:endc))                      ; this%t_h2osfc_col             (:)   = nan
     allocate(this%t_h2osfc_bef_col         (begc:endc))                      ; this%t_h2osfc_bef_col         (:)   = nan
     allocate(this%t_ssbef_col              (begc:endc,-nlevsno+1:nlevgrnd))  ; this%t_ssbef_col              (:,:) = nan
@@ -540,6 +554,15 @@ contains
             ptr_patch=this%gdd1020_patch, default='inactive')
 
     end if
+    if(use_luna)then
+         call hist_addfld1d (fname='TVEGD10', units='Kelvin', &
+            avgflag='A', long_name='10 day running mean of patch daytime vegetation temperature', &
+            ptr_patch=this%t_veg10_day_patch, default='inactive')
+         call hist_addfld1d (fname='TVEGN10', units='Kelvin', &
+            avgflag='A', long_name='10 day running mean of patch night-time vegetation temperature', &
+            ptr_patch=this%t_veg10_night_patch, default='inactive')
+    endif
+
 
   end subroutine InitHistory
 
@@ -922,6 +945,31 @@ contains
             dim1name='pft', long_name='20 year average of growing degree-days base 0C from planting', units='ddays', &
             interpinic_flag='interp', readvar=readvar, data=this%gdd020_patch)
     end if
+
+    if(use_luna)then
+       call restartvar(ncid=ncid, flag=flag, varname='tvegd10', xtype=ncd_double,  &
+            dim1name='pft', long_name='10-day mean daytime vegetation temperature', units='Kelvin', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_veg10_day_patch )
+       call restartvar(ncid=ncid, flag=flag, varname='tvegd', xtype=ncd_double,  &
+            dim1name='pft', long_name='accumulative daytime vegetation temperature', units='Kelvin*steps', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_veg_day_patch )
+       call restartvar(ncid=ncid, flag=flag, varname='tvegn10', xtype=ncd_double,  &
+            dim1name='pft', long_name='10-day mean nighttime vegetation temperature', units='Kelvin', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_veg10_night_patch )
+       call restartvar(ncid=ncid, flag=flag, varname='tvegn', xtype=ncd_double,  &
+            dim1name='pft', long_name='accumulative nighttime vegetation temperature', units='Kelvin*steps', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_veg_night_patch )
+       call restartvar(ncid=ncid, flag=flag, varname='tair10', xtype=ncd_double,  &
+            dim1name='pft', long_name='10-day mean air temperature', units='Kelvin', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_a10_patch )
+       call restartvar(ncid=ncid, flag=flag, varname='ndaysteps', xtype=ncd_double,  &
+            dim1name='pft', long_name='accumulative daytime steps', units='steps', &
+            interpinic_flag='interp', readvar=readvar, data=this%ndaysteps_patch )
+       call restartvar(ncid=ncid, flag=flag, varname='nnightsteps', xtype=ncd_double,  &
+            dim1name='pft', long_name='accumulative nighttime steps', units='steps', &
+            interpinic_flag='interp', readvar=readvar, data=this%nnightsteps_patch )
+    endif
+
     if ( is_prog_buildtemp )then
        ! landunit type physical state variable - t_building
        call restartvar(ncid=ncid, flag=flag, varname='t_building', xtype=ncd_double,  & 

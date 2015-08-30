@@ -10,7 +10,7 @@ module WaterstateType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
-  use clm_varctl     , only : use_vancouver, use_mexicocity, use_cn, iulog
+  use clm_varctl     , only : use_vancouver, use_mexicocity, use_cn, iulog, use_luna
   use clm_varpar     , only : nlevgrnd, nlevurb, nlevsno   
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -33,12 +33,14 @@ module WaterstateType
      real(r8), pointer :: snow_layer_unity_col   (:,:) ! value 1 for each snow layer, used for history diagnostics
      real(r8), pointer :: bw_col                 (:,:) ! col partial density of water in the snow pack (ice + liquid) [kg/m3] 
 
+     real(r8), pointer :: smp_l_col              (:,:) ! col liquid phase soil matric potential, mm
      real(r8), pointer :: h2osno_col             (:)   ! col snow water (mm H2O)
      real(r8), pointer :: h2osno_old_col         (:)   ! col snow mass for previous time step (kg/m2) (new)
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_liqice_10cm_col (:)   ! col liquid water + ice lens in top 10cm of soil (kg/m2)
-     real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)  
+     real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
+     real(r8), pointer :: air_vol_col            (:,:) ! col air filled porosity
      real(r8), pointer :: h2osoi_liqvol_col      (:,:) ! col volumetric liquid water content (v/v)
      real(r8), pointer :: h2ocan_patch           (:)   ! patch canopy water (mm H2O)
      real(r8), pointer :: h2ocan_col             (:)   ! col canopy water (mm H2O)
@@ -63,6 +65,7 @@ module WaterstateType
      real(r8), pointer :: rh_ref2m_r_patch       (:)   ! patch 2 m height surface relative humidity - rural (%)
      real(r8), pointer :: rh_ref2m_u_patch       (:)   ! patch 2 m height surface relative humidity - urban (%)
      real(r8), pointer :: rh_af_patch            (:)   ! patch fractional humidity of canopy air (dimensionless) ! private
+     real(r8), pointer :: rh10_af_patch          (:)   ! 10-day mean patch fractional humidity of canopy air (dimensionless)
      real(r8), pointer :: qg_snow_col            (:)   ! col ground specific humidity [kg/kg]
      real(r8), pointer :: qg_soil_col            (:)   ! col ground specific humidity [kg/kg]
      real(r8), pointer :: qg_h2osfc_col          (:)   ! col ground specific humidity [kg/kg]
@@ -172,10 +175,12 @@ contains
     allocate(this%snow_layer_unity_col   (begc:endc,-nlevsno+1:0))        ; this%snow_layer_unity_col   (:,:) = nan
     allocate(this%bw_col                 (begc:endc,-nlevsno+1:0))        ; this%bw_col                 (:,:) = nan   
 
+    allocate(this%smp_l_col              (begc:endc,-nlevsno+1:nlevgrnd)) ; this%smp_l_col              (:,:) = nan
     allocate(this%h2osno_col             (begc:endc))                     ; this%h2osno_col             (:)   = nan   
     allocate(this%h2osno_old_col         (begc:endc))                     ; this%h2osno_old_col         (:)   = nan   
     allocate(this%h2osoi_liqice_10cm_col (begc:endc))                     ; this%h2osoi_liqice_10cm_col (:)   = nan   
     allocate(this%h2osoi_vol_col         (begc:endc, 1:nlevgrnd))         ; this%h2osoi_vol_col         (:,:) = nan
+    allocate(this%air_vol_col            (begc:endc, 1:nlevgrnd))         ; this%air_vol_col            (:,:) = nan
     allocate(this%h2osoi_liqvol_col      (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liqvol_col      (:,:) = nan
     allocate(this%h2osoi_ice_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_ice_col         (:,:) = nan
     allocate(this%h2osoi_liq_col         (begc:endc,-nlevsno+1:nlevgrnd)) ; this%h2osoi_liq_col         (:,:) = nan
@@ -208,6 +213,7 @@ contains
     allocate(this%rh_ref2m_u_patch       (begp:endp))                     ; this%rh_ref2m_u_patch       (:)   = nan
     allocate(this%rh_ref2m_r_patch       (begp:endp))                     ; this%rh_ref2m_r_patch       (:)   = nan
     allocate(this%rh_af_patch            (begp:endp))                     ; this%rh_af_patch            (:)   = nan
+    allocate(this%rh10_af_patch          (begp:endp))                     ; this%rh10_af_patch          (:)   = spval
 
     allocate(this%frac_sno_col           (begc:endc))                     ; this%frac_sno_col           (:)   = nan
     allocate(this%frac_sno_eff_col       (begc:endc))                     ; this%frac_sno_eff_col       (:)   = nan
@@ -226,7 +232,6 @@ contains
     allocate(this%errh2o_patch           (begp:endp))                     ; this%errh2o_patch           (:)   = nan
     allocate(this%errh2o_col             (begc:endc))                     ; this%errh2o_col             (:)   = nan
     allocate(this%errh2osno_col          (begc:endc))                     ; this%errh2osno_col          (:)   = nan
-
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -371,6 +376,12 @@ contains
     call hist_addfld1d (fname='RHAF', units='fraction', &
          avgflag='A', long_name='fractional humidity of canopy air', &
          ptr_patch=this%rh_af_patch, set_spec=spval, default='inactive')
+
+    if(use_luna)then
+       call hist_addfld1d (fname='RHAF10', units='fraction', &
+        avgflag='A', long_name='10 day running mean of fractional humidity of canopy air', &
+        ptr_patch=this%rh10_af_patch, set_spec=spval, default='inactive')
+    endif
 
     ! Fractions
 
@@ -649,7 +660,6 @@ contains
       this%h2osoi_vol_col(bounds%begc:bounds%endc,         1:) = spval
       this%h2osoi_liq_col(bounds%begc:bounds%endc,-nlevsno+1:) = spval
       this%h2osoi_ice_col(bounds%begc:bounds%endc,-nlevsno+1:) = spval
-
       do c = bounds%begc,bounds%endc
          l = col%landunit(c)
          if (.not. lun%lakpoi(l)) then  !not lake
@@ -702,7 +712,6 @@ contains
             endif
             do j = 1, nlevs
                this%h2osoi_vol_col(c,j) = min(this%h2osoi_vol_col(c,j), watsat_col(c,j))
-
                if (t_soisno_col(c,j) <= SHR_CONST_TKFRZ) then
                   this%h2osoi_ice_col(c,j) = col%dz(c,j)*denice*this%h2osoi_vol_col(c,j)
                   this%h2osoi_liq_col(c,j) = 0._r8
@@ -854,6 +863,12 @@ contains
          long_name='Canopy snow unloading', units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%snounload_patch)
 
+    if(use_luna)then
+       call restartvar(ncid=ncid, flag=flag, varname='rh10', xtype=ncd_double,  &
+            dim1name='pft', long_name='10-day mean boundary layer relatie humidity', units='unitless', &
+            interpinic_flag='interp', readvar=readvar, data=this%rh10_af_patch)
+    endif
+
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then
        do c = bounds%begc, bounds%endc
@@ -1004,6 +1019,8 @@ contains
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%wf_col) 
     end if
+
+
 
   end subroutine Restart
 

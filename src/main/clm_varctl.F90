@@ -197,6 +197,35 @@ module clm_varctl
   logical, public :: use_ed_spit_fire = .false.  ! true => use spitfire model
 
   !----------------------------------------------------------
+  !  LUNA switches		
+  !----------------------------------------------------------
+
+  logical, public :: use_luna = .false.            ! true => use  LUNA
+
+  !----------------------------------------------------------
+  !  flexibleCN
+  !----------------------------------------------------------
+  !  TODO(bja, 2015-08) some of these need to be moved into the
+  !  appropriate module.
+  logical, public :: use_flexibleCN = .false.
+  logical, public :: MM_Nuptake_opt = .false.
+  logical, public :: dynamic_plant_alloc_opt = .false.
+  logical, public :: downreg_opt = .true.
+  integer, public :: plant_ndemand_opt = 0
+  logical, public :: substrate_term_opt = .true.
+  logical, public :: nscalar_opt = .true.
+  logical, public :: temp_scalar_opt = .true.
+  logical, public :: CNratio_floating = .false.
+  logical, public :: lnc_opt = .false.
+  logical, public :: reduce_dayl_factor = .false.
+  integer, public :: vcmax_opt = 0
+  integer, public :: CN_residual_opt = 0
+  integer, public :: CN_partition_opt = 0
+  integer, public :: carbon_excess_opt = 0
+  integer, public :: carbon_storage_excess_opt = 0
+  integer, public :: CN_evergreen_phenology_opt = 0
+
+  !----------------------------------------------------------
   ! lai streams switch for Sat. Phenology
   !----------------------------------------------------------
 

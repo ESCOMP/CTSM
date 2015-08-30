@@ -13,7 +13,7 @@ module CanopyFluxesMod
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
-  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_ed
+  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_ed, use_luna
   use clm_varpar            , only : nlevgrnd, nlevsno
   use clm_varcon            , only : namep 
   use pftconMod             , only : nbrdlf_dcd_tmp_shrub, pftcon
@@ -49,6 +49,8 @@ module CanopyFluxesMod
   use PatchType             , only : patch                
   use EDTypesMod            , only : ed_site_type
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+  use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
+  use LunaMod               , only : Update_Photosynthesis_Capacity, Acc24_Climate_LUNA,Acc240_Climate_LUNA,Clear24_Climate_LUNA
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -77,7 +79,7 @@ contains
        ed_allsites_inst,  atm2lnd_inst, canopystate_inst, cnveg_state_inst,            &
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst, &
        temperature_inst, waterflux_inst, waterstate_inst, ch4_inst, ozone_inst, photosyns_inst, &
-       humanindex_inst, soil_water_retention_curve) 
+       humanindex_inst, soil_water_retention_curve, cnveg_nitrogenstate_inst) 
     !
     ! !DESCRIPTION:
     ! 1. Calculates the leaf temperature:
@@ -108,7 +110,7 @@ contains
     !
     ! !USES:
     use shr_const_mod      , only : SHR_CONST_RGAS
-    use clm_time_manager   , only : get_step_size, get_prev_date
+    use clm_time_manager   , only : get_step_size, get_prev_date,is_end_curr_day
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice
     use clm_varcon         , only : denh2o, tfrz, csoilc, tlsai_crit, alpha_aero
     use clm_varcon         , only : c14ratio
@@ -119,6 +121,7 @@ contains
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                     SwampCoolEff, KtoC, VaporPres
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
     !
     ! !ARGUMENTS:
     type(bounds_type)         , intent(in)    :: bounds 
@@ -130,7 +133,7 @@ contains
     type(cnveg_state_type)                 , intent(in)            :: cnveg_state_inst
     type(energyflux_type)                  , intent(inout)         :: energyflux_inst
     type(frictionvel_type)                 , intent(inout)         :: frictionvel_inst
-    type(solarabs_type)                    , intent(in)            :: solarabs_inst
+    type(solarabs_type)                    , intent(inout)         :: solarabs_inst
     type(surfalb_type)                     , intent(in)            :: surfalb_inst
     type(soilstate_type)                   , intent(inout)         :: soilstate_inst
     type(temperature_type)                 , intent(inout)         :: temperature_inst
@@ -141,6 +144,7 @@ contains
     type(photosyns_type)                   , intent(inout)         :: photosyns_inst
     type(humanindex_type)                  , intent(inout)         :: humanindex_inst
     class(soil_water_retention_curve_type) , intent(in)            :: soil_water_retention_curve
+    type(cnveg_nitrogenstate_type)         , intent(in)            :: cnveg_nitrogenstate_inst
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: btran0 = 0.0_r8  ! initial value
@@ -286,6 +290,7 @@ contains
     real(r8) :: temprootr                 
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
     integer  :: iv
+    logical  :: is_end_day                               ! is end of current day
 
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
@@ -433,8 +438,8 @@ contains
          eflx_sh_soil           => energyflux_inst%eflx_sh_soil_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
          eflx_sh_veg            => energyflux_inst%eflx_sh_veg_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from leaves (W/m**2) [+ to atm]                    
          eflx_sh_grnd           => energyflux_inst%eflx_sh_grnd_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]                    
-
-         begp                 => bounds%begp                               , &
+         leafn                  => cnveg_nitrogenstate_inst%leafn_patch         , & ! Input:  [real(r8) (:)   ]  (gN/m2) leaf N      
+         begp                   => bounds%begp                                  , &
          endp                   => bounds%endp                                  , &
          begg                   => bounds%begg                                  , &
          endg                   => bounds%endg                                    &
@@ -443,6 +448,7 @@ contains
       ! Determine step size
 
       dtime = get_step_size()
+      is_end_day = is_end_curr_day()
 
       ! Make a local copy of the exposedvegp filter. With the current implementation,
       ! this is needed because the filter is modified in the iteration loop.
@@ -756,7 +762,7 @@ contains
             call Photosynthesis (bounds, fn, filterp, &
                  svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
                  dayl_factor(begp:endp), atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
-                 canopystate_inst, ozone_inst, photosyns_inst, phase='sun')
+                 canopystate_inst, ozone_inst, photosyns_inst, cnveg_nitrogenstate_inst, phase='sun')
 
             if ( use_cn .and. use_c13 ) then
                call Fractionation (bounds, fn, filterp, &
@@ -781,7 +787,7 @@ contains
             call Photosynthesis (bounds, fn, filterp, &
                  svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
                  dayl_factor(begp:endp), atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
-                 canopystate_inst, ozone_inst, photosyns_inst, phase='sha')
+                 canopystate_inst, ozone_inst, photosyns_inst, cnveg_nitrogenstate_inst, phase='sha')
 
             if ( use_cn .and. use_c13 ) then
                call Fractionation (bounds, fn, filterp,  &
@@ -1184,6 +1190,47 @@ contains
            rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
            ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
            tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp))
+
+      !---------------------------------------------------------
+      !update Vc,max and Jmax by LUNA model
+      if(use_luna)then
+        call Acc24_Climate_LUNA(bounds, fn, filterp, &
+                   canopystate_inst, photosyns_inst, &
+                   surfalb_inst, solarabs_inst, &
+                   temperature_inst)
+
+       if(is_end_day)then
+
+          call Acc240_Climate_LUNA(bounds, fn, filterp, &
+                 o2(begp:endp), &
+                 co2(begp:endp), &
+                 rb(begp:endp), &
+                 rhaf(begp:endp),&
+                 temperature_inst, & 
+                 photosyns_inst, &
+                 surfalb_inst, &
+                 solarabs_inst, &
+                 waterstate_inst,&
+                 frictionvel_inst) 
+
+          call Update_Photosynthesis_Capacity(bounds, fn, filterp, &
+                 dayl_factor(begp:endp), &
+                 atm2lnd_inst, &
+                 temperature_inst, & 
+                 canopystate_inst, &
+                 photosyns_inst, &
+                 surfalb_inst, &
+                 solarabs_inst, &
+                 waterstate_inst,&
+                 frictionvel_inst)        
+
+           call Clear24_Climate_LUNA(bounds, fn, filterp, &
+                   canopystate_inst, photosyns_inst, &
+                   surfalb_inst, solarabs_inst, &
+                   temperature_inst)
+         endif 
+ 
+      endif
 
       ! Filter out patches which have small energy balance errors; report others
 

@@ -96,6 +96,32 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <paramfile                 >lnd/clm2/paramdata/clm_params.c141205.nc</paramfile>
 <paramfile use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c150317.nc</paramfile>
 
+
+<!-- ========================================================================================  -->
+<!-- clm 5.0 BGC nitrogen model                                                                -->
+<!-- ========================================================================================  -->
+<paramfile use_flexibleCN=".true.">lnd/clm2/paramdata/clm_params_78pft.c150605.nc</paramfile>
+
+<use_flexibleCN>.false.</use_flexibleCN>
+<MM_Nuptake_opt use_flexibleCN=".true." >.true.</MM_Nuptake_opt>
+<dynamic_plant_alloc_opt use_flexibleCN=".true." >.false.</dynamic_plant_alloc_opt>
+<downreg_opt use_flexibleCN=".true." >.false.</downreg_opt>
+<plant_ndemand_opt use_flexibleCN=".true." >3</plant_ndemand_opt>
+<substrate_term_opt use_flexibleCN=".true." >.true.</substrate_term_opt>
+<nscalar_opt use_flexibleCN=".true." >.true.</nscalar_opt>
+<temp_scalar_opt use_flexibleCN=".true." >.true.</temp_scalar_opt>
+<CNratio_floating use_flexibleCN=".true." >.true.</CNratio_floating>
+<lnc_opt use_flexibleCN=".true." >.true.</lnc_opt>
+<reduce_dayl_factor use_flexibleCN=".true." >.false.</reduce_dayl_factor>
+<vcmax_opt use_flexibleCN=".true." >3</vcmax_opt>
+<CN_residual_opt use_flexibleCN=".true." >1</CN_residual_opt>
+<CN_partition_opt use_flexibleCN=".true." >1</CN_partition_opt>
+<carbon_excess_opt use_flexibleCN=".true." >0</carbon_excess_opt>
+<carbon_storage_excess_opt use_flexibleCN=".true." >1</carbon_storage_excess_opt>
+<CN_evergreen_phenology_opt use_flexibleCN=".true." >1</CN_evergreen_phenology_opt>
+
+<use_luna>.false.</use_luna>
+
 <!--
 
      Original initial condition file at 1 degree resolution

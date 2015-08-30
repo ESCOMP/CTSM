@@ -51,9 +51,10 @@ contains
     ! select one subroutine to do the soil and root water coupling
     !
     !USES
+    use shr_kind_mod      , only : r8 => shr_kind_r8
+    use clm_varpar        , only : nlevsoi
     use decompMod         , only : bounds_type   
     use abortutils        , only : endrun   
-    use shr_kind_mod      , only : r8 => shr_kind_r8
     use clm_varpar        , only : nlevsoi
     use SoilHydrologyType , only : soilhydrology_type
     use SoilStateType     , only : soilstate_type
@@ -62,6 +63,9 @@ contains
     use WaterStateType    , only : waterstate_type
     use ColumnType        , only : col
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    use clm_varcon        , only : denh2o, denice
+    use clm_varctl,  only : use_flexibleCN   
+    use ColumnType        , only : col    
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds                ! bounds
@@ -77,9 +81,20 @@ contains
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
-    character(len=32)              :: subname = 'SoilWater' ! subroutine name   
+    character(len=32)              :: subname = 'SoilWater' ! subroutine name
+    real(r8) :: xs(bounds%begc:bounds%endc)                !excess soil water above urban ponding limit
+    real(r8) :: watmin
+    integer  :: fc, c, j
+    
     !------------------------------------------------------------------------------
 
+    associate(                                                         &
+      wa                 =>    soilhydrology_inst%wa_col             , & ! Input:  [real(r8) (:)   ] water in the unconfined aquifer (mm)
+      dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)    
+      h2osoi_ice         =>    waterstate_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
+      h2osoi_vol         =>    waterstate_inst%h2osoi_vol_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
+      h2osoi_liq         =>    waterstate_inst%h2osoi_liq_col          & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
+    )      
     select case(soilroot_water_method)
 
     case (zengdecker_2009)
@@ -94,6 +109,45 @@ contains
 
     end select
 
+    if (use_flexibleCN) then
+       !a work around of the negative liquid water. Jinyun Tang, Jan 14, 2015
+       watmin = 0.001_r8
+       
+       do j = 1, nlevsoi-1
+          do fc = 1, num_hydrologyc
+             c = filter_hydrologyc(fc)
+             if (h2osoi_liq(c,j) < 0._r8) then
+                xs(c) = watmin - h2osoi_liq(c,j)
+             else
+                xs(c) = 0._r8
+             end if
+             h2osoi_liq(c,j  ) = h2osoi_liq(c,j  ) + xs(c)
+             h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) - xs(c)
+          end do
+       end do
+       
+       j = nlevsoi
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          if (h2osoi_liq(c,j) < watmin) then
+             xs(c) = watmin-h2osoi_liq(c,j)
+          else
+             xs(c) = 0._r8
+          end if
+          h2osoi_liq(c,j) = h2osoi_liq(c,j) + xs(c)
+          wa(c) = wa(c) - xs(c)
+       end do
+       
+       !update volumetric soil moisture for bgc calculation
+       do j = 1, nlevsoi
+          do fc = 1, num_hydrologyc
+             c = filter_hydrologyc(fc)
+             h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) &
+                  + h2osoi_ice(c,j)/(dz(c,j)*denice)
+          enddo
+       enddo
+    end if
+   end associate 
   end subroutine SoilWater
 
   !-----------------------------------------------------------------------   
@@ -267,6 +321,7 @@ contains
     use clm_varpar                 , only : nlevsoi, max_patch_per_col, nlevgrnd
     use clm_time_manager           , only : get_step_size
     use column_varcon              , only : icol_roof, icol_road_imperv
+    use clm_varctl                 , only : use_flexibleCN
     use TridiagonalMod             , only : Tridiagonal
     use abortutils                 , only : endrun     
     use SoilStateType              , only : soilstate_type
@@ -370,6 +425,9 @@ contains
          qflx_deficit      =>    waterflux_inst%qflx_deficit_col    , & ! Input:  [real(r8) (:)   ]  water deficit to keep non-negative liquid water content
          qflx_infl         =>    waterflux_inst%qflx_infl_col       , & ! Input:  [real(r8) (:)   ]  infiltration (mm H2O /s)                          
 
+         qflx_rootsoi      =>    waterflux_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:,:) ]  vegetation/soil water exchange (m H2O/s) (+ = to atm)
+         qflx_tran_veg_col =>    waterflux_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
+         rootr_col         =>    soilstate_inst%rootr_col           , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
          t_soisno          =>    temperature_inst%t_soisno_col        & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
          )
 
@@ -578,6 +636,7 @@ contains
          amx(c,j) =  0._r8
          bmx(c,j) =  dzmm(c,j)*(sdamp+1._r8/dtime) + dqodw1(c,j)
          cmx(c,j) =  dqodw2(c,j)
+         
       end do
 
       ! Nodes j=2 to j=nlevsoi-1
@@ -601,6 +660,7 @@ contains
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  dqodw2(c,j)
+            
          end do
       end do
 
@@ -679,6 +739,8 @@ contains
          endif
       end do
 
+
+
       ! Solve for dwat
 
       jtop(bounds%begc : bounds%endc) = 1
@@ -751,7 +813,14 @@ contains
             endif
          enddo
       enddo
-
+      if (use_flexibleCN) then
+         do j = 1, nlevsoi
+            do fc = 1, num_hydrologyc
+               c = filter_hydrologyc(fc)
+               qflx_rootsoi(c,j) = qflx_tran_veg_col(c) * rootr_col(c,j) * 1.e-3_r8       ![m H2O/s]
+            enddo
+         enddo
+      end if
     end associate 
          
    end subroutine soilwater_zengdecker2009

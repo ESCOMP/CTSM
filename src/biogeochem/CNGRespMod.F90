@@ -6,10 +6,15 @@ module CNGRespMod
   ! for coupled carbon-nitrogen code.
   !
   ! !USES:
-  use shr_kind_mod         , only : r8 => shr_kind_r8
-  use pftconMod            , only : npcropmin, pftcon
-  use CNVegcarbonfluxType  , only : cnveg_carbonflux_type
-  use PatchType            , only : patch                
+  use shr_kind_mod           , only : r8 => shr_kind_r8
+  use pftconMod              , only : npcropmin, pftcon
+  use CNVegcarbonfluxType    , only : cnveg_carbonflux_type
+  use PatchType              , only : patch    
+  use CanopyStateType        , only : canopystate_type              
+  use CNVegCarbonStateType   , only : cnveg_carbonstate_type       
+  use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type     
+  use clm_varctl             , only : carbon_excess_opt          
+  use clm_varctl             , only : carbon_storage_excess_opt  
   !
   implicit none
   private
@@ -21,20 +26,46 @@ module CNGRespMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNGResp(num_soilp, filter_soilp, cnveg_carbonflux_inst)
+  ! subroutine CNGResp(num_soilp, filter_soilp, cnveg_carbonflux_inst)   
+  subroutine CNGResp(num_soilp, filter_soilp, cnveg_carbonflux_inst, canopystate_inst, cnveg_carbonstate_inst, &
+       cnveg_nitrogenstate_inst)  
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update all the prognostic carbon state
     ! variables
     !
     ! !ARGUMENTS:
-    integer                     , intent(in)    :: num_soilp       ! number of soil patches in filter
-    integer                     , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    type(cnveg_carbonflux_type) , intent(inout) :: cnveg_carbonflux_inst
+    integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
+    integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
+    type(canopystate_type)         , intent(in)    :: canopystate_inst            
+    type(cnveg_carbonstate_type)   , intent(in)    :: cnveg_carbonstate_inst      
+    type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst    
     !
     ! !LOCAL VARIABLES:
     integer :: p                ! indices
     integer :: fp               ! lake filter patch index
+    real(r8):: respfact_leaf   				
+    real(r8):: respfact_froot  				    
+    real(r8):: respfact_livecroot  			
+    real(r8):: respfact_livestem  			
+    real(r8):: respfact_leaf_storage  		
+    real(r8):: respfact_froot_storage 		    
+    real(r8):: respfact_livecroot_storage  	
+    real(r8):: respfact_livestem_storage  	
+    real(r8):: leafcn_storage_actual 					
+    real(r8):: leafcn_actual       									
+    real(r8):: frootcn_storage_actual       										
+    real(r8):: frootcn_actual               	
+    real(r8):: livestemcn_storage_actual    	
+    real(r8):: livestemcn_actual            	
+    real(r8):: livecrootcn_storage_actual   			
+    real(r8):: livecrootcn_actual           	
+    real(r8):: leafcn_max                   	
+    real(r8):: frootcn_max                  	
+    real(r8):: livewdcn_max                 	              
+    !integer, parameter :: carbon_excess_opt = 0            	
+    !integer, parameter :: carbon_storage_excess_opt = 0    
     !-----------------------------------------------------------------------
 
     associate(                                                                                           & 
@@ -43,7 +74,31 @@ contains
          woody                         =>    pftcon%woody                                              , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          grperc                        =>    pftcon%grperc                                             , & ! Input:  growth respiration parameter
          grpnow                        =>    pftcon%grpnow                                             , & ! Input:  growth respiration parameter
-
+         leafcn                        =>    pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)                         
+         frootcn                       =>    pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)                    
+         livewdcn                      =>    pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)  
+         
+         laisun                        =>    canopystate_inst%laisun_patch                             , & ! Input:  [real(r8) (:)]  sunlit projected leaf area index      
+         laisha                        =>    canopystate_inst%laisha_patch                             , & ! Input:  [real(r8) (:)]  shaded projected leaf area index  
+         
+         leafc                 		   =>    cnveg_carbonstate_inst%leafc_patch                        , & ! Input:  [real(r8) (:)]                                       
+         frootc                        =>    cnveg_carbonstate_inst%frootc_patch                       , & ! Input:  [real(r8) (:)]                             
+         livestemc                     =>    cnveg_carbonstate_inst%livestemc_patch                    , & ! Input:  [real(r8) (:)]                             
+         livecrootc                    =>    cnveg_carbonstate_inst%livecrootc_patch                   , & ! Input:  [real(r8) (:)]     
+         leafc_storage                 =>    cnveg_carbonstate_inst%leafc_storage_patch                , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C storage                           
+         frootc_storage                =>    cnveg_carbonstate_inst%frootc_storage_patch               , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C storage                        
+         livestemc_storage             =>    cnveg_carbonstate_inst%livestemc_storage_patch            , & ! Input:  [real(r8) (:)]  (gC/m2) live stem C storage                                          
+         livecrootc_storage            =>    cnveg_carbonstate_inst%livecrootc_storage_patch           , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C storage    
+         
+         leafn             			   =>    cnveg_nitrogenstate_inst%leafn_patch                      , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N  
+         frootn                        =>    cnveg_nitrogenstate_inst%frootn_patch                     , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N 
+         livestemn                     =>    cnveg_nitrogenstate_inst%livestemn_patch                  , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N                                
+         livecrootn                    =>    cnveg_nitrogenstate_inst%livecrootn_patch                 , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N                  
+         leafn_storage                 =>    cnveg_nitrogenstate_inst%leafn_storage_patch              , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N storage                              
+         frootn_storage                =>    cnveg_nitrogenstate_inst%frootn_storage_patch             , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N storage                         
+         livestemn_storage             =>    cnveg_nitrogenstate_inst%livestemn_storage_patch          , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N storage                                              
+         livecrootn_storage            =>    cnveg_nitrogenstate_inst%livecrootn_storage_patch         , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N storage                  
+           
          cpool_to_leafc                =>    cnveg_carbonflux_inst%cpool_to_leafc_patch                , & ! Input:  [real(r8) (:)]                                                    
          cpool_to_leafc_storage        =>    cnveg_carbonflux_inst%cpool_to_leafc_storage_patch        , & ! Input:  [real(r8) (:)]                                                    
          cpool_to_frootc               =>    cnveg_carbonflux_inst%cpool_to_frootc_patch               , & ! Input:  [real(r8) (:)]                                                    
@@ -92,58 +147,270 @@ contains
       ! start patch loop
       do fp = 1,num_soilp
          p = filter_soilp(fp)
+          
+         respfact_leaf = 1.0_r8   				
+         respfact_froot = 1.0_r8 				    
+         respfact_livecroot = 1.0_r8  			
+         respfact_livestem = 1.0_r8  			
+         respfact_livecroot = 1.0_r8 			   
+         respfact_livestem = 1.0_r8 			
+         respfact_leaf_storage = 1.0_r8 		
+         respfact_froot_storage = 1.0_r8 		    
+         respfact_livecroot_storage = 1.0_r8  	
+         respfact_livestem_storage = 1.0_r8 	
+         respfact_livecroot_storage = 1.0_r8 	
+         respfact_livestem_storage = 1.0_r8 	
+         
+         if (carbon_excess_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then   
+            ! computing carbon to nitrogen ratio of different plant parts 
+                    
+            if (leafn(p) == 0.0_r8) then   ! to avoid division by zero, and also to make leafcn_actual(p) a very large number if leafn(p) is zero 
+               leafcn_actual = leafc(p) / 0.000000001_r8    				
+            else                        										
+               leafcn_actual = leafc(p)  / leafn(p)   					! leaf CN ratio 
+            end if    																												 														
+          
+            if (frootn(p) == 0.0_r8) then   ! to avoid division by zero, and also to make frootcn_actual(p) a very large number if frootc(p) is zero 
+               frootcn_actual = frootc(p) / 0.000000001_r8    			
+            else                        										
+               frootcn_actual = frootc(p) / frootn(p) 					! fine root CN ratio 
+            end if    														
+      
+            if (woody(ivt(p)) == 1._r8) then  
 
+               if (livestemn(p) == 0.0_r8) then   ! to avoid division by zero, and also to make livestemcn_actual(p) a very large number if livestemc(p) is zero 
+                  livestemcn_actual = livestemc(p) / 0.000000001_r8    		
+               else                        										
+                  livestemcn_actual =  livestemc(p) / livestemn(p)  			! live stem CN ratio 
+               end if 														 														
+              
+               if (livecrootn(p) == 0.0_r8) then   ! to avoid division by zero, and also to make livecrootcn_actual(p) a very large number if livecrootc(p) is zero 
+                  livecrootcn_actual = livecrootc(p) / 0.000000001_r8    	
+               else                        										
+                  livecrootcn_actual = livecrootc(p) / livecrootn(p)  		! live coarse root CN ratio 
+               end if    														
+              
+            end if   
+          
+            if (ivt(p) >= npcropmin) then ! skip 2 generic crops    
+														              
+               if (livestemn(p) == 0.0_r8) then   ! to avoid division by zero, and also to make livestemcn_actual(p) a very large number if livestemc(p) is zero 
+                  livestemcn_actual = livestemc(p) / 0.000000001_r8    		
+               else                        										
+                  livestemcn_actual =  livestemc(p) / livestemn(p)  			! live stem CN ratio 
+               end if 														
+              
+               if (livecrootn(p) == 0.0_r8) then   ! to avoid division by zero, and also to make livecrootcn_actual(p) a very large number if livecrootc(p) is zero 
+                  livecrootcn_actual = livecrootc(p) / 0.000000001_r8    	
+               else                        										
+                  livecrootcn_actual = livecrootc(p) / livecrootn(p)  		! live coarse root CN ratio 
+               end if 
+          
+            end if   
+                          
+            leafcn_max = leafcn(ivt(p)) + 25.0_r8   
+            frootcn_max = frootcn(ivt(p)) + 25.0_r8  
+            
+            ! Note that for high CN ratio stress the plant part does not retranslocate nitrogen as the plant part will need the N 
+            ! if high leaf CN ratio (i.e., high leaf C compared to N) then turnover extra C           
+            if (leafcn_actual > leafcn_max) then       
+               respfact_leaf = 1.0_r8  
+            end if    
+
+            ! if high fine root CN ratio (i.e., high fine root C compared to N) then turnover extra C 
+            if (frootcn_actual > frootcn_max) then     
+               respfact_froot = 1.0_r8     
+            end if    
+					
+		    if (woody(ivt(p)) == 1._r8) then  
+		  
+		       livewdcn_max = livewdcn(ivt(p)) + 25.0_r8   
+
+               ! if high coarse root CN ratio (i.e., high coarse root C compared to N) then turnover extra C 
+               if (livecrootcn_actual > livewdcn_max) then     
+                  respfact_livecroot = 1.0_r8  
+               end if    
+          
+               ! if high stem CN ratio (i.e., high stem C compared to N) then turnover extra C 
+               if (livestemcn_actual > livewdcn_max) then       
+                   respfact_livestem = 1.0_r8  
+               end if    
+              
+            end if  
+          
+            if (ivt(p) >= npcropmin) then ! skip 2 generic crops    
+
+               livewdcn_max = livewdcn(ivt(p)) + 25.0_r8  
+
+               ! if high coarse root CN ratio (i.e., high coarse root C compared to N) then turnover extra C 
+               if (livecrootcn_actual > livewdcn_max) then     
+                  respfact_livecroot = 1.0_r8 
+               end if    
+          
+               ! if high stem CN ratio (i.e., high stem C compared to N) then turnover extra C 
+               if (livestemcn_actual > livewdcn_max) then       
+                  respfact_livestem = 1.0_r8 
+               end if    
+              
+            end if  
+      
+         end if   
+      
+      
+         if (carbon_storage_excess_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then   
+            ! computing carbon to nitrogen ratio of different plant parts 
+          
+            if (leafn_storage(p) == 0.0_r8) then   ! to avoid division by zero, and also to make leafcn_actual(p) a very large number if leafn(p) is zero 
+               leafcn_storage_actual = leafc_storage(p) / 0.000000001_r8    				
+            else                        										
+               leafcn_storage_actual = leafc_storage(p)  / leafn_storage(p)   					! leaf CN ratio 
+            end if    
+
+            if (frootn_storage(p) == 0.0_r8) then   ! to avoid division by zero, and also to make frootcn_actual(p) a very large number if frootc(p) is zero 
+               frootcn_storage_actual = frootc_storage(p) / 0.000000001_r8    			
+            else                        										
+               frootcn_storage_actual = frootc_storage(p) / frootn_storage(p) 					! fine root CN ratio 
+            end if    														
+
+            if (woody(ivt(p)) == 1._r8) then  
+          
+               if (livestemn_storage(p) == 0.0_r8) then   ! to avoid division by zero, and also to make livestemcn_actual(p) a very large number if livestemc(p) is zero 
+                  livestemcn_storage_actual = livestemc_storage(p) / 0.000000001_r8    		
+               else                        										
+                  livestemcn_storage_actual =  livestemc_storage(p) / livestemn_storage(p)  			! live stem CN ratio 
+               end if 																												
+      
+               if (livecrootn_storage(p) == 0.0_r8) then   ! to avoid division by zero, and also to make livecrootcn_actual(p) a very large number if livecrootc(p) is zero 
+                  livecrootcn_storage_actual = livecrootc_storage(p) / 0.000000001_r8    	
+               else                        										
+                  livecrootcn_storage_actual = livecrootc_storage(p) / livecrootn_storage(p)  		! live coarse root CN ratio 
+               end if    														
+ 														              
+            end if   
+          
+            if (ivt(p) >= npcropmin) then ! skip 2 generic crops    
+          
+               if (livestemn_storage(p) == 0.0_r8) then   ! to avoid division by zero, and also to make livestemcn_actual(p) a very large number if livestemc(p) is zero 
+                  livestemcn_storage_actual = livestemc_storage(p) / 0.000000001_r8    		
+               else                        										
+                  livestemcn_storage_actual =  livestemc_storage(p) / livestemn_storage(p)  			! live stem CN ratio 
+               end if 																												
+      
+               if (livecrootn_storage(p) == 0.0_r8) then   ! to avoid division by zero, and also to make livecrootcn_actual(p) a very large number if livecrootc(p) is zero 
+                  livecrootcn_storage_actual = livecrootc_storage(p) / 0.000000001_r8    	
+               else                        										
+                  livecrootcn_storage_actual = livecrootc_storage(p) / livecrootn_storage(p)  		! live coarse root CN ratio 
+               end if 
+          
+            end if   
+            
+                             
+            leafcn_max = leafcn(ivt(p)) + 25.0_r8     
+            frootcn_max = frootcn(ivt(p)) + 25.0_r8    
+            
+            ! Note that for high CN ratio stress the plant part does not retranslocate nitrogen as the plant part will need the N 
+            ! if high leaf CN ratio (i.e., high leaf C compared to N) then turnover extra C 
+            if (leafcn_storage_actual > leafcn_max) then       
+               respfact_leaf_storage = 1.0_r8 
+            end if    
+
+            ! if high fine root CN ratio (i.e., high fine root C compared to N) then turnover extra C 
+            if (frootcn_storage_actual > frootcn_max) then     
+               respfact_froot_storage = 1.0_r8     
+            end if    
+					
+		    if (woody(ivt(p)) == 1._r8) then  
+		  
+		       livewdcn_max = livewdcn(ivt(p)) + 25.0_r8  
+
+               ! if high coarse root CN ratio (i.e., high coarse root C compared to N) then turnover extra C 
+               if (livecrootcn_storage_actual > livewdcn_max) then     
+                  respfact_livecroot_storage = 1.0_r8  
+               end if    
+
+               ! if high stem CN ratio (i.e., high stem C compared to N) then turnover extra C 
+               if (livestemcn_storage_actual > livewdcn_max) then       
+                  respfact_livestem_storage = 1.0_r8 
+               end if    
+              
+            end if  
+          
+            if (ivt(p) >= npcropmin) then ! skip 2 generic crops    
+
+               livewdcn_max = livewdcn(ivt(p)) + 25.0_r8   
+
+               ! if high coarse root CN ratio (i.e., high coarse root C compared to N) then turnover extra C 
+               if (livecrootcn_storage_actual > livewdcn_max) then     
+                  respfact_livecroot_storage = 1.0_r8 
+               end if    
+          
+               ! if high stem CN ratio (i.e., high stem C compared to N) then turnover extra C 
+               if (livestemcn_storage_actual > livewdcn_max) then       
+                  respfact_livestem_storage = 1.0_r8 
+               end if    
+              
+            end if  
+      
+         end if   
+
+         
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-            cpool_livestem_gr(p) = cpool_to_livestemc(p) * grperc(ivt(p))
+            cpool_livestem_gr(p) = cpool_to_livestemc(p) * grperc(ivt(p)) * respfact_livestem     
 
-            cpool_livestem_storage_gr(p) = cpool_to_livestemc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p))
+            cpool_livestem_storage_gr(p) = cpool_to_livestemc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p)) * &
+                 respfact_livestem_storage   
 
-            transfer_livestem_gr(p) = livestemc_xfer_to_livestemc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p)))
+            transfer_livestem_gr(p) = livestemc_xfer_to_livestemc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p))) * &
+                 respfact_livestem_storage   
 
-            cpool_grain_gr(p) = cpool_to_grainc(p) * grperc(ivt(p))
+            cpool_grain_gr(p) = cpool_to_grainc(p) * grperc(ivt(p))   
 
-            cpool_grain_storage_gr(p) = cpool_to_grainc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p))
+            cpool_grain_storage_gr(p) = cpool_to_grainc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p)) 
 
-            transfer_grain_gr(p) = grainc_xfer_to_grainc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p)))
+            transfer_grain_gr(p) = grainc_xfer_to_grainc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p))) 
          end if
 
          ! leaf and fine root growth respiration
-         cpool_leaf_gr(p) = cpool_to_leafc(p) * grperc(ivt(p))
+         cpool_leaf_gr(p) = cpool_to_leafc(p) * grperc(ivt(p)) * respfact_leaf   
 
-         cpool_leaf_storage_gr(p) = cpool_to_leafc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p))
+         cpool_leaf_storage_gr(p) = cpool_to_leafc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p)) * respfact_leaf_storage   
 
-         transfer_leaf_gr(p) = leafc_xfer_to_leafc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p)))
+         transfer_leaf_gr(p) = leafc_xfer_to_leafc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p))) * respfact_leaf_storage   
 
-         cpool_froot_gr(p) = cpool_to_frootc(p) * grperc(ivt(p))
+         cpool_froot_gr(p) = cpool_to_frootc(p) * grperc(ivt(p)) * respfact_froot * respfact_froot   
 
-         cpool_froot_storage_gr(p) = cpool_to_frootc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p))
+         cpool_froot_storage_gr(p) = cpool_to_frootc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p)) * respfact_froot_storage   
 
-         transfer_froot_gr(p) = frootc_xfer_to_frootc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p)))
+         transfer_froot_gr(p) = frootc_xfer_to_frootc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p))) * respfact_froot_storage   
 
          if (woody(ivt(p)) == 1._r8) then
-            cpool_livestem_gr(p) = cpool_to_livestemc(p) * grperc(ivt(p))
+            cpool_livestem_gr(p) = cpool_to_livestemc(p) * grperc(ivt(p)) * respfact_livestem   
 
-            cpool_livestem_storage_gr(p) = cpool_to_livestemc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p))
+            cpool_livestem_storage_gr(p) = cpool_to_livestemc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p)) * &
+respfact_livestem_storage   
 
-            transfer_livestem_gr(p) = livestemc_xfer_to_livestemc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p)))
+            transfer_livestem_gr(p) = livestemc_xfer_to_livestemc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p))) * &
+respfact_livestem_storage   
 
-            cpool_deadstem_gr(p) = cpool_to_deadstemc(p) * grperc(ivt(p))
+            cpool_deadstem_gr(p) = cpool_to_deadstemc(p) * grperc(ivt(p)) 
 
-            cpool_deadstem_storage_gr(p) = cpool_to_deadstemc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p))
+            cpool_deadstem_storage_gr(p) = cpool_to_deadstemc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p)) 
 
-            transfer_deadstem_gr(p) = deadstemc_xfer_to_deadstemc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p)))
+            transfer_deadstem_gr(p) = deadstemc_xfer_to_deadstemc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p))) 
 
-            cpool_livecroot_gr(p) = cpool_to_livecrootc(p) * grperc(ivt(p))
+            cpool_livecroot_gr(p) = cpool_to_livecrootc(p) * grperc(ivt(p)) * respfact_livecroot   
 
-            cpool_livecroot_storage_gr(p) = cpool_to_livecrootc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p))
+            cpool_livecroot_storage_gr(p) = cpool_to_livecrootc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p)) * &
+respfact_livecroot_storage   
 
-            transfer_livecroot_gr(p) = livecrootc_xfer_to_livecrootc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p)))
+            transfer_livecroot_gr(p) = livecrootc_xfer_to_livecrootc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p))) * &
+respfact_livecroot_storage   
 
-            cpool_deadcroot_gr(p) = cpool_to_deadcrootc(p) * grperc(ivt(p))
+            cpool_deadcroot_gr(p) = cpool_to_deadcrootc(p) * grperc(ivt(p)) 
 
-            cpool_deadcroot_storage_gr(p) = cpool_to_deadcrootc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p))
+            cpool_deadcroot_storage_gr(p) = cpool_to_deadcrootc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p)) 
 
-            transfer_deadcroot_gr(p) = deadcrootc_xfer_to_deadcrootc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p)))
+            transfer_deadcroot_gr(p) = deadcrootc_xfer_to_deadcrootc(p) * grperc(ivt(p)) * (1._r8 - grpnow(ivt(p))) 
          end if
 
       end do

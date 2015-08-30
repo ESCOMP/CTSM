@@ -162,7 +162,6 @@
       </test>
       <test name="ERP_D_Ld5_P24x1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/ciso">hobart</machine>
-        <machine compiler="nag" testtype="aux_clm_short" testmods="clm/ciso">hobart</machine>
       </test>
       <test name="ERP_Ld5">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/drydepnomegan">yellowstone</machine>
@@ -173,14 +172,8 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/ciso">hobart</machine>
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/default">hobart</machine>
       </test>
-      <test name="ERP_P12x2_D_Ld5">
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/ciso">hobart</machine>
-      </test>
       <test name="ERP_P15x2_D_Ld5">
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ciso">yellowstone</machine>
-        <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/ciso">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/ciso">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/ciso">yellowstone</machine>
         <machine compiler="intel" testtype="aux_testsystem" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="prealpha" testmods="clm/ciso">yellowstone</machine>
       </test>
@@ -505,6 +498,30 @@
       </test>
     </grid>
     <grid name="f10_f10">
+       <test name="SMS_D_Ld3">
+          <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+          <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+          <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+          <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+          <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+          <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+       </test>
+       <test name="ERS_D_Ld3">
+          <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+          <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+          <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+          <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+          <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+          <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+       </test>
+       <test name="ERP_D_Ld3_P15x2">
+          <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+          <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+          <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+          <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+          <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+          <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+       </test>
       <test name="CME_Ld1">
         <machine compiler="intel" testtype="aux_testsystem" testmods="clm/default">yellowstone</machine>
       </test>
@@ -626,15 +643,6 @@
       <test name="PEM_Lm25">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput">yellowstone</machine>
       </test>
-      <test name="SMS_Ly3">
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/irrigOn_reduceOutput" comment="note that this has an initial conditions file">hobart</machine>
-        <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/irrigOn_reduceOutput" comment="note that this has an initial conditions file">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/irrigOn_reduceOutput" comment="note that this has an initial conditions file">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/irrigOn_reduceOutput" comment="note that this has an initial conditions file">yellowstone</machine>
-      </test>
-      <test name="SMS_Ly3_P24x1">
-        <machine compiler="nag" testtype="aux_clm_short" testmods="clm/irrigOn_reduceOutput" comment="note that this has an initial conditions file">hobart</machine>
-      </test>
     </grid>
     <grid name="f19_g16">
       <test name="SMS_Lm25">
@@ -668,15 +676,6 @@
       </test>
       <test name="ERP_P192x2_D_Ld5">
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/crop">edison</machine>
-      </test>
-      <test name="SMS_D_Ld1">
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">hobart</machine>
-        <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-      </test>
-      <test name="SMS_D_Ld1_P24x1">
-        <machine compiler="nag" testtype="aux_clm_short" testmods="clm/default">hobart</machine>
       </test>
     </grid>
   </compset>
@@ -898,6 +897,10 @@
   </compset>
   <compset name="ICRUCLM50BGC">
     <grid name="f10_f10">
+       <test name="ERP_D_P15x2_Ld3">
+          <machine compiler="intel" testtype="aux_clm45" testmods="clm/flexibleCN">yellowstone</machine>
+          <machine compiler="intel" testtype="aux_clm45" testmods="clm/luna">yellowstone</machine>
+       </test>
       <test name="ERI_D_Ld9">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/default">edison</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -1165,33 +1168,17 @@
     <grid name="f10_f10">
       <test name="ERP_D">
         <machine compiler="nag" testtype="prealpha" testmods="clm/default">goldbach</machine>
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">hobart</machine>
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/decStart">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/decStart">yellowstone</machine>
-        <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="ERP_D_P24x1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/decStart">hobart</machine>
-        <machine compiler="nag" testtype="aux_clm_short" testmods="clm/default">hobart</machine>
       </test>
       <test name="ERP_P15x2_Lm13">
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16">
-      <test name="ERP">
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">hobart</machine>
-        <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-      </test>
-      <test name="ERP_D">
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-      </test>
-      <test name="ERP_P24x1">
-        <machine compiler="nag" testtype="aux_clm_short" testmods="clm/default">hobart</machine>
-      </test>
       <test name="PET_P24x2_Lm13">
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/monthly">edison</machine>
       </test>

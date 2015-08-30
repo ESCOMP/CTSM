@@ -17,13 +17,13 @@ module NutrientCompetitionMethodMod
    contains
 
      ! read in nutrient competition kinetic parameters
-     procedure(readParams_interface), deferred :: readParams
+     procedure(readParams_interface), public, deferred :: readParams
 
       ! compute plant nutrient demand
-     procedure(calc_plant_nutrient_demand_interface), deferred :: calc_plant_nutrient_demand
+     procedure(calc_plant_nutrient_demand_interface), public, deferred :: calc_plant_nutrient_demand
 
      ! compute the nutrient yield for different components
-     procedure(calc_plant_nutrient_competition_interface), deferred :: calc_plant_nutrient_competition
+     procedure(calc_plant_nutrient_competition_interface), public, deferred :: calc_plant_nutrient_competition
 
   end type nutrient_competition_method_type
 
@@ -62,7 +62,10 @@ module NutrientCompetitionMethodMod
           photosyns_inst, crop_inst, canopystate_inst,                             &
           cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,         &
           c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                    &
-          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, aroot, arepr)
+          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+          soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
+          energyflux_inst,      &
+          aroot, arepr)
        !
        ! DESCRIPTION
        ! calculate nutrient yield after considering competition between different components
@@ -75,13 +78,16 @@ module NutrientCompetitionMethodMod
        use CanopyStateType        , only : canopystate_type
        use CNVegStateType         , only : cnveg_state_type
        use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-       use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
        use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
+       use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
        use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
+       use SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
+       use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+       use EnergyFluxType         , only : energyflux_type
        import :: nutrient_competition_method_type
        !
        ! !ARGUMENTS:
-       class(nutrient_competition_method_type) , intent(in)    :: this
+       class(nutrient_competition_method_type) , intent(inout)    :: this
        type(bounds_type)               , intent(in)    :: bounds
        integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
        integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
@@ -95,15 +101,21 @@ module NutrientCompetitionMethodMod
        type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
        type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
        type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
+       type(soilbiogeochem_carbonflux_type), intent(in) :: soilbiogeochem_carbonflux_inst
+       type(soilbiogeochem_nitrogenstate_type), intent(in) :: soilbiogeochem_nitrogenstate_inst
+       type(energyflux_type)           , intent(in)    :: energyflux_inst   
        real(r8)                        , intent(out)   :: aroot(bounds%begp:)
        real(r8)                        , intent(out)   :: arepr(bounds%begp:)
 
      end subroutine calc_plant_nutrient_demand_interface
 
      !-----------------------------------------------------------------------
-     subroutine calc_plant_nutrient_competition_interface (this, bounds, num_soilp, filter_soilp, &
-          cnveg_state_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst,                     &
-          c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                                     &
+     subroutine calc_plant_nutrient_competition_interface (this, &
+          bounds, num_soilp, filter_soilp, &
+          cnveg_state_inst, cnveg_carbonflux_inst, &
+          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
+          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+          soilbiogeochem_nitrogenstate_inst, &
           aroot, arepr, fpg_col)                                              
        !
        ! !USES:
@@ -111,11 +123,13 @@ module NutrientCompetitionMethodMod
        use decompMod             , only : bounds_type       
        use CNVegStateType        , only : cnveg_state_type
        use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
+       use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
        use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
+       use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
        import :: nutrient_competition_method_type
        !
        ! !ARGUMENTS:
-       class(nutrient_competition_method_type), intent(in) :: this
+       class(nutrient_competition_method_type), intent(inout) :: this
        type(bounds_type)               , intent(in)    :: bounds
        integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
        integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
@@ -123,7 +137,9 @@ module NutrientCompetitionMethodMod
        type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
        type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
        type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
+       type(cnveg_nitrogenstate_type)  , intent(inout) :: cnveg_nitrogenstate_inst
        type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
+       type(soilbiogeochem_nitrogenstate_type), intent(in)    :: soilbiogeochem_nitrogenstate_inst
        real(r8)                        , intent(in)    :: aroot(bounds%begp:)
        real(r8)                        , intent(in)    :: arepr(bounds%begp:)
        real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)

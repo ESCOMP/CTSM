@@ -191,6 +191,13 @@ Toggle to turn on the ED
 Toggle to turn on spit fire (only relevant if ED is being used).
 </entry>
 
+
+<entry id="use_luna" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the LUNA model, not supporting CLM(ED) yet
+</entry>
+
+
 <entry id="paramfile" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname datafile with plant function type (PFT) constants combined with
@@ -1236,6 +1243,123 @@ will allocate roots preferentially to the active layer.
        group="clm_inparm" valid_values="" >
 If TRUE, weight btran (vegetation soil moisture availability) by the active layer, as defined by the greatest thaw depth over the current and prior years.
 (EXPERIMENTAL and NOT tested)
+</entry>
+
+
+<!-- ========================================================================================  -->
+<!-- namelist elements associated with the clm 5.0 BGC nitrogen model                          -->
+<!-- ========================================================================================  -->
+<entry id="use_flexibleCN" type="logical" category="clm_nitrogen"
+       group="clm_inparm" value=".false.">
+Turn on the clm 5.0 nitrogen model in clm 4.5/5.0 compsets.
+</entry>
+
+<entry id="MM_Nuptake_opt" type="logical" category="clm_nitrogen"
+       group="clm_nitrogen" value=".false.">
+   Michaelis Menten nitrogen uptake kinetics
+   clm 5.0: MM_Nuptake_opt = true
+   clm 4.5: MM_Nuptake_opt = false
+</entry>
+
+<entry id="dynamic_plant_alloc_opt" type="logical" category="clm_nitrogen"
+       group="clm_nitrogen" value=".false.">
+   Dynamic plant allocation of nitrogen
+   clm 5.0: dynamic_plant_alloc_opt = false
+   clm 4.5: dynamic_plant_alloc_opt = false
+</entry>
+
+<entry id="downreg_opt" type="logical" category="clm_nitrogen"
+       group="clm_nitrogen" value=".false.">
+   GPP downregulation
+   clm 5.0: downreg_opt = false
+   clm 4.5: downreg_opt = true
+</entry>
+
+<entry id="plant_ndemand_opt" type="integer" category="clm_nitrogen"
+       group="clm_nitrogen" valid_values="0,1,2,3">
+   Plant nitrogen demand
+   clm 5.0: plant_ndemand_opt = 3
+   clm 4.5: plant_ndemand_opt = 0
+</entry>
+
+<entry id="substrate_term_opt" type="logical" category="clm_nitrogen"
+       group="clm_nitrogen" value=".true.">
+   Michaelis Menten substrate limitation
+   clm 5.0: substrate_term_opt = true
+   clm 4.5: substrate_term_opt = true
+</entry>
+
+<entry id="nscalar_opt" type="logical" category="clm_nitrogen"
+       group="clm_nitrogen" value=".true.">
+   Michaelis Menten nitrogen limitation
+   clm 5.0: nscalar_opt = true
+   clm 4.5: nscalar_opt = true
+</entry>
+
+<entry id="temp_scalar_opt" type="logical" category="clm_nitrogen"
+       group="clm_nitrogen" value=".true.">
+   Michaelis Menten temperature limitation
+   clm 5.0: temp_scalar_opt = true
+   clm 4.5: temp_scalar_opt = true
+</entry>
+
+<entry id="CNratio_floating" type="logical" category="clm_nitrogen"
+       group="clm_nitrogen" value=".false.">
+   Flexible CN ratio
+   clm 5.0: CNratio_floating = true
+   clm 4.5: CNratio_floating = false
+</entry>
+
+<entry id="lnc_opt" type="logical" category="clm_nitrogen"
+       group="clm_nitrogen" value=".false.">
+   Leaf nitrogen content
+   clm 5.0: lnc_opt = true
+   clm 4.5: lnc_opt = false
+</entry>
+
+<entry id="reduce_dayl_factor" type="logical" category="clm_nitrogen"
+       group="clm_nitrogen" value=".false.">
+   Reduce day length factor
+   clm 5.0: reduce_dayl_factor = false
+   clm 4.5: reduce_dayl_factor = false
+</entry>
+
+<entry id="vcmax_opt" type="integer" category="clm_nitrogen"
+       group="clm_nitrogen" valid_values="0,1,2,3,4">
+   Vcmax calculation
+   clm 5.0: vcmax_opt = 3
+   clm 4.5: vcmax_opt = 0
+</entry>
+
+<entry id="CN_residual_opt" type="integer" category="clm_nitrogen"
+       group="clm_nitrogen" valid_values="0,1">
+   clm 5.0: CN_residual_opt = 1
+   clm 4.5: CN_residual_opt = 0
+</entry>
+
+<entry id="CN_partition_opt" type="integer" category="clm_nitrogen"
+       group="clm_nitrogen" valid_values="0,1">
+   clm 5.0: CN_partition_opt = 1
+   clm 4.5: CN_partition_opt = 0
+</entry>
+
+<entry id="carbon_excess_opt" type="integer" category="clm_nitrogen"
+       group="clm_nitrogen" valid_values="0,1">
+   clm 5.0: carbon_excess_opt = 0
+   clm 4.5: carbon_excess_opt = 0           
+</entry>
+
+<entry id="carbon_storage_excess_opt" type="integer" category="clm_nitrogen"
+       group="clm_nitrogen" valid_values="0,1">
+   clm 5.0: carbon_storage_excess_opt = 1
+   clm 4.5: carbon_storage_excess_opt = 0
+
+</entry>
+
+<entry id="CN_evergreen_phenology_opt" type="integer" category="clm_nitrogen"
+       group="clm_nitrogen" valid_values="0,1">
+   clm 5.0: CN_evergreen_phenology_opt = 1
+   clm 4.5: CN_evergreen_phenology_opt = 0
 </entry>
 
 

@@ -440,7 +440,7 @@ contains
             atm2lnd_inst, canopystate_inst, cnveg_state_inst,                               &
             energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst, &
             temperature_inst, waterflux_inst, waterstate_inst, ch4_inst, ozone_inst, photosyns_inst, &
-            humanindex_inst, soil_water_retention_curve) 
+            humanindex_inst, soil_water_retention_curve, cnveg_nitrogenstate_inst) 
        call t_stopf('canflux')
 
        ! Fluxes for all urban landunits

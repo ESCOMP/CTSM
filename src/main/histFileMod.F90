@@ -959,13 +959,14 @@ contains
     integer :: f                   ! field index
     integer :: num2d               ! size of second dimension (e.g. number of vertical levels)
     character(len=*),parameter :: subname = 'hist_update_hbuf'
+    character(len=8) :: type2d     ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)"]
     !-----------------------------------------------------------------------
 
     do t = 1,ntapes
 !$OMP PARALLEL DO PRIVATE (f, num2d)
        do f = 1,tape(t)%nflds
           num2d = tape(t)%hlist(f)%field%num2d
-          if ( num2d == 1) then
+          if ( num2d == 1) then   
              call hist_update_hbuf_field_1d (t, f, bounds)
           else
              call hist_update_hbuf_field_2d (t, f, bounds, num2d)
@@ -1671,7 +1672,7 @@ contains
     ! wrapper calls to define the history file contents.
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad
+    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad, nlevcan
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
     use landunit_varcon , only : max_lunit
     use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
@@ -1817,6 +1818,7 @@ contains
     call ncd_defdim(lnfid, 'numrad' , numrad , dimid)
     call ncd_defdim(lnfid, 'levsno' , nlevsno , dimid)
     call ncd_defdim(lnfid, 'ltype', max_lunit, dimid)
+    call ncd_defdim(lnfid, 'nlevcan',nlevcan, dimid)
     call htape_add_ltype_metadata(lnfid)
     call ncd_defdim(lnfid, 'natpft', natpft_size, dimid)
     if (cft_size > 0) then
@@ -1835,6 +1837,7 @@ contains
     end do
     call ncd_defdim(lnfid, 'string_length', 8, strlen_dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
+    
     if ( .not. lhistrest )then
        call ncd_defdim(lnfid, 'hist_interval', 2, hist_interval_dimid)
        call ncd_defdim(lnfid, 'time', ncd_unlimited, time_dimid)
@@ -4049,7 +4052,7 @@ contains
     real(r8)        , optional, pointer    :: ptr_gcell(:)   ! pointer to gridcell array
     real(r8)        , optional, pointer    :: ptr_lunit(:)   ! pointer to landunit array
     real(r8)        , optional, pointer    :: ptr_col(:)     ! pointer to column array
-    real(r8)        , optional, pointer    :: ptr_patch(:)     ! pointer to patch array
+    real(r8)        , optional, pointer    :: ptr_patch(:)   ! pointer to patch array
     real(r8)        , optional, pointer    :: ptr_lnd(:)     ! pointer to lnd array
     real(r8)        , optional, pointer    :: ptr_atm(:)     ! pointer to atm array
     real(r8)        , optional, intent(in) :: set_lake       ! value to set lakes to
@@ -4260,7 +4263,7 @@ contains
     ! initial or branch run to initialize the actual history tapes.
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full 
+    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, nlevcan
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec
     use landunit_varcon , only : max_lunit
     !
@@ -4371,10 +4374,12 @@ contains
        end if
     case ('levsno')
        num2d = nlevsno
+    case ('nlevcan')
+        num2d = nlevcan 
     case default
        write(iulog,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
           ' currently supported types for multi level fields are: ', &
-          '[levgrnd,levlak,numrad,levdcmp,ltype,natpft,cft,glc_nec,elevclas,levsno]'
+          '[levgrnd,levlak,numrad,levdcmp,levtrc,ltype,natpft,cft,glc_nec,elevclas,levsno]'
        call endrun(msg=errMsg(__FILE__, __LINE__))
     end select
 

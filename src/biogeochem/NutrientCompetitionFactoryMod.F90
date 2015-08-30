@@ -9,6 +9,7 @@ module NutrientCompetitionFactoryMod
   use abortutils          , only : endrun
   use shr_log_mod         , only : errMsg => shr_log_errMsg
   use clm_varctl          , only : iulog
+
   implicit none
   save
   private
@@ -26,8 +27,15 @@ contains
     ! is determined based on a namelist parameter.
     !
     ! !USES:
+    use shr_kind_mod, only : SHR_KIND_CL
     use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
     use NutrientCompetitionCLM45defaultMod, only : nutrient_competition_clm45default_type
+    use NutrientCompetitionFlexibleCNMod, only : nutrient_competition_FlexibleCN_type
+
+    ! FIXME(bja, 2015-06) need to pass method control in as a parameter
+    ! instead of relying on a global!
+    use clm_varctl, only : use_flexibleCN   
+
     !
     ! !ARGUMENTS:
     class(nutrient_competition_method_type), allocatable :: nutrient_competition_method  ! function result
@@ -38,16 +46,29 @@ contains
     ! this routine (appropriate if the 'method' is in its own namelist group), or do the
     ! namelist read outside this module and pass the method in as a parameter (appropriate
     ! if the 'method' is part of a larger namelist group).
-    character(len=*), parameter :: method = "clm45default"
+    character(len=SHR_KIND_CL) :: method
     
     character(len=*), parameter :: subname = 'create_nutrient_competition_method'
     !-----------------------------------------------------------------------
     
-    select case (method)
+    ! FIXME(bja, 2015-06) flexible_cn may need to be
+    ! merged with other nitrogen code, so a more robust method of
+    ! selecting the competition method will depend on how the science
+    ! is merged.
+    method = "clm45default"
+    if (use_flexibleCN) then
+       method = "flexible_cn"
+    end if
+    
+    select case (trim(method))
        
     case ("clm45default")
        allocate(nutrient_competition_method, &
             source=nutrient_competition_clm45default_type())
+
+    case ("flexible_cn")
+       allocate(nutrient_competition_method, &
+            source=nutrient_competition_FlexibleCN_type())
 
     case default
        write(iulog,*) subname//' ERROR: unknown method: ', method

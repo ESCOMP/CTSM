@@ -395,6 +395,8 @@ contains
        call cnveg_nitrogenstate_inst%Init(bounds,                  &
             cnveg_carbonstate_inst%leafc_patch(begp:endp),         &
             cnveg_carbonstate_inst%leafc_storage_patch(begp:endp), &
+            cnveg_carbonstate_inst%frootc_patch(begp:endp), &
+            cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
             cnveg_carbonstate_inst%deadstemc_patch(begp:endp))
        call cnveg_nitrogenflux_inst%Init(bounds) 
 

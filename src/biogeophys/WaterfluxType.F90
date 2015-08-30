@@ -6,7 +6,7 @@ module WaterfluxType
   ! !USES:
   use shr_kind_mod   , only: r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar     , only : nlevsno
+  use clm_varpar     , only : nlevsno, nlevsoi
   use clm_varcon     , only : spval
   use decompMod      , only : bounds_type
   use LandunitType   , only : lun                
@@ -63,6 +63,8 @@ module WaterfluxType
      real(r8), pointer :: qflx_ev_h2osfc_patch     (:)   ! patch evaporation heat flux from soil       (W/m**2) [+ to atm]
      real(r8), pointer :: qflx_ev_h2osfc_col       (:)   ! col evaporation heat flux from soil         (W/m**2) [+ to atm]
 
+     real(r8), pointer :: qflx_adv_col             (:,:) ! col advective flux across different soil layer interfaces [mm H2O/s] [+ downward]
+     real(r8), pointer :: qflx_rootsoi_col         (:,:) ! col root and soil water exchange [mm H2O/s] [+ into root]
      real(r8), pointer :: qflx_infl_col            (:)   ! col infiltration (mm H2O /s)
      real(r8), pointer :: qflx_surf_col            (:)   ! col surface runoff (mm H2O /s)
      real(r8), pointer :: qflx_drain_col           (:)   ! col sub-surface runoff (mm H2O /s)
@@ -86,6 +88,7 @@ module WaterfluxType
      real(r8), pointer :: qflx_glcice_col          (:)   ! col net flux of new glacial ice (growth - melt) (mm H2O/s), passed to GLC
      real(r8), pointer :: qflx_glcice_frz_col      (:)   ! col ice growth (positive definite) (mm H2O/s)
      real(r8), pointer :: qflx_glcice_melt_col     (:)   ! col ice melt (positive definite) (mm H2O/s)
+     real(r8), pointer :: qflx_drain_vr_col        (:,:) ! col liquid water losted as drainage (m /time step)
      real(r8), pointer :: snow_sources_col         (:)   ! col snow sources (mm H2O/s)
      real(r8), pointer :: snow_sinks_col           (:)   ! col snow sinks (mm H2O/s)
 
@@ -185,6 +188,9 @@ contains
     allocate( this%qflx_ev_h2osfc_patch    (begp:endp))              ; this%qflx_ev_h2osfc_patch     (:)   = nan
     allocate( this%qflx_ev_h2osfc_col      (begc:endc))              ; this%qflx_ev_h2osfc_col       (:)   = nan
 
+    allocate(this%qflx_drain_vr_col      (begc:endc,1:nlevsoi))      ; this%qflx_drain_vr_col        (:,:) = nan
+    allocate(this%qflx_adv_col             (begc:endc,0:nlevsoi))    ; this%qflx_adv_col             (:,:) = nan
+    allocate(this%qflx_rootsoi_col         (begc:endc,1:nlevsoi))    ; this%qflx_rootsoi_col         (:,:) = nan
     allocate(this%qflx_infl_col            (begc:endc))              ; this%qflx_infl_col            (:)   = nan
     allocate(this%qflx_surf_col            (begc:endc))              ; this%qflx_surf_col            (:)   = nan
     allocate(this%qflx_drain_col           (begc:endc))              ; this%qflx_drain_col           (:)   = nan

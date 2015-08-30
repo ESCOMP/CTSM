@@ -122,7 +122,7 @@ contains
     allocate(this%fsun24_patch             (begp:endp))           ; this%fsun24_patch             (:)   = nan
     allocate(this%fsun240_patch            (begp:endp))           ; this%fsun240_patch            (:)   = nan
 
-    allocate(this%alt_col                  (begc:endc))           ; this%alt_col                  (:)   = spval;     
+    allocate(this%alt_col                  (begc:endc))           ; this%alt_col                  (:)   = spval     
     allocate(this%altmax_col               (begc:endc))           ; this%altmax_col               (:)   = spval
     allocate(this%altmax_lastyear_col      (begc:endc))           ; this%altmax_lastyear_col      (:)   = spval
     allocate(this%alt_indx_col             (begc:endc))           ; this%alt_indx_col             (:)   = huge(1)
@@ -132,7 +132,8 @@ contains
     allocate(this%dewmx_patch              (begp:endp))           ; this%dewmx_patch              (:)   = nan
 
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
-    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8    
+    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8     
+
 
   end subroutine InitAllocate
 
@@ -247,6 +248,8 @@ contains
             avgflag='A', long_name='maximum prior year active layer thickness', &
             ptr_col=this%altmax_lastyear_col, default='inactive')
     end if
+
+
 
     ! Accumulated fields
     this%fsun24_patch(begp:endp) = spval

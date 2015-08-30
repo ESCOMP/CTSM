@@ -13,14 +13,14 @@ module  PhotosynthesisMod
   use shr_log_mod         , only : errMsg => shr_log_errMsg
   use shr_infnan_mod      , only : nan => shr_infnan_nan, assignment(=)
   use abortutils          , only : endrun
-  use clm_varctl          , only : use_c13, use_c14, use_cn, use_cndv, use_ed 
+  use clm_varctl          , only : use_c13, use_c14, use_cn, use_cndv, use_ed, use_luna
   use clm_varctl          , only : iulog
   use clm_varpar          , only : nlevcan
-  use clm_varcon          , only : namep, c14ratio, spval 
+  use clm_varcon          , only : namep, c14ratio, spval
   use decompMod           , only : bounds_type
   use QuadraticMod        , only : quadratic
   use pftconMod           , only : pftcon
-  use C14BombSpikeMod     , only : C14BombSpike, use_c14_bombspike 
+  use C14BombSpikeMod     , only : C14BombSpike, use_c14_bombspike
   use atm2lndType         , only : atm2lnd_type
   use CanopyStateType     , only : canopystate_type
   use TemperatureType     , only : temperature_type
@@ -29,7 +29,8 @@ module  PhotosynthesisMod
   use CNvegStateType      , only : cnveg_state_type
   use OzoneBaseMod        , only : ozone_base_type
   use LandunitType        , only : lun
-  use PatchType           , only : patch                
+  use PatchType           , only : patch
+  use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type    
   !
   implicit none
   private
@@ -37,7 +38,7 @@ module  PhotosynthesisMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: Photosynthesis       ! Leaf stomatal resistance and leaf photosynthesis
   public :: PhotosynthesisTotal  ! Determine of total photosynthesis
-  public :: Fractionation        ! C13 fractionation during photosynthesis 
+  public :: Fractionation        ! C13 fractionation during photosynthesis
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: hybrid         ! hybrid solver for ci
@@ -48,14 +49,14 @@ module  PhotosynthesisMod
   private :: fth25          ! scaling factor for photosynthesis temperature inhibition
 
   ! !PUBLIC VARIABLES:
-  type, public :: photosyns_type   
+  type, public :: photosyns_type
 
      logical , pointer, private :: c3flag_patch      (:)   ! patch true if C3 and false if C4
      real(r8), pointer, private :: ac_patch          (:,:) ! patch Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
      real(r8), pointer, private :: aj_patch          (:,:) ! patch RuBP-limited gross photosynthesis (umol CO2/m**2/s)
      real(r8), pointer, private :: ap_patch          (:,:) ! patch product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
      real(r8), pointer, private :: ag_patch          (:,:) ! patch co-limited gross leaf photosynthesis (umol CO2/m**2/s)
-     real(r8), pointer, private :: an_patch          (:,:) ! patch net leaf photosynthesis (umol CO2/m**2/s)   
+     real(r8), pointer, private :: an_patch          (:,:) ! patch net leaf photosynthesis (umol CO2/m**2/s)
      real(r8), pointer, private :: vcmax_z_patch     (:,:) ! patch maximum rate of carboxylation (umol co2/m**2/s)
      real(r8), pointer, private :: cp_patch          (:)   ! patch CO2 compensation point (Pa)
      real(r8), pointer, private :: kc_patch          (:)   ! patch Michaelis-Menten constant for CO2 (Pa)
@@ -70,19 +71,19 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: gb_mol_patch      (:)   ! patch leaf boundary layer conductance (umol H2O/m**2/s)
      real(r8), pointer, private :: rh_leaf_patch     (:)   ! patch fractional humidity at leaf surface (dimensionless)
 
-     real(r8), pointer, private :: alphapsnsun_patch (:)   ! patch sunlit 13c fractionation ([])                      
-     real(r8), pointer, private :: alphapsnsha_patch (:)   ! patch shaded 13c fractionation ([])                      
+     real(r8), pointer, private :: alphapsnsun_patch (:)   ! patch sunlit 13c fractionation ([])
+     real(r8), pointer, private :: alphapsnsha_patch (:)   ! patch shaded 13c fractionation ([])
 
-     real(r8), pointer, public  :: rc13_canair_patch (:)   ! patch C13O2/C12O2 in canopy air                          
-     real(r8), pointer, public  :: rc13_psnsun_patch (:)   ! patch C13O2/C12O2 in sunlit canopy psn flux              
-     real(r8), pointer, public  :: rc13_psnsha_patch (:)   ! patch C13O2/C12O2 in shaded canopy psn flux              
+     real(r8), pointer, public  :: rc13_canair_patch (:)   ! patch C13O2/C12O2 in canopy air
+     real(r8), pointer, public  :: rc13_psnsun_patch (:)   ! patch C13O2/C12O2 in sunlit canopy psn flux
+     real(r8), pointer, public  :: rc13_psnsha_patch (:)   ! patch C13O2/C12O2 in shaded canopy psn flux
 
-     real(r8), pointer, public  :: psnsun_patch      (:)   ! patch sunlit leaf photosynthesis     (umol CO2/m**2/s)       
-     real(r8), pointer, public  :: psnsha_patch      (:)   ! patch shaded leaf photosynthesis     (umol CO2/m**2/s)       
-     real(r8), pointer, public  :: c13_psnsun_patch  (:)   ! patch c13 sunlit leaf photosynthesis (umol 13CO2/m**2/s) 
-     real(r8), pointer, public  :: c13_psnsha_patch  (:)   ! patch c13 shaded leaf photosynthesis (umol 13CO2/m**2/s) 
-     real(r8), pointer, public  :: c14_psnsun_patch  (:)   ! patch c14 sunlit leaf photosynthesis (umol 14CO2/m**2/s) 
-     real(r8), pointer, public  :: c14_psnsha_patch  (:)   ! patch c14 shaded leaf photosynthesis (umol 14CO2/m**2/s) 
+     real(r8), pointer, public  :: psnsun_patch      (:)   ! patch sunlit leaf photosynthesis     (umol CO2/m**2/s)
+     real(r8), pointer, public  :: psnsha_patch      (:)   ! patch shaded leaf photosynthesis     (umol CO2/m**2/s)
+     real(r8), pointer, public  :: c13_psnsun_patch  (:)   ! patch c13 sunlit leaf photosynthesis (umol 13CO2/m**2/s)
+     real(r8), pointer, public  :: c13_psnsha_patch  (:)   ! patch c13 shaded leaf photosynthesis (umol 13CO2/m**2/s)
+     real(r8), pointer, public  :: c14_psnsun_patch  (:)   ! patch c14 sunlit leaf photosynthesis (umol 14CO2/m**2/s)
+     real(r8), pointer, public  :: c14_psnsha_patch  (:)   ! patch c14 shaded leaf photosynthesis (umol 14CO2/m**2/s)
 
      real(r8), pointer, private :: psnsun_z_patch    (:,:) ! patch canopy layer: sunlit leaf photosynthesis   (umol CO2/m**2/s)
      real(r8), pointer, private :: psnsha_z_patch    (:,:) ! patch canopy layer: shaded leaf photosynthesis   (umol CO2/m**2/s)
@@ -93,10 +94,12 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: psnsun_wp_patch   (:)   ! patch product-limited sunlit leaf photosynthesis (umol CO2/m**2/s)
      real(r8), pointer, private :: psnsha_wp_patch   (:)   ! patch product-limited shaded leaf photosynthesis (umol CO2/m**2/s)
 
-     real(r8), pointer, public  :: fpsn_patch        (:)   ! patch photosynthesis                 (umol CO2/m**2/s)
-     real(r8), pointer, private :: fpsn_wc_patch     (:)   ! patch Rubisco-limited photosynthesis (umol CO2/m**2/s)
-     real(r8), pointer, private :: fpsn_wj_patch     (:)   ! patch RuBP-limited photosynthesis    (umol CO2/m**2/s)
-     real(r8), pointer, private :: fpsn_wp_patch     (:)   ! patch product-limited photosynthesis (umol CO2/m**2/s)
+     real(r8), pointer, public  :: fpsn_patch        (:)   ! patch photosynthesis                 (umol CO2/m**2 ground/s)
+     real(r8), pointer, private :: fpsn_wc_patch     (:)   ! patch Rubisco-limited photosynthesis (umol CO2/m**2 ground/s)
+     real(r8), pointer, private :: fpsn_wj_patch     (:)   ! patch RuBP-limited photosynthesis    (umol CO2/m**2 ground/s)
+     real(r8), pointer, private :: fpsn_wp_patch     (:)   ! patch product-limited photosynthesis (umol CO2/m**2 ground/s)
+
+     real(r8), pointer, public  :: lnca_patch        (:)   ! top leaf layer leaf N concentration (gN leaf/m^2)
 
      real(r8), pointer, public  :: lmrsun_patch      (:)   ! patch sunlit leaf maintenance respiration rate               (umol CO2/m**2/s)
      real(r8), pointer, public  :: lmrsha_patch      (:)   ! patch shaded leaf maintenance respiration rate               (umol CO2/m**2/s)
@@ -115,18 +118,24 @@ module  PhotosynthesisMod
      real(r8), pointer, public  :: psncanopy_patch   (:)   ! patch sunlit leaf photosynthesis (umol CO2 /m**2/ s) (ED specific)
      real(r8), pointer, public  :: lmrcanopy_patch   (:)   ! sunlit leaf maintenance respiration rate (umol CO2/m**2/s) (ED specific)
 
+     ! LUNA specific variables
+     real(r8), pointer, public  :: vcmx25_z_patch    (:,:) ! patch  leaf Vc,max25 (umol CO2/m**2/s) for canopy layer 
+     real(r8), pointer, public  :: jmx25_z_patch     (:,:) ! patch  leaf Jmax25 (umol electron/m**2/s) for canopy layer 
+     real(r8), pointer, public  :: pnlc_z_patch      (:,:) ! patch proportion of leaf nitrogen allocated for light capture for canopy layer
+     real(r8), pointer, public  :: enzs_z_patch      (:,:) ! enzyme decay status 1.0-fully active; 0-all decayed during stress
+     real(r8), pointer, public  :: fpsn24_patch      (:)   ! 24 hour mean patch photosynthesis (umol CO2/m**2 ground/day)
    contains
 
      ! Public procedures
      procedure, public  :: Init
-     procedure, public  :: Restart      
+     procedure, public  :: Restart
      procedure, public  :: TimeStepInit
      procedure, public  :: NewPatchInit
 
      ! Private procedures
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
 
   end type photosyns_type
   !------------------------------------------------------------------------
@@ -134,10 +143,10 @@ module  PhotosynthesisMod
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds) 
+  subroutine Init(this, bounds)
 
-    class(photosyns_type) :: this 
-    type(bounds_type), intent(in) :: bounds  
+    class(photosyns_type) :: this
+    type(bounds_type), intent(in) :: bounds
 
     call this%InitAllocate (bounds)
     call this%InitHistory  (bounds)
@@ -146,11 +155,11 @@ contains
   end subroutine Init
 
   !------------------------------------------------------------------------
-  subroutine InitAllocate(this, bounds) 
+  subroutine InitAllocate(this, bounds)
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -199,6 +208,8 @@ contains
     allocate(this%fpsn_wc_patch     (begp:endp))           ; this%fpsn_wc_patch     (:)   = nan
     allocate(this%fpsn_wj_patch     (begp:endp))           ; this%fpsn_wj_patch     (:)   = nan
     allocate(this%fpsn_wp_patch     (begp:endp))           ; this%fpsn_wp_patch     (:)   = nan
+    
+    allocate(this%lnca_patch        (begp:endp))           ; this%lnca_patch        (:)   = nan
 
     allocate(this%lmrsun_z_patch    (begp:endp,1:nlevcan)) ; this%lmrsun_z_patch    (:,:) = nan
     allocate(this%lmrsha_z_patch    (begp:endp,1:nlevcan)) ; this%lmrsha_z_patch    (:,:) = nan
@@ -220,8 +231,14 @@ contains
     allocate(this%rssha_patch       (begp:endp))           ; this%rssha_patch       (:)   = nan
 
     allocate(this%psncanopy_patch   (begp:endp))           ; this%psncanopy_patch   (:)   = nan
-
     allocate(this%lmrcanopy_patch   (begp:endp))           ; this%lmrcanopy_patch   (:)   = nan
+    if(use_luna)then
+      allocate(this%vcmx25_z_patch  (begp:endp,1:nlevcan)) ; this%vcmx25_z_patch    (:,:) = 30._r8
+      allocate(this%jmx25_z_patch   (begp:endp,1:nlevcan)) ; this%jmx25_z_patch     (:,:) = 60._r8 
+      allocate(this%pnlc_z_patch    (begp:endp,1:nlevcan)) ; this%pnlc_z_patch      (:,:) = 0.01_r8
+      allocate(this%fpsn24_patch    (begp:endp))           ; this%fpsn24_patch      (:)   = nan
+      allocate(this%enzs_z_patch    (begp:endp,1:nlevcan)) ; this%enzs_z_patch      (:,:) = 1._r8
+    endif
 
   end subroutine InitAllocate
 
@@ -229,11 +246,12 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod   , only: hist_addfld1d
+    use histFileMod   , only: hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
+    real(r8), pointer  :: ptr_1d(:)  ! pointer to 1d patch array
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -326,7 +344,7 @@ contains
        call hist_addfld1d (fname='ALPHAPSNSUN', units='proportion', &
             avgflag='A', long_name='sunlit c13 fractionation', &
             ptr_patch=this%alphapsnsun_patch, default='inactive')
-       
+
        this%alphapsnsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='ALPHAPSNSHA', units='proportion', &
             avgflag='A', long_name='shaded c13 fractionation', &
@@ -343,6 +361,41 @@ contains
          avgflag='M', long_name='shaded leaf stomatal resistance', &
          ptr_patch=this%rssha_patch, set_lake=spval, set_urb=spval, default='inactive')
 
+    if(use_luna)then  
+       if(nlevcan>1)then
+         call hist_addfld2d (fname='Vcmx25Z', units='umol/m2/s', type2d='nlevcan', &
+            avgflag='A', long_name='canopy profile of vcmax25 predicted by LUNA model', &
+            ptr_patch=this%vcmx25_z_patch,default='inactive')
+ 
+         call hist_addfld2d (fname='Jmx25Z', units='umol/m2/s', type2d='nlevcan', &
+            avgflag='A', long_name='canopy profile of  vcmax25 predicted by LUNA model', &
+            ptr_patch=this%jmx25_z_patch,default='inactive')
+
+         call hist_addfld2d (fname='PNLCZ', units='unitless', type2d='nlevcan', &
+            avgflag='A', long_name='Proportion of nitrogen allocated for light capture', &
+            ptr_patch=this%pnlc_z_patch,default='inactive')
+       else
+         ptr_1d => this%vcmx25_z_patch(:,1)
+         call hist_addfld1d (fname='Vcmx25Z', units='umol/m2/s',&
+            avgflag='A', long_name='canopy profile of vcmax25 predicted by LUNA model', &
+            ptr_patch=ptr_1d,default='inactive')
+         ptr_1d => this%jmx25_z_patch(:,1)
+         call hist_addfld1d (fname='Jmx25Z', units='umol/m2/s',&
+            avgflag='A', long_name='canopy profile of  vcmax25 predicted by LUNA model', &
+            ptr_patch=ptr_1d,default='inactive')
+         ptr_1d => this%pnlc_z_patch(:,1)
+         call hist_addfld1d (fname='PNLCZ', units='unitless', &
+            avgflag='A', long_name='Proportion of nitrogen allocated for light capture', &
+            ptr_patch=ptr_1d,default='inactive')
+
+       endif
+        this%fpsn24_patch = spval 
+        call hist_addfld1d (fname='FPSN24', units='umol CO2/m**2 ground/day',&
+             avgflag='A', long_name='24 hour accumulative patch photosynthesis starting from mid-night', &
+             ptr_patch=this%fpsn24_patch,default='inactive')
+   
+    endif
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -350,7 +403,7 @@ contains
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: p,l                        ! indices
@@ -359,7 +412,7 @@ contains
     do p = bounds%begp,bounds%endp
        l = patch%landunit(p)
 
-       this%lmrcanopy_patch(p) =  0.0_r8 
+       this%lmrcanopy_patch(p) =  0.0_r8
 
        this%alphapsnsun_patch(p) = spval
        this%alphapsnsha_patch(p) = spval
@@ -382,14 +435,14 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
-    ! 
+    !
     ! !USES:
     use ncdio_pio  , only : file_desc_t, ncd_defvar, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
     use restUtilMod
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
-    type(bounds_type), intent(in)    :: bounds 
+    type(bounds_type), intent(in)    :: bounds
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
     !
@@ -401,16 +454,38 @@ contains
     if ( use_c13 ) then
        call restartvar(ncid=ncid, flag=flag, varname='rc13_canair', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%rc13_canair_patch) 
+            interpinic_flag='interp', readvar=readvar, data=this%rc13_canair_patch)
 
        call restartvar(ncid=ncid, flag=flag, varname='rc13_psnsun', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%rc13_psnsun_patch) 
+            interpinic_flag='interp', readvar=readvar, data=this%rc13_psnsun_patch)
 
        call restartvar(ncid=ncid, flag=flag, varname='rc13_psnsha', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%rc13_psnsha_patch) 
+            interpinic_flag='interp', readvar=readvar, data=this%rc13_psnsha_patch)
     endif
+
+    if(use_luna) then
+      call restartvar(ncid=ncid, flag=flag, varname='vcmx25_z', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
+         long_name='Maximum carboxylation rate at 25 celcius for canopy layers', units='umol CO2/m**2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%vcmx25_z_patch)
+      call restartvar(ncid=ncid, flag=flag, varname='jmx25_z', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
+         long_name='Maximum carboxylation rate at 25 celcius for canopy layers', units='umol CO2/m**2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%jmx25_z_patch)
+      call restartvar(ncid=ncid, flag=flag, varname='pnlc_z', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
+         long_name='proportion of leaf nitrogen allocated for light capture', units='unitless', &
+         interpinic_flag='interp', readvar=readvar, data=this%pnlc_z_patch )
+      call restartvar(ncid=ncid, flag=flag, varname='enzs_z', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
+         long_name='enzyme decay status during stress: 1.0-fully active; 0.0-all decayed', units='unitless', &
+         interpinic_flag='interp', readvar=readvar, data=this%enzs_z_patch )
+      call restartvar(ncid=ncid, flag=flag, varname='gpp24', xtype=ncd_double,  &
+            dim1name='pft', long_name='accumulative gross primary production', units='umol CO2/m**2 ground/day', &
+            interpinic_flag='interp', readvar=readvar, data=this%fpsn24_patch)    
+   endif
 
   end subroutine Restart
 
@@ -420,11 +495,11 @@ contains
     ! Time step initialization
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop, istice, istice_mec, istwet 
+    use landunit_varcon, only : istsoil, istcrop, istice, istice_mec, istwet
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
-    type(bounds_type) , intent(in)    :: bounds                         
+    type(bounds_type) , intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: p,l ! indices
@@ -475,8 +550,8 @@ contains
   !------------------------------------------------------------------------------
   subroutine NewPatchInit (this, p)
     !
-    ! For new run-time pft, modify state and flux variables to maintain 
-    ! carbon and nitrogen balance with dynamic pft-weights. 
+    ! For new run-time pft, modify state and flux variables to maintain
+    ! carbon and nitrogen balance with dynamic pft-weights.
     ! Called from dyn_cnbal_patch
     !
     ! !ARGUMENTS:
@@ -503,14 +578,15 @@ contains
        this%c14_psnsun_patch(p) = 0._r8
        this%c14_psnsha_patch(p) = 0._r8
     end if
-    
+
   end subroutine NewPatchInit
 
+  !------------------------------------------------------------------------------
   !------------------------------------------------------------------------------
   subroutine Photosynthesis ( bounds, fn, filterp, &
        esat_tv, eair, oair, cair, rb, btran, &
        dayl_factor, atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
-       canopystate_inst, ozone_inst, photosyns_inst, phase)
+       canopystate_inst, ozone_inst, photosyns_inst, cnveg_nitrogenstate_inst, phase)
     !
     ! !DESCRIPTION:
     ! Leaf photosynthesis and stomatal conductance calculation as described by
@@ -519,12 +595,13 @@ contains
     !
     ! !USES:
     use clm_varcon     , only : rgas, tfrz
-    use clm_varctl     , only : cnallocate_carbon_only 
+    use clm_varctl     , only : cnallocate_carbon_only
+    use clm_varctl     , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use pftconMod      , only : nbrdlf_dcd_tmp_shrub, npcropmin
-    
+
     !
     ! !ARGUMENTS:
-    type(bounds_type)      , intent(in)    :: bounds                         
+    type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: fn                             ! size of pft filter
     integer                , intent(in)    :: filterp(fn)                    ! patch filter
     real(r8)               , intent(in)    :: esat_tv( bounds%begp: )        ! saturation vapor pressure at t_veg (Pa) [pft]
@@ -541,13 +618,15 @@ contains
     type(canopystate_type) , intent(in)    :: canopystate_inst
     class(ozone_base_type) , intent(in)    :: ozone_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
+    type(cnveg_nitrogenstate_type), intent(in) :: cnveg_nitrogenstate_inst   
     character(len=*)       , intent(in)    :: phase                          ! 'sun' or 'sha'
+
     !
     ! !LOCAL VARIABLES:
     !
     ! Leaf photosynthesis parameters
     real(r8) :: jmax_z(bounds%begp:bounds%endp,nlevcan)  ! maximum electron transport rate (umol electrons/m**2/s)
-    real(r8) :: lnc(bounds%begp:bounds%endp)   ! leaf N concentration (gN leaf/m^2)
+    !real(r8) :: lnc(bounds%begp:bounds%endp)   ! leaf N concentration (gN leaf/m^2)
     real(r8) :: bbbopt(bounds%begp:bounds%endp)! Ball-Berry minimum leaf conductance, unstressed (umol H2O/m**2/s)
     real(r8) :: mbbopt(bounds%begp:bounds%endp)! Ball-Berry slope of conductance-photosynthesis relationship, unstressed
     real(r8) :: kn(bounds%begp:bounds%endp)    ! leaf nitrogen decay coefficient
@@ -638,24 +717,31 @@ contains
     real(r8) :: laican            ! canopy sum of lai_z
     real(r8) :: rh_can
 
-    real(r8) , pointer :: lai_z       (:,:)    
-    real(r8) , pointer :: par_z       (:,:)    
-    real(r8) , pointer :: vcmaxcint   (:)  
-    real(r8) , pointer :: alphapsn    (:)   
-    real(r8) , pointer :: psn         (:)        
-    real(r8) , pointer :: psn_wc      (:)     
-    real(r8) , pointer :: psn_wj      (:)     
-    real(r8) , pointer :: psn_wp      (:)     
-    real(r8) , pointer :: psn_z       (:,:)    
-    real(r8) , pointer :: lmr         (:)        
-    real(r8) , pointer :: lmr_z       (:,:)    
-    real(r8) , pointer :: rs          (:)         
-    real(r8) , pointer :: rs_z        (:,:)     
-    real(r8) , pointer :: ci_z        (:,:)     
+    real(r8) , pointer :: lai_z       (:,:)
+    real(r8) , pointer :: par_z       (:,:)
+    real(r8) , pointer :: vcmaxcint   (:)
+    real(r8) , pointer :: alphapsn    (:)
+    real(r8) , pointer :: psn         (:)
+    real(r8) , pointer :: psn_wc      (:)
+    real(r8) , pointer :: psn_wj      (:)
+    real(r8) , pointer :: psn_wp      (:)
+    real(r8) , pointer :: psn_z       (:,:)
+    real(r8) , pointer :: lmr         (:)
+    real(r8) , pointer :: lmr_z       (:,:)
+    real(r8) , pointer :: rs          (:)
+    real(r8) , pointer :: rs_z        (:,:)
+    real(r8) , pointer :: ci_z        (:,:)
     real(r8) , pointer :: o3coefv     (:)  ! o3 coefficient used in photo calculation
     real(r8) , pointer :: o3coefg     (:)  ! o3 coefficient used in rs calculation
-    real(r8) , pointer :: alphapsnsun (:)  
-    real(r8) , pointer :: alphapsnsha (:) 
+    real(r8) , pointer :: alphapsnsun (:)
+    real(r8) , pointer :: alphapsnsha (:)
+
+    !integer  :: lnc_opt                  
+    !integer  :: reduce_dayl_factor              
+    !integer  :: vcmax_opt                               
+    real(r8) :: sum_nscaler              
+    real(r8) :: total_lai                
+    integer  :: nptreemax                
     !------------------------------------------------------------------------------
 
     ! Temperature and soil water response functions
@@ -674,77 +760,89 @@ contains
     SHR_ASSERT_ALL((ubound(btran)       == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
     SHR_ASSERT_ALL((ubound(dayl_factor) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
 
-    associate(                                                 & 
-         c3psn      => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3                              
-         leafcn     => pftcon%leafcn                         , & ! Input:  leaf C:N (gC/gN)                                                      
-         flnr       => pftcon%flnr                           , & ! Input:  fraction of leaf N in the Rubisco enzyme (gN Rubisco / gN leaf)       
-         fnitr      => pftcon%fnitr                          , & ! Input:  foliage nitrogen limitation factor (-)                                
-         slatop     => pftcon%slatop                         , & ! Input:  specific leaf area at top of canopy, projected area basis [m^2/gC]    
+    associate(                                                 &
+         c3psn      => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3
+         leafcn     => pftcon%leafcn                         , & ! Input:  leaf C:N (gC/gN)
+         flnr       => pftcon%flnr                           , & ! Input:  fraction of leaf N in the Rubisco enzyme (gN Rubisco / gN leaf)
+         fnitr      => pftcon%fnitr                          , & ! Input:  foliage nitrogen limitation factor (-)
+         slatop     => pftcon%slatop                         , & ! Input:  specific leaf area at top of canopy, projected area basis [m^2/gC]
+         i_vc       => pftcon%i_vc                           , & ! Input:  [real(r8) (:)   ]  
+         s_vc       => pftcon%s_vc                           , & ! Input:  [real(r8) (:)   ]  
+         i_vca      => pftcon%i_vca                          , & ! Input:  [real(r8) (:)   ]  
+         s_vca      => pftcon%s_vca                          , & ! Input:  [real(r8) (:)   ]  
+         i_vcad     => pftcon%i_vcad                         , & ! Input:  [real(r8) (:)   ]  
+         s_vcad     => pftcon%s_vcad                         , & ! Input:  [real(r8) (:)   ]  
+         i_flnr     => pftcon%i_flnr                         , & ! Input:  [real(r8) (:)   ]  
+         s_flnr     => pftcon%s_flnr                         , & ! Input:  [real(r8) (:)   ]  
+         leafn      => cnveg_nitrogenstate_inst%leafn_patch  , & ! Input:  [real(r8) (:)   ]  (gN/m2) leaf N      
+         forc_pbot  => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)
 
-         forc_pbot  => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
+         t_veg      => temperature_inst%t_veg_patch          , & ! Input:  [real(r8) (:)   ]  vegetation temperature (Kelvin)
+         t10        => temperature_inst%t_a10_patch          , & ! Input:  [real(r8) (:)   ]  10-day running mean of the 2 m temperature (K)
+         tgcm       => temperature_inst%thm_patch            , & ! Input:  [real(r8) (:)   ]  air temperature at agcm reference height (kelvin)
 
-         t_veg      => temperature_inst%t_veg_patch          , & ! Input:  [real(r8) (:)   ]  vegetation temperature (Kelvin)                                       
-         t10        => temperature_inst%t_a10_patch          , & ! Input:  [real(r8) (:)   ]  10-day running mean of the 2 m temperature (K)                        
-         tgcm       => temperature_inst%thm_patch            , & ! Input:  [real(r8) (:)   ]  air temperature at agcm reference height (kelvin)                     
+         nrad       => surfalb_inst%nrad_patch               , & ! Input:  [integer  (:)   ]  pft number of canopy layers, above snow for radiative transfer
+         tlai_z     => surfalb_inst%tlai_z_patch             , & ! Input:  [real(r8) (:,:) ]  pft total leaf area index for canopy layer
+         tlai       => canopystate_inst%tlai_patch           , & ! Input:  [real(r8)(:)    ]  one-sided leaf area index, no burying by snow  
+         vcmx25_z   => photosyns_inst%vcmx25_z_patch         , & ! Input:  [real(r8) (:,:) ]  Vc,max25 (umol co2 /m**2/ s) [always +]
+         jmx25_z    => photosyns_inst%jmx25_z_patch          , & ! Input:  [real(r8) (:,:) ]  Jmax25 (umol electron /m**2/ s) [always +]
 
-         nrad       => surfalb_inst%nrad_patch               , & ! Input:  [integer  (:)   ]  pft number of canopy layers, above snow for radiative transfer  
-         tlai_z     => surfalb_inst%tlai_z_patch             , & ! Input:  [real(r8) (:,:) ]  pft total leaf area index for canopy layer                              
-
-         c3flag     => photosyns_inst%c3flag_patch           , & ! Output: [logical  (:)   ]  true if C3 and false if C4                                             
-         ac         => photosyns_inst%ac_patch               , & ! Output: [real(r8) (:,:) ]  Rubisco-limited gross photosynthesis (umol CO2/m**2/s)              
-         aj         => photosyns_inst%aj_patch               , & ! Output: [real(r8) (:,:) ]  RuBP-limited gross photosynthesis (umol CO2/m**2/s)                 
+         c3flag     => photosyns_inst%c3flag_patch           , & ! Output: [logical  (:)   ]  true if C3 and false if C4
+         ac         => photosyns_inst%ac_patch               , & ! Output: [real(r8) (:,:) ]  Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
+         aj         => photosyns_inst%aj_patch               , & ! Output: [real(r8) (:,:) ]  RuBP-limited gross photosynthesis (umol CO2/m**2/s)
          ap         => photosyns_inst%ap_patch               , & ! Output: [real(r8) (:,:) ]  product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
-         ag         => photosyns_inst%ag_patch               , & ! Output: [real(r8) (:,:) ]  co-limited gross leaf photosynthesis (umol CO2/m**2/s)              
-         an         => photosyns_inst%an_patch               , & ! Output: [real(r8) (:,:) ]  net leaf photosynthesis (umol CO2/m**2/s)                           
-         gb_mol     => photosyns_inst%gb_mol_patch           , & ! Output: [real(r8) (:)   ]  leaf boundary layer conductance (umol H2O/m**2/s)                     
-         gs_mol     => photosyns_inst%gs_mol_patch           , & ! Output: [real(r8) (:,:) ]  leaf stomatal conductance (umol H2O/m**2/s)                         
-         vcmax_z    => photosyns_inst%vcmax_z_patch          , & ! Output: [real(r8) (:,:) ]  maximum rate of carboxylation (umol co2/m**2/s)                     
-         cp         => photosyns_inst%cp_patch               , & ! Output: [real(r8) (:)   ]  CO2 compensation point (Pa)                                           
-         kc         => photosyns_inst%kc_patch               , & ! Output: [real(r8) (:)   ]  Michaelis-Menten constant for CO2 (Pa)                                
-         ko         => photosyns_inst%ko_patch               , & ! Output: [real(r8) (:)   ]  Michaelis-Menten constant for O2 (Pa)                                 
-         qe         => photosyns_inst%qe_patch               , & ! Output: [real(r8) (:)   ]  quantum efficiency, used only for C4 (mol CO2 / mol photons)          
-         tpu_z      => photosyns_inst%tpu_z_patch            , & ! Output: [real(r8) (:,:) ]  triose phosphate utilization rate (umol CO2/m**2/s)                 
-         kp_z       => photosyns_inst%kp_z_patch             , & ! Output: [real(r8) (:,:) ]  initial slope of CO2 response curve (C4 plants)                     
-         theta_cj   => photosyns_inst%theta_cj_patch         , & ! Output: [real(r8) (:)   ]  empirical curvature parameter for ac, aj photosynthesis co-limitation 
-         bbb        => photosyns_inst%bbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry minimum leaf conductance (umol H2O/m**2/s)                 
-         mbb        => photosyns_inst%mbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship           
-         rh_leaf    => photosyns_inst%rh_leaf_patch            & ! Output: [real(r8) (:)   ]  fractional humidity at leaf surface (dimensionless)                   
+         ag         => photosyns_inst%ag_patch               , & ! Output: [real(r8) (:,:) ]  co-limited gross leaf photosynthesis (umol CO2/m**2/s)
+         an         => photosyns_inst%an_patch               , & ! Output: [real(r8) (:,:) ]  net leaf photosynthesis (umol CO2/m**2/s)
+         gb_mol     => photosyns_inst%gb_mol_patch           , & ! Output: [real(r8) (:)   ]  leaf boundary layer conductance (umol H2O/m**2/s)
+         gs_mol     => photosyns_inst%gs_mol_patch           , & ! Output: [real(r8) (:,:) ]  leaf stomatal conductance (umol H2O/m**2/s)
+         vcmax_z    => photosyns_inst%vcmax_z_patch          , & ! Output: [real(r8) (:,:) ]  maximum rate of carboxylation (umol co2/m**2/s)
+         cp         => photosyns_inst%cp_patch               , & ! Output: [real(r8) (:)   ]  CO2 compensation point (Pa)
+         kc         => photosyns_inst%kc_patch               , & ! Output: [real(r8) (:)   ]  Michaelis-Menten constant for CO2 (Pa)
+         ko         => photosyns_inst%ko_patch               , & ! Output: [real(r8) (:)   ]  Michaelis-Menten constant for O2 (Pa)
+         qe         => photosyns_inst%qe_patch               , & ! Output: [real(r8) (:)   ]  quantum efficiency, used only for C4 (mol CO2 / mol photons)
+         tpu_z      => photosyns_inst%tpu_z_patch            , & ! Output: [real(r8) (:,:) ]  triose phosphate utilization rate (umol CO2/m**2/s)
+         kp_z       => photosyns_inst%kp_z_patch             , & ! Output: [real(r8) (:,:) ]  initial slope of CO2 response curve (C4 plants)
+         theta_cj   => photosyns_inst%theta_cj_patch         , & ! Output: [real(r8) (:)   ]  empirical curvature parameter for ac, aj photosynthesis co-limitation
+         bbb        => photosyns_inst%bbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry minimum leaf conductance (umol H2O/m**2/s)
+         mbb        => photosyns_inst%mbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship
+         rh_leaf    => photosyns_inst%rh_leaf_patch          , & ! Output: [real(r8) (:)   ]  fractional humidity at leaf surface (dimensionless)
+         lnc        => photosyns_inst%lnca_patch               & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
          )
-      
+
       if (phase == 'sun') then
-         par_z     =>    solarabs_inst%parsun_z_patch        ! Input:  [real(r8) (:,:) ]  par absorbed per unit lai for canopy layer (w/m**2)                 
-         lai_z     =>    canopystate_inst%laisun_z_patch     ! Input:  [real(r8) (:,:) ]  leaf area index for canopy layer, sunlit or shaded                  
-         vcmaxcint =>    surfalb_inst%vcmaxcintsun_patch     ! Input:  [real(r8) (:)   ]  leaf to canopy scaling coefficient                                     
-         alphapsn  =>    photosyns_inst%alphapsnsun_patch    ! Input:  [real(r8) (:)   ]  13C fractionation factor for PSN ()                                   
+         par_z     =>    solarabs_inst%parsun_z_patch        ! Input:  [real(r8) (:,:) ]  par absorbed per unit lai for canopy layer (w/m**2)
+         lai_z     =>    canopystate_inst%laisun_z_patch     ! Input:  [real(r8) (:,:) ]  leaf area index for canopy layer, sunlit or shaded
+         vcmaxcint =>    surfalb_inst%vcmaxcintsun_patch     ! Input:  [real(r8) (:)   ]  leaf to canopy scaling coefficient
+         alphapsn  =>    photosyns_inst%alphapsnsun_patch    ! Input:  [real(r8) (:)   ]  13C fractionation factor for PSN ()
          o3coefv   =>    ozone_inst%o3coefvsun_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in photosynthesis calculation
          o3coefg   =>    ozone_inst%o3coefgsun_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in rs calculation
-         ci_z      =>    photosyns_inst%cisun_z_patch        ! Output: [real(r8) (:,:) ]  intracellular leaf CO2 (Pa)                                         
-         rs        =>    photosyns_inst%rssun_patch          ! Output: [real(r8) (:)   ]  leaf stomatal resistance (s/m)                                        
-         rs_z      =>    photosyns_inst%rssun_z_patch        ! Output: [real(r8) (:,:) ]  canopy layer: leaf stomatal resistance (s/m)                        
-         lmr       =>    photosyns_inst%lmrsun_patch         ! Output: [real(r8) (:)   ]  leaf maintenance respiration rate (umol CO2/m**2/s)                   
-         lmr_z     =>    photosyns_inst%lmrsun_z_patch       ! Output: [real(r8) (:,:) ]  canopy layer: leaf maintenance respiration rate (umol CO2/m**2/s)   
-         psn       =>    photosyns_inst%psnsun_patch         ! Output: [real(r8) (:)   ]  foliage photosynthesis (umol co2 /m**2/ s) [always +]                 
-         psn_z     =>    photosyns_inst%psnsun_z_patch       ! Output: [real(r8) (:,:) ]  canopy layer: foliage photosynthesis (umol co2 /m**2/ s) [always +] 
-         psn_wc    =>    photosyns_inst%psnsun_wc_patch      ! Output: [real(r8) (:)   ]  Rubisco-limited foliage photosynthesis (umol co2 /m**2/ s) [always +] 
-         psn_wj    =>    photosyns_inst%psnsun_wj_patch      ! Output: [real(r8) (:)   ]  RuBP-limited foliage photosynthesis (umol co2 /m**2/ s) [always +]    
-         psn_wp    =>    photosyns_inst%psnsun_wp_patch      ! Output: [real(r8) (:)   ]  product-limited foliage photosynthesis (umol co2 /m**2/ s) [always +] 
+         ci_z      =>    photosyns_inst%cisun_z_patch        ! Output: [real(r8) (:,:) ]  intracellular leaf CO2 (Pa)
+         rs        =>    photosyns_inst%rssun_patch          ! Output: [real(r8) (:)   ]  leaf stomatal resistance (s/m)
+         rs_z      =>    photosyns_inst%rssun_z_patch        ! Output: [real(r8) (:,:) ]  canopy layer: leaf stomatal resistance (s/m)
+         lmr       =>    photosyns_inst%lmrsun_patch         ! Output: [real(r8) (:)   ]  leaf maintenance respiration rate (umol CO2/m**2/s)
+         lmr_z     =>    photosyns_inst%lmrsun_z_patch       ! Output: [real(r8) (:,:) ]  canopy layer: leaf maintenance respiration rate (umol CO2/m**2/s)
+         psn       =>    photosyns_inst%psnsun_patch         ! Output: [real(r8) (:)   ]  foliage photosynthesis (umol co2 /m**2/ s) [always +]
+         psn_z     =>    photosyns_inst%psnsun_z_patch       ! Output: [real(r8) (:,:) ]  canopy layer: foliage photosynthesis (umol co2 /m**2/ s) [always +]
+         psn_wc    =>    photosyns_inst%psnsun_wc_patch      ! Output: [real(r8) (:)   ]  Rubisco-limited foliage photosynthesis (umol co2 /m**2/ s) [always +]
+         psn_wj    =>    photosyns_inst%psnsun_wj_patch      ! Output: [real(r8) (:)   ]  RuBP-limited foliage photosynthesis (umol co2 /m**2/ s) [always +]
+         psn_wp    =>    photosyns_inst%psnsun_wp_patch      ! Output: [real(r8) (:)   ]  product-limited foliage photosynthesis (umol co2 /m**2/ s) [always +]
       else if (phase == 'sha') then
-         par_z     =>    solarabs_inst%parsha_z_patch        ! Input:  [real(r8) (:,:) ]  par absorbed per unit lai for canopy layer (w/m**2)                 
-         lai_z     =>    canopystate_inst%laisha_z_patch     ! Input:  [real(r8) (:,:) ]  leaf area index for canopy layer, sunlit or shaded                  
-         vcmaxcint =>    surfalb_inst%vcmaxcintsha_patch     ! Input:  [real(r8) (:)   ]  leaf to canopy scaling coefficient                                    
+         par_z     =>    solarabs_inst%parsha_z_patch        ! Input:  [real(r8) (:,:) ]  par absorbed per unit lai for canopy layer (w/m**2)
+         lai_z     =>    canopystate_inst%laisha_z_patch     ! Input:  [real(r8) (:,:) ]  leaf area index for canopy layer, sunlit or shaded
+         vcmaxcint =>    surfalb_inst%vcmaxcintsha_patch     ! Input:  [real(r8) (:)   ]  leaf to canopy scaling coefficient
          alphapsn  =>    photosyns_inst%alphapsnsha_patch    ! Input:  [real(r8) (:)   ]  13C fractionation factor for PSN ()
          o3coefv   =>    ozone_inst%o3coefvsha_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in photosynthesis calculation
          o3coefg   =>    ozone_inst%o3coefgsha_patch         ! Input:  [real(r8) (:)   ]  O3 coefficient used in rs calculation
-         ci_z      =>    photosyns_inst%cisha_z_patch        ! Output: [real(r8) (:,:) ]  intracellular leaf CO2 (Pa)                                         
-         rs        =>    photosyns_inst%rssha_patch          ! Output: [real(r8) (:)   ]  leaf stomatal resistance (s/m)                                        
-         rs_z      =>    photosyns_inst%rssha_z_patch        ! Output: [real(r8) (:,:) ]  canopy layer: leaf stomatal resistance (s/m)                        
-         lmr       =>    photosyns_inst%lmrsha_patch         ! Output: [real(r8) (:)   ]  leaf maintenance respiration rate (umol CO2/m**2/s)                   
-         lmr_z     =>    photosyns_inst%lmrsha_z_patch       ! Output: [real(r8) (:,:) ]  canopy layer: leaf maintenance respiration rate (umol CO2/m**2/s)   
-         psn       =>    photosyns_inst%psnsha_patch         ! Output: [real(r8) (:)   ]  foliage photosynthesis (umol co2 /m**2/ s) [always +]                 
-         psn_z     =>    photosyns_inst%psnsha_z_patch       ! Output: [real(r8) (:,:) ]  canopy layer: foliage photosynthesis (umol co2 /m**2/ s) [always +] 
-         psn_wc    =>    photosyns_inst%psnsha_wc_patch      ! Output: [real(r8) (:)   ]  Rubisco-limited foliage photosynthesis (umol co2 /m**2/ s) [always +] 
-         psn_wj    =>    photosyns_inst%psnsha_wj_patch      ! Output: [real(r8) (:)   ]  RuBP-limited foliage photosynthesis (umol co2 /m**2/ s) [always +]    
-         psn_wp    =>    photosyns_inst%psnsha_wp_patch      ! Output: [real(r8) (:)   ]  product-limited foliage photosynthesis (umol co2 /m**2/ s) [always +] 
+         ci_z      =>    photosyns_inst%cisha_z_patch        ! Output: [real(r8) (:,:) ]  intracellular leaf CO2 (Pa)
+         rs        =>    photosyns_inst%rssha_patch          ! Output: [real(r8) (:)   ]  leaf stomatal resistance (s/m)
+         rs_z      =>    photosyns_inst%rssha_z_patch        ! Output: [real(r8) (:,:) ]  canopy layer: leaf stomatal resistance (s/m)
+         lmr       =>    photosyns_inst%lmrsha_patch         ! Output: [real(r8) (:)   ]  leaf maintenance respiration rate (umol CO2/m**2/s)
+         lmr_z     =>    photosyns_inst%lmrsha_z_patch       ! Output: [real(r8) (:,:) ]  canopy layer: leaf maintenance respiration rate (umol CO2/m**2/s)
+         psn       =>    photosyns_inst%psnsha_patch         ! Output: [real(r8) (:)   ]  foliage photosynthesis (umol co2 /m**2/ s) [always +]
+         psn_z     =>    photosyns_inst%psnsha_z_patch       ! Output: [real(r8) (:,:) ]  canopy layer: foliage photosynthesis (umol co2 /m**2/ s) [always +]
+         psn_wc    =>    photosyns_inst%psnsha_wc_patch      ! Output: [real(r8) (:)   ]  Rubisco-limited foliage photosynthesis (umol co2 /m**2/ s) [always +]
+         psn_wj    =>    photosyns_inst%psnsha_wj_patch      ! Output: [real(r8) (:)   ]  RuBP-limited foliage photosynthesis (umol co2 /m**2/ s) [always +]
+         psn_wp    =>    photosyns_inst%psnsha_wp_patch      ! Output: [real(r8) (:)   ]  product-limited foliage photosynthesis (umol co2 /m**2/ s) [always +]
       end if
 
       !==============================================================================!
@@ -796,7 +894,7 @@ contains
          ! C3 or C4 photosynthesis logical variable
 
          if (nint(c3psn(patch%itype(p))) == 1) then
-            c3flag(p) = .true. 
+            c3flag(p) = .true.
          else if (nint(c3psn(patch%itype(p))) == 0) then
             c3flag(p) = .false.
          end if
@@ -848,18 +946,99 @@ contains
       do f = 1, fn
          p = filterp(f)
 
-         ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
+         if (lnc_opt .eqv. .false.) then     
+            ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
+            lnc(p) = 1._r8 / (slatop(patch%itype(p)) * leafcn(patch%itype(p)))
+         end if   
 
-         lnc(p) = 1._r8 / (slatop(patch%itype(p)) * leafcn(patch%itype(p)))
+         ! Using the actual nitrogen allocated to the leaf after
+         ! uptake rather than fixing leaf nitrogen based on SLA and CN
+         ! ratio
+         if (lnc_opt .eqv. .true.) then                                                     
+            ! nlevcan and nrad(p) look like the same variable ?? check this later
+            sum_nscaler = 0.0_r8                                                    
+            laican = 0.0_r8                                                         
+            total_lai = 0.0_r8                                                      
 
-         ! vcmax25 at canopy top, as in CN but using lnc at top of the canopy
+            do iv = 1, nrad(p)                                                      
 
-         vcmax25top = lnc(p) * flnr(patch%itype(p)) * fnr * act25 * dayl_factor(p)
-         if (.not. use_cn) then
-            vcmax25top = vcmax25top * fnitr(patch%itype(p))
-         else
-            if ( CNAllocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
-         end if
+               if (iv == 1) then                                                    
+                  laican = 0.5_r8 * tlai_z(p,iv)                                    
+                  total_lai = tlai_z(p,iv)                                          
+               else                                                                 
+                  laican = laican + 0.5_r8 * (tlai_z(p,iv-1)+tlai_z(p,iv))          
+                  total_lai = total_lai + tlai_z(p,iv)                              
+               end if                                                               
+
+               ! Scale for leaf nitrogen profile. If multi-layer code, use explicit
+               ! profile. If sun/shade big leaf code, use canopy integrated factor.
+               if (nlevcan == 1) then                                               
+                  nscaler = 1.0_r8                                                  
+               else if (nlevcan > 1) then                                           
+                  nscaler = exp(-kn(p) * laican)                                    
+               end if                                                               
+
+               sum_nscaler = sum_nscaler + nscaler                                  
+
+            end do                                                                  
+
+            if (tlai(p) > 0.0_r8 .AND. sum_nscaler > 0.0_r8) then
+               ! dividing by LAI to convert total leaf nitrogen
+               ! from m2 ground to m2 leaf; dividing by sum_nscaler to
+               ! convert total leaf N to leaf N at canopy top
+               lnc(p) = leafn(p) / (tlai(p) * sum_nscaler)
+            else                                                                    
+               lnc(p) = 0.0_r8                                                      
+            end if                                                                  
+
+         end if                                                                     
+
+
+         ! reduce_dayl_factor .eqv. .false.  
+         if (reduce_dayl_factor .eqv. .true.) then                                          
+            if (dayl_factor(p) > 0.25_r8) then                                      ! added by BG
+               ! dayl_factor(p) = 1.0_r8  
+            end if                                                                  
+         end if                                                                     
+
+
+         ! vcmax_opt = 3  
+         if (vcmax_opt == 0) then                                                   
+            ! vcmax25 at canopy top, as in CN but using lnc at top of the canopy
+            vcmax25top = lnc(p) * flnr(patch%itype(p)) * fnr * act25 * dayl_factor(p)
+            if (.not. use_cn) then
+               vcmax25top = vcmax25top * fnitr(patch%itype(p))
+            else
+               if ( CNAllocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
+            end if
+         end if                                                                                     
+
+         if (vcmax_opt == 1) then                                                                   
+            vcmax25top = ( i_vc(patch%itype(p)) + s_vc(patch%itype(p)) * lnc(p) ) * dayl_factor(p)      
+         end if                                                                                     
+
+         if (vcmax_opt == 2) then                                                                   
+            vcmax25top = ( i_vca(patch%itype(p)) + s_vca(patch%itype(p)) * lnc(p) ) * dayl_factor(p)    
+         end if                                                                                     
+
+         if (vcmax_opt == 3) then                                                                   
+            vcmax25top = ( i_vcad(patch%itype(p)) + s_vcad(patch%itype(p)) * lnc(p) ) * dayl_factor(p)  
+         end if                                                                                     
+
+         if (vcmax_opt == 4) then                                                                   
+            nptreemax = 9  ! is this number correct? check later 
+            if (patch%itype(p) >= nptreemax) then   ! if not tree 
+               ! for shrubs and herbs 
+               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) + s_flnr(patch%itype(p)) * lnc(p) ) * fnr * act25 * &
+                    dayl_factor(p)
+            else
+               ! if tree 
+               vcmax25top = lnc(p) * ( i_flnr(patch%itype(p)) * exp(s_flnr(patch%itype(p)) * lnc(p)) ) * fnr * act25 * &
+                    dayl_factor(p)
+               ! for trees 
+            end if     
+         end if        
+
 
          ! Parameters derived from vcmax25top. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
          ! used jmax25 = 1.97 vcmax25, from Wullschleger (1993) Journal of Experimental Botany 44:907-920.
@@ -936,6 +1115,11 @@ contains
             ! Maintenance respiration
 
             lmr25 = lmr25top * nscaler
+
+            if(use_luna.and.c3flag(p).and.(.not.use_cn))then
+                lmr25 = 0.015_r8 * vcmx25_z(p,iv)
+            endif
+          
             if (c3flag(p)) then
                lmr_z(p,iv) = lmr25 * ft(t_veg(p), lmrha) * fth(t_veg(p), lmrhd, lmrse, lmrc)
             else
@@ -956,9 +1140,15 @@ contains
 
             else                                     ! day time
 
-               vcmax25 = vcmax25top * nscaler
-               jmax25 = jmax25top * nscaler
-               tpu25 = tpu25top * nscaler
+               if(use_luna.and.c3flag(p))then
+                  vcmax25 = vcmx25_z(p,iv)
+                  jmax25 = jmx25_z(p,iv)
+                  tpu25 = 0.167_r8 * vcmax25        
+               else
+                  vcmax25 = vcmax25top * nscaler
+                  jmax25 = jmax25top * nscaler
+                  tpu25 = tpu25top * nscaler                  
+               endif
                kp25 = kp25top * nscaler
 
                ! Adjust for temperature
@@ -1032,7 +1222,7 @@ contains
                ceair = min( eair(p),  esat_tv(p) )
                rh_can = ceair / esat_tv(p)
 
-               ! Electron transport rate for C3 plants. Convert par from W/m2 to 
+               ! Electron transport rate for C3 plants. Convert par from W/m2 to
                ! umol photons/m**2/s using the factor 4.6
 
                qabs  = 0.5_r8 * (1._r8 - fnps) * par_z(p,iv) * 4.6_r8
@@ -1188,36 +1378,36 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                             &
-         forc_pco2   => atm2lnd_inst%forc_pco2_grc       , & ! Input:  [real(r8) (:) ]  partial pressure co2 (Pa)                                             
-         forc_pc13o2 => atm2lnd_inst%forc_pc13o2_grc     , & ! Input:  [real(r8) (:) ]  partial pressure c13o2 (Pa)                                           
-         forc_po2    => atm2lnd_inst%forc_po2_grc        , & ! Input:  [real(r8) (:) ]  partial pressure o2 (Pa)                                              
+         forc_pco2   => atm2lnd_inst%forc_pco2_grc       , & ! Input:  [real(r8) (:) ]  partial pressure co2 (Pa)
+         forc_pc13o2 => atm2lnd_inst%forc_pc13o2_grc     , & ! Input:  [real(r8) (:) ]  partial pressure c13o2 (Pa)
+         forc_po2    => atm2lnd_inst%forc_po2_grc        , & ! Input:  [real(r8) (:) ]  partial pressure o2 (Pa)
 
-         laisun      => canopystate_inst%laisun_patch    , & ! Input:  [real(r8) (:) ]  sunlit leaf area                                                      
-         laisha      => canopystate_inst%laisha_patch    , & ! Input:  [real(r8) (:) ]  shaded leaf area                                                      
+         laisun      => canopystate_inst%laisun_patch    , & ! Input:  [real(r8) (:) ]  sunlit leaf area
+         laisha      => canopystate_inst%laisha_patch    , & ! Input:  [real(r8) (:) ]  shaded leaf area
 
-         psnsun      => photosyns_inst%psnsun_patch      , & ! Input:  [real(r8) (:) ]  sunlit leaf photosynthesis (umol CO2 /m**2/ s)                        
-         psnsha      => photosyns_inst%psnsha_patch      , & ! Input:  [real(r8) (:) ]  shaded leaf photosynthesis (umol CO2 /m**2/ s)                        
+         psnsun      => photosyns_inst%psnsun_patch      , & ! Input:  [real(r8) (:) ]  sunlit leaf photosynthesis (umol CO2 /m**2/ s)
+         psnsha      => photosyns_inst%psnsha_patch      , & ! Input:  [real(r8) (:) ]  shaded leaf photosynthesis (umol CO2 /m**2/ s)
          rc13_canair => photosyns_inst%rc13_canair_patch , & ! Output: [real(r8) (:) ]  C13O2/C12O2 in canopy air
-         rc13_psnsun => photosyns_inst%rc13_psnsun_patch , & ! Output: [real(r8) (:) ]  C13O2/C12O2 in sunlit canopy psn flux             
-         rc13_psnsha => photosyns_inst%rc13_psnsha_patch , & ! Output: [real(r8) (:) ]  C13O2/C12O2 in shaded canopy psn flux  
-         alphapsnsun => photosyns_inst%alphapsnsun_patch , & ! Output: [real(r8) (:) ]  fractionation factor in sunlit canopy psn flux  
-         alphapsnsha => photosyns_inst%alphapsnsha_patch , & ! Output: [real(r8) (:) ]  fractionation factor in shaded canopy psn flux   
-         psnsun_wc   => photosyns_inst%psnsun_wc_patch   , & ! Output: [real(r8) (:) ]  Rubsico-limited sunlit leaf photosynthesis (umol CO2 /m**2/ s)        
-         psnsun_wj   => photosyns_inst%psnsun_wj_patch   , & ! Output: [real(r8) (:) ]  RuBP-limited sunlit leaf photosynthesis (umol CO2 /m**2/ s)           
-         psnsun_wp   => photosyns_inst%psnsun_wp_patch   , & ! Output: [real(r8) (:) ]  product-limited sunlit leaf photosynthesis (umol CO2 /m**2/ s)        
-         psnsha_wc   => photosyns_inst%psnsha_wc_patch   , & ! Output: [real(r8) (:) ]  Rubsico-limited shaded leaf photosynthesis (umol CO2 /m**2/ s)        
-         psnsha_wj   => photosyns_inst%psnsha_wj_patch   , & ! Output: [real(r8) (:) ]  RuBP-limited shaded leaf photosynthesis (umol CO2 /m**2/ s)           
-         psnsha_wp   => photosyns_inst%psnsha_wp_patch   , & ! Output: [real(r8) (:) ]  product-limited shaded leaf photosynthesis (umol CO2 /m**2/ s)        
-         c13_psnsun  => photosyns_inst%c13_psnsun_patch  , & ! Output: [real(r8) (:) ]  sunlit leaf photosynthesis (umol 13CO2 /m**2/ s)  
-         c13_psnsha  => photosyns_inst%c13_psnsha_patch  , & ! Output: [real(r8) (:) ]  shaded leaf photosynthesis (umol 13CO2 /m**2/ s) 
-         c14_psnsun  => photosyns_inst%c14_psnsun_patch  , & ! Output: [real(r8) (:) ]  sunlit leaf photosynthesis (umol 14CO2 /m**2/ s)  
-         c14_psnsha  => photosyns_inst%c14_psnsha_patch  , & ! Output: [real(r8) (:) ]  shaded leaf photosynthesis (umol 14CO2 /m**2/ s) 
-         fpsn        => photosyns_inst%fpsn_patch        , & ! Output: [real(r8) (:) ]  photosynthesis (umol CO2 /m**2 /s)                                    
-         fpsn_wc     => photosyns_inst%fpsn_wc_patch     , & ! Output: [real(r8) (:) ]  Rubisco-limited photosynthesis (umol CO2 /m**2 /s)                    
-         fpsn_wj     => photosyns_inst%fpsn_wj_patch     , & ! Output: [real(r8) (:) ]  RuBP-limited photosynthesis (umol CO2 /m**2 /s)                       
-         fpsn_wp     => photosyns_inst%fpsn_wp_patch       & ! Output: [real(r8) (:) ]  product-limited photosynthesis (umol CO2 /m**2 /s)                    
+         rc13_psnsun => photosyns_inst%rc13_psnsun_patch , & ! Output: [real(r8) (:) ]  C13O2/C12O2 in sunlit canopy psn flux
+         rc13_psnsha => photosyns_inst%rc13_psnsha_patch , & ! Output: [real(r8) (:) ]  C13O2/C12O2 in shaded canopy psn flux
+         alphapsnsun => photosyns_inst%alphapsnsun_patch , & ! Output: [real(r8) (:) ]  fractionation factor in sunlit canopy psn flux
+         alphapsnsha => photosyns_inst%alphapsnsha_patch , & ! Output: [real(r8) (:) ]  fractionation factor in shaded canopy psn flux
+         psnsun_wc   => photosyns_inst%psnsun_wc_patch   , & ! Output: [real(r8) (:) ]  Rubsico-limited sunlit leaf photosynthesis (umol CO2 /m**2/ s)
+         psnsun_wj   => photosyns_inst%psnsun_wj_patch   , & ! Output: [real(r8) (:) ]  RuBP-limited sunlit leaf photosynthesis (umol CO2 /m**2/ s)
+         psnsun_wp   => photosyns_inst%psnsun_wp_patch   , & ! Output: [real(r8) (:) ]  product-limited sunlit leaf photosynthesis (umol CO2 /m**2/ s)
+         psnsha_wc   => photosyns_inst%psnsha_wc_patch   , & ! Output: [real(r8) (:) ]  Rubsico-limited shaded leaf photosynthesis (umol CO2 /m**2/ s)
+         psnsha_wj   => photosyns_inst%psnsha_wj_patch   , & ! Output: [real(r8) (:) ]  RuBP-limited shaded leaf photosynthesis (umol CO2 /m**2/ s)
+         psnsha_wp   => photosyns_inst%psnsha_wp_patch   , & ! Output: [real(r8) (:) ]  product-limited shaded leaf photosynthesis (umol CO2 /m**2/ s)
+         c13_psnsun  => photosyns_inst%c13_psnsun_patch  , & ! Output: [real(r8) (:) ]  sunlit leaf photosynthesis (umol 13CO2 /m**2/ s)
+         c13_psnsha  => photosyns_inst%c13_psnsha_patch  , & ! Output: [real(r8) (:) ]  shaded leaf photosynthesis (umol 13CO2 /m**2/ s)
+         c14_psnsun  => photosyns_inst%c14_psnsun_patch  , & ! Output: [real(r8) (:) ]  sunlit leaf photosynthesis (umol 14CO2 /m**2/ s)
+         c14_psnsha  => photosyns_inst%c14_psnsha_patch  , & ! Output: [real(r8) (:) ]  shaded leaf photosynthesis (umol 14CO2 /m**2/ s)
+         fpsn        => photosyns_inst%fpsn_patch        , & ! Output: [real(r8) (:) ]  photosynthesis (umol CO2 /m**2 /s)
+         fpsn_wc     => photosyns_inst%fpsn_wc_patch     , & ! Output: [real(r8) (:) ]  Rubisco-limited photosynthesis (umol CO2 /m**2 /s)
+         fpsn_wj     => photosyns_inst%fpsn_wj_patch     , & ! Output: [real(r8) (:) ]  RuBP-limited photosynthesis (umol CO2 /m**2 /s)
+         fpsn_wp     => photosyns_inst%fpsn_wp_patch       & ! Output: [real(r8) (:) ]  product-limited photosynthesis (umol CO2 /m**2 /s)
          )
-         
+
       if ( use_c14 ) then
          if (use_c14_bombspike) then
             !call C14BombSpike(rc14_atm)
@@ -1271,7 +1461,7 @@ contains
     ! limitation is taken into account in the CNAllocation module.
     !
     ! !ARGUMENTS:
-    type(bounds_type)      , intent(in)    :: bounds               
+    type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: fn                   ! size of pft filter
     integer                , intent(in)    :: filterp(fn)          ! patch filter
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
@@ -1290,27 +1480,27 @@ contains
     real(r8) :: ci
     !------------------------------------------------------------------------------
 
-    associate(                                                  & 
-         forc_pbot   => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
-         forc_pco2   => atm2lnd_inst%forc_pco2_grc            , & ! Input:  [real(r8) (:)   ]  partial pressure co2 (Pa)                                             
+    associate(                                                  &
+         forc_pbot   => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)
+         forc_pco2   => atm2lnd_inst%forc_pco2_grc            , & ! Input:  [real(r8) (:)   ]  partial pressure co2 (Pa)
 
-         c3psn       => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3                              
+         c3psn       => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3
 
-         nrad        => surfalb_inst%nrad_patch               , & ! Input:  [integer  (:)   ]  number of canopy layers, above snow for radiative transfer             
+         nrad        => surfalb_inst%nrad_patch               , & ! Input:  [integer  (:)   ]  number of canopy layers, above snow for radiative transfer
 
-         downreg     => cnveg_state_inst%downreg_patch        , & ! Input:  [real(r8) (:)   ]  fractional reduction in GPP due to N limitation (DIM)                 
+         downreg     => cnveg_state_inst%downreg_patch        , & ! Input:  [real(r8) (:)   ]  fractional reduction in GPP due to N limitation (DIM)
 
-         an          => photosyns_inst%an_patch               , & ! Input:  [real(r8) (:,:) ]  net leaf photosynthesis (umol CO2/m**2/s)                           
-         gb_mol      => photosyns_inst%gb_mol_patch           , & ! Input:  [real(r8) (:)   ]  leaf boundary layer conductance (umol H2O/m**2/s)                     
-         gs_mol      => photosyns_inst%gs_mol_patch             & ! Input:  [real(r8) (:,:) ]  leaf stomatal conductance (umol H2O/m**2/s)                         
+         an          => photosyns_inst%an_patch               , & ! Input:  [real(r8) (:,:) ]  net leaf photosynthesis (umol CO2/m**2/s)
+         gb_mol      => photosyns_inst%gb_mol_patch           , & ! Input:  [real(r8) (:)   ]  leaf boundary layer conductance (umol H2O/m**2/s)
+         gs_mol      => photosyns_inst%gs_mol_patch             & ! Input:  [real(r8) (:,:) ]  leaf stomatal conductance (umol H2O/m**2/s)
          )
 
       if (phase == 'sun') then
-         par_z    =>    solarabs_inst%parsun_z_patch     ! Input :  [real(r8) (:,:)]  par absorbed per unit lai for canopy layer (w/m**2)                 
-         alphapsn =>    photosyns_inst%alphapsnsun_patch ! Output:  [real(r8) (:)]                                                                        
+         par_z    =>    solarabs_inst%parsun_z_patch     ! Input :  [real(r8) (:,:)]  par absorbed per unit lai for canopy layer (w/m**2)
+         alphapsn =>    photosyns_inst%alphapsnsun_patch ! Output:  [real(r8) (:)]
       else if (phase == 'sha') then
-         par_z    =>    solarabs_inst%parsha_z_patch     ! Input :  [real(r8) (:,:)]  par absorbed per unit lai for canopy layer (w/m**2)                 
-         alphapsn =>    photosyns_inst%alphapsnsha_patch ! Output:  [real(r8) (:)]                                                                        
+         par_z    =>    solarabs_inst%parsha_z_patch     ! Input :  [real(r8) (:,:)]  par absorbed per unit lai for canopy layer (w/m**2)
+         alphapsn =>    photosyns_inst%alphapsnsha_patch ! Output:  [real(r8) (:)]
       end if
 
       do f = 1, fn
@@ -1343,7 +1533,7 @@ contains
        atm2lnd_inst, photosyns_inst)
     !
     !! DESCRIPTION:
-    ! use a hybrid solver to find the root of equation  
+    ! use a hybrid solver to find the root of equation
     ! f(x) = x- h(x),
     !we want to find x, s.t. f(x) = 0.
     !the hybrid approach combines the strength of the newton secant approach (find the solution domain)
@@ -1353,7 +1543,7 @@ contains
     !! REVISION HISTORY:
     !Dec 14/2012: created by Jinyun Tang
     !
-    !!USES:   
+    !!USES:
     !
     !! ARGUMENTS:
     implicit none
@@ -1367,7 +1557,7 @@ contains
     real(r8), intent(in) :: oair               ! Atmospheric O2 partial pressure (Pa)
     integer,  intent(in) :: p, iv, c           ! pft, c3/c4, and column index
     real(r8), intent(out) :: gs_mol            ! leaf stomatal conductance (umol H2O/m**2/s)
-    integer,  intent(out) :: iter              !number of iterations used, for record only   
+    integer,  intent(out) :: iter              !number of iterations used, for record only
     type(atm2lnd_type)  , intent(in)    :: atm2lnd_inst
     type(photosyns_type), intent(inout) :: photosyns_inst
     !
@@ -1415,7 +1605,7 @@ contains
        endif
        x0 = x1
        f0 = f1
-       x1 = x   
+       x1 = x
 
        call ci_func(x1,f1, p, iv, c, gb_mol, je, cair, oair, lmr_z, par_z, rh_can, gs_mol, &
             atm2lnd_inst, photosyns_inst)
@@ -1439,7 +1629,7 @@ contains
           x0=x
           exit
        endif
-       if(iter>itmax)then 
+       if(iter>itmax)then
           !in case of failing to converge within itmax iterations
           !stop at the minimum function
           !this happens because of some other issues besides the stomatal conductance calculation
@@ -1476,7 +1666,7 @@ contains
     real(r8), intent(in) :: je                ! electron transport rate (umol electrons/m**2/s)
     real(r8), intent(in) :: cair              ! Atmospheric CO2 partial pressure (Pa)
     real(r8), intent(in) :: oair              ! Atmospheric O2 partial pressure (Pa)
-    real(r8), intent(in) :: rh_can            ! inside canopy relative humidity 
+    real(r8), intent(in) :: rh_can            ! inside canopy relative humidity
     integer,  intent(in) :: ip, iv, ic        ! pft, c3/c4, and column index
     real(r8), intent(out) :: gs_mol           ! leaf stomatal conductance (umol H2O/m**2/s)
     type(atm2lnd_type)  , intent(in)    :: atm2lnd_inst
@@ -1517,7 +1707,7 @@ contains
           fb=fc
           fc=fa
        endif
-       tol1=2._r8*EPS*abs(b)+0.5_r8*tol  !Convergence check.   
+       tol1=2._r8*EPS*abs(b)+0.5_r8*tol  !Convergence check.
        xm=0.5_r8*(c-b)
        if(abs(xm) <= tol1 .or. fb == 0.)then
           x=b
@@ -1578,13 +1768,13 @@ contains
     ! Jinyun Tang separated it out from Photosynthesis, Feb. 07/2013
     !
     !!USES
-    use clm_varcon  , only : rgas, tfrz   
+    use clm_varcon  , only : rgas, tfrz
     !
     ! !ARGUMENTS:
     real(r8), intent(in) :: tl  ! leaf temperature in photosynthesis temperature function (K)
     real(r8), intent(in) :: ha  ! activation energy in photosynthesis temperature function (J/mol)
     !
-    ! !LOCAL VARIABLES:   
+    ! !LOCAL VARIABLES:
     real(r8) :: ans
     !-------------------------------------------------------------------------------
 
@@ -1593,7 +1783,7 @@ contains
     return
   end function ft
 
-  !-------------------------------------------------------------------------------   
+  !-------------------------------------------------------------------------------
   function fth(tl,hd,se,scaleFactor) result(ans)
     !
     !!DESCRIPTION:
@@ -1602,7 +1792,7 @@ contains
     ! !REVISION HISTORY
     ! Jinyun Tang separated it out from Photosynthesis, Feb. 07/2013
     !
-    use clm_varcon  , only : rgas, tfrz   
+    use clm_varcon  , only : rgas, tfrz
     !
     ! !ARGUMENTS:
     real(r8), intent(in) :: tl  ! leaf temperature in photosynthesis temperature function (K)
@@ -1610,34 +1800,34 @@ contains
     real(r8), intent(in) :: se  ! entropy term in photosynthesis temperature function (J/mol/K)
     real(r8), intent(in) :: scaleFactor  ! scaling factor for high temperature inhibition (25 C = 1.0)
     !
-    ! !LOCAL VARIABLES:      
+    ! !LOCAL VARIABLES:
     real(r8) :: ans
-    !-------------------------------------------------------------------------------   
+    !-------------------------------------------------------------------------------
 
     ans = scaleFactor / ( 1._r8 + exp( (-hd+se*tl) / (rgas*1.e-3_r8*tl) ) )
 
     return
   end function fth
 
-  !-------------------------------------------------------------------------------   
+  !-------------------------------------------------------------------------------
   function fth25(hd,se)result(ans)
     !
-    !!DESCRIPTION:   
+    !!DESCRIPTION:
     ! scaling factor for photosynthesis temperature inhibition
     !
     ! !REVISION HISTORY:
     ! Jinyun Tang separated it out from Photosynthesis, Feb. 07/2013
     !
     !!USES
-    use clm_varcon  , only : rgas, tfrz   
+    use clm_varcon  , only : rgas, tfrz
     !
     ! !ARGUMENTS:
     real(r8), intent(in) :: hd    ! deactivation energy in photosynthesis temperature function (J/mol)
     real(r8), intent(in) :: se    ! entropy term in photosynthesis temperature function (J/mol/K)
     !
-    ! !LOCAL VARIABLES:   
+    ! !LOCAL VARIABLES:
     real(r8) :: ans
-    !-------------------------------------------------------------------------------   
+    !-------------------------------------------------------------------------------
 
     ans = 1._r8 + exp( (-hd+se*(tfrz+25._r8)) / (rgas*1.e-3_r8*(tfrz+25._r8)) )
 
@@ -1683,24 +1873,24 @@ contains
     real(r8) :: theta_ip             ! empirical curvature parameter for ap photosynthesis co-limitation
     !------------------------------------------------------------------------------
 
-    associate(& 
-         forc_pbot  => atm2lnd_inst%forc_pbot_downscaled_col   , & ! Output: [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
-         c3flag     => photosyns_inst%c3flag_patch             , & ! Output: [logical  (:)   ]  true if C3 and false if C4                                             
-         ac         => photosyns_inst%ac_patch                 , & ! Output: [real(r8) (:,:) ]  Rubisco-limited gross photosynthesis (umol CO2/m**2/s)              
-         aj         => photosyns_inst%aj_patch                 , & ! Output: [real(r8) (:,:) ]  RuBP-limited gross photosynthesis (umol CO2/m**2/s)                 
+    associate(&
+         forc_pbot  => atm2lnd_inst%forc_pbot_downscaled_col   , & ! Output: [real(r8) (:)   ]  atmospheric pressure (Pa)
+         c3flag     => photosyns_inst%c3flag_patch             , & ! Output: [logical  (:)   ]  true if C3 and false if C4
+         ac         => photosyns_inst%ac_patch                 , & ! Output: [real(r8) (:,:) ]  Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
+         aj         => photosyns_inst%aj_patch                 , & ! Output: [real(r8) (:,:) ]  RuBP-limited gross photosynthesis (umol CO2/m**2/s)
          ap         => photosyns_inst%ap_patch                 , & ! Output: [real(r8) (:,:) ]  product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
-         ag         => photosyns_inst%ag_patch                 , & ! Output: [real(r8) (:,:) ]  co-limited gross leaf photosynthesis (umol CO2/m**2/s)              
-         an         => photosyns_inst%an_patch                 , & ! Output: [real(r8) (:,:) ]  net leaf photosynthesis (umol CO2/m**2/s)                           
-         vcmax_z    => photosyns_inst%vcmax_z_patch            , & ! Input:  [real(r8) (:,:) ]  maximum rate of carboxylation (umol co2/m**2/s)                     
-         cp         => photosyns_inst%cp_patch                 , & ! Output: [real(r8) (:)   ]  CO2 compensation point (Pa)                                           
-         kc         => photosyns_inst%kc_patch                 , & ! Output: [real(r8) (:)   ]  Michaelis-Menten constant for CO2 (Pa)                                
-         ko         => photosyns_inst%ko_patch                 , & ! Output: [real(r8) (:)   ]  Michaelis-Menten constant for O2 (Pa)                                 
-         qe         => photosyns_inst%qe_patch                 , & ! Output: [real(r8) (:)   ]  quantum efficiency, used only for C4 (mol CO2 / mol photons)          
-         tpu_z      => photosyns_inst%tpu_z_patch              , & ! Output: [real(r8) (:,:) ]  triose phosphate utilization rate (umol CO2/m**2/s)                 
-         kp_z       => photosyns_inst%kp_z_patch               , & ! Output: [real(r8) (:,:) ]  initial slope of CO2 response curve (C4 plants)                     
-         theta_cj   => photosyns_inst%theta_cj_patch           , & ! Output: [real(r8) (:)   ]  empirical curvature parameter for ac, aj photosynthesis co-limitation 
-         bbb        => photosyns_inst%bbb_patch                , & ! Output: [real(r8) (:)   ]  Ball-Berry minimum leaf conductance (umol H2O/m**2/s)                 
-         mbb        => photosyns_inst%mbb_patch                  & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship           
+         ag         => photosyns_inst%ag_patch                 , & ! Output: [real(r8) (:,:) ]  co-limited gross leaf photosynthesis (umol CO2/m**2/s)
+         an         => photosyns_inst%an_patch                 , & ! Output: [real(r8) (:,:) ]  net leaf photosynthesis (umol CO2/m**2/s)
+         vcmax_z    => photosyns_inst%vcmax_z_patch            , & ! Input:  [real(r8) (:,:) ]  maximum rate of carboxylation (umol co2/m**2/s)
+         cp         => photosyns_inst%cp_patch                 , & ! Output: [real(r8) (:)   ]  CO2 compensation point (Pa)
+         kc         => photosyns_inst%kc_patch                 , & ! Output: [real(r8) (:)   ]  Michaelis-Menten constant for CO2 (Pa)
+         ko         => photosyns_inst%ko_patch                 , & ! Output: [real(r8) (:)   ]  Michaelis-Menten constant for O2 (Pa)
+         qe         => photosyns_inst%qe_patch                 , & ! Output: [real(r8) (:)   ]  quantum efficiency, used only for C4 (mol CO2 / mol photons)
+         tpu_z      => photosyns_inst%tpu_z_patch              , & ! Output: [real(r8) (:,:) ]  triose phosphate utilization rate (umol CO2/m**2/s)
+         kp_z       => photosyns_inst%kp_z_patch               , & ! Output: [real(r8) (:,:) ]  initial slope of CO2 response curve (C4 plants)
+         theta_cj   => photosyns_inst%theta_cj_patch           , & ! Output: [real(r8) (:)   ]  empirical curvature parameter for ac, aj photosynthesis co-limitation
+         bbb        => photosyns_inst%bbb_patch                , & ! Output: [real(r8) (:)   ]  Ball-Berry minimum leaf conductance (umol H2O/m**2/s)
+         mbb        => photosyns_inst%mbb_patch                  & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship
          )
 
       ! Miscellaneous parameters, from Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
@@ -1715,7 +1905,7 @@ contains
          ! C3: RuBP-limited photosynthesis
          aj(p,iv) = je * max(ci-cp(p), 0._r8) / (4._r8*ci+8._r8*cp(p))
 
-         ! C3: Product-limited photosynthesis 
+         ! C3: Product-limited photosynthesis
          ap(p,iv) = 3._r8 * tpu_z(p,iv)
 
       else

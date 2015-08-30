@@ -207,6 +207,15 @@ module pftconMod
      real(r8), allocatable :: ffrootcn      (:)   ! C:N during grain fill; fine root
      real(r8), allocatable :: fstemcn       (:)   ! C:N during grain fill; stem
 
+     real(r8), allocatable :: i_vc          (:)   
+     real(r8), allocatable :: s_vc          (:)   
+     real(r8), allocatable :: i_vca         (:)   
+     real(r8), allocatable :: s_vca         (:)   
+     real(r8), allocatable :: i_vcad        (:)   
+     real(r8), allocatable :: s_vcad        (:)   
+     real(r8), allocatable :: i_flnr        (:)   
+     real(r8), allocatable :: s_flnr        (:)     
+
      ! pft parameters for CNDV code (from LPJ subroutine pftparameters)
      real(r8), allocatable :: pftpar20      (:)   ! tree maximum crown area (m2)
      real(r8), allocatable :: pftpar28      (:)   ! min coldest monthly mean temperature
@@ -355,6 +364,14 @@ contains
     allocate( this%fleafcn       (0:mxpft) )  
     allocate( this%ffrootcn      (0:mxpft) ) 
     allocate( this%fstemcn       (0:mxpft) )  
+    allocate( this%i_vc          (0:mxpft) )
+    allocate( this%s_vc          (0:mxpft) )
+    allocate( this%i_vca         (0:mxpft) )
+    allocate( this%s_vca         (0:mxpft) )
+    allocate( this%i_vcad        (0:mxpft) )
+    allocate( this%s_vcad        (0:mxpft) )
+    allocate( this%i_flnr        (0:mxpft) )
+    allocate( this%s_flnr        (0:mxpft) )
     allocate( this%pftpar20      (0:mxpft) )   
     allocate( this%pftpar28      (0:mxpft) )   
     allocate( this%pftpar29      (0:mxpft) )   
@@ -374,7 +391,7 @@ contains
     use fileutils   , only : getfil
     use ncdio_pio   , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
-    use clm_varctl  , only : paramfile, use_ed
+    use clm_varctl  , only : paramfile, use_ed, use_flexibleCN
     use spmdMod     , only : masterproc
     use EDPftvarcon , only : EDpftconrd
     !
@@ -820,6 +837,35 @@ contains
           this%tree(m) = 0
        end if
     end do
+    !
+    ! clm 5 nitrogen variables
+    !
+    if (use_flexibleCN) then
+       call ncd_io('i_vc', this%i_vc, 'read', ncid, readvar=readv) 
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
+       
+       call ncd_io('s_vc', this%s_vc, 'read', ncid, readvar=readv) 
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
+
+       call ncd_io('i_vca', this%i_vca, 'read', ncid, readvar=readv) 
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
+       
+       call ncd_io('s_vca', this%s_vca, 'read', ncid, readvar=readv) 
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
+       
+       call ncd_io('i_vcad', this%i_vcad, 'read', ncid, readvar=readv) 
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
+       
+       call ncd_io('s_vcad', this%s_vcad, 'read', ncid, readvar=readv) 
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
+       
+       call ncd_io('i_flnr', this%i_flnr, 'read', ncid, readvar=readv) 
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
+       
+       call ncd_io('s_flnr', this%s_flnr, 'read', ncid, readvar=readv) 
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
+    end if
+
     !
     ! ED variables
     !
