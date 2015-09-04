@@ -1258,7 +1258,7 @@ contains
     logical           :: field_allocated! whether 'field' was allocated here
     logical , pointer :: active(:)      ! flag saying whether each point is active (used for type1d = landunit/column/pft) 
                                         !(this refers to a point being active, NOT a history field being active)
-    real(r8) :: field_gcell(bounds%begg:bounds%endg,num2d) ! gricell level field (used if mapping to gridcell is done)
+    real(r8) :: field_gcell(bounds%begg:bounds%endg,num2d) ! gridcell level field (used if mapping to gridcell is done)
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
     !-----------------------------------------------------------------------
 
@@ -1306,7 +1306,7 @@ contains
     if (type1d_out == nameg .or. type1d_out == grlnd) then
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
-	  ! (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
+          ! (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
           ! for some fields, the lower bound has been reset to 1 due to taking a pointer
           ! to an array slice. Thus, this code will NOT work properly if done within a
           ! threaded region! (See also bug 1786)
@@ -1573,15 +1573,16 @@ contains
 
        num_snow_layers = abs(snl(c))
        num_nonexistent_layers = num_levels - num_snow_layers
-       
+      
        ! Fill output field appropriately for each layer
        ! When only a subset of snow layers exist, it is the LAST num_snow_layers that exist
+       ! Levels are rearranged such that the top snow layer (surface layer) becomes level 1, etc.
 
-       do level = 1, num_nonexistent_layers
+       do level = num_levels, (num_levels-num_nonexistent_layers+1), -1
           field_out(point, level) = no_snow_val
        end do
-       do level = (num_nonexistent_layers + 1), num_levels
-          field_out(point, level) = field_in(point, level)
+       do level = (num_levels-num_nonexistent_layers), 1, -1
+          field_out(point, level) = field_in(point, level+num_nonexistent_layers)
        end do
           
     end do

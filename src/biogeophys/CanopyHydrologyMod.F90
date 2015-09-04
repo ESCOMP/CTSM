@@ -214,7 +214,6 @@ contains
           t_grnd               => temperature_inst%t_grnd_col             , & ! Input:  [real(r8) (:)   ]  ground temperature (Kelvin)             
           t_soisno             => temperature_inst%t_soisno_col           , & ! Output: [real(r8) (:,:) ]  soil temperature (Kelvin)  
 
-          do_capsnow           => waterstate_inst%do_capsnow_col          , & ! Output: [logical  (:)   ]  true => do snow capping                  
           h2ocan               => waterstate_inst%h2ocan_patch            , & ! Output: [real(r8) (:)   ]  total canopy water (mm H2O)             
           snocan               => waterstate_inst%snocan_patch            , & ! Output: [real(r8) (:)   ]  canopy snow (mm H2O)             
           liqcan               => waterstate_inst%liqcan_patch            , & ! Output: [real(r8) (:)   ]  canopy liquid (mm H2O)   
@@ -234,8 +233,6 @@ contains
           qflx_floodc          => waterflux_inst%qflx_floodc_col          , & ! Output: [real(r8) (:)   ]  column flux of flood water from RTM     
           qflx_snow_drain       => waterflux_inst%qflx_snow_drain_col     , & ! Input: [real(r8) (:)   ]  drainage from snow pack from previous time step       
           qflx_snow_h2osfc     => waterflux_inst%qflx_snow_h2osfc_col     , & ! Output: [real(r8) (:)   ]  snow falling on surface water (mm/s)     
-          qflx_snwcp_liq       => waterflux_inst%qflx_snwcp_liq_patch     , & ! Output: [real(r8) (:)   ]  excess rainfall due to snow capping (mm H2O /s) [+]
-          qflx_snwcp_ice       => waterflux_inst%qflx_snwcp_ice_patch     , & ! Output: [real(r8) (:)   ]  excess snowfall due to snow capping (mm H2O /s) [+]
           qflx_snow_grnd_col   => waterflux_inst%qflx_snow_grnd_col       , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
           qflx_snow_grnd_patch => waterflux_inst%qflx_snow_grnd_patch     , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
           qflx_prec_intr       => waterflux_inst%qflx_prec_intr_patch     , & ! Output: [real(r8) (:)   ]  interception of precipitation [mm/s]    
@@ -428,18 +425,8 @@ contains
 
           qflx_prec_grnd(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
 
-          if (do_capsnow(c)) then
-             qflx_snwcp_liq(p) = qflx_prec_grnd_rain(p)
-             qflx_snwcp_ice(p) = qflx_prec_grnd_snow(p)
-
-             qflx_snow_grnd_patch(p) = 0._r8
-             qflx_rain_grnd(p) = 0._r8
-          else
-             qflx_snwcp_liq(p) = 0._r8
-             qflx_snwcp_ice(p) = 0._r8
-             qflx_snow_grnd_patch(p) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
-             qflx_rain_grnd(p)     = qflx_prec_grnd_rain(p)           ! liquid water onto ground (mm/s)
-          end if
+          qflx_snow_grnd_patch(p) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
+          qflx_rain_grnd(p)       = qflx_prec_grnd_rain(p)           ! liquid water onto ground (mm/s)
 
        end do ! (end patch loop)
 
@@ -488,127 +475,119 @@ contains
              swe_old(c,j)=h2osoi_liq(c,j)+h2osoi_ice(c,j)
           enddo
 
-          if (do_capsnow(c)) then
-             dz_snowf = 0._r8
-             newsnow(c) = (1._r8 - frac_h2osfc(c)) * qflx_snow_grnd_col(c) * dtime
-             frac_sno(c)=1._r8
-             int_snow(c) = 5.e2_r8
+          if (forc_t(c) > tfrz + 2._r8) then
+             bifall=50._r8 + 1.7_r8*(17.0_r8)**1.5_r8
+          else if (forc_t(c) > tfrz - 15._r8) then
+             bifall=50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
           else
-             if (forc_t(c) > tfrz + 2._r8) then
-                bifall=50._r8 + 1.7_r8*(17.0_r8)**1.5_r8
-             else if (forc_t(c) > tfrz - 15._r8) then
-                bifall=50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
-             else
-                bifall=50._r8
-             end if
+             bifall=50._r8
+          end if
 
-             ! newsnow is all snow that doesn't fall on h2osfc
-             newsnow(c) = (1._r8 - frac_h2osfc(c)) * qflx_snow_grnd_col(c) * dtime
+          ! newsnow is all snow that doesn't fall on h2osfc
+          newsnow(c) = (1._r8 - frac_h2osfc(c)) * qflx_snow_grnd_col(c) * dtime
 
-             ! update int_snow
-             int_snow(c) = max(int_snow(c),h2osno(c)) !h2osno could be larger due to frost
+          ! update int_snow
+          int_snow(c) = max(int_snow(c),h2osno(c)) !h2osno could be larger due to frost
 
-             ! snowmelt from previous time step * dtime
-             snowmelt(c) = qflx_snow_drain(c) * dtime
+          ! snowmelt from previous time step * dtime
+          snowmelt(c) = qflx_snow_drain(c) * dtime
 
-             ! set shape factor for accumulation of snow
-             accum_factor=0.1
+          ! set shape factor for accumulation of snow
+          accum_factor=0.1
 
-             if (h2osno(c) > 0.0) then
+          if (h2osno(c) > 0.0) then
 
-                !======================  FSCA PARAMETERIZATIONS  ======================
-                ! fsca parameterization based on *changes* in swe
-                ! first compute change from melt during previous time step
-                if(snowmelt(c) > 0._r8) then
+             !======================  FSCA PARAMETERIZATIONS  ======================
+             ! fsca parameterization based on *changes* in swe
+             ! first compute change from melt during previous time step
+             if(snowmelt(c) > 0._r8) then
 
-                   smr=min(1._r8,(h2osno(c))/(int_snow(c)))
+                smr=min(1._r8,(h2osno(c))/(int_snow(c)))
 
-                   frac_sno(c) = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(n_melt(c))
+                frac_sno(c) = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(n_melt(c))
 
-                endif
+             endif
 
-                ! update fsca by new snow event, add to previous fsca
-                if (newsnow(c) > 0._r8) then
-                   fsno_new = 1._r8 - (1._r8 - tanh(accum_factor*newsnow(c)))*(1._r8 - frac_sno(c))
-                   frac_sno(c) = fsno_new
+             ! update fsca by new snow event, add to previous fsca
+             if (newsnow(c) > 0._r8) then
+                fsno_new = 1._r8 - (1._r8 - tanh(accum_factor*newsnow(c)))*(1._r8 - frac_sno(c))
+                frac_sno(c) = fsno_new
 
-                   ! reset int_snow after accumulation events
-                   temp_intsnow= (h2osno(c) + newsnow(c)) &
-                        / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
-                   int_snow(c) = min(1.e8_r8,temp_intsnow)
-                endif
+                ! reset int_snow after accumulation events
+                temp_intsnow= (h2osno(c) + newsnow(c)) &
+                     / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
+                int_snow(c) = min(1.e8_r8,temp_intsnow)
+             endif
 
-                !====================================================================
+             !====================================================================
 
-                ! for subgrid fluxes
-                if (subgridflag ==1 .and. .not. lun%urbpoi(l)) then
-                   if (frac_sno(c) > 0._r8)then
-                      snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall * frac_sno(c))
-                   else
-                      snow_depth(c)=0._r8
-                   end if
+             ! for subgrid fluxes
+             if (subgridflag ==1 .and. .not. lun%urbpoi(l)) then
+                if (frac_sno(c) > 0._r8)then
+                   snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall * frac_sno(c))
                 else
-                   ! for uniform snow cover
-                   snow_depth(c)=snow_depth(c)+newsnow(c)/bifall
-                endif
+                   snow_depth(c)=0._r8
+                end if
+             else
+                ! for uniform snow cover
+                snow_depth(c)=snow_depth(c)+newsnow(c)/bifall
+             endif
 
-                ! use original fsca formulation (n&y 07)
+             ! use original fsca formulation (n&y 07)
+             if (oldfflag == 1) then 
+                ! snow cover fraction in Niu et al. 2007
+                if(snow_depth(c) > 0.0_r8)  then
+                   frac_sno(c) = tanh(snow_depth(c)/(2.5_r8*zlnd* &
+                        (min(800._r8,(h2osno(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
+                endif
+                if(h2osno(c) < 1.0_r8)  then
+                   frac_sno(c)=min(frac_sno(c),h2osno(c))
+                endif
+             endif
+
+          else !h2osno == 0
+             ! initialize frac_sno and snow_depth when no snow present initially
+             if (newsnow(c) > 0._r8) then 
+                z_avg = newsnow(c)/bifall
+                fmelt=newsnow(c)
+                frac_sno(c) = tanh(accum_factor*newsnow(c))
+
+                ! make int_snow consistent w/ new fsno, h2osno
+                int_snow(c) = 0. !reset prior to adding newsnow below
+                temp_intsnow= (h2osno(c) + newsnow(c)) &
+                     / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
+                int_snow(c) = min(1.e8_r8,temp_intsnow)
+
+                ! update snow_depth and h2osno to be consistent with frac_sno, z_avg
+                if (subgridflag ==1 .and. .not. lun%urbpoi(l)) then
+                   snow_depth(c)=z_avg/frac_sno(c)
+                else
+                   snow_depth(c)=newsnow(c)/bifall
+                endif
+                ! use n&y07 formulation
                 if (oldfflag == 1) then 
                    ! snow cover fraction in Niu et al. 2007
                    if(snow_depth(c) > 0.0_r8)  then
                       frac_sno(c) = tanh(snow_depth(c)/(2.5_r8*zlnd* &
-                           (min(800._r8,(h2osno(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
-                   endif
-                   if(h2osno(c) < 1.0_r8)  then
-                      frac_sno(c)=min(frac_sno(c),h2osno(c))
+                           (min(800._r8,newsnow(c)/snow_depth(c))/100._r8)**1._r8) )
                    endif
                 endif
+             else
+                z_avg = 0._r8
+                snow_depth(c) = 0._r8
+                frac_sno(c) = 0._r8
+             endif
+          endif ! end of h2osno > 0
 
-             else !h2osno == 0
-                ! initialize frac_sno and snow_depth when no snow present initially
-                if (newsnow(c) > 0._r8) then 
-                   z_avg = newsnow(c)/bifall
-                   fmelt=newsnow(c)
-                   frac_sno(c) = tanh(accum_factor*newsnow(c))
+          ! snow directly falling on surface water melts, increases h2osfc
+          qflx_snow_h2osfc(c) = frac_h2osfc(c)*qflx_snow_grnd_col(c)
 
-                   ! make int_snow consistent w/ new fsno, h2osno
-                   int_snow(c) = 0. !reset prior to adding newsnow below
-                   temp_intsnow= (h2osno(c) + newsnow(c)) &
-                        / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
-                   int_snow(c) = min(1.e8_r8,temp_intsnow)
+          ! update h2osno for new snow
+          h2osno(c) = h2osno(c) + newsnow(c) 
+          int_snow(c) = int_snow(c) + newsnow(c)
 
-                   ! update snow_depth and h2osno to be consistent with frac_sno, z_avg
-                   if (subgridflag ==1 .and. .not. lun%urbpoi(l)) then
-                      snow_depth(c)=z_avg/frac_sno(c)
-                   else
-                      snow_depth(c)=newsnow(c)/bifall
-                   endif
-                   ! use n&y07 formulation
-                   if (oldfflag == 1) then 
-                      ! snow cover fraction in Niu et al. 2007
-                      if(snow_depth(c) > 0.0_r8)  then
-                         frac_sno(c) = tanh(snow_depth(c)/(2.5_r8*zlnd* &
-                              (min(800._r8,newsnow(c)/snow_depth(c))/100._r8)**1._r8) )
-                      endif
-                   endif
-                else
-                   z_avg = 0._r8
-                   snow_depth(c) = 0._r8
-                   frac_sno(c) = 0._r8
-                endif
-             endif ! end of h2osno > 0
-
-             ! snow directly falling on surface water melts, increases h2osfc
-             qflx_snow_h2osfc(c) = frac_h2osfc(c)*qflx_snow_grnd_col(c)
-
-             ! update h2osno for new snow
-             h2osno(c) = h2osno(c) + newsnow(c) 
-             int_snow(c) = int_snow(c) + newsnow(c)
-
-             ! update change in snow depth
-             dz_snowf = (snow_depth(c) - temp_snow_depth) / dtime
-
-          end if !end of do_capsnow construct
+          ! update change in snow depth
+          dz_snowf = (snow_depth(c) - temp_snow_depth) / dtime
 
           ! set frac_sno_eff variable
           if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -631,7 +610,7 @@ contains
           ! as the surface air temperature
 
           newnode = 0    ! flag for when snow node will be initialized
-          if (snl(c) == 0 .and. qflx_snow_grnd_col(c) > 0.0_r8 .and. frac_sno(c)*snow_depth(c) >= 0.01_r8) then
+          if (snl(c) == 0 .and. frac_sno(c)*snow_depth(c) >= 0.01_r8) then
              newnode = 1
              snl(c) = -1
              dz(c,0) = snow_depth(c)                       ! meter
@@ -791,7 +770,7 @@ contains
           ! h2osfc only calculated for soil vegetated land units
           if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
-             !  Use newton-raphson method to iteratively determine frac_h20sfc
+             !  Use newton-raphson method to iteratively determine frac_h2osfc
              !  based on amount of surface water storage (h2osfc) and 
              !  microtopography variability (micro_sigma)
 

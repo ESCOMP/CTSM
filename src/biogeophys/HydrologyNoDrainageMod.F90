@@ -64,7 +64,7 @@ contains
     use clm_varctl           , only : use_cn
     use clm_varpar           , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
     use clm_time_manager     , only : get_step_size, get_nstep
-    use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers
+    use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
     use SoilHydrologyMod     , only : CLMVICMap, SurfaceRunoff, Infiltration, WaterTable
     use SoilWaterMovementMod , only : SoilWater 
@@ -191,6 +191,10 @@ contains
 
       call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
            soilhydrology_inst, soilstate_inst, temperature_inst, waterstate_inst, waterflux_inst) 
+
+      ! Snow capping
+      call SnowCapping(bounds, num_nolakec, filter_nolakec, num_snowc, filter_snowc, &
+           aerosol_inst, waterflux_inst, waterstate_inst)
 
       ! Natural compaction and metamorphosis.
       call SnowCompaction(bounds, num_snowc, filter_snowc, &

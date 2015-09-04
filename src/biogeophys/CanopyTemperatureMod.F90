@@ -140,8 +140,6 @@ contains
          frac_h2osfc      =>    waterstate_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
          frac_sno_eff     =>    waterstate_inst%frac_sno_eff_col      , & ! Input:  [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)
          frac_sno         =>    waterstate_inst%frac_sno_col          , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
-         h2osfc           =>    waterstate_inst%h2osfc_col            , & ! Input:  [real(r8) (:)   ] surface water (mm)                      
-         h2osno           =>    waterstate_inst%h2osno_col            , & ! Input:  [real(r8) (:)   ] snow water (mm H2O)                      
          h2osoi_ice       =>    waterstate_inst%h2osoi_ice_col        , & ! Input:  [real(r8) (:,:) ] ice lens (kg/m2)                       
          h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col        , & ! Input:  [real(r8) (:,:) ] liquid water (kg/m2)                   
          qg_snow          =>    waterstate_inst%qg_snow_col           , & ! Output: [real(r8) (:)   ] specific humidity at snow surface [kg/kg]

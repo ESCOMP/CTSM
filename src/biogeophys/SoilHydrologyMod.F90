@@ -312,9 +312,6 @@ contains
           frac_h2osfc      =>    waterstate_inst%frac_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
           frac_sno         =>    waterstate_inst%frac_sno_eff_col    , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
           h2osoi_ice       =>    waterstate_inst%h2osoi_ice_col      , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
-          h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col      , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-          h2osno           =>    waterstate_inst%h2osno_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                               
-          snow_depth       =>    waterstate_inst%snow_depth_col      , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
           h2osfc           =>    waterstate_inst%h2osfc_col          , & ! Output: [real(r8) (:)   ]  surface water (mm)                                
 
           qflx_ev_soil     =>    waterflux_inst%qflx_ev_soil_col     , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (W/m**2) [+ to atm]    
@@ -922,8 +919,8 @@ contains
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical
           h2osfcflag         =>    soilhydrology_inst%h2osfcflag         , & ! Input:  logical
           
-          qflx_snwcp_liq     =>    waterflux_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess rainfall due to snow capping (mm H2O /s) [+]
-          qflx_snwcp_ice     =>    waterflux_inst%qflx_snwcp_ice_col     , & ! Output: [real(r8) (:)   ] excess snowfall due to snow capping (mm H2O /s) [+]
+          qflx_snwcp_liq     =>    waterflux_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
+          qflx_snwcp_ice     =>    waterflux_inst%qflx_snwcp_ice_col     , & ! In/Out: [real(r8) (:)   ] excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
           qflx_dew_grnd      =>    waterflux_inst%qflx_dew_grnd_col      , & ! Output: [real(r8) (:)   ] ground surface dew formation (mm H2O /s) [+]      
           qflx_dew_snow      =>    waterflux_inst%qflx_dew_snow_col      , & ! Output: [real(r8) (:)   ] surface dew added to snow pack (mm H2O /s) [+]    
           qflx_sub_snow      =>    waterflux_inst%qflx_sub_snow_col      , & ! Output: [real(r8) (:)   ] sublimation rate from snow pack (mm H2O /s) [+]   

@@ -213,8 +213,6 @@ contains
 
          qflx_evap_soi    =>    waterflux_inst%qflx_evap_soi_patch     , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)          
          qflx_evap_tot    =>    waterflux_inst%qflx_evap_tot_patch     , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
-         qflx_snwcp_ice   =>    waterflux_inst%qflx_snwcp_ice_patch    , & ! Output: [real(r8) (:)   ]  excess snowfall due to snow capping (mm H2O /s) [+]
-         qflx_snwcp_liq   =>    waterflux_inst%qflx_snwcp_liq_patch    , & ! Output: [real(r8) (:)   ]  excess rainfall due to snow capping (mm H2O /s) [+] 
          qflx_prec_grnd   =>    waterflux_inst%qflx_prec_grnd_patch    , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
 
          t_veg            =>    temperature_inst%t_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation temperature (Kelvin)                   
@@ -656,11 +654,6 @@ contains
          t_veg(p) = forc_t(c)
          eflx_lwrad_net(p)  = eflx_lwrad_out(p) - forc_lwrad(c)
          qflx_prec_grnd(p) = forc_rain(c) + forc_snow(c)
-
-         ! Because they will be used in pft2col initialize here.
-         ! This will be overwritten in LakeHydrology
-         qflx_snwcp_ice(p) = 0._r8
-         qflx_snwcp_liq(p) = 0._r8
 
       end do
 

@@ -71,7 +71,7 @@ contains
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevsoi
     use clm_varctl      , only : iulog
     use clm_time_manager, only : get_step_size
-    use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater, BuildSnowFilter
+    use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater, BuildSnowFilter, SnowCapping
     use SnowHydrologyMod, only : DivideSnowLayers
     use LakeCon         , only : lsadz
     !
@@ -140,7 +140,6 @@ contains
          dTdz_top             =>  temperature_inst%dTdz_top_col         , & ! Output: [real(r8) (:)   ]  temperature gradient in top layer K m-1] !TOD 
          snot_top             =>  temperature_inst%snot_top_col         , & ! Output: [real(r8) (:)   ]  snow temperature in top layer [K]  !TODO
 
-         do_capsnow           =>  waterstate_inst%do_capsnow_col        , & ! Input:  [logical  (:)   ]  true => do snow capping                  
          begwb                =>  waterstate_inst%begwb_col             , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
          endwb                =>  waterstate_inst%endwb_col             , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
          snw_rds              =>  waterstate_inst%snw_rds_col           , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
@@ -168,8 +167,6 @@ contains
          qflx_evap_grnd       =>  waterflux_inst%qflx_evap_grnd_patch   , & ! Output: [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
          qflx_dew_snow        =>  waterflux_inst%qflx_dew_snow_patch    , & ! Output: [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
          qflx_dew_grnd        =>  waterflux_inst%qflx_dew_grnd_patch    , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
-         qflx_snwcp_ice       =>  waterflux_inst%qflx_snwcp_ice_patch   , & ! Output: [real(r8) (:)   ]  excess snowfall due to snow capping (mm H2O /s) [+]
-         qflx_snwcp_liq       =>  waterflux_inst%qflx_snwcp_liq_patch   , & ! Output: [real(r8) (:)   ]  excess rainfall due to snow capping (mm H2O /s) [+]
          qflx_snomelt         =>  waterflux_inst%qflx_snomelt_col       , & ! Output: [real(r8) (:)   ]  snow melt (mm H2O /s)                   
          qflx_prec_grnd_col   =>  waterflux_inst%qflx_prec_grnd_col     , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
          qflx_evap_grnd_col   =>  waterflux_inst%qflx_evap_grnd_col     , & ! Output: [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
@@ -178,8 +175,7 @@ contains
          qflx_sub_snow_col    =>  waterflux_inst%qflx_sub_snow_col      , & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
          qflx_snow_grnd_col   =>  waterflux_inst%qflx_snow_grnd_col     , & ! Output: [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
          qflx_evap_tot_col    =>  waterflux_inst%qflx_evap_tot_col      , & ! Output: [real(r8) (:)   ]  pft quantity averaged to the column (assuming one pft)
-         qflx_snwcp_ice_col   =>  waterflux_inst%qflx_snwcp_ice_col     , & ! Output: [real(r8) (:)   ]  excess snowfall due to snow capping (mm H2O /s) [+]
-         qflx_snwcp_liq_col   =>  waterflux_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ]  excess rainfall due to snow capping (mm H2O /s) [+]
+         qflx_snwcp_ice       =>  waterflux_inst%qflx_snwcp_ice_col     , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
          qflx_drain_perched   =>  waterflux_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ]  perched wt sub-surface runoff (mm H2O /s) !TODO - move this to somewhere else
          qflx_h2osfc_surf     =>  waterflux_inst%qflx_h2osfc_surf_col   , & ! Output: [real(r8) (:)   ]  surface water runoff (mm H2O /s)        
          qflx_snow_drain      =>  waterflux_inst%qflx_snow_drain_col    , & ! Output: [real(r8) (:)   ]  drainage from snow pack                          
@@ -228,17 +224,9 @@ contains
          qflx_prec_grnd_rain(p) = forc_rain(c)
          qflx_prec_grnd(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
 
-         if (do_capsnow(c)) then
-            qflx_snwcp_ice(p) = qflx_prec_grnd_snow(p)
-            qflx_snwcp_liq(p) = qflx_prec_grnd_rain(p)
-            qflx_snow_grnd_patch(p) = 0._r8
-            qflx_rain_grnd(p) = 0._r8
-         else
-            qflx_snwcp_ice(p) = 0._r8
-            qflx_snwcp_liq(p) = 0._r8
-            qflx_snow_grnd_patch(p) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
-            qflx_rain_grnd(p)     = qflx_prec_grnd_rain(p)           ! liquid water onto ground (mm/s)
-         end if
+         qflx_snow_grnd_patch(p) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
+         qflx_rain_grnd(p)     = qflx_prec_grnd_rain(p)           ! liquid water onto ground (mm/s)
+
          ! Assuming one PFT; needed for below
          qflx_snow_grnd_col(c) = qflx_snow_grnd_patch(p)
          qflx_rain_grnd_col(c) = qflx_rain_grnd(p)
@@ -254,20 +242,16 @@ contains
          ! U.S.Department of Agriculture Forest Service, Project F,
          ! Progress Rep. 1, Alta Avalanche Study Center:Snow Layer Densification.
 
-         if (do_capsnow(c)) then
-            dz_snowf = 0._r8
+         if (forc_t(c) > tfrz + 2._r8) then
+            bifall=50._r8 + 1.7_r8*(17.0_r8)**1.5_r8
+         else if (forc_t(c) > tfrz - 15._r8) then
+            bifall=50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
          else
-            if (forc_t(c) > tfrz + 2._r8) then
-               bifall=50._r8 + 1.7_r8*(17.0_r8)**1.5_r8
-            else if (forc_t(c) > tfrz - 15._r8) then
-               bifall=50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
-            else
-               bifall=50._r8
-            end if
-            dz_snowf = qflx_snow_grnd_col(c)/bifall
-            snow_depth(c) = snow_depth(c) + dz_snowf*dtime
-            h2osno(c) = h2osno(c) + qflx_snow_grnd_col(c)*dtime  ! snow water equivalent (mm)
+            bifall=50._r8
          end if
+         dz_snowf = qflx_snow_grnd_col(c)/bifall
+         snow_depth(c) = snow_depth(c) + dz_snowf*dtime
+         h2osno(c) = h2osno(c) + qflx_snow_grnd_col(c)*dtime  ! snow water equivalent (mm)
 
          ! When the snow accumulation exceeds 40 mm, initialize snow layer
          ! Currently, the water temperature for the precipitation is simply set
@@ -343,13 +327,6 @@ contains
                   qflx_dew_grnd(p) = abs(qflx_evap_soi(p))
                end if
             end if
-            ! Update the patch-level qflx_snowcap
-            ! This was moved in from Hydrology2 to keep all patch-level
-            ! calculations out of Hydrology2
-            if (do_capsnow(c)) then
-               qflx_snwcp_ice(p) = qflx_snwcp_ice(p) + qflx_dew_snow(p) 
-               qflx_snwcp_liq(p) = qflx_snwcp_liq(p) + qflx_dew_grnd(p)
-            end if
 
          else ! No snow layers
             if (qflx_evap_soi(p) >= 0._r8) then
@@ -368,13 +345,7 @@ contains
             ! Update snow pack for dew & sub.
 
             h2osno_temp = h2osno(c)
-            if (do_capsnow(c)) then
-               h2osno(c) = h2osno(c) - qflx_sub_snow(p)*dtime
-               qflx_snwcp_ice(p) = qflx_snwcp_ice(p) + qflx_dew_snow(p) 
-               qflx_snwcp_liq(p) = qflx_snwcp_liq(p) + qflx_dew_grnd(p)
-            else
-               h2osno(c) = h2osno(c) + (-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
-            end if
+            h2osno(c) = h2osno(c) + (-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
             if (h2osno_temp > 0._r8) then
                snow_depth(c) = snow_depth(c) * h2osno(c) / h2osno_temp
             else
@@ -383,11 +354,6 @@ contains
 
             h2osno(c) = max(h2osno(c), 0._r8)
          end if
-
-         qflx_snwcp_ice_col(c) = qflx_snwcp_ice(p)
-         qflx_snwcp_liq_col(c) = qflx_snwcp_liq(p)
-
-
       end do
 
       ! patch averages must be done here -- BEFORE SNOW CALCULATIONS AS THEY USE IT.
@@ -428,6 +394,9 @@ contains
       call SnowWater(bounds, &
            num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
            atm2lnd_inst, waterflux_inst, waterstate_inst, aerosol_inst)
+
+      call SnowCapping(bounds, num_lakec, filter_lakec, num_shlakesnowc, filter_shlakesnowc, &
+           aerosol_inst, waterflux_inst, waterstate_inst)
 
       ! Determine soil hydrology
       ! Here this consists only of making sure that soil is saturated even as it melts and
@@ -662,7 +631,8 @@ contains
          qflx_drain(c)         = 0._r8
 
          ! Insure water balance using qflx_qrgwl
-         qflx_qrgwl(c)     = forc_rain(c) + forc_snow(c) - qflx_evap_tot(p) - qflx_snwcp_ice(p) - &
+         ! qflx_snwcp_ice(c) has been computed in routine SnowCapping
+         qflx_qrgwl(c)     = forc_rain(c) + forc_snow(c) - qflx_evap_tot(p) - qflx_snwcp_ice(c) - &
               (endwb(c)-begwb(c))/dtime + qflx_floodg(g)
          qflx_floodc(c)    = qflx_floodg(g)
          qflx_runoff(c)    = qflx_drain(c) + qflx_qrgwl(c)

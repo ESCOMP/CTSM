@@ -1307,8 +1307,8 @@ A number of history fields provide information about individual snow layers:
 interpretation: <varname>SNO_EXISTENCE</varname> (described below). These fields
 are inactive by default, but can be enabled like other history fields. If the
 maximum number of snow layers is 5 (for example), then the layers of these
-fields are arranged on the history file so that layer 5 is closest to the
-ground, and layer 1 only exists if the snow is deep enough to support all
+fields are arranged on the history file so that layer 1 is at the top of the
+snow pack, and layer 5 only exists if the snow is deep enough to support all
 layers.
 </para>
 <para>

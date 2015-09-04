@@ -23,7 +23,6 @@ module WaterstateType
   ! !PUBLIC TYPES:
   type, public :: waterstate_type
 
-     logical , pointer :: do_capsnow_col         (:)   ! col true => do snow capping
      real(r8), pointer :: snow_depth_col         (:)   ! col snow height of snow covered area (m)
      real(r8), pointer :: snow_persistence_col   (:)   ! col length of time that ground has had non-zero snow thickness (sec)
      real(r8), pointer :: snowdp_col             (:)   ! col area-averaged snow height (m)
@@ -165,7 +164,6 @@ contains
     begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
-    allocate(this%do_capsnow_col         (begc:endc))                   
     allocate(this%snow_depth_col         (begc:endc))                     ; this%snow_depth_col         (:)   = nan
     allocate(this%snow_persistence_col   (begc:endc))                     ; this%snow_persistence_col   (:)   = nan
     allocate(this%snowdp_col             (begc:endc))                     ; this%snowdp_col             (:)   = nan

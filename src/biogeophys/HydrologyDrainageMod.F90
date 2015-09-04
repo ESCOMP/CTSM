@@ -110,7 +110,7 @@ contains
          qflx_runoff        => waterflux_inst%qflx_runoff_col        , & ! Output: [real(r8) (:)   ]  total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_runoff_u      => waterflux_inst%qflx_runoff_u_col      , & ! Output: [real(r8) (:)   ]  Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
          qflx_runoff_r      => waterflux_inst%qflx_runoff_r_col      , & ! Output: [real(r8) (:)   ]  Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-         qflx_snwcp_ice     => waterflux_inst%qflx_snwcp_ice_col     , & ! Output: [real(r8) (:)   ]  excess snowfall due to snow capping (mm H2O /s) [+]`
+         qflx_snwcp_ice     => waterflux_inst%qflx_snwcp_ice_col     , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
          qflx_glcice        => waterflux_inst%qflx_glcice_col        , & ! Output: [real(r8) (:)   ]  flux of new glacier ice (mm H2O /s)               
          qflx_glcice_frz    => waterflux_inst%qflx_glcice_frz_col    , & ! Output: [real(r8) (:)   ]  ice growth (positive definite) (mm H2O/s)         
 

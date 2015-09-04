@@ -256,7 +256,6 @@ contains
          qg                  =>   waterstate_inst%qg_col                    , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface (kg/kg)       
          h2osoi_ice          =>   waterstate_inst%h2osoi_ice_col            , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
          h2osoi_liq          =>   waterstate_inst%h2osoi_liq_col            , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-         h2osno              =>   waterstate_inst%h2osno_col                , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                               
          qaf                 =>   waterstate_inst%qaf_lun                   , & ! Output: [real(r8) (:)   ]  urban canopy air specific humidity (kg/kg)        
          q_ref2m             =>   waterstate_inst%q_ref2m_patch             , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)      
          rh_ref2m            =>   waterstate_inst%rh_ref2m_patch            , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)          

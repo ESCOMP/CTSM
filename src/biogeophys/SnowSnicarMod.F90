@@ -1069,10 +1069,8 @@ contains
          dz                 => col%dz                             , & ! Input:  [real(r8) (:,:) ]  layer thickness (col,lyr) [m]         
 
          qflx_snow_grnd_col => waterflux_inst%qflx_snow_grnd_col  , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (col) [kg m-2 s-1]
-         qflx_snwcp_ice     => waterflux_inst%qflx_snwcp_ice_col  , & ! Input:  [real(r8) (:)   ]  excess precipitation due to snow capping [kg m-2 s-1]
          qflx_snofrz_lyr    => waterflux_inst%qflx_snofrz_lyr_col , & ! Input:  [real(r8) (:,:) ]  snow freezing rate (col,lyr) [kg m-2 s-1]
 
-         do_capsnow         => waterstate_inst%do_capsnow_col     , & ! Input:  [logical  (:)   ]  true => do snow capping                  
          frac_sno           => waterstate_inst%frac_sno_eff_col   , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
          h2osno             => waterstate_inst%h2osno_col         , & ! Input:  [real(r8) (:)   ]  snow water (col) [mm H2O]               
          h2osoi_liq         => waterstate_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water content (col,lyr) [kg m-2]
@@ -1199,11 +1197,7 @@ contains
             !               RE-FREEZING
             !
             ! new snowfall [kg/m2]
-            if (do_capsnow(c_idx)) then
-               newsnow = max(0._r8, (qflx_snwcp_ice(c_idx)*dtime))
-            else
-               newsnow = max(0._r8, (qflx_snow_grnd_col(c_idx)*dtime))
-            endif
+            newsnow = max(0._r8, (qflx_snow_grnd_col(c_idx)*dtime))
 
             ! snow that has re-frozen [kg/m2]
             refrzsnow = max(0._r8, (qflx_snofrz_lyr(c_idx,i)*dtime))

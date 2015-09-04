@@ -39,10 +39,12 @@ module WaterfluxType
      real(r8), pointer :: qflx_evap_tot_col        (:)   ! col col_qflx_evap_soi + col_qflx_evap_veg + qflx_tran_veg
      real(r8), pointer :: qflx_evap_grnd_patch     (:)   ! patch ground surface evaporation rate (mm H2O/s) [+]
      real(r8), pointer :: qflx_evap_grnd_col       (:)   ! col ground surface evaporation rate (mm H2O/s) [+]
-     real(r8), pointer :: qflx_snwcp_liq_patch     (:)   ! patch excess rainfall due to snow capping (mm H2O /s)
-     real(r8), pointer :: qflx_snwcp_liq_col       (:)   ! col excess rainfall due to snow capping (mm H2O /s)
-     real(r8), pointer :: qflx_snwcp_ice_patch     (:)   ! patch excess snowfall due to snow capping (mm H2O /s)
-     real(r8), pointer :: qflx_snwcp_ice_col       (:)   ! col excess snowfall due to snow capping (mm H2O /s)
+
+    ! In the snow capping parametrization excess mass above h2osno_max is removed.  A breakdown of mass into liquid 
+    ! and solid fluxes is done, these are represented by qflx_snwcp_liq_col and qflx_snwcp_ice_col. 
+     real(r8), pointer :: qflx_snwcp_liq_col       (:)   ! col excess liquid h2o due to snow capping (outgoing) (mm H2O /s)
+     real(r8), pointer :: qflx_snwcp_ice_col       (:)   ! col excess solid h2o due to snow capping (outgoing) (mm H2O /s)
+
      real(r8), pointer :: qflx_tran_veg_patch      (:)   ! patch vegetation transpiration (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_tran_veg_col        (:)   ! col vegetation transpiration (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_dew_snow_patch      (:)   ! patch surface dew added to snow pack (mm H2O /s) [+]
@@ -148,8 +150,6 @@ contains
     allocate(this%qflx_rain_grnd_patch     (begp:endp))              ; this%qflx_rain_grnd_patch     (:)   = nan
     allocate(this%qflx_snow_grnd_patch     (begp:endp))              ; this%qflx_snow_grnd_patch     (:)   = nan
     allocate(this%qflx_sub_snow_patch      (begp:endp))              ; this%qflx_sub_snow_patch      (:)   = 0.0_r8
-    allocate(this%qflx_snwcp_liq_patch     (begp:endp))              ; this%qflx_snwcp_liq_patch     (:)   = nan
-    allocate(this%qflx_snwcp_ice_patch     (begp:endp))              ; this%qflx_snwcp_ice_patch     (:)   = nan
     allocate(this%qflx_tran_veg_patch      (begp:endp))              ; this%qflx_tran_veg_patch      (:)   = nan
 
     allocate(this%qflx_snowindunload_patch (begp:endp))              ; this%qflx_snowindunload_patch (:)   = nan
@@ -357,11 +357,6 @@ contains
          avgflag='A', long_name='canopy transpiration', &
          ptr_patch=this%qflx_tran_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
-    this%qflx_snwcp_liq_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QSNWCPLIQ', units='mm H2O/s', &
-         avgflag='A', long_name='excess rainfall due to snow capping', &
-         ptr_patch=this%qflx_snwcp_liq_patch, c2l_scale_type='urbanf', default='inactive')
-
     this%qflx_snowindunload_patch(begp:endp) = spval
     call hist_addfld1d (fname='QSNOWINDUNLOAD', units='mm/s',  &
          avgflag='A', long_name='canopy snow wind unloading', &
@@ -371,12 +366,15 @@ contains
     call hist_addfld1d (fname='QSNOTEMPUNLOAD', units='mm/s',  &
          avgflag='A', long_name='canopy snow temp unloading', &
          ptr_patch=this%qflx_snotempunload_patch, set_lake=0._r8, c2l_scale_type='urbanf')
-		 
-    ! Use qflx_snwcp_ice_col rather than qflx_snwcp_ice_patch, because the column version 
-    ! is the final version, which includes some  additional corrections beyond the patch-level version
-    this%qflx_snwcp_ice_patch(begp:endp) = spval
+
+    this%qflx_snwcp_liq_col(begc:endc) = spval
+    call hist_addfld1d (fname='QSNWCPLIQ', units='mm H2O/s', &
+         avgflag='A', long_name='excess liquid h2o due to snow capping not including correction for land use change', &
+         ptr_col=this%qflx_snwcp_liq_col, c2l_scale_type='urbanf')
+
+    this%qflx_snwcp_ice_col(begc:endc) = spval
     call hist_addfld1d (fname='QSNWCPICE', units='mm H2O/s', &
-         avgflag='A', long_name='excess snowfall due to snow capping not including correction for land use change', &
+         avgflag='A', long_name='excess solid h2o due to snow capping not including correction for land use change', &
          ptr_col=this%qflx_snwcp_ice_col, c2l_scale_type='urbanf')
 
     if (use_cn) then

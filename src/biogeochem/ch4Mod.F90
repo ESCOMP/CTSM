@@ -2916,7 +2916,6 @@ contains
          h2osoi_vol    =>    waterstate_inst%h2osoi_vol_col  , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
          h2osoi_liq    =>    waterstate_inst%h2osoi_liq_col  , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) [for snow & soil layers]   
          h2osoi_ice    =>    waterstate_inst%h2osoi_ice_col  , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) [for snow & soil layers]       
-         h2osno        =>    waterstate_inst%h2osno_col      , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                               
          h2osfc        =>    waterstate_inst%h2osfc_col      , & ! Input:  [real(r8) (:)   ]  surface water (mm)                                
 
          c_atm         =>    ch4_inst%c_atm_grc              , & ! Input:  [real(r8) (:,:) ]  CH4, O2, CO2 atmospheric conc  (mol/m3)         

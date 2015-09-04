@@ -1130,7 +1130,6 @@ contains
          h2osno             => waterstate_inst%h2osno_col                , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
          h2osoi_ice         => waterstate_inst%h2osoi_ice_col            , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                      
          h2osoi_liq         => waterstate_inst%h2osoi_liq_col            , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
-         do_capsnow         => waterstate_inst%do_capsnow_col            , & ! Output: [logical  (:)   ]  true => do snow capping                  
          h2osno_old         => waterstate_inst%h2osno_old_col            , & ! Output: [real(r8) (:)   ]  snow water (mm H2O) at previous time step
          frac_iceold        => waterstate_inst%frac_iceold_col           , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
 
@@ -1158,13 +1157,6 @@ contains
 
          ! Save snow mass at previous time step
          h2osno_old(c) = h2osno(c)
-
-         ! Decide whether to cap snow
-         if (h2osno(c) > h2osno_max) then
-            do_capsnow(c) = .true.
-         else
-            do_capsnow(c) = .false.
-         end if
 
          ! Reset flux from beneath soil/ice column 
          eflx_bot(c)  = 0._r8
@@ -1214,6 +1206,7 @@ contains
     use WaterFluxType  , only : waterflux_type
     use EnergyFluxType , only : energyflux_type
     use subgridAveMod  , only : p2c
+    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds  
@@ -1287,24 +1280,6 @@ contains
          waterflux_inst%qflx_snow_grnd_patch(bounds%begp:bounds%endp), &
          waterflux_inst%qflx_snow_grnd_col(bounds%begc:bounds%endc))
     
-    call p2c (bounds, num_allc, filter_allc, &
-         waterflux_inst%qflx_snwcp_liq_patch(bounds%begp:bounds%endp), &
-         waterflux_inst%qflx_snwcp_liq_col(bounds%begc:bounds%endc))
-    !TODO - WJS has suggested that at this point qflx_snwcp_liq_patch should
-    ! now be set to nan in order to ensure that this variable is not used
-    ! for the remainder of the timestep - other variables where this should
-    ! occur in this routine should be examined as well
-
-    ! For lakes, this field is initially set in LakeFluxesMod (which
-    ! is called before this routine; hence it is appropriate to
-    ! include lake columns in this p2c call.  However, it is later
-    ! overwritten in LakeHydrologyMod, both on the patch and the column
-    ! level.
-
-    call p2c (bounds, num_allc, filter_allc, &
-         waterflux_inst%qflx_snwcp_ice_patch(bounds%begp:bounds%endp), &
-         waterflux_inst%qflx_snwcp_ice_col(bounds%begc:bounds%endc))
-
     call p2c (bounds, num_nolakec, filter_nolakec, &
          waterflux_inst%qflx_tran_veg_patch(bounds%begp:bounds%endp), &
          waterflux_inst%qflx_tran_veg_col(bounds%begc:bounds%endc))

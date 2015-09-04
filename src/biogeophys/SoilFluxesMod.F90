@@ -89,7 +89,6 @@ contains
 
          frac_sno_eff            => waterstate_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
          frac_h2osfc             => waterstate_inst%frac_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
-         do_capsnow              => waterstate_inst%do_capsnow_col          , & ! Input:  [logical  (:)   ]  true => do snow capping                  
          h2osoi_ice              => waterstate_inst%h2osoi_ice_col          , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) (new)                
          h2osoi_liq              => waterstate_inst%h2osoi_liq_col          , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) (new)            
 
@@ -122,16 +121,14 @@ contains
          qflx_evap_soi           => waterflux_inst%qflx_evap_soi_patch      , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
          qflx_evap_veg           => waterflux_inst%qflx_evap_veg_patch      , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)
          qflx_tran_veg           => waterflux_inst%qflx_tran_veg_patch      , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
-         qflx_snwcp_liq          => waterflux_inst%qflx_snwcp_liq_patch     , & ! Output: [real(r8) (:)   ]  excess rainfall due to snow capping (mm H2O /s)
-         qflx_snwcp_ice          => waterflux_inst%qflx_snwcp_ice_patch     , & ! Output: [real(r8) (:)   ]  excess snowfall due to snow capping (mm H2O /s)
          qflx_evap_tot           => waterflux_inst%qflx_evap_tot_patch      , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
          qflx_evap_grnd          => waterflux_inst%qflx_evap_grnd_patch     , & ! Output: [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
          qflx_sub_snow           => waterflux_inst%qflx_sub_snow_patch      , & ! Output: [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
          qflx_dew_snow           => waterflux_inst%qflx_dew_snow_patch      , & ! Output: [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
          qflx_dew_grnd           => waterflux_inst%qflx_dew_grnd_patch      , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
-         qflx_ev_snow            => waterflux_inst%qflx_ev_snow_patch       , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (W/m**2) [+ to atm]
-         qflx_ev_soil            => waterflux_inst%qflx_ev_soil_patch       , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (W/m**2) [+ to atm]
-         qflx_ev_h2osfc          => waterflux_inst%qflx_ev_h2osfc_patch     , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (W/m**2) [+ to atm]
+         qflx_ev_snow            => waterflux_inst%qflx_ev_snow_patch       , & ! In/Out: [real(r8) (:)   ]  evaporation flux from snow (W/m**2) [+ to atm]
+         qflx_ev_soil            => waterflux_inst%qflx_ev_soil_patch       , & ! In/Out: [real(r8) (:)   ]  evaporation flux from soil (W/m**2) [+ to atm]
+         qflx_ev_h2osfc          => waterflux_inst%qflx_ev_h2osfc_patch     , & ! In/Out: [real(r8) (:)   ]  evaporation flux from soil (W/m**2) [+ to atm]
          
          eflx_sh_grnd            => energyflux_inst%eflx_sh_grnd_patch      , & ! Output: [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]
          eflx_sh_veg             => energyflux_inst%eflx_sh_veg_patch       , & ! Output: [real(r8) (:)   ]  sensible heat flux from leaves (W/m**2) [+ to atm]
@@ -337,15 +334,6 @@ contains
             else
                qflx_dew_grnd(p) = abs(qflx_ev_snow(p))
             end if
-         end if
-
-         ! Update the patch-level qflx_snwcp
-         ! This was moved in from Hydrology2 to keep all patch-level
-         ! calculations out of Hydrology2
-
-         if (col%snl(c) < 0 .and. do_capsnow(c)) then
-            qflx_snwcp_liq(p) = qflx_snwcp_liq(p)+frac_sno_eff(c)*qflx_dew_grnd(p)
-            qflx_snwcp_ice(p) = qflx_snwcp_ice(p)+frac_sno_eff(c)*qflx_dew_snow(p)
          end if
 
          ! Variables needed by history tape
