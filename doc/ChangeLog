@@ -1,4 +1,83 @@
 ===============================================================
+Tag name:  clm4_5_2_r122
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Sep  9 05:57:15 MDT 2015
+One-line Summary: Update to latest cime
+
+Purpose of changes:
+
+   Update cime to the version likely to be in cesm1_4_beta07
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: none
+
+List any svn externals directories updated (cime, rtm, cism, etc.):
+
+   cime2.0.7 -> cime2.0.17
+
+List all files eliminated:
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+========= Change instructions: no longer need dot in your path
+M       components/clm/src/README.unit_testing
+
+========= Remove CME and NCK expected failures: these pass now, presumably due
+          to fixes in cime (although since the failures were intermittent, it's
+          hard to say definitively that the problem is fixed)
+M       components/clm/cimetest/ExpectedTestFails.xml
+
+-   <entry bugz="cime-115" >CFAIL CME_Ld5.f10_f10.ICN.yellowstone_intel</entry>
+-   <entry bugz="cime-115" >CFAIL CME_Ly4.f10_f10.I1850CLM45BGC.yellowstone_intel.clm-monthly</entry>
+-   <entry bugz="cime-116" >FAIL NCK_Ld1.f10_f10.ICRUCLM45.yellowstone_intel.clm-default</entry>
+-   <entry bugz="cime-116" >RUN NCK_Ld1.f10_f10.ICRUCLM45.yellowstone_intel.clm-default</entry>
+
+CLM testing:
+
+  unit-tests (components/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    hobart_nag: clm40 ok, CLM45 NOT RUN
+       Note that there is still a problem with clm45 nag
+
+CLM tag used for the baseline comparisons: clm4_5_2_r121
+
+Changes answers relative to baseline: NO
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_2_r121
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Sep  4 10:55:54 MDT 2015

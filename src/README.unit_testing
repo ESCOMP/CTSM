@@ -1,7 +1,6 @@
 # To run all CIME unit tests on caldera, run the following command:
 # (Note that this must be done from an interactive caldera session, not from yellowstone)
 # (One way to do that is to prepend with the "execca" utility that sends the resulting command to caldera)
-# NOTE: YOU MUST HAVE "." IN YOUR PATH FOR THIS TO WORK!!!!
 execca ../../../cime/tools/unit_testing/run_tests.py --test-spec-dir=. --compiler=intel --mpilib=mpich2 \
 --mpirun-command=mpirun.lsf --cmake-args=-DPAPI_LIB=/glade/apps/opt/papi/5.3.0/intel/12.1.5/lib64 &
 

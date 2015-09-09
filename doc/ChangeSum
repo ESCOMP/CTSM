@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_2_r122    sacks 09/09/2015 Update to latest cime
    clm4_5_2_r121    sacks 09/04/2015 Rework snow capping
    clm4_5_1_r120    andre 08/29/2015 CLM 5 nitrogen models Flexible CN and LUNA
    clm4_5_1_r119     erik 08/26/2015 Bring hobart/nag bug fixes to trunk, and fix a few bugs
