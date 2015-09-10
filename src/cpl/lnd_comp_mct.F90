@@ -9,7 +9,7 @@ module lnd_comp_mct
   ! !uses:
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use shr_sys_mod      , only : shr_sys_flush
-  use mct_mod          , only : mct_avect, mct_gsmap
+  use mct_mod          , only : mct_avect, mct_gsmap, mct_gGrid
   use decompmod        , only : bounds_type, ldecomp
   use lnd_import_export, only : lnd_import, lnd_export
   !
@@ -39,6 +39,7 @@ contains
     ! back from (i.e. albedos, surface temperature and snow cover over land).
     !
     ! !USES:
+    use shr_kind_mod     , only : shr_kind_cl
     use abortutils       , only : endrun
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, set_nextsw_cday
     use clm_initializeMod, only : initialize1, initialize2, lnd2atm_inst, lnd2glc_inst
@@ -61,7 +62,7 @@ contains
     use spmdMod          , only : masterproc, spmd_init
     use clm_varctl       , only : nsrStartup, nsrContinue, nsrBranch
     use clm_cpl_indices  , only : clm_cpl_indices_set
-    use mct_mod
+    use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap_lsize
     use ESMF
     !
     ! !ARGUMENTS:
@@ -300,7 +301,6 @@ contains
     use spmdMod         ,  only : masterproc, mpicom
     use perf_mod        ,  only : t_startf, t_stopf, t_barrierf
     use shr_orb_mod     ,  only : shr_orb_decl
-    use mct_mod
     use ESMF
     !
     ! !ARGUMENTS:
@@ -490,7 +490,6 @@ contains
     use seq_cdata_mod   ,only : seq_cdata, seq_cdata_setptrs
     use seq_timemgr_mod ,only : seq_timemgr_EClockGetData, seq_timemgr_StopAlarmIsOn
     use seq_timemgr_mod ,only : seq_timemgr_RestartAlarmIsOn, seq_timemgr_EClockDateInSync
-    use mct_mod
     use esmf
     !
     ! !ARGUMENTS:
@@ -560,7 +559,7 @@ contains
     use clm_varcon  , only: re
     use domainMod   , only: ldomain
     use spmdMod     , only: iam
-    use mct_mod     , only: mct_gsMap, mct_gGrid, mct_gGrid_importIAttr
+    use mct_mod     , only: mct_gGrid_importIAttr
     use mct_mod     , only: mct_gGrid_importRAttr, mct_gGrid_init, mct_gsMap_orderedPoints
     use seq_flds_mod, only: seq_flds_dom_coord, seq_flds_dom_other
     !

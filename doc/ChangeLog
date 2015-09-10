@@ -1,4 +1,115 @@
 ===============================================================
+Tag name:  clm4_5_2_r123
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Sep 10 10:25:55 MDT 2015
+One-line Summary: Fix some problems with pgi and nag compilers
+
+Purpose of changes:
+
+   (1) Fix some problems with the nag compiler: fix bug 2208, but open new bug
+       2213
+
+   (2) Work around some problems that appear with pgi 15.7 (appear to be
+       compiler bugs), which Sean Santos tracked down: The key problem is that
+       PGI is exporting some names that should have been aliased. So for
+       instance:
+
+       use foo_mod, only: foo_bar => bar
+
+       In this case, if you have a "use" without an "only" of foo_mod, you get
+       both foo_bar and bar imported into the namespace.
+
+       Note: I have not been able to test these changes with pgi 15.7, because
+       there is a PIO build problem with pgi 15.7
+
+   (3) No longer kill the run if we're using ozone with pgi: The pgi compiler
+       bug that showed up with the ozone code has been fixed as of pgi 15.1,
+       which is now our default.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+   2208: nag reports a problem with associate statement to un-allocated LUNA
+         memory in photosynthesisMod (but see new bug 2213)
+   2094: ozone code doesn't work with the PGI compiler
+
+Known bugs (include bugzilla ID):
+    2213: CLM45 / CLM50 runs without BGC die with NAG compiler, due to associate
+    to unallocated memory
+
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.):
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Fix for pgi 15.7. CLM40 changes from Sean Santos; I ported these
+          changes to CLM45
+M       components/clm/src_clm40/main/lnd_comp_mct.F90
+M       components/clm/src_clm40/main/spmdGathScatMod.F90
+M       components/clm/src/cpl/lnd_comp_mct.F90
+M       components/clm/src/utils/spmdGathScatMod.F90
+
+========= Fix for nag from Ben Andre
+M       components/clm/src/biogeophys/PhotosynthesisMod.F90
+
+========= No longer abort if running with pgi
+M       components/clm/src/biogeophys/OzoneMod.F90
+
+========= Remove ozone pgi test, because it runs out of wallclock time (but I
+          believe it would now pass: a shorter version now passes)
+M       components/clm/cimetest/testlist_clm.xml
+
+========= Update xFails: Add hobart_nag xFails, remove no-longer-relevant or
+          no-longer-failing tests (many have been passing for a while now)
+M       components/clm/cimetest/ExpectedTestFails.xml
+
+
+CLM testing:
+
+  unit-tests (components/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    hobart_nag: ok
+       However, all runs without BGC still die: see bug 2213 and
+       ExpectedTestFails list
+
+CLM tag used for the baseline comparisons: clm4_5_2_r122
+
+Changes answers relative to baseline: NO
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_2_r122
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Sep  9 05:57:15 MDT 2015

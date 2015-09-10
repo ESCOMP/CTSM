@@ -145,16 +145,6 @@ contains
     type(bounds_type), intent(in)    :: bounds
     !-----------------------------------------------------------------------
 
-#ifdef __PGI
-    ! COMPILER_BUG(wjs, 2014-12-01, pgi 14.7) With pgi 14.7, variables that are defined
-    ! in ozone_type (as opposed to ozone_base_type) get resized to 0 at some point at run
-    ! time. Presumably pgi isn't tracking the dynamic type information properly. I can't
-    ! find a workaround for this problem. I'm hopeful that it will be resolved in pgi 15.
-    ! (This is documented in bug 2094.)
-    call endrun(msg='Ozone code currently is not supported with PGI, due to a compiler bug&
-         & present in pgi14.7 and earlier')
-#endif
-
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
     call this%InitCold(bounds)

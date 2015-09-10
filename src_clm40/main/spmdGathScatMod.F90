@@ -20,6 +20,7 @@ module spmdGathScatMod
 !
 ! !PUBLIC TYPES:
   implicit none
+  private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public  scatter_data_from_master, gather_data_to_master

@@ -233,6 +233,9 @@ contains
     allocate(this%psncanopy_patch   (begp:endp))           ; this%psncanopy_patch   (:)   = nan
     allocate(this%lmrcanopy_patch   (begp:endp))           ; this%lmrcanopy_patch   (:)   = nan
     if(use_luna)then
+      ! NOTE(bja, 2015-09) because these variables are only allocated
+      ! when luna is turned on, they can not be placed into associate
+      ! statements.
       allocate(this%vcmx25_z_patch  (begp:endp,1:nlevcan)) ; this%vcmx25_z_patch    (:,:) = 30._r8
       allocate(this%jmx25_z_patch   (begp:endp,1:nlevcan)) ; this%jmx25_z_patch     (:,:) = 60._r8 
       allocate(this%pnlc_z_patch    (begp:endp,1:nlevcan)) ; this%pnlc_z_patch      (:,:) = 0.01_r8
@@ -784,9 +787,6 @@ contains
          nrad       => surfalb_inst%nrad_patch               , & ! Input:  [integer  (:)   ]  pft number of canopy layers, above snow for radiative transfer
          tlai_z     => surfalb_inst%tlai_z_patch             , & ! Input:  [real(r8) (:,:) ]  pft total leaf area index for canopy layer
          tlai       => canopystate_inst%tlai_patch           , & ! Input:  [real(r8)(:)    ]  one-sided leaf area index, no burying by snow  
-         vcmx25_z   => photosyns_inst%vcmx25_z_patch         , & ! Input:  [real(r8) (:,:) ]  Vc,max25 (umol co2 /m**2/ s) [always +]
-         jmx25_z    => photosyns_inst%jmx25_z_patch          , & ! Input:  [real(r8) (:,:) ]  Jmax25 (umol electron /m**2/ s) [always +]
-
          c3flag     => photosyns_inst%c3flag_patch           , & ! Output: [logical  (:)   ]  true if C3 and false if C4
          ac         => photosyns_inst%ac_patch               , & ! Output: [real(r8) (:,:) ]  Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
          aj         => photosyns_inst%aj_patch               , & ! Output: [real(r8) (:,:) ]  RuBP-limited gross photosynthesis (umol CO2/m**2/s)
@@ -1117,7 +1117,7 @@ contains
             lmr25 = lmr25top * nscaler
 
             if(use_luna.and.c3flag(p).and.(.not.use_cn))then
-                lmr25 = 0.015_r8 * vcmx25_z(p,iv)
+                lmr25 = 0.015_r8 * photosyns_inst%vcmx25_z_patch(p,iv)
             endif
           
             if (c3flag(p)) then
@@ -1141,8 +1141,8 @@ contains
             else                                     ! day time
 
                if(use_luna.and.c3flag(p))then
-                  vcmax25 = vcmx25_z(p,iv)
-                  jmax25 = jmx25_z(p,iv)
+                  vcmax25 = photosyns_inst%vcmx25_z_patch(p,iv)
+                  jmax25 = photosyns_inst%jmx25_z_patch(p,iv)
                   tpu25 = 0.167_r8 * vcmax25        
                else
                   vcmax25 = vcmax25top * nscaler
