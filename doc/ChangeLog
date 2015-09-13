@@ -1,4 +1,118 @@
 ===============================================================
+Tag name:  clm4_5_2_r124
+Originator(s):  sacks (Bill Sacks)
+Date: Sun Sep 13 06:33:20 MDT 2015
+One-line Summary: Wind-dependent snow density
+
+Purpose of changes:
+
+   Add an option to make snow density dependent on wind speed. There are two
+   components to this: (1) adding a wind-related factor to the fresh snow
+   density, and (2) adding a wind-related factor for the compaction of the
+   existing snow pack (applying just to the top layer). This allows for more
+   realistic (higher) fresh snow densities in windy conditions.
+
+   Other than myself, contributors to these changes are: Jan Lenaerts, Leo van
+   Kampenhout and Drew Slater.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: new option: 'wind_dependent_snow_density'
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated:
+
+========= Renamed
+D       components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology.pf
+
+List all files added and what they do:
+
+========= Tests of some of the new code
+A       components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology_windCompactionFactor.pf
+
+========= Renamed
+A       components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology_initSnowLayers.pf
+
+List all existing files that have been modified, and describe the changes:
+
+========= Add wind-dependent snow density parameterizations and control flag
+M       components/clm/src/main/controlMod.F90
+M       components/clm/src/biogeophys/CanopyHydrologyMod.F90
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/biogeophys/LakeHydrologyMod.F90
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+
+========= Add tests for some of the new code
+M       components/clm/src/biogeophys/test/SnowHydrology_test/CMakeLists.txt
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+
+  unit-tests (components/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    hobart_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_2_r123
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all CLM50
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+        larger than roundoff; magnitude not investigated in detail
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_2_r123
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Sep 10 10:25:55 MDT 2015

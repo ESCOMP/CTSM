@@ -2718,6 +2718,7 @@ sub setup_logic_snowpack {
   if ($physv->as_long() >= $physv->as_long("clm4_5")) {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nlevsno');
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'h2osno_max');
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'wind_dependent_snow_density');
   }
 }
 
@@ -2762,7 +2763,7 @@ sub write_output_files {
   } else {
     @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams lai_streams clm_canopyhydrology_inparm 
                  clm_soilhydrology_inparm dynamic_subgrid finidat_consistency_checks dynpft_consistency_checks 
-                 clmu_inparm clm_soilstate_inparm clm_nitrogen );
+                 clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm );
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);
     # Eventually only list namelists that are actually used when CN on

@@ -83,6 +83,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <nlevsno phys="clm4_5" >5</nlevsno>
 <h2osno_max phys="clm5_0" >1000.0</h2osno_max>
 <h2osno_max phys="clm4_5" >1000.0</h2osno_max>
+<wind_dependent_snow_density phys="clm5_0" >.true.</wind_dependent_snow_density>
+<wind_dependent_snow_density phys="clm4_5" >.false.</wind_dependent_snow_density>
 
 <!-- Determine whether to perform certain downscaling operations over glc_mec landunits -->
 <glcmec_downscale_longwave>.true.</glcmec_downscale_longwave>

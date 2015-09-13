@@ -198,7 +198,7 @@ contains
 
       ! Natural compaction and metamorphosis.
       call SnowCompaction(bounds, num_snowc, filter_snowc, &
-           temperature_inst, waterstate_inst)
+           temperature_inst, waterstate_inst, atm2lnd_inst)
 
       ! Combine thin snow elements
       call CombineSnowLayers(bounds, num_snowc, filter_snowc, &

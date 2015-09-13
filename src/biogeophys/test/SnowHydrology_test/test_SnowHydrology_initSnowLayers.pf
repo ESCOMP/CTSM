@@ -1,6 +1,6 @@
-module test_SnowHydrology
+module test_SnowHydrology_initSnowLayers
   
-  ! Tests of SnowHydrologyMod
+  ! Tests of SnowHydrologyMod: initSnowLayers
   
   use pfunit_mod
   use SnowHydrologyMod
@@ -70,4 +70,4 @@ contains
 
   end subroutine test_initSnowLayers_depth1_snl
 
-end module test_SnowHydrology
+end module test_SnowHydrology_initSnowLayers

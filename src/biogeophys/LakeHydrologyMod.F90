@@ -72,7 +72,7 @@ contains
     use clm_varctl      , only : iulog
     use clm_time_manager, only : get_step_size
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater, BuildSnowFilter, SnowCapping
-    use SnowHydrologyMod, only : DivideSnowLayers
+    use SnowHydrologyMod, only : DivideSnowLayers, NewSnowBulkDensity
     use LakeCon         , only : lsadz
     !
     ! !ARGUMENTS:
@@ -99,7 +99,7 @@ contains
     real(r8) :: dtime                                           ! land model time step (sec)
     integer  :: newnode                                         ! flag when new snow node is set, (1=yes, 0=no)
     real(r8) :: dz_snowf                                        ! layer thickness rate change due to precipitation [mm/s]
-    real(r8) :: bifall                                          ! bulk density of newly fallen dry snow [kg/m3]
+    real(r8) :: bifall(bounds%begc:bounds%endc)                 ! bulk density of newly fallen dry snow [kg/m3]
     real(r8) :: fracsnow(bounds%begp:bounds%endp)               ! frac of precipitation that is snow
     real(r8) :: fracrain(bounds%begp:bounds%endp)               ! frac of precipitation that is rain
     real(r8) :: qflx_prec_grnd_snow(bounds%begp:bounds%endp)    ! snow precipitation incident on ground [mm/s]
@@ -235,6 +235,9 @@ contains
 
       ! Determine snow height and snow water
 
+      call NewSnowBulkDensity(bounds, num_lakec, filter_lakec, &
+           atm2lnd_inst, bifall(bounds%begc:bounds%endc))
+
       do fc = 1, num_lakec
          c = filter_lakec(fc)
 
@@ -242,14 +245,7 @@ contains
          ! U.S.Department of Agriculture Forest Service, Project F,
          ! Progress Rep. 1, Alta Avalanche Study Center:Snow Layer Densification.
 
-         if (forc_t(c) > tfrz + 2._r8) then
-            bifall=50._r8 + 1.7_r8*(17.0_r8)**1.5_r8
-         else if (forc_t(c) > tfrz - 15._r8) then
-            bifall=50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
-         else
-            bifall=50._r8
-         end if
-         dz_snowf = qflx_snow_grnd_col(c)/bifall
+         dz_snowf = qflx_snow_grnd_col(c)/bifall(c)
          snow_depth(c) = snow_depth(c) + dz_snowf*dtime
          h2osno(c) = h2osno(c) + qflx_snow_grnd_col(c)*dtime  ! snow water equivalent (mm)
 
@@ -441,7 +437,7 @@ contains
       ! Natural compaction and metamorphosis.
 
       call SnowCompaction(bounds, num_shlakesnowc, filter_shlakesnowc, &
-           temperature_inst, waterstate_inst)
+           temperature_inst, waterstate_inst, atm2lnd_inst)
 
       ! Combine thin snow elements
 

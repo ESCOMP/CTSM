@@ -1,4 +1,8 @@
+set (pfunit_sources
+  test_SnowHydrology_initSnowLayers.pf
+  test_SnowHydrology_windCompactionFactor.pf)
+
 create_pFUnit_test(SnowHydrology test_SnowHydrology_exe
-  "test_SnowHydrology.pf" "")
+  "${pfunit_sources}" "")
 
 target_link_libraries(test_SnowHydrology_exe clm csm_share esmf_wrf_timemgr)

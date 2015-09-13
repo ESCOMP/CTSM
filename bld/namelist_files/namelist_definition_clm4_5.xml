@@ -1582,4 +1582,11 @@ Maximum snow depth in mm H2O equivalent. Additional mass gains will be capped wh
 is exceeded.
 </entry>
 
+<entry id="wind_dependent_snow_density" type="logical" category="clm_physics"
+       group="clm_snowhydrology_inparm" valid_values="" >
+If TRUE, the density of new snow depends on wind speed, and there is also
+wind-dependent snow compaction.
+</entry>
+
+
 </namelist_definition>

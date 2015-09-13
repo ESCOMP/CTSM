@@ -37,6 +37,7 @@ module SnowHydrologyMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
+  public :: SnowHydrology_readnl       ! Read namelist
   public :: SnowWater                  ! Change of snow mass and the snow water onto soil
   public :: SnowCompaction             ! Change in snow layer thickness due to compaction
   public :: CombineSnowLayers          ! Combine snow layers less than a min thickness
@@ -44,6 +45,10 @@ module SnowHydrologyMod
   public :: InitSnowLayers             ! Initialize cold-start snow layer thickness
   public :: BuildSnowFilter            ! Construct snow/no-snow filters
   public :: SnowCapping                ! Remove snow mass for capped columns
+  public :: NewSnowBulkDensity         ! Compute bulk density of any newly-fallen snow
+
+  ! The following are public just for the sake of unit testing:
+  public :: WindCompactionFactor       ! Compaction enhancement factor of snowpack due to wind
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: Combo                  ! Returns the combined variables: dz, t, wliq, wice.
@@ -82,9 +87,70 @@ module SnowHydrologyMod
                (/ 0.02_r8, 0.05_r8, 0.11_r8, 0.23_r8, 0.47_r8, 0.95_r8, &
                   1.91_r8, 3.83_r8, 7.67_r8, 15.35_r8, 30.71_r8  /)
 
+  !
+  ! !PRIVATE DATA MEMBERS:
+
+  ! If true, the density of new snow depends on wind speed, and there is also
+  ! wind-dependent snow compaction
+  logical :: wind_dependent_snow_density
+
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine SnowHydrology_readnl( NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for SnowHydrology
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'SnowHydrology_readnl'
+    !-----------------------------------------------------------------------
+
+    namelist /clm_snowhydrology_inparm/ &
+         wind_dependent_snow_density
+
+    ! Initialize options to default values, in case they are not specified in the namelist
+    wind_dependent_snow_density = .false.
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in clm_SnowHydrology_inparm  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, 'clm_SnowHydrology_inparm', status=ierr)
+       if (ierr == 0) then
+          read(unitn, clm_snowhydrology_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading clm_snowhydrology_inparm namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast (wind_dependent_snow_density, mpicom)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) 'SnowHydrology settings:'
+       write(iulog,nml=clm_snowhydrology_inparm)
+       write(iulog,*) ' '
+    end if
+
+  end subroutine SnowHydrology_readnl
+
 
   !-----------------------------------------------------------------------
   subroutine SnowWater(bounds, &
@@ -426,7 +492,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SnowCompaction(bounds, num_snowc, filter_snowc, &
-       temperature_inst, waterstate_inst)
+       temperature_inst, waterstate_inst, atm2lnd_inst)
     !
     ! !DESCRIPTION:
     ! Determine the change in snow layer thickness due to compaction and
@@ -449,9 +515,11 @@ contains
     integer                , intent(in) :: filter_snowc(:) ! column filter for snow points
     type(temperature_type) , intent(in) :: temperature_inst
     type(waterstate_type)  , intent(in) :: waterstate_inst
+    type(atm2lnd_type)     , intent(in) :: atm2lnd_inst
     !
     ! !LOCAL VARIABLES:
     integer :: j, l, c, fc                      ! indices
+    integer :: g                                ! gridcell index
     real(r8):: dtime                            ! land model time step (sec)
     ! parameters
     real(r8), parameter :: c2 = 23.e-3_r8       ! [m3/kg]
@@ -465,6 +533,7 @@ contains
     real(r8) :: ddz1                            ! Rate of settling of snowpack due to destructive metamorphism.
     real(r8) :: ddz2                            ! Rate of compaction of snowpack due to overburden.
     real(r8) :: ddz3                            ! Rate of compaction of snowpack due to melt [1/s]
+    real(r8) :: windcomp                        ! Compaction enhancement factor of snowpack due to wind [-]
     real(r8) :: dexpf                           ! expf=exp(-c4*(273.15-t_soisno)).
     real(r8) :: fi                              ! Fraction of ice relative to the total water content at current time step
     real(r8) :: td                              ! t_soisno - tfrz [K]
@@ -480,6 +549,7 @@ contains
          snl          => col%snl                          , & ! Input:  [integer (:)    ] number of snow layers
          n_melt       => col%n_melt                       , & ! Input:  [real(r8) (:)   ] SCA shape parameter
          ltype        => lun%itype                        , & ! Input:  [integer (:)    ] landunit type
+         forc_wind    => atm2lnd_inst%forc_wind_grc       , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed (m/s)
 
          t_soisno     => temperature_inst%t_soisno_col    , & ! Input:  [real(r8) (:,:) ] soil temperature (Kelvin)
          imelt        => temperature_inst%imelt_col       , & ! Input:  [integer (:,:)  ] flag for melting (=1), freezing (=2), Not=0
@@ -505,6 +575,7 @@ contains
     do j = -nlevsno+1, 0
        do fc = 1, num_snowc
           c = filter_snowc(fc)
+          g = col%gridcell(c)
           if (j >= snl(c)+1) then
 
              wx = h2osoi_ice(c,j) + h2osoi_liq(c,j)
@@ -531,8 +602,15 @@ contains
                 if (h2osoi_liq(c,j) > 0.01_r8*dz(c,j)*frac_sno(c)) ddz1=ddz1*c5
 
                 ! Compaction due to overburden
-
-                ddz2 = -(burden(c)+wx/2._r8)*exp(-0.08_r8*td - c2*bi)/eta0
+                if (wind_dependent_snow_density) then
+                   windcomp = WindCompactionFactor( &
+                        forc_wind = forc_wind(g), &
+                        layer     = j, &
+                        snl       = snl(c))
+                else
+                   windcomp = 1.0_r8
+                end if
+                ddz2 = -(burden(c)+wx/2._r8)*windcomp*exp(-0.08_r8*td - c2*bi)/eta0
 
                 ! Compaction occurring during melt
 
@@ -1460,6 +1538,123 @@ contains
 
     end associate
   end subroutine SnowCapping
+
+  !-----------------------------------------------------------------------
+  subroutine NewSnowBulkDensity(bounds, num_c, filter_c, atm2lnd_inst, bifall)
+    !
+    ! !DESCRIPTION:
+    ! Compute the bulk density of any newly-fallen snow.
+    !
+    ! The return value is placed in bifall. Only columns within the given filter are set:
+    ! all other columns remain at their original values.
+    !
+    ! !USES:
+    use clm_varcon,  only : tfrz
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)  , intent(in)    :: bounds
+    integer            , intent(in)    :: num_c                ! number of columns in filterc
+    integer            , intent(in)    :: filter_c(:)          ! column-level filter to operate on
+    type(atm2lnd_type) , intent(in)    :: atm2lnd_inst
+    real(r8)           , intent(inout) :: bifall(bounds%begc:) ! bulk density of newly fallen dry snow [kg/m3]
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c, g
+
+    character(len=*), parameter :: subname = 'NewSnowBulkDensity'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(bifall) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+
+    associate( &
+         forc_t      => atm2lnd_inst%forc_t_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)        
+         forc_wind   => atm2lnd_inst%forc_wind_grc           & ! Input:  [real(r8) (:)   ]  atmospheric wind speed (m/s)
+         )
+
+    do fc = 1, num_c
+       c = filter_c(fc)
+       g = col%gridcell(c)
+
+       if (forc_t(c) > tfrz + 2._r8) then
+          bifall(c) = 50._r8 + 1.7_r8*(17.0_r8)**1.5_r8
+       else if (forc_t(c) > tfrz - 15._r8) then
+          bifall(c) = 50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
+       else
+          bifall(c) = 50._r8
+       end if
+
+       if (wind_dependent_snow_density) then
+          ! Density offset for wind-driven compaction, based on Glen Liston et.al.
+          ! Journal of Glaciology, Vol. 53, No. 181, 2007
+          if (forc_wind(g) >= 5._r8) then
+             bifall(c) = bifall(c) + 25._r8 + 250._r8 * (1._r8 - exp(-0.2_r8 * (forc_wind(g) - 5._r8)))
+          end if
+       end if
+
+    end do
+
+    end associate
+
+  end subroutine NewSnowBulkDensity
+
+  !-----------------------------------------------------------------------
+  function WindCompactionFactor(forc_wind, layer, snl) result(windcomp)
+    !
+    ! !DESCRIPTION:
+    ! Computes compaction enhancement factor of snowpack due to wind.
+    !
+    ! This is used if wind_dependent_snow_density is true.
+    !
+    ! Parameterization comes from Glen Liston et al., Journal of Glaciology, Vol. 53, No.
+    ! 181, 2007 (equation 18)
+    !
+    ! For forc_wind >= 5 m/s, parameterization varies between 5 (forc_wind = 5 m/s) and
+    ! 20 (forc_wind large); for forc_wind < 5 m/s, returns 1.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    real(r8) :: windcomp  ! function result
+    real(r8), intent(in) :: forc_wind  ! atmospheric wind speed (m/s)
+    integer , intent(in) :: layer      ! current snow layer index (between snl+1 [top] and 0 [bottom])
+    integer , intent(in) :: snl        ! NEGATIVE number of snow layers
+    !
+    ! !LOCAL VARIABLES:
+
+    ! minimum wind speed tht results in compaction (m/s)
+    real(r8), parameter :: min_wind = 5._r8
+
+    ! wind compaction factor at min_wind (E1 from Liston et al.)
+    real(r8), parameter :: min_factor = 5._r8
+
+    ! maximum addition to min_factor for very strong winds (E2 from Liston et al.)
+    real(r8), parameter :: max_additional_factor = 15._r8
+
+    ! factor controlling progression of wind compaction factor from weak to strong winds
+    ! (E3 from Liston et al.)
+    real(r8), parameter :: progression_factor = 0.2_r8
+
+    character(len=*), parameter :: subname = 'WindCompactionFactor'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT(-snl <= nlevsno, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(snl+1 <= layer .and. layer <= 0, errMsg(__FILE__, __LINE__))
+
+    ! Only apply wind compaction to top snow layer
+    if (layer == snl+1) then
+       if (forc_wind >= min_wind) then
+          windcomp = min_factor + max_additional_factor * &
+               (1.0_r8 - exp(-progression_factor * (forc_wind - min_wind)))
+       else
+          windcomp = 1.0_r8
+       end if
+    else
+       windcomp = 1.0_r8
+    end if
+
+  end function WindCompactionFactor
+
+
 
   !-----------------------------------------------------------------------
   subroutine Combo(dz,  wliq,  wice, t, dz2, wliq2, wice2, t2)

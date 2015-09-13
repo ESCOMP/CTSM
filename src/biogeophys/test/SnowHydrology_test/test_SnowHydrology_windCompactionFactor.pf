@@ -1,0 +1,116 @@
+module test_SnowHydrology_windCompactionFactor
+  
+  ! Tests of SnowHydrologyMod: windCompactionFactor
+  
+  use pfunit_mod
+  use SnowHydrologyMod
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use clm_varpar, only : nlevsno
+
+  implicit none
+  
+  @TestCase
+  type, extends(TestCase) :: TestSnowHydrology
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestSnowHydrology
+
+  ! These constants agree with the hard-coded values in WindCompactionFactor
+  real(r8), parameter :: MIN_WIND = 5._r8  ! minimum wind speed that results in compaction
+  real(r8), parameter :: MIN_FACTOR = 5._r8  ! factor at min_wind
+  real(r8), parameter :: MAX_ADDITIONAL_FACTOR = 15._r8 ! maximum addition to MIN_FACTOR for very strong winds
+  real(r8), parameter :: MAX_FACTOR = MIN_FACTOR + MAX_ADDITIONAL_FACTOR  ! limit of factor for very strong winds
+
+  ! Using these "standard" constants should result in a moderate wind compaction factor
+  integer  , parameter :: STANDARD_NLEVSNO   = 5
+  integer  , parameter :: STANDARD_SNL       = -4               ! negative number of snow layers
+  integer  , parameter :: STANDARD_TOP_LAYER = STANDARD_SNL + 1
+  real(r8) , parameter :: STANDARD_WIND      = MIN_WIND * 2._r8 ! moderate wind speed (m/s)
+
+  real(r8), parameter :: tol = 1.e-13 ! tolerance for error checks
+
+contains
+  
+  subroutine setUp(this)
+    class(TestSnowHydrology), intent(inout) :: this
+
+    nlevsno = STANDARD_NLEVSNO
+  end subroutine setUp
+  
+  subroutine tearDown(this)
+    class(TestSnowHydrology), intent(inout) :: this
+  end subroutine tearDown
+
+  @Test
+  subroutine windCompactionFactor_topLayer_moderateWind(this)
+    ! Test the "standard" inputs
+    class(TestSnowHydrology), intent(inout) :: this
+    real(r8) :: windcomp
+
+    windcomp = WindCompactionFactor( &
+         forc_wind = STANDARD_WIND, &
+         layer     = STANDARD_TOP_LAYER, &
+         snl       = STANDARD_SNL)
+
+    @assertGreaterThan(windcomp, MIN_FACTOR)
+    @assertLessThan(windcomp, MAX_FACTOR)
+
+  end subroutine windCompactionFactor_topLayer_moderateWind
+
+  @Test
+  subroutine windCompactionFactor_topLayer_minWind_returns_minFactor(this)
+    ! If wind is at the minimum threshold value, the return value should be MIN_FACTOR
+    class(TestSnowHydrology), intent(inout) :: this
+    real(r8) :: windcomp
+
+    windcomp = WindCompactionFactor( &
+         forc_wind = MIN_WIND, &
+         layer     = STANDARD_TOP_LAYER, &
+         snl       = STANDARD_SNL)
+
+    @assertEqual(MIN_FACTOR, windcomp)
+  end subroutine windCompactionFactor_topLayer_minWind_returns_minFactor
+
+  @Test
+  subroutine windCompactionFactor_topLayer_hugeWind_returns_maxFactor(this)
+    ! If wind is essentially infinite, the return value should be MAX_FACTOR
+    class(TestSnowHydrology), intent(inout) :: this
+    real(r8) :: windcomp
+
+    windcomp = WindCompactionFactor( &
+         forc_wind = huge(1._r8), &
+         layer     = STANDARD_TOP_LAYER, &
+         snl       = STANDARD_SNL)
+
+    @assertEqual(MAX_FACTOR, windcomp, tolerance=tol)
+  end subroutine windCompactionFactor_topLayer_hugeWind_returns_maxFactor
+
+  @Test
+  subroutine windCompactionFactor_lowerLayer_returns1(this)
+    class(TestSnowHydrology), intent(inout) :: this
+    integer, parameter :: lower_layer = STANDARD_TOP_LAYER + 1
+    real(r8) :: windcomp
+
+    windcomp = WindCompactionFactor( &
+         forc_wind = STANDARD_WIND, &
+         layer     = lower_layer, &
+         snl       = STANDARD_SNL)
+
+    @assertEqual(1.0_r8, windcomp)
+  end subroutine windCompactionFactor_lowerLayer_returns1
+
+  @Test
+  subroutine windCompactionFactor_lowWind_returns1(this)
+    class(TestSnowHydrology), intent(inout) :: this
+    real(r8) :: windcomp
+
+    windcomp = WindCompactionFactor( &
+         forc_wind = 0.1_r8, &
+         layer     = STANDARD_TOP_LAYER, &
+         snl       = STANDARD_SNL)
+
+    @assertEqual(1.0_r8, windcomp)
+  end subroutine windCompactionFactor_lowWind_returns1
+
+end module test_SnowHydrology_windCompactionFactor
