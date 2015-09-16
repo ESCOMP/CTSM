@@ -27,7 +27,7 @@ module CanopyFluxesMod
   use SoilMoistStressMod    , only : calc_effective_soilporosity, calc_volumetric_h2oliq
   use SoilMoistStressMod    , only : calc_root_moist_stress, set_perchroot_opt
   use SimpleMathMod         , only : array_div_vector
-  use SurfaceResistanceMod  , only : do_soilevap_beta
+  use SurfaceResistanceMod  , only : do_soilevap_beta,do_soil_resistance_sl14
   use atm2lndType           , only : atm2lnd_type
   use CanopyStateType       , only : canopystate_type
   use CNVegStateType        , only : cnveg_state_type
@@ -296,6 +296,7 @@ contains
     !------------------------------------------------------------------------------
 
     associate(                                                               & 
+         soilresis            => soilstate_inst%soilresis_col              , & ! Input:  [real(r8) (:)   ]  soil evaporative resistance
          snl                  => col%snl                                   , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
          dayl                 => grc%dayl                                  , & ! Input:  [real(r8) (:)   ]  daylength (s)
          max_dayl             => grc%max_dayl                              , & ! Input:  [real(r8) (:)   ]  maximum daylength for this grid cell (s)
@@ -885,6 +886,9 @@ contains
             else
                if (do_soilevap_beta()) then
                   wtgq(p) = soilbeta(c)*frac_veg_nosno(p)/(raw(p,2)+rdl)
+               endif
+               if (do_soil_resistance_sl14()) then
+                  wtgq(p) = frac_veg_nosno(p)/(raw(p,2)+soilresis(c))
                endif
             end if
 

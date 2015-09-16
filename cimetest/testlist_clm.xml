@@ -896,6 +896,9 @@
   </compset>
   <compset name="ICRUCLM50BGC">
     <grid name="f10_f10">
+      <test name="ERS_D_Ld3">
+         <machine compiler="intel" testtype="aux_clm45" testmods="clm/deepsoil_bedrock">yellowstone</machine>
+      </test>
       <test name="ERI_D_Ld9">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/default">edison</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>

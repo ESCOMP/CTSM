@@ -113,6 +113,115 @@ If TRUE, square the organic fraction when it's used (as was done in CLM4.5)
 Otherwise use the fraction straight up              (the default for CLM5.0)
 </entry>
 
+<entry id="deep_soilcolumn" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, use deep soil column.
+
+Uses a 10 meter soil column having 49 layers (+5 bedrock layers).
+</entry>
+
+<entry id="use_bedrock" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, use variable soil depth.
+
+If present on surface dataset, use depth to bedrock information to
+specify spatially variable soil thickness. If not present, use bottom
+of soil column (nlevsoi).
+</entry>
+
+<entry id="rooting_profile_method" type="integer" category="clm_physics"
+       group="rooting_profile_inparm" valid_values="0,1,2" >
+Index of rooting profile.
+
+Changes rooting profile from Zeng 2001 double exponential (0) to
+Jackson 1996 single exponential (1) to Koven uniform exponential (2).
+</entry>
+
+<entry id="soil_resis_method" type="integer" category="clm_physics"
+       group="soil_resis_inparm" valid_values="0,1" >
+Index of evaporative resistance method.
+
+Changes soil evaporative resistance method from Sakaguchi and Zeng
+2009 Beta function (0) to Swenson and Lawrence 2014 dry surface layer
+formulation (1).
+</entry>
+
+<entry id="interception_fraction" type="real" category="clm_physics"
+       group="clm_canopyhydrology_inparm" valid_values="" >
+Fraction of intercepted precipitation
+</entry>
+
+<entry id="use_clm5_fpi" type="logical" category="clm_physics"
+       group="clm_canopyhydrology_inparm" valid_values="" >
+If TRUE use clm5 equation for fraction of intercepted precipitation
+</entry>
+
+<entry id="maximum_leaf_wetted_fraction" type="real" category="clm_physics"
+       group="clm_canopyhydrology_inparm" valid_values="" >
+Maximum fraction of leaf that may be wet prior to drip occuring
+</entry>
+
+<entry id="soilwater_movement_method" type="integer" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="0,1" >
+Index of solution method of Richards equation.
+
+Change method for richards equation solution and boundary
+conditions.
+
+CLM 4.5 - soilwater_movement_method = 0 (Zeng and Decker, 2009, method). 
+CLM 5.0 - soilwater_movement_method = 1 (adaptive time stepping moisture form from Martyn Clark).
+
+1 (adaptive time stepping moisture form
+</entry>
+
+<entry id="upper_boundary_condition" type="integer" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="1" >
+Index of upper boundary condition for Richards equation.
+</entry>
+
+<entry id="lower_boundary_condition" type="integer" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="1,2,3,4" >
+Index of lower boundary condition for Richards equation.
+
+CLM 4.5 - default lower_boundary_condition = 4
+CLM 5.0 - default lower_boundary_condition = 3
+
+lower_boundary_condition = 2 : zero-flux lower boundary condition
+lower_boundary_condition = 3 : water table head-based lower boundary condition w/ aquifer layer.
+lower_boundary_condition = 4 : 11-layer solution w/ aquifer layer
+
+TODO(bja, 2015-09) these should be strings so they have meaningful names instead of ints. 
+</entry>
+
+<entry id="dtmin" type="real" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="" >
+minimum time step length (seconds) for adaptive time stepping in richards equation
+</entry>
+<entry id="verySmall" type="real" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="" >
+a very small number: used to check for sub step completion for adaptive time stepping in richards equation
+</entry>
+<entry id="xTolerUpper" type="real" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="" >
+tolerance to halve length of substep for adaptive time stepping in richards equation
+</entry>
+<entry id="xTolerLower" type="real" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="" >
+tolerance to double length of substep for adaptive time stepping in richards equation
+</entry>
+<entry id="expensive" type="integer" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="" >
+
+</entry>
+<entry id="inexpensive" type="integer" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="" >
+
+</entry>
+<entry id="flux_calculation" type="integer" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="" >
+
+</entry>
+
 <entry id="irrigate" type="logical" category="clm_physics"
        group="clm_inparm"  >
 If TRUE, irrigation will be active.
@@ -518,7 +627,7 @@ in its attributes. (Only used if scripgriddata_src_type = UGRID.)
 <!--                                                   -->
 <entry id="mksrf_filename" type="char*256" category="mksurfdata"
        group="default_settings" 
-       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fvocef,mksrf_furbtopo,mksrf_flndtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >
+       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fvocef,mksrf_furbtopo,mksrf_flndtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >
 Filename for mksurfdata_map to remap raw data into the output surface dataset
 </entry>
 
@@ -629,6 +738,11 @@ GDP dataset for mksurfdata
 <entry id="mksrf_fpeat" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Peat dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_fsoildepth" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Soil depth dataset for mksurfdata
 </entry>
 
 <entry id="mksrf_fabm" type="char*256" category="mksurfdata"

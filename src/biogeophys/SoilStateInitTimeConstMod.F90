@@ -90,7 +90,7 @@ contains
     use spmdMod             , only : masterproc
     use ncdio_pio           , only : file_desc_t, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
     use ncdio_pio           , only : ncd_pio_openfile, ncd_pio_closefile, ncd_inqdlen
-    use clm_varpar          , only : more_vertlayers, numpft, numrad 
+    use clm_varpar          , only : more_vertlayers, numpft, numrad, deep_soilcolumn
     use clm_varpar          , only : nlevsoi, nlevgrnd, nlevlak, nlevsoifl, nlayer, nlayert, nlevurb, nlevsno
     use clm_varcon          , only : zsoi, dzsoi, zisoi, spval
     use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
@@ -102,6 +102,7 @@ contains
     use organicFileMod      , only : organicrd 
     use FuncPedotransferMod , only : pedotransf, get_ipedof
     use RootBiophysMod      , only : init_vegrootfr
+    use GridcellType     , only : grc                
     !
     ! !ARGUMENTS:
     type(bounds_type)    , intent(in)    :: bounds  
@@ -123,6 +124,7 @@ contains
     real(r8)           :: om_tkd         = 0.05_r8      ! thermal conductivity of dry organic soil (Farouki, 1981)
     real(r8)           :: om_b                          ! Clapp Hornberger paramater for oragnic soil (Letts, 2000)
     real(r8)           :: zsapric        = 0.5_r8       ! depth (m) that organic matter takes on characteristics of sapric peat
+!scs
     real(r8)           :: csol_bedrock   = 2.0e6_r8     ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
     real(r8)           :: pcalpha        = 0.5_r8       ! percolation threshold
     real(r8)           :: pcbeta         = 0.139_r8     ! percolation exponent
@@ -182,6 +184,13 @@ contains
           do lev = 1,nlevsoi
              soilstate_inst%rootfr_road_perv_col(c,lev) = 0.1_r8  ! uniform profile
           end do
+!scs: remove roots below bedrock layer
+          soilstate_inst%rootfr_road_perv_col(c,1:col%nbedrock(c)) = &
+               soilstate_inst%rootfr_road_perv_col(c,1:col%nbedrock(c)) &
+               + sum(soilstate_inst%rootfr_road_perv_col(c,col%nbedrock(c)+1:nlevsoi)) &
+               /real(col%nbedrock(c))
+          soilstate_inst%rootfr_road_perv_col(c,col%nbedrock(c)+1:nlevsoi) = 0._r8
+!scs
        end if
     end do
 
@@ -233,7 +242,7 @@ contains
     call ncd_pio_openfile (ncid, locfn, 0)
 
     call ncd_inqdlen(ncid,dimid,nlevsoifl,name='nlevsoi')
-    if ( .not. more_vertlayers )then
+    if ( .not. more_vertlayers .and. .not. deep_soilcolumn)then
        if ( nlevsoifl /= nlevsoi )then
           call endrun(msg=' ERROR: Number of soil layers on file does NOT match the number being used'//&
                errMsg(__FILE__, __LINE__))
@@ -352,6 +361,10 @@ contains
              soilstate_inst%tkmg_col(c,lev)   = spval
              soilstate_inst%tksatu_col(c,lev) = spval
              soilstate_inst%tkdry_col(c,lev)  = spval
+! moving this to soilthermprop
+!!$             if (lun%itype(l)==istwet .and. lev > nlevsoi) then
+!!$                soilstate_inst%csol_col(c,lev) = csol_bedrock
+!!$             else
              if (lun%itype(l)==istwet .and. lev > nlevsoi) then
                 soilstate_inst%csol_col(c,lev) = csol_bedrock
              else
@@ -389,7 +402,7 @@ contains
 
           do lev = 1,nlevgrnd
 
-             if ( more_vertlayers )then ! duplicate clay and sand values from last soil layer
+             if ( more_vertlayers .or. deep_soilcolumn)then ! duplicate clay and sand values from last soil layer
 
                 if (lev .eq. 1) then
                    clay = clay3d(g,1)
@@ -497,6 +510,10 @@ contains
                 soilstate_inst%csol_col(c,lev)   = ((1._r8-om_frac)*(2.128_r8*sand+2.385_r8*clay) / (sand+clay) + &
                      om_csol*om_frac)*1.e6_r8  ! J/(m3 K)
 
+! moving this statement to soilthermprop to be consistent with thk_bedrock
+!!$                if (lev > nlevsoi) then
+!!$                   soilstate_inst%csol_col(c,lev) = csol_bedrock
+!!$                endif
                 if (lev > nlevsoi) then
                    soilstate_inst%csol_col(c,lev) = csol_bedrock
                 endif
@@ -597,6 +614,10 @@ contains
                                        om_tkd * om_frac
              soilstate_inst%csol_col(c,lev)   = ((1._r8-om_frac)*(2.128_r8*sand+2.385_r8*clay) / (sand+clay) +   &
                                        om_csol * om_frac)*1.e6_r8  ! J/(m3 K)
+!move to soilthermprop
+!!$             if (lev > nlevsoi) then
+!!$                soilstate_inst%csol_col(c,lev) = csol_bedrock
+!!$             endif
              if (lev > nlevsoi) then
                 soilstate_inst%csol_col(c,lev) = csol_bedrock
              endif

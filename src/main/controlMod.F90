@@ -18,7 +18,7 @@ module controlMod
   use spmdMod                          , only: masterproc
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max
-  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, more_vertlayers, numrad, nlevsno
+  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, more_vertlayers, numrad, nlevsno, deep_soilcolumn
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
@@ -27,6 +27,7 @@ module controlMod
   use LakeCon                          , only: deepmixing_depthcrit, deepmixing_mixfact 
   use CanopyfluxesMod                  , only: perchroot, perchroot_alt
   use CanopyHydrologyMod               , only: CanopyHydrology_readnl
+  use SurfaceResistanceMod             , only: soil_resistance_readNL
   use SnowHydrologyMod                 , only: SnowHydrology_readnl
   use SurfaceAlbedoMod                 , only: albice, lake_melt_icealb
   use UrbanParamsType                  , only: UrbanReadNML
@@ -173,8 +174,8 @@ contains
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
-         albice, more_vertlayers, subgridflag, irrigate, all_active, &
-         repartition_rain_snow
+         albice, more_vertlayers, deep_soilcolumn, subgridflag, &
+         irrigate, all_active, repartition_rain_snow
 
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -184,11 +185,11 @@ contains
     namelist /clm_inparm/  & 
           exponential_rooting_profile, rootprof_exp, surfprof_exp, pftspecific_rootingprofile
 
-    namelist /clm_inparm / no_frozen_nitrif_denitrif
+    namelist /clm_inparm/ no_frozen_nitrif_denitrif
 
-    namelist /clm_inparm / use_c13, use_c14
+    namelist /clm_inparm/ use_c13, use_c14
 
-    namelist /clm_inparm / use_ed, use_ed_spit_fire
+    namelist /clm_inparm/ use_ed, use_ed_spit_fire
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -200,6 +201,8 @@ contains
          CN_evergreen_phenology_opt  
 
     namelist /clm_inparm / use_lai_streams
+
+    namelist /clm_inparm/ use_bedrock
 
     namelist /clm_inparm/  &
          use_c14_bombspike, atm_c14_filename
@@ -369,7 +372,8 @@ contains
     !For future version, I suggest to  put the following two calls inside their
     !own modules, which are called from their own initializing methods
     call init_hydrology( NLFilename )
-    
+
+    call soil_resistance_readnl ( NLFilename )
     call CanopyHydrology_readnl ( NLFilename )
     call SnowHydrology_readnl   ( NLFilename )
     call UrbanReadNML           ( NLFilename )
@@ -543,6 +547,8 @@ contains
 
     call mpi_bcast (use_lai_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    call mpi_bcast (use_bedrock, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     if (use_cn .and. use_vertsoilc) then
        ! vertical soil mixing variables
        call mpi_bcast (som_adv_flux, 1, MPI_REAL8,  0, mpicom, ier)
@@ -587,6 +593,7 @@ contains
     call mpi_bcast (co2_ppmv, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (albice, 2, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (more_vertlayers,1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (deep_soilcolumn,1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -798,6 +805,7 @@ contains
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   more vertical layers = ', more_vertlayers
+    write(iulog,*) '   deep soil column = ', deep_soilcolumn
     if (nsrest == nsrContinue) then
        write(iulog,*) 'restart warning:'
        write(iulog,*) '   Namelist not checked for agreement with initial run.'

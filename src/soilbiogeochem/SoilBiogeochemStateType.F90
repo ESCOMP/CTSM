@@ -7,7 +7,7 @@ module SoilBiogeochemStateType
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc
   use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoifl, nlevsoi, crop_prog
-  use clm_varpar     , only : ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full, more_vertlayers  
+  use clm_varpar     , only : ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full, more_vertlayers, deep_soilcolumn 
   use clm_varcon     , only : spval, ispval, c14ratio, grlnd
   use landunit_varcon, only : istsoil, istcrop
   use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, crop_prog 
@@ -233,7 +233,7 @@ contains
     call ncd_pio_openfile (ncid, locfn, 0)
 
     call ncd_inqdlen(ncid,dimid,nlevsoifl,name='nlevsoi')
-    if ( .not. more_vertlayers )then
+    if ( .not. more_vertlayers .and. .not. deep_soilcolumn)then
        if ( nlevsoifl /= nlevsoi )then
           call endrun(msg=' ERROR: Number of soil layers on file does NOT match the number being used'//&
                errMsg(__FILE__, __LINE__))

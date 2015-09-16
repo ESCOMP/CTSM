@@ -74,6 +74,42 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <organic_frac_squared phys="clm4_5" >.true.</organic_frac_squared>
 <organic_frac_squared phys="clm5_0" >.false.</organic_frac_squared>
 
+<deep_soilcolumn>.false.</deep_soilcolumn>
+
+<use_bedrock>.false.</use_bedrock>
+
+<!-- Rooting profile namelist defaults -->
+<rooting_profile_method phys="clm5_0">1</rooting_profile_method>
+<rooting_profile_method phys="clm4_5">0</rooting_profile_method>
+
+<!-- Soil evaporative resistance namelist defaults -->
+<soil_resis_method phys="clm5_0">1</soil_resis_method>
+<soil_resis_method phys="clm4_5">0</soil_resis_method>
+
+<!-- Canopy hydrology namelist defaults -->
+<use_clm5_fpi phys="clm5_0">.true.</use_clm5_fpi>
+<interception_fraction phys="clm5_0">1.0</interception_fraction>
+<maximum_leaf_wetted_fraction phys="clm5_0">0.05</maximum_leaf_wetted_fraction>
+
+<use_clm5_fpi phys="clm4_5">.false.</use_clm5_fpi>
+<interception_fraction phys="clm4_5">0.25</interception_fraction>
+<maximum_leaf_wetted_fraction phys="clm4_5">1.0</maximum_leaf_wetted_fraction>
+
+<!-- Soilwater movement namelist defaults -->
+<soilwater_movement_method phys="clm4_5">0</soilwater_movement_method>
+<upper_boundary_condition phys="clm4_5" >1</upper_boundary_condition>
+<lower_boundary_condition phys="clm4_5" >4</lower_boundary_condition>
+<soilwater_movement_method phys="clm5_0">1</soilwater_movement_method>
+<upper_boundary_condition phys="clm5_0" >1</upper_boundary_condition>
+<lower_boundary_condition phys="clm5_0" >3</lower_boundary_condition>
+<dtmin>60.</dtmin>      
+<verySmall>1.e-8</verySmall>
+<xTolerUpper>1.e-1</xTolerUpper> 
+<xTolerLower>1.e-2</xTolerLower> 
+<expensive>42</expensive>
+<inexpensive>1</inexpensive>
+<flux_calculation>1</flux_calculation>
+
 <!-- Snow veg treatment -->
 <snowveg_flag phys="clm4_5" >OFF</snowveg_flag>
 <snowveg_flag phys="clm5_0" >ON_RAD</snowveg_flag>

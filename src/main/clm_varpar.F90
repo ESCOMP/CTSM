@@ -16,6 +16,7 @@ module clm_varpar
   save
   !
   logical, public :: more_vertlayers = .false. ! true => run with more vertical soil layers
+  logical, public :: deep_soilcolumn = .false. ! true => run with deep soil column
 
   ! Note - model resolution is read in from the surface dataset
 
@@ -144,6 +145,13 @@ contains
        nlevsoi     =  8  + nlev_equalspace
        nlevgrnd    =  15 + nlev_equalspace
     end if
+
+! this will override more_vertlayers
+    if ( deep_soilcolumn )then
+      nlevsoi     =  49 ! 10x10 + 9x100 + 30x300 = 1e4mm = 10m
+!       nlevsoi     =  29 ! 10x10 + 9x100 + 10x300 = 4e3mm = 4m
+       nlevgrnd    =  nlevsoi+5
+    endif
 
     if (use_vichydro) then
        nlayert     =  nlayer + (nlevgrnd -nlevsoi)

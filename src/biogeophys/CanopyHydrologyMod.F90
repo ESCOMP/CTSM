@@ -44,12 +44,16 @@ module CanopyHydrologyMod
   !
   ! !PRIVATE DATA MEMBERS:
   integer :: oldfflag=0  ! use old fsno parameterization (N&Y07) 
+  real(r8) :: interception_fraction ! Fraction of intercepted precipitation
+  real(r8) :: maximum_leaf_wetted_fraction ! Maximum fraction of leaf that may be wet
+  logical, private :: use_clm5_fpi    = .false. ! use clm5 fpi equation
   ! Snow in vegetation canopy namelist options.
   logical, private :: snowveg_off    = .false.  ! snowveg_flag = 'OFF'
   logical, private :: snowveg_on     = .false.  ! snowveg_flag = 'ON'
   logical, private :: snowveg_onrad  = .true.   ! snowveg_flag = 'ON_RAD'
   ! for now, all mods on by default:
   character(len= 10), public           :: snowveg_flag = 'ON_RAD'
+
   !-----------------------------------------------------------------------
 
 contains
@@ -75,8 +79,12 @@ contains
     character(len=32) :: subname = 'CanopyHydrology_readnl'  ! subroutine name
     !-----------------------------------------------------------------------
 
-    namelist / clm_canopyhydrology_inparm / oldfflag
-    namelist / clm_canopyhydrology_inparm / snowveg_flag
+    namelist /clm_canopyhydrology_inparm/ &
+         oldfflag, &
+         interception_fraction, &
+         maximum_leaf_wetted_fraction, &
+         use_clm5_fpi, &
+         snowveg_flag
 
     ! ----------------------------------------------------------------------
     ! Read namelist from standard input. 
@@ -87,7 +95,7 @@ contains
        unitn = getavu()
        write(iulog,*) 'Read in clm_CanopyHydrology_inparm  namelist'
        call opnfil (NLFilename, unitn, 'F')
-       call shr_nl_find_group_name(unitn, 'clm_CanopyHydrology_inparm', status=ierr)
+       call shr_nl_find_group_name(unitn, 'clm_canopyhydrology_inparm', status=ierr)
        if (ierr == 0) then
           read(unitn, clm_canopyhydrology_inparm, iostat=ierr)
           if (ierr /= 0) then
@@ -110,7 +118,18 @@ contains
     end if
     ! Broadcast namelist variables read in
     call shr_mpi_bcast(oldfflag, mpicom)
+    call shr_mpi_bcast(interception_fraction, mpicom)
+    call shr_mpi_bcast(maximum_leaf_wetted_fraction, mpicom)
+    call shr_mpi_bcast(use_clm5_fpi, mpicom)
     call shr_mpi_bcast(snowveg_flag, mpicom)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) 'canopyhydrology settings:'
+       write(iulog,*) '  interception_fraction        = ',interception_fraction
+       write(iulog,*) '  maximum_leaf_wetted_fraction = ',maximum_leaf_wetted_fraction
+       write(iulog,*) '  use_clm5_fpi                 = ',use_clm5_fpi
+    endif
 
    end subroutine CanopyHydrology_readnl
 
@@ -295,8 +314,11 @@ contains
                    ! vegetation storage of solid water is the same as liquid water.
                    h2ocanmx = dewmx(p) * (elai(p) + esai(p))
                    ! Coefficient of interception
-                   ! set fraction of potential interception to max 0.25
-                   fpi = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
+                   if(use_clm5_fpi) then 
+                      fpi = interception_fraction * tanh(elai(p) + esai(p))
+                   else
+                      fpi = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
+                   endif
 
                    if (snowveg_on .or. snowveg_onrad) then
                       snocanmx = 60._r8*dewmx(p) * (elai(p) + esai(p))  ! 6*(LAI+SAI)
@@ -691,7 +713,7 @@ contains
                 vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
                 dewmxi  = 1.0_r8/dewmx(p)
                 fwet(p) = ((dewmxi/vegt)*h2ocan(p))**0.666666666666_r8
-                fwet(p) = min (fwet(p),1.0_r8)   ! Check for maximum limit of fwet
+                fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
                 if (snowveg_onrad) then
                    if (snocan(p) > 0._r8) then
                       dewmxi  = 1.0_r8/dewmx(p)
@@ -739,7 +761,7 @@ contains
      !
      ! !LOCAL VARIABLES:
      integer :: c,f,l          ! indices
-     real(r8):: d,fd,dfdd      ! temporary variable for frac_h2oscs iteration
+     real(r8):: d,fd,dfdd      ! temporary variable for frac_h2o iteration
      real(r8):: sigma          ! microtopography pdf sigma in mm
      real(r8):: min_h2osfc
      !-----------------------------------------------------------------------

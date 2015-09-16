@@ -66,9 +66,11 @@ contains
     use clm_time_manager     , only : get_step_size, get_nstep
     use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
     use SnowHydrologyMod     , only : SnowWater, BuildSnowFilter 
-    use SoilHydrologyMod     , only : CLMVICMap, SurfaceRunoff, Infiltration, WaterTable
+    use SoilHydrologyMod     , only : CLMVICMap, SurfaceRunoff, Infiltration, WaterTable, PerchedWaterTable
+    use SoilHydrologyMod     , only : ThetaBasedWaterTable, RenewCondensation
     use SoilWaterMovementMod , only : SoilWater 
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    use SoilWaterMovementMod , only : use_aquifer_layer
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
@@ -189,8 +191,25 @@ contains
               soilhydrology_inst, waterstate_inst)
       end if
 
-      call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-           soilhydrology_inst, soilstate_inst, temperature_inst, waterstate_inst, waterflux_inst) 
+      if (use_aquifer_layer()) then 
+         call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
+              soilhydrology_inst, soilstate_inst, temperature_inst, waterstate_inst, waterflux_inst) 
+      else
+
+         call PerchedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
+              num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
+              temperature_inst, waterstate_inst, waterflux_inst) 
+
+         call ThetaBasedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
+              num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
+              waterstate_inst, waterflux_inst) 
+
+         call RenewCondensation(bounds, num_hydrologyc, filter_hydrologyc, &
+              num_urbanc, filter_urbanc,&
+              soilhydrology_inst, soilstate_inst, &
+              waterstate_inst, waterflux_inst)
+         
+      endif
 
       ! Snow capping
       call SnowCapping(bounds, num_nolakec, filter_nolakec, num_snowc, filter_snowc, &

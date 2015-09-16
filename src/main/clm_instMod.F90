@@ -499,6 +499,8 @@ contains
     call temperature_inst%restart (bounds, ncid, flag=flag, &
          is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp())
 
+    call soilstate_inst%restart (bounds, ncid, flag=flag)
+
     call waterflux_inst%restart (bounds, ncid, flag=flag)
 
     call waterstate_inst%restart (bounds, ncid, flag=flag, &

@@ -1,4 +1,4 @@
-module SoilWaterRetentionCurveClappHornberg1978Mod
+module SoilWaterRetentionCurveVanGenuchten1980Mod
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -13,29 +13,29 @@ module SoilWaterRetentionCurveClappHornberg1978Mod
   private
   !
   ! !PUBLIC TYPES:
-  public :: soil_water_retention_curve_clapp_hornberg_1978_type
+  public :: soil_water_retention_curve_vangenuchten_1980_type
   
   type, extends(soil_water_retention_curve_type) :: &
-       soil_water_retention_curve_clapp_hornberg_1978_type
+       soil_water_retention_curve_vangenuchten_1980_type
      private
    contains
      procedure :: soil_hk              ! compute hydraulic conductivity
      procedure :: soil_suction         ! compute soil suction potential
      procedure :: soil_suction_inverse ! compute relative saturation at which soil suction is equal to a target value
-  end type soil_water_retention_curve_clapp_hornberg_1978_type
+  end type soil_water_retention_curve_vangenuchten_1980_type
 
-  interface soil_water_retention_curve_clapp_hornberg_1978_type
-     ! initialize a new soil_water_retention_curve_clapp_hornberg_1978_type object
+  interface soil_water_retention_curve_vangenuchten_1980_type
+     ! initialize a new soil_water_retention_curve_vangenuchten_1980_type object
      module procedure constructor  
-  end interface soil_water_retention_curve_clapp_hornberg_1978_type
+  end interface soil_water_retention_curve_vangenuchten_1980_type
 
 contains
 
   !-----------------------------------------------------------------------
-  type(soil_water_retention_curve_clapp_hornberg_1978_type) function constructor()
+  type(soil_water_retention_curve_vangenuchten_1980_type) function constructor()
     !
     ! !DESCRIPTION:
-    ! Creates an object of type soil_water_retention_curve_clapp_hornberg_1978_type.
+    ! Creates an object of type soil_water_retention_curve_vangenuchten_1980_type.
     ! For now, this is simply a place-holder.
     !-----------------------------------------------------------------------
 
@@ -51,7 +51,7 @@ contains
     use SoilStateType  , only : soilstate_type
     !
     ! !ARGUMENTS:
-    class(soil_water_retention_curve_clapp_hornberg_1978_type), intent(in) :: this
+    class(soil_water_retention_curve_vangenuchten_1980_type), intent(in) :: this
     integer,  intent(in)             :: c        !column index
     integer,  intent(in)             :: j        !level index
     real(r8), intent(in)             :: s        !relative saturation, [0, 1]
@@ -85,7 +85,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine soil_suction(this, c, j, s, soilstate_inst, smp, dsmpds)
-    !
+    !j, 
     ! !DESCRIPTION:
     ! Compute soil suction potential
     !
@@ -93,7 +93,7 @@ contains
     use SoilStateType  , only : soilstate_type
     !
     ! !ARGUMENTS:
-    class(soil_water_retention_curve_clapp_hornberg_1978_type), intent(in) :: this
+    class(soil_water_retention_curve_vangenuchten_1980_type), intent(in) :: this
     integer,  intent(in)             :: c       !column index
     integer,  intent(in)             :: j        !level index
     real(r8), intent(in)             :: s        !relative saturation, [0, 1]
@@ -124,8 +124,7 @@ contains
   end subroutine soil_suction
 
   !-----------------------------------------------------------------------
-  subroutine soil_suction_inverse(this, c, j, smp_target, soilstate_inst, &
-       s_target)
+  subroutine soil_suction_inverse(this, c, j, smp_target, soilstate_inst, s_target)
     !
     ! !DESCRIPTION:
     ! Compute relative saturation at which soil suction is equal to a target value.
@@ -135,7 +134,7 @@ contains
     use SoilStateType  , only : soilstate_type
     !
     ! !ARGUMENTS:
-    class(soil_water_retention_curve_clapp_hornberg_1978_type), intent(in) :: this
+    class(soil_water_retention_curve_vangenuchten_1980_type), intent(in) :: this
     integer,  intent(in)             :: c       !column index
     integer,  intent(in)             :: j        !level index
     type(soilstate_type), intent(in) :: soilstate_inst
@@ -158,5 +157,6 @@ contains
 
   end subroutine soil_suction_inverse
 
-end module SoilWaterRetentionCurveClappHornberg1978Mod
+end module SoilWaterRetentionCurveVanGenuchten1980Mod
+
 

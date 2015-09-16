@@ -232,6 +232,12 @@ module clm_varctl
   logical, public :: use_lai_streams = .false. ! true => use lai streams in SatellitePhenologyMod.F90
 
   !----------------------------------------------------------
+  ! bedrock / soil depth switch
+  !----------------------------------------------------------
+
+  logical, public :: use_bedrock = .false. ! true => use spatially variable soil depth
+
+  !----------------------------------------------------------
   ! glacier_mec control variables: default values (may be overwritten by namelist)
   ! NOTE: glc_smb must have the same values for CLM and GLC
   !----------------------------------------------------------

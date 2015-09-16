@@ -32,6 +32,7 @@ module mkvarctl
   character(len=256), public :: mksrf_fsoicol    = ' '  ! soil color data file name
   character(len=256), public :: mksrf_fabm       = ' '  ! ag fire peak month and
   character(len=256), public :: mksrf_fpeat      = ' '  ! peatlands and
+  character(len=256), public :: mksrf_fsoildepth = ' '  ! soil depth file name
   character(len=256), public :: mksrf_fgdp       = ' '  ! gdp data file names
   character(len=256), public :: mksrf_flakwat    = ' '  ! inland lake data file name
   character(len=256), public :: mksrf_fwetlnd    = ' '  ! inland wetlands data file name
@@ -57,6 +58,7 @@ module mkvarctl
   character(len=256), public :: map_fsoicol     = ' ' ! Mapping file for soil color
   character(len=256), public :: map_fabm        = ' ' ! Mapping file: ag fire...
   character(len=256), public :: map_fpeat       = ' ' ! Mapping file: peatlands
+  character(len=256), public :: map_fsoildepth  = ' ' ! Mapping file: soil depth
   character(len=256), public :: map_fgdp        = ' ' ! Mapping file: gdp
   character(len=256), public :: map_furban      = ' ' ! Mapping file for urban
   character(len=256), public :: map_furbtopo    = ' ' ! Mapping file for urban topography

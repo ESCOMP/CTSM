@@ -1,9 +1,12 @@
 Module SoilHydrologyType
 
   use shr_kind_mod          , only : r8 => shr_kind_r8
+  use shr_log_mod           , only : errMsg => shr_log_errMsg
+  use abortutils            , only : endrun
   use decompMod             , only : bounds_type
   use clm_varpar            , only : nlevgrnd, nlayer, nlayert, nlevsoi 
   use clm_varcon            , only : spval
+  use clm_varctl            , only : iulog
   use LandunitType          , only : lun                
   use ColumnType            , only : col                
   !
@@ -16,6 +19,7 @@ Module SoilHydrologyType
      integer :: h2osfcflag              ! true => surface water is active (namelist)       
      integer :: origflag                ! used to control soil hydrology properties (namelist)
 
+     real(r8), pointer :: num_substeps_col   (:)    ! col adaptive timestep counter     
      ! NON-VIC
      real(r8), pointer :: frost_table_col   (:)     ! col frost table depth                    
      real(r8), pointer :: zwt_col           (:)     ! col water table depth
@@ -103,6 +107,7 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
+    allocate(this%num_substeps_col   (begc:endc))                ; this%num_substeps_col   (:)     = nan
     allocate(this%frost_table_col   (begc:endc))                 ; this%frost_table_col   (:)     = nan
     allocate(this%zwt_col           (begc:endc))                 ; this%zwt_col           (:)     = nan
     allocate(this%zwt_perched_col   (begc:endc))                 ; this%zwt_perched_col   (:)     = nan
@@ -175,6 +180,12 @@ contains
          avgflag='A', long_name='fractional area with water table at surface', &
          ptr_col=this%fsat_col, l2g_scale_type='veg')
 
+    this%num_substeps_col(begc:endc) = spval
+    call hist_addfld1d (fname='NSUBSTEPS',  units='unitless',  &
+         avgflag='A', long_name='number of adaptive timesteps in CLM timestep', &
+         ptr_col=this%num_substeps_col, l2g_scale_type='veg', &
+         default='inactive')
+
     this%frost_table_col(begc:endc) = spval
     call hist_addfld1d (fname='FROST_TABLE',  units='m',  &
          avgflag='A', long_name='frost table depth (vegetated landunits only)', &
@@ -199,10 +210,19 @@ contains
     !
     ! !ARGUMENTS:
     class(soilhydrology_type) :: this
-    type(bounds_type) , intent(in)    :: bounds                                    
+    type(bounds_type) , intent(in)    :: bounds
+    ! !LOCAL VARIABLES:
+    integer :: c ! indices
+
     !-----------------------------------------------------------------------
 
     ! Nothing for now
+
+    ! needs to be initialized to spval to avoid problems when 
+    ! averaging for the accum field
+    do c = bounds%begc, bounds%endc
+       this%num_substeps_col(c) = spval
+    end do
 
   end subroutine InitCold
 
@@ -310,4 +330,4 @@ contains
 
    end subroutine ReadNL
 
- end Module SoilHydrologyType
+end Module SoilHydrologyType

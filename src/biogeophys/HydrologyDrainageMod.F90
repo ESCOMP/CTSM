@@ -50,7 +50,8 @@ contains
     use clm_varctl       , only : glc_snow_persistence_max_days, use_vichydro
     use clm_varpar       , only : nlevgrnd, nlevurb
     use clm_time_manager , only : get_step_size, get_nstep
-    use SoilHydrologyMod , only : CLMVICMap, Drainage
+    use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, LateralFlowPowerLaw
+    use SoilWaterMovementMod , only : use_aquifer_layer
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
@@ -126,10 +127,25 @@ contains
               soilhydrology_inst, waterstate_inst)
       endif
 
-      call Drainage(bounds, num_hydrologyc, filter_hydrologyc, &
-           num_urbanc, filter_urbanc,&
-           temperature_inst, soilhydrology_inst, soilstate_inst, &
-           waterstate_inst, waterflux_inst)
+      if (use_aquifer_layer()) then 
+         call Drainage(bounds, num_hydrologyc, filter_hydrologyc, &
+              num_urbanc, filter_urbanc,&
+              temperature_inst, soilhydrology_inst, soilstate_inst, &
+              waterstate_inst, waterflux_inst)
+      else
+         
+         call PerchedLateralFlow(bounds, num_hydrologyc, filter_hydrologyc, &
+              num_urbanc, filter_urbanc,&
+              soilhydrology_inst, soilstate_inst, &
+              waterstate_inst, waterflux_inst)
+
+         
+         call LateralFlowPowerLaw(bounds, num_hydrologyc, filter_hydrologyc, &
+              num_urbanc, filter_urbanc,&
+              soilhydrology_inst, soilstate_inst, &
+              waterstate_inst, waterflux_inst)
+
+      endif
 
       do j = 1, nlevgrnd
          do fc = 1, num_nolakec

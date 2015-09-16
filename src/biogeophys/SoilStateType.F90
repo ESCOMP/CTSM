@@ -43,6 +43,8 @@ module SoilStateType
      real(r8), pointer :: watopt_col           (:,:) ! col btran parameter for btran = 1
      real(r8), pointer :: watfc_col            (:,:) ! col volumetric soil water at field capacity (nlevsoi)
      real(r8), pointer :: sucsat_col           (:,:) ! col minimum soil suction (mm) (nlevgrnd) 
+     real(r8), pointer :: dsl_col              (:)   ! col dry surface layer thickness (mm)
+     real(r8), pointer :: soilresis_col        (:)   ! col soil evaporative resistance S&L14 (s/m)
      real(r8), pointer :: soilbeta_col         (:)   ! col factor that reduces ground evaporation L&P1992(-)
      real(r8), pointer :: soilalpha_col        (:)   ! col factor that reduces ground saturated specific humidity (-)
      real(r8), pointer :: soilalpha_u_col      (:)   ! col urban factor that reduces ground saturated specific humidity (-) 
@@ -51,7 +53,11 @@ module SoilStateType
      real(r8), pointer :: porosity_col         (:,:) ! col soil porisity (1-bulk_density/soil_density) (VIC)
      real(r8), pointer :: eff_porosity_col     (:,:) ! col effective porosity = porosity - vol_ice (nlevgrnd) 
      real(r8), pointer :: gwc_thr_col          (:)   ! col threshold soil moisture based on clay content
-
+!scs: vangenuchten
+     real(r8), pointer :: msw_col              (:,:) ! col vanGenuchtenClapp "m"
+     real(r8), pointer :: nsw_col              (:,:) ! col vanGenuchtenClapp "n"
+     real(r8), pointer :: alphasw_col          (:,:) ! col vanGenuchtenClapp "nalpha"
+     real(r8), pointer :: watres_col           (:,:) ! residual soil water content
      ! thermal conductivity / heat capacity
      real(r8), pointer :: thk_col              (:,:) ! col thermal conductivity of each layer [W/m-K] 
      real(r8), pointer :: tkmg_col             (:,:) ! col thermal conductivity, soil minerals  [W/m-K] (new) (nlevgrnd) 
@@ -70,6 +76,7 @@ module SoilStateType
    contains
 
      procedure, public  :: Init         
+     procedure, public  :: Restart
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
@@ -131,6 +138,8 @@ contains
     allocate(this%watopt_col           (begc:endc,nlevgrnd))            ; this%watopt_col           (:,:) = spval
     allocate(this%watfc_col            (begc:endc,nlevgrnd))            ; this%watfc_col            (:,:) = nan
     allocate(this%sucsat_col           (begc:endc,nlevgrnd))            ; this%sucsat_col           (:,:) = spval
+    allocate(this%dsl_col              (begc:endc))                     ; this%dsl_col         (:)   = spval!nan   
+    allocate(this%soilresis_col        (begc:endc))                     ; this%soilresis_col         (:)   = spval!nan   
     allocate(this%soilbeta_col         (begc:endc))                     ; this%soilbeta_col         (:)   = nan   
     allocate(this%soilalpha_col        (begc:endc))                     ; this%soilalpha_col        (:)   = nan
     allocate(this%soilalpha_u_col      (begc:endc))                     ; this%soilalpha_u_col      (:)   = nan
@@ -153,6 +162,10 @@ contains
     allocate(this%rootfr_col           (begc:endc,1:nlevgrnd))          ; this%rootfr_col           (:,:) = nan 
     allocate(this%rootfr_road_perv_col (begc:endc,1:nlevgrnd))          ; this%rootfr_road_perv_col (:,:) = nan
 
+    allocate(this%msw_col              (begc:endc,1:nlevgrnd))            ; this%msw_col              (:,:) = nan
+    allocate(this%nsw_col              (begc:endc,1:nlevgrnd))            ; this%nsw_col              (:,:) = nan
+    allocate(this%alphasw_col          (begc:endc,1:nlevgrnd))            ; this%alphasw_col          (:,:) = nan
+    allocate(this%watres_col           (begc:endc,1:nlevgrnd))            ; this%watres_col           (:,:) = nan
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -269,6 +282,16 @@ contains
             ptr_col=this%watfc_col, default='inactive')
     end if
 
+    this%soilresis_col(begc:endc) = spval
+    call hist_addfld1d (fname='SOILRESIS',  units='s/m',  &
+         avgflag='A', long_name='soil resistance to evaporation', &
+         ptr_col=this%soilresis_col)
+
+    this%dsl_col(begc:endc) = spval
+    call hist_addfld1d (fname='DSL',  units='mm',  &
+         avgflag='A', long_name='dry surface layer thickness', &
+         ptr_col=this%dsl_col)
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -288,5 +311,36 @@ contains
     ! Nothing for now
 
   end subroutine InitCold
+
+  !------------------------------------------------------------------------
+  subroutine Restart(this, bounds, ncid, flag)
+    ! 
+    ! !DESCRIPTION:
+    ! Read/Write module information to/from restart file.
+    !
+    ! !USES:
+    use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
+    use restUtilMod
+    !
+    ! !ARGUMENTS:
+    class(soilstate_type) :: this
+    type(bounds_type), intent(in)    :: bounds 
+    type(file_desc_t), intent(inout) :: ncid   ! netcdf id
+    character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: c
+    logical  :: readvar
+    !------------------------------------------------------------------------
+
+    call restartvar(ncid=ncid, flag=flag, varname='DSL', xtype=ncd_double,  &
+         dim1name='column', long_name='dsl thickness', units='mm', &
+         interpinic_flag='interp', readvar=readvar, data=this%dsl_col)
+    
+    call restartvar(ncid=ncid, flag=flag, varname='SOILRESIS', xtype=ncd_double,  &
+         dim1name='column', long_name='soil resistance', units='s/m', &
+         interpinic_flag='interp', readvar=readvar, data=this%soilresis_col)
+    
+  end subroutine Restart
 
 end module SoilStateType

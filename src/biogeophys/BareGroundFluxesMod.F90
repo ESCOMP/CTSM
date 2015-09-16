@@ -50,7 +50,7 @@ contains
     use landunit_varcon      , only : istsoil, istcrop
     use FrictionVelocityMod  , only : FrictionVelocity, MoninObukIni
     use QSatMod              , only : QSat
-    use SurfaceResistanceMod , only : do_soilevap_beta
+    use SurfaceResistanceMod , only : do_soilevap_beta,do_soil_resistance_sl14
     use HumanIndexMod        , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                       swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                       SwampCoolEff, KtoC, VaporPres
@@ -111,6 +111,7 @@ contains
     !------------------------------------------------------------------------------
 
     associate(                                                                       & 
+         soilresis              => soilstate_inst%soilresis_col                 , & ! Input:  [real(r8) (:,:) ]  evaporative soil resistance (s/m)                                                     
          snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
          dz                     => col%dz                                       , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                                     
          zii                    => col%zii                                      , & ! Input:  [real(r8) (:)   ]  convective boundary height [m]                                        
@@ -331,6 +332,10 @@ contains
             if(do_soilevap_beta())then
                ! Lee and Pielke 1992 beta is applied
                raiw    = soilbeta(c)*forc_rho(c)/(raw)
+            endif
+            if(do_soil_resistance_sl14())then
+               ! Swenson & Lawrence 2014 soil resistance is applied
+               raiw    = forc_rho(c)/(raw+soilresis(c))
             endif
          end if
 

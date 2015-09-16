@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_2_r125    andre 09/15/2015 clm 50 hydrology updates.
    clm4_5_2_r124    sacks 09/13/2015 Wind-dependent snow density
    clm4_5_2_r123    sacks 09/10/2015 Fix some problems with pgi and nag compilers
    clm4_5_2_r122    sacks 09/09/2015 Update to latest cime

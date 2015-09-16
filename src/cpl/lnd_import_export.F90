@@ -185,7 +185,20 @@ contains
           e = esati(tdc(forc_t))
        end if
        qsat           = 0.622_r8*e / (forc_pbot - 0.378_r8*e)
+
+!scs: modify specific humidity if precip occurs
+       if(1==2) then
+          if((forc_rainc+forc_rainl) > 0._r8) then
+             forc_q = 0.95_r8*qsat
+             !           forc_q = qsat
+             !           forc_q = 0.5*(qsat+forc_q)
+             atm2lnd_inst%forc_q_not_downscaled_grc(g) = forc_q
+          endif
+       endif
+!scs
        atm2lnd_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
+
+
        ! Make sure relative humidity is properly bounded
        ! atm2lnd_inst%forc_rh_grc(g) = min( 100.0_r8, atm2lnd_inst%forc_rh_grc(g) )
        ! atm2lnd_inst%forc_rh_grc(g) = max(   0.0_r8, atm2lnd_inst%forc_rh_grc(g) )

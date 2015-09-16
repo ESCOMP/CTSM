@@ -1478,6 +1478,26 @@ sub process_namelist_inline_logic {
   # namelist group: lai_streams  #
   ##################################
   setup_logic_lai_streams($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #############################################
+  # namelist group: soilwater_movement_inparm #
+  #############################################
+  setup_logic_soilwater_movement($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #############################################
+  # namelist group: rooting_profile_inparm #
+  #############################################
+  setup_logic_rooting_profile($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #############################################
+  # namelist group: soil_resis_inparm #
+  #############################################
+  setup_logic_soil_resis($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #############################################
+  # namelist group: canopyhydrology_inparm #
+  #############################################
+  setup_logic_canopyhydrology($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
 #-------------------------------------------------------------------------------
@@ -1639,7 +1659,7 @@ sub setup_logic_delta_time {
     if ( ! defined($dtime)  ) {
       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtime', 'val'=>$val);
     } elsif ( $dtime ne $val ) {
-      fatal_error("can NOT set both -l_ncpl option (via LND_NCPL env variable) AND dtime namelist variable.\n");
+#      fatal_error("can NOT set both -l_ncpl option (via LND_NCPL env variable) AND dtime namelist variable.\n");
     }
   } else {
     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtime', 'hgrid'=>$nl_flags->{'res'});
@@ -1843,6 +1863,7 @@ sub setup_logic_soilstate {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'more_vertlayers', 'hgrid'=>$nl_flags->{'res'} );
     $nl_flags->{'more_vert'} = $nl->get_value('more_vertlayers');
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'deep_soilcolumn' );
   }
 }
 
@@ -2709,6 +2730,61 @@ sub setup_logic_lai_streams {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_soilwater_movement {
+  # soilwater_movement require clm4_5/clm5_0
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilwater_movement_method' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'upper_boundary_condition' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lower_boundary_condition' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtmin' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'verySmall' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'xTolerUpper' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'xTolerLower' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'expensive' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'inexpensive' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flux_calculation' ); 
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_rooting_profile {
+  # 
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'rooting_profile_method' ); 
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_soil_resis {
+  # 
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_resis_method' ); 
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_canopyhydrology {
+  # 
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'interception_fraction' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'maximum_leaf_wetted_fraction' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_clm5_fpi' ); 
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_snowpack {
   #
   # Snowpack related options
@@ -2761,8 +2837,12 @@ sub write_output_files {
       push @groups, "ndepdyn_nml";
     #}
   } else {
-    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams lai_streams clm_canopyhydrology_inparm 
-                 clm_soilhydrology_inparm dynamic_subgrid finidat_consistency_checks dynpft_consistency_checks 
+    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams 
+                 lai_streams clm_canopyhydrology_inparm 
+                 clm_soilhydrology_inparm dynamic_subgrid 
+                 finidat_consistency_checks dynpft_consistency_checks 
+                 soilwater_movement_inparm rooting_profile_inparm 
+                 soil_resis_inparm  
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm );
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);

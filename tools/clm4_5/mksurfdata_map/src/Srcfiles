@@ -25,6 +25,7 @@ mkncdio.F90
 mkgdpMod.F90
 mkagfirepkmonthMod.F90
 mkpeatMod.F90
+mksoildepthMod.F90
 mktopostatsMod.F90
 mkVICparamsMod.F90
 mkCH4inversionMod.F90

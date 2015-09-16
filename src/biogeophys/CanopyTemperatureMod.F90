@@ -18,7 +18,7 @@ module CanopyTemperatureMod
   use abortutils           , only : endrun
   use clm_varctl           , only : iulog
   use PhotosynthesisMod    , only : Photosynthesis, PhotosynthesisTotal, Fractionation
-  use SurfaceResistanceMod , only : calc_soilevap_stress
+  use SurfaceResistanceMod , only : calc_soilevap_resis
   use pftconMod            , only : pftcon
   use atm2lndType          , only : atm2lnd_type
   use CanopyStateType      , only : canopystate_type
@@ -220,7 +220,7 @@ contains
       end do
 
       ! calculate moisture stress/resistance for soil evaporation
-      call calc_soilevap_stress(bounds, num_nolakec, filter_nolakec, soilstate_inst, waterstate_inst)
+      call calc_soilevap_resis(bounds, num_nolakec, filter_nolakec, soilstate_inst, waterstate_inst, temperature_inst)
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)

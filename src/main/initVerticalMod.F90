@@ -12,11 +12,13 @@ module initVerticalMod
   use shr_sys_mod       , only : shr_sys_abort
   use decompMod         , only : bounds_type
   use spmdMod           , only : masterproc
-  use clm_varpar        , only : more_vertlayers, nlevsno, nlevgrnd, nlevlak
+  use clm_varpar        , only : more_vertlayers, deep_soilcolumn
+  use clm_varpar        , only : nlevsno, nlevgrnd, nlevlak
   use clm_varpar        , only : toplev_equalspace, nlev_equalspace
   use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb 
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
+  use clm_varctl        , only : use_bedrock
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
   use landunit_varcon   , only : istdlak, istice_mec
@@ -33,9 +35,67 @@ module initVerticalMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: initVertical
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private :: ReadNL
+  !
+
+  !
   !------------------------------------------------------------------------
 
 contains
+
+  !------------------------------------------------------------------------
+  subroutine ReadNL( )
+    !
+    ! !DESCRIPTION:
+    ! Read namelist for SoilStateType
+    !
+    ! !USES:
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use shr_log_mod    , only : errMsg => shr_log_errMsg
+    use fileutils      , only : getavu, relavu, opnfil
+    use clm_nlUtilsMod , only : find_nlgroup_name
+    use clm_varctl     , only : iulog
+    use spmdMod        , only : mpicom, masterproc
+    use abortUtils     , only : endrun    
+    use controlMod     , only : NLFilename
+    !
+    ! !ARGUMENTS:
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+    character(len=32) :: subname = 'InitVertical_readnl'  ! subroutine name
+    !-----------------------------------------------------------------------
+
+    character(len=*), parameter :: nl_name  = 'clm_inparm'  ! Namelist name
+                                                                      
+    ! MUST agree with name in namelist and read
+    namelist /clm_inparm/ use_bedrock
+
+    ! preset values
+
+    use_bedrock = .false.
+
+    if ( masterproc )then
+
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nl_name//' namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call find_nlgroup_name(unitn, nl_name, status=ierr)
+       if (ierr == 0) then
+          read(unit=unitn, nml=clm_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading '//nl_name//' namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       end if
+       call relavu( unitn )
+
+    end if
+
+    call shr_mpi_bcast(use_bedrock, mpicom)
+
+  end subroutine ReadNL
 
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, snow_depth, thick_wall, thick_roof)
@@ -60,6 +120,7 @@ contains
     integer               :: ier               ! error status
     real(r8)              :: scalez = 0.025_r8 ! Soil layer thickness discretization (m)
     real(r8)              :: thick_equal = 0.2
+    real(r8) ,pointer     :: zbedrock_in(:)   ! read in - z_bedrock
     real(r8) ,pointer     :: lakedepth_in(:)   ! read in - lakedepth 
     real(r8), allocatable :: zurb_wall(:,:)    ! wall (layer node depth)
     real(r8), allocatable :: zurb_roof(:,:)    ! roof (layer node depth)
@@ -70,6 +131,8 @@ contains
     real(r8)              :: depthratio        ! ratio of lake depth to standard deep lake depth 
     integer               :: begc, endc
     integer               :: begl, endl
+    integer               :: jmin_bedrock
+    real(r8),parameter    :: zmin_bedrock = 0.4 !minimum soil depth [m]
     !------------------------------------------------------------------------
 
     begc = bounds%begc; endc= bounds%endc
@@ -85,7 +148,7 @@ contains
     call ncd_pio_openfile (ncid, locfn, 0)
 
     call ncd_inqdlen(ncid, dimid, nlevsoifl, name='nlevsoi')
-    if ( .not. more_vertlayers )then
+    if ( .not. more_vertlayers .and. .not. deep_soilcolumn)then
        if ( nlevsoifl /= nlevsoi )then
           call shr_sys_abort(' ERROR: Number of soil layers on file does NOT match the number being used'//&
                errMsg(__FILE__, __LINE__))
@@ -138,6 +201,31 @@ contains
        zisoi(j) = 0.5_r8*(zsoi(j)+zsoi(j+1))         !interface depths
     enddo
     zisoi(nlevgrnd) = zsoi(nlevgrnd) + 0.5_r8*dzsoi(nlevgrnd)
+
+    if ( deep_soilcolumn )then
+!scs: 10 meter soil column, nlevsoi set to 49 in clm_varpar
+       do j = 1,10
+          dzsoi(j)= 1.e-2_r8     !10mm layers
+       enddo
+       do j = 11,19
+          dzsoi(j)= 1.e-1_r8     !100 mm layers
+       enddo
+       do j = 20,nlevsoi+1       !300 mm layers
+          dzsoi(j)= 3.e-1_r8
+       enddo
+       do j = nlevsoi+2,nlevgrnd !10 meter bedrock layers
+          dzsoi(j)= 10._r8
+       enddo
+       
+       zisoi(0) = 0._r8
+       do j = 1,nlevgrnd
+          zisoi(j)= sum(dzsoi(1:j))
+       enddo
+       
+       do j = 1, nlevgrnd
+          zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
+       enddo
+    endif
 
     if (masterproc) then
        write(iulog, *) 'zsoi', zsoi(:) 
@@ -335,6 +423,51 @@ contains
     if (nlevurb > 0) then
        deallocate(zurb_wall, zurb_roof, dzurb_wall, dzurb_roof, ziurb_wall, ziurb_roof)
     end if
+
+    !-----------------------------------------------
+    ! Set index defining depth to bedrock
+    !-----------------------------------------------
+
+    allocate(zbedrock_in(bounds%begg:bounds%endg))
+    call ncd_io(ncid=ncid, varname='zbedrock', flag='read', data=zbedrock_in, dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       if (masterproc) then
+          write(iulog,*) 'WARNING:: zbedrock not found on surface data set. All lake columns will have lake depth', &
+               ' set equal to default value.'
+       end if
+       zbedrock_in(:) = zisoi(nlevsoi)
+    end if
+
+!  if use_bedrock = false, set zbedrock to lowest layer bottom interface
+    if (.not. use_bedrock) then
+       if (masterproc) write(iulog,*) 'not using use_bedrock!!'
+       zbedrock_in(:) = zisoi(nlevsoi)
+    endif
+
+!scs: set zbedrock to spatially uniform value
+!    zbedrock_in(:) = min(10.0,zisoi(nlevsoi))
+!    zbedrock_in(:) = min(1.0,zisoi(nlevsoi))
+
+!  determine minimum index of minimum soil depth
+    jmin_bedrock = 3
+    do j = 3,nlevsoi 
+       if (zisoi(j-1) < zmin_bedrock .and. zisoi(j) >= zmin_bedrock) then
+          jmin_bedrock = j
+       endif
+    enddo
+    if (masterproc) write(iulog,*) 'jmin_bedrock: ', jmin_bedrock
+
+    do c = begc, endc
+       g = col%gridcell(c)
+       col%nbedrock(c) = nlevsoi
+       do j = jmin_bedrock,nlevsoi 
+          if (zisoi(j-1) < zbedrock_in(g) .and. zisoi(j) >= zbedrock_in(g)) then
+             col%nbedrock(c) = j
+          endif
+       enddo
+
+    end do
+    deallocate(zbedrock_in)
 
     !-----------------------------------------------
     ! Set lake levels and layers (no interfaces)

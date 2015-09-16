@@ -328,6 +328,7 @@ sub write_namelist_file {
  map_flndtopo     = '$map->{'top'}'
  map_fgdp         = '$map->{'gdp'}'
  map_fpeat        = '$map->{'peat'}'
+ map_fsoildepth   = '$map->{'soildepth'}'
  map_fabm         = '$map->{'abm'}'
  map_ftopostats   = '$map->{'topostats'}'
  map_fvic         = '$map->{'vic'}'
@@ -343,6 +344,7 @@ sub write_namelist_file {
  mksrf_flndtopo   = '$datfil->{'top'}'
  mksrf_fgdp       = '$datfil->{'gdp'}'
  mksrf_fpeat      = '$datfil->{'peat'}'
+ mksrf_fsoildepth = '$datfil->{'soildepth'}'
  mksrf_fabm       = '$datfil->{'abm'}'
  mksrf_ftopostats = '$datfil->{'topostats'}'
  mksrf_fvic       = '$datfil->{'vic'}'
@@ -609,7 +611,7 @@ EOF
       my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
       foreach my $typ ( "lak", "veg", "voc", "top", "tex", "col", 
                         "fmx", "lai", "urb", "org", "glc", "utp", "wet",
-		        "gdp", "peat","abm", "topostats" , "vic", "ch4") {
+		        "gdp", "peat","soildepth","abm", "topostats" , "vic", "ch4") {
          my $lmask = `$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,mergeGIS=$merge_gis,hirespft=$hirespft -var lmask`;
          $lmask = trim($lmask);
          my $hgrid_cmd = "$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,hirespft=$hirespft -var hgrid";

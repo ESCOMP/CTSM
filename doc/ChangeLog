@@ -1,4 +1,165 @@
 ===============================================================
+Tag name:  clm4_5_2_r125
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Tue Sep 15 22:08:09 MDT 2015
+One-line Summary: clm 5.0 hydrology
+
+Purpose of changes: clm 5.0 hydrology
+
+  Dry surface layer from Sean Swenson
+  Variably saturated flow from Martyn Clark
+  Revised groundwater from Sean Swenson
+  Depth to bedrock from Sean Swenson
+  Canopy interception
+
+  Full ChangeLog information was not avialble at press time. It
+  will be updated in a later tag.
+
+Requirements for tag: regular
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): unknown
+
+Known bugs (include bugzilla ID): 2213
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+      1147 (mkgriddata can't straddle over Greenwich)
+      1025 (SCM mode can NOT use a global finidat file)
+      1017 (SCM mode can NOT restart)
+       896 (T62 mode does not work)
+       701 (svn keyword)
+       452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist:
+
+    Added new namelist variables for clm 5.0 hydrology. See namelist
+    definition file for details. use_bedrock, deep_soilcolumn,
+    soilwater_movement_method, upeer_boundary_condition,
+    lower_boundary_condition, soil_resis_method,
+    rooting_profile_method, interception_fraction,
+    maximum_leaf_wetted_fraction.
+
+List any changes to the defaults for the boundary datasets: unknown
+
+Describe any substantial timing or memory changes: unknown
+
+Code reviewed by: Sean Swenson
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: unknown
+
+List all files added and what they do:
+
+  clm/cimetest/testmods_dirs/clm/deepsoil_bedrock - new test for clm50 hydrology options.
+
+  clm/src/biogeophys/SoilWaterRetentionCurveVanGenuchten1980Mod.F90
+
+List all existing files that have been modified, and describe the changes: unknown
+
+  clm/cimetest/testlist_clm.xml - new test
+  
+  clm/tools/clm4_5/mksurfdata_map/src/mksurfdat.F90
+  clm/tools/clm4_5/mksurfdata_map/src/Srcfiles
+  clm/tools/clm4_5/mksurfdata_map/src/mkvarctl.F90
+  clm/tools/clm4_5/mksurfdata_map/src/mkfileMod.F90
+  clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl
+  
+  clm/bld/namelist_files/namelist_defaults_clm4_5.xml - new namelist options
+  clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+  clm/bld/namelist_files/namelist_definition_clm4_5.xml
+  clm/bld/CLMBuildNamelist.pm
+  
+  clm/src/cpl/lnd_import_export.F90
+  
+  clm/src/biogeochem/CNVegStateType.F90
+  
+  clm/src/main/clm_varpar.F90
+  clm/src/main/ColumnType.F90
+  clm/src/main/init_hydrology.F90
+  clm/src/main/controlMod.F90
+  clm/src/main/clm_varctl.F90
+  clm/src/main/pftconMod.F90
+  clm/src/main/initVerticalMod.F90
+  clm/src/main/clm_instMod.F90
+  
+  clm/src/biogeophys/WaterStateType.F90
+  clm/src/biogeophys/SoilWaterRetentionCurveFactoryMod.F90
+  clm/src/biogeophys/SoilWaterRetentionCurveClappHornberg1978Mod.F90
+  clm/src/biogeophys/SoilWaterRetentionCurveMod.F90
+  clm/src/biogeophys/IrrigationMod.F90
+  clm/src/biogeophys/SurfaceResistanceMod.F90
+  clm/src/biogeophys/HydrologyDrainageMod.F90
+  clm/src/biogeophys/RootBiophysMod.F90
+  clm/src/biogeophys/BalanceCheckMod.F90
+  clm/src/biogeophys/SoilWaterMovementMod.F90
+  clm/src/biogeophys/SoilMoistStressMod.F90
+  clm/src/biogeophys/CanopyHydrologyMod.F90
+  clm/src/biogeophys/CanopyTemperatureMod.F90
+  clm/src/biogeophys/SoilHydrologyMod.F90
+  clm/src/biogeophys/HydrologyNoDrainageMod.F90
+  clm/src/biogeophys/SoilStateType.F90
+  clm/src/biogeophys/SoilHydrologyType.F90
+  clm/src/biogeophys/BareGroundFluxesMod.F90
+  clm/src/biogeophys/CanopyFluxesMod.F90
+  clm/src/biogeophys/SoilStateInitTimeConstMod.F90
+  
+  clm/src/soilbiogeochem/SoilBiogeochemVerticalProfileMod.F90
+  clm/src/soilbiogeochem/SoilBiogeochemStateType.F90
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - CLMBuildNamelist unit tests pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - n/a
+
+  regular tests (aux_clm40, aux_clm45):
+
+    NOTE: for all aux_clm45 machine/compiler combinations - clm50 compsets not bit for bit with baseline (new hydrology model is used).
+
+    yellowstone_intel : aux_clm40 - pass; aux_clm45 - clm 45 compsets pass, clm50 compsets not bit for bit
+    yellowstone_pgi : aux_clm40 - pass; aux_clm45 - clm 45 compsets pass, clm50 compsets not bit for bit
+    yellowstone_gnu (clm45 only) : aux_clm45 - clm 45 compsets ok, clm50 compsets not bit for bit
+    hobart_nag : aux_clm45 - clm 45 compsets ok, clm50 compsets not bit for bit. bug 2213 still applies for clm45 compsets.
+
+CLM tag used for the baseline comparisons: clm4_5_2_r124
+
+Changes answers relative to baseline:
+  clm40 and clm45 compsets are bit for bit. clm50 compsets are answer changing.
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all clm50 compsets
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff, unknown climate.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: unknown
+
+   URL for LMWG diagnostics output used to validate new climate:
+	unknown
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_2_r124
 Originator(s):  sacks (Bill Sacks)
 Date: Sun Sep 13 06:33:20 MDT 2015

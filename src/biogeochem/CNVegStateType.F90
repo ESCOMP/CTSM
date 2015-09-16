@@ -465,14 +465,15 @@ contains
     call ncd_pio_openfile (ncid, locfn, 0)
 
     call ncd_inqdlen(ncid,dimid,nlevsoifl,name='nlevsoi')
-    if ( .not. more_vertlayers )then
-       if ( nlevsoifl /= nlevsoi )then
-          call endrun(msg=' ERROR: Number of soil layers on file does NOT match the number being used'//&
-               errMsg(__FILE__, __LINE__))
-       end if
-    else
-       ! read in layers, interpolate to high resolution grid later
-    end if
+!scs: this appears to duplicate check in initVertical
+!!$    if ( .not. more_vertlayers )then
+!!$       if ( nlevsoifl /= nlevsoi )then
+!!$          call endrun(msg=' ERROR: Number of soil layers on file does NOT match the number being used'//&
+!!$               errMsg(__FILE__, __LINE__))
+!!$       end if
+!!$    else
+!!$       ! read in layers, interpolate to high resolution grid later
+!!$    end if
 
 
     ! --------------------------------------------------------------------

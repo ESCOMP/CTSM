@@ -1,0 +1,3 @@
+lower_boundary_condition = 2
+deep_soilcolumn = .true.
+use_bedrock = .true.

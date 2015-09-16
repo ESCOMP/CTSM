@@ -38,6 +38,7 @@ program mksurfdat
                                     domain_write
     use mkgdpMod           , only : mkgdp
     use mkpeatMod          , only : mkpeat
+    use mksoildepthMod          , only : mksoildepth
     use mkagfirepkmonthMod , only : mkagfirepkmon
     use mktopostatsMod     , only : mktopostats
     use mkVICparamsMod     , only : mkVICparams
@@ -117,6 +118,7 @@ program mksurfdat
     real(r8), allocatable  :: organic(:,:)       ! organic matter density (kg/m3)            
     real(r8), allocatable  :: gdp(:)             ! GDP (x1000 1995 US$/capita)
     real(r8), allocatable  :: fpeat(:)           ! peatland fraction of gridcell
+    real(r8), allocatable  :: soildepth(:)       ! soil depth (m)
     integer , allocatable  :: agfirepkmon(:)     ! agricultural fire peak month
     integer , allocatable  :: urban_region(:)    ! urban region ID
     real(r8), allocatable  :: topo_stddev(:)     ! standard deviation of elevation (m)
@@ -157,6 +159,7 @@ program mksurfdat
          mksrf_fdynuse,            &
          mksrf_fgdp,               &
          mksrf_fpeat,              &
+         mksrf_fsoildepth,         &
          mksrf_fabm,               &
          mksrf_ftopostats,         &
          mksrf_fvic,               &
@@ -187,6 +190,7 @@ program mksurfdat
          map_fharvest,             &
          map_fgdp,                 &
          map_fpeat,                &
+         map_fsoildepth,           &
          map_fabm,                 &
          map_ftopostats,           &
          map_fvic,                 &
@@ -224,6 +228,7 @@ program mksurfdat
     !    mksrf_fvocef  -- Volatile Organic Compund Emission Factor dataset
     !    mksrf_fgdp ----- GDP dataset
     !    mksrf_fpeat ---- Peatland dataset
+    !    mksrf_fsoildepth Soil depth dataset
     !    mksrf_fabm ----- Agricultural fire peak month dataset
     !    mksrf_ftopostats Topography statistics dataset
     !    mksrf_fvic ----- VIC parameters dataset
@@ -247,6 +252,7 @@ program mksurfdat
     !    map_fharvest ---- Mapping for mksrf_flai harvesting
     !    map_fgdp -------- Mapping for mksrf_fgdp
     !    map_fpeat ------- Mapping for mksrf_fpeat
+    !    map_fsoildepth -- Mapping for mksrf_fsoildepth
     !    map_fabm -------- Mapping for mksrf_fabm
     !    map_ftopostats -- Mapping for mksrf_ftopostats
     !    map_fvic -------- Mapping for mksrf_fvic
@@ -406,6 +412,7 @@ program mksurfdat
                soicol(ns_o)                       , & 
                gdp(ns_o)                          , & 
                fpeat(ns_o)                        , & 
+               soildepth(ns_o)                    , & 
                agfirepkmon(ns_o)                  , & 
                topo_stddev(ns_o)                  , &
                slope(ns_o)                        , &
@@ -432,6 +439,7 @@ program mksurfdat
     soicol(:)             = -999
     gdp(:)                = spval
     fpeat(:)              = spval
+    soildepth(:)          = spval
     agfirepkmon(:)        = -999
     topo_stddev(:)        = spval
     slope(:)              = spval
@@ -485,6 +493,7 @@ program mksurfdat
     write(ndiag,*) 'VOC emission factors from:   ',trim(mksrf_fvocef)
     write(ndiag,*) 'gdp from:                    ',trim(mksrf_fgdp)
     write(ndiag,*) 'peat from:                   ',trim(mksrf_fpeat)
+    write(ndiag,*) 'soil depth from:             ',trim(mksrf_fsoildepth)
     write(ndiag,*) 'abm from:                    ',trim(mksrf_fabm)
     write(ndiag,*) 'topography statistics from:  ',trim(mksrf_ftopostats)
     write(ndiag,*) 'VIC parameters from:         ',trim(mksrf_fvic)
@@ -505,6 +514,7 @@ program mksurfdat
     write(ndiag,*)' mapping for land topography  ',trim(map_flndtopo)
     write(ndiag,*)' mapping for GDP              ',trim(map_fgdp)
     write(ndiag,*)' mapping for peatlands        ',trim(map_fpeat)
+    write(ndiag,*)' mapping for soil depth       ',trim(map_fsoildepth)
     write(ndiag,*)' mapping for ag fire pk month ',trim(map_fabm)
     write(ndiag,*)' mapping for topography stats ',trim(map_ftopostats)
     write(ndiag,*)' mapping for VIC parameters   ',trim(map_fvic)
@@ -566,6 +576,11 @@ program mksurfdat
 
     call mkpeat (ldomain, mapfname=map_fpeat, datfname=mksrf_fpeat, &
          ndiag=ndiag, peat_o=fpeat)
+
+    ! Make soil depth data [soildepth] from [soildepthf]
+
+    call mksoildepth (ldomain, mapfname=map_fsoildepth, datfname=mksrf_fsoildepth, &
+         ndiag=ndiag, soildepth_o=soildepth)
 
     ! Make agricultural fire peak month data [abm] from [abm]
 
@@ -900,6 +915,11 @@ program mksurfdat
     call check_ret(nf_inq_varid(ncid, 'peatf', varid), subname)
     call check_ret(nf_put_var_double(ncid, varid, fpeat), subname)
 
+
+!    call check_ret(nf_inq_varid(ncid, 'Avg_Depth_Median', varid), subname)
+    call check_ret(nf_inq_varid(ncid, 'zbedrock', varid), subname)
+    call check_ret(nf_put_var_double(ncid, varid, soildepth), subname)
+
     call check_ret(nf_inq_varid(ncid, 'abm', varid), subname)
     call check_ret(nf_put_var_int(ncid, varid, agfirepkmon), subname)
 
@@ -968,6 +988,7 @@ program mksurfdat
     deallocate ( pctsand, pctclay )
     deallocate ( soicol )
     deallocate ( gdp, fpeat, agfirepkmon )
+    deallocate ( soildepth )
     deallocate ( topo_stddev, slope )
     deallocate ( vic_binfl, vic_ws, vic_dsmax, vic_ds )
     deallocate ( lakedepth )

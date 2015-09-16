@@ -534,6 +534,7 @@ contains
     use clm_varcon      , only : denice, denh2o, spval, sb, bdsno 
     use clm_varcon      , only : h2osno_max, zlnd, tfrz, spval, pc
     use clm_varctl      , only : fsurdat, iulog
+    use clm_varctl        , only : use_bedrock
     use spmdMod         , only : masterproc
     use abortutils      , only : endrun
     use fileutils       , only : getfil
@@ -557,6 +558,7 @@ contains
     character(len=256) :: locfn       
     real(r8)           :: snowbd      ! temporary calculation of snow bulk density (kg/m3)
     real(r8)           :: fmelt       ! snowbd/100
+    integer            :: nbedrock
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(h2osno_input_col)     == (/bounds%endc/))          , errMsg(__FILE__, __LINE__))
@@ -666,7 +668,12 @@ contains
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                nlevs = nlevgrnd
                do j = 1, nlevs
-                  if (j > nlevsoi) then
+                  if (use_bedrock) then
+                     nbedrock = col%nbedrock(c)
+                  else
+                     nbedrock = nlevsoi
+                  endif
+                  if (j > nbedrock) then
                      this%h2osoi_vol_col(c,j) = 0.0_r8
                   else
                      this%h2osoi_vol_col(c,j) = 0.15_r8

@@ -135,6 +135,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lmask type="tex"              >IGBP-GSDP</lmask>
 <lmask type="gdp"              >AVHRR</lmask>
 <lmask type="peat"             >AVHRR</lmask>
+<lmask type="soildepth"        >ISRIC-WISE</lmask>
 <lmask type="abm"              >AVHRR</lmask>
 <lmask type="topostats"        >HYDRO1K-merge-nomask</lmask>
 <lmask type="vic"              >GRDC</lmask>
@@ -158,6 +159,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hgrid type="tex"              >5x5min</hgrid>
 <hgrid type="gdp"              >0.5x0.5</hgrid>
 <hgrid type="peat"             >0.5x0.5</hgrid>
+<hgrid type="soildepth"        >5x5min</hgrid>
 <hgrid type="abm"              >0.5x0.5</hgrid>
 <hgrid type="topostats"        >1km-merge-10min</hgrid>
 <hgrid type="vic"              >0.9x1.25</hgrid>
@@ -179,6 +181,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_filename type="tex" >mksrf_fsoitex</mksrf_filename>
 <mksrf_filename type="gdp" >mksrf_fgdp</mksrf_filename>
 <mksrf_filename type="peat">mksrf_fpeat</mksrf_filename>
+<mksrf_filename type="soildepth">mksrf_fsoildepth</mksrf_filename>
 <mksrf_filename type="abm" >mksrf_fabm</mksrf_filename>
 <mksrf_filename type="topostats">mksrf_ftopostats</mksrf_filename>
 <mksrf_filename type="vic" >mksrf_fvic</mksrf_filename>
@@ -256,6 +259,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <mksrf_fpeat hgrid="0.5x0.5" lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc</mksrf_fpeat>
+
+<mksrf_fsoildepth hgrid="5x5min" lmask="ISRIC-WISE"
+>/glade/p/work/swensosc/soildepth_data/u.arizona/soil_alluvial_thickness_5x5min.no_nan.nc</mksrf_fsoildepth>
 
 <mksrf_fabm hgrid="0.5x0.5" lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc</mksrf_fabm>

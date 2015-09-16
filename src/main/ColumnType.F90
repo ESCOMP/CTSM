@@ -58,6 +58,7 @@ module ColumnType
      real(r8), pointer :: dz_lake              (:,:) ! lake layer thickness (m)  (1:nlevlak)
      real(r8), pointer :: z_lake               (:,:) ! layer depth for lake (m)
      real(r8), pointer :: lakedepth            (:)   ! variable lake depth (m)                             
+     integer , pointer :: nbedrock              (:)   ! variable depth to bedrock index                             
 
    contains
 
@@ -100,6 +101,7 @@ contains
     allocate(this%dz_lake     (begc:endc,nlevlak))             ; this%dz_lake     (:,:) = nan
     allocate(this%z_lake      (begc:endc,nlevlak))             ; this%z_lake      (:,:) = nan
 
+    allocate(this%nbedrock   (begc:endc))                     ; this%nbedrock   (:)   = ispval  
     allocate(this%glc_topo    (begc:endc))                     ; this%glc_topo    (:)   = nan
     allocate(this%micro_sigma (begc:endc))                     ; this%micro_sigma (:)   = nan
     allocate(this%n_melt      (begc:endc))                     ; this%n_melt      (:)   = nan 
@@ -137,6 +139,7 @@ contains
     deallocate(this%n_melt     )
     deallocate(this%topo_slope )
     deallocate(this%topo_std   )
+    deallocate(this%nbedrock   )
 
   end subroutine Clean
 

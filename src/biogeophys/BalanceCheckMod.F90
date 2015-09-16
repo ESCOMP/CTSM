@@ -366,9 +366,16 @@ contains
              write(iulog,*)'qflx_evap_tot  = ',qflx_evap_tot(indexc)
              write(iulog,*)'qflx_irrig     = ',qflx_irrig(indexc)
              write(iulog,*)'qflx_surf      = ',qflx_surf(indexc)
+             write(iulog,*)'qflx_h2osfc_surf= ',qflx_h2osfc_surf(indexc)
              write(iulog,*)'qflx_qrgwl     = ',qflx_qrgwl(indexc)
              write(iulog,*)'qflx_drain     = ',qflx_drain(indexc)
              write(iulog,*)'qflx_snwcp_ice = ',qflx_snwcp_ice(indexc)
+
+             write(iulog,*)'deltawb          = ',endwb(indexc)-begwb(indexc)
+             write(iulog,*)'deltawb/dtime    = ',(endwb(indexc)-begwb(indexc))/dtime
+             write(iulog,*)'deltaflux        = ',forc_rain_col(indexc)+forc_snow_col(indexc) - (qflx_evap_tot(indexc) + &
+                  qflx_surf(indexc)+qflx_h2osfc_surf(indexc)+qflx_drain(indexc))
+
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
 
