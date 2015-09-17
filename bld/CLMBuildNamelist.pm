@@ -999,7 +999,9 @@ sub setup_cmdl_irrigation {
     }
     if ( defined($nl->get_value("irrigate")) && $nl->get_value("irrigate") ne $nl_flags->{'irrig'} ) {
       my $irrigate = $nl->get_value("irrigate");
-      fatal_error("The namelist value 'irrigate=$irrigate' contradicts the command line option '-irrig=$val'");
+      fatal_error("The namelist value 'irrigate=$irrigate' contradicts the command line option '-irrig=$val'\n." .
+                  "Please set 'irrigate' in user_nl_clm AND '-irrig' in env_run.xml CLM_BLDNML_OPTS to the same value ('.true.' or '.false.')!\n");
+
     }
   }
 }
@@ -1478,6 +1480,11 @@ sub process_namelist_inline_logic {
   # namelist group: lai_streams  #
   ##################################
   setup_logic_lai_streams($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  ##################################
+  # namelist group: bgc_shared
+  ##################################
+  setup_logic_bgc_shared($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #############################################
   # namelist group: soilwater_movement_inparm #
@@ -2275,6 +2282,19 @@ sub setup_logic_bgc_spinup {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_bgc_shared {
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5")) {
+    if ( $nl_flags->{'bgc_mode'} ne "sp" ) {
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'decomp_depth_efolding', 'phys'=>$physv->as_string() );
+    }
+
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_supplemental_nitrogen {
   #
   # Supplemental Nitrogen for prognostic crop cases
@@ -2837,13 +2857,15 @@ sub write_output_files {
       push @groups, "ndepdyn_nml";
     #}
   } else {
+
     @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams 
                  lai_streams clm_canopyhydrology_inparm 
                  clm_soilhydrology_inparm dynamic_subgrid 
                  finidat_consistency_checks dynpft_consistency_checks 
                  soilwater_movement_inparm rooting_profile_inparm 
-                 soil_resis_inparm  
+                 soil_resis_inparm  bgc_shared
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm );
+
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);
     # Eventually only list namelists that are actually used when CN on

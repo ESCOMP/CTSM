@@ -160,6 +160,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <use_luna>.false.</use_luna>
 
+<!-- turnover time modifications    -->
+<decomp_depth_efolding phys="clm4_5">0.5</decomp_depth_efolding>
+<decomp_depth_efolding phys="clm5_0">1.0</decomp_depth_efolding>
+
 <!--
 
      Original initial condition file at 1 degree resolution

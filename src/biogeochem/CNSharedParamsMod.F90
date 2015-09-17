@@ -30,9 +30,22 @@ module CNSharedParamsMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNParamsReadShared(ncid)
+  subroutine CNParamsReadShared(ncid, namelist_file)
+
+    use ncdio_pio   , only : file_desc_t
+
+    type(file_desc_t), intent(inout) :: ncid   ! pio netCDF file id
+    character(len=*),  intent(in) :: namelist_file
+
+    call CNParamsReadShared_netcdf(ncid)
+    call CNParamsReadShared_namelist(namelist_file)
+
+  end subroutine CNParamsReadShared
+  
+  !-----------------------------------------------------------------------
+  subroutine CNParamsReadShared_netcdf(ncid)
     !
-    use ncdio_pio   , only : file_desc_t,ncd_io
+    use ncdio_pio   , only : file_desc_t, ncd_io
     use abortutils  , only : endrun
     use shr_log_mod , only : errMsg => shr_log_errMsg
     !
@@ -73,11 +86,6 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNParamsShareInst%froz_q10=tempr   
 
-    tString='decomp_depth_efolding'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    CNParamsShareInst%decomp_depth_efolding=tempr  
-
     tString='mino2lim'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
@@ -89,6 +97,82 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     CNParamsShareInst%organic_max=tempr
 
-  end subroutine CNParamsReadShared
+  end subroutine CNParamsReadShared_netcdf
   
+  !-----------------------------------------------------------------------
+  subroutine CNParamsReadShared_namelist(namelist_file)
+    !
+    ! !DESCRIPTION:
+    ! Read and initialize CN Shared parameteres from the namelist.
+    !
+    ! !USES:
+    use fileutils   , only : relavu, getavu
+    use spmdMod     , only : masterproc, mpicom, MPI_REAL8
+    use shr_nl_mod  , only : shr_nl_find_group_name
+    use shr_log_mod , only : errMsg => shr_log_errMsg
+    use clm_varctl  , only : iulog
+    use abortutils  , only : endrun
+    
+    !
+    implicit none
+    !
+
+    character(len=*), intent(in) :: namelist_file
+    
+    integer :: i,j,n                ! loop indices
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    real(r8) :: decomp_depth_efolding = 0.0_r8
+
+    character(len=32) :: subroutine_name = 'CNParamsReadNamelist'
+    character(len=10) :: namelist_group = 'bgc_shared'
+
+    !-----------------------------------------------------------------------
+
+    ! ----------------------------------------------------------------------
+    ! Namelist Variables
+    ! ----------------------------------------------------------------------
+
+    namelist /bgc_shared/ &
+         decomp_depth_efolding
+
+
+    ! Read namelist from standard input.
+    if (masterproc) then
+
+       write(iulog,*) 'Attempting to read CN/BGC shared namelist parameters .....'
+       unitn = getavu()
+       write(iulog,*) 'Read in ' // namelist_group // ' namelist from: ', trim(namelist_file)
+       open( unitn, file=trim(namelist_file), status='old' )
+       call shr_nl_find_group_name(unitn, namelist_group, status=ierr)
+       if (ierr == 0) then
+          read(unitn, bgc_shared, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg='error in reading in ' // namelist_group // ' namelist' // &
+                  errMsg(__FILE__, __LINE__))
+          end if
+       end if
+       call relavu( unitn )
+
+    end if ! masterproc
+
+    ! Broadcast the parameters from master
+    call mpi_bcast ( decomp_depth_efolding, 1 , MPI_REAL8, 0, mpicom, ierr )
+
+    ! Save the parameter to the instance
+    CNParamsShareInst%decomp_depth_efolding = decomp_depth_efolding
+
+    ! Output read parameters to the lnd.log
+    if (masterproc) then
+       write(iulog,*) 'CN/BGC shared namelist parameters:'
+       write(iulog,*)' '
+       write(iulog,*)'  decomp_depth_efolding = ', decomp_depth_efolding
+
+       write(iulog,*)
+
+    end if
+
+  end subroutine CNParamsReadShared_namelist
+
 end module CNSharedParamsMod

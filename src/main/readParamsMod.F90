@@ -42,6 +42,7 @@ contains
     use SoilBiogeochemDecompCascadeCNMod  , only : readSoilBiogeochemDecompCnParams       => readParams
     use ch4Mod                            , only : readCH4Params                          => readParams
     use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
+    use clm_varctl,                         only : NLFilename_in
     !
     ! !ARGUMENTS:
     class(nutrient_competition_method_type), intent(in) :: nutrient_competition_method
@@ -70,7 +71,7 @@ contains
     end if
 
     if (use_cn) then
-       call CNParamsReadShared(ncid)
+       call CNParamsReadShared(ncid, NLFilename_in)
        call nutrient_competition_method%readParams(ncid)
        call readCNGapMortParams(ncid)
        call readCNMRespParams(ncid)

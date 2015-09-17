@@ -1,4 +1,113 @@
 ===============================================================
+Tag name:  clm4_5_2_r126
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Thu Sep 17 14:53:49 MDT 2015
+One-line Summary: New decomp_depth_efolding value for clm5.0, set as a namelist parameter instead of netcdf params file.
+
+Purpose of changes:
+    Set decomp_depth_efolding as a namelist parameter instead of netcdf params file. New default value for CLM 5.0.
+
+    Improved error message from build namelist when turning on irrigation.
+
+Requirements for tag: regular
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 2190
+
+Known bugs (include bugzilla ID): 2213 
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+     1147 (mkgriddata can't straddle over Greenwich)
+     1025 (SCM mode can NOT use a global finidat file)
+     1017 (SCM mode can NOT restart)
+      896 (T62 mode does not work)
+      701 (svn keyword)
+      452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: add namelist group bgc_shared and namelist parameter decomp_depth_efolding. New default value for clm 5.0.
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+    clm/bld/namelist_files/namelist_defaults_clm4_5.xml - new defaults for decomp_depth_efolding
+    clm/bld/namelist_files/namelist_definition_clm4_5.xml - put decomp_depth_efolding in new namelist group
+    clm/bld/CLMBuildNamelist.pm - logic for new namelist variable, improve error message
+    clm/src/unit_test_stubs/utils/spmdMod_stub.F90 - add mpi_real8 so unit tests will compile
+    clm/src/biogeochem/CNSharedParamsMod.F90 - add new method to set parameters from namelist.
+    clm/src/main/readParamsMod.F90 - pass namelist filename into CNSharedParamsMod::CNParamsReadShared
+
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone - unit tests pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - passed
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - n/a
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - n/a
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel : 40 - ok; 45 - ok; 50 - ok, clm50 bgc answer changing
+    yellowstone_pgi : 40 - ok; 45 - ok; 50 - ok, clm50 bgc answer changing
+    yellowstone_gnu (clm45 only) : 45 - ok; 50 - ok, clm50 bgc answer changing
+    hobart_nag : 45 - ok; 50 - ok, clm50 bgc answer changing
+
+CLM tag used for the baseline comparisons: clm4_5_2_r125
+
+Changes answers relative to baseline: yes
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm50 bgc compsets
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): climate changing for clm 5.0
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+
+    Parameter change based on experiments described in
+
+	Koven, C.D., D.M. Lawrence, and W.J. Riley, 2015:
+	Permafrost-carbon feedback: Sensitivity to deep soil
+	decomposability and nitrogen cycle. PNAS,
+	DOI:10.1073/pnas.1415123112.
+
+	Lawrence, D.M., C.D. Koven, S.C. Swenson, W.J. Riley, and
+	A.G. Slater, 2015: Permafrost thaw and resulting soil moisture
+	changes regulate projected high-latitude CO2 and CH4
+	emission. ERL, 10, doi:10.1088/1748-9326/10/9/094011.
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_2_r125
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Tue Sep 15 22:08:09 MDT 2015
@@ -6,14 +115,12 @@ One-line Summary: clm 5.0 hydrology
 
 Purpose of changes: clm 5.0 hydrology
 
-  Dry surface layer from Sean Swenson
-  Variably saturated flow from Martyn Clark
-  Revised groundwater from Sean Swenson
-  Depth to bedrock from Sean Swenson
-  Canopy interception
-
-  Full ChangeLog information was not avialble at press time. It
-  will be updated in a later tag.
+  Dry surface layer soil evaporative resistance from Sean Swenson
+  Richards equation with adaptive time stepping from Martyn Clark
+  Zero-flux lower boundary for soil moisture
+  Deep soil column (10 meters)
+  Variable depth to bedrock from Sean Swenson
+  Canopy interception and maximum leaf wetted fraction change
 
 Requirements for tag: regular
 
@@ -57,7 +164,8 @@ List all files added and what they do:
 
   clm/cimetest/testmods_dirs/clm/deepsoil_bedrock - new test for clm50 hydrology options.
 
-  clm/src/biogeophys/SoilWaterRetentionCurveVanGenuchten1980Mod.F90
+  clm/src/biogeophys/SoilWaterRetentionCurveVanGenuchten1980Mod.F90 - adds placeholder for vanGenuchten soil water retention curve
+
 
 List all existing files that have been modified, and describe the changes: unknown
 

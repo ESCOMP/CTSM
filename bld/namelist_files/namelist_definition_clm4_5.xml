@@ -1258,7 +1258,7 @@ Maximum depth to mix soils to by croturbation, in permafrost soils.
 
 <!-- turnover time modifications    -->
 <entry id="decomp_depth_efolding" type="real" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
+       group="bgc_shared" valid_values="" >
 E-folding depth over which decomposition is slowed with depth in all soils.
 </entry>
 
