@@ -1,4 +1,190 @@
 ===============================================================
+Tag name:  clm4_5_2_r127
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Sep 18 10:53:12 MDT 2015
+One-line Summary: Fix interpolation of initial conditions for glc_mec and crop <-> non-crop
+
+Purpose of changes:
+
+   Fixes the following bugs in initInterp: (1) interpolation of one glc_mec case
+   to another glc_mec case (due to bug 2126); (2) interpolation of a non-crop
+   case to a crop case (problems with generic crop type); (3) interpolation of a
+   crop case to a non-crop case (problems with generic crop type).
+
+   Note: If you want to use initInterp with an old glc_mec initial conditions
+   file (generated before this tag), you will need to either: (1) run the same
+   case with this tag or later, without use_init_interp, for at least one time
+   step to generate a new (fixed) initial conditions file; or (2) overwrite the
+   pfts1d_topoglc variable on your original initial conditions file so that it
+   has the correct size. (1) is easier if it is feasible for you to do so.
+
+   Some related changes to initInterp:
+
+   - Changed the "user interface" for interpolating initial conditions: There is
+     no longer a finidat_interp_source namelist option; instead, you set finidat
+     to point to the initial conditions file to interpolate, and set the
+     use_init_interp namelist option to .true.
+
+   - Changed the default behavior so that it does NOT fill missing points (e.g.,
+     landunits that are in the new case but not on the input file) with the bare
+     ground patch / vegetated landunit. Instead, it dies with an error message
+     if it can't find a reasonable template column. If you want to it to use the
+     nearest bare ground / vegetated point in this case, then rerun with
+     init_interp_fill_missing_with_natveg set to .true.
+
+   - Added system and unit tests of initInterp. System tests include both
+     interpolation of a file onto an identical configuration, and ensuring they
+     are bit-for-bit (LII test), and tests that involve interpolation from one
+     resolution or configuration to another. For the latter, I have done some
+     very quick checks, but have NOT carefully checked the current operation to
+     ensure it is correct.
+
+   Some (mostly) unrelated changes:
+
+   (1) Write more metadata on column type to 1-d (vector) history files
+
+   (2) Updated cime; this included, among other things:
+   - fix RESUBMIT bug
+   - no longer set FORCE_COLDSTART for glc_mec runs
+   - addition of LII test
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+- 1447 (interpinic needs to be extended to work for glc_mec)
+- 1703 (need better testing of interpinic)
+- 1725 (interpinic doesn't work right for crop)
+- 2126 (Error in writing pfts1d_topoglc to restart file)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist:
+- Removed finidat_interp_source namelist option
+- Added use_init_interp and init_interp_fill_missing_with_natveg namelist option
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.):
+
+   cime: cime2.0.17 -> cime2.0.18-p1.1 (see summary above)
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Separate testable parts of initInterp into their own module; fix
+          initInterp bugs as noted above
+A       components/clm/src/main/initInterpMindist.F90
+
+========= Add system tests that exercise initInterp
+A       components/clm/cimetest/testmods_dirs/clm/interp_from_f09/user_nl_clm
+A       components/clm/cimetest/testmods_dirs/clm/interp_from_f09/include_user_mods
+A       components/clm/cimetest/testmods_dirs/clm/interp_from_f09/README
+A       components/clm/cimetest/testmods_dirs/clm/interp_from_f09
+A       components/clm/cimetest/testmods_dirs/clm/glcMEC_spunup_1way/shell_commands
+A       components/clm/cimetest/testmods_dirs/clm/glcMEC_spunup_1way/README
+A       components/clm/cimetest/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm
+A       components/clm/cimetest/testmods_dirs/clm/glcMEC_spunup_1way/include_user_mods
+A       components/clm/cimetest/testmods_dirs/clm/glcMEC_spunup_1way
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop/user_nl_clm
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop/include_user_mods
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop/README
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop2crop/user_nl_clm
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop2crop/include_user_mods
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop2crop/README
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop2crop
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_crop/README
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_crop/user_nl_clm
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_crop/include_user_mods
+A       components/clm/cimetest/testmods_dirs/clm/interp_f19_crop
+
+========= Add unit tests that exercise initInterp: set_mindist
+A       components/clm/src/main/test/initInterpMindist_test/CMakeLists.txt
+A       components/clm/src/main/test/initInterpMindist_test/test_init_interp_mindist.pf
+A       components/clm/src/main/test/initInterpMindist_test
+
+List all existing files that have been modified, and describe the changes:
+
+========= Fix incorrect dimension for pfts1d_topoglc
+M       components/clm/src/main/subgridRestMod.F90
+
+========= Remove finidat_interp_source namelist option; add use_init_interp and
+          init_interp_fill_missing_with_natveg options
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/src/main/controlMod.F90
+M       components/clm/src/main/clm_varctl.F90
+
+========= Refactor to split into two modules; parse new namelist option; change
+          line endings from DOS to UNIX (changes all lines!)
+M       components/clm/src/main/initInterp.F90
+
+========= Write column type metadata to 1-d (vector) history files
+M       components/clm/src/main/column_varcon.F90
+M       components/clm/src/main/histFileMod.F90
+M       components/clm/src/main/restFileMod.F90
+
+========= Add optional msg argument to check_dim
+M       components/clm/src/main/ncdio_pio.F90.in
+
+========= Add system tests that exercise initInterp
+M       components/clm/cimetest/testlist_clm.xml
+
+========= Add unit tests that exercise initInterp: set_mindist
+M       components/clm/src/main/CMakeLists.txt
+M       components/clm/src/main/test/CMakeLists.txt
+M       components/clm/src/unit_test_stubs/main/ncdio_pio_fake.F90.in
+
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+
+      This test fails; it looks like it started failing in r125:
+      131/547 < FAIL> <Test Id: 131> <Desc: both l_ncpl and dtime>  
+
+  unit-tests (components/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    hobart_nag: ok
+
+    Note: There was one BFAIL:
+        BFAIL ERP_P15x2_Lm36.f10_f10.ICLM45BGCCROP.yellowstone_intel.clm-irrig_o3_reduceOutput.clm2.h1.nc : baseline compare clm2.h1 (baseline: compare .base file with clm4_5_2_r126 file) (baseline history file does not exist)
+
+
+CLM tag used for the baseline comparisons: clm4_5_2_r126
+
+Changes answers relative to baseline: NO
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_2_r126
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Thu Sep 17 14:53:49 MDT 2015

@@ -329,7 +329,7 @@ contains
   end subroutine check_att
 
   !-----------------------------------------------------------------------
-  subroutine check_dim(ncid, dimname, value)
+  subroutine check_dim(ncid, dimname, value, msg)
     !
     ! !DESCRIPTION:
     ! Validity check on dimension
@@ -338,6 +338,8 @@ contains
     class(file_desc_t),intent(in) :: ncid      ! PIO file handle
     character(len=*) , intent(in) :: dimname   ! Dimension name
     integer, intent(in)           :: value     ! Expected dimension size
+
+    character(len=*), intent(in), optional :: msg  ! Optional additional message printed upon error
     !
     ! !LOCAL VARIABLES:
     integer :: dimid, dimlen    ! temporaries
@@ -350,6 +352,9 @@ contains
     if (dimlen /= value) then
        write(iulog,*) subname//' ERROR: mismatch of input dimension ',dimlen, &
             ' with expected value ',value,' for variable ',trim(dimname)
+       if (present(msg)) then
+          write(iulog,*) msg
+       end if
        call shr_sys_abort(errMsg(__FILE__, __LINE__))
     end if
 

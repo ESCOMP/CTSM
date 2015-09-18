@@ -119,6 +119,7 @@ module histFileMod
   private :: htape_addfld              ! Add a field to the active list for a history tape
   private :: htape_create              ! Define contents of history file t
   private :: htape_add_ltype_metadata  ! Add global metadata defining landunit types
+  private :: htape_add_ctype_metadata  ! Add global metadata defining column types
   private :: htape_add_natpft_metadata ! Add global metadata defining natpft types
   private :: htape_add_cft_metadata    ! Add global metadata defining cft types
   private :: htape_timeconst           ! Write time constant values to history tape
@@ -1821,6 +1822,7 @@ contains
     call ncd_defdim(lnfid, 'ltype', max_lunit, dimid)
     call ncd_defdim(lnfid, 'nlevcan',nlevcan, dimid)
     call htape_add_ltype_metadata(lnfid)
+    call htape_add_ctype_metadata(lnfid)
     call ncd_defdim(lnfid, 'natpft', natpft_size, dimid)
     if (cft_size > 0) then
        call ncd_defdim(lnfid, 'cft', cft_size, dimid)
@@ -1885,6 +1887,28 @@ contains
     end do
 
   end subroutine htape_add_ltype_metadata
+
+  !-----------------------------------------------------------------------
+  subroutine htape_add_ctype_metadata(lnfid)
+    !
+    ! !DESCRIPTION:
+    ! Add global metadata defining column types
+    !
+    ! !USES:
+    use column_varcon, only : write_coltype_metadata
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: lnfid ! local file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: att_prefix = 'ctype_'  ! prefix for attributes
+
+    character(len=*), parameter :: subname = 'htape_add_ctype_metadata'
+    !-----------------------------------------------------------------------
+
+    call write_coltype_metadata(att_prefix, lnfid)
+
+  end subroutine htape_add_ctype_metadata
 
   !-----------------------------------------------------------------------
   subroutine htape_add_natpft_metadata(lnfid)
@@ -2745,6 +2769,9 @@ contains
           call ncd_defvar(varname='cols1d_wtlunit', xtype=ncd_double, dim1name=namec, &
                long_name='column weight relative to corresponding landunit', ncid=ncid)
 
+          call ncd_defvar(varname='cols1d_itype_col', xtype=ncd_int, dim1name=namec, &
+               long_name='column type (see global attributes)', ncid=ncid)
+
           call ncd_defvar(varname='cols1d_itype_lunit', xtype=ncd_int, dim1name=namec, &
                long_name='column landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)', &
                   ncid=ncid)
@@ -2788,6 +2815,9 @@ contains
 
           call ncd_defvar(varname='pfts1d_itype_veg', xtype=ncd_int, dim1name=namep, &
                long_name='pft vegetation type', ncid=ncid)
+
+          call ncd_defvar(varname='pfts1d_itype_col', xtype=ncd_int, dim1name=namep, &
+               long_name='pft column type (see global attributes)', ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_itype_lunit', xtype=ncd_int, dim1name=namep, &
                long_name='pft landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)',  &
@@ -2881,10 +2911,13 @@ contains
        ! ----------------------------------------------------------------
        call ncd_io(varname='cols1d_wtgcell', data=col%wtgcell , dim1name=namec, ncid=ncid, flag='write')
        call ncd_io(varname='cols1d_wtlunit', data=col%wtlunit , dim1name=namec, ncid=ncid, flag='write')
+       call ncd_io(varname='cols1d_itype_col', data=col%itype , dim1name=namec, ncid=ncid, flag='write')
+
        do c = bounds%begc,bounds%endc
          icarr(c) = lun%itype(col%landunit(c))
        enddo
        call ncd_io(varname='cols1d_itype_lunit', data=icarr    , dim1name=namec, ncid=ncid, flag='write')
+
        call ncd_io(varname='cols1d_active' , data=col%active  , dim1name=namec, ncid=ncid, flag='write')
 
        ! Write patch info
@@ -2916,9 +2949,15 @@ contains
        call ncd_io(varname='pfts1d_itype_veg', data=patch%itype   , dim1name=namep, ncid=ncid, flag='write')
 
        do p = bounds%begp,bounds%endp
+          iparr(p) = col%itype(patch%column(p))
+       end do
+       call ncd_io(varname='pfts1d_itype_col', data=iparr         , dim1name=namep, ncid=ncid, flag='write')
+
+       do p = bounds%begp,bounds%endp
           iparr(p) = lun%itype(patch%landunit(p))
        enddo
        call ncd_io(varname='pfts1d_itype_lunit', data=iparr      , dim1name=namep, ncid=ncid, flag='write')
+
        call ncd_io(varname='pfts1d_active'   , data=patch%active  , dim1name=namep, ncid=ncid, flag='write')
 
        deallocate(rgarr,rlarr,rcarr,rparr)

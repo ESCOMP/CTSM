@@ -8,25 +8,14 @@
 <!-- CLM Namelist -->
 <!-- ========================================================================================  -->
 
-<entry id="finidat_interp_source" 
-       type="char*256" 
-       category="datasets"
-       input_pathname="abs" 
-       group="clm_inparm" 
-       valid_values="" >
-If non-blank, then interpinic will be called to interpolate finidat_interp_source and 
-create output file specified by finidat_interp_dest.
-For this to be used finidat MUST BE blank.
-</entry>
-
 <entry id="finidat_interp_dest" 
        type="char*256" 
        category="datasets"
        input_pathname="abs" 
        group="clm_inparm" 
        valid_values="" >
-If finidat_interp_source is set to non-blank, then interpinic will be called 
-to interpolate finidat_interp_source and create output file finidat_interp_dest.
+If use_init_interp is set to .true., interpinic will be called to interpolate
+the file given by finidat, creating the output file specified by finidat_interp_dest.
 </entry>
 
 <entry id="finidat" 
@@ -37,6 +26,17 @@ to interpolate finidat_interp_source and create output file finidat_interp_dest.
        valid_values="" >
 Full pathname of initial conditions file. If blank CLM will startup from
 arbitrary initial conditions.
+</entry>
+
+<entry id="use_init_interp"
+       type="logical"
+       category="datasets"
+       group="clm_inparm"
+       valid_values="" >
+If set to .true., interpinic will be called to interpolate the file given by finidat,
+creating the output file specified by finidat_interp_dest.
+
+This requires that finidat be non-blank.
 </entry>
 
 <entry id="nrevsn" 
@@ -1702,5 +1702,16 @@ If TRUE, the density of new snow depends on wind speed, and there is also
 wind-dependent snow compaction.
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- Namelist options related to initInterp                                                    -->
+<!-- ========================================================================================  -->
+
+<entry id="init_interp_fill_missing_with_natveg" type="logical" category="datasets"
+       group="clm_initinterp_inparm" valid_values="" >
+If FALSE (which is the default): If an output type cannot be found in the input for initInterp,
+code aborts
+If TRUE: If an output type cannot be found in the input, fill with closest natural veg column
+(using bare soil for patch-level variables)
+</entry>
 
 </namelist_definition>

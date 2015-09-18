@@ -24,7 +24,8 @@ module controlMod
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
   use histFileMod                      , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fexcl1, hist_fexcl2, hist_fexcl3
   use histFileMod                      , only: hist_fexcl4, hist_fexcl5, hist_fexcl6
-  use LakeCon                          , only: deepmixing_depthcrit, deepmixing_mixfact 
+  use initInterpMod                    , only: initInterp_readnl
+  use LakeCon                          , only: deepmixing_depthcrit, deepmixing_mixfact
   use CanopyfluxesMod                  , only: perchroot, perchroot_alt
   use CanopyHydrologyMod               , only: CanopyHydrology_readnl
   use SurfaceResistanceMod             , only: soil_resistance_readNL
@@ -48,6 +49,9 @@ module controlMod
   public :: control_init  ! initial run control information
   public :: control_print ! print run control information
   !
+  !
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private :: apply_use_init_interp  ! apply the use_init_interp namelist option, if set
   !
   ! !PRIVATE TYPES:
   character(len=  7) :: runtyp(4)                        ! run type
@@ -107,6 +111,7 @@ contains
     integer :: unitn                ! unit for namelist file
     integer :: dtime                ! Integer time-step
     integer :: override_nsrest      ! If want to override the startup type sent from driver
+    logical :: use_init_interp      ! Apply initInterp to the file given by finidat
     !------------------------------------------------------------------------
 
     ! ----------------------------------------------------------------------
@@ -121,7 +126,8 @@ contains
 
     namelist /clm_inparm / &
          fatmlndfrc, finidat, nrevsn, &
-         finidat_interp_source, finidat_interp_dest
+         finidat_interp_dest, &
+         use_init_interp
 
     ! Input datasets
 
@@ -241,6 +247,8 @@ contains
 
     override_nsrest = nsrest
 
+    use_init_interp = .false.
+
     if (masterproc) then
 
        ! ----------------------------------------------------------------------
@@ -270,10 +278,14 @@ contains
        call relavu( unitn )
 
        ! ----------------------------------------------------------------------
-       ! Consistency checks on input namelist.
+       ! Process some namelist variables, and perform consistency checks
        ! ----------------------------------------------------------------------
 
        call set_timemgr_init( dtime_in=dtime )
+
+       if (use_init_interp) then
+          call apply_use_init_interp(finidat, finidat_interp_source)
+       end if
 
        ! History and restart files
 
@@ -368,6 +380,9 @@ contains
     ! ----------------------------------------------------------------------
     ! Read in other namelists for other modules
     ! ----------------------------------------------------------------------
+
+    call initInterp_readnl( NLFilename )
+
     !I call init_hydrology to set up default hydrology sub-module methods.
     !For future version, I suggest to  put the following two calls inside their
     !own modules, which are called from their own initializing methods
@@ -788,9 +803,18 @@ contains
        write(iulog,*) '   glc snow persistence max days = ', glc_snow_persistence_max_days
     endif
 
-    if (nsrest == nsrStartup .and. finidat == ' ') write(iulog,*) '   initial data created by model'
-    if (nsrest == nsrStartup .and. finidat /= ' ') write(iulog,*) '   initial data   = ',trim(finidat)
-    if (nsrest /= nsrStartup) write(iulog,*) '   restart data   = ',trim(nrevsn)
+    if (nsrest == nsrStartup) then
+       if (finidat /= ' ') then
+          write(iulog,*) '   initial data: ', trim(finidat)
+       else if (finidat_interp_source /= ' ') then
+          write(iulog,*) '   initial data interpolated from: ', trim(finidat_interp_source)
+       else
+          write(iulog,*) '   initial data created by model (cold start)'
+       end if
+    else
+       write(iulog,*) '   restart data   = ',trim(nrevsn)
+    end if
+
     write(iulog,*) '   atmospheric forcing data is from cesm atm model'
     write(iulog,*) 'Restart parameters:'
     write(iulog,*)'   restart pointer file directory     = ',trim(rpntdir)
@@ -856,5 +880,44 @@ contains
     end if
     write(iulog, *) '  use_luna = ', use_luna
   end subroutine control_print
+
+
+  !-----------------------------------------------------------------------
+  subroutine apply_use_init_interp(finidat, finidat_interp_source)
+    !
+    ! !DESCRIPTION:
+    ! Applies the use_init_interp option, setting finidat_interp_source to finidat
+    !
+    ! Should be called if use_init_interp is true.
+    !
+    ! Does error checking to ensure that it is valid to set use_init_interp to true,
+    ! given the values of finidat and finidat_interp_source.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(inout) :: finidat
+    character(len=*), intent(inout) :: finidat_interp_source
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'apply_use_init_interp'
+    !-----------------------------------------------------------------------
+
+    if (finidat == ' ') then
+       call endrun(msg=' ERROR: Can only set use_init_interp if finidat is set')
+    end if
+
+    if (finidat_interp_source /= ' ') then
+       call endrun(msg=' ERROR: Cannot set use_init_interp if finidat_interp_source is &
+            &already set')
+    end if
+
+    finidat_interp_source = finidat
+    finidat = ' '
+
+  end subroutine apply_use_init_interp
+
+
 
 end module controlMod

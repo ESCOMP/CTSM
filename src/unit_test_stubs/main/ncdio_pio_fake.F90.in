@@ -34,6 +34,8 @@ module ncdio_pio
   integer, parameter, public :: ncd_int = 2
   integer, parameter, public :: ncd_log = 3
 
+  integer, parameter, public :: ncd_global = 1
+
   !
   ! !PUBLIC MEMBER FUNCTIONS:
 
@@ -47,6 +49,7 @@ module ncdio_pio
   public :: ncd_inqdid            ! stub: inquire dimension id
   public :: ncd_inqvdlen          ! stub: inquire size of a dimension
   public :: ncd_inqdlen           ! stub: inquire size of a dimension
+  public :: ncd_putatt            ! stub: put attribute
 
   interface file_desc_t
      module procedure constructor  ! initialize a new file_desc_t object
@@ -77,6 +80,12 @@ module ncdio_pio
      module procedure ncd_io_{DIMS}d_{TYPE}_glob
 
   end interface ncd_io
+
+  interface ncd_putatt
+     module procedure ncd_putatt_int
+     module procedure ncd_putatt_real
+     module procedure ncd_putatt_char
+  end interface ncd_putatt
 
 contains
 
@@ -334,6 +343,70 @@ contains
     len = 0
 
   end subroutine ncd_inqdlen
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_putatt_int(ncid,varid,attrib,value,xtype)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement for ncd_putatt_int. This does nothing, but just satisfies the
+    ! interface.
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    integer           ,intent(in)    :: value     ! netcdf attrib value
+    integer,optional  ,intent(in)    :: xtype     ! netcdf data type
+    !
+    ! !LOCAL VARIABLES:
+    integer :: status
+    !-----------------------------------------------------------------------
+
+    ! Do nothing
+  end subroutine ncd_putatt_int
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_putatt_char(ncid,varid,attrib,value,xtype)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement for ncd_putatt_char. This does nothing, but just satisfies the
+    ! interface.
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    character(len=*)  ,intent(in)    :: value     ! netcdf attrib value
+    integer,optional  ,intent(in)    :: xtype     ! netcdf data type
+    !
+    ! !LOCAL VARIABLES:
+    integer :: status
+    !-----------------------------------------------------------------------
+
+    ! Do nothing
+  end subroutine ncd_putatt_char
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_putatt_real(ncid,varid,attrib,value,xtype)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement for ncd_putatt_real. This does nothing, but just satisfies the
+    ! interface.
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    real(r8)          ,intent(in)    :: value     ! netcdf attrib value
+    integer,optional  ,intent(in)    :: xtype     ! netcdf data type
+    !
+    ! !LOCAL VARIABLES:
+    integer :: status
+    !-----------------------------------------------------------------------
+
+    ! Do nothing
+  end subroutine ncd_putatt_real
+
 
   ! ======================================================================
   ! Public routines to aid unit testing, specific to this fake replacement

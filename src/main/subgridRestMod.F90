@@ -380,7 +380,7 @@ contains
        rparr(p) = col%glc_topo(c)
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_topoglc', xtype=ncd_double,   &
-         dim1name='column',                                                             &
+         dim1name='pft',                                                             &
          long_name='mean elevation on glacier elevation classes', units='m',            &
          interpinic_flag='skip', readvar=readvar, data=rparr)
 

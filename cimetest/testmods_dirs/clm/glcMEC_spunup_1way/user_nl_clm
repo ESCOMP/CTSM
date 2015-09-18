@@ -1,0 +1,4 @@
+! This file provides partially-spun-up initial conditions for glc_mec.
+! However, it is by no means entirely spun up, and should not be used for production runs.
+! Note that this was generated with GLC_TWO_WAY_COUPLING=FALSE
+finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.IG1850CLM45.0006-01-01.1.9x2.5_g1v6_simyr1850_c150907.nc'

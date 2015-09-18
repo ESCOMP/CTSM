@@ -1,0 +1,12 @@
+This testmods directory allows testing glc_mec cases using (partially) spun-up
+initial conditions. Once we have out-of-the-box initial conditions with glc_mec,
+this will no longer be necessary.
+
+Note that this uses an initial conditions file for f19_g16, year 1850.
+
+This also turns off the glc two-way coupling. This is done so that
+glacier areas are taken from the restart file rather than from
+CISM. This is partly so that changes in CISM don't affect the test
+results, but more importantly so that LII tests can pass even if CISM
+changes. (GLC two-way coupling was off in the generation of the
+initial conditions file used here, too.)

@@ -1,0 +1,3 @@
+This testmods directory allows testing the interpolation of initial conditions
+from one resolution (or configuration) to another, using the out-of-the-box
+initial conditions file for f09.

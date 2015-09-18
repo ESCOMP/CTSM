@@ -180,6 +180,12 @@
       <test name="ERP_P24x2_D_Ld5">
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/ciso">edison</machine>
       </test>
+      <test name="PET_P15x2_D">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/interp_f19_noncrop" comment="include a test of initInterp from one resolution to another; make it a PET test to exercise the OpenMP directives in initInterp (could be changed to a CROP compset with interp_f19_crop if we had non-buggy initial conditions for crop - i.e., once bug 1753 is resolved and crop initial conditions files are remade)">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Ld3">
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/interp_f19_crop" comment="test interpolation of crop to non-crop (also change resolution, but that is not an essential part of this test)">yellowstone</machine>
+      </test>
     </grid>
     <grid name="f19_g16">
       <test name="ERP_Ld5">
@@ -636,11 +642,17 @@
       <test name="ERP_P24x2_Lm36">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/irrigOn_reduceOutput">edison</machine>
       </test>
+      <test name="LII_D">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/crop" comment="include one interpolation test involving crop (for now we also want one without glc_mec, although we could drop the requirement of having a non-glc_mec LII test if/when we switch to always using glc_mec)">yellowstone</machine>
+      </test>
       <test name="PEM_Ld1">
         <machine compiler="intel" testtype="prebeta" testmods="clm/crop">goldbach</machine>
       </test>
       <test name="PEM_Lm25">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Ld3">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/interp_f19_noncrop2crop" comment="test interpolation of non-crop to crop (also change resolution, but that is not an essential part of this test)">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16">
@@ -973,6 +985,9 @@
       </test>
       <test name="ERP">
         <machine compiler="pgi" testtype="aux_clm45">yellowstone</machine>
+      </test>
+      <test name="LII_D_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_spunup_1way" comment="include one interpolation test involving glc_mec (we can stop using the spunup testmod once glc_mec cases point to out-of-the-box initial conditions)">yellowstone</machine>
       </test>
       <test name="PEM_D">
         <machine compiler="intel" testtype="aux_clm_ys_pgi">edison</machine>

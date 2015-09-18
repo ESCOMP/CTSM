@@ -2862,6 +2862,7 @@ sub write_output_files {
                  lai_streams clm_canopyhydrology_inparm 
                  clm_soilhydrology_inparm dynamic_subgrid 
                  finidat_consistency_checks dynpft_consistency_checks 
+                 clm_initinterp_inparm
                  soilwater_movement_inparm rooting_profile_inparm 
                  soil_resis_inparm  bgc_shared
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm );

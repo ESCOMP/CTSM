@@ -527,7 +527,7 @@ contains
     ! Add global metadata defining column types
     !
     ! !USES:
-    use column_varcon, only : icol_roof, icol_sunwall, icol_shadewall, icol_road_imperv, icol_road_perv
+    use column_varcon, only : write_coltype_metadata
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid ! local file id
@@ -538,22 +538,7 @@ contains
     character(len=*), parameter :: subname = 'restFile_add_icol_metadata'
     !-----------------------------------------------------------------------
     
-    ! Unlike ilun and ipft, the column names currently do not exist in column_varcon.
-    ! This is partly because of the trickiness of encoding column values for crop &
-    ! icemec.
-
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'vegetated_or_bare_soil', 1) 
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'crop'                  , 2) 
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'crop_noncompete'       , '2*100+m, m=cft_lb,cft_ub')
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'landice'               , 3) 
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'landice_multiple_elevation_classes', '4*100+m, m=1,glcnec')  
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'deep_lake'             , 5) 
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'wetland'               , 6) 
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'urban_roof'            , icol_roof)
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'urban_sunwall'         , icol_sunwall)
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'urban_shadewall'       , icol_shadewall)
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'urban_impervious_road' , icol_road_imperv)
-    call ncd_putatt(ncid, ncd_global, att_prefix // 'urban_pervious_road'   , icol_road_perv)
+    call write_coltype_metadata(att_prefix, ncid)
 
   end subroutine restFile_add_icol_metadata
 
@@ -608,6 +593,7 @@ contains
     integer :: numc      ! total number of columns across all processors
     integer :: nump      ! total number of pfts across all processors
     integer :: numCohort ! total number of cohorts across all processors
+    character(len=:), allocatable :: msg  ! diagnostic message
     character(len=32) :: subname='restFile_dimcheck' ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -615,11 +601,12 @@ contains
 
     if ( .not. single_column .or. nsrest /= nsrStartup )then
        call get_proc_global(ng=numg, nl=numl, nc=numc, np=nump, nCohorts=numCohort)
-       call check_dim(ncid, nameg, numg)
-       call check_dim(ncid, namel, numl)
-       call check_dim(ncid, namec, numc)
-       call check_dim(ncid, namep, nump)
-       if ( use_ed ) call check_dim(ncid, nameCohort  , numCohort)
+       msg = 'Did you mean to set use_init_interp = .true. ?'
+       call check_dim(ncid, nameg, numg, msg=msg)
+       call check_dim(ncid, namel, numl, msg=msg)
+       call check_dim(ncid, namec, numc, msg=msg)
+       call check_dim(ncid, namep, nump, msg=msg)
+       if ( use_ed ) call check_dim(ncid, nameCohort  , numCohort, msg=msg)
     end if
     call check_dim(ncid, 'levsno'  , nlevsno)
     call check_dim(ncid, 'levgrnd' , nlevgrnd)

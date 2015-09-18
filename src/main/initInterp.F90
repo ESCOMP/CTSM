@@ -5,6 +5,7 @@ module initInterpMod
   ! to another resolution and/or landmask
   !----------------------------------------------------------------------- 
 
+  use initInterpMindist, only: set_mindist, subgrid_type, subgrid_special_indices_type
   use shr_kind_mod   , only: r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_const_mod  , only: SHR_CONST_PI, SHR_CONST_REARTH
   use shr_sys_mod    , only: shr_sys_flush
@@ -17,7 +18,7 @@ module initInterpMod
   use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip
   use restUtilMod    , only: iflag_noswitchdim, iflag_switchdim
   use ncdio_utils    , only: find_var_on_file
-  use clm_varcon     , only: spval, re
+  use clm_varcon     , only: spval
   use ncdio_pio
   use pio
 
@@ -27,6 +28,7 @@ module initInterpMod
 
   ! Public methods
 
+  public :: initInterp_readnl  ! Read namelist
   public :: initInterp
 
   ! Private methods
@@ -36,9 +38,6 @@ module initInterpMod
   private :: findMinDist
   private :: set_subgrid_dist
   private :: set_subgrid_glob
-  private :: set_mindist
-  private :: is_sametype
-  private :: is_baresoil
   private :: interp_0d_copy
   private :: interp_1d_double
   private :: interp_1d_int
@@ -46,27 +45,69 @@ module initInterpMod
 
   ! Private data
  
-  integer          :: ipft_not_vegetated 
-  integer          :: icol_vegetated_or_bare_soil
-  integer          :: ilun_vegetated_or_bare_soil
-  integer          :: ilun_landice_multiple_elevation_classes 
   character(len=8) :: created_glacier_mec_landunits
-  logical          :: override_missing = .true. ! override missing types with closest bare-soil
-  
-  type, public :: subgrid_type
-     character(len=16) :: name               ! pft, column, landunit
-     integer , pointer :: ptype(:) => null() ! used for patch type 
-     integer , pointer :: ctype(:) => null() ! used for patch or col type
-     integer , pointer :: ltype(:) => null() ! used for pft, col or lun type
-     real(r8), pointer :: topoglc(:) => null()
-     real(r8), pointer :: lat(:)
-     real(r8), pointer :: lon(:)
-     real(r8), pointer :: coslat(:)
-  end type subgrid_type
+
+  ! If true, fill missing types with closest natural veg column (using bare soil for
+  ! patch-level variables)
+  logical :: init_interp_fill_missing_with_natveg
 
 contains
 
   !=======================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine initInterp_readnl(NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for initInterp
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'initInterp_readnl'
+    !-----------------------------------------------------------------------
+
+    namelist /clm_initinterp_inparm/ &
+         init_interp_fill_missing_with_natveg
+
+    ! Initialize options to default values, in case they are not specified in the namelist
+    init_interp_fill_missing_with_natveg = .false.
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in clm_initinterp_inparm  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, 'clm_initinterp_inparm', status=ierr)
+       if (ierr == 0) then
+          read(unitn, clm_initinterp_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading clm_initinterp_inparm namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast (init_interp_fill_missing_with_natveg, mpicom)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) 'initInterp settings:'
+       write(iulog,nml=clm_initinterp_inparm)
+       write(iulog,*) ' '
+    end if
+
+  end subroutine initInterp_readnl
+
 
   subroutine initInterp (filei, fileo, bounds)
 
@@ -130,6 +171,7 @@ contains
     logical , pointer  :: lun_activei(:), lun_activeo(:) 
     integer , pointer  :: sgridindex(:)
     logical , pointer  :: activei(:), activeo(:)
+    type(subgrid_special_indices_type) :: subgrid_special_indices
     !--------------------------------------------------------------------
 
     if (masterproc) then
@@ -173,22 +215,37 @@ contains
     ! --------------------------------------------
 
     status = pio_get_att(ncidi, pio_global, &
-         'ipft_not_vegetated',                      ipft_not_vegetated)
+         'ipft_not_vegetated', &
+         subgrid_special_indices%ipft_not_vegetated)
     status = pio_get_att(ncidi, pio_global, &
-         'icol_vegetated_or_bare_soil',             icol_vegetated_or_bare_soil)
+         'icol_vegetated_or_bare_soil', &
+         subgrid_special_indices%icol_vegetated_or_bare_soil)
     status = pio_get_att(ncidi, pio_global, &
-         'ilun_vegetated_or_bare_soil',             ilun_vegetated_or_bare_soil)
+         'ilun_vegetated_or_bare_soil', &
+         subgrid_special_indices%ilun_vegetated_or_bare_soil)
     status = pio_get_att(ncidi, pio_global, &
-         'ilun_landice_multiple_elevation_classes', ilun_landice_multiple_elevation_classes)
+         'ilun_crop', &
+         subgrid_special_indices%ilun_crop)
     status = pio_get_att(ncidi, pio_global, &
-         'created_glacier_mec_landunits',           created_glacier_mec_landunits)
+         'ilun_landice_multiple_elevation_classes', &
+         subgrid_special_indices%ilun_landice_multiple_elevation_classes)
+    status = pio_get_att(ncidi, pio_global, &
+         'created_glacier_mec_landunits', &
+         created_glacier_mec_landunits)
 
     if (masterproc) then
-       write(iulog,*)'ipft_not_vegetated                      = ' ,ipft_not_vegetated
-       write(iulog,*)'icol_vegetated_or_bare_soil             = ' ,icol_vegetated_or_bare_soil
-       write(iulog,*)'ilun_vegetated_or_bare_soil             = ' ,ilun_vegetated_or_bare_soil
-       write(iulog,*)'ilun_landice_multiple_elevation_classes = ' ,ilun_landice_multiple_elevation_classes
-       write(iulog,*)'create_glacier_mec_landunits            = ',trim(created_glacier_mec_landunits)
+       write(iulog,*)'ipft_not_vegetated                      = ' , &
+            subgrid_special_indices%ipft_not_vegetated
+       write(iulog,*)'icol_vegetated_or_bare_soil             = ' , &
+            subgrid_special_indices%icol_vegetated_or_bare_soil
+       write(iulog,*)'ilun_vegetated_or_bare_soil             = ' , &
+            subgrid_special_indices%ilun_vegetated_or_bare_soil
+       write(iulog,*)'ilun_crop                               = ' , &
+            subgrid_special_indices%ilun_crop
+       write(iulog,*)'ilun_landice_multiple_elevation_classes = ' , &
+            subgrid_special_indices%ilun_landice_multiple_elevation_classes
+       write(iulog,*)'create_glacier_mec_landunits            = ', &
+            trim(created_glacier_mec_landunits)
     end if
 
     ! --------------------------------------------
@@ -222,7 +279,7 @@ contains
     end if
     vec_dimname = 'pft'
     call findMinDist(vec_dimname, begp_i, endp_i, begp_o, endp_o, ncidi, ncido, &
-         pft_activei, pft_activeo, pftindx )
+         subgrid_special_indices, pft_activei, pft_activeo, pftindx )
 
     ! For each output column, find the input column, colindx, that is closest
 
@@ -231,7 +288,7 @@ contains
     end if
     vec_dimname = 'column'
     call findMinDist(vec_dimname, begc_i, endc_i, begc_o, endc_o, ncidi, ncido, &
-         col_activei, col_activeo, colindx )
+         subgrid_special_indices, col_activei, col_activeo, colindx )
 
     ! For each output landunit, find the input landunit, lunindx, that is closest
 
@@ -240,7 +297,7 @@ contains
     end if
     vec_dimname = 'landunit'
     call findMinDist(vec_dimname, begl_i, endl_i, begl_o, endl_o, ncidi, ncido, &
-         lun_activei, lun_activeo, lunindx )
+         subgrid_special_indices, lun_activei, lun_activeo, lunindx )
 
     !------------------------------------------------------------------------          
     ! Read input initial data and write output initial data
@@ -541,7 +598,7 @@ contains
   !=======================================================================
 
   subroutine findMinDist( dimname, begi, endi, bego, endo, ncidi, ncido, &
-       activei, activeo, minindx)
+       subgrid_special_indices, activei, activeo, minindx)
 
     ! --------------------------------------------------------------------
     !
@@ -553,6 +610,7 @@ contains
     integer           , intent(in)    :: bego, endo
     type(file_desc_t) , intent(inout) :: ncidi         
     type(file_desc_t) , intent(inout) :: ncido         
+    type(subgrid_special_indices_type), intent(in) :: subgrid_special_indices
     logical           , intent(out)   :: activei(begi:endi)
     logical           , intent(out)   :: activeo(bego:endo)
     integer           , intent(out)   :: minindx(bego:endo)         
@@ -575,7 +633,8 @@ contains
     if (masterproc) then
        write(iulog,*)'calling set_mindist for ',trim(dimname)
     end if
-    call set_mindist(begi, endi, bego, endo, activei, activeo, subgridi, subgrido, minindx)
+    call set_mindist(begi, endi, bego, endo, activei, activeo, subgridi, subgrido, &
+         subgrid_special_indices, init_interp_fill_missing_with_natveg, minindx)
 
     deallocate(subgridi%lat, subgridi%lon, subgridi%coslat)
     deallocate(subgrido%lat, subgrido%lon, subgrido%coslat)
@@ -737,186 +796,6 @@ contains
     deallocate(itemp)
 
   end subroutine set_subgrid_glob
-
-  !=======================================================================
-
-  subroutine set_mindist(begi, endi, bego, endo, activei, activeo, subgridi, subgrido, mindist_index)
-
-    ! --------------------------------------------------------------------
-    ! arguments
-    integer            , intent(in)  :: begi, endi 
-    integer            , intent(in)  :: bego, endo 
-    logical            , intent(in)  :: activei(begi:endi) 
-    logical            , intent(in)  :: activeo(bego:endo) 
-    type(subgrid_type) , intent(in)  :: subgridi
-    type(subgrid_type) , intent(in)  :: subgrido
-    integer            , intent(out) :: mindist_index(bego:endo) 
-    !
-    ! local variables
-    real(r8) :: dx,dy
-    real(r8) :: distmin,dist,hgtdiffmin,hgtdiff    
-    integer  :: nsizei, nsizeo
-    integer  :: ni,no,nmin,ier,n,noloc
-    logical  :: closest
-    ! --------------------------------------------------------------------
-
-    mindist_index(bego:endo) = 0
-    distmin = spval
-
-!$OMP PARALLEL DO PRIVATE (ni,no,n,nmin,distmin,dx,dy,dist,closest,hgtdiffmin,hgtdiff)
-    do no = bego,endo
-       
-       ! If output type is contained in input dataset ...
-       if (activeo(no)) then 
-
-          nmin    = 0
-          distmin = spval
-          hgtdiffmin = spval
-          do ni = begi,endi
-             if (activei(ni)) then
-                if (is_sametype(ni, no, subgridi, subgrido)) then
-                   dy = abs(subgrido%lat(no)-subgridi%lat(ni))*re
-                   dx = abs(subgrido%lon(no)-subgridi%lon(ni))*re * &
-                        0.5_r8*(subgrido%coslat(no)+subgridi%coslat(ni))
-                   dist = dx*dx + dy*dy
-                   if (associated(subgridi%topoglc) .and. associated(subgrido%topoglc)) then
-                      hgtdiff = abs(subgridi%topoglc(ni) - subgrido%topoglc(no))
-                   end if
-                   closest = .false.
-                   if ( dist < distmin ) then
-                      closest = .true.
-                      distmin = dist
-                      nmin = ni
-                      if (associated(subgridi%topoglc) .and. associated(subgrido%topoglc)) then
-                         hgtdiffmin = hgtdiff
-                      end if
-                   end if
-                   if (.not. closest) then
-                      if (associated(subgridi%topoglc) .and. associated(subgrido%topoglc)) then
-                         hgtdiff = abs(subgridi%topoglc(ni) - subgrido%topoglc(no))
-                         if ((dist == distmin) .and. (hgtdiff < hgtdiffmin)) then
-                            closest = .true.
-                            hgtdiffmin = hgtdiff
-                            distmin = dist
-                            nmin = ni
-                         end if
-                      end if
-                   end if
-                end if
-             end if
-          end do
-          
-          ! If output type is not contained in input dataset, then use closest bare soil 
-          if ( override_missing .and. distmin == spval) then
-             do ni = begi, endi
-                if (activei(ni)) then
-                   if ( is_baresoil(ni, subgridi)) then
-                      dy = abs(subgrido%lat(no)-subgridi%lat(ni))*re
-                      dx = abs(subgrido%lon(no)-subgridi%lon(ni))*re * &
-                           0.5_r8*(subgrido%coslat(no)+subgridi%coslat(ni))
-                      dist = dx*dx + dy*dy
-                      if ( dist < distmin )then
-                         distmin = dist
-                         nmin = ni
-                      end if
-                   end if
-                end if
-             end do
-          end if
-
-          ! Error conditions
-          if ( distmin == spval )then
-             write(iulog,*) 'ERROR interpinic set_mindist: Cannot find the closest output ni,no,type= ',&
-                  ni, no,subgridi%name
-             call endrun(msg=errMsg(__FILE__, __LINE__))
-          end if
-
-          mindist_index(no) = nmin
-
-       end if ! end if activeo block
-    end do
-!$OMP END PARALLEL DO
-    
-  end subroutine set_mindist
-
-  !=======================================================================
-
-  logical function is_sametype (ni, no, subgridi, subgrido)
-
-    ! --------------------------------------------------------------------
-    ! arguments
-    integer           , intent(in)  :: ni 
-    integer           , intent(in)  :: no 
-    type(subgrid_type), intent(in)  :: subgridi
-    type(subgrid_type), intent(in)  :: subgrido
-    ! --------------------------------------------------------------------
-
-    is_sametype = .false.
-
-    if (trim(subgridi%name) == 'pft' .and. trim(subgrido%name) == 'pft') then
-       if ( subgridi%ltype(ni) == ilun_landice_multiple_elevation_classes .and. &
-            subgrido%ltype(no) == ilun_landice_multiple_elevation_classes) then
-          is_sametype = .true.
-       else if (subgridi%ptype(ni) == subgrido%ptype(no) .and. &
-                subgridi%ctype(ni) == subgrido%ctype(no) .and. &
-                subgridi%ltype(ni) == subgrido%ltype(no)) then
-          is_sametype = .true.
-       end if
-    else if (trim(subgridi%name) == 'column' .and. trim(subgrido%name) == 'column') then
-       if ( subgridi%ltype(ni) == ilun_landice_multiple_elevation_classes  .and. &
-            subgrido%ltype(no) == ilun_landice_multiple_elevation_classes ) then
-          is_sametype = .true.
-       else if (subgridi%ctype(ni) == subgrido%ctype(no) .and. &
-                subgridi%ltype(ni) == subgrido%ltype(no)) then
-          is_sametype = .true.
-       end if
-    else if (trim(subgridi%name) == 'landunit' .and. trim(subgrido%name) == 'landunit') then
-       if (subgridi%ltype(ni) == subgrido%ltype(no)) then
-          is_sametype = .true.
-       end if
-    else 
-       if (masterproc) then
-          write(iulog,*)'ERROR interpinic: is_sametype check on input and output type not supported'
-          write(iulog,*)'typei = ',trim(subgridi%name)
-          write(iulog,*)'typeo = ',trim(subgrido%name)
-       end if
-       call endrun(msg=errMsg(__FILE__, __LINE__))
-    end if
-
-  end function is_sametype
-
-  !=======================================================================
-
-  logical function is_baresoil (n, subgrid)
-
-    ! --------------------------------------------------------------------
-    ! arguments
-    integer           , intent(in)  :: n 
-    type(subgrid_type), intent(in)  :: subgrid
-    ! --------------------------------------------------------------------
-
-    is_baresoil = .false.
-
-    if (subgrid%name == 'pft') then
-       if (subgrid%ptype(n) == ipft_not_vegetated) then
-          is_baresoil = .true.
-       end if
-    else if (subgrid%name == 'column') then
-       if (subgrid%ctype(n) == icol_vegetated_or_bare_soil) then
-          is_baresoil = .true.
-       end if
-    else if (subgrid%name == 'landunit') then
-       if (subgrid%ltype(n) == ilun_vegetated_or_bare_soil) then
-          is_baresoil = .true.
-       end if
-    else 
-       if (masterproc) then
-          write(iulog,*)'ERROR interpinic: is_baresoil subgrid type ',subgrid%name,' not supported'
-       end if
-       call endrun(msg=errMsg(__FILE__, __LINE__))
-    end if
-
-  end function is_baresoil
 
   !=======================================================================
 
