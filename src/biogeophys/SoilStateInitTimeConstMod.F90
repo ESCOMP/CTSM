@@ -125,7 +125,6 @@ contains
     real(r8)           :: om_b                          ! Clapp Hornberger paramater for oragnic soil (Letts, 2000)
     real(r8)           :: zsapric        = 0.5_r8       ! depth (m) that organic matter takes on characteristics of sapric peat
 !scs
-    real(r8)           :: csol_bedrock   = 2.0e6_r8     ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
     real(r8)           :: pcalpha        = 0.5_r8       ! percolation threshold
     real(r8)           :: pcbeta         = 0.139_r8     ! percolation exponent
     real(r8)           :: pc_lake        = 0.5_r8       ! percolation threshold
@@ -184,13 +183,12 @@ contains
           do lev = 1,nlevsoi
              soilstate_inst%rootfr_road_perv_col(c,lev) = 0.1_r8  ! uniform profile
           end do
-!scs: remove roots below bedrock layer
+! remove roots below bedrock layer
           soilstate_inst%rootfr_road_perv_col(c,1:col%nbedrock(c)) = &
                soilstate_inst%rootfr_road_perv_col(c,1:col%nbedrock(c)) &
                + sum(soilstate_inst%rootfr_road_perv_col(c,col%nbedrock(c)+1:nlevsoi)) &
                /real(col%nbedrock(c))
           soilstate_inst%rootfr_road_perv_col(c,col%nbedrock(c)+1:nlevsoi) = 0._r8
-!scs
        end if
     end do
 
@@ -361,15 +359,7 @@ contains
              soilstate_inst%tkmg_col(c,lev)   = spval
              soilstate_inst%tksatu_col(c,lev) = spval
              soilstate_inst%tkdry_col(c,lev)  = spval
-! moving this to soilthermprop
-!!$             if (lun%itype(l)==istwet .and. lev > nlevsoi) then
-!!$                soilstate_inst%csol_col(c,lev) = csol_bedrock
-!!$             else
-             if (lun%itype(l)==istwet .and. lev > nlevsoi) then
-                soilstate_inst%csol_col(c,lev) = csol_bedrock
-             else
-                soilstate_inst%csol_col(c,lev)= spval
-             endif
+             soilstate_inst%csol_col(c,lev)= spval
           end do
 
        else if (lun%urbpoi(l) .and. (col%itype(c) /= icol_road_perv) .and. (col%itype(c) /= icol_road_imperv) )then
@@ -510,14 +500,6 @@ contains
                 soilstate_inst%csol_col(c,lev)   = ((1._r8-om_frac)*(2.128_r8*sand+2.385_r8*clay) / (sand+clay) + &
                      om_csol*om_frac)*1.e6_r8  ! J/(m3 K)
 
-! moving this statement to soilthermprop to be consistent with thk_bedrock
-!!$                if (lev > nlevsoi) then
-!!$                   soilstate_inst%csol_col(c,lev) = csol_bedrock
-!!$                endif
-                if (lev > nlevsoi) then
-                   soilstate_inst%csol_col(c,lev) = csol_bedrock
-                endif
-
                 soilstate_inst%watdry_col(c,lev) = soilstate_inst%watsat_col(c,lev) * &
                      (316230._r8/soilstate_inst%sucsat_col(c,lev)) ** (-1._r8/soilstate_inst%bsw_col(c,lev)) 
                 soilstate_inst%watopt_col(c,lev) = soilstate_inst%watsat_col(c,lev) * &
@@ -614,13 +596,6 @@ contains
                                        om_tkd * om_frac
              soilstate_inst%csol_col(c,lev)   = ((1._r8-om_frac)*(2.128_r8*sand+2.385_r8*clay) / (sand+clay) +   &
                                        om_csol * om_frac)*1.e6_r8  ! J/(m3 K)
-!move to soilthermprop
-!!$             if (lev > nlevsoi) then
-!!$                soilstate_inst%csol_col(c,lev) = csol_bedrock
-!!$             endif
-             if (lev > nlevsoi) then
-                soilstate_inst%csol_col(c,lev) = csol_bedrock
-             endif
 
              soilstate_inst%watdry_col(c,lev) = soilstate_inst%watsat_col(c,lev) &
                   * (316230._r8/soilstate_inst%sucsat_col(c,lev)) ** (-1._r8/soilstate_inst%bsw_col(c,lev))

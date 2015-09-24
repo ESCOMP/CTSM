@@ -604,7 +604,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi
-    use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock
+    use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
     use landunit_varcon , only : istice, istice_mec, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
     use clm_varctl      , only : iulog
@@ -639,6 +639,7 @@ contains
     SHR_ASSERT_ALL((ubound(tk_h2osfc) == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
 
     associate(                                                 & 
+         nbedrock     =>    col%nbedrock                     , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)                                 
          snl          =>    col%snl			     , & ! Input:  [integer  (:)   ]  number of snow layers                    
          dz           =>    col%dz			     , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                       
          zi           =>    col%zi			     , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m) 
@@ -706,7 +707,7 @@ contains
                   else
                      thk(c,j) = tkdry(c,j)
                   endif
-                  if (j > nlevsoi) thk(c,j) = thk_bedrock
+                  if (j > nbedrock(c)) thk(c,j) = thk_bedrock
                else if (lun%itype(l) == istice .OR. lun%itype(l) == istice_mec) then
                   thk(c,j) = tkwat
                   if (t_soisno(c,j) < tfrz) thk(c,j) = tkice
@@ -786,9 +787,10 @@ contains
                  .AND. col%itype(c) /= icol_sunwall .AND. col%itype(c) /= icol_shadewall .AND. &
                  col%itype(c) /= icol_roof) then
                cv(c,j) = csol(c,j)*(1-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
+               if (j > nbedrock(c)) cv(c,j) = csol_bedrock*dz(c,j)
             else if (lun%itype(l) == istwet) then 
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
-               if (j > nlevsoi) cv(c,j) = csol(c,j)*dz(c,j)
+               if (j > nbedrock(c)) cv(c,j) = csol_bedrock*dz(c,j)
             else if (lun%itype(l) == istice .OR. lun%itype(l) == istice_mec) then
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
             endif

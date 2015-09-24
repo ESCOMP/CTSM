@@ -1077,7 +1077,7 @@ contains
      !
      ! !USES:
      use clm_varcon  , only : denh2o, denice, tfrz, tkwat, tkice, tkair
-     use clm_varcon  , only : cpice,  cpliq, thk_bedrock
+     use clm_varcon  , only : cpice,  cpliq, thk_bedrock, csol_bedrock
      use clm_varpar  , only : nlevsno, nlevsoi, nlevgrnd
      !
      ! !ARGUMENTS:
@@ -1217,6 +1217,9 @@ contains
              !   end if
              ! Won't worry about heat capacity for thin snow on lake with no snow layers.
              ! Its temperature will be assigned based on air temperature anyway if a new node is formed.
+             if (j > nlevsoi) then
+                cv(c,j) = csol_bedrock*dz(c,j)
+             endif
           enddo
        end do
 

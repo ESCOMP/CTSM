@@ -141,8 +141,7 @@ contains
                              / dzsoi_decomp(j)
                      end do
                   else
-                     cinput_rootfr(p,1) = 1._r8 / dzsoi_decomp(1)
-!scs: in future use this   cinput_rootfr(p,1) = 0.
+                     cinput_rootfr(p,1) = 0.
                   endif
                end do
             endif
