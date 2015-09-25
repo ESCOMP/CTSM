@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_3_r129    andre 09/25/2015 bump tag revision number because clm4_5_2_r128 was climate changing.
    clm4_5_2_r128    andre 09/24/2015 science bugfixes (not bfb) for root fraction and bedrock thermal properties
    clm4_5_2_r127    sacks 09/18/2015 Fix interpolation of initial conditions for glc_mec and crop <-> non-crop
    clm4_5_2_r126    andre 09/17/2015 New decomp_depth_efolding value for clm5.0, set as a namelist parameter instead of netcdf params file.
