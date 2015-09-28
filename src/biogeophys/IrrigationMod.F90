@@ -89,7 +89,11 @@ module IrrigationMod
      !     (h2osoi_liq_so + irrig_factor*(h2osoi_liq_sat - h2osoi_liq_so)). 
      ! A value of 0 means that the target soil moisture level is h2osoi_liq_so. 
      ! A value of 1 means that the target soil moisture level is h2osoi_liq_sat
-     real(r8) :: irrig_factor = 0.7_r8            
+     real(r8) :: irrig_factor = 0.7_r8
+
+     ! Threshold for river water volume below which irrigation is shut off, if
+     ! limit_lake_evap_and_irrig is .true. (m^3)
+     real(r8) :: irrig_volr_threshold = 1.0_r8
 
   end type irrigation_params_type
 
@@ -108,8 +112,9 @@ module IrrigationMod
      real(r8), pointer :: relsat_so_patch(:,:) ! relative saturation at which smp = smpso (i.e., full stomatal opening) [patch, nlevgrnd]
 
      ! Private data members; time-varying:
-     real(r8), pointer :: irrig_rate_patch         (:)  ! current irrigation rate [mm/s]
-     integer , pointer :: n_irrig_steps_left_patch (:)  ! number of time steps for which we still need to irrigate today (if 0, ignore)
+     real(r8), pointer :: irrig_rate_patch            (:) ! current irrigation rate [mm/s]
+     integer , pointer :: n_irrig_steps_left_patch    (:) ! number of time steps for which we still need to irrigate today (if 0, ignore)
+     real(r8), pointer :: qflx_irrig_noh2olimit_patch (:) ! copy of qflx_irrig_patch before possible surface water source limitation
      
    contains
      ! Public routines
@@ -145,7 +150,7 @@ contains
 
   !-----------------------------------------------------------------------
   function irrigation_params_constructor(irrig_min_lai, irrig_btran_thresh, &
-       irrig_start_time, irrig_length, irrig_factor) &
+       irrig_start_time, irrig_length, irrig_factor, irrig_volr_threshold) &
        result(this)
     !
     ! !DESCRIPTION:
@@ -160,6 +165,7 @@ contains
     integer , intent(in) :: irrig_start_time
     integer , intent(in) :: irrig_length
     real(r8), intent(in) :: irrig_factor
+    real(r8), intent(in) :: irrig_volr_threshold
     !
     ! !LOCAL VARIABLES:
     
@@ -171,6 +177,7 @@ contains
     this%irrig_start_time = irrig_start_time
     this%irrig_length = irrig_length
     this%irrig_factor = irrig_factor
+    this%irrig_volr_threshold = irrig_volr_threshold
 
   end function irrigation_params_constructor
 
@@ -249,6 +256,7 @@ contains
     begc = bounds%begc; endc= bounds%endc
 
     allocate(this%qflx_irrig_patch         (begp:endp))          ; this%qflx_irrig_patch         (:)   = nan
+    allocate(this%qflx_irrig_noh2olimit_patch(begp:endp))        ; this%qflx_irrig_noh2olimit_patch        (:)   = nan
     allocate(this%qflx_irrig_col           (begc:endc))          ; this%qflx_irrig_col           (:)   = nan
     allocate(this%relsat_so_patch          (begp:endp,nlevgrnd)) ; this%relsat_so_patch(:,:) = nan
     allocate(this%irrig_rate_patch         (begp:endp))          ; this%irrig_rate_patch         (:)   = nan
@@ -281,6 +289,11 @@ contains
     call hist_addfld1d (fname='QIRRIG', units='mm/s', &
          avgflag='A', long_name='water added through irrigation', &
          ptr_patch=this%qflx_irrig_patch)
+
+    this%qflx_irrig_noh2olimit_patch(begp:endp) = spval
+    call hist_addfld1d (fname='QIRRIG_DEMAND', units='mm/s', &
+         avgflag='A', long_name='irrigation demand', &
+         ptr_patch=this%qflx_irrig_noh2olimit_patch, default='inactive')
 
   end subroutine IrrigationInitHistory
 
@@ -319,16 +332,10 @@ contains
          do p = bounds%begp, bounds%endp
             c = patch%column(p)
             if (patch%itype(p) /= noveg) then
-!!$               call soil_water_retention_curve%soil_suction_inverse( &
-!!$                    smp_target = smpso(patch%itype(p)), &
-!!$                    smpsat = sucsat(c,j), &
-!!$                    bsw = bsw(c,j), &
-!!$                    s_target = this%relsat_so_patch(p,j))
-!scs
                call soil_water_retention_curve%soil_suction_inverse( &
                     c,j,smpso(patch%itype(p)),soilstate_inst, &
                     this%relsat_so_patch(p,j))
-!scs
+
             end if
          end do
       end do
@@ -452,6 +459,7 @@ contains
     !-----------------------------------------------------------------------
     
     deallocate(this%qflx_irrig_patch)
+    deallocate(this%qflx_irrig_noh2olimit_patch)
     deallocate(this%qflx_irrig_col)
     deallocate(this%relsat_so_patch)
     deallocate(this%irrig_rate_patch)
@@ -465,7 +473,7 @@ contains
   ! ========================================================================
   
   !-----------------------------------------------------------------------
-  subroutine ApplyIrrigation(this, bounds)
+  subroutine ApplyIrrigation(this, bounds, volr)
     !
     ! !DESCRIPTION:
     ! Apply the irrigation computed by CalcIrrigationNeeded to qflx_irrig.
@@ -474,27 +482,44 @@ contains
     ! access qflx_irrig_patch or qflx_irrig_col.
     !
     ! !USES:
-    use subgridAveMod, only : p2c
+    use subgridAveMod , only : p2c
+    use clm_varctl    , only : limit_lake_evap_and_irrig
     !
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
+    real(r8)               , intent(in)    :: volr(bounds%begg: )  ! river volume (m^3)
     !
     ! !LOCAL VARIABLES:
     integer :: p  ! patch index
+    integer :: g  ! grid cell index
     
     character(len=*), parameter :: subname = 'ApplyIrrigation'
     !-----------------------------------------------------------------------
-    
+
+    SHR_ASSERT_ALL((ubound(volr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+
     ! This should be called exactly once per time step, so that this counter decrease
     ! works correctly.
 
     do p = bounds%begp, bounds%endp
+       g = patch%gridcell(p)
+
        if (this%n_irrig_steps_left_patch(p) > 0) then
           this%qflx_irrig_patch(p)         = this%irrig_rate_patch(p)
           this%n_irrig_steps_left_patch(p) = this%n_irrig_steps_left_patch(p) - 1
        else
           this%qflx_irrig_patch(p) = 0._r8
+       end if
+
+       ! copy qflx_irrig_patch to track irrigation demand 
+       this%qflx_irrig_noh2olimit_patch(p) = this%qflx_irrig_patch(p)
+
+       if (limit_lake_evap_and_irrig) then
+          ! threshold could be divided by gridcell area (grc%area(g))
+          if (volr(g) < this%params%irrig_volr_threshold) then
+             this%qflx_irrig_patch(p) = 0._r8
+          end if
        end if
     end do
 

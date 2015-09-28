@@ -19,6 +19,7 @@ module CNSharedParamsMod
       real(r8) :: decomp_depth_efolding ! e-folding depth for reduction in decomposition (m) 
       real(r8) :: mino2lim              ! minimum anaerobic decomposition rate as a fraction of potential aerobic rate
       real(r8) :: organic_max           ! organic matter content (kg/m3) where soil is assumed to act like peat
+      logical  :: constrain_stress_deciduous_onset ! if true use additional constraint on stress deciduous onset trigger
   end type CNParamsShareType
 
   type(CNParamsShareType), protected :: CNParamsShareInst
@@ -107,7 +108,7 @@ contains
     !
     ! !USES:
     use fileutils   , only : relavu, getavu
-    use spmdMod     , only : masterproc, mpicom, MPI_REAL8
+    use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_LOGICAL
     use shr_nl_mod  , only : shr_nl_find_group_name
     use shr_log_mod , only : errMsg => shr_log_errMsg
     use clm_varctl  , only : iulog
@@ -124,6 +125,7 @@ contains
     integer :: unitn                ! unit for namelist file
 
     real(r8) :: decomp_depth_efolding = 0.0_r8
+    logical  :: constrain_stress_deciduous_onset = .false.
 
     character(len=32) :: subroutine_name = 'CNParamsReadNamelist'
     character(len=10) :: namelist_group = 'bgc_shared'
@@ -135,7 +137,8 @@ contains
     ! ----------------------------------------------------------------------
 
     namelist /bgc_shared/ &
-         decomp_depth_efolding
+         decomp_depth_efolding,       &
+         constrain_stress_deciduous_onset
 
 
     ! Read namelist from standard input.
@@ -159,15 +162,18 @@ contains
 
     ! Broadcast the parameters from master
     call mpi_bcast ( decomp_depth_efolding, 1 , MPI_REAL8, 0, mpicom, ierr )
+    call mpi_bcast ( constrain_stress_deciduous_onset, 1 , MPI_LOGICAL, 0, mpicom, ierr )
 
     ! Save the parameter to the instance
     CNParamsShareInst%decomp_depth_efolding = decomp_depth_efolding
+    CNParamsShareInst%constrain_stress_deciduous_onset = constrain_stress_deciduous_onset
 
     ! Output read parameters to the lnd.log
     if (masterproc) then
        write(iulog,*) 'CN/BGC shared namelist parameters:'
        write(iulog,*)' '
        write(iulog,*)'  decomp_depth_efolding = ', decomp_depth_efolding
+       write(iulog,*)'  constrain_stress_deciduous_onset = ',constrain_stress_deciduous_onset
 
        write(iulog,*)
 

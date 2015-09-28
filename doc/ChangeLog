@@ -1,4 +1,145 @@
 ===============================================================
+Tag name:  clm4_5_3_r130
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Mon Sep 28 11:16:54 MDT 2015
+One-line Summary: add namelist option to reduce lake evaporation and irrigation when river water storage falls below a threshold value, and add an additional constraint on stress deciduous leaf onset.
+
+Purpose of changes:
+
+    To maintain river storage above a minimum threshold.  To add a
+    second condition that must be fulfilled prior to leaf onset
+    occurring for stress deciduous pfts.
+
+Requirements for tag: regular
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): none
+
+Known bugs (include bugzilla ID): 2213, 2219
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+  1147 (mkgriddata can't straddle over Greenwich)
+  1025 (SCM mode can NOT use a global finidat file)
+  1017 (SCM mode can NOT restart)
+   896 (T62 mode does not work)
+   701 (svn keyword)
+   452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist:
+
+  new namelist flags:
+    limit_lake_evap_and_irrig
+    constrain_stress_deciduous_onset
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: unknown, none expected
+
+Code reviewed by: Sean Swenson, Dave Lawrence, Bill Sacks (irrigation)
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+  clm/cimetest/testmods_dirs/clm/limit_river_withdraw - testmods for new flag
+
+List all existing files that have been modified, and describe the changes:
+
+  clm/src/biogeochem/CNDriverMod.F90 - add atm2lnd_inst to function call for phenology
+  clm/src/biogeochem/CNPhenologyMod.F90 - add atm2lnd_inst, new check for stress deciduous
+  clm/src/biogeochem/CNSharedParamsMod.F90 - new stress deciduous namelist variable
+
+  clm/src/main/init_hydrology.F90 - note
+  clm/src/main/controlMod.F90 - add limit_lake_evap_and_irrig namelist variable
+  clm/src/main/clm_driver.F90 - add volr_grc to ApplyIrrigation function call
+  clm/src/main/clm_varctl.F90 - add limit_lake_evap_and_irrig namelist variable
+
+  clm/src/biogeophys/IrrigationMod.F90 - check for limit irrigation
+  clm/src/biogeophys/LakeFluxesMod.F90 - check for limit lake evap
+  clm/src/biogeophys/test/Irrigation_test/test_irrigation_singlepatch.pf - new unit test
+  clm/src/biogeophys/test/Irrigation_test/IrrigationWrapperMod.F90 - new unit test
+
+  clm/src/unit_test_stubs/utils/spmdMod_stub.F90 - add stub mpi type
+
+  clm/bld/namelist_files/namelist_defaults_clm4_5.xml - new namelist variables
+  clm/bld/namelist_files/namelist_definition_clm4_5.xml
+  clm/bld/CLMBuildNamelist.pm
+
+  clm/cimetest/testlist_clm.xml - new tests
+
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone - unit tests pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) pass
+    hobart_nag - run, ok
+
+CLM tag used for the baseline comparisons: clm4_5_2_r128/clm4_5_3_r129
+
+  Note: new test for limit_river_withdraw got dropped from the
+  testlist during a merge/manage_testlist update. This wasn't noticed
+  until after baselines were generated. This test was added to the
+  baselines manually.
+
+Changes answers relative to baseline: yes
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all clm50 compsets
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+
+     When active, these changes will be climate changing.  Lake
+     evaporation and irrigation limitation will change the surface energy
+     balance by reducing latent heat and increasing sensible heat when
+     river storage is below a threshold value.  Constraining leaf onset
+     with a secondary constraint will modify vegetation dynamics,
+     e.g. LAI will differ in magnitude and seasonality, which will change
+     the surface energy balance by altering evapotranspiration.
+
+     Note: all of the aux_clm tests for clm50 compsets triggered were
+     bit for bit with the baseline. The stress deciduous flag is on by
+     default for clm50, and changes should have been observed. Sean
+     Swenson verified that the flag is active in 30 day runs, so it is
+     assumed that the shorter three and nine day runs were not enough
+     to trigger the new code. A new 30 day test was added.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: none
+
+   URL for LMWG diagnostics output used to validate new climate: none
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r129
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Fri Sep 25 15:30:39 MDT 2015

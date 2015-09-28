@@ -49,7 +49,7 @@ contains
     use clm_varpar          , only : nlevlak
     use clm_varcon          , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, tkair
     use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval, zsno
-    use clm_varctl          , only : use_lch4
+    use clm_varctl          , only : use_lch4, limit_lake_evap_and_irrig
     use LakeCon             , only : betavis, z0frzlake, tdmax, emg_lake
     use LakeCon             , only : lake_use_old_fcrit_minz0
     use LakeCon             , only : minz0lake, cur0, cus, curm, fcrit
@@ -149,6 +149,9 @@ contains
     real(r8) :: kva                                ! kinematic viscosity of air at ground temperature and forcing pressure
     real(r8), parameter :: prn = 0.713             ! Prandtl # for air at neutral stability
     real(r8), parameter :: sch = 0.66              ! Schmidt # for water in air at neutral stability
+    real(r8) :: lake_evap_threshold                ! river storage threshold for reducing lake evaporation
+    real(r8) :: beta_river                         ! beta factor for lake evaporation
+
     !-----------------------------------------------------------------------
 
     associate(                                                           & 
@@ -408,6 +411,17 @@ contains
             ram(p)  = 1._r8/(ustar(p)*ustar(p)/um(p))
             rah(p)  = 1._r8/(temp1(p)*ustar(p))
             raw(p)  = 1._r8/(temp2(p)*ustar(p))
+
+            if(limit_lake_evap_and_irrig) then
+               beta_river = 1.0
+               lake_evap_threshold = 1.e8
+! threshold could be divided by gridcell area (grc%area(g))
+               if (atm2lnd_inst%volr_grc(g) < lake_evap_threshold) then 
+                  beta_river = 1.e6
+               endif
+               raw(p) = beta_river * raw(p)
+            endif            
+
             if (use_lch4) then
                lake_raw(c) = raw(p) ! Pass out for calculating ground ch4 conductance
             end if

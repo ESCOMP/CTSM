@@ -240,6 +240,12 @@ module clm_varctl
   logical, public :: use_bedrock = .false. ! true => use spatially variable soil depth
 
   !----------------------------------------------------------
+  ! lake evaporation / irrigation limitation switch
+  !----------------------------------------------------------
+
+  logical, public ::  limit_lake_evap_and_irrig = .false. ! true => limit lake evaporation and irrigation when river storage 
+
+  !----------------------------------------------------------
   ! glacier_mec control variables: default values (may be overwritten by namelist)
   ! NOTE: glc_smb must have the same values for CLM and GLC
   !----------------------------------------------------------

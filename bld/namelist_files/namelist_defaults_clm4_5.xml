@@ -110,6 +110,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <inexpensive>1</inexpensive>
 <flux_calculation>1</flux_calculation>
 
+<!--  River storage derived lake evaporation and irrigation limitation  -->
+<limit_lake_evap_and_irrig>.false.</limit_lake_evap_and_irrig>
+
 <!-- Snow veg treatment -->
 <snowveg_flag phys="clm4_5" >OFF</snowveg_flag>
 <snowveg_flag phys="clm5_0" >ON_RAD</snowveg_flag>
@@ -163,6 +166,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- turnover time modifications    -->
 <decomp_depth_efolding phys="clm4_5">0.5</decomp_depth_efolding>
 <decomp_depth_efolding phys="clm5_0">1.0</decomp_depth_efolding>
+
+<!-- use additional stress deciduous onset trigger    -->
+<constrain_stress_deciduous_onset phys="clm4_5">.false.</constrain_stress_deciduous_onset>
+<constrain_stress_deciduous_onset phys="clm5_0">.true.</constrain_stress_deciduous_onset>
 
 <!--
 

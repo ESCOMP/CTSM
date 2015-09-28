@@ -355,7 +355,8 @@ contains
 
        ! Irrigation flux
 
-       call irrigation_inst%ApplyIrrigation(bounds_clump)
+       call irrigation_inst%ApplyIrrigation(bounds_clump, &
+            volr = atm2lnd_inst%volr_grc(bounds_clump%begg:bounds_clump%endg))
 
        ! ============================================================================
        ! Canopy Hydrology

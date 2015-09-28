@@ -394,10 +394,12 @@ contains
 
     call t_startf('CNPhenology')
 
-    call CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
-         doalb, waterstate_inst, temperature_inst, crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
-         cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,                                  &
-         cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                                                &
+    call CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
+         filter_soilp, num_pcropp, filter_pcropp, &
+         doalb, waterstate_inst, temperature_inst, atm2lnd_inst, &
+         crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
+         cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+         cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
          froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full))
 

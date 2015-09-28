@@ -33,6 +33,7 @@ module CNPhenologyMod
   use ColumnType                      , only : col                
   use GridcellType                    , only : grc                
   use PatchType                       , only : patch                
+  use atm2lndType                     , only : atm2lnd_type
   !
   implicit none
   private
@@ -172,10 +173,13 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
-       doalb, waterstate_inst, temperature_inst, crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
+  subroutine CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
+       filter_soilp, num_pcropp, filter_pcropp, &
+       doalb, waterstate_inst, temperature_inst, atm2lnd_inst, crop_inst, &
+       canopystate_inst, soilstate_inst, dgvs_inst, &
        cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
-       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, leaf_prof_patch, froot_prof_patch)
+       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, leaf_prof_patch, &
+       froot_prof_patch)
     !
     ! !DESCRIPTION:
     ! Dynamic phenology routine for coupled carbon-nitrogen code (CN)
@@ -192,6 +196,7 @@ contains
     logical                        , intent(in)    :: doalb           ! true if time for sfc albedo calc
     type(waterstate_type)          , intent(in)    :: waterstate_inst
     type(temperature_type)         , intent(inout) :: temperature_inst
+    type(atm2lnd_type)             , intent(in)    :: atm2lnd_inst
     type(crop_type)                , intent(in)    :: crop_inst
     type(canopystate_type)         , intent(in)    :: canopystate_inst
     type(soilstate_type)           , intent(in)    :: soilstate_inst
@@ -222,7 +227,7 @@ contains
          cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
     call CNStressDecidPhenology(num_soilp, filter_soilp,   &
-         soilstate_inst, temperature_inst, cnveg_state_inst, &
+         soilstate_inst, temperature_inst, atm2lnd_inst, cnveg_state_inst, &
          cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
     if (doalb .and. num_pcropp > 0 ) then
@@ -888,9 +893,10 @@ contains
   end subroutine CNSeasonDecidPhenology
 
   !-----------------------------------------------------------------------
-  subroutine CNStressDecidPhenology (num_soilp, filter_soilp , &                                            
-       soilstate_inst, temperature_inst, cnveg_state_inst        , &
-       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+  subroutine CNStressDecidPhenology (num_soilp, filter_soilp , &
+       soilstate_inst, temperature_inst, atm2lnd_inst, cnveg_state_inst, &
+       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+       cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
     ! This routine handles phenology for vegetation types, such as grasses and
@@ -907,13 +913,15 @@ contains
     use clm_time_manager , only : get_days_per_year
     use clm_varcon       , only : secspday
     use shr_const_mod    , only : SHR_CONST_TKFRZ, SHR_CONST_PI
+    use CNSharedParamsMod, only : CNParamsShareInst
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(soilstate_type)           , intent(in)    :: soilstate_inst
     type(temperature_type)         , intent(in)    :: temperature_inst
-    type(cnveg_state_type)             , intent(inout) :: cnveg_state_inst
+    type(atm2lnd_type)             , intent(in)    :: atm2lnd_inst
+    type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
     type(cnveg_nitrogenstate_type) , intent(inout) :: cnveg_nitrogenstate_inst
     type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
@@ -927,6 +935,8 @@ contains
     real(r8):: crit_onset_gdd  ! degree days for onset trigger
     real(r8):: soilt           ! temperature of top soil layer
     real(r8):: psi             ! water stress of top soil layer
+    real(r8):: rain_threshold  ! rain threshold for leaf on [mm]
+    logical :: additional_onset_condition ! additional condition for leaf onset
     !-----------------------------------------------------------------------
 
     associate(                                                                                                   & 
@@ -940,7 +950,7 @@ contains
          soilpsi                             =>    soilstate_inst%soilpsi_col                                  , & ! Input:  [real(r8)  (:,:) ]  soil water potential in each soil layer (MPa)   
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-         
+         prec10                              => atm2lnd_inst%prec10_patch                                      , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation                  
          dormant_flag                        =>    cnveg_state_inst%dormant_flag_patch                         , & ! Output:  [real(r8) (:)   ]  dormancy flag                                     
          days_active                         =>    cnveg_state_inst%days_active_patch                          , & ! Output:  [real(r8) (:)   ]  number of days since last dormancy                
          onset_flag                          =>    cnveg_state_inst%onset_flag_patch                           , & ! Output:  [real(r8) (:)   ]  onset flag                                        
@@ -1017,6 +1027,9 @@ contains
 
       ! set time steps
       dayspyr = get_days_per_year()
+
+      ! specify rain threshold for leaf onset
+      rain_threshold = 20._r8
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
@@ -1126,7 +1139,17 @@ contains
                end if
 
                ! if soils are wet, accumulate soil water index for onset trigger
-               if (psi >= soilpsi_on) onset_swi(p) = onset_swi(p) + fracday
+               additional_onset_condition = .true.
+               if(CNParamsShareInst%constrain_stress_deciduous_onset) then
+                  ! if additional constraint condition not met,  set to false
+                  if ((prec10(p) * (3600.0_r8*10.0_r8*24.0_r8)) < rain_threshold) then
+                     additional_onset_condition = .false.
+                  endif
+               endif
+
+               if (psi >= soilpsi_on .and. additional_onset_condition) then
+                  onset_swi(p) = onset_swi(p) + fracday
+               endif
 
                ! if critical soil water index is exceeded, set onset_flag, and
                ! then test for soil temperature criteria

@@ -1429,6 +1429,7 @@ sub process_namelist_inline_logic {
   setup_logic_supplemental_nitrogen($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_snowpack($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_atm_forcing($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_limit_river_withdrawal($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #########################################
   # namelist group: clm_humanindex_inparm #
@@ -1876,6 +1877,16 @@ sub setup_logic_soilstate {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_limit_river_withdrawal {
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'limit_lake_evap_and_irrig', 'hgrid'=>$nl_flags->{'res'} );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_demand {
   #
   # Deal with options that the user has said are required...
@@ -2288,6 +2299,7 @@ sub setup_logic_bgc_shared {
   if ( $physv->as_long() >= $physv->as_long("clm4_5")) {
     if ( $nl_flags->{'bgc_mode'} ne "sp" ) {
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'decomp_depth_efolding', 'phys'=>$physv->as_string() );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'constrain_stress_deciduous_onset', 'phys'=>$physv->as_string() );
     }
 
   }

@@ -14,9 +14,6 @@ subroutine init_hydrology( NLFilename )
   use FuncPedotransferMod,  only : init_pedof
   use RootBiophysMod,       only : init_rootprof
   use SoilWaterMovementMod, only : init_soilwater_movement
-!scs
-!  use SurfaceResistanceMod, only : init_soil_resistance
-!scs
   use SoilMoistStressMod,   only : init_root_moist_stress
 implicit none
 
@@ -33,7 +30,7 @@ implicit none
   
   call init_soilwater_movement
   
-!scs: remove due to circular dependency of nlfilename, read namlist 
+! remove due to circular dependency of nlfilename, read namlist 
 ! in controlmod instead, as is done for canopyhydrology
 !  call init_soil_resistance
   

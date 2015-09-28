@@ -35,6 +35,7 @@ module IrrigationWrapperMod
      real(r8), allocatable :: eff_porosity(:,:)
      real(r8), allocatable :: h2osoi_liq(:,:)
      real(r8), allocatable :: relsat_so(:,:)
+     real(r8), allocatable :: volr(:)
 
      ! Previous model time
      integer :: time_prev
@@ -74,7 +75,10 @@ contains
     ! Values are set up such that there is some irrigation deficit everywhere, and
     ! irrigation would start in the following call to CalcIrrigationNeeded (followed by
     ! ApplyIrrigation). Values are set the same for every patch/column, and are the same
-    ! at every level EXCEPT for relsat_so, which varies linearly by level and patch number.
+    ! at every level EXCEPT for relsat_so, which varies linearly by level and patch
+    ! number.
+    !
+    ! volr is set up to be non-limiting
     !
     ! Assumes that nlevgrnd has been set, and that all necessary subgrid setup has been
     ! completed.
@@ -83,6 +87,8 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: p,j
+
+    real(r8), parameter :: irrig_volr_threshold = 1._r8
     !
     !-----------------------------------------------------------------------
 
@@ -92,7 +98,8 @@ contains
          irrig_btran_thresh = 0.99_r8, &
          irrig_start_time = 21600, &
          irrig_length = 14400, &
-         irrig_factor = 0.7_r8)
+         irrig_factor = 0.7_r8, &
+         irrig_volr_threshold = irrig_volr_threshold)
          
 
     ! ------------------------------------------------------------------------
@@ -106,6 +113,7 @@ contains
     allocate(constructor%eff_porosity(bounds%begc:bounds%endc, nlevgrnd), source=1._r8)
     allocate(constructor%h2osoi_liq(bounds%begc:bounds%endc, nlevgrnd), source=0._r8)
     allocate(constructor%relsat_so(bounds%begp:bounds%endp, nlevgrnd))
+    allocate(constructor%volr(bounds%begg:bounds%endg), source=irrig_volr_threshold + 1.e-13_r8)
 
     do j = 1, nlevgrnd
        do p = bounds%begp, bounds%endp
@@ -192,7 +200,7 @@ contains
          eff_porosity = this%eff_porosity, &
          h2osoi_liq = this%h2osoi_liq)
     
-    call irrigation%ApplyIrrigation(bounds)
+    call irrigation%ApplyIrrigation(bounds, this%volr)
 
   end subroutine calculateAndApplyIrrigation
 
@@ -268,6 +276,7 @@ contains
     ! !USES:
     use pftconMod , only : pftcon
     use clm_varpar, only : mxpft
+    use clm_varctl, only : limit_lake_evap_and_irrig
     !
     ! !ARGUMENTS:
     integer, intent(in) :: maxpft  ! max pft type that needs to be supported
@@ -280,6 +289,8 @@ contains
 
     ! slightly greater than 1 hour offset
     grc%londeg(:) = 15.1_r8
+
+    limit_lake_evap_and_irrig = .true.
     
   end subroutine setupEnvironment
 

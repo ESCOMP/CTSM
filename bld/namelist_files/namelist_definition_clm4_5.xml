@@ -222,6 +222,12 @@ tolerance to double length of substep for adaptive time stepping in richards equ
 
 </entry>
 
+<entry id="limit_lake_evap_and_irrig" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, limit lake evaporation and irrigation when river storage 
+drops below a threshold.
+</entry>
+
 <entry id="irrigate" type="logical" category="clm_physics"
        group="clm_inparm"  >
 If TRUE, irrigation will be active.
@@ -1357,6 +1363,12 @@ will allocate roots preferentially to the active layer.
        group="clm_inparm" valid_values="" >
 If TRUE, weight btran (vegetation soil moisture availability) by the active layer, as defined by the greatest thaw depth over the current and prior years.
 (EXPERIMENTAL and NOT tested)
+</entry>
+
+<!-- stress deciduous onset trigger    -->
+<entry id="constrain_stress_deciduous_onset" type="logical" category="clm_physics"
+       group="bgc_shared" valid_values="" >
+If TRUE use additional stress deciduous onset trigger
 </entry>
 
 

@@ -908,9 +908,6 @@
   </compset>
   <compset name="ICRUCLM50BGC">
     <grid name="f10_f10">
-      <test name="ERS_D_Ld3">
-         <machine compiler="intel" testtype="aux_clm45" testmods="clm/deepsoil_bedrock">yellowstone</machine>
-      </test>
       <test name="ERI_D_Ld9">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/default">edison</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -927,10 +924,17 @@
       </test>
       <test name="ERP_D_P15x2_Ld3">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/flexibleCN">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/limit_river_withdraw">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/luna">yellowstone</machine>
+      </test>
+      <test name="ERP_D_P15x2_Ld30">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default" comment="NOTE(bja, 201509) constrain_stress_deciduous_onset is on by default for clm50, but functionality is not exercised by nine day tests, Sean Swenson verified that it is active during 30 day tests.">yellowstone</machine>
       </test>
       <test name="ERP_Ld5_P24x1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">hobart</machine>
+      </test>
+      <test name="ERS_D_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/deepsoil_bedrock">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16">
