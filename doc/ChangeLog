@@ -1,4 +1,471 @@
 ===============================================================
+Tag name:  clm4_5_3_r131
+Originator(s):  mvertens, sacks
+Date: Wed Sep 30 05:13:45 MDT 2015
+One-line Summary: Bring in cime3
+
+Purpose of changes:
+
+   Bring in cime3 (de-CESMization of CIME), which requires the addition of a
+   cime_config directory and a bit of other rework.
+
+   Also, port the pnetcdf problem with dov2xy=false from clm45 to clm4 code base
+   (workaround for bug 1730 - and 2214 and 2222). This was needed because now
+   pnetcdf is on by default in most runs.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+- 2214: CLM4 test fails in PIO while trying to write h1 file
+- 2222: CLM4 cases die when writing 1-d history files with pnetcdf
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: rework for cime3
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.):
+cime2.0.18-p1.1 -> cime3.0.7
+cism2_1_02 -> cism2_1_05
+rtm1_0_52 -> rtm1_0_53
+
+
+List all files eliminated:
+
+========= Moved into cime_config
+D       components/clm/cimetest/testlist_clm.xml
+D       components/clm/cimetest/ExpectedTestFails.xml
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_long/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_long/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_long/README
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_long
+D       components/clm/cimetest/testmods_dirs/clm/decStart/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/decStart/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/decStart
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetMid/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetMid/README
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetMid/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetMid
+D       components/clm/cimetest/testmods_dirs/clm/irrigOn_reduceOutput/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/irrigOn_reduceOutput/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/irrigOn_reduceOutput/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/irrigOn_reduceOutput
+D       components/clm/cimetest/testmods_dirs/clm/default/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/default/shell_commands
+D       components/clm/cimetest/testmods_dirs/clm/default
+D       components/clm/cimetest/testmods_dirs/clm/crop_trans_sville/README
+D       components/clm/cimetest/testmods_dirs/clm/crop_trans_sville/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/crop_trans_sville/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/crop_trans_sville
+D       components/clm/cimetest/testmods_dirs/clm/edTest/shell_commands
+D       components/clm/cimetest/testmods_dirs/clm/edTest/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/edTest
+D       components/clm/cimetest/testmods_dirs/clm/reduceOutput/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/reduceOutput
+D       components/clm/cimetest/testmods_dirs/clm/cropMonthOutput/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/cropMonthOutput/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/cropMonthOutput
+D       components/clm/cimetest/testmods_dirs/clm/monthly/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/monthly/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/monthly/user_nl_cpl
+D       components/clm/cimetest/testmods_dirs/clm/monthly
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC/user_nl_cpl
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC
+D       components/clm/cimetest/testmods_dirs/clm/ciso/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/ciso/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/ciso
+D       components/clm/cimetest/testmods_dirs/clm/luna/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/luna/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/luna
+D       components/clm/cimetest/testmods_dirs/clm/monthly_noinitial/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/monthly_noinitial/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/monthly_noinitial
+D       components/clm/cimetest/testmods_dirs/clm/interp_from_f09/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/interp_from_f09/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/interp_from_f09/README
+D       components/clm/cimetest/testmods_dirs/clm/interp_from_f09
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_increase/user_nl_cism
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_increase/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_increase/README
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_increase
+D       components/clm/cimetest/testmods_dirs/clm/crop/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/crop/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/crop
+D       components/clm/cimetest/testmods_dirs/clm/allActive/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/allActive
+D       components/clm/cimetest/testmods_dirs/clm/cn_conly/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/cn_conly/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/cn_conly
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_spunup_1way/shell_commands
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_spunup_1way/README
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_spunup_1way/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_spunup_1way
+D       components/clm/cimetest/testmods_dirs/clm/snowlayers_12/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/snowlayers_12/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/snowlayers_12
+D       components/clm/cimetest/testmods_dirs/clm/ptsROA/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/ptsROA/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/ptsROA
+D       components/clm/cimetest/testmods_dirs/clm/NoVSNoNI/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/NoVSNoNI/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/NoVSNoNI
+D       components/clm/cimetest/testmods_dirs/clm/SNICARFRC/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/SNICARFRC/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/SNICARFRC
+D       components/clm/cimetest/testmods_dirs/clm/flexibleCN/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/flexibleCN
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_changeFlags/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_changeFlags/README
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_changeFlags/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_changeFlags/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_changeFlags
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop/README
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop
+D       components/clm/cimetest/testmods_dirs/clm/crop_trans_f10/README
+D       components/clm/cimetest/testmods_dirs/clm/crop_trans_f10/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/crop_trans_f10/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/crop_trans_f10
+D       components/clm/cimetest/testmods_dirs/clm/o3/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/o3/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/o3
+D       components/clm/cimetest/testmods_dirs/clm/vrtlay/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/vrtlay/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/vrtlay
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetEarly/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetEarly/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetEarly/README
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetEarly
+D       components/clm/cimetest/testmods_dirs/clm/oldhyd/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/oldhyd
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop2crop/README
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop2crop/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop2crop/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_noncrop2crop
+D       components/clm/cimetest/testmods_dirs/clm/irrig_o3_reduceOutput/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/irrig_o3_reduceOutput/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/irrig_o3_reduceOutput/README
+D       components/clm/cimetest/testmods_dirs/clm/irrig_o3_reduceOutput
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_decrease/user_nl_cism
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_decrease/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_decrease/README
+D       components/clm/cimetest/testmods_dirs/clm/glcMEC_decrease
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subset/README
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subset/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subset
+D       components/clm/cimetest/testmods_dirs/clm/USUMB/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/USUMB/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/USUMB
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetLate/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetLate/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetLate/README
+D       components/clm/cimetest/testmods_dirs/clm/tropicAtl_subsetLate
+D       components/clm/cimetest/testmods_dirs/clm/drydepnomegan/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/drydepnomegan/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/drydepnomegan
+D       components/clm/cimetest/testmods_dirs/clm/rootlit/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/rootlit/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/rootlit
+D       components/clm/cimetest/testmods_dirs/clm/deepsoil_bedrock/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/deepsoil_bedrock/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/deepsoil_bedrock
+D       components/clm/cimetest/testmods_dirs/clm/af_bias_v5/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/af_bias_v5/user_nl_datm
+D       components/clm/cimetest/testmods_dirs/clm/af_bias_v5/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/af_bias_v5
+D       components/clm/cimetest/testmods_dirs/clm/limit_river_withdraw/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/limit_river_withdraw/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/limit_river_withdraw
+D       components/clm/cimetest/testmods_dirs/clm/snowlayers_3_monthly/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/snowlayers_3_monthly/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/snowlayers_3_monthly
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_crop/README
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_crop/user_nl_clm
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_crop/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/interp_f19_crop
+D       components/clm/cimetest/testmods_dirs/clm/ptsRLA/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/ptsRLA/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/ptsRLA
+D       components/clm/cimetest/testmods_dirs/clm/pts/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/pts/README
+D       components/clm/cimetest/testmods_dirs/clm/pts/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/pts
+D       components/clm/cimetest/testmods_dirs/clm/ptsRLB/xmlchange_cmnds
+D       components/clm/cimetest/testmods_dirs/clm/ptsRLB/include_user_mods
+D       components/clm/cimetest/testmods_dirs/clm/ptsRLB
+D       components/clm/cimetest/testmods_dirs/clm
+D       components/clm/cimetest/testmods_dirs
+D       components/clm/cimetest
+D       components/clm/bld/clm.buildlib
+D       components/clm/bld/user_nl_clm
+D       components/clm/bld/clm.buildnml
+
+========= This is no longer needed - it is generated automatically by the build script
+D       components/clm/src_clm40/main/ncdio_pio.F90
+
+
+List all files added and what they do:
+
+========= New stuff needed for cime3
+A       components/clm/cime_config
+A       components/clm/cime_config/config_component.xml
+A       components/clm/cime_config/config_pes.xml
+A       components/clm/cime_config/config_compsets.xml
+
+========= Moved from elsewhere (new organization needed for cime3)
+A       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/USUMB/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/USUMB/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/USUMB
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/rootlit/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/rootlit/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/rootlit
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/drydepnomegan/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/drydepnomegan/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/drydepnomegan
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/deepsoil_bedrock/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/deepsoil_bedrock/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/deepsoil_bedrock
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/limit_river_withdraw/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/limit_river_withdraw/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/limit_river_withdraw
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5/user_nl_datm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_3_monthly/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_3_monthly/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_3_monthly
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_crop/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_crop/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_crop/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_crop
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLA/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLA/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLA
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLB/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLB/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLB
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/pts/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/pts/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/pts/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/pts
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_long/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_long/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_long/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_long
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/irrigOn_reduceOutput/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/irrigOn_reduceOutput/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/irrigOn_reduceOutput/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/irrigOn_reduceOutput
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/default/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/default/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/default
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/reduceOutput/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/reduceOutput
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/edTest/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/edTest/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/edTest
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_sville/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_sville/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_sville/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_sville
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC/user_nl_cpl
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/monthly/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/monthly/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/monthly/user_nl_cpl
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/monthly
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonthOutput/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonthOutput/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonthOutput
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/luna/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/luna/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/luna
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/monthly_noinitial/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/monthly_noinitial/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/monthly_noinitial
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_from_f09/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_from_f09/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_from_f09/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_from_f09
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/crop/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/crop/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/crop
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_increase/user_nl_cism
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_increase/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_increase/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_increase
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cn_conly/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cn_conly/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cn_conly
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/allActive/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/allActive
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_12/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_12/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_12
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsROA/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsROA/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsROA
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/NoVSNoNI/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/NoVSNoNI/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/NoVSNoNI
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/SNICARFRC/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/SNICARFRC/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/SNICARFRC
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/flexibleCN/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/flexibleCN
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_changeFlags/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_changeFlags/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_changeFlags/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_changeFlags/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_changeFlags
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_f10/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_f10/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_f10/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_f10
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/o3/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/o3/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/o3
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/vrtlay/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/vrtlay/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/vrtlay
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly/xmlchange_cmnds
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/oldhyd/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/oldhyd
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop2crop/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop2crop/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop2crop/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop2crop
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_decrease/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_decrease/user_nl_cism
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_decrease/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_decrease
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/irrig_o3_reduceOutput/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/irrig_o3_reduceOutput/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/irrig_o3_reduceOutput/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/irrig_o3_reduceOutput
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset
+A       components/clm/cime_config/testdefs/testmods_dirs/clm
+A       components/clm/cime_config/testdefs/testmods_dirs
+A       components/clm/cime_config/testdefs/testlist_clm.xml
+A       components/clm/cime_config/testdefs
+A       components/clm/cime_config/user_nl_clm
+A       components/clm/cime_config/buildlib
+A       components/clm/cime_config/buildnml
+
+
+List all existing files that have been modified, and describe the changes:
+
+========= Minor changes for cime3
+M       components/clm/bld/CLMBuildNamelist.pm
+
+========= Port bug 1730 workaround to clm40, fixing bugs 2214 & 2222
+M       components/clm/src_clm40/main/histFileMod.F90
+M       components/clm/src_clm40/main/ncdio_pio.F90.in
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+    (ran unit_testers and test_build_namelist tests)
+
+  unit-tests (components/clm/src):
+
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    hobart_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_3_r130
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  There are large differences in the anomaly forcing, due to a bug fix that has
+  been incorporated in the cime3 changes. This changes answers for this test:
+
+  SMS_Ld1.f09_g16.ICRUCLM45.yellowstone_intel.clm-af_bias_v5
+
+  In addition, there are roundoff-level changes in x2l_Flrr_volr, VOLR and TWS
+  in these tests:
+  ERS_E_Ld9.f45_g37.I.yellowstone_intel.clm-default
+  ERI_D_Ld9.ne30_g16.ICLM45BGC.yellowstone_intel.clm-vrtlay
+
+  Also, this BFAILed:
+  BFAIL ERP_P15x2_Lm36.f10_f10.ICLM45BGCCROP.yellowstone_intel.clm-irrig_o3_reduceOutput.clm2.h1.nc : baseline compare clm2.h1 (baseline: compare .base file with clm4_5_3_r130 file) (baseline history file does not exist)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r130
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Mon Sep 28 11:16:54 MDT 2015

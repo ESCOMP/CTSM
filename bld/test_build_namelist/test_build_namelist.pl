@@ -30,7 +30,7 @@ BEGIN {
 
   # check for a couple of modules from the paths we added.
   use_ok("CLMBuildNamelist");
-  use_ok("SetupTools");
+  use_ok("Config::SetupTools");
   use_ok("Test::Class");
 }
 
@@ -42,7 +42,7 @@ require Build::NamelistDefaults;
 require Build::Namelist;
 require config_files::clm_phys_vers;
 require Streams::TemplateGeneric;
-require SetupTools;
+require Config::SetupTools;
 
 # local perl modules
 use Test::Class;

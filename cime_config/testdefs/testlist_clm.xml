@@ -326,10 +326,10 @@
   </compset>
   <compset name="I1PTCLM45">
     <grid name="1x1_mexicocityMEX">
-      <test name="ERS_D_Mmpi-serial_Ld5">
+      <test name="ERS_D_Ld5_Mmpi-serial">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/default">hobart</machine>
       </test>
-      <test name="ERS_Mmpi-serial_Ld5">
+      <test name="ERS_Ld5_Mmpi-serial">
         <machine compiler="nag" testtype="prealpha" testmods="clm/default">goldbach</machine>
       </test>
       <test name="SMS_Ld1">
@@ -350,12 +350,12 @@
       <test name="SMS_D_Ld1">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
-      <test name="SMS_D_Mmpi-serial_Ld1">
+      <test name="SMS_D_Ld1_Mmpi-serial">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/default">hobart</machine>
       </test>
     </grid>
     <grid name="CLM_USRDAT">
-      <test name="SMS_D_Mmpi-serial_Lm1">
+      <test name="SMS_D_Lm1_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/USUMB">edison</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/USUMB">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/USUMB">yellowstone</machine>
@@ -372,7 +372,7 @@
       <test name="ERS_Ld5">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
-      <test name="SMS_D_Mmpi-serial_Ld1">
+      <test name="SMS_D_Ld1_Mmpi-serial">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/default">hobart</machine>
       </test>
     </grid>
@@ -460,7 +460,7 @@
       </test>
     </grid>
     <grid name="f45_f45">
-      <test name="SMS_D_Mmpi-serial_Ld1">
+      <test name="SMS_D_Ld1_Mmpi-serial">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
@@ -470,7 +470,7 @@
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsRLB">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsROA">yellowstone</machine>
       </test>
-      <test name="SMS_Mmpi-serial_Ld1">
+      <test name="SMS_Ld1_Mmpi-serial">
         <machine compiler="nag" testtype="prealpha" testmods="clm/ptsRLA">goldbach</machine>
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
@@ -710,13 +710,13 @@
   </compset>
   <compset name="ICLM45ED">
     <grid name="1x1_brazil">
-      <test name="ERS_D_Mmpi-serial_Ld5">
+      <test name="ERS_D_Ld5_Mmpi-serial">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
       </test>
     </grid>
     <grid name="5x5_amazon">
-      <test name="SMS_D_Mmpi-serial_Ld5">
+      <test name="SMS_D_Ld5_Mmpi-serial">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/edTest">hobart</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
       </test>
@@ -735,7 +735,7 @@
     </grid>
   </compset>
   <compset name="ICLM45GLCMEC">
-    <grid name="f19_g16">
+    <grid name="f19_g16_gl5">
       <test name="ERP_D_Ld5">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/glcMEC">edison</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_changeFlags">yellowstone</machine>
@@ -966,24 +966,24 @@
     </grid>
   </compset>
   <compset name="IG">
-    <grid name="f09_g16">
+    <grid name="f09_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
   </compset>
   <compset name="IG1850CLM45">
-    <grid name="T31_g37">
+    <grid name="T31_g37_gl5">
       <test name="SMS_Lm37">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_long" comment="Long enough test for SMB to be generated in bare land areas; add a month beyond the 3rd year to allow time for CLM to respond to CISM forcing from the 3rd year. (Note: if we had spun-up initial conditions for an IG compset, we could test this with much shorter test, if it also used the glc override options - much of the need for this long test is to allow the snow pack to spin up.)">yellowstone</machine>
       </test>
     </grid>
-    <grid name="f09_g16">
+    <grid name="f09_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
-    <grid name="f19_g16">
+    <grid name="f19_g16_gl5">
       <test name="ERI">
         <machine compiler="intel" testtype="aux_clm_ys_pgi">edison</machine>
       </test>
@@ -1001,7 +1001,7 @@
     </grid>
   </compset>
   <compset name="IG1850CN">
-    <grid name="f19_g16">
+    <grid name="f19_g16_gl5">
       <test name="ERI_D">
         <machine compiler="intel" testtype="aux_clm_ys_pgi">edison</machine>
         <machine compiler="pgi" testtype="aux_clm40">yellowstone</machine>
@@ -1009,7 +1009,7 @@
     </grid>
   </compset>
   <compset name="IGCLM45">
-    <grid name="f19_g16">
+    <grid name="f19_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
@@ -1023,86 +1023,86 @@
     </grid>
   </compset>
   <compset name="IGHIST">
-    <grid name="T31_g37">
+    <grid name="T31_g37_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
-    <grid name="f19_g16">
+    <grid name="f19_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
   </compset>
   <compset name="IGHISTCLM45">
-    <grid name="T31_g37">
+    <grid name="T31_g37_gl5">
       <test name="ERS_D_Ld10">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/glcMEC_decrease" comment="test transient PFTs (via HIST) in conjunction with changing glacier area">yellowstone</machine>
       </test>
     </grid>
-    <grid name="f19_g16">
+    <grid name="f19_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
   </compset>
   <compset name="IGHISTCLM45CN">
-    <grid name="f09_g16">
+    <grid name="f09_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
   </compset>
   <compset name="IGHISTCN">
-    <grid name="f09_g16">
+    <grid name="f09_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
   </compset>
   <compset name="IGRCP26CN">
-    <grid name="f09_g16">
+    <grid name="f09_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
-    <grid name="f19_g16">
+    <grid name="f19_g16_gl5">
       <test name="ERS_D">
         <machine compiler="pgi" testtype="aux_clm40" testmods="clm/reduceOutput">hobart</machine>
       </test>
     </grid>
   </compset>
   <compset name="IGRCP45CLM45CN">
-    <grid name="f09_g16">
+    <grid name="f09_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
-    <grid name="f19_g16">
+    <grid name="f19_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
   </compset>
   <compset name="IGRCP45CN">
-    <grid name="f09_g16">
+    <grid name="f09_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
-    <grid name="f19_g16">
+    <grid name="f19_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
   </compset>
   <compset name="IGRCP60CN">
-    <grid name="f09_g16">
+    <grid name="f09_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
-    <grid name="f19_g16">
+    <grid name="f19_g16_gl5">
       <test name="ERP_Lm3">
         <machine compiler="intel" testtype="aux_clm_ys_intel">edison</machine>
       </test>
@@ -1112,19 +1112,19 @@
     </grid>
   </compset>
   <compset name="IGRCP85CLM45CN">
-    <grid name="f09_g16">
+    <grid name="f09_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
-    <grid name="f19_g16">
+    <grid name="f19_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
   </compset>
   <compset name="IGRCP85CN">
-    <grid name="f09_g16">
+    <grid name="f09_g16_gl5">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
       </test>

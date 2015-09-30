@@ -355,12 +355,6 @@ sub check_for_perl_utils {
   my $cesmroot = abs_path( "$cfgdir/../../../");
   my $perl5lib_dir = "$cesmroot/cime/utils/perl5lib";
 
-  # The root diretory for the perl SetupTools.pm module
-  my $SetupTools_dir = "$cesmroot/cime/scripts/Tools";
-  (-f "$SetupTools_dir/SetupTools.pm")  or
-      fatal_error("Cannot find perl module \"SetupTools.pm\" in directory\n" .
-		  "\"$SetupTools_dir\" \n");
-
   # The XML::Lite module is required to parse the XML files.
   (-f "$perl5lib_dir/XML/Lite.pm")  or
       fatal_error("Cannot find perl module \"XML/Lite.pm\" in directory\n" .
@@ -392,7 +386,7 @@ sub check_for_perl_utils {
 
   #-----------------------------------------------------------------------------
   # Add $perl5lib_dir to the list of paths that Perl searches for modules
-  my @dirs = ( $ProgDir, $cfgdir, "$perl5lib_dir", "$SetupTools_dir");
+  my @dirs = ( $ProgDir, $cfgdir, "$perl5lib_dir");
   unshift @INC, @dirs;
 
   # required cesm perl modules
@@ -402,7 +396,7 @@ sub check_for_perl_utils {
   require Build::NamelistDefaults;
   require Build::Namelist;
   require config_files::clm_phys_vers;
-  require SetupTools;
+  require Config::SetupTools;
 }
 
 #-------------------------------------------------------------------------------
