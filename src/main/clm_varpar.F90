@@ -173,6 +173,14 @@ contains
        nlevlak     =  25     ! number of lake layers (Yields better results for site simulations)
     end if
 
+    write(iulog, *) 'CLM varpar subsurface discretization levels '
+    write(iulog, '(a, i3)') '    nlevsoi = ', nlevsoi
+    write(iulog, '(a, i3)') '    nlevgrnd = ', nlevgrnd
+    write(iulog, '(a, i3)') '    nlevdecomp = ', nlevdecomp
+    write(iulog, '(a, i3)') '    nlevdecomp_full = ', nlevdecomp_full
+    write(iulog, '(a, i3)') '    nlevlak = ', nlevlak
+    write(iulog, *)
+
     if (use_century_decomp) then
        ndecomp_pools = 7
        ndecomp_cascade_transitions = 10

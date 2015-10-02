@@ -99,6 +99,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, snow_depth, thick_wall, thick_roof)
+    use clm_varcon, only : zmin_bedrock
     !
     ! !ARGUMENTS:
     type(bounds_type)   , intent(in)    :: bounds
@@ -132,7 +133,6 @@ contains
     integer               :: begc, endc
     integer               :: begl, endl
     integer               :: jmin_bedrock
-    real(r8),parameter    :: zmin_bedrock = 0.4 !minimum soil depth [m]
     !------------------------------------------------------------------------
 
     begc = bounds%begc; endc= bounds%endc
@@ -235,11 +235,7 @@ contains
 
     ! define a vertical grid spacing such that it is the normal dzsoi if nlevdecomp =nlevgrnd, or else 1 meter
     if (use_vertsoilc) then
-       dzsoi_decomp(1) = 0.5_r8*(zsoi(1)+zsoi(2))             !thickness b/n two interfaces
-       do j = 2,nlevgrnd-1
-          dzsoi_decomp(j)= 0.5_r8*(zsoi(j+1)-zsoi(j-1))
-       enddo
-       dzsoi_decomp(nlevgrnd) = zsoi(nlevgrnd)-zsoi(nlevgrnd-1)
+       dzsoi_decomp = dzsoi            !thickness b/n two interfaces
     else
        dzsoi_decomp(1) = 1.
     end if
@@ -432,7 +428,7 @@ contains
     call ncd_io(ncid=ncid, varname='zbedrock', flag='read', data=zbedrock_in, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
        if (masterproc) then
-          write(iulog,*) 'WARNING:: zbedrock not found on surface data set. All lake columns will have lake depth', &
+          write(iulog,*) 'WARNING:: zbedrock not found on surface data set. All soil columns will have soil depth', &
                ' set equal to default value.'
        end if
        zbedrock_in(:) = zisoi(nlevsoi)

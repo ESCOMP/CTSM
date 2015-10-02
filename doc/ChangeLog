@@ -1,4 +1,108 @@
 ===============================================================
+Tag name:  clm4_5_3_r132
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Fri Oct  2 10:29:57 MDT 2015
+One-line Summary: Modify soil BGC diffusion and cryoturbation code to allow for spatially variable soil thickness.
+
+Purpose of changes:
+
+  Changes from Dave Lawrence to modify soil BGC diffusion and
+  cryoturbation code to allow for spatially variable soil thickness
+  (e.g. if use_bedrock = true); fixed dzsoi_decomp for new vertical
+  grids
+
+Requirements for tag: regular
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): none
+
+Known bugs (include bugzilla ID): 2213, 2219
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+   1147 (mkgriddata can't straddle over Greenwich)
+   1025 (SCM mode can NOT use a global finidat file)
+   1017 (SCM mode can NOT restart)
+    896 (T62 mode does not work)
+    701 (svn keyword)
+    452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: unknown none expected
+
+Code reviewed by: Dave Lawrence
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+  clm/src/main/initVerticalMod.F90 - use zmin_bedrock param, fix dzsoi_decomp 
+  clm/src/main/clm_varcon.F90 - make zmin_bedrock a constant parameter
+  clm/src/main/clm_varpar.F90 - write subsurface discretization levels to land log
+  clm/src/soilbiogeochem/SoilBiogeochemVerticalProfileMod.F90 - spatially variable soil thickness
+  clm/src/soilbiogeochem/SoilBiogeochemLittVertTranspMod.F90 - spatially variable soil thickness
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone - unit tests pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - 40, pass; 45, ok (see below)
+    yellowstone_pgi - 40, pass; 45, pass
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - pass
+
+  Only test not bit for bit with baseline is:
+    ERS_D_Ld3.f10_f10.ICRUCLM50BGC.yellowstone_intel.clm-deepsoil_bedrock
+
+CLM tag used for the baseline comparisons: clm4_5_3_r131
+
+Changes answers relative to baseline: some
+
+  Tag changes answers for clm50 bgc compsets where use_bedrock =
+  true. No change to default version of model, doesn't change
+  results for use_bedrock = true when in SP mode.
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm50 bgc with use_bedrock = true
+    - what platforms/compilers: all/all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): new climate
+
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename:  none
+
+   URL for LMWG diagnostics output used to validate new climate:
+	none
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r131
 Originator(s):  mvertens, sacks
 Date: Wed Sep 30 05:13:45 MDT 2015

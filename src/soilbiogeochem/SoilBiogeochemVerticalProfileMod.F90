@@ -45,9 +45,9 @@ contains
     use shr_log_mod             , only : errMsg => shr_log_errMsg
     use decompMod               , only : bounds_type
     use abortutils              , only : endrun
-    use clm_varcon              , only : zsoi, dzsoi, zisoi, dzsoi_decomp
+    use clm_varcon              , only : zsoi, dzsoi, zisoi, dzsoi_decomp, zmin_bedrock
     use clm_varpar              , only : nlevdecomp, nlevgrnd, nlevdecomp_full, maxpatch_pft
-    use clm_varctl              , only : use_vertsoilc, iulog
+    use clm_varctl              , only : use_vertsoilc, iulog, use_bedrock
     use pftconMod               , only : noveg, pftcon
     use SoilBiogeochemStateType , only : soilbiogeochem_state_type
     use CanopyStateType         , only : canopystate_type
@@ -108,6 +108,11 @@ contains
          surface_prof(:) = 0._r8
          do j = 1, nlevdecomp
             surface_prof(j) = exp(-surfprof_exp * zsoi(j)) / dzsoi_decomp(j)
+            if (use_bedrock) then 
+               if (zsoi(j) > zmin_bedrock) then
+                 surface_prof(j) = 0._r8
+               end if
+            end if
          end do
 
          ! initialize profiles to zero
@@ -134,12 +139,22 @@ contains
                ! use beta distribution parameter from Jackson et al., 1996
                do fp = 1,num_soilp
                   p = filter_soilp(fp)
+                  c = patch%column(p)
                   if (patch%itype(p) /= noveg) then
                      do j = 1, nlevdecomp
                         cinput_rootfr(p,j) = ( pftcon%rootprof_beta(patch%itype(p)) ** (zisoi(j-1)*100._r8) - &
                              pftcon%rootprof_beta(patch%itype(p)) ** (zisoi(j)*100._r8) ) &
                              / dzsoi_decomp(j)
+                        ! NOTE(dml, 201509) if use_bedrock = 1, then use the rootfr from RootBiophysMod
+                        ! which also should modify code such that all root info is
+                        ! calculated in RootBiophysMod, but this will make it
+                        ! hard to be backwards compatible to CLM4.5 which
+                        ! unrealistically uses Jackson for BGC and Zeng for biogeophys
+                        if (use_bedrock) then 
+                           cinput_rootfr(p,j) = rootfr(p,j) / dzsoi_decomp(j)
+                        endif
                      end do
+
                   else
                      cinput_rootfr(p,1) = 0.
                   endif
@@ -171,6 +186,10 @@ contains
                do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
                   froot_prof(p,j) = cinput_rootfr(p,j) / rootfr_tot
                   croot_prof(p,j) = cinput_rootfr(p,j) / rootfr_tot
+
+                  if (j > col%nbedrock(c) .and. cinput_rootfr(p,j) > 0._r8) then 
+                     write(iulog,*) 'cinput_rootfr > 0 in bedrock'
+                  end if
                   ! set all surface processes to shallower profile
                   leaf_prof(p,j) = surface_prof(j)/ surface_prof_tot
                   stem_prof(p,j) = surface_prof(j)/ surface_prof_tot
