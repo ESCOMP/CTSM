@@ -350,6 +350,16 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_simyr1850_c150121.nc</fsurdat>
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".false." >
 lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c141219.nc</fsurdat>
 
+<!-- pre-industrial with crop -->
+<fsurdat hgrid="0.9x1.25"  sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_simyr1850_c151003.nc</fsurdat>
+<fsurdat hgrid="1.9x2.5"   sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_simyr1850_c150917.nc</fsurdat>
+<fsurdat hgrid="10x15"     sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_10x15_78pfts_simyr1850_c150917.nc</fsurdat>
+<fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr1850_c151003.nc</fsurdat>
+
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 
 <!-- Note that, to reduce the number of necessary datasets, we use an RCP
@@ -376,6 +386,16 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c141219.nc</fsurdat>
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_rcp8.5_simyr1850-2100_c150121.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4"       sim_year_range="1850-2000" 
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+
+<!-- Dynamic PFT surface datasets for crop -->
+
+<flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2000"
+ use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_10x15_hist_78pfts_simyr1850-2005_c150203.nc</flanduse_timeseries>
+
+<!-- Note that this transient file only goes up to year 1855.
+     This is sufficient for testing purposes, but could cause problems if you try to run beyond 1855. -->
+<flanduse_timeseries hgrid="1x1_smallvilleIA" sim_year_range="1850-2000"
+ use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c150218.nc</flanduse_timeseries>
 
 <!-- Dynamic PFT surface datasets for future scenarios(relative to {csmdata}) -->
 

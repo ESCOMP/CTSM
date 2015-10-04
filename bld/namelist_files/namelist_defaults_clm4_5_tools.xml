@@ -287,6 +287,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_fvegtyp hgrid="3x3min"        sim_year="2000" crop="on"  >lnd/clm2/rawdata/pftlanduse.3minx3min.simyr2000.c110913/mksrf_78pft_landuse_rc2000_c130927.nc</mksrf_fvegtyp>
 
 <!-- Historical period from 1850 to 2005 -->
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="1850" crop="on"  >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_78pft_harvest_landuse_rc1850_c150819.nc
+</mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="1850" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_landuse_rc1850_c090630.nc
 </mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="1851" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_landuse_rc1851_c090630.nc

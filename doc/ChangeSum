@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_3_r134    sacks 10/04/2015 Fixes for transient and preindustrial crop cases
    clm4_5_3_r133    andre 10/02/2015 Bugfix for mksurfdata_map - add file missed by clm4_5_2_r125.
    clm4_5_3_r132    andre 10/02/2015 Modify soil BGC diffusion and cryoturbation code to allow for spatially variable soil thickness.
    clm4_5_3_r131    sacks 09/30/2015 Bring in cime3

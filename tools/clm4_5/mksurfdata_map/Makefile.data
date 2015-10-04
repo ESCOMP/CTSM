@@ -44,9 +44,13 @@ TROPICS = \
 	tropics-atlantic-transient
 
 CROP = \
-	crop-global-1.9 \
-	crop-global-0.125 \
-	crop-numa
+	crop-global-present-1.9 \
+	crop-global-present-0.125 \
+	crop-numa-present \
+	crop-smallville-1850 \
+	crop-global-1850-0.9 \
+	crop-global-1850-1.9 \
+	crop-global-1850-f10
 
 all : standard tropics crop urban landuse-timeseries
 
@@ -107,17 +111,17 @@ tropics-atlantic-transient : FORCE
 #
 crop : $(CROP)
 
-crop-global-1.9 : FORCE
+crop-global-present-1.9 : FORCE
 	$(MKSURFDATA) -crop -hirespft -glc_nec 10 -y 2000 -r 1.9x2.5 $(BACKGROUND)
 
 # time series generates a surface data set with the same name, so we skip this one.
-#crop-global-10 : FORCE
+#crop-global-present-f10 : FORCE
 #	$(MKSURFDATA) -crop -hirespft -glc_nec 10 -y 2000 -r 10x15 $(BACKGROUND)
 
-crop-global-0.125 : FORCE
+crop-global-present-0.125 : FORCE
 	$(MKSURFDATA) -crop -hirespft -glc_nec 10 -y 2000 -r 0.125x0.125 $(BACKGROUND)
 
-crop-numa : FORCE
+crop-numa-present : FORCE
 	$(MKSURFDATA) -crop -hirespft -y 2000 -r 1x1_numaIA $(BACKGROUND)
 
 # time series generates a surface data set with the same name, so we skip this one.
@@ -126,6 +130,22 @@ crop-numa : FORCE
 #		-pft_idx 17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78 \
 #		-pft_frc 6.5,1.5,1.6,1.7,1.8,1.9,1.5,1.6,1.7,1.8,1.9,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5 \
 #		$(BACKGROUND)
+
+# Note that the smallville 1850 dataset is entirely natural vegetation. This
+# facilitates testing a transient case that starts with no crop, and then later
+# adds crop (to make sure that it works properly to add crop in a grid cell
+# where there used to be no crop).
+crop-smallville-1850 : FORCE
+	$(MKSURFDATA) -crop -y 1850 -r 1x1_smallvilleIA -pft_idx 13 -pft_frc 100 $(BACKGROUND)
+
+crop-global-1850-0.9 : FORCE
+	$(MKSURFDATA) -crop -glc_nec 10 -y 1850 -r 0.9x1.25 $(BACKGROUND)
+
+crop-global-1850-1.9 : FORCE
+	$(MKSURFDATA) -crop -glc_nec 10 -y 1850 -r 1.9x2.5 $(BACKGROUND)
+
+crop-global-1850-f10 : FORCE
+	$(MKSURFDATA) -crop -glc_nec 10 -y 1850 -r 10x15 $(BACKGROUND)
 
 #
 # urban

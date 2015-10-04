@@ -14,7 +14,7 @@ module surfrdMod
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog, scmlat, scmlon, single_column
   use clm_varctl      , only : create_glacier_mec_landunit, use_cndv
-  use surfrdUtilsMod  , only : check_sums_equal_1
+  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
   use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid
   use pio
@@ -711,12 +711,10 @@ contains
     ! Determine weight arrays for non-dynamic landuse mode
     !
     ! !USES:
-    use clm_varctl      , only : irrigate
-    use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_lb, cft_ub, cft_size
+    use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size
     use clm_varpar      , only : crop_prog
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft
     use landunit_varcon , only : istsoil, istcrop
-    use pftconMod       , only : nc3crop, nc3irrig, npcropmax, pftcon
     !
     ! !ARGUMENTS:
     integer, intent(in) :: begg, endg
@@ -792,61 +790,8 @@ contains
     end if
 
 
-    ! If no irrigation, merge irrigated CFTs with rainfed
-    
-    if (crop_prog .and. .not. irrigate) then
-       if (masterproc) then
-          write(iulog,*) trim(subname)//' crop=.T. and irrigate=.F., so merging irrigated pfts with rainfed'
-       end if
-
-       if (cft_size <= 0) then
-          call endrun( msg='ERROR: Trying to merge irrigated CFTs with rainfed, but cft_size <= 0'//&
-               errMsg(__FILE__, __LINE__))
-       end if
-
-       do nl = begg,endg
-          ! Left Hand Side: merged rainfed+irrigated crop pfts from nc3crop to
-          !                 npcropmax-1, stride 2
-          ! Right Hand Side: rainfed crop pfts from nc3crop to npcropmax-1,
-          !                  stride 2
-          ! plus             irrigated crop pfts from nc3irrig to npcropmax,
-          !                  stride 2
-          ! where stride 2 means "every other"
-          wt_cft(nl, nc3crop:npcropmax-1:2) = &
-               wt_cft(nl, nc3crop:npcropmax-1:2) + wt_cft(nl, nc3irrig:npcropmax:2)
-          wt_cft(nl, nc3irrig:npcropmax:2)  = 0._r8
-       end do
-
-       call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
-    end if
-
-    ! Now merge CFTs into the list of crops that the CLM knows how to model
     if (crop_prog) then
-       if (masterproc) then
-          write(iulog, *) trim(subname) // ' merging wheat, barley, and rye into temperate cereals'
-          write(iulog, *) trim(subname) // ' clm knows how to model corn, temperate cereals, and soybean'
-          write(iulog, *) trim(subname) // ' all other crops are lumped with the generic crop pft'
-       end if
-
-       if (cft_size <= 0) then
-          call endrun( msg=trim(subname) // &
-               'ERROR: Trying to manipulate CFT list, but cft_size <= 0' // &
-               errMsg(__FILE__, __LINE__))
-       end if
-
-       do nl = begg, endg
-          do m = 1, npcropmax
-             if (m /= pftcon%mergetoclmpft(m)) then
-                ! merge wt_cft(nl,m) into wt_cft(nl,mergetoclmpft(m)) and
-                ! reset wt_cft(nl,m) to zero
-                wt_cft(nl, pftcon%mergetoclmpft(m)) = wt_cft(nl, pftcon%mergetoclmpft(m)) + wt_cft(nl, m)
-                wt_cft(nl, m) = 0._r8
-             end if
-          end do
-
-       end do
-
-       call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
+       call collapse_crop_types(wt_cft(begg:endg, :), begg, endg, verbose=.true.)
     end if
 
   end subroutine surfrd_veg_all

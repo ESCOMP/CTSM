@@ -1205,6 +1205,18 @@
       </test>
     </grid>
   </compset>
+  <compset name="IHISTCLM45BGCCROP">
+    <grid name="1x1_smallvilleIA">
+      <test name="SMS_D_Ly6">
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="Want a debug test that tests a number of aspects of transient crops, including a new crop landunit and shifting PCT_CFT">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f10_f10">
+      <test name="ERS_Ly5_P60x1">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="Want a multi-year global test of transient crops; also want a multi-year transient restart test. Using P60x1 and ERS rather than ERP to get faster turnaround of this long-running test">yellowstone</machine>
+      </test>
+    </grid>
+  </compset>
   <compset name="IHISTCN">
     <grid name="f10_f10">
       <test name="ERI_D">
@@ -1230,9 +1242,6 @@
   </compset>
   <compset name="IHISTCRUCLM45BGC">
     <grid name="f10_f10">
-      <test name="ERP_Ly5">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly_noinitial">yellowstone</machine>
-      </test>
       <test name="ERP_P48x1_Ly5">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/monthly">edison</machine>
       </test>

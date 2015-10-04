@@ -1,4 +1,176 @@
 ===============================================================
+Tag name:  clm4_5_3_r134
+Originator(s):  sacks (Bill Sacks)
+Date: Sun Oct  4 07:25:05 MDT 2015
+One-line Summary: Fixes for transient and preindustrial crop cases
+
+Purpose of changes:
+
+   (1) Important bug fix for transient crop: Collapse crop types in the
+       transient run. Previously, when the transient portion started, (a) the
+       collapse of the 78 pfts to the "known" crops was not happening, and (b)
+       the collapse of irrigated pfts in a non-irrigation run was not
+       happening. These two problems are fixed now.
+
+   (2) Restore lost transient crop test cases
+
+   (3) Add 1850 crop raw dataset (created using
+       https://github.com/billsacks/clm_misc-make_crop_1850_dataset)
+
+   (4) Add out-of-the-box surface datasets for 1850 crop, and out-of-the-box
+       landuse timeseries datasets for transient crop
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+- 2010 (create year-1850 surface datasets for crop)
+- 2149 (tweak smallville transient test case)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: new out-of-the-box defaults (see below)
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated:
+
+========= Remove testmods directories that are no longer needed because
+          transient crop cases now pick up a surface dataset and landuse
+          timeseries file out-of-the-box
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_sville/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_sville/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_sville/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_sville
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_f10/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_f10/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_f10/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/crop_trans_f10
+
+========= Remove testmods directory that is no longer used (should have been removed in clm4_5_2_r127)
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_from_f09/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_from_f09/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_from_f09/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_from_f09
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Collapse crop types in a transient run
+M       components/clm/src/main/surfrdUtilsMod.F90
+M       components/clm/src/main/surfrdMod.F90
+M       components/clm/src/dyn_subgrid/dyncropFileMod.F90
+
+========= Relax tolerance for check of PCT_NAT_PFT between landuse timeseries
+          file and surface dataset. Transient crop runs exceeded the previous
+          strict tolerance. I'm not sure why they need this relaxed tolerance,
+          but given the manipulations that were needed both to create the
+          year-1850 crop raw dataset and to create the crop landuse timeseries
+          file, I'm willing to accept that this is needed. I have made this
+          tolerance about 2 orders of magnitude looser than the differences I
+          observed, to try to prevent the check from being wrongly triggered in
+          the future. The tolerance of 1e-6 still seems sufficient to catch any
+          real problems.
+M       components/clm/src/dyn_subgrid/dynpftFileMod.F90
+
+========= Add rules to make some 1850 crop surface datasets
+M       components/clm/tools/clm4_5/mksurfdata_map/Makefile.data
+
+========= Add raw dataset for 1850 crop
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+
+========= Add some surface datasets for 1850 crop, and landuse timeseries files
+          for crop
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+========= Just add a comment
+M       components/clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl
+
+========= Restore transient crop tests that were lost shortly after they were
+          added (when the test list was migrated out of scripts into CLM)
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+========= Unrelated change: add a note at Ben's request
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop/README
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_crop/README
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: ok
+
+  unit-tests (components/clm/src):
+
+    yellowstone: ok
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone: NOT RUN
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone: NOT RUN
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    hobart_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_3_r132
+
+Changes answers relative to baseline: YES - just for transient crop cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: transient crop cases
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      not investigated, likely to be new climate
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+
+
+   Note that there were no transient crop tests in the test suite prior to this
+   tag, so the answer changes do not affect any existing tests.
+
+   Note the following unexpected BFAILs:
+
+    BFAIL ERP_D_P15x2_Ld3.f10_f10.ICRUCLM50BGC.yellowstone_intel.clm-limit_river_withdraw.clm2.h0.nc : baseline compare clm2.h0 (baseline: compare .base file with clm4_5_3_r132 file) (baseline history file does not exist)
+    BFAIL ERP_D_P15x2_Ld3.f10_f10.ICRUCLM50BGC.yellowstone_intel.clm-limit_river_withdraw.clm2.h1.nc : baseline compare clm2.h1 (baseline: compare .base file with clm4_5_3_r132 file) (baseline history file does not exist)
+
+    BFAIL ERP_P15x2_Lm36.f10_f10.ICLM45BGCCROP.yellowstone_intel.clm-irrig_o3_reduceOutput.clm2.h1.nc : baseline compare clm2.h1 (baseline: compare .base file with clm4_5_3_r132 file) (baseline history file does not exist)
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r133
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Fri Oct  2 16:24:53 MDT 2015

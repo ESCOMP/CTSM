@@ -713,6 +713,13 @@ EOF
                # For transient crop, we currently can only generate a year-2000 surface
                # dataset - not a year-1850 surface dataset as is typically done for
                # transient cases. See http://bugs.cgd.ucar.edu/show_bug.cgi?id=2010
+               #
+               # NOTE(wjs, 2015-10-03) Although bug 2010 is basically resolved
+               # (via the creation of a year-1850 raw dataset for crop), this
+               # comment still holds: We still cannot generate a year-1850
+               # surface dataset in the course of creating a transient dataset;
+               # instead, a year-1850 surface dataset needs to be created
+               # separately, via a run with '-year 1850'.
                print "For transient crop, generating a year-2000 surface dataset rather than the typical year-1850 surface dataset\n";
                $sim_yr_surfdat = 2000;
             }

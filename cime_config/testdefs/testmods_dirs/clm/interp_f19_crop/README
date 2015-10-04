@@ -5,3 +5,7 @@ initial conditions file for f19 with crop.
 Note: if we stop supporting out-of-the-box f19 initial conditions files, this
 could be changed to f09 (or whatever resolution we provide initial conditions
 for).
+
+Note: If this test fails, it may be because you need to update the
+initial conditions file it uses (finidat). finidat should be updated
+to match the out-of-the-box initial conditions file for f19 with crop.

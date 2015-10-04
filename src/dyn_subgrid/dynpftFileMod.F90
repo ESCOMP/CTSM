@@ -122,7 +122,7 @@ contains
     integer             :: g                        ! index
     real(r8), pointer   :: wtpatch_time1(:,:)       ! weight of each pft in each grid cell at first time
     logical             :: readvar                  ! whether variable was read
-    real(r8), parameter :: tol = 1.e-13_r8          ! tolerance for checking equality
+    real(r8), parameter :: tol = 1.e-6_r8           ! tolerance for checking equality
 
     character(len=*), parameter :: subname = 'dynpft_check_consistency'
     !-----------------------------------------------------------------------

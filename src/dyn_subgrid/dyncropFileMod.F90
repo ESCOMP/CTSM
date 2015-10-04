@@ -112,6 +112,7 @@ contains
     ! !USES:
     use landunit_varcon   , only : istcrop
     use clm_varpar        , only : cft_lb, cft_ub
+    use surfrdUtilsMod    , only : collapse_crop_types
     use subgridWeightsMod , only : set_landunit_weight
     !
     ! !ARGUMENTS:
@@ -144,7 +145,9 @@ contains
     ! each crop is on its own column.
     allocate(wtcft_cur(bounds%begg:bounds%endg, cft_lb:cft_ub))
     call wtcft%get_current_data(wtcft_cur)
-    
+
+    call collapse_crop_types(wtcft_cur, bounds%begg, bounds%endg, verbose = .false.)
+
     allocate(col_set(bounds%begc:bounds%endc))
     col_set(:) = .false.
 
