@@ -1822,7 +1822,7 @@ contains
     ! initialized, and after pftcon file is read in.
     !
     ! !USES:
-    use pftconMod       , only: npcropmin, npcropmax, npcropmaxknown
+    use pftconMod       , only: npcropmin, npcropmax
     use clm_time_manager, only: get_calday
     !
     ! !ARGUMENTS:
@@ -1844,8 +1844,8 @@ contains
     ! Convert planting dates into julian day
     minplantjday(:,:) = huge(1)
     maxplantjday(:,:) = huge(1)
-    do n = npcropmin, npcropmaxknown
-       if (pftcon%mergetoclmpft(n) >= npcropmin) then
+    do n = npcropmin, npcropmax
+       if (pftcon%is_pft_known_to_model(n)) then
           minplantjday(n, inNH) = int( get_calday( pftcon%mnNHplantdate(n), 0 ) )
           maxplantjday(n, inNH) = int( get_calday( pftcon%mxNHplantdate(n), 0 ) )
 

@@ -38,11 +38,12 @@ contains
     ! Obtain gridcell properties
     !
     ! !USES
-    use clm_varpar      , only : natpft_size, cft_size, maxpatch_urb, maxpatch_glcmec
+    use clm_varpar      , only : natpft_size, maxpatch_urb, maxpatch_glcmec
     use clm_varctl      , only : create_crop_landunit
     use clm_instur      , only : wt_lunit, urban_valid, wt_glc_mec
     use landunit_varcon , only : istsoil, istcrop, istice, istice_mec, istdlak, istwet
     use landunit_varcon , only : isturb_tbd, isturb_hd, isturb_md
+    use pftconMod       , only : num_cfts_known_to_model
     use EDtypesMod      , only : cohorts_per_gcell
     !
     ! !ARGUMENTS
@@ -242,7 +243,7 @@ contains
        ! To support dynamic landunits, we have a crop landunit in every grid cell (if
        ! create_crop_landunit is true), because it might need to come into existence even
        ! if its weight is 0 at the start of the run.
-       npatches_per_lunit = cft_size
+       npatches_per_lunit = num_cfts_known_to_model
        ilunits = ilunits + 1
        icols   = icols + npatches_per_lunit
        ipatches = ipatches + npatches_per_lunit

@@ -8,7 +8,7 @@ module pftconMod
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
-  use clm_varpar  , only : mxpft, numrad, ivis, inir
+  use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub
   use clm_varctl  , only : iulog, use_cndv, use_vertsoilc
   !
   ! !PUBLIC TYPES:
@@ -96,9 +96,14 @@ module pftconMod
   integer :: ntrp_soybean           !value for tropical soybean (rf)
   integer :: nirrig_trp_soybean     !value for tropical soybean (ir)
   integer :: npcropmax              ! value for last prognostic crop in list
-  integer :: npcropmaxknown         ! value for last one clm knows how to model
   integer :: nc3crop                ! value for generic crop (rf)
   integer :: nc3irrig               ! value for irrigated generic crop (ir)
+
+  ! Number of crop functional types actually used in the model. This includes each CFT for
+  ! which is_pft_known_to_model is true. Note that this includes irrigated crops even if
+  ! irrigation is turned off in this run: it just excludes crop types that aren't handled
+  ! at all, as given by the mergetoclmpft list.
+  integer :: num_cfts_known_to_model
 
   ! !PUBLIC TYPES:
   type, public :: pftcon_type
@@ -139,6 +144,16 @@ module pftconMod
      real(r8), allocatable :: rootprof_beta (:)   ! CLM rooting distribution parameter for C and N inputs [unitless]
 
      !  crop
+
+     ! These arrays give information about the merge of unused crop types to the types CLM
+     ! knows about. mergetoclmpft(m) gives the crop type that CLM uses to simulate input
+     ! type m (and mergetoclmpft(m) == m implies that CLM simulates crop type m
+     ! directly). is_pft_known_to_model(m) is true if CLM simulates crop type m, and false
+     ! otherwise. Note that these do NOT relate to whether irrigation is on or off in a
+     ! given simulation - that is handled separately.
+     integer , allocatable :: mergetoclmpft         (:)
+     logical , allocatable :: is_pft_known_to_model (:)
+
      real(r8), allocatable :: graincn       (:)   ! grain C:N (gC/gN)
      real(r8), allocatable :: mxtmp         (:)   ! parameter used in accFlds
      real(r8), allocatable :: baset         (:)   ! parameter used in accFlds
@@ -157,7 +172,6 @@ module pftconMod
      real(r8), allocatable :: hybgdd        (:)   ! parameter used in CNPhenology
      real(r8), allocatable :: lfemerg       (:)   ! parameter used in CNPhenology
      real(r8), allocatable :: grnfill       (:)   ! parameter used in CNPhenology
-     integer , allocatable :: mergetoclmpft (:)   ! parameter used in surfrdMod
      integer , allocatable :: mxmat         (:)   ! parameter used in CNPhenology
      integer , allocatable :: mnNHplantdate (:)   ! minimum planting date for NorthHemisphere (YYYYMMDD)
      integer , allocatable :: mxNHplantdate (:)   ! maximum planting date for NorthHemisphere (YYYYMMDD)
@@ -228,6 +242,8 @@ module pftconMod
      procedure, public  :: Init
      procedure, private :: InitAllocate   
      procedure, private :: InitRead
+     procedure, private :: set_is_pft_known_to_model   ! Set is_pft_known_to_model based on mergetoclmpft
+     procedure, private :: set_num_cfts_known_to_model ! Set the module-level variable, num_cfts_known_to_model
 
   end type pftcon_type
 
@@ -284,7 +300,8 @@ contains
     allocate( this%roota_par     (0:mxpft) )   
     allocate( this%rootb_par     (0:mxpft) )   
     allocate( this%crop          (0:mxpft) )        
-    allocate( this%mergetoclmpft (0:mxpft) )   
+    allocate( this%mergetoclmpft (0:mxpft) )
+    allocate( this%is_pft_known_to_model  (0:mxpft) )
     allocate( this%irrigated     (0:mxpft) )   
     allocate( this%smpso         (0:mxpft) )       
     allocate( this%smpsc         (0:mxpft) )       
@@ -967,7 +984,9 @@ contains
     ntree                = nbrdlf_dcd_brl_tree  ! value for last type of tree
     npcropmin            = ntmp_corn            ! first prognostic crop
     npcropmax            = mxpft                ! last prognostic crop in list
-    npcropmaxknown = maxval(this%mergetoclmpft) ! & last one that clm knows how to model
+
+    call this%set_is_pft_known_to_model()
+    call this%set_num_cfts_known_to_model()
 
     if (use_cndv) then
        this%fcur(:) = this%fcurdv(:)
@@ -1035,6 +1054,66 @@ contains
     end if
 
   end subroutine InitRead
+
+  !-----------------------------------------------------------------------
+  subroutine set_is_pft_known_to_model(this)
+    !
+    ! !DESCRIPTION:
+    ! Set is_pft_known_to_model based on mergetoclmpft
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(pftcon_type), intent(inout) :: this
+    !
+    ! !LOCAL VARIABLES:
+    integer :: m, merge_type
+
+    character(len=*), parameter :: subname = 'set_is_pft_known_to_model'
+    !-----------------------------------------------------------------------
+
+    this%is_pft_known_to_model(:) = .false.
+
+    ! NOTE(wjs, 2015-10-04) Currently, type 0 has mergetoclmpft = _FillValue in the file,
+    ! so we can't handle it in the general loop below. But CLM always uses type 0, so
+    ! handle it specially here.
+    this%is_pft_known_to_model(0) = .true.
+
+    ! NOTE(wjs, 2015-10-04) Currently, mergetoclmpft is only used for crop types.
+    ! However, we handle it more generally here (treating ALL pft types), in case its use
+    ! is ever extended to work with non-crop types as well.
+    do m = 1, mxpft
+       merge_type = this%mergetoclmpft(m)
+       this%is_pft_known_to_model(merge_type) = .true.
+    end do
+
+  end subroutine set_is_pft_known_to_model
+
+  !-----------------------------------------------------------------------
+  subroutine set_num_cfts_known_to_model(this)
+    !
+    ! !DESCRIPTION:
+    ! Set the module-level variable, num_cfts_known_to_model
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(pftcon_type), intent(in) :: this
+    !
+    ! !LOCAL VARIABLES:
+    integer :: m
+
+    character(len=*), parameter :: subname = 'set_num_cfts_known_to_model'
+    !-----------------------------------------------------------------------
+
+    num_cfts_known_to_model = 0
+    do m = cft_lb, cft_ub
+       if (this%is_pft_known_to_model(m)) then
+          num_cfts_known_to_model = num_cfts_known_to_model + 1
+       end if
+    end do
+
+  end subroutine set_num_cfts_known_to_model
 
 end module pftconMod
 

@@ -258,7 +258,7 @@ contains
     ! !USES
     use clm_instur, only : wt_lunit, wt_nat_patch
     use subgridMod, only : subgrid_get_gcellinfo
-    use clm_varpar, only : numpft, maxpatch_pft, numcft, natpft_lb, natpft_ub
+    use clm_varpar, only : numpft, maxpatch_pft, natpft_lb, natpft_ub
     !
     ! !ARGUMENTS:
     integer , intent(in)    :: ltype             ! landunit type
@@ -406,7 +406,8 @@ contains
     use landunit_varcon , only : istcrop, istsoil
     use subgridMod      , only : subgrid_get_gcellinfo
     use clm_varctl      , only : create_crop_landunit
-    use clm_varpar      , only : maxpatch_pft, numcft, crop_prog, cft_lb, cft_ub
+    use clm_varpar      , only : maxpatch_pft, crop_prog, cft_lb, cft_ub
+    use pftconMod       , only : pftcon
     !
     ! !ARGUMENTS:
     integer , intent(in)    :: ltype             ! landunit type
@@ -445,8 +446,10 @@ contains
 
        if (create_crop_landunit) then
           do m = cft_lb, cft_ub
-             call add_column(ci=ci, li=li, ctype=((istcrop*100) + m), wtlunit=wt_cft(gi,m))
-             call add_patch(pi=pi, ci=ci, ptype=m, wtcol=1.0_r8)
+             if (pftcon%is_pft_known_to_model(m)) then
+                call add_column(ci=ci, li=li, ctype=((istcrop*100) + m), wtlunit=wt_cft(gi,m))
+                call add_patch(pi=pi, ci=ci, ptype=m, wtcol=1.0_r8)
+             end if
           end do
        end if
 

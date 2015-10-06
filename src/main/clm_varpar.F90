@@ -52,7 +52,7 @@ module clm_varpar
   integer            :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
 
   integer :: numpft      = mxpft   ! actual # of pfts (without bare)
-  integer :: numcft      =  64     ! actual # of crops
+  integer :: numcft      =  64     ! actual # of crops (includes unused CFTs that are merged into other CFTs)
   logical :: crop_prog   = .true.  ! If prognostic crops is turned on
   integer :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
 
@@ -73,14 +73,18 @@ module clm_varpar
   integer :: natpft_lb          ! In PATCH arrays, lower bound of Patches on the natural veg landunit (i.e., bare ground index)
   integer :: natpft_ub          ! In PATCH arrays, upper bound of Patches on the natural veg landunit
   integer :: natpft_size        ! Number of Patches on natural veg landunit (including bare ground)
-  integer :: cft_lb             ! In PATCH arrays, lower bound of Patches on the crop landunit
-  integer :: cft_ub             ! In PATCH arrays, upper bound of Patches on the crop landunit
-  integer :: cft_size           ! Number of Patches on crop landunit
+
+  ! The following variables pertain to arrays of all PFTs - e.g., those dimensioned (g,
+  ! pft_index). These include unused CFTs that are merged into other CFTs. Thus, these
+  ! variables do NOT give the actual number of CFTs on the crop landunit - that number
+  ! will generally be less because CLM does not simulate all crop types (some crop types
+  ! are merged into other types).
+  integer :: cft_lb             ! In arrays of PFTs, lower bound of PFTs on the crop landunit
+  integer :: cft_ub             ! In arrays of PFTs, upper bound of PFTs on the crop landunit
+  integer :: cft_size           ! Number of PFTs on crop landunit in arrays of PFTs
 
   integer :: maxpatch_glcmec    ! max number of elevation classes
   integer :: max_patch_per_col
-
-  real(r8) :: mach_eps            ! machine epsilon
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public clm_varpar_init          ! set parameters
@@ -133,8 +137,12 @@ contains
     cft_lb = natpft_ub + 1
     cft_ub = cft_lb + cft_size - 1
 
+    ! TODO(wjs, 2015-10-04, bugz 2227) Using numcft in this 'max' gives a significant
+    ! overestimate of max_patch_per_col when use_crop is true. This should be reworked -
+    ! or, better, removed from the code entirely (because it is a maintenance problem, and
+    ! I can't imagine that looping idioms that use it help performance that much, and
+    ! likely they hurt performance.)
     max_patch_per_col= max(numpft+1, numcft, maxpatch_urb)
-    mach_eps       = epsilon(1.0_r8)
 
     nlevsoifl   =  10
     nlevurb     =  5

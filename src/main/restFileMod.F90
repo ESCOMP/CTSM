@@ -420,7 +420,7 @@ contains
     use clm_varctl           , only : conventions, source
     use dynSubgridControlMod , only : get_flanduse_timeseries
     use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevurb, nlevcan
-    use clm_varpar           , only : cft_lb, cft_ub, maxpatch_glcmec
+    use clm_varpar           , only : maxpatch_glcmec
     use decompMod            , only : get_proc_global
     !
     ! !ARGUMENTS:
