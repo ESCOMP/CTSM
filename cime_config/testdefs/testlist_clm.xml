@@ -3,7 +3,7 @@
   <compset name="I">
     <grid name="1x1_brazil">
       <test name="ERS_Mmpi-serial_P1x1_Ld5">
-        <machine compiler="intel" testtype="aux_scripts" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_scripts" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
@@ -16,18 +16,18 @@
     </grid>
     <grid name="f09_g16">
       <test name="ERP_Ld5">
-        <machine compiler="intel" testtype="aux_science" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_science" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
     <grid name="f10_f10">
       <test name="ERP_D_Ld5">
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="NCK_Ld5">
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="prealpha" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
+        <machine compiler="pgi" testtype="prealpha" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
     <grid name="f45_f45">
@@ -48,7 +48,7 @@
     </grid>
     <grid name="f45_g37">
       <test name="ERS_E_Ld9">
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
   </compset>
@@ -80,14 +80,14 @@
     </grid>
     <grid name="f19_g16">
       <test name="ERP_E_Ld5">
-        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/default">edison</machine>
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/40default">edison</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="ERP_P180x2_Ld5">
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="ERP_P192x2_Ld5">
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
       </test>
     </grid>
     <grid name="f45_g37">
@@ -241,14 +241,14 @@
     </grid>
     <grid name="f19_g16">
       <test name="ERI_D_Ld9">
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="ERP_P180x2_Ld5">
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="ERP_P192x2_Ld5">
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
       </test>
     </grid>
     <grid name="f45_g37">
@@ -266,7 +266,7 @@
   <compset name="I1850CRUCLM45BGC">
     <grid name="f09_g16">
       <test name="ERI_Ld9">
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/drydepnomegan">yellowstone</machine>
       </test>
     </grid>
@@ -306,11 +306,11 @@
   <compset name="I1PT">
     <grid name="1x1_mexicocityMEX">
       <test name="SMS_Ld1">
-        <machine compiler="nag" testtype="aux_clm40" testmods="clm/default">hobart</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">janus</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">yellowstone</machine>
+        <machine compiler="nag" testtype="aux_clm40" testmods="clm/40default">hobart</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">janus</machine>
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
     <grid name="1x1_urbanc_alpha">
@@ -320,7 +320,7 @@
     </grid>
     <grid name="1x1_vancouverCAN">
       <test name="ERS_Ld5">
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">hobart</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">hobart</machine>
       </test>
     </grid>
   </compset>
@@ -390,16 +390,16 @@
     </grid>
     <grid name="f45_g37">
       <test name="ERI_Ld9">
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">janus</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">janus</machine>
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
     <grid name="ne30_g16">
       <test name="ERI_Ld9">
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
@@ -787,16 +787,16 @@
     </grid>
     <grid name="ne30_g16">
       <test name="ERP_D_P48x24_Ld3">
-        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/default">edison</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/40default">edison</machine>
       </test>
       <test name="ERP_D_P4x24_Ld5">
-        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/default">edison</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/40default">edison</machine>
       </test>
       <test name="ERP_D_P4x30_Ld5">
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="ERP_D_P64x16_Ld3">
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
   </compset>
@@ -806,20 +806,20 @@
         <machine compiler="pgi" testtype="aux_clm40" testmods="clm/reduceOutput">hobart</machine>
       </test>
       <test name="SMS_Ld1">
-        <machine compiler="intel " testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">janus</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel " testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">janus</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
     <grid name="1x1_smallvilleIA">
       <test name="ERP_D_Ld5">
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">edison</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">eos</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">hopper</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">titan</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">edison</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">eos</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">hopper</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">titan</machine>
       </test>
     </grid>
     <grid name="f10_f10">
@@ -832,8 +832,8 @@
     </grid>
     <grid name="f19_g16">
       <test name="ERP_Ld5">
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
   </compset>
@@ -945,6 +945,7 @@
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
       </test>
       <test name="ERP_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/fire_emis">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
@@ -957,8 +958,8 @@
   <compset name="ICRUCN">
     <grid name="hcru_hcru">
       <test name="ERP_D_Ld5">
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
@@ -1220,18 +1221,18 @@
   <compset name="IHISTCN">
     <grid name="f10_f10">
       <test name="ERI_D">
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16">
       <test name="ERP_Ld5">
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">bluewaters</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">edison</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">eos</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">hopper</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">titan</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">bluewaters</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">edison</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">eos</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">hopper</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">titan</machine>
       </test>
     </grid>
     <grid name="ne120_g16">
@@ -1405,8 +1406,8 @@
     </grid>
     <grid name="f19_g16">
       <test name="ERP_D">
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
     <grid name="ne120_g16">
@@ -1431,24 +1432,24 @@
         <machine compiler="null" testtype="null">null</machine>
       </test>
       <test name="SMS_D_Ld1">
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">janus</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">janus</machine>
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16">
       <test name="ERI_Ld5">
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">edison</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">goldbach</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">goldbach</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">hopper</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">edison</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">goldbach</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">goldbach</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">hopper</machine>
       </test>
       <test name="ERP_Ld5">
-        <machine compiler="pgi" testtype="aux_rasm" testmods="clm/default">eastwind</machine>
-        <machine compiler="intel" testtype="aux_rasm" testmods="clm/default">evergreen</machine>
-        <machine compiler="pgi" testtype="aux_rasm" testmods="clm/default">olympus</machine>
-        <machine compiler="intel" testtype="aux_rasm" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_rasm" testmods="clm/40default">eastwind</machine>
+        <machine compiler="intel" testtype="aux_rasm" testmods="clm/40default">evergreen</machine>
+        <machine compiler="pgi" testtype="aux_rasm" testmods="clm/40default">olympus</machine>
+        <machine compiler="intel" testtype="aux_rasm" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
     <grid name="f45_f45">
@@ -1463,10 +1464,10 @@
     </grid>
     <grid name="f45_g37">
       <test name="ERI_Ld5">
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">goldbach</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/default">goldbach</machine>
-        <machine compiler="intel" testtype="prealpha" testmods="clm/default">janus</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/default">janus</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">goldbach</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">goldbach</machine>
+        <machine compiler="intel" testtype="prealpha" testmods="clm/40default">janus</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40default">janus</machine>
       </test>
     </grid>
   </compset>

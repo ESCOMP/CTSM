@@ -102,6 +102,7 @@ module atm2lndType
      real(r8) , pointer :: prec365_patch                (:)   => null() ! patch 365-day running mean of tot. precipitation
      real(r8) , pointer :: prec60_patch                 (:)   => null() ! patch 60-day running mean of tot. precipitation (mm/s) 
      real(r8) , pointer :: prec10_patch                 (:)   => null() ! patch 10-day running mean of tot. precipitation (mm/s) 
+     real(r8) , pointer :: rh30_patch                   (:)   => null() ! patch 30-day running mean of relative humidity 
      real(r8) , pointer :: prec24_patch                 (:)   => null() ! patch 24-hour running mean of tot. precipitation (mm/s) 
      real(r8) , pointer :: rh24_patch                   (:)   => null() ! patch 24-hour running mean of relative humidity
      real(r8) , pointer :: wind24_patch                 (:)   => null() ! patch 24-hour running mean of wind
@@ -224,6 +225,7 @@ contains
     allocate(this%fsi240_patch                  (begp:endp))        ; this%fsi240_patch                  (:)   = nan
     allocate(this%prec10_patch                  (begp:endp))        ; this%prec10_patch                  (:)   = nan
     allocate(this%prec60_patch                  (begp:endp))        ; this%prec60_patch                  (:)   = nan
+    allocate(this%rh30_patch                    (begp:endp))        ; this%rh30_patch                    (:)   = nan 
     allocate(this%prec365_patch                 (begp:endp))        ; this%prec365_patch                 (:)   = nan
     if (use_ed) then
        allocate(this%prec24_patch               (begp:endp))        ; this%prec24_patch                  (:)   = nan
@@ -402,6 +404,23 @@ contains
          avgflag='A', long_name='direct radiation (last 240hrs)', &
          ptr_patch=this%fsd240_patch, default='inactive')
 
+    if (use_cn) then
+       this%rh30_patch(begp:endp) = spval
+       call hist_addfld1d (fname='RH30', units='%',  &
+            avgflag='A', long_name='30-day running mean of relative humidity', &
+            ptr_patch=this%rh30_patch, default='inactive')
+
+       this%prec10_patch(begp:endp) = spval
+       call hist_addfld1d (fname='PREC10', units='MM H2O/S',  &
+            avgflag='A', long_name='10-day running mean of PREC', &
+            ptr_patch=this%prec10_patch, default='inactive')
+
+       this%prec60_patch(begp:endp) = spval
+       call hist_addfld1d (fname='PREC60', units='MM H2O/S',  &
+            avgflag='A', long_name='60-day running mean of PREC', &
+            ptr_patch=this%prec60_patch, default='inactive')
+    end if
+
     if (use_cndv) then
        call hist_addfld1d (fname='TDA', units='K',  &
             avgflag='A', long_name='daily average 2-m temperature', &
@@ -470,6 +489,10 @@ contains
        call init_accum_field (name='PREC60', units='MM H2O/S', &
             desc='60-day running mean of total precipitation', accum_type='runmean', accum_period=-60, &
             subgrid_type='pft', numlev=1, init_value=0._r8)
+    
+       call init_accum_field (name='RH30', units='%', &
+            desc='30-day running mean of relative humidity', accum_type='runmean', accum_period=-30, &
+            subgrid_type='pft', numlev=1, init_value=100._r8)
     end if
 
     if (use_cndv) then
@@ -569,6 +592,9 @@ contains
 
        call extract_accum_field ('PREC60', rbufslp, nstep)
        this%prec60_patch(begp:endp) = rbufslp(begp:endp)
+   
+       call extract_accum_field ('RH30', rbufslp, nstep)
+       this%rh30_patch(begp:endp) = rbufslp(begp:endp)
     end if
 
     if (use_cndv) then
@@ -699,14 +725,14 @@ contains
        call extract_accum_field ('PREC24', this%prec24_patch, nstep)
 
        do p = bounds%begp,bounds%endp
-          c = patch%column(p)
+          g = patch%gridcell(p) 
           rbufslp(p) = this%forc_wind_grc(g) 
        end do
        call update_accum_field  ('WIND24', rbufslp, nstep)
        call extract_accum_field ('WIND24', this%wind24_patch, nstep)
 
        do p = bounds%begp,bounds%endp
-          c = patch%column(p)
+          g = patch%gridcell(p) 
           rbufslp(p) = this%forc_rh_grc(g) 
        end do
        call update_accum_field  ('RH24', rbufslp, nstep)
@@ -735,6 +761,16 @@ contains
      call update_accum_field  ('pbot240', rbufslp, nstep)
      call extract_accum_field ('pbot240', this%forc_pbot240_downscaled_patch, nstep)
 
+    endif
+
+    if (use_cn) then
+       do p = begp,endp
+          g = patch%gridcell(p) 
+          rbufslp(p) = this%forc_rh_grc(g)
+       end do
+       ! Accumulate and extract RH30 (accumulates RH as 30-day running mean)
+       call update_accum_field  ('RH30', rbufslp, nstep)
+       call extract_accum_field ('RH30', this%rh30_patch, nstep)
     endif
 
     deallocate(rbufslp)

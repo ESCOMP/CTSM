@@ -47,7 +47,7 @@ module dynSubgridDriverMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine dynSubgrid_init(bounds, dgvs_inst)
+  subroutine dynSubgrid_init(bounds, NLFilename, dgvs_inst)
     !
     ! !DESCRIPTION:
     ! Initialize objects needed for prescribed transient PFTs, CNDV, and/or dynamic
@@ -78,7 +78,8 @@ contains
     use dynCNDVMod        , only : dynCNDV_init
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in)    :: bounds  ! processor-level bounds
+    type(bounds_type), intent(in)    :: bounds     ! processor-level bounds
+    character(len=*) , intent(in)    :: NLFilename ! Namelist filename
     type(dgvs_type)  , intent(inout) :: dgvs_inst
     !
     ! !LOCAL VARIABLES:
@@ -87,7 +88,7 @@ contains
 
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
-    call dynSubgridControl_init
+    call dynSubgridControl_init( NLFilename )
     prior_weights = prior_weights_type(bounds)
 
     ! Initialize stuff for prescribed transient Patches

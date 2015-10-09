@@ -160,6 +160,9 @@ OPTIONS
                               This turns on the namelist variable: use_cndv
      -ed_mode                 Turn ED (Ecosystem Demography) : [on | off] (default is off)
                               Sets the namelist variable use_ed and use_spit_fire.
+     -fire_emis               Produce a fire_emis_nl namelist that will go into the
+                              "drv_flds_in" file for the driver to pass fire emissions to the atm.
+                              (Note: buildnml copies the file for use by the driver)
      -glc_present             Set to true if the glc model is present (not sglc).
                               This is used for error-checking, to make sure other options are
                               set appropriately.
@@ -263,6 +266,7 @@ sub process_commandline {
                chk_res               => undef,
                note                  => undef,
                drydep                => 0,
+               fire_emis             => 0,
                megan                 => 1,
                irrig                 => "default",
                res                   => "default",
@@ -287,6 +291,7 @@ sub process_commandline {
              "clm_usr_name=s"            => \$opts{'clm_usr_name'},
              "envxml_dir=s"              => \$opts{'envxml_dir'},
              "drydep!"                   => \$opts{'drydep'},
+             "fire_emis!"                => \$opts{'fire_emis'},
              "chk_res!"                  => \$opts{'chk_res'},
              "note!"                     => \$opts{'note'},
              "megan!"                    => \$opts{'megan'},
@@ -496,6 +501,7 @@ sub read_namelist_defaults {
   my @nl_defaults_files = ( "$nl_flags->{'cfgdir'}/namelist_files/namelist_defaults_overall.xml",
                             "$nl_flags->{'cfgdir'}/namelist_files/namelist_defaults_$phys.xml",
                             "$drvblddir/namelist_files/namelist_defaults_drv.xml",
+                            "$nl_flags->{'cfgdir'}/namelist_files/namelist_defaults_fire_emis.xml",
                             "$nl_flags->{'cfgdir'}/namelist_files/namelist_defaults_drydep.xml" );
 
   # Add the location of the use case defaults files to the options hash
@@ -1430,6 +1436,11 @@ sub process_namelist_inline_logic {
   #########################################
   setup_logic_humanindex($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
+  #################################
+  # namelist group: cnfire_inparm #
+  #################################
+  setup_logic_cnfire($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
   #######################################################################
   # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
   #######################################################################
@@ -1465,6 +1476,11 @@ sub process_namelist_inline_logic {
   # namelist group: drydep_inparm #
   #################################
   setup_logic_dry_deposition($opts, $nl_flags, $definition, $defaults, $nl);
+
+  #################################
+  # namelist group: fire_emis_nl  #
+  #################################
+  setup_logic_fire_emis($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #################################
   # namelist group: megan_emis_nl #
@@ -1661,7 +1677,7 @@ sub setup_logic_delta_time {
     if ( ! defined($dtime)  ) {
       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtime', 'val'=>$val);
     } elsif ( $dtime ne $val ) {
-#      fatal_error("can NOT set both -l_ncpl option (via LND_NCPL env variable) AND dtime namelist variable.\n");
+      fatal_error("can NOT set both -l_ncpl option (via LND_NCPL env variable) AND dtime namelist variable.\n");
     }
   } else {
     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtime', 'hgrid'=>$nl_flags->{'res'});
@@ -1827,6 +1843,15 @@ sub setup_logic_create_crop_landunit {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'create_crop_landunit', 'irrig'=>$nl_flags->{'irrig'} );
   } else {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'create_crop_landunit', 'use_crop'=>$nl_flags->{'use_crop'});
+  }
+}
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cnfire {
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
   }
 }
 
@@ -2691,6 +2716,26 @@ sub setup_logic_dry_deposition {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_fire_emis {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ($opts->{'fire_emis'} ) {
+    if ( $physv->as_long() < $physv->as_long("clm4_5") ) {
+      fatal_error("fire_emis option can NOT be set for CLM versions before clm4_5");
+    }
+    add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_factors_file');
+    add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_specifier');
+  } else {
+    if ( defined($nl->get_value('fire_emis_elevated'))     ||
+         defined($nl->get_value('fire_emis_factors_file')) ||
+         defined($nl->get_value('fire_emis_specifier')) ) {
+      fatal_error("fire_emission setting defined: fire_emis_elevated, fire_emis_factors_file, or fire_emis_specifier, but fire_emis option NOT set\n");
+    }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_megan {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -2884,6 +2929,7 @@ sub write_output_files {
     }
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
       push @groups, "clm_humanindex_inparm";
+      push @groups, "cnfire_inparm";
     }
   }
 
@@ -2892,9 +2938,9 @@ sub write_output_files {
   $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
   verbose_message("Writing clm namelist to $outfile");
 
-  # Drydep or MEGAN namelist
-  if ($opts->{'drydep'} || $opts->{'megan'} ) {
-    @groups = qw(drydep_inparm megan_emis_nl);
+  # Drydep, fire-emission or MEGAN namelist for driver
+  if ($opts->{'drydep'} || $opts->{'megan'} || $opts->{'fire_emis'} ) {
+    @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl);
     $outfile = "$opts->{'dir'}/drv_flds_in";
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     verbose_message("Writing @groups namelists to $outfile");

@@ -52,7 +52,7 @@ module clm_driver
   use CNVegStructUpdateMod   , only : CNVegStructUpdate 
   use CNAnnualUpdateMod      , only : CNAnnualUpdate
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
-  use CNFireMod              , only : CNFireInterp
+  use CNFireMethodMod        , only : cnfire_method_type
   use CNDVDriverMod          , only : CNDVDriver, CNDVHIST
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
@@ -81,6 +81,7 @@ module clm_driver
   use PatchType              , only : patch                
   use clm_instMod
   use clm_initializeMod      , only : soil_water_retention_curve
+  use CNFireEmissionsMod     , only : CNFireEmisUpdate
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -311,7 +312,7 @@ contains
     if (use_cn) then
        call t_startf('ndep_interp')
        call ndep_interp(bounds_proc, atm2lnd_inst)
-       call CNFireInterp(bounds_proc)
+       call cnfire_method%CNFireInterp(bounds_proc)
        call t_stopf('ndep_interp')
     end if
 
@@ -684,11 +685,15 @@ contains
                atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
                dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,          &
-               nutrient_competition_method)
+               nutrient_competition_method, cnfire_method)
 
-             call CNAnnualUpdate(bounds_clump,            &
-                  filter(nc)%num_soilc, filter(nc)%soilc, &
-                  filter(nc)%num_soilp, filter(nc)%soilp, &
+          ! fire carbon emissions 
+          call CNFireEmisUpdate(bounds_clump, filter(nc)%num_soilp, filter(nc)%soilp, &
+               cnveg_carbonflux_inst, cnveg_carbonstate_inst, fireemis_inst )
+
+          call CNAnnualUpdate(bounds_clump,            &
+               filter(nc)%num_soilc, filter(nc)%soilc, &
+               filter(nc)%num_soilp, filter(nc)%soilp, &
                cnveg_state_inst, cnveg_carbonflux_inst)
           call t_stopf('ecosysdyn')
 
@@ -880,7 +885,7 @@ contains
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
          waterstate_inst, waterflux_inst, energyflux_inst,               &
          solarabs_inst, cnveg_carbonflux_inst, drydepvel_inst,       &
-         vocemis_inst, dust_inst, ch4_inst, lnd2atm_inst) 
+         vocemis_inst, fireemis_inst, dust_inst, ch4_inst, lnd2atm_inst) 
     call t_stopf('lnd2atm')
 
     ! ============================================================================

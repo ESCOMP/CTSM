@@ -250,6 +250,7 @@ contains
     use clm_time_manager   , only : get_nstep, get_step_size  
     use seq_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
+    use shr_fire_emis_mod  , only : shr_fire_emis_mechcomps_n
     !
     ! !ARGUMENTS:
     implicit none
@@ -313,6 +314,14 @@ contains
        if (index_l2x_Fall_flxvoc  /= 0 ) then
           l2x(index_l2x_Fall_flxvoc:index_l2x_Fall_flxvoc+shr_megan_mechcomps_n-1,i) = &
                -lnd2atm_inst%flxvoc_grc(g,:shr_megan_mechcomps_n)
+       end if
+
+
+       ! for fire emis fluxes
+       if (index_l2x_Fall_flxfire  /= 0 ) then
+          l2x(index_l2x_Fall_flxfire:index_l2x_Fall_flxfire+shr_fire_emis_mechcomps_n-1,i) = &
+               -lnd2atm_inst%fireflx_grc(g,:shr_fire_emis_mechcomps_n)
+          l2x(index_l2x_Sl_ztopfire,i) = lnd2atm_inst%fireztop_grc(g)
        end if
 
        if (index_l2x_Fall_methane /= 0) then

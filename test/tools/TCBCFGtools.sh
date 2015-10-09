@@ -75,8 +75,8 @@ done < ${CLM_SCRIPTDIR}/config_files/$2
 if [ "$TOOLSLIBS" != "" ]; then
    export SLIBS=$TOOLSLIBS
 fi
-echo "env CIMEROOT=$CLM_ROOT/cime $config_string $CLM_ROOT/cime/machines/configure -mach $CESM_MACH -compiler $CESM_COMP $TOOLS_CONF_STRING"
-env CIMEROOT=$CLM_ROOT/cime $config_string $CLM_ROOT/cime/machines/configure -mach $CESM_MACH -compiler $CESM_COMP  $TOOLS_CONF_STRING >> test.log 2>&1
+echo "env CIMEROOT=$CLM_ROOT/cime $config_string $CLM_ROOT/cime/tools/configure -mach $CESM_MACH -compiler $CESM_COMP $TOOLS_CONF_STRING"
+env CIMEROOT=$CLM_ROOT/cime $config_string $CLM_ROOT/cime/tools/configure -mach $CESM_MACH -compiler $CESM_COMP  $TOOLS_CONF_STRING >> test.log 2>&1
 rc=$?
 if [ $rc -ne 0 ]; then
    echo "TCBCFGtools.sh: configure failed, error from configure= $rc" 
@@ -84,6 +84,8 @@ if [ $rc -ne 0 ]; then
    echo "FAIL.job${JOBID}" > TestStatus
    exit 5
 fi
+
+ln -s Macros.make Macros
 attempt=1
 still_compiling="TRUE"
 while [ $still_compiling = "TRUE" ]; do

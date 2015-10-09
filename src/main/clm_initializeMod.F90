@@ -11,7 +11,7 @@ module clm_initializeMod
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, is_cold_start
   use clm_varctl      , only : create_glacier_mec_landunit, iulog
-  use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_voc, use_c13, use_c14, use_ed
+  use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_ed
   use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
@@ -300,6 +300,8 @@ contains
     use SnowSnicarMod         , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod            , only : lnd2atm_minimal
     use NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
+    use CNFireFactoryMod      , only : create_cnfire_method
+    use controlMod            , only : NLFilename
     !
     ! !ARGUMENTS    
     !
@@ -350,6 +352,9 @@ contains
 
     allocate(nutrient_competition_method, &
          source=create_nutrient_competition_method())
+
+    allocate(cnfire_method, &
+         source=create_cnfire_method())
 
     if (use_cn .or. use_ed) then
        call readParameters(nutrient_competition_method)
@@ -456,7 +461,7 @@ contains
 
     call t_startf('init_dyn_subgrid')
     call init_subgrid_weights_mod(bounds_proc)
-    call dynSubgrid_init(bounds_proc, dgvs_inst)
+    call dynSubgrid_init(bounds_proc, NLFilename, dgvs_inst)
     call t_stopf('init_dyn_subgrid')
 
     ! ------------------------------------------------------------------------
@@ -464,7 +469,7 @@ contains
     ! ------------------------------------------------------------------------
 
     if (use_cn) then
-       call CNDriverInit(bounds_proc)
+       call CNDriverInit(bounds_proc, NLFilename, cnfire_method)
 
        if (n_drydep > 0 .and. drydep_method == DD_XLND) then
           ! Must do this also when drydeposition is used so that estimates of monthly 
@@ -585,7 +590,7 @@ contains
 
     if (use_cn) then
        call t_startf('init_ndep')
-       call ndep_init(bounds_proc)
+       call ndep_init(bounds_proc, NLFilename)
        call ndep_interp(bounds_proc, atm2lnd_inst)
        call t_stopf('init_ndep')
     end if

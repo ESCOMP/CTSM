@@ -39,6 +39,7 @@ module controlMod
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: exponential_rooting_profile, rootprof_exp, surfprof_exp, pftspecific_rootingprofile 
   use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
+  use CNFireFactoryMod                 , only: CNFireReadNML
   use clm_varctl                       
   !
   ! !PUBLIC TYPES:
@@ -402,6 +403,14 @@ contains
 
     call control_spmd()
     
+    ! ----------------------------------------------------------------------
+    ! Read in other namelists that are dependent on other namelist setttings
+    ! ----------------------------------------------------------------------
+
+    if ( use_cn ) then
+       call CNFireReadNML( NLFilename )
+    end if
+
     ! ----------------------------------------------------------------------
     ! consistency checks
     ! ----------------------------------------------------------------------

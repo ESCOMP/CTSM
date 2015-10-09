@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 352;
+my $ntests = 363;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 195;
+   $ntests += 201;
 }
 plan( tests=>$ntests );
 
@@ -145,7 +145,7 @@ if (@ARGV) {
     usage();
 }
 my $mode = "standard";
-system( "../configure -s" );
+system( "../configure -s -phys clm4_0" );
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
 my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -no-note";
@@ -237,13 +237,14 @@ my $options = "-co2_ppmv 250 -glc_nec 10 -glc_present -glc_smb .false.";
    &cleanup();
 
 print "\n==================================================\n";
-print "Test drydep and megan namelists  \n";
+print "Test drydep, fire_emis and megan namelists  \n";
 print "==================================================\n";
 
 # drydep and megan namelists
+system( "../configure -s -phys clm5_0" );
 my @mfiles = ( "lnd_in", "drv_flds_in", $tempfile );
 my $mfiles = NMLTest::CompFiles->new( $cwd, @mfiles );
-foreach my $options ( "-drydep", "-megan", "-drydep -megan" ) {
+foreach my $options ( "-drydep", "-megan", "-drydep -megan", "-fire_emis", "-drydep -megan -fire_emis" ) {
    &make_env_run();
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
@@ -260,6 +261,7 @@ foreach my $options ( "-drydep", "-megan", "-drydep -megan" ) {
    }
    &cleanup();
 }
+system( "../configure -s -phys clm4_0" );
 
 print "\n==================================================\n";
 print "Test irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
@@ -522,6 +524,21 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
+     "fireemiswith40"            =>{ options=>"-envxml_dir . -fire_emis",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm4_0",
+                                   },
+     "specWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
+                                     namelst=>"fire_emis_specifier='bc_a1 = BC'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "elevWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
+                                     namelst=>"fire_emis_elevated=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
      "envxml_not_dir"            =>{ options=>"-envxml_dir myuser_nl_clm",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -663,7 +680,7 @@ print "==================================================\n";
 # Run over single-point regional cases
 foreach my $res ( @regional ) {
    $mode = "$res";
-   system( "../configure -s -sitespf_pt $res" );
+   system( "../configure -s -sitespf_pt $res -phys clm4_0" );
    &make_env_run();
    eval{ system( "$bldnml -envxml_dir . > $tempfile 2>&1 " ); };
    is( $@, '', "$res" );
@@ -686,7 +703,7 @@ print "==================================================\n";
 
 # Check for crop resolutions
 my $mode = "crop";
-system( "../configure -s -crop on -bgc cn" );
+system( "../configure -s -crop on -bgc cn -phys clm4_0" );
 my @crop_res = ( "10x15", "1.9x2.5" );
 foreach my $res ( @crop_res ) {
    $options = "-res $res -envxml_dir .";
@@ -743,7 +760,7 @@ foreach my $res ( @glc_res ) {
 }
 # Transient 20th Century simulations
 my $mode = "standard";
-system( "../configure -s" );
+system( "../configure -s -phys clm4_0" );
 my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne60np4", "ne120np4", "10x15", "1x1_tropicAtl" );
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 0;
@@ -766,7 +783,7 @@ foreach my $res ( @tran_res ) {
 }
 # Transient rcp scenarios
 my $mode = "standard";
-system( "../configure -s" );
+system( "../configure -s -phys clm4_0" );
 my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
 foreach my $usecase ( "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient", "1850-2100_rcp6_transient", "1850-2100_rcp8.5_transient" ) {
    foreach my $res ( @tran_res ) {

@@ -86,6 +86,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <soil_resis_method phys="clm5_0">1</soil_resis_method>
 <soil_resis_method phys="clm4_5">0</soil_resis_method>
 
+<!-- CN Fire model method defaults -->
+<fire_method phys="clm5_0">li2016crufrc</fire_method>
+<fire_method phys="clm4_5">li2014qianfrc</fire_method>
+
 <!-- Canopy hydrology namelist defaults -->
 <use_clm5_fpi phys="clm5_0">.true.</use_clm5_fpi>
 <interception_fraction phys="clm5_0">1.0</interception_fraction>

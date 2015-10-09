@@ -57,8 +57,8 @@ module CNVegCarbonStateType
      real(r8), pointer :: totc_patch               (:) ! (gC/m2) total patch-level carbon, including cpool
      real(r8), pointer :: rootc_col                (:) ! (gC/m2) root carbon at column level (fire)
      real(r8), pointer :: leafc_col                (:) ! (gC/m2) column-level leafc (fire)
-     real(r8), pointer :: fuelc_col                (:) ! (0-1) fuel avalability factor for Reg.C 
-     real(r8), pointer :: fuelc_crop_col           (:) ! (0-1) fuel avalability factor for Reg.A 
+     real(r8), pointer :: fuelc_col                (:) ! fuel load outside cropland
+     real(r8), pointer :: fuelc_crop_col           (:) ! fuel load for cropland
 
      ! pools for dynamic landcover
      real(r8), pointer :: seedc_col                (:) ! (gC/m2) column-level pool for seeding new Patches

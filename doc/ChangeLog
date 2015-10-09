@@ -1,4 +1,190 @@
 ===============================================================
+Tag name:  clm4_5_3_r137
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Oct  9 12:07:35 MDT 2015
+One-line Summary: Bring in changes for fire-emissions as well tuning changes to the  fire model to be used with clm5_0
+
+Purpose of changes:
+     Move fire_clm4_5_2_r128_tags/fire06_clm4_5_3_r136 branch originated from Francis Vitt and Fang Li
+     to trunk. This does two things: sends fire-emissions from land to coupler (then to ATM), and has
+     an updated (retuned) version of CNFire from Fang Li. The retuned version is tuned for running with
+     CAM, but there are fire parameter changes that allow it to be tuned with CRU forcing.
+
+     CLM can test fire-emissions with the -fire_emis option to CLM_BLDNML_OPTS. Coupled configurations
+     with CAM-CHEM will turn on fire-emissions when fire_emis_nl namelist added to drv_flds_in coupler
+     namelist file.
+
+Requirements for tag: fire-emissions added and tested, clm4_5 identical, clm5_0 uses newly tuned fire-model
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+  Bug 2231 – Issue with PTCLM with changes in cime4.0.1
+  Bug 2229 – clm scripts not compatible with cime > cime2.x.y
+  Bug 2220 – Bug in fire model with ED for RH24 and WIND24
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Add ability to use and generate fire-emission namelist: fire_emis_nl
+    Add cnfire_inparm namelist for clm4_5 with fire_method to either li2014qianfrc (clm4_5 default), 
+    or li2016crufrc (clm5_0 default)
+    Add -fire_emis option to CLM build-namelist
+    Add shr_fire_emis_factors_file file to use when fire-emissions are sent to coupler
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, fang-li, fvitt
+
+List any svn externals directories updated (cime, rtm, cism, etc.):
+
+   PTCLM to PTCLM2_151009
+
+List all files eliminated:
+
+D       components/clm/src/biogeochem/CNFireMod.F90 --- clm4_5 fire model was split into
+          polymorphic versions that include clm4_5 and clm5_0 default versions
+
+List all files added and what they do:
+
+A       components/clm/bld/namelist_files/namelist_defaults_fire_emis.xml -- fire emissions
+          defaults to use when -fire_emis CLM_BLDNML_OPTS option is used
+
+------- Add some clm4_0 specific testmods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/fire_emis/user_nl_clm ------- Set fire-emission
+            history fields, include fire_emis_elevated=.true.
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/fire_emis/include_user_mods - use default
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/fire_emis
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/flexibleCN/include_user_mods ---- use default
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset/shell_commands - turn -fire_emis
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/40default/user_nl_clm ---- Same as default
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/40default/shell_commands - Same as default, but no -fire_emis
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/40default
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/reduceOutput/shell_commands - -no-fire_emis
+
+------- Fire model polymorphic options
+------- CNFireFactory chooses which version, CNFireMethod is abstract class, CNFireBase is base class
+------- CNFireLi2014 extends the base class for clm4_5 default version CNFireLi2016 extends base class
+------- for clm5_0 default version
+A       components/clm/src/biogeochem/CNFireFactoryMod.F90 --- Factory and namelist to figure out which
+           version to implement.
+A       components/clm/src/biogeochem/CNFireMethodMod.F90 ---- Abstract class to define all interfaces
+A       components/clm/src/biogeochem/CNFireBaseMod.F90 ------ Base class, does initialization and
+           handles lightning and pop-dens datasets
+A       components/clm/src/biogeochem/CNFireLi2014Mod.F90 ---- Implements CNFireArea and CNFireFluxes
+           for the clm4_5 default version
+A       components/clm/src/biogeochem/CNFireLi2016Mod.F90 ---- Implements CNFireArea and CNFireFluxes
+           for the clm5_0 default version, tuned with CAM5 (parameter changes for version tuned to CRUNCEP)
+
+------- Fire emission factors
+A       components/clm/src/biogeochem/FireEmisFactorsMod.F90 -- Fire emission factors from new NetCDF dataset
+A       components/clm/src/biogeochem/CNFireEmissionsMod.F90 -- Gathers carbon emissions from fire sources 
+              to be sent to CAM-Chem via the coupler
+
+List all existing files that have been modified, and describe the changes:
+
+------- Get working with cime4.0.1
+M       components/clm/test/tools/TCBCFGtools.sh --- change location of configure and soft link Macros.make
+M       components/clm/test/tools/TCBtools.sh ------ change location of configure and soft link Macros.make
+
+------- Update sample namelist (used for tools tests)
+M       components/clm/tools/clm4_5/mksurfdata_map/mksurfdata_map.namelist
+
+------- 
+M       components/clm/bld/unit_testers/build-namelist_test.pl ----------- Add fire_emis tests
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Add default fire_method options
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Add cnfire_inparm, and fire_emis_nl
+           namelist groups.  Adding: fire_method, fire_emis_elevated, fire_emis_factors_file, and fire_emis_specifier
+M       components/clm/bld/CLMBuildNamelist.pm --------------------------- Add cnfire_inparm namelist and
+           handle fire_emis option simialr to megan and drydep options. 
+           Add: fire_emis_elevated, fire_emis_factors_file, and fire_emis_specifier
+
+------- 
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/crop/include_user_mods - use 40defaults
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/flexibleCN/user_nl_clm - use defaults, so just set use_flexibleCN
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/pts/include_user_mods -- use 40defaults
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/default/shell_commands - Add -fire_emis
+M       components/clm/cime_config/testdefs/testlist_clm.xml ------- Change clm4_0 tests to use 40default
+             and add fire_emis test
+M       components/clm/cime_config/user_nl_clm ---- Add mention of -fire_emis option
+
+------- 
+M       components/clm/src/dyn_subgrid/dynSubgridControlMod.F90 - NFileName to NLFilename, and read_namelist
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90 -- Pass NLFilename down to dynSubgrid_init
+M       components/clm/src/cpl/clm_cpl_indices.F90 -------------- Add fire-fluxes, and top of fire emissions
+M       components/clm/src/cpl/lnd_import_export.F90 ------------ Set fire-fluxes and top of fire emission
+M       components/clm/src/biogeochem/VOCEmissionMod.F90 -------- Add an additional coefficient multiply
+              (currently just set to 1.0)
+M       components/clm/src/biogeochem/CNDriverMod.F90 ----------- Pass NLFilename and cnfire_method
+              down to CNDriverInit and cnfire_method to CNDriverNoLeaching, and use for CNFireArea and
+              CNFireFluxes calls
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90 -- Correct fire variable descriptions 
+              (fuelc_col, fuelc_crop_col)
+MM      components/clm/src/main/clm_initializeMod.F90 ----------- Add create_cnfire_method, pass NLFilename
+               down to CNDriverInit, ndep_init, and dynSubgrid_init
+M       components/clm/src/main/lnd2atmMod.F90 ------------------ Add use shr_fire_emis_mod to handle
+               fire emissions to send from land to ATM
+M       components/clm/src/main/ndepStreamMod.F90 --------------- NLFilename passed down rather than using 
+               controlMod
+M       components/clm/src/main/lnd2atmType.F90 ----------------- Add wild-fire emissions flux and vertical
+               distribution
+M       components/clm/src/main/atm2lndType.F90 ----------------- Add RH30, PREC10, and PREC60
+              ( 30 day relative humidity, 10 and 60 day precipitation) Fix bug 2220 for ED
+M       components/clm/src/main/clm_instMod.F90 ----------------- Add cnfire and fireemis objects
+              call initialize for fireemis
+MM      components/clm/src/main/controlMod.F90 ------------------ Call CNFireReadNML
+M       components/clm/src/main/clm_driver.F90 ------------------ Replace cnfire_method object
+              for calls to CNFire module, add call to CNFireEmisUpdate
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone   yes
+
+  unit-tests (components/clm/src):
+
+    yellowstone yes
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone yes
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone yes
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel yes
+    yellowstone_pgi   yes
+    yellowstone_gnu   yes
+    hobart_nag        yes
+
+CLM tag used for the baseline comparisons:  clm4_5_3_r137
+
+Changes answers relative to baseline: Yes, for clm5_0
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5_0
+    - what platforms/compilers: All
+    - nature of change (fire tuned differently):
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r136
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date: Thu Oct  8 10:15:33 MDT 2015

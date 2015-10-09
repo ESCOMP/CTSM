@@ -50,23 +50,25 @@ module CNDriverMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNDriverInit(bounds)
+  subroutine CNDriverInit(bounds, NLFilename, cnfire_method)
     !
     ! !DESCRIPTION:
     ! Initialzation of the CN Ecosystem dynamics.
     !
     ! !USES:
     use CNPhenologyMod              , only : CNPhenologyInit
-    use CNFireMod                   , only : CNFireInit
+    use CNFireMethodMod             , only : cnfire_method_type
     use SoilBiogeochemCompetitionMod, only : SoilBiogeochemCompetitionInit
     !
     ! !ARGUMENTS:
-    type(bounds_type)                      , intent(in) :: bounds      
+    type(bounds_type)                      , intent(in)    :: bounds      
+    character(len=*)                       , intent(in)    :: NLFilename     ! Namelist filename
+    class(cnfire_method_type)              , intent(inout) :: cnfire_method 
     !-----------------------------------------------------------------------
 
     call SoilBiogeochemCompetitionInit(bounds)
     call CNPhenologyInit(bounds)
-    call CNFireInit(bounds)
+    call cnfire_method%CNFireInit(bounds, NLFilename)
     
   end subroutine CNDriverInit
 
@@ -85,7 +87,8 @@ contains
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,                &
        atm2lnd_inst, waterstate_inst, waterflux_inst,                                      &
        canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst,            &
-       dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst, nutrient_competition_method)
+       dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,                     &
+       nutrient_competition_method, cnfire_method)
     !
     ! !DESCRIPTION:
     ! The core CN code is executed here. Calculates fluxes for maintenance
@@ -102,7 +105,7 @@ contains
     use CNMRespMod                        , only: CNMResp
     use CNPhenologyMod                    , only: CNPhenology
     use CNGRespMod                        , only: CNGResp
-    use CNFireMod                         , only: CNFireArea, CNFireFluxes
+    use CNFireMethodMod                   , only: cnfire_method_type
     use CNCIsoFluxMod                     , only: CIsoFlux1, CIsoFlux2, CIsoFlux2h, CIsoFlux3
     use CNC14DecayMod                     , only: C14Decay
     use CNWoodProductsMod                 , only: CNWoodProducts
@@ -164,6 +167,7 @@ contains
     type(soilhydrology_type)                , intent(in)    :: soilhydrology_inst
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
+    class(cnfire_method_type)               , intent(inout) :: cnfire_method
     !
     ! !LOCAL VARIABLES:
     real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
@@ -611,14 +615,14 @@ contains
     ! Calculate fire area and fluxes
     !--------------------------------------------
 
-    call CNFireArea(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+    call cnfire_method%CNFireArea(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
          atm2lnd_inst, energyflux_inst, soilhydrology_inst, waterstate_inst, &
          cnveg_state_inst, cnveg_carbonstate_inst, &
          totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
          decomp_cpools_vr_col=soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools), &
          t_soi17cm_col=temperature_inst%t_soi17cm_col(begc:endc))
 
-    call CNFireFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                                    &
+    call cnfire_method%CNFireFluxes(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,                                      &
          dgvs_inst, cnveg_state_inst,                                                                                              &
          cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                         &
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp, 1:nlevdecomp_full),                                  &

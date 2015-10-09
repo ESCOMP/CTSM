@@ -64,6 +64,7 @@ module clm_instMod
   use UrbanParamsType                 , only : urbanparams_type
   use HumanIndexMod                   , only : humanindex_type
   use VOCEmissionMod                  , only : vocemis_type
+  use CNFireEmissionsMod              , only : fireemis_type
   use atm2lndType                     , only : atm2lnd_type
   use lnd2atmType                     , only : lnd2atm_type
   use lnd2glcMod                      , only : lnd2glc_type 
@@ -78,6 +79,7 @@ module clm_instMod
   use EDCLMLinkMod                    , only : ed_clm_type
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
+  use CNFireMethodMod                 , only : cnfire_method_type
   !
   use SoilStateInitTimeConstMod       , only : SoilStateInitTimeConst
   use SoilHydrologyInitTimeConstMod   , only : SoilHydrologyInitTimeConst
@@ -129,6 +131,7 @@ module clm_instMod
   type(cnveg_nitrogenflux_type)           :: cnveg_nitrogenflux_inst
   type(cn_balance_type)                   :: cn_balance_inst
   class(nutrient_competition_method_type), allocatable :: nutrient_competition_method
+  class(cnfire_method_type)              , allocatable :: cnfire_method
 
   ! Soil biogeochem types 
   type(soilbiogeochem_state_type)         :: soilbiogeochem_state_inst
@@ -147,6 +150,7 @@ module clm_instMod
   type(crop_type)                         :: crop_inst
   type(dust_type)                         :: dust_inst
   type(vocemis_type)                      :: vocemis_inst
+  type(fireemis_type)                     :: fireemis_inst
   type(drydepvel_type)                    :: drydepvel_inst
 
   ! ED types passed in from top level
@@ -322,6 +326,8 @@ contains
     if (use_voc ) then
        call vocemis_inst%Init(bounds)
     end if
+
+    call fireemis_inst%Init(bounds)
 
     call drydepvel_inst%Init(bounds)
 

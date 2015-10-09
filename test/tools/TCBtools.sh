@@ -85,10 +85,12 @@ while [ $still_compiling = "TRUE" ]; do
       HOSTNAME=`uname -n | cut -c 1-2`
       if [ "$HOSTNAME" = "be" ]; then
          echo "TCBtools.sh: run configure for gen_domain on bluefire"
-         env CIMEROOT=${CLM_ROOT}/cime ${CLM_ROOT}/cime/machines/configure -mach bluefire >> test.log 2>&1
+         env CIMEROOT=${CLM_ROOT}/cime ${CLM_ROOT}/cime/tools/configure -mach bluefire >> test.log 2>&1
          rc=$?
       fi
    fi
+
+    ln -s Macros.make Macros
 
     echo "TCBtools.sh: call to make:" 
     echo "        ${MAKE_CMD} ${config_string} "

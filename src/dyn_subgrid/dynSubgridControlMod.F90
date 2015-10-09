@@ -43,7 +43,7 @@ module dynSubgridControlMod
 contains
   
   !-----------------------------------------------------------------------
-  subroutine dynSubgridControl_init
+  subroutine dynSubgridControl_init( NLFilename )
     !
     ! !DESCRIPTION:
     ! Initialize the dyn_subgrid_control settings.
@@ -52,13 +52,14 @@ contains
     use spmdMod           , only : masterproc
     !
     ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
     !
     ! !LOCAL VARIABLES:
     
     character(len=*), parameter :: subname = 'dynSubgridControl_init'
     !-----------------------------------------------------------------------
     
-    call read_namelist
+    call read_namelist( NLFilename )
     if (masterproc) then
        call check_namelist_consistency
     end if
@@ -66,7 +67,7 @@ contains
   end subroutine dynSubgridControl_init
 
   !-----------------------------------------------------------------------
-  subroutine read_namelist
+  subroutine read_namelist( NLFilename )
     !
     ! !DESCRIPTION:
     ! Read dyn_subgrid_control namelist variables
@@ -74,12 +75,12 @@ contains
     ! !USES:
     use fileutils      , only : getavu, relavu
     use clm_nlUtilsMod , only : find_nlgroup_name
-    use controlMod     , only : NLFilename
     use clm_varctl     , only : iulog
     use spmdMod        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
     !
     ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename   ! Namelist filename
     !
     ! !LOCAL VARIABLES:
     ! temporary variables corresponding to the components of dyn_subgrid_control_type:
