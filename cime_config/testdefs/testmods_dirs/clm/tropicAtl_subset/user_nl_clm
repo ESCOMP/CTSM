@@ -2,3 +2,8 @@ flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_1x
 
 ! Need to set this to false because the landuse_timeseries file starts in 1939, disagreeing with the 1850 surface dataset
 check_dynpft_consistency = .false.
+
+! more_vertlayers was a namelist default for this 1x1_tropAtl
+! grid. DML didn't see any reason for that. Just making
+! soil_layerstruct a testmod
+soil_layerstruct = '23SL_3.5m'

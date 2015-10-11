@@ -9,14 +9,11 @@ module clm_varpar
   use clm_varctl   , only: use_extralakelayers, use_vertsoilc, use_crop
   use clm_varctl   , only: use_century_decomp, use_c13, use_c14
   use clm_varctl   , only: iulog, create_crop_landunit, irrigate
-  use clm_varctl   , only: use_vichydro
+  use clm_varctl   , only: use_vichydro, soil_layerstruct
   !
   ! !PUBLIC TYPES:
   implicit none
   save
-  !
-  logical, public :: more_vertlayers = .false. ! true => run with more vertical soil layers
-  logical, public :: deep_soilcolumn = .false. ! true => run with deep soil column
 
   ! Note - model resolution is read in from the surface dataset
 
@@ -146,20 +143,22 @@ contains
 
     nlevsoifl   =  10
     nlevurb     =  5
-    if ( .not. more_vertlayers )then
+    write(iulog, *) 'soil_layerstruct varpar ',soil_layerstruct
+    if ( soil_layerstruct == '10SL_3.5m' ) then
        nlevsoi     =  nlevsoifl
        nlevgrnd    =  15
-    else
+    else if ( soil_layerstruct == '23SL_3.5m' ) then 
        nlevsoi     =  8  + nlev_equalspace
        nlevgrnd    =  15 + nlev_equalspace
-    end if
-
-! this will override more_vertlayers
-    if ( deep_soilcolumn )then
+    else if ( soil_layerstruct == '49SL_10m' ) then
       nlevsoi     =  49 ! 10x10 + 9x100 + 30x300 = 1e4mm = 10m
 !       nlevsoi     =  29 ! 10x10 + 9x100 + 10x300 = 4e3mm = 4m
        nlevgrnd    =  nlevsoi+5
+    else if ( soil_layerstruct == '20SL_8.5m' ) then
+      nlevsoi     =  20 
+      nlevgrnd    =  nlevsoi+5
     endif
+    write(iulog, *) 'soil_layerstruct varpar ',soil_layerstruct,nlevsoi,nlevgrnd
 
     if (use_vichydro) then
        nlayert     =  nlayer + (nlevgrnd -nlevsoi)

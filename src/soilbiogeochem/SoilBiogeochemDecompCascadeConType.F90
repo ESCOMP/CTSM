@@ -55,6 +55,11 @@ contains
     allocate(decomp_cascade_con%cascade_donor_pool(1:ndecomp_cascade_transitions))
     allocate(decomp_cascade_con%cascade_receiver_pool(1:ndecomp_cascade_transitions))
 
+    ! NOTE(bja, 2015-10) according to Dave Lawrence and Charlie Koven,
+    ! the indexing of decomposing pools from 0:ndecomp_pools is a
+    ! bug. The lower bound should be 1. The index zero data shouldn't
+    ! be used.
+    
     !-- properties of each decomposing pool
     allocate(decomp_cascade_con%floating_cn_ratio_decomp_pools(0:ndecomp_pools))
     allocate(decomp_cascade_con%decomp_pool_name_restart(0:ndecomp_pools))
@@ -69,7 +74,7 @@ contains
     allocate(decomp_cascade_con%is_metabolic(0:ndecomp_pools))
     allocate(decomp_cascade_con%is_cellulose(0:ndecomp_pools))
     allocate(decomp_cascade_con%is_lignin(0:ndecomp_pools))
-    allocate(decomp_cascade_con%spinup_factor(0:ndecomp_pools))
+    allocate(decomp_cascade_con%spinup_factor(1:ndecomp_pools))
 
     !-- properties of each pathway along decomposition cascade 
     decomp_cascade_con%cascade_step_name(1:ndecomp_cascade_transitions) = ''
@@ -90,7 +95,7 @@ contains
     decomp_cascade_con%is_metabolic(0:ndecomp_pools)                   = .false.
     decomp_cascade_con%is_cellulose(0:ndecomp_pools)                   = .false.
     decomp_cascade_con%is_lignin(0:ndecomp_pools)                      = .false.
-    decomp_cascade_con%spinup_factor(0:ndecomp_pools)                  = nan
+    decomp_cascade_con%spinup_factor(1:ndecomp_pools)                  = nan
 
   end subroutine init_decomp_cascade_constants
 

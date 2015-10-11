@@ -69,7 +69,6 @@ module SoilBiogeochemDecompCascadeBGCMod
      real(r8) :: minpsi_bgc   !minimum soil water potential for heterotrophic resp
      
      integer  :: nsompools = 3
-     real(r8),allocatable :: spinup_vector(:) ! multipliers for soil decomp during accelerated spinup
 
   end type params_type
   !
@@ -96,10 +95,6 @@ contains
     real(r8)           :: tempr   ! temporary to read in constant
     character(len=100) :: tString ! temp. var for reading
     !-----------------------------------------------------------------------
-
-    ! These are not read off of netcdf file
-    allocate(params_inst%spinup_vector(params_inst%nsompools))
-    params_inst%spinup_vector(:) = (/ 1.0_r8, 15.0_r8, 675.0_r8 /)
 
     ! Read off of netcdf file
     tString='tau_l1'
@@ -266,6 +261,7 @@ contains
     integer :: i_s3s1
     integer :: i_cwdl2
     integer :: i_cwdl3
+    real(r8):: speedup_fac                  ! acceleration factor, higher when vertsoilc = .true.
 
     integer  :: c, j    ! indices
     real(r8) :: t       ! temporary variable
@@ -294,6 +290,7 @@ contains
          is_cellulose                   => decomp_cascade_con%is_cellulose                       , & ! Output: [logical           (:)     ]  TRUE => pool is cellulose                                 
          is_lignin                      => decomp_cascade_con%is_lignin                          , & ! Output: [logical           (:)     ]  TRUE => pool is lignin                                    
          spinup_factor                  => decomp_cascade_con%spinup_factor                        & ! Output: [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
+
          )
 
       allocate(rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp))
@@ -443,13 +440,34 @@ contains
       is_cellulose(i_soil3) = .false.
       is_lignin(i_soil3) = .false.
 
+!DML
+
+      i_litr1 = i_met_lit
+      i_litr2 = i_cel_lit
+      i_litr3 = i_lig_lit
+      i_soil1 = 5
+      i_soil2 = 6
+      i_soil3 = 7
+      speedup_fac = 1._r8                     !Account for non-temperature factors (water, depth, o2)
+      if (use_vertsoilc) speedup_fac = 3._r8
+
+      !lit1
       spinup_factor(i_litr1) = 1._r8
-      spinup_factor(i_litr2) = 1._r8
-      spinup_factor(i_litr3) = 1._r8
-      spinup_factor(i_cwd) = 1._r8
-      spinup_factor(i_soil1) = params_inst%spinup_vector(1)
-      spinup_factor(i_soil2) = params_inst%spinup_vector(2)
-      spinup_factor(i_soil3) = params_inst%spinup_vector(3)
+      !lit2,3
+      spinup_factor(i_litr2) = max(1._r8, (speedup_fac * params_inst%tau_l2_l3_bgc))
+      spinup_factor(i_litr3) = max(1._r8, (speedup_fac * params_inst%tau_l2_l3_bgc))
+      !CWD
+      spinup_factor(i_cwd) = max(1._r8, (speedup_fac * params_inst%tau_cwd_bgc / 2._r8 ))
+      !som1
+      spinup_factor(i_soil1) = 1._r8
+      !som2,3
+      spinup_factor(i_soil2) = max(1._r8, (speedup_fac * params_inst%tau_s2_bgc))
+      spinup_factor(i_soil3) = max(1._r8, (speedup_fac * params_inst%tau_s3_bgc))
+
+      write(iulog,*) 'Spinup_state ',spinup_state
+      write(iulog,*) 'Spinup factors ',spinup_factor
+
+!DML
 
       !----------------  list of transitions and their time-independent coefficients  ---------------!
       i_l1s1 = 1
@@ -592,6 +610,7 @@ contains
     real(r8):: days_per_year                ! days per year
     real(r8):: depth_scalar(bounds%begc:bounds%endc,1:nlevdecomp) 
     real(r8):: mino2lim                     !minimum anaerobic decomposition rate
+
     !-----------------------------------------------------------------------
 
     !----- CENTURY T response function
@@ -612,7 +631,8 @@ contains
          t_scalar       => soilbiogeochem_carbonflux_inst%t_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil temperature scalar for decomp                     
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
-         decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col   & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)             
+         decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
+         spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
 
       mino2lim = CNParamsShareInst%mino2lim
@@ -664,22 +684,25 @@ contains
       k_s3 = 1._r8    / (secspday * days_per_year * tau_s3)
       k_frag = 1._r8  / (secspday * days_per_year * tau_cwd)
 
-      ! calc ref rate
-      catanf_30 = catanf(30._r8)
-      ! The following code implements the acceleration part of the AD spinup algorithm
-
-      if ( spinup_state .eq. 1 ) then
-         k_s1 = k_s1 * params_inst%spinup_vector(1)
-         k_s2 = k_s2 * params_inst%spinup_vector(2)
-         k_s3 = k_s3 * params_inst%spinup_vector(3)
-      endif
-
-      i_litr1 = 1
-      i_litr2 = 2
-      i_litr3 = 3
+      i_litr1 = i_met_lit
+      i_litr2 = i_cel_lit
+      i_litr3 = i_lig_lit
       i_soil1 = 5
       i_soil2 = 6
       i_soil3 = 7
+
+      if ( spinup_state >= 1 ) then
+         k_l1 = k_l1 * spinup_factor(i_litr1)
+         k_l2_l3 = k_l2_l3 * spinup_factor(i_litr2)
+         k_frag = k_frag * spinup_factor(i_cwd)
+         k_s1 = k_s1 * spinup_factor(i_soil1)
+         k_s2 = k_s2 * spinup_factor(i_soil2)
+         k_s3 = k_s3 * spinup_factor(i_soil3)
+      endif
+!DML
+
+      ! calc ref rate
+      catanf_30 = catanf(30._r8)
 
       !--- time dependent coefficients-----!
       if ( nlevdecomp .eq. 1 ) then

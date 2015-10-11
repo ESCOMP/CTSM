@@ -1887,10 +1887,8 @@ sub setup_logic_soilstate {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'more_vertlayers', 'hgrid'=>$nl_flags->{'res'} );
-    $nl_flags->{'more_vert'} = $nl->get_value('more_vertlayers');
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'deep_soilcolumn' );
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct' );
   }
 }
 
@@ -2045,7 +2043,6 @@ sub setup_logic_initial_conditions {
                     'use_vertsoilc'=>$nl_flags->{'use_vertsoilc'},
                     'use_century_decomp'=>$nl_flags->{'use_century_decomp'},
                     'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
-                    'more_vertlayers'=>$nl_flags->{'more_vert'},
                     'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_crop'=>$nl_flags->{'use_crop'},
                     'irrigate'=>$nl_flags->{'irrigate'} );
       }
@@ -2066,7 +2063,6 @@ sub setup_logic_initial_conditions {
                     'use_vertsoilc'=>$nl_flags->{'use_vertsoilc'},
                     'use_century_decomp'=>$nl_flags->{'use_century_decomp'},
                     'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
-                    'more_vertlayers'=>$nl_flags->{'more_vert'},
                     'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_crop'=>$nl_flags->{'use_crop'},
                     'irrigate'=>$nl_flags->{'irrigate'} );
       }
@@ -2087,7 +2083,6 @@ sub setup_logic_initial_conditions {
                     'use_vertsoilc'=>$nl_flags->{'use_vertsoilc'},
                     'use_century_decomp'=>$nl_flags->{'use_century_decomp'},
                     'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
-                    'more_vertlayers'=>$nl_flags->{'more_vert'},
                     'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_crop'=>$nl_flags->{'use_crop'},
                     'irrigate'=>$nl_flags->{'irrigate'} );
       }

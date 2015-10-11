@@ -41,6 +41,7 @@ contains
     use pftconMod        , only : ntrp_corn, nirrig_trp_corn
     use pftconMod        , only : nsugarcane, nirrig_sugarcane
     use pftconMod        , only : pftcon
+    use clm_varctl       , only : spinup_state
     use clm_time_manager , only : get_rad_step_size
     !
     ! !ARGUMENTS:
@@ -198,9 +199,14 @@ contains
                   end if
 
                else
-
-                  htop(p) = ((3._r8 * deadstemc(p) * taper * taper)/ &
-                       (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
+                  !correct height calculation if doing accelerated spinup
+                  if (spinup_state == 2) then
+                    htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper * taper)/ &
+                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
+                  else
+                    htop(p) = ((3._r8 * deadstemc(p) * taper * taper)/ &
+                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
+                  end if
 
                endif
 

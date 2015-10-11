@@ -57,6 +57,7 @@ module CNVegCarbonStateType
      real(r8), pointer :: totc_patch               (:) ! (gC/m2) total patch-level carbon, including cpool
      real(r8), pointer :: rootc_col                (:) ! (gC/m2) root carbon at column level (fire)
      real(r8), pointer :: leafc_col                (:) ! (gC/m2) column-level leafc (fire)
+     real(r8), pointer :: deadstemc_col            (:) ! (gC/m2) column-level deadstemc (fire)
      real(r8), pointer :: fuelc_col                (:) ! fuel load outside cropland
      real(r8), pointer :: fuelc_crop_col           (:) ! fuel load for cropland
 
@@ -168,6 +169,7 @@ contains
     allocate(this%totprodc_col             (begc:endc)) ; this%totprodc_col             (:) = nan
     allocate(this%rootc_col                (begc:endc)) ; this%rootc_col                (:) = nan
     allocate(this%leafc_col                (begc:endc)) ; this%leafc_col                (:) = nan
+    allocate(this%deadstemc_col            (begc:endc)) ; this%deadstemc_col            (:) = nan
     allocate(this%fuelc_col                (begc:endc)) ; this%fuelc_col                (:) = nan
     allocate(this%fuelc_crop_col           (begc:endc)) ; this%fuelc_crop_col           (:) = nan
 
@@ -1013,6 +1015,8 @@ contains
     ! !USES:
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
     use clm_varcon       , only : c14ratio
+    use clm_varctl       , only : spinup_state, use_cndv
+    use clm_time_manager , only : get_nstep
     use restUtilMod
     use ncdio_pio
     !
@@ -1026,7 +1030,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer            :: i,j,k,l,c
-    real(r8)           :: m         ! multiplier for the exit_spinup code
+!    real(r8)           :: m         ! multiplier for the exit_spinup code
     character(len=128) :: varname   ! temporary
     logical            :: readvar
     integer            :: idata
@@ -1040,6 +1044,9 @@ contains
     real(r8)           :: c4_r2     ! isotope ratio (13c/[12c+13c]) for C4 photosynthesis
     ! flags for comparing the model and restart decomposition cascades
     integer            :: decomp_cascade_state, restart_file_decomp_cascade_state 
+    ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
+    integer            :: restart_file_spinup_state
+
     !------------------------------------------------------------------------
 
     if (carbon_type == 'c13' .or. carbon_type == 'c14') then
@@ -1154,6 +1161,46 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='totcolc', xtype=ncd_double,  &
             dim1name='column', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%totc_col) 
+
+       if (flag == 'read') then
+          call restartvar(ncid=ncid, flag=flag, varname='spinup_state', xtype=ncd_int, &
+            long_name='Spinup state of the model that wrote this restart file: ' &
+            // ' 0 = normal model mode, 1 = AD spinup, 2 = AAD spinup', units='', &
+            interpinic_flag='copy', readvar=readvar,  data=idata)
+
+          if (readvar) then
+             restart_file_spinup_state = idata
+          else
+             restart_file_spinup_state = spinup_state
+             if ( masterproc ) then
+                write(iulog,*) ' CNRest: WARNING!  Restart file does not contain info ' &
+                      // ' on spinup state used to generate the restart file. '
+                 write(iulog,*) '   Assuming the same as current setting: ', spinup_state
+             end if
+          end if
+       end if
+
+       if (flag == 'read' .and. spinup_state /= restart_file_spinup_state .and. .not. use_cndv) then
+          write(iulog, *) 'exit_spinup ',exit_spinup,' restart_file_spinup_state ',restart_file_spinup_state
+          if (spinup_state == 0 .and. restart_file_spinup_state == 2 ) then
+             if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools out of AD spinup mode'
+             exit_spinup = .true.
+             write(iulog, *) 'Multiplying stemc and crootc by 10 for exit spinup'
+             do i = bounds%begp,bounds%endp
+                this%deadstemc_patch(i) = this%deadstemc_patch(i) * 10._r8
+                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * 10._r8
+             end do
+          else if (spinup_state == 2 .and. restart_file_spinup_state == 0 ) then
+             if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools into AD spinup mode'
+             enter_spinup = .true.
+             write(iulog, *) 'Dividing stemc and crootc by 10 for enter spinup '
+             do i = bounds%begp,bounds%endp
+                this%deadstemc_patch(i) = this%deadstemc_patch(i) / 10._r8
+                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / 10._r8
+             end do
+          end if
+       end if
+
     end if
 
     !--------------------------------
@@ -2036,6 +2083,7 @@ contains
        i  = filter_column(fi)
        this%rootc_col(i)                = value_column
        this%leafc_col(i)                = value_column
+       this%deadstemc_col(i)            = value_column
        this%fuelc_col(i)                = value_column
        this%fuelc_crop_col(i)           = value_column
        this%totvegc_col(i)              = value_column

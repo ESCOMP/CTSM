@@ -92,7 +92,7 @@ contains
       end do ! end of columns loop
 
       do l = 1, ndecomp_pools
-         if ( spinup_state == 1) then
+         if ( spinup_state >= 1) then
             ! speed up radioactive decay by the same factor as decomposition so tat SOM ages prematurely in all respects
             spinup_term = spinup_factor(l) 
          else

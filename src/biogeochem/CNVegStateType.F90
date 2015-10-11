@@ -6,8 +6,8 @@ module CNVegStateType
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoifl, nlevsoi, crop_prog
-  use clm_varpar     , only : ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full, more_vertlayers  
+  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoi, crop_prog
+  use clm_varpar     , only : ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full
   use clm_varctl     , only : use_vertsoilc, use_c14, use_cn, iulog, fsurdat 
   use clm_varcon     , only : spval, ispval, c14ratio, grlnd
   use landunit_varcon, only : istsoil, istcrop
@@ -457,24 +457,8 @@ contains
     ! Open surface dataset
     ! --------------------------------------------------------------------
 
-    if (masterproc) then
-       write(iulog,*) 'Attempting to read soil color, sand and clay boundary data .....'
-    end if
-
     call getfil (fsurdat, locfn, 0)
     call ncd_pio_openfile (ncid, locfn, 0)
-
-    call ncd_inqdlen(ncid,dimid,nlevsoifl,name='nlevsoi')
-!scs: this appears to duplicate check in initVertical
-!!$    if ( .not. more_vertlayers )then
-!!$       if ( nlevsoifl /= nlevsoi )then
-!!$          call endrun(msg=' ERROR: Number of soil layers on file does NOT match the number being used'//&
-!!$               errMsg(__FILE__, __LINE__))
-!!$       end if
-!!$    else
-!!$       ! read in layers, interpolate to high resolution grid later
-!!$    end if
-
 
     ! --------------------------------------------------------------------
     ! Read in GDP data 

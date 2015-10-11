@@ -664,10 +664,10 @@ contains
         ! only allow this to occur on first timestep of model run.
         
         if (flag == 'read' .and. spinup_state /= restart_file_spinup_state ) then
-           if (spinup_state == 0 .and. restart_file_spinup_state == 1 ) then
+           if (spinup_state == 0 .and. restart_file_spinup_state >= 1 ) then
               if ( masterproc ) write(iulog,*) ' CNRest: taking SOM pools out of AD spinup mode'
               exit_spinup = .true.
-           else if (spinup_state == 1 .and. restart_file_spinup_state == 0 ) then
+           else if (spinup_state >= 1 .and. restart_file_spinup_state == 0 ) then
               if ( masterproc ) write(iulog,*) ' CNRest: taking SOM pools into AD spinup mode'
               enter_spinup = .true.
            else

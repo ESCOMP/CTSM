@@ -4,7 +4,9 @@
    <entry bugz="2070" >FAIL ERS_D_Ld5_Mmpi-serial.1x1_brazil.ICLM45ED.yellowstone_intel.clm-edTest</entry>
    <entry bugz="2221" >RUN SMS_Ld5.f19_g16.ICLM45ED.yellowstone_intel.clm-edTest</entry>
    <entry bugz="2221" >RUN SMS_Ld5.f10_f10.ICLM45ED.yellowstone_intel.clm-edTest</entry>
+   <entry bugz=""     >RUN ERP_D_Ld5.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay</entry>
 
+   <entry bugz=""     >RUN ERP_Ld5.f09_g16.ICLM45VIC.yellowstone_pgi.clm-vrtlay</entry>
    <entry bugz="2221" >RUN SMS_Ld5.f10_f10.ICLM45ED.yellowstone_pgi.clm-edTest</entry>
 
    <entry bugz="2070" >RUN SMS_Ld5.f19_g16.ICLM45ED.yellowstone_gnu.clm-edTest</entry>

@@ -237,7 +237,8 @@ module clm_varctl
   ! bedrock / soil depth switch
   !----------------------------------------------------------
 
-  logical, public :: use_bedrock = .false. ! true => use spatially variable soil depth
+  logical,           public :: use_bedrock = .false. ! true => use spatially variable soil depth
+  character(len=16), public :: soil_layerstruct = '10SL_3.5m'
 
   !----------------------------------------------------------
   ! lake evaporation / irrigation limitation switch

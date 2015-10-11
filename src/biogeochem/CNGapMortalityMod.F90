@@ -88,7 +88,7 @@ contains
     use clm_time_manager , only: get_days_per_year
     use clm_varpar       , only: nlevdecomp_full
     use clm_varcon       , only: secspday
-    use clm_varctl       , only: use_cndv
+    use clm_varctl       , only: use_cndv, spinup_state
     use pftconMod        , only: npcropmin
     use clm_varctl       , only : carbon_excess_opt            
     use clm_varctl       , only : carbon_storage_excess_opt    
@@ -118,11 +118,11 @@ contains
     real(r8):: mort_max      ! asymptotic max mortality rate (/yr)
     real(r8):: k_mort = 0.3  ! coeff of growth efficiency in mortality equation
          
-    real(r8):: leafcn_storage_actual 					
-    real(r8):: leafcn_actual       									
-    real(r8):: frootcn_storage_actual       										
-    real(r8):: frootcn_actual               	
-    real(r8):: livestemcn_storage_actual    	
+    real(r8):: leafcn_storage_actual 
+    real(r8):: leafcn_actual     
+    real(r8):: frootcn_storage_actual       
+    real(r8):: frootcn_actual              
+    real(r8):: livestemcn_storage_actual    
     real(r8):: livestemcn_actual            	
     real(r8):: livecrootcn_storage_actual   			
     real(r8):: livecrootcn_actual           	
@@ -203,9 +203,14 @@ contains
          cnveg_carbonflux_inst%m_leafc_to_litter_patch(p)               = cnveg_carbonstate_inst%leafc_patch(p)               * m
          cnveg_carbonflux_inst%m_frootc_to_litter_patch(p)              = cnveg_carbonstate_inst%frootc_patch(p)              * m
          cnveg_carbonflux_inst%m_livestemc_to_litter_patch(p)           = cnveg_carbonstate_inst%livestemc_patch(p)           * m
-         cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)           = cnveg_carbonstate_inst%deadstemc_patch(p)           * m
          cnveg_carbonflux_inst%m_livecrootc_to_litter_patch(p)          = cnveg_carbonstate_inst%livecrootc_patch(p)          * m
-         cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)          = cnveg_carbonstate_inst%deadcrootc_patch(p)          * m
+         if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
+           cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)  * m * 10._r8
+           cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * 10._r8        
+         else
+           cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)           * m
+           cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)          * m
+         end if
 
          ! storage pools
          cnveg_carbonflux_inst%m_leafc_storage_to_litter_patch(p)       = cnveg_carbonstate_inst%leafc_storage_patch(p)       * m
@@ -222,16 +227,16 @@ contains
             ! computing carbon to nitrogen ratio of different plant parts 
                     
             if (cnveg_nitrogenstate_inst%leafn_patch(p) == 0.0_r8) then   ! to avoid division by zero, and also to make leafcn_actual(p) a very large number if leafn(p) is zero 
-               leafcn_actual = cnveg_carbonstate_inst%leafc_patch(p) / 0.000000001_r8    				
-            else                        										
-               leafcn_actual = cnveg_carbonstate_inst%leafc_patch(p)  / cnveg_nitrogenstate_inst%leafn_patch(p)   					! leaf CN ratio 
-            end if    																												 														
+               leafcn_actual = cnveg_carbonstate_inst%leafc_patch(p) / 0.000000001_r8
+            else                        
+               leafcn_actual = cnveg_carbonstate_inst%leafc_patch(p)  / cnveg_nitrogenstate_inst%leafn_patch(p)  ! leaf CN ratio
+            end if
           
             if (cnveg_nitrogenstate_inst%frootn_patch(p) == 0.0_r8) then   ! to avoid division by zero, and also to make frootcn_actual(p) a very large number if frootc(p) is zero 
-               frootcn_actual = cnveg_carbonstate_inst%frootc_patch(p) / 0.000000001_r8    			
-            else                        										
-               frootcn_actual = cnveg_carbonstate_inst%frootc_patch(p) / cnveg_nitrogenstate_inst%frootn_patch(p) 					! fine root CN ratio 
-            end if    														
+               frootcn_actual = cnveg_carbonstate_inst%frootc_patch(p) / 0.000000001_r8    
+            else                       
+               frootcn_actual = cnveg_carbonstate_inst%frootc_patch(p) / cnveg_nitrogenstate_inst%frootn_patch(p) ! fine root CN ratio 
+            end if    
       
             if (woody(ivt(p)) == 1._r8) then  
 
@@ -443,12 +448,19 @@ contains
          !------------------------------------------------------
 
          ! displayed pools
-         cnveg_nitrogenflux_inst%m_leafn_to_litter_patch(p)               = cnveg_nitrogenstate_inst%leafn_patch(p)      * m
-         cnveg_nitrogenflux_inst%m_frootn_to_litter_patch(p)              = cnveg_nitrogenstate_inst%frootn_patch(p)     * m
-         cnveg_nitrogenflux_inst%m_livestemn_to_litter_patch(p)           = cnveg_nitrogenstate_inst%livestemn_patch(p)  * m
-         cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)           = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * m
-         cnveg_nitrogenflux_inst%m_livecrootn_to_litter_patch(p)          = cnveg_nitrogenstate_inst%livecrootn_patch(p) * m
-         cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)          = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * m
+         cnveg_nitrogenflux_inst%m_leafn_to_litter_patch(p)            = cnveg_nitrogenstate_inst%leafn_patch(p)               * m
+         cnveg_nitrogenflux_inst%m_frootn_to_litter_patch(p)           = cnveg_nitrogenstate_inst%frootn_patch(p)              * m
+         cnveg_nitrogenflux_inst%m_livestemn_to_litter_patch(p)        = cnveg_nitrogenstate_inst%livestemn_patch(p)           * m
+         cnveg_nitrogenflux_inst%m_livecrootn_to_litter_patch(p)       = cnveg_nitrogenstate_inst%livecrootn_patch(p)          * m
+
+         if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
+           cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * m * 10._r8
+           cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * m * 10._r8
+         else
+           cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_patch(p)           * m 
+           cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_patch(p)          * m 
+         end if
+
          if (ivt(p) < npcropmin) then
             cnveg_nitrogenflux_inst%m_retransn_to_litter_patch(p) = cnveg_nitrogenstate_inst%retransn_patch(p) * m
          end if

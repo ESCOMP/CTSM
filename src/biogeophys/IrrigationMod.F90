@@ -332,6 +332,12 @@ contains
          do p = bounds%begp, bounds%endp
             c = patch%column(p)
             if (patch%itype(p) /= noveg) then
+!!$               call soil_water_retention_curve%soil_suction_inverse( &
+!!$                    smp_target = smpso(patch%itype(p)), &
+!!$                    smpsat = sucsat(c,j), &
+!!$                    bsw = bsw(c,j), &
+!!$                    s_target = this%relsat_so_patch(p,j))
+!scs
                call soil_water_retention_curve%soil_suction_inverse( &
                     c,j,smpso(patch%itype(p)),soilstate_inst, &
                     this%relsat_so_patch(p,j))

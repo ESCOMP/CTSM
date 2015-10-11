@@ -90,12 +90,12 @@ contains
     use spmdMod             , only : masterproc
     use ncdio_pio           , only : file_desc_t, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
     use ncdio_pio           , only : ncd_pio_openfile, ncd_pio_closefile, ncd_inqdlen
-    use clm_varpar          , only : more_vertlayers, numpft, numrad, deep_soilcolumn
+    use clm_varpar          , only : numpft, numrad
     use clm_varpar          , only : nlevsoi, nlevgrnd, nlevlak, nlevsoifl, nlayer, nlayert, nlevurb, nlevsno
     use clm_varcon          , only : zsoi, dzsoi, zisoi, spval
     use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_ed
-    use clm_varctl          , only : iulog, fsurdat, paramfile 
+    use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct
     use landunit_varcon     , only : istice, istdlak, istwet, istsoil, istcrop, istice_mec
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
     use fileutils           , only : getfil
@@ -124,7 +124,6 @@ contains
     real(r8)           :: om_tkd         = 0.05_r8      ! thermal conductivity of dry organic soil (Farouki, 1981)
     real(r8)           :: om_b                          ! Clapp Hornberger paramater for oragnic soil (Letts, 2000)
     real(r8)           :: zsapric        = 0.5_r8       ! depth (m) that organic matter takes on characteristics of sapric peat
-!scs
     real(r8)           :: pcalpha        = 0.5_r8       ! percolation threshold
     real(r8)           :: pcbeta         = 0.139_r8     ! percolation exponent
     real(r8)           :: pc_lake        = 0.5_r8       ! percolation threshold
@@ -238,16 +237,6 @@ contains
 
     call getfil (fsurdat, locfn, 0)
     call ncd_pio_openfile (ncid, locfn, 0)
-
-    call ncd_inqdlen(ncid,dimid,nlevsoifl,name='nlevsoi')
-    if ( .not. more_vertlayers .and. .not. deep_soilcolumn)then
-       if ( nlevsoifl /= nlevsoi )then
-          call endrun(msg=' ERROR: Number of soil layers on file does NOT match the number being used'//&
-               errMsg(__FILE__, __LINE__))
-       end if
-    else
-       ! read in layers, interpolate to high resolution grid later
-    end if
 
     ! Read in organic matter dataset 
 
@@ -391,9 +380,9 @@ contains
        else
 
           do lev = 1,nlevgrnd
-
-             if ( more_vertlayers .or. deep_soilcolumn)then ! duplicate clay and sand values from last soil layer
-
+             ! DML - this if statement could probably be removed and just the
+             ! top part used for all soil layer structures
+             if ( soil_layerstruct /= '10SL_3.5m' )then ! apply soil texture from 10 layer input dataset 
                 if (lev .eq. 1) then
                    clay = clay3d(g,1)
                    sand = sand3d(g,1)
@@ -596,7 +585,6 @@ contains
                                        om_tkd * om_frac
              soilstate_inst%csol_col(c,lev)   = ((1._r8-om_frac)*(2.128_r8*sand+2.385_r8*clay) / (sand+clay) +   &
                                        om_csol * om_frac)*1.e6_r8  ! J/(m3 K)
-
              soilstate_inst%watdry_col(c,lev) = soilstate_inst%watsat_col(c,lev) &
                   * (316230._r8/soilstate_inst%sucsat_col(c,lev)) ** (-1._r8/soilstate_inst%bsw_col(c,lev))
              soilstate_inst%watopt_col(c,lev) = soilstate_inst%watsat_col(c,lev) &

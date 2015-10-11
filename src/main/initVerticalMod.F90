@@ -12,13 +12,12 @@ module initVerticalMod
   use shr_sys_mod       , only : shr_sys_abort
   use decompMod         , only : bounds_type
   use spmdMod           , only : masterproc
-  use clm_varpar        , only : more_vertlayers, deep_soilcolumn
   use clm_varpar        , only : nlevsno, nlevgrnd, nlevlak
   use clm_varpar        , only : toplev_equalspace, nlev_equalspace
   use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb 
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
-  use clm_varctl        , only : use_bedrock
+  use clm_varctl        , only : use_bedrock, soil_layerstruct
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
   use landunit_varcon   , only : istdlak, istice_mec
@@ -147,16 +146,6 @@ contains
     call getfil (fsurdat, locfn, 0)
     call ncd_pio_openfile (ncid, locfn, 0)
 
-    call ncd_inqdlen(ncid, dimid, nlevsoifl, name='nlevsoi')
-    if ( .not. more_vertlayers .and. .not. deep_soilcolumn)then
-       if ( nlevsoifl /= nlevsoi )then
-          call shr_sys_abort(' ERROR: Number of soil layers on file does NOT match the number being used'//&
-               errMsg(__FILE__, __LINE__))
-       end if
-    else
-       ! read in layers, interpolate to high resolution grid later
-    end if
-
     ! --------------------------------------------------------------------
     ! Define layer structure for soil, lakes, urban walls and roof 
     ! Vertical profile of snow is not initialized here - but below
@@ -164,10 +153,27 @@ contains
     
     ! Soil layers and interfaces (assumed same for all non-lake patches)
     ! "0" refers to soil surface and "nlevsoi" refers to the bottom of model soil
-    
-    if ( more_vertlayers )then
-       ! replace standard exponential grid with a grid that starts out exponential, 
-       ! then has several evenly spaced layers, then finishes off exponential. 
+
+    if ( soil_layerstruct == '10SL_3.5m' ) then 
+       do j = 1, nlevgrnd
+          zsoi(j) = scalez*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
+       enddo
+
+       dzsoi(1) = 0.5_r8*(zsoi(1)+zsoi(2))             !thickness b/n two interfaces
+       do j = 2,nlevgrnd-1
+          dzsoi(j)= 0.5_r8*(zsoi(j+1)-zsoi(j-1))
+       enddo
+       dzsoi(nlevgrnd) = zsoi(nlevgrnd)-zsoi(nlevgrnd-1)
+
+       zisoi(0) = 0._r8
+       do j = 1, nlevgrnd-1
+          zisoi(j) = 0.5_r8*(zsoi(j)+zsoi(j+1))         !interface depths
+       enddo
+       zisoi(nlevgrnd) = zsoi(nlevgrnd) + 0.5_r8*dzsoi(nlevgrnd)
+
+    else if ( soil_layerstruct == '23SL_3.5m' )then
+       ! Soil layer structure that starts with standard exponential
+       ! and then has several evenly spaced layers, then finishes off exponential. 
        ! this allows the upper soil to behave as standard, but then continues 
        ! with higher resolution to a deeper depth, so that, for example, permafrost
        ! dynamics are not lost due to an inability to resolve temperature, moisture, 
@@ -183,27 +189,21 @@ contains
        do j = toplev_equalspace + nlev_equalspace +1, nlevgrnd
           zsoi(j) = scalez*(exp(0.5_r8*((j - nlev_equalspace)-0.5_r8))-1._r8) + nlev_equalspace * thick_equal
        enddo
-    else
 
-       do j = 1, nlevgrnd
-          zsoi(j) = scalez*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
+       dzsoi(1) = 0.5_r8*(zsoi(1)+zsoi(2))             !thickness b/n two interfaces
+       do j = 2,nlevgrnd-1
+          dzsoi(j)= 0.5_r8*(zsoi(j+1)-zsoi(j-1))
        enddo
-    end if
+       dzsoi(nlevgrnd) = zsoi(nlevgrnd)-zsoi(nlevgrnd-1)
 
-    dzsoi(1) = 0.5_r8*(zsoi(1)+zsoi(2))             !thickness b/n two interfaces
-    do j = 2,nlevgrnd-1
-       dzsoi(j)= 0.5_r8*(zsoi(j+1)-zsoi(j-1))
-    enddo
-    dzsoi(nlevgrnd) = zsoi(nlevgrnd)-zsoi(nlevgrnd-1)
-
-    zisoi(0) = 0._r8
-    do j = 1, nlevgrnd-1
+       zisoi(0) = 0._r8
+       do j = 1, nlevgrnd-1
        zisoi(j) = 0.5_r8*(zsoi(j)+zsoi(j+1))         !interface depths
-    enddo
-    zisoi(nlevgrnd) = zsoi(nlevgrnd) + 0.5_r8*dzsoi(nlevgrnd)
+       enddo
+       zisoi(nlevgrnd) = zsoi(nlevgrnd) + 0.5_r8*dzsoi(nlevgrnd)
 
-    if ( deep_soilcolumn )then
-!scs: 10 meter soil column, nlevsoi set to 49 in clm_varpar
+    else if ( soil_layerstruct == '49SL_10m' ) then
+       !scs: 10 meter soil column, nlevsoi set to 49 in clm_varpar
        do j = 1,10
           dzsoi(j)= 1.e-2_r8     !10mm layers
        enddo
@@ -225,22 +225,44 @@ contains
        do j = 1, nlevgrnd
           zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
        enddo
-    endif
 
-    if (masterproc) then
-       write(iulog, *) 'zsoi', zsoi(:) 
-       write(iulog, *) 'zisoi: ', zisoi(:)
-       write(iulog, *) 'dzsoi: ', dzsoi(:)
+    else if ( soil_layerstruct == '20SL_8.5m' ) then
+       do j = 1,4
+          dzsoi(j)= j*0.02_r8          ! linear increase in layer thickness of 2cm each layer
+       enddo
+       do j = 5,13
+          dzsoi(j)= dzsoi(4)+(j-4)*0.04_r8      ! linear increase in layer thickness of 2cm each layer
+       enddo
+       do j = 14,nlevsoi       
+          dzsoi(j)= dzsoi(13)+(j-13)*0.10_r8     ! linear increase in layer thickness of 2cm each layer
+       enddo
+       do j = nlevsoi+1,nlevgrnd !bedrock layers
+          dzsoi(j)= dzsoi(nlevsoi)+(((j-nlevsoi)*25._r8)**1.5_r8)/100._r8  ! bedrock layers
+       enddo
+       
+       zisoi(0) = 0._r8
+       do j = 1,nlevgrnd
+          zisoi(j)= sum(dzsoi(1:j))
+       enddo
+       
+       do j = 1, nlevgrnd
+          zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
+       enddo
     end if
 
-    ! define a vertical grid spacing such that it is the normal dzsoi if nlevdecomp =nlevgrnd, or else 1 meter
+    ! define a vertical grid spacing such that it is the normal dzsoi if
+    ! nlevdecomp =nlevgrnd, or else 1 meter
     if (use_vertsoilc) then
        dzsoi_decomp = dzsoi            !thickness b/n two interfaces
     else
        dzsoi_decomp(1) = 1.
     end if
+
     if (masterproc) then
-       write(iulog, *) 'dzsoi_decomp', dzsoi_decomp(:) 
+       write(iulog, *) 'zsoi', zsoi(:) 
+       write(iulog, *) 'zisoi: ', zisoi(:)
+       write(iulog, *) 'dzsoi: ', dzsoi(:)
+       write(iulog, *) 'dzsoi_decomp: ',dzsoi_decomp
     end if
 
     if (nlevurb > 0) then

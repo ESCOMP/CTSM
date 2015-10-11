@@ -157,6 +157,7 @@ contains
 
                   else
                      cinput_rootfr(p,1) = 0.
+!scs: in future use this   cinput_rootfr(p,1) = 0.
                   endif
                end do
             endif

@@ -498,9 +498,9 @@ contains
     do fc = 1,num_special_col
        c = special_col(fc)
        this%seedn_col(c)    = 0._r8
-       this%prod10n_col(c)  = 0._r8	  
-       this%prod100n_col(c) = 0._r8	  
-       this%totprodn_col(c) = 0._r8	  
+       this%prod10n_col(c)  = 0._r8
+       this%prod100n_col(c) = 0._r8  
+       this%totprodn_col(c) = 0._r8  
     end do
 
     ! initialize fields for special filters
@@ -520,6 +520,9 @@ contains
     ! !USES:
     use restUtilMod
     use ncdio_pio
+    use clm_varctl             , only : spinup_state, use_cndv
+    use clm_time_manager       , only : get_nstep
+
     !
     ! !ARGUMENTS:
     class (cnveg_nitrogenstate_type) :: this
@@ -532,6 +535,13 @@ contains
     logical            :: readvar
     real(r8), pointer  :: ptr1d(:)   ! temp. pointers for slicing larger arrays
     character(len=128) :: varname    ! temporary
+    logical            :: exit_spinup  = .false.
+    logical            :: enter_spinup = .false.
+    integer            :: idata
+
+    ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
+    integer            :: restart_file_spinup_state
+
     !------------------------------------------------------------------------
 
     !--------------------------------
@@ -655,6 +665,45 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='totcoln', xtype=ncd_double,  &
          dim1name='column', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%totn_col) 
+
+    if (flag == 'read') then
+       call restartvar(ncid=ncid, flag=flag, varname='spinup_state', xtype=ncd_int, &
+         long_name='Spinup state of the model that wrote this restart file: ' &
+         // ' 0 = normal model mode, 1 = AD spinup', units='', &
+         interpinic_flag='copy', readvar=readvar,  data=idata)
+
+       if (readvar) then
+          restart_file_spinup_state = idata
+       else
+          restart_file_spinup_state = spinup_state
+          if ( masterproc ) then
+             write(iulog,*) ' CNRest: WARNING!  Restart file does not contain info ' &
+                   // ' on spinup state used to generate the restart file. '
+             write(iulog,*) '   Assuming the same as current setting: ', spinup_state
+          end if
+       end if
+    end if
+
+    if (flag == 'read' .and. spinup_state /= restart_file_spinup_state .and. .not. use_cndv) then
+       if (spinup_state == 0 .and. restart_file_spinup_state == 2 ) then
+          if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools out of AD spinup mode'
+          exit_spinup = .true.
+          write(iulog, *) 'Multiplying stemn and crootn by 10 for exit spinup '
+          do i = bounds%begp,bounds%endp
+             this%deadstemn_patch(i) = this%deadstemn_patch(i) * 10._r8
+             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) * 10._r8
+          end do
+       else if (spinup_state == 2 .and. restart_file_spinup_state == 0 ) then
+          if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools into AD spinup mode'
+          enter_spinup = .true.
+          write(iulog, *) 'Dividing stemn and crootn by 10 for enter spinup '
+          do i = bounds%begp,bounds%endp
+             this%deadstemn_patch(i) = this%deadstemn_patch(i) / 10._r8
+             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) / 10._r8
+          end do
+       endif
+
+    end if
 
   end subroutine Restart
 

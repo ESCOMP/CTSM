@@ -91,7 +91,7 @@ contains
     use clm_time_manager     , only: get_step_size, get_days_per_year, get_curr_date, get_nstep
     use clm_varpar           , only: max_patch_per_col
     use clm_varcon           , only: secspday
-    use clm_varctl           , only: use_nofire
+    use clm_varctl           , only: use_nofire, spinup_state
     use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
     use pftconMod            , only: nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
     use dynSubgridControlMod , only : get_do_transient_pfts
@@ -213,6 +213,7 @@ contains
          deadcrootc         => cnveg_carbonstate_inst%deadcrootc_patch         , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C                        
          deadcrootc_storage => cnveg_carbonstate_inst%deadcrootc_storage_patch , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C storage                
          deadcrootc_xfer    => cnveg_carbonstate_inst%deadcrootc_xfer_patch    , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C transfer               
+         deadstemc          => cnveg_carbonstate_inst%deadstemc_patch          , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead stem root C
          frootc             => cnveg_carbonstate_inst%frootc_patch             , & ! Input:  [real(r8) (:)     ]  (gC/m2) fine root C                               
          frootc_storage     => cnveg_carbonstate_inst%frootc_storage_patch     , & ! Input:  [real(r8) (:)     ]  (gC/m2) fine root C storage                       
          frootc_xfer        => cnveg_carbonstate_inst%frootc_xfer_patch        , & ! Input:  [real(r8) (:)     ]  (gC/m2) fine root C transfer                      
@@ -224,6 +225,7 @@ contains
          leafc_xfer         => cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Input:  [real(r8) (:)     ]  (gC/m2) leaf C transfer                           
          rootc_col          => cnveg_carbonstate_inst%rootc_col                , & ! Output: [real(r8) (:)     ]  root carbon                                       
          leafc_col          => cnveg_carbonstate_inst%leafc_col                , & ! Output: [real(r8) (:)     ]  leaf carbon at column level                       
+         deadstemc_col      => cnveg_carbonstate_inst%deadstemc_col            , & ! Output: [real(r8) (:)     ]  deadstem carbon at column level
          fuelc              => cnveg_carbonstate_inst%fuelc_col                , & ! Output: [real(r8) (:)     ]  fuel load coutside cropland                 
          fuelc_crop         => cnveg_carbonstate_inst%fuelc_crop_col             & ! Output: [real(r8) (:)     ]  fuel load for cropland                 
          )
@@ -253,6 +255,10 @@ contains
       call p2c(bounds, num_soilc, filter_soilc, &
            leafc(bounds%begp:bounds%endp), &
            leafc_col(bounds%begc:bounds%endc))
+
+      call p2c(bounds, num_soilc, filter_soilc, &
+           deadstemc(bounds%begp:bounds%endp), &
+           deadstemc_col(bounds%begc:bounds%endc))
 
      call get_curr_date (kyr, kmo, kda, mcsec)
      dayspyr = get_days_per_year()
@@ -531,6 +537,9 @@ contains
         hdmlf=this%forc_hdm(g)
         if( cropf_col(c)  <  1._r8 )then
            fuelc(c) = totlitc(c)+totvegc_col(c)-rootc_col(c)-fuelc_crop(c)*cropf_col(c)
+           if (spinup_state == 2) then
+              fuelc(c) = fuelc(c) + ((10._r8 - 1._r8)*deadstemc_col(c))
+           end if
            do j = 1, nlevdecomp  
               fuelc(c) = fuelc(c)+decomp_cpools_vr(c,j,i_cwd) * dzsoi_decomp(j)
            end do
@@ -629,7 +638,7 @@ contains
    ! !USES:
    use clm_time_manager     , only: get_step_size,get_days_per_year,get_curr_date
    use clm_varpar           , only: max_patch_per_col
-   use clm_varctl           , only: use_cndv
+   use clm_varctl           , only: use_cndv, spinup_state
    use clm_varcon           , only: secspday
    use pftconMod            , only: nc3crop
    use dynSubgridControlMod , only: get_do_transient_pfts
@@ -660,6 +669,7 @@ contains
    integer :: g,c,p,j,l,pi,kyr, kmo, kda, mcsec   ! indices
    integer :: fp,fc                ! filter indices
    real(r8):: f                    ! rate for fire effects (1/s)
+   real(r8):: m                    ! acceleration factor for fuel carbon
    real(r8):: dt                   ! time step variable (s)
    real(r8):: dayspyr              ! days per year
    logical :: do_transient_pfts    ! whether transient pfts are active in this run
@@ -901,13 +911,18 @@ contains
         ! apply this rate to the patch state variables to get flux rates
         ! biomass burning
         ! carbon fluxes
+        m = 1._r8
+        if (spinup_state == 2) then
+           m = 10._r8
+        end if
+
         m_leafc_to_fire(p)               =  leafc(p)              * f * cc_leaf(patch%itype(p))
         m_leafc_storage_to_fire(p)       =  leafc_storage(p)      * f * cc_other(patch%itype(p))
         m_leafc_xfer_to_fire(p)          =  leafc_xfer(p)         * f * cc_other(patch%itype(p))
         m_livestemc_to_fire(p)           =  livestemc(p)          * f * cc_lstem(patch%itype(p))
         m_livestemc_storage_to_fire(p)   =  livestemc_storage(p)  * f * cc_other(patch%itype(p))
         m_livestemc_xfer_to_fire(p)      =  livestemc_xfer(p)     * f * cc_other(patch%itype(p))
-        m_deadstemc_to_fire(p)           =  deadstemc(p)          * f * cc_dstem(patch%itype(p))
+        m_deadstemc_to_fire(p)           =  deadstemc(p)          * f * cc_dstem(patch%itype(p)) * m
         m_deadstemc_storage_to_fire(p)   =  deadstemc_storage(p)  * f * cc_other(patch%itype(p))
         m_deadstemc_xfer_to_fire(p)      =  deadstemc_xfer(p)     * f * cc_other(patch%itype(p))
         m_frootc_to_fire(p)              =  frootc(p)             * f * 0._r8
@@ -930,7 +945,7 @@ contains
         m_livestemn_to_fire(p)           =  livestemn(p)          * f * cc_lstem(patch%itype(p))
         m_livestemn_storage_to_fire(p)   =  livestemn_storage(p)  * f * cc_other(patch%itype(p))
         m_livestemn_xfer_to_fire(p)      =  livestemn_xfer(p)     * f * cc_other(patch%itype(p))
-        m_deadstemn_to_fire(p)           =  deadstemn(p)          * f * cc_dstem(patch%itype(p))
+        m_deadstemn_to_fire(p)           =  deadstemn(p)          * f * cc_dstem(patch%itype(p)) * m
         m_deadstemn_storage_to_fire(p)   =  deadstemn_storage(p)  * f * cc_other(patch%itype(p))
         m_deadstemn_xfer_to_fire(p)      =  deadstemn_xfer(p)     * f * cc_other(patch%itype(p))
         m_frootn_to_fire(p)              =  frootn(p)             * f * 0._r8
@@ -967,7 +982,7 @@ contains
         m_livestemc_to_deadstemc_fire(p)            =  livestemc(p) * f * &
              (1._r8 - cc_lstem(patch%itype(p))) * &
              (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
-        m_deadstemc_to_litter_fire(p)               =  deadstemc(p) * f * &
+        m_deadstemc_to_litter_fire(p)               =  deadstemc(p) * f * m * &
              (1._r8 - cc_dstem(patch%itype(p))) * &
              fm_droot(patch%itype(p))    
         m_deadstemc_storage_to_litter_fire(p)       =  deadstemc_storage(p) * f * &
@@ -990,7 +1005,7 @@ contains
              fm_other(patch%itype(p)) 
         m_livecrootc_to_deadcrootc_fire(p)          =  livecrootc(p)         * f * &
              (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
-        m_deadcrootc_to_litter_fire(p)              =  deadcrootc(p)         * f * &
+        m_deadcrootc_to_litter_fire(p)              =  deadcrootc(p)         * f * m * &
              fm_droot(patch%itype(p))
         m_deadcrootc_storage_to_litter_fire(p)      =  deadcrootc_storage(p) * f * &
              fm_other(patch%itype(p))
@@ -1040,7 +1055,7 @@ contains
              fm_other(patch%itype(p)) 
         m_livecrootn_to_deadcrootn_fire(p)         =  livecrootn(p)         * f * &
              (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
-        m_deadcrootn_to_litter_fire(p)             =  deadcrootn(p)         * f * &
+        m_deadcrootn_to_litter_fire(p)             =  deadcrootn(p)         * f * m * &
              fm_droot(patch%itype(p))
         m_deadcrootn_storage_to_litter_fire(p)     =  deadcrootn_storage(p) * f * &
              fm_other(patch%itype(p))

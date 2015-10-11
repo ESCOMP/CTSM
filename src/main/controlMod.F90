@@ -18,7 +18,7 @@ module controlMod
   use spmdMod                          , only: masterproc
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max
-  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, more_vertlayers, numrad, nlevsno, deep_soilcolumn
+  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
@@ -181,7 +181,7 @@ contains
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
-         albice, more_vertlayers, deep_soilcolumn, subgridflag, &
+         albice, soil_layerstruct, subgridflag, &
          irrigate, all_active, repartition_rain_snow
 
     ! vertical soil mixing variables
@@ -620,8 +620,7 @@ contains
     call mpi_bcast (scmlon, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (co2_ppmv, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (albice, 2, MPI_REAL8,0, mpicom, ier)
-    call mpi_bcast (more_vertlayers,1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (deep_soilcolumn,1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (soil_layerstruct,len(soil_layerstruct), MPI_CHARACTER, 0, mpicom, ier)
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -742,13 +741,15 @@ contains
           write(iulog,*) '   nfix_timeconst == zero, use standard N fixation scheme. '
        end if
        
-       write(iulog,*) '   spinup_state, (0 = normal mode; 1 = AD spinup)         : ', spinup_state
+       write(iulog,*) '   spinup_state, (0 = normal mode; 1 = AD spinup; 2 AAD)         : ', spinup_state
        if ( spinup_state .eq. 0 ) then
           write(iulog,*) '   model is currently NOT in AD spinup mode.'
        else if ( spinup_state .eq. 1 ) then
           write(iulog,*) '   model is currently in AD spinup mode.'
+       else if ( spinup_state .eq. 2 ) then
+          write(iulog,*) '   model is currently in accelerated AD spinup mode.'
        else
-          call endrun(msg=' error: spinup_state can only have integer value of 0 or 1'//&
+          call endrun(msg=' error: spinup_state can only have integer value of 0 or 1 or 2'//&
                errMsg(__FILE__, __LINE__))
        end if
        
@@ -841,8 +842,7 @@ contains
     end if
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
-    write(iulog,*) '   more vertical layers = ', more_vertlayers
-    write(iulog,*) '   deep soil column = ', deep_soilcolumn
+    write(iulog,*) '   soil layer structure = ', soil_layerstruct
     if (nsrest == nsrContinue) then
        write(iulog,*) 'restart warning:'
        write(iulog,*) '   Namelist not checked for agreement with initial run.'

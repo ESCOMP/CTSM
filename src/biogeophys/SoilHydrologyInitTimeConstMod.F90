@@ -33,8 +33,8 @@ contains
     use shr_const_mod   , only : shr_const_pi
     use shr_spfn_mod    , only : shr_spfn_erf
     use abortutils      , only : endrun
-    use clm_varctl      , only : fsurdat, paramfile, iulog, use_vichydro
-    use clm_varpar      , only : more_vertlayers, nlevsoifl, toplev_equalspace 
+    use clm_varctl      , only : fsurdat, paramfile, iulog, use_vichydro, soil_layerstruct
+    use clm_varpar      , only : nlevsoifl, toplev_equalspace 
     use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb, nlayer, nlayert 
     use clm_varcon      , only : zsoi, dzsoi, zisoi, spval, nlvic, dzvic, pc, grlnd
     use landunit_varcon , only : istice, istwet, istsoil, istdlak, istcrop, istice_mec
@@ -235,8 +235,8 @@ contains
                 ! do nothing
              else
                 do lev = 1,nlevgrnd
-                   if ( more_vertlayers )then
-                      ! duplicate clay and sand values from last soil layer
+                   if ( soil_layerstruct /= '10SL_3.5m' )then
+                      write(iulog,*) 'Setting clay, sand, organic, in Soil Hydrology for VIC'
                       if (lev .eq. 1) then
                          clay    = clay3d(g,1)
                          sand    = sand3d(g,1)

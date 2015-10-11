@@ -275,7 +275,7 @@ contains
 
             do s = 1, ndecomp_pools
 
-               if ( spinup_state .eq. 1 ) then
+               if ( spinup_state >= 1 ) then
                   ! increase transport (both advection and diffusion) by the same factor as accelerated decomposition for a given pool
                   spinup_term = spinup_factor(s)
                else
