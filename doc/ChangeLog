@@ -1,4 +1,119 @@
 ===============================================================
+Tag name:  clm4_5_3_r139
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Tue Oct 13 10:17:43 MDT 2015
+One-line Summary: dynamic roots from Beth Drewniak
+
+Purpose of changes:
+
+  Introduce dynamic roots from Beth Drewniak.  Allows roots to grow
+  dynamically, optimizing for water and nutrient uptake.  Crop roots
+  start from zero each season.  Generally leads to higher root
+  densities near the surface, but also deeper maximum root depth.
+  Overall, water stress is reduced.  If use_bedrock = true, roots are
+  confined exist in soil layers only.  Root litter is input into the
+  soil according to the dynamic root distribution.
+
+Requirements for tag: regular
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): none
+
+Known bugs (include bugzilla ID): none
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+   1147 (mkgriddata can't straddle over Greenwich)
+   1025 (SCM mode can NOT use a global finidat file)
+   1017 (SCM mode can NOT restart)
+    896 (T62 mode does not work)
+    701 (svn keyword)
+    452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: new variable use_dynroot
+
+List any changes to the defaults for the boundary datasets:
+  updated pft parameter file to c151012, includes merge of dynamic
+  roots and flexCN params.
+
+  NOTE: ED parameter file was not update.
+
+Describe any substantial timing or memory changes: unknown, none expected
+
+Code reviewed by: Dave Lawrence
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: 
+
+  clm/src/biogeochem/CNRootDynMod.F90 - implement dynamic roots
+
+List all existing files that have been modified, and describe the changes:
+
+  new namelist variable use_dynroots and defaults
+    clm/bld/CLMBuildNamelist.pm
+    clm/bld/namelist_files/namelist_definition_clm4_5.xml
+    clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+  clm/src/biogeochem/CNDriverMod.F90 - call dynamic roots
+  clm/src/main/controlMod.F90 - read use_dynroot namelist var
+  clm/src/main/clm_varctl.F90 - add use_dynroot switch
+  clm/src/main/pftconMod.F90 - new dynamic root variable
+  clm/src/biogeophys/SoilStateType.F90 - add root_depth_patch variable
+
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone - unit tests pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pfunit tests pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - n/a, not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - n/a, not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - a couple of manual tests compiled and ran. full suite not finished at time of tag. 
+
+    NOTE: ok = amelist changes expected for clm45/50. New defaults
+    namelist for clm50 turns on dynamic roots, expect all clm50
+    compsets to be answer changing.
+
+CLM tag used for the baseline comparisons: clm4_5_3_r138
+
+Changes answers relative to baseline: some
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm50 with use_dynroot = true (default)
+    - what platforms/compilers: all/all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): new climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: none
+
+   URL for LMWG diagnostics output used to validate new climate: none
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r138
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Sun Oct 11 13:23:12 MDT 2015

@@ -211,6 +211,8 @@ contains
 
     namelist /clm_inparm/ use_bedrock
 
+    namelist /clm_inparm/ use_dynroot
+
     namelist /clm_inparm/ limit_lake_evap_and_irrig
 
     namelist /clm_inparm/  &
@@ -574,6 +576,8 @@ contains
     call mpi_bcast (use_lai_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_bedrock, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (limit_lake_evap_and_irrig, 1, MPI_LOGICAL, 0, mpicom, ier)
 

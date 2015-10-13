@@ -6,7 +6,7 @@ module CNDriverMod
   !
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use clm_varctl                      , only : use_c13, use_c14, use_ed
+  use clm_varctl                      , only : use_c13, use_c14, use_ed, use_dynroot
   use dynSubgridControlMod            , only : get_do_harvest
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
@@ -126,6 +126,7 @@ contains
     use SoilBiogeochemNitrifDenitrifMod   , only: SoilBiogeochemNitrifDenitrif
     use SoilBiogeochemNStateUpdate1Mod    , only: SoilBiogeochemNStateUpdate1
     use NutrientCompetitionMethodMod      , only: nutrient_competition_method_type
+    use CNRootDynMod                      , only: CNRootDyn
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -158,7 +159,7 @@ contains
     type(waterstate_type)                   , intent(in)    :: waterstate_inst
     type(waterflux_type)                    , intent(in)    :: waterflux_inst
     type(canopystate_type)                  , intent(in)    :: canopystate_inst
-    type(soilstate_type)                    , intent(in)    :: soilstate_inst
+    type(soilstate_type)                    , intent(inout) :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst
     type(crop_type)                         , intent(in)    :: crop_inst
     type(ch4_type)                          , intent(in)    :: ch4_inst
@@ -419,6 +420,20 @@ contains
          cnveg_carbonflux_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)  
          
     call t_stopf('CNGResp')
+
+    !--------------------------------------------
+    ! Dynamic Roots
+    !--------------------------------------------
+
+    if( use_dynroot ) then
+        call t_startf('CNRootDyn')
+
+        call CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst,  &
+             cnveg_state_inst, crop_inst,  soilstate_inst, soilbiogeochem_nitrogenstate_inst)
+
+        call t_stopf('CNRootDyn')
+     end if
 
     !--------------------------------------------
     ! CNUpdate0

@@ -241,6 +241,12 @@ module clm_varctl
   character(len=16), public :: soil_layerstruct = '10SL_3.5m'
 
   !----------------------------------------------------------
+  ! dynamic root switch
+  !----------------------------------------------------------
+
+  logical, public :: use_dynroot = .false. ! true => use dynamic root module
+
+  !----------------------------------------------------------
   ! lake evaporation / irrigation limitation switch
   !----------------------------------------------------------
 

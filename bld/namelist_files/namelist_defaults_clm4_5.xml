@@ -1,4 +1,3 @@
-
 <?xml version="1.0"?>
 
 <?xml-stylesheet type="text/xsl" href="namelist_defaults.xsl"?>
@@ -136,15 +135,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile                 >lnd/clm2/paramdata/clm_params.c141205.nc</paramfile>
+<paramfile                 >lnd/clm2/paramdata/clm_params.c151012.nc</paramfile>
+
 <paramfile use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c150317.nc</paramfile>
 
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
 <!-- ========================================================================================  -->
-<paramfile use_flexibleCN=".true.">lnd/clm2/paramdata/clm_params_78pft.c150605.nc</paramfile>
-
 <use_flexibleCN>.false.</use_flexibleCN>
 <MM_Nuptake_opt use_flexibleCN=".true." >.true.</MM_Nuptake_opt>
 <dynamic_plant_alloc_opt use_flexibleCN=".true." >.false.</dynamic_plant_alloc_opt>
@@ -172,6 +170,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- use additional stress deciduous onset trigger    -->
 <constrain_stress_deciduous_onset phys="clm4_5">.false.</constrain_stress_deciduous_onset>
 <constrain_stress_deciduous_onset phys="clm5_0">.true.</constrain_stress_deciduous_onset>
+
+<!-- dynamic roots -->
+<use_dynroot phys="clm4_5">.false.</use_dynroot>
+<use_dynroot phys="clm5_0" bgc_mode="sp">.false.</use_dynroot>
+<use_dynroot phys="clm5_0" bgc_mode="bgc">.true.</use_dynroot>
+
 
 <!--
 

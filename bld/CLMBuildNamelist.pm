@@ -1222,6 +1222,7 @@ sub setup_cmdl_vichydro {
   }
 }
 
+
 #-------------------------------------------------------------------------------
 
 sub process_namelist_commandline_namelist {
@@ -1418,6 +1419,7 @@ sub process_namelist_inline_logic {
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref, $physv);
   setup_logic_dynamic_plant_nitrogen_alloc($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_luna($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_dynamic_roots($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_create_crop_landunit($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_soilstate($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -2500,6 +2502,24 @@ sub setup_logic_luna {
     # TODO(bja, 2015-04) make this depend on > clm 5.0 and bgc mode at some point.
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_luna' );
   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_dynamic_roots {
+  #
+  # dynamic root model
+  #
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+  
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_dynroot', 'phys'=>$physv->as_string(), 'bgc_mode'=>$nl_flags->{'bgc_mode'});
+    my $use_dynroot = $nl->get_value('use_dynroot');
+    if ( ($use_dynroot eq ".true.") && ($nl_flags->{'bgc_mode'} eq "sp") ) {
+      fatal_error("Cannot turn dynroot mode on mode bgc=sp\n" .
+                  "Set the bgc mode to 'cn' or 'bgc'.\n");
+    }
+  } # else - not relevant in clm4_0, not part of namelist definition, will not run.
 }
 
 #-------------------------------------------------------------------------------

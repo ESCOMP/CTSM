@@ -237,6 +237,9 @@ module pftconMod
      real(r8), allocatable :: pftpar30      (:)   ! min growing degree days (>= 5 deg C)
      real(r8), allocatable :: pftpar31      (:)   ! upper limit of temperature of the warmest month (twmax)
 
+     ! pft parameters for dynamic root code
+     real(r8), allocatable :: root_dmx(:)     !maximum root depth
+
    contains
 
      procedure, public  :: Init
@@ -394,6 +397,7 @@ contains
     allocate( this%pftpar29      (0:mxpft) )   
     allocate( this%pftpar30      (0:mxpft) )   
     allocate( this%pftpar31      (0:mxpft) )   
+    allocate( this%root_dmx      (0:mxpft) )
 
   end subroutine InitAllocate
 
@@ -408,7 +412,7 @@ contains
     use fileutils   , only : getfil
     use ncdio_pio   , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
-    use clm_varctl  , only : paramfile, use_ed, use_flexibleCN
+    use clm_varctl  , only : paramfile, use_ed, use_flexibleCN, use_crop, use_dynroot
     use spmdMod     , only : masterproc
     use EDPftvarcon , only : EDpftconrd
     !
@@ -888,7 +892,14 @@ contains
        ! The following sets the module variable EDpftcon_inst in EDPftcon
        call EDpftconrd ( ncid )
     endif
-       
+    !
+    ! Dynamic Root variables for crops
+    !
+    if ( use_crop .and. use_dynroot )then
+       call ncd_io('root_dmx', this%root_dmx, 'read', ncid, readvar=readv)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+    end if
+   
     call ncd_pio_closefile(ncid)
 
     do i = 0, mxpft

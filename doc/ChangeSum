@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_3_r139    andre 10/13/2015 dynamic roots from Beth Drewniak
    clm4_5_3_r138    andre 10/11/2015 new accelerated spinup and soil vertical structure
    clm4_5_3_r137     erik 10/09/2015 Bring in changes for fire-emissions as well tuning changes to the  fire model to be used with clm5_0
    clm4_5_3_r136    andre 10/08/2015 coupler field prep for mosart and externals update
