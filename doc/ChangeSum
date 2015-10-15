@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_3_r136    andre 10/08/2015 coupler field prep for mosart and externals update
    clm4_5_3_r135    sacks 10/06/2015 Substantial reduction in memory allocation for prognostic crops
    clm4_5_3_r134    sacks 10/04/2015 Fixes for transient and preindustrial crop cases
    clm4_5_3_r133    andre 10/02/2015 Bugfix for mksurfdata_map - add file missed by clm4_5_2_r125.
