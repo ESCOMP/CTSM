@@ -212,6 +212,11 @@
     <lname>2000_DATM%CRU_CLM50%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
+  <compset>
+    <alias>IMCRUCLM50BGC</alias>      
+    <lname>2000_DATM%CRU_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
   <!---I compset system tests -->
 
   <compset>

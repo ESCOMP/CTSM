@@ -1,4 +1,119 @@
 ===============================================================
+Tag name:  clm4_5_3_r140
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Thu Oct 15 23:45:49 MDT 2015
+One-line Summary: mosart, direct to ocean runoff
+
+Purpose of changes:
+  Coordinated changes to clm, mosart and rtm to handle direct to
+  ocean runoff.
+
+Requirements for tag: regular
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): none
+
+Known bugs (include bugzilla ID): 2233
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+   1147 (mkgriddata can't straddle over Greenwich)
+   1025 (SCM mode can NOT use a global finidat file)
+   1017 (SCM mode can NOT restart)
+    896 (T62 mode does not work)
+    701 (svn keyword)
+    452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: unknown, none expected
+
+Code reviewed by: Sean Swenson
+
+List any svn externals directories updated (cime, rtm, cism, etc.): cime, rtm, mosart
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+  SVN_EXTERNAL_DIRECTORIES - update externals
+  clm/cime_config/config_compsets.xml - new compset IMCRUCLM50BGC for testing mosart
+  clm/cime_config/testdefs/ExpectedTestFails.xml - known issue in cime causes test failure
+  clm/cime_config/testdefs/testlist_clm.xml - add IM compset test for mosart
+
+  add coupler fields for direct ocean runoff
+    clm/src_clm40/main/clm_cpl_indices.F90
+    clm/src_clm40/main/lnd_import_export.F90
+    clm/src/biogeophys/WaterfluxType.F90
+    clm/src/biogeophys/HydrologyDrainageMod.F90
+    clm/src/cpl/clm_cpl_indices.F90
+    clm/src/cpl/lnd_import_export.F90
+    clm/src/main/lnd2atmMod.F90
+    clm/src/main/lnd2atmType.F90
+
+
+CLM testing: regular
+
+
+  build-namelist tests:
+
+    yellowstone - n/a, not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - n/a, not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - n/a, not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - generate tests not finished at time of tag, but expected to be ok based on earlier testing.
+
+  Notes:
+
+    - ok means that all functionality tests pass. bit for bit
+    comparison with baselines only show differences in the following
+    runoff fields when rtm or mosart is running:
+      clm - TWS, VOLR, VOLRMCH
+     coupler - l2x_Flrl_rofgwl, x2l_Flrr_volr, x2l_Flrr_volrmch, r2x_Forr_rofl, r2x_Flrr_volr, r2x_Flrr_volrmch, x2r_Flrl_rofgwl
+
+    - bfail for new mosart test
+
+    - new expected failure for ERI_N2_Ld9.f19_g16.ICRUCLM45BGCCROP.yellowstone_intel.clm-default because of cime issue.
+
+CLM tag used for the baseline comparisons: clm4_5_3_r139
+
+Changes answers relative to baseline: some
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all with rtm or mosart
+    - what platforms/compilers: all/all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):  larger than roundoff.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: none
+
+   URL for LMWG diagnostics output used to validate new climate: none
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r139
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Tue Oct 13 10:17:43 MDT 2015

@@ -108,6 +108,7 @@ contains
          qflx_surf          => waterflux_inst%qflx_surf_col          , & ! Output: [real(r8) (:)   ]  surface runoff (mm H2O /s)                        
          qflx_infl          => waterflux_inst%qflx_infl_col          , & ! Output: [real(r8) (:)   ]  infiltration (mm H2O /s)                          
          qflx_qrgwl         => waterflux_inst%qflx_qrgwl_col         , & ! Output: [real(r8) (:)   ]  qflx_surf at glaciers, wetlands, lakes            
+         qflx_neg_runoff_glc => waterflux_inst%qflx_neg_runoff_glc_col, & ! Output: [real(r8) (:)   ]  negative surface runoff at glaciers
          qflx_runoff        => waterflux_inst%qflx_runoff_col        , & ! Output: [real(r8) (:)   ]  total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_runoff_u      => waterflux_inst%qflx_runoff_u_col      , & ! Output: [real(r8) (:)   ]  Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
          qflx_runoff_r      => waterflux_inst%qflx_runoff_r_col      , & ! Output: [real(r8) (:)   ]  Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
@@ -209,6 +210,8 @@ contains
          end if
       end do
 
+      qflx_neg_runoff_glc(bounds%begc:bounds%endc) = 0._r8
+
       ! Determine wetland and land ice hydrology (must be placed here
       ! since need snow updated from CombineSnowLayers)
 
@@ -227,6 +230,11 @@ contains
             qflx_infl(c)          = 0._r8
             qflx_qrgwl(c) = forc_rain(c) + forc_snow(c) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
                  (endwb(c)-begwb(c))/dtime
+
+!  Partition glacier runoff into positive and negative streams for river routing purposes
+            if (qflx_qrgwl(c) < 0._r8) then
+               qflx_neg_runoff_glc(c) = qflx_qrgwl(c)
+            endif
 
             ! With glc_dyn_runoff_routing = false (the less realistic way, typically used
             ! when NOT coupling to CISM), excess snow immediately runs off, whereas melting

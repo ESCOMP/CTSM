@@ -316,6 +316,11 @@ contains
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
     call c2g( bounds, &
+         waterflux_inst%qflx_neg_runoff_glc_col (bounds%begc:bounds%endc), &
+         lnd2atm_inst%qflx_rofliq_qdto_grc   (bounds%begg:bounds%endg), &
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+    
+    call c2g( bounds, &
          waterflux_inst%qflx_snwcp_ice_col(bounds%begc:bounds%endc),  &
          lnd2atm_inst%qflx_rofice_grc     (bounds%begg:bounds%endg),  & 
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
