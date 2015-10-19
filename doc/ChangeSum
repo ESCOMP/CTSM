@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_3_r141    sacks 10/19/2015 Fix bug that leads to infinite growth in snow depth
    clm4_5_3_r140    andre 10/15/2015 mosart direct to ocean runoff
    clm4_5_3_r139    andre 10/13/2015 dynamic roots from Beth Drewniak
    clm4_5_3_r138    andre 10/11/2015 new accelerated spinup and soil vertical structure

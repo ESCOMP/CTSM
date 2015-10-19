@@ -628,7 +628,16 @@ contains
           ! as the surface air temperature
 
           newnode = 0    ! flag for when snow node will be initialized
-          if (snl(c) == 0 .and. frac_sno(c)*snow_depth(c) >= 0.01_r8) then
+
+          ! TODO(wjs, 2015-10-18) With the 'qflx_snow_grnd_col(c) > 0.0_r8' check in the
+          ! following conditional, Leo van Kampenhout has found that, under some rare
+          ! conditions, the snow pack does not get initialized when it should. However, if
+          ! this check is removed, then under some different rare conditions, snow depth
+          ! can grow infinitely. We clearly need a more robust check here, and/or some
+          ! fixed logic elsewhere. But for now we're going with the lesser of the two bugs
+          ! - i.e., allowing the snow pack to not be initialized when it should under some
+          ! conditions.
+          if (snl(c) == 0 .and. qflx_snow_grnd_col(c) > 0.0_r8 .and. frac_sno(c)*snow_depth(c) >= 0.01_r8) then
              newnode = 1
              snl(c) = -1
              dz(c,0) = snow_depth(c)                       ! meter
