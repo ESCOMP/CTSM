@@ -76,16 +76,17 @@ module SnowHydrologyMod
 
   ! Definition of snow pack vertical structure
   ! Hardcoded maximum of 12 snowlayers, this is checked elsewhere (controlMod.F90)
-  ! The bottom layer has no limit on thickness, hence 11 elements in dzmax_* arrays
+  ! The bottom layer has no limit on thickness, hence the last element of the dzmax_*
+  ! arrays is 'huge'.
   real(r8), parameter :: dzmin(12) = &       ! minimum of top snow layer
                (/ 0.010_r8, 0.015_r8, 0.025_r8, 0.055_r8, 0.115_r8, 0.235_r8, &
                   0.475_r8, 0.955_r8, 1.915_r8, 3.835_r8, 7.675_r8, 15.355_r8 /)
-  real(r8), parameter :: dzmax_l(11) = &     ! maximum thickness of layer when no layers beneath
+  real(r8), parameter :: dzmax_l(12) = &     ! maximum thickness of layer when no layers beneath
                (/ 0.03_r8, 0.07_r8, 0.18_r8, 0.41_r8, 0.88_r8, 1.83_r8, &
-                  3.74_r8, 7.57_r8, 15.24_r8, 30.59_r8, 61.3_r8  /)
-  real(r8), parameter :: dzmax_u(11) = &     ! maximum thickness of layer when layers beneath
+                  3.74_r8, 7.57_r8, 15.24_r8, 30.59_r8, 61.3_r8, huge(1._r8)  /)
+  real(r8), parameter :: dzmax_u(12) = &     ! maximum thickness of layer when layers beneath
                (/ 0.02_r8, 0.05_r8, 0.11_r8, 0.23_r8, 0.47_r8, 0.95_r8, &
-                  1.91_r8, 3.83_r8, 7.67_r8, 15.35_r8, 30.71_r8  /)
+                  1.91_r8, 3.83_r8, 7.67_r8, 15.35_r8, 30.71_r8, huge(1._r8)  /)
 
   !
   ! !PRIVATE DATA MEMBERS:

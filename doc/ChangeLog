@@ -1,4 +1,85 @@
 ===============================================================
+Tag name:  clm4_5_3_r142
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Oct 19 19:57:35 MDT 2015
+One-line Summary: Fix bug in initialization of 12-layer snow pack
+
+Purpose of changes:
+
+   Expand the dzmax arrays to have 12 elements, with the last element being
+   'huge'. This fixes a bug in the initialization of the snow pack when you try
+   to initialize it to need all 12 layers. And, more generally, this helps avoid
+   special-case code that would otherwise be needed to handle the edge case at
+   the bottom layer.
+
+Requirements for tag:
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Leo van Kampenhout
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: NOT RUN
+
+  unit-tests (components/clm/src):
+
+    yellowstone: ok
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone: NOT RUN
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone: NOT RUN
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    hobart_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_3_r141
+
+Changes answers relative to baseline: NO
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r141
 Originator(s):  Keith Oleson, Bill Sacks
 Date: Mon Oct 19 14:15:06 MDT 2015
