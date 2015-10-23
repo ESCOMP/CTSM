@@ -362,7 +362,7 @@ contains
 
     call nutrient_competition_method%calc_plant_nutrient_competition ( &
          bounds, num_soilp, filter_soilp, &
-         cnveg_state_inst, cnveg_carbonflux_inst, &
+         cnveg_state_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
          soilbiogeochem_nitrogenstate_inst, &

@@ -282,6 +282,7 @@ module LunaMod
                          !-------------------------------------------------------------------------------------------
                          !for sun lit leaves
                          FNCa        = FNCa_z(z)
+                         if(FNCa>15.0_r8) FNCa = 15.0_r8  !boundary condition check for unrealistically high leaf nitrogen content
                          radmax2mean = par240x_z(p,z) / par240d_z(p,z)
                          if(tlai_z(p,z)>0.0_r8)then
                             qabs  = par240d_z(p,z)/rabsorb
@@ -319,23 +320,29 @@ module LunaMod
                          !nitrogen allocastion model-end  
                          !-----------------------------------------------------------------------------------------------------   
                          if(isnan(vcmx25_z(p, z)).or. vcmx25_z(p, z)>1000._r8 .or. vcmx25_z(p, z)<0._r8)then
-                             write(iulog, *) 'Error: Vc,mx25 become unrealistic (NaN,>1000, or negative) for patch=', p, 'z=', z
+                             write(iulog, *) 'Warning: Vc,mx25 become unrealistic (NaN,>1000, or negative) for patch=', &
+                                  p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:',FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             call endrun(msg=errmsg(__FILE__, __LINE__))
+                             !call endrun(msg=errmsg(__FILE__, __LINE__))
                          endif
                          if(isnan(jmx25_z(p, z)).or.jmx25_z(p, z)>1000._r8 .or. jmx25_z(p, z)<0._r8)then
-                             write(iulog, *) 'Error: Jmx25 become unrealistic (NaN,>1000, or negative)for patch=', p, 'z=', z
+                             write(iulog, *) 'Warning: Jmx25 become unrealistic (NaN,>1000, or negative)for patch=', &
+                                  p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:', FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             call endrun(msg=errmsg(__FILE__, __LINE__))
-                
+                             !call endrun(msg=errmsg(__FILE__, __LINE__))
                          endif
                       enddo ! finished loop of leaf layers  
                     else !decay during drought or winter
-                      max_daily_decay = min(0.5_r8, 0.1_r8 * max_daily_pchg)!assume enzyme turnover under maintenance is 10 times lower than enzyme change under growth
+                      max_daily_decay = min(0.5_r8, 0.1_r8 * max_daily_pchg)
+                      !assume enzyme turnover under maintenance is 10
+                      !times lower than enzyme change under growth
                       do z = 1 , nrad(p)
-                         if(enzs_z(p,z)>0.5_r8) then !decay is set at only 50% of original enzyme in view that plant will need to maintain their basic functionality
+                         if(enzs_z(p,z)>0.5_r8) then
+                            !decay is set at only 50% of original
+                            !enzyme in view that plant will need to
+                            !maintain their basic functionality
                           enzs_z(p,z) = enzs_z(p,z)* (1.0_r8 - max_daily_decay)
                           jmx25_z(p, z) = jmx25_z(p, z)* (1.0_r8 - max_daily_decay) 
                           vcmx25_z(p, z) = vcmx25_z(p, z)* (1.0_r8 - max_daily_decay) 

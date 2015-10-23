@@ -765,6 +765,7 @@ contains
 
     associate(                                                 &
          c3psn      => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3
+	 crop       => pftcon%crop                           , & ! Input:  crop or not (0 =not crop and 1 = crop)
          leafcn     => pftcon%leafcn                         , & ! Input:  leaf C:N (gC/gN)
          flnr       => pftcon%flnr                           , & ! Input:  fraction of leaf N in the Rubisco enzyme (gN Rubisco / gN leaf)
          fnitr      => pftcon%fnitr                          , & ! Input:  foliage nitrogen limitation factor (-)
@@ -996,7 +997,7 @@ contains
 
          ! reduce_dayl_factor .eqv. .false.  
          if (reduce_dayl_factor .eqv. .true.) then                                          
-            if (dayl_factor(p) > 0.25_r8) then                                      ! added by BG
+            if (dayl_factor(p) > 0.25_r8) then
                ! dayl_factor(p) = 1.0_r8  
             end if                                                                  
          end if                                                                     
@@ -1116,7 +1117,7 @@ contains
 
             lmr25 = lmr25top * nscaler
 
-            if(use_luna.and.c3flag(p).and.(.not.use_cn))then
+            if(use_luna.and.c3flag(p).and.(.not.use_cn).and.crop(patch%itype(p))== 0) then
                 lmr25 = 0.015_r8 * photosyns_inst%vcmx25_z_patch(p,iv)
             endif
           
@@ -1140,7 +1141,7 @@ contains
 
             else                                     ! day time
 
-               if(use_luna.and.c3flag(p))then
+               if(use_luna.and.c3flag(p).and.crop(patch%itype(p))== 0)then
                   vcmax25 = photosyns_inst%vcmx25_z_patch(p,iv)
                   jmax25 = photosyns_inst%jmx25_z_patch(p,iv)
                   tpu25 = 0.167_r8 * vcmax25        

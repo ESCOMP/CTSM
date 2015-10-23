@@ -130,7 +130,16 @@ module CNVegCarbonFluxType
      real(r8), pointer :: livestemc_to_litter_patch                 (:)     ! live stem C litterfall (gC/m2/s)
      real(r8), pointer :: grainc_to_food_patch                      (:)     ! grain C to food for prognostic crop(gC/m2/s)
 
-     ! maintenance respiration fluxes                          
+     ! maintenance respiration fluxes     
+     real(r8), pointer :: cpool_to_resp_patch                       (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
+     real(r8), pointer :: cpool_to_leafc_resp_patch                 (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
+     real(r8), pointer :: cpool_to_leafc_storage_resp_patch         (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
+     real(r8), pointer :: cpool_to_frootc_resp_patch                (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
+     real(r8), pointer :: cpool_to_frootc_storage_resp_patch        (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
+     real(r8), pointer :: cpool_to_livecrootc_resp_patch            (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
+     real(r8), pointer :: cpool_to_livecrootc_storage_resp_patch    (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
+     real(r8), pointer :: cpool_to_livestemc_resp_patch             (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
+     real(r8), pointer :: cpool_to_livestemc_storage_resp_patch     (:)     ! CNflex excess C maintenance respiration (gC/m2/s)
      real(r8), pointer :: leaf_mr_patch                             (:)     ! leaf maintenance respiration (gC/m2/s)
      real(r8), pointer :: froot_mr_patch                            (:)     ! fine root maintenance respiration (gC/m2/s)
      real(r8), pointer :: livestem_mr_patch                         (:)     ! live stem maintenance respiration (gC/m2/s)
@@ -462,6 +471,15 @@ contains
     allocate(this%deadcrootc_xfer_to_deadcrootc_patch       (begp:endp)) ; this%deadcrootc_xfer_to_deadcrootc_patch       (:) = nan
     allocate(this%leafc_to_litter_patch                     (begp:endp)) ; this%leafc_to_litter_patch                     (:) = nan
     allocate(this%frootc_to_litter_patch                    (begp:endp)) ; this%frootc_to_litter_patch                    (:) = nan
+    allocate(this%cpool_to_resp_patch                       (begp:endp)) ; this%cpool_to_resp_patch                       (:) = nan
+    allocate(this%cpool_to_leafc_resp_patch                 (begp:endp)) ; this%cpool_to_leafc_resp_patch                 (:) = nan
+    allocate(this%cpool_to_leafc_storage_resp_patch         (begp:endp)) ; this%cpool_to_leafc_storage_resp_patch         (:) = nan
+    allocate(this%cpool_to_frootc_resp_patch                (begp:endp)) ; this%cpool_to_frootc_resp_patch                (:) = nan
+    allocate(this%cpool_to_frootc_storage_resp_patch        (begp:endp)) ; this%cpool_to_frootc_storage_resp_patch        (:) = nan
+    allocate(this%cpool_to_livecrootc_resp_patch            (begp:endp)) ; this%cpool_to_livecrootc_resp_patch            (:) = nan
+    allocate(this%cpool_to_livecrootc_storage_resp_patch    (begp:endp)) ; this%cpool_to_livecrootc_storage_resp_patch    (:) = nan
+    allocate(this%cpool_to_livestemc_resp_patch             (begp:endp)) ; this%cpool_to_livestemc_resp_patch             (:) = nan
+    allocate(this%cpool_to_livestemc_storage_resp_patch     (begp:endp)) ; this%cpool_to_livestemc_storage_resp_patch     (:) = nan
     allocate(this%leaf_mr_patch                             (begp:endp)) ; this%leaf_mr_patch                             (:) = nan
     allocate(this%froot_mr_patch                            (begp:endp)) ; this%froot_mr_patch                            (:) = nan
     allocate(this%livestem_mr_patch                         (begp:endp)) ; this%livestem_mr_patch                         (:) = nan
@@ -1101,7 +1119,11 @@ contains
        call hist_addfld1d (fname='FROOTC_TO_LITTER', units='gC/m^2/s', &
             avgflag='A', long_name='fine root C litterfall', &
             ptr_patch=this%frootc_to_litter_patch, default='inactive')
-
+            
+       this%cpool_to_resp_patch(begp:endp) = spval
+       call hist_addfld1d (fname='EXCESSC_MR', units='gC/m^2/s', &
+            avgflag='A', long_name='excess C maintenance respiration', &
+            ptr_patch=this%cpool_to_resp_patch, default='inactive')
        this%leaf_mr_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAF_MR', units='gC/m^2/s', &
             avgflag='A', long_name='leaf maintenance respiration', &
@@ -3405,6 +3427,15 @@ contains
        this%deadcrootc_xfer_to_deadcrootc_patch(i)       = value_patch
        this%leafc_to_litter_patch(i)                     = value_patch
        this%frootc_to_litter_patch(i)                    = value_patch
+       this%cpool_to_resp_patch(i)                       = value_patch
+       this%cpool_to_leafc_resp_patch(i)                 = value_patch
+       this%cpool_to_leafc_storage_resp_patch(i)         = value_patch
+       this%cpool_to_frootc_resp_patch(i)                = value_patch
+       this%cpool_to_frootc_storage_resp_patch(i)        = value_patch
+       this%cpool_to_livecrootc_resp_patch(i)            = value_patch
+       this%cpool_to_livecrootc_storage_resp_patch(i)    = value_patch
+       this%cpool_to_livestemc_resp_patch(i)             = value_patch
+       this%cpool_to_livestemc_storage_resp_patch(i)     = value_patch
        this%leaf_mr_patch(i)                             = value_patch
        this%froot_mr_patch(i)                            = value_patch
        this%livestem_mr_patch(i)                         = value_patch
@@ -3640,7 +3671,7 @@ contains
     ! !USES:
     use clm_time_manager                   , only: get_step_size
     use clm_varcon                         , only: secspday
-    use clm_varctl                         , only: nfix_timeconst   
+    use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
     use subgridAveMod                      , only: p2c
     use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con
     !
@@ -3681,6 +3712,15 @@ contains
             this%froot_mr_patch(p)    + &
             this%livestem_mr_patch(p) + &
             this%livecroot_mr_patch(p)
+
+       if (carbon_resp_opt == 1) then
+          this%mr_patch(p)  = &
+               this%cpool_to_resp_patch(p)     + &
+               this%leaf_mr_patch(p)     + &
+               this%froot_mr_patch(p)    + &
+               this%livestem_mr_patch(p) + &
+               this%livecroot_mr_patch(p)
+       end if
        if ( crop_prog .and. patch%itype(p) >= npcropmin )then
           this%mr_patch(p) = &
                this%mr_patch(p) + &

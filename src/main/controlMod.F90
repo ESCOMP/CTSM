@@ -205,7 +205,7 @@ contains
          plant_ndemand_opt, substrate_term_opt, nscalar_opt, temp_scalar_opt, &
          CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, CN_residual_opt, &
          CN_partition_opt, carbon_excess_opt, carbon_storage_excess_opt, &
-         CN_evergreen_phenology_opt  
+         CN_evergreen_phenology_opt, carbon_resp_opt  
 
     namelist /clm_inparm / use_lai_streams
 
@@ -570,6 +570,7 @@ contains
     call mpi_bcast (carbon_excess_opt, 1, MPI_INTEGER, 0, mpicom, ier)          
     call mpi_bcast (carbon_storage_excess_opt, 1, MPI_INTEGER, 0, mpicom, ier)  
     call mpi_bcast (CN_evergreen_phenology_opt, 1, MPI_INTEGER, 0, mpicom, ier) 
+    call mpi_bcast (carbon_resp_opt, 1, MPI_INTEGER, 0, mpicom, ier) 
 
     call mpi_bcast (use_luna, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -895,6 +896,7 @@ contains
        write(iulog, *) '    carbon_excess_opt = ', carbon_excess_opt
        write(iulog, *) '    carbon_storage_excess_opt = ', carbon_storage_excess_opt
        write(iulog, *) '    CN_evergreen_phenology_opt = ', CN_evergreen_phenology_opt
+       write(iulog, *) '    carbon_resp_opt = ', carbon_resp_opt
     end if
     write(iulog, *) '  use_luna = ', use_luna
   end subroutine control_print

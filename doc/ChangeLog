@@ -1,4 +1,123 @@
 ===============================================================
+Tag name:  clm4_5_3_r143
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Thu Oct 22 23:39:50 MDT 2015
+One-line Summary: flexibleCN and luna bugfixes.
+
+Purpose of changes:
+
+  flexibleCN and LUNA bugfix changes from Bardan Ghimire, Rosie Fisher
+  and Chonggang Xu.
+
+  Changes to FlexCN to burn off excess C. Corrected the cpool problem
+  not going to 0 by changing the order of processes.
+
+  Turn off LUNA for crops and put a boundary cut-off on lnc for very
+  high lnc fed to LUNA
+
+
+Requirements for tag: regular
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): none
+
+Known bugs (include bugzilla ID): none
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+   1147 (mkgriddata can't straddle over Greenwich)
+   1025 (SCM mode can NOT use a global finidat file)
+   1017 (SCM mode can NOT restart)
+    896 (T62 mode does not work)
+    701 (svn keyword)
+    452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: new namelist carbon_resp_opt
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: unknown, none expected
+
+Code reviewed by: Bardan Ghimire, Chonggang Xu, Rosie Fischer, Dave Lawrence
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+  new namelist option carbon_resp_opt
+    clm/bld/CLMBuildNamelist.pm
+    clm/bld/namelist_files/namelist_definition_clm4_5.xml
+    clm/bld/namelist_files/namelist_defaults_clm4_5.xml - update defaults for carbon_storage_excess_opt
+    clm/src/main/controlMod.F90
+    clm/src/main/clm_varctl.F90
+
+  flexibleCN
+    clm/src/biogeochem/NutrientCompetitionFlexibleCNMod.F90 - change order of processes
+    clm/src/biogeochem/CNVegCarbonFluxType.F90 - carbon_resp_opt
+    clm/src/biogeochem/CNCStateUpdate1Mod.F90 - carbon_resp_opt
+    clm/src/biogeochem/NutrientCompetitionMethodMod.F90 - update interface
+    clm/src/biogeochem/NutrientCompetitionCLM45defaultMod.F90 - update interface
+    clm/src/biogeochem/CNDriverMod.F90 - update interface
+
+  LUNA
+    clm/src/biogeophys/LunaMod.F90 - leaf nitrogen cutoff
+    clm/src/biogeophys/PhotosynthesisMod.F90 - turnoff luna for crops
+
+  whitespace / remove dead code
+    clm/src/biogeochem/CNPhenologyMod.F90
+
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone - unit tests pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pfunit tests pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - n/a, not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - n/a, not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass, flexibleCN not expected to be bit for bit with baseline
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - not finished at time of tag, expected to be ok based on prior branch testing.
+
+CLM tag used for the baseline comparisons: clm4_5_3_r142
+
+Changes answers relative to baseline: some
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm50 with flexibleCN and clm50 with LUNA and crop on
+    - what platforms/compilers: all/all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+
+    larger than roundoff
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: none
+
+   URL for LMWG diagnostics output used to validate new climate: none
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r142
 Originator(s):  sacks (Bill Sacks)
 Date: Mon Oct 19 19:57:35 MDT 2015

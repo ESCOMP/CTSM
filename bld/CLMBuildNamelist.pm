@@ -2485,6 +2485,8 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_evergreen_phenology_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'carbon_resp_opt',
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
     }
   }
 }

@@ -112,7 +112,7 @@ module NutrientCompetitionMethodMod
      !-----------------------------------------------------------------------
      subroutine calc_plant_nutrient_competition_interface (this, &
           bounds, num_soilp, filter_soilp, &
-          cnveg_state_inst, cnveg_carbonflux_inst, &
+          cnveg_state_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
           c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
           cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
           soilbiogeochem_nitrogenstate_inst, &
@@ -122,6 +122,8 @@ module NutrientCompetitionMethodMod
        use shr_kind_mod          , only : r8 => shr_kind_r8
        use decompMod             , only : bounds_type       
        use CNVegStateType        , only : cnveg_state_type
+       use CanopyStateType       , only : canopystate_type
+       use CNVegCarbonStateType  , only : cnveg_carbonstate_type
        use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
        use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
        use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
@@ -134,6 +136,8 @@ module NutrientCompetitionMethodMod
        integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
        integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
        type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
+       type(canopystate_type)          , intent(in)    :: canopystate_inst
+       type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
        type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
        type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
        type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst

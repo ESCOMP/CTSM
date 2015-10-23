@@ -1484,7 +1484,7 @@ Turn on the clm 5.0 nitrogen model in clm 4.5/5.0 compsets.
 
 <entry id="carbon_storage_excess_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,1">
-   clm 5.0: carbon_storage_excess_opt = 1
+   clm 5.0: carbon_storage_excess_opt = 0
    clm 4.5: carbon_storage_excess_opt = 0
 
 </entry>
@@ -1493,6 +1493,12 @@ Turn on the clm 5.0 nitrogen model in clm 4.5/5.0 compsets.
        group="clm_nitrogen" valid_values="0,1">
    clm 5.0: CN_evergreen_phenology_opt = 1
    clm 4.5: CN_evergreen_phenology_opt = 0
+</entry>
+
+<entry id="carbon_resp_opt" type="integer" category="clm_nitrogen"
+       group="clm_nitrogen" valid_values="0,1">
+   clm 5.0: carbon_resp_opt = 1
+   clm 4.5: carbon_resp_opt = 0
 </entry>
 
 

@@ -571,10 +571,7 @@ contains
             deadstemn_xfer_to_deadstemn(p)   = t1 * deadstemn_xfer(p)   
             livecrootn_xfer_to_livecrootn(p) = t1 * livecrootn_xfer(p)  
             deadcrootn_xfer_to_deadcrootn(p) = t1 * deadcrootn_xfer(p)  
-        end if    
-            
-        !write (iulog,*)  'leafc_storage_to_xfer(p), leafn_storage_to_xfer(p) =', leafc_storage_to_xfer(p), leafn_storage_to_xfer(p)    delete later
-        !write (iulog,*)  'leafc_xfer_to_leafc(p), leafn_xfer_to_leafc(p) =', leafc_xfer_to_leafc(p), leafn_xfer_to_leafn(p)            delete later
+        end if
                 
       end if ! end of if (evergreen(ivt(p)) == 1._r8) then    
      

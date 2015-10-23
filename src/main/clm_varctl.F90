@@ -226,6 +226,7 @@ module clm_varctl
   integer, public :: carbon_excess_opt = 0
   integer, public :: carbon_storage_excess_opt = 0
   integer, public :: CN_evergreen_phenology_opt = 0
+  integer, public :: carbon_resp_opt = 0
 
   !----------------------------------------------------------
   ! lai streams switch for Sat. Phenology

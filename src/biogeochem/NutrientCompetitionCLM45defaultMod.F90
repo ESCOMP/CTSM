@@ -16,7 +16,8 @@ module NutrientCompetitionCLM45defaultMod
   use LandunitType        , only : lun                
   use ColumnType          , only : col                
   use PatchType           , only : patch                
-  use NutrientCompetitionMethodMod, only : nutrient_competition_method_type  
+  use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
+  !use clm_varctl          , only : iulog  
   !
   implicit none
   private
@@ -90,7 +91,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine calc_plant_nutrient_competition (this, &
        bounds, num_soilp, filter_soilp, &
-       cnveg_state_inst, cnveg_carbonflux_inst, &
+       cnveg_state_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
        c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
        soilbiogeochem_nitrogenstate_inst, &
@@ -100,6 +101,8 @@ contains
     use shr_kind_mod          , only : r8 => shr_kind_r8
     use decompMod             , only : bounds_type       
     use CNVegStateType        , only : cnveg_state_type
+    use CanopyStateType        , only : canopystate_type
+    use CNVegCarbonStateType  , only : cnveg_carbonstate_type
     use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
     use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
     use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
@@ -111,6 +114,8 @@ contains
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
+    type(canopystate_type)          , intent(in)    :: canopystate_inst
+    type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
@@ -122,7 +127,7 @@ contains
     real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
 
     call this%calc_plant_cn_alloc (bounds, num_soilp, filter_soilp,        &
-       cnveg_state_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
+       cnveg_state_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
        c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                 &
        aroot=aroot(bounds%begp:bounds%endp),                               &
        arepr=arepr(bounds%begp:bounds%endp),                               &
@@ -132,7 +137,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine calc_plant_cn_alloc (this, bounds, num_soilp, filter_soilp,   &
-       cnveg_state_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
+       cnveg_state_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
        c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                 &
        aroot, arepr, fpg_col)                                              
     !
@@ -141,6 +146,8 @@ contains
     use pftconMod             , only : pftcon, npcropmin
     use clm_varctl            , only : use_c13, use_c14
     use CNVegStateType        , only : cnveg_state_type
+    use CanopyStateType        , only : canopystate_type
+    use CNVegCarbonStateType   , only : cnveg_carbonstate_type
     use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
     use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
     !
@@ -150,6 +157,8 @@ contains
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
+    type(canopystate_type)          , intent(in)    :: canopystate_inst
+    type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst

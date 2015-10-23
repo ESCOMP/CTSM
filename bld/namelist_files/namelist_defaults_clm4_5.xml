@@ -158,8 +158,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <CN_residual_opt use_flexibleCN=".true." >1</CN_residual_opt>
 <CN_partition_opt use_flexibleCN=".true." >1</CN_partition_opt>
 <carbon_excess_opt use_flexibleCN=".true." >0</carbon_excess_opt>
-<carbon_storage_excess_opt use_flexibleCN=".true." >1</carbon_storage_excess_opt>
+<carbon_storage_excess_opt use_flexibleCN=".true." >0</carbon_storage_excess_opt>
 <CN_evergreen_phenology_opt use_flexibleCN=".true." >1</CN_evergreen_phenology_opt>
+<carbon_resp_opt use_flexibleCN=".true.">1</carbon_resp_opt>
 
 <use_luna>.false.</use_luna>
 
