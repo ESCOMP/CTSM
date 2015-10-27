@@ -235,6 +235,7 @@ contains
          qflx_dew_grnd  => waterflux_inst%qflx_dew_grnd_col  , & ! Input:  [real(r8) (:)   ] ground surface dew formation (mm H2O /s) [+]
          qflx_snow_drain => waterflux_inst%qflx_snow_drain_col,& ! Output: [real(r8) (:)   ] net snow melt
          qflx_top_soil  => waterflux_inst%qflx_top_soil_col  , & ! Output: [real(r8) (:)   ] net water input into soil from top (mm/s)
+         snow_depth     => waterstate_inst%snow_depth_col    , & ! Output: [real(r8) (:)   ] snow height (m)
 
          mss_bcphi      => aerosol_inst%mss_bcphi_col        , & ! Output: [real(r8) (:,:) ] hydrophillic BC mass in snow (col,lyr) [kg]
          mss_bcpho      => aerosol_inst%mss_bcpho_col        , & ! Output: [real(r8) (:,:) ] hydrophobic  BC mass in snow (col,lyr) [kg]
@@ -484,8 +485,11 @@ contains
 
        qflx_top_soil(c) = qflx_rain_grnd(c) + qflx_snomelt(c)
        ! reset accumulated snow when no snow present
-       if (h2osno(c) <= 0) int_snow(c) = 0.
-       if (h2osno(c) <= 0) frac_sno(c) = 0.
+       if (h2osno(c) <= 0._r8) then
+          int_snow(c) = 0._r8
+          frac_sno(c) = 0._r8
+          snow_depth(c) = 0._r8
+       end if
     end do
 
     end associate
