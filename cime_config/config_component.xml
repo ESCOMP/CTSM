@@ -95,6 +95,9 @@
       <value compset="_CLM45%[^_]*ED"		>-ed_mode</value>
       <value compset="_CLM50%[^_]*SP"		>-bgc sp</value>
       <value compset="_CLM50%[^_]*BGC"		>-bgc bgc</value>
+      <value compset="_CLM50%[^_]*BGCDV"	>-bgc bgc -dynamic_vegetation</value>
+      <value compset="_CLM50%[^_]*BGC-CROP"	>-bgc bgc -crop</value>
+      <value compset="_CLM50%[^_]*BGCDV-CROP"	>-bgc bgc -dynamic_vegetation -crop</value>
     </values>
     <group>run_component_clm</group>
     <file>env_run.xml</file>
@@ -190,9 +193,12 @@
     <desc compset="_CLM45%[^_]*VIC"		>clm4.5 vic hydrology:</desc>
     <desc compset="_CLM45%[^_]*ED"		>clm4.5 ED (Ecosystem Demography): (experimental)</desc>
     <desc compset="_CLM45%[^_]*BGCDV"		>clm4.5 bgc (cn and methane) with dynamic vegetation:</desc>
+    <desc compset="_CLM45%[^_]*BGCDV-CROP"	>clm4.5 bgc (cn and methane) with dynamic vegetation and prognostic crop:</desc>
     <desc compset="_CLM50"			>clm5.0 physics:</desc>
     <desc compset="_CLM50%[^_]*SP"		>clm5.0 Satellite phenology:</desc>
     <desc compset="_CLM50%[^_]*BGC"		>clm5.0 bgc (cn and methane):</desc>
+    <desc compset="_CLM50%[^_]*BGC-CROP"	>clm5.0 bgc with prognostic crop:</desc>
+    <desc compset="_CLM50%[^_]*BGCDV-CROP"	>clm5.0 bgc (cn and methane) with dynamic vegetation and prognostic crop:</desc>
   </description>
 
   <help>

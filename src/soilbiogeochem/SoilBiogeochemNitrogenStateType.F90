@@ -154,7 +154,7 @@ contains
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N (vertically resolved)'
           call hist_addfld2d (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
-               ptr_col=data2dptr)
+               ptr_col=data2dptr, default='inactive')
        endif
 
        data1dptr => this%decomp_npools_col(:,l)
@@ -231,7 +231,7 @@ contains
        this%sminn_vr_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
             avgflag='A', long_name='soil mineral N', &
-            ptr_col=this%sminn_vr_col, default = 'inactive')
+            ptr_col=this%sminn_vr_col)
     else
        this%sminn_vr_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &

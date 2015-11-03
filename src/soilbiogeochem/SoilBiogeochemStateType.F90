@@ -192,7 +192,7 @@ contains
     this%fpi_vr_col(begc:endc,:) = spval
     call hist_addfld_decomp (fname='FPI'//trim(vr_suffix), units='proportion', type2d='levdcmp', & 
          avgflag='A', long_name='fraction of potential immobilization', &
-         ptr_col=this%fpi_vr_col)
+         ptr_col=this%fpi_vr_col, default='inactive')
 
   end subroutine InitHistory
 

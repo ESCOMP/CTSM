@@ -242,7 +242,7 @@ contains
     if (l_avoid_pnetcdf) then
        if (my_io_type == pio_iotype_pnetcdf) then
           my_io_type = pio_iotype_netcdf
-          if (pio_subsystem%io_rank==0) then
+          if(pio_iotask_rank(pio_subsystem)==0) then
              write(iulog,*) 'Workaround for bugz 1730: creating'
              write(iulog,*) trim(fname)
              write(iulog,*) 'with type netcdf instead of pnetcdf'

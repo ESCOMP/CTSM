@@ -415,7 +415,7 @@ contains
           longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' N tendency due to vertical transport'
           call hist_addfld_decomp (fname=fieldname, units='gN/m^3/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
-               ptr_col=data2dptr)
+               ptr_col=data2dptr, default='inactive')
        end if
     end do
 

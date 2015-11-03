@@ -33,8 +33,4 @@
 <!-- glc_smb will already be set if glc_nec is set, but set explicitly here -->
 <glc_smb    >.true.</glc_smb>
 
-<hist_fincl2>QICE</hist_fincl2>
-<hist_mfilt >1,1</hist_mfilt>
-<hist_nhtfrq>0,-8760</hist_nhtfrq>
-
 </namelist_defaults>

@@ -73,7 +73,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <soil_layerstruct phys="clm5_0">20SL_8.5m</soil_layerstruct>
 <soil_layerstruct phys="clm4_5">10SL_3.5m</soil_layerstruct>
 
-<use_bedrock>.false.</use_bedrock>
+<use_bedrock phys="clm5_0">.false.</use_bedrock>
+<use_bedrock phys="clm4_5">.false.</use_bedrock>
 
 <!-- Rooting profile namelist defaults -->
 <rooting_profile_method phys="clm5_0">1</rooting_profile_method>
@@ -102,7 +103,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lower_boundary_condition phys="clm4_5" >4</lower_boundary_condition>
 <soilwater_movement_method phys="clm5_0">1</soilwater_movement_method>
 <upper_boundary_condition phys="clm5_0" >1</upper_boundary_condition>
-<lower_boundary_condition phys="clm5_0" >3</lower_boundary_condition>
+<lower_boundary_condition phys="clm5_0" >2</lower_boundary_condition>
 <dtmin>60.</dtmin>      
 <verySmall>1.e-8</verySmall>
 <xTolerUpper>1.e-1</xTolerUpper> 
@@ -112,7 +113,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <flux_calculation>1</flux_calculation>
 
 <!--  River storage derived lake evaporation and irrigation limitation  -->
-<limit_lake_evap_and_irrig>.false.</limit_lake_evap_and_irrig>
+<limit_lake_evap_and_irrig phys="clm5_0">.true.</limit_lake_evap_and_irrig>
+<limit_lake_evap_and_irrig              >.false.</limit_lake_evap_and_irrig>
 
 <!-- Snow veg treatment -->
 <snowveg_flag phys="clm4_5" >OFF</snowveg_flag>
@@ -175,7 +177,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- dynamic roots -->
 <use_dynroot phys="clm4_5">.false.</use_dynroot>
 <use_dynroot phys="clm5_0" bgc_mode="sp">.false.</use_dynroot>
-<use_dynroot phys="clm5_0" bgc_mode="bgc">.true.</use_dynroot>
+<use_dynroot phys="clm5_0" bgc_mode="cn">.false.</use_dynroot>
+<use_dynroot phys="clm5_0" bgc_mode="bgc">.false.</use_dynroot>
 
 
 <!--

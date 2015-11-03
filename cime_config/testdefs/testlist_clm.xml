@@ -525,9 +525,9 @@
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
-        <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+        <machine compiler="gnu" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="ERP_D_Ld5">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/rootlit">edison</machine>
@@ -552,9 +552,9 @@
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
-        <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+        <machine compiler="gnu" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="PEM_Ld1">
         <machine compiler="intel" testtype="aux_testsystem" testmods="clm/default">yellowstone</machine>
@@ -566,9 +566,9 @@
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
-        <machine compiler="gnu" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm_short" testmods="clm/default">yellowstone</machine>
+        <machine compiler="gnu" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SMS_Lm1_D">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/snowlayers_3_monthly" comment="nlevsno less than 5 is not important scientifically, but is useful for making sure no code assumes that there are 5 snow layers (because this should result in an array bounds exception); this test can be removed once CLM5 is released and most new branches are based off of CLM5 (which will have a runtime-set number of snow layers, rather than assuming 5 snow layers)... until then, I want this test to catch any new code that assumes 5 snow layers">yellowstone</machine>
@@ -923,9 +923,15 @@
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/reduceOutput">yellowstone</machine>
       </test>
       <test name="ERP_D_P15x2_Ld3">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/flexibleCN">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/limit_river_withdraw">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/luna">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="gnu" testtype="clm_short_50" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="clm_short_50" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="clm_short_50" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="ERP_D_P15x2_Ld30">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default" comment="NOTE(bja, 201509) constrain_stress_deciduous_onset is on by default for clm50, but functionality is not exercised by nine day tests, Sean Swenson verified that it is active during 30 day tests.">yellowstone</machine>
@@ -934,7 +940,21 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">hobart</machine>
       </test>
       <test name="ERS_D_Ld3">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/deepsoil_bedrock">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="gnu" testtype="clm_short_50" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="clm_short_50" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="clm_short_50" testmods="clm/default">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Ld3">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+        <machine compiler="gnu" testtype="clm_short_50" testmods="clm/default">yellowstone</machine>
+        <machine compiler="intel" testtype="clm_short_50" testmods="clm/default">yellowstone</machine>
+        <machine compiler="pgi" testtype="clm_short_50" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16">
@@ -955,12 +975,12 @@
       </test>
     </grid>
   </compset>
-  <compset name="IMCRUCLM50BGC">
-     <grid name="f10_f10">
-        <test name="ERS_D_Ld5">
-           <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
-        </test>
-     </grid>
+  <compset name="ICRUCLM50BGCCROP">
+    <grid name="f10_f10">
+      <test name="ERP_D_P15x2_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropColdStart">yellowstone</machine>
+      </test>
+    </grid>
   </compset>
   <compset name="ICRUCN">
     <grid name="hcru_hcru">
@@ -1257,6 +1277,13 @@
     <grid name="f19_g16">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
+      </test>
+    </grid>
+  </compset>
+  <compset name="IMCRUCLM50BGC">
+    <grid name="f10_f10">
+      <test name="ERS_D_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
   </compset>

@@ -24,10 +24,6 @@
 <!-- glc_smb will already be set if glc_nec is set, but set explicitly here -->
 <glc_smb    >.true.</glc_smb>
 
-<hist_fincl2>QICE</hist_fincl2>
-<hist_mfilt >1,1</hist_mfilt>
-<hist_nhtfrq>0,-8760</hist_nhtfrq>
-
 <clm_start_type>arb_ic</clm_start_type>
 
 <stream_year_first_ndep phys="clm4_0" bgc="cn"   >1850</stream_year_first_ndep>

@@ -418,12 +418,12 @@ contains
     this%conc_ch4_sat_col(begc:endc,1:nlevgrnd) = spval
     call hist_addfld2d (fname='CONC_CH4_SAT', units='mol/m3', type2d='levgrnd', &
          avgflag='A', long_name='CH4 soil Concentration for inundated / lake area', &
-         ptr_col=this%conc_ch4_sat_col)
+         ptr_col=this%conc_ch4_sat_col, default='inactive')
 
     this%conc_ch4_unsat_col(begc:endc,1:nlevgrnd) = spval
     call hist_addfld2d (fname='CONC_CH4_UNSAT', units='mol/m3', type2d='levgrnd', &
          avgflag='A', long_name='CH4 soil Concentration for non-inundated area', &
-         ptr_col=this%conc_ch4_unsat_col)
+         ptr_col=this%conc_ch4_unsat_col, default='inactive')
 
     if (hist_wrtch4diag) then
        this%ch4_prod_depth_sat_col(begc:endc,1:nlevgrnd) = spval
@@ -490,16 +490,9 @@ contains
     end if
 
     this%o2_decomp_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
-    if (hist_wrtch4diag) then
-       this%o2_decomp_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='O2_DECOMP_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='O2 consumption from HR and AR for non-inundated area', &
-            ptr_col=this%o2_decomp_depth_unsat_col)
-    else
-       call hist_addfld2d (fname='o2_decomp_depth_unsat', units='mol/m3/2', type2d='levgrnd', &
-            avgflag='A', long_name='o2_decomp_depth_unsat', &
-            ptr_col=this%o2_decomp_depth_unsat_col)
-    end if
+    call hist_addfld2d (fname='O2_DECOMP_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='O2 consumption from HR and AR for non-inundated area', &
+         ptr_col=this%o2_decomp_depth_unsat_col, default=active)
 
     if (hist_wrtch4diag) then
        this%ch4_tran_depth_sat_col(begc:endc,1:nlevgrnd) = spval
