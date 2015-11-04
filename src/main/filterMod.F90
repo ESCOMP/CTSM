@@ -281,7 +281,7 @@ contains
     use decompMod       , only : BOUNDS_LEVEL_CLUMP
     use pftconMod       , only : npcropmin
     use landunit_varcon , only : istsoil, istcrop, istice_mec
-    use column_varcon   , only : icol_road_perv
+    use column_varcon   , only : is_hydrologically_active
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds  
@@ -382,8 +382,7 @@ contains
     do c = bounds%begc,bounds%endc
        if (col%active(c) .or. include_inactive) then
           l =col%landunit(c)
-          if (lun%itype(l) == istsoil .or. col%itype(c) == icol_road_perv .or. &
-               lun%itype(l) == istcrop) then
+          if (is_hydrologically_active(col_itype=col%itype(c), lun_itype=lun%itype(l))) then
              f = f + 1
              this_filter(nc)%hydrologyc(f) = c
           end if

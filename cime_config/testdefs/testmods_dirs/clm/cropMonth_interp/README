@@ -1,0 +1,1 @@
+Setting use_init_interp = .true. is currently needed for clm50 tests with crop.

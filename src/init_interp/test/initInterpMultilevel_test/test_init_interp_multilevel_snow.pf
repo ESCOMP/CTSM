@@ -1,0 +1,221 @@
+module test_init_interp_multilevel_snow
+
+  ! Tests of initInterpMultilevelSnow
+
+  use pfunit_mod
+  use initInterpMultilevelSnow
+  use shr_kind_mod , only : r8 => shr_kind_r8
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestInitInterpMultilevelSnow
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestInitInterpMultilevelSnow
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+  ! Tests use these source & destination indices. Some other indices get filled with
+  ! garbage values to make sure we're accessing the correct points.
+  integer, parameter :: index_source = 2
+  integer, parameter :: index_dest = 3
+
+  integer, parameter :: npts_source = index_source + 1
+  integer, parameter :: npts_dest = index_dest + 1
+
+contains
+
+  ! ------------------------------------------------------------------------
+  ! Helper methods
+  ! ------------------------------------------------------------------------
+
+  subroutine setUp(this)
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+  end subroutine tearDown
+
+  function create_interpolator(num_snow_layers_source) result(interpolator)
+    ! Arguments:
+    type(interp_multilevel_snow_type) :: interpolator ! function result
+    integer, intent(in) :: num_snow_layers_source  ! number of existing snow layers for index_source
+
+    ! Local variables:
+    integer, allocatable :: num_snow_layers_source_all(:)
+    character(len=*), parameter :: num_layers_name = 'NUM_LAYERS'
+    !-----------------------------------------------------------------------
+
+    allocate(num_snow_layers_source_all(npts_source))
+
+    num_snow_layers_source_all(:) = 0
+    num_snow_layers_source_all(index_source) = num_snow_layers_source
+
+    interpolator = interp_multilevel_snow_type( &
+         num_snow_layers_source = num_snow_layers_source_all, &
+         num_layers_name = num_layers_name)
+
+  end function create_interpolator
+
+
+  ! ------------------------------------------------------------------------
+  ! Tests: more levels in destination
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine moreDestLevels_noSourceLevels_setsDestToZero(this)
+    ! If there are no existing snow levels in the source, dest should be set to 0 for all
+    ! levels
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+    type(interp_multilevel_snow_type) :: interpolator
+    real(r8) :: data_dest(5) = 1000._r8
+    real(r8) :: data_dest_expected(5)
+    real(r8) :: data_source(3) = [11._r8, 12._r8, 13._r8]
+
+    interpolator = create_interpolator(num_snow_layers_source = 0)
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+
+    data_dest_expected(:) = 0._r8
+    @assertEqual(data_dest_expected, data_dest)
+  end subroutine moreDestLevels_noSourceLevels_setsDestToZero
+
+  @Test
+  subroutine moreDestLevels_allSourceLevels(this)
+    ! All source levels have snow present
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+    type(interp_multilevel_snow_type) :: interpolator
+    real(r8) :: data_dest(5) = 1000._r8
+    real(r8) :: data_dest_expected(5)
+    real(r8) :: data_source(3) = [11._r8, 12._r8, 13._r8]
+
+    interpolator = create_interpolator(num_snow_layers_source = size(data_source))
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+
+    data_dest_expected(1:2) = 0._r8
+    data_dest_expected(3:5) = data_source(:)
+    @assertEqual(data_dest_expected, data_dest)
+  end subroutine moreDestLevels_allSourceLevels
+
+  @Test
+  subroutine moreDestLevels_oneSourceLevel(this)
+    ! One source level has snow present
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+    type(interp_multilevel_snow_type) :: interpolator
+    real(r8) :: data_dest(5) = 1000._r8
+    real(r8) :: data_dest_expected(5)
+    real(r8) :: data_source(3) = [11._r8, 12._r8, 13._r8]
+
+    interpolator = create_interpolator(num_snow_layers_source = 1)
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+
+    data_dest_expected(1:4) = 0._r8
+    data_dest_expected(5) = data_source(3)
+    @assertEqual(data_dest_expected, data_dest)
+  end subroutine moreDestLevels_oneSourceLevel
+
+  @Test
+  subroutine moreDestLevels_twoSourceLevels(this)
+    ! Two source levels has snow present
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+    type(interp_multilevel_snow_type) :: interpolator
+    real(r8) :: data_dest(5) = 1000._r8
+    real(r8) :: data_dest_expected(5)
+    real(r8) :: data_source(3) = [11._r8, 12._r8, 13._r8]
+
+    interpolator = create_interpolator(num_snow_layers_source = 2)
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+
+    data_dest_expected(1:3) = 0._r8
+    data_dest_expected(4:5) = data_source(2:3)
+    @assertEqual(data_dest_expected, data_dest)
+  end subroutine moreDestLevels_twoSourceLevels
+
+  ! ------------------------------------------------------------------------
+  ! Tests: fewer levels in source
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine fewerDestLevels_noSourceLevels_setsDestToZero(this)
+    ! If there are no existing snow levels in the source, dest should be set to 0 for all
+    ! levels
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+    type(interp_multilevel_snow_type) :: interpolator
+    real(r8) :: data_dest(5) = 1000._r8
+    real(r8) :: data_dest_expected(5)
+    integer  :: i
+    real(r8) :: data_source(7) = [ (i, i=11,17) ]
+
+    interpolator = create_interpolator(num_snow_layers_source = 0)
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+
+    data_dest_expected(:) = 0._r8
+    @assertEqual(data_dest_expected, data_dest)
+  end subroutine fewerDestLevels_noSourceLevels_setsDestToZero
+
+  @Test
+  subroutine fewerDestLevels_allSourceLevels(this)
+    ! All source levels have snow present
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+    type(interp_multilevel_snow_type) :: interpolator
+    real(r8) :: data_dest(5) = 1000._r8
+    real(r8) :: data_dest_expected(5)
+    integer  :: i
+    real(r8) :: data_source(7) = [ (i, i=11,17) ]
+
+    interpolator = create_interpolator(num_snow_layers_source = size(data_source))
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+
+    data_dest_expected(:) = data_source(1:5)
+    @assertEqual(data_dest_expected, data_dest)
+
+  end subroutine fewerDestLevels_allSourceLevels
+
+  @Test
+  subroutine fewerDestLevels_oneSourceLevel(this)
+    ! One source level has snow present
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+    type(interp_multilevel_snow_type) :: interpolator
+    real(r8) :: data_dest(5) = 1000._r8
+    real(r8) :: data_dest_expected(5)
+    integer  :: i
+    real(r8) :: data_source(7) = [ (i, i=11,17) ]
+
+    interpolator = create_interpolator(num_snow_layers_source = 1)
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+
+    data_dest_expected(1:4) = 0._r8
+    data_dest_expected(5) = data_source(7)
+    @assertEqual(data_dest_expected, data_dest)
+  end subroutine fewerDestLevels_oneSourceLevel
+
+  @Test
+  subroutine fewerDestLevels_twoSourceLevels(this)
+    ! Two source levels have snow present
+    class(TestInitInterpMultilevelSnow), intent(inout) :: this
+    type(interp_multilevel_snow_type) :: interpolator
+    real(r8) :: data_dest(5) = 1000._r8
+    real(r8) :: data_dest_expected(5)
+    integer  :: i
+    real(r8) :: data_source(7) = [ (i, i=11,17) ]
+
+    interpolator = create_interpolator(num_snow_layers_source = 2)
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+
+    data_dest_expected(1:3) = 0._r8
+    data_dest_expected(4:5) = data_source(6:7)
+    @assertEqual(data_dest_expected, data_dest)
+  end subroutine fewerDestLevels_twoSourceLevels
+
+
+end module test_init_interp_multilevel_snow

@@ -1,0 +1,287 @@
+module initInterp2dvar
+
+  ! ------------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! This module defines a class that holds information about a 2-d variable, to
+  ! facilitate reading & writing
+  !
+  ! !USES:
+  use abortutils     , only: endrun
+  use shr_log_mod    , only: errMsg => shr_log_errMsg
+  use shr_kind_mod   , only: r8 => shr_kind_r8, i4=>shr_kind_i4
+  use clm_varctl     , only: iulog
+  use ncdio_pio      , only: file_desc_t, var_desc_t, ncd_inqvid, ncd_inqvdids
+  use ncdio_pio      , only: ncd_inqdlen, ncd_inqdname, ncd_io, ncd_getatt
+
+  implicit none
+  private
+  save
+
+  ! Public types
+
+  public :: interp_2dvar_type
+
+  type :: interp_2dvar_type
+     private
+     character(len=:), allocatable :: varname  ! variable name
+     type(var_desc_t) :: vardesc        ! variable descriptor on file
+     integer :: varid                   ! variable ID on file
+     type(file_desc_t), pointer :: ncid ! pointer to netcdf ID corresponding to this variable
+     logical :: file_is_dest            ! true if this is on the dest file, false if on the source file
+     character(len=16) :: vec_dimname   ! dimension name of vector dimension (e.g., 'col')
+     character(len=16) :: lev_dimname   ! dimension name of level dimension
+     integer :: vec_beg                 ! beginning index of vector dimension
+     integer :: vec_end                 ! ending index of vector dimension
+     integer :: nlev                    ! size of level dimension
+     logical :: switchdim               ! true if dimensions are 'switched' for this variable
+   contains
+     ! Public routines
+     generic :: readvar => readvar_int, readvar_double
+     !TYPE int,double
+     procedure :: readvar_{TYPE}
+     generic :: writevar => writevar_int, writevar_double
+     !TYPE int,double
+     procedure :: writevar_{TYPE}
+     procedure :: get_varname      ! get variable name
+     procedure :: get_vec_dimname  ! get dimension name of vector dimension (e.g., 'col')
+     procedure :: get_lev_dimname  ! get dimension name of level dimension
+     procedure :: get_vec_beg      ! get beginning index of vector dimension
+     procedure :: get_vec_end      ! get ending index of vector dimension
+     procedure :: get_vec_npts     ! get number of points in vector dimension
+
+     ! Private routines
+     procedure, private :: set_switchdim
+  end type interp_2dvar_type
+
+  interface interp_2dvar_type
+     module procedure constructor
+  end interface interp_2dvar_type
+
+contains
+
+  ! ========================================================================
+  ! Constructors
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  function constructor(varname, ncid, file_is_dest, bounds) &
+       result(this)
+    !
+    ! !DESCRIPTION:
+    ! Creates an interp_2dvar_type object
+    !
+    ! !USES:
+    use initInterpBounds, only : interp_bounds_type
+    !
+    ! !ARGUMENTS:
+    type(interp_2dvar_type) :: this  ! function result
+    character(len=*)  , intent(in)         :: varname      ! variable name
+    type(file_desc_t) , target, intent(inout) :: ncid      ! netcdf id
+    logical           , intent(in)         :: file_is_dest ! true if this is the dest file, false if the source file
+    type(interp_bounds_type), intent(in)   :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: vec_dimnum  ! dimension number of the vector dimension (e.g., 'col')
+    integer :: lev_dimnum  ! dimension number of the level dimension
+    integer :: dimids(2)   ! dimension IDs
+
+    character(len=*), parameter :: subname = 'interp_2dvar_type constructor'
+    !-----------------------------------------------------------------------
+
+    this%varname = varname
+    this%ncid => ncid
+    this%file_is_dest = file_is_dest
+
+    call ncd_inqvid(this%ncid, trim(varname), this%varid, this%vardesc)
+    call this%set_switchdim()
+
+    ! ------------------------------------------------------------------------
+    ! Get information related to dimensions
+    ! ------------------------------------------------------------------------
+
+    if (this%switchdim) then
+       lev_dimnum = 1
+       vec_dimnum = 2
+    else
+       lev_dimnum = 2
+       vec_dimnum = 1
+    end if
+
+    call ncd_inqvdids(this%ncid, dimids, this%vardesc)
+
+    ! Get size of level dimension
+    call ncd_inqdlen(this%ncid, dimids(lev_dimnum), this%nlev)
+
+    ! Get name of level dimension
+    call ncd_inqdname(this%ncid, dimids(lev_dimnum), this%lev_dimname)
+
+    ! Get name of vector dimension
+    call ncd_inqdname(this%ncid, dimids(vec_dimnum), this%vec_dimname)
+
+    this%vec_beg = bounds%get_beg(this%vec_dimname)
+    this%vec_end = bounds%get_end(this%vec_dimname)
+
+  end function constructor
+
+  ! ========================================================================
+  ! Public methods
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  !TYPE int,double
+  subroutine readvar_{TYPE}(this, data)
+    !
+    ! !DESCRIPTION:
+    ! Reads variable from file.
+    !
+    ! The 'data' variable is allocated here, and must be deallocated by the caller.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(interp_2dvar_type), intent(in) :: this
+    {VTYPE}, pointer, intent(out) :: data(:,:)   ! [vec, lev]
+    !
+    ! !LOCAL VARIABLES:
+    {VTYPE}, pointer :: data_transpose(:,:) ! transpose of data array if switchdim is true
+
+    character(len=*), parameter :: subname = 'readvar'
+    !-----------------------------------------------------------------------
+
+    allocate(data(this%vec_beg:this%vec_end, this%nlev))
+
+    ! The destination file uses the model's decomposition, whereas the source file does
+    ! not. Thus, we need to handle the reads differently.
+    if (this%file_is_dest) then
+       call ncd_io(ncid=this%ncid, varname=trim(this%varname), flag='read', data=data, &
+            dim1name=trim(this%vec_dimname), switchdim=this%switchdim)
+    else
+       if (this%switchdim) then
+          allocate(data_transpose(this%nlev, this%vec_beg:this%vec_end))
+          call ncd_io(ncid=this%ncid, varname=trim(this%varname), flag='read', &
+               data=data_transpose)
+          data = transpose(data_transpose)
+          deallocate(data_transpose)
+       else
+          call ncd_io(ncid=this%ncid, varname=trim(this%varname), flag='read', &
+               data=data)
+       end if
+    end if
+
+  end subroutine readvar_{TYPE}
+
+  !-----------------------------------------------------------------------
+  !TYPE int,double
+  subroutine writevar_{TYPE}(this, data)
+    !
+    ! !DESCRIPTION:
+    ! Writes variable to file.
+    !
+    ! Currently only works for the destination file, not the source file.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(interp_2dvar_type), intent(in) :: this
+    {VTYPE}, pointer, intent(in) :: data(:,:)   ! [vec, lev]
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'writevar'
+    !-----------------------------------------------------------------------
+
+    if (this%file_is_dest) then
+       call ncd_io(ncid=this%ncid, varname=trim(this%varname), flag='write', data=data, &
+            dim1name=trim(this%vec_dimname), switchdim=this%switchdim)
+    else
+       ! NOTE(wjs, 2015-10-13) In principle, we could probably handle writes to the
+       ! source file the same way as we handle reads. But since this is untested, I'm
+       ! currently aborting in this case.
+       call endrun(msg='ERROR: unhandled attempt to write variable to source file '// &
+            errMsg(__FILE__, __LINE__))
+    end if
+
+  end subroutine writevar_{TYPE}
+
+  function get_varname(this) result(varname)
+    ! Get variable name
+    character(len=:), allocatable :: varname  ! function result
+    class(interp_2dvar_type), intent(in) :: this
+
+    varname = this%varname
+  end function get_varname
+
+  function get_vec_dimname(this) result(vec_dimname)
+    ! Get name of vector dimension (e.g., 'col')
+    character(len=:), allocatable :: vec_dimname  ! function result
+    class(interp_2dvar_type), intent(in) :: this
+
+    vec_dimname = this%vec_dimname
+  end function get_vec_dimname
+
+  function get_lev_dimname(this) result(lev_dimname)
+    ! Get name of level dimension
+    character(len=:), allocatable :: lev_dimname  ! function result
+    class(interp_2dvar_type), intent(in) :: this
+
+    lev_dimname = this%lev_dimname
+  end function get_lev_dimname
+
+  integer function get_vec_beg(this)
+    ! Get beginning index of vector dimension
+    class(interp_2dvar_type), intent(in) :: this
+
+    get_vec_beg = this%vec_beg
+  end function get_vec_beg
+
+  integer function get_vec_end(this)
+    ! Get ending index of vector dimension
+    class(interp_2dvar_type), intent(in) :: this
+
+    get_vec_end = this%vec_end
+  end function get_vec_end
+
+  integer function get_vec_npts(this)
+    ! Get number of points in vector dimension
+    class(interp_2dvar_type), intent(in) :: this
+
+    get_vec_npts = (this%vec_end - this%vec_beg + 1)
+  end function get_vec_npts
+
+  ! ========================================================================
+  ! Private methods
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine set_switchdim(this)
+    !
+    ! !DESCRIPTION:
+    ! Sets the switchdim attribute by reading the appropriate metadata from the file
+    !
+    ! !USES:
+    use restUtilMod    , only: iflag_noswitchdim, iflag_switchdim
+    !
+    ! !ARGUMENTS:
+    class(interp_2dvar_type), intent(inout) :: this
+    !
+    ! !LOCAL VARIABLES:
+    integer :: switchdim_flag
+
+    character(len=*), parameter :: subname = 'set_switchdim'
+    !-----------------------------------------------------------------------
+
+    call ncd_getatt(this%ncid, this%varid, 'switchdim_flag', switchdim_flag)
+    select case (switchdim_flag)
+    case (iflag_switchdim)
+       this%switchdim = .true.
+    case (iflag_noswitchdim)
+       this%switchdim = .false.
+    case default
+       write(iulog,*) subname//' ERROR: unknown switchdim_flag: ', switchdim_flag
+       call endrun('ERROR: unknown switchdim flag '//errMsg(__FILE__, __LINE__))
+    end select
+
+  end subroutine set_switchdim
+
+
+end module initInterp2dvar

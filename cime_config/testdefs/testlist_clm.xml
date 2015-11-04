@@ -192,6 +192,9 @@
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/default">edison</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
+      <test name="LII_D_Ld3">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default" comment="This test is mostly redundant with LII_D.f10_f10.ICLM45BGCCROP.yellowstone_gnu.clm-crop. However, the initial conditions file for the crop test has O2_DECOMP_DEPTH_UNSAT = 0 everywhere. That failed to catch a problem that appears when there are non-zero values in O2_DECOMP_DEPTH_UNSAT. Once the initial conditions file for the crop LII test has non-zero values for O2_DECOMP_DEPTH_UNSAT, this non-crop LII test can be removed.">yellowstone</machine>
+      </test>
       <test name="SSP_D_Ld10">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
@@ -545,9 +548,6 @@
       <test name="ERP_Ld5_P24x1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">hobart</machine>
       </test>
-      <test name="ERP_P15x2_D">
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/snowlayers_12" comment="Can be removed once we change the CLM5 default to have more than 5 snow layers (at which point we will be testing 5 layers with CLM45 and more than 5 with CLM5)">yellowstone</machine>
-      </test>
       <test name="ERS_D_Ld3">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -569,9 +569,6 @@
         <machine compiler="gnu" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
-      </test>
-      <test name="SMS_Lm1_D">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/snowlayers_3_monthly" comment="nlevsno less than 5 is not important scientifically, but is useful for making sure no code assumes that there are 5 snow layers (because this should result in an array bounds exception); this test can be removed once CLM5 is released and most new branches are based off of CLM5 (which will have a runtime-set number of snow layers, rather than assuming 5 snow layers)... until then, I want this test to catch any new code that assumes 5 snow layers">yellowstone</machine>
       </test>
       <test name="SSP_Ld10">
         <machine compiler="intel" testtype="aux_scripts" testmods="clm/default">yellowstone</machine>
@@ -635,6 +632,9 @@
       <test name="ERP_Ly5">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_o3_reduceOutput">yellowstone</machine>
       </test>
+      <test name="ERP_P15x2_D">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/snowlayers_12" comment="Can be removed once we change the CLM5 default to have more than 5 snow layers (at which point we will be testing 5 layers with CLM45 and more than 5 with CLM5)">yellowstone</machine>
+      </test>
       <test name="ERP_P15x2_Lm36">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_o3_reduceOutput">yellowstone</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/irrigOn_reduceOutput">yellowstone</machine>
@@ -653,6 +653,9 @@
       </test>
       <test name="SMS_D_Ld3">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/interp_f19_noncrop2crop" comment="test interpolation of non-crop to crop (also change resolution, but that is not an essential part of this test)">yellowstone</machine>
+      </test>
+      <test name="SMS_Lm1_D">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/snowlayers_3_monthly" comment="nlevsno less than 5 is not important scientifically, but is useful for making sure no code assumes that there are 5 snow layers (because this should result in an array bounds exception); this test can be removed once CLM5 is released and most new branches are based off of CLM5 (which will have a runtime-set number of snow layers, rather than assuming 5 snow layers)... until then, I want this test to catch any new code that assumes 5 snow layers">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16">
@@ -746,11 +749,11 @@
     <grid name="f09_g16">
       <test name="ERP_D_Ld5">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/vrtlay">edison</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/vrtlay">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/vrtlay_interp">yellowstone</machine>
       </test>
       <test name="ERP_Ld5">
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/vrtlay">edison</machine>
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/vrtlay">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/vrtlay_interp">yellowstone</machine>
       </test>
     </grid>
     <grid name="f10_f10">
@@ -979,6 +982,9 @@
     <grid name="f10_f10">
       <test name="ERP_D_P15x2_Ld3">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropColdStart">yellowstone</machine>
+      </test>
+      <test name="ERP_P15x2_Lm36">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonth_interp" comment="Ideally this test (currently our only CLM50 crop test with initial conditions) would turn on irrigation, too; however, that would require creating a new crop+irrig initial conditions file with the necessary metadata on it for init_interp">yellowstone</machine>
       </test>
     </grid>
   </compset>

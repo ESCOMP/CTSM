@@ -2481,6 +2481,17 @@ contains
               long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
               imissing_value=ispval, ifill_value=ispval)
        end if
+       if (ldomain%isgrid2d) then
+          call ncd_defvar(varname='nbedrock' , xtype=ncd_int, &
+              dim1name='lon', dim2name='lat', &
+              long_name='index of shallowest bedrock layer', ncid=nfid(t), &
+              imissing_value=ispval, ifill_value=ispval)
+       else
+          call ncd_defvar(varname='nbedrock' , xtype=ncd_int, &
+              dim1name=grlnd, &
+              long_name='index of shallowest bedrock layer', ncid=nfid(t), &
+              imissing_value=ispval, ifill_value=ispval)
+       end if
 
     else if (mode == 'write') then
 
@@ -2498,6 +2509,7 @@ contains
        call ncd_io(varname='landfrac', data=ldomain%frac, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='landmask', data=ldomain%mask, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='pftmask' , data=ldomain%pftm, dim1name=grlnd, ncid=nfid(t), flag='write')
+       call ncd_io(varname='nbedrock' , data=grc%nbedrock, dim1name=grlnd, ncid=nfid(t), flag='write')
 
     end if  ! (define/write mode
 

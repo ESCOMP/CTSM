@@ -1,0 +1,14 @@
+This testmods directory should be used for vrtlay tests that have an
+out-of-the-box initial conditions file. init_interp needs to be run in this
+case, because our current out-of-the-box initial conditions files were generated
+with shallower soil.
+
+It does not work to specify use_init_interp = .true. for all vrtlay tests
+because this raises an error for tests where there are no initial conditions
+(use_init_interp = .true. cannot be used with finidat = ' '). Once we have
+changed the namelist logic so that all cases pick up an initial conditions file
+(specifying use_init_interp = .true. when needed), this testmods directory can
+be removed: either use_init_interp = .true. can be specified for all vrtlay
+tests, or (depending on how sophisticated the build-namelist logic is -
+particularly, whether it recognizes the incompatibility in soil layer structure)
+this may not be needed at all.

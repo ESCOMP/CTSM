@@ -1,0 +1,99 @@
+module array_utils
+
+  ! ------------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! This module contains routines for working with arrays.
+  !
+  ! NOTE(wjs, 2015-10-21) These routines could be moved to csm_share. However, I'm not
+  ! sure if these routines will stick around for long, since they are just here to work
+  ! around the fact that we don't specify -Mallocatable=03 with pgi (which in turn is
+  ! because that flag led to bugs with pgi14).
+  !
+  ! !USES:
+
+  use shr_kind_mod, only : r8 => shr_kind_r8, i4=>shr_kind_i4
+
+  implicit none
+  private
+  save
+
+  ! Public routines
+
+  public :: transpose_wrapper ! wrap the intrinsic transpose function, first allocating the destination array
+  public :: pack_wrapper      ! wrap the intrinsic pack function, first allocating the destination array
+
+  interface transpose_wrapper
+     !TYPE int,double
+     module procedure transpose_wrapper_{TYPE}
+  end interface transpose_wrapper
+
+contains
+
+  !-----------------------------------------------------------------------
+  !TYPE int,double
+  subroutine transpose_wrapper_{TYPE}(arr_out, arr_in)
+    !
+    ! !DESCRIPTION:
+    ! Wrap the intrinsic transpose function, doing the necessary allocation of the
+    ! destination array
+    !
+    ! NOTE(wjs, 2015-10-21) This is supposed to be handled for you in Fortran2003. Within
+    ! CESM, it currently appears to be handled for all compilers except pgi: It is
+    ! handled with intel through the use of '-assume realloc_lhs'. It could be handled
+    ! with pgi through the use of '-Mallocatable=03', but we currently don't use that
+    ! flag, because it triggered bugs with pgi14.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    {VTYPE}, allocatable, intent(out) :: arr_out(:,:)
+    {VTYPE}, intent(in) :: arr_in(:,:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: size1, size2
+
+    character(len=*), parameter :: subname = 'transpose_wrapper_{TYPE}'
+    !-----------------------------------------------------------------------
+
+    size1 = size(arr_in, 1)
+    size2 = size(arr_in, 2)
+    allocate(arr_out(size2, size1))
+
+    arr_out = transpose(arr_in)
+
+  end subroutine transpose_wrapper_{TYPE}
+
+  !-----------------------------------------------------------------------
+  subroutine pack_wrapper(arr_packed, arr, mask)
+    !
+    ! !DESCRIPTION:
+    ! Wrap the intrinsic pack function, doing the necessary allocation of the destination
+    ! array.
+    !
+    ! NOTE(wjs, 2015-10-21) This is supposed to be handled for you in Fortran2003. Within
+    ! CESM, it currently appears to be handled for all compilers except pgi: It is
+    ! handled with intel through the use of '-assume realloc_lhs'. It could be handled
+    ! with pgi through the use of '-Mallocatable=03', but we currently don't use that
+    ! flag, because it triggered bugs with pgi14.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    real(r8), allocatable, intent(out) :: arr_packed(:)
+    real(r8), intent(in) :: arr(:)
+    logical , intent(in) :: mask(:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: packed_size
+
+    character(len=*), parameter :: subname = 'pack_wrapper'
+    !-----------------------------------------------------------------------
+
+    packed_size = count(mask)
+    allocate(arr_packed(packed_size))
+    arr_packed = pack(arr, mask)
+
+  end subroutine pack_wrapper
+
+end module array_utils
+  

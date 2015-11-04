@@ -1,4 +1,291 @@
 ===============================================================
+Tag name:  clm4_5_3_r146
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Nov  4 06:48:41 MST 2015
+One-line Summary: Implement vertical interpolation in init_interp
+
+Purpose of changes
+------------------
+
+The major requirements this addresses are:
+
+(1) Handle changes in the vertical discretization of the soil column,
+    including changing the number of layers and/or changing the depth of layers.
+
+(2) Handle changes in which soil layers are considered bedrock vs. "standard"
+    soil: Information from bedrock layers should not be transmitted to soil
+    layers, and vice versa.
+
+(3) Handle changing number of snow layers
+
+There was previously-existing code to handle (1). However, while it was mostly
+right, it was hard-coded to just handle the interpolation from "standard"
+vertical levels to "more_vertlevels". And there were a number of special cases
+that it mis-handled (such as urban points, which have a different vertical
+discretization; also, spvals were not handled correctly). It was also going to
+be hard to fit requirements #2 and #3 into the old code. So I removed the old
+code and replaced it with a new, object-oriented design.
+
+Because the number of files involved in init_interp has now grown significantly,
+I have moved this code to a new directory (src/init_interp).
+
+As part of the handling of vertical interpolation, I needed to fix a few
+inconsistencies in the use of spval in some multi-level fields (see below for
+details).
+
+Finally, to aid with testing of this new code, and because it is useful in
+general, Sean Swenson added nbedrock to the first history file of a run.
+
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include bugzilla ID): [If none, remove this line]
+- 2239: need new initial conditions files with extra metadata on them
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp):
+
+- If you want to use init_interp on an initial conditions file generated prior
+  to this tag, you will need to first get some new metadata onto your initial
+  conditions file: COL_Z, LEVGRND_CLASS, COL_Z_p and LEVGRND_CLASS_p. You have
+  two options for how to do this:
+
+  (1) Run the model for a short time using this tag, with a configuration that
+      matches the source file, using the source file as finidat (with
+      use_init_interp = .false.), in order to produce a new restart file with
+      the necessary metadata.  Then use that new file as the finidat file for
+      init_interp.
+  
+  (2) If that is not possible, then an alternative is to run the model for a
+      short time using this tag, with cold start initial conditions (finidat = " ").
+      Then use a tool like ncks to copy the misssing fields onto the original source
+      finidat file. Then use that patched file as the finidat file for
+      init_interp. CAUTION: A bug in the netcdf library means that adding fields
+      using ncks can result in data corruption of existing fields. I have
+      observed this in the plant_nalloc field, which fortunately does not seem
+      to be needed at all on the restart file. However, if you use this method,
+      you should compare the old and new files to ensure that nothing other than
+      plant_nalloc has been changed.
+
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   Some new initial conditions files: same as old, but with metadata needed for
+   running them through init_interp
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self; CLM-CMT plans to do a more detailed review later
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: NOT RUN
+
+  unit-tests (components/clm/src):
+
+    yellowstone: ok
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone: NOT RUN
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone: NOT RUN
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    hobart_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_3_r145
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45 / CLM50 runs that use init_interp to
+  interpolate to a different resolution
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+        larger than roundoff; not investigated closely
+
+    Changes arise from the fact that multi-level points are now interpolated
+    rather than copied from the input to the output. This changes results for
+    urban points, where the vertical level structure of walls and rooves varies
+    from gridcell to gridcell.
+
+    There are also FILLDIFFs in SOILLIQ and SOILICE in vector (dov2xy = .false.)
+    history files, due to a bug fix in the treatment of spval for these
+    variables.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated:
+
+========= Moved to new directory for init_interp code
+D       components/clm/src/main/initInterpMindist.F90
+D       components/clm/src/main/initInterp.F90
+D       components/clm/src/main/test/initInterpMindist_test/CMakeLists.txt
+D       components/clm/src/main/test/initInterpMindist_test/test_init_interp_mindist.pf
+D       components/clm/src/main/test/initInterpMindist_test
+
+List all files added and what they do:
+
+========= Added new directory for init_interp code, populated with files that
+          used to be in main
+A       components/clm/src/init_interp
+A       components/clm/src/init_interp/initInterpMindist.F90
+A       components/clm/src/init_interp/CMakeLists.txt
+A       components/clm/src/init_interp/test/initInterpMindist_test/CMakeLists.txt
+A       components/clm/src/init_interp/test/initInterpMindist_test/test_init_interp_mindist.pf
+A       components/clm/src/init_interp/test/initInterpMindist_test
+A       components/clm/src/init_interp/test
+
+========= Main changes needed for vertical interpolation
+A       components/clm/src/init_interp/initInterpMultilevelBase.F90
+A       components/clm/src/init_interp/initInterpMultilevelCopy.F90
+A       components/clm/src/init_interp/initInterpMultilevelInterp.F90
+A       components/clm/src/init_interp/initInterpMultilevelSnow.F90
+A       components/clm/src/init_interp/initInterpMultilevelSplit.F90
+A       components/clm/src/init_interp/initInterpMultilevelContainer.F90
+A       components/clm/src/init_interp/initInterp.F90
+A       components/clm/src/init_interp/initInterp2dvar.F90.in
+A       components/clm/src/init_interp/initInterpBounds.F90
+
+========= Wrappers to transpose and pack that handle allocation for you (needed
+          for pgi)
+A       components/clm/src/utils/array_utils.F90.in
+
+========= Put unit tests around the parts of the vertical interpolation that
+          have significant logic
+A       components/clm/src/init_interp/test/CMakeLists.txt
+A       components/clm/src/init_interp/test/initInterpMultilevel_test/test_init_interp_multilevel_split.pf
+A       components/clm/src/init_interp/test/initInterpMultilevel_test/initInterpMultilevelMock.pf
+A       components/clm/src/init_interp/test/initInterpMultilevel_test/multilevel_interp_factory.F90
+A       components/clm/src/init_interp/test/initInterpMultilevel_test/test_init_interp_multilevel_interp.pf
+A       components/clm/src/init_interp/test/initInterpMultilevel_test/test_init_interp_multilevel_snow.pf
+A       components/clm/src/init_interp/test/initInterpMultilevel_test/CMakeLists.txt
+A       components/clm/src/init_interp/test/initInterpMultilevel_test
+
+========= Allow vrtlay tests to use init_interp
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/vrtlay_interp/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/vrtlay_interp/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/vrtlay_interp/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/vrtlay_interp
+
+========= Add a CLM5 crop test that uses init_interp (init_interp is needed for
+          CLM5 cases with non-cold-start initial conditions)
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonth_interp/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonth_interp/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonth_interp/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonth_interp
+
+List all existing files that have been modified, and describe the changes:
+
+========= Added new directory for init_interp code
+M       components/clm/bld/configure
+M       components/clm/src/CMakeLists.txt
+M       components/clm/src/main/test/CMakeLists.txt
+
+========= Added new metadata to restart file that is needed for the vertical interpolation
+M       components/clm/src/main/initVerticalMod.F90
+M       components/clm/src/main/subgridRestMod.F90
+M       components/clm/src/main/ColumnType.F90
+M       components/clm/src/main/column_varcon.F90
+M       components/clm/src/main/filterMod.F90
+M       components/clm/src/utils/restUtilMod.F90.in
+
+========= New routines used to add metadata to restart file and to read
+          variables in init_interp
+M       components/clm/src/main/ncdio_pio.F90.in
+
+========= Remove unnecessary use of spval (the vertical interpolation was not
+          handling this use of spval correctly, because it is inconsistent with
+          other uses of spval in the code; it turns out this use of spval wasn't
+          necessary to begin with)
+M       components/clm/src/biogeochem/ch4Mod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrifDenitrifMod.F90
+
+========= Fix bug: calculations were being done on spval, leading to values of
+          1e75 on the restart file (this was causing problems with the new
+          vertical interpolation)
+M       components/clm/src/biogeophys/WaterStateType.F90
+
+========= Added new necessary metadata to any initial conditions file that is
+          used for init_interp testing. I have NOT taken the time to do this for
+          other out-of-the-box initial conditions, figuring that they'll be
+          replaced soon anyway. (Any file generated with the new tag will have
+          the necassary metadata on it.)
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_crop/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop/user_nl_clm
+
+========= Tangentially-related change: add nbedrock to first history file
+          (changes from Sean Swenson)
+M       components/clm/src/main/GridcellType.F90
+M       components/clm/src/main/histFileMod.F90
+
+========= Totally unrelated change: add a comment
+M       components/clm/src/biogeophys/test/Irrigation_test/IrrigationWrapperMod.F90
+
+========= Added another system test of init_interp, and modify snowlayer tests
+          and some vrtlay tests to use init_interp
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_3_monthly/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/snowlayers_12/user_nl_clm
+
+========= Put unit tests around the parts of the vertical interpolation that
+          have significant logic
+M       components/clm/src/utils/CMakeLists.txt
+M       components/clm/src/main/CMakeLists.txt
+
+========= Remove old failing vrtlay tests from xfail list, add new vrtlay_interp
+          tests to xfail list (fail due to bug 2239); add two new CLM5 crop
+          tests to xfail list (bugs 2240 and 2241)
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+========= New ChangeLog template, with sections removed / added / rearranged
+M       .ChangeLog_template
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r145
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Tue Nov  3 14:25:30 MST 2015

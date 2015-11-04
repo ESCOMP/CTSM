@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_3_r146    sacks 11/04/2015 Implement vertical interpolation in init_interp
    clm4_5_3_r145    andre 11/03/2015 update clm50 defaults, enable clm50 crop compsets
    clm4_5_3_r144    sacks 10/27/2015 Better fix for bug that leads to infinite growth in snow depth
    clm4_5_3_r143    andre 10/22/2015 flexibleCN and luna bugfixes.

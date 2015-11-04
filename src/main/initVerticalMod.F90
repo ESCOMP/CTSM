@@ -18,11 +18,12 @@ module initVerticalMod
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
   use clm_varctl        , only : use_bedrock, soil_layerstruct
-  use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, grlnd 
-  use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
+  use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
+  use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
   use landunit_varcon   , only : istdlak, istice_mec
   use fileutils         , only : getfil
   use LandunitType      , only : lun                
+  use GridcellType      , only : grc                
   use ColumnType        , only : col                
   use SnowHydrologyMod  , only : InitSnowLayers             
   use ncdio_pio
@@ -36,6 +37,7 @@ module initVerticalMod
   public :: initVertical
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ReadNL
+  private :: hasBedrock  ! true if the given column type includes bedrock layers
   !
 
   !
@@ -132,6 +134,26 @@ contains
     integer               :: begc, endc
     integer               :: begl, endl
     integer               :: jmin_bedrock
+
+    ! Possible values for levgrnd_class. The important thing is that, for a given column,
+    ! layers that are fundamentally different (e.g., soil vs bedrock) have different
+    ! values. This information is used in the vertical interpolation in init_interp.
+    !
+    ! IMPORTANT: These values should not be changed lightly. e.g., try to avoid changing
+    ! the values assigned to LEVGRND_CLASS_STANDARD, LEVGRND_CLASS_DEEP_BEDROCK, etc.  The
+    ! problem with changing these is that init_interp expects that layers with a value of
+    ! (e.g.) 1 on the source file correspond to layers with a value of 1 on the
+    ! destination file. So if you change the values of these constants, you either need to
+    ! adequately inform users of this change, or build in some translation mechanism in
+    ! init_interp (such as via adding more metadata to the restart file on the meaning of
+    ! these different values).
+    !
+    ! The distinction between "shallow" and "deep" bedrock is not made explicitly
+    ! elsewhere. But, since these classes have somewhat different behavior, they are
+    ! distinguished explicitly here.
+    integer, parameter :: LEVGRND_CLASS_STANDARD        = 1
+    integer, parameter :: LEVGRND_CLASS_DEEP_BEDROCK    = 2
+    integer, parameter :: LEVGRND_CLASS_SHALLOW_BEDROCK = 3
     !------------------------------------------------------------------------
 
     begc = bounds%begc; endc= bounds%endc
@@ -473,18 +495,25 @@ contains
           jmin_bedrock = j
        endif
     enddo
+
     if (masterproc) write(iulog,*) 'jmin_bedrock: ', jmin_bedrock
 
-    do c = begc, endc
-       g = col%gridcell(c)
-       col%nbedrock(c) = nlevsoi
+    !  Determine gridcell bedrock index
+    do g = bounds%begg,bounds%endg
+       grc%nbedrock(g) = nlevsoi
        do j = jmin_bedrock,nlevsoi 
           if (zisoi(j-1) < zbedrock_in(g) .and. zisoi(j) >= zbedrock_in(g)) then
-             col%nbedrock(c) = j
-          endif
-       enddo
-
+             grc%nbedrock(g) = j
+          end if
+       end do
     end do
+
+    !  Set column bedrock index
+    do c = begc, endc
+       g = col%gridcell(c)
+       col%nbedrock(c) = grc%nbedrock(g) 
+    end do
+
     deallocate(zbedrock_in)
 
     !-----------------------------------------------
@@ -604,6 +633,37 @@ contains
        end if
     end do
 
+    ! ------------------------------------------------------------------------
+    ! Set classes of layers
+    ! ------------------------------------------------------------------------
+
+    do c = bounds%begc, bounds%endc
+       l = col%landunit(c)
+       if (hasBedrock(col_itype=col%itype(c), lun_itype=lun%itype(l))) then
+          ! NOTE(wjs, 2015-10-17) We are assuming that points with bedrock have both
+          ! "shallow" and "deep" bedrock. Currently, this is not true for lake columns:
+          ! lakes do not distinguish between "shallow" bedrock and "normal" soil.
+          ! However, that was just due to an oversight that is supposed to be corrected
+          ! soon; so to keep things simple we assume that any point with bedrock
+          ! potentially has both shallow and deep bedrock.
+          col%levgrnd_class(c, 1:col%nbedrock(c)) = LEVGRND_CLASS_STANDARD
+          if (col%nbedrock(c) < nlevsoi) then
+             col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = LEVGRND_CLASS_SHALLOW_BEDROCK
+          end if
+          col%levgrnd_class(c, (nlevsoi + 1) : nlevgrnd) = LEVGRND_CLASS_DEEP_BEDROCK
+       else
+          col%levgrnd_class(c, 1:nlevgrnd) = LEVGRND_CLASS_STANDARD
+       end if
+    end do
+
+    do j = 1, nlevgrnd
+       do c = bounds%begc, bounds%endc
+          if (col%z(c,j) == spval) then
+             col%levgrnd_class(c,j) = ispval
+          end if
+       end do
+    end do
+
     !-----------------------------------------------
     ! Set cold-start values for snow levels, snow layers and snow interfaces 
     !-----------------------------------------------
@@ -668,5 +728,64 @@ contains
     call ncd_pio_closefile(ncid)
 
   end subroutine initVertical
+
+  !-----------------------------------------------------------------------
+  logical function hasBedrock(col_itype, lun_itype)
+    !
+    ! !DESCRIPTION:
+    ! Returns true if the given column type has a representation of bedrock - i.e., a set
+    ! of layers at the bottom of the column that are treated fundamentally differently
+    ! from the upper layers.
+    !
+    ! !USES:
+    use landunit_varcon, only : istice, istice_mec, isturb_MIN, isturb_MAX
+    use column_varcon  , only : icol_road_perv, is_hydrologically_active
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: col_itype  ! col%itype value
+    integer, intent(in) :: lun_itype  ! lun%itype value for the landunit on which this column sits
+    ! If we had an easy way to figure out which landunit a column was on based on
+    ! col_itype (which would be very helpful!), then we wouldn't need lun_itype.
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'hasBedrock'
+    !-----------------------------------------------------------------------
+
+    ! TODO(wjs, 2015-10-17) I don't like that the logic here implicitly duplicates logic
+    ! elsewhere in the code. For example, if there were a change in the lake code so that
+    ! it no longer treated the bottom layers as bedrock, then that change would need to be
+    ! reflected here. One solution would be to set some has_bedrock flag in one central
+    ! place, and then have the science code use that. But that could get messy in the
+    ! science code. Another solution would be to decentralize the definition of
+    ! hasBedrock, so that (for example) the lake code itself sets the value for lun_itype
+    ! == istdlak - that way, hasBedrock(lake) would be more likely to get updated
+    ! correctly if the lake logic changes.
+
+    if (lun_itype == istice .or. lun_itype == istice_mec) then
+       hasBedrock = .false.
+    else if (lun_itype >= isturb_MIN .and. lun_itype <= isturb_MAX) then
+       if (col_itype == icol_road_perv) then
+          hasBedrock = .true.
+       else
+          hasBedrock = .false.
+       end if
+    else
+       hasBedrock = .true.
+    end if
+
+    ! As an independent check of the above logic, assert that, at the very least, any
+    ! hydrologically-active column is given hasBedrock = .true. This is to try to catch
+    ! problems with new column types being added that aren't handled properly by the
+    ! above logic, since (as noted in the todo note above) there is some implicit
+    ! duplication of logic between this routine and other parts of the code, which is
+    ! dangerous. For example, if a new "urban lawn" type is added, then it should have
+    ! hasBedrock = .true. - and this omission will hopefully be caught by this assertion.
+    if (is_hydrologically_active(col_itype=col_itype, lun_itype=lun_itype)) then
+       SHR_ASSERT(hasBedrock, "hasBedrock should be true for all hydrologically-active columns")
+    end if
+
+  end function hasBedrock
+
 
 end module initVerticalMod

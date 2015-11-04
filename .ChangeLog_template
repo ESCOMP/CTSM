@@ -4,42 +4,38 @@ Originator(s):
 Date: 
 One-line Summary:
 
-Purpose of changes:
+Purpose of changes
+------------------
 
-Requirements for tag:
+[Fill this in with details]
 
-Test level of tag: regular, short, tools, build_namelist, doc
 
-Bugs fixed (include bugzilla ID):
+Bugs fixed or introduced
+------------------------
 
-Known bugs (include bugzilla ID):
-    http://bugs.cgd.ucar.edu/
+Bugs fixed (include bugzilla ID): [If none, remove this line]
 
-Known Limitations:
-                                 1147 (mkgriddata can't straddle over Greenwich)
-                                 1025 (SCM mode can NOT use a global finidat file)
-                                 1017 (SCM mode can NOT restart)
-                                  896 (T62 mode does not work)
-                                  701 (svn keyword)
-                                  452 (Problem with support of soil-colors != 8 or 20)
+Known bugs introduced in this tag (include bugzilla ID): [If none, remove this line]
 
-Describe any changes made to build system:
 
-Describe any changes made to the namelist:
+Notes of particular relevance for users
+---------------------------------------
 
-List any changes to the defaults for the boundary datasets:
+Caveats for users (e.g., need to run initial conditions through init_interp):
 
-Describe any substantial timing or memory changes:
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Substantial timing or memory changes:
+
+
+Code reviews and testing
+------------------------
 
 Code reviewed by:
-
-List any svn externals directories updated (cime, rtm, cism, etc.):
-
-List all files eliminated:
-
-List all files added and what they do:
-
-List all existing files that have been modified, and describe the changes:
 
 CLM testing:
 
@@ -80,6 +76,10 @@ CLM testing:
 
 CLM tag used for the baseline comparisons: 
 
+
+Answer changes
+--------------
+
 Changes answers relative to baseline:
 
   If a tag changes answers relative to baseline comparison the
@@ -99,4 +99,16 @@ Changes answers relative to baseline:
 
    URL for LMWG diagnostics output used to validate new climate:
 	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.):
+
+List all files eliminated:
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
 ===============================================================

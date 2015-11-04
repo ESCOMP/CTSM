@@ -24,7 +24,8 @@ module restUtilMod
      !DIMS 0,1,2
      !TYPE text,int,double
      module procedure restartvar_{DIMS}d_{TYPE}
-     module procedure restartvar_2d_double_bounds
+     !TYPE int,double
+     module procedure restartvar_2d_{TYPE}_bounds
   end interface restartvar
 
   integer,parameter, public :: iflag_interp = 1
@@ -323,8 +324,8 @@ contains
   end subroutine restartvar_{DIMS}d_{TYPE}
 
   !-----------------------------------------------------------------------
-
-  subroutine restartvar_2d_double_bounds(ncid, flag, varname, xtype, &
+  !TYPE int,double
+  subroutine restartvar_2d_{TYPE}_bounds(ncid, flag, varname, xtype, &
        dim1name, dim2name, switchdim, lowerb2, upperb2, &
        long_name, units, interpinic_flag, data, readvar, &
        comment, flag_meanings, missing_value, fill_value, &
@@ -349,7 +350,7 @@ contains
     logical          , intent(in)           :: switchdim
     character(len=*) , intent(in)           :: long_name        ! long name for variable
     character(len=*) , intent(in)           :: interpinic_flag  ! interpolate variable using interpinic
-    real(r8)         , pointer              :: data(:,:)        ! raw data
+    {VTYPE}          , pointer              :: data(:,:)        ! raw data
     logical          , intent(out)          :: readvar          ! was var read?
     integer          , intent(in), optional :: lowerb2
     integer          , intent(in), optional :: upperb2 
@@ -483,7 +484,7 @@ contains
        if (.not. readvar .and. is_restart()) call shr_sys_abort()
     end if
 
-  end subroutine restartvar_2d_double_bounds
+  end subroutine restartvar_2d_{TYPE}_bounds
 
 
   !-----------------------------------------------------------------------

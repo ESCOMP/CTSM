@@ -140,6 +140,11 @@ contains
     ! code that builds on top of these computed deficits. By having this function, we can
     ! avoid having to hard-code the deficits in each test.
     !
+    ! An alternative would have been to make a test-specific subclass of the irrigation
+    ! type for testing, in which we replaced the IrrigationDeficit with our own version
+    ! in which we could set the desired IrrigationDeficit for each (p,j) to some simple
+    ! value.
+    !
     ! !USES:
     !
     ! !ARGUMENTS:

@@ -11,7 +11,7 @@ module SoilBiogeochemNitrifDenitrifMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use clm_varpar                      , only : nlevdecomp
   use clm_varcon                      , only : rpi, grav
-  use clm_varcon                      , only : d_con_g, d_con_w, spval, secspday
+  use clm_varcon                      , only : d_con_g, d_con_w, secspday
   use clm_varctl                      , only : use_lch4
   use abortutils                      , only : endrun
   use decompMod                       , only : bounds_type
@@ -261,8 +261,7 @@ contains
                ratio_diffusivity_water_gas(c,j) = (d_con_g(2,1) + d_con_g(2,2)*t_soisno(c,j) ) * 1.e-4_r8 / &
                     ((d_con_w(2,1) + d_con_w(2,2)*t_soisno(c,j) + d_con_w(2,3)*t_soisno(c,j)**2) * 1.e-9_r8)
 
-               if (o2_decomp_depth_unsat(c,j) /= spval .and. conc_o2_unsat(c,j) /= spval .and.  & 
-                    o2_decomp_depth_unsat(c,j) > 0._r8) then
+               if (o2_decomp_depth_unsat(c,j) > 0._r8) then
                   anaerobic_frac(c,j) = exp(-rij_kro_a * r_psi(c,j)**(-rij_kro_alpha) * &
                        o2_decomp_depth_unsat(c,j)**(-rij_kro_beta) * &
                        conc_o2_unsat(c,j)**rij_kro_gamma * (h2osoi_vol(c,j) + ratio_diffusivity_water_gas(c,j) * &
@@ -274,8 +273,7 @@ contains
                if (anoxia_wtsat) then ! Average saturated fraction values into anaerobic_frac(c,j).
                   r_min_sat = 2._r8 * surface_tension_water / (rho_w * grav * abs(grav * 1.e-6_r8 * sucsat(c,j)))
                   r_psi_sat = sqrt(r_min_sat * r_max)
-                  if (o2_decomp_depth_sat(c,j) /= spval .and. conc_o2_sat(c,j) /= spval .and. &
-                       o2_decomp_depth_sat(c,j) > 0._r8) then
+                  if (o2_decomp_depth_sat(c,j) > 0._r8) then
                      anaerobic_frac_sat = exp(-rij_kro_a * r_psi_sat**(-rij_kro_alpha) * &
                           o2_decomp_depth_sat(c,j)**(-rij_kro_beta) * &
                           conc_o2_sat(c,j)**rij_kro_gamma * (watsat(c,j) + ratio_diffusivity_water_gas(c,j) * &

@@ -218,13 +218,13 @@ ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map
 <!-- Initial condition file with CLM45BGC -->
 <!-- Note that we use a BGC initial file even for SP cases (since we haven't bothered to make an SP version at this resolution -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" use_cn=".false." ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c141226.nc
+ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c151025.nc
 </finidat>
 
 <!-- Initial condition file with CLM45BGC (works for cent/no-cent; Vertical layers and Nitrification/Denitrification NEED to be on) -->
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false."  ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c141226.nc
+ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c151025.nc
 </finidat>
 
 <!-- CRUNCEP half-degree resolution -->
@@ -267,13 +267,13 @@ ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map
 <!-- 2 degree resolution -->
 
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v6" use_cn=".true." use_cndv=".false." ic_ymd="00010101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis_reinterp.1.9x2.5_g1v6_simyr2000_c151004.nc
+ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis_reinterp.1.9x2.5_g1v6_simyr2000_c151026.nc
 </finidat>
 
 <!-- f10 resolution -->
 
 <finidat hgrid="10x15"    maxpft="79"  mask="USGS" use_cn=".true." use_cndv=".false." ic_ymd="00010101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis.10x15_USGS_simyr2000_c151004.nc
+ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis.10x15_USGS_simyr2000_c151026.nc
 </finidat>
 
 <!-- f10 resolution, with irrigation on -->

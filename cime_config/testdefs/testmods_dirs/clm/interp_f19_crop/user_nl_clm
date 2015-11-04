@@ -1,2 +1,2 @@
-finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis_reinterp.1.9x2.5_g1v6_simyr2000_c150116.nc'
+finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis_reinterp.1.9x2.5_g1v6_simyr2000_c151026.nc'
 use_init_interp = .true.

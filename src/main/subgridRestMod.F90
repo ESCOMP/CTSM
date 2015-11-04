@@ -11,7 +11,7 @@ module subgridRestMod
   use domainMod          , only : ldomain
   use clm_time_manager   , only : get_curr_date
   use clm_varcon         , only : nameg, namel, namec, namep
-  use clm_varpar         , only : nlevsno
+  use clm_varpar         , only : nlevsno, nlevgrnd
   use pio                , only : file_desc_t
   use ncdio_pio          , only : ncd_int, ncd_double
   use GetGlobalValuesMod , only : GetGlobalIndex
@@ -95,7 +95,10 @@ contains
     integer , pointer :: ilarr(:)    ! temporary
     integer , pointer :: icarr(:)    ! temporary
     integer , pointer :: iparr(:)    ! temporary
-    
+
+    real(r8), pointer :: temp2d_r(:,:) ! temporary for multi-level variables
+    integer , pointer :: temp2d_i(:,:) ! temporary for multi-level variables
+
     character(len=*), parameter :: subname = 'subgridRest_write_only'
     !-----------------------------------------------------------------------
     
@@ -278,6 +281,19 @@ contains
          long_name='column active flag (1=active, 0=inactive)', units=' ',          &
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
+    call restartvar(ncid=ncid, flag=flag, varname='LEVGRND_CLASS', xtype=ncd_int,   &
+         dim1name='column', dim2name='levgrnd', switchdim=.true.,                   &
+         long_name='class in which each layer falls', units=' ',                    &
+         interpinic_flag='skip', readvar=readvar, data=col%levgrnd_class)
+
+    allocate(temp2d_r(bounds%begc:bounds%endc, 1:nlevgrnd))
+    temp2d_r(bounds%begc:bounds%endc, 1:nlevgrnd) = col%z(bounds%begc:bounds%endc, 1:nlevgrnd)
+    call restartvar(ncid=ncid, flag=flag, varname='COL_Z', xtype=ncd_double,  & 
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='layer depth, excluding snow layers', units='m', &
+         interpinic_flag='skip', readvar=readvar, data=temp2d_r)
+    deallocate(temp2d_r)
+
     deallocate(rcarr, icarr)
 
     !------------------------------------------------------------------
@@ -384,6 +400,28 @@ contains
          long_name='mean elevation on glacier elevation classes', units='m',            &
          interpinic_flag='skip', readvar=readvar, data=rparr)
 
+    allocate(temp2d_i(bounds%begp:bounds%endp, 1:nlevgrnd))
+    do p=bounds%begp,bounds%endp
+       c = patch%column(p)
+       temp2d_i(p, 1:nlevgrnd) = col%levgrnd_class(c, 1:nlevgrnd)
+    end do
+    call restartvar(ncid=ncid, flag=flag, varname='LEVGRND_CLASS_p', xtype=ncd_int, &
+         dim1name='pft', dim2name='levgrnd', switchdim=.true., &
+         long_name='class in which each layer falls, patch-level', units=' ', &
+         interpinic_flag='skip', readvar=readvar, data=temp2d_i)
+    deallocate(temp2d_i)
+
+    allocate(temp2d_r(bounds%begp:bounds%endp, 1:nlevgrnd))
+    do p=bounds%begp,bounds%endp
+       c = patch%column(p)
+       temp2d_r(p, 1:nlevgrnd) = col%z(c, 1:nlevgrnd)
+    end do
+    call restartvar(ncid=ncid, flag=flag, varname='COL_Z_p', xtype=ncd_double, &
+         dim1name='pft', dim2name='levgrnd', switchdim=.true., &
+         long_name='layer depth, excluding snow layers, patch-level', units='m', &
+         interpinic_flag='skip', readvar=readvar, data=temp2d_r)
+    deallocate(temp2d_r)
+
     deallocate(rparr, iparr)
 
   end subroutine subgridRest_write_only
@@ -451,7 +489,7 @@ contains
 
     call restartvar(ncid=ncid, flag=flag, varname='SNLSNO', xtype=ncd_int,  & 
          dim1name='column', &
-         long_name='number of snow layers', units='unitless', &
+         long_name='negative number of snow layers', units='unitless', &
          interpinic_flag='interp', readvar=readvar, data=col%snl)
 
     allocate(temp2d(bounds%begc:bounds%endc,-nlevsno+1:0))

@@ -28,6 +28,8 @@ module GridcellType
      real(r8), pointer :: latdeg           (:) ! latitude (degrees)
      real(r8), pointer :: londeg           (:) ! longitude (degrees)
 
+     integer,  pointer :: nbedrock         (:) ! index of uppermost bedrock layer
+
      ! Daylength
      real(r8) , pointer :: max_dayl        (:) ! maximum daylength for this grid cell (s)
      real(r8) , pointer :: dayl            (:) ! daylength (seconds)
@@ -66,6 +68,7 @@ contains
     allocate(this%lon       (begg:endg)) ; this%lon       (:) = nan
     allocate(this%latdeg    (begg:endg)) ; this%latdeg    (:) = nan
     allocate(this%londeg    (begg:endg)) ; this%londeg    (:) = nan
+    allocate(this%nbedrock  (begg:endg)) ; this%nbedrock  (:) = ispval
 
     ! This is initiailized in module DayLength
     allocate(this%max_dayl  (begg:endg)) ; this%max_dayl  (:) = nan
@@ -89,6 +92,7 @@ contains
     deallocate(this%lon              )
     deallocate(this%latdeg           )
     deallocate(this%londeg           )
+    deallocate(this%nbedrock         )
     deallocate(this%max_dayl         )
     deallocate(this%dayl             )
     deallocate(this%prev_dayl        )

@@ -790,9 +790,6 @@ contains
        this%ch4stress_unsat_col(c,:) = spval
        this%lake_soilc_col     (c,:) = spval 
 
-       ! To detect first time-step for denitrification code
-       this%o2_decomp_depth_unsat_col(c,:)= spval
-
        l = col%landunit(c)
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
@@ -803,6 +800,9 @@ contains
           this%o2stress_sat_col   (c,1:nlevsoi) = 1._r8
           this%o2stress_unsat_col (c,1:nlevsoi) = 1._r8
           this%layer_sat_lag_col  (c,1:nlevsoi) = 1._r8
+          this%o2_decomp_depth_sat_col(c,1:nlevsoi) = 0._r8
+          this%o2_decomp_depth_unsat_col(c,1:nlevsoi) = 0._r8
+
           this%qflx_surf_lag_col  (c)           = 0._r8
           this%finundated_lag_col (c)           = 0._r8
           this%finundated_col(c)                = 0._r8

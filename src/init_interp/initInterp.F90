@@ -5,7 +5,12 @@ module initInterpMod
   ! to another resolution and/or landmask
   !----------------------------------------------------------------------- 
 
+#include "shr_assert.h"
+  use initInterpBounds, only : interp_bounds_type
   use initInterpMindist, only: set_mindist, subgrid_type, subgrid_special_indices_type
+  use initInterp2dvar, only: interp_2dvar_type
+  use initInterpMultilevelBase, only : interp_multilevel_type
+  use initInterpMultilevelContainer, only : interp_multilevel_container_type
   use shr_kind_mod   , only: r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_const_mod  , only: SHR_CONST_PI, SHR_CONST_REARTH
   use shr_sys_mod    , only: shr_sys_flush
@@ -16,7 +21,6 @@ module initInterpMod
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
   use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip
-  use restUtilMod    , only: iflag_noswitchdim, iflag_switchdim
   use ncdio_utils    , only: find_var_on_file
   use clm_varcon     , only: spval
   use ncdio_pio
@@ -42,6 +46,7 @@ module initInterpMod
   private :: interp_1d_double
   private :: interp_1d_int
   private :: interp_2d_double
+  private :: limit_snlsno
 
   ! Private data
  
@@ -126,36 +131,24 @@ contains
     ! local variables
     integer            :: i,j,k,l,m,n     ! loop indices    
     integer            :: begi, endi      ! beginning/ending indices 
-    integer            :: bego, endo      ! beginning/ending indices 
-    integer            :: begp_i, endp_i  ! input file patch bounds
-    integer            :: begp_o, endp_o  ! output file patch bounds
-    integer            :: begc_i, endc_i  ! input file column bounds
-    integer            :: begc_o, endc_o  ! output file column bounds
-    integer            :: begl_i, endl_i  ! input file landunit bounds
-    integer            :: begl_o, endl_o  ! output file landunit bounds
-    integer            :: begg_i, endg_i  ! input file gridcell bounds
-    integer            :: begg_o, endg_o  ! output file gridcell bounds
+    integer            :: bego, endo      ! beginning/ending indices
+    type(interp_bounds_type) :: bounds_i  ! input file bounds
+    type(interp_bounds_type) :: bounds_o  ! output file bounds
     integer            :: nlevi,nlevo     ! input/output number of levels
-    type(file_desc_t)  :: ncidi, ncido    ! input/output pio fileids 
+    type(file_desc_t), target :: ncidi, ncido    ! input/output pio fileids 
     integer            :: dimleni,dimleno ! input/output dimension length       
     integer            :: nvars           ! number of variables
     character(len=256) :: varname         ! variable name
     character(len=256) :: varname_i_options ! possible variable names on input file
     character(len=256) :: varname_i       ! variable name on input file
     character(len=16)  :: vec_dimname     ! subgrid dimension name
-    character(len=16)  :: lev_dimname     ! level dimension name
     type(Var_desc_t)   :: vardesc         ! pio variable descriptor
-    integer            :: levdimi,levdimo ! input/output level dimension (2d fields only)
-    integer            :: vecdimi,vecdimo ! input/output non-level dimension (2d fields only)
     integer            :: xtypeo          ! netCDF variable type
     integer            :: varido          ! netCDF variable id
     integer            :: ndimso          ! netCDF number of dimensions
     integer            :: dimidso(3) = -1 ! netCDF dimension ids
-    integer            :: dimidsi(3) = -1 ! netCDF dimension ids
     integer            :: status          ! return code
-    integer            :: switchdim_flag  ! 1 => level dimension is first dimension
     integer            :: iflag_interpinic
-    logical            :: switchdimi, switchdimo
     real(r8)           :: rvalue
     integer            :: ivalue 
     integer            :: spinup_state_i, spinup_state_o
@@ -172,6 +165,8 @@ contains
     integer , pointer  :: sgridindex(:)
     logical , pointer  :: activei(:), activeo(:)
     type(subgrid_special_indices_type) :: subgrid_special_indices
+    type(interp_multilevel_container_type) :: interp_multilevel_container
+    type(interp_2dvar_type) :: var2d_i, var2d_o  ! holds metadata for 2-d variables
     !--------------------------------------------------------------------
 
     if (masterproc) then
@@ -202,13 +197,19 @@ contains
        write (iulog,*) 'input pfts      = ',npftsi,' output pfts      = ',npftso
     end if
 
-    call check_dim_level(ncidi, ncido, dimname='levsno' )
-    call check_dim_level(ncidi, ncido, dimname='levsno1')
-    call check_dim_level(ncidi, ncido, dimname='levcan' )
-    call check_dim_level(ncidi, ncido, dimname='levlak' )
-    call check_dim_level(ncidi, ncido, dimname='levtot' )
-    call check_dim_level(ncidi, ncido, dimname='levgrnd')
-    call check_dim_level(ncidi, ncido, dimname='numrad' )
+    ! NOTE(wjs, 2015-10-31) The inclusion of must_be_same in these checks essentially
+    ! duplicates checks done elsewhere - specifically, if the interpolator for a given
+    ! level dimension is the copy interpolator, then that will do its own checks to
+    ! ensure that the dimension sizes match. So we may want to remove the must_be_same
+    ! argument, and make check_dim_level purely informational, in order to remove this
+    ! maintenance problem - or maybe even remove check_dim_level entirely.
+    call check_dim_level(ncidi, ncido, dimname='levsno' , must_be_same=.false.)
+    call check_dim_level(ncidi, ncido, dimname='levsno1', must_be_same=.false.)
+    call check_dim_level(ncidi, ncido, dimname='levcan' , must_be_same=.true.)
+    call check_dim_level(ncidi, ncido, dimname='levlak' , must_be_same=.true.)
+    call check_dim_level(ncidi, ncido, dimname='levtot' , must_be_same=.false.)
+    call check_dim_level(ncidi, ncido, dimname='levgrnd', must_be_same=.false.)
+    call check_dim_level(ncidi, ncido, dimname='numrad' , must_be_same=.true.)
 
     ! --------------------------------------------
     ! Determine input file global attributes that are needed 
@@ -252,25 +253,27 @@ contains
     ! Find closest values for pfts, cols, landunits
     ! --------------------------------------------
 
-    begp_i = 1 ;  endp_i = npftsi
-    begc_i = 1 ;  endc_i = ncolsi
-    begl_i = 1 ;  endl_i = nlunsi
+    bounds_i = interp_bounds_type( &
+         begp = 1, endp = npftsi, &
+         begc = 1, endc = ncolsi, &
+         begl = 1, endl = nlunsi)
 
-    begp_o = bounds%begp ;  endp_o = bounds%endp
-    begc_o = bounds%begc ;  endc_o = bounds%endc
-    begl_o = bounds%begl ;  endl_o = bounds%endl
+    bounds_o = interp_bounds_type( &
+         begp = bounds%begp, endp = bounds%endp, &
+         begc = bounds%begc, endc = bounds%endc, &
+         begl = bounds%begl, endl = bounds%endl)
 
-    allocate(pft_activei(begp_i:endp_i))
-    allocate(col_activei(begc_i:endc_i))
-    allocate(lun_activei(begl_i:endl_i))
+    allocate(pft_activei(bounds_i%get_begp():bounds_i%get_endp()))
+    allocate(col_activei(bounds_i%get_begc():bounds_i%get_endc()))
+    allocate(lun_activei(bounds_i%get_begl():bounds_i%get_endl()))
 
-    allocate(pft_activeo(begp_o:endp_o))
-    allocate(col_activeo(begc_o:endc_o))
-    allocate(lun_activeo(begl_o:endl_o))
+    allocate(pft_activeo(bounds_o%get_begp():bounds_o%get_endp()))
+    allocate(col_activeo(bounds_o%get_begc():bounds_o%get_endc()))
+    allocate(lun_activeo(bounds_o%get_begl():bounds_o%get_endl()))
 
-    allocate(pftindx(begp_o:endp_o))
-    allocate(colindx(begc_o:endc_o))
-    allocate(lunindx(begl_o:endl_o))
+    allocate(pftindx(bounds_o%get_begp():bounds_o%get_endp()))
+    allocate(colindx(bounds_o%get_begc():bounds_o%get_endc()))
+    allocate(lunindx(bounds_o%get_begl():bounds_o%get_endl()))
 
     ! For each output pft, find the input pft, pftindx, that is closest
 
@@ -278,7 +281,8 @@ contains
        write(iulog,*)'finding minimum distance for pfts'
     end if
     vec_dimname = 'pft'
-    call findMinDist(vec_dimname, begp_i, endp_i, begp_o, endp_o, ncidi, ncido, &
+    call findMinDist(vec_dimname, bounds_i%get_begp(), bounds_i%get_endp(), &
+         bounds_o%get_begp(), bounds_o%get_endp(), ncidi, ncido, &
          subgrid_special_indices, pft_activei, pft_activeo, pftindx )
 
     ! For each output column, find the input column, colindx, that is closest
@@ -287,7 +291,8 @@ contains
        write(iulog,*)'finding minimum distance for columns'
     end if
     vec_dimname = 'column'
-    call findMinDist(vec_dimname, begc_i, endc_i, begc_o, endc_o, ncidi, ncido, &
+    call findMinDist(vec_dimname, bounds_i%get_begc(), bounds_i%get_endc(), &
+         bounds_o%get_begc(), bounds_o%get_endc(), ncidi, ncido, &
          subgrid_special_indices, col_activei, col_activeo, colindx )
 
     ! For each output landunit, find the input landunit, lunindx, that is closest
@@ -296,8 +301,20 @@ contains
        write(iulog,*)'finding minimum distance for landunits'
     end if
     vec_dimname = 'landunit'
-    call findMinDist(vec_dimname, begl_i, endl_i, begl_o, endl_o, ncidi, ncido, &
+    call findMinDist(vec_dimname, bounds_i%get_begl(), bounds_i%get_endl(), &
+         bounds_o%get_begl(), bounds_o%get_endl(), ncidi, ncido, &
          subgrid_special_indices, lun_activei, lun_activeo, lunindx )
+
+    ! ------------------------------------------------------------------------
+    ! Set up interpolators for multi-level variables
+    ! ------------------------------------------------------------------------
+
+    if (masterproc) then
+       write(iulog,*)'setting up interpolators for multi-level variables'
+    end if
+    interp_multilevel_container = &
+         interp_multilevel_container_type(ncid_source = ncidi, ncid_dest = ncido, &
+         bounds_source = bounds_i, bounds_dest = bounds_o)
 
     !------------------------------------------------------------------------          
     ! Read input initial data and write output initial data
@@ -462,27 +479,19 @@ contains
        else if ( ndimso == 1 ) then
 
           status = pio_inq_dimname(ncido, dimidso(1), vec_dimname)
+          begi = bounds_i%get_beg(vec_dimname)
+          endi = bounds_i%get_end(vec_dimname)
+          bego = bounds_o%get_beg(vec_dimname)
+          endo = bounds_o%get_end(vec_dimname)
           if ( vec_dimname == 'pft' )then
-             begi = begp_i
-             endi = endp_i
-             bego = begp_o
-             endo = endp_o
              activei => pft_activei
              activeo => pft_activeo
              sgridindex => pftindx
           else if ( vec_dimname  == 'column' )then
-             begi = begc_i
-             endi = endc_i
-             bego = begc_o
-             endo = endc_o
              activei => col_activei
              activeo => col_activeo
              sgridindex => colindx
           else if ( vec_dimname == 'landunit' )then
-             begi = begl_i
-             endi = endl_i
-             bego = begl_o
-             endo = endl_o
              activei => lun_activei
              activeo => lun_activeo
              sgridindex => lunindx
@@ -513,57 +522,33 @@ contains
              call endrun(msg='ERROR interpinic: 2D variable with unknown type: '//&
                   trim(varname)//errMsg(__FILE__, __LINE__))
           end if
-          ! Determine order of level and subgrid dimension in restart file
-          status = pio_inq_varid (ncidi, trim(varname_i), vardesc)
-          status = pio_inquire_variable(ncidi, vardesc=vardesc, dimids=dimidsi)
-          status = pio_get_att(ncidi, vardesc, 'switchdim_flag', switchdim_flag)
-          if (switchdim_flag > 0) then
-             levdimi = dimidsi(1)  
-             vecdimi = dimidsi(2)  
-             switchdimi = .true.
-          else
-             levdimi = dimidsi(2) 
-             vecdimi = dimidsi(1) 
-             switchdimi = .false.
-          end if
-          status = pio_inq_dimlen(ncidi,levdimi,nlevi)
 
-          status = pio_inq_varid (ncido, trim(varname), vardesc)
-          status = pio_get_att(ncido, vardesc, 'switchdim_flag', switchdim_flag)
-          if (switchdim_flag > 0) then
-             levdimo = dimidso(1)  
-             vecdimo = dimidso(2)  
-             switchdimo = .true.
-          else
-             levdimo = dimidso(2) 
-             vecdimo = dimidso(1) 
-             switchdimo = .false.
-          end if
-          status = pio_inq_dimlen(ncido,levdimo,nlevo)
-          status = pio_inq_dimname(ncido, vecdimo, vec_dimname)
-          status = pio_inq_dimname(ncido, levdimo, lev_dimname)
+          var2d_i = interp_2dvar_type( &
+               varname = varname_i, &
+               ncid = ncidi, &
+               file_is_dest = .false., &
+               bounds = bounds_i)
 
+          var2d_o = interp_2dvar_type( &
+               varname = varname, &
+               ncid = ncido, &
+               file_is_dest = .true., &
+               bounds = bounds_o)
+
+          vec_dimname = var2d_o%get_vec_dimname()
+          begi = bounds_i%get_beg(vec_dimname)
+          endi = bounds_i%get_end(vec_dimname)
+          bego = bounds_o%get_beg(vec_dimname)
+          endo = bounds_o%get_end(vec_dimname)
           if ( vec_dimname == 'pft' )then
-             begi = begp_i
-             endi = endp_i
-             bego = begp_o
-             endo = endp_o
              activei => pft_activei
              activeo => pft_activeo
              sgridindex => pftindx
           else if ( vec_dimname  == 'column' )then
-             begi = begc_i
-             endi = endc_i
-             bego = begc_o
-             endo = endc_o
              activei => col_activei
              activeo => col_activeo
              sgridindex => colindx
           else if ( vec_dimname == 'landunit' )then
-             begi = begl_i
-             endi = endl_i
-             bego = begl_o
-             endo = endl_o
              activei => lun_activei
              activeo => lun_activeo
              sgridindex => lunindx
@@ -571,9 +556,10 @@ contains
              call endrun(msg='ERROR interpinic: 2D variable with unknown subgrid dimension: '//&
                   trim(varname)//errMsg(__FILE__, __LINE__))
           end if
-          call interp_2d_double(varname, varname_i, vec_dimname, lev_dimname, &
-               begi, endi, bego, endo, nlevi, nlevo, switchdimi, switchdimo, &
-               ncidi, ncido, activei, activeo, sgridindex)
+          call interp_2d_double(var2d_i, var2d_o, &
+               begi, endi, bego, endo, &
+               activei, activeo, sgridindex, &
+               interp_multilevel_container)
 
        else
 
@@ -584,6 +570,27 @@ contains
        call shr_sys_flush(iulog)
 
     end do
+
+    ! Do some final cleanup of specific variables
+    !
+    ! NOTE(wjs, 2015-10-31) I really don't like having this variable-specific logic here,
+    ! but I can't see a great way around this. (One alternative would be to do this
+    ! cleanup when reading the restart file, e.g., in subgridRestMod. But (1) that feels
+    ! like a hidden way to accomplish this, and (2) that would apply for *any* restart
+    ! read, as opposed to just restart reads following init_interp, which could mask
+    ! problems with other restart files.)
+
+    ! Need to first sync the file so the previous writes complete before we try to re-read
+    ! variables
+    call pio_syncfile(ncido)
+
+    if (masterproc) then
+       write(iulog,*) 'Cleaning up / adjusting variables'
+    end if
+
+    call limit_snlsno(ncido, bounds_o)
+
+
     ! Close input and output files
 
     call pio_closefile(ncidi)
@@ -945,182 +952,72 @@ contains
 
   !=======================================================================
 
-  subroutine interp_2d_double (varname, varname_i, vec_dimname, lev_dimname, &
-       begi, endi, bego, endo, nlevi, nlevo, &
-       switchdimi, switchdimo, ncidi, ncido, activei, activeo, sgridindex)
+  subroutine interp_2d_double (var2di, var2do, &
+       begi, endi, bego, endo, &
+       activei, activeo, sgridindex, &
+       interp_multilevel_container)
 
     ! --------------------------------------------------------------------
     ! arguments
-    character(len=*)  , intent(inout) :: varname   ! variable name on output file   
-    character(len=*)  , intent(in)    :: varname_i ! variable name on input file
-    character(len=*)  , intent(inout) :: vec_dimname
-    character(len=*)  , intent(inout) :: lev_dimname
+    class(interp_2dvar_type), intent(in) :: var2di  ! variable on input file
+    class(interp_2dvar_type), intent(in) :: var2do  ! variable on output file
     integer           , intent(in)    :: begi, endi
     integer           , intent(in)    :: bego, endo
-    integer           , intent(in)    :: nlevi, nlevo
-    logical           , intent(inout) :: switchdimi
-    logical           , intent(inout) :: switchdimo
-    type(file_desc_t) , intent(inout) :: ncidi         
-    type(file_desc_t) , intent(inout) :: ncido         
-    logical           , intent(in)    :: activei(begi:endi)        
-    logical           , intent(in)    :: activeo(bego:endo)        
-    integer           , intent(in)    :: sgridindex(bego:endo)
+    logical           , intent(in)    :: activei(begi:)        
+    logical           , intent(in)    :: activeo(bego:)        
+    integer           , intent(in)    :: sgridindex(bego:)
+    type(interp_multilevel_container_type), intent(in) :: interp_multilevel_container
     !
     ! local variables
+    class(interp_multilevel_type), pointer :: multilevel_interpolator
     integer             :: ni,no               ! indices
-    integer             :: ji, jj, index_lower ! indices
-    integer             :: status              ! netCDF return code
-    integer             :: lev                 ! temporary
-    integer             :: start(2), count(2)
-    logical             :: copylevels, doneloop
-    type(Var_desc_t)    :: vardesc             ! pio variable descriptor
     real(r8), pointer   :: rbuf2do(:,:)        ! output array
     real(r8), pointer   :: rbuf2di(:,:)        ! input array
-    real(r8), pointer   :: rbuf1di(:)          ! input array
-    real(r8), pointer   :: zsoii(:), zsoio(:) 
-    real(r8), parameter :: eps = 1e-6
     ! --------------------------------------------------------------------
 
+    SHR_ASSERT_ALL((ubound(activei) == (/endi/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(activeo) == (/endo/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(var2di%get_vec_beg() == begi, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(var2di%get_vec_end() == endi, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(var2do%get_vec_beg() == bego, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(var2do%get_vec_end() == endo, errMsg(__FILE__, __LINE__))
+
+    multilevel_interpolator => interp_multilevel_container%find_interpolator( &
+         lev_dimname = var2do%get_lev_dimname(), &
+         vec_dimname = var2do%get_vec_dimname())
+
     if (masterproc) then
-       write(iulog,*) 'Interpolating: ',trim(varname_i), ' => ', trim(varname)
+       write(iulog,*) 'Interpolating: ', &
+            trim(var2di%get_varname()), ' => ', &
+            trim(var2do%get_varname()), ': ', &
+            multilevel_interpolator%get_description()
     end if
 
-    allocate(rbuf2do(bego:endo, nlevo))
-    call ncd_io(ncid=ncido, varname=trim(varname), flag='read', data=rbuf2do, &
-         dim1name=trim(vec_dimname), switchdim=switchdimo)
+    call multilevel_interpolator%check_npts( &
+         npts_source = var2di%get_vec_npts(), &
+         npts_dest   = var2do%get_vec_npts(), &
+         varname     = var2do%get_varname())
 
-    if (nlevi == nlevo) then
+    call var2di%readvar(rbuf2di)
+    call var2do%readvar(rbuf2do)
 
-       ! Read in 1 level of input array at a time and do interpolation for just that level
-
-       status = pio_inq_varid(ncidi, trim(varname_i), vardesc)
-       allocate(rbuf1di(begi:endi))
-       do lev = 1,nlevo
-          if (switchdimi) then
-             start(1) = lev
-             count(1) = 1
-             start(2) = 1
-             count(2) = endi-begi+1
-          else
-             start(1) = 1
-             count(1) = endi-begi+1
-             start(2) = lev
-             count(2) = 1
+    do no = bego,endo
+       if (activeo(no)) then
+          ni = sgridindex(no)
+          if (ni > 0) then
+             call multilevel_interpolator%interp_multilevel( &
+                  data_dest    = rbuf2do(no,:), &
+                  data_source  = rbuf2di(ni,:), &
+                  index_dest   = no - bego + 1, &
+                  index_source = ni - begi + 1)
           end if
-          status = pio_get_var(ncidi, vardesc, start, count, rbuf1di)
-          do no = bego,endo
-             if (activeo(no)) then
-                ni = sgridindex(no)
-                if (ni > 0) then
-                   rbuf2do(no,lev) = rbuf1di(ni)
-                end if
-             else
-                if ( shr_infnan_isnan(rbuf2do(no,lev)) ) then
-                   rbuf2do(no,lev) = spval
-                end if
-             end if
-          end do
-       end do
-       deallocate(rbuf1di)
-       
-       call ncd_io(ncid=ncido, varname=trim(varname), flag='write', data=rbuf2do, &
-            dim1name=trim(vec_dimname), switchdim=switchdimo)
-       
-    else if (nlevi < nlevo) then
-
-       ! for the special case when we are regridding from the standard grid to the more
-       ! vertlayers grid, calculate a linear interpolation from the one grid to the other
-
-       if (switchdimi) then
-          allocate(rbuf2di(nlevi, begi:endi))
-       else
-          allocate(rbuf2di(begi:endi, nlevi))
        end if
-       call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read', data=rbuf2di)
+    end do
 
-       if ( ( nlevi .eq. 15) .and. (nlevo .eq. 30) ) then
-          !!! this is the case for variables on the levgrnd grid
-          allocate(zsoii(nlevi), zsoio(nlevo))
-          status = pio_inq_varid(ncidi, 'zsoi', vardesc)
-          status = pio_get_var(ncidi, vardesc, zsoii)
-          status = pio_inq_varid(ncido, 'zsoi', vardesc)
-          status = pio_get_var(ncido, vardesc, zsoio)  
-       else if ( ( nlevi .eq. 20) .and. (nlevo .eq. 35) ) then
-          !!! this is the case for variables on the levtot grid
-          allocate(zsoii(nlevi), zsoio(nlevo))
-          status = pio_inq_varid(ncidi, 'zsoi', vardesc)
-          status = pio_get_var(ncidi, vardesc, zsoii(6:20))
-          status = pio_inq_varid(ncido, 'zsoi', vardesc)
-          status = pio_get_var(ncido, vardesc, zsoio(6:35))
-          !! need to put in dummy coordinates for the five snow levels
-          zsoii(1:5) = (/ -5._r8, -4._r8, -3._r8, -2._r8, 0._r8 /)
-          zsoio(1:5) = (/ -5._r8, -4._r8, -3._r8, -2._r8, 0._r8 /)
-       else
-          call endrun(msg='ERROR: vertical grid must be either levgrnd or levtot'//&
-            errMsg(__FILE__, __LINE__))
-       endif
-       !
-       do ji = 1, nlevo
-          doneloop = .false.
-          do jj = 1, nlevi
-             if ( .not. doneloop) then
-                if ( (abs(zsoio(ji) - zsoii(jj))  <  eps ) .or. (jj .eq. nlevi) ) then
-                   doneloop = .true.
-                   copylevels = .true.
-                   index_lower = jj
-                else if ( (zsoio(ji)  >  zsoii(jj)) .and. (zsoio(ji)  <  zsoii(jj+1)) ) then
-                   doneloop = .true.
-                   copylevels = .false.
-                   index_lower = jj
-                end if
-             end if
-          end do
-          do no = bego,endo
-             if (activeo(no)) then
-                ni = sgridindex(no)
-                if (ni > 0) then
-                   if (switchdimi) then
-                      if ( copylevels) then
-                         rbuf2do(no,ji) = rbuf2di(index_lower,ni)
-                      else
-                         rbuf2do(no,ji) = &
-                              rbuf2di(index_lower+1,ni) &
-                              * (zsoio(ji) - zsoii(index_lower)) &
-                              / (zsoii(index_lower+1) - zsoii(index_lower)) + &
-                              rbuf2di(index_lower,ni) &
-                              * (zsoii(index_lower+1) - zsoio(ji) ) &
-                              / (zsoii(index_lower+1) - zsoii(index_lower))
-                      end if
-                   else
-                      if ( copylevels) then
-                         rbuf2do(no,ji) = rbuf2di(ni,index_lower)
-                      else
-                         rbuf2do(no,ji) = &
-                              rbuf2di(ni,index_lower+1) &
-                              * (zsoio(ji) - zsoii(index_lower)) &
-                              / (zsoii(index_lower+1) - zsoii(index_lower)) + &
-                              rbuf2di(ni,index_lower) &
-                              * (zsoii(index_lower+1) - zsoio(ji) ) &
-                              / (zsoii(index_lower+1) - zsoii(index_lower))
-                      end if
-                   end if
-                end if
-             end if
-          end do
-       end do
-       deallocate(rbuf2di, zsoii, zsoio)
-       !
-       call ncd_io(ncid=ncido, varname=trim(varname), flag='write', data=rbuf2do, &
-            dim1name=trim(vec_dimname), switchdim=switchdimo)
-
-    else
-
-       call endrun(msg='ERROR: new grid must have more vertical levels than old grid'//&
-            errMsg(__FILE__, __LINE__))
-
-    end if
-
-    deallocate(rbuf2do)
+    call var2do%writevar(rbuf2do)
+       
+    deallocate(rbuf2di, rbuf2do)
 
   end subroutine interp_2d_double
 
@@ -1150,13 +1047,16 @@ contains
 
   !=======================================================================
 
-  subroutine check_dim_level(ncidi, ncido, dimname)
+  subroutine check_dim_level(ncidi, ncido, dimname, must_be_same)
+    ! Checks whether dimension size is the same for input and output. If 'must_be_same'
+    ! is true, aborts if they disagree; otherwise, simply prints an informative message.
 
     ! --------------------------------------------------------------------
     ! arguments
     type(file_desc_t) , intent(inout) :: ncidi         
     type(file_desc_t) , intent(inout) :: ncido         
     character(len=*)  , intent(in)    :: dimname
+    logical           , intent(in)    :: must_be_same
     !
     ! local variables
     integer :: status
@@ -1169,27 +1069,82 @@ contains
     status = pio_inq_dimid (ncido, dimname, dimid)
     status = pio_inq_dimlen(ncido, dimid  , dimleno)
 
-    if ( (trim(dimname) == 'levgrnd') .or. (trim(dimname) == 'levtot') ) then
-       if (dimleni /= dimleno) then
+    if (dimleni /= dimleno) then
+       if (must_be_same) then
+          write (iulog,*) 'ERROR interpinic: input and output ',trim(dimname),' values disagree'
+          write (iulog,*) 'input dimlen = ',dimleni,' output dimlen = ',dimleno
+          call endrun(msg=errMsg(__FILE__, __LINE__))
+       else
           if (masterproc) then
              write (iulog,*) 'input and output ',trim(dimname),' values disagree'
              write (iulog,*) 'input nlevgrnd = ',dimleni,' output nlevgrnd = ',dimleno
-          end if
-          if (dimleni > dimleno) then
-             if (masterproc) then
-                write (iulog,*) 'ERROR interpinic: input > output for variable ',trim(dimname),'; not supported, stopping'
-             end if
-             call endrun(msg=errMsg(__FILE__, __LINE__))
+             write (iulog,*) 'This is okay: vertical levels will be interpolated'
           end if
        end if
-    else if (dimleni/=dimleno) then
-       !!if (masterproc) then
-          write (iulog,*) 'ERROR interpinic: input and output ',trim(dimname),' values disagree'
-          write (iulog,*) 'input dimlen = ',dimleni,' output dimlen = ',dimleno
-       !!end if
-       call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
   end subroutine check_dim_level
+
+  !-----------------------------------------------------------------------
+  subroutine limit_snlsno(ncido, bounds_o)
+    !
+    ! !DESCRIPTION:
+    ! Apply a limit to SNLSNO in the output file so that it doesn't exceed the number of
+    ! snow layers.
+    !
+    ! This is needed if the output file has fewer snow layers than the input file.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t)       , intent(inout) :: ncido         
+    type(interp_bounds_type), intent(in)    :: bounds_o
+    !
+    ! !LOCAL VARIABLES:
+    character(len=16) :: vec_dimname
+    integer :: bego, endo
+    integer, pointer :: snlsno(:)
+    integer :: snlsno_dids(1)  ! dimension ID
+    integer :: levsno_dimid
+    integer :: levsno
+    integer :: i
+    integer :: err_code
+
+    character(len=*), parameter :: levsno_dimname = 'levsno'
+    character(len=*), parameter :: snlsno_varname = 'SNLSNO'
+
+    character(len=*), parameter :: subname = 'limit_snlsno'
+    !-----------------------------------------------------------------------
+
+    ! Determine levsno size
+    call ncd_inqdlen(ncid=ncido, dimid=levsno_dimid, len=levsno, name=levsno_dimname)
+
+    ! Read SNLSNO
+    !
+    ! TODO(wjs, 2015-11-01) This is a lot of code for simply reading in a 1-d variable.
+    ! It would be nice if there was a routine that did all of this for you, similarly to
+    ! what initInterp2dvar does for 2-d variables.
+    call ncd_inqvdname(ncid=ncido, varname=snlsno_varname, dimnum=1, dname=vec_dimname, &
+         err_code=err_code)
+    if (err_code /= 0) then
+       call endrun(subname//' ERROR getting vec_dimname')
+    end if
+    bego = bounds_o%get_beg(vec_dimname)
+    endo = bounds_o%get_end(vec_dimname)
+    allocate(snlsno(bego:endo))
+    call ncd_io(ncid=ncido, varname=snlsno_varname, flag='read', data=snlsno, &
+         dim1name=trim(vec_dimname))
+
+    ! Limit SNLSNO
+    do i = bego, endo
+       ! Note that snlsno is negative
+       snlsno(i) = max(snlsno(i), -1*levsno)
+    end do
+
+    ! Write out limited SNLSNO
+    call ncd_io(ncid=ncido, varname=snlsno_varname, flag='write', data=snlsno, &
+         dim1name=trim(vec_dimname))
+    deallocate(snlsno)
+  end subroutine limit_snlsno
 
 end module initInterpMod
