@@ -883,7 +883,7 @@ contains
     call t_startf('lnd2atm')
     call lnd2atm(bounds_proc,                                            &
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
-         waterstate_inst, waterflux_inst, energyflux_inst,               &
+         waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
          solarabs_inst, cnveg_carbonflux_inst, drydepvel_inst,       &
          vocemis_inst, fireemis_inst, dust_inst, ch4_inst, lnd2atm_inst) 
     call t_stopf('lnd2atm')

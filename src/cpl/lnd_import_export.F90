@@ -187,16 +187,15 @@ contains
        end if
        qsat           = 0.622_r8*e / (forc_pbot - 0.378_r8*e)
 
-!scs: modify specific humidity if precip occurs
+!modify specific humidity if precip occurs
        if(1==2) then
           if((forc_rainc+forc_rainl) > 0._r8) then
              forc_q = 0.95_r8*qsat
              !           forc_q = qsat
-             !           forc_q = 0.5*(qsat+forc_q)
              atm2lnd_inst%forc_q_not_downscaled_grc(g) = forc_q
           endif
        endif
-!scs
+
        atm2lnd_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
 
 
@@ -331,12 +330,21 @@ contains
        ! sign convention is positive downward with 
        ! hierarchy of atm/glc/lnd/rof/ice/ocn.  so water sent from land to rof is positive
 
-       l2x(index_l2x_Flrl_rofsur,i) = lnd2atm_inst%qflx_rofliq_qsur_grc(g)
-       l2x(index_l2x_Flrl_rofsub,i) = lnd2atm_inst%qflx_rofliq_qsub_grc(g)
+       !  surface runoff is the sum of qflx_over, qflx_h2osfc_surf, and qflx_irrig
+       l2x(index_l2x_Flrl_rofsur,i) = lnd2atm_inst%qflx_rofliq_qsur_grc(g) &
+            + lnd2atm_inst%qflx_rofliq_h2osfc_grc(g)
+
+       !  subsurface runoff is the sum of qflx_drain and qflx_perched_drain
+       l2x(index_l2x_Flrl_rofsub,i) = lnd2atm_inst%qflx_rofliq_qsub_grc(g) &
+            + lnd2atm_inst%qflx_rofliq_drain_perched_grc(g) &
+            - lnd2atm_inst%qflx_rofliq_irrig_grc(g)
+
        ! remove direct to ocean runoff from qgwl and send separately to coupler
        l2x(index_l2x_Flrl_rofgwl,i) = lnd2atm_inst%qflx_rofliq_qgwl_grc(g) &
             - lnd2atm_inst%qflx_rofliq_qdto_grc(g)
+
        l2x(index_l2x_Flrl_rofdto,i) = lnd2atm_inst%qflx_rofliq_qdto_grc(g)
+
        l2x(index_l2x_Flrl_rofi,i) = lnd2atm_inst%qflx_rofice_grc(g)
 
        ! glc coupling

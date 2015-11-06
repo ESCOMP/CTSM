@@ -31,6 +31,7 @@ module lnd2atmMod
   use TemperatureType      , only : temperature_type
   use WaterFluxType        , only : waterflux_type
   use WaterstateType       , only : waterstate_type
+  use IrrigationMod        , only : irrigation_type 
   use GridcellType         , only : grc                
   !
   ! !PUBLIC TYPES:
@@ -110,7 +111,7 @@ contains
   !------------------------------------------------------------------------
   subroutine lnd2atm(bounds, &
        atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
-       waterstate_inst, waterflux_inst, energyflux_inst,               &
+       waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
        solarabs_inst, cnveg_carbonflux_inst, drydepvel_inst,  &
        vocemis_inst, fireemis_inst, dust_inst, ch4_inst, lnd2atm_inst) 
     !
@@ -128,6 +129,7 @@ contains
     type(frictionvel_type)      , intent(in)    :: frictionvel_inst
     type(waterstate_type)       , intent(inout) :: waterstate_inst
     type(waterflux_type)        , intent(in)    :: waterflux_inst
+    type(irrigation_type)       , intent(in)    :: irrigation_inst
     type(energyflux_type)       , intent(in)    :: energyflux_inst
     type(solarabs_type)         , intent(in)    :: solarabs_inst
     type(cnveg_carbonflux_type) , intent(in)    :: cnveg_carbonflux_inst
@@ -315,6 +317,25 @@ contains
          lnd2atm_inst%qflx_rofliq_qgwl_grc   (bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
+    do g = bounds%begg, bounds%endg
+       lnd2atm_inst%qflx_rofliq_qgwl_grc(g) = lnd2atm_inst%qflx_rofliq_qgwl_grc(g) - waterflux_inst%qflx_liq_dynbal_grc(g)
+    enddo
+
+    call c2g( bounds, &
+         waterflux_inst%qflx_h2osfc_surf_col (bounds%begc:bounds%endc), &
+         lnd2atm_inst%qflx_rofliq_h2osfc_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+
+    call c2g( bounds, &
+         waterflux_inst%qflx_drain_perched_col (bounds%begc:bounds%endc), &
+         lnd2atm_inst%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+
+    call c2g( bounds, &
+         irrigation_inst%qflx_irrig_col (bounds%begc:bounds%endc), &
+         lnd2atm_inst%qflx_rofliq_irrig_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+
     call c2g( bounds, &
          waterflux_inst%qflx_neg_runoff_glc_col (bounds%begc:bounds%endc), &
          lnd2atm_inst%qflx_rofliq_qdto_grc   (bounds%begg:bounds%endg), &
@@ -324,6 +345,7 @@ contains
          waterflux_inst%qflx_snwcp_ice_col(bounds%begc:bounds%endc),  &
          lnd2atm_inst%qflx_rofice_grc     (bounds%begg:bounds%endg),  & 
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+
     do g = bounds%begg, bounds%endg
        lnd2atm_inst%qflx_rofice_grc(g) = lnd2atm_inst%qflx_rofice_grc(g) - waterflux_inst%qflx_ice_dynbal_grc(g)          
     enddo

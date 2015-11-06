@@ -1220,9 +1220,9 @@ contains
 !!$    integer,parameter :: inexpensive=1
 !!$    integer,parameter :: flux_calculation=inexpensive  ! used to calculate first order taylor series approximation of the net flux
     real(r8) :: qin_test,qout_test ! fluxes into and out of each layer
-    real(r8) :: fluxNet0(nlevsoi)  ! net flux in each layer based on the first order taylor series approximation
-    real(r8) :: fluxNet1(nlevsoi)  ! net flux in each layer based on the flux at the start of the substep
-    real(r8) :: errorVec(nlevsoi)  ! error vector
+    real(r8) :: fluxNet0(1:nlevsoi)  ! net flux in each layer based on the first order taylor series approximation
+    real(r8) :: fluxNet1(1:nlevsoi)  ! net flux in each layer based on the flux at the start of the substep
+    real(r8) :: errorVec(1:nlevsoi)  ! error vector
     real(r8) :: errorMax(1)        ! max error
     real(r8) :: qcTemp             ! drainage flux for a given substep
 
@@ -1391,6 +1391,9 @@ contains
             ! **********
             ! error estimation segment
             ! (could be a separate subroutine)
+
+            fluxNet1(1:nlevsoi) = 0._r8
+            fluxNet0(1:nlevsoi) = 0._r8
 
             ! estimate errors for each layer
             do j = 1, nLayers

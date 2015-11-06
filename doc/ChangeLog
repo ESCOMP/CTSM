@@ -1,4 +1,150 @@
 ===============================================================
+Tag name:  clm4_5_3_r147
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Thu Nov  5 21:51:53 MST 2015
+One-line Summary: swenson bedrock and coupler runoff bugfixes
+
+Purpose of changes
+------------------
+
+  Science bugfixs from Sean Swenson for bedrock and coupler runoff fields.
+
+    The bugfix for bedrock corrects an issue where running with debug
+    flags and bedrock on would generate floating point errors or
+    unreproducible behavior when run with a surface data set that
+    contained bedrock data.
+
+    coupler runoff fields bugfix: splitting of runoff for mosart did
+    not contain all surface and subsurface fields. surface runoff is
+    the sum of qflx_over, qflx_h2osfc_surf, and qflx_irrig. subsurface
+    runoff is the sum of qflx_drain and qflx_perched_drain
+
+  Add cropColdStart test mods directory missing from r145.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2241
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through
+init_interp):
+  use_bedrock is still not true by default because we do
+  not have a fully consistent set of surface data sets and initial
+  conditions for testing.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: unknown, none expected
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: Swenson, Andre
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone - unit tests pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - n/a, not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - n/a, not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - 40 pass; 45 ok
+    yellowstone_pgi - 40 pass; 45 ok
+    yellowstone_gnu (clm45 only) - 45 ok
+    hobart_nag - ok
+
+  'ok' means - all clm45/50 compsets have only the 'baseline compare'
+  answer changing failures. Fields described below.
+
+  test BFAIL ERP_D_P15x2_Ld3.f10_f10.ICRUCLM50BGCCROP.yellowstone_intel.clm-cropColdStart because baseline is not in r146.
+
+CLM tag used for the baseline comparisons: clm4_5_3_r146
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: yes
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm45/clm50
+    - what platforms/compilers: all/all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
+
+   All clm45 and clm50 compsets will have answer changes in the clm
+   and coupler history files because of changes to the runoff passed
+   from clm to the coupler. Only the following fields have changed:
+
+   clm: TWS, VOLRMCH, VOLR
+
+   cpl: l2x_Flrl_rofgwl, x2r_Flrl_rofsub, x2r_Flrl_rofsur,
+   r2x_Flrr_volrmch, r2x_Flrr_volr, r2x_Forr_rofl, x2l_Flrr_volrmch,
+   x2l_Flrr_volr, l2x_Flrl_rofsub, l2x_Flrl_rofsur, x2r_Flrl_rofgwl
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: none
+
+   URL for LMWG diagnostics output used to validate new climate: none
+
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+    Add missing cropColdStart test mods
+      clm/cime_config/testdefs/testmods_dirs/clm/cropColdStart/user_nl_clm
+      clm/cime_config/testdefs/testmods_dirs/clm/cropColdStart/include_user_mods
+      clm/cime_config/testdefs/testmods_dirs/clm/cropColdStart
+
+List all existing files that have been modified, and describe the changes:
+
+    Bedrock bug fix, initialize and size arrays correctly.
+      clm/src/biogeophys/SoilWaterMovementMod.F90
+
+    Remove expected failure from missing test mods:
+      clm/cime_config/testdefs/ExpectedTestFails.xml
+
+    Coupler runoff bugfix:
+      clm/src/cpl/lnd_import_export.F90
+      clm/src/main/lnd2atmType.F90
+      clm/src/main/clm_driver.F90
+      clm/src/main/lnd2atmMod.F90
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r146
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Nov  4 06:48:41 MST 2015
