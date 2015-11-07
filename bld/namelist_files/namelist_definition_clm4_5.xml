@@ -259,7 +259,11 @@ Only works when glc_nec is greater than zero, and when coupled to CISM.
        group="clm_inparm" valid_values="" >
 Number of days before one considers the perennially snow-covered point 'land ice'
 (and thus capable of generating a positive surface mass balance for CISM).
-Default: 7300 (20 years)
+This is meant to compensate for the fact that, with small values of h2osno_max,
+the onset of a snow-capped state (and thus conversion to land ice) can occur in an
+unrealistically short amount of time.
+Thus, in general, large values of h2osno_max should have glc_snow_persistence_max_days = 0;
+small values of h2osno_max should have glc_snow_persistence_max_days > 0.
 </entry>
 
 <entry id="albice" type="real(2)" category="clm_physics"
@@ -1742,6 +1746,11 @@ Values less than 5 are mainly useful for testing, and should not be used for sci
        group="clm_inparm" valid_values="" >
 Maximum snow depth in mm H2O equivalent. Additional mass gains will be capped when this depth 
 is exceeded.
+Changes in this value should possibly be accompanied by changes in:
+- nlevsno: larger values of h2osno_max should be accompanied by increases in nlevsno
+- glc_snow_persistence_max_days: large values of h2osno_max should generally have
+  glc_snow_persistence_max_days = 0; small values of h2osno_max should generally have
+  glc_snow_persistence_max_days > 0.
 </entry>
 
 <entry id="wind_dependent_snow_density" type="logical" category="clm_physics"

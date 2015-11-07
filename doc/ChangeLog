@@ -1,4 +1,131 @@
 ===============================================================
+Tag name:  clm4_5_3_r148
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Nov  7 06:41:25 MST 2015
+One-line Summary: For CLM5, increase max snow depth to 20 m
+
+Purpose of changes
+------------------
+
+Change CLM5 snow defaults:
+
+- h2osno_max = 20m rather than 1m
+
+- nlevsno = 12 rather than 5
+
+- glc_snow_persistence_max_days = 0 rather than 7300 (this is just used for
+  modeling glacial inception when coupled to CISM)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp):
+
+   For CLM5 cases, need to run initial conditions through init_interp, because
+   of the change in nlevsno. See caveats under clm4_5_3_r146 before doing so.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+- h2osno_max = 20m rather than 1m
+
+- nlevsno = 12 rather than 5
+
+- glc_snow_persistence_max_days = 0 rather than 7300 (this is just used for
+  modeling glacial inception when coupled to CISM)
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes:
+
+   This change will lead to some memory increase, and some increase in timing,
+   due to having more snow layers. I have not investigated this closely. The
+   tputcomp tests all passed, but these are not very meaningful.
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone: NOT RUN
+
+  unit-tests (components/clm/src):
+
+    yellowstone: NOT RUN
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone: NOT RUN
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone: NOT RUN
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel: ok
+    yellowstone_pgi: ok
+    yellowstone_gnu (clm45 only): ok
+    hobart_nag: ok
+
+CLM tag used for the baseline comparisons: clm4_5_3_r147
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM5
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff, likely new climate in some regions
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename:
+
+       Some runs documented here:
+       https://docs.google.com/document/d/1Y5kCwa0GUnQ0hy7vNwvtFOKaC3ikysfLXdcNVqRygok/edit
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+       http://www.staff.science.uu.nl/~kampe004/lnd_diag/tr_eraimod_5_cap-tr_eraimod_12_cap/setsIndex.html
+       - note that this uses 10m snow pack rather than 20m
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Change namelist defaults, as listed above
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+========= Add documentation
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r147
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Thu Nov  5 21:51:53 MST 2015
