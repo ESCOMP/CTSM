@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_3_r149    sacks 11/08/2015 Change cold start initialization of snow pack
    clm4_5_3_r148    sacks 11/07/2015 For CLM5, increase max snow depth to 20 m
    clm4_5_3_r147    andre 11/05/2015 swenson bedrock and coupler runoff bugfixes
    clm4_5_3_r146    sacks 11/04/2015 Implement vertical interpolation in init_interp

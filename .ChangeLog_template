@@ -53,26 +53,26 @@ CLM testing:
 
   build-namelist tests:
 
-    yellowstone
+    yellowstone - 
 
   unit-tests (components/clm/src):
 
-    yellowstone
+    yellowstone - 
 
   tools-tests (components/clm/test/tools):
 
-    yellowstone
+    yellowstone - 
 
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
-     yellowstone
+     yellowstone - 
 
   regular tests (aux_clm40, aux_clm45):
 
-    yellowstone_intel
-    yellowstone_pgi
-    yellowstone_gnu (clm45 only)
-    hobart_nag
+    yellowstone_intel - 
+    yellowstone_pgi - 
+    yellowstone_gnu (clm45 only) - 
+    hobart_nag - 
 
 CLM tag used for the baseline comparisons: 
 

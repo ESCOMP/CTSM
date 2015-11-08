@@ -1,4 +1,117 @@
 ===============================================================
+Tag name:  clm4_5_3_r149
+Originator(s):  sacks (Bill Sacks)
+Date: Sun Nov  8 12:41:59 MST 2015
+One-line Summary: Change cold start initialization of snow pack
+
+Purpose of changes
+------------------
+
+Change cold start initialization of snow pack to lead to fewer instances where
+cold start conditions negatively impact the simulation for long periods. Main
+change is to make initial snow pack over glacier and high-latitude vegetation
+much smaller.
+
+Also make istice consistent with istice_mec.
+
+New method developed in conjunction with Jan Lenaerts, Leo van Kampenhout, and
+Dave Lawrence.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - NOT RUN
+
+  unit-tests (components/clm/src):
+
+    yellowstone - OK
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - NOT RUN
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - NOT RUN
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - OK
+
+CLM tag used for the baseline comparisons: clm4_5_3_r148
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM45/CLM5 cold start runs
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff; not investigated carefully
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes
+M       components/clm/src/main/clm_instMod.F90
+
+========= Add a comment in changelog entry for clm4_5_3_r148
+M       ChangeLog
+M       components/clm/doc/ChangeLog
+
+========= Minor tweak to template
+M       .ChangeLog_template
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r148
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Nov  7 06:41:25 MST 2015
@@ -42,7 +155,9 @@ Substantial timing or memory changes:
 
    This change will lead to some memory increase, and some increase in timing,
    due to having more snow layers. I have not investigated this closely. The
-   tputcomp tests all passed, but these are not very meaningful.
+   tputcomp tests all passed, but these are not very meaningful - in part
+   because there likely weren't any grid cells with substantially more than 5
+   layers in these test runs.
 
 
 Code reviews and testing

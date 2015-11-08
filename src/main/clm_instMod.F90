@@ -205,25 +205,20 @@ contains
     allocate (snow_depth_col(begc:endc))
 
     ! snow water
-    ! Note: Glacier_mec columns are initialized with half the maximum snow cover.
-    ! This gives more realistic values of qflx_glcice sooner in the simulation
-    ! for columns with net ablation, at the cost of delaying ice formation
-    ! in columns with net accumulation.
     do c = begc,endc
        l = col%landunit(c)
        g = col%gridcell(c)
 
-       if (lun%itype(l)==istice) then
-          h2osno_col(c) = h2osno_max
-       elseif (lun%itype(l)==istice_mec .or. &
-              (lun%itype(l)==istsoil .and. abs(grc%latdeg(g)) >= 60._r8)) then 
-          ! In order to speed equilibration of the snow pack, initialize non-zero snow
-          ! thickness in some places. This is mainly of interest for glacier spinup.
-          ! However, putting in an explicit dependence on glcmask is problematic, because
-          ! that means that answers change simply due to changing glcmask (which may be
-          ! done simply to have additional virtual columns for the sake of diagnostics).
-          ! Thus, we apply this non-zero initialization at all high latitude soil points.
-          h2osno_col(c) = 0.5_r8 * h2osno_max   ! 50 cm if h2osno_max = 1 m
+       ! In areas that should be snow-covered, it can be problematic to start with 0 snow
+       ! cover, because this can affect the long-term state through soil heating, albedo
+       ! feedback, etc. On the other hand, it can be problematic to put too much snow in
+       ! places that are in a net melt regime, because it can take a very long time to
+       ! melt a large snow pack. So, as a compromise, we start with a small amount of snow
+       ! in places that are likely to be snow-covered for much or all of the year.
+       if (lun%itype(l)==istice .or. lun%itype(l)==istice_mec) then
+          h2osno_col(c) = 100._r8
+       else if (lun%itype(l)==istsoil .and. abs(grc%latdeg(g)) >= 60._r8) then 
+          h2osno_col(c) = 100._r8
        else
           h2osno_col(c) = 0._r8
        endif
