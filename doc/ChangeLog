@@ -1,4 +1,110 @@
 ===============================================================
+Tag name:  clm4_5_4_r150
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Nov 13 13:42:39 MST 2015
+One-line Summary: Some needed answer changing fixes for: fire, disallow negative photosynthis, 
+                  and reduce LAI of DBT in evergreen state
+
+Purpose of changes
+------------------
+
+Add in changes to fire fluxes for deadstem (both clm4_5 and clm5_0). Don't allow
+photosynthis to be less than zero. Reduce the Leaf Area Index (LAI) of Deciduous 
+Broadleaf Tree (DBT) when in an evergreen state (warm enough that all of the leaves never
+all fall off) by taking into account leaf longevity and only allowing the amount of 
+leaf or fine root Carbon storage transfered to be more than the amount of remaining leaf 
+or fine root Carbon (would be zero unless in an evergreen state). Previously, DBT in 
+evergreen state would have unrealistically high LAI, that would then cause them to take up 
+too much water and then kill the trees. So they had an unrealistic cycle for trees that are 
+supposed to be in an evergreen state.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2242, 2243, and 2244
+   2244 Change to reduce leaf area of DBT in evergreen state (rfisher)
+   2243 Deadstem not taken into account in fire-fluxes for clm4_5 (koven)
+   2242 Disallow negative photosynthis (olesen and bonan)
+
+
+Notes of particular relevance for users None
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self, koven, rfisher, oleson
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - yes
+
+  unit-tests (components/clm/src):
+
+    yellowstone -  yes
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone -  no
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - no
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - yes
+    yellowstone_pgi - yes
+    yellowstone_gnu (clm45 only) - yes
+    hobart_nag - yes
+
+CLM tag used for the baseline comparisons:  clm4_5_3_r149
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm4_5 and clm5_0
+    - what platforms/compilers: all
+    - nature of change: similar climate
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M components/clm/src/biogeochem/CNFireLi2014Mod.F90 --- Deal with deadstem for fire fluxes
+M components/clm/src/biogeochem/CNFireLi2016Mod.F90 --- Deal with deadstem for fire fluxes
+M components/clm/src/biogeochem/CNPhenologyMod.F90 ---- In CNStressDecidPhenology take into
+      account leaf longevity in lgsf, lower leaf and froot Carbon storage to transfer, by
+      the leaf and froot Carbon
+M components/clm/src/biogeophys/PhotosynthesisMod.F90 - Make ag max of zero or calculated value
+     
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_3_r149
 Originator(s):  sacks (Bill Sacks)
 Date: Sun Nov  8 12:41:59 MST 2015

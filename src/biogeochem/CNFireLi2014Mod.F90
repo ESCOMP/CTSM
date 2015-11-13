@@ -1023,6 +1023,15 @@ contains
         m_livestemn_to_deadstemn_fire(p)           =  livestemn(p) * f * &
              (1._r8 - cc_lstem(patch%itype(p))) * &
              (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
+        m_deadstemn_to_litter_fire(p)              =  deadstemn(p) * f * &
+             (1._r8 - cc_dstem(patch%itype(p))) * &
+             fm_droot(patch%itype(p))
+        m_deadstemn_storage_to_litter_fire(p)      =  deadstemn_storage(p) * f * &
+             (1._r8 - cc_other(patch%itype(p))) * &
+             fm_other(patch%itype(p))
+        m_deadstemn_xfer_to_litter_fire(p)         =  deadstemn_xfer(p) * f * &
+             (1._r8 - cc_other(patch%itype(p))) * &
+             fm_other(patch%itype(p))
         m_frootn_to_litter_fire(p)                 =  frootn(p)             * f * &
              fm_root(patch%itype(p))
         m_frootn_storage_to_litter_fire(p)         =  frootn_storage(p)     * f * &

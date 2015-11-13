@@ -972,12 +972,14 @@ contains
          livecrootc_storage                  =>    cnveg_carbonstate_inst%livecrootc_storage_patch             , & ! Input:  [real(r8)  (:)   ]  (gC/m2) live coarse root C storage                
          deadcrootc_storage                  =>    cnveg_carbonstate_inst%deadcrootc_storage_patch             , & ! Input:  [real(r8)  (:)   ]  (gC/m2) dead coarse root C storage                
          gresp_storage                       =>    cnveg_carbonstate_inst%gresp_storage_patch                  , & ! Input:  [real(r8)  (:)   ]  (gC/m2) growth respiration storage                
-         leafc_xfer                          =>    cnveg_carbonstate_inst%leafc_xfer_patch                     , & ! Output:  [real(r8) (:)   ]  (gC/m2) leaf C transfer                           
+         leafc_xfer                          =>    cnveg_carbonstate_inst%leafc_xfer_patch                     , & ! Output:  [real(r8) (:)   ]  (gC/m2) leaf C transfer
          frootc_xfer                         =>    cnveg_carbonstate_inst%frootc_xfer_patch                    , & ! Output:  [real(r8) (:)   ]  (gC/m2) fine root C transfer                      
          livestemc_xfer                      =>    cnveg_carbonstate_inst%livestemc_xfer_patch                 , & ! Output:  [real(r8) (:)   ]  (gC/m2) live stem C transfer                      
          deadstemc_xfer                      =>    cnveg_carbonstate_inst%deadstemc_xfer_patch                 , & ! Output:  [real(r8) (:)   ]  (gC/m2) dead stem C transfer                      
          livecrootc_xfer                     =>    cnveg_carbonstate_inst%livecrootc_xfer_patch                , & ! Output:  [real(r8) (:)   ]  (gC/m2) live coarse root C transfer               
          deadcrootc_xfer                     =>    cnveg_carbonstate_inst%deadcrootc_xfer_patch                , & ! Output:  [real(r8) (:)   ]  (gC/m2) dead coarse root C transfer               
+         leafc                               =>    cnveg_carbonstate_inst%leafc_patch                          , & ! Input:   [real(r8) (:)   ]  (gC/m2) leaf C
+         frootc                              =>    cnveg_carbonstate_inst%frootc_patch                         , & ! Input:   [real(r8) (:)   ]  (gC/m2) root C
          
          leafn_storage                       =>    cnveg_nitrogenstate_inst%leafn_storage_patch                , & ! Input:  [real(r8)  (:)   ]  (gN/m2) leaf N storage                            
          frootn_storage                      =>    cnveg_nitrogenstate_inst%frootn_storage_patch               , & ! Input:  [real(r8)  (:)   ]  (gN/m2) fine root N storage                       
@@ -1270,7 +1272,7 @@ contains
             ! calculate long growing season factor (lgsf)
             ! only begin to calculate a lgsf greater than 0.0 once the number
             ! of days active exceeds days/year.
-            lgsf(p) = max(min((days_active(p)-dayspyr)/dayspyr, 1._r8),0._r8)
+            lgsf(p) = max(min(3.0_r8*(days_active(p)-leaf_long(ivt(p))*dayspyr )/dayspyr, 1._r8),0._r8)
 
             ! set background litterfall rate, when not in the phenological offset period
             if (offset_flag(p) == 1._r8) then
@@ -1294,8 +1296,8 @@ contains
 
                ! set carbon fluxes for shifting storage pools to transfer pools
 
-               leafc_storage_to_xfer(p)  = leafc_storage(p) * bgtr(p)
-               frootc_storage_to_xfer(p) = frootc_storage(p) * bgtr(p)
+               leafc_storage_to_xfer(p)  = max(0.0_r8,(leafc_storage(p)-leafc(p))) * bgtr(p)
+               frootc_storage_to_xfer(p) = max(0.0_r8,(frootc_storage(p)-frootc(p))) * bgtr(p)
                if (woody(ivt(p)) == 1.0_r8) then
                   livestemc_storage_to_xfer(p)  = livestemc_storage(p) * bgtr(p)
                   deadstemc_storage_to_xfer(p)  = deadstemc_storage(p) * bgtr(p)

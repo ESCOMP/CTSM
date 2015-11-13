@@ -1934,7 +1934,7 @@ contains
       bquad = -(ai + ap(p,iv))
       cquad = ai * ap(p,iv)
       call quadratic (aquad, bquad, cquad, r1, r2)
-      ag(p,iv) = min(r1,r2)
+      ag(p,iv) = max(0._r8,min(r1,r2))
 
       ! Net photosynthesis. Exit iteration if an < 0
 
