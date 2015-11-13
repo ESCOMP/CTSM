@@ -1203,7 +1203,7 @@ Description of the use case selected.
 </entry>
 
 <entry id="bgc_spinup" type="char*3" category="default_settings"
-       group="default_settings" valid_values="on-accell,on,off" >
+       group="default_settings" valid_values="on,off" >
 Command line arguement for turning on CN spinup mode.
 </entry>
 

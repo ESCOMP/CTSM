@@ -32,7 +32,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <bgc_spinup>off</bgc_spinup>
 
 <!-- Spinup state -->
-<spinup_state bgc_spinup="on-accell" >2</spinup_state>
 <spinup_state bgc_spinup="on" >1</spinup_state>
 <spinup_state bgc_spinup="off">0</spinup_state>
 

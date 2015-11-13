@@ -1,4 +1,57 @@
 ===============================================================
+Tag name:  clm4_5_4_r151
+Originator(s):  erik (Erik Kluzek)
+Date:  Fri Nov 13 15:50:58 MST 2015
+One-line Summary: Fix broken r150 tag, with bgc_spinup issue in it
+
+Purpose of changes
+------------------
+
+Backout changes to -bgc_spinup in CLM build-namelist should NOT
+have been committed.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2245
+    2245 setup doesn't work, because of issue iwth -bgc_spinup
+
+Notes of particular relevance for users None
+---------------------------------------
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing: None! (but this is the same as what was actually tested for clm4_5_4_r150)
+
+CLM tag used for the baseline comparisons:  clm4_5_4_r150
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>> Remove non-working on-accell option to -bgc_spinup to namelist
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_4_r150
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Nov 13 13:42:39 MST 2015
@@ -26,6 +79,8 @@ Bugs fixed (include bugzilla ID): 2242, 2243, and 2244
    2243 Deadstem not taken into account in fire-fluxes for clm4_5 (koven)
    2242 Disallow negative photosynthis (olesen and bonan)
 
+Known bugs introduced in this tag (include bugzilla ID): 2245
+    2245 setup doesn't work, because of issue iwth -bgc_spinup
 
 Notes of particular relevance for users None
 ---------------------------------------

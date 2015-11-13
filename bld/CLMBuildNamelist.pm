@@ -102,9 +102,8 @@ OPTIONS
                                     This toggles on the namelist variables:
                                           use_cn, use_lch4, use_nitrif_denitrif, use_vertsoilc, use_century_decomp
 
-     -bgc_spinup "on-accell|on|off"     CLM 4.5 Only. For CLM 4.0, spinup is controlled from configure.
+     -bgc_spinup "on|off"     CLM 4.5 Only. For CLM 4.0, spinup is controlled from configure.
                               Turn on given spinup mode for BGC setting of CN
-                                  on-accell : Turn on Accelerated Decomposition   (spinup_state = 2)
                                   on : Turn on Accelerated Decomposition   (spinup_state = 1)
                                   off : run in normal mode                 (spinup_state = 0)
 
@@ -1061,16 +1060,13 @@ sub setup_cmdl_bgc_spinup {
       my @valid_values   = $definition->get_valid_values( $var );
       fatal_error("$var has an invalid value ($val). Valid values are: @valid_values\n");
     }
-    if ( $nl_flags->{'bgc_spinup'} =~ /on/ && $nl_flags->{'use_cn'} ne ".true.") {
+    if ( $nl_flags->{'bgc_spinup'} eq "on" && $nl_flags->{'use_cn'} ne ".true.") {
       fatal_error("$var can not be '$nl_flags->{'bgc_spinup'}' if CN is turned off (use_cn=$nl_flags->{'use_cn'}).");
     }
-    if ( $nl->get_value("spinup_state") ne 2 && $nl_flags->{'bgc_spinup'} eq "on-accell" ) {
+    if ( $nl->get_value("spinup_state") eq 0 && $nl_flags->{'bgc_spinup'} eq "on" ) {
       fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
     }
-    if ( $nl->get_value("spinup_state") ne 1 && $nl_flags->{'bgc_spinup'} eq "on" ) {
-      fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
-    }
-    if ( $nl->get_value("spinup_state") ne 0 && $nl_flags->{'bgc_spinup'} eq "off" ) {
+    if ( $nl->get_value("spinup_state") eq 1 && $nl_flags->{'bgc_spinup'} eq "off" ) {
       fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
     }
   }
