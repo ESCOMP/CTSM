@@ -2209,19 +2209,6 @@ contains
 !          rsub_top(c) = rsub_top(c) - xs(c)/dtime
           qflx_rsub_sat(c) = qflx_rsub_sat(c) - xs(c)/dtime
 
-          if(xs(c)/dtime > 1.e-6) then
-             g = col%gridcell(c)
-             write(iulog,*) 'xs drainage: ', c, xs(c), xs(c)/dtime
-             write(iulog,*) 'lat/lon: ', grc%latdeg(g), grc%londeg(g)
-             write(iulog,*) 'h2osno, h2osfc'
-             write(iulog,'(i8,2f14.6)') c,h2osno(c),h2osfc(c)
-             write(iulog,*) 'soil liq/ice'
-             do k = 1, nlevsoi
-                write(iulog,'(i4,2f14.6)') k, h2osoi_liq(c,k),h2osoi_ice(c,k)
-             enddo
-             write(iulog,*) ' '
-          endif
-
        end do
 
        do fc = 1, num_hydrologyc

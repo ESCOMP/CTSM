@@ -518,7 +518,7 @@ contains
              !======================  FSCA PARAMETERIZATIONS  ======================
              ! fsca parameterization based on *changes* in swe
              ! first compute change from melt during previous time step
-             if(snowmelt(c) >= 0._r8) then
+             if(snowmelt(c) > 0._r8) then
 
                 smr=min(1._r8,(h2osno(c))/(int_snow(c)))
 

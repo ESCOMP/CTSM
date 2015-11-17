@@ -1,4 +1,127 @@
 ===============================================================
+Tag name:  clm4_5_6_r153
+Originator(s):  Sean Swenson, Bill Sacks
+Date: Tue Nov 17 06:01:47 MST 2015
+One-line Summary: Fix snow cover fraction bug
+
+Purpose of changes
+------------------
+
+The fix for infinite snow growth made in clm4_5_3_r144 turned out to have a bug
+of its own: It prevented snow cover fraction from going above 0.8.
+
+This tag fixes the snow cover fraction bug while still (it appears) preventing
+infinite snow growth.
+
+This results in a potentially large change in model behavior, so the version
+number is bumped from clm4_5_5 to clm4_5_6. However, this is mainly due to
+backing out some of the (buggy) changes that were put in place in
+clm4_5_3_r144. That is, if the changes in this new tag were made on top of
+clm4_5_3_r143, the differences would likely be relatively small.
+
+Changes made by Sean Swenson, brought to trunk by Bill Sacks.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: Bill Sacks
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    'ok' means: tests pass, but answers change for CLM45 / CLM50 cases
+
+CLM tag used for the baseline comparisons: clm4_5_5_r152
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM45 / CLM50 cases
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      New climate
+
+      Main changes are due to backing out some of the (buggy) changes that were
+      put in place in clm4_5_3_r144. That is, if the changes in this new tag
+      were made on top of clm4_5_3_r143, the differences would likely be
+      relatively small.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes. The change to CanopyHydrologyMod backs out a change that
+          was made in r144. The change to SnowHydrologyMod is new.
+M       components/clm/src/biogeophys/CanopyHydrologyMod.F90
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+
+========= Unrelated change: get rid of a write statement that was resulting in
+          lots of messages to the log file
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_5_r152
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Nov 17 05:22:58 MST 2015
