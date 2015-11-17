@@ -316,7 +316,7 @@ contains
 
        end do
 
-       ! Suppose glc_dyn_runoff_routing = T:   
+       ! For glc_dyn_runoff_routing = T:   
        ! (1) We have qflx_snwcp_ice = 0, and excess snow has been incorporated in qflx_glcice_frz.
        !     This flux must be included here to complete the water balance, because it is a
        !     sink of water as far as CLM is concerned (this water will now be owned by CISM).
@@ -325,6 +325,15 @@ contains
        !     an equivalent ice mass has been "borrowed" from the base of the column.  So this mass
        !     has to be added back to the column, as far as the error correction is concerned, by
        !     adding back the equivalent flux*timestep.
+       !
+       ! For glc_dyn_runoff_routing = F:
+       ! (1) qflx_snwcp_ice has been reduced by an amount equal to qflx_glcice_melt. The
+       !     amount of snow removal is therefore given by (qflx_snwcp_ice +
+       !     qflx_glcice_melt), meaning that we should add qflx_glcice_melt to errh2o.
+       ! (2) qflx_glcice_melt has been incorporated in qflx_qrgwl, but an equivalent ice
+       !     mass has been "borrowed" from the base of the column, meaning that we should
+       !     subtract qflx_glcice_melt from errh2o.
+       ! These two corrections cancel out, so nothing is done here.
        
        do fc = 1,num_do_smb_c
           c = filter_do_smb_c(fc)
@@ -444,6 +453,12 @@ contains
                    ! Need to add qflx_glcice_frz to snow_sinks for the same reason as it is
                    ! added to errh2o above - see the comment above for details.
                    snow_sinks(c) = snow_sinks(c) + qflx_glcice_frz(c)
+                else
+                   ! For glc_dyn_runoff_routing=F, qflx_glcice_melt has been removed from
+                   ! qflx_snwcp_ice. So need to account for that here.
+                   if (lun%itype(l) == istice_mec) then
+                      snow_sinks(c) = snow_sinks(c) + qflx_glcice_melt(c)
+                   end if
                 end if
 
                 errh2osno(c) = (h2osno(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
@@ -494,6 +509,7 @@ contains
              write(iulog,*)'qflx_sl_top_soil = ',qflx_sl_top_soil(indexc)*dtime
              if (create_glacier_mec_landunit) then
                 write(iulog,*)'qflx_glcice_frz  = ',qflx_glcice_frz(indexc)*dtime
+                write(iulog,*)'qflx_glcice_melt = ',qflx_glcice_melt(indexc)*dtime
              end if
              write(iulog,*)'clm model is stopping'
 

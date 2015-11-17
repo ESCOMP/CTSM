@@ -211,10 +211,11 @@ contains
 
        ! In areas that should be snow-covered, it can be problematic to start with 0 snow
        ! cover, because this can affect the long-term state through soil heating, albedo
-       ! feedback, etc. On the other hand, it can be problematic to put too much snow in
-       ! places that are in a net melt regime, because it can take a very long time to
-       ! melt a large snow pack. So, as a compromise, we start with a small amount of snow
-       ! in places that are likely to be snow-covered for much or all of the year.
+       ! feedback, etc. On the other hand, we would introduce hysteresis by putting too
+       ! much snow in places that are in a net melt regime, because the melt-albedo
+       ! feedback may not activate on time (or at all). So, as a compromise, we start with
+       ! a small amount of snow in places that are likely to be snow-covered for much or
+       ! all of the year.
        if (lun%itype(l)==istice .or. lun%itype(l)==istice_mec) then
           h2osno_col(c) = 100._r8
        else if (lun%itype(l)==istsoil .and. abs(grc%latdeg(g)) >= 60._r8) then 

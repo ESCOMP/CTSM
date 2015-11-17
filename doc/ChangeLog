@@ -1,4 +1,165 @@
 ===============================================================
+Tag name:  clm4_5_5_r152
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Nov 17 05:22:58 MST 2015
+One-line Summary: Fix glc_mec energy conservation bug
+
+Purpose of changes
+------------------
+
+Fix an energy conservation bug that appears when running glc_mec (i.e., in runs
+with CISM). Energy loss due to ice melt was essentially being double-counted:
+First, all snow capping was being sent as ice runoff, and thus melted by the
+ocean; in addition, glacier ice melt removed energy from CLM. This removal of
+energy due to both accumulation (snow capping) and melt amounts to
+double-counting.
+
+This is fixed by: For each unit of ice melt, remove one unit of ice runoff
+(possibly resulting in negative ice runoff), adding one unit of liquid
+runoff. You can think of this as: each unit of ice melt indicates one unit of
+snow capping that should not have made it to the ocean, but instead melted en
+route.
+
+Note that we currently adjust qflx_snwcp_ice in order to achieve this ice runoff
+adjustment. This affects the QSNWCPICE history field. (In an upcoming tag, I
+plan to return qflx_snwcp_ice to its original values (i.e., truly indicating
+snow capping), by introducing a new field that explicitly gives ice runoff.)
+
+This tag also fixes a minor bug in the calculation of negative runoff for
+glc_mec columns with glc_dyn_runoff_routing=T. In addition, it reorders some
+code in HydrologyDrainageMod in order to remove some complexity.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - pass
+
+    'ok' means: pass except for baseline failures in IG tests (IG compsets plus
+    ICLM45GLCMEC)
+
+    Also, unexpected baseline failures in the following tests; however, these
+    same baseline failures were observed when comparing a fresh checkout of r151
+    against the r150 baselines (this new branch is bit-for-bit with a fresh
+    checkout of r151 for these tests):
+
+     NCK_Ld5.f10_f10.I.yellowstone_pgi.clm-40default
+        RMS x2l_Flrr_volr                    8.8324E-18            NORMALIZED  2.2700E-15
+         RMS x2l_Flrr_volrmch                 8.8324E-18            NORMALIZED  2.2700E-15
+
+     SMS_D_Ld3.f10_f10.ICRUCLM50BGC.yellowstone_pgi.clm-default
+     SMS_Ld5.f19_g16.IRCP45CLM45BGC.yellowstone_pgi.clm-decStart
+        FILLDIFF topo                            
+
+     NCK_Ld1.f10_f10.ICRUCLM45.yellowstone_intel.clm-default
+        RMS VOLR                             8.9604E-05            NORMALIZED  1.2335E-14
+         RMS VOLRMCH                          8.9604E-05            NORMALIZED  1.2335E-14
+        RMS x2l_Flrr_volr                    2.8268E-17            NORMALIZED  6.8542E-15
+         RMS x2l_Flrr_volrmch                 2.8268E-17            NORMALIZED  6.8542E-15
+
+CLM tag used for the baseline comparisons: clm4_5_4_r151 (baseline directory
+named clm4_5_4_r150)
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All IG compsets (compsets with CISM / glc_mec)
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Likely new climate
+
+      For each unit of glacier melt, there is an extra unit of liquid runoff,
+      and one unit less of ice runoff.
+
+      This results in changes in the following CLM history fields: ERRH2O,
+      ERRH2OSNO, QRGWL, QRUNOFF, QRUNOFF_TO_COUPLER, QSNWCPICE,
+      QSNWCPICE_TO_COUPLER, TWS, VOLR, VOLRMCH
+
+      And the following changes in l2x cpl hist fields: l2x_Flrl_rofdto,
+      l2x_Flrl_rofgwl, l2x_Flrl_rofi
+
+      There are also changes in the consequent x2r, r2x and x2l cpl hist fields.
+
+      I did one test run to confirm that the differences in (l2x_Flrl_rofdto +
+      l2x_Flrl_rofgwl) exactly balanced the differences in l2x_Flrl_rofi.
+
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes
+M       components/clm/src/biogeophys/BalanceCheckMod.F90
+M       components/clm/src/biogeophys/HydrologyDrainageMod.F90
+
+========= Unrelated change: just change a comment
+M       components/clm/src/main/clm_instMod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_4_r151
 Originator(s):  erik (Erik Kluzek)
 Date:  Fri Nov 13 15:50:58 MST 2015

@@ -185,31 +185,6 @@ contains
          end do
       end do
 
-      ! Prior to summing up wetland/ice hydrology, calculate land ice contributions/sinks
-      ! to this hydrology.
-      ! 1) Generate SMB from capped-snow amount.  This is done over istice_mec
-      !    columns, and also any other columns included in do_smb_c filter, where
-      !    perennial snow has remained for at least snow_persistence_max.
-      ! 2) If using glc_dyn_runoff_routing=T, zero qflx_snwcp_ice: qflx_snwcp_ice is the flux
-      !    sent to ice runoff, but for glc_dyn_runoff_routing=T, we do NOT want this to be
-      !    sent to ice runoff (instead it is sent to CISM).
-
-      do c = bounds%begc,bounds%endc
-         qflx_glcice_frz(c) = 0._r8
-      end do
-      do fc = 1,num_do_smb_c
-         c = filter_do_smb_c(fc)
-         l = col%landunit(c)
-         g = col%gridcell(c)
-         ! In the following, we convert glc_snow_persistence_max_days to r8 to avoid overflow
-         if ( (snow_persistence(c) >= (real(glc_snow_persistence_max_days, r8) * secspday)) &
-              .or. lun%itype(l) == istice_mec) then
-            qflx_glcice_frz(c) = qflx_snwcp_ice(c)  
-            qflx_glcice(c) = qflx_glcice(c) + qflx_glcice_frz(c)
-            if (glc_dyn_runoff_routing(g)) qflx_snwcp_ice(c) = 0._r8
-         end if
-      end do
-
       qflx_neg_runoff_glc(bounds%begc:bounds%endc) = 0._r8
 
       ! Determine wetland and land ice hydrology (must be placed here
@@ -231,29 +206,15 @@ contains
             qflx_qrgwl(c) = forc_rain(c) + forc_snow(c) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
                  (endwb(c)-begwb(c))/dtime
 
-!  Partition glacier runoff into positive and negative streams for river routing purposes
+            if (lun%itype(l)==istice_mec) then
+               ! Add meltwater from istice_mec columns to the runoff
+               qflx_qrgwl(c) = qflx_qrgwl(c) + qflx_glcice_melt(c)
+            end if
+
+            !  Partition glacier runoff into positive and negative streams for river
+            !  routing purposes
             if (qflx_qrgwl(c) < 0._r8) then
                qflx_neg_runoff_glc(c) = qflx_qrgwl(c)
-            endif
-
-            ! With glc_dyn_runoff_routing = false (the less realistic way, typically used
-            ! when NOT coupling to CISM), excess snow immediately runs off, whereas melting
-            ! ice stays in place and does not run off. The reverse is true with
-            ! glc_dyn_runoff_routing = true: in this case, melting ice runs off, and excess
-            ! snow is sent to CISM, where it is converted to ice. These corrections are
-            ! done here: 
-
-            if (glc_dyn_runoff_routing(g) .and. lun%itype(l)==istice_mec) then
-               ! If glc_dyn_runoff_routing=T, add meltwater from istice_mec ice columns to the runoff.
-               !    Note: The meltwater contribution is computed in PhaseChanges (part of Biogeophysics2)
-               qflx_qrgwl(c) = qflx_qrgwl(c) + qflx_glcice_melt(c)
-               ! Also subtract the freezing component of qflx_glcice: this ice is added to
-               ! CISM's ice column rather than running off. (This is analogous to the
-               ! subtraction of qflx_snwcp_ice from qflx_qrgwl above, which accounts for
-               ! snow that should be put into ice runoff rather than liquid runoff. But for
-               ! glc_dyn_runoff_routing=true, qflx_snwcp_ice has been zeroed out, and has
-               ! been put into qflx_glcice_frz.)
-               qflx_qrgwl(c) = qflx_qrgwl(c) - qflx_glcice_frz(c)
             endif
 
          else if (lun%urbpoi(l) .and. ctype(c) /= icol_road_perv) then
@@ -275,6 +236,69 @@ contains
             qflx_runoff_r(c) = qflx_runoff(c)
          end if
 
+      end do
+
+      ! Calculate positive surface mass balance to ice sheets, and adjust qflx_snwcp_ice.
+      !
+      ! SMB is generated from capped-snow amount. This is done over istice_mec columns,
+      ! and also any other columns included in do_smb_c filter, where perennial snow has
+      ! remained for at least snow_persistence_max.
+      !
+      ! TODO(wjs, 2015-11-13) This code is in this module for historical reasons. It
+      ! probably should be moved to some (new?) glacier-specific module. But note that the
+      ! following adjustments to qflx_snwcp_ice need to be done AFTER qflx_qrgwl is
+      ! computed using qflx_snwcp_ice.
+
+      do c = bounds%begc,bounds%endc
+         qflx_glcice_frz(c) = 0._r8
+      end do
+      do fc = 1,num_do_smb_c
+         c = filter_do_smb_c(fc)
+         l = col%landunit(c)
+         g = col%gridcell(c)
+         ! In the following, we convert glc_snow_persistence_max_days to r8 to avoid overflow
+         if ( (snow_persistence(c) >= (real(glc_snow_persistence_max_days, r8) * secspday)) &
+              .or. lun%itype(l) == istice_mec) then
+            qflx_glcice_frz(c) = qflx_snwcp_ice(c)  
+            qflx_glcice(c) = qflx_glcice(c) + qflx_glcice_frz(c)
+            if (glc_dyn_runoff_routing(g)) then
+               ! In places where we are coupled to a dynamic glacier model, zero
+               ! qflx_snwcp_ice: qflx_snwcp_ice is the flux sent to ice runoff, but for
+               ! glc_dyn_runoff_routing=T, we do NOT want this to be sent to ice runoff
+               ! (instead it is sent to GLC).
+               qflx_snwcp_ice(c) = 0._r8
+            end if
+         end if
+
+         if ((lun%itype(l) == istice_mec) .and. .not. glc_dyn_runoff_routing(g)) then
+            ! In places where we are not coupled to a dynamic glacier model, CLM sends all
+            ! of the snow capping to the ocean as an ice runoff term. (This is essentially
+            ! a crude parameterization of calving, assuming steady state - i.e., all ice
+            ! gain is balanced by an ice loss.) But each unit of melt that happens is an
+            ! indication that 1 unit of the ice shouldn't have made it to the ocean - but
+            ! instead melted before it got there. So we need to correct for that by
+            ! removing 1 unit of ice runoff for each unit of melt. Note that, for a given
+            ! point in space & time, this can result in negative ice runoff. However, we
+            ! expect that, in a temporally and spatially-integrated sense (if we're near
+            ! equilibrium), this will just serve to decrease the too-high positive ice
+            ! runoff.
+            !
+            ! Another way to think about this is: ice melt removes mass; the snow capping
+            ! flux also removes mass. If both the accumulation and melt remove mass, there
+            ! is a double-counting. So we need to correct that by: for each unit of ice
+            ! melt (resulting in 1 unit of liquid runoff), remove 1 unit of ice
+            ! runoff. (This is not an issue in the case of glc_dyn_runoff_routing=T,
+            ! because then the snow capping mass is retained in the LND-GLC coupled
+            ! system.)
+            !
+            ! The alternative of simply not adding ice melt to the runoff stream if
+            ! glc_dyn_runoff_routing=F conserves mass, but fails to conserve energy, for a
+            ! similar reason: Ice melt in CLM removes energy; also, the ocean's melting of
+            ! the snow capping flux removes energy. If both the accumulation and melting
+            ! remove energy, there is a double-counting.
+            
+            qflx_snwcp_ice(c) = qflx_snwcp_ice(c) - qflx_glcice_melt(c)
+         end if
       end do
 
     end associate

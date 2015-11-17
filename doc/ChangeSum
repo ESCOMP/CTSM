@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_5_r152    sacks 11/17/2015 Fix glc_mec energy conservation bug
    clm4_5_4_r151     erik 11/13/2015 Fix broken r150 tag, with bgc_spinup issue in it
    clm4_5_4_r150     erik 11/13/2015 Some needed answer changing fixes for: fire, disallow 
                                      negative photosynthis, and reduce LAI of DBT in evergreen state
