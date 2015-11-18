@@ -354,6 +354,11 @@
   </compset>
 
   <compset grid="g%gland">
+    <alias>IGCRUCLM50BGCCROP</alias> 
+    <lname>2000_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_RTM_CISM1_SWAV</lname>
+  </compset>
+
+  <compset grid="g%gland">
     <alias>IGRCP85CN</alias>
     <lname>RCP8_DATM%QIA_CLM40%CN_SICE_SOCN_RTM_CISM1_SWAV</lname>
   </compset>

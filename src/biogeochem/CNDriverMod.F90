@@ -621,7 +621,7 @@ contains
     ! and update product pool state variables
     !--------------------------------------------
 
-    call CNWoodProducts(num_soilc, filter_soilc, &
+    call CNWoodProducts(bounds, num_soilc, filter_soilc, &
          cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
          cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst)

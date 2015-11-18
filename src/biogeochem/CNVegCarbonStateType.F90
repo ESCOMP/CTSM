@@ -63,6 +63,7 @@ module CNVegCarbonStateType
 
      ! pools for dynamic landcover
      real(r8), pointer :: seedc_col                (:) ! (gC/m2) column-level pool for seeding new Patches
+     real(r8), pointer :: cropprod1c_col           (:) ! (gC/m2) grain product C pool, 1-year lifespan
      real(r8), pointer :: prod10c_col              (:) ! (gC/m2) wood product C pool, 10-year lifespan
      real(r8), pointer :: prod100c_col             (:) ! (gC/m2) wood product C pool, 100-year lifespan
      real(r8), pointer :: totprodc_col             (:) ! (gC/m2) total wood product C
@@ -164,6 +165,7 @@ contains
     allocate(this%woodc_patch              (begp:endp)) ; this%woodc_patch              (:) = nan     
 
     allocate(this%seedc_col                (begc:endc)) ; this%seedc_col                (:) = nan
+    allocate(this%cropprod1c_col           (begc:endc)) ; this%cropprod1c_col           (:) = nan
     allocate(this%prod10c_col              (begc:endc)) ; this%prod10c_col              (:) = nan
     allocate(this%prod100c_col             (begc:endc)) ; this%prod100c_col             (:) = nan
     allocate(this%totprodc_col             (begc:endc)) ; this%totprodc_col             (:) = nan
@@ -221,7 +223,7 @@ contains
        if (crop_prog) then
           this%grainc_patch(begp:endp) = spval
           call hist_addfld1d (fname='GRAINC', units='gC/m^2', &
-               avgflag='A', long_name='grain C', &
+               avgflag='A', long_name='grain C (does not equal yield)', &
                ptr_patch=this%grainc_patch)
        end if
        
@@ -369,6 +371,11 @@ contains
        call hist_addfld1d (fname='SEEDC', units='gC/m^2', &
             avgflag='A', long_name='pool for seeding new Patches', &
             ptr_col=this%seedc_col)
+
+       this%cropprod1c_col(begc:endc) = spval
+       call hist_addfld1d (fname='CROPPROD1C', units='gC/m^2', &
+            avgflag='A', long_name='1-yr grain product C', &
+            ptr_col=this%cropprod1c_col)
 
        this%prod10c_col(begc:endc) = spval
        call hist_addfld1d (fname='PROD10C', units='gC/m^2', &
@@ -548,6 +555,11 @@ contains
             avgflag='A', long_name='C13 pool for seeding new Patches', &
             ptr_col=this%seedc_col)
 
+       this%cropprod1c_col(begc:endc) = spval
+       call hist_addfld1d (fname='C13_CROPPROD1C', units='gC13/m^2', &
+            avgflag='A', long_name='C13 1-yr grain product C', &
+            ptr_col=this%cropprod1c_col)
+
        this%prod10c_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_PROD10C', units='gC13/m^2', &
             avgflag='A', long_name='C13 10-yr wood product C', &
@@ -720,6 +732,11 @@ contains
        call hist_addfld1d (fname='C14_SEEDC', units='gC14/m^2', &
             avgflag='A', long_name='C14 pool for seeding new Patches', &
             ptr_col=this%seedc_col)
+
+       this%cropprod1c_col(begc:endc) = spval
+       call hist_addfld1d (fname='C14_CROPPROD1C', units='gC14/m^2', &
+            avgflag='A', long_name='C14 1-yr grain product C', &
+            ptr_col=this%cropprod1c_col)
 
        this%prod10c_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_PROD10C', units='gC14/m^2', &
@@ -946,9 +963,11 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           ! dynamic landcover state variables
           this%seedc_col(c)      = 0._r8
+          this%cropprod1c_col(c) = 0._r8
           this%prod10c_col(c)    = 0._r8
           this%prod100c_col(c)   = 0._r8
           this%totprodc_col(c)   = 0._r8
+!          this%totgrainc_col(c)  = 0._r8
 
           ! total carbon pools
           this%totecosysc_col(c) = 0._r8
@@ -962,6 +981,7 @@ contains
     do fc = 1,num_special_col
        c = special_col(fc)
        this%seedc_col(c)      = 0._r8
+       this%cropprod1c_col(c) = 0._r8
        this%prod10c_col(c)    = 0._r8
        this%prod100c_col(c)   = 0._r8
        this%totprodc_col(c)   = 0._r8
@@ -1857,6 +1877,12 @@ contains
     end if
 
     if (carbon_type == 'c12') then
+       call restartvar(ncid=ncid, flag=flag, varname='cropprod1c', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%cropprod1c_col)
+    end if
+
+    if (carbon_type == 'c12') then
        call restartvar(ncid=ncid, flag=flag, varname='prod10c', xtype=ncd_double,  &
             dim1name='column', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%prod10c_col) 
@@ -1883,6 +1909,19 @@ contains
           end if
        end if
     end if
+
+    if (carbon_type == 'c13') then
+       call restartvar(ncid=ncid, flag=flag, varname='cropprod1c_13', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%cropprod1c_col)
+       if (flag=='read' .and. .not. readvar) then
+          if (this%cropprod1c_col(i) /= spval .and. &
+               .not. isnan( this%cropprod1c_col(i) ) ) then
+             this%cropprod1c_col(i) = c12_cnveg_carbonstate_inst%cropprod1c_col(i) * c3_r2
+          endif
+       end if
+    end if
+
 
     if (carbon_type == 'c13') then
        call restartvar(ncid=ncid, flag=flag, varname='prod10c_13', xtype=ncd_double,  &
@@ -1925,6 +1964,19 @@ contains
                 this%seedc_col(i) = c12_cnveg_carbonstate_inst%seedc_col(i) * c14ratio
              endif
           end do
+       end if
+    end if
+
+    if ( carbon_type == 'c14' ) then
+       call restartvar(ncid=ncid, flag=flag, varname='cropprod1c_14', xtype=ncd_double,  &
+            dim1name='column', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%cropprod1c_col)
+       if (flag=='read' .and. .not. readvar) then
+          write(iulog,*) 'initializing this%cropprod1c_col with atmospheric c14 value'
+          if (this%cropprod1c_col(i) /= spval .and. &
+               .not. isnan(this%cropprod1c_col(i)) ) then
+             this%cropprod1c_col(i) = c12_cnveg_carbonstate_inst%cropprod1c_col(i) * c14ratio
+          endif
        end if
     end if
 
@@ -2122,6 +2174,7 @@ contains
     !
     ! !USES:
     use subgridAveMod, only : p2c
+    use clm_varctl   , only : use_grainproduct
     !
     ! !DESCRIPTION:
     ! On the radiation time step, perform patch and column-level carbon summary calculations
@@ -2236,6 +2289,7 @@ contains
             soilbiogeochem_cwdc_col(c)    + &
             soilbiogeochem_totlitc_col(c) + &
             soilbiogeochem_totsomc_col(c) + &
+            this%cropprod1c_col(c)         + &
             this%totprodc_col(c)          + &
             this%totvegc_col(c)
 
@@ -2244,6 +2298,7 @@ contains
             soilbiogeochem_cwdc_col(c)      + &
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
+            this%cropprod1c_col(c)           + &
             this%totprodc_col(c)            + &
             this%seedc_col(c)               + &
             soilbiogeochem_ctrunc_col(c)

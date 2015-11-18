@@ -1342,6 +1342,7 @@ contains
     use pftconMod        , only : nirrig_trp_corn, nirrig_sugarcane, nirrig_trp_soybean
     use pftconMod        , only : nirrig_cotton, nirrig_rice
     use clm_varcon       , only : spval, secspday
+    use clm_varctl       , only : use_fertilizer 
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
@@ -1432,7 +1433,11 @@ contains
       jday    = get_curr_calday()
       call get_curr_date(kyr, kmo, kda, mcsec)
 
-      ndays_on = 20._r8 ! number of days to fertilize
+      if (use_fertilizer) then
+       ndays_on = 20._r8 ! number of days to fertilize
+      else
+       ndays_on = 0._r8 ! number of days to fertilize
+      end if
 
       do fp = 1, num_pcropp
          p = filter_pcropp(fp)
@@ -1749,8 +1754,8 @@ contains
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
                   onset_counter(p) = dt
-                  fert_counter(p)  = ndays_on * secspday
-                  fert(p) = fertnitro(ivt(p)) * 1000._r8 / fert_counter(p)
+                    fert_counter(p)  = ndays_on * secspday
+                    fert(p) = fertnitro(ivt(p)) * 1000._r8 / fert_counter(p)
                else
                   ! this ensures no re-entry to onset of phase2
                   ! b/c onset_counter(p) = onset_counter(p) - dt
@@ -1792,11 +1797,11 @@ contains
             ! continue fertilizer application while in phase 2;
             ! assumes that onset of phase 2 took one time step only
 
-            if (fert_counter(p) <= 0._r8) then
-               fert(p) = 0._r8
-            else ! continue same fert application every timestep
-               fert_counter(p) = fert_counter(p) - dt
-            end if
+              if (fert_counter(p) <= 0._r8) then
+                 fert(p) = 0._r8
+              else ! continue same fert application every timestep
+                 fert_counter(p) = fert_counter(p) - dt
+              end if
 
          else   ! crop not live
             ! next 2 lines conserve mass if leaf*_xfer > 0 due to interpinic
@@ -2478,6 +2483,7 @@ contains
     ! !USES:
     use clm_varpar , only : max_patch_per_col, nlevdecomp
     use pftconMod  , only : npcropmin
+    use clm_varctl , only : use_grainproduct
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
@@ -2590,21 +2596,24 @@ contains
                         phenology_n_to_litr_lig_n(c,j) = phenology_n_to_litr_lig_n(c,j) &
                              + livestemn_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
 
-                        ! grain litter carbon fluxes
-                        phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                             + grainc_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                             + grainc_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                             + grainc_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                        if (.not. use_grainproduct) then
+                         ! grain litter carbon fluxes
+                         phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
+                              + grainc_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                         phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
+                              + grainc_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                         phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
+                              + grainc_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+ 
+                         ! grain litter nitrogen fluxes
+                         phenology_n_to_litr_met_n(c,j) = phenology_n_to_litr_met_n(c,j) &
+                              + grainn_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                         phenology_n_to_litr_cel_n(c,j) = phenology_n_to_litr_cel_n(c,j) &
+                              + grainn_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                         phenology_n_to_litr_lig_n(c,j) = phenology_n_to_litr_lig_n(c,j) &
+                              + grainn_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                        end if
 
-                        ! grain litter nitrogen fluxes
-                        phenology_n_to_litr_met_n(c,j) = phenology_n_to_litr_met_n(c,j) &
-                             + grainn_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_n_to_litr_cel_n(c,j) = phenology_n_to_litr_cel_n(c,j) &
-                             + grainn_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_n_to_litr_lig_n(c,j) = phenology_n_to_litr_lig_n(c,j) &
-                             + grainn_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
 
                      end if
                   end if

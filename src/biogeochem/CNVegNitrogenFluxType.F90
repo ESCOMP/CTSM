@@ -202,7 +202,8 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: dwt_deadcrootn_to_cwdn_col                (:,:)   ! col (gN/m3/s) dead coarse root to CWD due to landcover change
      real(r8), pointer :: dwt_nloss_col                             (:)     ! col (gN/m2/s) total nitrogen loss from product pools and conversion
 
-     ! wood product pool loss fluxes
+     ! wood & grain product pool loss fluxes
+     real(r8), pointer :: cropprod1n_loss_col                       (:)     ! col (gN/m2/s) decomposition loss from 1-yr grain product pool
      real(r8), pointer :: prod10n_loss_col                          (:)     ! col (gN/m2/s) decomposition loss from 10-yr wood product pool
      real(r8), pointer :: prod100n_loss_col                         (:)     ! col (gN/m2/s) decomposition loss from 100-yr wood product pool
      real(r8), pointer :: product_nloss_col                         (:)     ! col (gN/m2/s) total wood product nitrogen loss
@@ -390,6 +391,7 @@ contains
 
     allocate(this%hrv_deadstemn_to_prod10n_col              (begc:endc)) ; this%hrv_deadstemn_to_prod10n_col              (:) = nan
     allocate(this%hrv_deadstemn_to_prod100n_col             (begc:endc)) ; this%hrv_deadstemn_to_prod100n_col             (:) = nan
+    allocate(this%cropprod1n_loss_col                       (begc:endc)) ; this%cropprod1n_loss_col                       (:) = nan
     allocate(this%prod10n_loss_col                          (begc:endc)) ; this%prod10n_loss_col                          (:) = nan
     allocate(this%prod100n_loss_col                         (begc:endc)) ; this%prod100n_loss_col                         (:) = nan
     allocate(this%product_nloss_col                         (begc:endc)) ; this%product_nloss_col                         (:) = nan
@@ -940,6 +942,11 @@ contains
          avgflag='A', long_name='addition to 10-yr wood product pool', &
          ptr_col=this%dwt_prod10n_gain_col)
 
+    this%cropprod1n_loss_col(begc:endc) = spval
+    call hist_addfld1d (fname='CROPPROD1N_LOSS', units='gN/m^2/s', &
+         avgflag='A', long_name='loss from 1-yr grain product pool', &
+         ptr_col=this%cropprod1n_loss_col)
+
     this%prod10n_loss_col(begc:endc) = spval
     call hist_addfld1d (fname='PROD10N_LOSS', units='gN/m^2/s', &
          avgflag='A', long_name='loss from 10-yr wood product pool', &
@@ -957,7 +964,7 @@ contains
 
     this%product_nloss_col(begc:endc) = spval
     call hist_addfld1d (fname='PRODUCT_NLOSS', units='gN/m^2/s', &
-         avgflag='A', long_name='total N loss from wood product pools', &
+         avgflag='A', long_name='total N loss from wood & grain product pools', &
          ptr_col=this%product_nloss_col)
 
     this%dwt_frootn_to_litr_met_n_col(begc:endc,:) = spval
@@ -1378,6 +1385,7 @@ contains
 
        this%hrv_deadstemn_to_prod10n_col(i)  = value_column        
        this%hrv_deadstemn_to_prod100n_col(i) = value_column      
+       this%cropprod1n_loss_col(i)               = value_column
        this%prod10n_loss_col(i)              = value_column
        this%prod100n_loss_col(i)             = value_column
        this%product_nloss_col(i)             = value_column
@@ -1445,7 +1453,7 @@ contains
     !
     ! !USES:
     use clm_varpar    , only: nlevdecomp,ndecomp_cascade_transitions,ndecomp_pools
-    use clm_varctl    , only: use_nitrif_denitrif
+    use clm_varctl    , only: use_nitrif_denitrif, use_grainproduct
     use subgridAveMod , only: p2c 
     !
     ! !ARGUMENTS:
@@ -1540,10 +1548,12 @@ contains
        this%dwt_nloss_col(c) = &
             this%dwt_conv_nflux_col(c)
 
-       ! total wood product N loss
+      ! total wood & grain product N loss
        this%product_nloss_col(c) = &
+            this%cropprod1n_loss_col(c)  + &
             this%prod10n_loss_col(c) + &
             this%prod100n_loss_col(c) 
+
     end do
 
   end subroutine Summary_nitrogenflux

@@ -574,6 +574,16 @@ Toggle to turn on the VIC hydrologic parameterizations
 Toggle to turn on the prognostic crop model
 </entry>
 
+<entry id="use_fertilizer" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the prognostic fertilizer for crop model 
+</entry>
+
+<entry id="use_grainproduct" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on the 1-year grain product pool in the crop model 
+</entry>
+
 <entry id="use_ozone" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on ozone stress

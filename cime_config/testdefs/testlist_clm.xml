@@ -988,6 +988,13 @@
       </test>
     </grid>
   </compset>
+  <compset name="IGCRUCLM50BGCCROP">
+     <grid name="f09_g16_gl5">
+        <test name="ERS_D_Ld3">
+           <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KitchenSink">yellowstone</machine>
+        </test>
+     </grid>
+  </compset>
   <compset name="ICRUCN">
     <grid name="hcru_hcru">
       <test name="ERP_D_Ld5">

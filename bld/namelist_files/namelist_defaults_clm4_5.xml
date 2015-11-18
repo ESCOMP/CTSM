@@ -173,6 +173,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <use_luna>.false.</use_luna>
 
+<use_fertilizer>.false.</use_fertilizer>
+<use_fertilizer use_crop=".true." phys="clm4_5">.true.</use_fertilizer>
+<use_fertilizer use_crop=".true." phys="clm5_0">.true.</use_fertilizer>
+
+<use_grainproduct>.false.</use_grainproduct>
+<use_grainproduct use_crop=".true." phys="clm4_5">.false.</use_grainproduct> <!-- 1-year grain product pool default to off for clm45 if crop is turned on -->
+<use_grainproduct use_crop=".true." phys="clm5_0">.true.</use_grainproduct> <!-- 1-year grain product pool default to on for clm50 if crop is turned on -->
+
+
 <!-- turnover time modifications    -->
 <decomp_depth_efolding phys="clm4_5">0.5</decomp_depth_efolding>
 <decomp_depth_efolding phys="clm5_0">1.0</decomp_depth_efolding>

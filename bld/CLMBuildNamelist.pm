@@ -1422,6 +1422,8 @@ sub process_namelist_inline_logic {
   setup_logic_dynamic_roots($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_create_crop_landunit($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_fertilizer($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_grainproduct($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_soilstate($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_surface_dataset($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -2504,6 +2506,36 @@ sub setup_logic_luna {
     $nl_flags->{'use_luna'} = $nl->get_value('use_luna');
     # TODO(bja, 2015-04) make this depend on > clm 5.0 and bgc mode at some point.
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_luna' );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_fertilizer {
+  #
+  # Flags to control fertilizer application 
+  #
+   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     $nl_flags->{'use_crop'} = $nl->get_value('use_crop');
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fertilizer',
+     'use_crop'=>$nl_flags->{'use_crop'} );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_grainproduct {
+  #
+  # Flags to control 1-year grain product pool 
+  #
+   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     $nl_flags->{'use_crop'} = $nl->get_value('use_crop');
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_grainproduct',
+     'use_crop'=>$nl_flags->{'use_crop'}, 'phys'=>$physv->as_string() );
   }
 }
 

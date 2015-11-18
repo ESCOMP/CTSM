@@ -1,0 +1,4 @@
+fsurdat = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_simyr1850_c151003.nc'
+finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clm5r142bgccrop_1degGSWP3_staticGLC.clm2.r.0047-01-01-00000_c151029.nc'
+use_bedrock = .true.
+use_init_interp = .true.

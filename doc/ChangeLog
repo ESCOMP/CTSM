@@ -1,4 +1,145 @@
 ===============================================================
+Tag name:  clm4_5_6_r154
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date: Wed Nov 18 16:35:53 MST 2015
+One-line Summary: one year grain product pool
+
+Purpose of changes
+------------------
+
+  Introduce logic to have the harvested grain products decay over the
+  course of one year. This is distinct from previous versions, in
+  which the grain products decayed immediately. Including the one-year
+  decay time changes soil carbon and nitrogen pools, and is on by
+  default in the CLM5 crop model. (Danica Lombardozzi, Dave Lawrence)
+
+  Add temporary test for all the clm50 functionality being used in the
+  preliminary cesm2 coupled run:
+
+    ERS_D_Ld3.f09_g16_gl5.IGCRUCLM50BGCCROP.yellowstone_intel.clm-clm50KitchenSink
+
+  Note: Because of the brittle situation with the surface
+  datasets/initial conditions files being inconsistent, we had to use
+  the f09 grid for this test. The run length was kept short to keep
+  the wall clock time ~30 min. This is too short exercise some new
+  clm50 functionality, e.g. one year grain product pool.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+
+  New namelist variables: use_fertilizer, use_grainproduct
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: unknown, none expected
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: Lombardozzi, Sacks
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone - unit tests pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - n/a, not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - n/a, not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - 4.0 pass; 4.5 ok
+    yellowstone_pgi - 4.0 pass; 4.5 ok
+    yellowstone_gnu (clm45 only) - 4.5 ok
+    hobart_nag - 4.5 ok
+
+    'ok' means: all tests passed functionality and baseline
+    comparisons. only nlcomp failures. new test did not have a
+    baseline.
+
+  Note: Grain product pool is active by default for clm50 with crops,
+  and will change answers. None of the tests are affected because they
+  do not run long enough to trigger the new code.
+
+CLM tag used for the baseline comparisons: clm4_5_6_r153
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: yes
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm50-crop
+    - what platforms/compilers: all/all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      expected to be larger than roundoff, same climate.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: none
+
+   URL for LMWG diagnostics output used to validate new climate: none
+
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+  test mods for new test
+    clm/cime_config/testdefs/testmods_dirs/clm/clm50KitchenSink/user_nl_clm
+    clm/cime_config/testdefs/testmods_dirs/clm/clm50KitchenSink/include_user_mods
+
+List all existing files that have been modified, and describe the changes:
+
+  one year grain product pool
+    clm/src/biogeochem/CNPhenologyMod.F90 - fertilizer switch
+    clm/src/biogeochem/CNVegNitrogenFluxType.F90
+    clm/src/biogeochem/CNDriverMod.F90
+    clm/src/biogeochem/CNVegCarbonFluxType.F90
+    clm/src/biogeochem/CNVegCarbonStateType.F90
+    clm/src/biogeochem/CNVegNitrogenStateType.F90
+    clm/src/biogeochem/CNWoodProductsMod.F90
+
+  new namelist/control variables for fertilizer and grain product pool
+    clm/src/main/clm_varctl.F90
+    clm/src/main/controlMod.F90
+    clm/bld/namelist_files/namelist_definition_clm4_5.xml
+    clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+    clm/bld/CLMBuildNamelist.pm
+
+  new test
+    clm/cime_config/config_compsets.xml
+    clm/cime_config/testdefs/testlist_clm.xml
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_6_r153
 Originator(s):  Sean Swenson, Bill Sacks
 Date: Tue Nov 17 06:01:47 MST 2015

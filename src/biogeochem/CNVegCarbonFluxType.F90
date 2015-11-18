@@ -261,9 +261,10 @@ module CNVegCarbonFluxType
      real(r8), pointer :: dwt_closs_col                             (:)     ! (gC/m2/s) total carbon loss from product pools and conversion
 
      ! wood product pool loss fluxes
+     real(r8), pointer :: cropprod1c_loss_col                       (:)     ! (gC/m2/s) decomposition loss from 1-yr grain product pool
      real(r8), pointer :: prod10c_loss_col                          (:)     ! (gC/m2/s) decomposition loss from 10-yr wood product pool
      real(r8), pointer :: prod100c_loss_col                         (:)     ! (gC/m2/s) decomposition loss from 100-yr wood product pool
-     real(r8), pointer :: product_closs_col                         (:)     ! (gC/m2/s) total wood product carbon loss
+     real(r8), pointer :: product_closs_col                         (:)     ! (gC/m2/s) total wood and grain product carbon loss
 
      ! summary (diagnostic) flux variables, not involved in mass balance
      real(r8), pointer :: gpp_before_downreg_patch                  (:)     ! (gC/m2/s) gross primary production before down regulation
@@ -599,6 +600,7 @@ contains
     allocate(this%dwt_conv_cflux_col                (begc:endc))                  ; this%dwt_conv_cflux_col        (:)  =nan
     allocate(this%dwt_prod10c_gain_col              (begc:endc))                  ; this%dwt_prod10c_gain_col      (:)  =nan
     allocate(this%dwt_prod100c_gain_col             (begc:endc))                  ; this%dwt_prod100c_gain_col     (:)  =nan
+    allocate(this%cropprod1c_loss_col               (begc:endc))                  ; this%cropprod1c_loss_col       (:)  =nan
     allocate(this%prod10c_loss_col                  (begc:endc))                  ; this%prod10c_loss_col          (:)  =nan
     allocate(this%prod100c_loss_col                 (begc:endc))                  ; this%prod100c_loss_col         (:)  =nan
     allocate(this%product_closs_col                 (begc:endc))                  ; this%product_closs_col         (:)  =nan
@@ -2629,6 +2631,11 @@ contains
             avgflag='A', long_name='landcover change-driven addition to 10-yr wood product pool', &
             ptr_col=this%dwt_prod10c_gain_col)
 
+       this%cropprod1c_loss_col(begc:endc) = spval
+       call hist_addfld1d (fname='CROPPROD1C_LOSS', units='gC/m^2/s', &
+            avgflag='A', long_name='loss from 1-yr grain product pool', &
+            ptr_col=this%cropprod1c_loss_col)
+
        this%prod10c_loss_col(begc:endc) = spval
        call hist_addfld1d (fname='PROD10C_LOSS', units='gC/m^2/s', &
             avgflag='A', long_name='loss from 10-yr wood product pool', &
@@ -2742,7 +2749,8 @@ contains
 
        this%landuseflux_col(begc:endc) = spval
        call hist_addfld1d (fname='LAND_USE_FLUX', units='gC/m^2/s', &
-            avgflag='A', long_name='total C emitted from land cover conversion and wood product pools', &
+            avgflag='A', &
+            long_name='total C emitted from land cover conversion and wood and grain product pools (NOTE: not a net value)', &
             ptr_col=this%landuseflux_col)
 
     end if
@@ -2794,6 +2802,11 @@ contains
        call hist_addfld1d (fname='C13_DWT_PROD10C_GAIN', units='gC13/m^2/s', &
             avgflag='A', long_name='C13 addition to 10-yr wood product pool', &
             ptr_col=this%dwt_prod10c_gain_col)
+
+       this%cropprod1c_loss_col(begc:endc) = spval
+       call hist_addfld1d (fname='C13_CROPPROD1C_LOSS', units='gC13/m^2/s', &
+            avgflag='A', long_name='C13 loss from 1-yr grain product pool', &
+            ptr_col=this%cropprod1c_loss_col)
 
        this%prod10c_loss_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_PROD10C_LOSS', units='gC13/m^2/s', &
@@ -2934,6 +2947,11 @@ contains
        call hist_addfld1d (fname='C14_DWT_PROD10C_GAIN', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 addition to 10-yr wood product pool', &
             ptr_col=this%dwt_prod10c_gain_col)
+
+       this%cropprod1c_loss_col(begc:endc) = spval
+       call hist_addfld1d (fname='C14_CROPPROD1C_LOSS', units='gC14/m^2/s', &
+            avgflag='A', long_name='C14 loss from 1-yr grain product pool', &
+            ptr_col=this%cropprod1c_loss_col)
 
        this%prod10c_loss_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_PROD10C_LOSS', units='gC14/m^2/s', &
@@ -3104,6 +3122,7 @@ contains
           this%dwt_conv_cflux_col(c)        = 0._r8
           this%dwt_prod10c_gain_col(c)      = 0._r8
           this%dwt_prod100c_gain_col(c)     = 0._r8
+          this%cropprod1c_loss_col(c)       = 0._r8
           this%prod10c_loss_col(c)          = 0._r8
           this%prod100c_loss_col(c)         = 0._r8
           do j = 1, nlevdecomp_full
@@ -3569,6 +3588,7 @@ contains
 
        this%hrv_deadstemc_to_prod10c_col(i)  = value_column        
        this%hrv_deadstemc_to_prod100c_col(i) = value_column  
+       this%cropprod1c_loss_col(i)           = value_column
        this%prod10c_loss_col(i)              = value_column
        this%prod100c_loss_col(i)             = value_column
        this%product_closs_col(i)             = value_column
@@ -3671,7 +3691,7 @@ contains
     ! !USES:
     use clm_time_manager                   , only: get_step_size
     use clm_varcon                         , only: secspday
-    use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
+    use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt, use_grainproduct   
     use subgridAveMod                      , only: p2c
     use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con
     !
@@ -4113,8 +4133,9 @@ contains
             this%litfire_col(c) + &
             this%somfire_col(c) 
 
-       ! total wood product loss
+       ! total wood & grain product loss
        this%product_closs_col(c) = &
+            this%cropprod1c_loss_col(c) + &
             this%prod10c_loss_col(c) + &
             this%prod100c_loss_col(c) 
 
@@ -4150,7 +4171,7 @@ contains
             this%er_col(c)
 
        ! net biome production of carbon, includes depletion from: fire flux, 
-       ! landcover change flux, and loss from wood products pools, positive for sink (NBP)
+       ! landcover change flux, and loss from wood & grain products pools, positive for sink (NBP)
        this%nbp_col(c) =  &
             this%nep_col(c)        - &
             this%fire_closs_col(c) - &
@@ -4158,7 +4179,7 @@ contains
             this%product_closs_col(c)
 
        ! net ecosystem exchange of carbon, includes fire flux, landcover change flux, loss
-       ! from wood products pools, and hrv_xsmrpool flux, positive for source (NEE)
+       ! from wood & grain products pools, and hrv_xsmrpool flux, positive for source (NEE)
        this%nee_col(c) = &
             -this%nep_col(c)          + &
             this%fire_closs_col(c)    + &
@@ -4167,8 +4188,8 @@ contains
             this%hrv_xsmrpool_to_atm_col(c)
 
        ! land use flux 
-       this%landuseflux_col(c) =    &
-            this%dwt_closs_col(c) + &
+       this%landuseflux_col(c) =      &
+            this%dwt_closs_col(c)   + &
             this%product_closs_col(c)
 
        ! land uptake flux
