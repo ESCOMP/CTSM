@@ -56,6 +56,7 @@ contains
     ! Initialzation of the CN Ecosystem dynamics.
     !
     ! !USES:
+    use CNSharedParamsMod           , only : use_fun
     use CNPhenologyMod              , only : CNPhenologyInit
     use CNFireMethodMod             , only : cnfire_method_type
     use SoilBiogeochemCompetitionMod, only : SoilBiogeochemCompetitionInit
@@ -65,7 +66,6 @@ contains
     character(len=*)                       , intent(in)    :: NLFilename     ! Namelist filename
     class(cnfire_method_type)              , intent(inout) :: cnfire_method 
     !-----------------------------------------------------------------------
-
     call SoilBiogeochemCompetitionInit(bounds)
     call CNPhenologyInit(bounds)
     call cnfire_method%CNFireInit(bounds, NLFilename)
@@ -99,10 +99,11 @@ contains
     ! !USES:
     use clm_varpar                        , only: crop_prog, nlevgrnd, nlevdecomp_full 
     use clm_varpar                        , only: nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-    use subgridAveMod                     , only: p2c
+    use subgridAveMod                     , only: p2c, p2c_2d
     use CropType                          , only: crop_type
-    use CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix
+    use CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix,CNFreeLivingFixation
     use CNMRespMod                        , only: CNMResp
+    use CNFUNMod                          , only: CNFUNInit  !, CNFUN 
     use CNPhenologyMod                    , only: CNPhenology
     use CNGRespMod                        , only: CNGResp
     use CNFireMethodMod                   , only: cnfire_method_type
@@ -115,6 +116,7 @@ contains
     use CNNStateUpdate1Mod                , only: NStateUpdate1
     use CNNStateUpdate2Mod                , only: NStateUpdate2, NStateUpdate2h
     use CNGapMortalityMod                 , only: CNGapMortality
+    use CNSharedParamsMod                 , only: use_fun
     use dynHarvestMod                     , only: CNHarvest
     use SoilBiogeochemDecompCascadeBGCMod , only: decomp_rate_constants_bgc
     use SoilBiogeochemDecompCascadeCNMod  , only: decomp_rate_constants_cn
@@ -157,8 +159,8 @@ contains
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst 
     type(waterstate_type)                   , intent(in)    :: waterstate_inst
-    type(waterflux_type)                    , intent(in)    :: waterflux_inst
-    type(canopystate_type)                  , intent(in)    :: canopystate_inst
+    type(waterflux_type)                    , intent(inout)    :: waterflux_inst
+    type(canopystate_type)                  , intent(inout)    :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst
     type(crop_type)                         , intent(in)    :: crop_inst
@@ -268,11 +270,19 @@ contains
     call CNNDeposition(bounds, &
          atm2lnd_inst, soilbiogeochem_nitrogenflux_inst)
     call t_stopf('CNDeposition')
-
-    call t_startf('CNFixation')
-    call CNNFixation( num_soilc, filter_soilc, &
-         cnveg_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
-    call t_stopf('CNFixation')
+    
+    if(.not.use_fun)then
+	    call t_startf('CNFixation')
+	    call CNNFixation( num_soilc, filter_soilc, &
+	         cnveg_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
+	    call t_stopf('CNFixation')
+	  else
+	   
+	    call t_startf('CNFFixation')
+	    call CNFreeLivingFixation( num_soilc, filter_soilc, &
+	         waterflux_inst, soilbiogeochem_nitrogenflux_inst)
+	    call t_stopf('CNFFixation')
+    end if
 
     if (crop_prog) then
        call CNNFert(bounds, num_soilc,filter_soilc, &
@@ -353,9 +363,27 @@ contains
          soilbiogeochem_state_inst%plant_ndemand_col(begc:endc))
 
     ! resolve plant/heterotroph competition for mineral N 
+ 
+    if ( use_fun ) then
+       call CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
+            filter_soilp, num_pcropp, filter_pcropp, &
+            doalb, waterstate_inst, temperature_inst, atm2lnd_inst, &
+            crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
+            cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+            cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+            leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
+            froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), phase=1)
 
-    call SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc, &
-         soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
+       call CNFUNInit(bounds,cnveg_state_inst,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst)
+
+     end if
+     call SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstate_inst, &
+                                     waterflux_inst,temperature_inst,soilstate_inst,cnveg_state_inst,          &
+                                     cnveg_carbonstate_inst               ,&
+                                     cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
+                                     soilbiogeochem_carbonflux_inst,&
+                                     soilbiogeochem_state_inst,soilbiogeochem_nitrogenstate_inst,              &
+                                     soilbiogeochem_nitrogenflux_inst,canopystate_inst)
 
     ! distribute the available N between the competing patches  on the basis of 
     ! relative demand, and allocate C and N to new growth and storage
@@ -399,6 +427,16 @@ contains
 
     call t_startf('CNPhenology')
 
+    if ( .not. use_fun ) then
+       call CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
+            filter_soilp, num_pcropp, filter_pcropp, &
+            doalb, waterstate_inst, temperature_inst, atm2lnd_inst, &
+            crop_inst, canopystate_inst, soilstate_inst, dgvs_inst, &
+            cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+            cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+            leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
+            froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), phase=1)
+    end if
     call CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
          filter_soilp, num_pcropp, filter_pcropp, &
          doalb, waterstate_inst, temperature_inst, atm2lnd_inst, &
@@ -406,7 +444,7 @@ contains
          cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
          leaf_prof_patch=soilbiogeochem_state_inst%leaf_prof_patch(begp:endp,1:nlevdecomp_full), &
-         froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full))
+         froot_prof_patch=soilbiogeochem_state_inst%froot_prof_patch(begp:endp,1:nlevdecomp_full), phase=2)
 
     call t_stopf('CNPhenology')
 
@@ -499,7 +537,7 @@ contains
 
     ! Update all prognostic nitrogen state variables (except for gap-phase mortality and fire fluxes)
     call NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst) 
+         cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
 
     call SoilBiogeochemNStateUpdate1(num_soilc, filter_soilc,  &
          soilbiogeochem_state_inst, soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
@@ -714,7 +752,7 @@ contains
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
     type(waterstate_type)                   , intent(in)    :: waterstate_inst
-    type(waterflux_type)                    , intent(in)    :: waterflux_inst
+    type(waterflux_type)                    , intent(inout)    :: waterflux_inst
     type(cnveg_nitrogenflux_type)           , intent(inout) :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst

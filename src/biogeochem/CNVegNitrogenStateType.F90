@@ -11,6 +11,7 @@ module CNVegNitrogenStateType
   use landunit_varcon                    , only : istcrop, istsoil 
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump
+  use CNSharedParamsMod                  , only : use_fun
   use decompMod                          , only : bounds_type
   use pftconMod                          , only : npcropmin, noveg, pftcon
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
@@ -22,7 +23,10 @@ module CNVegNitrogenStateType
   ! 
   ! !PUBLIC TYPES:
   implicit none
+
   private
+
+
   !
   type, public :: cnveg_nitrogenstate_type
 
@@ -32,6 +36,8 @@ module CNVegNitrogenStateType
      real(r8), pointer :: leafn_patch              (:) ! (gN/m2) leaf N 
      real(r8), pointer :: leafn_storage_patch      (:) ! (gN/m2) leaf N storage
      real(r8), pointer :: leafn_xfer_patch         (:) ! (gN/m2) leaf N transfer
+     real(r8), pointer :: leafn_storage_xfer_acc_patch (:) ! (gN/m2) Accmulated leaf N transfer
+     real(r8), pointer :: storage_ndemand_patch        (:) ! (gN/m2) N demand during the offset period 
      real(r8), pointer :: frootn_patch             (:) ! (gN/m2) fine root N
      real(r8), pointer :: frootn_storage_patch     (:) ! (gN/m2) fine root N storage
      real(r8), pointer :: frootn_xfer_patch        (:) ! (gN/m2) fine root N transfer
@@ -123,6 +129,8 @@ contains
     allocate(this%leafn_patch              (begp:endp)) ; this%leafn_patch              (:) = nan
     allocate(this%leafn_storage_patch      (begp:endp)) ; this%leafn_storage_patch      (:) = nan     
     allocate(this%leafn_xfer_patch         (begp:endp)) ; this%leafn_xfer_patch         (:) = nan     
+    allocate(this%leafn_storage_xfer_acc_patch  (begp:endp)) ; this%leafn_storage_xfer_acc_patch         (:) = nan
+    allocate(this%storage_ndemand_patch    (begp:endp)) ; this%storage_ndemand_patch    (:) = nan
     allocate(this%frootn_patch             (begp:endp)) ; this%frootn_patch             (:) = nan
     allocate(this%frootn_storage_patch     (begp:endp)) ; this%frootn_storage_patch     (:) = nan     
     allocate(this%frootn_xfer_patch        (begp:endp)) ; this%frootn_xfer_patch        (:) = nan     
@@ -207,6 +215,18 @@ contains
     call hist_addfld1d (fname='LEAFN_XFER', units='gN/m^2', &
          avgflag='A', long_name='leaf N transfer', &
          ptr_patch=this%leafn_xfer_patch)     
+
+    if ( use_fun ) then
+       this%leafn_storage_xfer_acc_patch(begp:endp) = spval
+       call hist_addfld1d (fname='LEAFN_STORAGE_XFER_ACC', units='gN/m^2', &
+            avgflag='A', long_name='Accmulated leaf N transfer', &
+            ptr_patch=this%leafn_storage_xfer_acc_patch, default='inactive')
+
+       this%storage_ndemand_patch(begp:endp)        = spval
+       call hist_addfld1d (fname='STORAGE_NDEMAND', units='gN/m^2', &
+            avgflag='A', long_name='N demand during the offset period', &
+            ptr_patch=this%storage_ndemand_patch, default='inactive')
+    end if
 
     this%frootn_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN', units='gN/m^2', &
@@ -438,6 +458,10 @@ contains
           end if
 
           this%leafn_xfer_patch(p)        = 0._r8
+
+          this%leafn_storage_xfer_acc_patch(p)        = 0._r8
+          this%storage_ndemand_patch(p)   = 0._r8
+
           if ( crop_prog )then
              this%grainn_patch(p)         = 0._r8
              this%grainn_storage_patch(p) = 0._r8
@@ -569,6 +593,17 @@ contains
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%leafn_xfer_patch) 
 
+     if ( use_fun ) then
+        call restartvar(ncid=ncid, flag=flag, varname='leafn_storage_xfer_acc', xtype=ncd_double,  &
+             dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%leafn_storage_xfer_acc_patch)
+    
+        call restartvar(ncid=ncid, flag=flag, varname='storage_ndemand', xtype=ncd_double,  &
+             dim1name='pft', long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%storage_ndemand_patch)
+     end if
+
+
     call restartvar(ncid=ncid, flag=flag, varname='frootn', xtype=ncd_double,  &
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%frootn_patch) 
@@ -698,7 +733,7 @@ contains
     end if
 
     if (flag == 'read' .and. spinup_state /= restart_file_spinup_state .and. .not. use_cndv) then
-       if (spinup_state == 0 .and. restart_file_spinup_state == 2 ) then
+       if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
           if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools out of AD spinup mode'
           exit_spinup = .true.
           write(iulog, *) 'Multiplying stemn and crootn by 10 for exit spinup '
@@ -706,7 +741,7 @@ contains
              this%deadstemn_patch(i) = this%deadstemn_patch(i) * 10._r8
              this%deadcrootn_patch(i) = this%deadcrootn_patch(i) * 10._r8
           end do
-       else if (spinup_state == 2 .and. restart_file_spinup_state == 0 ) then
+       else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 ) then
           if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools into AD spinup mode'
           enter_spinup = .true.
           write(iulog, *) 'Dividing stemn and crootn by 10 for enter spinup '
@@ -748,6 +783,7 @@ contains
        this%leafn_patch(i)              = value_patch
        this%leafn_storage_patch(i)      = value_patch
        this%leafn_xfer_patch(i)         = value_patch
+       this%leafn_storage_xfer_acc_patch(i) = value_patch
        this%frootn_patch(i)             = value_patch
        this%frootn_storage_patch(i)     = value_patch
        this%frootn_xfer_patch(i)        = value_patch
@@ -832,7 +868,7 @@ contains
     type(soilbiogeochem_nitrogenstate_type) , intent(in) :: soilbiogeochem_nitrogenstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,p,j,k,l   ! indices
+    integer  :: c,p,j,k,l ! indices
     integer  :: fp,fc       ! lake filter indices
     real(r8) :: maxdepth    ! depth to integrate soil variables
     !-----------------------------------------------------------------------
@@ -843,7 +879,8 @@ contains
     
     do fp = 1,num_soilp
        p = filter_soilp(fp)
-
+         
+	      
        ! displayed vegetation nitrogen, excluding storage (DISPVEGN)
        this%dispvegn_patch(p) = &
             this%leafn_patch(p)      + &
@@ -890,7 +927,7 @@ contains
        this%totn_patch(p) = &
             this%totvegn_patch(p) + &
             this%ntrunc_patch(p)
-
+            
     end do
 
     ! --------------------------------------------
@@ -934,6 +971,9 @@ contains
             this%seedn_col(c)                                + &
             soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
     end do
+    
+    
+    
 
   end subroutine Summary_nitrogenstate
 

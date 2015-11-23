@@ -1,0 +1,1 @@
+./xmlchange CLM_BLDNML_OPTS="-dynamic_vegetation" --append

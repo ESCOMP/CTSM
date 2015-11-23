@@ -236,6 +236,20 @@ module pftconMod
      real(r8), allocatable :: pftpar29      (:)   ! max coldest monthly mean temperature
      real(r8), allocatable :: pftpar30      (:)   ! min growing degree days (>= 5 deg C)
      real(r8), allocatable :: pftpar31      (:)   ! upper limit of temperature of the warmest month (twmax)
+     
+     ! pft parameters for FUN
+     real(r8), allocatable :: a_fix         (:)   ! A BNF parameter
+     real(r8), allocatable :: b_fix         (:)   ! A BNF parameter
+     real(r8), allocatable :: c_fix         (:)   ! A BNF parameter
+     real(r8), allocatable :: s_fix         (:)   ! A BNF parameter
+     real(r8), allocatable :: akc_active    (:)   ! A mycorrhizal uptake parameter
+     real(r8), allocatable :: akn_active    (:)   ! A mycorrhizal uptake parameter
+     real(r8), allocatable :: ekc_active    (:)   ! A mycorrhizal uptake parameter
+     real(r8), allocatable :: ekn_active    (:)   ! A mycorrhizal uptake parameter
+     real(r8), allocatable :: kc_nonmyc     (:)   ! A non-mycorrhizal uptake parameter
+     real(r8), allocatable :: kn_nonmyc     (:)   ! A non-mycorrhizal uptake parameter
+     real(r8), allocatable :: kr_resorb     (:)   ! A retrasnlcation parameter
+     real(r8), allocatable :: perecm        (:)   ! The fraction of ECM-associated PFT 
 
      ! pft parameters for dynamic root code
      real(r8), allocatable :: root_dmx(:)     !maximum root depth
@@ -397,6 +411,18 @@ contains
     allocate( this%pftpar29      (0:mxpft) )   
     allocate( this%pftpar30      (0:mxpft) )   
     allocate( this%pftpar31      (0:mxpft) )   
+    allocate( this%a_fix         (0:mxpft) )
+    allocate( this%b_fix         (0:mxpft) )
+    allocate( this%c_fix         (0:mxpft) )
+    allocate( this%s_fix         (0:mxpft) )
+    allocate( this%akc_active    (0:mxpft) )
+    allocate( this%akn_active    (0:mxpft) )
+    allocate( this%ekc_active    (0:mxpft) )
+    allocate( this%ekn_active    (0:mxpft) )  
+    allocate( this%kc_nonmyc     (0:mxpft) )
+    allocate( this%kn_nonmyc     (0:mxpft) )
+    allocate( this%kr_resorb     (0:mxpft) )
+    allocate( this%perecm        (0:mxpft) )
     allocate( this%root_dmx      (0:mxpft) )
 
   end subroutine InitAllocate
@@ -690,6 +716,42 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
 
     call ncd_io('pftpar31', this%pftpar31, 'read', ncid, readvar=readv, posNOTonfile=.true.)  
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
+    call ncd_io('a_fix', this%a_fix, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+   
+    call ncd_io('b_fix', this%b_fix, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+    
+    call ncd_io('c_fix', this%c_fix, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+    
+    call ncd_io('s_fix', this%s_fix, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
+    call ncd_io('akc_active', this%akc_active, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
+    call ncd_io('akn_active', this%akn_active, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
+    call ncd_io('ekc_active', this%ekc_active, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
+    call ncd_io('ekn_active', this%ekn_active, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
+    call ncd_io('kc_nonmyc', this%kc_nonmyc, 'read', ncid, readvar=readv,   posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+   
+    call ncd_io('kn_nonmyc', this%kn_nonmyc, 'read', ncid, readvar=readv,   posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
+    call ncd_io('kr_resorb', this%kr_resorb, 'read', ncid, readvar=readv,   posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
+    call ncd_io('perecm', this%perecm, 'read', ncid, readvar=readv,         posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
 
     call ncd_io('fertnitro', this%fertnitro, 'read', ncid, readvar=readv, posNOTonfile=.true.)

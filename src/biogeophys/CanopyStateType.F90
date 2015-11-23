@@ -55,12 +55,15 @@ module CanopyStateType
      real(r8) , pointer :: rscanopy_patch           (:)   ! patch canopy stomatal resistance (s/m) (ED specific)
      real(r8) , pointer :: gccanopy_patch           (:)   ! patch (ED specific)
 
+     real(r8)           :: leaf_mr_vcm = spval            ! Scalar constant of leaf respiration with Vcmax
+
    contains
 
      procedure, public  :: Init         
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
+     procedure, public  :: ReadNML
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
@@ -80,6 +83,10 @@ contains
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
     call this%InitCold(bounds)
+
+    if ( this%leaf_mr_vcm == spval ) then
+       call endrun(msg="ERROR canopystate Init called before ReadNML"//errmsg(__FILE__, __LINE__))
+    end if
 
   end subroutine Init
 
@@ -364,6 +371,59 @@ contains
     deallocate(rbufslp)
 
   end subroutine InitAccVars
+
+  !-----------------------------------------------------------------------
+  subroutine ReadNML( this, NLFilename )
+    !
+    ! Read in canopy parameter namelist
+    !       
+    ! USES:
+    use shr_mpi_mod   , only : shr_mpi_bcast
+    use abortutils    , only : endrun
+    use spmdMod       , only : masterproc, mpicom
+    use fileutils     , only : getavu, relavu, opnfil
+    use shr_nl_mod    , only : shr_nl_find_group_name
+    use shr_mpi_mod   , only : shr_mpi_bcast
+    use clm_varctl    , only : iulog
+    use shr_log_mod   , only : errMsg => shr_log_errMsg
+    !
+    ! ARGUMENTS:
+    implicit none
+    class(canopystate_type)      :: this
+    character(len=*), intent(IN) :: NLFilename ! Namelist filename
+    ! LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+    real(r8) :: leaf_mr_vcm         ! Scalar of leaf respiration to vcmax
+    character(len=32) :: subname = 'CanopyStateType::ReadNML'  ! subroutine name
+    !-----------------------------------------------------------------------
+    namelist / clm_canopy_inparm / leaf_mr_vcm
+
+    ! ----------------------------------------------------------------------
+    ! Read namelist from input namelist filename
+    ! ----------------------------------------------------------------------
+
+    if ( masterproc )then
+
+       unitn = getavu()
+       write(iulog,*) 'Read in clm_canopy_inparm  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, 'clm_canopy_inparm', status=ierr)
+       if (ierr == 0) then
+          read(unitn, clm_canopy_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading clm_canopy_inparm namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       end if
+       call relavu( unitn )
+
+    end if
+
+    ! Broadcast namelist variables read in
+    call shr_mpi_bcast(leaf_mr_vcm, mpicom)
+    this%leaf_mr_vcm = leaf_mr_vcm
+
+  end subroutine ReadNML
 
   !-----------------------------------------------------------------------
   subroutine UpdateAccVars (this, bounds)

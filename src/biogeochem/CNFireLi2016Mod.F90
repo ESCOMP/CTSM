@@ -39,6 +39,7 @@ module CNFireLi2016Mod
   use GridcellType                       , only : grc                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
+  use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   use CNFireMethodMod                    , only : cnfire_method_type
   use CNFireBaseMod                      , only : cnfire_base_type
   !
@@ -175,6 +176,7 @@ contains
          wf2                => waterstate_inst%wf2_col                         , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m         
          
          is_cwd             => decomp_cascade_con%is_cwd                       , & ! Input:  [logical  (:)     ]  TRUE => pool is a cwd pool                         
+         spinup_factor      => decomp_cascade_con%spinup_factor                , & ! Input:  [real(r8) (:)     ]  factor for AD spinup associated with each pool           
 
          forc_rh            => atm2lnd_inst%forc_rh_grc                        , & ! Input:  [real(r8) (:)     ]  relative humidity                                 
          forc_wind          => atm2lnd_inst%forc_wind_grc                      , & ! Input:  [real(r8) (:)     ]  atmospheric wind speed (m/s)                       
@@ -375,11 +377,19 @@ contains
                        end if
                     end if
                  end if
-                 rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
-                      frootc_xfer(p) + deadcrootc(p) +                &
-                      deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
-                      livecrootc(p)+livecrootc_storage(p) +           &
-                      livecrootc_xfer(p))*patch%wtcol(p)
+                 if (spinup_state == 2) then         
+                    rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
+                         frootc_xfer(p) + deadcrootc(p) * 10._r8 +       &
+                         deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
+                         livecrootc(p)+livecrootc_storage(p) +           &
+                         livecrootc_xfer(p))*patch%wtcol(p)
+                 else
+                    rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
+                         frootc_xfer(p) + deadcrootc(p) +                &
+                         deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
+                         livecrootc(p)+livecrootc_storage(p) +           &
+                         livecrootc_xfer(p))*patch%wtcol(p)
+                 endif
 
                  fsr_col(c) = fsr_col(c) + fsr_pft(patch%itype(p))*patch%wtcol(p)/(1._r8-cropf_col(c))
 
@@ -539,10 +549,15 @@ contains
            fuelc(c) = totlitc(c)+totvegc_col(c)-rootc_col(c)-fuelc_crop(c)*cropf_col(c)
            if (spinup_state == 2) then
               fuelc(c) = fuelc(c) + ((10._r8 - 1._r8)*deadstemc_col(c))
+              do j = 1, nlevdecomp  
+                 fuelc(c) = fuelc(c)+decomp_cpools_vr(c,j,i_cwd) * dzsoi_decomp(j) * spinup_factor(i_cwd) &
+                            * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+              end do
+           else
+              do j = 1, nlevdecomp  
+                 fuelc(c) = fuelc(c)+decomp_cpools_vr(c,j,i_cwd) * dzsoi_decomp(j)
+              end do
            end if
-           do j = 1, nlevdecomp  
-              fuelc(c) = fuelc(c)+decomp_cpools_vr(c,j,i_cwd) * dzsoi_decomp(j)
-           end do
            fuelc(c) = fuelc(c)/(1._r8-cropf_col(c))
            fb       = max(0._r8,min(1._r8,(fuelc(c)-lfuel)/(ufuel-lfuel)))
            if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then  
@@ -1043,7 +1058,7 @@ contains
              (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
         m_deadstemn_to_litter_fire(p)              =  deadstemn(p) * f * m * &
              (1._r8 - cc_dstem(patch%itype(p))) * &
-             fm_droot(patch%itype(p))
+             fm_droot(patch%itype(p))    
         m_deadstemn_storage_to_litter_fire(p)      =  deadstemn_storage(p) * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))

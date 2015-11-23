@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_6_r155     erik 11/23/2015 Bring FUN (Fixation and Uptake of Nitrogen) code option to trunk 
+                                     from Mingjie, as well as latitude varying spinup from Charlie, 
+                                     and a fix for crop with dynamic roots from Beth
    clm4_5_6_r154    andre 11/18/2015 one year grain product pool
    clm4_5_6_r153    sacks 11/17/2015 Fix snow cover fraction bug
    clm4_5_5_r152    sacks 11/17/2015 Fix glc_mec energy conservation bug

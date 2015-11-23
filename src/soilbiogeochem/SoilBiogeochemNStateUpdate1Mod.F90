@@ -10,11 +10,12 @@ module SoilBiogeochemNStateUpdate1Mod
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
   use clm_varpar                         , only : crop_prog, i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use clm_varctl                         , only : iulog, use_nitrif_denitrif
-  use clm_varcon                         , only : nitrif_n2o_loss_frac
+  use clm_varcon                         , only : nitrif_n2o_loss_frac, dzsoi_decomp
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenfluxType     , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use CNSharedParamsMod                  , only : use_fun
   use ColumnType                         , only : col 
   !
   implicit none
@@ -45,6 +46,7 @@ contains
     integer :: c,p,j,l,k ! indices
     integer :: fp,fc     ! lake filter indices
     real(r8):: dt        ! radiation time step (seconds)
+
     !-----------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -64,22 +66,28 @@ contains
       do j = 1, nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
+            if(use_fun)then !RF in FUN logic, the fixed N goes straight into the plant, and not into the SMINN pool. 
+ 	               ! N deposition and fixation (put all into NH4 pool)
+	               ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) + nf%ndep_to_sminn_col(c)*dt * ndep_prof(c,j)
+	               ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) + nf%ffix_to_sminn_col(c)*dt * nfixation_prof(c,j)
+	          else
+	            if (.not. use_nitrif_denitrif) then
 
-            if (.not. use_nitrif_denitrif) then
+	               ! N deposition and fixation
+	               ns%sminn_vr_col(c,j) = ns%sminn_vr_col(c,j) + nf%ndep_to_sminn_col(c)*dt * ndep_prof(c,j)
+	               ns%sminn_vr_col(c,j) = ns%sminn_vr_col(c,j) + nf%nfix_to_sminn_col(c)*dt * nfixation_prof(c,j)
 
-               ! N deposition and fixation
-               ns%sminn_vr_col(c,j) = ns%sminn_vr_col(c,j) + nf%ndep_to_sminn_col(c)*dt * ndep_prof(c,j)
-               ns%sminn_vr_col(c,j) = ns%sminn_vr_col(c,j) + nf%nfix_to_sminn_col(c)*dt * nfixation_prof(c,j)
+	            else
 
-            else
-
-               ! N deposition and fixation (put all into NH4 pool)
-               ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) + nf%ndep_to_sminn_col(c)*dt * ndep_prof(c,j)
-               ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) + nf%nfix_to_sminn_col(c)*dt * nfixation_prof(c,j)
-
-            end if
-
+	               ! N deposition and fixation (put all into NH4 pool)
+	               ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) + nf%ndep_to_sminn_col(c)*dt * ndep_prof(c,j)
+	               ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) + nf%nfix_to_sminn_col(c)*dt * nfixation_prof(c,j)
+                       
+                end if
+           end if
+          
          end do
+         
       end do
 
       ! repeating N dep and fixation for crops
@@ -191,8 +199,11 @@ contains
                ns%sminn_vr_col(c,j) = ns%sminn_vr_col(c,j) - nf%sminn_to_denit_excess_vr_col(c,j) * dt
 
                ! total plant uptake from mineral N
-               ns%sminn_vr_col(c,j) = ns%sminn_vr_col(c,j) - nf%sminn_to_plant_vr_col(c,j)*dt
-
+               if ( .not. use_fun ) then
+                  ns%sminn_vr_col(c,j) = ns%sminn_vr_col(c,j) - nf%sminn_to_plant_vr_col(c,j)*dt
+               else
+                  ns%sminn_vr_col(c,j) = ns%sminn_vr_col(c,j) - nf%sminn_to_plant_fun_vr_col(c,j)*dt
+               end if
                ! flux that prevents N limitation (when Carbon_only is set)
                ns%sminn_vr_col(c,j) = ns%sminn_vr_col(c,j) + nf%supplement_to_sminn_vr_col(c,j)*dt
             end do
@@ -218,9 +229,16 @@ contains
                ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%actual_immob_no3_vr_col(c,j)*dt
 
                ! plant uptake fluxes
-               ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) - nf%smin_nh4_to_plant_vr_col(c,j)*dt
+               if ( .not. use_fun )then
+                  ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) - nf%smin_nh4_to_plant_vr_col(c,j)*dt
 
-               ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%smin_no3_to_plant_vr_col(c,j)*dt
+                  ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%smin_no3_to_plant_vr_col(c,j)*dt
+               else 
+                  ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) -  nf%sminn_to_plant_fun_nh4_vr_col(c,j)*dt
+
+                  ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) -  nf%sminn_to_plant_fun_no3_vr_col(c,j)*dt
+               end if
+             
 
                ! Account for nitrification fluxes
                ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) - nf%f_nit_vr_col(c,j) * dt
@@ -236,10 +254,10 @@ contains
 
                ! update diagnostic total
                ns%sminn_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) + ns%smin_no3_vr_col(c,j)
-
+               
             end do ! end of column loop
          end do
-
+              
       end if
 
     end associate

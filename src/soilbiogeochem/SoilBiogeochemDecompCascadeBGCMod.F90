@@ -24,6 +24,8 @@ module SoilBiogeochemDecompCascadeBGCMod
   use TemperatureType                    , only : temperature_type 
   use ch4Mod                             , only : ch4_type
   use ColumnType                         , only : col                
+  use GridcellType                       , only : grc
+  use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   !
   implicit none
   private
@@ -440,7 +442,6 @@ contains
       is_cellulose(i_soil3) = .false.
       is_lignin(i_soil3) = .false.
 
-!DML
 
       i_litr1 = i_met_lit
       i_litr2 = i_cel_lit
@@ -448,14 +449,13 @@ contains
       i_soil1 = 5
       i_soil2 = 6
       i_soil3 = 7
-      speedup_fac = 1._r8                     !Account for non-temperature factors (water, depth, o2)
-      if (use_vertsoilc) speedup_fac = 3._r8
+      speedup_fac = 1._r8
 
       !lit1
       spinup_factor(i_litr1) = 1._r8
       !lit2,3
-      spinup_factor(i_litr2) = max(1._r8, (speedup_fac * params_inst%tau_l2_l3_bgc))
-      spinup_factor(i_litr3) = max(1._r8, (speedup_fac * params_inst%tau_l2_l3_bgc))
+      spinup_factor(i_litr2) = 1._r8
+      spinup_factor(i_litr3) = 1._r8
       !CWD
       spinup_factor(i_cwd) = max(1._r8, (speedup_fac * params_inst%tau_cwd_bgc / 2._r8 ))
       !som1
@@ -467,7 +467,6 @@ contains
       write(iulog,*) 'Spinup_state ',spinup_state
       write(iulog,*) 'Spinup factors ',spinup_factor
 
-!DML
 
       !----------------  list of transitions and their time-independent coefficients  ---------------!
       i_l1s1 = 1
@@ -610,6 +609,12 @@ contains
     real(r8):: days_per_year                ! days per year
     real(r8):: depth_scalar(bounds%begc:bounds%endc,1:nlevdecomp) 
     real(r8):: mino2lim                     !minimum anaerobic decomposition rate
+    real(r8):: spinup_geogterm_l1(bounds%begc:bounds%endc) ! geographically-varying spinup term for l1
+    real(r8):: spinup_geogterm_l23(bounds%begc:bounds%endc) ! geographically-varying spinup term for l2 and l3
+    real(r8):: spinup_geogterm_cwd(bounds%begc:bounds%endc) ! geographically-varying spinup term for cwd
+    real(r8):: spinup_geogterm_s1(bounds%begc:bounds%endc) ! geographically-varying spinup term for s1
+    real(r8):: spinup_geogterm_s2(bounds%begc:bounds%endc) ! geographically-varying spinup term for s2
+    real(r8):: spinup_geogterm_s3(bounds%begc:bounds%endc) ! geographically-varying spinup term for s3
 
     !-----------------------------------------------------------------------
 
@@ -692,14 +697,57 @@ contains
       i_soil3 = 7
 
       if ( spinup_state >= 1 ) then
-         k_l1 = k_l1 * spinup_factor(i_litr1)
-         k_l2_l3 = k_l2_l3 * spinup_factor(i_litr2)
-         k_frag = k_frag * spinup_factor(i_cwd)
-         k_s1 = k_s1 * spinup_factor(i_soil1)
-         k_s2 = k_s2 * spinup_factor(i_soil2)
-         k_s3 = k_s3 * spinup_factor(i_soil3)
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            !
+            if ( abs(spinup_factor(i_litr1) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_l1(c) = spinup_factor(i_litr1) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            else
+               spinup_geogterm_l1(c) = 1._r8
+            endif
+            !
+            if ( abs(spinup_factor(i_litr2) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_l23(c) = spinup_factor(i_litr2) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            else
+               spinup_geogterm_l23(c) = 1._r8
+            endif
+            !
+            if ( abs(spinup_factor(i_cwd) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_cwd(c) = spinup_factor(i_cwd) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            else
+               spinup_geogterm_cwd(c) = 1._r8
+            endif
+            !
+            if ( abs(spinup_factor(i_soil1) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_s1(c) = spinup_factor(i_soil1) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            else
+               spinup_geogterm_s1(c) = 1._r8
+            endif
+            !
+            if ( abs(spinup_factor(i_soil2) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_s2(c) = spinup_factor(i_soil2) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            else
+               spinup_geogterm_s2(c) = 1._r8
+            endif
+            !
+            if ( abs(spinup_factor(i_soil3) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_s3(c) = spinup_factor(i_soil3) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            else
+               spinup_geogterm_s3(c) = 1._r8
+            endif
+            !
+         end do
+      else
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            spinup_geogterm_l1(c) = 1._r8
+            spinup_geogterm_l23(c) = 1._r8
+            spinup_geogterm_cwd(c) = 1._r8
+            spinup_geogterm_s1(c) = 1._r8
+            spinup_geogterm_s2(c) = 1._r8
+            spinup_geogterm_s3(c) = 1._r8
+         end do
       endif
-!DML
 
       ! calc ref rate
       catanf_30 = catanf(30._r8)
@@ -942,26 +990,33 @@ contains
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
+               decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
+                                       * spinup_geogterm_l1(c)
+               decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
+                                       * spinup_geogterm_l23(c)
+               decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
+                                       * spinup_geogterm_l23(c)
+               decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
+                                       * spinup_geogterm_cwd(c)
+               decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
+                                       * spinup_geogterm_s1(c)
+               decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
+                                       * spinup_geogterm_s2(c)
+               decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
+                                       * spinup_geogterm_s3(c)
             end do
          end do
       else
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
-               decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j)
+               decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l1(c)
+               decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
+               decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
+               decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s1(c)
+               decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s1(c)
+               decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s2(c)
+               decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s3(c)
             end do
          end do
       end if

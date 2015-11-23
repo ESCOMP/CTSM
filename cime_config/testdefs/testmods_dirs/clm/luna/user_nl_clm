@@ -1,2 +1,3 @@
  use_luna    = .true.
+ use_flexibleCN = .false.
 

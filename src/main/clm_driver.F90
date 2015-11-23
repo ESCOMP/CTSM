@@ -933,6 +933,8 @@ contains
 
        call canopystate_inst%UpdateAccVars(bounds_proc)
 
+       call waterflux_inst%UpdateAccVars(bounds_proc)
+
        if (use_ed) then
           call ed_phenology_inst%accumulateAndExtract(bounds_proc, &
                temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp), &

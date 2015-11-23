@@ -22,6 +22,7 @@ module SoilBiogeochemNitrogenFluxType
      ! deposition fluxes
      real(r8), pointer :: ndep_to_sminn_col                         (:)     ! col atmospheric N deposition to soil mineral N (gN/m2/s)
      real(r8), pointer :: nfix_to_sminn_col                         (:)     ! col symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s) 
+     real(r8), pointer :: ffix_to_sminn_col                         (:)     ! col free living N fixation to soil mineral N (gN/m2/s)  
      real(r8), pointer :: fert_to_sminn_col                         (:)     ! col fertilizer N to soil mineral N (gN/m2/s)
      real(r8), pointer :: soyfixn_to_sminn_col                      (:)     ! col soybean fixation to soil mineral N (gN/m2/s)
 
@@ -45,7 +46,7 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: gross_nmin_col                            (:)     ! col vert-int (diagnostic) gross rate of N mineralization (gN/m2/s)
      real(r8), pointer :: net_nmin_vr_col                           (:,:)   ! col vertically-resolved net rate of N mineralization (gN/m3/s)
      real(r8), pointer :: net_nmin_col                              (:)     ! col vert-int (diagnostic) net rate of N mineralization (gN/m2/s)
-
+     real(r8), pointer :: sminn_to_plant_fun_col                    (:)     ! col total soil N uptake of FUN        (gN/m2/s)
      ! ---------- NITRIF_DENITRIF  ---------------------
 
      ! nitrification / denitrification fluxes
@@ -99,7 +100,8 @@ module SoilBiogeochemNitrogenFluxType
 
      real(r8), pointer :: r_psi_col                                 (:,:)
      real(r8), pointer :: anaerobic_frac_col                        (:,:)
-
+     real(r8), pointer :: sminn_to_plant_fun_no3_vr_col             (:,:)   ! col total layer no3 uptake of FUN     (gN/m2/s)
+     real(r8), pointer :: sminn_to_plant_fun_nh4_vr_col             (:,:)   ! col total layer nh4 uptake of FUN     (gN/m2/s)
      !----------- no NITRIF_DENITRIF--------------
 
      ! denitrification fluxes
@@ -123,7 +125,7 @@ module SoilBiogeochemNitrogenFluxType
      ! all n pools involved in decomposition
      real(r8), pointer :: decomp_npools_sourcesink_col              (:,:,:) ! col (gN/m3) change in decomposing n pools 
                                                                             ! (sum of all additions and subtractions from stateupdate1).  
-
+          real(r8), pointer :: sminn_to_plant_fun_vr_col                 (:,:)   ! col total layer soil N uptake of FUN  (gN/m2/s)
    contains
 
      procedure , public  :: Init   
@@ -163,12 +165,14 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer           :: begc,endc
+!   integer           :: begp,endp
     !------------------------------------------------------------------------
 
     begc = bounds%begc; endc = bounds%endc
-
+!   begp = bounds%begp; endp = bounds%endp
     allocate(this%ndep_to_sminn_col                 (begc:endc))                   ; this%ndep_to_sminn_col          (:)   = nan
     allocate(this%nfix_to_sminn_col                 (begc:endc))                   ; this%nfix_to_sminn_col          (:)   = nan
+    allocate(this%ffix_to_sminn_col                 (begc:endc))                   ; this%ffix_to_sminn_col          (:)   = nan
     allocate(this%fert_to_sminn_col                 (begc:endc))                   ; this%fert_to_sminn_col          (:)   = nan
     allocate(this%soyfixn_to_sminn_col              (begc:endc))                   ; this%soyfixn_to_sminn_col       (:)   = nan
     allocate(this%sminn_to_plant_col                (begc:endc))                   ; this%sminn_to_plant_col         (:)   = nan
@@ -190,7 +194,10 @@ contains
     allocate(this%supplement_to_sminn_vr_col        (begc:endc,1:nlevdecomp_full)) ; this%supplement_to_sminn_vr_col (:,:) = nan
     allocate(this%gross_nmin_vr_col                 (begc:endc,1:nlevdecomp_full)) ; this%gross_nmin_vr_col          (:,:) = nan
     allocate(this%net_nmin_vr_col                   (begc:endc,1:nlevdecomp_full)) ; this%net_nmin_vr_col            (:,:) = nan
-
+    allocate(this%sminn_to_plant_fun_col            (begc:endc))                   ; this%sminn_to_plant_fun_col     (:)     = nan
+    allocate(this%sminn_to_plant_fun_vr_col         (begc:endc,1:nlevdecomp_full)) ; this%sminn_to_plant_fun_vr_col  (:,:)   = nan
+    allocate(this%sminn_to_plant_fun_no3_vr_col     (begc:endc,1:nlevdecomp_full)) ; this%sminn_to_plant_fun_no3_vr_col(:,:) = nan
+    allocate(this%sminn_to_plant_fun_nh4_vr_col     (begc:endc,1:nlevdecomp_full)) ; this%sminn_to_plant_fun_nh4_vr_col(:,:) = nan
     allocate(this%f_nit_vr_col                      (begc:endc,1:nlevdecomp_full)) ; this%f_nit_vr_col               (:,:) = nan
     allocate(this%f_denit_vr_col                    (begc:endc,1:nlevdecomp_full)) ; this%f_denit_vr_col             (:,:) = nan
     allocate(this%smin_no3_leached_vr_col           (begc:endc,1:nlevdecomp_full)) ; this%smin_no3_leached_vr_col    (:,:) = nan
@@ -309,6 +316,11 @@ contains
     call hist_addfld1d (fname='NFIX_TO_SMINN', units='gN/m^2/s', &
          avgflag='A', long_name='symbiotic/asymbiotic N fixation to soil mineral N', &
          ptr_col=this%nfix_to_sminn_col)
+
+    this%ffix_to_sminn_col(begc:endc) = spval
+    call hist_addfld1d (fname='FFIX_TO_SMINN', units='gN/m^2/s', &
+         avgflag='A', long_name='free living  N fixation to soil mineral N', &
+         ptr_col=this%ffix_to_sminn_col)
 
     do l = 1, ndecomp_cascade_transitions
        ! vertically integrated fluxes
@@ -950,6 +962,7 @@ contains
           if (.not. use_nitrif_denitrif) then
              this%sminn_to_denit_excess_vr_col(i,j)      = value_column
              this%sminn_leached_vr_col(i,j)              = value_column
+             this%sminn_to_plant_fun_vr_col(i,j)         = value_column
           else
              this%f_nit_vr_col(i,j)                      = value_column
              this%f_denit_vr_col(i,j)                    = value_column
@@ -991,6 +1004,8 @@ contains
           this%supplement_to_sminn_vr_col(i,j)           = value_column
           this%gross_nmin_vr_col(i,j)                    = value_column
           this%net_nmin_vr_col(i,j)                      = value_column
+          this%sminn_to_plant_fun_no3_vr_col(i,j)        = value_column
+          this%sminn_to_plant_fun_nh4_vr_col(i,j)        = value_column
        end do
     end do
 
@@ -999,6 +1014,7 @@ contains
 
        this%ndep_to_sminn_col(i)             = value_column
        this%nfix_to_sminn_col(i)             = value_column
+       this%ffix_to_sminn_col(i)             = value_column
        this%fert_to_sminn_col(i)             = value_column
        this%soyfixn_to_sminn_col(i)          = value_column
        this%potential_immob_col(i)           = value_column
@@ -1008,6 +1024,7 @@ contains
        this%gross_nmin_col(i)                = value_column
        this%net_nmin_col(i)                  = value_column
        this%denit_col(i)                     = value_column
+       this%sminn_to_plant_fun_col(i)        = value_column
        if (use_nitrif_denitrif) then
           this%f_nit_col(i)                  = value_column
           this%pot_f_nit_col(i)              = value_column

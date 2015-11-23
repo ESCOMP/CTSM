@@ -350,6 +350,7 @@ contains
     ! Read in parameters files
     ! ------------------------------------------------------------------------
 
+    call clm_instReadNML( NLFilename )
     allocate(nutrient_competition_method, &
          source=create_nutrient_competition_method())
 
@@ -617,6 +618,7 @@ contains
 
     call atm2lnd_inst%initAccVars(bounds_proc)
     call temperature_inst%initAccVars(bounds_proc)
+    call waterflux_inst%initAccVars(bounds_proc)
     if (use_ed) then
        call ed_phenology_inst%initAccVars(bounds_proc)
     endif

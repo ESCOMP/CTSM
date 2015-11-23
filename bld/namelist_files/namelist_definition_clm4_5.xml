@@ -271,6 +271,17 @@ small values of h2osno_max should have glc_snow_persistence_max_days > 0.
 Visible and Near-infrared albedo's for glacier ice
 </entry>
 
+<entry id="br_root" type="real" category="clm_physics"
+       group="cnmresp_inparm" >
+CN Maintenence Respiration base rate for roots
+(if NOT set, use the value for br_mr on the params file)
+</entry>
+
+<entry id="leaf_mr_vcm" type="real" category="clm_physics"
+       group="clm_canopy_inparm" >
+Scalar of leaf respiration to vcmax
+</entry>
+
 <entry id="dtime" type="real"  category="clm_physics" 
        group="clm_inparm" valid_values="">
 Time step (seconds)
@@ -536,6 +547,12 @@ CLM Biogeochemistry mode : Carbon Nitrogen model (CN)
        group="clm_inparm" valid_values="" value=".false.">
 CLM Biogeochemistry mode : Carbon Nitrogen with Dynamic Global Vegetation Model (CNDV)
 (or CLM45BGCDV if phys=clm4_5, vsoilc_centbgc='on', and clm4me='on')
+</entry>
+
+<entry id="use_fun" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Turn the Fixation and Uptate of Nitrogen model version 2 (FUN2.0)
+Requires the CN model to work (either CN or CNDV).
 </entry>
 
 <entry id="use_nitrif_denitrif" type="logical" category="bgc"

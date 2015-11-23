@@ -252,6 +252,8 @@ contains
     use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
     use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
     use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+    use CNSharedParamsMod     , only : use_fun
+    
     !
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type), intent(inout) :: this
@@ -282,7 +284,8 @@ contains
     real(r8) :: f5                 ! grain allocation parameter
     real(r8) :: cng                ! C:N ratio for grain (= cnlw for now; slevis)
     real(r8) :: dt                 ! model time step
-    
+    real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes
+
     real(r8):: leafcn_storage_actual 					
     real(r8):: leafcn_actual       									
     real(r8):: frootcn_storage_actual       										
@@ -378,6 +381,7 @@ contains
          availc                       => cnveg_carbonflux_inst%availc_patch                        , & ! Output: [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
          excess_cflux                 => cnveg_carbonflux_inst%excess_cflux_patch                  , & ! Output: [real(r8) (:)   ]  C flux not allocated due to downregulation (gC/m2/s)
          plant_calloc                 => cnveg_carbonflux_inst%plant_calloc_patch                  , & ! Output: [real(r8) (:)   ]  total allocated C flux (gC/m2/s)
+         npp_growth                  => cnveg_carbonflux_inst%npp_growth_patch              , & ! Output:  [real(r8) (:) ] C for growth in FUN. g/m2/s
          cpool_to_resp                => cnveg_carbonflux_inst%cpool_to_resp_patch                 , & ! Output: [real(r8) (:)   ]
          cpool_to_leafc_resp          => cnveg_carbonflux_inst%cpool_to_leafc_resp_patch              , & ! Output: [real(r8) (:)   ]
          cpool_to_leafc_storage_resp  => cnveg_carbonflux_inst%cpool_to_leafc_storage_resp_patch      , & ! Output: [real(r8) (:)   ]
@@ -428,7 +432,15 @@ contains
          npool_to_livecrootn          => cnveg_nitrogenflux_inst%npool_to_livecrootn_patch         , & ! Output: [real(r8) (:)   ]
          npool_to_livecrootn_storage  => cnveg_nitrogenflux_inst%npool_to_livecrootn_storage_patch , & ! Output: [real(r8) (:)   ]
          npool_to_deadcrootn          => cnveg_nitrogenflux_inst%npool_to_deadcrootn_patch         , & ! Output: [real(r8) (:)   ]
-         npool_to_deadcrootn_storage  => cnveg_nitrogenflux_inst%npool_to_deadcrootn_storage_patch   & ! Output: [real(r8) (:)   ]
+         npool_to_deadcrootn_storage  => cnveg_nitrogenflux_inst%npool_to_deadcrootn_storage_patch , & ! Output: [real(r8) (:)   ]
+         Npassive                     => cnveg_nitrogenflux_inst%Npassive_patch                    , & ! Output:  [real(r8) (:) ]  Passive N uptake (gN/m2/s)
+         Nfix                         => cnveg_nitrogenflux_inst%Nfix_patch                        , & ! Output:  [real(r8) (:) ]  Symbiotic BNF (gN/m2/s)
+         Nactive                      => cnveg_nitrogenflux_inst%Nactive_patch                     , & ! Output:  [real(r8) (:) ] Mycorrhizal N uptake (gN/m2/s)
+         Nnonmyc                      => cnveg_nitrogenflux_inst%Nnonmyc_patch                     , & ! Output:  [real(r8) (:) ] Non-mycorrhizal N uptake (gN/m2/s)
+         Nam                          => cnveg_nitrogenflux_inst%Nam_patch                         , & ! Output:  [real(r8) (:) ]  AM uptake (gN/m2/s)
+         Necm                         => cnveg_nitrogenflux_inst%Necm_patch                        , & ! Output:  [real(r8) (:) ]  ECM uptake (gN/m2/s)
+         sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch            & ! Output:  [real(r8) (:) ]  Total soil N uptake of FUN (gN/m2/s)
+
          )
 
       ! set time steps
@@ -491,41 +503,55 @@ contains
          ! ndays_active = days/year.  This prevents the continued storage of C and N.
          ! turning off this correction (PET, 12/11/03), instead using bgtr in
          ! phenology algorithm.
-         sminn_to_npool(p) = plant_ndemand(p) * fpg(c)
+         
+         
+         if(use_fun)then ! if we are using FUN, we get the N available from there.
+           sminn_to_npool(p) = sminn_to_plant_fun(p)
+         else ! no FUN. :( we get N available from the FPG calculation in soilbiogeochemistry competition. 
+           sminn_to_npool(p) = plant_ndemand(p) * fpg(c)        
+         endif
+       
          plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
+         
+         if(.not.use_fun)then
+	         if (downreg_opt) then
+	            ! calculate the associated carbon allocation, and the excess
+	            ! carbon flux that must be accounted for through downregulation
+	            plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
+	            excess_cflux(p) = availc(p) - plant_calloc(p)
 
-         if (downreg_opt) then
-            ! calculate the associated carbon allocation, and the excess
-            ! carbon flux that must be accounted for through downregulation
-            plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
-            excess_cflux(p) = availc(p) - plant_calloc(p)
+	            ! reduce gpp fluxes due to N limitation
+	            if (gpp(p) > 0.0_r8) then
+	               downreg(p) = excess_cflux(p)/gpp(p)
 
-            ! reduce gpp fluxes due to N limitation
-            if (gpp(p) > 0.0_r8) then
-               downreg(p) = excess_cflux(p)/gpp(p)
+	               psnsun_to_cpool(p)   = psnsun_to_cpool(p)  *(1._r8 - downreg(p))
+	               psnshade_to_cpool(p) = psnshade_to_cpool(p)*(1._r8 - downreg(p))
 
-               psnsun_to_cpool(p)   = psnsun_to_cpool(p)  *(1._r8 - downreg(p))
-               psnshade_to_cpool(p) = psnshade_to_cpool(p)*(1._r8 - downreg(p))
-
-               if ( use_c13 ) then
-                  c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
-                       c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
-                  c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
-                       c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-               endif
-               if ( use_c14 ) then
-                  c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
-                       c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
-                  c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
-                       c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-               endif
-            end if
+	               if ( use_c13 ) then
+	                  c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
+	                       c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
+	                  c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
+	                       c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
+	               endif
+	               if ( use_c14 ) then
+	                  c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
+	                       c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
+	                  c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
+	                       c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
+	               endif
+	            end if
+	         end if
          end if
 
-         if (.not. downreg_opt) then
-            plant_calloc(p) = availc(p)
+         
+         if(use_fun)then
+            plant_calloc(p) = npp_growth(p) 
+         else
+            if (.not. downreg_opt) then
+               plant_calloc(p) = availc(p)
+            end if         
          end if
-
+        
          ! calculate the amount of new leaf C dictated by these allocation
          ! decisions, and calculate the daily fluxes of C and N to current
          ! growth and storage pools
@@ -950,7 +976,8 @@ contains
             cpool_to_livecrootc_storage_resp(p) = 0.0_r8
             cpool_to_livestemc_resp(p) = 0.0_r8
             cpool_to_livestemc_storage_resp(p) = 0.0_r8
-
+            
+            if(.not.use_fun)then ! FUN does not need to have this burning-off option. We could make it so that carbon_resp_opt is 0 when FUN is on? (RF)
             if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then   
                ! computing carbon to nitrogen ratio of different plant parts 
 
@@ -1117,7 +1144,7 @@ contains
                     cpool_to_livestemc_resp(p) + cpool_to_livestemc_storage_resp(p)
 
             end if   ! end of if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then   
-         
+            end if
 									
          end if    ! end of if (downreg_opt .eqv. .false. .AND. CN_partition_opt == 1) then
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1215,6 +1242,7 @@ contains
     use SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
     use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
     use EnergyFluxType         , only : energyflux_type     !
+    use CNSharedParamsMod      , only : use_fun
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type), intent(inout) :: this
     type(bounds_type)               , intent(in)    :: bounds
@@ -1295,7 +1323,8 @@ contains
          grperc                => pftcon%grperc                                     , & ! Input:  parameter used below
          grpnow                => pftcon%grpnow                                     , & ! Input:  parameter used below
          declfact              => pftcon%declfact                                   , & ! Input:
-
+         season_decid          => pftcon%season_decid                               , & ! Input:  binary flag for seasonal-deciduous leaf habit (0 or 1)
+         stress_decid          => pftcon%stress_decid                               , & ! Input:  binary flag for stress-deciduous leaf habit (0 or 1)
          psnsun                => photosyns_inst%psnsun_patch                       , & ! Input:  [real(r8) (:)   ]  sunlit leaf-level photosynthesis (umol CO2 /m**2/ s)
          psnsha                => photosyns_inst%psnsha_patch                       , & ! Input:  [real(r8) (:)   ]  shaded leaf-level photosynthesis (umol CO2 /m**2/ s)
          c13_psnsun            => photosyns_inst%c13_psnsun_patch                   , & ! Input:  [real(r8) (:)   ]  sunlit leaf-level photosynthesis (umol CO2 /m**2/ s)
@@ -1645,20 +1674,35 @@ contains
 
          ! based on available C, use constant allometric relationships to
          ! determine N requirements
-
-         if (woody(ivt(p)) == 1.0_r8) then
-            c_allometry(p) = (1._r8+g1)*(1._r8+f1+f3*(1._r8+f2))
-            n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
-                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
-         else if (ivt(p) >= npcropmin) then ! skip generic crops
-            cng = graincn(ivt(p))
-            c_allometry(p) = (1._r8+g1)*(1._r8+f1+f5+f3*(1._r8+f2))
-            n_allometry(p) = 1._r8/cnl + f1/cnfr + f5/cng + (f3*f4*(1._r8+f2))/cnlw + &
-                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
-         else
-            c_allometry(p) = 1._r8+g1+f1+f1*g1
-            n_allometry(p) = 1._r8/cnl + f1/cnfr
-         end if
+         if(use_fun)then ! In FUN, growth respiration is not part of the allometry calculation. 
+	         if (woody(ivt(p)) == 1.0_r8) then
+	            c_allometry(p) = (1._r8)*(1._r8+f1+f3*(1._r8+f2))
+	            n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
+	                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
+	         else if (ivt(p) >= npcropmin) then ! skip generic crops
+	            cng = graincn(ivt(p))
+	            c_allometry(p) = (1._r8)*(1._r8+f1+f5+f3*(1._r8+f2))
+	            n_allometry(p) = 1._r8/cnl + f1/cnfr + f5/cng + (f3*f4*(1._r8+f2))/cnlw + &
+	                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
+	         else
+	            c_allometry(p) = 1._r8+f1
+	            n_allometry(p) = 1._r8/cnl + f1/cnfr
+	         end if           
+        else !no FUN.
+	         if (woody(ivt(p)) == 1.0_r8) then
+	            c_allometry(p) = (1._r8+g1)*(1._r8+f1+f3*(1._r8+f2))
+	            n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
+	                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
+	         else if (ivt(p) >= npcropmin) then ! skip generic crops
+	            cng = graincn(ivt(p))
+	            c_allometry(p) = (1._r8+g1)*(1._r8+f1+f5+f3*(1._r8+f2))
+	            n_allometry(p) = 1._r8/cnl + f1/cnfr + f5/cng + (f3*f4*(1._r8+f2))/cnlw + &
+	                 (f3*(1._r8-f4)*(1._r8+f2))/cndw
+	         else
+	            c_allometry(p) = 1._r8+g1+f1+f1*g1
+	            n_allometry(p) = 1._r8/cnl + f1/cnfr
+	         end if
+         end if !FUN
 
 
          if (nscalar_opt) then
@@ -1700,33 +1744,37 @@ contains
             temp_scalar=t_scalar(c,1)
             temp_scalar = min( max(0.0_r8, temp_scalar), 1.0_r8 )
          end if
+         
+         if(use_fun)then ! in FUN, plant_ndemand is just used as a maximum draw on soil N pools. 
+             plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
+         else !FUN
+	         if (plant_ndemand_opt == 0) then
+	            plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
+	         else if (plant_ndemand_opt == 1) then
+	            plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p)) * substrate_term
+	         else if (plant_ndemand_opt == 2) then      ! N uptake happens at day time only
 
-         if (plant_ndemand_opt == 0) then
-            plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
-         else if (plant_ndemand_opt == 1) then
-            plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p)) * substrate_term
-         else if (plant_ndemand_opt == 2) then      ! N uptake happens at day time only
+	            if (gpp(p) > 0.0_r8) then
+	               Vmax_N = 2.7E-8_r8
+	               plant_ndemand(p) = Vmax_N * frootc(p) * substrate_term * temp_scalar  * nscalar
+	            else
+	               plant_ndemand(p) = 0.0_r8
+	            end if
+	         else if (plant_ndemand_opt == 3) then      ! N uptake happens at day and night time
 
-            if (gpp(p) > 0.0_r8) then
-               Vmax_N = 2.7E-8_r8
-               plant_ndemand(p) = Vmax_N * frootc(p) * substrate_term * temp_scalar  * nscalar
-            else
-               plant_ndemand(p) = 0.0_r8
-            end if
-         else if (plant_ndemand_opt == 3) then      ! N uptake happens at day and night time
+	            if (laisun(p)+laisha(p) > 0.0_r8) then
+	               Vmax_N = 2.7E-8_r8
+	               plant_ndemand(p) =  Vmax_N  * frootc(p) * substrate_term * temp_scalar * nscalar
+	            else
+	               plant_ndemand(p) = 0.0_r8
+	            end if
 
-            if (laisun(p)+laisha(p) > 0.0_r8) then
-               Vmax_N = 2.7E-8_r8
-               plant_ndemand(p) =  Vmax_N  * frootc(p) * substrate_term * temp_scalar * nscalar
-            else
-               plant_ndemand(p) = 0.0_r8
-            end if
+	            if (leafcn_actual(p) < leafcn_min) then
+	               plant_ndemand(p) = 0.0_r8
+	            end if
 
-            if (leafcn_actual(p) < leafcn_min) then
-               plant_ndemand(p) = 0.0_r8
-            end if
-
-         end if
+	         end if
+         end if  !FUN
 
 
          ! retranslocated N deployment depends on seasonal cycle of potential GPP
@@ -1762,7 +1810,14 @@ contains
          else
             retransn_to_npool(p) = plant_ndemand(p)
          end if
-         plant_ndemand(p) = plant_ndemand(p) - retransn_to_npool(p)
+
+         if ( .not. use_fun ) then
+            plant_ndemand(p) = plant_ndemand(p) - retransn_to_npool(p)
+         else
+            if (season_decid(ivt(p)) == 1._r8.or.stress_decid(ivt(p))==1._r8) then
+               plant_ndemand(p) = plant_ndemand(p) - retransn_to_npool(p)
+            end if
+         end if
 
       end do ! end patch loop
 

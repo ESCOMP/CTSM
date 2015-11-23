@@ -489,8 +489,8 @@ contains
                ' lun%itype= ',lun%itype(col%landunit(indexc)), &
                ' errh2osno= ',errh2osno(indexc)
 
-          if (abs(errh2osno(indexc)) > 1.e-5_r8 .and. (nstep > 2) ) then
-             write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
+          if (abs(errh2osno(indexc)) > 1.e-3_r8 .and. (nstep > 2) ) then
+             write(iulog,*)'clm model is stopping - error is greater than 1e-3 (mm)'
              write(iulog,*)'nstep            = ',nstep
              write(iulog,*)'errh2osno        = ',errh2osno(indexc)
              write(iulog,*)'snl              = ',col%snl(indexc)

@@ -55,13 +55,17 @@ contains
       ! set time steps
       dt = real( get_step_size(), r8 )
 
+
+
       ! gross photosynthesis fluxes
       do fp = 1,num_soilp
          p = filter_soilp(fp)
+     
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) + cf_veg%psnsun_to_cpool_patch(p)*dt
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) + cf_veg%psnshade_to_cpool_patch(p)*dt
       end do
 
+     
     end associate
 
   end subroutine CStateUpdate0
@@ -90,6 +94,8 @@ contains
     integer  :: c,p,j,k,l ! indices
     integer  :: fp,fc     ! lake filter indices
     real(r8) :: dt        ! radiation time step (seconds)
+    real(r8) :: check_cpool
+    real(r8) :: cpool_delta
     !-----------------------------------------------------------------------
 
     associate(                                                               & 
@@ -161,6 +167,7 @@ contains
 
       do fp = 1,num_soilp
          p = filter_soilp(fp)
+         c = patch%column(p)
 
          ! phenology: transfer growth fluxes
          cs_veg%leafc_patch(p)           = cs_veg%leafc_patch(p)       + cf_veg%leafc_xfer_to_leafc_patch(p)*dt
@@ -188,6 +195,7 @@ contains
          ! phenology: litterfall fluxes
          cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) - cf_veg%leafc_to_litter_patch(p)*dt
          cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) - cf_veg%frootc_to_litter_patch(p)*dt
+        
 
          ! livewood turnover fluxes
          if (woody(ivt(p)) == 1._r8) then
@@ -200,12 +208,15 @@ contains
             cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_litter_patch(p)*dt
             cs_veg%grainc_patch(p)     = cs_veg%grainc_patch(p)     - cf_veg%grainc_to_food_patch(p)*dt
          end if
-
+         
+         check_cpool = cs_veg%cpool_patch(p)- cf_veg%psnsun_to_cpool_patch(p)*dt-cf_veg%psnshade_to_cpool_patch(p)*dt
+         cpool_delta  =  cs_veg%cpool_patch(p) 
+         
          ! maintenance respiration fluxes from cpool
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_to_xsmrpool_patch(p)*dt
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%leaf_curmr_patch(p)*dt
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%froot_curmr_patch(p)*dt
-         if (woody(ivt(p)) == 1._r8) then
+         If (woody(ivt(p)) == 1._r8) then
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livestem_curmr_patch(p)*dt
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livecroot_curmr_patch(p)*dt
          end if
@@ -213,8 +224,13 @@ contains
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livestem_curmr_patch(p)*dt
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%grain_curmr_patch(p)*dt
          end if
+         
+         
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) -  cf_veg%cpool_to_resp_patch(p)*dt
 
+         !RF Add in the carbon spent on uptake respiration. 
+         cs_veg%cpool_patch(p)= cs_veg%cpool_patch(p) - cf_veg%soilc_change_patch(p)*dt
+         
          ! maintenance respiration fluxes from xsmrpool
          cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) + cf_veg%cpool_to_xsmrpool_patch(p)*dt
          cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%leaf_xsmr_patch(p)*dt
@@ -293,6 +309,7 @@ contains
             cs_veg%grainc_storage_patch(p)     = cs_veg%grainc_storage_patch(p)     + cf_veg%cpool_to_grainc_storage_patch(p)*dt
          end if
 
+
          ! growth respiration fluxes for current growth
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_leaf_gr_patch(p)*dt
          cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_froot_gr_patch(p)*dt
@@ -363,6 +380,13 @@ contains
             cs_veg%grainc_storage_patch(p)     = cs_veg%grainc_storage_patch(p)    - cf_veg%grainc_storage_to_xfer_patch(p)*dt
             cs_veg%grainc_xfer_patch(p)        = cs_veg%grainc_xfer_patch(p)       + cf_veg%grainc_storage_to_xfer_patch(p)*dt
          end if
+         
+         
+         if(abs(cs_veg%cpool_patch(p)-check_cpool).ge.0.0000000001_r8)then
+             write(*,*) 'cpool imbalance',p,cs_veg%cpool_patch(p)  ,check_cpool,cs_veg%cpool_patch(p)-check_cpool,woody(ivt(p))
+         endif 
+ !endif           
+         
 
       end do ! end of patch loop
 

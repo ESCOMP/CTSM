@@ -755,6 +755,8 @@ contains
           enddo !end cohort loop
 
           !This loop weights the scorch height for the contribution of each cohort to the overall biomass.   
+
+         ! does this do anything? I think it might be redundant? RF. 
           currentPatch%SH = 0.0_r8
           currentCohort => currentPatch%tallest;
           do while(associated(currentCohort))

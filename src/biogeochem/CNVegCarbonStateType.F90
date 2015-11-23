@@ -32,6 +32,8 @@ module CNVegCarbonStateType
      real(r8), pointer :: leafc_patch              (:) ! (gC/m2) leaf C
      real(r8), pointer :: leafc_storage_patch      (:) ! (gC/m2) leaf C storage
      real(r8), pointer :: leafc_xfer_patch         (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: leafc_storage_xfer_acc_patch   (:) ! (gC/m2) Accmulated leaf C transfer
+     real(r8), pointer :: storage_cdemand_patch          (:) ! (gC/m2)       C use from the C storage pool 
      real(r8), pointer :: frootc_patch             (:) ! (gC/m2) fine root C
      real(r8), pointer :: frootc_storage_patch     (:) ! (gC/m2) fine root C storage
      real(r8), pointer :: frootc_xfer_patch        (:) ! (gC/m2) fine root C transfer
@@ -135,6 +137,8 @@ contains
     allocate(this%leafc_patch              (begp:endp)) ; this%leafc_patch              (:) = nan
     allocate(this%leafc_storage_patch      (begp:endp)) ; this%leafc_storage_patch      (:) = nan
     allocate(this%leafc_xfer_patch         (begp:endp)) ; this%leafc_xfer_patch         (:) = nan
+    allocate(this%leafc_storage_xfer_acc_patch (begp:endp)) ; this%leafc_storage_xfer_acc_patch (:) = nan
+    allocate(this%storage_cdemand_patch        (begp:endp)) ; this%storage_cdemand_patch        (:) = nan
     allocate(this%frootc_patch             (begp:endp)) ; this%frootc_patch             (:) = nan
     allocate(this%frootc_storage_patch     (begp:endp)) ; this%frootc_storage_patch     (:) = nan
     allocate(this%frootc_xfer_patch        (begp:endp)) ; this%frootc_xfer_patch        (:) = nan
@@ -246,6 +250,16 @@ contains
        call hist_addfld1d (fname='LEAFC_XFER', units='gC/m^2', &
             avgflag='A', long_name='leaf C transfer', &
             ptr_patch=this%leafc_xfer_patch)    
+
+       this%leafc_storage_xfer_acc_patch(begp:endp) = spval
+       call hist_addfld1d (fname='LEAFC_STORAGE_XFER_ACC', units='gC/m^2', &
+            avgflag='A', long_name='Accumulated leaf C transfer', &
+            ptr_patch=this%leafc_storage_xfer_acc_patch, default='inactive')
+
+       this%storage_cdemand_patch(begp:endp) = spval
+       call hist_addfld1d (fname='STORAGE_CDEMAND', units='gC/m^2', &
+            avgflag='A', long_name='C use from the C storage pool', &
+            ptr_patch=this%storage_cdemand_patch, default='inactive')
 
        this%frootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='FROOTC', units='gC/m^2', &
@@ -430,6 +444,11 @@ contains
             avgflag='A', long_name='C13 leaf C transfer', &
             ptr_patch=this%leafc_xfer_patch, default='inactive')
 
+       this%leafc_storage_xfer_acc_patch(begp:endp) = spval
+       call hist_addfld1d (fname='C13_LEAFC_STORAGE_XFER_ACC', units='gC13/m^2', &
+            avgflag='A', long_name='Accumulated C13 leaf C transfer', &
+            ptr_patch=this%leafc_storage_xfer_acc_patch, default='inactive')
+
        this%frootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_FROOTC', units='gC13/m^2', &
             avgflag='A', long_name='C13 fine root C', &
@@ -607,6 +626,11 @@ contains
        call hist_addfld1d (fname='C14_LEAFC_XFER', units='gC14/m^2', &
             avgflag='A', long_name='C14 leaf C transfer', &
             ptr_patch=this%leafc_xfer_patch, default='inactive')
+
+        this%leafc_storage_xfer_acc_patch(begp:endp) = spval
+        call hist_addfld1d (fname='C14_LEAFC_STORAGE_XFER_ACC', units='gC14/m^2', &
+             avgflag='A', long_name='Accumulated C14 leaf C transfer', &
+             ptr_patch=this%leafc_storage_xfer_acc_patch, default='inactive')
 
        this%frootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_FROOTC', units='gC14/m^2', &
@@ -873,6 +897,9 @@ contains
           end if
           this%leafc_xfer_patch(p) = 0._r8
 
+          this%leafc_storage_xfer_acc_patch(p)  = 0._r8
+          this%storage_cdemand_patch(p)         = 0._r8
+
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
              this%frootc_patch(p)            = 0._r8 
              this%frootc_storage_patch(p)    = 0._r8 
@@ -1093,6 +1120,14 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_xfer_patch) 
 
+       call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_xfer_acc', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%leafc_storage_xfer_acc_patch)
+ 
+       call restartvar(ncid=ncid, flag=flag, varname='storage_cdemand', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%storage_cdemand_patch)
+
        call restartvar(ncid=ncid, flag=flag, varname='frootc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_patch) 
@@ -1202,7 +1237,7 @@ contains
 
        if (flag == 'read' .and. spinup_state /= restart_file_spinup_state .and. .not. use_cndv) then
           write(iulog, *) 'exit_spinup ',exit_spinup,' restart_file_spinup_state ',restart_file_spinup_state
-          if (spinup_state == 0 .and. restart_file_spinup_state == 2 ) then
+          if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
              if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools out of AD spinup mode'
              exit_spinup = .true.
              write(iulog, *) 'Multiplying stemc and crootc by 10 for exit spinup'
@@ -1210,7 +1245,7 @@ contains
                 this%deadstemc_patch(i) = this%deadstemc_patch(i) * 10._r8
                 this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * 10._r8
              end do
-          else if (spinup_state == 2 .and. restart_file_spinup_state == 0 ) then
+          else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 ) then
              if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools into AD spinup mode'
              enter_spinup = .true.
              write(iulog, *) 'Dividing stemc and crootc by 10 for enter spinup '
@@ -2099,6 +2134,8 @@ contains
        this%leafc_patch(i)              = value_patch
        this%leafc_storage_patch(i)      = value_patch
        this%leafc_xfer_patch(i)         = value_patch
+       this%leafc_storage_xfer_acc_patch(i) = value_patch
+       this%storage_cdemand_patch(i)        = value_patch        
        this%frootc_patch(i)             = value_patch
        this%frootc_storage_patch(i)     = value_patch
        this%frootc_xfer_patch(i)        = value_patch

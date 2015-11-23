@@ -31,6 +31,7 @@ contains
     use CNSharedParamsMod                 , only : CNParamsReadShared
     use CNGapMortalityMod                 , only : readCNGapMortParams                    => readParams
     use CNMRespMod                        , only : readCNMRespParams                      => readParams
+    use CNFUNMod                          , only : readCNFUNParams                        => readParams
     use CNPhenologyMod                    , only : readCNPhenolParams                     => readParams
     use SoilBiogeochemCompetitionMod      , only : readSoilBiogeochemCompetitionParams    => readParams
     use SoilBiogeochemNLeachingMod        , only : readSoilBiogeochemNLeachingParams      => readParams
@@ -75,6 +76,7 @@ contains
        call nutrient_competition_method%readParams(ncid)
        call readCNGapMortParams(ncid)
        call readCNMRespParams(ncid)
+       call readCNFUNParams(ncid)
        call readCNPhenolParams(ncid)
     end if
 

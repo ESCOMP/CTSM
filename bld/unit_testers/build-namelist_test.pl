@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 363;
+my $ntests = 367;
 if ( defined($opts{'compare'}) ) {
    $ntests += 201;
 }
@@ -459,6 +459,11 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
+     "br_root and bgc=sp"        =>{ options=>"-bgc sp -envxml_dir .",
+                                     namelst=>"br_root=1.0",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
      "both co2_type and on nml"  =>{ options=>"-co2_type constant -envxml_dir .",
                                      namelst=>"co2_type='prognostic'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -536,6 +541,21 @@ my %failtest = (
                                    },
      "elevWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
                                      namelst=>"fire_emis_elevated=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "funWOcn"                   =>{ options=>"-envxml_dir .",
+                                     namelst=>"use_fun=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0 -bgc sp",
+                                   },
+     "flexCNWOcn"                =>{ options=>"-envxml_dir .",
+                                     namelst=>"use_flexibleCN=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0 -bgc sp",
+                                   },
+     "funWOnitrif"               =>{ options=>"-envxml_dir .",
+                                     namelst=>"use_fun=.true., use_nitrif_denitrif=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },

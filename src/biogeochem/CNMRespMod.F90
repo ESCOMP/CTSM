@@ -9,6 +9,7 @@ module CNMRespMod
   use shr_kind_mod           , only : r8 => shr_kind_r8
   use shr_const_mod          , only : SHR_CONST_TKFRZ
   use clm_varpar             , only : nlevgrnd
+  use clm_varcon             , only : spval
   use decompMod              , only : bounds_type
   use abortutils             , only : endrun
   use shr_log_mod            , only : errMsg => shr_log_errMsg
@@ -26,11 +27,13 @@ module CNMRespMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: readParams
-  public :: CNMResp
+  public :: CNMRespReadNML       ! Read in namelist (CALL FIRST!)
+  public :: readParams           ! Read in parameters from file
+  public :: CNMResp              ! Apply maintenance respiration
 
   type, private :: params_type
-     real(r8) :: br  ! base rate for maintenance respiration(gC/gN/s)
+     real(r8) :: br      = spval ! base rate for maintenance respiration (gC/gN/s)
+     real(r8) :: br_root = spval ! base rate for maintenance respiration for roots (gC/gN/s)
   end type params_type
 
   type(params_type), private :: params_inst
@@ -39,10 +42,68 @@ module CNMRespMod
 contains
 
   !-----------------------------------------------------------------------
+  subroutine CNMRespReadNML( NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for CNMResp (MUST BE CALLED BEFORE readParams!!!)
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use clm_varctl     , only : iulog
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'CNMRespReadNML'
+    character(len=*), parameter :: nmlname = 'cnmresp_inparm'
+    real(r8) :: br_root = spval ! base rate for maintenance respiration for roots (gC/gN/s)
+    !-----------------------------------------------------------------------
+
+    namelist /cnmresp_inparm/ br_root
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=cnmresp_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast (br_root, mpicom)
+
+    params_inst%br_root = br_root
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=cnmresp_inparm)
+       write(iulog,*) ' '
+    end if
+
+  end subroutine CNMRespReadNML
+  !-----------------------------------------------------------------------
+
+  !-----------------------------------------------------------------------
   subroutine readParams ( ncid )
     !
     ! !DESCRIPTION:
-    ! Read parameters
+    ! Read parameters (call AFTER CNMRespReadNML!)
     !
     ! !USES:
     use ncdio_pio , only : file_desc_t,ncd_io
@@ -63,6 +124,10 @@ contains
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
     params_inst%br=tempr
+
+    if ( params_inst%br_root == spval ) then
+       params_inst%br_root = params_inst%br
+    end if
 
   end subroutine readParams
 
@@ -89,12 +154,13 @@ contains
     type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: c,p,j ! indices
-    integer :: fp    ! soil filter patch index
-    integer :: fc    ! soil filter column index
-    real(r8):: br    ! base rate (gC/gN/s)
-    real(r8):: q10   ! temperature dependence
-    real(r8):: tc    ! temperature correction, 2m air temp (unitless)
+    integer :: c,p,j   ! indices
+    integer :: fp      ! soil filter patch index
+    integer :: fc      ! soil filter column index
+    real(r8):: br      ! base rate (gC/gN/s)
+    real(r8):: br_root ! root base rate (gC/gN/s)
+    real(r8):: q10     ! temperature dependence
+    real(r8):: tc      ! temperature correction, 2m air temp (unitless)
     real(r8):: tcsoi(bounds%begc:bounds%endc,nlevgrnd) ! temperature correction by soil layer (unitless)
     !-----------------------------------------------------------------------
 
@@ -134,7 +200,8 @@ contains
       ! Original expression is br = 0.0106 molC/(molN h)
       ! Conversion by molecular weights of C and N gives 2.525e-6 gC/(gN s)
       ! set constants
-      br = params_inst%br
+      br      = params_inst%br
+      br_root = params_inst%br_root
 
       ! Peter Thornton: 3/13/09 
       ! Q10 was originally set to 2.0, an arbitrary choice, but reduced to 1.5 as part of the tuning
@@ -176,7 +243,7 @@ contains
 
          if (woody(ivt(p)) == 1) then
             livestem_mr(p) = livestemn(p)*br*tc
-            livecroot_mr(p) = livecrootn(p)*br*tc
+            livecroot_mr(p) = livecrootn(p)*br_root*tc
          else if (ivt(p) >= npcropmin) then
             livestem_mr(p) = livestemn(p)*br*tc
             grain_mr(p) = grainn(p)*br*tc
@@ -197,7 +264,7 @@ contains
             ! to estimate the total fine root maintenance respiration as a
             ! function of temperature and N content.
 
-            froot_mr(p) = froot_mr(p) + frootn(p)*br*tcsoi(c,j)*rootfr(p,j)
+            froot_mr(p) = froot_mr(p) + frootn(p)*br_root*tcsoi(c,j)*rootfr(p,j)
          end do
       end do
 

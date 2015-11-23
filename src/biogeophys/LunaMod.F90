@@ -909,6 +909,7 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   real(r8) :: Wc                                      !rubisco-limited photosynthetic rate (umol/m2/s)
   real(r8) :: Wj                                      !light limited photosynthetic rate (umol/m2/s)
   real(r8) :: NUECHG                                  !the nitrogen use efficiency change under current conidtions compared to reference climate conditions (25oC and 385 ppm )
+  real(r8), parameter :: leaf_mr_vcm = 0.015_r8       !Scalar constant of leaf respiration with Vcmax (should use parameter in CanopyStateMod)
   
   theta_cj = 0.95_r8
   theta = 0.292_r8 / (1.0_r8 + 0.076_r8 / (Nlc * Cb))
@@ -930,7 +931,7 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   endif
   PSN = Cv * A * hourpd
   Vcmaxnight = VcmxTKattge(tair10, tleafn10) / VcmxTKattge(tair10, tleafd10) * Vcmax
-  RESP = Cv * 0.015_r8 * (Vcmax * hourpd + Vcmaxnight * (24.0_r8 - hourpd))                 
+  RESP = Cv * leaf_mr_vcm * (Vcmax * hourpd + Vcmaxnight * (24.0_r8 - hourpd))
   Net = Jmax / Fj
   Ncb = Vcmax / Fc
   Nresp = RESP / NUEr

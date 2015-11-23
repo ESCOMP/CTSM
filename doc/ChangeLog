@@ -1,4 +1,266 @@
 ===============================================================
+Tag name:  clm4_5_6_r155
+Originator(s):  erik (Erik Kluzek)
+Date: etl xim 23  1:11:04 carra MST 2015
+One-line Summary: Bring FUN (Fixation and Uptake of Nitrogen) code option to trunk from Mingjie, 
+                  as well as latitude varying spinup from Charlie, and a fix for crop with dynamic 
+                  roots from Beth
+
+Purpose of changes
+------------------
+
+FUN Model (Fixation and Uptake of Nitrogen): Mingjie Shi, Josh Fisher, 
+                                             and implmentation changes from Rosie Fisher
+
+  FUN is the Fixation and Uptake of Nitrogen, and is designed to extract N from numerous 
+  sources (fixation, active uptake, retranslocation) in proportion to the inverse of the 
+  cost of uptake in term of C spent per unit N acquired. 
+
+  The FUN model developed by Fisher et al. 2010 and end Brzostek et al. 2014. Coded by Mingjie Shi 2015.
+  Coding logic and structure altered by Rosie Fisher. October 2015. 
+  Critically, this removes the 'FUN-resistors' idea of Brzostek et al. 2014
+  and replaces it with uptake that is proportional to the N/C exchange rate. 
+  and adjusts the logic so that FUN does not depends upon the CLM4.0 'FPG' downregulation idea
+  and instead it takes C spent on N uptake away from growth.
+  The critical output so fthis code are sminn_to_plant_fun and npp_Nuptake, which are the N 
+  available to the plant for growth, and the C spent on obtaining it.
+
+  When FUN is on and flex-CN is on, do NOT do the burn off of excess Carbon.
+
+  Add in Kyla's rainfall trigger for stress decidious when FUN is on.
+
+  Call FUN in the middle of SoilBiogeochemCompetition. Split CNPhenology into
+  two sections for FUN. Get N available from N in NutrientCompetetion. Add
+  annual average ET needed for CNFreeLivingFixation which is used in place
+  of CNNFixation when FUN on.
+ 
+Dynamic Roots bug fix: Beth Drewniak
+
+  Initialize huigrain to zero (rather than nan). And add a check for huigrain non zero
+  to prevent a divide by zero.
+
+BGC Spinup Changes: Charlie Koven
+
+  Add a latitude dependent factor for accellerated decomposition spinup that is 
+  about 1 at the equator goes to 26 at 60 degree's latitude (south and north) 
+  and then about 50 at the poles.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):  2237
+    2237 (dynamic root code divides by 0)
+
+Known bugs introduced in this tag (include bugzilla ID): 2249
+   2249 Simulations have low LAI in the amazon with FUN and Luna on
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp):
+   LAI is low in Amazon (see bug 2249)
+   FUN requires use_nitrif_denitrif to be on.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): new CLM namelist variables
+   Add br_root (maintenence respiration for roots)
+   And leaf_mr_vcm (Scalar of leaf respiration to vcmax)
+   And use_fun logical to turn the FUN model on
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   For CLM50 set leaf_mr_vcm to 0.032 (from Atkin 2015)
+   For CLM50 with FUN on br_root=2.525e-06
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   New params files with FUN parameters on them
+
+Substantial timing or memory changes: Slower with FUN
+    Will notices that simulations with FUN are slower
+    (there are optimization issues that I saw that could be worked on)
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self, rfisher, koven, drewniak
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - OK
+
+OK, means tests PASS or only expected fails do not.
+SSP comparision tests FAIL for CLM50, since spinup changes
+
+
+CLM tag used for the baseline comparisons:  clm4_5_6_r154
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No 
+
+  Except when spinup on, or when FUN turned on.
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): None
+
+List all files eliminated:
+
+=========== Remove flexibleCN test directory and add one for flexCN and FUN
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/flexibleCN
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/flexibleCN/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/flexibleCN/include_user_mods
+
+List all files added and what they do:
+
+=========== Add new tests
+=========== NOTE: clm50* tests can be used with CLM45 compsets to create new CLM50 configurations
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCDVCROPmonthly/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCDVCROPmonthly/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCDVCROPmonthly
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/flexCN_FUN/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/flexCN_FUN/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/flexCN_FUN
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_flexCN_FUN/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_flexCN_FUN/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_flexCN_FUN
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/noFUN_flexCN/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/noFUN_flexCN/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/noFUN_flexCN
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCCROPmonthly/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCCROPmonthly/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCCROPmonthly
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCmonthly/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCmonthly/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCmonthly
+
+=========== Add unit test for AC spinup
+A       components/clm/src/soilbiogeochem/CMakeLists.txt
+A       components/clm/src/soilbiogeochem/test/CMakeLists.txt
+A       components/clm/src/soilbiogeochem/test/ACSpinup_test/test_acspinup.pf
+A       components/clm/src/soilbiogeochem/test/ACSpinup_test/CMakeLists.txt
+A       components/clm/src/soilbiogeochem/test/ACSpinup_test
+A       components/clm/src/soilbiogeochem/test
+
+=========== New FUN module
+A       components/clm/src/biogeochem/CNFUNMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50KitchenSink/user_nl_clm - Remove
+           fsurdat, new finidat file, turn: luna, flex-CN, dynroots, and FUN on, 
+           for interpolation fill missing with bare ground, limit_lake_evap to false
+           set leaf_mr_vcm to 0.015
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonthOutput/user_nl_clm - turn dynroots on
+
+M       components/clm/bld/namelist_files/namelist_definition.xsl ------- Update to work again
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- New params file with FUN parameters
+             c151024 and ED.c151023, turn dynroots off for bgc, add phys version to finidat, set use_fun
+             br_root, leaf_mr_vcm
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml  Add br_root, leaf_mr_vcm, use_fun
+M       components/clm/bld/CLMBuildNamelist.pm -------------------------- Handle cnmresp_inparm,
+             clm_canopy_inparm, send phys for finidat
+M       components/clm/bld/unit_testers/build-namelist_test.pl ---------- Add tests for fun w/o CN,
+             or w/o nitrif_denitrif, or flexCN w/o CN
+
+M       components/clm/cime_config/config_compsets.xml - Change IGCRUCLM50BGCCROP to IG1850CRUCLM50BGCCROP
+             add IG1850CRUCLM50BGC
+
+M       components/clm/cime_config/testdefs/testlist_clm.xml ---- Add new tests (noFUN_flexCN, flexCN_FUN, 
+             ciso_flexCN_FUN, clm50KitchenSink w/o crop, clm50BGCDVCROPmonthly, transient clm50BGC, 
+             and new CROP-off clm50KitchenSink test add luna test on hobart, ICRUCLM50BGCCROP tests
+             use clm50BGCCROPmonthly test-mods (with dynroots on, so change answers)
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/luna/user_nl_clm - Turn flexCN on
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonthOutput/user_nl_clm - Turn dynroot on
+             (so these tests change answers)
+
+M       components/clm/src/ED/fire/SFMainMod.F90 - Comment from Rosie
+
+M       components/clm/src/biogeophys/WaterfluxType.F90 --- Add running annual mean of ET when FUN is on
+M       components/clm/src/biogeophys/BalanceCheckMod.F90 - Increase tolerance for snow balance check (see bug 2238)
+M       components/clm/src/biogeophys/LunaMod.F90 --------- Make 0.015 constant a parameter 
+                                                  (later should use parameter in CanopyStateMod)
+M       components/clm/src/biogeophys/PhotosynthesisMod.F90 - Use leaf_mr_vcm constant from canopystate_ins
+            Remove (.not.use_cn) for recalculation of lmr25 when luna on, for natural C3 veg (see bug 2249)
+M       components/clm/src/biogeophys/CanopyStateType.F90 - Make parameter for leaf_mr_vcm, add ReadNML sub
+
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCompetitionMod.F90 ---- Call FUN module
+M       components/clm/src/soilbiogeochem/SoilBiogeochemPrecisionControlMod.F90 When FUN on, do not
+                do precision control of low values for no3 and nh4
+M       components/clm/src/soilbiogeochem/SoilBiogeochemLittVertTranspMod.F90 -- Increase transport by
+                same factor as spinup acceleration by latitude
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCarbonFluxType.F90 ----- Add soilc_change_col
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90 ---- Take into account latitude
+                varying spinup acceleration for exit and enter spinup states
+M       components/clm/src/soilbiogeochem/SoilBiogeochemStateType.F90 ---------- Add function for increase
+                of spinup acceleration by latitude
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNStateUpdate1Mod.F90 --- For FUN N deposition and fixation put into NH4
+                use FUN version of sminn_to_plant_fun
+
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenFluxType.F90 --- Add several FUN nitrogen fixation
+                terms: ffix_to_sminn_col, ffix_to_sminn_col, sminn_to_plant_fun_no3_vr_col,
+                       sminn_to_plant_fun_nh4_vr_col, sminn_to_plant_fun_vr_col
+M       components/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeBGCMod.F90  Changes from Charlie to make
+                spinup acceleration higher as latitude increases.
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90 -- decomp_npools_vr depends
+                on spinup state and depends on latitude.
+
+M       components/clm/src/CMakeLists.txt - Add soilbiogeochem directory for unit tests
+
+M       components/clm/src/biogeochem/CNBalanceCheckMod.F90 --------- Add cbalance warning, for FUN
+                add in free living fixation, decrease n-balance error from e-8 to e-6, add nbalance warn
+M       components/clm/src/biogeochem/CNVegStateType.F90 ------------ Init huigrain to zero, add leafcn_offset
+                and plantCN for FUN
+M       components/clm/src/biogeochem/CNMRespMod.F90 ---------------- Add CNMRespReadNML, br_root
+M       components/clm/src/biogeochem/CNVegNitrogenStateType.F90 ---- Add leafn_storage_xfer_acc and 
+                storage_ndemand for FUN, change two conditionals on spinup_state/restart_spinup_state 
+                to include 0 AND 1
+MM      components/clm/src/biogeochem/CNRootDynMod.F90 -------------- Only update root_depth if huigrain>0
+M       components/clm/src/biogeochem/CNPhenologyMod.F90 ------------ Add phase to CNPhenology (divides
+                into two parts, needed for FUN), add Kyla's rainfall trigger (ONLY when FUN on)
+                other changes when FUN on
+M       components/clm/src/biogeochem/CNCStateUpdate1Mod.F90 -------- Add carbon spent on uptake respiration
+M       components/clm/src/biogeochem/CNSharedParamsMod.F90 --------- Add use_fun
+M       components/clm/src/biogeochem/NutrientCompetitionCLM45defaultMod.F90 If FUN on get N available from FUN
+                turn off some sections when fun on
+M       components/clm/src/biogeochem/CNFireLi2016Mod.F90 ----------- Changes for spinup from Charlie
+M       components/clm/src/biogeochem/CNNDynamicsMod.F90 ------------ Add CNFreeLivingFixation subroutine
+                set ndep_to_sminn to zero for FUN
+M       components/clm/src/biogeochem/CNVegNitrogenFluxType.F90 ----- Add N demand and aquired arrays for FUN
+M       components/clm/src/biogeochem/CNDriverMod.F90 --------------- If FUN on call CNFreeLivingFixation
+                rather than CNNFixation. If FUN on split CNPhenology into two segments
+M       components/clm/src/biogeochem/CNC14DecayMod.F90 ------------- Speed up radioactive decay by lat factor
+M       components/clm/src/biogeochem/NutrientCompetitionFlexibleCNMod.F90 Changes for FUN. Burning off option
+                not used for FUN, for FUN, growth respiration is not part of the allometry calculation
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90 ------- Carbon flux fields for FUN
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90 ------ Add leafc_storage_xfer_acc and
+                storage_cdemand for FUN, change some spinup state if statements from Charlie
+
+MM      components/clm/src/main/clm_initializeMod.F90 - Call clm_instReadNML and waterflux_inst%initAccVar
+MM      components/clm/src/main/clm_varcon.F90 -------- Add fun_period and small_value for FUN
+M       components/clm/src/main/pftconMod.F90 --------- Add FUN pft-varying parameters
+M       components/clm/src/main/clm_instMod.F90 ------- Add clm_instReadNML for namelists, calls
+              canopystate_inst%ReadNML, add waterflux_inst%InitAccBuffer
+M       components/clm/src/main/readParamsMod.F90 ----- Add readCNFUNParams
+MM      components/clm/src/main/controlMod.F90 -------- Set use_fun and call CNMRespReadNML
+M       components/clm/src/main/clm_driver.F90 -------- Call waterflux_inst%UpdateAccVars
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_6_r154
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date: Wed Nov 18 16:35:53 MST 2015

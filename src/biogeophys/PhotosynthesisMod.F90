@@ -807,7 +807,8 @@ contains
          bbb        => photosyns_inst%bbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry minimum leaf conductance (umol H2O/m**2/s)
          mbb        => photosyns_inst%mbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship
          rh_leaf    => photosyns_inst%rh_leaf_patch          , & ! Output: [real(r8) (:)   ]  fractional humidity at leaf surface (dimensionless)
-         lnc        => photosyns_inst%lnca_patch               & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
+         lnc        => photosyns_inst%lnca_patch             , & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
+         leaf_mr_vcm => canopystate_inst%leaf_mr_vcm           & ! Input:  [real(r8)       ]  scalar constant of leaf respiration with Vcmax
          )
 
       if (phase == 'sun') then
@@ -1084,7 +1085,7 @@ contains
             ! Leaf maintenance respiration in proportion to vcmax25top
 
             if (c3flag(p)) then
-               lmr25top = vcmax25top * 0.015_r8
+               lmr25top = vcmax25top * leaf_mr_vcm
             else
                lmr25top = vcmax25top * 0.025_r8
             end if
@@ -1117,8 +1118,8 @@ contains
 
             lmr25 = lmr25top * nscaler
 
-            if(use_luna.and.c3flag(p).and.(.not.use_cn).and.crop(patch%itype(p))== 0) then
-                lmr25 = 0.015_r8 * photosyns_inst%vcmx25_z_patch(p,iv)
+            if(use_luna.and.c3flag(p).and.crop(patch%itype(p))== 0) then
+                lmr25 = leaf_mr_vcm * photosyns_inst%vcmx25_z_patch(p,iv)
             endif
           
             if (c3flag(p)) then

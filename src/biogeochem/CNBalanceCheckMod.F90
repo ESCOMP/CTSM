@@ -20,6 +20,8 @@ module CNBalanceCheckMod
   use SoilBiogeochemCarbonfluxType    , only : soilbiogeochem_carbonflux_type
   use ColumnType                      , only : col                
   use GridcellType                    , only : grc
+  use CNSharedParamsMod               , only : use_fun
+
   !
   implicit none
   private
@@ -184,16 +186,21 @@ contains
             err_found = .true.
             err_index = c
          end if
+          if (abs(col_errcb(c)) > 1e-10_r8) then
+            write(*,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
+         end if
+
+
 
       end do ! end of columns loop
 
       if (err_found) then
          c = err_index
-         write(iulog,*)'column cbalance error = ', col_errcb(c), c
-         write(iulog,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-         write(iulog,*)'begcb       = ',col_begcb(c)
-         write(iulog,*)'endcb       = ',col_endcb(c)
-         write(iulog,*)'delta store = ',col_endcb(c)-col_begcb(c)
+         write(*,*)'column cbalance error = ', col_errcb(c), c
+         write(*,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+         write(*,*)'begcb       = ',col_begcb(c)
+         write(*,*)'endcb       = ',col_endcb(c)
+         write(*,*)'delta store = ',col_endcb(c)-col_begcb(c)
          call endrun(msg=errMsg(__FILE__, __LINE__))
       end if
 
@@ -236,6 +243,7 @@ contains
          beg_vals_set        => this%beg_vals_set_col                                    , & ! Input:  [logical  (:) ]  Whether begcb/begnb have been set in this time step
          ndep_to_sminn       => soilbiogeochem_nitrogenflux_inst%ndep_to_sminn_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) atmospheric N deposition to soil mineral N        
          nfix_to_sminn       => soilbiogeochem_nitrogenflux_inst%nfix_to_sminn_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) symbiotic/asymbiotic N fixation to soil mineral N 
+         ffix_to_sminn       => soilbiogeochem_nitrogenflux_inst%ffix_to_sminn_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) free living N fixation to soil mineral N         
          fert_to_sminn       => soilbiogeochem_nitrogenflux_inst%fert_to_sminn_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s)                                         
          soyfixn_to_sminn    => soilbiogeochem_nitrogenflux_inst%soyfixn_to_sminn_col    , & ! Input:  [real(r8) (:) ]  (gN/m2/s)                                         
          supplement_to_sminn => soilbiogeochem_nitrogenflux_inst%supplement_to_sminn_col , & ! Input:  [real(r8) (:) ]  (gN/m2/s) supplemental N supply                           
@@ -271,6 +279,10 @@ contains
 
          ! calculate total column-level inputs
          col_ninputs(c) = ndep_to_sminn(c) + nfix_to_sminn(c) + supplement_to_sminn(c)
+         if(use_fun)then
+            col_ninputs(c) = col_ninputs(c) + ffix_to_sminn(c) ! for FUN, free living fixation is a seprate flux. RF. 
+         endif
+     
          if (crop_prog) then
             col_ninputs(c) = col_ninputs(c) + fert_to_sminn(c) + soyfixn_to_sminn(c)
          end if
@@ -291,23 +303,34 @@ contains
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - (col_endnb(c) - col_begnb(c))
 
-         if (abs(col_errnb(c)) > 1e-8_r8) then
+         if (abs(col_errnb(c)) > 1e-6_r8) then
             err_found = .true.
             err_index = c
+         end if
+         
+         if (abs(col_errnb(c)) > 1e-8_r8) then
+            write(*,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
+            write(*,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+            write(*,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
          end if
 
       end do ! end of columns loop
 
       if (err_found) then
          c = err_index
-         write(iulog,*)'column nbalance error = ',col_errnb(c), c
-         write(iulog,*)'Latdeg,Londeg         = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-         write(iulog,*)'begnb                 = ',col_begnb(c)
-         write(iulog,*)'endnb                 = ',col_endnb(c)
-         write(iulog,*)'delta store           = ',col_endnb(c)-col_begnb(c)
-         write(iulog,*)'input mass            = ',col_ninputs(c)*dt
-         write(iulog,*)'output mass           = ',col_noutputs(c)*dt
-         write(iulog,*)'net flux              = ',(col_ninputs(c)-col_noutputs(c))*dt
+         write(*,*)'column nbalance error = ',col_errnb(c), c
+         write(*,*)'Latdeg,Londeg         = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+         write(*,*)'begnb                 = ',col_begnb(c)
+         write(*,*)'endnb                 = ',col_endnb(c)
+         write(*,*)'delta store           = ',col_endnb(c)-col_begnb(c)
+         write(*,*)'input mass            = ',col_ninputs(c)*dt
+         write(*,*)'output mass           = ',col_noutputs(c)*dt
+         write(*,*)'net flux              = ',(col_ninputs(c)-col_noutputs(c))*dt
+         write(*,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+         write(*,*)'outputs,ffix,nfix,ndep = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+        
+         
+         
          call endrun(msg=errMsg(__FILE__, __LINE__))
       end if
 

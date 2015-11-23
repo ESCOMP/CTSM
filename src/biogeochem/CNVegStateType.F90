@@ -102,8 +102,9 @@ module CNVegStateType
      real(r8), pointer :: tempmax_retransn_patch       (:)     ! patch temporary annual max of retranslocated N pool (gN/m2)
      real(r8), pointer :: annmax_retransn_patch        (:)     ! patch annual max of retranslocated N pool (gN/m2)
      real(r8), pointer :: downreg_patch                (:)     ! patch fractional reduction in GPP due to N limitation (DIM)
-
-     integer           :: CropRestYear                        ! restart year from initial conditions file - increment as time elapses
+     real(r8), pointer :: leafcn_offset_patch          (:)     ! patch leaf C:N used by FUN
+     real(r8), pointer :: plantCN_patch                (:)     ! patch plant C:N used by FUN
+     integer           :: CropRestYear                         ! restart year from initial conditions file - increment as time elapses
 
    contains
 
@@ -162,7 +163,7 @@ contains
     allocate(this%vf_patch            (begp:endp))                   ; this%vf_patch            (:)   = 0.0_r8
     allocate(this%gddmaturity_patch   (begp:endp))                   ; this%gddmaturity_patch   (:)   = spval
     allocate(this%huileaf_patch       (begp:endp))                   ; this%huileaf_patch       (:)   = nan
-    allocate(this%huigrain_patch      (begp:endp))                   ; this%huigrain_patch      (:)   = nan
+    allocate(this%huigrain_patch      (begp:endp))                   ; this%huigrain_patch      (:)   = 0.0_r8
     allocate(this%aleafi_patch        (begp:endp))                   ; this%aleafi_patch        (:)   = nan
     allocate(this%astemi_patch        (begp:endp))                   ; this%astemi_patch        (:)   = nan
     allocate(this%aleaf_patch         (begp:endp))                   ; this%aleaf_patch         (:)   = nan
@@ -230,7 +231,8 @@ contains
     allocate(this%tempmax_retransn_patch      (begp:endp)) ;    this%tempmax_retransn_patch      (:) = nan
     allocate(this%annmax_retransn_patch       (begp:endp)) ;    this%annmax_retransn_patch       (:) = nan
     allocate(this%downreg_patch               (begp:endp)) ;    this%downreg_patch               (:) = nan
-
+    allocate(this%leafcn_offset_patch         (begp:endp)) ;    this%leafcn_offset_patch         (:) = nan
+    allocate(this%plantCN_patch               (begp:endp)) ;    this%plantCN_patch               (:) = nan
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -420,6 +422,15 @@ contains
          avgflag='A', long_name='fractional reduction in GPP due to N limitation', &
          ptr_patch=this%downreg_patch, default='inactive')
 
+    this%leafcn_offset_patch(begp:endp) = spval
+    call hist_addfld1d (fname='LEAFCN_OFFSET', units='unitless', &
+         avgflag='A', long_name='Leaf C:N used by FUN', &
+         ptr_patch=this%leafcn_offset_patch, default='inactive')
+
+    this%plantCN_patch(begp:endp)       = spval
+    call hist_addfld1d (fname='PLANTCN', units='unitless', &
+         avgflag='A', long_name='Plant C:N used by FUN', &
+         ptr_patch=this%plantCN_patch, default='inactive')
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -577,6 +588,8 @@ contains
           this%tempmax_retransn_patch(p)      = spval
           this%annmax_retransn_patch(p)       = spval
           this%downreg_patch(p)               = spval
+          this%leafcn_offset_patch(p)         = spval
+          this%plantCN_patch(p)               = spval
        end if
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -608,6 +621,8 @@ contains
           this%tempmax_retransn_patch(p)      = 0._r8
           this%annmax_retransn_patch(p)       = 0._r8
           this%downreg_patch(p)               = 0._r8
+          this%leafcn_offset_patch(p)         = spval 
+          this%plantCN_patch(p)               = spval 
        end if
 
     end do
@@ -763,6 +778,16 @@ contains
          dim1name='pft', &
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%downreg_patch) 
+
+    call restartvar(ncid=ncid, flag=flag, varname='leafcn_offset', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%leafcn_offset_patch)
+     
+    call restartvar(ncid=ncid, flag=flag, varname='plantCN', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%plantCN_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='annsum_counter', xtype=ncd_double,  &
          dim1name='column', &

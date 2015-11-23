@@ -44,6 +44,7 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: hr_col                                    (:)     ! (gC/m2/s) total heterotrophic respiration
      real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration 
      real(r8), pointer :: somhr_col                                 (:)     ! (gC/m2/s) soil organic matter heterotrophic res   
+     real(r8), pointer :: soilc_change_col                          (:)     ! (gC/m2/s) FUN used soil C
 
    contains
 
@@ -126,7 +127,7 @@ contains
      allocate(this%hr_col                  (begc:endc)) ; this%hr_col                  (:) = nan
      allocate(this%lithr_col               (begc:endc)) ; this%lithr_col               (:) = nan
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
-
+     allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
    end subroutine InitAllocate 
 
    !------------------------------------------------------------------------
@@ -635,6 +636,7 @@ contains
        this%som_c_leached_col(i) = value_column
        this%somhr_col(i)         = value_column
        this%lithr_col(i)         = value_column
+       this%soilc_change_col(i)  = value_column
     end do
 
   end subroutine SetValues
@@ -669,6 +671,8 @@ contains
     ! !DESCRIPTION:
     ! On the radiation time step, column-level carbon summary calculations
     !
+    ! !USES:
+    use CNSharedParamsMod,  only : use_fun
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonflux_type)           :: this
     type(bounds_type)               , intent(in)    :: bounds          
@@ -765,9 +769,19 @@ contains
     ! total heterotrophic respiration (HR)
     do fc = 1,num_soilc
        c = filter_soilc(fc)
-       this%hr_col(c) = &
-            this%lithr_col(c) + &
-            this%somhr_col(c)
+       if ( .not. use_fun )then
+          this%hr_col(c) = &
+               this%lithr_col(c) + &
+               this%somhr_col(c)
+          this%hr_col(c) = &
+               this%lithr_col(c) + &
+               this%somhr_col(c)
+       else
+          this%hr_col(c) = &
+               this%lithr_col(c) + &
+               this%somhr_col(c) !+ &
+
+       end if
     end do
 
   end subroutine Summary

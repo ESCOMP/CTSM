@@ -76,11 +76,13 @@ module clm_varcon
   real(r8) :: re = SHR_CONST_REARTH*0.001_r8                ! radius of earth (km)
 
   real(r8), public, parameter :: degpsec = 15._r8/3600.0_r8 ! Degree's earth rotates per second
-  real(r8), public, parameter ::  secspday= SHR_CONST_CDAY  ! Seconds per day
+  real(r8), public, parameter :: secspday= SHR_CONST_CDAY   ! Seconds per day
   integer,  public, parameter :: isecspday= secspday        ! Integer seconds per day
-  real(r8), public, parameter ::  spval = 1.e36_r8          ! special value for real data
+  real(r8), public, parameter :: spval = 1.e36_r8           ! special value for real data
   integer , public, parameter :: ispval = -9999             ! special value for int data 
                                                             ! (keep this negative to avoid conflicts with possible valid values)
+  integer, public, parameter  :: fun_period  = 1            ! A FUN parameter, and probably needs to be changed for testing
+  real(r8),public, parameter  :: smallValue  = 1.e-12_r8    ! A small values used by FUN
 
   ! These are tunable constants from clm2_3
 

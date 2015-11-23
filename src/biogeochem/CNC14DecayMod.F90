@@ -12,6 +12,9 @@ module CNC14DecayMod
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
+  use ColumnType                         , only : col                
+  use GridcellType                       , only : grc
+  use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   !
   implicit none
   private
@@ -92,15 +95,18 @@ contains
       end do ! end of columns loop
 
       do l = 1, ndecomp_pools
-         if ( spinup_state >= 1) then
-            ! speed up radioactive decay by the same factor as decomposition so tat SOM ages prematurely in all respects
-            spinup_term = spinup_factor(l) 
-         else
-            spinup_term = 1.
-         endif
          do j = 1, nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
+               if ( spinup_state >= 1) then
+                  ! speed up radioactive decay by the same factor as decomposition so tat SOM ages prematurely in all respects
+                  spinup_term = spinup_factor(l)
+                  if ( abs(spinup_factor(l) - 1._r8) .gt. .000001_r8 ) then
+                     spinup_term = spinup_term  * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+                  endif
+               else
+                  spinup_term = 1.
+               endif
                decomp_cpools_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (1._r8 - decay_const * spinup_term * dt)
             end do
          end do

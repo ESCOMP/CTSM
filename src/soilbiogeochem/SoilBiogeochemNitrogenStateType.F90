@@ -17,6 +17,8 @@ module SoilBiogeochemNitrogenStateType
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
+  use GridcellType                       , only : grc
+  use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -588,7 +590,15 @@ contains
           end if
           do c = bounds%begc, bounds%endc
              do j = 1, nlevdecomp
-                this%decomp_npools_vr_col(c,j,k) = this%decomp_npools_vr_col(c,j,k) * m
+                if ( abs(m - 1._r8) .gt. 0.000001_r8 .and. exit_spinup) then
+                   this%decomp_npools_vr_col(c,j,k) = this%decomp_npools_vr_col(c,j,k) * m * &
+                        get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+                elseif ( abs(m - 1._r8) .gt. 0.000001_r8 .and. enter_spinup) then
+                   this%decomp_npools_vr_col(c,j,k) = this%decomp_npools_vr_col(c,j,k) * m / &
+                        get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+                else
+                   this%decomp_npools_vr_col(c,j,k) = this%decomp_npools_vr_col(c,j,k) * m 
+                endif
              end do
           end do
        end do

@@ -537,7 +537,6 @@
         <machine compiler="nag" testtype="prebeta" testmods="clm/reduceOutput">goldbach</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/NoVSNoNI">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/rootlit">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ciso">yellowstone</machine>
       </test>
       <test name="ERP_D_Ld5_P24x1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">hobart</machine>
@@ -679,6 +678,7 @@
     <grid name="f10_f10">
       <test name="ERP_P15x2_Lm25">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50BGCDVCROPmonthly">yellowstone</machine>
       </test>
       <test name="ERP_P24x2_Lm25">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/monthly">edison</machine>
@@ -925,9 +925,13 @@
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/reduceOutput">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/reduceOutput">yellowstone</machine>
       </test>
+      <test name="ERP_D_Ld5">
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ciso_flexCN_FUN">yellowstone</machine>
+      </test>
       <test name="ERP_D_P15x2_Ld3">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/flexibleCN">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/flexCN_FUN">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/noFUN_flexCN">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/limit_river_withdraw">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/luna">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -941,6 +945,9 @@
       </test>
       <test name="ERP_Ld5_P24x1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">hobart</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/flexCN_FUN">hobart</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/noFUN_flexCN">hobart</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/luna">hobart</machine>
       </test>
       <test name="ERS_D_Ld3">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -979,6 +986,14 @@
     </grid>
   </compset>
   <compset name="ICRUCLM50BGCCROP">
+    <grid name="1x1_numaIA">
+      <test name="ERP_Lm40">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/clm50BGCCROPmonthly" comment="tests mid-year restart, with the restart file being written in the middle of the second year">yellowstone</machine>
+      </test>
+      <test name="ERP_Ly5">
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/clm50BGCCROPmonthly">hobart</machine>
+      </test>
+    </grid>
     <grid name="f10_f10">
       <test name="ERP_D_P15x2_Ld3">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropColdStart">yellowstone</machine>
@@ -987,13 +1002,6 @@
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonth_interp" comment="Ideally this test (currently our only CLM50 crop test with initial conditions) would turn on irrigation, too; however, that would require creating a new crop+irrig initial conditions file with the necessary metadata on it for init_interp">yellowstone</machine>
       </test>
     </grid>
-  </compset>
-  <compset name="IGCRUCLM50BGCCROP">
-     <grid name="f09_g16_gl5">
-        <test name="ERS_D_Ld3">
-           <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KitchenSink">yellowstone</machine>
-        </test>
-     </grid>
   </compset>
   <compset name="ICRUCN">
     <grid name="hcru_hcru">
@@ -1046,6 +1054,20 @@
       <test name="ERI_D">
         <machine compiler="intel" testtype="aux_clm_ys_pgi">edison</machine>
         <machine compiler="pgi" testtype="aux_clm40">yellowstone</machine>
+      </test>
+    </grid>
+  </compset>
+  <compset name="IG1850CRUCLM50BGC">
+    <grid name="f09_g16_gl5">
+      <test name="SMS_Lm1">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KitchenSink">yellowstone</machine>
+      </test>
+    </grid>
+  </compset>
+  <compset name="IG1850CRUCLM50BGCCROP">
+    <grid name="f09_g16_gl5">
+      <test name="ERS_D_Ld3">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50KitchenSink">yellowstone</machine>
       </test>
     </grid>
   </compset>
@@ -1237,7 +1259,11 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/decStart">hobart</machine>
       </test>
       <test name="ERP_P15x2_Lm13">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50BGCmonthly">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
+      </test>
+      <test name="SMS_Ld5_D_P24x1">
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/clm50BGCmonthly">hobart</machine>
       </test>
     </grid>
     <grid name="f19_g16">

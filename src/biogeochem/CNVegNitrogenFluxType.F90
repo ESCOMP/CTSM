@@ -7,6 +7,7 @@ module CNVegNitrogenFluxType
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, crop_prog
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc
+  use CNSharedParamsMod                  , only : use_fun
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
@@ -212,6 +213,32 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: plant_ndemand_patch                       (:)     ! N flux required to support initial GPP (gN/m2/s)
      real(r8), pointer :: avail_retransn_patch                      (:)     ! N flux available from retranslocation pool (gN/m2/s)
      real(r8), pointer :: plant_nalloc_patch                        (:)     ! total allocated N flux (gN/m2/s)
+     real(r8), pointer :: plant_ndemand_retrans_patch               (:)     ! The N demand pool generated for FUN2.0; mainly used for deciduous trees (gN/m2/s)
+     real(r8), pointer :: plant_ndemand_season_patch                (:)     ! The N demand pool for seasonal deciduous (gN/m2/s)
+     real(r8), pointer :: plant_ndemand_stress_patch                (:)     ! The N demand pool for stress deciduous   (gN/m2/s)
+     real(r8), pointer :: Nactive_patch                             (:)     ! N acquired by mycorrhizal uptake  (gN/m2/s)
+     real(r8), pointer :: Nnonmyc_patch                             (:)     ! N acquired by non-myc uptake      (gN/m2/s)
+     real(r8), pointer :: Nam_patch                                 (:)     ! N acquired by AM plant            (gN/m2/s)
+     real(r8), pointer :: Necm_patch                                (:)     ! N acquired by ECM plant           (gN/m2/s)
+     real(r8), pointer :: Nactive_no3_patch                         (:)     ! N acquired by mycorrhizal uptake  (gN/m2/s)
+     real(r8), pointer :: Nactive_nh4_patch                         (:)     ! N acquired by mycorrhizal uptake  (gN/m2/s)
+     real(r8), pointer :: Nnonmyc_no3_patch                         (:)     ! N acquired by non-myc             (gN/m2/s)
+     real(r8), pointer :: Nnonmyc_nh4_patch                         (:)     ! N acquired by non-myc             (gN/m2/s)
+     real(r8), pointer :: Nam_no3_patch                             (:)     ! N acquired by AM plant            (gN/m2/s)
+     real(r8), pointer :: Nam_nh4_patch                             (:)     ! N acquired by AM plant            (gN/m2/s)
+     real(r8), pointer :: Necm_no3_patch                            (:)     ! N acquired by ECM plant           (gN/m2/s)
+     real(r8), pointer :: Necm_nh4_patch                            (:)     ! N acquired by ECM plant           (gN/m2/s)
+     real(r8), pointer :: Nfix_patch                                (:)     ! N acquired by Symbiotic BNF       (gN/m2/s)
+     real(r8), pointer :: Npassive_patch                            (:)     ! N acquired by passive uptake      (gN/m2/s)
+     real(r8), pointer :: Nretrans_patch                            (:)     ! N acquired by retranslocation     (gN/m2/s)
+     real(r8), pointer :: Nretrans_org_patch                        (:)     ! N acquired by retranslocation     (gN/m2/s)
+     real(r8), pointer :: Nretrans_season_patch                     (:)     ! N acquired by retranslocation     (gN/m2/s)
+     real(r8), pointer :: Nretrans_stress_patch                     (:)     ! N acquired by retranslocation     (gN/m2/s)
+     real(r8), pointer :: Nuptake_patch                             (:)     ! Total N uptake of FUN             (gN/m2/s)
+     real(r8), pointer :: sminn_to_plant_fun_patch                  (:)     ! Total soil N uptake of FUN        (gN/m2/s)
+     real(r8), pointer :: sminn_to_plant_fun_vr_patch               (:,:)   ! Total layer soil N uptake of FUN  (gN/m2/s)
+     real(r8), pointer :: sminn_to_plant_fun_no3_vr_patch           (:,:)   ! Total layer no3 uptake of FUN     (gN/m2/s)
+     real(r8), pointer :: sminn_to_plant_fun_nh4_vr_patch           (:,:)   ! Total layer nh4 uptake of FUN     (gN/m2/s)
 
    contains
 
@@ -451,6 +478,36 @@ contains
     allocate(this%plant_ndemand_patch         (begp:endp)) ;    this%plant_ndemand_patch         (:) = nan
     allocate(this%avail_retransn_patch        (begp:endp)) ;    this%avail_retransn_patch        (:) = nan
     allocate(this%plant_nalloc_patch          (begp:endp)) ;    this%plant_nalloc_patch          (:) = nan
+
+    allocate(this%plant_ndemand_retrans_patch (begp:endp)) ;    this%plant_ndemand_retrans_patch (:) = nan
+    allocate(this%plant_ndemand_season_patch  (begp:endp)) ;    this%plant_ndemand_season_patch  (:) = nan
+    allocate(this%plant_ndemand_stress_patch  (begp:endp)) ;    this%plant_ndemand_stress_patch  (:) = nan
+    allocate(this%Nactive_patch               (begp:endp)) ;    this%Nactive_patch               (:) = nan 
+    allocate(this%Nnonmyc_patch               (begp:endp)) ;    this%Nnonmyc_patch               (:) = nan
+    allocate(this%Nam_patch                   (begp:endp)) ;    this%Nam_patch                   (:) = nan
+    allocate(this%Necm_patch                  (begp:endp)) ;    this%Necm_patch                  (:) = nan
+    allocate(this%Nactive_no3_patch           (begp:endp)) ;    this%Nactive_no3_patch           (:) = nan
+    allocate(this%Nactive_nh4_patch           (begp:endp)) ;    this%Nactive_nh4_patch           (:) = nan
+    allocate(this%Nnonmyc_no3_patch           (begp:endp)) ;    this%Nnonmyc_no3_patch           (:) = nan
+    allocate(this%Nnonmyc_nh4_patch           (begp:endp)) ;    this%Nnonmyc_nh4_patch           (:) = nan
+    allocate(this%Nam_no3_patch               (begp:endp)) ;    this%Nam_no3_patch               (:) = nan
+    allocate(this%Nam_nh4_patch               (begp:endp)) ;    this%Nam_nh4_patch               (:) = nan
+    allocate(this%Necm_no3_patch              (begp:endp)) ;    this%Necm_no3_patch              (:) = nan
+    allocate(this%Necm_nh4_patch              (begp:endp)) ;    this%Necm_nh4_patch              (:) = nan
+    allocate(this%Npassive_patch              (begp:endp)) ;    this%Npassive_patch              (:) = nan
+    allocate(this%Nfix_patch                  (begp:endp)) ;    this%Nfix_patch                  (:) = nan
+    allocate(this%Nretrans_patch              (begp:endp)) ;    this%Nretrans_patch              (:) = nan
+    allocate(this%Nretrans_org_patch          (begp:endp)) ;    this%Nretrans_org_patch          (:) = nan
+    allocate(this%Nretrans_season_patch       (begp:endp)) ;    this%Nretrans_season_patch       (:) = nan
+    allocate(this%Nretrans_stress_patch       (begp:endp)) ;    this%Nretrans_stress_patch       (:) = nan 
+    allocate(this%Nuptake_patch               (begp:endp)) ;    this%Nuptake_patch               (:) = nan
+    allocate(this%sminn_to_plant_fun_patch    (begp:endp)) ;    this%sminn_to_plant_fun_patch    (:) = nan
+    allocate(this%sminn_to_plant_fun_vr_patch (begp:endp,1:nlevdecomp_full)) 
+    this%sminn_to_plant_fun_vr_patch          (:,:) = nan
+    allocate(this%sminn_to_plant_fun_no3_vr_patch (begp:endp,1:nlevdecomp_full))  
+    this%sminn_to_plant_fun_no3_vr_patch      (:,:) = nan
+    allocate(this%sminn_to_plant_fun_nh4_vr_patch (begp:endp,1:nlevdecomp_full))  
+    this%sminn_to_plant_fun_nh4_vr_patch      (:,:) = nan
 
   end subroutine InitAllocate
 
@@ -1011,6 +1068,111 @@ contains
     call hist_addfld1d (fname='PLANT_NALLOC', units='gN/m^2/s', &
          avgflag='A', long_name='total allocated N flux', &
          ptr_patch=this%plant_nalloc_patch, default='inactive')
+    
+    if ( use_fun ) then
+       this%Nactive_patch(begp:endp)  = spval
+       call hist_addfld1d (fname='NACTIVE', units='gN/m^2/s',       &
+            avgflag='A', long_name='Mycorrhizal N uptake flux',     &
+            ptr_patch=this%Nactive_patch)
+   
+       this%Nnonmyc_patch(begp:endp)  = spval
+       call hist_addfld1d (fname='NNONMYC', units='gN/m^2/s',       &
+            avgflag='A', long_name='Non-mycorrhizal N uptake flux', &
+            ptr_patch=this%Nnonmyc_patch)    
+
+       this%Nam_patch(begp:endp)      = spval
+       call hist_addfld1d (fname='NAM', units='gN/m^2/s',           &
+            avgflag='A', long_name='AM-associated N uptake flux',   &
+            ptr_patch=this%Nam_patch)
+
+       this%Necm_patch(begp:endp)     = spval
+       call hist_addfld1d (fname='NECM', units='gN/m^2/s',          &
+            avgflag='A', long_name='ECM-associated N uptake flux',  &
+            ptr_patch=this%Necm_patch)
+
+       if (use_nitrif_denitrif) then
+          this%Nactive_no3_patch(begp:endp)  = spval
+          call hist_addfld1d (fname='NACTIVE_NO3', units='gN/m^2/s',   &
+               avgflag='A', long_name='Mycorrhizal N uptake flux',     &
+               ptr_patch=this%Nactive_no3_patch)
+   
+          this%Nactive_nh4_patch(begp:endp)  = spval
+          call hist_addfld1d (fname='NACTIVE_NH4', units='gN/m^2/s',   &
+               avgflag='A', long_name='Mycorrhizal N uptake flux',     &
+               ptr_patch=this%Nactive_nh4_patch)
+
+          this%Nnonmyc_no3_patch(begp:endp)  = spval
+          call hist_addfld1d (fname='NNONMYC_NO3', units='gN/m^2/s',   &
+               avgflag='A', long_name='Non-mycorrhizal N uptake flux', &
+               ptr_patch=this%Nnonmyc_no3_patch)
+  
+          this%Nnonmyc_nh4_patch(begp:endp)  = spval
+          call hist_addfld1d (fname='NNONMYC_NH4', units='gN/m^2/s',   &
+               avgflag='A', long_name='Non-mycorrhizal N uptake flux', &
+               ptr_patch=this%Nnonmyc_nh4_patch)
+
+          this%Nam_no3_patch(begp:endp)      = spval
+          call hist_addfld1d (fname='NAM_NO3', units='gN/m^2/s',       &
+               avgflag='A', long_name='AM-associated N uptake flux',   &
+               ptr_patch=this%Nam_no3_patch)
+ 
+          this%Nam_nh4_patch(begp:endp)      = spval
+          call hist_addfld1d (fname='NAM_NH4', units='gN/m^2/s',       &
+               avgflag='A', long_name='AM-associated N uptake flux',   &
+               ptr_patch=this%Nam_nh4_patch)
+
+          this%Necm_no3_patch(begp:endp)     = spval
+          call hist_addfld1d (fname='NECM_NO3', units='gN/m^2/s',      &
+               avgflag='A', long_name='ECM-associated N uptake flux',  &
+               ptr_patch=this%Necm_no3_patch) 
+  
+          this%Necm_nh4_patch(begp:endp)     = spval
+          call hist_addfld1d (fname='NECM_NH4', units='gN/m^2/s',      &
+               avgflag='A', long_name='ECM-associated N uptake flux',  &
+               ptr_patch=this%Necm_nh4_patch)   
+       end if 
+
+       this%Npassive_patch(begp:endp) = spval
+       call hist_addfld1d (fname='NPASSIVE', units='gN/m^2/s',        &
+            avgflag='A', long_name='Passive N uptake flux',           &
+            ptr_patch=this%Npassive_patch)
+
+       this%Nfix_patch(begp:endp)     = spval
+       call hist_addfld1d (fname='NFIX', units='gN/m^2/s',            &
+            avgflag='A', long_name='Symbiotic BNF uptake flux',       &
+            ptr_patch=this%Nfix_patch)
+
+       this%Nretrans_patch(begp:endp) = spval
+       call hist_addfld1d (fname='NRETRANS', units='gN/m^2/s',        &
+            avgflag='A', long_name='Retranslocated N uptake flux',    &
+            ptr_patch=this%Nretrans_patch)
+  
+       this%Nretrans_org_patch(begp:endp) = spval
+       call hist_addfld1d (fname='NRETRANS_REG', units='gN/m^2/s',    &
+            avgflag='A', long_name='Retranslocated N uptake flux',    &
+            ptr_patch=this%Nretrans_org_patch)
+
+       this%Nretrans_season_patch(begp:endp) = spval
+       call hist_addfld1d (fname='NRETRANS_SEASON', units='gN/m^2/s', &
+            avgflag='A', long_name='Retranslocated N uptake flux',    &
+            ptr_patch=this%Nretrans_season_patch)
+
+       this%Nretrans_stress_patch(begp:endp) = spval
+       call hist_addfld1d (fname='NRETRANS_STRESS', units='gN/m^2/s', &
+            avgflag='A', long_name='Retranslocated N uptake flux',    &
+            ptr_patch=this%Nretrans_stress_patch)
+  
+       this%Nuptake_patch(begp:endp) = spval
+       call hist_addfld1d (fname='NUPTAKE', units='gN/m^2/s',         &
+            avgflag='A', long_name='Total N uptake of FUN',           &
+            ptr_patch=this%Nuptake_patch)
+
+       this%sminn_to_plant_fun_patch(begp:endp) = spval
+       call hist_addfld1d (fname='SMINN_TO_PLANT_FUN', units='gN/m^2/s',&
+            avgflag='A', long_name='Total soil N uptake of FUN',        &
+            ptr_patch=this%sminn_to_plant_fun_patch)
+
+    end if
 
   end subroutine InitHistory
 
@@ -1029,7 +1191,7 @@ contains
     type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
-    integer :: p,c,l
+    integer :: p,c,l,j
     integer :: fp, fc                                    ! filter indices
     integer :: num_special_col                           ! number of good values in special_col filter
     integer :: num_special_patch                         ! number of good values in special_patch filter
@@ -1075,11 +1237,39 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%fert_counter_patch(p)  = 0._r8
        end if
-
-       if (lun%ifspecial(l)) then
-          this%plant_ndemand_patch(p)  = spval
-          this%avail_retransn_patch(p) = spval
-          this%plant_nalloc_patch(p)   = spval
+       if ( use_fun ) then
+          if (lun%ifspecial(l)) then
+             this%plant_ndemand_patch(p)        = spval
+             this%avail_retransn_patch(p)       = spval
+             this%plant_nalloc_patch(p)         = spval
+             this%Npassive_patch(p)             = spval
+             this%Nactive_patch(p)              = spval
+             this%Nnonmyc_patch(p)              = spval
+             this%Nam_patch(p)                  = spval
+             this%Necm_patch(p)                 = spval
+             if (use_nitrif_denitrif) then
+                this%Nactive_no3_patch(p)       = spval
+                this%Nactive_nh4_patch(p)       = spval
+                this%Nnonmyc_no3_patch(p)       = spval
+                this%Nnonmyc_nh4_patch(p)       = spval
+                this%Nam_no3_patch(p)           = spval
+                this%Nam_nh4_patch(p)           = spval
+                this%Necm_no3_patch(p)          = spval
+                this%Necm_nh4_patch(p)          = spval
+             end if
+             this%Nfix_patch(p)                 = spval
+             this%Nretrans_patch(p)             = spval
+             this%Nretrans_org_patch(p)         = spval
+             this%Nretrans_season_patch(p)      = spval
+             this%Nretrans_stress_patch(p)      = spval
+             this%Nuptake_patch(p)              = spval
+             this%sminn_to_plant_fun_patch(p)   = spval
+             do j = 1, nlevdecomp
+                this%sminn_to_plant_fun_vr_patch(p,j)       = spval
+                this%sminn_to_plant_fun_no3_vr_patch(p,j)   = spval
+                this%sminn_to_plant_fun_nh4_vr_patch(p,j)   = spval
+             end do 
+          end if
        end if
     end do
 
@@ -1188,6 +1378,110 @@ contains
          dim1name='pft', &
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%plant_nalloc_patch) 
+
+     if ( use_fun ) then
+        call restartvar(ncid=ncid, flag=flag, varname='Nactive', xtype=ncd_double,       &
+             dim1name='pft', &
+             long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%Nactive_patch) 
+!    
+        call restartvar(ncid=ncid, flag=flag, varname='Nnonmyc', xtype=ncd_double,       &
+             dim1name='pft', &
+             long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%Nnonmyc_patch)
+ 
+        call restartvar(ncid=ncid, flag=flag, varname='Nam', xtype=ncd_double,           &
+             dim1name='pft', &
+             long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%Nam_patch)
+ 
+        call restartvar(ncid=ncid, flag=flag, varname='Necm', xtype=ncd_double,          &
+             dim1name='pft', &
+             long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%Necm_patch)
+ 
+        if (use_nitrif_denitrif) then
+           call restartvar(ncid=ncid, flag=flag, varname='Nactive_no3', xtype=ncd_double,   &
+                dim1name='pft', &
+                long_name='', units='', &
+                interpinic_flag='interp', readvar=readvar, data=this%Nactive_no3_patch)
+    
+           call restartvar(ncid=ncid, flag=flag, varname='Nactive_nh4', xtype=ncd_double,   &
+                dim1name='pft', &
+                long_name='', units='', &
+                interpinic_flag='interp', readvar=readvar, data=this%Nactive_nh4_patch)   
+ 
+           call restartvar(ncid=ncid, flag=flag, varname='Nnonmyc_no3', xtype=ncd_double,    &
+                dim1name='pft', &
+                long_name='', units='', &
+                interpinic_flag='interp', readvar=readvar, data=this%Nnonmyc_no3_patch)
+ 
+           call restartvar(ncid=ncid, flag=flag, varname='Nnonmyc_nh4', xtype=ncd_double,    &
+                dim1name='pft', &
+                long_name='', units='', &
+                interpinic_flag='interp', readvar=readvar, data=this%Nnonmyc_nh4_patch)
+ 
+           call restartvar(ncid=ncid, flag=flag, varname='Nam_no3', xtype=ncd_double,         &
+                dim1name='pft', &
+                long_name='', units='', &
+                interpinic_flag='interp', readvar=readvar, data=this%Nam_no3_patch)
+ 
+           call restartvar(ncid=ncid, flag=flag, varname='Nam_nh4', xtype=ncd_double,         &
+                dim1name='pft', &
+                long_name='', units='', &
+                interpinic_flag='interp', readvar=readvar, data=this%Nam_nh4_patch)
+ 
+           call restartvar(ncid=ncid, flag=flag, varname='Necm_no3', xtype=ncd_double,        &
+                dim1name='pft', &
+                long_name='', units='', &
+                interpinic_flag='interp', readvar=readvar, data=this%Necm_no3_patch)
+ 
+           call restartvar(ncid=ncid, flag=flag, varname='Necm_nh4', xtype=ncd_double,        &
+                dim1name='pft', &
+                long_name='', units='', &
+                interpinic_flag='interp', readvar=readvar, data=this%Necm_nh4_patch)
+        end if
+!
+        call restartvar(ncid=ncid, flag=flag, varname='Npassive', xtype=ncd_double,      &
+             dim1name='pft', &
+             long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%Npassive_patch)
+ 
+        call restartvar(ncid=ncid, flag=flag, varname='Nfix', xtype=ncd_double,          &
+             dim1name='pft', &
+             long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%Nfix_patch)
+ 
+        call restartvar(ncid=ncid, flag=flag, varname='Nretrans', xtype=ncd_double,       &
+             dim1name='pft', &
+             long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%Nretrans_patch)
+ 
+        call restartvar(ncid=ncid, flag=flag, varname='Nretrans_org', xtype=ncd_double,   &
+             dim1name='pft', &
+             long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%Nretrans_org_patch)
+ 
+        call restartvar(ncid=ncid, flag=flag, varname='Nretrans_season', xtype=ncd_double, &
+             dim1name='pft', &
+             long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%Nretrans_season_patch)
+ 
+        call restartvar(ncid=ncid, flag=flag, varname='Nretrans_stress', xtype=ncd_double, &
+             dim1name='pft', &
+             long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%Nretrans_stress_patch)
+ 
+        call restartvar(ncid=ncid, flag=flag, varname='Nuptake', xtype=ncd_double,            &
+             dim1name='pft', &
+             long_name='', units='', &
+             interpinic_flag='interp', readvar=readvar, data=this%Nuptake_patch)
+
+        call restartvar(ncid=ncid, flag=flag, varname='sminn_to_plant_fun', xtype=ncd_double,            &
+             dim1name='pft', &
+             long_name='Total soil N uptake of FUN', units='gN/m2/s', &
+             interpinic_flag='interp', readvar=readvar, data=this%sminn_to_plant_fun_patch)
+     end if
 
   end subroutine Restart
 

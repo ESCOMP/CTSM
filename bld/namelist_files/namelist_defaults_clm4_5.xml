@@ -144,10 +144,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile                 >lnd/clm2/paramdata/clm_params.c151012.nc</paramfile>
-
-<paramfile use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c150317.nc</paramfile>
-
+<paramfile                 >lnd/clm2/paramdata/clm_params.c151024.nc</paramfile>
+<paramfile use_ed=".true." >lnd/clm2/paramdata/clm_params.ED.c151023.nc</paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -222,7 +220,6 @@ ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map
 ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I2000CLM45CRUBGC.2000-01-01.0.9x1.25_gx1v6_simyr2000_c141226.nc
 </finidat>
 
-
 <!--
 
      Files interpolated to other resolutions using interpinic
@@ -240,7 +237,7 @@ ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map
 <!-- Initial condition file with CLM45BGC (works for cent/no-cent; Vertical layers and Nitrification/Denitrification NEED to be on) -->
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false."  ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c151025.nc
+ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." phys="clm4_5" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c151025.nc
 </finidat>
 
 <!-- CRUNCEP half-degree resolution -->
@@ -494,6 +491,16 @@ lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr1850_c151003.nc</fsu
 <flndtopo hgrid="0.9x1.25"  >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</flndtopo>
 <flndtopo hgrid="1.9x2.5"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</flndtopo>
 <flndtopo hgrid="48x96"     >lnd/clm2/griddata/topodata_48x96_USGS_070110.nc</flndtopo>
+
+<!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
+<use_fun phys="clm5_0" use_cn=".true.">.false.</use_fun>
+<use_fun                              >.false.</use_fun>
+<br_root phys="clm5_0" use_cn=".true." use_fun=".true.">2.525d-06</br_root>
+
+
+<!-- Scalar of leaf respiration to vcmax (used for SP mode and with luna)-->
+<leaf_mr_vcm phys="clm5_0" >0.032d00</leaf_mr_vcm> <!-- From Atkin 2015 -->
+<leaf_mr_vcm phys="clm4_5" >0.015d00</leaf_mr_vcm>
 
 <!-- SNICAR (SNow, ICe, and Aerosol Radiative model) datasets -->
 <!--  ***********  Resolution independent:   ***********  -->

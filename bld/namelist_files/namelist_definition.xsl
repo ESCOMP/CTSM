@@ -68,7 +68,7 @@
     </table>
 
     <table border="1" cellpadding="10">
-    <caption>CLM Namelist Permafrost Model Options</caption>
+    <caption>CLM Biogeochemistry (BGC) Model Options</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -77,7 +77,20 @@
       <tr>
       <th colspan="1">Valid values</th>
       </tr>
-      <xsl:apply-templates select="entry[@category='clm_permafrost']"/>
+      <xsl:apply-templates select="entry[@category='bgc']"/>
+    </table>
+
+    <table border="1" cellpadding="10">
+    <caption>CLM Biogeochemistry Namelist Nitrogen Model Options</caption>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
+      <th>Description</th>
+      </tr>
+      <tr>
+      <th colspan="1">Valid values</th>
+      </tr>
+      <xsl:apply-templates select="entry[@category='clm_nitrogen']"/>
     </table>
 
     <table border="1" cellpadding="10">
@@ -206,6 +219,35 @@
 <hr/>
 <p>
 </p>
+    <h2>Command Line Options to CLM Build-namelist</h2>
+    <p>Variables that are entered as options to build-namelist (but NOT used by 
+        namelists in code). Most of these are options that could be added to
+        CLM_BLDNML_OPTS. Included in the table are the following pieces 
+        of information:</p>
+    <ul>
+    <li>Variable name.</li>
+    <li>Type.</li>
+    <li>Valid values.</li>
+    <li>Variable description.</li>
+    </ul>
+
+    <table border="1" cellpadding="10">
+    <caption>CLM Namelist Default Settings</caption>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
+      <th>Description</th>
+      </tr>
+      <tr>
+      <th colspan="1">Valid values, if restricted at all</th>
+      </tr>
+      <xsl:apply-templates select="entry[@category='default_settings']"/>
+    </table>
+<p>
+</p>
+<hr/>
+<p>
+</p>
     <h2>Namelist items for CLM Tools</h2>
     <p>These are namelist items that appear in the CLM Tools under components/clm/tools.
     </p>
@@ -234,6 +276,30 @@
       <xsl:apply-templates select="entry[@category='mkgriddata']"/>
     </table>
     <table border="1" cellpadding="10">
+    <caption>CLM mkmapdata</caption>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
+      <th>Description</th>
+      </tr>
+      <tr>
+      <th colspan="1">Valid values</th>
+      </tr>
+      <xsl:apply-templates select="entry[@category='mkmapdata']"/>
+    </table>
+    <table border="1" cellpadding="10">
+    <caption>CLM mkgriddata</caption>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
+      <th>Description</th>
+      </tr>
+      <tr>
+      <th colspan="1">Valid values</th>
+      </tr>
+      <xsl:apply-templates select="entry[@category='mkgriddata']"/>
+    </table>
+    <table border="1" cellpadding="10">
     <caption>Miscellaneous CLM tools</caption>
       <tr>
       <th rowspan="2">Name</th>
@@ -247,6 +313,21 @@
     </table>
 
 <hr/>
+
+<h2>Namelist items for Driver MEGAN Physics</h2>
+    <table border="1" cellpadding="10">
+    <caption>Driver Physics</caption>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
+      <th>Description</th>
+      </tr>
+      <tr>
+      <th colspan="1">Valid values</th>
+      </tr>
+      <xsl:apply-templates select="entry[@category='drv_physics']"/>
+    </table>
+
 
 <h2>Namelist items for Driver Dry Deposition</h2>
     <table border="1" cellpadding="10">

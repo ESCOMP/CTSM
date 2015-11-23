@@ -837,6 +837,15 @@ sub setup_cmdl_bgc {
       fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values\n");
     }
   }
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    my $var = "use_fun";
+    if ( ! defined($nl->get_value($var)) ) {
+       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+    }
+    if ( (! value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) && value_is_true($nl->get_value('use_fun')) ) {
+       fatal_error("When FUN is on, use_nitrif_denitrif MUST also be on!\n");
+    }
+  }
 } # end bgc
 
 #-------------------------------------------------------------------------------
@@ -1466,6 +1475,11 @@ sub process_namelist_inline_logic {
   ###############################
   setup_logic_nitrogen_deposition($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
+  ##################################
+  # namelist group: cnmresp_inparm #
+  ##################################
+  setup_logic_cnmresp($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
   #################################
   # namelist group: popd_streams  #
   #################################
@@ -1520,6 +1534,11 @@ sub process_namelist_inline_logic {
   # namelist group: canopyhydrology_inparm #
   #############################################
   setup_logic_canopyhydrology($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #####################################
+  # namelist group: clm_canopy_inparm #
+  #####################################
+  setup_logic_canopy($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
 #-------------------------------------------------------------------------------
@@ -1827,7 +1846,7 @@ sub setup_logic_params_file {
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'paramfile', 
-                'use_ed'=>$nl_flags->{'use_ed'},
+                'use_ed'=>$nl_flags->{'use_ed'}, 'phys'=>$nl_flags->{'phys'},
                 'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
   } else {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fpftcon');
@@ -2049,7 +2068,7 @@ sub setup_logic_initial_conditions {
                     'use_century_decomp'=>$nl_flags->{'use_century_decomp'},
                     'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
                     'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_crop'=>$nl_flags->{'use_crop'},
-                    'irrigate'=>$nl_flags->{'irrigate'} );
+                    'irrigate'=>$nl_flags->{'irrigate'}, 'phys'=>$nl_flags->{'phys'} );
       }
     } elsif ($opts->{'ignore_ic_year'}) {
       if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
@@ -2069,7 +2088,7 @@ sub setup_logic_initial_conditions {
                     'use_century_decomp'=>$nl_flags->{'use_century_decomp'},
                     'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
                     'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_crop'=>$nl_flags->{'use_crop'},
-                    'irrigate'=>$nl_flags->{'irrigate'} );
+                    'irrigate'=>$nl_flags->{'irrigate'}, 'phys'=>$nl_flags->{'phys'} );
       }
     } else {
       if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
@@ -2089,7 +2108,7 @@ sub setup_logic_initial_conditions {
                     'use_century_decomp'=>$nl_flags->{'use_century_decomp'},
                     'sim_year'=>$nl_flags->{'sim_year'}, 'maxpft'=>$nl_flags->{'maxpft'},
                     'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_crop'=>$nl_flags->{'use_crop'},
-                    'irrigate'=>$nl_flags->{'irrigate'} );
+                    'irrigate'=>$nl_flags->{'irrigate'}, 'phys'=>$nl_flags->{'phys'} );
       }
     }
     my $finidat = $nl->get_value($var);
@@ -2450,7 +2469,7 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") &&
-       $nl_flags->{'bgc_mode'} eq "bgc" ) {
+       value_is_true($nl_flags->{'use_cn'}) ) {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_flexibleCN' );
     $nl_flags->{'use_flexibleCN'} = $nl->get_value('use_flexibleCN');
 
@@ -2491,6 +2510,10 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'carbon_resp_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
     }
+  } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") && ! value_is_true($nl_flags->{'use_cn'}) ) {
+     if ( value_is_true($nl->get_value('use_flexibleCN')) ) {
+        fatal_error("use_flexibleCN can ONLY be set if CN is on\n");
+     }
   }
 }
 
@@ -2670,6 +2693,43 @@ sub setup_logic_nitrogen_deposition {
                   "stream_year_last_ndep, model_year_align_ndep, nor stream_fldfilename_ndep" .
                   " can be set!\n");
     }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cnmresp {
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  #
+  # CN Maintence respiration for bgc=CN
+  #
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_mode'} ne "sp" ) {
+    # When FUN is on and it's clm5_0 get a default value
+    if ( value_is_true( $nl->get_value('use_fun') ) && $physv->as_long() >= $physv->as_long("clm5_0")) {
+       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, 
+                   $nl, 'br_root', 'phys'=>$nl_flags->{'phys'}, 
+                   'use_fun'=>$nl->get_value('use_fun'),
+                   'use_cn'=>$nl_flags->{'use_cn'} );
+    }
+  } else {
+    # If bgc is NOT CN/CNDV then make sure not set
+    if ( defined($nl->get_value('br_root'))) {
+      fatal_error("br_root can NOT be set when phys==clm4_0 or bgc_mode==sp!\n");
+    }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_canopy {
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+  #
+  # Canopy state
+  #
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, 
+                 $nl, 'leaf_mr_vcm', 'phys'=>$nl_flags->{'phys'} )
   }
 }
 
@@ -2979,7 +3039,9 @@ sub write_output_files {
     }
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
       push @groups, "clm_humanindex_inparm";
+      push @groups, "cnmresp_inparm";
       push @groups, "cnfire_inparm";
+      push @groups, "clm_canopy_inparm";
     }
   }
 

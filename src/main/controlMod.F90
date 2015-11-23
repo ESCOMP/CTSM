@@ -33,7 +33,7 @@ module controlMod
   use SurfaceAlbedoMod                 , only: albice, lake_melt_icealb
   use UrbanParamsType                  , only: UrbanReadNML
   use HumanIndexMod                    , only: HumanIndexReadNML
-  use CNSharedParamsMod                , only: anoxia_wtsat
+  use CNSharedParamsMod                , only: anoxia_wtsat, use_fun
   use C14BombSpikeMod                  , only: use_c14_bombspike, atm_c14_filename
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
@@ -105,6 +105,7 @@ contains
     ! !USES:
     use clm_time_manager , only : set_timemgr_init
     use fileutils        , only : getavu, relavu
+    use CNMRespMod       , only : CNMRespReadNML
     !
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
@@ -164,7 +165,7 @@ contains
          perchroot, perchroot_alt
 
     namelist /clm_inparm / &
-         anoxia, anoxia_wtsat
+         anoxia, anoxia_wtsat, use_fun
 
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
@@ -409,6 +410,10 @@ contains
     ! Read in other namelists that are dependent on other namelist setttings
     ! ----------------------------------------------------------------------
 
+    if ( use_fun ) then
+       call CNMRespReadNML( NLFilename )
+    end if
+
     if ( use_cn ) then
        call CNFireReadNML( NLFilename )
     end if
@@ -603,6 +608,7 @@ contains
     if (use_cn) then
        call mpi_bcast (use_c14_bombspike,  1, MPI_LOGICAL, 0, mpicom, ier)
        call mpi_bcast (atm_c14_filename,  len(atm_c14_filename), MPI_CHARACTER, 0, mpicom, ier)
+       call mpi_bcast (use_fun,            1, MPI_LOGICAL, 0, mpicom, ier)
     end if
 
     call mpi_bcast (perchroot, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -760,6 +766,10 @@ contains
        else
           call endrun(msg=' error: spinup_state can only have integer value of 0 or 1 or 2'//&
                errMsg(__FILE__, __LINE__))
+       end if
+
+       if ( use_fun ) then
+          write(iulog,*) '   Fixation and Uptake of Nitrogen Model Version 2 (FUN2) is turned on for Nitrogen Competition'
        end if
        
        write(iulog,*) '   override_bgc_restart_mismatch_dump                     : ', override_bgc_restart_mismatch_dump

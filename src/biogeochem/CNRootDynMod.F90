@@ -134,7 +134,9 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
             c = pcolumn(p)
             if (ivt(p) /= noveg) then
                 if((ivt(p)) >= npcropmin)then !skip generic crop types
-                    root_depth(p) = max(zi(c,2), min(hui(p)/huigrain(p)* root_dmx(ivt(p)), root_dmx(ivt(p))))
+                    if(huigrain(p) > 0._r8)then
+                        root_depth(p) = max(zi(c,2), min(hui(p)/huigrain(p)* root_dmx(ivt(p)), root_dmx(ivt(p))))
+                    end if
                 else
                 ! this can be changed to any depth (i.e. the maximum soil depth)
                     root_depth(p) = zi(c,nlevsoi) 

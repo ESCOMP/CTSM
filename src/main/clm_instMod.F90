@@ -158,11 +158,23 @@ module clm_instMod
   type(ed_phenology_type)                 :: ed_phenology_inst
   type(ed_clm_type)                       :: ed_clm_inst
   !
-  public :: clm_instInit
-  public :: clm_instRest
+  public :: clm_instInit       ! Initialize
+  public :: clm_instReadNML    ! Read in namelist
+  public :: clm_instRest       ! Setup restart
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine clm_instReadNML( NLFilename )
+    !
+    ! !ARGUMENTS    
+    implicit none
+    character(len=*), intent(IN) :: NLFilename ! Namelist filename
+    ! Read in any namelists that must be read for any clm object instances that need it
+    call canopystate_inst%ReadNML( NLFilename )
+
+  end subroutine clm_instReadNML
 
   !-----------------------------------------------------------------------
   subroutine clm_instInit(bounds)
@@ -441,6 +453,8 @@ contains
     call atm2lnd_inst%InitAccBuffer(bounds)
 
     call temperature_inst%InitAccBuffer(bounds)
+    
+    call waterflux_inst%InitAccBuffer(bounds)
 
     if (use_ed) then
        call ed_phenology_inst%initAccBuffer(bounds)

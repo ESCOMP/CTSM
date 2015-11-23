@@ -32,7 +32,8 @@ module CNPhenologyMod
   use WaterstateType                  , only : waterstate_type
   use ColumnType                      , only : col                
   use GridcellType                    , only : grc                
-  use PatchType                       , only : patch                
+  use PatchType                       , only : patch   
+  use atm2lndType                     , only : atm2lnd_type             
   use atm2lndType                     , only : atm2lnd_type
   !
   implicit none
@@ -177,9 +178,11 @@ contains
        filter_soilp, num_pcropp, filter_pcropp, &
        doalb, waterstate_inst, temperature_inst, atm2lnd_inst, crop_inst, &
        canopystate_inst, soilstate_inst, dgvs_inst, &
-       cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+       cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,    &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, leaf_prof_patch, &
-       froot_prof_patch)
+       froot_prof_patch, phase)
+    ! !USES:
+    use CNSharedParamsMod, only: use_fun
     !
     ! !DESCRIPTION:
     ! Dynamic phenology routine for coupled carbon-nitrogen code (CN)
@@ -208,6 +211,7 @@ contains
     type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
     real(r8)                       , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
     real(r8)                       , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
+    integer                        , intent(in)    :: phase
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), errMsg(__FILE__, __LINE__))
@@ -216,48 +220,52 @@ contains
     ! each of the following phenology type routines includes a filter
     ! to operate only on the relevant patches
 
-    call CNPhenologyClimate(num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
-         temperature_inst, cnveg_state_inst)
+    if ( phase == 1 ) then
+       call CNPhenologyClimate(num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
+            temperature_inst, cnveg_state_inst)
+   
+       call CNEvergreenPhenology(num_soilp, filter_soilp, &
+            cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
-    call CNEvergreenPhenology(num_soilp, filter_soilp, &
-         cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
-
-    call CNSeasonDecidPhenology(num_soilp, filter_soilp, &
-         temperature_inst, cnveg_state_inst, dgvs_inst, &
-         cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
-
-    call CNStressDecidPhenology(num_soilp, filter_soilp,   &
-         soilstate_inst, temperature_inst, atm2lnd_inst, cnveg_state_inst, &
-         cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
-
-    if (doalb .and. num_pcropp > 0 ) then
-       call CropPhenology(num_pcropp, filter_pcropp, &
-            waterstate_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst, &
+       call CNSeasonDecidPhenology(num_soilp, filter_soilp, &
+            temperature_inst, cnveg_state_inst, dgvs_inst, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+
+       call CNStressDecidPhenology(num_soilp, filter_soilp,   &
+            soilstate_inst, temperature_inst, atm2lnd_inst, cnveg_state_inst, &
+            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+
+       if (doalb .and. num_pcropp > 0 ) then
+          call CropPhenology(num_pcropp, filter_pcropp, &
+               waterstate_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst, &
+               cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+       end if
+    else if ( phase == 2 ) then
+       ! the same onset and offset routines are called regardless of
+       ! phenology type - they depend only on onset_flag, offset_flag, bglfr, and bgtr
+
+       call CNOnsetGrowth(num_soilp, filter_soilp, &
+            cnveg_state_inst, &
+            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+
+       call CNOffsetLitterfall(num_soilp, filter_soilp, &
+            cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+
+       call CNBackgroundLitterfall(num_soilp, filter_soilp, &
+            cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+   
+       call CNLivewoodTurnover(num_soilp, filter_soilp, &
+            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+
+       ! gather all patch-level litterfall fluxes to the column for litter C and N inputs
+
+       call CNLitterToColumn(bounds, num_soilc, filter_soilc, &
+            cnveg_state_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+            leaf_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full), & 
+            froot_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full))
+    else
+       call endrun( 'bad phase' )
     end if
-
-    ! the same onset and offset routines are called regardless of
-    ! phenology type - they depend only on onset_flag, offset_flag, bglfr, and bgtr
-
-    call CNOnsetGrowth(num_soilp, filter_soilp, &
-         cnveg_state_inst, &
-         cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
-
-    call CNOffsetLitterfall(num_soilp, filter_soilp, &
-         cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
-
-    call CNBackgroundLitterfall(num_soilp, filter_soilp, &
-         cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
-
-    call CNLivewoodTurnover(num_soilp, filter_soilp, &
-         cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
-
-    ! gather all patch-level litterfall fluxes to the column for litter C and N inputs
-
-    call CNLitterToColumn(bounds, num_soilc, filter_soilc, &
-         cnveg_state_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
-         leaf_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full), & 
-         froot_prof_patch(bounds%begp:bounds%endp,1:nlevdecomp_full))
 
   end subroutine CNPhenology
 
@@ -908,6 +916,7 @@ contains
     !
     ! !USES:
     use clm_time_manager , only : get_days_per_year
+    use CNSharedParamsMod, only : use_fun
     use clm_varcon       , only : secspday
     use shr_const_mod    , only : SHR_CONST_TKFRZ, SHR_CONST_PI
     use CNSharedParamsMod, only : CNParamsShareInst
@@ -940,6 +949,7 @@ contains
          ivt                                 =>    patch%itype                                                   , & ! Input:  [integer   (:)   ]  patch vegetation type                                
          dayl                                =>    grc%dayl                                                    , & ! Input:  [real(r8)  (:)   ]  daylength (s)
          
+         prec10                              => atm2lnd_inst%prec10_patch                                     , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
          leaf_long                           =>    pftcon%leaf_long                                            , & ! Input:  leaf longevity (yrs)                              
          woody                               =>    pftcon%woody                                                , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          stress_decid                        =>    pftcon%stress_decid                                         , & ! Input:  binary flag for stress-deciduous leaf habit (0 or 1)
@@ -947,7 +957,6 @@ contains
          soilpsi                             =>    soilstate_inst%soilpsi_col                                  , & ! Input:  [real(r8)  (:,:) ]  soil water potential in each soil layer (MPa)   
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-         prec10                              => atm2lnd_inst%prec10_patch                                      , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation                  
          dormant_flag                        =>    cnveg_state_inst%dormant_flag_patch                         , & ! Output:  [real(r8) (:)   ]  dormancy flag                                     
          days_active                         =>    cnveg_state_inst%days_active_patch                          , & ! Output:  [real(r8) (:)   ]  number of days since last dormancy                
          onset_flag                          =>    cnveg_state_inst%onset_flag_patch                           , & ! Output:  [real(r8) (:)   ]  onset flag                                        
@@ -964,7 +973,9 @@ contains
          bglfr                               =>    cnveg_state_inst%bglfr_patch                                , & ! Output:  [real(r8) (:)   ]  background litterfall rate (1/s)                  
          bgtr                                =>    cnveg_state_inst%bgtr_patch                                 , & ! Output:  [real(r8) (:)   ]  background transfer growth rate (1/s)             
          annavg_t2m                          =>    cnveg_state_inst%annavg_t2m_patch                           , & ! Output:  [real(r8) (:)   ]  annual average 2m air temperature (K)             
+         leafc                               =>    cnveg_carbonstate_inst%leafc_patch                          , & ! Input:  [real(r8)  (:)   ]  (gC/m2) leaf C 
      
+         frootc                              =>    cnveg_carbonstate_inst%frootc_patch                         , & ! Input:  [real(r8) (:)    ]  (gC/m2) fine root C
          leafc_storage                       =>    cnveg_carbonstate_inst%leafc_storage_patch                  , & ! Input:  [real(r8)  (:)   ]  (gC/m2) leaf C storage                            
          frootc_storage                      =>    cnveg_carbonstate_inst%frootc_storage_patch                 , & ! Input:  [real(r8)  (:)   ]  (gC/m2) fine root C storage                       
          livestemc_storage                   =>    cnveg_carbonstate_inst%livestemc_storage_patch              , & ! Input:  [real(r8)  (:)   ]  (gC/m2) live stem C storage                       
@@ -978,9 +989,6 @@ contains
          deadstemc_xfer                      =>    cnveg_carbonstate_inst%deadstemc_xfer_patch                 , & ! Output:  [real(r8) (:)   ]  (gC/m2) dead stem C transfer                      
          livecrootc_xfer                     =>    cnveg_carbonstate_inst%livecrootc_xfer_patch                , & ! Output:  [real(r8) (:)   ]  (gC/m2) live coarse root C transfer               
          deadcrootc_xfer                     =>    cnveg_carbonstate_inst%deadcrootc_xfer_patch                , & ! Output:  [real(r8) (:)   ]  (gC/m2) dead coarse root C transfer               
-         leafc                               =>    cnveg_carbonstate_inst%leafc_patch                          , & ! Input:   [real(r8) (:)   ]  (gC/m2) leaf C
-         frootc                              =>    cnveg_carbonstate_inst%frootc_patch                         , & ! Input:   [real(r8) (:)   ]  (gC/m2) root C
-         
          leafn_storage                       =>    cnveg_nitrogenstate_inst%leafn_storage_patch                , & ! Input:  [real(r8)  (:)   ]  (gN/m2) leaf N storage                            
          frootn_storage                      =>    cnveg_nitrogenstate_inst%frootn_storage_patch               , & ! Input:  [real(r8)  (:)   ]  (gN/m2) fine root N storage                       
          livestemn_storage                   =>    cnveg_nitrogenstate_inst%livestemn_storage_patch            , & ! Input:  [real(r8)  (:)   ]  (gN/m2) live stem N storage                       
@@ -1153,7 +1161,9 @@ contains
                ! if critical soil water index is exceeded, set onset_flag, and
                ! then test for soil temperature criteria
 
-               if (onset_swi(p) > crit_onset_swi) then
+               ! Adding in Kyla's rainfall trigger when fun on. RF. prec10 (mm/s) needs to be higher than 8mm over 10 days. 
+           
+               if (onset_swi(p) > crit_onset_swi.and.(.not. use_fun .or. (prec10(p)*24.0_r8*3600.0_r8*10._r8.gt.8.0_r8)) ) then
                   onset_flag(p) = 1._r8
 
                   ! only check soil temperature criteria if freeze flag set since
@@ -1273,6 +1283,12 @@ contains
             ! only begin to calculate a lgsf greater than 0.0 once the number
             ! of days active exceeds days/year.
             lgsf(p) = max(min(3.0_r8*(days_active(p)-leaf_long(ivt(p))*dayspyr )/dayspyr, 1._r8),0._r8)
+            ! RosieF. 5 Nov 2015.  Changed this such that the increase in leaf turnover is faster after
+            ! trees enter the 'fake evergreen' state. Otherwise, they have a whole year of 
+            ! cheating, with less litterfall than they should have, resulting in very high LAI. 
+            ! Further, the 'fake evergreen' state (where lgsf>0) is entered at the end of a single leaf lifespan
+            ! and not a whole year. The '3' is arbitrary, given that this entire system is quite abstract. 
+
 
             ! set background litterfall rate, when not in the phenological offset period
             if (offset_flag(p) == 1._r8) then
@@ -1296,6 +1312,8 @@ contains
 
                ! set carbon fluxes for shifting storage pools to transfer pools
 
+               ! reduced the amount of stored carbon flowing to display pool by only counting the delta
+               ! between leafc and leafc_store in the flux. RosieF, Nov5 2015. 
                leafc_storage_to_xfer(p)  = max(0.0_r8,(leafc_storage(p)-leafc(p))) * bgtr(p)
                frootc_storage_to_xfer(p) = max(0.0_r8,(frootc_storage(p)-frootc(p))) * bgtr(p)
                if (woody(ivt(p)) == 1.0_r8) then
@@ -2155,13 +2173,14 @@ contains
     ! pools during the phenological offset period.
     !
     ! !USES:
-    use pftconMod, only : npcropmin
-    use clm_varctl          , only : CNratio_floating    
+    use pftconMod        , only : npcropmin
+    use CNSharedParamsMod, only : use_fun
+    use clm_varctl       , only : CNratio_floating    
     !
     ! !ARGUMENTS:
     integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                       , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    type(cnveg_state_type)            , intent(inout) :: cnveg_state_inst
+    type(cnveg_state_type)        , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)  , intent(in)    :: cnveg_carbonstate_inst
     type(cnveg_nitrogenstate_type), intent(in)    :: cnveg_nitrogenstate_inst
     type(cnveg_carbonflux_type)   , intent(inout) :: cnveg_carbonflux_inst
@@ -2171,11 +2190,13 @@ contains
     integer :: p, c         ! indices
     integer :: fp           ! lake filter patch index
     real(r8):: t1           ! temporary variable
+    real(r8):: denom        ! temporary variable for divisor
     real(r8) :: ntovr_leaf  
+    real(r8) :: fr_leafn_to_litter ! fraction of the nitrogen turnover that goes to litter; remaining fraction is retranslocated
     !-----------------------------------------------------------------------
 
     associate(                                                                           & 
-         ivt                   =>    patch%itype                                         , & ! Input:  [integer  (:) ]  patch vegetation type                                
+         ivt                   =>    patch%itype                                       , & ! Input:  [integer  (:) ]  patch vegetation type                                
 
          leafcn                =>    pftcon%leafcn                                     , & ! Input:  leaf C:N (gC/gN)                                  
          lflitcn               =>    pftcon%lflitcn                                    , & ! Input:  leaf litter C:N (gC/gN)                           
@@ -2208,7 +2229,10 @@ contains
          grainn_to_food        =>    cnveg_nitrogenflux_inst%grainn_to_food_patch      , & ! Output: [real(r8) (:) ]  grain N to food (gN/m2/s)                         
          leafn_to_litter       =>    cnveg_nitrogenflux_inst%leafn_to_litter_patch     , & ! Output: [real(r8) (:) ]  leaf N litterfall (gN/m2/s)                       
          leafn_to_retransn     =>    cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Output: [real(r8) (:) ]  leaf N to retranslocated N pool (gN/m2/s)         
-         frootn_to_litter      =>    cnveg_nitrogenflux_inst%frootn_to_litter_patch      & ! Output: [real(r8) (:) ]  fine root N litterfall (gN/m2/s)                  
+         frootn_to_litter      =>    cnveg_nitrogenflux_inst%frootn_to_litter_patch    , & ! Output: [real(r8) (:) ]  fine root N litterfall (gN/m2/s)                  
+         leafc_to_litter_fun   =>    cnveg_carbonflux_inst%leafc_to_litter_fun_patch   , & ! Output:  [real(r8) (:) ]  leaf C litterfall used by FUN (gC/m2/s)
+         leafcn_offset         =>    cnveg_state_inst%leafcn_offset_patch              , & ! Output:  [real(r8) (:) ]  Leaf C:N used by FUN
+         Nretrans              =>    cnveg_nitrogenflux_inst%Nretrans_patch              & ! Input:   [real(r8) (:) ]  Retranslocation N uptake (gN/m2/s)
          )
 
       ! The litterfall transfer rate starts at 0.0 and increases linearly
@@ -2234,27 +2258,54 @@ contains
                t1 = dt * 2.0_r8 / (offset_counter(p) * offset_counter(p))
                leafc_to_litter(p)  = prev_leafc_to_litter(p)  + t1*(leafc(p)  - prev_leafc_to_litter(p)*offset_counter(p))
                frootc_to_litter(p) = prev_frootc_to_litter(p) + t1*(frootc(p) - prev_frootc_to_litter(p)*offset_counter(p))
-            end if
 
-            ! calculate the leaf N litterfall and retranslocation
-            leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
-            leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
-            
-            if (CNratio_floating .eqv. .true.) then    
-               if (leafc(p) == 0.0_r8) then    
-                   ntovr_leaf = 0.0_r8    
-                else    
-                   ntovr_leaf = leafc_to_litter(p) * (leafn(p) / leafc(p))   
-                end if   
-              
-                leafn_to_litter(p)   = 0.5_r8 * ntovr_leaf  ! assuming 50% goes to litter 
-                leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)   
+            end if
+            if ( use_fun ) then
+               leafc_to_litter_fun(p)      =  leafc_to_litter(p)
+               leafn_to_retransn(p)        =  Nretrans(p)
+               if (leafn(p).gt.0._r8) then
+                  if (leafn(p)-leafn_to_retransn(p)*dt.gt.0._r8) then
+                      leafcn_offset(p)     =  leafc(p)/(leafn(p)-leafn_to_retransn(p)*dt)
+                  else
+                      leafcn_offset(p)     =  leafc(p)/leafn(p)
+                  end if
+               else
+                  leafcn_offset(p)         =  leafcn(ivt(p))
+               end if
+               leafn_to_litter(p)          =  leafc_to_litter(p)/leafcn_offset(p) - leafn_to_retransn(p)
+               leafn_to_litter(p)          =  max(leafn_to_litter(p),0._r8)
+               
+               denom = ( leafn_to_retransn(p) + leafn_to_litter(p) )
+               if ( denom /= 0.0_r8 ) then
+                  fr_leafn_to_litter =  leafn_to_litter(p) / ( leafn_to_retransn(p) + leafn_to_litter(p) )
+               else if ( leafn_to_litter(p) == 0.0_r8 ) then
+                  fr_leafn_to_litter =  0.0_r8
+               else
+                  fr_leafn_to_litter =  1.0_r8
+               end if
+
+            else
+               if (CNratio_floating .eqv. .true.) then    
+                  fr_leafn_to_litter = 0.5_r8    ! assuming 50% of nitrogen turnover goes to litter
+               end if
+               ! calculate the leaf N litterfall and retranslocation
+               leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
+               leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
+
             end if    
 
             ! calculate fine root N litterfall (no retranslocation of fine root N)
             frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
             
             if (CNratio_floating .eqv. .true.) then    
+               if (leafc(p) == 0.0_r8) then    
+                  ntovr_leaf = 0.0_r8    
+               else    
+                  ntovr_leaf = leafc_to_litter(p) * (leafn(p) / leafc(p))   
+               end if   
+           
+               leafn_to_litter(p)   = fr_leafn_to_litter * ntovr_leaf
+               leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)
                if (frootc(p) == 0.0_r8) then    
                    frootn_to_litter(p) = 0.0_r8    
                 else    
@@ -2290,8 +2341,11 @@ contains
     ! Determines the flux of C and N from displayed pools to litter
     ! pools as the result of background litter fall.
     !
+    ! !USES:
+    use CNSharedParamsMod   , only : use_fun
     use clm_varctl          , only : CNratio_floating    
     ! !ARGUMENTS:
+    implicit none
     integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                       , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(cnveg_state_type)        , intent(in)    :: cnveg_state_inst
@@ -2303,7 +2357,9 @@ contains
     ! !LOCAL VARIABLES:
     integer :: p            ! indices
     integer :: fp           ! lake filter patch index
+    real(r8) :: fr_leafn_to_litter ! fraction of the nitrogen turnover that goes to litter; remaining fraction is retranslocated
     real(r8) :: ntovr_leaf  
+    real(r8) :: denom       
     !-----------------------------------------------------------------------
 
     associate(                                                                     & 
@@ -2325,7 +2381,10 @@ contains
          frootn            =>    cnveg_nitrogenstate_inst%frootn_patch           , & ! Input:  [real(r8) (:) ]  (gN/m2) fine root N 
          leafn_to_litter   =>    cnveg_nitrogenflux_inst%leafn_to_litter_patch   , & ! Output: [real(r8) (:) ]                                                    
          leafn_to_retransn =>    cnveg_nitrogenflux_inst%leafn_to_retransn_patch , & ! Output: [real(r8) (:) ]                                                    
-         frootn_to_litter  =>    cnveg_nitrogenflux_inst%frootn_to_litter_patch    & ! Output: [real(r8) (:) ]                                                    
+         frootn_to_litter  =>    cnveg_nitrogenflux_inst%frootn_to_litter_patch  , & ! Output: [real(r8) (:) ]                                                    
+         leafc_to_litter_fun   => cnveg_carbonflux_inst%leafc_to_litter_fun_patch, & ! Output:  [real(r8) (:) ] leaf C litterfall used by FUN (gC/m2/s)
+         leafcn_offset         => cnveg_state_inst%leafcn_offset_patch           , & ! Output:  [real(r8) (:) ] Leaf C:N used by FUN
+         Nretrans              => cnveg_nitrogenflux_inst%Nretrans_patch           & ! Input:   [real(r8) (:) ] Retranslocation N uptake (gN/m2/s)
          )
 
       ! patch loop
@@ -2337,26 +2396,53 @@ contains
             ! units for bglfr are already 1/s
             leafc_to_litter(p)  = bglfr(p) * leafc(p)
             frootc_to_litter(p) = bglfr(p) * frootc(p)
+            if ( use_fun ) then
+               leafc_to_litter_fun(p)     = leafc_to_litter(p)
+               leafn_to_retransn(p)       = Nretrans(p)
+               if (leafn(p).gt.0._r8) then
+                  if (leafn(p)-leafn_to_retransn(p)*dt.gt.0._r8) then
+                     leafcn_offset(p)     = leafc(p)/(leafn(p)-leafn_to_retransn(p)*dt)
+                  else
+                     leafcn_offset(p)     = leafc(p)/leafn(p)
+                  end if
+               else
+                  leafcn_offset(p)        = leafcn(ivt(p))
+               end if
+               leafn_to_litter(p)         = leafc_to_litter(p)/leafcn_offset(p) - leafn_to_retransn(p)
+               leafn_to_litter(p)         = max(leafn_to_litter(p),0._r8)
 
-            ! calculate the leaf N litterfall and retranslocation
-            leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
-            leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
-            
-            if (CNratio_floating .eqv. .true.) then    
-               if (leafc(p) == 0.0_r8) then    
-                   ntovr_leaf = 0.0_r8    
-                else    
-                   ntovr_leaf = leafc_to_litter(p) * (leafn(p) / leafc(p))   
-                end if   
-              
-                leafn_to_litter(p)   = 0.5_r8 * ntovr_leaf  ! assuming 50% goes to litter 
-                leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)   
+               denom = ( leafn_to_retransn(p) + leafn_to_litter(p) )
+               if ( denom /= 0.0_r8 ) then
+                  fr_leafn_to_litter =  leafn_to_litter(p) / ( leafn_to_retransn(p) + leafn_to_litter(p) )
+               else if ( leafn_to_litter(p) == 0.0_r8 ) then
+                  fr_leafn_to_litter =  0.0_r8
+               else
+                  fr_leafn_to_litter =  1.0_r8
+               end if
+
+
+            else
+               if (CNratio_floating .eqv. .true.) then    
+                  fr_leafn_to_litter = 0.5_r8    ! assuming 50% of nitrogen turnover goes to litter
+               end if
+               ! calculate the leaf N litterfall and retranslocation
+               leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
+               leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
+
             end if    
 
             ! calculate fine root N litterfall (no retranslocation of fine root N)
             frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
             
             if (CNratio_floating .eqv. .true.) then    
+               if (leafc(p) == 0.0_r8) then    
+                  ntovr_leaf = 0.0_r8    
+               else    
+                  ntovr_leaf = leafc_to_litter(p) * (leafn(p) / leafc(p))   
+               end if   
+           
+               leafn_to_litter(p)   = fr_leafn_to_litter * ntovr_leaf
+               leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)
                if (frootc(p) == 0.0_r8) then    
                    frootn_to_litter(p) = 0.0_r8    
                 else    
@@ -2380,6 +2466,7 @@ contains
     ! Determines the flux of C and N from live wood to
     ! dead wood pools, for stem and coarse root.
     !
+    use CNSharedParamsMod, only: use_fun
     use clm_varctl          , only : CNratio_floating    
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -2417,6 +2504,8 @@ contains
          livecrootn_to_deadcrootn =>    cnveg_nitrogenflux_inst%livecrootn_to_deadcrootn_patch , & ! Output: [real(r8) (:) ]                                                    
          livecrootn_to_retransn   =>    cnveg_nitrogenflux_inst%livecrootn_to_retransn_patch     & ! Output: [real(r8) (:) ]                                                    
          )
+
+
 
       ! patch loop
       do fp = 1,num_soilp
@@ -2462,6 +2551,11 @@ contains
             end if    
             
             livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
+            if(use_fun)then
+               !TURNED OFF FLUXES TO CORRECT N ACCUMULATION ISSUE. RF. Oct 2015. 
+               livecrootn_to_retransn(p) = 0.0_r8
+               livestemn_to_retransn(p)  = 0.0_r8
+            endif
 
          end if
 

@@ -16,6 +16,9 @@ module SoilBiogeochemLittVertTranspMod
   use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ColumnType                         , only : col                
+  use GridcellType                       , only : grc
+  use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   !
   implicit none
   private
@@ -275,19 +278,23 @@ contains
 
             do s = 1, ndecomp_pools
 
-               if ( spinup_state >= 1 ) then
-                  ! increase transport (both advection and diffusion) by the same factor as accelerated decomposition for a given pool
-                  spinup_term = spinup_factor(s)
-               else
-                  spinup_term = 1.
-               endif
-
                if ( .not. is_cwd(s) ) then
 
                   do j = 1,nlevdecomp+1
                      do fc = 1, num_soilc
                         c = filter_soilc (fc)
                         !
+                        if ( spinup_state >= 1 ) then
+                           ! increase transport (both advection and diffusion) by the same factor as accelerated decomposition for a given pool
+                           spinup_term = spinup_factor(s)
+                        else
+                           spinup_term = 1._r8
+                        endif
+
+                        if (abs(spinup_term - 1._r8) > .000001_r8 ) then
+                           spinup_term = spinup_term * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+                        endif
+
                         if ( abs(som_adv_coef(c,j)) * spinup_term < epsilon ) then
                            adv_flux(c,j) = epsilon
                         else
