@@ -101,6 +101,7 @@ contains
 
          qflx_evap_tot      => waterflux_inst%qflx_evap_tot_col      , & ! Input:  [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
          qflx_glcice_melt   => waterflux_inst%qflx_glcice_melt_col   , & ! Input:  [real(r8) (:)]  ice melt (positive definite) (mm H2O/s)      
+         qflx_snwcp_ice     => waterflux_inst%qflx_snwcp_ice_col     , & ! Input: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
          qflx_h2osfc_surf   => waterflux_inst%qflx_h2osfc_surf_col   , & ! Output: [real(r8) (:)   ]  surface water runoff (mm/s)                        
          qflx_drain_perched => waterflux_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ]  sub-surface runoff from perched zwt (mm H2O /s)   
          qflx_rsub_sat      => waterflux_inst%qflx_rsub_sat_col      , & ! Output: [real(r8) (:)   ]  soil saturation excess [mm h2o/s]                 
@@ -112,10 +113,9 @@ contains
          qflx_runoff        => waterflux_inst%qflx_runoff_col        , & ! Output: [real(r8) (:)   ]  total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_runoff_u      => waterflux_inst%qflx_runoff_u_col      , & ! Output: [real(r8) (:)   ]  Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
          qflx_runoff_r      => waterflux_inst%qflx_runoff_r_col      , & ! Output: [real(r8) (:)   ]  Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-         qflx_snwcp_ice     => waterflux_inst%qflx_snwcp_ice_col     , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
          qflx_glcice        => waterflux_inst%qflx_glcice_col        , & ! Output: [real(r8) (:)   ]  flux of new glacier ice (mm H2O /s)               
          qflx_glcice_frz    => waterflux_inst%qflx_glcice_frz_col    , & ! Output: [real(r8) (:)   ]  ice growth (positive definite) (mm H2O/s)         
-
+         qflx_ice_runoff_snwcp => waterflux_inst%qflx_ice_runoff_snwcp_col, & ! Output: [real(r8) (:)] solid runoff from snow capping (mm H2O /s)
          qflx_irrig         => irrigation_inst%qflx_irrig_col          & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)                       
          )
 
@@ -236,18 +236,36 @@ contains
             qflx_runoff_r(c) = qflx_runoff(c)
          end if
 
+         ! Start by assuming that all capped snow runs off as ice runoff. This is
+         ! adjusted later in this routine.
+         qflx_ice_runoff_snwcp(c) = qflx_snwcp_ice(c)
+
       end do
 
-      ! Calculate positive surface mass balance to ice sheets, and adjust qflx_snwcp_ice.
+      ! Calculate positive surface mass balance to ice sheets, and adjust
+      ! qflx_ice_runoff_snwcp.
       !
       ! SMB is generated from capped-snow amount. This is done over istice_mec columns,
       ! and also any other columns included in do_smb_c filter, where perennial snow has
       ! remained for at least snow_persistence_max.
       !
-      ! TODO(wjs, 2015-11-13) This code is in this module for historical reasons. It
-      ! probably should be moved to some (new?) glacier-specific module. But note that the
-      ! following adjustments to qflx_snwcp_ice need to be done AFTER qflx_qrgwl is
-      ! computed using qflx_snwcp_ice.
+      ! TODO(wjs, 2015-11-18) This code is in this subroutine mainly for historical
+      ! reasons; its main connection to the rest of this subroutine is that it updates
+      ! qflx_ice_runoff_snwcp. It could be moved to some (new?) glacier-specific
+      ! module. In that case, I think we should do something like:
+      ! - Call the new glacier-specific routine before this routine; it would set
+      !   qflx_glcice_frz and qflx_glcice
+      ! - Within this routine (or a separate routine called from here) have logic like the
+      !   following (in a loop over all columns in the nolakec filter):
+      !     if (glc_dyn_runoff_routing(g)) then
+      !        qflx_ice_runoff_snwcp(c) = qflx_ice_runoff_snwcp(c) - qflx_glcice_frz(c)
+      !     else
+      !        qflx_ice_runoff_snwcp(c) = qflx_ice_runoff_snwcp(c) - qflx_glcice_melt(c)
+      !     end if
+      !
+      !   (Note that I think it's okay to do those adjustments for all columns, because
+      !   glcice_frz and glcice_melt should be 0 in columns outside of the smb filter, I
+      !   think.)
 
       do c = bounds%begc,bounds%endc
          qflx_glcice_frz(c) = 0._r8
@@ -262,11 +280,10 @@ contains
             qflx_glcice_frz(c) = qflx_snwcp_ice(c)  
             qflx_glcice(c) = qflx_glcice(c) + qflx_glcice_frz(c)
             if (glc_dyn_runoff_routing(g)) then
-               ! In places where we are coupled to a dynamic glacier model, zero
-               ! qflx_snwcp_ice: qflx_snwcp_ice is the flux sent to ice runoff, but for
-               ! glc_dyn_runoff_routing=T, we do NOT want this to be sent to ice runoff
-               ! (instead it is sent to GLC).
-               qflx_snwcp_ice(c) = 0._r8
+               ! In places where we are coupled to a dynamic glacier model, the glacier
+               ! model handles the fate of capped snow, so we do not want it sent to
+               ! runoff.
+               qflx_ice_runoff_snwcp(c) = 0._r8
             end if
          end if
 
@@ -297,7 +314,7 @@ contains
             ! the snow capping flux removes energy. If both the accumulation and melting
             ! remove energy, there is a double-counting.
             
-            qflx_snwcp_ice(c) = qflx_snwcp_ice(c) - qflx_glcice_melt(c)
+            qflx_ice_runoff_snwcp(c) = qflx_ice_runoff_snwcp(c) - qflx_glcice_melt(c)
          end if
       end do
 

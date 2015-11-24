@@ -50,7 +50,12 @@ module CNFireLi2016Mod
   public :: cnfire_li2016_type
   !
   type, extends(cnfire_base_type) :: cnfire_li2016_type
-    private
+     private
+     ! COMPILER_BUG(wjs, 2015-11-24, intel15.0.3) Without this 'dummy' field, the intel
+     ! compiler sometimes gives a segmentation fault in the constructor: 'Segmentation
+     ! fault - invalid memory reference' -- presumably because there are no data fields
+     ! in the type.
+     integer :: dummy
   contains
      !
      ! !PUBLIC MEMBER FUNCTIONS:
@@ -78,6 +83,8 @@ contains
     ! !DESCRIPTION:
     ! Creates an object of type cnfire_base_type.
     ! !ARGUMENTS:
+
+    constructor%dummy = 0
   end function constructor
 
   !-----------------------------------------------------------------------

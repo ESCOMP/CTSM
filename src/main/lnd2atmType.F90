@@ -178,9 +178,9 @@ contains
          ptr_lnd=this%qflx_rofliq_grc)
 
     this%qflx_rofice_grc(begg:endg) = 0._r8
-    call hist_addfld1d (fname='QSNWCPICE_TO_COUPLER',  units='mm/s',  &
+    call hist_addfld1d (fname='QRUNOFF_ICE_TO_COUPLER',  units='mm/s',  &
          avgflag='A', &
-         long_name='excess snowfall due to snow capping sent to coupler (includes corrections for land use change)', &
+         long_name='total ice runoff sent to coupler (includes corrections for land use change)', &
          ptr_lnd=this%qflx_rofice_grc)
 
     if (use_lch4) then

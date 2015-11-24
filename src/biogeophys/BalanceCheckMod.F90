@@ -193,6 +193,7 @@ contains
           h2osno_old              =>    waterstate_inst%h2osno_old_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
           frac_sno_eff            =>    waterstate_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  effective snow fraction                 
           frac_sno                =>    waterstate_inst%frac_sno_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+          snow_depth              =>    waterstate_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
           begwb                   =>    waterstate_inst%begwb_col               , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
           errh2o                  =>    waterstate_inst%errh2o_col              , & ! Output: [real(r8) (:)   ]  water conservation error (mm H2O)       
           errh2osno               =>    waterstate_inst%errh2osno_col           , & ! Output: [real(r8) (:)   ]  error in h2osno (kg m-2)                
@@ -219,7 +220,8 @@ contains
           qflx_qrgwl              =>    waterflux_inst%qflx_qrgwl_col           , & ! Input:  [real(r8) (:)   ]  qflx_surf at glaciers, wetlands, lakes  
           qflx_drain              =>    waterflux_inst%qflx_drain_col           , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
           qflx_runoff             =>    waterflux_inst%qflx_runoff_col          , & ! Input:  [real(r8) (:)   ]  total runoff (mm H2O /s)                
-          qflx_glcice             =>    waterflux_inst%qflx_glcice_col          , & ! Input:  [real(r8) (:)   ]  flux of new glacier ice (mm H2O /s) [+ if ice grows]
+          qflx_ice_runoff_snwcp   =>    waterflux_inst%qflx_ice_runoff_snwcp_col, & ! Input:  [real(r8) (:)   ] solid runoff from snow capping (mm H2O /s)
+          qflx_ice_runoff_xs      =>    waterflux_inst%qflx_ice_runoff_xs_col   , & ! Input:  [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s)
           qflx_glcice_melt        =>    waterflux_inst%qflx_glcice_melt_col     , & ! Input:  [real(r8) (:)   ]  ice melt (mm H2O/s)              
           qflx_glcice_frz         =>    waterflux_inst%qflx_glcice_frz_col      , & ! Input:  [real(r8) (:)   ]  ice growth (mm H2O/s) [+]               
           qflx_top_soil           =>    waterflux_inst%qflx_top_soil_col        , & ! Input:  [real(r8) (:)   ]  net water input into soil from top (mm/s)
@@ -306,7 +308,8 @@ contains
                   - qflx_qrgwl(c)            &
                   - qflx_drain(c)            &
                   - qflx_drain_perched(c)    &
-                  - qflx_snwcp_ice(c)) * dtime
+                  - qflx_ice_runoff_snwcp(c) &
+                  - qflx_ice_runoff_xs(c)) * dtime
 
           else
 
@@ -316,20 +319,23 @@ contains
 
        end do
 
-       ! For glc_dyn_runoff_routing = T:   
-       ! (1) We have qflx_snwcp_ice = 0, and excess snow has been incorporated in qflx_glcice_frz.
-       !     This flux must be included here to complete the water balance, because it is a
-       !     sink of water as far as CLM is concerned (this water will now be owned by CISM).
-       ! (2) Meltwater from ice (qflx_glcice_melt) is allowed to run off and is included in qflx_qrgwl,
-       !     but the water content of the ice column has not changed (at least for now) because
-       !     an equivalent ice mass has been "borrowed" from the base of the column.  So this mass
-       !     has to be added back to the column, as far as the error correction is concerned, by
-       !     adding back the equivalent flux*timestep.
+       ! For glc_dyn_runoff_routing = T:
+       ! (1) We have qflx_ice_runoff_snwcp = 0, and excess snow has been incorporated in
+       !     qflx_glcice_frz.  This flux must be included here to complete the water
+       !     balance, because it is a sink of water as far as CLM is concerned (this water
+       !     will now be owned by CISM).
+       ! (2) Meltwater from ice (qflx_glcice_melt) is allowed to run off and is included
+       !     in qflx_qrgwl, but the water content of the ice column has not changed (at
+       !     least for now) because an equivalent ice mass has been "borrowed" from the
+       !     base of the column.  So this mass has to be added back to the column, as far
+       !     as the error correction is concerned, by adding back the equivalent
+       !     flux*timestep.
        !
        ! For glc_dyn_runoff_routing = F:
-       ! (1) qflx_snwcp_ice has been reduced by an amount equal to qflx_glcice_melt. The
-       !     amount of snow removal is therefore given by (qflx_snwcp_ice +
-       !     qflx_glcice_melt), meaning that we should add qflx_glcice_melt to errh2o.
+       ! (1) qflx_ice_runoff_snwcp has been reduced by an amount equal to
+       !     qflx_glcice_melt. The amount of snow removal is therefore given by
+       !     (qflx_ice_runoff_snwcp + qflx_glcice_melt), meaning that we should add
+       !     qflx_glcice_melt to errh2o.
        ! (2) qflx_glcice_melt has been incorporated in qflx_qrgwl, but an equivalent ice
        !     mass has been "borrowed" from the base of the column, meaning that we should
        !     subtract qflx_glcice_melt from errh2o.
@@ -366,19 +372,20 @@ contains
                abs(errh2o(indexc)) > 1.e-5_r8 .and. (nstep > 2) ) then
 
              write(iulog,*)'clm urban model is stopping - error is greater than 1e-5 (mm)'
-             write(iulog,*)'nstep          = ',nstep
-             write(iulog,*)'errh2o         = ',errh2o(indexc)
-             write(iulog,*)'forc_rain      = ',forc_rain_col(indexc)
-             write(iulog,*)'forc_snow      = ',forc_snow_col(indexc)
-             write(iulog,*)'endwb          = ',endwb(indexc)
-             write(iulog,*)'begwb          = ',begwb(indexc)
-             write(iulog,*)'qflx_evap_tot  = ',qflx_evap_tot(indexc)
-             write(iulog,*)'qflx_irrig     = ',qflx_irrig(indexc)
-             write(iulog,*)'qflx_surf      = ',qflx_surf(indexc)
-             write(iulog,*)'qflx_h2osfc_surf= ',qflx_h2osfc_surf(indexc)
-             write(iulog,*)'qflx_qrgwl     = ',qflx_qrgwl(indexc)
-             write(iulog,*)'qflx_drain     = ',qflx_drain(indexc)
-             write(iulog,*)'qflx_snwcp_ice = ',qflx_snwcp_ice(indexc)
+             write(iulog,*)'nstep                 = ',nstep
+             write(iulog,*)'errh2o                = ',errh2o(indexc)
+             write(iulog,*)'forc_rain             = ',forc_rain_col(indexc)*dtime
+             write(iulog,*)'forc_snow             = ',forc_snow_col(indexc)*dtime
+             write(iulog,*)'endwb                 = ',endwb(indexc)
+             write(iulog,*)'begwb                 = ',begwb(indexc)
+             write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
+             write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
+             write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
+             write(iulog,*)'qflx_h2osfc_surf      = ',qflx_h2osfc_surf(indexc)*dtime
+             write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
+             write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime
+             write(iulog,*)'qflx_ice_runoff_snwcp = ',qflx_ice_runoff_snwcp(indexc)*dtime
+             write(iulog,*)'qflx_ice_runoff_xs    = ',qflx_ice_runoff_xs(indexc)*dtime
 
              write(iulog,*)'deltawb          = ',endwb(indexc)-begwb(indexc)
              write(iulog,*)'deltawb/dtime    = ',(endwb(indexc)-begwb(indexc))/dtime
@@ -391,23 +398,24 @@ contains
           else if (abs(errh2o(indexc)) > 1.e-5_r8 .and. (nstep > 2) ) then
 
              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
-             write(iulog,*)'nstep              = ',nstep
-             write(iulog,*)'errh2o             = ',errh2o(indexc)
-             write(iulog,*)'forc_rain          = ',forc_rain_col(indexc)
-             write(iulog,*)'forc_snow          = ',forc_snow_col(indexc)
-             write(iulog,*)'endwb              = ',endwb(indexc)
-             write(iulog,*)'begwb              = ',begwb(indexc)
-             write(iulog,*)'qflx_evap_tot      = ',qflx_evap_tot(indexc)
-             write(iulog,*)'qflx_irrig         = ',qflx_irrig(indexc)
-             write(iulog,*)'qflx_surf          = ',qflx_surf(indexc)
-             write(iulog,*)'qflx_h2osfc_surf   = ',qflx_h2osfc_surf(indexc)
-             write(iulog,*)'qflx_qrgwl         = ',qflx_qrgwl(indexc)
-             write(iulog,*)'qflx_drain         = ',qflx_drain(indexc)
-             write(iulog,*)'qflx_drain_perched = ',qflx_drain_perched(indexc)
-             write(iulog,*)'qflx_flood         = ',qflx_floodc(indexc)
-             write(iulog,*)'qflx_snwcp_ice     = ',qflx_snwcp_ice(indexc)
-             write(iulog,*)'qflx_glcice_melt   = ',qflx_glcice_melt(indexc)
-             write(iulog,*)'qflx_glcice_frz    = ',qflx_glcice_frz(indexc)
+             write(iulog,*)'nstep                 = ',nstep
+             write(iulog,*)'errh2o                = ',errh2o(indexc)
+             write(iulog,*)'forc_rain             = ',forc_rain_col(indexc)*dtime
+             write(iulog,*)'forc_snow             = ',forc_snow_col(indexc)*dtime
+             write(iulog,*)'endwb                 = ',endwb(indexc)
+             write(iulog,*)'begwb                 = ',begwb(indexc)
+             write(iulog,*)'qflx_evap_tot         = ',qflx_evap_tot(indexc)*dtime
+             write(iulog,*)'qflx_irrig            = ',qflx_irrig(indexc)*dtime
+             write(iulog,*)'qflx_surf             = ',qflx_surf(indexc)*dtime
+             write(iulog,*)'qflx_h2osfc_surf      = ',qflx_h2osfc_surf(indexc)*dtime
+             write(iulog,*)'qflx_qrgwl            = ',qflx_qrgwl(indexc)*dtime
+             write(iulog,*)'qflx_drain            = ',qflx_drain(indexc)*dtime
+             write(iulog,*)'qflx_drain_perched    = ',qflx_drain_perched(indexc)*dtime
+             write(iulog,*)'qflx_flood            = ',qflx_floodc(indexc)*dtime
+             write(iulog,*)'qflx_ice_runoff_snwcp = ',qflx_ice_runoff_snwcp(indexc)*dtime
+             write(iulog,*)'qflx_ice_runoff_xs    = ',qflx_ice_runoff_xs(indexc)*dtime
+             write(iulog,*)'qflx_glcice_melt      = ',qflx_glcice_melt(indexc)*dtime
+             write(iulog,*)'qflx_glcice_frz       = ',qflx_glcice_frz(indexc)*dtime
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
           end if
@@ -449,18 +457,6 @@ contains
                           + qflx_snow_drain(c) + qflx_sl_top_soil(c)
                 endif
 
-                if (glc_dyn_runoff_routing(g)) then
-                   ! Need to add qflx_glcice_frz to snow_sinks for the same reason as it is
-                   ! added to errh2o above - see the comment above for details.
-                   snow_sinks(c) = snow_sinks(c) + qflx_glcice_frz(c)
-                else
-                   ! For glc_dyn_runoff_routing=F, qflx_glcice_melt has been removed from
-                   ! qflx_snwcp_ice. So need to account for that here.
-                   if (lun%itype(l) == istice_mec) then
-                      snow_sinks(c) = snow_sinks(c) + qflx_glcice_melt(c)
-                   end if
-                end if
-
                 errh2osno(c) = (h2osno(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
              else
                 snow_sources(c) = 0._r8
@@ -489,28 +485,29 @@ contains
                ' lun%itype= ',lun%itype(col%landunit(indexc)), &
                ' errh2osno= ',errh2osno(indexc)
 
-          if (abs(errh2osno(indexc)) > 1.e-3_r8 .and. (nstep > 2) ) then
-             write(iulog,*)'clm model is stopping - error is greater than 1e-3 (mm)'
-             write(iulog,*)'nstep            = ',nstep
-             write(iulog,*)'errh2osno        = ',errh2osno(indexc)
-             write(iulog,*)'snl              = ',col%snl(indexc)
-             write(iulog,*)'h2osno           = ',h2osno(indexc)
-             write(iulog,*)'h2osno_old       = ',h2osno_old(indexc)
-             write(iulog,*)'snow_sources     = ',snow_sources(indexc)
-             write(iulog,*)'snow_sinks       = ',snow_sinks(indexc)
-             write(iulog,*)'qflx_prec_grnd   = ',qflx_prec_grnd(indexc)*dtime
-             write(iulog,*)'qflx_sub_snow    = ',qflx_sub_snow(indexc)*dtime
-             write(iulog,*)'qflx_evap_grnd   = ',qflx_evap_grnd(indexc)*dtime
-             write(iulog,*)'qflx_top_soil    = ',qflx_top_soil(indexc)*dtime
-             write(iulog,*)'qflx_dew_snow    = ',qflx_dew_snow(indexc)*dtime
-             write(iulog,*)'qflx_dew_grnd    = ',qflx_dew_grnd(indexc)*dtime
-             write(iulog,*)'qflx_snwcp_ice   = ',qflx_snwcp_ice(indexc)*dtime
-             write(iulog,*)'qflx_snwcp_liq   = ',qflx_snwcp_liq(indexc)*dtime
-             write(iulog,*)'qflx_sl_top_soil = ',qflx_sl_top_soil(indexc)*dtime
-             if (create_glacier_mec_landunit) then
-                write(iulog,*)'qflx_glcice_frz  = ',qflx_glcice_frz(indexc)*dtime
-                write(iulog,*)'qflx_glcice_melt = ',qflx_glcice_melt(indexc)*dtime
-             end if
+          if (abs(errh2osno(indexc)) > 1.e-5_r8 .and. (nstep > 2) ) then
+             write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
+             write(iulog,*)'nstep              = ',nstep
+             write(iulog,*)'errh2osno          = ',errh2osno(indexc)
+             write(iulog,*)'snl                = ',col%snl(indexc)
+             write(iulog,*)'snow_depth         = ',snow_depth(indexc)
+             write(iulog,*)'frac_sno_eff       = ',frac_sno_eff(indexc)
+             write(iulog,*)'h2osno             = ',h2osno(indexc)
+             write(iulog,*)'h2osno_old         = ',h2osno_old(indexc)
+             write(iulog,*)'snow_sources       = ',snow_sources(indexc)*dtime
+             write(iulog,*)'snow_sinks         = ',snow_sinks(indexc)*dtime
+             write(iulog,*)'qflx_prec_grnd     = ',qflx_prec_grnd(indexc)*dtime
+             write(iulog,*)'qflx_snow_grnd_col = ',qflx_snow_grnd_col(indexc)*dtime
+             write(iulog,*)'qflx_rain_grnd_col = ',qflx_rain_grnd_col(indexc)*dtime
+             write(iulog,*)'qflx_sub_snow      = ',qflx_sub_snow(indexc)*dtime
+             write(iulog,*)'qflx_snow_drain    = ',qflx_snow_drain(indexc)*dtime
+             write(iulog,*)'qflx_evap_grnd     = ',qflx_evap_grnd(indexc)*dtime
+             write(iulog,*)'qflx_top_soil      = ',qflx_top_soil(indexc)*dtime
+             write(iulog,*)'qflx_dew_snow      = ',qflx_dew_snow(indexc)*dtime
+             write(iulog,*)'qflx_dew_grnd      = ',qflx_dew_grnd(indexc)*dtime
+             write(iulog,*)'qflx_snwcp_ice     = ',qflx_snwcp_ice(indexc)*dtime
+             write(iulog,*)'qflx_snwcp_liq     = ',qflx_snwcp_liq(indexc)*dtime
+             write(iulog,*)'qflx_sl_top_soil   = ',qflx_sl_top_soil(indexc)*dtime
              write(iulog,*)'clm model is stopping'
 
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))

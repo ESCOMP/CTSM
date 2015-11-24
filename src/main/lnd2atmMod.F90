@@ -120,6 +120,7 @@ contains
     !
     ! !USES:
     use ch4varcon  , only : ch4offline
+    use ColumnType , only : col
     !
     ! !ARGUMENTS:
     type(bounds_type)           , intent(in)    :: bounds  
@@ -141,7 +142,8 @@ contains
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst 
     !
     ! !LOCAL VARIABLES:
-    integer :: g             ! index
+    integer  :: c, g  ! indices
+    real(r8) :: qflx_ice_runoff_col(bounds%begc:bounds%endc) ! total column-level ice runoff
     real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
     real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
     real(r8), parameter :: amCO2 = amC + 2.0_r8*amO ! Atomic mass number for CO2
@@ -340,12 +342,17 @@ contains
          waterflux_inst%qflx_neg_runoff_glc_col (bounds%begc:bounds%endc), &
          lnd2atm_inst%qflx_rofliq_qdto_grc   (bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-    
-    call c2g( bounds, &
-         waterflux_inst%qflx_snwcp_ice_col(bounds%begc:bounds%endc),  &
-         lnd2atm_inst%qflx_rofice_grc     (bounds%begg:bounds%endg),  & 
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
+    do c = bounds%begc, bounds%endc
+       if (col%active(c)) then
+          qflx_ice_runoff_col(c) = waterflux_inst%qflx_ice_runoff_snwcp_col(c) + &
+               waterflux_inst%qflx_ice_runoff_xs_col(c)
+       end if
+    end do
+    call c2g( bounds, &
+         qflx_ice_runoff_col(bounds%begc:bounds%endc),  &
+         lnd2atm_inst%qflx_rofice_grc(bounds%begg:bounds%endg),  & 
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
     do g = bounds%begg, bounds%endg
        lnd2atm_inst%qflx_rofice_grc(g) = lnd2atm_inst%qflx_rofice_grc(g) - waterflux_inst%qflx_ice_dynbal_grc(g)          
     enddo

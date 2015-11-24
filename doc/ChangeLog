@@ -1,4 +1,168 @@
 ===============================================================
+Tag name:  clm4_5_6_r156
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Nov 24 10:19:07 MST 2015
+One-line Summary: Fix QSNWCPICE and glacial inception
+
+Purpose of changes
+------------------
+
+Previously, qflx_snwcp_ice_col (output to history file as QSNWCPICE) had served
+two purposes: (1) the snow capping flux, which is used to specify surface mass
+balance to GLC; and (2) the ice runoff flux, sent to ROF. However, these two
+uses are not identical, which resulted in a number of problems.
+
+This tag separates these uses, so that qflx_snwcp_ice_col truly gives the snow
+capping flux, and the ice runoff flux is derived separately (via two new
+variables: qflx_ice_runoff_snwcp_col and qflx_ice_runoff_xs_col).
+
+This changes serves the following purposes:
+
+(1) QSNWCPICE becomes a useful history field, actually giving the amount of snow capping
+
+(2) Fixes snow balance check: bug 2238
+
+(3) Fixes a problem where xs1 could initiate glacial inception, by contributing to qflx_glcice_frz
+
+(4) simplifies some logic in BalanceCheckMod
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2238: Possible bug involving qflx_snwcp_ice in BalanceCheckMod.F90
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+  QSNWCPICE_TO_COUPLER history field renamed to QRUNOFF_ICE_TO_COUPLER
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: Leo van Kampenhout
+
+CLM testing:
+
+  NOTE: most testing done on r75327 (prior to the workaround for the intel
+  compiler bug); after that, just ran:
+  ERP_Lm40.1x1_numaIA.ICRUCLM50BGCCROP.yellowstone_gnu.clm-clm50BGCCROPmonthly
+  (previously-failing test)
+  ERI_D_Ld9_P24x1.f10_f10.ICRUCLM50BGC.hobart_nag.clm-reduceOutput
+  (to run one nag test with the change)
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+  'ok' means tests pass, baseline comparisons fail as noted below
+
+  Also BFAILs for:
+    BFAIL SMS_Ld5_D_P24x1.f10_f10.IHISTCLM45BGC.hobart_nag.clm-clm50BGCmonthly.GC.1123-1949.45.n.nlcomp
+    BFAIL ERP_Ly5.1x1_numaIA.ICRUCLM50BGCCROP.hobart_nag.clm-clm50BGCCROPmonthly.GC.1123-1949.45.n.nlcomp
+
+  And for the newly-passing:
+  ERP_Lm40.1x1_numaIA.ICRUCLM50BGCCROP.yellowstone_gnu.clm-clm50BGCCROPmonthly
+
+CLM tag used for the baseline comparisons: clm4_5_6_r155
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: diagnostic changes for all CLM45/CLM50;
+  significant changes for IG compsets with CLM45/CLM50
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Changes for IG compsets are potentially climate changing
+
+   Changes in non-IG compsets are in the following three fields:
+   - QSNWCPICE
+   - ERRH2OSNO
+   - SNOW_SINKS (roundoff-level)
+
+   Bigger changes in IG compsets are due to no longer including the xs1 term in
+   qice (SMB) sent to GLC. Of the tests in the test suite, this was just
+   observed for SMS_Lm37.T31_g37_gl5.IG1850CLM45.yellowstone_intel.clm-glcMEC_long.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeophys/HydrologyDrainageMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/biogeophys/LakeHydrologyMod.F90
+M       components/clm/src/main/lnd2atmType.F90
+M       components/clm/src/main/lnd2atmMod.F90
+M       components/clm/src/biogeophys/BalanceCheckMod.F90
+          - also add dtime multiplier for some log message output
+
+========= Unrelated change: workaround for intel compiler bug
+M       components/clm/src/biogeochem/CNFireLi2016Mod.F90
+
+========= Unrelated change: edit ChangeLog entry for clm4_5_6_r153
+M       ChangeLog
+M       components/clm/doc/ChangeLog
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_6_r155
 Originator(s):  erik (Erik Kluzek)
 Date: etl xim 23  1:11:04 carra MST 2015
@@ -411,7 +575,8 @@ Purpose of changes
 ------------------
 
 The fix for infinite snow growth made in clm4_5_3_r144 turned out to have a bug
-of its own: It prevented snow cover fraction from going above 0.8.
+of its own: It made snow cover fraction rarely reach ~ 1, instead maxing out
+around 0.8 or 0.9.
 
 This tag fixes the snow cover fraction bug while still (it appears) preventing
 infinite snow growth.
