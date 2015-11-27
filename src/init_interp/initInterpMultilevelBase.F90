@@ -6,10 +6,16 @@ module initInterpMultilevelBase
   !
   ! Usage: For a given variable:
   !
-  !   First call check_npts with the number of source and destination points, to ensure
-  !   that this interpolator is appropriate for this variable.
+  !   First call check_npts with the number of destination points, to ensure that this
+  !   interpolator is appropriate for this variable.
   !
   !   Then call interp_multilevel once for each destination point
+  !
+  ! Note that these interpolators only care about the destination point, not the source
+  ! point. Any information on the source grid is expected to have already been
+  ! interpolated to the destination grid. (This is needed for the sake of memory
+  ! scalability: Information on the source grid is not decomposed across processors, so
+  ! results in large amounts of memory usage.)
   !
   ! !USES:
 
@@ -30,11 +36,10 @@ module initInterpMultilevelBase
 
   abstract interface
 
-     subroutine check_npts_interface(this, npts_source, npts_dest, varname)
+     subroutine check_npts_interface(this, npts, varname)
        ! !DESCRIPTION:
-       ! Checks the number of source and destination points, to ensure that this
-       ! interpolator is appropriate for this variable. This should be called once for
-       ! each variable.
+       ! Checks the number of destination points, to ensure that this interpolator is
+       ! appropriate for this variable. This should be called once for each variable.
        !
        ! Aborts if there is a mismatch.
        !
@@ -43,22 +48,21 @@ module initInterpMultilevelBase
        !
        ! !ARGUMENTS:
        class(interp_multilevel_type), intent(in) :: this
-       integer, intent(in) :: npts_source      ! number of source points
-       integer, intent(in) :: npts_dest        ! number of dest points (on this processor)
+       integer, intent(in) :: npts             ! number of dest points (on this processor)
        character(len=*), intent(in) :: varname ! variable name (for diagnostic output)
      end subroutine check_npts_interface
 
      subroutine interp_multilevel_interface(this, &
-          data_dest, data_source, index_dest, index_source)
+          data_dest, data_source, index_dest)
        ! !DESCRIPTION:
        ! Interpolates a multi-level field from source to dest, for a single point.
        !
        ! data_dest and data_source give values for all levels, for one destination or
-       ! source point. index_dest and index_source give the spatial indices (e.g., column
-       ! indices) of the dest and source points; these are needed for some types of
-       ! interpolation (to find the appropriate metadata), but are ignored by others.
-       ! These indices should be 1-based (i.e., if the lower bounds in the caller are not
-       ! 1, they should be adjusted so that the first index is 1).
+       ! source point. index_dest gives the spatial index (e.g., column index) of the dest
+       ! point; this is needed for some types of interpolation (to find the appropriate
+       ! metadata), but is ignored by others.  This index should be 1-based (i.e., if the
+       ! lower bounds in the caller are not 1, they should be adjusted so that the first
+       ! index is 1).
        !
        ! !USES:
        use shr_kind_mod, only : r8 => shr_kind_r8
@@ -69,7 +73,6 @@ module initInterpMultilevelBase
        real(r8) , intent(inout) :: data_dest(:)
        real(r8) , intent(in)    :: data_source(:)
        integer  , intent(in)    :: index_dest
-       integer  , intent(in)    :: index_source
      end subroutine interp_multilevel_interface
 
      pure function get_description_interface(this) result(description)

@@ -57,12 +57,11 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine check_npts(this, npts_source, npts_dest, varname)
+  subroutine check_npts(this, npts, varname)
     !
     ! !DESCRIPTION:
-    ! Checks the number of source and destination points, to ensure that this
-    ! interpolator is appropriate for this variable. This should be called once for
-    ! each variable.
+    ! Checks the number of destination points, to ensure that this interpolator is
+    ! appropriate for this variable. This should be called once for each variable.
     !
     ! This version accepts any number of points, because it has no point-based metadata.
     !
@@ -70,8 +69,7 @@ contains
     !
     ! !ARGUMENTS:
     class(interp_multilevel_copy_type), intent(in) :: this
-    integer, intent(in) :: npts_source      ! number of source points
-    integer, intent(in) :: npts_dest        ! number of dest points (on this processor)
+    integer, intent(in) :: npts             ! number of dest points (on this processor)
     character(len=*), intent(in) :: varname ! variable name (for diagnostic output)
     !
     ! !LOCAL VARIABLES:
@@ -85,7 +83,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest, index_source)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
     !
     ! !DESCRIPTION:
     ! Interpolates a multi-level field from source to dest, for a single point.
@@ -98,7 +96,6 @@ contains
     real(r8) , intent(inout) :: data_dest(:)
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
-    integer  , intent(in)    :: index_source
     !
     ! !LOCAL VARIABLES:
 

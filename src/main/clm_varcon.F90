@@ -78,13 +78,28 @@ module clm_varcon
   real(r8), public, parameter :: degpsec = 15._r8/3600.0_r8 ! Degree's earth rotates per second
   real(r8), public, parameter :: secspday= SHR_CONST_CDAY   ! Seconds per day
   integer,  public, parameter :: isecspday= secspday        ! Integer seconds per day
-  real(r8), public, parameter :: spval = 1.e36_r8           ! special value for real data
-  integer , public, parameter :: ispval = -9999             ! special value for int data 
-                                                            ! (keep this negative to avoid conflicts with possible valid values)
+
   integer, public, parameter  :: fun_period  = 1            ! A FUN parameter, and probably needs to be changed for testing
   real(r8),public, parameter  :: smallValue  = 1.e-12_r8    ! A small values used by FUN
 
+  ! ------------------------------------------------------------------------
+  ! Special value flags
+  ! ------------------------------------------------------------------------
+
+  ! NOTE(wjs, 2015-11-23) The presence / absence of spval should be static in time for
+  ! multi-level fields.  i.e., if a given level & column has spval at initialization, it
+  ! should remain spval throughout the run (e.g., indicating that this level is not valid
+  ! for this column type); similarly, if it starts as a valid value, it should never
+  ! become spval. This is needed for init_interp to work correctly on multi-level fields.
+  ! For more details, see the note near the top of initInterpMultilevelInterp.
+  real(r8), public, parameter ::  spval = 1.e36_r8          ! special value for real data
+
+  ! Keep this negative to avoid conflicts with possible valid values
+  integer , public, parameter :: ispval = -9999             ! special value for int data
+
+  ! ------------------------------------------------------------------------
   ! These are tunable constants from clm2_3
+  ! ------------------------------------------------------------------------
 
   real(r8) :: zlnd = 0.01_r8        ! Roughness length for soil [m]
   real(r8) :: zsno = 0.0024_r8      ! Roughness length for snow [m]

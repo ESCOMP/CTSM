@@ -109,19 +109,17 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine check_npts(this, npts_source, npts_dest, varname)
+  subroutine check_npts(this, npts, varname)
     !
     ! !DESCRIPTION:
-    ! Checks the number of source and destination points, to ensure that this
-    ! interpolator is appropriate for this variable. This should be called once for
-    ! each variable.
+    ! Checks the number of destination points, to ensure that this interpolator is
+    ! appropriate for this variable. This should be called once for each variable.
     !
     ! !USES:
     !
     ! !ARGUMENTS:
     class(interp_multilevel_split_type), intent(in) :: this
-    integer, intent(in) :: npts_source      ! number of source points
-    integer, intent(in) :: npts_dest        ! number of dest points (on this processor)
+    integer, intent(in) :: npts             ! number of dest points (on this processor)
     character(len=*), intent(in) :: varname ! variable name (for diagnostic output)
     !
     ! !LOCAL VARIABLES:
@@ -129,8 +127,8 @@ contains
     character(len=*), parameter :: subname = 'check_npts'
     !-----------------------------------------------------------------------
 
-    call this%interpolator_first_levels%check_npts(npts_source, npts_dest, varname)
-    call this%interpolator_second_levels%check_npts(npts_source, npts_dest, varname)
+    call this%interpolator_first_levels%check_npts(npts, varname)
+    call this%interpolator_second_levels%check_npts(npts, varname)
   end subroutine check_npts
 
   !-----------------------------------------------------------------------
@@ -158,7 +156,7 @@ contains
   end function get_description
 
   !-----------------------------------------------------------------------
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest, index_source)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
     !
     ! !DESCRIPTION:
     ! Interpolates a multi-level field from source to dest, for a single point.
@@ -170,7 +168,6 @@ contains
     real(r8) , intent(inout) :: data_dest(:)
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
-    integer  , intent(in)    :: index_source
     !
     ! !LOCAL VARIABLES:
     integer :: num_first_levels_dest
@@ -196,14 +193,12 @@ contains
     call this%interpolator_first_levels%interp_multilevel( &
          data_dest = data_dest(1:num_first_levels_dest), &
          data_source = data_source(1:num_first_levels_source), &
-         index_dest = index_dest, &
-         index_source = index_source)
+         index_dest = index_dest)
 
     call this%interpolator_second_levels%interp_multilevel( &
          data_dest = data_dest((num_first_levels_dest+1):size(data_dest)), &
          data_source = data_source((num_first_levels_source+1):size(data_source)), &
-         index_dest = index_dest, &
-         index_source = index_source)
+         index_dest = index_dest)
 
   end subroutine interp_multilevel
 

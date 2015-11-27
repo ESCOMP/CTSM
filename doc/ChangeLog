@@ -1,4 +1,141 @@
 ===============================================================
+Tag name:  clm4_5_6_r157
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Nov 27 05:52:17 MST 2015
+One-line Summary: Reduce memory use for init_interp
+
+Purpose of changes
+------------------
+
+For high-resolution source files (e.g., f09 or higher), the new multilevel
+interpolation was using unacceptable amounts of memory, since it was reading all
+source points at all levels into memory at once - both for the actual data to
+interpolate, and for the metadata used in the multilevel interpolators.
+
+This tag reworks how 2-d interpolation is done so that only one level from the
+source is needed in memory at a time, thus greatly reducing memory use in some
+cases.
+
+In making this change, I extracted routines to do 1-d interpolation. In doing
+so, I made some minor changes to their behavior for consistency. The main change
+was to remove special handling of inactive points: Inactive points used to have
+their values set to spval, and I have now removed that logic, keeping inactive
+points at their values before interpolation. This results in some NaNs appearing
+in finidat_interp_dest (if values were NaN before interpolation); before spval
+was put in all inactive points.
+
+Also, some unrelated changes:
+
+- Remove a duplicate and unused entry in config_component.xml (found by Jim
+  Edwards)
+
+- Remove redundant settings in CNZero (found by Dave Lawrence)
+
+- Fix cray compilation problems (found by Jim Edwards)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes:
+- Big memory decrease in some cases when using init_interp
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - pass
+
+CLM tag used for the baseline comparisons: clm4_5_6_r156
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Extract interpolation routines so they can be called from a few
+          places. Note that I have changed the behavior slightly, in ways that
+          affect the produced restart file, but not a CLM run done with this
+          restart file. In particular, inactive points are no longer set to
+          spval.
+A       components/clm/src/init_interp/initInterp1dData.F90
+
+
+List all existing files that have been modified, and describe the changes:
+
+========= Rework multi-level interpolation in order to reduce memory use
+M       components/clm/src/init_interp/initInterp2dvar.F90.in
+M       components/clm/src/init_interp/initInterpMultilevelInterp.F90
+M       components/clm/src/init_interp/initInterpMultilevelContainer.F90
+M       components/clm/src/init_interp/initInterpMultilevelSnow.F90
+M       components/clm/src/init_interp/test/initInterpMultilevel_test/test_init_interp_multilevel_split.pf
+M       components/clm/src/init_interp/test/initInterpMultilevel_test/initInterpMultilevelMock.pf
+M       components/clm/src/init_interp/test/initInterpMultilevel_test/multilevel_interp_factory.F90
+M       components/clm/src/init_interp/test/initInterpMultilevel_test/test_init_interp_multilevel_interp.pf
+M       components/clm/src/init_interp/test/initInterpMultilevel_test/test_init_interp_multilevel_snow.pf
+M       components/clm/src/init_interp/initInterpMultilevelBase.F90
+M       components/clm/src/init_interp/initInterpMultilevelCopy.F90
+M       components/clm/src/init_interp/initInterpMultilevelSplit.F90
+M       components/clm/src/init_interp/initInterp.F90
+
+========= Unrelated change: remove an entry that duplicates an entry in the
+          driver's config_component, and is unused here
+M       components/clm/cime_config/config_component.xml
+
+========= Unrelated change: remove redundant settings in CNZero
+M       components/clm/src/biogeochem/CNDriverMod.F90
+
+========= Unrelated change: add helpful tip to output message
+M       components/clm/src/init_interp/initInterpMindist.F90
+
+========= Unrelated change: add a comment
+M       components/clm/src/main/clm_varcon.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_6_r156
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Nov 24 10:19:07 MST 2015

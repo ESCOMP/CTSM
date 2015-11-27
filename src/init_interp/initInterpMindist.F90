@@ -202,6 +202,8 @@ contains
              write(iulog,*) '(using bare soil for patch-level variables).'
              write(iulog,*) 'So, you should consider whether that is what you want.'
              write(iulog,*) ' '
+             write(iulog,*) 'If you are interpolating a non-crop case to a crop case,'
+             write(iulog,*) 'then this IS what you should do.'
              call endrun(msg=errMsg(__FILE__, __LINE__))
           end if
 

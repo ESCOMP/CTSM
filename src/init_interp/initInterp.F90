@@ -8,13 +8,13 @@ module initInterpMod
 #include "shr_assert.h"
   use initInterpBounds, only : interp_bounds_type
   use initInterpMindist, only: set_mindist, subgrid_type, subgrid_special_indices_type
+  use initInterp1dData, only : interp_1d_data
   use initInterp2dvar, only: interp_2dvar_type
   use initInterpMultilevelBase, only : interp_multilevel_type
   use initInterpMultilevelContainer, only : interp_multilevel_container_type
   use shr_kind_mod   , only: r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_const_mod  , only: SHR_CONST_PI, SHR_CONST_REARTH
   use shr_sys_mod    , only: shr_sys_flush
-  use shr_infnan_mod , only: shr_infnan_isnan
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_string_mod , only: shr_string_listGetName
   use clm_varctl     , only: iulog
@@ -22,7 +22,6 @@ module initInterpMod
   use spmdMod        , only: masterproc
   use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip
   use ncdio_utils    , only: find_var_on_file
-  use clm_varcon     , only: spval
   use ncdio_pio
   use pio
 
@@ -163,7 +162,6 @@ contains
     logical , pointer  :: col_activei(:), col_activeo(:) 
     logical , pointer  :: lun_activei(:), lun_activeo(:) 
     integer , pointer  :: sgridindex(:)
-    logical , pointer  :: activei(:), activeo(:)
     type(subgrid_special_indices_type) :: subgrid_special_indices
     type(interp_multilevel_container_type) :: interp_multilevel_container
     type(interp_2dvar_type) :: var2d_i, var2d_o  ! holds metadata for 2-d variables
@@ -312,9 +310,10 @@ contains
     if (masterproc) then
        write(iulog,*)'setting up interpolators for multi-level variables'
     end if
-    interp_multilevel_container = &
-         interp_multilevel_container_type(ncid_source = ncidi, ncid_dest = ncido, &
-         bounds_source = bounds_i, bounds_dest = bounds_o)
+    interp_multilevel_container = interp_multilevel_container_type( &
+         ncid_source = ncidi, ncid_dest = ncido, &
+         bounds_source = bounds_i, bounds_dest = bounds_o, &
+         pftindex = pftindx, colindex = colindx)
 
     !------------------------------------------------------------------------          
     ! Read input initial data and write output initial data
@@ -484,16 +483,10 @@ contains
           bego = bounds_o%get_beg(vec_dimname)
           endo = bounds_o%get_end(vec_dimname)
           if ( vec_dimname == 'pft' )then
-             activei => pft_activei
-             activeo => pft_activeo
              sgridindex => pftindx
           else if ( vec_dimname  == 'column' )then
-             activei => col_activei
-             activeo => col_activeo
              sgridindex => colindx
           else if ( vec_dimname == 'landunit' )then
-             activei => lun_activei
-             activeo => lun_activeo
              sgridindex => lunindx
           else
              call endrun(msg='ERROR interpinic: 1D variable '//trim(varname)//&
@@ -503,10 +496,10 @@ contains
 
           if ( xtypeo == pio_int )then
              call interp_1d_int ( varname, varname_i, vec_dimname, begi, endi, bego, endo, &
-                  ncidi, ncido, activei, activeo, sgridindex )
+                  ncidi, ncido, sgridindex )
           else if ( xtypeo == pio_double )then                                 
              call interp_1d_double( varname, varname_i, vec_dimname, begi, endi, bego, endo, &
-                  ncidi, ncido, activei, activeo, sgridindex )
+                  ncidi, ncido, sgridindex )
           else
              call endrun(msg='ERROR interpinic: 1D variable with unknown type: '//&
                   trim(varname)//errMsg(__FILE__, __LINE__))
@@ -541,16 +534,10 @@ contains
           bego = bounds_o%get_beg(vec_dimname)
           endo = bounds_o%get_end(vec_dimname)
           if ( vec_dimname == 'pft' )then
-             activei => pft_activei
-             activeo => pft_activeo
              sgridindex => pftindx
           else if ( vec_dimname  == 'column' )then
-             activei => col_activei
-             activeo => col_activeo
              sgridindex => colindx
           else if ( vec_dimname == 'landunit' )then
-             activei => lun_activei
-             activeo => lun_activeo
              sgridindex => lunindx
           else
              call endrun(msg='ERROR interpinic: 2D variable with unknown subgrid dimension: '//&
@@ -558,7 +545,7 @@ contains
           end if
           call interp_2d_double(var2d_i, var2d_o, &
                begi, endi, bego, endo, &
-               activei, activeo, sgridindex, &
+               sgridindex, &
                interp_multilevel_container)
 
        else
@@ -843,7 +830,7 @@ contains
   !=======================================================================
 
   subroutine interp_1d_double (varname, varname_i, dimname, begi, endi, bego, endo, ncidi, ncido, &
-       activei, activeo, sgridindex)
+       sgridindex)
 
     ! ------------------------ arguments ---------------------------------
     character(len=*)  , intent(inout) :: varname   ! variable name on output file
@@ -853,13 +840,10 @@ contains
     integer           , intent(in)    :: bego, endo
     type(file_desc_t) , intent(inout) :: ncidi
     type(file_desc_t) , intent(inout) :: ncido
-    logical           , intent(in)    :: activei(begi:endi)
-    logical           , intent(in)    :: activeo(bego:endo)
     integer           , intent(in)    :: sgridindex(bego:endo)
     ! --------------------------------------------------------------------
 
     ! ------------------------ local variables --------------------------
-    integer           :: no,ni          ! indices
     real(r8), pointer :: rbufsli(:)     ! input array
     real(r8), pointer :: rbufslo(:)     ! output array
     ! --------------------------------------------------------------------
@@ -873,24 +857,9 @@ contains
     call ncd_io(ncid=ncido, varname=trim(varname), flag='read', data=rbufslo, &
          dim1name=dimname)
 
-    do no = bego,endo
-       if (activeo(no)) then
-          ni = sgridindex(no)
-          if (ni > 0) then
-             if ( shr_infnan_isnan(rbufsli(ni)) ) then
-                rbufslo(no) = spval
-             else
-                rbufslo(no) = rbufsli(ni)
-             end if
-          else
-             rbufslo(no) = spval
-          end if
-       else
-          if ( shr_infnan_isnan(rbufslo(no)) ) then
-             rbufslo(no) = spval
-          end if
-       end if
-    end do
+    call interp_1d_data(begi=begi, endi=endi, bego=bego, endo=endo, &
+         sgridindex=sgridindex, keep_existing=.true., &
+         data_in=rbufsli, data_out=rbufslo)
 
     call ncd_io(ncid=ncido, varname=trim(varname), flag='write', data=rbufslo, &
          dim1name=dimname)
@@ -902,7 +871,7 @@ contains
   !=======================================================================
 
   subroutine interp_1d_int (varname, varname_i, dimname, begi, endi, bego, endo, ncidi, ncido, &
-       activei, activeo, sgridindex)
+       sgridindex)
 
     ! ------------------------ arguments ---------------------------------
     character(len=*)  , intent(inout) :: varname   ! variable name on output file
@@ -912,13 +881,10 @@ contains
     integer           , intent(in)    :: bego, endo
     type(file_desc_t) , intent(inout) :: ncidi
     type(file_desc_t) , intent(inout) :: ncido
-    logical           , intent(in)    :: activei(begi:endi)
-    logical           , intent(in)    :: activeo(bego:endo)
     integer           , intent(in)    :: sgridindex(bego:endo)
     ! --------------------------------------------------------------------
 
     ! ------------------------ local variables --------------------------
-    integer           :: no,ni          !indices
     integer , pointer :: ibufsli(:)     !input array
     integer , pointer :: ibufslo(:)     !output array
     ! --------------------------------------------------------------------
@@ -934,14 +900,9 @@ contains
     call ncd_io(ncid=ncido, varname=trim(varname), flag='read', &
          data=ibufslo, dim1name=dimname)
 
-    do no = bego,endo
-       if (activeo(no)) then
-          ni = sgridindex(no)
-          if (ni > 0) then
-             ibufslo(no) = ibufsli(ni)  
-          end if
-       end if
-    end do
+    call interp_1d_data(begi=begi, endi=endi, bego=bego, endo=endo, &
+         sgridindex=sgridindex, keep_existing=.true., &
+         data_in=ibufsli, data_out=ibufslo)
 
     call ncd_io(ncid=ncido, varname=trim(varname), flag='write', &
          data=ibufslo, dim1name=dimname)
@@ -953,30 +914,28 @@ contains
   !=======================================================================
 
   subroutine interp_2d_double (var2di, var2do, &
-       begi, endi, bego, endo, &
-       activei, activeo, sgridindex, &
+       begi, endi, bego, endo, sgridindex, &
        interp_multilevel_container)
 
     ! --------------------------------------------------------------------
     ! arguments
-    class(interp_2dvar_type), intent(in) :: var2di  ! variable on input file
-    class(interp_2dvar_type), intent(in) :: var2do  ! variable on output file
+    class(interp_2dvar_type), intent(inout) :: var2di  ! variable on input file
+    class(interp_2dvar_type), intent(inout) :: var2do  ! variable on output file
     integer           , intent(in)    :: begi, endi
     integer           , intent(in)    :: bego, endo
-    logical           , intent(in)    :: activei(begi:)        
-    logical           , intent(in)    :: activeo(bego:)        
     integer           , intent(in)    :: sgridindex(bego:)
     type(interp_multilevel_container_type), intent(in) :: interp_multilevel_container
     !
     ! local variables
     class(interp_multilevel_type), pointer :: multilevel_interpolator
-    integer             :: ni,no               ! indices
-    real(r8), pointer   :: rbuf2do(:,:)        ! output array
-    real(r8), pointer   :: rbuf2di(:,:)        ! input array
+    integer             :: no                   ! index
+    integer             :: level                ! level index
+    integer             :: nlevi                ! number of input levels
+    real(r8), pointer   :: rbuf2do(:,:)         ! output array
+    real(r8), pointer   :: rbuf1di(:)           ! one level of input array
+    real(r8), pointer   :: rbuf2do_levelsi(:,:) ! array on output horiz grid, but input levels
     ! --------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(activei) == (/endi/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(activeo) == (/endo/)), errMsg(__FILE__, __LINE__))
     SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(__FILE__, __LINE__))
     SHR_ASSERT(var2di%get_vec_beg() == begi, errMsg(__FILE__, __LINE__))
     SHR_ASSERT(var2di%get_vec_end() == endi, errMsg(__FILE__, __LINE__))
@@ -995,29 +954,54 @@ contains
     end if
 
     call multilevel_interpolator%check_npts( &
-         npts_source = var2di%get_vec_npts(), &
-         npts_dest   = var2do%get_vec_npts(), &
-         varname     = var2do%get_varname())
+         npts    = var2do%get_vec_npts(), &
+         varname = var2do%get_varname())
 
-    call var2di%readvar(rbuf2di)
-    call var2do%readvar(rbuf2do)
+    ! First do a horizontal interpolation. We need to separate the horizontal and vertical
+    ! interpolation steps to avoid storing all levels of the source grid in memory at
+    ! once: that is problematic in terms of memory requirements since the full source grid
+    ! is stored in memory on every processor (in contrast to the destination grid, which
+    ! is decomposed across processors).
+    nlevi = var2di%get_nlev()
+    allocate(rbuf2do_levelsi(bego:endo, nlevi))
+    allocate(rbuf1di(begi:endi))
+    do level = 1, nlevi
+       ! COMPILER_BUG(wjs, 2015-11-25, cray8.4.0) The cray compiler has trouble
+       ! resolving the generic reference here, giving the message: 'No specific
+       ! match can be found for the generic subprogram call "READLEVEL"'. So we
+       ! explicitly call the specific routine, rather than calling readlevel.
+       call var2di%readlevel_double(rbuf1di, level)
+       call interp_1d_data(begi=begi, endi=endi, bego=bego, endo=endo, &
+            sgridindex=sgridindex, keep_existing=.false., &
+            data_in=rbuf1di, data_out=rbuf2do_levelsi(:,level))
+    end do
+    deallocate(rbuf1di)
 
+    ! Now do the vertical interpolation
+
+    ! COMPILER_BUG(wjs, 2015-11-25, cray8.4.0) The cray compiler has trouble
+    ! resolving the generic reference here, giving the message: 'No specific
+    ! match can be found for the generic subprogram call "READVAR"'. So we
+    ! explicitly call the specific routine, rather than calling readvar.
+    call var2do%readvar_double(rbuf2do)
     do no = bego,endo
-       if (activeo(no)) then
-          ni = sgridindex(no)
-          if (ni > 0) then
-             call multilevel_interpolator%interp_multilevel( &
-                  data_dest    = rbuf2do(no,:), &
-                  data_source  = rbuf2di(ni,:), &
-                  index_dest   = no - bego + 1, &
-                  index_source = ni - begi + 1)
-          end if
+       ! Only do the interpolation for output points that have a corresponding input
+       ! point. Other output points will remain at their original value.
+       if (sgridindex(no) > 0) then
+          call multilevel_interpolator%interp_multilevel( &
+               data_dest    = rbuf2do(no,:), &
+               data_source  = rbuf2do_levelsi(no,:), &
+               index_dest   = no - bego + 1)
        end if
     end do
 
-    call var2do%writevar(rbuf2do)
+    ! COMPILER_BUG(wjs, 2015-11-25, cray8.4.0) The cray compiler has trouble
+    ! resolving the generic reference here, giving the message: 'No specific
+    ! match can be found for the generic subprogram call "WRITEVAR"'. So we
+    ! explicitly call the specific routine, rather than calling writevar.
+    call var2do%writevar_double(rbuf2do)
        
-    deallocate(rbuf2di, rbuf2do)
+    deallocate(rbuf2do, rbuf2do_levelsi)
 
   end subroutine interp_2d_double
 

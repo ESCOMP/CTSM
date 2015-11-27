@@ -21,12 +21,10 @@ module test_init_interp_multilevel_split
 
   real(r8), parameter :: tol = 1.e-13_r8
 
-  ! Tests use these source & destination indices. Some other indices get filled with
-  ! garbage values to make sure we're accessing the correct points.
-  integer, parameter :: index_source = 2
+  ! Tests use this destination index. Some other indices get filled with garbage values to
+  ! make sure we're accessing the correct points.
   integer, parameter :: index_dest = 3
 
-  integer, parameter :: npts_source = index_source + 1
   integer, parameter :: npts_dest = index_dest + 1
 
 contains
@@ -67,15 +65,13 @@ contains
     interp_first = interp_multilevel_mock_type("interp_first", &
          expected_data_dest = data_dest(1:nlev_dest_first), &
          expected_data_source = data_source(1:nlev_source_first), &
-         expected_index_dest = index_dest, &
-         expected_index_source = index_source)
+         expected_index_dest = index_dest)
 
     allocate(interp_second)
     interp_second = interp_multilevel_mock_type("interp_second", &
          expected_data_dest = data_dest(start_dest_second:size(data_dest)), &
          expected_data_source = data_source(start_source_second:size(data_source)), &
-         expected_index_dest = index_dest, &
-         expected_index_source = index_source)
+         expected_index_dest = index_dest)
 
     interpolator = create_interp_multilevel_split_type( &
          interpolator_first_levels = interp_first, &
@@ -83,7 +79,7 @@ contains
          num_second_levels_source = nlev_source_second, &
          num_second_levels_dest = nlev_dest_second)
     
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     ! No assert section: mocks do the asserts for us
 
@@ -119,9 +115,7 @@ contains
     interp_second = create_multilevel_interp_no_levclasses( &
          coordinates_source = coordinates_source_second, &
          coordinates_dest = coordinates_dest_second, &
-         index_source = index_source, &
          index_dest = index_dest, &
-         npts_source = npts_source, &
          npts_dest = npts_dest)
 
     interpolator = create_interp_multilevel_split_type( &
@@ -130,7 +124,7 @@ contains
          num_second_levels_source = nlev_source_second, &
          num_second_levels_dest = nlev_dest_second)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     ! Determine expected result
     ! The first set of levels involves a simple copy:

@@ -17,12 +17,10 @@ module test_init_interp_multilevel_snow
 
   real(r8), parameter :: tol = 1.e-13_r8
 
-  ! Tests use these source & destination indices. Some other indices get filled with
-  ! garbage values to make sure we're accessing the correct points.
-  integer, parameter :: index_source = 2
+  ! Tests use this destination index. Some other indices get filled with garbage values to
+  ! make sure we're accessing the correct points.
   integer, parameter :: index_dest = 3
 
-  integer, parameter :: npts_source = index_source + 1
   integer, parameter :: npts_dest = index_dest + 1
 
 contains
@@ -42,17 +40,17 @@ contains
   function create_interpolator(num_snow_layers_source) result(interpolator)
     ! Arguments:
     type(interp_multilevel_snow_type) :: interpolator ! function result
-    integer, intent(in) :: num_snow_layers_source  ! number of existing snow layers for index_source
+    integer, intent(in) :: num_snow_layers_source  ! number of existing snow layers for index_dest
 
     ! Local variables:
     integer, allocatable :: num_snow_layers_source_all(:)
     character(len=*), parameter :: num_layers_name = 'NUM_LAYERS'
     !-----------------------------------------------------------------------
 
-    allocate(num_snow_layers_source_all(npts_source))
+    allocate(num_snow_layers_source_all(npts_dest))
 
     num_snow_layers_source_all(:) = 0
-    num_snow_layers_source_all(index_source) = num_snow_layers_source
+    num_snow_layers_source_all(index_dest) = num_snow_layers_source
 
     interpolator = interp_multilevel_snow_type( &
          num_snow_layers_source = num_snow_layers_source_all, &
@@ -77,7 +75,7 @@ contains
 
     interpolator = create_interpolator(num_snow_layers_source = 0)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected(:) = 0._r8
     @assertEqual(data_dest_expected, data_dest)
@@ -94,7 +92,7 @@ contains
 
     interpolator = create_interpolator(num_snow_layers_source = size(data_source))
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected(1:2) = 0._r8
     data_dest_expected(3:5) = data_source(:)
@@ -112,7 +110,7 @@ contains
 
     interpolator = create_interpolator(num_snow_layers_source = 1)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected(1:4) = 0._r8
     data_dest_expected(5) = data_source(3)
@@ -130,7 +128,7 @@ contains
 
     interpolator = create_interpolator(num_snow_layers_source = 2)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected(1:3) = 0._r8
     data_dest_expected(4:5) = data_source(2:3)
@@ -154,7 +152,7 @@ contains
 
     interpolator = create_interpolator(num_snow_layers_source = 0)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected(:) = 0._r8
     @assertEqual(data_dest_expected, data_dest)
@@ -172,7 +170,7 @@ contains
 
     interpolator = create_interpolator(num_snow_layers_source = size(data_source))
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected(:) = data_source(1:5)
     @assertEqual(data_dest_expected, data_dest)
@@ -191,7 +189,7 @@ contains
 
     interpolator = create_interpolator(num_snow_layers_source = 1)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected(1:4) = 0._r8
     data_dest_expected(5) = data_source(7)
@@ -210,7 +208,7 @@ contains
 
     interpolator = create_interpolator(num_snow_layers_source = 2)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected(1:3) = 0._r8
     data_dest_expected(4:5) = data_source(6:7)

@@ -6,12 +6,14 @@ module initInterp2dvar
   ! facilitate reading & writing
   !
   ! !USES:
+#include "shr_assert.h" 
   use abortutils     , only: endrun
   use shr_log_mod    , only: errMsg => shr_log_errMsg
   use shr_kind_mod   , only: r8 => shr_kind_r8, i4=>shr_kind_i4
   use clm_varctl     , only: iulog
   use ncdio_pio      , only: file_desc_t, var_desc_t, ncd_inqvid, ncd_inqvdids
   use ncdio_pio      , only: ncd_inqdlen, ncd_inqdname, ncd_io, ncd_getatt
+  use pio            , only: pio_inq_varid, pio_get_var
 
   implicit none
   private
@@ -39,15 +41,22 @@ module initInterp2dvar
      generic :: readvar => readvar_int, readvar_double
      !TYPE int,double
      procedure :: readvar_{TYPE}
+
      generic :: writevar => writevar_int, writevar_double
      !TYPE int,double
      procedure :: writevar_{TYPE}
+
+     generic :: readlevel => readlevel_int, readlevel_double  ! read one level
+     !TYPE int,double
+     procedure :: readlevel_{TYPE}
+
      procedure :: get_varname      ! get variable name
      procedure :: get_vec_dimname  ! get dimension name of vector dimension (e.g., 'col')
      procedure :: get_lev_dimname  ! get dimension name of level dimension
      procedure :: get_vec_beg      ! get beginning index of vector dimension
      procedure :: get_vec_end      ! get ending index of vector dimension
      procedure :: get_vec_npts     ! get number of points in vector dimension
+     procedure :: get_nlev         ! get number of levels
 
      ! Private routines
      procedure, private :: set_switchdim
@@ -139,7 +148,8 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    class(interp_2dvar_type), intent(in) :: this
+    ! 'this' is intent(inout) for the sake of ncid
+    class(interp_2dvar_type), intent(inout) :: this
     {VTYPE}, pointer, intent(out) :: data(:,:)   ! [vec, lev]
     !
     ! !LOCAL VARIABLES:
@@ -147,6 +157,22 @@ contains
 
     character(len=*), parameter :: subname = 'readvar'
     !-----------------------------------------------------------------------
+
+    if (.not. this%file_is_dest) then
+       ! NOTE(wjs, 2015-11-22) The code is set up to be able to read properly from the
+       ! source file, and this has been tested. However, for relatively high resolution
+       ! source files (f09 or higher, and/or higher-than-standard number of vertical
+       ! levels) it can cause out-of-memory problems on yellowstone that bring the whole
+       ! system to a temporary stand-still. So, to be safe, we currently abort if this is
+       ! attempted.
+       write(iulog,*) subname//' ERROR: Attempt to read all levels at once from source file.'
+       write(iulog,*) 'Although this is possible in theory, it is generally a bad idea'
+       write(iulog,*) 'because it can result in extreme memory usage.'
+       write(iulog,*) 'In some cases, this can cause system hangs that affect all users.'
+       write(iulog,*) 'If you want to try anyway, you can remove this endrun call.'
+       call endrun(msg='Attempt to read all levels at once from source file '// &
+            errMsg(__FILE__, __LINE__))
+    end if
 
     allocate(data(this%vec_beg:this%vec_end, this%nlev))
 
@@ -182,7 +208,8 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    class(interp_2dvar_type), intent(in) :: this
+    ! 'this' is intent(inout) for the sake of ncid
+    class(interp_2dvar_type), intent(inout) :: this
     {VTYPE}, pointer, intent(in) :: data(:,:)   ! [vec, lev]
     !
     ! !LOCAL VARIABLES:
@@ -202,6 +229,65 @@ contains
     end if
 
   end subroutine writevar_{TYPE}
+
+  !-----------------------------------------------------------------------
+  !TYPE int,double
+  subroutine readlevel_{TYPE}(this, data, level)
+    !
+    ! !DESCRIPTION:
+    ! Reads one level of variable from file.
+    !
+    ! In contrast to readvar, this routine does NOT allocate the data: it expects data to
+    ! already be allocated of the correct size. (This is to avoid requiring repeated
+    ! allocations and deallocations when reading one level at a time.)
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    ! 'this' is intent(inout) for the sake of ncid
+    class(interp_2dvar_type), intent(inout) :: this
+    {VTYPE}, pointer :: data(:)
+    integer, intent(in) :: level  ! level index to read
+    !
+    ! !LOCAL VARIABLES:
+    integer          :: status  ! netCDF return code
+    type(Var_desc_t) :: vardesc ! pio variable descriptor
+    integer          :: starts(2)
+    integer          :: counts(2)
+
+    character(len=*), parameter :: subname = 'readlevel'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((lbound(data) == (/this%vec_beg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(data) == (/this%vec_end/)), errMsg(__FILE__, __LINE__))
+
+    if (this%file_is_dest) then
+       ! NOTE(wjs, 2015-11-22) As far as I can tell, ncdio_pio currently doesn't provide
+       ! a robust mechanism for reading in a single level. Since we don't actually need
+       ! this functionality right now, I am aborting rather than trying to either (a) add
+       ! the functionality to ncdio_pio, or (b) handle it here with direct calls to pio.
+       call endrun(msg='ERROR: unhandled attempt to read one level from dest file '//&
+            errMsg(__FILE__, __LINE__))
+    else
+       ! TODO(wjs, 2015-11-22) I don't like that we're making direct pio calls here.
+       ! Ideally we'd go through ncdio_pio, but currently that module doesn't provide the
+       ! necessary functionality.
+       status = pio_inq_varid(this%ncid, trim(this%varname), vardesc)
+       if (this%switchdim) then
+          starts(1) = level
+          counts(1) = 1
+          starts(2) = 1
+          counts(2) = this%get_vec_npts()
+       else
+          starts(1) = 1
+          counts(1) = this%get_vec_npts()
+          starts(2) = level
+          counts(2) = 1
+       end if
+       status = pio_get_var(this%ncid, vardesc, starts, counts, data)
+    end if
+
+  end subroutine readlevel_{TYPE}
 
   function get_varname(this) result(varname)
     ! Get variable name
@@ -247,6 +333,13 @@ contains
 
     get_vec_npts = (this%vec_end - this%vec_beg + 1)
   end function get_vec_npts
+
+  integer function get_nlev(this)
+    ! Get number of levels
+    class(interp_2dvar_type), intent(in) :: this
+
+    get_nlev = this%nlev
+  end function get_nlev
 
   ! ========================================================================
   ! Private methods

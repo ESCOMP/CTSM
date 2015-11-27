@@ -26,7 +26,6 @@ module initInterpMultilevelMock
      real(r8), allocatable :: expected_data_dest(:)   ! original values in data_dest
      real(r8), allocatable :: expected_data_source(:)
      integer :: expected_index_dest
-     integer :: expected_index_source
    contains
      ! Public methods from base class
      procedure :: interp_multilevel
@@ -46,7 +45,7 @@ contains
 
   !-----------------------------------------------------------------------
   function constructor(name, expected_data_dest, expected_data_source, &
-       expected_index_dest, expected_index_source) result(this)
+       expected_index_dest) result(this)
     !
     ! !DESCRIPTION:
     ! Creates an interp_multilevel_mock_type object
@@ -59,7 +58,6 @@ contains
     real(r8) , intent(in)    :: expected_data_dest(:)    ! original values in data_dest
     real(r8) , intent(in)    :: expected_data_source(:)
     integer  , intent(in)    :: expected_index_dest
-    integer  , intent(in)    :: expected_index_source
     !
     ! !LOCAL VARIABLES:
 
@@ -72,7 +70,6 @@ contains
     allocate(this%expected_data_source(size(expected_data_source)))
     this%expected_data_source = expected_data_source
     this%expected_index_dest = expected_index_dest
-    this%expected_index_source = expected_index_source
 
   end function constructor
 
@@ -80,28 +77,25 @@ contains
   ! Public methods
   ! ========================================================================
 
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest, index_source)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
     ! Mock version: Asserts that it is called with correct arguments
     class(interp_multilevel_mock_type), intent(in) :: this
     real(r8) , intent(inout) :: data_dest(:)    ! not modified here, but intent(inout) to match interface
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
-    integer  , intent(in)    :: index_source
 
     @assertEqual(size(this%expected_data_dest), size(data_dest), message=this%name//': data_dest size')
     @assertEqual(this%expected_data_dest, data_dest, message=this%name//': data_dest')
     @assertEqual(size(this%expected_data_source), size(data_source), message=this%name//': data_source size')
     @assertEqual(this%expected_data_source, data_source, message=this%name//': data_source')
     @assertEqual(this%expected_index_dest, index_dest, message=this%name//': index_dest')
-    @assertEqual(this%expected_index_source, index_source, message=this%name//': index_source')
 
   end subroutine interp_multilevel
 
-  subroutine check_npts(this, npts_source, npts_dest, varname)
+  subroutine check_npts(this, npts, varname)
     ! Stub
     class(interp_multilevel_mock_type), intent(in) :: this
-    integer, intent(in) :: npts_source      ! number of source points
-    integer, intent(in) :: npts_dest        ! number of dest points (on this processor)
+    integer, intent(in) :: npts             ! number of dest points (on this processor)
     character(len=*), intent(in) :: varname ! variable name (for diagnostic output)
 
     ! Do nothing

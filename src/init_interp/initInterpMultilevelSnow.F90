@@ -24,8 +24,12 @@ module initInterpMultilevelSnow
   type, extends(interp_multilevel_type) :: interp_multilevel_snow_type
      private
      character(len=:), allocatable :: num_layers_name
-     integer, allocatable :: num_snow_layers_source(:)  ! number of active snow layers for each point on the source grid
-     integer :: npts_source  ! number of spatial points on source grid
+
+     ! Number of active snow layers on the source grid, regridded to the destination grid
+     !
+     ! Thus, num_snow_layers_source(i) gives the number of active snow layers on the source
+     ! grid for the source grid point that maps to destination point i.
+     integer, allocatable :: num_snow_layers_source(:)
    contains
      procedure :: check_npts
      procedure :: interp_multilevel
@@ -53,7 +57,10 @@ contains
     !
     ! !ARGUMENTS:
 
-    ! number of active snow layers for each point on the source grid
+    ! Number of active snow layers on the source grid, regridded to the destination grid
+    !
+    ! Thus, num_snow_layers_source(i) gives the number of active snow layers on the source
+    ! grid for the source grid point that maps to destination point i.
     integer, intent(in) :: num_snow_layers_source(:)
 
     ! name of variable giving number of snow layers (just used for identification purposes)
@@ -64,11 +71,12 @@ contains
     character(len=*), parameter :: subname = 'constructor'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL(num_snow_layers_source >= 0, errMsg(__FILE__, __LINE__))
+    ! We do not check validity of num_snow_layers_source here (i.e., confirming that it
+    ! is >= 0 everywhere) because it's okay for it to be invalid for points that are
+    ! never invoked. This is the case for destination points with no corresponding source
+    ! point (e.g., inactive destination points).
 
-    constructor%npts_source = size(num_snow_layers_source)
-
-    allocate(constructor%num_snow_layers_source(constructor%npts_source))
+    allocate(constructor%num_snow_layers_source(size(num_snow_layers_source)))
     constructor%num_snow_layers_source(:) = num_snow_layers_source(:)
 
     constructor%num_layers_name = trim(num_layers_name)
@@ -80,40 +88,30 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine check_npts(this, npts_source, npts_dest, varname)
+  subroutine check_npts(this, npts, varname)
     !
     ! !DESCRIPTION:
-    ! Checks the number of source and destination points, to ensure that this
-    ! interpolator is appropriate for this variable. This should be called once for
-    ! each variable.
+    ! Checks the number of destination points, to ensure that this interpolator is
+    ! appropriate for this variable. This should be called once for each variable.
     !
     ! !USES:
     !
     ! !ARGUMENTS:
     class(interp_multilevel_snow_type), intent(in) :: this
-    integer, intent(in) :: npts_source      ! number of source points
-    integer, intent(in) :: npts_dest        ! number of dest points (on this processor)
+    integer, intent(in) :: npts             ! number of dest points (on this processor)
     character(len=*), intent(in) :: varname ! variable name (for diagnostic output)
     !
     ! !LOCAL VARIABLES:
-    logical :: mismatch
 
     character(len=*), parameter :: subname = 'check_npts'
     !-----------------------------------------------------------------------
 
-    mismatch = .false.
-
-    if (npts_source /= this%npts_source) then
-       write(iulog,*) subname//' ERROR: mismatch in number of source points for ', &
+    if (npts /= size(this%num_snow_layers_source)) then
+       write(iulog,*) subname//' ERROR: mismatch in number of dest points for ', &
             trim(varname)
-       write(iulog,*) 'Number of source points: ', npts_source
-       write(iulog,*) 'Expected number of source points: ', this%npts_source
-       mismatch = .true.
-    end if
-
-    ! Note: this class doesn't care about the number of destination points
-
-    if (mismatch) then
+       write(iulog,*) 'Number of dest points: ', npts
+       write(iulog,*) 'Expected number of dest points: ', &
+            size(this%num_snow_layers_source)
        call endrun(msg=subname//' ERROR: mismatch in number of points for '//&
             trim(varname) // ' ' // errMsg(__FILE__, __LINE__))
     end if
@@ -121,7 +119,7 @@ contains
   end subroutine check_npts
 
   !-----------------------------------------------------------------------
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest, index_source)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
     !
     ! !DESCRIPTION:
     ! Interpolates a multi-level field from source to dest, for a single point.
@@ -134,15 +132,14 @@ contains
     ! number of existing snow layers, then the top N levels of the source are copied to
     ! the destination (where N is the number of levels in the destination).
     !
-    ! index_source is used in this version, in order to match each point with its number
-    ! of existing snow layers; index_source should be 1-based.
+    ! index_dest is used in this version, in order to match each point with its number
+    ! of existing snow layers; index_dest should be 1-based.
     !
     ! !ARGUMENTS:
     class(interp_multilevel_snow_type), intent(in) :: this
     real(r8) , intent(inout) :: data_dest(:)
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
-    integer  , intent(in)    :: index_source
     !
     ! !LOCAL VARIABLES:
     integer :: num_snow_layers_source  ! number of existing snow layers at this source point
@@ -154,7 +151,8 @@ contains
     character(len=*), parameter :: subname = 'interp_multilevel'
     !-----------------------------------------------------------------------
 
-    num_snow_layers_source = this%num_snow_layers_source(index_source)
+    num_snow_layers_source = this%num_snow_layers_source(index_dest)
+    SHR_ASSERT(num_snow_layers_source >= 0, errMsg(__FILE__, __LINE__))
     SHR_ASSERT(num_snow_layers_source <= size(data_source), errMsg(__FILE__, __LINE__))
 
     ! Determine the index in the source for the top layer that has snow. If there is snow

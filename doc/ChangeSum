@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_6_r157    sacks 11/27/2015 Reduce memory use for init_interp
    clm4_5_6_r156    sacks 11/24/2015 Fix QSNWCPICE and glacial inception
    clm4_5_6_r155     erik 11/23/2015 Bring FUN (Fixation and Uptake of Nitrogen) code option to trunk 
                                      from Mingjie, as well as latitude varying spinup from Charlie, 

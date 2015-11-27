@@ -211,20 +211,6 @@ contains
     
     call t_startf('CNZero')
 
-    call cnveg_carbonflux_inst%SetValues( &
-         num_soilp, filter_soilp, 0._r8, &
-         num_soilc, filter_soilc, 0._r8)
-    if ( use_c13 ) then
-       call c13_cnveg_carbonflux_inst%SetValues( &
-            num_soilp, filter_soilp, 0._r8, &
-            num_soilc, filter_soilc, 0._r8)
-    end if
-    if ( use_c14 ) then
-       call c14_cnveg_carbonflux_inst%SetValues( &
-            num_soilp, filter_soilp, 0._r8, &
-            num_soilc, filter_soilc, 0._r8)
-    end if
-
     ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Without this, the filter is full of garbage
     ! in some situations
     dummy_to_make_pgi_happy = ubound(filter_soilc, 1)

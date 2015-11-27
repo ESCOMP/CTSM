@@ -78,12 +78,17 @@ module initInterpMultilevelInterp
   type, extends(interp_multilevel_type) :: interp_multilevel_interp_type
      private
      character(len=:), allocatable :: coord_varname     ! name of coordinate variable (just used for identification purposes)
+
+     ! The following 'source' arrays store information about the source grid, but
+     ! regridded to the destination grid. e.g., coordinates_source(n,i) gives the
+     ! coordinate value for level n on the source grid, for the source grid point that
+     ! maps to destination point i.
      real(r8), allocatable :: coordinates_source(:,:)   ! coordinate values on source grid [lev, pt]
      real(r8), allocatable :: coordinates_dest(:,:)     ! coordinate values on dest grid [lev, pt]
      integer , allocatable :: level_classes_source(:,:) ! class indices on source grid [lev, pt]
      integer , allocatable :: level_classes_dest(:,:)   ! class indices on dest grid [lev, pt]
-     integer :: npts_source  ! number of spatial points on source grid
-     integer :: npts_dest    ! number of spatial points on dest grid
+
+     integer :: npts         ! number of spatial points on dest grid
      integer :: nlev_source  ! number of levels on source grid
      integer :: nlev_dest    ! number of levels on dest grid
    contains
@@ -122,7 +127,11 @@ contains
     ! Construct an interp_multilevel_interp_type object, where all levels have the same
     ! level_class.
     !
-    ! Coordinates must be monotonically increasing
+    ! Coordinates must be monotonically increasing.
+    !
+    ! coordinates_source gives information about the source grid, but regridded to the
+    ! destination grid. So coordinates_source(n,i) gives the coordinate value for level
+    ! n on the source grid, for the source grid point that maps to destination point i.
     !
     ! !USES:
     !
@@ -133,7 +142,7 @@ contains
     character(len=*), intent(in) :: coord_varname   ! name of coordinate variable (just used for identification purposes)
     !
     ! !LOCAL VARIABLES:
-    integer :: npts_source, npts_dest
+    integer :: npts
     integer :: nlev_source, nlev_dest
     integer, allocatable :: level_classes_source(:,:)
     integer, allocatable :: level_classes_dest(:,:)
@@ -141,13 +150,14 @@ contains
     character(len=*), parameter :: subname = 'constructor_no_levclasses'
     !-----------------------------------------------------------------------
 
-    npts_source = size(coordinates_source, 2)
-    npts_dest = size(coordinates_dest, 2)
+    npts = size(coordinates_source, 2)
+    SHR_ASSERT((size(coordinates_dest, 2) == npts), errMsg(__FILE__, __LINE__))
+
     nlev_source = size(coordinates_source, 1)
     nlev_dest = size(coordinates_dest, 1)
 
-    allocate(level_classes_source(nlev_source, npts_source), source = 1)
-    allocate(level_classes_dest(nlev_dest, npts_dest), source = 1)
+    allocate(level_classes_source(nlev_source, npts), source = 1)
+    allocate(level_classes_dest(nlev_dest, npts), source = 1)
 
     this = interp_multilevel_interp_type( &
          coordinates_source = coordinates_source, &
@@ -169,7 +179,12 @@ contains
     ! Construct an interp_multilevel_interp_type object, where classes are specified for
     ! each level.
     !
-    ! Coordinates must be monotonically increasing
+    ! Coordinates must be monotonically increasing.
+    !
+    ! coordinates_source and level_classes_source give information about the source grid,
+    ! but regridded to the destination grid. e.g., coordinates_source(n,i) gives the
+    ! coordinate value for level n on the source grid, for the source grid point that maps
+    ! to destination point i.
     !
     ! For the 'level_classes': The particular values are not important; the important
     ! thing is that, for a given column, levels that are fundamentally different should
@@ -198,18 +213,19 @@ contains
 
     this%coord_varname = trim(coord_varname)
 
-    this%npts_source = size(coordinates_source, 2)
-    this%npts_dest = size(coordinates_dest, 2)
+    this%npts = size(coordinates_source, 2)
+    SHR_ASSERT((size(coordinates_dest, 2) == this%npts), errMsg(__FILE__, __LINE__))
+
     this%nlev_source = size(coordinates_source, 1)
     this%nlev_dest = size(coordinates_dest, 1)
 
-    SHR_ASSERT_ALL((shape(level_classes_source) == [this%nlev_source, this%npts_source]), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((shape(level_classes_dest) == [this%nlev_dest, this%npts_dest]), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((shape(level_classes_source) == [this%nlev_source, this%npts]), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((shape(level_classes_dest) == [this%nlev_dest, this%npts]), errMsg(__FILE__, __LINE__))
 
-    do i = 1, this%npts_source
+    do i = 1, this%npts
        call this%check_coordinate_array(coordinates_source(:,i), level_classes_source(:,i))
     end do
-    do i = 1, this%npts_dest
+    do i = 1, this%npts
        call this%check_coordinate_array(coordinates_dest(:,i), level_classes_dest(:,i))
     end do
 
@@ -226,46 +242,29 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine check_npts(this, npts_source, npts_dest, varname)
+  subroutine check_npts(this, npts, varname)
     !
     ! !DESCRIPTION:
-    ! Checks the number of source and destination points, to ensure that this
-    ! interpolator is appropriate for this variable. This should be called once for
-    ! each variable.
+    ! Checks the number of destination points, to ensure that this interpolator is
+    ! appropriate for this variable. This should be called once for each variable.
     !
     ! !USES:
     !
     ! !ARGUMENTS:
     class(interp_multilevel_interp_type), intent(in) :: this
-    integer, intent(in) :: npts_source      ! number of source points
-    integer, intent(in) :: npts_dest        ! number of dest points (on this processor)
+    integer, intent(in) :: npts             ! number of dest points (on this processor)
     character(len=*), intent(in) :: varname ! variable name (for diagnostic output)
     !
     ! !LOCAL VARIABLES:
-    logical :: mismatch
 
     character(len=*), parameter :: subname = 'check_npts'
     !-----------------------------------------------------------------------
 
-    mismatch = .false.
-
-    if (npts_source /= this%npts_source) then
-       write(iulog,*) subname//' ERROR: mismatch in number of source points for ', &
-            trim(varname)
-       write(iulog,*) 'Number of source points: ', npts_source
-       write(iulog,*) 'Expected number of source points: ', this%npts_source
-       mismatch = .true.
-    end if
-
-    if (npts_dest /= this%npts_dest) then
+    if (npts /= this%npts) then
        write(iulog,*) subname//' ERROR: mismatch in number of dest points for ', &
             trim(varname)
-       write(iulog,*) 'Number of dest points: ', npts_dest
-       write(iulog,*) 'Expected number of dest points: ', this%npts_dest
-       mismatch = .true.
-    end if
-
-    if (mismatch) then
+       write(iulog,*) 'Number of dest points: ', npts
+       write(iulog,*) 'Expected number of dest points: ', this%npts
        call endrun(msg=subname//' ERROR: mismatch in number of points for '//&
             trim(varname) // ' ' // errMsg(__FILE__, __LINE__))
     end if
@@ -273,15 +272,15 @@ contains
   end subroutine check_npts
 
   !-----------------------------------------------------------------------
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest, index_source)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
     !
     ! !DESCRIPTION:
     ! Interpolates a multi-level field from source to dest, for a single point.
     !
     ! This version does a true interpolation, using a coordinate variable. The coordinate
     ! variable (along with the group to which each level belongs) can vary for each
-    ! spatial point. Thus, index_dest and index_source are used in this version, and they
-    ! must be within the bounds of the metadata. These indices should be 1-based.
+    ! spatial point. Thus, index_dest is used in this version, and is must be within the
+    ! bounds of the metadata. This index should be 1-based.
     !
     ! If level_classes were provided for this object (i.e., level_classes_source and
     ! level_classes_dest), then: For a given destination level, the interpolation is done
@@ -302,14 +301,13 @@ contains
     real(r8) , intent(inout) :: data_dest(:)
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
-    integer  , intent(in)    :: index_source
     !
     ! !LOCAL VARIABLES:
     integer :: lev_dest
     integer :: level_class_dest
     integer :: lev_source
 
-    ! source information for this index_source
+    ! source information for this index_dest
     real(r8) :: my_level_classes_source(this%nlev_source)
     real(r8) :: my_coordinates_source(this%nlev_source)
 
@@ -325,11 +323,10 @@ contains
 
     SHR_ASSERT((size(data_dest) == this%nlev_dest), errMsg(__FILE__, __LINE__))
     SHR_ASSERT((size(data_source) == this%nlev_source), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT((index_dest >= 1 .and. index_dest <= this%npts_dest), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT((index_source >= 1 .and. index_source <= this%npts_source), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((index_dest >= 1 .and. index_dest <= this%npts), errMsg(__FILE__, __LINE__))
 
-    my_level_classes_source(:)     = this%level_classes_source(:, index_source)
-    my_coordinates_source(:)       = this%coordinates_source(:, index_source)
+    my_level_classes_source(:) = this%level_classes_source(:, index_dest)
+    my_coordinates_source(:)   = this%coordinates_source(:, index_dest)
 
     do lev_dest = 1, this%nlev_dest
        level_class_dest = this%level_classes_dest(lev_dest, index_dest)

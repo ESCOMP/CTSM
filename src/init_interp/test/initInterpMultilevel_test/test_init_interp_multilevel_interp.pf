@@ -19,12 +19,10 @@ module test_init_interp_multilevel_interp
 
   real(r8), parameter :: tol = 1.e-13_r8
 
-  ! Tests use these source & destination indices. Some other indices get filled with
-  ! garbage values to make sure we're accessing the correct points.
-  integer, parameter :: index_source = 2
+  ! Tests use this destination index. Some other indices get filled with garbage values to
+  ! make sure we're accessing the correct points.
   integer, parameter :: index_dest = 3
 
-  integer, parameter :: npts_source = index_source + 1
   integer, parameter :: npts_dest = index_dest + 1
 
 contains
@@ -45,16 +43,14 @@ contains
        result(interpolator)
     ! Arguments:
     type(interp_multilevel_interp_type) :: interpolator  ! function result
-    real(r8), intent(in) :: coordinates_source(:)  ! coordinates in source data for index_source
+    real(r8), intent(in) :: coordinates_source(:)  ! coordinates in source data for index_dest
     real(r8), intent(in) :: coordinates_dest(:)    ! coordinates in dest data for index_dest
     !-----------------------------------------------------------------------
 
     interpolator = create_multilevel_interp_no_levclasses( &
          coordinates_source = coordinates_source, &
          coordinates_dest = coordinates_dest, &
-         index_source = index_source, &
          index_dest = index_dest, &
-         npts_source = npts_source, &
          npts_dest = npts_dest)
 
   end function create_interpolator_no_levclasses
@@ -64,9 +60,9 @@ contains
        result(interpolator)
     ! Arguments:
     type(interp_multilevel_interp_type) :: interpolator  ! function result
-    real(r8), intent(in) :: coordinates_source(:)   ! coordinates in source data for index_source
+    real(r8), intent(in) :: coordinates_source(:)   ! coordinates in source data for index_dest
     real(r8), intent(in) :: coordinates_dest(:)     ! coordinates in dest data for index_dest
-    integer , intent(in) :: level_classes_source(:) ! class indices in source data for index_source
+    integer , intent(in) :: level_classes_source(:) ! class indices in source data for index_dest
     integer , intent(in) :: level_classes_dest(:)   ! class indices in dest data for index_dest
     !-----------------------------------------------------------------------
 
@@ -75,9 +71,7 @@ contains
          coordinates_dest = coordinates_dest, &
          level_classes_source = level_classes_source, &
          level_classes_dest = level_classes_dest, &
-         index_source = index_source, &
          index_dest = index_dest, &
-         npts_source = npts_source, &
          npts_dest = npts_dest)
 
   end function create_interpolator_with_levclasses
@@ -100,7 +94,7 @@ contains
          coordinates_source = coordinates, &
          coordinates_dest   = coordinates)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     @assertEqual(data_source, data_dest)
 
@@ -125,7 +119,7 @@ contains
          coordinates_source = coordinates_source, &
          coordinates_dest   = coordinates_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected = [11.5_r8, 12.75_r8, 14.5_r8]
 
@@ -148,7 +142,7 @@ contains
          coordinates_source = coordinates_source, &
          coordinates_dest   = coordinates_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     @assertEqual(data_source(3), data_dest)
 
@@ -169,7 +163,7 @@ contains
          coordinates_source = coordinates_source, &
          coordinates_dest   = coordinates_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     @assertEqual(data_source(1), data_dest)
 
@@ -192,7 +186,7 @@ contains
          coordinates_dest   = coordinates_dest)
 
     data_dest(1) = data_orig
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     @assertEqual(data_orig, data_dest)
   end subroutine noSourceLevels_leavesDestinationUnchanged
@@ -222,7 +216,7 @@ contains
          level_classes_dest   = level_classes_dest)
 
     data_dest(1) = data_orig
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     @assertEqual(data_orig, data_dest)
 
@@ -251,7 +245,7 @@ contains
          level_classes_dest   = level_classes_dest)
 
     data_dest(1) = data_orig
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     @assertEqual(data_orig, data_dest)
   end subroutine destLevelIsSpval_leavesDestinationUnchanged
@@ -281,7 +275,7 @@ contains
          level_classes_source = level_classes_source, &
          level_classes_dest   = level_classes_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected = [12._r8, 63._r8]
 
@@ -324,7 +318,7 @@ contains
          coordinates_dest   = coordinates_dest)
 
     data_dest(1) = spval
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     @assertEqual(spval, data_dest)
   end subroutine destIsSpval_leavesDestinationUnchanged
@@ -349,7 +343,7 @@ contains
          coordinates_source = coordinates_source, &
          coordinates_dest   = coordinates_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest, index_source)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
 
     data_dest_expected(1) = 12.5_r8
     @assertEqual(data_dest_expected, data_dest, tolerance=tol)
