@@ -182,8 +182,11 @@ contains
 
     hashkey = gen_hashkey(name)
     nfactors = size(data)
-
     ndx = hash_table_indices(hashkey)
+
+    if(ndx < 1) then
+       call endrun('ndx out of bounds '//name)
+    endif
 
     allocate (comp_factors_table(ndx)%eff(nfactors))
 
@@ -213,18 +216,18 @@ contains
     !
     integer :: hash
     integer :: i
-
+    integer :: strlen
     integer, parameter :: tbl_max_idx = 15  ! 2**N - 1
     integer, parameter :: gen_hash_key_offset = z'000053db'
     integer, dimension(0:tbl_max_idx) :: tbl_gen_hash_key =  (/61,59,53,47,43,41,37,31,29,23,17,13,11,7,3,1/)
 
     hash = gen_hash_key_offset
-
-    if ( len(string) /= 19 ) then
+    strlen = len_trim(string)
+    if ( strlen /= 19 ) then
        !
        ! Process arbitrary string length.
        !
-       do i = 1, len(string)
+       do i = 1, strlen
           hash = ieor(hash , (ichar(string(i:i)) * tbl_gen_hash_key(iand(i-1,tbl_max_idx))))
        end do
     else
@@ -234,7 +237,7 @@ contains
        do i = 1, tbl_max_idx+1
           hash = ieor(hash , ichar(string(i:i))   * tbl_gen_hash_key(i-1)) 
        end do
-       do i = tbl_max_idx+2, len(string)
+       do i = tbl_max_idx+2, strlen
           hash = ieor(hash , ichar(string(i:i))   * tbl_gen_hash_key(i-tbl_max_idx-2)) 
        end do
     end if

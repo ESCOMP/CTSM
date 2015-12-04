@@ -141,6 +141,9 @@ module histFileMod
   ! !PRIVATE TYPES:
   ! Constants
   !
+  integer, parameter :: max_length_filename = 128 ! max length of a filename. on most linux systems this
+                                                  ! is 255. But this can't be increased until all hard
+                                                  ! coded values throughout the i/o stack are updated.
   integer, parameter :: max_chars = 128        ! max chars for char variables
   integer, parameter :: max_subs = 100         ! max number of subscripts
   integer            :: num_subs = 0           ! actual number of subscripts
@@ -221,7 +224,7 @@ module histFileMod
   !
   ! Other variables
   !
-  character(len=max_chars) :: locfnh(max_tapes)  ! local history file names
+  character(len=max_length_filename) :: locfnh(max_tapes)  ! local history file names
   character(len=max_chars) :: locfnhr(max_tapes) ! local history restart file names
   logical :: htapes_defined = .false.            ! flag indicates history contents have been defined
   !
@@ -4040,7 +4043,7 @@ contains
    end subroutine list_index
 
    !-----------------------------------------------------------------------
-   character(len=256) function set_hist_filename (hist_freq, hist_mfilt, hist_file)
+   character(len=max_length_filename) function set_hist_filename (hist_freq, hist_mfilt, hist_file)
      !
      ! !DESCRIPTION:
      ! Determine history dataset filenames.
@@ -4056,12 +4059,13 @@ contains
      !
      ! !LOCAL VARIABLES:
      !EOP
-     character(len=256) :: cdate       !date char string
+     character(len=max_chars) :: cdate !date char string
      character(len=  1) :: hist_index  !p,1 or 2 (currently)
      integer :: day                    !day (1 -> 31)
      integer :: mon                    !month (1 -> 12)
      integer :: yr                     !year (0 -> ...)
      integer :: sec                    !seconds into current day
+     integer :: filename_length
      character(len=*),parameter :: subname = 'set_hist_filename'
      !-----------------------------------------------------------------------
 
@@ -4076,6 +4080,21 @@ contains
    set_hist_filename = "./"//trim(caseid)//".clm2"//trim(inst_suffix)//&
                        ".h"//hist_index//"."//trim(cdate)//".nc"
 
+   ! check to see if the concatenated filename exceeded the
+   ! length. Simplest way to do this is ensure that the file
+   ! extension is '.nc'.
+   filename_length = len_trim(set_hist_filename)
+   if (set_hist_filename(filename_length-2:filename_length) /= '.nc') then
+      write(iulog, '(a,a,a,a,a)') 'ERROR: ', subname, &
+           ' : expected file extension ".nc", received extension "', &
+           set_hist_filename(filename_length-2:filename_length), '"'
+      write(iulog, '(a,a,a,a,a)') 'ERROR: ', subname, &
+           ' : filename : "', set_hist_filename, '"'
+      write(iulog, '(a,a,a,i3,a,i3)') 'ERROR: ', subname, &
+           ' Did the constructed filename exceed the maximum length? : filename length = ', &
+           filename_length, ', max length = ', max_length_filename
+      call endrun(msg=errMsg(__FILE__, __LINE__))
+   end if
   end function set_hist_filename
 
   !-----------------------------------------------------------------------

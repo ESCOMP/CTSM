@@ -778,7 +778,6 @@ contains
          s_vcad     => pftcon%s_vcad                         , & ! Input:  [real(r8) (:)   ]  
          i_flnr     => pftcon%i_flnr                         , & ! Input:  [real(r8) (:)   ]  
          s_flnr     => pftcon%s_flnr                         , & ! Input:  [real(r8) (:)   ]  
-         leafn      => cnveg_nitrogenstate_inst%leafn_patch  , & ! Input:  [real(r8) (:)   ]  (gN/m2) leaf N      
          forc_pbot  => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)
 
          t_veg      => temperature_inst%t_veg_patch          , & ! Input:  [real(r8) (:)   ]  vegetation temperature (Kelvin)
@@ -988,7 +987,11 @@ contains
                ! dividing by LAI to convert total leaf nitrogen
                ! from m2 ground to m2 leaf; dividing by sum_nscaler to
                ! convert total leaf N to leaf N at canopy top
-               lnc(p) = leafn(p) / (tlai(p) * sum_nscaler)
+               lnc(p) = cnveg_nitrogenstate_inst%leafn_patch(p) / (tlai(p) * sum_nscaler)
+               ! NOTE(bja, 2015-11) can not associate leafn_patch to a
+               ! shorter name because leafn_patch may not be
+               ! allocated, e.g. SP runs. Using an associate with
+               ! unallocated memory results in a NAG runtime error.
             else                                                                    
                lnc(p) = 0.0_r8                                                      
             end if                                                                  

@@ -218,6 +218,11 @@
   </compset>
 
   <compset>
+    <alias>I1850CRUCLM50BGCCROP</alias>      
+    <lname>1850_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
     <alias>IMCRUCLM50BGC</alias>      
     <lname>2000_DATM%CRU_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>

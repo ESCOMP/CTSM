@@ -439,7 +439,6 @@ contains
          eflx_sh_soil           => energyflux_inst%eflx_sh_soil_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
          eflx_sh_veg            => energyflux_inst%eflx_sh_veg_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from leaves (W/m**2) [+ to atm]                    
          eflx_sh_grnd           => energyflux_inst%eflx_sh_grnd_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]                    
-         leafn                  => cnveg_nitrogenstate_inst%leafn_patch         , & ! Input:  [real(r8) (:)   ]  (gN/m2) leaf N      
          begp                   => bounds%begp                                  , &
          endp                   => bounds%endp                                  , &
          begg                   => bounds%begg                                  , &

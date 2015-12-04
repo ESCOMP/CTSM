@@ -1,4 +1,140 @@
 ===============================================================
+Tag name:  clm4_5_6_r158
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Fri Dec  4 16:10:11 MST 2015
+One-line Summary: misc clm 5.0 bugfixes
+
+Purpose of changes
+------------------
+
+Misc. bugfixes for CLM 5.0
+
+  * LUNA bugfix to endrun if simulation goes out of range.
+
+  * Restore ability to run SP simulations on nag.
+
+  * String length bugfix from Jim Edwards.
+
+  * New long clm50 kitchen sink test.
+
+  * endrun if history filenames exceed maximum allowed length.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2209, 2213
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp):
+
+  CLM will now endrun if the generated history filename exceeds the
+  maximum allowed length. This will result in run time failures for
+  people running the test suite with the default or longer test ids.
+
+  CLM 5.0 with LUNA will now endrun if nitrogen computations go
+  outside a valid range.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: unknown, none expected
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone - unit tests pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - n/a, not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - n/a, not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - 40 - pass; 45 - ok
+    yellowstone_pgi -  40 - pass; 45 - pass
+    yellowstone_gnu (clm45 only) - 45 - pass
+    hobart_nag - ok
+
+CLM tag used for the baseline comparisons: clm4_5_6_r157
+
+  Notes: 'ok' means:
+
+  * Fixing bug 2213 restores tests an hobart_nag. These tests BFAIL
+    because they don't have baselines.
+
+  * r157 yellowstone baseline does not include clm history files for
+    two tests because of filename length issues:
+
+    ERS_D_Ld3.f09_g16_gl5.IG1850CRUCLM50BGCCROP.yellowstone_intel.clm-clm50KitchenSink
+    ERP_P15x2_Lm25.f10_f10.ICLM45BGCDVCROP.yellowstone_intel.clm-clm50BGCDVCROPmonthly
+
+  * New test does not have baseline:
+
+    ERS_Ly3.f10_f10.I1850CRUCLM50BGCCROP.yellowstone_intel.clm-clm50KSinkMOut
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: bit for bit
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+  new clm50 kitchen sink test with monthly output
+    clm/cime_config/testdefs/testmods_dirs/clm/clm50KSinkMOut/user_nl_clm
+    clm/cime_config/testdefs/testmods_dirs/clm/clm50KSinkMOut/include_user_mods
+    clm/cime_config/testdefs/testmods_dirs/clm/clm50KSinkMOut
+
+List all existing files that have been modified, and describe the changes:
+
+  new clm50 compset w/o glc and test for longer kitchen sink test
+    clm/cime_config/config_compsets.xml
+    clm/cime_config/testdefs/testlist_clm.xml
+
+  string length bugfix from Jim Edwards
+    clm/src/biogeochem/FireEmisFactorsMod.F90
+
+  runtime error if constructed history filename exceeds max length
+    clm/src/main/histFileMod.F90
+
+  bug 2209
+    clm/src/biogeophys/LunaMod.F90 - runtime error if LUNA nitrogen computations become unrealistic
+
+  bug 2213
+    clm/src/biogeophys/PhotosynthesisMod.F90 - remove association of CN variable that may not be allocated for SP runs.
+    clm/src/biogeophys/CanopyFluxesMod.F90 - remove association of CN variable that may not be allocated for SP runs.
+    clm/cime_config/testdefs/ExpectedTestFails.xml - remove nag tests from xfails.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_6_r157
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Nov 27 05:52:17 MST 2015

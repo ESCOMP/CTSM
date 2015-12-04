@@ -24,18 +24,6 @@
    <entry bugz="2027" >CFAIL PET_P12x2_D.f10_f10.I1850CLM45BGC.hobart_nag.clm-ciso</entry>
    <entry bugz="2071" >RUN SMS_D_Ld1_P24x1.f10_f10.ICRUCLM45.hobart_nag.clm-af_bias_v5</entry>
 
-   <entry bugz="2213" >RUN SMS_Ld1_Mmpi-serial.f45_f45.ICLM45.hobart_nag.clm-ptsRLA</entry>
-   <entry bugz="2213" >RUN ERS_D_Ld5_Mmpi-serial.1x1_mexicocityMEX.I1PTCLM45.hobart_nag.clm-default</entry>
-   <entry bugz="2213" >RUN ERI_D_Ld9_P24x1.f10_f10.ICLM45.hobart_nag.clm-SNICARFRC</entry>
-   <entry bugz="2213" >RUN SMS_D_Ld1_Mmpi-serial.1x1_vancouverCAN.I1PTCLM50.hobart_nag.clm-default</entry>
-   <entry bugz="2213" >RUN SMS_Ld1.f45_f45.ICLM45.hobart_nag.clm-ptsRLA</entry>
-   <entry bugz="2213" >RUN SMS_D_Ld1_Mmpi-serial.f45_f45.ICLM45.hobart_nag.clm-ptsRLA</entry>
-   <entry bugz="2213" >RUN SMS_D_Ld1_Mmpi-serial.1x1_vancouverCAN.I1PTCLM45.hobart_nag.clm-default</entry>
-   <entry bugz="2213" >RUN SMS_D_Ld5_Mmpi-serial.5x5_amazon.ICLM45ED.hobart_nag.clm-edTest</entry>
-   <entry bugz="2213" >RUN ERP_D_Ld5_P24x1.f10_f10.I1850CLM45.hobart_nag.clm-o3</entry>
-   <entry bugz="2213" >RUN ERI_D_Ld9_P24x1.T31_g37.I1850CLM45.hobart_nag.clm-reduceOutput</entry>
-   
-
    <entry bugz="2027" >FAIL PET_P12x2_D.f10_f10.I1850CLM45BGC.hobart_pgi.clm-ciso</entry>
 
    <entry             >FAIL ERH_D.f19_g16.I1850CLM45CN.edison_intel.clm-default</entry>

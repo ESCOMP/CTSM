@@ -280,18 +280,23 @@ module LunaMod
                       do z = 1 , nrad(p)
                          
                          !-------------------------------------------------------------------------------------------
-                         !for sun lit leaves
-                         FNCa        = FNCa_z(z)
-                         if(FNCa>15.0_r8) FNCa = 15.0_r8  !boundary condition check for unrealistically high leaf nitrogen content
+                         !for different layers of leaves
+                         FNCa     = FNCa_z(z)
+                         if(FNCa>15.0_r8) then !boundary condition check for unrealistically high leaf nitrogen content
+                             FNCa = 15.0_r8  
+                             write(iulog, *) 'Warning: leaf nitrogen content become unrealistically high (>15.0 g N/m2 leaf) ', &
+                                  'for patch=', p, 'z=', z, "pft=", ft
+                         endif
                          radmax2mean = par240x_z(p,z) / par240d_z(p,z)
                          if(tlai_z(p,z)>0.0_r8)then
-                            qabs  = par240d_z(p,z)/rabsorb
+                            qabs   = par240d_z(p,z)/rabsorb
                             PARi10 =  qabs * 4.6_r8                 
                          else
-                            PARi10  =  0.0_r8
+                            PARi10 =  0.0_r8
                          endif                         
-                         PARimx10     = PARi10*radmax2mean
-                         !-----------------------------------------------------------------------------------------------------            
+                         PARimx10  = PARi10*radmax2mean
+                         !-----------------------------------------------------------------------------------------------------
+ 
                          !nitrogen allocastion model-start          
                          PNlcold   = PNlc_z(p,z)
                          PNetold   = 0.0_r8
@@ -318,20 +323,20 @@ module LunaMod
                             enzs_z(p,z) = enzs_z(p,z)* (1.0_r8 + max_daily_pchg)
                          endif
                          !nitrogen allocastion model-end  
-                         !-----------------------------------------------------------------------------------------------------   
+                         !-----------------------------------------------------------------------------------------------------  
                          if(isnan(vcmx25_z(p, z)).or. vcmx25_z(p, z)>1000._r8 .or. vcmx25_z(p, z)<0._r8)then
-                             write(iulog, *) 'Warning: Vc,mx25 become unrealistic (NaN,>1000, or negative) for patch=', &
+                             write(iulog, *) 'Error: Vc,mx25 become unrealistic (NaN,>1000, or negative) for patch=', &
                                   p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:',FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             !call endrun(msg=errmsg(__FILE__, __LINE__))
+                             call endrun(msg=errmsg(__FILE__, __LINE__))
                          endif
-                         if(isnan(jmx25_z(p, z)).or.jmx25_z(p, z)>1000._r8 .or. jmx25_z(p, z)<0._r8)then
-                             write(iulog, *) 'Warning: Jmx25 become unrealistic (NaN,>1000, or negative)for patch=', &
+                         if(isnan(jmx25_z(p, z)).or.jmx25_z(p, z)>2000._r8 .or. jmx25_z(p, z)<0._r8)then
+                             write(iulog, *) 'Error: Jmx25 become unrealistic (NaN,>2000, or negative) for patch=', &
                                   p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:', FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             !call endrun(msg=errmsg(__FILE__, __LINE__))
+                             call endrun(msg=errmsg(__FILE__, __LINE__))
                          endif
                       enddo ! finished loop of leaf layers  
                     else !decay during drought or winter
