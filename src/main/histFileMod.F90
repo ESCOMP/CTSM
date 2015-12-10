@@ -141,10 +141,10 @@ module histFileMod
   ! !PRIVATE TYPES:
   ! Constants
   !
-  integer, parameter :: max_length_filename = 128 ! max length of a filename. on most linux systems this
+  integer, parameter :: max_length_filename = 199 ! max length of a filename. on most linux systems this
                                                   ! is 255. But this can't be increased until all hard
                                                   ! coded values throughout the i/o stack are updated.
-  integer, parameter :: max_chars = 128        ! max chars for char variables
+  integer, parameter :: max_chars = 199        ! max chars for char variables
   integer, parameter :: max_subs = 100         ! max number of subscripts
   integer            :: num_subs = 0           ! actual number of subscripts
   character(len=32)  :: subs_name(max_subs)    ! name of subscript
@@ -225,7 +225,7 @@ module histFileMod
   ! Other variables
   !
   character(len=max_length_filename) :: locfnh(max_tapes)  ! local history file names
-  character(len=max_chars) :: locfnhr(max_tapes) ! local history restart file names
+  character(len=max_length_filename) :: locfnhr(max_tapes) ! local history restart file names
   logical :: htapes_defined = .false.            ! flag indicates history contents have been defined
   !
   ! NetCDF  Id's

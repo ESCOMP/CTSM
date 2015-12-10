@@ -15,16 +15,41 @@
    <entry bugz="2070" >FAIL ERS_D_Ld5_Mmpi-serial.1x1_brazil.ICLM45ED.yellowstone_gnu.clm-edTest</entry>
    <entry bugz="2197" >RUN ERS_D_Ld5_Mmpi-serial.1x1_brazil.ICLM45ED.yellowstone_gnu.clm-edTest</entry>
 
-   <entry bugz="2027" >FAIL PET_P12x2_D.f10_f10.I1850CLM45BGC.hobart_intel.clm-ciso</entry>
 
-   <entry bugz="2027" >CFAIL PET_P12x2_D.f10_f10.I1850CLM45BGC.hobart_nag.clm-ciso</entry>
-   <entry             >FAIL ERI.f19_g16.ICLM45BGC.hobart_nag.clm-reduceOutput</entry>
-   <entry             >RUN ERS.f10_f10.I20TRCLM45BGC.hobart_nag.clm-reduceOutput</entry>
-   <entry             >FAIL SMS.f09_g16.ICRUCLM45.hobart_nag.clm-af_bias_v5</entry>
-   <entry bugz="2027" >CFAIL PET_P12x2_D.f10_f10.I1850CLM45BGC.hobart_nag.clm-ciso</entry>
-   <entry bugz="2071" >RUN SMS_D_Ld1_P24x1.f10_f10.ICRUCLM45.hobart_nag.clm-af_bias_v5</entry>
+   <entry bugz="2056" >ERP_D_P4x30_Ld5.ne30_g16.ICN.yellowstone_intel.clm-40default</entry>
+   <entry bugz="2056" >RUN ERP_D_Ld5.f19_g16.ICRUCLM50BGC.yellowstone_intel.clm-fire_emis</entry>
+   <entry bugz="2056" >RUN ERP_D_Ld5.hcru_hcru.ICRUCN.yellowstone_pgi.clm-40default</entry>
+   <entry bugz="2056" >RUN SMS_D_Ld5_Mmpi-serial.5x5_amazon.ICLM45ED.yellowstone_pgi.clm-edTest</entry>
+   <entry bugz="2056" >RUN ERS_P192x1_Ld211.f19_g16.ICNDVCROP.yellowstone_intel.clm-crop</entry>
+   <entry bugz="2056" >RUN ERI_Ld9.ne30_g16.I4804.yellowstone_pgi.clm-40default</entry>
 
-   <entry bugz="2027" >FAIL PET_P12x2_D.f10_f10.I1850CLM45BGC.hobart_pgi.clm-ciso</entry>
+   <entry bugz="2256" >RUN ERI_D_Ld9_P24x1.f10_f10.ICRUCLM50BGC.hobart_nag.clm-reduceOutput</entry>
+   <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.ICRUCLM50BGC.hobart_nag.clm-reduceOutput</entry>
+   <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.ICRUCLM50BGC.hobart_nag.clm-noFUN_flexCN</entry>
+   <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.ICRUCLM50BGC.hobart_nag.clm-luna</entry>
+   <entry bugz="2256" >RUN SMS.f10_f10.IRCP45CN.hobart_pgi.clm-reduceOutput</entry>
+   <entry bugz="2256" >RUN SMS_Ld5_D_P24x1.f10_f10.IRCP45CLM45BGC.hobart_nag.clm-decStart</entry>
+
+   <entry bugz="2256" >RUN RUN ERP_D_Ld5_P24x1.f10_f10.ICLM45BGC.hobart_nag.clm-reduceOutput</entry>
+   <entry bugz="2256" >RUN ERP_D_Ld5_P24x1.f10_f10.I1850CLM45BGC.hobart_nag.clm-ciso</entry>
+   <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.I1850CLM45BGC.hobart_nag.clm-default</entry>
+   <entry bugz="2256" >RUN ERP_D_Ld5.f10_f10.ICN.hobart_pgi.clm-reduceOutput</entry>
+   <entry bugz="2256" >RUN ERP_Ld5.f10_f10.I1850CN.hobart_pgi.clm-reduceOutput</entry>
+   <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.ICLM45BGC.hobart_nag.clm-reduceOutput</entry>
+   <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.I1850CLM45BGC.hobart_nag.clm-ciso</entry>
+   <entry bugz="2256" >RUN ERI_D_Ld9_P24x1.f10_f10.ICLM45BGC.hobart_nag.clm-reduceOutput</entry>
+   <entry bugz="2256" >RUN SMS_Ld5_D_P24x1.f10_f10.IHISTCLM45BGC.hobart_nag.clm-clm50BGCmonthly</entry>
+   <entry bugz="2256" >RUN ERP_D_P24x1.f10_f10.IHISTCLM45BGC.hobart_nag.clm-decStart</entry>
+   <entry bugz="2256" >RUN ERS_D.f19_g16_gl5.IGRCP26CN.hobart_pgi.clm-reduceOutput</entry>
+   <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.ICRUCLM50BGC.hobart_nag.clm-flexCN_FUN</entry>
+
+   <entry bugz="2256" >RUN ERS_D_Ld5_Mmpi-serial.1x1_mexicocityMEX.I1PTCLM45.hobart_nag.clm-default</entry>
+   <entry bugz="2256" >RUN ERI_D_Ld9_P24x1.f10_f10.ICLM45.hobart_nag.clm-SNICARFRC</entry>
+   <entry bugz="2256" >RUN SMS_Ld1.f45_f45.ICLM45.hobart_nag.clm-ptsRLA</entry>
+   <entry bugz="2256" >RUN SMS_D_Ld5_Mmpi-serial.5x5_amazon.ICLM45ED.hobart_nag.clm-edTest</entry>
+   <entry bugz="2256" >RUN ERP_D_Ld5_P24x1.f10_f10.I1850CLM45.hobart_nag.clm-o3</entry>
+   <entry bugz="2256" >RUN ERI_D_Ld9_P24x1.T31_g37.I1850CLM45.hobart_nag.clm-reduceOutput</entry>
+   
 
    <entry             >FAIL ERH_D.f19_g16.I1850CLM45CN.edison_intel.clm-default</entry>
    <entry             >FAIL ERI_D.ne30_g16.ICLM45BGC.edison_intel.clm-vrtlay</entry>

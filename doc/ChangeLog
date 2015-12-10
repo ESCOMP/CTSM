@@ -1,4 +1,126 @@
 ===============================================================
+Tag name:  clm4_5_6_r159
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Dec 10 15:46:47 MST 2015
+One-line Summary: Update CIME version
+
+Purpose of changes
+------------------
+
+Update to very latest version of CIME, which we had held off doing
+for two months. The main user change is that CIME no longer names
+scripts with your CASENAME.
+
+This CIME version also updated PIO1 to PIO2 (pio2_0_27). These
+early versions of PIO2 do have issues with potential hangs. See
+bug 2256 below. As such we do not recommend use of this tag. Or
+if you do and run into problems, do the workaround in the bug
+report to move the PIO version to pio1_9_23. The behavior is that
+after the simulation finishes it times out when writing history and
+restart files. mpi-serial (single point) cases seem to work fine.
+
+Also fix two minor bugs.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+
+    2251  Bad NH max planting date of 6/31
+    2250  History filenames get truncated to 128 characters
+
+Bugs Introduced (include bugzilla ID):
+
+    2257 Unit tests fail in clm4_5_6_r159
+    2256 Problems with early versions of PIO2 in CLM
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users: CASE SCRIPTS NO LONGER NAMED $CASE.build, $CASE.run, $CASE.submit 
+
+    After ./create_newcase is run you have the scripts named:
+       ./case.build
+       ./case.run
+       ./case.submit
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): New params file
+
+Substantial timing or memory changes: None
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self, fvitt
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone -  PASS
+
+   (several comparision tests to clm4_5_6_r158 FAIL because of the new params
+   file)
+
+  unit-tests (components/clm/src):
+
+    yellowstone -  FAIL
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone -  PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - OK
+
+    OK means failures are in the ExpectedFails list
+
+CLM tag used for the baseline comparisons:  clm4_5_6_r158
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:  Yes (but just for two diagnostic cpl fields)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: diagnostic change
+
+atm topo field
+For drydep TERPOOH (dd034) is different because of an update by Francis Vitt
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): cime to cime4.3.1
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+    Increase max filename length from 128 to 199.
+M       components/clm/src/main/ncdio_pio.F90.in -- increase tmp_string to 199
+M       components/clm/src/main/histFileMod.F90 --- max length filename
+           and max_chars to 199 and dimension locfnhr by max_length_filename
+
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- new params file
+           change 631 max planting date for NH to 701
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_6_r158
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Fri Dec  4 16:10:11 MST 2015
