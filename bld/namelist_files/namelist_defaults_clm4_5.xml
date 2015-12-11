@@ -487,11 +487,6 @@ lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr1850_c151003.nc</fsu
 <fglcmask hgrid="0.9x1.25" >glc/cism/griddata/glcmaskdata_0.9x1.25_gland_c141105.nc</fglcmask>
 <fglcmask hgrid="1.9x2.5"  >glc/cism/griddata/glcmaskdata_1.9x2.5_gland_c141105.nc</fglcmask>
 
-<!-- Land topo datasets (when running glc_nec) (relative to {csmdata}) -->
-<flndtopo hgrid="0.9x1.25"  >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</flndtopo>
-<flndtopo hgrid="1.9x2.5"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</flndtopo>
-<flndtopo hgrid="48x96"     >lnd/clm2/griddata/topodata_48x96_USGS_070110.nc</flndtopo>
-
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
 <use_fun phys="clm5_0" use_cn=".true.">.false.</use_fun>
 <use_fun                              >.false.</use_fun>

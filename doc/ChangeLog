@@ -1,4 +1,177 @@
 ===============================================================
+Tag name:  clm4_5_6_r160
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Dec 11 10:51:21 MST 2015
+One-line Summary: For glc_mec, get gridcell topographic height from atm
+
+Purpose of changes
+------------------
+
+Runs with glc_mec require knowledge of the atmosphere's topographic height. Up
+until now, this was specified via the flndtopo file for the three resolutions
+that glc_mec can run at: f09, f19, T31. However, this has three problems:
+
+(1) It made it hard to extend glc_mec to run at other CLM resolutions
+
+(2) If CAM's topographic height changes (as it did recently), CLM would need to
+    have its flndtopo files updated to agree.
+
+(3) It assumes that datm's forcing heights match CAM's.
+
+In this tag, flndtopo has been removed, and CLM now gets the atmosphere's
+topographic height from the atmosphere, via the coupler. References to flndtopo
+/ ldomain%topo have been replaced with atm2lnd_inst%forc_topo_grc.
+
+For now, datm is set up to provide a topographic height that matches the old f09
+file - so offline (I compset) runs at f09 will be the same as before. But this
+will soon change.
+
+Also removed fatmtopo, which was in the code in a few places but was no longer
+being used.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- removed flndtopo file for CLM45/CLM5
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- removed flndtopo file for CLM45/CLM5
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - pass (both sets of tests)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - pass
+
+    'ok' means pass except baseline comparison failures for IG tests, as noted
+    below
+
+    Note that most hobart_nag tests are now in the expected fail list. The only
+    passing tests on hobart_nag are:
+
+       SMS_D_Ld1_P24x1.f10_f10.ICRUCLM45.hobart_nag.clm-af_bias_v5
+       SMS_Ld1_Mmpi-serial.f45_f45.ICLM45.hobart_nag.clm-ptsRLA
+       SMS_D_Ld1_Mmpi-serial.1x1_vancouverCAN.I1PTCLM50.hobart_nag.clm-default
+       SMS_Ld1.f45_f45.ICLM45.hobart_nag.clm-ptsRLA
+       SMS_D_Ld1_Mmpi-serial.1x1_vancouverCAN.I1PTCLM45.hobart_nag.clm-default
+       SMS_D_Ld1_P24x1.f10_f10.ICLM45BGC.hobart_nag.clm-oldhyd
+       ERS_D_Ld5_Mmpi-serial.1x1_mexicocityMEX.I1PTCLM45.hobart_nag.clm-default
+       SMS_D_Ld1_Mmpi-serial.f45_f45.ICLM45.hobart_nag.clm-ptsRLA
+       ERP_Ly5.1x1_numaIA.ICLM45BGCCROP.hobart_nag.clm-monthly
+       SMS_Ld1.1x1_mexicocityMEX.I1PT.hobart_nag.clm-40default
+       SMS_Ld5_P24x1.f10_f10.IRCP26CN.hobart_nag.clm-reduceOutput
+       SMS_D_Ld1.1x1_mexicocityMEX.I.hobart_nag
+
+CLM tag used for the baseline comparisons: clm4_5_6_r159
+   compared
+   ERS_Ly3.f10_f10.I1850CRUCLM50BGCCROP.yellowstone_intel.clm-clm50KSinkMOut
+   against baselines in directory clm4_5_r159
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM5 with glc_mec (IG, FG, BG)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+      Potentially new climate. Magnitude of change depends on how different
+      atm's topography is from the flndtopo file that had been used before.
+
+      For now, offline (IG) runs at f09 are the same as before, but all other
+      offline runs change. Runs coupled to CAM may be the same (or close to the
+      same), if CAM is using its old topography files, but will change for the
+      new CAM topography.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as described above
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/bld/test_build_namelist/t/input/namelist_defaults_clm4_5_test.xml
+M       components/clm/bld/test_build_namelist/t/input/namelist_definition_clm4_5_test.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/doc/UsersGuide/preface.xml
+M       components/clm/doc/UsersGuide/adding_files.xml
+M       components/clm/doc/UsersGuide/single_point.xml
+M       components/clm/src/cpl/clm_cpl_indices.F90
+M       components/clm/src/cpl/lnd_import_export.F90
+M       components/clm/src/utils/domainMod.F90
+M       components/clm/src/main/clm_initializeMod.F90
+M       components/clm/src/main/atm2lndType.F90
+M       components/clm/src/main/controlMod.F90
+M       components/clm/src/main/clm_varctl.F90
+M       components/clm/src/main/atm2lndMod.F90
+M       components/clm/src/main/surfrdMod.F90
+
+========= Remove topo field that is defined but never set
+M       components/clm/src/main/histFileMod.F90
+
+========= Add test to expected fail list; it seemed to pass for Erik, but fails
+          for me even out of a fresh checkout of clm4_5_6_r159:
+          ERP_Ly5.1x1_numaIA.ICRUCLM50BGCCROP.hobart_nag.clm-clm50BGCCROPmonthly
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_6_r159
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Dec 10 15:46:47 MST 2015

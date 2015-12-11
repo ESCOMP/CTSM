@@ -49,7 +49,8 @@
    <entry bugz="2256" >RUN SMS_D_Ld5_Mmpi-serial.5x5_amazon.ICLM45ED.hobart_nag.clm-edTest</entry>
    <entry bugz="2256" >RUN ERP_D_Ld5_P24x1.f10_f10.I1850CLM45.hobart_nag.clm-o3</entry>
    <entry bugz="2256" >RUN ERI_D_Ld9_P24x1.T31_g37.I1850CLM45.hobart_nag.clm-reduceOutput</entry>
-   
+
+   <entry bugz="2258" >RUN ERP_Ly5.1x1_numaIA.ICRUCLM50BGCCROP.hobart_nag.clm-clm50BGCCROPmonthly</entry>
 
    <entry             >FAIL ERH_D.f19_g16.I1850CLM45CN.edison_intel.clm-default</entry>
    <entry             >FAIL ERI_D.ne30_g16.ICLM45BGC.edison_intel.clm-vrtlay</entry>

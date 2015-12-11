@@ -318,33 +318,6 @@ need to create your own custom file to do that. Normally, we turn river-routing
 OFF for regional or single point simulations.</para></entry>
 </row>
 <row>
-   <entry morerows="1" valign="middle">flndtopo</entry>
-   <entry>ALL</entry>
-   <entry><para>fine-mesh simulations (specifying land resolution as a finer grid than
-atmosphere resolution).</para></entry>
-   <entry>Yes</entry>
-   <entry>No</entry>
-</row>
-<row>
-   <entry spanname="notes_span"><para>You may customize to give better surface heights for your site, or
-input a higher resolution orography file when you create it using
-<command>mkgriddata</command>.</para></entry>
-</row>
-<row>
-   <entry morerows="1" valign="middle">fatmtopo</entry>
-   <entry>ALL</entry>
-   <entry><para>fine-mesh simulations (specifying land resolution as a finer grid than
-atmosphere resolution).</para></entry>
-   <entry>Yes</entry>
-   <entry>No</entry>
-</row>
-<row>
-   <entry spanname="notes_span"><para>You may customize to give better surface heights
-    for your site, or
-input a higher resolution orography file when you create it using
-<command>mkgriddata</command>.</para></entry>
-</row>
-<row>
    <entry morerows="1" valign="middle">finidat</entry>
    <entry>ALL</entry>
    <entry><para>RUN_TYPE="startup", CLM_FORCE_COLDSTART="off"</para></entry>

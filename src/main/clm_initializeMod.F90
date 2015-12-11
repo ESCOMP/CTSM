@@ -43,11 +43,11 @@ contains
     use clm_varcon       , only: clm_varcon_init
     use landunit_varcon  , only: landunit_varcon_init, max_lunit, istice_mec
     use column_varcon    , only: col_itype_to_icemec_class
-    use clm_varctl       , only: fsurdat, fatmlndfrc, flndtopo, fglcmask, noland, version  
+    use clm_varctl       , only: fsurdat, fatmlndfrc, fglcmask, noland, version  
     use pftconMod        , only: pftcon       
     use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
     use domainMod        , only: domain_check, ldomain, domain_init
-    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_topo, surfrd_get_data 
+    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data 
     use controlMod       , only: control_init, control_print
     use ncdio_pio        , only: ncd_pio_init
     use initGridCellsMod , only: initGridCells
@@ -138,16 +138,6 @@ contains
        call domain_check(ldomain)
     endif
     ldomain%mask = 1  !!! TODO - is this needed?
-
-    ! Get topo if appropriate (set ldomain%topo)
-
-    if (flndtopo /= " ") then
-       if (masterproc) then
-          write(iulog,*) 'Attempting to read atm topo from ',trim(flndtopo)
-          call shr_sys_flush(iulog)
-       endif
-       call surfrd_get_topo(ldomain, flndtopo)  
-    endif
 
     ! Initialize urban model input (initialize urbinp data structure)
     ! This needs to be called BEFORE the call to surfrd_get_data since

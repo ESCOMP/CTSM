@@ -71,6 +71,7 @@ module clm_cpl_indices
   ! drv -> lnd (required)
 
   integer, public ::index_x2l_Sa_z            ! bottom atm level height
+  integer, public ::index_x2l_Sa_topo         ! atm surface height (m)
   integer, public ::index_x2l_Sa_u            ! bottom atm level zon wind
   integer, public ::index_x2l_Sa_v            ! bottom atm level mer wind
   integer, public ::index_x2l_Sa_ptem         ! bottom atm level pot temp
@@ -230,6 +231,7 @@ contains
     !-------------------------------------------------------------
 
     index_x2l_Sa_z          = mct_avect_indexra(x2l,'Sa_z')
+    index_x2l_Sa_topo       = mct_avect_indexra(x2l,'Sa_topo')
     index_x2l_Sa_u          = mct_avect_indexra(x2l,'Sa_u')
     index_x2l_Sa_v          = mct_avect_indexra(x2l,'Sa_v')
     index_x2l_Sa_ptem       = mct_avect_indexra(x2l,'Sa_ptem')

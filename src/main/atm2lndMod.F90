@@ -48,6 +48,10 @@ contains
     ! !DESCRIPTION:
     ! Downscale atmospheric forcing fields from gridcell to column.
     !
+    ! Downscaling is done based on the difference between each CLM column's elevation and
+    ! the atmosphere's surface elevation (which is the elevation at which the atmospheric
+    ! forcings are valid).
+    !
     ! Note that the downscaling procedure can result in changes in grid cell mean values
     ! compared to what was provided by the atmosphere. We conserve fluxes of mass and
     ! energy, but allow states such as temperature to differ.
@@ -60,7 +64,6 @@ contains
     ! !USES:
     use clm_varcon      , only : rair, cpair, grav, lapse_glcmec
     use landunit_varcon , only : istice_mec 
-    use domainMod       , only : ldomain
     use QsatMod         , only : Qsat
     !
     ! !ARGUMENTS:
@@ -87,6 +90,9 @@ contains
     SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
     associate(&
+         ! Gridcell-level metadata:
+         forc_topo_g  => atm2lnd_inst%forc_topo_grc                , & ! Input:  [real(r8) (:)]  atmospheric surface height (m)
+
          ! Gridcell-level non-downscaled fields:
          forc_t_g     => atm2lnd_inst%forc_t_not_downscaled_grc    , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
          forc_th_g    => atm2lnd_inst%forc_th_not_downscaled_grc   , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (Kelvin)
@@ -126,7 +132,7 @@ contains
          ! This is a simple downscaling procedure 
          ! Note that forc_hgt, forc_u, and forc_v are not downscaled.
 
-         hsurf_g = ldomain%topo(g)                       ! gridcell sfc elevation
+         hsurf_g = forc_topo_g(g)                        ! gridcell sfc elevation
          hsurf_c = col%glc_topo(c)                       ! column sfc elevation
          tbot_g  = forc_t_g(g)                           ! atm sfc temp
          thbot_g = forc_th_g(g)                          ! atm sfc pot temp
@@ -333,7 +339,6 @@ contains
     ! Must be done AFTER temperature downscaling
     !
     ! !USES:
-    use domainMod       , only : ldomain
     use landunit_varcon , only : istice_mec 
     use clm_varcon      , only : lapse_glcmec
     use clm_varctl      , only : glcmec_downscale_longwave
@@ -358,6 +363,9 @@ contains
     !-----------------------------------------------------------------------
 
     associate(&
+         ! Gridcell-level metadata:
+         forc_topo_g  => atm2lnd_inst%forc_topo_grc                , & ! Input:  [real(r8) (:)]  atmospheric surface height (m)
+
          ! Gridcell-level fields:
          forc_t_g     => atm2lnd_inst%forc_t_not_downscaled_grc    , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
          forc_lwrad_g => atm2lnd_inst%forc_lwrad_not_downscaled_grc, & ! Input:  [real(r8) (:)]  downward longwave (W/m**2)
@@ -391,7 +399,7 @@ contains
             l = col%landunit(c)
             g = col%gridcell(c)
 
-            hsurf_g = ldomain%topo(g)
+            hsurf_g = forc_topo_g(g)
             hsurf_c = col%glc_topo(c)
 
             ! Here we assume that deltaLW = (dLW/dT)*(dT/dz)*deltaz

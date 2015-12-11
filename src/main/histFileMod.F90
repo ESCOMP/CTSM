@@ -2441,17 +2441,6 @@ contains
               missing_value=spval, fill_value=spval)
        end if
        if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='topo', xtype=tape(t)%ncprec, &
-              dim1name='lon', dim2name='lat',&
-              long_name='grid cell topography', units='m', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       else
-          call ncd_defvar(varname='topo', xtype=tape(t)%ncprec, &
-              dim1name=grlnd, &
-              long_name='grid cell topography', units='m', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       end if
-       if (ldomain%isgrid2d) then
           call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat', &
               long_name='land fraction', ncid=nfid(t), &

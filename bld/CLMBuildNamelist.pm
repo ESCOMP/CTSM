@@ -1788,7 +1788,9 @@ sub setup_logic_glacier {
         fatal_error("$var is NOT set, but glc_nec is positive");
       }
     }
-    add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flndtopo'  , 'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'} );
+    if ( $physv->as_long() < $physv->as_long("clm4_5")) {
+       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flndtopo'  , 'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'} );
+    }
     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fglcmask'  , 'hgrid'=>$nl_flags->{'res'});
 
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {

@@ -298,12 +298,6 @@ set to 3 meaning branch.
 Full pathname of land-ice mask data file (on lnd grid).
 </entry>
 
-<entry id="flndtopo" type="char*256" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of topography data file. Only required when 
-land-ice model is active.
-</entry>
-
 <entry id="glcmec_downscale_longwave" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, downscale longwave radiation over glc_mec landunits.

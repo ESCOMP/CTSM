@@ -462,7 +462,6 @@ linkend="customize"></xref>). The list of files extracted by
 their name used in the namelists are:
 <varname>fatmgrid</varname>, <varname>fatmlndfrc</varname>, 
 <varname>fsurdat</varname>, <varname>flanduse_timeseries</varname>, 
-<varname>flndtopo</varname>, 
 <varname>stream_fldfilename_ndep</varname>, and the &datm; files 
 <varname>domainfile</varname>, and <varname>faerdep</varname>.
 For more information on these files see the <link linkend="required_files"

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_6_r160    sacks 12/11/2015 For glc_mec, get gridcell topographic height from atm
    clm4_5_6_r159     erik 12/10/2015 Update CIME version
    clm4_5_6_r158    andre 12/04/2015 misc clm 5.0 bugfixes
    clm4_5_6_r157    sacks 11/27/2015 Reduce memory use for init_interp

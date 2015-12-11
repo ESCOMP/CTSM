@@ -1270,9 +1270,6 @@ only used for &clm; stand-alone testing.</para>
 
         CASA has NOT been scientifically validated in &clm4;.</para>
 </listitem>
-<listitem><para><emphasis>fine-mesh namelist options:</emphasis> flndtopo, and fatmtopo.
-        These options are functional but experimental. See the -lnd_res option above.</para>
-</listitem>
 <listitem>
    <para>
    <emphasis>suplnitro='ALL'</emphasis>

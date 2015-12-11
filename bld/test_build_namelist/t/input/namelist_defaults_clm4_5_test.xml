@@ -324,11 +324,6 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130927.nc</fsurdat>
 <fglcmask hgrid="0.9x1.25" >glc/cism/griddata/glcmaskdata_0.9x1.25_gland_c141105.nc</fglcmask>
 <fglcmask hgrid="1.9x2.5"  >glc/cism/griddata/glcmaskdata_1.9x2.5_gland_c141105.nc</fglcmask>
 
-<!-- Land topo datasets (when running glc_nec) (relative to {csmdata}) -->
-<flndtopo hgrid="0.9x1.25"  >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</flndtopo>
-<flndtopo hgrid="1.9x2.5"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</flndtopo>
-<flndtopo hgrid="48x96"     >lnd/clm2/griddata/topodata_48x96_USGS_070110.nc</flndtopo>
-
 <!-- SNICAR (SNow, ICe, and Aerosol Radiative model) datasets -->
 <!--  ***********  Resolution independent:   ***********  -->
 <fsnowoptics >lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc</fsnowoptics>

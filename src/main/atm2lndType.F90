@@ -40,6 +40,7 @@ module atm2lndType
      real(r8), pointer :: forc_v_grc                    (:)   => null() ! atm wind speed, north direction (m/s)
      real(r8), pointer :: forc_wind_grc                 (:)   => null() ! atmospheric wind speed
      real(r8), pointer :: forc_hgt_grc                  (:)   => null() ! atmospheric reference height (m)
+     real(r8), pointer :: forc_topo_grc                 (:)   => null() ! atmospheric surface height (m)
      real(r8), pointer :: forc_hgt_u_grc                (:)   => null() ! obs height of wind [m] (new)
      real(r8), pointer :: forc_hgt_t_grc                (:)   => null() ! obs height of temperature [m] (new)
      real(r8), pointer :: forc_hgt_q_grc                (:)   => null() ! obs height of humidity [m] (new)
@@ -163,6 +164,7 @@ contains
     allocate(this%forc_wind_grc                 (begg:endg))        ; this%forc_wind_grc                 (:)   = ival
     allocate(this%forc_rh_grc                   (begg:endg))        ; this%forc_rh_grc                   (:)   = ival
     allocate(this%forc_hgt_grc                  (begg:endg))        ; this%forc_hgt_grc                  (:)   = ival
+    allocate(this%forc_topo_grc                 (begg:endg))        ; this%forc_topo_grc                 (:)   = ival
     allocate(this%forc_hgt_u_grc                (begg:endg))        ; this%forc_hgt_u_grc                (:)   = ival
     allocate(this%forc_hgt_t_grc                (begg:endg))        ; this%forc_hgt_t_grc                (:)   = ival
     allocate(this%forc_hgt_q_grc                (begg:endg))        ; this%forc_hgt_q_grc                (:)   = ival
@@ -285,6 +287,11 @@ contains
     call hist_addfld1d (fname='ZBOT', units='m',  &
          avgflag='A', long_name='atmospheric reference height', &
          ptr_lnd=this%forc_hgt_grc)
+
+    this%forc_topo_grc(begg:endg) = spval
+    call hist_addfld1d (fname='ATM_TOPO', units='m', &
+         avgflag='A', long_name='atmospheric surface height', &
+         ptr_lnd=this%forc_topo_grc)
 
     this%forc_solar_grc(begg:endg) = spval
     call hist_addfld1d (fname='FSDS', units='W/m^2',  &
@@ -845,6 +852,7 @@ contains
     deallocate(this%forc_wind_grc)
     deallocate(this%forc_rh_grc)
     deallocate(this%forc_hgt_grc)
+    deallocate(this%forc_topo_grc)
     deallocate(this%forc_hgt_u_grc)
     deallocate(this%forc_hgt_t_grc)
     deallocate(this%forc_hgt_q_grc)
