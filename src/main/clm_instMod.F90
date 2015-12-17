@@ -69,8 +69,9 @@ module clm_instMod
   use lnd2atmType                     , only : lnd2atm_type
   use lnd2glcMod                      , only : lnd2glc_type 
   use glc2lndMod                      , only : glc2lnd_type
+  use glcBehaviorMod                  , only : glc_behavior_type
   use glcDiagnosticsMod               , only : glc_diagnostics_type
-  use GridcellType                    , only : grc                
+  use GridcellType                    , only : grc
   use LandunitType                    , only : lun                
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
@@ -116,6 +117,7 @@ module clm_instMod
   type(glc2lnd_type)                      :: glc2lnd_inst
   type(lnd2atm_type)                      :: lnd2atm_inst
   type(lnd2glc_type)                      :: lnd2glc_inst
+  type(glc_behavior_type)                 :: glc_behavior
   type(glc_diagnostics_type)              :: glc_diagnostics_inst
   class(soil_water_retention_curve_type) , allocatable :: soil_water_retention_curve
 
@@ -211,7 +213,7 @@ contains
 
     begp = bounds%begp; endp = bounds%endp 
     begc = bounds%begc; endc = bounds%endc 
-    begl = bounds%begl; endl = bounds%endl 
+    begl = bounds%begl; endl = bounds%endl
 
     allocate (h2osno_col(begc:endc))
     allocate (snow_depth_col(begc:endc))
@@ -259,7 +261,7 @@ contains
     ! because at least some variables (such as the icemask) are referred to in code that
     ! is executed even when running without glc_mec.
 
-    call glc2lnd_inst%Init( bounds )
+    call glc2lnd_inst%Init( bounds, glc_behavior )
     call lnd2glc_inst%Init( bounds )
 
     ! Initialization of public data types

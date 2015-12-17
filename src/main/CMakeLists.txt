@@ -18,6 +18,8 @@ list(APPEND clm_sources
   clm_varsur.F90 
   column_varcon.F90
   decompMod.F90
+  filterColMod.F90
+  glcBehaviorMod.F90
   initSubgridMod.F90
   landunit_varcon.F90
   lnd2glcMod.F90

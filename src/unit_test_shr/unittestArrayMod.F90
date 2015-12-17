@@ -14,15 +14,42 @@ module unittestArrayMod
   private
   save
 
-  public :: col_array  ! create a column-level array
+  public :: grc_array_logical  ! create a gridcell-level array of logical values
+  public :: col_array          ! create a column-level array of r8 values
 
 contains
+
+  !-----------------------------------------------------------------------
+  pure function grc_array_logical(val) result(grc_array)
+    !
+    ! !DESCRIPTION:
+    ! Creates a gridcell-level array of logical values. All elements are set to val.
+    !
+    ! If val is provided, all elements of the array are set to val; if not, all elements
+    ! are set to false.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    logical, allocatable :: grc_array(:) ! function result
+    logical, intent(in)  :: val ! all elements in grc_array are set to val
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'grc_array_logical'
+    !-----------------------------------------------------------------------
+
+    allocate(grc_array(bounds%begg:bounds%endg))
+    grc_array(:) = val
+
+  end function grc_array_logical
+
 
   !-----------------------------------------------------------------------
   pure function col_array(val)
     !
     ! !DESCRIPTION:
-    ! Creates a column-level array.
+    ! Creates a column-level array of r8 values.
     !
     ! If val is provided, all elements of the array are set to val; if not, all elements
     ! are set to NaN.

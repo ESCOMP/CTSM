@@ -24,6 +24,8 @@ module glc2lndMod
   use GridcellType   , only : grc 
   use LandunitType   , only : lun
   use ColumnType     , only : col
+  use landunit_varcon, only : istice_mec
+  use glcBehaviorMod , only : glc_behavior_type
   !
   ! !REVISION HISTORY:
   ! Created by William Lipscomb, Dec. 2007, based on clm_atmlnd.F90.
@@ -40,9 +42,7 @@ module glc2lndMod
      real(r8), pointer :: topo_grc    (:,:) => null()
      real(r8), pointer :: hflx_grc    (:,:) => null()
 
-     ! Total ice sheet grid coverage mask (0-1)
-     ! (true ice sheet mask, received from glc, in contrast to glcmask, which is just a
-     ! guess available at initialization)
+     ! Total ice sheet grid coverage mask, received from glc (0-1)
      real(r8), pointer :: icemask_grc (:)   => null()
 
      ! icemask_coupled_fluxes_grc is like icemask_grc, but the mask only contains icesheet
@@ -58,23 +58,41 @@ module glc2lndMod
      ! coupler, and so we're using the non-dynamic form of runoff routing in CLM.)
      real(r8), pointer :: icemask_coupled_fluxes_grc (:)  => null()
 
-     ! Where we should do runof routing that is appropriate for having a dynamic icesheet underneath.
+     ! Where we should do runoff routing that is appropriate for having a dynamic icesheet underneath.
      logical , pointer :: glc_dyn_runoff_routing_grc (:) => null()
 
    contains
+
+     ! ------------------------------------------------------------------------
+     ! Public routines
+     ! ------------------------------------------------------------------------
 
      procedure, public  :: Init
      procedure, public  :: Restart
      procedure, public  :: update_glc2lnd
 
+     ! ------------------------------------------------------------------------
+     ! Private routines
+     ! ------------------------------------------------------------------------
+
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
-     procedure, private :: check_glc2lnd_icemask  ! sanity-check icemask from GLC
-     procedure, private :: check_glc2lnd_icemask_coupled_fluxes ! sanity-check icemask_coupled_fluxes from GLC
-     procedure, private :: update_glc2lnd_dyn_runoff_routing ! update glc_dyn_runoff_routing field based on input from GLC
-     procedure, private :: update_glc2lnd_fracs   ! update subgrid fractions based on input from GLC
-     procedure, private :: update_glc2lnd_topo    ! update column-level topographic heights based on input from GLC
+
+     ! sanity-check icemask from GLC
+     procedure, private :: check_glc2lnd_icemask
+
+     ! sanity-check icemask_coupled_fluxes from GLC
+     procedure, private :: check_glc2lnd_icemask_coupled_fluxes
+
+     ! update glc_dyn_runoff_routing field based on input from GLC
+     procedure, private :: update_glc2lnd_dyn_runoff_routing
+
+     ! update subgrid fractions based on input from GLC
+     procedure, private :: update_glc2lnd_fracs
+
+     ! update column-level topographic heights based on input from GLC
+     procedure, private :: update_glc2lnd_topo
 
   end type glc2lnd_type
 
@@ -83,14 +101,15 @@ module glc2lndMod
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, glc_behavior)
 
     class(glc2lnd_type) :: this
     type(bounds_type), intent(in) :: bounds  
+    type(glc_behavior_type), intent(in) :: glc_behavior
 
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
-    call this%InitCold(bounds)
+    call this%InitCold(bounds, glc_behavior)
     
   end subroutine Init
 
@@ -149,7 +168,7 @@ contains
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine InitCold(this, bounds)
+  subroutine InitCold(this, bounds, glc_behavior)
     !
     ! !USES:
     use domainMod      , only : ldomain
@@ -157,9 +176,11 @@ contains
     ! !ARGUMENTS:
     class(glc2lnd_type) :: this
     type(bounds_type), intent(in) :: bounds
+    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     integer :: begg, endg
+    integer :: g
 
     character(len=*), parameter :: subname = 'InitCold'
     !-----------------------------------------------------------------------
@@ -171,10 +192,16 @@ contains
     this%topo_grc(begg:endg, :) = 0.0_r8
     this%hflx_grc(begg:endg, :) = 0.0_r8
 
-    ! glcmask (from a file) provides a rough guess of the icemask (from CISM); thus, in
-    ! initialization, set icemask equal to glcmask; icemask will later get updated at
-    ! the start of the run loop, as soon as we have data from CISM
-    this%icemask_grc(begg:endg) = ldomain%glcmask(begg:endg)
+    ! Since we don't have GLC's icemask yet in initialization, we use has_virtual_columns
+    ! as a rough initial guess. Note that has_virtual_columns is guaranteed to be a
+    ! superset of the icemask.
+    do g = begg, endg
+       if (glc_behavior%has_virtual_columns_grc(g)) then
+          this%icemask_grc(g) = 1._r8
+       else
+          this%icemask_grc(g) = 0._r8
+       end if
+    end do
 
     ! initialize icemask_coupled_fluxes to 0; this seems safest in case we aren't coupled
     ! to CISM (to ensure that we use the uncoupled form of runoff routing)
@@ -217,7 +244,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine update_glc2lnd(this, bounds)
+  subroutine update_glc2lnd(this, bounds, glc_behavior, atm_topo)
     !
     ! !DESCRIPTION:
     ! Update values to derived-type CLM variables based on input from GLC (via the coupler)
@@ -228,12 +255,20 @@ contains
     ! controlled in a conditional around the call to this routine); fracs are updated if
     ! glc_do_dynglacier is true
     !
+    ! This routine also updates the topographic height and class of glc_mec columns in
+    ! regions where glaciers are collapsed down to a single topographic height that
+    ! matches the atmosphere's topographic height. This update has more to do with the
+    ! atm -> lnd coupling than the glc -> lnd coupling, but it is put here because it
+    ! updates the same variables as are updated in the glc -> lnd coupling.
+    !
     ! !USES:
     use clm_varctl , only : glc_do_dynglacier
     !
     ! !ARGUMENTS:
-    class(glc2lnd_type), intent(inout) :: this
-    type(bounds_type)  , intent(in)    :: bounds ! bounds
+    class(glc2lnd_type)     , intent(inout) :: this
+    type(bounds_type)       , intent(in)    :: bounds
+    type(glc_behavior_type) , intent(in)    :: glc_behavior
+    real(r8)                , intent(in)    :: atm_topo(bounds%begg:)
     !
     ! !LOCAL VARIABLES:
 
@@ -243,7 +278,7 @@ contains
     ! Note that nothing is needed to update icemask or icemask_coupled_fluxes here,
     ! because these values have already been set in lnd_import_export. However, we do
     ! some sanity-checking of those fields here.
-    call this%check_glc2lnd_icemask(bounds)
+    call this%check_glc2lnd_icemask(bounds, glc_behavior)
     call this%check_glc2lnd_icemask_coupled_fluxes(bounds)
 
     call this%update_glc2lnd_dyn_runoff_routing(bounds)
@@ -254,10 +289,12 @@ contains
 
     call this%update_glc2lnd_topo(bounds)
 
+    call glc_behavior%update_collapsed_columns(bounds, atm_topo)
+
   end subroutine update_glc2lnd
 
   !-----------------------------------------------------------------------
-  subroutine check_glc2lnd_icemask(this, bounds)
+  subroutine check_glc2lnd_icemask(this, bounds, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Do a sanity check on the icemask received from CISM via coupler.
@@ -268,7 +305,8 @@ contains
     !
     ! !ARGUMENTS:
     class(glc2lnd_type), intent(in) :: this
-    type(bounds_type)  , intent(in) :: bounds ! bounds
+    type(bounds_type)       , intent(in) :: bounds
+    type(glc_behavior_type) , intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     integer :: g  ! grid cell index
@@ -278,12 +316,13 @@ contains
     
     do g = bounds%begg, bounds%endg
 
-       ! Ensure that icemask is a subset of glcmask. This is needed because we allocated
-       ! memory based on glcmask, so it is a problem if the ice sheet tries to expand
-       ! beyond the area defined by glcmask.
+       ! Ensure that icemask is a subset of has_virtual_columns. This is needed because we
+       ! allocated memory based on has_virtual_columns, so it is a problem if the ice
+       ! sheet tries to expand beyond the area defined by has_virtual_columns.
 
-       if (this%icemask_grc(g) > 0._r8 .and. ldomain%glcmask(g) == 0._r8) then
-          write(iulog,*) subname//' ERROR: icemask must be a subset of glcmask.'
+       if (this%icemask_grc(g) > 0._r8 .and. &
+            .not. glc_behavior%has_virtual_columns_grc(g)) then
+          write(iulog,*) subname//' ERROR: icemask must be a subset of has_virtual_columns.'
           write(iulog,*) 'You can fix this problem by adding more grid cells'
           write(iulog,*) 'to the mask defined by the fglcmask file.'
           write(iulog,*) '(Change grid cells to 1 everywhere that CISM can operate.)'
@@ -375,7 +414,6 @@ contains
     !
     ! !USES:
     use clm_varcon        , only : ispval
-    use landunit_varcon   , only : istice_mec
     use column_varcon     , only : col_itype_to_icemec_class
     use subgridWeightsMod , only : set_landunit_weight
     !

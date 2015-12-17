@@ -139,6 +139,9 @@ contains
     endif
     ldomain%mask = 1  !!! TODO - is this needed?
 
+    ! Initialize glc behavior
+    call glc_behavior%Init(begg, endg, ldomain%glcmask(begg:endg), ldomain%latc(begg:endg))
+
     ! Initialize urban model input (initialize urbinp data structure)
     ! This needs to be called BEFORE the call to surfrd_get_data since
     ! that will call surfrd_get_special which in turn calls check_urban
@@ -172,11 +175,7 @@ contains
     ! Determine decomposition of subgrid scale landunits, columns, patches
     ! ------------------------------------------------------------------------
 
-    if (create_glacier_mec_landunit) then
-       call decompInit_clumps(ns, ni, nj, ldomain%glcmask)
-    else
-       call decompInit_clumps(ns, ni, nj)
-    endif
+    call decompInit_clumps(ns, ni, nj, glc_behavior)
 
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
 
@@ -198,15 +197,11 @@ contains
     ! Build hierarchy and topological info for derived types
     ! This is needed here for the following call to decompInit_glcp
 
-    call initGridCells()
+    call initGridCells(glc_behavior)
 
     ! Set global seg maps for gridcells, landlunits, columns and patches
 
-    if (create_glacier_mec_landunit) then
-       call decompInit_glcp(ns, ni, nj, ldomain%glcmask)
-    else
-       call decompInit_glcp(ns, ni, nj)
-    endif
+    call decompInit_glcp(ns, ni, nj, glc_behavior)
 
     ! ------------------------------------------------------------------------
     ! Remainder of initialization1
@@ -413,7 +408,13 @@ contains
 
     ! First put in history calls for subgrid data structures - these cannot appear in the
     ! module for the subgrid data definition due to circular dependencies that are introduced
-    
+
+    ! Note that we do NOT set glc_topo to spval, because it has already been initialized
+    ! at this point
+    call hist_addfld1d(fname='GLC_TOPO', units='m', &
+         avgflag='A', long_name='glacier topographic height', &
+         ptr_col=col%glc_topo, l2g_scale_type='ice', default='inactive')
+
     data2dptr => col%dz(:,-nlevsno+1:0)
     col%dz(bounds_proc%begc:bounds_proc%endc,:) = spval
     call hist_addfld2d (fname='SNO_Z', units='m', type2d='levsno',  &
@@ -511,7 +512,7 @@ contains
              write(iulog,*)'Reading initial conditions from ',trim(finidat)
           end if
           call getfil( finidat, fnamer, 0 )
-          call restFile_read(bounds_proc, fnamer)
+          call restFile_read(bounds_proc, fnamer, glc_behavior)
        end if
 
     else if ((nsrest == nsrContinue) .or. (nsrest == nsrBranch)) then
@@ -519,7 +520,7 @@ contains
        if (masterproc) then
           write(iulog,*)'Reading restart file ',trim(fnamer)
        end if
-       call restFile_read(bounds_proc, fnamer)
+       call restFile_read(bounds_proc, fnamer, glc_behavior)
 
     end if
 
@@ -547,7 +548,8 @@ contains
        do nc = 1, nclumps
           call get_clump_bounds(nc, bounds_clump)
           call reweight_wrapup(bounds_clump, &
-               glc2lnd_inst%icemask_grc(bounds_clump%begg:bounds_clump%endg))
+               glc2lnd_inst%icemask_grc(bounds_clump%begg:bounds_clump%endg), &
+               glc_behavior)
        end do
        !$OMP END PARALLEL DO
 
@@ -559,7 +561,7 @@ contains
        call initInterp(filei=fnamer, fileo=finidat_interp_dest, bounds=bounds_proc)
 
        ! Read new interpolated conditions file back in
-       call restFile_read(bounds_proc, finidat_interp_dest)
+       call restFile_read(bounds_proc, finidat_interp_dest, glc_behavior)
 
        ! Reset finidat to now be finidat_interp_dest 
        ! (to be compatible with routines still using finidat)
@@ -571,7 +573,8 @@ contains
     do nc = 1, nclumps
        call get_clump_bounds(nc, bounds_clump)
        call reweight_wrapup(bounds_clump, &
-            glc2lnd_inst%icemask_grc(bounds_clump%begg:bounds_clump%endg))
+            glc2lnd_inst%icemask_grc(bounds_clump%begg:bounds_clump%endg), &
+            glc_behavior)
     end do
     !$OMP END PARALLEL DO
 

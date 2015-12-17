@@ -274,7 +274,8 @@ contains
          cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
          cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,    &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                              &
-         soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst)
+         soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst, glc_behavior,        &
+         atm2lnd_inst)
     call t_stopf('dyn_subgrid')
 
     ! ============================================================================

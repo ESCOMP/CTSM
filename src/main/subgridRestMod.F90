@@ -20,6 +20,7 @@ module subgridRestMod
   use ColumnType         , only : col                
   use PatchType          , only : patch                
   use restUtilMod
+  use glcBehaviorMod     , only : glc_behavior_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -27,13 +28,15 @@ module subgridRestMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: subgridRest                   ! handle restart of subgrid variables
+  public :: subgridRestWrite              ! handle restart writes of subgrid variables
+  public :: subgridRestRead               ! handle restart reads of subgrid variables
   public :: subgridRest_check_consistency ! check consistency of variables read by subgridRest
   public :: subgridRest_read_cleanup      ! do cleanup of variables allocated when reading the restart file; should be called after subgridRest and subgridRest_check_consistency are complete
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: subgridRest_write_only     ! handle restart of subgrid variables that only need to be written, not read
   private :: subgridRest_write_and_read ! handle restart of subgrid variables that need to be read as well as written
+  private :: subgridRest_set_derived    ! set variables derived from others
   private :: save_old_weights
 
   ! !PRIVATE TYPES:
@@ -42,28 +45,47 @@ module subgridRestMod
 
 contains
 
-  !------------------------------------------------------------------------
-  subroutine subgridRest( bounds, ncid, flag )
+  !-----------------------------------------------------------------------
+  subroutine subgridRestWrite(bounds, ncid, flag)
     !
     ! !DESCRIPTION:
-    ! Handle restart of subgrid variables
+    ! Handle restart writes (and defines) of subgrid variables
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds ! bounds
     type(file_desc_t), intent(inout) :: ncid   ! netCDF dataset id
-    character(len=*) , intent(in)    :: flag   ! flag to determine if define, write or read data
+    character(len=*) , intent(in)    :: flag   ! flag to determine if define or write data
     !
     ! !LOCAL VARIABLES:
-    character(len=32) :: subname='SubgridRest' ! subroutine name
-    !------------------------------------------------------------------------
 
-    if (flag /= 'read') then
-       call subgridRest_write_only(bounds, ncid, flag)
-    end if
+    character(len=*), parameter :: subname = 'subgridRestWrite'
+    !-----------------------------------------------------------------------
 
+    call subgridRest_write_only(bounds, ncid, flag)
     call subgridRest_write_and_read(bounds, ncid, flag)
 
-  end subroutine subgridRest
+  end subroutine subgridRestWrite
+
+
+  !------------------------------------------------------------------------
+  subroutine subgridRestRead(bounds, ncid, glc_behavior )
+    !
+    ! !DESCRIPTION:
+    ! Handle restart reads of subgrid variables
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds ! bounds
+    type(file_desc_t), intent(inout) :: ncid   ! netCDF dataset id
+    type(glc_behavior_type), intent(in) :: glc_behavior
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32) :: subname='subgridRestRead' ! subroutine name
+    !------------------------------------------------------------------------
+
+    call subgridRest_write_and_read(bounds, ncid, 'read')
+    call subgridRest_set_derived(bounds, glc_behavior)
+
+  end subroutine subgridRestRead
 
   !-----------------------------------------------------------------------
   subroutine subgridRest_write_only(bounds, ncid, flag)
@@ -532,6 +554,31 @@ contains
     deallocate(temp2d)
 
   end subroutine subgridRest_write_and_read
+
+  !-----------------------------------------------------------------------
+  subroutine subgridRest_set_derived(bounds, glc_behavior)
+    !
+    ! !DESCRIPTION:
+    ! Set subgrid variables that are not on the restart file, but can be derived from
+    ! variables that are on the restart file.
+    !
+    ! This should be called after reading the subgrid variables from the restart file.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    type(glc_behavior_type), intent(in) :: glc_behavior
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'subgridRest_set_derived'
+    !-----------------------------------------------------------------------
+
+    call glc_behavior%update_glc_classes(bounds)
+
+  end subroutine subgridRest_set_derived
+
 
   !-----------------------------------------------------------------------
   subroutine save_old_weights(bounds)

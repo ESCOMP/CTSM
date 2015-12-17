@@ -325,6 +325,11 @@ contains
          avgflag='A', long_name='atmospheric air temperature', &
          ptr_gcell=this%forc_t_not_downscaled_grc, default='inactive')
 
+    this%forc_t_downscaled_col(begc:endc) = spval
+    call hist_addfld1d (fname='Tair_downscaled', units='K', &
+         avgflag='A', long_name='atmospheric air temperature downscaled to columns', &
+         ptr_col=this%forc_t_downscaled_col, default='inactive')
+
     this%forc_pbot_not_downscaled_grc(begg:endg) = spval
     call hist_addfld1d (fname='PSurf', units='Pa',  &
          avgflag='A', long_name='surface pressure', &

@@ -379,7 +379,7 @@ contains
   end subroutine add_landunit
 
   !-----------------------------------------------------------------------
-  subroutine add_column(ci, li, ctype, wtlunit)
+  subroutine add_column(ci, li, ctype, wtlunit, type_is_dynamic)
     !
     ! !DESCRIPTION:
     ! Add an entry in the column-level arrays. ci gives the index of the last column
@@ -391,10 +391,20 @@ contains
     integer  , intent(in)    :: li      ! landunit index on which this column should be placed (assumes this landunit has already been created)
     integer  , intent(in)    :: ctype   ! column type
     real(r8) , intent(in)    :: wtlunit ! weight of the column relative to the landunit
+
+    ! whether this column's type can change at runtime; if not provided, assumed to be false
+    logical  , intent(in), optional :: type_is_dynamic
     !
     ! !LOCAL VARIABLES:
+    logical :: l_type_is_dynamic  ! local version of type_is_dynamic
+
     character(len=*), parameter :: subname = 'add_column'
     !-----------------------------------------------------------------------
+
+    l_type_is_dynamic = .false.
+    if (present(type_is_dynamic)) then
+       l_type_is_dynamic = type_is_dynamic
+    end if
 
     ci = ci + 1
 
@@ -402,7 +412,8 @@ contains
     col%gridcell(ci) = lun%gridcell(li)
     col%wtlunit(ci) = wtlunit
     col%itype(ci) = ctype
-    
+    col%type_is_dynamic(ci) = l_type_is_dynamic
+
   end subroutine add_column
 
   !-----------------------------------------------------------------------

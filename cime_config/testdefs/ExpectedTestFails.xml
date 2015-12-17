@@ -18,10 +18,8 @@
 
    <entry bugz="2056" >ERP_D_P4x30_Ld5.ne30_g16.ICN.yellowstone_intel.clm-40default</entry>
    <entry bugz="2056" >RUN ERP_D_Ld5.f19_g16.ICRUCLM50BGC.yellowstone_intel.clm-fire_emis</entry>
-   <entry bugz="2056" >RUN ERP_D_Ld5.hcru_hcru.ICRUCN.yellowstone_pgi.clm-40default</entry>
    <entry bugz="2056" >RUN SMS_D_Ld5_Mmpi-serial.5x5_amazon.ICLM45ED.yellowstone_pgi.clm-edTest</entry>
    <entry bugz="2056" >RUN ERS_P192x1_Ld211.f19_g16.ICNDVCROP.yellowstone_intel.clm-crop</entry>
-   <entry bugz="2056" >RUN ERI_Ld9.ne30_g16.I4804.yellowstone_pgi.clm-40default</entry>
 
    <entry bugz="2256" >RUN ERI_D_Ld9_P24x1.f10_f10.ICRUCLM50BGC.hobart_nag.clm-reduceOutput</entry>
    <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.ICRUCLM50BGC.hobart_nag.clm-reduceOutput</entry>

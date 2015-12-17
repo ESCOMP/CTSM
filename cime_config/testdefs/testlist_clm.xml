@@ -409,7 +409,6 @@
     <grid name="ne30_g16">
       <test name="ERI_Ld9">
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
@@ -805,9 +804,6 @@
       <test name="ERP_D_P4x30_Ld5">
         <machine compiler="intel" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
-      <test name="ERP_D_P64x16_Ld3">
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
-      </test>
     </grid>
   </compset>
   <compset name="ICNCROP">
@@ -1014,7 +1010,6 @@
     <grid name="hcru_hcru">
       <test name="ERP_D_Ld5">
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>

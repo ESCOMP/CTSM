@@ -1,4 +1,241 @@
 ===============================================================
+Tag name:  clm4_5_6_r161
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Dec 17 14:04:29 MST 2015
+One-line Summary: Collapse mountain glaciers to a single elevation class
+
+Purpose of changes
+------------------
+
+Mountain glaciers (i.e., glaciers outside of Greenland and Antarctica) have been
+problematic when running with glc_mec, because of the adjustments made to the
+atmospheric forcings (downscaling to columns). Mountain glaciers generally sit
+above the atmospheric forcing height, so this downscaling leads to discrepancies
+between the atmospheric forcings and what CLM sees, on the gridcell mean. This
+same problem can exist over ice sheets, but it can be more pronounced in
+mountain regions because of the steep topography. Furthermore, because no
+downscaling is done over the vegetated portion of the grid cell: Even if CLM's
+mean grid cell elevation agreed exactly with the atmosphere's topographic
+height, there would still be a discrepancy after downscaling, because the
+glaciers would see a cooler climate, whereas the rest of the grid cell would see
+exactly the climate sent by the atmosphere.
+
+Mountain glaciers are not currently a focus of the Land Ice Working Group
+(LIWG), and surface mass balance is known to have significant problems in
+mountain glacier regions. Therefore, because of the above atm-lnd discrepancy,
+the LIWG (especially Bill Lipscomb and Jeremy Fyke) decided it would be best to
+have only a single glacier elevation class in mountain glacier regions (outside
+of Greenland and Antarctica), whose elevation exactly matches the atmosphere's
+topographic height. Note that this match of the atmopshere's topographic height
+is the same as what is done (implicitly) in all other landunits - resulting in
+no adjustment to the atmospheric forcings.
+
+This tag implements the collapse of mountain glaciers to a single elevation
+class, whose topographic height matches the atmosphere's topographic height. It
+allows for the possibility that the atmosphere's topographic height could change
+in time - in which case the glacier's topographic height (and potentially its
+elevation class index) will change in time to follow the atmosphere.
+
+In addition, this tag puts in place infrastructure to make it easier to define
+different glacier regions that receive different treatments (whether virtual
+columns are enabled, and whether glacier should be collapsed to a single
+elevation class). The "frontend" user interface for this will be added in an
+upcoming tag.
+
+Currently, the definition of the "mountain glacier" region is done so that it
+includes everything except the region defined by fglcmask and the region south
+of 60 deg S (assumed to be Antarctica). Soon the setting of this region will be
+made more robust and more easily user-definable.
+
+Finally, this tag adds infrastructure to aid in creating and using local
+column-level filters. Eventually, this could be extended to cover all of CLM's
+filters.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to run initial conditions through init_interp):
+- For runs with glc_mec (IG, FG, BG), need to run initial conditions through
+  init_interp, because there are now slightly fewer glc_mec columns.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- just changed finidat for glcMEC_spunup_1way testmod
+
+Substantial timing or memory changes:
+- small decrease in memory for glc_mec runs, due to a decrease in the number of
+  columns
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self; review by others will come later
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - pass
+
+    'ok' means: tests pass except for baseline comparison failures for IG tests,
+    as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_6_r160
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM50 with glc_mec (IG, FG, BG)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      not investigated closely, but expected to give new climate, at least regionally
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+   Verified that changes came just from collapsing mountain glaciers to a single
+   elevation class, by running the affected tests with this change in
+   glcBehaviorMod:
+
+-    logical, parameter :: collapse_mountain_glaciers = .true.
++    logical, parameter :: collapse_mountain_glaciers = .false.
+
+   -- these tests were bit-for-bit with the trunk, as expected.
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Main addition in this tag. This module determines a number of aspects
+          of the behavior of glacier_mec classes in each grid cell.
+A       components/clm/src/main/glcBehaviorMod.F90
+
+========= Unit tests of glcBehaviorMod
+A       components/clm/src/main/test/glcBehavior_test/CMakeLists.txt
+A       components/clm/src/main/test/glcBehavior_test/test_glcBehavior.pf
+A       components/clm/src/main/test/glcBehavior_test
+
+========= Supports creation and use of local column-level filters. Eventually we
+          may want to consider moving all filters to using infrastructure like
+          this.
+A       components/clm/src/main/filterColMod.F90
+
+========= Unit tests of filterColMod
+A       components/clm/src/main/test/filter_test/CMakeLists.txt
+A       components/clm/src/main/test/filter_test/test_filter_col.pf
+A       components/clm/src/main/test/filter_test
+
+========= Stub of module in driver_cpl/shr (needed by glc_elevclass_mod.F90)
+A       components/clm/src/unit_test_stubs/csm_share/seq_comm_mct.F90
+
+========= Minor changes needed to support unit tests
+
+List all existing files that have been modified, and describe the changes:
+
+========= Delegate glc_mec-related logic to glcBehaviorMod: this logic is now
+          complex, and tied in with various aspects of glcBehaviorMod; also,
+          delegating the logic to glcBehaviorMod allows us to reduce duplication
+          between initGridCellsMod and subgridMod. Also split the monster
+          routine in subgridMod (which had a bunch of optional arguments) into
+          small routines with well-defined interfaces.
+M       components/clm/src/main/subgridMod.F90
+M       components/clm/src/main/initGridCellsMod.F90
+          - also, put setting of ice_mec landunits in a separate routine, thus
+            cleaning up set_landunit_wet_ice_lake; and remove no-longer-used
+            setdata argument
+
+
+========= Use glc_behavior instead of glcmask
+M       components/clm/src/main/glc2lndMod.F90
+          - also call glc_behavior%update_collapsed_columns
+M       components/clm/src/main/subgridWeightsMod.F90
+
+========= Track whether a column's type is dynamic
+M       components/clm/src/main/ColumnType.F90
+M       components/clm/src/main/initSubgridMod.F90
+
+========= Update glc classes upon restart; also separate read and write routines
+          (which now have different required arguments)
+M       components/clm/src/main/subgridRestMod.F90
+
+========= Declare and initialize glc_behavior, and pass it where needed
+M       components/clm/src/main/clm_instMod.F90
+M       components/clm/src/main/clm_initializeMod.F90
+
+========= Pass newly-needed arguments
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+M       components/clm/src/main/decompInitMod.F90
+M       components/clm/src/main/restFileMod.F90
+M       components/clm/src/main/reweightMod.F90
+
+========= Make sure glcmask is always initialized to 0
+M       components/clm/src/main/surfrdMod.F90
+
+========= Add new history field
+M       components/clm/src/main/atm2lndType.F90
+
+========= For unit tests: add glc_elevclass_mod.F90 from driver_cpl/shr
+M       components/clm/src/CMakeLists.txt
+
+========= Minor changes needed to support unit tests
+M       components/clm/src/unit_test_stubs/csm_share/CMakeLists.txt
+M       components/clm/src/unit_test_shr/unittestArrayMod.F90
+M       components/clm/src/unit_test_shr/unittestSimpleSubgridSetupsMod.F90
+M       components/clm/src/main/CMakeLists.txt
+M       components/clm/src/main/test/CMakeLists.txt
+
+========= Remove some costly CLM4 tests
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+========= Point to new initial conditions file, init_interp'ed from the old one
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_6_r160
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Dec 11 10:51:21 MST 2015

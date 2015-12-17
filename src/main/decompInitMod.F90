@@ -18,6 +18,7 @@ module decompInitMod
   use ColumnType      , only : col                
   use PatchType       , only : patch                
   use EDVecCohortType , only : ed_vec_cohort
+  use glcBehaviorMod  , only : glc_behavior_type
   use decompMod
   use mct_mod
   !
@@ -309,7 +310,7 @@ contains
   end subroutine decompInit_lnd
 
   !------------------------------------------------------------------------------
-  subroutine decompInit_clumps(lns,lni,lnj,glcmask)
+  subroutine decompInit_clumps(lns,lni,lnj,glc_behavior)
     !
     ! !DESCRIPTION:
     ! This subroutine initializes the land surface decomposition into a clump
@@ -323,7 +324,7 @@ contains
     ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: lns,lni,lnj ! land domain global size
-    integer , pointer, optional   :: glcmask(:)  ! glc mask
+    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     integer :: ln,an              ! indices
@@ -366,13 +367,8 @@ contains
        an  = ldecomp%gdc2glo(anumg)
        cid = lcid(an)
        ln  = anumg
-       if (present(glcmask)) then
-          call subgrid_get_gcellinfo (ln, nlunits=ilunits, ncols=icols, npatches=ipatches, &
-              ncohorts=icohorts, glcmask=glcmask(ln))
-       else
-          call subgrid_get_gcellinfo (ln, nlunits=ilunits, ncols=icols, npatches=ipatches, &
-               ncohorts=icohorts )
-       endif
+       call subgrid_get_gcellinfo (ln, nlunits=ilunits, ncols=icols, npatches=ipatches, &
+            ncohorts=icohorts, glc_behavior=glc_behavior)
        allvecl(cid,1) = allvecl(cid,1) + 1
        allvecl(cid,2) = allvecl(cid,2) + ilunits  ! number of landunits for local clump cid
        allvecl(cid,3) = allvecl(cid,3) + icols    ! number of columns for local clump cid
@@ -476,10 +472,10 @@ contains
   end subroutine decompInit_clumps
 
   !------------------------------------------------------------------------------
-  subroutine decompInit_glcp(lns,lni,lnj,glcmask)
+  subroutine decompInit_glcp(lns,lni,lnj,glc_behavior)
     !
     ! !DESCRIPTION:
-    ! Determine gsMaps for landunits, columns, patchesand cohorts
+    ! Determine gsMaps for landunits, columns, patches and cohorts
     !
     ! !USES:
     use spmdMod
@@ -490,7 +486,7 @@ contains
     ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: lns,lni,lnj ! land domain global size
-    integer , pointer, optional   :: glcmask(:)  ! glc mask
+    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     integer :: gi,li,ci,pi,coi    ! indices
@@ -565,13 +561,8 @@ contains
     ! Determine gcount, lcount, ccount and pcount
 
     do gi = begg,endg
-       if (present(glcmask)) then
-          call subgrid_get_gcellinfo (gi, nlunits=ilunits, ncols=icols, npatches=ipatches, &
-              ncohorts=icohorts, glcmask=glcmask(gi))
-       else
-          call subgrid_get_gcellinfo (gi, nlunits=ilunits, ncols=icols, npatches=ipatches, &
-               ncohorts=icohorts )
-       endif
+       call subgrid_get_gcellinfo (gi, nlunits=ilunits, ncols=icols, npatches=ipatches, &
+            ncohorts=icohorts, glc_behavior=glc_behavior)
        gcount(gi)  = 1         ! number of gridcells for local gridcell index gi
        lcount(gi)  = ilunits   ! number of landunits for local gridcell index gi
        ccount(gi)  = icols     ! number of columns for local gridcell index gi

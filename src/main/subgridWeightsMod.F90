@@ -99,6 +99,7 @@ module subgridWeightsMod
   use LandunitType , only : lun                
   use ColumnType   , only : col                
   use PatchType    , only : patch                
+  use glcBehaviorMod , only : glc_behavior_type
   !
   ! PUBLIC TYPES:
   implicit none
@@ -240,7 +241,7 @@ contains
   end subroutine compute_higher_order_weights
 
   !-----------------------------------------------------------------------
-  subroutine set_active(bounds)
+  subroutine set_active(bounds, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Set 'active' flags at the pft, column and landunit level
@@ -257,6 +258,7 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds  ! bounds
+    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     integer :: l,c,p       ! loop counters
@@ -265,12 +267,12 @@ contains
     !------------------------------------------------------------------------
 
     do l = bounds%begl,bounds%endl
-       lun%active(l) = is_active_l(l)
+       lun%active(l) = is_active_l(l, glc_behavior)
     end do
 
     do c = bounds%begc,bounds%endc
        l = col%landunit(c)
-       col%active(c) = is_active_c(c)
+       col%active(c) = is_active_c(c, glc_behavior)
        if (col%active(c) .and. .not. lun%active(l)) then
           write(iulog,*) trim(subname),' ERROR: active column found on inactive landunit', &
                          'at c = ', c, ', l = ', l
@@ -291,18 +293,18 @@ contains
   end subroutine set_active
 
   !-----------------------------------------------------------------------
-  logical function is_active_l(l)
+  logical function is_active_l(l, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Determine whether the given landunit is active
     !
     ! !USES:
     use landunit_varcon, only : istsoil, istice, istice_mec
-    use domainMod , only : ldomain
     !
     ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: l   ! landunit index
+    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     integer :: g  ! grid cell index
@@ -326,14 +328,10 @@ contains
        ! Conditions under which is_active_p is set to true because we want extra virtual landunits:
        ! ------------------------------------------------------------------------
 
-       ! Always run over ice_mec landunits within the glcmask, because this is where glc
-       ! might need input from virtual (0-weight) landunits.
-       !
-       ! Note that we use glcmask rather than icemask here; the reason is: by using
-       ! glcmask, we make it easy to add virtual columns, simply by changing the fglcmask
-       ! file. Since icemask is a subset of glcmask, the only downside of using glcmask
-       ! rather than icemask is a (typically small) performance cost.
-       if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_l = .true.
+       if (lun%itype(l) == istice_mec .and. &
+            glc_behavior%has_virtual_columns_grc(g)) then
+          is_active_l = .true.
+       end if
 
        ! In general, include a virtual natural vegetation landunit. This aids
        ! initialization of a new landunit; and for runs that are coupled to CISM, this
@@ -361,18 +359,18 @@ contains
   end function is_active_l
 
   !-----------------------------------------------------------------------
-  logical function is_active_c(c)
+  logical function is_active_c(c, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Determine whether the given column is active
     !
     ! !USES:
     use landunit_varcon, only : istice_mec, isturb_MIN, isturb_MAX
-    use domainMod , only : ldomain
     !
     ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: c   ! column index
+    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     integer :: l  ! landunit index
@@ -398,12 +396,10 @@ contains
        ! Conditions under which is_active_c is set to true because we want extra virtual columns:
        ! ------------------------------------------------------------------------
 
-       ! Always run over all ice_mec columns within the glcmask, because this is where glc
-       ! might need input from virtual (0-weight) columns
-       !
-       ! Note that we use glcmask rather than icemask here; see comment in is_active_l
-       ! for the rationale.
-       if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_c = .true.
+       if (lun%itype(l) == istice_mec .and. &
+            glc_behavior%has_virtual_columns_grc(g)) then
+          is_active_c = .true.
+       end if
 
        ! We don't really need to run over 0-weight urban columns. But because of some
        ! messiness in the urban code (many loops are over the landunit filter, then drill

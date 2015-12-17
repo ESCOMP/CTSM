@@ -32,6 +32,7 @@ module dynSubgridDriverMod
   use WaterstateType               , only : waterstate_type
   use TemperatureType              , only : temperature_type
   use glc2lndMod                   , only : glc2lnd_type
+  use atm2lndType                  , only : atm2lnd_type
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -123,7 +124,8 @@ contains
        cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
        cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,    &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                              &
-       soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst)
+       soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst, glc_behavior,        &
+       atm2lnd_inst)
     !
     ! !DESCRIPTION:
     ! Update subgrid weights for prescribed transient PFTs, CNDV, and/or dynamic
@@ -152,6 +154,7 @@ contains
     use dynEDMod             , only : dyn_ED
     use reweightMod          , only : reweight_wrapup
     use subgridWeightsMod    , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
+    use glcBehaviorMod       , only : glc_behavior_type
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds_proc  ! processor-level bounds
@@ -178,6 +181,8 @@ contains
     type(cnveg_nitrogenflux_type)        , intent(inout) :: cnveg_nitrogenflux_inst
     type(soilbiogeochem_state_type)      , intent(in)    :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
+    type(glc_behavior_type)              , intent(in)    :: glc_behavior
+    type(atm2lnd_type)                   , intent(in)    :: atm2lnd_inst
     !
     ! !LOCAL VARIABLES:
     integer           :: nclumps      ! number of clumps on this processor
@@ -242,7 +247,10 @@ contains
        end if
 
        if (create_glacier_mec_landunit) then
-          call glc2lnd_inst%update_glc2lnd(bounds_clump)
+          call glc2lnd_inst%update_glc2lnd( &
+               bounds = bounds_clump, &
+               glc_behavior = glc_behavior, &
+               atm_topo = atm2lnd_inst%forc_topo_grc(bounds_clump%begg:bounds_clump%endg))
        end if
 
        ! Everything following this point in this loop only needs to be called if we have
@@ -256,7 +264,8 @@ contains
 
        ! Here: filters are re-made
        call reweight_wrapup(bounds_clump, &
-            glc2lnd_inst%icemask_grc(bounds_clump%begg:bounds_clump%endg))
+            glc2lnd_inst%icemask_grc(bounds_clump%begg:bounds_clump%endg), &
+            glc_behavior)
 
        call set_subgrid_diagnostic_fields(bounds_clump)
 

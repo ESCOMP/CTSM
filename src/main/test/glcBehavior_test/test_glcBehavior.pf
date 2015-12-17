@@ -1,0 +1,115 @@
+module test_glcBehavior
+
+  ! Tests of glcBehaviorMod
+
+  use pfunit_mod
+  use glcBehaviorMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSubgridMod
+  use unittestSimpleSubgridSetupsMod
+  use unittestArrayMod
+  use landunit_varcon, only : istice_mec
+  use column_varcon, only : icemec_class_to_col_itype, col_itype_to_icemec_class
+  use glcBehaviorMod, only : glc_behavior_type
+  use ColumnType, only : col
+  use glc_elevclass_mod, only : glc_elevclass_init, glc_elevclass_clean
+  use clm_varpar, only : maxpatch_glcmec
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestGlcBehavior
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestGlcBehavior
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestGlcBehavior), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestGlcBehavior), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
+    call glc_elevclass_clean()
+  end subroutine tearDown
+
+  subroutine setup_single_icemec_column(elev_class, topo)
+    ! Create a grid cell with a single icemec column
+    integer, intent(in) :: elev_class
+    real(r8), intent(in) :: topo
+
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call create_landunit_ncols(ltype=istice_mec, lweight=1.0_r8, &
+         ctypes=[icemec_class_to_col_itype(elev_class)], cweights=[1.0_r8])
+    call unittest_subgrid_setup_end()
+
+    col%glc_topo(bounds%begc) = topo
+  end subroutine setup_single_icemec_column
+
+  function create_glc_behavior_all_collapse() result(glc_behavior)
+    ! Create a glc_behavior object where all grid cells get collapsed to a single column
+    type(glc_behavior_type) :: glc_behavior
+
+    call glc_behavior%InitForTesting(bounds%begg, bounds%endg, &
+         has_virtual_columns = grc_array_logical(.false.), &
+         collapse_to_atm_topo = grc_array_logical(.true.))
+  end function create_glc_behavior_all_collapse
+
+  subroutine setup_elevation_classes(glc_nec, topomax)
+    integer, intent(in) :: glc_nec
+    real(r8), intent(in) :: topomax(:)
+
+    call glc_elevclass_init(glc_nec, topomax)
+    maxpatch_glcmec = glc_nec
+  end subroutine setup_elevation_classes
+
+  ! ------------------------------------------------------------------------
+  ! Tests of update_collapsed_columns
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine update_collapsed_columns_basic(this)
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+    integer, parameter :: glc_nec = 3
+    real(r8), parameter :: topomax(0:glc_nec) = [0._r8, 10._r8, 20._r8, 30._r8]
+    real(r8), parameter :: new_topo = 15._r8
+    integer, parameter :: new_elev_class = 2
+
+    call setup_elevation_classes(glc_nec, topomax)
+    call setup_single_icemec_column(elev_class = 1, topo = 0._r8)
+    glc_behavior = create_glc_behavior_all_collapse()
+    col%type_is_dynamic(:) = .true.
+
+    call glc_behavior%update_collapsed_columns(bounds, [new_topo])
+
+    @assertEqual(new_topo, col%glc_topo(bounds%begc))
+    @assertEqual(new_elev_class, col_itype_to_icemec_class(col%itype(bounds%begc)))
+  end subroutine update_collapsed_columns_basic
+
+  @Test
+  subroutine update_collapsed_columns_non_icemec(this)
+    ! A column that is not ice_mec should remain unchanged
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+    real(r8), parameter :: new_topo = 15._r8
+    integer :: coltype_orig
+
+    call setup_elevation_classes(3, [0._r8, 1._r8, 2._r8, 3._r8])
+    call setup_single_veg_patch(pft_type=1)
+    glc_behavior = create_glc_behavior_all_collapse()
+    coltype_orig = col%itype(bounds%begc)
+
+    call glc_behavior%update_collapsed_columns(bounds, [new_topo])
+
+    @assertEqual(coltype_orig, col%itype(bounds%begc))
+  end subroutine update_collapsed_columns_non_icemec
+
+end module test_glcBehavior

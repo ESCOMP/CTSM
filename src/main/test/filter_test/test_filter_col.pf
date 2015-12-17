@@ -1,0 +1,137 @@
+module test_filter_col
+
+  ! Tests of filterColMod
+
+  use pfunit_mod
+  use filterColMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSubgridMod
+  use unittestSimpleSubgridSetupsMod
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestFilterCol
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestFilterCol
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestFilterCol), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestFilterCol), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
+  end subroutine tearDown
+
+  subroutine assertFilterCorrect(expected_indices, filter, msg)
+    integer, intent(in) :: expected_indices(:)
+    type(filter_col_type), intent(in) :: filter
+    character(len=*), intent(in) :: msg
+
+    @assertEqual(size(expected_indices), filter%num, message=msg//': num')
+    @assertEqual(expected_indices, filter%indices(1:filter%num), message=msg//': indices')
+  end subroutine assertFilterCorrect
+
+  @Test
+  subroutine grcflags_ltypes_multipleGridcells(this)
+    ! Test col_filter_from_grcflags_ltypes with multiple grid cells, some with flag true
+    ! and some with flag false
+    class(TestFilterCol), intent(inout) :: this
+    integer, parameter :: target_ltype = 3
+    logical, parameter :: grcflags(3) = [.false., .true., .false.]
+    integer, allocatable :: expected_indices(:)
+    type(filter_col_type) :: filter
+
+    call unittest_subgrid_setup_start()
+    call my_add_gridcell()
+    call my_add_gridcell()
+    expected_indices = [ci - 1, ci]
+    call my_add_gridcell()
+    call unittest_subgrid_setup_end()
+
+    filter = col_filter_from_grcflags_ltypes(bounds = bounds, &
+         grcflags = grcflags, ltypes = [target_ltype])
+
+    call assertFilterCorrect(expected_indices, filter, &
+         'grcflags_ltypes_multipleGridcells')
+  contains
+    subroutine my_add_gridcell
+      call unittest_add_gridcell()
+      call create_landunit_ncols(ltype = target_ltype, lweight = 1._r8, &
+           ctypes = [1, 2], cweights = [0.5_r8, 0.5_r8])
+    end subroutine my_add_gridcell
+
+  end subroutine grcflags_ltypes_multipleGridcells
+
+  @Test
+  subroutine grcflags_ltypes_multipleLandunits(this)
+    ! Test col_filter_from_grcflags_ltypes with multiple landunits, some in the landunit
+    ! type array and some not
+    class(TestFilterCol), intent(inout) :: this
+    integer, parameter :: target_ltype1 = 2
+    integer, parameter :: target_ltype2 = 3
+    logical, parameter :: grcflags(1) = [.true.]
+    integer, allocatable :: expected_indices(:)
+    type(filter_col_type) :: filter
+
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call my_add_landunit(target_ltype1 - 1)
+    call my_add_landunit(target_ltype1)
+    expected_indices = [ci - 1, ci]
+    call my_add_landunit(target_ltype2)
+    expected_indices = [expected_indices, ci - 1, ci]
+    call my_add_landunit(target_ltype2 + 1)
+    call unittest_subgrid_setup_end()
+
+    filter = col_filter_from_grcflags_ltypes(bounds = bounds, &
+         grcflags = grcflags, ltypes = [target_ltype1, target_ltype2])
+
+    call assertFilterCorrect(expected_indices, filter, &
+         'grcflags_ltypes_multipleLandunits')
+
+  contains
+    subroutine my_add_landunit(ltype)
+      integer, intent(in) :: ltype
+
+      call create_landunit_ncols(ltype = ltype, lweight = 0.25_r8, &
+           ctypes = [1, 2], cweights = [0.5_r8, 0.5_r8])
+    end subroutine my_add_landunit
+
+  end subroutine grcflags_ltypes_multipleLandunits
+
+  @Test
+  subroutine glcflags_ltypes_ltypeNotPresent(this)
+    ! Test col_filter_from_grcflags_ltypes with a landunit type not present. It should
+    ! skip over that absent landunit type, but still include the present landunit type
+    ! that comes later.
+    class(TestFilterCol), intent(inout) :: this
+    integer, parameter :: target_ltype_not_present = 1
+    integer, parameter :: target_ltype_present = 2
+    logical, parameter :: grcflags(1) = [.true.]
+    integer, allocatable :: expected_indices(:)
+    type(filter_col_type) :: filter
+
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call create_landunit_ncols(ltype = target_ltype_present, lweight = 1._r8, &
+         ctypes = [1, 2], cweights = [0.5_r8, 0.5_r8])
+    expected_indices = [ci - 1, ci]
+    call unittest_subgrid_setup_end()
+
+    filter = col_filter_from_grcflags_ltypes(bounds = bounds, &
+         grcflags = grcflags, ltypes = [target_ltype_not_present, target_ltype_present])
+
+    call assertFilterCorrect(expected_indices, filter, &
+         'glcflags_ltypes_ltypeNotPresent')
+  end subroutine glcflags_ltypes_ltypeNotPresent
+
+end module test_filter_col

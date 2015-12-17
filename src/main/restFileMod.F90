@@ -11,7 +11,7 @@ module restFileMod
   use abortutils       , only : endrun
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use clm_time_manager , only : timemgr_restart_io, get_nstep
-  use subgridRestMod   , only : SubgridRest, subgridRest_read_cleanup
+  use subgridRestMod   , only : subgridRestWrite, subgridRestRead, subgridRest_read_cleanup
   use accumulMod       , only : accumulRest
   use clm_instMod      , only : clm_instRest
   use histFileMod      , only : hist_restart_ncd
@@ -20,6 +20,7 @@ module restFileMod
   use ncdio_pio        , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
   use ncdio_pio        , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim
   use ncdio_pio        , only : check_att, ncd_getatt
+  use glcBehaviorMod   , only : glc_behavior_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -87,7 +88,7 @@ contains
 
     call timemgr_restart_io(ncid, flag='define')
 
-    call SubgridRest(bounds, ncid, flag='define' )
+    call subgridRestWrite(bounds, ncid, flag='define' )
 
     call accumulRest( ncid, flag='define' )
 
@@ -103,7 +104,7 @@ contains
     
     call timemgr_restart_io( ncid, flag='write' )
 
-    call SubgridRest(bounds, ncid, flag='write' )
+    call subgridRestWrite(bounds, ncid, flag='write' )
 
     call accumulRest( ncid, flag='write' )
 
@@ -130,7 +131,7 @@ contains
   end subroutine restFile_write
 
   !-----------------------------------------------------------------------
-  subroutine restFile_read( bounds, file )
+  subroutine restFile_read( bounds, file, glc_behavior )
     !
     ! !DESCRIPTION:
     ! Read a CLM restart file.
@@ -138,6 +139,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds          
     character(len=*)  , intent(in) :: file             ! output netcdf restart file
+    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid ! netcdf id
@@ -152,7 +154,7 @@ contains
 
     call restFile_dimcheck( ncid )
 
-    call SubgridRest(bounds, ncid, flag='read')
+    call subgridRestRead(bounds, ncid, glc_behavior)
 
     call accumulRest( ncid, flag='read' )
 

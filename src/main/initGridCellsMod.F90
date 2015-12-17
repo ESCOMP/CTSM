@@ -6,9 +6,14 @@ module initGridCellsMod
   ! !DESCRIPTION:
   ! Initializes sub-grid mapping for each land grid cell. This module handles the high-
   ! level logic that determines how the subgrid structure is set up in a CLM run. It
-  ! makes use of lower-level routines in initSubgridMod, which contains stuff that is
+  ! makes use of lower-level routines in initSubgridMod.
+  !
+  ! TODO(wjs, 2015-12-08) Much of the logic here duplicates (in some sense) logic in
+  ! subgridMod. The duplication should probably be extracted into routines shared between
+  ! these modules (or the two modules should be combined into one).
   !
   ! !USES:
+#include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use spmdMod        , only : masterproc,iam
@@ -22,6 +27,7 @@ module initGridCellsMod
   use PatchType      , only : patch                
   use initSubgridMod , only : clm_ptrs_compdown, clm_ptrs_check
   use initSubgridMod , only : add_landunit, add_column, add_patch
+  use glcBehaviorMod , only : glc_behavior_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -34,6 +40,7 @@ module initGridCellsMod
   private set_cohort_decomp
   private set_landunit_veg_compete
   private set_landunit_wet_ice_lake
+  private set_landunit_ice_mec
   private set_landunit_crop_noncompete
   private set_landunit_urban
   !-----------------------------------------------------------------------
@@ -41,7 +48,7 @@ module initGridCellsMod
 contains
 
   !------------------------------------------------------------------------
-  subroutine initGridcells
+  subroutine initGridcells(glc_behavior)
     !
     ! !DESCRIPTION: 
     ! Initialize sub-grid mapping and allocates space for derived type hierarchy.
@@ -55,6 +62,9 @@ contains
     use landunit_varcon   , only : isturb_tbd, isturb_hd, isturb_md, istcrop
     use clm_varctl        , only : create_glacier_mec_landunit, use_ed
     use shr_const_mod     , only : SHR_CONST_PI
+    !
+    ! !ARGUMENTS:
+    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     integer :: nc,li,ci,pi,gdc      ! indices
@@ -95,7 +105,7 @@ contains
     ! ------------------------------------------------------------
     ! Gridcell:      1   1   1   2   2   2   1   1   1   2   2   2
     ! Landunit type: 1   1   1   1   1   1   2   2   2   2   2   2
-    ! PATCH type:      1   2   3   1   2   3   1   2   3   1   2   3
+    ! Patch type:    1   2   3   1   2   3   1   2   3   1   2   3
     !
     ! So note that clump index is most slowly varying, followed by landunit type,
     ! followed by gridcell, followed by column and patch type.
@@ -123,64 +133,55 @@ contains
        ! Determine naturally vegetated landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_veg_compete(               &
-               ltype=istsoil, gi=gdc, li=li, ci=ci, pi=pi, &
-               setdata=.true.)
+               ltype=istsoil, gi=gdc, li=li, ci=ci, pi=pi)
        end do
 
        ! Determine crop landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_crop_noncompete(           &
-               ltype=istcrop, gi=gdc, li=li, ci=ci, pi=pi, &
-               setdata=.true.)
+               ltype=istcrop, gi=gdc, li=li, ci=ci, pi=pi)
        end do
 
        ! Determine urban tall building district landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_urban( &
-               ltype=isturb_tbd, gi=gdc, li=li, ci=ci, pi=pi, &
-               setdata=.true.)
+               ltype=isturb_tbd, gi=gdc, li=li, ci=ci, pi=pi)
 
        end do
 
        ! Determine urban high density landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_urban( &
-               ltype=isturb_hd, gi=gdc, li=li, ci=ci, pi=pi, &
-               setdata=.true.)
+               ltype=isturb_hd, gi=gdc, li=li, ci=ci, pi=pi)
        end do
 
        ! Determine urban medium density landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_urban( &
-               ltype=isturb_md, gi=gdc, li=li, ci=ci, pi=pi, &
-               setdata=.true.)
+               ltype=isturb_md, gi=gdc, li=li, ci=ci, pi=pi)
        end do
 
        ! Determine lake, wetland and glacier landunits 
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_wet_ice_lake(              &
-               ltype=istdlak, gi=gdc, li=li, ci=ci, pi=pi, &
-               setdata=.true.)
+               ltype=istdlak, gi=gdc, li=li, ci=ci, pi=pi)
        end do
 
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_wet_ice_lake(              &
-               ltype=istwet, gi=gdc, li=li, ci=ci, pi=pi, &
-               setdata=.true.)
+               ltype=istwet, gi=gdc, li=li, ci=ci, pi=pi)
        end do
 
        do gdc = bounds_clump%begg,bounds_clump%endg
           call set_landunit_wet_ice_lake(              &
-               ltype=istice, gi=gdc, li=li, ci=ci, pi=pi, &
-               setdata=.true.)
+               ltype=istice, gi=gdc, li=li, ci=ci, pi=pi)
        end do
 
        if (create_glacier_mec_landunit) then
           do gdc = bounds_clump%begg,bounds_clump%endg
-             call set_landunit_wet_ice_lake(              &
-                  ltype=istice_mec, gi=gdc, li=li, ci=ci, pi=pi, &
-                  setdata=.true., &
-                  glcmask = ldomain%glcmask(gdc))
+             call set_landunit_ice_mec( &
+                  glc_behavior = glc_behavior, &
+                  ltype=istice_mec, gi=gdc, li=li, ci=ci, pi=pi)
           end do
        endif
 
@@ -250,14 +251,14 @@ contains
   end subroutine set_cohort_decomp
 
   !------------------------------------------------------------------------
-  subroutine set_landunit_veg_compete (ltype, gi, li, ci, pi, setdata)
+  subroutine set_landunit_veg_compete (ltype, gi, li, ci, pi)
     !
     ! !DESCRIPTION: 
     ! Initialize vegetated landunit with competition
     !
     ! !USES
     use clm_instur, only : wt_lunit, wt_nat_patch
-    use subgridMod, only : subgrid_get_gcellinfo
+    use subgridMod, only : subgrid_get_info_natveg
     use clm_varpar, only : numpft, maxpatch_pft, natpft_lb, natpft_ub
     !
     ! !ARGUMENTS:
@@ -266,18 +267,21 @@ contains
     integer , intent(inout) :: li                ! landunit index
     integer , intent(inout) :: ci                ! column index
     integer , intent(inout) :: pi                ! patch index
-    logical , intent(in)    :: setdata           ! set info or just compute
     !
     ! !LOCAL VARIABLES:
     integer  :: m                                ! index
+    integer  :: ncohorts
     integer  :: npatches                         ! number of patches in landunit
+    integer  :: ncols
+    integer  :: nlunits
     integer  :: pitype                           ! patch itype
     real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
     !------------------------------------------------------------------------
 
     ! Set decomposition properties
 
-    call subgrid_get_gcellinfo(gi, nveg=npatches)
+    call subgrid_get_info_natveg(gi, &
+         ncohorts=ncohorts, npatches=npatches, ncols=ncols, nlunits=nlunits)
     wtlunit2gcell = wt_lunit(gi, ltype)
 
     if (npatches > 0) then
@@ -294,17 +298,16 @@ contains
   end subroutine set_landunit_veg_compete
   
   !------------------------------------------------------------------------
-  subroutine set_landunit_wet_ice_lake (ltype, gi, li, ci, pi, setdata, glcmask)
+  subroutine set_landunit_wet_ice_lake (ltype, gi, li, ci, pi)
     !
-    ! !DESCRIPTION: 
-    ! Initialize wet_ice_lake landunits that are non-urban (lake, wetland, glacier, glacier_mec)
+    ! !DESCRIPTION:
+    ! Initialize weland, glacier and lake landunits
     !
     ! !USES
-    use clm_varpar      , only : maxpatch_glcmec
-    use clm_instur      , only : wt_lunit, wt_glc_mec
-    use landunit_varcon , only : istwet, istdlak, istice, istice_mec
-    use column_varcon   , only : icemec_class_to_col_itype
-    use subgridMod      , only : subgrid_get_gcellinfo
+    use clm_instur      , only : wt_lunit
+    use landunit_varcon , only : istwet, istdlak, istice
+    use subgridMod      , only : subgrid_get_info_wetland, subgrid_get_info_lake
+    use subgridMod      , only : subgrid_get_info_glacier
     use pftconMod       , only : noveg
 
     !
@@ -314,31 +317,28 @@ contains
     integer , intent(inout) :: li                ! landunit index
     integer , intent(inout) :: ci                ! column index
     integer , intent(inout) :: pi                ! patch index
-    logical , intent(in)    :: setdata           ! set info or just compute
-    integer , intent(in), optional :: glcmask    ! = 1 where glc requires sfc mass balance
     !
     ! !LOCAL VARIABLES:
-    integer  :: m                                ! index
-    integer  :: c                                ! column loop index
-    integer  :: ier                              ! error status 
     integer  :: npatches                         ! number of pfts in landunit
+    integer  :: ncols
+    integer  :: nlunits
     real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
-    real(r8) :: wtcol2lunit                      ! col weight in landunit
     !------------------------------------------------------------------------
 
     ! Set decomposition properties
 
     if (ltype == istwet) then
-       call subgrid_get_gcellinfo(gi, nwetland=npatches)
+       call subgrid_get_info_wetland(gi, &
+            npatches=npatches, ncols=ncols, nlunits=nlunits)
     else if (ltype == istdlak) then
-       call subgrid_get_gcellinfo(gi, nlake=npatches)
+       call subgrid_get_info_lake(gi, &
+            npatches=npatches, ncols=ncols, nlunits=nlunits)
     else if (ltype == istice) then 
-       call subgrid_get_gcellinfo(gi, nglacier=npatches)
-    else if (ltype == istice_mec) then
-       call subgrid_get_gcellinfo(gi, nglacier_mec=npatches, glcmask = glcmask)
+       call subgrid_get_info_glacier(gi, &
+            npatches=npatches, ncols=ncols, nlunits=nlunits)
     else
        write(iulog,*)' set_landunit_wet_ice_lake: ltype of ',ltype,' not valid'
-       write(iulog,*)' only istwet, istdlak, istice and istice_mec ltypes are valid'
+       write(iulog,*)' only istwet, istdlak and istice ltypes are valid'
        call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
@@ -346,53 +346,103 @@ contains
 
     if (npatches > 0) then
 
-       if (npatches /=1 .and. ltype /= istice_mec) then
+       if (npatches /= 1) then
           write(iulog,*)' set_landunit_wet_ice_lake: compete landunit must'// &
                ' have one patch '
           write(iulog,*)' current value of npatches=',npatches
           call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
 
-       if (ltype==istice_mec) then   ! multiple columns per landunit
-
-          call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
-
-          ! Determine column and properties
-          ! (Each column has its own pft)
-          ! 
-          ! For grid cells with glcmask = 1, make sure all the elevations classes
-          !  are populated, even if some have zero fractional area.  This ensures that the 
-          !  ice sheet component, glc, will receive a surface mass balance in each elevation 
-          !  class wherever the SMB is needed.
-          ! Columns with zero weight are referred to as "virtual" columns.
- 
-          do m = 1, maxpatch_glcmec
-
-             wtcol2lunit = wt_glc_mec(gi,m)
-
-             if (wtcol2lunit > 0._r8 .or. glcmask == 1) then
-                call add_column(ci=ci, li=li, ctype=icemec_class_to_col_itype(m), wtlunit=wtcol2lunit)
-                call add_patch(pi=pi, ci=ci, ptype=noveg, wtcol=1.0_r8)
-             endif
-          enddo
-
-       else
-
-          ! Currently assume that each landunit only has only one column 
-          ! and that each column has its own pft
+       ! Currently assume that each landunit only has only one column 
+       ! and that each column has its own pft
        
-          call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
-          call add_column(ci=ci, li=li, ctype=ltype, wtlunit=1.0_r8)
-          call add_patch(pi=pi, ci=ci, ptype=noveg, wtcol=1.0_r8)
+       call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
+       call add_column(ci=ci, li=li, ctype=ltype, wtlunit=1.0_r8)
+       call add_patch(pi=pi, ci=ci, ptype=noveg, wtcol=1.0_r8)
 
-       end if   ! ltype = istice_mec
     endif       ! npatches > 0       
 
   end subroutine set_landunit_wet_ice_lake
 
+  !-----------------------------------------------------------------------
+  subroutine set_landunit_ice_mec(glc_behavior, ltype, gi, li, ci, pi)
+    !
+    ! !DESCRIPTION:
+    ! Initialize glacier_mec landunits
+    !
+    ! !USES:
+    use clm_varpar      , only : maxpatch_glcmec
+    use clm_instur      , only : wt_lunit, wt_glc_mec
+    use landunit_varcon , only : istice_mec
+    use column_varcon   , only : icemec_class_to_col_itype
+    use subgridMod      , only : subgrid_get_info_glacier_mec
+    use pftconMod       , only : noveg
+    !
+    ! !ARGUMENTS:
+    type(glc_behavior_type), intent(in) :: glc_behavior
+    integer , intent(in)    :: ltype             ! landunit type
+    integer , intent(in)    :: gi                ! gridcell index
+    integer , intent(inout) :: li                ! landunit index
+    integer , intent(inout) :: ci                ! column index
+    integer , intent(inout) :: pi                ! patch index
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: m                                ! index
+    integer  :: npatches      ! number of patches in landunit
+    integer  :: ncols
+    integer  :: nlunits
+    logical  :: col_exists
+    real(r8) :: wtlunit2gcell ! weight relative to gridcell of landunit
+    real(r8) :: wtcol2lunit   ! col weight in landunit
+    logical  :: type_is_dynamic
+
+    ! We don't have a true atm_topo value at the point of this call, so arbitrarily use
+    ! 0. This will put glc_mec in elevation class 1 in some places where it should
+    ! actually be in a higher elevation class, but that will be adjusted in the run loop
+    ! (or upon reading the restart file).
+    real(r8), parameter :: atm_topo = 0._r8
+
+    character(len=*), parameter :: subname = 'set_landunit_ice_mec'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT(ltype == istice_mec, errMsg(__FILE__, __LINE__))
+
+    call subgrid_get_info_glacier_mec(gi, atm_topo, glc_behavior, &
+         npatches=npatches, ncols=ncols, nlunits=nlunits)
+
+    if (nlunits == 1) then
+       wtlunit2gcell = wt_lunit(gi, ltype)
+       call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
+
+       ! Determine column and properties
+       ! (Each column has its own pft)
+       !
+       ! For grid cells where the glc behavior indicates a need for virtual columns
+       ! (i.e., zero-weight columns that are nevertheless active), make sure all the
+       ! elevations classes are populated, even if some have zero fractional area.
+       ! This ensures that the ice sheet component, glc, will receive a surface mass
+       ! balance in each elevation class wherever the SMB is needed.
+       
+       type_is_dynamic = glc_behavior%cols_have_dynamic_type(gi)
+       do m = 1, maxpatch_glcmec
+          call glc_behavior%glc_mec_col_exists(gi = gi, elev_class = m, atm_topo = atm_topo, &
+               exists = col_exists, col_wt_lunit = wtcol2lunit)
+          if (col_exists) then
+             call add_column(ci=ci, li=li, ctype=icemec_class_to_col_itype(m), &
+                  wtlunit=wtcol2lunit, type_is_dynamic=type_is_dynamic)
+             call add_patch(pi=pi, ci=ci, ptype=noveg, wtcol=1.0_r8)
+          endif
+       enddo
+
+    else if (nlunits /= 0) then
+       call endrun(msg=subname//' ERROR: expect 0 or 1 landunits')
+    end if
+
+  end subroutine set_landunit_ice_mec
+
   !------------------------------------------------------------------------
 
-  subroutine set_landunit_crop_noncompete (ltype, gi, li, ci, pi, setdata)
+  subroutine set_landunit_crop_noncompete (ltype, gi, li, ci, pi)
     !
     ! !DESCRIPTION: 
     ! Initialize crop landunit without competition
@@ -404,7 +454,7 @@ contains
     ! !USES
     use clm_instur      , only : wt_lunit, wt_cft
     use landunit_varcon , only : istcrop, istsoil
-    use subgridMod      , only : subgrid_get_gcellinfo
+    use subgridMod      , only : subgrid_get_info_crop
     use clm_varctl      , only : create_crop_landunit
     use clm_varpar      , only : maxpatch_pft, crop_prog, cft_lb, cft_ub
     use pftconMod       , only : pftcon
@@ -415,18 +465,20 @@ contains
     integer , intent(inout) :: li                ! landunit index
     integer , intent(inout) :: ci                ! column index
     integer , intent(inout) :: pi                ! patch index
-    logical , intent(in)    :: setdata           ! set info or just compute
     !
     ! !LOCAL VARIABLES:
     integer  :: my_ltype                         ! landunit type for crops
     integer  :: m                                ! index
     integer  :: npatches                         ! number of pfts in landunit
+    integer  :: ncols
+    integer  :: nlunits
     real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
     !------------------------------------------------------------------------
 
     ! Set decomposition properties
 
-    call subgrid_get_gcellinfo(gi, ncrop=npatches)
+    call subgrid_get_info_crop(gi, &
+         npatches=npatches, ncols=ncols, nlunits=nlunits)
     wtlunit2gcell = wt_lunit(gi, ltype)
 
     if (npatches > 0) then
@@ -459,7 +511,7 @@ contains
 
   !------------------------------------------------------------------------------
 
-  subroutine set_landunit_urban (ltype, gi, li, ci, pi, setdata)
+  subroutine set_landunit_urban (ltype, gi, li, ci, pi)
     !
     ! !DESCRIPTION: 
     ! Initialize urban landunits
@@ -470,7 +522,8 @@ contains
     use landunit_varcon , only : isturb_tbd, isturb_hd, isturb_md, isturb_MIN
     use clm_varpar      , only : maxpatch_urb
     use clm_instur      , only : wt_lunit
-    use subgridMod      , only : subgrid_get_gcellinfo
+    use subgridMod      , only : subgrid_get_info_urban_tbd, subgrid_get_info_urban_hd
+    use subgridMod      , only : subgrid_get_info_urban_md
     use UrbanParamsType , only : urbinp
     use decompMod       , only : ldecomp
     use pftconMod       , only : noveg
@@ -481,14 +534,14 @@ contains
     integer , intent(inout) :: li                ! landunit index
     integer , intent(inout) :: ci                ! column index
     integer , intent(inout) :: pi                ! patch index
-    logical , intent(in)    :: setdata           ! set info or just compute
     !
     ! !LOCAL VARIABLES:
-    integer  :: c             ! column loop index
     integer  :: m             ! index
     integer  :: n             ! urban density type index
     integer  :: ctype         ! column type
     integer  :: npatches      ! number of pfts in landunit
+    integer  :: ncols
+    integer  :: nlunits
     real(r8) :: wtlunit2gcell ! weight relative to gridcell of landunit
     real(r8) :: wtcol2lunit   ! weight of column with respect to landunit
     real(r8) :: wtlunit_roof  ! weight of roof with respect to landunit
@@ -500,11 +553,14 @@ contains
 
     select case (ltype)
     case (isturb_tbd)
-       call subgrid_get_gcellinfo(gi, nurban_tbd=npatches)
+       call subgrid_get_info_urban_tbd(gi, &
+            npatches=npatches, ncols=ncols, nlunits=nlunits)
     case (isturb_hd)
-       call subgrid_get_gcellinfo(gi, nurban_hd=npatches)
+       call subgrid_get_info_urban_hd(gi, &
+            npatches=npatches, ncols=ncols, nlunits=nlunits)
     case (isturb_md)
-       call subgrid_get_gcellinfo(gi, nurban_md=npatches)
+       call subgrid_get_info_urban_md(gi, &
+            npatches=npatches, ncols=ncols, nlunits=nlunits)
     case default
        write(iulog,*)' set_landunit_urban: unknown ltype: ', ltype
        call endrun(msg=errMsg(__FILE__, __LINE__))

@@ -273,6 +273,7 @@ contains
 
     call ncd_pio_closefile(ncid)
 
+    ldomain%glcmask(:) = 0
     if (present(glcfilename)) then
        if (masterproc) then
           if (glcfilename == ' ') then
@@ -283,7 +284,6 @@ contains
        call getfil( glcfilename, locfn, 0 )
        call ncd_pio_openfile (ncidg, trim(locfn), 0)
 
-       ldomain%glcmask(:) = 0
        call ncd_io(ncid=ncidg, varname='GLCMASK', flag='read', data=ldomain%glcmask, &
             dim1name=grlnd, readvar=readvar)
        if (.not. readvar) call endrun( msg=' ERROR: GLCMASK NOT in file'//errMsg(__FILE__, __LINE__))
