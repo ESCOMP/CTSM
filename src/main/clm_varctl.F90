@@ -249,7 +249,7 @@ module clm_varctl
   ! lake evaporation / irrigation limitation switch
   !----------------------------------------------------------
 
-  logical, public ::  limit_lake_evap_and_irrig = .false. ! true => limit lake evaporation and irrigation when river storage 
+  logical, public ::  limit_irrigation = .false. ! true => limit irrigation when river storage 
 
   !----------------------------------------------------------
   ! glacier_mec control variables: default values (may be overwritten by namelist)

@@ -214,7 +214,7 @@ contains
 
     namelist /clm_inparm/ use_dynroot
 
-    namelist /clm_inparm/ limit_lake_evap_and_irrig
+    namelist /clm_inparm/ limit_irrigation
 
     namelist /clm_inparm/  &
          use_c14_bombspike, atm_c14_filename
@@ -585,7 +585,7 @@ contains
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (limit_lake_evap_and_irrig, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (limit_irrigation, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     if (use_cn .and. use_vertsoilc) then
        ! vertical soil mixing variables
@@ -878,7 +878,7 @@ contains
     write(iulog,*) 'Albedo over melting lakes will approach values (visible, NIR):', lake_melt_icealb, &
                    'as compared with 0.60, 0.40 for cold frozen lakes with no snow.'
 
-    write(iulog, *) 'limit_lake_evap_and_irrig = ', limit_lake_evap_and_irrig
+    write(iulog, *) 'limit_irrigation = ', limit_irrigation
     write(iulog, *) 'plant nitrogen model namelists:'
     write(iulog, *) '  use_flexibleCN = ', use_flexibleCN                       
     if (use_flexibleCN) then

@@ -92,8 +92,8 @@ module IrrigationMod
      real(r8) :: irrig_factor = 0.7_r8
 
      ! Threshold for river water volume below which irrigation is shut off, if
-     ! limit_lake_evap_and_irrig is .true. (m^3)
-     real(r8) :: irrig_volr_threshold = 1.0_r8
+     ! limit_irrigation is .true. (m)
+     real(r8) :: irrig_volr_threshold = 1.e-4_r8
 
   end type irrigation_params_type
 
@@ -489,7 +489,7 @@ contains
     !
     ! !USES:
     use subgridAveMod , only : p2c
-    use clm_varctl    , only : limit_lake_evap_and_irrig
+    use clm_varctl    , only : limit_irrigation
     !
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
@@ -501,6 +501,7 @@ contains
     integer :: g  ! grid cell index
     
     character(len=*), parameter :: subname = 'ApplyIrrigation'
+
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(volr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
@@ -521,9 +522,8 @@ contains
        ! copy qflx_irrig_patch to track irrigation demand 
        this%qflx_irrig_noh2olimit_patch(p) = this%qflx_irrig_patch(p)
 
-       if (limit_lake_evap_and_irrig) then
-          ! threshold could be divided by gridcell area (grc%area(g))
-          if (volr(g) < this%params%irrig_volr_threshold) then
+       if (limit_irrigation) then
+          if (volr(g) < (this%params%irrig_volr_threshold*grc%area(g)*1e6)) then
              this%qflx_irrig_patch(p) = 0._r8
           end if
        end if

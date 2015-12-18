@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_7_r162    andre 12/18/2015 negative runoff updates.
    clm4_5_6_r161    sacks 12/17/2015 Collapse mountain glaciers to a single elevation class
    clm4_5_6_r160    sacks 12/11/2015 For glc_mec, get gridcell topographic height from atm
    clm4_5_6_r159     erik 12/10/2015 Update CIME version

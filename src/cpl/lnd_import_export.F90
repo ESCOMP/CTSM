@@ -340,12 +340,10 @@ contains
             + lnd2atm_inst%qflx_rofliq_drain_perched_grc(g) &
             - lnd2atm_inst%qflx_rofliq_irrig_grc(g)
 
-       ! remove direct to ocean runoff from qgwl and send separately to coupler
-       l2x(index_l2x_Flrl_rofgwl,i) = lnd2atm_inst%qflx_rofliq_qgwl_grc(g) &
-            - lnd2atm_inst%qflx_rofliq_qdto_grc(g)
+       ! qgwl sent individually to coupler
+       l2x(index_l2x_Flrl_rofgwl,i) = lnd2atm_inst%qflx_rofliq_qgwl_grc(g)
 
-       l2x(index_l2x_Flrl_rofdto,i) = lnd2atm_inst%qflx_rofliq_qdto_grc(g)
-
+       ! ice  sent individually to coupler
        l2x(index_l2x_Flrl_rofi,i) = lnd2atm_inst%qflx_rofice_grc(g)
 
        ! glc coupling

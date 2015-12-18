@@ -1924,7 +1924,7 @@ sub setup_logic_limit_river_withdrawal {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'limit_lake_evap_and_irrig', 'hgrid'=>$nl_flags->{'res'} );
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'limit_irrigation', 'hgrid'=>$nl_flags->{'res'} );
   }
 }
 

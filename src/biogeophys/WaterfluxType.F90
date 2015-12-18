@@ -82,7 +82,6 @@ module WaterfluxType
      real(r8), pointer :: qflx_snomelt_col         (:)   ! col snow melt (mm H2O /s)
      real(r8), pointer :: qflx_snow_drain_col      (:)   ! col drainage from snow pack
      real(r8), pointer :: qflx_qrgwl_col           (:)   ! col qflx_surf at glaciers, wetlands, lakes
-     real(r8), pointer :: qflx_neg_runoff_glc_col  (:)   ! col negative qflx_surf at glaciers
      real(r8), pointer :: qflx_runoff_col          (:)   ! col total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
      real(r8), pointer :: qflx_runoff_r_col        (:)   ! col Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
      real(r8), pointer :: qflx_runoff_u_col        (:)   ! col urban total runoff (qflx_drain+qflx_surf) (mm H2O /s) 
@@ -215,7 +214,6 @@ contains
     allocate(this%qflx_snofrz_col          (begc:endc))              ; this%qflx_snofrz_col          (:)   = nan
     allocate(this%qflx_snofrz_lyr_col      (begc:endc,-nlevsno+1:0)) ; this%qflx_snofrz_lyr_col      (:,:) = nan
     allocate(this%qflx_qrgwl_col           (begc:endc))              ; this%qflx_qrgwl_col           (:)   = nan
-    allocate(this%qflx_neg_runoff_glc_col  (begc:endc))              ; this%qflx_neg_runoff_glc_col  (:)   = nan
     allocate(this%qflx_drain_perched_col   (begc:endc))              ; this%qflx_drain_perched_col   (:)   = nan
     allocate(this%qflx_deficit_col         (begc:endc))              ; this%qflx_deficit_col         (:)   = nan
     allocate(this%qflx_floodc_col          (begc:endc))              ; this%qflx_floodc_col          (:)   = nan
@@ -280,11 +278,6 @@ contains
     call hist_addfld1d (fname='QRGWL',  units='mm/s',  &
          avgflag='A', long_name='surface runoff at glaciers (liquid only), wetlands, lakes', &
          ptr_col=this%qflx_qrgwl_col, c2l_scale_type='urbanf')
-
-    this%qflx_neg_runoff_glc_col(begc:endc) = spval
-    call hist_addfld1d (fname='QFLX_NEG_RUNOFF_GLC',  units='mm/s',  &
-         avgflag='A', long_name='negative surface runoff at glaciers (liquid only)', &
-         ptr_col=this%qflx_neg_runoff_glc_col, c2l_scale_type='urbanf', default='inactive')
 
     this%qflx_drain_col(begc:endc) = spval
     call hist_addfld1d (fname='QDRAI',  units='mm/s',  &

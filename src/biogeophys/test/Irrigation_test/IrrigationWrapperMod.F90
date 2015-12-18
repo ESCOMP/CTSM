@@ -281,7 +281,7 @@ contains
     ! !USES:
     use pftconMod , only : pftcon
     use clm_varpar, only : mxpft
-    use clm_varctl, only : limit_lake_evap_and_irrig
+    use clm_varctl, only : limit_irrigation
     !
     ! !ARGUMENTS:
     integer, intent(in) :: maxpft  ! max pft type that needs to be supported
@@ -295,7 +295,7 @@ contains
     ! slightly greater than 1 hour offset
     grc%londeg(:) = 15.1_r8
 
-    limit_lake_evap_and_irrig = .true.
+    limit_irrigation = .true.
     
   end subroutine setupEnvironment
 

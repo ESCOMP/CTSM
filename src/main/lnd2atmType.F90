@@ -60,7 +60,6 @@ module lnd2atmType
      real(r8), pointer :: qflx_rofliq_h2osfc_grc  (:)   => null() ! rof liq -- surface water runoff component
      real(r8), pointer :: qflx_rofliq_drain_perched_grc    (:)   => null() ! rof liq -- perched water table runoff component
      real(r8), pointer :: qflx_rofliq_irrig_grc   (:)   => null() ! rof liq -- irrigation runoff component (negative)
-     real(r8), pointer :: qflx_rofliq_qdto_grc    (:)   => null() ! rof liq -- direct to ocean runoff
      real(r8), pointer :: qflx_rofice_grc    (:)   => null() ! rof ice forcing
 
    contains
@@ -131,7 +130,6 @@ contains
     allocate(this%qflx_rofliq_h2osfc_grc  (begg:endg))       ; this%qflx_rofliq_h2osfc_grc    (:)   =ival
     allocate(this%qflx_rofliq_drain_perched_grc    (begg:endg))       ; this%qflx_rofliq_drain_perched_grc    (:)   =ival
     allocate(this%qflx_rofliq_irrig_grc   (begg:endg))       ; this%qflx_rofliq_irrig_grc    (:)   =ival
-    allocate(this%qflx_rofliq_qdto_grc    (begg:endg))       ; this%qflx_rofliq_qdto_grc    (:)   =ival
     allocate(this%qflx_rofice_grc    (begg:endg))            ; this%qflx_rofice_grc    (:)   =ival
 
     if (shr_megan_mechcomps_n>0) then

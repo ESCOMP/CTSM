@@ -26,7 +26,6 @@ module clm_cpl_indices
   integer, public ::index_l2x_Flrl_rofsur     ! lnd->rtm input liquid surface fluxes
   integer, public ::index_l2x_Flrl_rofgwl     ! lnd->rtm input liquid gwl fluxes
   integer, public ::index_l2x_Flrl_rofsub     ! lnd->rtm input liquid subsurface fluxes
-  integer, public ::index_l2x_Flrl_rofdto     ! lnd->rtm input liquid direct to ocean fluxes
   integer, public ::index_l2x_Flrl_rofi       ! lnd->rtm input frozen fluxes
 
   integer, public ::index_l2x_Sl_t            ! temperature
@@ -171,7 +170,6 @@ contains
     index_l2x_Flrl_rofsur   = mct_avect_indexra(l2x,'Flrl_rofsur')
     index_l2x_Flrl_rofgwl   = mct_avect_indexra(l2x,'Flrl_rofgwl')
     index_l2x_Flrl_rofsub   = mct_avect_indexra(l2x,'Flrl_rofsub')
-    index_l2x_Flrl_rofdto   = mct_avect_indexra(l2x,'Flrl_rofdto')
     index_l2x_Flrl_rofi     = mct_avect_indexra(l2x,'Flrl_rofi')
 
     index_l2x_Sl_t          = mct_avect_indexra(l2x,'Sl_t')
