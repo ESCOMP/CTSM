@@ -1,4 +1,169 @@
 ===============================================================
+Tag name:  clm4_5_7_r163
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Dec 23 20:31:22 MST 2015
+One-line Summary: Improve crop performance by allocating less memory
+
+Purpose of changes
+------------------
+
+Performance of crop runs was being significantly impacted by the fact that we
+allocate memory for any crop column that might ever need to come into existence
+with dynamic landunits. Most CLM code should not run over 0-weight points, so
+this likely reflects problems in memory/cache efficiency.
+
+This tag changes that behavior, so that for non-transient runs, we only allocate
+memory for the crops that actually exist in that run (i.e., have non-zero
+area). For transient crop runs, the behavior is currently the same as before.
+
+Note that this means you need to run init_interp when transitioning from a
+non-transient crop run to a transient crop run, or vice versa.
+
+For an f09 run without i/o (20-day run with compset
+1850_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV), this resulted in:
+
+- number of columns reduced from 674,634 to 277,728
+
+- number of patches reduced from 968,284 to 571,378
+
+- throughput increased from 3.821 seconds/mday to 2.404 seconds/mday
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+- need to run old crop initial conditions through init_interp (already done for
+  out-of-the-box finidat files)
+
+- from now on, need to run init_interp when transitioning from a non-transient
+  crop run to a transient crop run, or vice versa
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): new finidat
+files for crop: same as old, but run through init_interp
+
+Substantial timing or memory changes: substantial improvement in both timing and
+memory for crop cases
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - irrigation test fails, as in r162
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    NOTE: On yellowstone, I tested with a cime version that had a one-off from
+    cime4.3.1: changes to cprnc. This was done so that cprnc would indicate
+    which tests had differences in dimension sizes in the h1 history files.
+
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    'ok' means tests pass, baseline comparisons fail for some diagnostic fields
+    for crop cases, as described below
+
+    Also, this test failed the baseline comparison due to a problem in the
+    baseline:
+    ERS_D_Ld5.f10_f10.IMCRUCLM50BGC.yellowstone_intel.clm-default
+
+    Some r162 baselines were missing on hobart; I reran these tests and verified
+    that baseline comparisons passed.
+
+CLM tag used for the baseline comparisons: clm4_5_7_r162
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm45/clm50 with crop
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Changes in diagnostic fields only
+
+      Changes are in:
+
+      (1) PCT_CFT in grid cells that have 0% crop
+
+      (2) dimension sizes differ for history files with dov2xy = .false.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes
+M       components/clm/src/main/initGridCellsMod.F90
+M       components/clm/src/main/subgridMod.F90
+
+========= Initialize dynSubgridControl earlier in initialization. This is needed
+          because it now needs to be initialized before we set up the subgrid
+          stuff / bounds.
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+M       components/clm/src/dyn_subgrid/dynSubgridControlMod.F90
+M       components/clm/src/main/clm_initializeMod.F90
+
+========= Add more informative message if it looks like use_init_interp is needed
+M       components/clm/src/main/restFileMod.F90
+M       components/clm/src/main/ncdio_pio.F90.in
+
+========= Point to new finidat files for crop, which have been run through init_interp
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_crop/user_nl_clm
+
+========= Minor tweak: remove explicit reference to init_interp, to make it
+          easier to search the ChangeLog for true references to init_interp
+M       .ChangeLog_template
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_7_r162
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Fri Dec 18 15:59:23 MST 2015

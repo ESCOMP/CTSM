@@ -603,7 +603,15 @@ contains
 
     if ( .not. single_column .or. nsrest /= nsrStartup )then
        call get_proc_global(ng=numg, nl=numl, nc=numc, np=nump, nCohorts=numCohort)
-       msg = 'Did you mean to set use_init_interp = .true. ?'
+       msg = 'Did you mean to set use_init_interp = .true. in user_nl_clm?' // &
+            new_line('x') // &
+            '(Setting use_init_interp = .true. is needed when doing a' // &
+            new_line('x') // &
+            'transient run with crops using an initial conditions file from a non-transient run,' // &
+            new_line('x') // &
+            'or a non-transient run with crops using an initial conditions file from a transient run,' // &
+            new_line('x') // &
+            'or when running a resolution or configuration that differs from the initial conditions.)'
        call check_dim(ncid, nameg, numg, msg=msg)
        call check_dim(ncid, namel, numl, msg=msg)
        call check_dim(ncid, namec, numc, msg=msg)

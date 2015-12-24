@@ -360,7 +360,7 @@ contains
        write(iulog,*) subname//' ERROR: mismatch of input dimension ',dimlen, &
             ' with expected value ',value,' for variable ',trim(dimname)
        if (present(msg)) then
-          write(iulog,*) msg
+          write(iulog,'(a)') msg
        end if
        call shr_sys_abort(errMsg(__FILE__, __LINE__))
     end if

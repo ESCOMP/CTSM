@@ -21,7 +21,7 @@ Known bugs introduced in this tag (include bugzilla ID): [If none, remove this l
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to run initial conditions through init_interp):
+Caveats for users (e.g., need to interpolate initial conditions):
 
 Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
 

@@ -454,10 +454,8 @@ contains
     ! !USES
     use clm_instur      , only : wt_lunit, wt_cft
     use landunit_varcon , only : istcrop, istsoil
-    use subgridMod      , only : subgrid_get_info_crop
-    use clm_varctl      , only : create_crop_landunit
+    use subgridMod      , only : subgrid_get_info_crop, crop_patch_exists
     use clm_varpar      , only : maxpatch_pft, crop_prog, cft_lb, cft_ub
-    use pftconMod       , only : pftcon
     !
     ! !ARGUMENTS:
     integer , intent(in)    :: ltype             ! landunit type
@@ -468,7 +466,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: my_ltype                         ! landunit type for crops
-    integer  :: m                                ! index
+    integer  :: cft                              ! crop functional type index
     integer  :: npatches                         ! number of pfts in landunit
     integer  :: ncols
     integer  :: nlunits
@@ -481,7 +479,7 @@ contains
          npatches=npatches, ncols=ncols, nlunits=nlunits)
     wtlunit2gcell = wt_lunit(gi, ltype)
 
-    if (npatches > 0) then
+    if (nlunits > 0) then
 
        ! Note that we cannot simply use the 'ltype' argument to set itype here,
        ! because ltype will always indicate istcrop
@@ -496,14 +494,12 @@ contains
        ! Set column and patch properties for this landunit 
        ! (each column has its own pft)
 
-       if (create_crop_landunit) then
-          do m = cft_lb, cft_ub
-             if (pftcon%is_pft_known_to_model(m)) then
-                call add_column(ci=ci, li=li, ctype=((istcrop*100) + m), wtlunit=wt_cft(gi,m))
-                call add_patch(pi=pi, ci=ci, ptype=m, wtcol=1.0_r8)
-             end if
-          end do
-       end if
+       do cft = cft_lb, cft_ub
+          if (crop_patch_exists(gi, cft)) then
+             call add_column(ci=ci, li=li, ctype=((istcrop*100) + cft), wtlunit=wt_cft(gi,cft))
+             call add_patch(pi=pi, ci=ci, ptype=cft, wtcol=1.0_r8)
+          end if
+       end do
 
     end if
        

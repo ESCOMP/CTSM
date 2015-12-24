@@ -9,7 +9,7 @@ module dynSubgridDriverMod
   ! dynamic landunits).
   !
   ! !USES:
-  use dynSubgridControlMod         , only : dynSubgridControl_init, get_flanduse_timeseries
+  use dynSubgridControlMod         , only : get_flanduse_timeseries
   use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops
   use dynSubgridControlMod         , only : get_do_harvest
   use dynPriorWeightsMod           , only : prior_weights_type
@@ -48,13 +48,13 @@ module dynSubgridDriverMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine dynSubgrid_init(bounds, NLFilename, dgvs_inst)
+  subroutine dynSubgrid_init(bounds, dgvs_inst)
     !
     ! !DESCRIPTION:
     ! Initialize objects needed for prescribed transient PFTs, CNDV, and/or dynamic
     ! landunits. 
     !
-    ! This should be called from initialization. 
+    ! This should be called from initialization, after dynSubgridControl is initialized. 
     !
     ! Note that no subgrid weights are updated here - so in initialization, weights will
     ! stay at the values read from the surface dataset, then there will be a potentially
@@ -80,7 +80,6 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds     ! processor-level bounds
-    character(len=*) , intent(in)    :: NLFilename ! Namelist filename
     type(dgvs_type)  , intent(inout) :: dgvs_inst
     !
     ! !LOCAL VARIABLES:
@@ -89,7 +88,6 @@ contains
 
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
-    call dynSubgridControl_init( NLFilename )
     prior_weights = prior_weights_type(bounds)
 
     ! Initialize stuff for prescribed transient Patches

@@ -48,11 +48,12 @@ contains
     use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
     use domainMod        , only: domain_check, ldomain, domain_init
     use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data 
-    use controlMod       , only: control_init, control_print
+    use controlMod       , only: control_init, control_print, NLFilename
     use ncdio_pio        , only: ncd_pio_init
     use initGridCellsMod , only: initGridCells
     use ch4varcon        , only: ch4conrd
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
+    use dynSubgridControlMod, only: dynSubgridControl_init
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
@@ -87,6 +88,8 @@ contains
     call ncd_pio_init()
 
     if (masterproc) call control_print()
+
+    call dynSubgridControl_init(NLFilename)
 
     ! ------------------------------------------------------------------------
     ! Read in global land grid and land mask (amask)- needed to set decomposition
@@ -453,7 +456,7 @@ contains
 
     call t_startf('init_dyn_subgrid')
     call init_subgrid_weights_mod(bounds_proc)
-    call dynSubgrid_init(bounds_proc, NLFilename, dgvs_inst)
+    call dynSubgrid_init(bounds_proc, dgvs_inst)
     call t_stopf('init_dyn_subgrid')
 
     ! ------------------------------------------------------------------------

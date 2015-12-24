@@ -11,6 +11,7 @@ module dynSubgridControlMod
   ! pass around the single instance just to query these control flags.
   !
   ! !USES:
+#include "shr_assert.h"
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use abortutils         , only : endrun
   use clm_varctl         , only : fname_len
@@ -36,6 +37,7 @@ module dynSubgridControlMod
      logical :: do_transient_pfts  = .false. ! whether to apply transient natural PFTs from dataset
      logical :: do_transient_crops = .false. ! whether to apply transient crops from dataset
      logical :: do_harvest         = .false. ! whether to apply harvest from dataset
+     logical :: initialized        = .false. ! whether this object has been initialized
   end type dyn_subgrid_control_type
   
   type(dyn_subgrid_control_type) :: dyn_subgrid_control_inst
@@ -63,6 +65,8 @@ contains
     if (masterproc) then
        call check_namelist_consistency
     end if
+
+    dyn_subgrid_control_inst%initialized = .true.
 
   end subroutine dynSubgridControl_init
 
@@ -214,8 +218,12 @@ contains
   character(len=fname_len) function get_flanduse_timeseries()
     ! !DESCRIPTION:
     ! Return the value of the flanduse_timeseries file name
+
+    character(len=*), parameter :: subname = 'get_flanduse_timeseries'
     !-----------------------------------------------------------------------
-    
+
+    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(__FILE__, __LINE__))
+
     get_flanduse_timeseries = dyn_subgrid_control_inst%flanduse_timeseries
 
   end function get_flanduse_timeseries
@@ -226,6 +234,8 @@ contains
     ! Return the value of the do_transient_pfts control flag
     !-----------------------------------------------------------------------
     
+    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(__FILE__, __LINE__))
+
     get_do_transient_pfts = dyn_subgrid_control_inst%do_transient_pfts
 
   end function get_do_transient_pfts
@@ -236,6 +246,8 @@ contains
     ! Return the value of the do_transient_crops control flag
     !-----------------------------------------------------------------------
     
+    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(__FILE__, __LINE__))
+
     get_do_transient_crops = dyn_subgrid_control_inst%do_transient_crops
 
   end function get_do_transient_crops
@@ -246,6 +258,8 @@ contains
     ! Return the value of the do_harvest control flag
     !-----------------------------------------------------------------------
     
+    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(__FILE__, __LINE__))
+
     get_do_harvest = dyn_subgrid_control_inst%do_harvest
 
   end function get_do_harvest
