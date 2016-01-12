@@ -13,6 +13,14 @@
     <desc>Name of land component</desc>
   </entry>
 
+  <entry id="LND_PIO_REARRANGER">
+    <values>
+      <value compset="_CLM40" >2</value>
+      <value compset="_CLM45" >1</value>
+      <value compset="_CLM50" >1</value>
+    </values>
+  </entry>
+
   <entry id="CLM_CONFIG_OPTS" >
     <type>char</type>
     <default_value></default_value>

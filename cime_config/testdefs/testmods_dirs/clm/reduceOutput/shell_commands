@@ -1,2 +1,9 @@
+#!/bin/bash
 # Turn fire emission driver namelist off in case clm4_0 is being used
 ./xmlchange CLM_BLDNML_OPTS="-no-fire_emis" --append
+
+#
+# # Use SUBSET rearranger on hobart
+if [ `hostname` == "hobart" ]; then
+  ./xmlchange LND_PIO_REARRANGER=2
+fi

@@ -12,3 +12,4 @@ cp user_nl_clm user_nl_clm_0002
 
 # Turn fire emission driver namelist off in case clm4_0 is being used
 ./xmlchange CLM_BLDNML_OPTS="-no-fire_emis" --append
+

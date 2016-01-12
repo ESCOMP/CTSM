@@ -557,6 +557,9 @@ contains
        call shr_sys_flush(iulog)
 
     end do
+    ! Close input file
+
+    call pio_closefile(ncidi)
 
     ! Do some final cleanup of specific variables
     !
@@ -571,6 +574,13 @@ contains
     ! variables
     call pio_syncfile(ncido)
 
+    ! BUG: (EBK, 2016-1-6, bugz: 2261) PIO2 in cime4.3.9 has a bug where you can't do 
+    ! two writes of the same variable to a file. So we have to close and reopen the file. 
+    ! When PIO2 is robust enough to handle that we can remove the following two lines.
+    call pio_closefile(ncido)
+    call ncd_pio_openfile (ncido, trim(fileo),  ncd_write)
+    ! ENDBUG:
+
     if (masterproc) then
        write(iulog,*) 'Cleaning up / adjusting variables'
     end if
@@ -578,9 +588,8 @@ contains
     call limit_snlsno(ncido, bounds_o)
 
 
-    ! Close input and output files
+    ! Close output file
 
-    call pio_closefile(ncidi)
     call pio_closefile(ncido)
 
     if (masterproc) then

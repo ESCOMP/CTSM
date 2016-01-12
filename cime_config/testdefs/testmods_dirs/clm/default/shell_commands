@@ -1,3 +1,4 @@
+#!/bin/bash
 # Apply these testmods to multi-instance tests, too (assuming there are only two instances)
 #
 # Doing this copy rather than explicitly including user_nl_clm_0001, etc. is
@@ -11,3 +12,8 @@ cp user_nl_clm user_nl_clm_0001
 cp user_nl_clm user_nl_clm_0002
 
 ./xmlchange CLM_BLDNML_OPTS="-fire_emis" --append
+
+# Use SUBSET rearranger on hobart
+if [ `hostname` == "hobart" ]; then
+  ./xmlchange LND_PIO_REARRANGER=2
+fi

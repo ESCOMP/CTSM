@@ -1,4 +1,136 @@
 ===============================================================
+Tag name:  clm4_5_7_r164
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Jan 12 00:51:25 MST 2016
+One-line Summary: Update CIME and MOSART
+
+Purpose of changes
+------------------
+
+Update CLM to a robust version of CIME and PIO2 (used in the cesm1_5_beta04 tag). 
+Also fix an issue in MOSART that changes answers (qgwl_volume must be multiplied 
+by area). 
+
+Note, that this version of CIME removes the archive.locked directory.
+
+Change the rearranger that PIO uses from being hardcoded to using the one
+picked  with the env_run.xml variable LND_PIO_REARRANGER (both clm40 and clm45).
+By default, as before the rearranger for clm40 is the new SUBSET option, and 
+for clm45/clm50 it's the old BOX method.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 
+   2265 Workaround for pio_syncfile issue
+   2257 Unit tests fail
+
+Bugs found recently:
+   2264 Fire is missing accounting of C/N for transfer of live to dead
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   This version of CIME now creates cimeteststatus instead of cs.status when create_test used
+      (use the summary option to cimeteststatus "-s"!)
+   Remove the archive.locked functionality and the creation of the associated hardlinks
+   Removed the option DOUT_S_SAVE_DATES_RESTART_FILE_SET 
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): pio rearranger
+   set the rearranger for PIO to use by the env_run variable LND_PIO_REARRANGER
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: PIO2 should have better performance
+  and it allows two options for the rearranger to use (BOX and SUBSET).
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone -  PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone -  OK (all PASS except irrigation test with known issue)
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - OK (only one expected FAIL)
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel -  OK
+    yellowstone_pgi -    OK
+    yellowstone_gnu (clm45 only) -  OK
+    hobart_nag - OK
+
+OK means tests pass except those in the ExpectedFail list file
+
+CLM tag used for the baseline comparisons: clm4_5_7_r163
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: only if MOSART used
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: with mosart
+    - what platforms/compilers: all
+    - nature of change: fixes bug where area wasn't multiplied in
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): cime, mosart
+    cime   to cime4.3.9
+    mosart to mosart1_0_15
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M    components/clm/src/README.unit_testing -- Add note about how to delete previous build
+
+   M    components/clm/src/init_interp/initInterp.F90 -- workaround for bug in PIO where you can't
+         do two writes in a row.
+   M    components/clm/src/main/ncdio_pio.F90.in -- Take out specifier for rearranger
+         so will use the setting from LND_PIO_REARRANGER (was hardcoded to BOX)
+
+   M    components/clm/src_clm40/main/ncdio_pio.F90.in
+         so will use the setting from LND_PIO_REARRANGER (was hardcoded to SUBSET)
+
+   M    components/clm/cime_config/config_component.xml -------- Set LND_PIO_REARRANGER 
+          to BOX for clm45/clm50 and to SUBSET for clm40
+   M    components/clm/cime_config/testdefs/testlist_clm.xml --- change goldbach tests for
+          prealpha/prebeta to hobart
+   M    components/clm/cime_config/testdefs/testmods_dirs/clm/40default/shell_commands
+   M    components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subset/shell_commands
+   M    components/clm/cime_config/testdefs/testmods_dirs/clm/default/shell_commands
+   M    components/clm/cime_config/testdefs/testmods_dirs/clm/reduceOutput/shell_commands
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_7_r163
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Dec 23 20:31:22 MST 2015

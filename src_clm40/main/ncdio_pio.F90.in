@@ -2269,8 +2269,7 @@ contains
 
     deallocate(gsmOP)
 
-!    call pio_initdecomp(pio_subsystem, baseTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc, rearr=PIO_REARR_BOX)
-    call pio_initdecomp(pio_subsystem, baseTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc, rearr=PIO_REARR_SUBSET)
+    call pio_initdecomp(pio_subsystem, baseTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc )
 
 
     deallocate(compDOF)
