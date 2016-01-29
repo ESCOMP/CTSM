@@ -43,7 +43,7 @@ contains
     use clm_varcon       , only: clm_varcon_init
     use landunit_varcon  , only: landunit_varcon_init, max_lunit, istice_mec
     use column_varcon    , only: col_itype_to_icemec_class
-    use clm_varctl       , only: fsurdat, fatmlndfrc, fglcmask, noland, version  
+    use clm_varctl       , only: fsurdat, fatmlndfrc, noland, version  
     use pftconMod        , only: pftcon       
     use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
     use domainMod        , only: domain_check, ldomain, domain_init
@@ -133,7 +133,7 @@ contains
        call shr_sys_flush(iulog)
     endif
     if (create_glacier_mec_landunit) then
-       call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc, fglcmask)
+       call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc)
     else
        call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc)
     endif
@@ -143,7 +143,7 @@ contains
     ldomain%mask = 1  !!! TODO - is this needed?
 
     ! Initialize glc behavior
-    call glc_behavior%Init(begg, endg, ldomain%glcmask(begg:endg), ldomain%latc(begg:endg))
+    call glc_behavior%Init(begg, endg, NLFilename)
 
     ! Initialize urban model input (initialize urbinp data structure)
     ! This needs to be called BEFORE the call to surfrd_get_data since

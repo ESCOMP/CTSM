@@ -10,6 +10,7 @@ test_mod.F90
 mkindexmapMod.F90
 mkchecksMod.F90
 mkurbanparMod.F90
+mkdiagnosticsMod.F90
 mkurbanparCommonMod.F90
 mkutilsMod.F90
 mkdomainMod.F90

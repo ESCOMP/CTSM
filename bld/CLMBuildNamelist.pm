@@ -1790,10 +1790,11 @@ sub setup_logic_glacier {
     }
     if ( $physv->as_long() < $physv->as_long("clm4_5")) {
        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flndtopo'  , 'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'} );
+       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fglcmask'  , 'hgrid'=>$nl_flags->{'res'});
     }
-    add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fglcmask'  , 'hgrid'=>$nl_flags->{'res'});
 
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+      add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_behavior');
       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glcmec_downscale_longwave');
       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glc_snow_persistence_max_days');
     }
@@ -3028,7 +3029,8 @@ sub write_output_files {
                  clm_initinterp_inparm
                  soilwater_movement_inparm rooting_profile_inparm 
                  soil_resis_inparm  bgc_shared
-                 clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm );
+                 clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
+                 clm_glacier_behavior );
 
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);

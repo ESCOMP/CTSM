@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_7_r165    sacks 01/29/2016 Remove fglcmask, recreate all surface datasets
    clm4_5_7_r164     erik 01/12/2016 Update CIME and MOSART
    clm4_5_7_r163    sacks 12/23/2015 Improve crop performance by allocating less memory
    clm4_5_7_r162    andre 12/18/2015 negative runoff updates.

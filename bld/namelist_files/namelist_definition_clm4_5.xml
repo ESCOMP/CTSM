@@ -254,6 +254,23 @@ If TRUE, dynamically change areas and topographic heights over glacier points.
 Only works when glc_nec is greater than zero, and when coupled to CISM.
 </entry>
 
+<entry id="glacier_region_behavior" type="char*32(10)" category="clm_physics"
+       group="clm_glacier_behavior"
+       valid_values="multiple,virtual,single_at_atm_topo" >
+Behavior of each glacier region (GLACIER_REGION in surface dataset).
+First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
+second to GLACIER_REGION with ID 1, etc.
+Allowed values are:
+'multiple': grid cells can potentially have multiple glacier elevation classes,
+   but no virtual columns
+'virtual': grid cells have virtual columns: values are computed for every glacier
+   elevation class, even those with 0 area
+'single_at_atm_topo': glacier landunits in these grid cells have a single column,
+   whose elevation matches the atmosphere's topographic height (so that there is no
+   adjustment due to downscaling)
+Only applies when glc_nec is greater than 0.
+</entry>
+
 <entry id="glc_snow_persistence_max_days" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="" >
 Number of days before one considers the perennially snow-covered point 'land ice'
@@ -290,11 +307,6 @@ Time step (seconds)
        group="clm_inparm" valid_values="3">
 Override the start type from the driver: it can only be
 set to 3 meaning branch.
-</entry>
-
-<entry id="fglcmask" type="char*256" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of land-ice mask data file (on lnd grid).
 </entry>
 
 <entry id="glcmec_downscale_longwave" type="logical" category="clm_physics"
@@ -663,7 +675,7 @@ in its attributes. (Only used if scripgriddata_src_type = UGRID.)
 <!--                                                   -->
 <entry id="mksrf_filename" type="char*256" category="mksurfdata"
        group="default_settings" 
-       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fvocef,mksrf_furbtopo,mksrf_flndtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >
+       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >
 Filename for mksurfdata_map to remap raw data into the output surface dataset
 </entry>
 
@@ -677,14 +689,14 @@ Plant Function Type dataset for mksurfdata
 Dataset for percent glacier land-unit for mksurfdata
 </entry>
 
+<entry id="mksrf_fglacierregion" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Dataset for glacier region ID for mksurfdata
+</entry>
+
 <entry id="mksrf_furbtopo" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Dataset for topography used to define urban threshold
-</entry>
-
-<entry id="mksrf_flndtopo" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Dataset for land topography
 </entry>
 
 <entry id="mksrf_flai" type="char*256" category="mksurfdata"

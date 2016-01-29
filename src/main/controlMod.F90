@@ -174,7 +174,7 @@ contains
     ! Glacier_mec info
     namelist /clm_inparm/ &    
          maxpatch_glcmec, glc_smb, glc_do_dynglacier, &
-         glcmec_downscale_longwave, glc_snow_persistence_max_days, fglcmask, &
+         glcmec_downscale_longwave, glc_snow_persistence_max_days, &
          nlevsno, h2osno_max
 
     ! Other options
@@ -644,7 +644,6 @@ contains
     call mpi_bcast (glc_do_dynglacier, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glcmec_downscale_longwave, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_snow_persistence_max_days, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (fglcmask, len(fglcmask), MPI_CHARACTER, 0, mpicom, ier)
 
     ! history file variables
     call mpi_bcast (hist_empty_htapes, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -805,7 +804,6 @@ contains
 
     if (create_glacier_mec_landunit) then
        write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
-       write(iulog,*) '   glc glacier mask file = ',trim(fglcmask)
        if (glcmec_downscale_longwave) then
           write(iulog,*) '   Longwave radiation will be downscaled'
        else

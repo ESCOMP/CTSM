@@ -152,13 +152,13 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Glacier_raw_data_file_name', len_trim(str), trim(str)), subname)
 
+    str = get_filename(mksrf_fglacierregion)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'Glacier_region_raw_data_file_name', len_trim(str), trim(str)), subname)
+
     str = get_filename(mksrf_furbtopo)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Urban_Topography_raw_data_file_name', len_trim(str), trim(str)), subname)
-
-    str = get_filename(mksrf_flndtopo)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'Land_Topography_raw_data_file_name', len_trim(str), trim(str)), subname)
 
     str = get_filename(mksrf_furban)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -216,6 +216,10 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'map_glacier_file', len_trim(str), trim(str)), subname)
 
+    str = get_filename(map_fglacierregion)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_glacier_region_file', len_trim(str), trim(str)), subname)
+
     str = get_filename(map_fsoitex)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'map_soil_texture_file', len_trim(str), trim(str)), subname)
@@ -251,10 +255,6 @@ contains
     str = get_filename(map_furbtopo)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'map_urban_topography_file', len_trim(str), trim(str)), subname)
-
-    str = get_filename(map_flndtopo)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'map_land_topography_file', len_trim(str), trim(str)), subname)
 
     str = get_filename(map_fabm)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -489,6 +489,9 @@ contains
        call ncd_def_spatial_var(ncid=ncid, varname='PCT_GLACIER', xtype=xtype, &
             long_name='percent glacier', units='unitless')
 
+       call ncd_def_spatial_var(ncid=ncid, varname='GLACIER_REGION', xtype=nf_int, &
+            long_name='glacier region ID', units='unitless')
+
        if ( nglcec > 0 )then
           call ncd_defvar(ncid=ncid, varname='GLC_MEC', xtype=xtype, &
                dim1name='nglcecp1', long_name='Glacier elevation class', units='m')
@@ -515,9 +518,6 @@ contains
                lev1name='nglcec', &
                long_name='mean elevation on glacier elevation classes', units='m')
        end if
-
-       call ncd_def_spatial_var(ncid=ncid, varname='TOPO', xtype=xtype, &
-            long_name='mean elevation on land', units='m')
 
        call ncd_def_spatial_var(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
             lev1name='numurbl', &

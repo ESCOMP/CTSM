@@ -65,8 +65,9 @@ module glcBehaviorMod
      ! Public routines
      ! ------------------------------------------------------------------------
 
-     procedure, public  :: Init
-     procedure, public  :: InitForTesting  ! version of Init meant for unit testing
+     procedure, public  :: Init            ! version of Init meant for production use
+     procedure, public  :: InitFromInputs  ! version of Init meant for unit testing (and called by other code in this class)
+     procedure, public  :: InitSetDirectly ! version of Init meant for unit testing
 
      ! get number of subgrid units in glc_mec landunit on one grid cell
      procedure, public  :: get_num_glc_mec_subgrid
@@ -87,11 +88,23 @@ module glcBehaviorMod
      procedure, public  :: update_glc_classes
 
      ! ------------------------------------------------------------------------
+     ! Public routines, for unit tests only
+     ! ------------------------------------------------------------------------
+
+     ! get the value of collapse_to_atm_topo at a given grid cell
+     procedure, public :: get_collapse_to_atm_topo
+
+     ! ------------------------------------------------------------------------
      ! Private routines
      ! ------------------------------------------------------------------------
 
      procedure, private :: InitAllocate
-     procedure, private :: set_masks
+
+     ! reads GLACIER_REGION field from surface dataset
+     procedure, private, nopass :: read_surface_dataset
+
+     ! reads local namelist items
+     procedure, private, nopass :: read_namelist
 
      ! returns a column-level filter of ice_mec columns with the collapse_to_atm_topo
      ! behavior
@@ -103,13 +116,24 @@ module glcBehaviorMod
 
   end type glc_behavior_type
 
+  ! !PRIVATE MEMBER DATA:
+
+  ! Longest name allowed for glacier_region_behavior
+  integer, parameter :: max_behavior_name_len = 32
+
+  ! Largest allowed value for a glacier region ID
+  integer, parameter :: max_glacier_region_id = 10
+
 contains
 
   !-----------------------------------------------------------------------
-  subroutine Init(this, begg, endg, glcmask, latdeg)
+  subroutine Init(this, begg, endg, NLFilename)
     !
     ! !DESCRIPTION:
-    ! Initialize a glc_behavior_type object
+    ! Initialize a glc_behavior_type object.
+    !
+    ! This version of Init is the one intended for production code use. It reads the
+    ! information it needs from the surface dataset and namelist.
     !
     ! !USES:
     !
@@ -117,25 +141,151 @@ contains
     class(glc_behavior_type), intent(inout) :: this
     integer, intent(in) :: begg  ! beginning gridcell index
     integer, intent(in) :: endg  ! ending gridcell index
-    integer, intent(in) :: glcmask(begg: )
-    real(r8), intent(in) :: latdeg(begg: )
+    character(len=*), intent(in)  :: NLFilename ! Namelist filename
     !
     ! !LOCAL VARIABLES:
+    integer, allocatable :: glacier_region_map(:)
+    character(len=max_behavior_name_len) :: glacier_region_behavior(0:max_glacier_region_id)
 
     character(len=*), parameter :: subname = 'Init'
     !-----------------------------------------------------------------------
 
-    call this%InitAllocate(begg, endg)
-    call this%set_masks(begg, endg, glcmask(begg:endg), latdeg(begg:endg))
+    allocate(glacier_region_map(begg:endg))
+    call this%read_surface_dataset(begg, endg, glacier_region_map(begg:endg))
+    call this%read_namelist(NLFilename, glacier_region_behavior)
+
+    call this%InitFromInputs(begg, endg, &
+         glacier_region_map(begg:endg), glacier_region_behavior)
 
   end subroutine Init
 
   !-----------------------------------------------------------------------
-  subroutine InitForTesting(this, begg, endg, &
+  subroutine InitFromInputs(this, begg, endg, &
+       glacier_region_map, glacier_region_behavior_str)
+    !
+    ! !DESCRIPTION:
+    ! Initialize a glc_behavior_type object given a map of glacier region IDs and an
+    ! array of behavior specifications for each of these IDs.
+    !
+    ! This version should generally only be called directly by tests, but it is also used
+    ! by the main production Init method.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(glc_behavior_type), intent(inout) :: this
+    integer, intent(in) :: begg  ! beginning gridcell index
+    integer, intent(in) :: endg  ! ending gridcell index
+
+    ! map of glacier region IDs
+    integer, intent(in) :: glacier_region_map(begg:)
+
+    ! string giving behavior for each glacier region ID
+    ! allowed values are:
+    ! - 'multiple': grid cells can potentially have multiple glacier elevation classes,
+    !   but no virtual columns
+    ! - 'virtual': grid cells have virtual columns: values are computed for every glacier
+    !   elevation class, even those with 0 area
+    ! - 'single_at_atm_topo': glacier landunits in these grid cells have a single column,
+    !   whose elevation matches the atmosphere's topographic height (so that there is no
+    !   adjustment due to downscaling)
+    character(len=*), intent(in) :: glacier_region_behavior_str(0:)
+    !
+    ! !LOCAL VARIABLES:
+    ! integer codes corresponding to glacier_region_behavior_str
+    integer, allocatable :: glacier_region_behavior(:)
+    integer :: g
+    integer :: my_id
+    integer :: my_behavior
+
+    ! possible glacier_region_behavior codes
+    integer, parameter :: BEHAVIOR_MULTIPLE = 1
+    integer, parameter :: BEHAVIOR_VIRTUAL = 2
+    integer, parameter :: BEHAVIOR_SINGLE_AT_ATM_TOPO = 3
+
+    character(len=*), parameter :: subname = 'InitFromInputs'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(glacier_region_map) == (/endg/)), errMsg(__FILE__, __LINE__))
+
+    allocate(glacier_region_behavior( &
+         lbound(glacier_region_behavior_str, 1):ubound(glacier_region_behavior_str, 1)))
+    call translate_glacier_region_behavior
+
+    call this%InitAllocate(begg, endg)
+
+    call check_glacier_region_map
+
+    do g = begg, endg
+       my_id = glacier_region_map(g)
+       my_behavior = glacier_region_behavior(my_id)
+
+       if (my_behavior == BEHAVIOR_VIRTUAL) then
+          this%has_virtual_columns_grc(g) = .true.
+       else
+          this%has_virtual_columns_grc(g) = .false.
+       end if
+
+       if (my_behavior == BEHAVIOR_SINGLE_AT_ATM_TOPO) then
+          this%collapse_to_atm_topo_grc(g) = .true.
+       else
+          this%collapse_to_atm_topo_grc(g) = .false.
+       end if
+    end do
+
+  contains
+    subroutine check_glacier_region_map
+      if (minval(glacier_region_map) < 0) then
+         write(iulog,*) subname//' ERROR: Expect GLACIER_REGION to be >= 0'
+         write(iulog,*) 'minval = ', minval(glacier_region_map)
+         call endrun(msg=' ERROR: Expect GLACIER_REGION to be >= 0 '// &
+              errMsg(__FILE__, __LINE__))
+      end if
+
+      if (maxval(glacier_region_map) > ubound(glacier_region_behavior, 1)) then
+         write(iulog,*) subname//' ERROR: Max GLACIER_REGION is ', &
+              maxval(glacier_region_map)
+         write(iulog,*) 'but glacier_region_behavior only specifies behavior up to ', &
+              ubound(glacier_region_behavior, 1)
+         write(iulog,*) 'Try increasing max_glacier_region_id in ', __FILE__
+         call endrun(msg=' ERROR: GLACIER_REGION larger than expected'// &
+              errMsg(__FILE__, __LINE__))
+      end if
+    end subroutine check_glacier_region_map
+
+    subroutine translate_glacier_region_behavior
+      integer :: i
+
+      do i = lbound(glacier_region_behavior_str, 1), ubound(glacier_region_behavior_str, 1)
+         select case (glacier_region_behavior_str(i))
+         case ('multiple')
+            glacier_region_behavior(i) = BEHAVIOR_MULTIPLE
+         case ('virtual')
+            glacier_region_behavior(i) = BEHAVIOR_VIRTUAL
+         case ('single_at_atm_topo')
+            glacier_region_behavior(i) = BEHAVIOR_SINGLE_AT_ATM_TOPO
+         case default
+            write(iulog,*) ' ERROR: Unknown glacier_region_behavior for ID ', i
+            write(iulog,*) glacier_region_behavior_str(i)
+            write(iulog,*) 'Allowable values are: multiple, virtual, single_at_atm_topo'
+            call endrun(msg=' ERROR: Unknown glacier_region_behavior'// &
+                 errMsg(__FILE__, __LINE__))
+         end select
+      end do
+    end subroutine translate_glacier_region_behavior
+
+  end subroutine InitFromInputs
+
+
+  !-----------------------------------------------------------------------
+  subroutine InitSetDirectly(this, begg, endg, &
        has_virtual_columns, collapse_to_atm_topo)
     !
     ! !DESCRIPTION:
-    ! Initialize a glc_behavior_type object for testing
+    ! Initialize a glc_behavior_type object by directly setting has_virtual_columns and
+    ! collapse_to_atm_topo
+    !
+    ! This version is meant for testing
     !
     ! !USES:
     !
@@ -158,7 +308,7 @@ contains
     this%has_virtual_columns_grc(:) = has_virtual_columns(:)
     this%collapse_to_atm_topo_grc(:) = collapse_to_atm_topo(:)
 
-  end subroutine InitForTesting
+  end subroutine InitSetDirectly
 
 
   !-----------------------------------------------------------------------
@@ -181,6 +331,110 @@ contains
     allocate(this%collapse_to_atm_topo_grc(begg:endg)); this%collapse_to_atm_topo_grc(:) = .false.
 
   end subroutine InitAllocate
+
+  !-----------------------------------------------------------------------
+  subroutine read_surface_dataset(begg, endg, glacier_region_map)
+    !
+    ! !DESCRIPTION:
+    ! Reads GLACIER_REGION field from surface dataset, returns it in glacier_region_map
+    !
+    ! !USES:
+    use clm_varctl , only : fsurdat
+    use fileutils  , only : getfil
+    use ncdio_pio  , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
+    use spmdMod    , only : masterproc
+    use clm_varcon , only : grlnd
+    !
+    ! !ARGUMENTS:
+    integer, intent(in)  :: begg  ! beginning grid cell index
+    integer, intent(in)  :: endg  ! ending grid cell index
+    integer, intent(out) :: glacier_region_map(begg:)
+    !
+    ! !LOCAL VARIABLES:
+    integer, pointer :: glacier_region_map_ptr(:)  ! pointer version needed for ncd_io interface
+    character(len=256) :: locfn        ! local filename
+    type(file_desc_t)  :: ncid         ! netcdf id
+    logical            :: readvar 
+
+    character(len=*), parameter :: subname = 'read_surface_dataset'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(glacier_region_map) == (/endg/)), errMsg(__FILE__, __LINE__))
+
+    if (masterproc) then
+       write(iulog,*) 'Attempting to read GLACIER_REGION...'
+    end if
+    call getfil(fsurdat, locfn, 0)
+    call ncd_pio_openfile(ncid, locfn, 0)
+    allocate(glacier_region_map_ptr(begg:endg))
+    call ncd_io(ncid=ncid, varname='GLACIER_REGION', flag='read', &
+         data=glacier_region_map_ptr, dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       call endrun(msg=' ERROR: GLACIER_REGION NOT on surfdata file'//errMsg(__FILE__, __LINE__))
+    end if
+    call ncd_pio_closefile(ncid)
+    glacier_region_map(begg:endg) = glacier_region_map_ptr(begg:endg)
+    deallocate(glacier_region_map_ptr)
+
+  end subroutine read_surface_dataset
+
+  !-----------------------------------------------------------------------
+  subroutine read_namelist(NLFilename, glacier_region_behavior)
+    !
+    ! !DESCRIPTION:
+    ! Read local namelist items
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use clm_nlUtilsMod , only : find_nlgroup_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in)  :: NLFilename ! Namelist filename
+    character(len=max_behavior_name_len), intent(out) :: glacier_region_behavior(0:max_glacier_region_id)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: unitn     ! unit for namelist file
+    integer :: nml_error ! namelist i/o error flag
+
+    character(len=*), parameter :: glacier_region_behavior_default = 'multiple'
+
+    character(len=*), parameter :: subname = 'read_namelist'
+    !-----------------------------------------------------------------------
+
+    namelist /clm_glacier_behavior/ &
+         glacier_region_behavior
+
+    ! Initialize options to default values
+    glacier_region_behavior(:) = glacier_region_behavior_default
+
+    if (masterproc) then
+       unitn = getavu()
+       call opnfil(NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, 'clm_glacier_behavior', status=nml_error)
+       if (nml_error == 0) then
+          read(unitn, nml=clm_glacier_behavior, iostat=nml_error)
+          if (nml_error /= 0) then
+             call endrun(msg='ERROR reading clm_glacier_behavior namelist'// &
+                  errMsg(__FILE__, __LINE__))
+          end if
+       end if
+       call relavu( unitn )
+    endif
+
+    call shr_mpi_bcast(glacier_region_behavior, mpicom)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) 'clm_glacier_behavior settings:'
+       write(iulog,nml=clm_glacier_behavior)
+       write(iulog,*) ' '
+    end if
+
+  end subroutine read_namelist
+
 
   !-----------------------------------------------------------------------
   subroutine get_num_glc_mec_subgrid(this, gi, atm_topo, npatches, ncols, nlunits)
@@ -484,52 +738,29 @@ contains
 
   end function collapse_to_atm_topo_icemec_filterc
 
-
   !-----------------------------------------------------------------------
-  subroutine set_masks(this, begg, endg, glcmask, latdeg)
+  function get_collapse_to_atm_topo(this, gi) result(collapse_to_atm_topo)
     !
     ! !DESCRIPTION:
-    ! Set the mask fields in this object
+    ! Get the value of collapse_to_atm_topo at a given grid cell
+    !
+    ! This function just exists to support unit testing, and should not be called from
+    ! production code.
+    !
+    ! !USES:
     !
     ! !ARGUMENTS:
-    class(glc_behavior_type), intent(inout) :: this
-    integer, intent(in) :: begg  ! beginning gridcell index
-    integer, intent(in) :: endg  ! ending gridcell index
-    integer, intent(in) :: glcmask(begg: )
-    real(r8), intent(in) :: latdeg(begg: )
+    logical :: collapse_to_atm_topo  ! function result
+    class(glc_behavior_type), intent(in) :: this
+    integer, intent(in) :: gi ! grid cell index
     !
     ! !LOCAL VARIABLES:
-    integer :: g
-    logical, parameter :: collapse_mountain_glaciers = .true.
 
-    character(len=*), parameter :: subname = 'set_masks'
+    character(len=*), parameter :: subname = 'get_collapse_to_atm_topo'
     !-----------------------------------------------------------------------
 
-    do g = begg, endg
-       if (glcmask(g) > 0) then
-          this%has_virtual_columns_grc(g) = .true.
-       else
-          this%has_virtual_columns_grc(g) = .false.
-       end if
-    end do
+    collapse_to_atm_topo = this%collapse_to_atm_topo_grc(gi)
 
-    if (collapse_mountain_glaciers) then
-       do g = begg, endg
-          if (this%has_virtual_columns_grc(g)) then
-             ! Greenland
-             this%collapse_to_atm_topo_grc(g) = .false.
-          else if (latdeg(g) <= -60._r8) then
-             ! Antarctica
-             this%collapse_to_atm_topo_grc(g) = .false.
-          else
-             ! mountain glaciers
-             this%collapse_to_atm_topo_grc(g) = .true.
-          end if
-       end do
-    else
-       this%collapse_to_atm_topo_grc(begg:endg) = .false.
-    end if
-
-  end subroutine set_masks
+  end function get_collapse_to_atm_topo
 
 end module glcBehaviorMod

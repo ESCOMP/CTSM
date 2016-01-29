@@ -128,10 +128,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lmask type="org"              >ISRIC-WISE</lmask>
 <lmask type="glc"              >GLOBE-Gardner</lmask>
 <lmask type="glc" mergeGIS="on">GLOBE-Gardner-mergeGIS</lmask>
+<lmask type="glcregion"        >nomask</lmask>
 <lmask type="fmx"              >USGS</lmask>
 <lmask type="irr"              >nomask</lmask>
 <lmask type="utp"              >nomask</lmask>
-<lmask type="top"              >nomask</lmask>
 <lmask type="tex"              >IGBP-GSDP</lmask>
 <lmask type="gdp"              >AVHRR</lmask>
 <lmask type="peat"             >AVHRR</lmask>
@@ -152,10 +152,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hgrid type="col"              >0.5x0.5</hgrid>
 <hgrid type="org"              >5x5min</hgrid>
 <hgrid type="glc"              >3x3min</hgrid>
+<hgrid type="glcregion"        >10x10min</hgrid>
 <hgrid type="fmx"              >3x3min</hgrid>
 <hgrid type="irr"              >5x5min</hgrid>
 <hgrid type="utp"              >10x10min</hgrid>
-<hgrid type="top"              >10x10min</hgrid>
 <hgrid type="tex"              >5x5min</hgrid>
 <hgrid type="gdp"              >0.5x0.5</hgrid>
 <hgrid type="peat"             >0.5x0.5</hgrid>
@@ -175,9 +175,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_filename type="col" >mksrf_fsoicol</mksrf_filename>
 <mksrf_filename type="org" >mksrf_forganic</mksrf_filename>
 <mksrf_filename type="glc" >mksrf_fglacier</mksrf_filename>
+<mksrf_filename type="glcregion">mksrf_fglacierregion</mksrf_filename>
 <mksrf_filename type="fmx" >mksrf_fmax</mksrf_filename>
 <mksrf_filename type="utp" >mksrf_furbtopo</mksrf_filename>
-<mksrf_filename type="top" >mksrf_flndtopo</mksrf_filename>
 <mksrf_filename type="tex" >mksrf_fsoitex</mksrf_filename>
 <mksrf_filename type="gdp" >mksrf_fgdp</mksrf_filename>
 <mksrf_filename type="peat">mksrf_fpeat</mksrf_filename>
@@ -223,10 +223,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_fvocef   hgrid="0.5x0.5"  lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_vocef_0.5x0.5_simyr2000.c110531.nc</mksrf_fvocef>
 
-<!-- Land topography -->
-<mksrf_flndtopo hgrid="10x10min" lmask="nomask"
->lnd/clm2/rawdata/topodata_10min_USGS_071205.nc</mksrf_flndtopo>
-
 <!-- urban -->
 <mksrf_furban   hgrid="3x3min"   lmask="LandScan2004"
 >lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c120621.nc</mksrf_furban>
@@ -248,6 +244,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.c120926.nc</mksrf_fglacier>
 <mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" mergeGIS="on"
 >lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
+
+<!-- Glacier region ID -->
+<mksrf_fglacierregion hgrid="10x10min" lmask="nomask"
+>lnd/clm2/rawdata/mksrf_GlacierRegion_10x10min_nomask_c160122.nc</mksrf_fglacierregion>
 
 <!-- mksrf_furbtopo - topography for urban threshold -->
 <mksrf_furbtopo hgrid="10x10min" lmask="nomask"

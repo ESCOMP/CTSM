@@ -273,8 +273,6 @@ module clm_varctl
   ! number of days before one considers the perennially snow-covered point 'land ice'
   integer , public :: glc_snow_persistence_max_days = 7300  
 
-  ! glacier mask file name
-  character(len=fname_len), public :: fglcmask = ' '        
   !
   !----------------------------------------------------------
   ! single column control variables

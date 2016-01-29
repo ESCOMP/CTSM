@@ -23,6 +23,7 @@ program mksurfdat
                                     soil_fmax, mkfmax
     use mkvocefMod         , only : mkvocef
     use mklanwatMod        , only : mklakwat, mkwetlnd, mklakparams
+    use mkglacierregionMod , only : mkglacierregion
     use mkglcmecMod        , only : nglcec, mkglcmec, mkglcmecInit, mkglacier
     use mkharvestMod       , only : mkharvest, mkharvest_init, mkharvest_fieldname, &
                                     mkharvest_numtypes, mkharvest_parse_oride
@@ -73,7 +74,7 @@ program mksurfdat
     logical  :: all_veg                     ! if gridcell will be 100% vegetated land-cover
     real(r8) :: suma                        ! sum for error check
     character(len=256) :: fgrddat           ! grid data file
-    character(len=256) :: fsurdat           ! output surface data file name
+    character(len=256) :: fsurdat           ! output surface data file name (if blank, do not output a surface dataset)
     character(len=256) :: fsurlog           ! output surface log file name
     character(len=256) :: fdyndat           ! dynamic landuse data file name
     character(len=256) :: fname             ! generic filename
@@ -98,13 +99,13 @@ program mksurfdat
     real(r8), allocatable  :: pctglcmec_gic(:,:) ! GIC pct coverage in each class (% of landunit)
     real(r8), allocatable  :: pctglcmec_icesheet(:,:) ! icesheet pct coverage in each class (% of landunit)
     real(r8), allocatable  :: elevclass(:)       ! glacier_mec elevation classes
-    real(r8), allocatable  :: pctlak(:)          ! percent of grid cell that is lake     
+    integer,  allocatable  :: glacier_region(:)  ! glacier region ID
+    real(r8), allocatable  :: pctlak(:)          ! percent of grid cell that is lake
     real(r8), allocatable  :: pctwet(:)          ! percent of grid cell that is wetland  
     real(r8), allocatable  :: pcturb(:)          ! percent of grid cell that is urbanized (total across all urban classes)
     real(r8), allocatable  :: urbn_classes(:,:)  ! percent cover of each urban class, as % of total urban area
     real(r8), allocatable  :: urbn_classes_g(:,:)! percent cover of each urban class, as % of grid cell
     real(r8), allocatable  :: elev(:)            ! glc elevation (m)
-    real(r8), allocatable  :: topo(:)            ! land elevation (m)
     real(r8), allocatable  :: fmax(:)            ! fractional saturated area
     integer , allocatable  :: soicol(:)          ! soil color                            
     real(r8), allocatable  :: pctsand(:,:)       ! soil texture: percent sand            
@@ -151,8 +152,8 @@ program mksurfdat
          mksrf_flakwat,            &
          mksrf_fwetlnd,            &
          mksrf_fglacier,           &
+         mksrf_fglacierregion,     &
          mksrf_furbtopo,           &
-         mksrf_flndtopo,           &
          mksrf_fmax,               &
          mksrf_furban,             &
          mksrf_flai,               &
@@ -178,11 +179,11 @@ program mksurfdat
          map_flakwat,              &
          map_fwetlnd,              &
          map_fglacier,             &
+         map_fglacierregion,       &
          map_fsoitex,              &
          map_fsoicol,              &
          map_furban,               &
          map_furbtopo,             &
-         map_flndtopo,             &
          map_fmax,                 &
          map_forganic,             &
          map_fvocef,               &
@@ -215,6 +216,7 @@ program mksurfdat
     ! Must specify settings for input high resolution datafiles
     ! ======================================
     !    mksrf_fglacier - Glacier dataset
+    !    mksrf_fglacierregion - Glacier region ID dataset
     !    mksrf_flai ----- Leaf Area Index dataset
     !    mksrf_flakwat -- Lake water dataset
     !    mksrf_fwetlnd -- Wetland water dataset
@@ -240,11 +242,11 @@ program mksurfdat
     !    map_flakwat ----- Mapping for mksrf_flakwat
     !    map_fwetlnd ----- Mapping for mksrf_fwetlnd
     !    map_fglacier ---- Mapping for mksrf_fglacier
+    !    map_fglacierregion - Mapping for mksrf_fglacierregion
     !    map_fsoitex ----- Mapping for mksrf_fsoitex
     !    map_fsoicol ----- Mapping for mksrf_fsoicol
     !    map_furban ------ Mapping for mksrf_furban
     !    map_furbtopo ---- Mapping for mksrf_furbtopo
-    !    map_flndtopo ---- Mapping for mksrf_flndtopo
     !    map_fmax -------- Mapping for mksrf_fmax
     !    map_forganic ---- Mapping for mksrf_forganic
     !    map_fvocef ------ Mapping for mksrf_fvocef
@@ -423,7 +425,8 @@ program mksurfdat
                lakedepth(ns_o)                    , &
                f0(ns_o)                           , &
                p3(ns_o)                           , &
-               zwt0(ns_o)                         )       
+               zwt0(ns_o)                         , &
+               glacier_region(ns_o)               )       
     landfrac_pft(:)       = spval 
     pctlnd_pft(:)         = spval
     pftdata_mask(:)       = -999
@@ -451,6 +454,7 @@ program mksurfdat
     f0(:)                 = spval
     p3(:)                 = spval
     zwt0(:)               = spval
+    glacier_region(:)     = -999
 
     ! ----------------------------------------------------------------------
     ! Open diagnostic output log file
@@ -482,8 +486,8 @@ program mksurfdat
     write(ndiag,*) 'fmax from:                   ',trim(mksrf_fmax)
     write(ndiag,*) 'glaciers from:               ',trim(mksrf_fglacier)
     write(ndiag,*) '           with:             ', nglcec, ' glacier elevation classes'
+    write(ndiag,*) 'glacier region ID from:      ',trim(mksrf_fglacierregion)
     write(ndiag,*) 'urban topography from:       ',trim(mksrf_furbtopo)
-    write(ndiag,*) 'land topography from:        ',trim(mksrf_flndtopo)
     write(ndiag,*) 'urban from:                  ',trim(mksrf_furban)
     write(ndiag,*) 'inland lake from:            ',trim(mksrf_flakwat)
     write(ndiag,*) 'inland wetland from:         ',trim(mksrf_fwetlnd)
@@ -502,6 +506,7 @@ program mksurfdat
     write(ndiag,*)' mapping for lake water       ',trim(map_flakwat)
     write(ndiag,*)' mapping for wetland          ',trim(map_fwetlnd)
     write(ndiag,*)' mapping for glacier          ',trim(map_fglacier)
+    write(ndiag,*)' mapping for glacier region   ',trim(map_fglacierregion)
     write(ndiag,*)' mapping for soil texture     ',trim(map_fsoitex)
     write(ndiag,*)' mapping for soil color       ',trim(map_fsoicol)
     write(ndiag,*)' mapping for soil organic     ',trim(map_forganic)
@@ -511,7 +516,6 @@ program mksurfdat
     write(ndiag,*)' mapping for harvest          ',trim(map_fharvest)
     write(ndiag,*)' mapping for lai/sai          ',trim(map_flai)
     write(ndiag,*)' mapping for urb topography   ',trim(map_furbtopo)
-    write(ndiag,*)' mapping for land topography  ',trim(map_flndtopo)
     write(ndiag,*)' mapping for GDP              ',trim(map_fgdp)
     write(ndiag,*)' mapping for peatlands        ',trim(map_fpeat)
     write(ndiag,*)' mapping for soil depth       ',trim(map_fsoildepth)
@@ -550,6 +554,12 @@ program mksurfdat
 
     call mkglacier (ldomain, mapfname=map_fglacier, datfname=mksrf_fglacier, &
          ndiag=ndiag, zero_out=all_urban.or.all_veg, glac_o=pctgla)
+
+    ! Make glacier region ID [glacier_region] from [fglacierregion] dataset
+
+    call mkglacierregion (ldomain, mapfname=map_fglacierregion, &
+         datfname=mksrf_fglacierregion, ndiag=ndiag, &
+         glacier_region_o = glacier_region)
 
     ! Make soil texture [pctsand, pctclay]  [fsoitex]
 
@@ -593,40 +603,6 @@ program mksurfdat
          ndiag=ndiag, zero_out=all_veg, urbn_o=pcturb, urbn_classes_o=urbn_classes, &
          region_o=urban_region)
 
-    ! WJS (9-25-12): Note about topo datasets: Until now, there have been two topography
-    ! datasets: flndtopo & fglctopo. flndtopo is used to create the TOPO variable, which I
-    ! believe is used to downscale grid cell-level climate to glc_mec columns (10-26-12:
-    ! Now I'm not surue about this: I think TOPO might actually come from a different file
-    ! in CLM, and TOPO on the surface dataset may be unused). Until now, fglctopo was used
-    ! for dividing pct_glacier data into multiple elevation classes in
-    ! mkglcmecMod. However, it is no longer needed for this purpose, since elevation data
-    ! is now folded into fglacier. fglctopo has also been used to screen urban points (I'm
-    ! not sure why fglctopo rather than flndtopo was chosen for that purpose).
-    !
-    ! For now, I am keeping fglctopo around simply for the urban screening purpose. To
-    ! make its purpose clear, I am renaming it to furbtopo. I had planned to switch to a
-    ! new topo file that is consistent with the topo data that are implicitly included in
-    ! fglacier (i.e., a file that gives the topo that's used for glc purposes, even though
-    ! fglctopo itself isn't used for glc purposes any more). However, this caused problems
-    ! in coming up with a new elev_thresh. Thus, for now I am continuing to use the old
-    ! fglctopo file, which no longer has any meaning with respect to glc (and again, I am
-    ! renaming it to furbtopo to make it clear that it is not connected with glc).
-    !
-    ! In the longer term, a better solution for this urban screening would probably be to
-    ! modify the raw urban data. In that case, I believe we could remove furbtopo.
-    ! 
-    ! Why was TOPO created from flndtopo rather than fglctopo? It seems like, for the
-    ! purpose of downscaling, this TOPO variable should ideally represent CAM's
-    ! topographic height. For that purpose, flndtopo is more appropriate, because it seems
-    ! to have come from CAM's topo dataset. However, I believe that many (all??) CAM
-    ! resolutions use some sort of smoothed topography. So the ideal thing to do would be
-    ! for CLM to get its grid cell-level topography from CAM at initialization. If that
-    ! were done, then I think flndtopo and the TOPO variable on the surface dataset could
-    ! go away. (Update 10-26-12: it actually looks to me like CLM's TOPO comes from a
-    ! different source entirely (flndtopo in CLM), so it may be that TOPO on the surface
-    ! dataset isn't currently used for anything!)
-
-
     ! Make elevation [elev] from [ftopo, ffrac] dataset
     ! Used only to screen pcturb  
     ! Screen pcturb by elevation threshold from elev dataset
@@ -634,6 +610,11 @@ program mksurfdat
     if ( .not. all_urban .and. .not. all_veg )then
        allocate(elev(ns_o))
        elev(:) = spval
+       ! NOTE(wjs, 2016-01-15) This uses the 'TOPO_ICE' variable for historical reasons
+       ! (this same dataset used to be used for glacier-related purposes as well).
+       ! TODO(wjs, 2016-01-15) A better solution for this urban screening would probably
+       ! be to modify the raw urban data; in that case, I believe we could remove
+       ! furbtopo.
        call mkelev (ldomain, mapfname=map_furbtopo, datfname=mksrf_furbtopo, &
          varname='TOPO_ICE', ndiag=ndiag, elev_o=elev)
 
@@ -643,12 +624,6 @@ program mksurfdat
        deallocate(elev)
     end if
     
-    ! Determine topography
-
-    allocate(topo(ns_o))
-    call mkelev (ldomain, mapfname=map_flndtopo, datfname=mksrf_flndtopo, &
-         varname='TOPO', ndiag=ndiag, elev_o=topo)
-
     ! Compute topography statistics [topo_stddev, slope] from [ftopostats]
     call mktopostats (ldomain, mapfname=map_ftopostats, datfname=mksrf_ftopostats, &
          ndiag=ndiag, topo_stddev_o=topo_stddev, slope_o=slope)
@@ -813,169 +788,213 @@ program mksurfdat
 
     ! Create netCDF surface dataset.  
 
-    if (fsurdat == ' ') then
-       write(6,*)' must specify fsurdat in namelist'
-       stop
-    end if
+    ! If fsurdat is blank, then we do not write a surface dataset - but we may still
+    ! write a dynamic landuse file. This is useful if we are creating many datasets at
+    ! once, and don't want duplicate surface datasets.
+    !
+    ! TODO(wjs, 2016-01-26) Ideally, we would also avoid doing the processing of
+    ! variables that are just needed by the surface dataset (not by the dynamic landuse
+    ! file). However, this would require some analysis of the above code, to determine
+    ! which processing is needed (directly or indirectly) in order to create a dynamic
+    ! landuse file.
 
-    call mkfile(ldomain, trim(fsurdat), dynlanduse = .false.)
+    if (fsurdat /= ' ') then
 
-    call domain_write(ldomain, fsurdat)
+       call mkfile(ldomain, trim(fsurdat), dynlanduse = .false.)
 
-    call check_ret(nf_open(trim(fsurdat), nf_write, ncid), subname)
-    call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
+       call domain_write(ldomain, fsurdat)
 
-    ! Write fields OTHER THAN lai, sai, heights, and urban parameters to netcdf surface dataset
+       call check_ret(nf_open(trim(fsurdat), nf_write, ncid), subname)
+       call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'natpft', varid), subname)
-    call check_ret(nf_put_var_int(ncid, varid, (/(n,n=natpft_lb,natpft_ub)/)), subname)
+       ! Write fields OTHER THAN lai, sai, heights, and urban parameters to netcdf surface dataset
 
-    if (num_cft > 0) then
-       call check_ret(nf_inq_varid(ncid, 'cft', varid), subname)
-       call check_ret(nf_put_var_int(ncid, varid, (/(n,n=cft_lb,cft_ub)/)), subname)
-    end if
+       call check_ret(nf_inq_varid(ncid, 'natpft', varid), subname)
+       call check_ret(nf_put_var_int(ncid, varid, (/(n,n=natpft_lb,natpft_ub)/)), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'PFTDATA_MASK', varid), subname)
-    call check_ret(nf_put_var_int(ncid, varid, pftdata_mask), subname)
+       if (num_cft > 0) then
+          call check_ret(nf_inq_varid(ncid, 'cft', varid), subname)
+          call check_ret(nf_put_var_int(ncid, varid, (/(n,n=cft_lb,cft_ub)/)), subname)
+       end if
 
-    call check_ret(nf_inq_varid(ncid, 'LANDFRAC_PFT', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, landfrac_pft), subname)
+       call check_ret(nf_inq_varid(ncid, 'PFTDATA_MASK', varid), subname)
+       call check_ret(nf_put_var_int(ncid, varid, pftdata_mask), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'mxsoil_color', varid), subname)
-    call check_ret(nf_put_var_int(ncid, varid, nsoicol), subname)
+       call check_ret(nf_inq_varid(ncid, 'LANDFRAC_PFT', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, landfrac_pft), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'SOIL_COLOR', varid), subname)
-    call check_ret(nf_put_var_int(ncid, varid, soicol), subname)
+       call check_ret(nf_inq_varid(ncid, 'mxsoil_color', varid), subname)
+       call check_ret(nf_put_var_int(ncid, varid, nsoicol), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'PCT_SAND', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, pctsand), subname)
+       call check_ret(nf_inq_varid(ncid, 'SOIL_COLOR', varid), subname)
+       call check_ret(nf_put_var_int(ncid, varid, soicol), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'PCT_CLAY', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, pctclay), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_SAND', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctsand), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'PCT_WETLAND', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, pctwet), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_CLAY', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctclay), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'PCT_LAKE', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, pctlak), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_WETLAND', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctwet), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'PCT_GLACIER', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, pctgla), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_LAKE', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctlak), subname)
 
-    if ( nglcec > 0 )then
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctglcmec), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_GLACIER', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctgla), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'GLC_MEC', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, elevclass), subname)
+       call check_ret(nf_inq_varid(ncid, 'GLACIER_REGION', varid), subname)
+       call check_ret(nf_put_var_int(ncid, varid, glacier_region), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'TOPO_GLC_MEC', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, topoglcmec), subname)
+       if ( nglcec > 0 )then
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
+          call check_ret(nf_inq_varid(ncid, 'GLC_MEC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, elevclass), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_ICESHEET', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctglcmec_icesheet), subname)
+          call check_ret(nf_inq_varid(ncid, 'TOPO_GLC_MEC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, topoglcmec), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GIC', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctglc_gic), subname)
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_ICESHEET', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctglc_icesheet), subname)
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_icesheet), subname)
 
-    end if
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_gic), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'TOPO', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, topo), subname)
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_icesheet), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, urbn_classes_g), subname)
+       end if
 
-    call check_ret(nf_inq_varid(ncid, 'PCT_NATVEG', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, get_pct_l2g_array(pctnatpft)), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, urbn_classes_g), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'PCT_CROP', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, get_pct_l2g_array(pctcft)), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_NATVEG', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, get_pct_l2g_array(pctnatpft)), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'PCT_NAT_PFT', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, get_pct_p2l_array(pctnatpft)), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_CROP', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, get_pct_l2g_array(pctcft)), subname)
 
-    if (num_cft > 0) then
-       call check_ret(nf_inq_varid(ncid, 'PCT_CFT', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, get_pct_p2l_array(pctcft)), subname)
-    end if
+       call check_ret(nf_inq_varid(ncid, 'PCT_NAT_PFT', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, get_pct_p2l_array(pctnatpft)), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'FMAX', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, fmax), subname)
+       if (num_cft > 0) then
+          call check_ret(nf_inq_varid(ncid, 'PCT_CFT', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, get_pct_p2l_array(pctcft)), subname)
+       end if
 
-    call check_ret(nf_inq_varid(ncid, 'gdp', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, gdp), subname)
+       call check_ret(nf_inq_varid(ncid, 'FMAX', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, fmax), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'peatf', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, fpeat), subname)
+       call check_ret(nf_inq_varid(ncid, 'gdp', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, gdp), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'peatf', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, fpeat), subname)
 
 
-!    call check_ret(nf_inq_varid(ncid, 'Avg_Depth_Median', varid), subname)
-    call check_ret(nf_inq_varid(ncid, 'zbedrock', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, soildepth), subname)
+       !    call check_ret(nf_inq_varid(ncid, 'Avg_Depth_Median', varid), subname)
+       call check_ret(nf_inq_varid(ncid, 'zbedrock', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, soildepth), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'abm', varid), subname)
-    call check_ret(nf_put_var_int(ncid, varid, agfirepkmon), subname)
+       call check_ret(nf_inq_varid(ncid, 'abm', varid), subname)
+       call check_ret(nf_put_var_int(ncid, varid, agfirepkmon), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'SLOPE', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, slope), subname)
+       call check_ret(nf_inq_varid(ncid, 'SLOPE', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, slope), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'STD_ELEV', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, topo_stddev), subname)
+       call check_ret(nf_inq_varid(ncid, 'STD_ELEV', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, topo_stddev), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'binfl', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, vic_binfl), subname)
+       call check_ret(nf_inq_varid(ncid, 'binfl', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, vic_binfl), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'Ws', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, vic_ws), subname)
+       call check_ret(nf_inq_varid(ncid, 'Ws', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, vic_ws), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'Dsmax', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, vic_dsmax), subname)
+       call check_ret(nf_inq_varid(ncid, 'Dsmax', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, vic_dsmax), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'Ds', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, vic_ds), subname)
+       call check_ret(nf_inq_varid(ncid, 'Ds', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, vic_ds), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'LAKEDEPTH', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, lakedepth), subname)
+       call check_ret(nf_inq_varid(ncid, 'LAKEDEPTH', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, lakedepth), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'F0', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, f0), subname)
+       call check_ret(nf_inq_varid(ncid, 'F0', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, f0), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'P3', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, p3), subname)
+       call check_ret(nf_inq_varid(ncid, 'P3', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, p3), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'ZWT0', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, zwt0), subname)
+       call check_ret(nf_inq_varid(ncid, 'ZWT0', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, zwt0), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'EF1_BTR', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, ef1_btr), subname)
+       call check_ret(nf_inq_varid(ncid, 'EF1_BTR', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, ef1_btr), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'EF1_FET', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, ef1_fet), subname)
+       call check_ret(nf_inq_varid(ncid, 'EF1_FET', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, ef1_fet), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'EF1_FDT', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, ef1_fdt), subname)
+       call check_ret(nf_inq_varid(ncid, 'EF1_FDT', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, ef1_fdt), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'EF1_SHR', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, ef1_shr), subname)
+       call check_ret(nf_inq_varid(ncid, 'EF1_SHR', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, ef1_shr), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'EF1_GRS', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, ef1_grs), subname)
+       call check_ret(nf_inq_varid(ncid, 'EF1_GRS', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, ef1_grs), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'EF1_CRP', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, ef1_crp), subname)
+       call check_ret(nf_inq_varid(ncid, 'EF1_CRP', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, ef1_crp), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'ORGANIC', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, organic), subname)
+       call check_ret(nf_inq_varid(ncid, 'ORGANIC', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, organic), subname)
 
-    call check_ret(nf_inq_varid(ncid, 'URBAN_REGION_ID', varid), subname)
-    call check_ret(nf_put_var_int(ncid, varid, urban_region), subname)
+       call check_ret(nf_inq_varid(ncid, 'URBAN_REGION_ID', varid), subname)
+       call check_ret(nf_put_var_int(ncid, varid, urban_region), subname)
+
+       ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
+
+       call check_ret(nf_sync(ncid), subname)
+
+       ! ----------------------------------------------------------------------
+       ! Make Urban Parameters from raw input data and write to surface dataset 
+       ! Write to netcdf file is done inside mkurbanpar routine
+       ! ----------------------------------------------------------------------
+
+       write(6,*)'calling mkurbanpar'
+       call mkurbanpar(datfname=mksrf_furban, ncido=ncid, region_o=urban_region, &
+            urbn_classes_gcell_o=urbn_classes_g, &
+            urban_skip_abort_on_invalid_data_check=urban_skip_abort_on_invalid_data_check)
+
+       ! ----------------------------------------------------------------------
+       ! Make LAI and SAI from 1/2 degree data and write to surface dataset 
+       ! Write to netcdf file is done inside mklai routine
+       ! ----------------------------------------------------------------------
+
+       write(6,*)'calling mklai'
+       call mklai(ldomain, mapfname=map_flai, datfname=mksrf_flai, &
+            ndiag=ndiag, ncido=ncid )
+
+       ! Close surface dataset
+
+       call check_ret(nf_close(ncid), subname)
+
+       write (6,'(72a1)') ("-",n=1,60)
+       write (6,*)' land model surface data set successfully created for ', &
+            'grid of size ',ns_o
+
+    else  ! fsurdat == ' '
+
+       write (6,*) 'fsurdat is blank: skipping writing surface dataset'
+
+    end if  ! if (fsurdat /= ' ')
 
     ! Deallocate arrays NOT needed for dynamic-pft section of code
 
@@ -993,37 +1012,7 @@ program mksurfdat
     deallocate ( vic_binfl, vic_ws, vic_dsmax, vic_ds )
     deallocate ( lakedepth )
     deallocate ( f0, p3, zwt0 )
-
-    ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
-
-    call check_ret(nf_sync(ncid), subname)
-
-    ! ----------------------------------------------------------------------
-    ! Make Urban Parameters from raw input data and write to surface dataset 
-    ! Write to netcdf file is done inside mkurbanpar routine
-    ! ----------------------------------------------------------------------
-
-    write(6,*)'calling mkurbanpar'
-    call mkurbanpar(datfname=mksrf_furban, ncido=ncid, region_o=urban_region, &
-         urbn_classes_gcell_o=urbn_classes_g, &
-         urban_skip_abort_on_invalid_data_check=urban_skip_abort_on_invalid_data_check)
-
-    ! ----------------------------------------------------------------------
-    ! Make LAI and SAI from 1/2 degree data and write to surface dataset 
-    ! Write to netcdf file is done inside mklai routine
-    ! ----------------------------------------------------------------------
-
-    write(6,*)'calling mklai'
-    call mklai(ldomain, mapfname=map_flai, datfname=mksrf_flai, &
-         ndiag=ndiag, ncido=ncid )
-
-    ! Close surface dataset
-
-    call check_ret(nf_close(ncid), subname)
-
-    write (6,'(72a1)') ("-",n=1,60)
-    write (6,*)' land model surface data set successfully created for ', &
-         'grid of size ',ns_o
+    deallocate ( glacier_region )
 
     ! ----------------------------------------------------------------------
     ! Create dynamic land use dataset if appropriate

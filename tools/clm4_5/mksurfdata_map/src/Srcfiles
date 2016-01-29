@@ -3,6 +3,7 @@ mkgridmapMod.F90
 mkindexmapMod.F90
 mkfileMod.F90
 fileutils.F90
+mkglacierregionMod.F90
 mkglcmecMod.F90
 mkharvestMod.F90
 mklaiMod.F90

@@ -57,7 +57,7 @@ contains
     ! Create a glc_behavior object where all grid cells get collapsed to a single column
     type(glc_behavior_type) :: glc_behavior
 
-    call glc_behavior%InitForTesting(bounds%begg, bounds%endg, &
+    call glc_behavior%InitSetDirectly(bounds%begg, bounds%endg, &
          has_virtual_columns = grc_array_logical(.false.), &
          collapse_to_atm_topo = grc_array_logical(.true.))
   end function create_glc_behavior_all_collapse
@@ -69,6 +69,74 @@ contains
     call glc_elevclass_init(glc_nec, topomax)
     maxpatch_glcmec = glc_nec
   end subroutine setup_elevation_classes
+
+  ! ------------------------------------------------------------------------
+  ! Tests of setup / initialization
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine init_multiple_behaviorIsCorrect(this)
+    ! Make sure behavior is correct for 'multiple'
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+
+    call setup_single_veg_patch(0)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['multiple'])
+
+    @assertFalse(glc_behavior%has_virtual_columns_grc(bounds%begg))
+    @assertFalse(glc_behavior%get_collapse_to_atm_topo(bounds%begg))
+  end subroutine init_multiple_behaviorIsCorrect
+
+  @Test
+  subroutine init_virtual_behaviorIsCorrect(this)
+    ! Make sure behavior is correct for 'virtual'
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+
+    call setup_single_veg_patch(0)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['virtual'])
+
+    @assertTrue(glc_behavior%has_virtual_columns_grc(bounds%begg))
+    @assertFalse(glc_behavior%get_collapse_to_atm_topo(bounds%begg))
+  end subroutine init_virtual_behaviorIsCorrect
+
+  @Test
+  subroutine init_single_behaviorIsCorrect(this)
+    ! Make sure behavior is correct for 'single_at_atm_topo'
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+
+    call setup_single_veg_patch(0)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['single_at_atm_topo'])
+
+    @assertFalse(glc_behavior%has_virtual_columns_grc(bounds%begg))
+    @assertTrue(glc_behavior%get_collapse_to_atm_topo(bounds%begg))
+  end subroutine init_single_behaviorIsCorrect
+
+  @Test
+  subroutine init_multipleGridCells(this)
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+
+    call setup_ncells_single_veg_patch(ncells = 3, pft_type = 0)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0, 1, 0], &
+         glacier_region_behavior_str = ['multiple', 'virtual ', 'multiple'])
+
+    @assertFalse(glc_behavior%has_virtual_columns_grc(bounds%begg))
+    @assertTrue(glc_behavior%has_virtual_columns_grc(bounds%begg + 1))
+    @assertFalse(glc_behavior%has_virtual_columns_grc(bounds%begg + 2))
+  end subroutine init_multipleGridCells
 
   ! ------------------------------------------------------------------------
   ! Tests of update_collapsed_columns

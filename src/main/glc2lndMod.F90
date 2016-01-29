@@ -322,10 +322,13 @@ contains
 
        if (this%icemask_grc(g) > 0._r8 .and. &
             .not. glc_behavior%has_virtual_columns_grc(g)) then
-          write(iulog,*) subname//' ERROR: icemask must be a subset of has_virtual_columns.'
-          write(iulog,*) 'You can fix this problem by adding more grid cells'
-          write(iulog,*) 'to the mask defined by the fglcmask file.'
-          write(iulog,*) '(Change grid cells to 1 everywhere that CISM can operate.)'
+          write(iulog,'(a)') subname//' ERROR: icemask must be a subset of has_virtual_columns.'
+          write(iulog,'(a)') 'Ensure that the glacier_region_behavior namelist item is set correctly.'
+          write(iulog,'(a)') '(It should specify "virtual" for the region corresponding to the GLC domain.)'
+          write(iulog,'(a)') 'If glacier_region_behavior is set correctly, then you can fix this problem'
+          write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
+          write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
+          write(iulog,'(a)') '- i.e., the region specified as "virtual" in glacier_region_behavior.)'
           call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
        end if
     end do

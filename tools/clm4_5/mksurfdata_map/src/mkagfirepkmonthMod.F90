@@ -144,6 +144,11 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   !
   ! WJS (3-4-13): I am trying to generally put these diagnostics in mkdiagnosticsMod, but
   ! so far there isn't a general diagnostics routine for categorical data
+  !
+  ! TODO(wjs, 2016-01-22) Now there is a routine for this: output_diagnostics_index.
+  ! However, it currently doesn't provide the capability for named months. Either add
+  ! that capability or decide it's not important, then delete the below code, instead
+  ! calling output_diagnostics_index.
   ! -----------------------------------------------------------------
 
   nagfirepkmon = maxval(agfirepkmon_i)

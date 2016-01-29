@@ -1025,6 +1025,7 @@ Then you must specify settings for input high resolution datafiles
 <orderedlist>
 <listitem><para><varname>mksrf_ffrac</varname> land fraction and land mask dataset</para></listitem>
 <listitem><para><varname>mksrf_fglacier</varname> Glacier dataset</para></listitem>
+<listitem><para><varname>mksrf_fglacierregion</varname> Glacier region ID dataset</para></listitem>
 <listitem><para><varname>mksrf_flai</varname> Leaf Area Index dataset</para></listitem>
 <listitem><para><varname>mksrf_flanwat</varname> Land water dataset</para></listitem>
 <listitem><para><varname>mksrf_forganic</varname> Organic soil carbon dataset</para></listitem>

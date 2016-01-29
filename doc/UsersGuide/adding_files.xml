@@ -332,19 +332,6 @@ simulation.</para>
 </entry>
 </row>
 <row>
-   <entry morerows="1" valign="middle">fglcmask</entry>
-   <entry>glc_nec &gt; 0</entry>
-   <entry><para>Used for simulations with the active glacier ice sheet model "cism"</para></entry>
-   <entry>Yes</entry>
-   <entry><para>glacier-grid</para></entry>
-</row>
-<row>
-   <entry spanname="notes_span"><para>Needs to match the file used by "cism" and
-be for the same glacier grid. Only customized as coupled with the glacier model.
-</para>
-</entry>
-</row>
-<row>
    <entry morerows="1" valign="middle">stream_fldfilename_ndep</entry>
    <entry>bgc=cn/cndv</entry>
    <entry>Yes</entry>

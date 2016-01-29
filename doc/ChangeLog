@@ -1,4 +1,246 @@
 ===============================================================
+Tag name:  clm4_5_7_r165
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Jan 29 05:28:46 MST 2016
+One-line Summary: Remove fglcmask, recreate all surface datasets
+
+Purpose of changes
+------------------
+
+Remove fglcmask input file. This specified the area where we need virtual
+glacier elevation classes for coupling to CISM. There were two main problems
+with this:
+
+- There was a separate file for each CLM resolution at which we can couple to
+  CISM - currently this is just f09, f19, T31. There was no easy way to generate
+  these files for all CLM resolutions - which is something that is needed in
+  order to turn GLC on by default in all CESM runs.
+
+- This did not provide the flexibility needed to treat three regions
+  differently: Greenland (virtual columns), Antarctica (multiple elevation
+  classes, but no virtual columns), and mountain glaciers (single elevation
+  class).
+
+This tag removes the fglcmask file, replacing it with an integer-valued
+GLACIER_REGION field on the surface dataset, together with a
+glacier_region_behavior namelist option.
+
+I have generated all new surface datasets. In addition to adding the
+GLACIER_REGION field, these:
+- add zbedrock (most out-of-the-box surface datasets did not yet have this
+  field)
+- remove unused TOPO field
+
+There are also new initial conditions files, simply for the sake of updating the
+surface_dataset metadata.
+
+Also changed mksurfdata_map's Makefile.data and perl script (including adding a
+-no_surfdata flag) so that the necessary out-of-the-box surface datasets are all
+created correctly (with correct names). Also did some other cleanup of
+mksurfdata.pl.
+
+Also removed kludgey Greenland and Antarctica areas from history file, which
+weren't being used.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+   - New surface datasets have zbedrock, in contrast to many old datasets. This
+     means that runs with use_bedrock = .true. will actually use bedrock now,
+     changing answers
+
+   - For any run with glc_mec (compsets with CISM): will need to run initial
+     conditions through init_interp
+
+   - For any initial conditions file of your own that was generated from an
+     earlier CLM tag (i.e., not an out-of-the-box initial conditions file): will
+     need to set check_finidat_fsurdat_consistency to .false., because surface
+     datasets have changed
+
+   - 1/8 deg surface dataset hasn't been updated, so won't work with this tag
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+
+   - New namelist variable: glacier_region_behavior
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+   - all new surface datasets; these are the same as before, but have:
+     - GLACIER_REGION added
+     - TOPO removed
+     - zbedrock added (wasn't yet on most default surface datasets)
+
+   - new initial conditions files: just updated surface_dataset metadata to
+     point to new surface datasets
+
+Substantial timing or memory changes: NONE
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - pass
+       010 blg54 failed due to problems / differences in the baseline; when I
+       fixed those, it passed
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means: all tests pass or xfail. Baseline comparisons fail for IG tests
+    and ERS_D_Ld3.f10_f10.ICRUCLM50BGC.yellowstone_intel.clm-deepsoil_bedrock,
+    as noted below.
+
+CLM tag used for the baseline comparisons: clm4_5_7_r164
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+      - configurations with glc_mec (compsets with CISM)
+      - configurations with use_bedrock = .true. for which zbedrock wasn't
+        previously on the surface dataset
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff; not investigated closely
+
+
+      The answer changes in glc_mec runs are due to small changes in the set of
+      grid cells in the single_at_atm_topo zone. I confirmed that, if I use a
+      kludged-in GLACIER_REGION field that exactly matches the old fglcmask, then
+      answers are bit-for-bit.
+
+      The answer changes in use_bedrock configurations are presumably due to
+      zbedrock being on the surface datasets now.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): No updates
+to top-level externals; updated PTCLM to allow build on pronghorn (same as
+yellowstone / caldera)
+
+List all files eliminated:
+
+========= Mostly-unrelated change: remove unused fields from history file (these
+          specified Greenland and Antarctica areas in a kludgey way)
+D       components/clm/src/main/glcDiagnosticsMod.F90
+
+========= Renamed to be consistent with new naming convention
+D       components/clm/tools/clm4_5/mksurfdata_map/landuse_timeseries_hist_simyr1850-2005.txt
+
+List all files added and what they do:
+
+========= Add GLACIER_REGION field to surface dataset
+A       components/clm/tools/clm4_5/mksurfdata_map/src/mkglacierregionMod.F90
+
+========= Renamed to be consistent with new naming convention
+A       components/clm/tools/clm4_5/mksurfdata_map/landuse_timeseries_hist_16pfts_simyr1850-2005.txt
+
+
+List all existing files that have been modified, and describe the changes:
+
+========= Remove glcmask. Instead make glcBehavior based on GLACIER_REGION on
+          the surface dataset
+M       components/clm/src/utils/domainMod.F90
+M       components/clm/src/main/controlMod.F90
+M       components/clm/src/main/test/glcBehavior_test/test_glcBehavior.pf
+M       components/clm/src/main/glc2lndMod.F90
+M       components/clm/src/main/clm_varctl.F90
+M       components/clm/src/main/surfrdMod.F90
+M       components/clm/src/main/clm_instMod.F90
+M       components/clm/src/main/glcBehaviorMod.F90
+M       components/clm/src/main/clm_initializeMod.F90
+
+========= Add GLACIER_REGION to surface datasets. Point to all new surface
+          datasets. Also new initial conditions files - identical to old ones
+          except for surface_dataset metadata. Also, remove fglcmask namelist
+          option and add glacier_region_behavior namelist option.
+M       components/clm/tools/clm4_5/mksurfdata_map/mksurfdata_map.namelist
+M       components/clm/tools/clm4_5/mksurfdata_map/README
+M       components/clm/tools/clm4_5/mksurfdata_map/README.developers
+M       components/clm/tools/clm4_5/mksurfdata_map/src/mksurfdat.F90
+M       components/clm/tools/clm4_5/mksurfdata_map/src/README.unit_testing
+M       components/clm/tools/clm4_5/mksurfdata_map/src/Srcfiles
+M       components/clm/tools/clm4_5/mksurfdata_map/src/mkvarctl.F90
+M       components/clm/tools/clm4_5/mksurfdata_map/src/mkfileMod.F90
+M       components/clm/tools/clm4_5/mksurfdata_map/unit_testers/Srcfiles
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/bld/namelist_files/checkmapfiles.ncl
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_crop/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_1way/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50KitchenSink/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop/user_nl_clm
+M       components/clm/doc/UsersGuide/tools.xml
+M       components/clm/doc/UsersGuide/adding_files.xml
+
+========= Make new routine for printing diagnostics of index fields
+M       components/clm/tools/clm4_5/mksurfdata_map/src/mkdiagnosticsMod.F90
+M       components/clm/tools/clm4_5/mksurfdata_map/src/mkagfirepkmonthMod.F90
+M       components/clm/tools/clm4_5/mksurfdata_map/src/mkurbanparMod.F90
+
+========= Fix makefile-based creation of surface datasets so that 'make all'
+          gives correctly-named datasets for all needed out-of-the-box surface
+          datasets
+M       components/clm/tools/clm4_5/mksurfdata_map/Makefile.data
+M       components/clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl
+
+========= Point to new PTCLM: allow testing on pronghorn (same as yellowstone)
+M       components/clm/tools/SVN_EXTERNAL_DIRECTORIES
+
+========= Add tests to xfail list. These all failed in clm4_5_7_r164 except for these new failures:
+          +   <entry bugz="2277" >RUN ERS_Ly3.f10_f10.I1850CRUCLM50BGCCROP.yellowstone_intel.clm-clm50KSinkMOut</entry>
+          +   <entry bugz="2279" >RUN SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PTCLM45.yellowstone_pgi.clm-USUMB</entry>
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_7_r164
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Jan 12 00:51:25 MST 2016
@@ -16,7 +258,8 @@ Note, that this version of CIME removes the archive.locked directory.
 Change the rearranger that PIO uses from being hardcoded to using the one
 picked  with the env_run.xml variable LND_PIO_REARRANGER (both clm40 and clm45).
 By default, as before the rearranger for clm40 is the new SUBSET option, and 
-for clm45/clm50 it's the old BOX method.
+for clm45/clm50 it's the old BOX method, eventually we expect both to use
+the SUBSET method by default.
 
 
 Bugs fixed or introduced
@@ -25,6 +268,7 @@ Bugs fixed or introduced
 Bugs fixed (include bugzilla ID): 
    2265 Workaround for pio_syncfile issue
    2257 Unit tests fail
+   2256 Issues with early versions of PIO2
 
 Bugs found recently:
    2264 Fire is missing accounting of C/N for transfer of live to dead

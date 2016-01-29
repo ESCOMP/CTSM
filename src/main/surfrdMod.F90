@@ -147,7 +147,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid               ! netcdf id
-    type(file_desc_t) :: ncidg              ! netCDF id for glcmask
     type(var_desc_t)  :: vardesc            ! variable descriptor
     integer :: beg                          ! local beg index
     integer :: end                          ! local end index
@@ -272,34 +271,6 @@ contains
     end if
 
     call ncd_pio_closefile(ncid)
-
-    ldomain%glcmask(:) = 0
-    if (present(glcfilename)) then
-       if (masterproc) then
-          if (glcfilename == ' ') then
-             write(iulog,*) trim(subname),' ERROR: glc filename must be specified '
-             call endrun(msg=errMsg(__FILE__, __LINE__))
-          endif
-       end if
-       call getfil( glcfilename, locfn, 0 )
-       call ncd_pio_openfile (ncidg, trim(locfn), 0)
-
-       call ncd_io(ncid=ncidg, varname='GLCMASK', flag='read', data=ldomain%glcmask, &
-            dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) call endrun( msg=' ERROR: GLCMASK NOT in file'//errMsg(__FILE__, __LINE__))
-
-       ! Make sure the glc mask is a subset of the land mask
-       do n = begg,endg
-          if (ldomain%glcmask(n)==1 .and. ldomain%mask(n)==0) then
-             write(iulog,*)trim(subname),&
-                  'initialize1: landmask/glcmask mismatch'
-             write(iulog,*)trim(subname),&
-                  'glc requires input where landmask = 0, gridcell index', n
-             call endrun(msg=errMsg(__FILE__, __LINE__))
-          endif
-       enddo
-       call ncd_pio_closefile(ncidg)
-    endif   ! present(glcfilename)
 
   end subroutine surfrd_get_grid
 

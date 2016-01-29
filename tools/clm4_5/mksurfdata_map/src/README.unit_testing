@@ -1,3 +1,4 @@
 To run all unit tests on yellowstone, run the following command:
 
-CTEST_OUTPUT_ON_FAILURE=1 ../../../../../../../tools/unit_testing/run_tests.py --build-dir=./build --test-spec-dir=. --compiler=intel  --build-type=CESM_DEBUG --clean
+execca ../../../../../../cime/tools/unit_testing/run_tests.py --test-spec-dir=. --compiler=intel \
+--mpilib=mpich2 --mpirun-command=mpirun.lsf --cmake-args=-DPAPI_LIB=/glade/apps/opt/papi/5.3.0/intel/12.1.5/lib64

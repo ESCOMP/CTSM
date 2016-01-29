@@ -128,6 +128,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <wind_dependent_snow_density phys="clm5_0" >.true.</wind_dependent_snow_density>
 <wind_dependent_snow_density phys="clm4_5" >.false.</wind_dependent_snow_density>
 
+<!-- Default glacier behavior is:
+     Mountain glaciers: single_at_atm_topo
+     Greenland: virtual
+     Antarctica: multiple -->
+<glacier_region_behavior>'single_at_atm_topo','virtual','multiple'</glacier_region_behavior>
+
 <!-- Determine whether to perform certain downscaling operations over glc_mec landunits -->
 <glcmec_downscale_longwave>.true.</glcmec_downscale_longwave>
 
@@ -202,22 +208,26 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 -->
 <!-- Original Initial condition file with SP and BGC - at 1 degree resolution -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".false." ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45SP.0521-01-01.0.9x1.25_g1v6_simyr1850_c141226.nc
+         ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >
+lnd/clm2/initdata_map/clmi.I1850CRUCLM45SP.0521-01-01.0.9x1.25_g1v6_simyr1850_c160127.nc
 </finidat>
 
 <!-- (works for cent/no-cent; Vertical layers and Nitrification/Denitrification NEED to be on) -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false." ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.0.9x1.25_g1v6_simyr1850_c141226.nc
+         ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >
+lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.0.9x1.25_g1v6_simyr1850_c160127.nc
 </finidat>
 
 <!-- And for year 2000 from a transient simulation -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".false." ic_ymd="20000101" 
-ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.ICRUCLM45SP.2000-01-01.0.9x1.25_g1v6_simyr2000_c141226.nc
+         ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".false." >
+lnd/clm2/initdata_map/clmi.ICRUCLM45SP.2000-01-01.0.9x1.25_g1v6_simyr2000_c160127.nc
 </finidat>
 
 <!-- (works for cent/no-cent; Vertical layers and Nitrification/Denitrification NEED to be on) -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false." ic_ymd="20000101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I2000CLM45CRUBGC.2000-01-01.0.9x1.25_gx1v6_simyr2000_c141226.nc
+         ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".false." >
+lnd/clm2/initdata_map/clmi.I2000CLM45CRUBGC.2000-01-01.0.9x1.25_gx1v6_simyr2000_c160127.nc
 </finidat>
 
 <!--
@@ -231,13 +241,15 @@ ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map
 <!-- Initial condition file with CLM45BGC -->
 <!-- Note that we use a BGC initial file even for SP cases (since we haven't bothered to make an SP version at this resolution -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" use_cn=".false." ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c151025.nc
+         ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >
+lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c160127.nc
 </finidat>
 
 <!-- Initial condition file with CLM45BGC (works for cent/no-cent; Vertical layers and Nitrification/Denitrification NEED to be on) -->
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false."  ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." phys="clm4_5" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c151025.nc
+         ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." phys="clm4_5" >
+lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c160127.nc
 </finidat>
 
 <!-- CRUNCEP half-degree resolution -->
@@ -245,12 +257,14 @@ ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." phys="clm4_5" >lnd/clm
 <!-- Initial condition file with CLM45BGC -->
 <!-- Note that we use a BGC initial file even for SP cases (since we haven't bothered to make an SP version at this resolution -->
 <finidat hgrid="360x720cru" maxpft="17"  mask="cruncep" use_cn=".false." ic_ymd="18500101" 
-ic_tod="0" sim_year="1850"  glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.360x720cru_hcru_simyr1850_c141226.nc
+         ic_tod="0" sim_year="1850"  glc_nec="0" use_crop=".false." >
+lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.360x720cru_hcru_simyr1850_c160127.nc
 </finidat>
 
 <!-- Initial condition file with CLM45BGC (works for cent/no-cent; Vertical layers and Nitrification/Denitrification NEED to be on) -->
 <finidat hgrid="360x720cru" maxpft="17"  mask="cruncep" use_cn=".true." use_cndv=".false." ic_ymd="18500101"  use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="1850"  glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.360x720cru_hcru_simyr1850_c141226.nc
+         ic_tod="0" sim_year="1850"  glc_nec="0" use_crop=".false." >
+lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.360x720cru_hcru_simyr1850_c160127.nc
 </finidat>
 
 <!-- HOMME grid ne30 resolution -->
@@ -258,12 +272,14 @@ ic_tod="0" sim_year="1850"  glc_nec="0" use_crop=".false." >lnd/clm2/initdata_ma
 <!-- Initial condition file with CLM45BGC -->
 <!-- Note that we use a BGC initial file even for SP cases (since we haven't bothered to make an SP version at this resolution -->
 <finidat hgrid="ne30np4"   maxpft="17"  mask="gx1v6" use_cn=".false." ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.ne30np4_g1v6_simyr1850_c141226.nc
+         ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >
+lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.ne30np4_g1v6_simyr1850_c160127.nc
 </finidat>
 
 <!-- Initial condition file with CLM45BGC (also works for no-cent, Vertical layers and Nitrification/Denitrification NEED to be on) -->
 <finidat hgrid="ne30np4"   maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false." ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.ne30np4_g1v6_simyr1850_c141226.nc
+         ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >
+lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.ne30np4_g1v6_simyr1850_c160127.nc
 </finidat>
 
 
@@ -272,7 +288,8 @@ ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map
 <!-- 1 degree resolution -->
 
 <finidat hgrid="0.9x1.25"   maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".true." ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGCDV.0241-01-01.0.9x1.25_g1v6_simyr1850_c141226.nc
+         ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >
+lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGCDV.0241-01-01.0.9x1.25_g1v6_simyr1850_c160127.nc
 </finidat>
 
 <!-- Initial condition files with CLM45BGCCROP -->
@@ -280,108 +297,111 @@ ic_tod="0" sim_year="1850" glc_nec="0" use_crop=".false." >lnd/clm2/initdata_map
 <!-- 2 degree resolution -->
 
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v6" use_cn=".true." use_cndv=".false." ic_ymd="00010101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis_reinterp.1.9x2.5_g1v6_simyr2000_c151222.nc
+         ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >
+lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis_reinterp.1.9x2.5_g1v6_simyr2000_c160127.nc
 </finidat>
 
 <!-- f10 resolution -->
 
 <finidat hgrid="10x15"    maxpft="79"  mask="USGS" use_cn=".true." use_cndv=".false." ic_ymd="00010101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis.10x15_USGS_simyr2000_c151222.nc
+         ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".false." >
+lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.levis.10x15_USGS_simyr2000_c160127.nc
 </finidat>
 
 <!-- f10 resolution, with irrigation on -->
 
 <finidat hgrid="10x15"    maxpft="79"  mask="USGS" use_cn=".true." use_cndv=".false." ic_ymd="00010101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
-ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".true." >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.Irrig.levis.10x15_USGS_simyr2000_c151223.nc
+         ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".true." irrigate=".true." >
+lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROP.78pfts.Irrig.levis.10x15_USGS_simyr2000_c160127.nc
 </finidat>
 
 <!-- for present day simulations - year 2000 -->
 <fsurdat hgrid="360x720cru"   sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_360x720cru_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="0.125x0.125"  sim_year="2000" use_crop=".false." >
 lnd/clm2/surfdata_map/surfdata_0.125x0.125_simyr2000_c150114.nc</fsurdat>
 <fsurdat hgrid="48x96"     sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_48x96_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_48x96_16pfts_simyr2000_c160127.nc</fsurdat>
 
 <fsurdat hgrid="0.9x1.25"  sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_0.9x1.25_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1.9x2.5_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_16pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_4x5_16pfts_simyr2000_c150116.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_4x5_16pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_10x15_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_10x15_16pfts_simyr2000_c160127.nc</fsurdat>
 
 <fsurdat hgrid="ne120np4"    sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_ne120np4_simyr2000_c150121.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne120np4_16pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="ne30np4"     sim_year="2000" >
-lnd/clm2/surfdata_map/surfdata_ne30np4_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne30np4_16pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="ne16np4"     sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_ne16np4_simyr2000_c150114.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne16np4_16pfts_simyr2000_c160127.nc</fsurdat>
 
 
 <!-- Crop surface datasets -->
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_simyr2000_c150116.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="0.125x0.125"  sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_0.125x0.125_mp24_simyr2000_c150114.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_10x15_78pfts_simyr2000_c150116.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_10x15_78pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="1x1_numaIA"       sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1x1_numaIA_78pfts_simyr2000_c150116.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_numaIA_78pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr2000_c150116.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr2000_c160127.nc</fsurdat>
 
 <fsurdat hgrid="5x5_amazon"    sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_5x5_amazon_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_5x5_amazon_16pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_brazil_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_brazil_16pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="1x1_tropicAtl" sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_16pfts_simyr2000_c160127.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_camdenNJ_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_camdenNJ_16pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_vancouverCAN_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_vancouverCAN_16pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_mexicocityMEX_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_mexicocityMEX_16pfts_simyr2000_c160127.nc</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_urbanc_alpha_simyr2000_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_urbanc_alpha_16pfts_simyr2000_c160127.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 -->
 <fsurdat hgrid="360x720cru"   sim_year="1850" use_crop=".false."                           >
-lnd/clm2/surfdata_map/surfdata_360x720cru_simyr1850_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_simyr1850_c160127.nc</fsurdat>
 <fsurdat hgrid="48x96"        sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_48x96_simyr1850_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_48x96_16pfts_simyr1850_c160127.nc</fsurdat>
 
 <fsurdat hgrid="0.9x1.25"     sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_0.9x1.25_simyr1850_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts_simyr1850_c160127.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"      sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1.9x2.5_simyr1850_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_16pfts_simyr1850_c160127.nc</fsurdat>
 <fsurdat hgrid="10x15"        sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_10x15_simyr1850_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_10x15_16pfts_simyr1850_c160127.nc</fsurdat>
 
 <fsurdat hgrid="1x1_tropicAtl" sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_simyr1850_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_16pfts_simyr1850_c160127.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_1x1_brazil_simyr1850_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_brazil_16pfts_simyr1850_c160127.nc</fsurdat>
 
 
 <fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_ne120np4_simyr1850_c150121.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne120np4_16pfts_simyr1850_c160127.nc</fsurdat>
 <fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".false." >
-lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c141219.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne30np4_16pfts_simyr1850_c160127.nc</fsurdat>
 
 <!-- pre-industrial with crop -->
 <fsurdat hgrid="0.9x1.25"  sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_simyr1850_c151003.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_simyr1850_c160127.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_simyr1850_c150917.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_simyr1850_c160127.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_10x15_78pfts_simyr1850_c150917.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_10x15_78pfts_simyr1850_c160127.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr1850_c151003.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr1850_c160127.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 
@@ -390,102 +410,97 @@ lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr1850_c151003.nc</fsu
      RCP datasets contain the 1850-2000 period as well as the future period. -->
 
 <flanduse_timeseries hgrid="360x720cru"    sim_year_range="1850-2000"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2000"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_10x15_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_10x15_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="48x96"         sim_year_range="1850-2000"
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_48x96_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_48x96_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="1x1_tropicAtl" sim_year_range="1850-2005"
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_tropicAtl_hist_simyr1850-2005_c141219.nc</flanduse_timeseries>
+ use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_tropicAtl_hist_16pfts_simyr1850-2005_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2000"
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="ne120np4"      sim_year_range="1850-2000" 
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_rcp8.5_simyr1850-2100_c150121.nc</flanduse_timeseries>
+ use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4"       sim_year_range="1850-2000" 
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 
 <!-- Dynamic PFT surface datasets for crop -->
 
 <flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2000"
- use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_10x15_hist_78pfts_simyr1850-2005_c150203.nc</flanduse_timeseries>
+ use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_10x15_hist_78pfts_simyr1850-2005_c160127.nc</flanduse_timeseries>
 
 <!-- Note that this transient file only goes up to year 1855.
      This is sufficient for testing purposes, but could cause problems if you try to run beyond 1855. -->
 <flanduse_timeseries hgrid="1x1_smallvilleIA" sim_year_range="1850-2000"
- use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c150218.nc</flanduse_timeseries>
+ use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c160127.nc</flanduse_timeseries>
 
 <!-- Dynamic PFT surface datasets for future scenarios(relative to {csmdata}) -->
 
 <!-- Other future scenario Dynamic PFT datasets -->
 <flanduse_timeseries hgrid="360x720cru"    rcp="8.5" sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="8.5" sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       rcp="8.5" sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         rcp="8.5" sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_10x15_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_10x15_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="48x96"         rcp="8.5" sim_year_range="1850-2100"
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_48x96_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_48x96_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4"       rcp="8.5" sim_year_range="1850-2100"
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne120np4"      rcp="8.5" sim_year_range="1850-2100" 
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_rcp8.5_simyr1850-2100_c150121.nc</flanduse_timeseries>
+ use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="1x1_brazil"    rcp="8.5" sim_year_range="1850-2100"
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_rcp8.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_rcp8.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="360x720cru"    rcp="6"   sim_year_range="1850-2100" 
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_rcp6.0_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_rcp6.0_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="6"   sim_year_range="1850-2100" 
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_rcp6.0_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_rcp6.0_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       rcp="6"   sim_year_range="1850-2100" 
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_rcp6.0_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_rcp6.0_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         rcp="6"   sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_10x15_rcp6.0_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_10x15_rcp6.0_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="48x96"         rcp="6"   sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_48x96_rcp6.0_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_48x96_rcp6.0_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4"       rcp="6"   sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp6.0_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp6.0_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="360x720cru"    rcp="4.5" sim_year_range="1850-2100" 
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_rcp4.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_rcp4.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="4.5" sim_year_range="1850-2100" 
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_rcp4.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_rcp4.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       rcp="4.5" sim_year_range="1850-2100" 
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_rcp4.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_rcp4.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         rcp="4.5" sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_10x15_rcp4.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_10x15_rcp4.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="48x96"         rcp="4.5" sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_48x96_rcp4.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_48x96_rcp4.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne120np4"      rcp="4.5" sim_year_range="1850-2100" 
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_rcp4.5_simyr1850-2100_c150121.nc</flanduse_timeseries>
+ use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_ne120np4_rcp4.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4"       rcp="4.5" sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp4.5_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp4.5_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="360x720cru"    rcp="2.6" sim_year_range="1850-2100" 
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_rcp2.6_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_rcp2.6_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="0.9x1.25"      rcp="2.6" sim_year_range="1850-2100" 
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_rcp2.6_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_rcp2.6_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       rcp="2.6" sim_year_range="1850-2100" 
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_rcp2.6_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_rcp2.6_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         rcp="2.6" sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_10x15_rcp2.6_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_10x15_rcp2.6_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="48x96"         rcp="2.6" sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_48x96_rcp2.6_simyr1850-2100_c141219.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_48x96_rcp2.6_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4"       rcp="2.6" sim_year_range="1850-2100"
- use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp2.6_simyr1850-2100_c141219.nc</flanduse_timeseries>
-
-<!-- GLC mask datasets (relative to {csmdata}) -->
-<fglcmask hgrid="48x96"    >glc/cism/griddata/glcmaskdata_48x96_gland_c141105.nc</fglcmask>
-<fglcmask hgrid="0.9x1.25" >glc/cism/griddata/glcmaskdata_0.9x1.25_gland_c141105.nc</fglcmask>
-<fglcmask hgrid="1.9x2.5"  >glc/cism/griddata/glcmaskdata_1.9x2.5_gland_c141105.nc</fglcmask>
+ use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp2.6_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
 <use_fun phys="clm5_0" use_cn=".true.">.false.</use_fun>

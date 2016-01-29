@@ -25,7 +25,7 @@ ensure that percentages add to 100%.
 
 Note: The following assumes that the new file uses an existing set of
 mapping files, or that you have already done everything necessary to add a
-new set of mapping files. If your mapping file has a new grid, or a new
+new set of mapping files. If your raw data file has a new grid, or a new
 landmask on an existing grid, see the instructions for adding mapping files
 in a separate section of this document.
 

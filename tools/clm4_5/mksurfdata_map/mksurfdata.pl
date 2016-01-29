@@ -61,7 +61,7 @@ my %opts = (
                merge_gis=>undef,
                inlandwet=>undef,
                help=>0,
-               mv=>0,
+               no_surfdata=>0,
                pft_override=>undef,
                pft_frc=>undef,
                pft_idx=>undef,
@@ -125,9 +125,8 @@ OPTIONS
      -exedir "directory"           Directory where mksurfdata_map program is
                                    (by default assume it is in the current directory)
      -inlandwet                    If you want to allow inland wetlands
-     -mv                           If you want to move the files after creation to the 
-                                   correct location in inputdata
-                                   (by default -nomv is assumed so files are NOT moved)
+     -no_surfdata                  Do not output a surface dataset
+                                   This is useful if you only want a landuse_timeseries file
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
@@ -252,7 +251,7 @@ sub write_transient_timeseries_file {
 
   my $strlen = 195;
   my $dynpft_format = "%-${strlen}.${strlen}s %4.4d\n";
-  my $landuse_timeseries_text_file;
+  my $landuse_timeseries_text_file = "";
   if ( $transient ) {
     if ( ! defined($opts{'dynpft'}) && ! $opts{'pft_override'} ) {
       $landuse_timeseries_text_file = "landuse_timeseries_$desc.txt";
@@ -298,22 +297,21 @@ sub write_transient_timeseries_file {
 }
 
 sub write_namelist_file {
-  my ($ofile, $glc_nec, $griddata, $map, $datfil, $double,
-      $all_urb, $no_inlandwet, $vegtyp, $res, $desc, $sdate,
-      $transient, $landuse_timeseries_text_file, $setnumpft,
-      $res, $rcp, $sim_year, $nl) = @_;
+   my ($namelist_fname, $logfile_fname, $fsurdat_fname, $fdyndat_fname,
+      $glc_nec, $griddata, $map, $datfil, $double,
+      $all_urb, $no_inlandwet, $vegtyp,
+      $landuse_timeseries_text_file, $setnumpft) = @_;
 
 
   my $fh = IO::File->new;
-  my $nl = "${ofile}.namelist";
-  $fh->open( ">$nl" ) or die "** can't open file: $nl\n";
-  print "CSMDATA is $CSMDATA \n";
+  $fh->open( ">$namelist_fname" ) or die "** can't open file: $namelist_fname\n";
   print $fh <<"EOF";
 &clmexp
  nglcec           = $glc_nec
  mksrf_fgrid      = '$griddata'
  map_fpft         = '$map->{'veg'}'
  map_fglacier     = '$map->{'glc'}'
+ map_fglacierregion = '$map->{'glcregion'}'
  map_fsoicol      = '$map->{'col'}'
  map_furban       = '$map->{'urb'}'
  map_fmax         = '$map->{'fmx'}'
@@ -325,7 +323,6 @@ sub write_namelist_file {
  map_fvocef       = '$map->{'voc'}'
  map_fsoitex      = '$map->{'tex'}'
  map_furbtopo     = '$map->{'utp'}'
- map_flndtopo     = '$map->{'top'}'
  map_fgdp         = '$map->{'gdp'}'
  map_fpeat        = '$map->{'peat'}'
  map_fsoildepth   = '$map->{'soildepth'}'
@@ -339,9 +336,9 @@ sub write_namelist_file {
  mksrf_fwetlnd    = '$datfil->{'wet'}'
  mksrf_fmax       = '$datfil->{'fmx'}'
  mksrf_fglacier   = '$datfil->{'glc'}'
+ mksrf_fglacierregion = '$datfil->{'glcregion'}'
  mksrf_fvocef     = '$datfil->{'voc'}'
  mksrf_furbtopo   = '$datfil->{'utp'}'
- mksrf_flndtopo   = '$datfil->{'top'}'
  mksrf_fgdp       = '$datfil->{'gdp'}'
  mksrf_fpeat      = '$datfil->{'peat'}'
  mksrf_fsoildepth = '$datfil->{'soildepth'}'
@@ -372,23 +369,16 @@ EOF
  mksrf_fsoicol  = '$datfil->{'col'}'
  mksrf_flai     = '$datfil->{'lai'}'
 EOF
+
+  # Note that some of the file names in the following may be empty strings
+  # (except for logfile_fname)
   print $fh <<"EOF";
- fsurdat        = '$ofile.nc'
- fsurlog        = '$ofile.log'     
+ fsurdat        = '$fsurdat_fname'
+ fsurlog        = '$logfile_fname'
+ mksrf_fdynuse  = '$landuse_timeseries_text_file'
+ fdyndat        = '$fdyndat_fname'
 EOF
 
-  my $ofile_ts = "landuse.timeseries_${res}_${desc}_${sdate}";
-  if ( $transient ) {
-    print $fh <<"EOF";
- mksrf_fdynuse  = '$landuse_timeseries_text_file'
- fdyndat        = '$ofile_ts.nc'
-EOF
-  } else {
-    print $fh <<"EOF";
- mksrf_fdynuse  = ' '
- fdyndat        = ' '
-EOF
-  }
   if ( $setnumpft ) {
     print $fh <<"EOF";
  $setnumpft
@@ -406,16 +396,13 @@ EOF
 EOF
 
   $fh->close;
-  print "resolution: $res rcp=$rcp sim_year = $sim_year\n";
-  print "namelist: $nl\n";
   # 
   # Print namelist file 
-  $fh->open( "<$nl" ) or die "** can't open file: $nl\n";
+  $fh->open( "<$namelist_fname" ) or die "** can't open file: $namelist_fname\n";
   while( $_ = <$fh> ) {
     print $_;
   }
   $fh->close;
-  return $nl, $ofile_ts;
 }
 
 #-----------------------------------------------------------------------------------------------
@@ -440,7 +427,7 @@ EOF
         "glc_nec=i"    => \$opts{'glc_nec'},
         "merge_gis"    => \$opts{'merge_gis'},
         "inlandwet"    => \$opts{'inlandwet'},
-        "mv"           => \$opts{'mv'},
+        "no_surfdata"  => \$opts{'no_surfdata'},
         "pft_frc=s"    => \$opts{'pft_frc'},
         "pft_idx=s"    => \$opts{'pft_idx'},
         "soil_col=i"   => \$opts{'soil_col'},
@@ -547,9 +534,6 @@ EOF
    my $sdate = "c" . `date +%y%m%d`;
    chomp( $sdate );
 
-   my @ncfiles;
-   my @lfiles;
-   my @tsfiles;
    my $cfile = "clm.input_data_files";
    if ( -f "$cfile" ) {
       `/bin/mv -f $cfile ${cfile}.previous`;
@@ -609,8 +593,8 @@ EOF
       }
       my $mopts  = "$queryopts -namelist default_settings $usrnam";
       my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
-      foreach my $typ ( "lak", "veg", "voc", "top", "tex", "col", 
-                        "fmx", "lai", "urb", "org", "glc", "utp", "wet",
+      foreach my $typ ( "lak", "veg", "voc", "tex", "col", 
+                        "fmx", "lai", "urb", "org", "glc", "glcregion", "utp", "wet",
 		        "gdp", "peat","soildepth","abm", "topostats" , "vic", "ch4") {
          my $lmask = `$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,mergeGIS=$merge_gis,hirespft=$hirespft -var lmask`;
          $lmask = trim($lmask);
@@ -731,37 +715,66 @@ EOF
                die "** trouble getting vegtyp file with: $cmd\n";
             }
             my $options = "";
-            my $crpdes  = "";
+            my $crpdes  = sprintf("%2.2dpfts_", $numpft);
             if ( $mkcrop ne "" ) {
                $options = "-options $mkcrop";
-               $crpdes  = sprintf("%2.2dpfts_", $numpft);
             }
             if ( $rcp != -999.9 ) {
-               $desc         = sprintf( "%s%2.1f_simyr%4.4d-%4.4d", "rcp", $rcp, $sim_yr0, $sim_yrn );
-               $desc_surfdat = sprintf( "%s%2.1f_simyr%4.4d",       "rcp", $rcp, $sim_yr_surfdat  );
-            } elsif ( $crpdes ne "") {
+               $desc         = sprintf( "%s%2.1f_%ssimyr%4.4d-%4.4d", "rcp", $rcp, $crpdes, $sim_yr0, $sim_yrn );
+               $desc_surfdat = sprintf( "%s%2.1f_%ssimyr%4.4d",       "rcp", $rcp, $crpdes, $sim_yr_surfdat  );
+            } else {
                $desc         = sprintf( "hist_%ssimyr%4.4d-%4.4d", $crpdes, $sim_yr0, $sim_yrn );
                $desc_surfdat = sprintf( "%ssimyr%4.4d",            $crpdes, $sim_yr_surfdat  );
-            } else {
-               $desc         = sprintf( "hist_simyr%4.4d-%4.4d", $sim_yr0, $sim_yrn );
-               $desc_surfdat = sprintf( "simyr%4.4d",            $sim_yr_surfdat  );
             }
-	    my $ofile = "surfdata_${res}_${desc_surfdat}_${sdate}";
+
+            my $fsurdat_fname_base = "";
+            my $fsurdat_fname = "";
+            if ( ! $opts{'no_surfdata'} ) {
+               $fsurdat_fname_base = "surfdata_${res}_${desc_surfdat}_${sdate}";
+               $fsurdat_fname = "${fsurdat_fname_base}.nc";
+            }
+
+            my $fdyndat_fname_base = "";
+            my $fdyndat_fname = "";
+            if ($transient) {
+               $fdyndat_fname_base = "landuse.timeseries_${res}_${desc}_${sdate}";
+               $fdyndat_fname = "${fdyndat_fname_base}.nc";
+            }
+
+            if (!$fsurdat_fname && !$fdyndat_fname) {
+               die("ERROR: Tried to run mksurfdata_map without creating either a surface dataset or a landuse.timeseries file")
+            }
+
+            my $logfile_fname;
+            my $namelist_fname;
+            if ($fsurdat_fname_base) {
+               $logfile_fname = "${fsurdat_fname_base}.log";
+               $namelist_fname = "${fsurdat_fname_base}.namelist";
+            }
+            else {
+               $logfile_fname = "${fdyndat_fname_base}.log";
+               $namelist_fname = "${fdyndat_fname_base}.namelist";
+            }
 
             my ($landuse_timeseries_text_file) = write_transient_timeseries_file(
                  $transient, $desc, $sim_yr0, $sim_yrn,
                  $queryfilopts, $resol, $rcp, $mkcrop_off,
                  $sim_yr_surfdat);
-            my ($nl, $ofile_ts) = write_namelist_file(
-                 $ofile, $glc_nec, $griddata, \%map, \%datfil, $double,
-                 $all_urb, $no_inlandwet, $vegtyp, $res, $desc, $sdate,
-                 $transient, $landuse_timeseries_text_file, $setnumpft,
-                 $res, $rcp, $sim_year);
+
+            print "CSMDATA is $CSMDATA \n";
+            print "resolution: $res rcp=$rcp sim_year = $sim_year\n";
+            print "namelist: $namelist_fname\n";
+            
+            write_namelist_file(
+                 $namelist_fname, $logfile_fname, $fsurdat_fname, $fdyndat_fname,
+                 $glc_nec, $griddata, \%map, \%datfil, $double,
+                 $all_urb, $no_inlandwet, $vegtyp,
+                 $landuse_timeseries_text_file, $setnumpft);
 
             #
             # Delete previous versions of files that will be created
             #
-            system( "/bin/rm -f $ofile.nc $ofile.log" );
+            system( "/bin/rm -f $fsurdat_fname $logfile_fname" );
             #
             # Run mksurfdata_map with the namelist file
             #
@@ -769,39 +782,17 @@ EOF
             if ( defined($opts{'exedir'}) ) {
                $exedir = $opts{'exedir'};
             }
-            print "$exedir/mksurfdata_map < $nl\n";
-            my $filehead;
-            my $tsfilehead;
+            print "$exedir/mksurfdata_map < $namelist_fname\n";
             if ( ! $opts{'debug'} ) {
-               system( "$exedir/mksurfdata_map < $nl" );
+               system( "$exedir/mksurfdata_map < $namelist_fname" );
                if ( $? ) { die "ERROR in mksurfdata_map: $?\n"; }
-            } else {
-               $filehead  = "surfdata_$res";
-               $tsfilehead = "landuse.timeseries_testfile";
-               system( "touch $filehead.nc" );
-               system( "touch $tsfilehead.nc" );
-               system( "touch $filehead.log" );
             }
 	    print "\n===========================================\n\n";
-            #
-            # Check that files were created
-            #
-            @ncfiles  = glob( "$ofile.nc" );
-            if ( $#ncfiles != 0 ) {
-              die "ERROR surfdata netcdf file was NOT created!\n";
-            }
-            chomp( $ncfiles[0] );
-            @lfiles = glob( "$ofile.log" );
-            chomp( $lfiles[0] );
-            @tsfiles = glob( "$ofile_ts.nc" );
-            chomp( $tsfiles[0] );
-            if ( $#tsfiles != 0 ) {
-              die "ERROR surfdata landuse_timeseries netcdf file was NOT created!\n";
-            }
+
             #
             # If urban point, overwrite urban variables from previous surface dataset to this one
             #
-            if ( $urb_pt ) {
+            if ( $urb_pt && ! $opts{'no_surfdata'} ) {
                my $prvsurfdata = `$scrdir/../../../bld/queryDefaultNamelist.pl $queryopts -var fsurdat`;
                if ( $? != 0 ) {
                   die "ERROR:: previous surface dataset file NOT found\n";
@@ -809,62 +800,11 @@ EOF
                chomp( $prvsurfdata );
                my $varlist = "CANYON_HWR,EM_IMPROAD,EM_PERROAD,EM_ROOF,EM_WALL,HT_ROOF,THICK_ROOF,THICK_WALL,T_BUILDING_MAX,T_BUILDING_MIN,WIND_HGT_CANYON,WTLUNIT_ROOF,WTROAD_PERV,ALB_IMPROAD_DIR,ALB_IMPROAD_DIF,ALB_PERROAD_DIR,ALB_PERROAD_DIF,ALB_ROOF_DIR,ALB_ROOF_DIF,ALB_WALL_DIR,ALB_WALL_DIF,TK_ROOF,TK_WALL,TK_IMPROAD,CV_ROOF,CV_WALL,CV_IMPROAD,NLEV_IMPROAD,PCT_URBAN,URBAN_REGION_ID";
                print "Overwrite urban parameters with previous surface dataset values\n";
-               $cmd = "ncks -A -v $varlist $prvsurfdata $ncfiles[0]";
+               $cmd = "ncks -A -v $varlist $prvsurfdata $fsurdat_fname";
                print "$cmd\n";
                if ( ! $opts{'debug'} ) { system( $cmd ); }
             }
-            #
-            # Rename files to CSMDATA
-            #
-            my $lsvnmesg = "'$svnmesg $urbdesc $desc'";
-            if ( -f "$ncfiles[0]" && -f "$lfiles[0]" ) {
-               my $outdir = "$CSMDATA/$surfdir";
-               my $ofile = "surfdata_${res}_${crpdes}${desc_surfdat}_${sdate}";
-               my $mvcmd = "/bin/mv -f $ncfiles[0]  $outdir/$ofile.nc";
-               if ( ! $opts{'debug'} && $opts{'mv'} ) {
-                  print "$mvcmd\n";
-                  system( "$mvcmd" );
-                  chmod( 0444, "$outdir/$ofile.nc" );
-               }
-               my $mvcmd = "/bin/mv -f $lfiles[0] $outdir/$ofile.log";
-               if ( ! $opts{'debug'} && $opts{'mv'} ) {
-                  print "$mvcmd\n";
-                  system( "$mvcmd" );
-                  chmod( 0444, "$outdir/$ofile.log" );
-               }
-               if ( $opts{'mv'} ) {
-                  print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.nc\n";
-                  print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.nc " . 
-                             "$svnrepo/$surfdir/$ofile.nc\n";
-                  print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.log\n";
-                  print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.log " .
-                             "$svnrepo/$surfdir/$ofile.log\n";
-               }
-               # If running a transient case
-               if ( $transient ) {
-                  $ofile = "landuse.timeseries_${res}_${desc}_${sdate}";
-                  $mvcmd = "/bin/mv -f $tsfiles[0] $outdir/$ofile.nc";
-                  if ( ! $opts{'debug'} && $opts{'mv'} ) {
-                     print "$mvcmd\n";
-                     system( "$mvcmd" );
-                     chmod( 0444, "$outdir/$ofile.nc" );
-                  }
-                  if ( $opts{'mv'} ) {
-                     print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.nc\n";
-                     print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.nc " .
-                                "$svnrepo/$surfdir/$ofile.nc\n";
-                  }
-               }
-   
-            } elsif ( ! $opts{'debug'} ) {
-              die "ERROR files were NOT created: nc=$ncfiles[0] log=$lfiles[0]\n";
-            }
-            if ( (! $opts{'debug'}) && $opts{'mv'} && (-f "$ncfiles[0]" || -f "$lfiles[0]") ) {
-              die "ERROR files were NOT moved: nc=$ncfiles[0] log=$lfiles[0]\n";
-            }
-            if ( ! $opts{'debug'} ) {
-               system( "/bin/rm -f $filehead.nc $filehead.log $tsfilehead.nc" );
-            }
+
          } # End of sim_year loop
       }    # End of rcp loop
    }

@@ -125,6 +125,7 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
    use mkvarctl    , only : all_urban
    use mkvarpar
    use mkncdio
+   use mkdiagnosticsMod, only : output_diagnostics_index
 !
 ! !ARGUMENTS:
    implicit none
@@ -154,8 +155,6 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
    real(r8), allocatable :: urbn_classes_gcell_o(:,:) ! output grid: percent urban in each density class
                                                       ! (% of total grid cell area)
    integer , allocatable :: region_i(:)               ! input grid: region ID
-   real(r8), allocatable :: gar_i(:)                  ! input grid: global area of each urban region ID
-   real(r8), allocatable :: gar_o(:)                  ! output grid: global area of each urban region ID
    integer  :: ni,no,ns,k                             ! indices
    integer  :: ncid,dimid,varid                       ! input netCDF id's
    integer  :: dimlen                                 ! netCDF dimension length
@@ -266,48 +265,10 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
    write (6,*) 'Successfully made urban region'
    write (6,*)
 
-   ! -----------------------------------------------------------------
-   ! Error check
-   ! Compare areas of each region ID on input and output grids
-   ! -----------------------------------------------------------------
+   ! Output diagnostics
 
-   allocate(gar_i(max_region), gar_o(max_region), stat=ier)
-   if (ier/=0) call abort()
-
-   gar_i(:) = 0.
-   do ni = 1,tdomain%ns
-      k = region_i(ni)
-      if (k >= 1 .and. k <= max_region) then
-         gar_i(k) = gar_i(k) + tgridmap%area_src(ni)*tgridmap%frac_src(ni)*re**2
-      end if
-   end do
-
-   gar_o(:) = 0.
-   do no = 1,ldomain%ns
-      k = region_o(no)
-      if (k >= 1 .and. k <= max_region) then
-         gar_o(k) = gar_o(k) + tgridmap%area_dst(no)*tgridmap%frac_dst(no)*re**2
-      end if      
-   end do
-  
-   write (ndiag,*)
-   write (ndiag,'(1x,70a1)') ('=',k=1,70)
-   write (ndiag,*) 'Urban Region ID Output'
-   write (ndiag,'(1x,70a1)') ('=',k=1,70)
-
-   write (ndiag,*)
-   write (ndiag,'(1x,70a1)') ('.',k=1,70)
-   write (ndiag,1003)
-1003 format (1x,'region ID  input grid area  output grid area',/ &
-             1x,'               10**6 km**2       10**6 km**2')
-   write (ndiag,'(1x,70a1)') ('.',k=1,70)
-   write (ndiag,*)
-
-   do k = 1, max_region
-      write (ndiag,1004) k,gar_i(k)*1.e-06,gar_o(k)*1.e-06
-1004  format (1x,i9,f17.3,f18.3)
-   end do
-
+   call output_diagnostics_index(region_i, region_o, tgridmap, 'Urban Region ID', &
+        1, max_region, ndiag)
 
    ! Deallocate dynamic memory & other clean up
 
@@ -315,7 +276,6 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
    call domain_clean(tdomain)
    call gridmap_clean(tgridmap)
    deallocate (urbn_classes_gcell_i, urbn_classes_gcell_o, region_i)
-   deallocate(gar_i, gar_o)
   
 end subroutine mkurban
 !-----------------------------------------------------------------------
