@@ -12,11 +12,12 @@ module dynInitColumnsMod
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
   use clm_varctl      , only : iulog  
-  use clm_varcon      , only : ispval, namec
+  use clm_varcon      , only : namec
   use TemperatureType , only : temperature_type
   use GridcellType    , only : grc
   use LandunitType    , only : lun
   use ColumnType      , only : col
+  use dynColumnTemplateMod, only : template_col_from_landunit, TEMPLATE_NONE_FOUND
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -28,7 +29,6 @@ module dynInitColumnsMod
   ! The following are public only for unit testing purposes, and should not be called
   ! directly by application code:
   public :: initial_template_col_crop ! Find column to use as a template for a crop column that has newly become active
-  public :: initial_template_col      ! Find column to serve as a template for the initialization of another column in the same grid cell
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: initial_template_col_dispatcher ! Find column to use as a template; dispatcher to the appropriate routine based on landunit type
@@ -66,7 +66,7 @@ contains
        ! If this column is newly-active, then we need to initialize it using the routines in this module
        if (col%active(c) .and. .not. cactive_prior(c)) then
           c_template = initial_template_col_dispatcher(bounds, c, cactive_prior(bounds%begc:bounds%endc))
-          if (c_template /= ispval) then
+          if (c_template /= TEMPLATE_NONE_FOUND) then
              call copy_state(c, c_template, temperature_inst)
           else
              write(iulog,*) subname// ' WARNING: No template column found to initialize newly-active column'
@@ -86,7 +86,7 @@ contains
     ! Find column to use as a template for the given column that has newly become active;
     ! this is a dispatcher that calls the appropriate routine based on the landunit type of c_new.
     !
-    ! Returns ispval if there is no column to use for initialization
+    ! Returns TEMPLATE_NONE_FOUND if there is no column to use for initialization
     !
     ! !USES:
     use landunit_varcon, only : istsoil, istcrop, istice, istice_mec, istdlak, istwet, isturb_MIN, isturb_MAX
@@ -147,10 +147,9 @@ contains
     ! For now, we assume that the only vegetated columns that can newly become active are
     ! ones with 0 weight on the grid cell (i.e., virtual columns). For these, we simply
     ! keep the state at the current value (likely arbitrary initial conditions), and so
-    ! return ispval from this function. Within this function, we check this assumption.
+    ! return TEMPLATE_NONE_FOUND from this function. Within this function, we check this assumption.
     !
     ! !USES:
-    use clm_varcon, only : ispval
     !
     ! !ARGUMENTS:
     integer              :: c_template ! function result
@@ -167,7 +166,7 @@ contains
        call endrun(decomp_index=c_new, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
     end if
 
-    c_template = ispval
+    c_template = TEMPLATE_NONE_FOUND
     
   end function initial_template_col_soil
 
@@ -177,10 +176,9 @@ contains
     ! !DESCRIPTION:
     ! Find column to use as a template for a crop column that has newly become active
     !
-    ! Returns ispval if there is no column to use for initialization
+    ! Returns TEMPLATE_NONE_FOUND if there is no column to use for initialization
     !
     ! !USES:
-    use clm_varcon, only : ispval
     use landunit_varcon, only : istsoil, istcrop
     !
     ! !ARGUMENTS:
@@ -198,78 +196,14 @@ contains
     
     ! First try to find an active column on the vegetated landunit; if there is none, then
     ! find the first active column on the crop landunit; if there is none, then
-    ! template_col will be ispval
-    c_template = initial_template_col(bounds, c_new, istsoil, cactive_prior(bounds%begc:bounds%endc))
-    if (c_template == ispval) then
-       c_template = initial_template_col(bounds, c_new, istcrop, cactive_prior(bounds%begc:bounds%endc))
+    ! template_col will be TEMPLATE_NONE_FOUND
+    c_template = template_col_from_landunit(bounds, c_new, istsoil, cactive_prior(bounds%begc:bounds%endc))
+    if (c_template == TEMPLATE_NONE_FOUND) then
+       c_template = template_col_from_landunit(bounds, c_new, istcrop, cactive_prior(bounds%begc:bounds%endc))
     end if
 
   end function initial_template_col_crop
 
-
-  !-----------------------------------------------------------------------
-  function initial_template_col(bounds, c_new, landunit_type, cactive_prior) result(c_template)
-    !
-    ! !DESCRIPTION:
-    ! Finds a column to serve as a template for the initialization of another column in
-    ! the same grid cell.
-    !
-    ! Looks for a landunit of the type given by landunit_type (e.g., istsoil,
-    ! istcrop). Looks for the first active column on this landunit type, in the same grid
-    ! cell; order of columns within a landunit is arbitrary (given by their order in
-    ! memory). Returns the column index of the first such column found. If there are no
-    ! active columns in this landunit in this grid cell, returns ispval.
-    !
-    ! Note that, in checking 'active', we use the active flags from the prior time step,
-    ! so that we don't identify a point that just became active for the first time in this
-    ! time step.
-    !
-    ! !USES:
-    use clm_varcon, only : ispval
-    !
-    ! !ARGUMENTS:
-    integer :: c_template  ! function return value
-
-    type(bounds_type) , intent(in) :: bounds                        ! bounds
-    integer           , intent(in) :: c_new                         ! column index that needs initialization
-    integer           , intent(in) :: landunit_type                 ! landunit type from which we want to find a template column (e.g., istsoil)
-    logical           , intent(in) :: cactive_prior( bounds%begc: ) ! column-level active flags from prior time step
-    !
-    ! !LOCAL VARIABLES:
-    logical :: found  ! whether a suitable template column has been found
-    integer :: g,l,c  ! indices of grid cell, landunit, column
-    
-    character(len=*), parameter :: subname = 'initial_template_col'
-    !-----------------------------------------------------------------------
-    
-    SHR_ASSERT_ALL((ubound(cactive_prior) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-
-    found = .false.
-    g = col%gridcell(c_new)
-    l = grc%landunit_indices(landunit_type, g)
-
-    ! If this landunit exists on this grid cell...
-    if (l /= ispval) then
-
-       ! Loop through columns on this landunit; stop if as soon as we find an active
-       ! column: that will serve as the template
-       c = lun%coli(l)
-       do while (.not. found .and. c <= lun%colf(l))
-          if (cactive_prior(c)) then
-             found = .true.
-          else
-             c = c + 1
-          end if
-       end do
-    end if
-
-    if (found) then
-       c_template = c
-    else
-       c_template = ispval
-    end if
-
-  end function initial_template_col
 
   !-----------------------------------------------------------------------
   subroutine copy_state(c_new, c_template, temperature_inst)

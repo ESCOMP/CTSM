@@ -13,6 +13,7 @@ module dynSubgridDriverMod
   use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops
   use dynSubgridControlMod         , only : get_do_harvest
   use dynPriorWeightsMod           , only : prior_weights_type
+  use dynColumnStateUpdaterMod     , only : column_state_updater_type
   use UrbanParamsType              , only : urbanparams_type
   use CNDVType                     , only : dgvs_type
   use CanopyStateType              , only : canopystate_type
@@ -42,7 +43,12 @@ module dynSubgridDriverMod
   public :: dynSubgrid_driver           ! top-level driver for transient land cover
   !
   ! !PRIVATE TYPES:
-  type(prior_weights_type) :: prior_weights ! saved weights from before the subgrid weight updates
+
+  ! saved weights from before the subgrid weight updates
+  type(prior_weights_type) :: prior_weights
+
+  ! object used to update column-level states after subgrid weight updates
+  type(column_state_updater_type) :: column_state_updater
   !---------------------------------------------------------------------------
 
 contains
@@ -89,6 +95,7 @@ contains
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     prior_weights = prior_weights_type(bounds)
+    column_state_updater = column_state_updater_type(bounds)
 
     ! Initialize stuff for prescribed transient Patches
     if (get_do_transient_pfts()) then
@@ -209,6 +216,7 @@ contains
             waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
 
        call prior_weights%set_prior_weights(bounds_clump)
+       call column_state_updater%set_old_weights(bounds_clump)
     end do
     !$OMP END PARALLEL DO
 
@@ -229,7 +237,7 @@ contains
     end if
 
     ! ==========================================================================
-    ! Do everything else related to land cover change
+    ! Do land cover change that does not require I/O
     ! ==========================================================================
 
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
@@ -251,10 +259,17 @@ contains
                atm_topo = atm2lnd_inst%forc_topo_grc(bounds_clump%begg:bounds_clump%endg))
        end if
 
+       ! ========================================================================
+       ! Do wrapup stuff after land cover change
+       !
        ! Everything following this point in this loop only needs to be called if we have
        ! actually changed some weights in this time step. This is also required in the
        ! first time step of the run to update filters to reflect state of CISM
        ! (particularly mask that is past through coupler).
+       !
+       ! However, it doesn't do any harm (other than a small performance hit) to call
+       ! this stuff all the time, so we do so for simplicity and safety.
+       ! ========================================================================
 
        call update_landunit_weights(bounds_clump)
 
@@ -264,6 +279,8 @@ contains
        call reweight_wrapup(bounds_clump, &
             glc2lnd_inst%icemask_grc(bounds_clump%begg:bounds_clump%endg), &
             glc_behavior)
+
+       call column_state_updater%set_new_weights(bounds_clump)
 
        call set_subgrid_diagnostic_fields(bounds_clump)
 

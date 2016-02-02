@@ -1,0 +1,179 @@
+module test_column_template
+
+  ! Tests of dynColumnTemplateMod
+
+  use pfunit_mod
+  use dynColumnTemplateMod
+  use unittestSubgridMod
+  use shr_kind_mod    , only : r8 => shr_kind_r8
+  use clm_varcon      , only : ispval
+  use ColumnType      , only : col
+  use LandunitType    , only : lun
+  use GridcellType    , only : grc 
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestColumnTemplate
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: setup_gridcells_with_three_landunits
+  end type TestColumnTemplate
+
+contains
+
+  subroutine setUp(this)
+    class(TestColumnTemplate), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestColumnTemplate), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
+  end subroutine tearDown
+
+  ! ------------------------------------------------------------------------
+  ! Helper routines
+  ! ------------------------------------------------------------------------
+
+  subroutine setup_gridcells_with_three_landunits(this, n_gridcells, c_target)
+    ! Sets up a grid with n_gridcells grid cells, each with three landunits (types 1, 2
+    ! and 3). Each landunit has multiple columns, all active.
+    !
+    ! There is a total of 9 columns on each grid cell.
+
+    class(TestColumnTemplate), intent(inout) :: this
+
+    ! number of gridcells
+    integer, intent(in) :: n_gridcells
+
+    ! column index of "target column" for some tests, which is the second column on the
+    ! landunit with ltype = 1, in the first grid cell
+    integer, intent(out) :: c_target
+
+    integer :: g
+
+    ! The weights (of both landunits and columns) and column types in the following are
+    ! arbitrary, since they are not important for these tests
+
+    call unittest_subgrid_setup_start()
+
+    do g = 1, n_gridcells
+       call unittest_add_gridcell()
+
+       call unittest_add_landunit(my_gi=gi, ltype=3, wtgcell=0.25_r8)
+       call unittest_add_column(my_li=li, ctype=1, wtlunit=0.5_r8)
+       call unittest_add_column(my_li=li, ctype=1, wtlunit=0.5_r8)
+
+       call unittest_add_landunit(my_gi=gi, ltype=1, wtgcell=0.5_r8)
+       call unittest_add_column(my_li=li, ctype=1, wtlunit=0.25_r8)
+       call unittest_add_column(my_li=li, ctype=1, wtlunit=0.25_r8)
+       if (g == 1) then
+          c_target = ci
+       end if
+       call unittest_add_column(my_li=li, ctype=1, wtlunit=0.25_r8)
+       call unittest_add_column(my_li=li, ctype=1, wtlunit=0.25_r8)
+
+       call unittest_add_landunit(my_gi=gi, ltype=2, wtgcell=0.25_r8)
+       call unittest_add_column(my_li=li, ctype=1, wtlunit=0.25_r8)
+       call unittest_add_column(my_li=li, ctype=1, wtlunit=0.25_r8)
+       call unittest_add_column(my_li=li, ctype=1, wtlunit=0.5_r8)
+    end do
+
+    call unittest_subgrid_setup_end()
+
+    col%active(bounds%begc:bounds%endc) = .true.
+  end subroutine setup_gridcells_with_three_landunits
+
+
+  ! ------------------------------------------------------------------------
+  ! Begin actual unit tests
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine template_col_with_no_landunit(this)
+    ! no landunit of the given landunit_type on this grid cell
+    class(TestColumnTemplate), intent(inout) :: this
+    integer :: c_target ! column index of "target column": 2nd col on landunit with ltype=1
+    integer :: template_col
+
+    call this%setup_gridcells_with_three_landunits(1, c_target)
+    grc%landunit_indices(2,gi) = ispval
+    template_col = template_col_from_landunit(bounds, c_target, 2, &
+         col%active(bounds%begc:bounds%endc))
+    @assertEqual(TEMPLATE_NONE_FOUND, template_col)
+  end subroutine template_col_with_no_landunit
+
+  @Test
+  subroutine template_col_with_no_active(this)
+    ! no active columns on the given landunit_type
+    class(TestColumnTemplate), intent(inout) :: this
+    integer :: l2  ! landunit index of landunit with ltype = 2
+    integer :: c_target ! column index of "target column": 2nd col on landunit with ltype=1
+    integer :: template_col
+
+    call this%setup_gridcells_with_three_landunits(1, c_target)
+    l2 = grc%landunit_indices(2,gi)
+    col%active(lun%coli(l2):lun%colf(l2)) = .false.
+    template_col = template_col_from_landunit(bounds, c_target, 2, &
+         col%active(bounds%begc:bounds%endc))
+    @assertEqual(TEMPLATE_NONE_FOUND, template_col)
+  end subroutine template_col_with_no_active
+
+  @Test
+  subroutine template_col_with_all_active(this)
+    ! all active columns on the given landunit type; should take the first
+    class(TestColumnTemplate), intent(inout) :: this
+    integer :: l2  ! landunit index of landunit with ltype = 2
+    integer :: c_target ! column index of "target column": 2nd col on landunit with ltype=1
+    integer :: template_col
+
+    call this%setup_gridcells_with_three_landunits(1, c_target)
+    template_col = template_col_from_landunit(bounds, c_target, 2, &
+         col%active(bounds%begc:bounds%endc))
+    l2 = grc%landunit_indices(2,gi)
+    @assertEqual(lun%coli(l2), template_col)
+  end subroutine template_col_with_all_active
+
+  @Test
+  subroutine template_col_with_second_active(this)
+    ! first col on the given landunit is inactive, second is active; should take the
+    ! second (ignoring the inactive column)
+    class(TestColumnTemplate), intent(inout) :: this
+    integer :: l2  ! landunit index of landunit with ltype = 2
+    integer :: c_target ! column index of "target column": 2nd col on landunit with ltype=1
+    integer :: template_col
+
+    call this%setup_gridcells_with_three_landunits(1, c_target)
+    l2 = grc%landunit_indices(2,gi)
+    col%active(lun%coli(l2)) = .false.
+    template_col = template_col_from_landunit(bounds, c_target, 2, &
+         col%active(bounds%begc:bounds%endc))
+    @assertEqual(lun%coli(l2)+1, template_col)
+  end subroutine template_col_with_second_active
+
+  @Test
+  subroutine template_col_from_natveg_array_with_two_gridcells(this)
+    class(TestColumnTemplate), intent(inout) :: this
+    integer :: c_target  ! ignored for this test
+    integer :: l1_g1, l1_g2  ! landunit indices of landunit type 1 in grid cell 1 & 2
+    integer, allocatable :: c_templates(:)
+    integer, allocatable :: expected_templates(:)
+
+    call this%setup_gridcells_with_three_landunits(n_gridcells=2, c_target=c_target)
+    allocate(c_templates(bounds%begc:bounds%endc))
+    call template_col_from_natveg_array(bounds, &
+         col%active(bounds%begc:bounds%endc), &
+         c_templates)
+
+    allocate(expected_templates(bounds%begc:bounds%endc))
+    l1_g1 = grc%landunit_indices(1, bounds%begg)
+    l1_g2 = grc%landunit_indices(1, bounds%begg+1)
+    ! In the following, note that there are 9 columns per grid cell
+    expected_templates(bounds%begc:(bounds%begc+8)) = lun%coli(l1_g1)
+    expected_templates((bounds%begc+9):(bounds%endc)) = lun%coli(l1_g2)
+    @assertEqual(expected_templates, c_templates)
+  end subroutine template_col_from_natveg_array_with_two_gridcells
+
+end module test_column_template

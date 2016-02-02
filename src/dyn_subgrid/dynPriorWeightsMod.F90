@@ -7,6 +7,11 @@ module dynPriorWeightsMod
   ! Defines a derived type and associated methods for working with prior subgrid weights
   ! (i.e., before the weight updates of this time step)
   !
+  ! TODO(wjs, 2015-07-04) See if I can combine some functionality here with
+  ! dynColumnStateUpdaterMod, and/or change some of this to be more similar to the
+  ! implementation of dynColumnStateUpdaterMod (i.e., an active class rather than a
+  ! passive data-holder).
+  !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg

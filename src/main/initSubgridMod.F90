@@ -333,7 +333,7 @@ contains
     ! accordingly.
     !
     ! !USES:
-    use landunit_varcon , only : istsoil, istcrop, istice_mec, istdlak, isturb_MIN, isturb_MAX
+    use landunit_varcon , only : istice_mec, istdlak, isturb_MIN, isturb_MAX, landunit_is_special
     !
     ! !ARGUMENTS:
     integer  , intent(inout) :: li      ! input value is index of last landunit added; output value is index of this newly-added landunit
@@ -351,12 +351,8 @@ contains
     lun%gridcell(li) = gi
     lun%wtgcell(li) = wtgcell
     lun%itype(li) = ltype
-    
-    if (ltype == istsoil .or. ltype == istcrop) then
-       lun%ifspecial(li) = .false.
-    else
-       lun%ifspecial(li) = .true.
-    end if
+
+    lun%ifspecial(li) = landunit_is_special(ltype)
 
     if (ltype == istice_mec) then
        lun%glcmecpoi(li) = .true.

@@ -1,4 +1,130 @@
 ===============================================================
+Tag name:  clm4_5_7_r166
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Feb  2 04:58:45 MST 2016
+One-line Summary: Infrastructure for carbon and nitrogen conservation with dynamic landunits
+
+Purpose of changes
+------------------
+
+Puts in place the infrastructure that will be used for carbon and nitrogen
+conservation, and possibly other column-level conservation, with dynamic
+landunits.
+
+This does NOT yet implement any of teh actual carbon and nitrogen conservation -
+that will be done in an upcoming tag via uses of this new infrastructure.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: High-level (design) review by Erik Kluzek and Ben Andre
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - pass
+
+CLM tag used for the baseline comparisons: clm4_5_7_r165
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.):
+
+List all files eliminated:
+
+List all files added and what they do:
+
+========= Main new code: class for adjusting column-level state variables due to
+          transient column areas
+A       components/clm/src/dyn_subgrid/dynColumnStateUpdaterMod.F90
+A       components/clm/src/dyn_subgrid/test/dynColumnStateUpdater_test/CMakeLists.txt
+A       components/clm/src/dyn_subgrid/test/dynColumnStateUpdater_test/test_column_state_updater.pf
+A       components/clm/src/dyn_subgrid/test/dynColumnStateUpdater_test
+
+========= Find a template column to use for the state variables on some other
+          column of interest. Used by both dynColumnStateUpdater and
+          dynInitColumns.
+A       components/clm/src/dyn_subgrid/dynColumnTemplateMod.F90
+A       components/clm/src/dyn_subgrid/test/dynColumnTemplate_test/test_column_template.pf
+A       components/clm/src/dyn_subgrid/test/dynColumnTemplate_test/CMakeLists.txt
+A       components/clm/src/dyn_subgrid/test/dynColumnTemplate_test
+
+========= Add test of get_ltype_special
+A       components/clm/src/unit_test_shr/test/unittestSubgrid_test/test_unittestSubgrid.pf
+A       components/clm/src/unit_test_shr/test/unittestSubgrid_test/CMakeLists.txt
+A       components/clm/src/unit_test_shr/test/unittestSubgrid_test
+
+List all existing files that have been modified, and describe the changes:
+
+========= Initialize a column state updater object, and set the old and new
+          weights in each time step
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+
+========= Extract initial_template_col and some related code into a new class
+          (dynColumnTemplateMod)
+M       components/clm/src/dyn_subgrid/dynInitColumnsMod.F90
+
+========= New function: landunit_is_special
+M       components/clm/src/main/landunit_varcon.F90
+M       components/clm/src/main/initSubgridMod.F90
+
+========= Just add a comment
+M       components/clm/src/dyn_subgrid/dynPriorWeightsMod.F90
+
+========= Add get_ltype_special function
+M       components/clm/src/unit_test_shr/unittestSubgridMod.F90
+
+========= Move test of extracted code to new directory
+M       components/clm/src/dyn_subgrid/test/dynInitColumns_test/test_init_columns.pf
+
+========= Add files for unit test build
+M       components/clm/src/dyn_subgrid/CMakeLists.txt
+M       components/clm/src/unit_test_shr/test/CMakeLists.txt
+M       components/clm/src/dyn_subgrid/test/CMakeLists.txt
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_7_r165
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Jan 29 05:28:46 MST 2016
