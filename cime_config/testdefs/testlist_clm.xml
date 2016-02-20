@@ -480,8 +480,8 @@
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsROA">yellowstone</machine>
       </test>
       <test name="SMS_Ld1_Mmpi-serial">
-        <machine compiler="nag" testtype="prealpha" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/ptsRLA">hobart</machine>
+        <machine compiler="nag" testtype="prealpha" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="intel" testtype="prealpha" testmods="clm/ptsRLA">yellowstone</machine>
@@ -1259,6 +1259,9 @@
       </test>
       <test name="ERP_D_P24x1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/decStart">hobart</machine>
+      </test>
+      <test name="ERP_Ly3_P30x2">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/ciso_monthly" comment="Want a multi-year transient case with isotopes, to test isotopes in the transient landuse and harvest code (ideally this would also include crop in order to test the combination of crop and isotopes, but currently you cannot combine crops and isotopes)">yellowstone</machine>
       </test>
       <test name="ERP_P15x2_Lm13">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50BGCmonthly">yellowstone</machine>

@@ -80,14 +80,14 @@ contains
 
        if ( use_c13 ) then
           c13_cnveg_carbonflux_inst%cropprod1c_loss_col(c)   = c13_cnveg_carbonstate_inst%cropprod1c_col(c)    * kprod1
-          cnveg_carbonflux_inst%prod10c_loss_col(c)  = cnveg_carbonstate_inst%prod10c_col(c)  * kprod10
-          cnveg_carbonflux_inst%prod100c_loss_col(c) = cnveg_carbonstate_inst%prod100c_col(c) * kprod100
+          c13_cnveg_carbonflux_inst%prod10c_loss_col(c)  = c13_cnveg_carbonstate_inst%prod10c_col(c)  * kprod10
+          c13_cnveg_carbonflux_inst%prod100c_loss_col(c) = c13_cnveg_carbonstate_inst%prod100c_col(c) * kprod100
        endif
 
        if ( use_c14 ) then
           c14_cnveg_carbonflux_inst%cropprod1c_loss_col(c)   = c14_cnveg_carbonstate_inst%cropprod1c_col(c)    * kprod1
-          cnveg_carbonflux_inst%prod10c_loss_col(c)  = cnveg_carbonstate_inst%prod10c_col(c)  * kprod10
-          cnveg_carbonflux_inst%prod100c_loss_col(c) = cnveg_carbonstate_inst%prod100c_col(c) * kprod100
+          c14_cnveg_carbonflux_inst%prod10c_loss_col(c)  = c14_cnveg_carbonstate_inst%prod10c_col(c)  * kprod10
+          c14_cnveg_carbonflux_inst%prod100c_loss_col(c) = c14_cnveg_carbonstate_inst%prod100c_col(c) * kprod100
        endif
 
        cnveg_nitrogenflux_inst%cropprod1n_loss_col(c) = cnveg_nitrogenstate_inst%cropprod1n_col(c)     * kprod1
@@ -137,17 +137,17 @@ end if
             cnveg_carbonflux_inst%dwt_prod100c_gain_col(c)*dt
 
        if ( use_c13 ) then
-          cnveg_carbonstate_inst%prod10c_col(c)  = cnveg_carbonstate_inst%prod10c_col(c)  + &
-               cnveg_carbonflux_inst%dwt_prod10c_gain_col(c) *dt
-          cnveg_carbonstate_inst%prod100c_col(c) = cnveg_carbonstate_inst%prod100c_col(c) + &
-               cnveg_carbonflux_inst%dwt_prod100c_gain_col(c)*dt
+          c13_cnveg_carbonstate_inst%prod10c_col(c)  = c13_cnveg_carbonstate_inst%prod10c_col(c)  + &
+               c13_cnveg_carbonflux_inst%dwt_prod10c_gain_col(c) *dt
+          c13_cnveg_carbonstate_inst%prod100c_col(c) = c13_cnveg_carbonstate_inst%prod100c_col(c) + &
+               c13_cnveg_carbonflux_inst%dwt_prod100c_gain_col(c)*dt
        endif
 
        if ( use_c14 ) then
-          cnveg_carbonstate_inst%prod10c_col(c)  = cnveg_carbonstate_inst%prod10c_col(c)  + &
-               cnveg_carbonflux_inst%dwt_prod10c_gain_col(c) *dt
-          cnveg_carbonstate_inst%prod100c_col(c) = cnveg_carbonstate_inst%prod100c_col(c) + &
-               cnveg_carbonflux_inst%dwt_prod100c_gain_col(c)*dt
+          c14_cnveg_carbonstate_inst%prod10c_col(c)  = c14_cnveg_carbonstate_inst%prod10c_col(c)  + &
+               c14_cnveg_carbonflux_inst%dwt_prod10c_gain_col(c) *dt
+          c14_cnveg_carbonstate_inst%prod100c_col(c) = c14_cnveg_carbonstate_inst%prod100c_col(c) + &
+               c14_cnveg_carbonflux_inst%dwt_prod100c_gain_col(c)*dt
        endif
 
        cnveg_nitrogenstate_inst%prod10n_col(c)    = cnveg_nitrogenstate_inst%prod10n_col(c)    + &
@@ -169,12 +169,12 @@ end if
        if ( use_c13 ) then
          if (use_grainproduct) then
             c13_cnveg_carbonstate_inst%cropprod1c_col(c)    = c13_cnveg_carbonstate_inst%cropprod1c_col(c)    + &
-                grainc_to_food_col_c13(c)*dt
+                 grainc_to_food_col_c13(c)*dt
          end if
-          cnveg_carbonstate_inst%prod10c_col(c)  = cnveg_carbonstate_inst%prod10c_col(c)  + &
-               cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_col(c)*dt
-          cnveg_carbonstate_inst%prod100c_col(c) = cnveg_carbonstate_inst%prod100c_col(c) + &
-               cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_col(c)*dt
+         c13_cnveg_carbonstate_inst%prod10c_col(c)  = c13_cnveg_carbonstate_inst%prod10c_col(c)  + &
+              c13_cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_col(c)*dt
+         c13_cnveg_carbonstate_inst%prod100c_col(c) = c13_cnveg_carbonstate_inst%prod100c_col(c) + &
+              c13_cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_col(c)*dt
        endif
 
        if ( use_c14 ) then
@@ -182,10 +182,10 @@ end if
             c14_cnveg_carbonstate_inst%cropprod1c_col(c)    = c14_cnveg_carbonstate_inst%cropprod1c_col(c)    + &
                  grainc_to_food_col_c14(c)*dt
          end if
-          cnveg_carbonstate_inst%prod10c_col(c)  = cnveg_carbonstate_inst%prod10c_col(c)  + &
-               cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_col(c)*dt
-          cnveg_carbonstate_inst%prod100c_col(c) = cnveg_carbonstate_inst%prod100c_col(c) + &
-               cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_col(c)*dt
+         c14_cnveg_carbonstate_inst%prod10c_col(c)  = c14_cnveg_carbonstate_inst%prod10c_col(c)  + &
+              c14_cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_col(c)*dt
+         c14_cnveg_carbonstate_inst%prod100c_col(c) = c14_cnveg_carbonstate_inst%prod100c_col(c) + &
+              c14_cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_col(c)*dt
        endif
 
        if (use_grainproduct) then 
@@ -206,25 +206,25 @@ end if
             cnveg_carbonflux_inst%prod100c_loss_col(c)*dt
 
        if ( use_c13 ) then
-            c13_cnveg_carbonstate_inst%cropprod1c_col(c)    = c13_cnveg_carbonstate_inst%cropprod1c_col(c)    - &
-              c13_cnveg_carbonflux_inst%cropprod1c_loss_col(c)*dt
-          cnveg_carbonstate_inst%prod10c_col(c)  = cnveg_carbonstate_inst%prod10c_col(c)  - &
-               cnveg_carbonflux_inst%prod10c_loss_col(c)*dt
-          cnveg_carbonstate_inst%prod100c_col(c) = cnveg_carbonstate_inst%prod100c_col(c) - &
-               cnveg_carbonflux_inst%prod100c_loss_col(c)*dt
+          c13_cnveg_carbonstate_inst%cropprod1c_col(c)    = c13_cnveg_carbonstate_inst%cropprod1c_col(c)    - &
+               c13_cnveg_carbonflux_inst%cropprod1c_loss_col(c)*dt
+          c13_cnveg_carbonstate_inst%prod10c_col(c)  = c13_cnveg_carbonstate_inst%prod10c_col(c)  - &
+               c13_cnveg_carbonflux_inst%prod10c_loss_col(c)*dt
+          c13_cnveg_carbonstate_inst%prod100c_col(c) = c13_cnveg_carbonstate_inst%prod100c_col(c) - &
+               c13_cnveg_carbonflux_inst%prod100c_loss_col(c)*dt
        endif
 
        if ( use_c14 ) then
-            c14_cnveg_carbonstate_inst%cropprod1c_col(c)    = c14_cnveg_carbonstate_inst%cropprod1c_col(c)    - &
-              c14_cnveg_carbonflux_inst%cropprod1c_loss_col(c)*dt
-          cnveg_carbonstate_inst%prod10c_col(c)  = cnveg_carbonstate_inst%prod10c_col(c)  - &
-               cnveg_carbonflux_inst%prod10c_loss_col(c)*dt
-          cnveg_carbonstate_inst%prod100c_col(c) = cnveg_carbonstate_inst%prod100c_col(c) - &
-               cnveg_carbonflux_inst%prod100c_loss_col(c)*dt
+          c14_cnveg_carbonstate_inst%cropprod1c_col(c)    = c14_cnveg_carbonstate_inst%cropprod1c_col(c)    - &
+               c14_cnveg_carbonflux_inst%cropprod1c_loss_col(c)*dt
+          c14_cnveg_carbonstate_inst%prod10c_col(c)  = c14_cnveg_carbonstate_inst%prod10c_col(c)  - &
+               c14_cnveg_carbonflux_inst%prod10c_loss_col(c)*dt
+          c14_cnveg_carbonstate_inst%prod100c_col(c) = c14_cnveg_carbonstate_inst%prod100c_col(c) - &
+               c14_cnveg_carbonflux_inst%prod100c_loss_col(c)*dt
        endif
 
-         cnveg_nitrogenstate_inst%cropprod1n_col(c) = cnveg_nitrogenstate_inst%cropprod1n_col(c)    - &
-              cnveg_nitrogenflux_inst%cropprod1n_loss_col(c)*dt
+       cnveg_nitrogenstate_inst%cropprod1n_col(c) = cnveg_nitrogenstate_inst%cropprod1n_col(c)    - &
+            cnveg_nitrogenflux_inst%cropprod1n_loss_col(c)*dt
        cnveg_nitrogenstate_inst%prod10n_col(c)    = cnveg_nitrogenstate_inst%prod10n_col(c)    - &
             cnveg_nitrogenflux_inst%prod10n_loss_col(c)*dt
        cnveg_nitrogenstate_inst%prod100n_col(c)   = cnveg_nitrogenstate_inst%prod100n_col(c)   - &

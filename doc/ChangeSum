@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_7_r167    sacks 02/20/2016 Fix carbon isotopes in transient runs
    clm4_5_7_r166    sacks 02/02/2016 Infrastructure for carbon and nitrogen conservation with dynamic landunits
    clm4_5_7_r165    sacks 01/29/2016 Remove fglcmask, recreate all surface datasets
    clm4_5_7_r164     erik 01/12/2016 Update CIME and MOSART

@@ -1,4 +1,104 @@
 ===============================================================
+Tag name:  clm4_5_7_r167
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Feb 20 06:24:52 MST 2016
+One-line Summary: Fix carbon isotopes in transient runs
+
+Purpose of changes
+------------------
+
+In CNWoodProducts, code that was supposed to operate on c13 / c14 variables was
+actually operating on the standard c12 variable. This led to incorrect results
+and carbon balance errors if running with carbon isotopes in transient runs.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2207: bug in carbon isotopes in CNWoodProducts
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - pass
+
+CLM tag used for the baseline comparisons: clm4_5_7_r166
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+   In principle, changes answers for transient runs with carbon isotopes
+   enabled, but since those runs were previously crashing (due to carbon balance
+   errors), I am listing this as no answer changes.        
+
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Add a long, transient test with carbon isotopes
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_monthly/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_monthly/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_monthly
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main change
+M       components/clm/src/biogeochem/CNWoodProductsMod.F90
+
+========= Add a long, transient test with carbon isotopes
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_7_r166
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Feb  2 04:58:45 MST 2016
