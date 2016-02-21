@@ -1,4 +1,124 @@
 ===============================================================
+Tag name:  clm4_5_8_r168
+Originator(s):  Keith Oleson; brought to trunk by Bill Sacks
+Date: Sat Feb 20 20:55:19 MST 2016
+One-line Summary: Fix zero methane production
+
+Purpose of changes
+------------------
+
+Methane production has been zero ever since the hydrology reordering in
+clm4_5_13 (in June, 2013). The order of subroutine calls appears to be a
+problem:
+1. CNDriverNoLeaching is called in clm_driver, which calls SetValues, which
+   zeros out the carbon fluxes (e.g., somhr and lithr)
+2. ch4 is called which uses the zero-ed out fluxes
+3. Summary is called which sums up the soil layer som and litter heterotrophic
+   respiration terms which should be used by ch4, but are not.
+
+This tag puts the call to ch4 back where it was in clm4_5_12 and earlier.
+
+Keith Oleson found and fixed this bug; Bill Sacks brought it to the trunk.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2225: CH4PROD=0
+- 2287: Methane production is zero
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Changes answers far more than you might immediately suspect; this was deemed
+  to be reasonable at the 02/18/2016 TSS meeting
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: Keith Oleson, Bill Sacks
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    'ok' means: tests pass or xfail, some baseline comparisons fail as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_7_r167
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45 & CLM50 with BGC turned on
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      New climate
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: clm5_respn05r162_2degGSWP3_1850spin_allN_v01_ch4A_785_799
+
+   URL for LMWG diagnostics output used to validate new climate:
+	http://www.cgd.ucar.edu/tss/clm/diagnostics/clm5_dev/clm5_respn05r162_2degGSWP3_1850spin_allN_v01_ch4A_785_799-clm5_respn05r162_2degGSWP3_1850spin_allN_v01_785_799/setsIndex.html
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Move ch4 call to where it was in clm4_5_12 and earlier
+M       components/clm/src/main/clm_driver.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_7_r167
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Feb 20 06:24:52 MST 2016

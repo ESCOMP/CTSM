@@ -705,13 +705,13 @@ contains
        if ((.not. use_cn) .and. (.not. use_ed) .and. (doalb)) then 
           call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                waterstate_inst, canopystate_inst)
-             end if
+       end if
 
        ! Ecosystem demography
 
        if (use_ed) then
           call ed_clm_inst%SetValues( bounds_clump, 0._r8 )
-          end if
+       end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
           
@@ -720,21 +720,6 @@ contains
             atm2lnd_inst, canopystate_inst, waterstate_inst, frictionvel_inst, &
             photosyns_inst, drydepvel_inst)
        call t_stopf('depvel')
-
-       ! Calculation of methane fluxes
-
-       if (use_lch4) then
-          call t_startf('ch4')
-          call ch4 (bounds_clump,                                                                  &
-               filter(nc)%num_soilc, filter(nc)%soilc,                                             &
-               filter(nc)%num_lakec, filter(nc)%lakec,                                             &
-               filter(nc)%num_soilp, filter(nc)%soilp,                                             &
-               atm2lnd_inst, lakestate_inst, canopystate_inst, soilstate_inst, soilhydrology_inst, &
-               temperature_inst, energyflux_inst, waterstate_inst, waterflux_inst,                 &
-               cnveg_carbonflux_inst, soilbiogeochem_carbonflux_inst,                          &
-               soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst)
-          call t_stopf('ch4')
-       end if
 
        ! ============================================================================
        ! Calculate soil/snow hydrology with drainage (subsurface runoff)
@@ -761,7 +746,7 @@ contains
        !   vegetation structure (LAI, SAI, height)
        ! ============================================================================
 
-          if (use_cn) then
+       if (use_cn) then
 
           ! Update the nitrogen leaching rate as a function of soluble mineral N 
           ! and total soil water outflow.
@@ -796,7 +781,7 @@ contains
                   cnveg_carbonstate_inst, canopystate_inst)
              end if
 
-          end if
+       end if
 
        ! ============================================================================
        ! Check the energy and water balance and also carbon and nitrogen balance
@@ -833,6 +818,21 @@ contains
                 call t_stopf('cnbalchk')
              end if
           end if
+
+       ! Calculation of methane fluxes
+
+       if (use_lch4) then
+          call t_startf('ch4')
+          call ch4 (bounds_clump,                                                                  &
+               filter(nc)%num_soilc, filter(nc)%soilc,                                             &
+               filter(nc)%num_lakec, filter(nc)%lakec,                                             &
+               filter(nc)%num_soilp, filter(nc)%soilp,                                             &
+               atm2lnd_inst, lakestate_inst, canopystate_inst, soilstate_inst, soilhydrology_inst, &
+               temperature_inst, energyflux_inst, waterstate_inst, waterflux_inst,                 &
+               cnveg_carbonflux_inst, soilbiogeochem_carbonflux_inst,                          &
+               soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst)
+          call t_stopf('ch4')
+       end if
 
        ! ============================================================================
        ! Determine albedos for next time step
