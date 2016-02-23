@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 367;
+my $ntests = 369;
 if ( defined($opts{'compare'}) ) {
    $ntests += 201;
 }
@@ -541,6 +541,16 @@ my %failtest = (
                                    },
      "elevWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
                                      namelst=>"fire_emis_elevated=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "nofireButSetcli_scale"     =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"fire_method='nofire', cli_scale=5.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "nocnButSetrh_low"          =>{ options=>"-envxml_dir . -bgc sp",
+                                     namelst=>"rh_low=5.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },

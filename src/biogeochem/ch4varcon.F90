@@ -127,6 +127,9 @@ contains
              call endrun(msg='error in reading in ch4par_in namelist'//&
                   errMsg(__FILE__, __LINE__))
           end if
+       else
+          call endrun(msg='error in finding ch4par_in namelist'//&
+                  errMsg(__FILE__, __LINE__))
        end if
        call relavu( unitn )
 

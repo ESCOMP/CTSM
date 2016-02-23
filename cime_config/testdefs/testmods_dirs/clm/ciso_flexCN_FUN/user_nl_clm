@@ -2,4 +2,3 @@
  use_c14        = .true.
  use_fun        = .true.
  use_flexibleCN = .true.
- use_dynroot    = .true.

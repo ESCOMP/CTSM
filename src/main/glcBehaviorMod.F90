@@ -420,6 +420,9 @@ contains
              call endrun(msg='ERROR reading clm_glacier_behavior namelist'// &
                   errMsg(__FILE__, __LINE__))
           end if
+       else
+          call endrun(msg='ERROR finding clm_glacier_behavior namelist'// &
+                      errMsg(__FILE__, __LINE__))
        end if
        call relavu( unitn )
     endif

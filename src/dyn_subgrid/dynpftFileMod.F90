@@ -210,6 +210,8 @@ contains
           if (nml_error /= 0) then
              call endrun(msg='ERROR reading dynpft_consistency_checks namelist'//errMsg(__FILE__, __LINE__))
           end if
+       else
+          call endrun(msg='ERROR finding dynpft_consistency_checks namelist'//errMsg(__FILE__, __LINE__))
        end if
        close(nu_nml)
        call relavu( nu_nml )

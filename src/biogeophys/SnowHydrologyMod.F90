@@ -137,6 +137,8 @@ contains
           if (ierr /= 0) then
              call endrun(msg="ERROR reading clm_snowhydrology_inparm namelist"//errmsg(__FILE__, __LINE__))
           end if
+       else
+          call endrun(msg="ERROR finding clm_snowhydrology_inparm namelist"//errmsg(__FILE__, __LINE__))
        end if
        call relavu( unitn )
     end if

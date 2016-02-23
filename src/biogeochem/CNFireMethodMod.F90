@@ -17,16 +17,19 @@ module CNFireMethodMod
    contains
 
      ! Initialize the fire datasets
-     procedure(CNFireInit_interface)  , public, deferred :: CNFireInit
+     procedure(CNFireInit_interface)   , public, deferred :: CNFireInit
+
+     ! Read namelist for the fire datasets
+     procedure(CNFireReadNML_interface), public, deferred :: CNFireReadNML
 
      ! Interpolate the fire datasets
-     procedure(CNFireInterp_interface), public, deferred :: CNFireInterp
+     procedure(CNFireInterp_interface) , public, deferred :: CNFireInterp
 
      ! Figure out the fire area
-     procedure(CNFireArea_interface)  , public, deferred :: CNFireArea
+     procedure(CNFireArea_interface)   , public, deferred :: CNFireArea
 
      ! Figure out the fire fluxes
-     procedure(CNFireFluxes_interface), public, deferred :: CNFireFluxes
+     procedure(CNFireFluxes_interface) , public, deferred :: CNFireFluxes
 
   end type cnfire_method_type
 
@@ -61,6 +64,20 @@ module CNFireMethodMod
     !-----------------------------------------------------------------------
 
   end subroutine CNFireInit_interface
+
+  subroutine CNFireReadNML_interface(this, NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read general fire namelist
+    !
+    ! USES
+    import :: cnfire_method_type
+    ! !ARGUMENTS:
+    class(cnfire_method_type)     :: this
+    character(len=*),  intent(in) :: NLFilename
+    !-----------------------------------------------------------------------
+
+  end subroutine CNFireReadNML_interface
 
   subroutine CNFireInterp_interface(this, bounds)
     !

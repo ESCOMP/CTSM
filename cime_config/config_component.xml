@@ -21,6 +21,13 @@
     </values>
   </entry>
 
+  <entry id="COMP_RUN_BARRIERS">
+    <values>
+      <value grid="l%0.9x1.25" >TRUE</value>
+      <value grid="l%1.9x2.5"  >TRUE</value>
+    </values>
+  </entry>
+
   <entry id="CLM_CONFIG_OPTS" >
     <type>char</type>
     <default_value></default_value>
@@ -148,6 +155,16 @@
       you should use your own user-defined component sets via using create_newcase 
       with a compset_file argument. 
       This is an advanced flag and should only be used by expert users.</desc>
+  </entry>
+
+  <entry id="CLM_ACCELERATED_SPINUP">
+    <type>char</type>
+    <valid_values>on,off</valid_values>
+    <default_value>off</default_value>
+    <group>run_component_clm</group>
+    <file>env_run.xml</file>
+    <desc>Turn on any settings for accellerating the model spinup.
+    </desc>
   </entry>
 
   <entry id="CLM_USRDAT_NAME">

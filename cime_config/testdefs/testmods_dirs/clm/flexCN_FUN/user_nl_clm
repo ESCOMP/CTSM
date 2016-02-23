@@ -1,5 +1,4 @@
  use_flexibleCN = .true.
  use_luna = .false.
  use_fun = .true.
- use_dynroot = .true.
 

@@ -139,6 +139,8 @@ contains
           if (nml_error /= 0) then
              call endrun(subname // ':: ERROR reading soilwater_movement namelist')
           end if
+       else
+          call endrun(subname // ':: ERROR reading soilwater_movement namelist')
        end if
        close(nu_nml)
        call relavu( nu_nml )

@@ -102,9 +102,9 @@ OPTIONS
                                     This toggles on the namelist variables:
                                           use_cn, use_lch4, use_nitrif_denitrif, use_vertsoilc, use_century_decomp
 
-     -bgc_spinup "on|off"     CLM 4.5 Only. For CLM 4.0, spinup is controlled from configure.
+     -bgc_spinup "on|off"     CLM 4.5/5.0 Only. For CLM 4.0, spinup is controlled from configure.
                               Turn on given spinup mode for BGC setting of CN
-                                  on : Turn on Accelerated Decomposition   (spinup_state = 1)
+                                  on : Turn on Accelerated Decomposition   (spinup_state = 1 or 2)
                                   off : run in normal mode                 (spinup_state = 0)
 
                               Default is off.
@@ -1075,7 +1075,7 @@ sub setup_cmdl_bgc_spinup {
     if ( $nl->get_value("spinup_state") eq 0 && $nl_flags->{'bgc_spinup'} eq "on" ) {
       fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
     }
-    if ( $nl->get_value("spinup_state") eq 1 && $nl_flags->{'bgc_spinup'} eq "off" ) {
+    if ( ($nl->get_value("spinup_state") eq 1 || $nl->get_value("spinup_state") eq 2) && $nl_flags->{'bgc_spinup'} eq "off" ) {
       fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
     }
   }
@@ -1876,8 +1876,26 @@ sub setup_logic_create_crop_landunit {
 sub setup_logic_cnfire {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
-  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+  my @fire_consts = ( "rh_low", "rh_hgh", "bt_min", "bt_max", "cli_scale", "boreal_peatfire_c", "non_boreal_peatfire_c", 
+                      "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree" );
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl->get_value('use_cn')) ) {
      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
+     my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
+     foreach my $item ( @fire_consts ) {
+        if ( $fire_method =~ /nofire/ ) {
+           if ( defined($nl->get_value($item)) ) {
+              fatal_error( "fire_method is no_fire and yet $item is being set, which contradicts that" );
+           }
+        } else {
+           add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, 'fire_method'=>$fire_method);
+        }
+     }
+  } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     foreach my $item ( @fire_consts ) {
+        if ( defined($nl->get_value($item)) ) {
+           fatal_error( "CN is off which implies that cnfire is off and yet a fire constant ($item) is being set, which contradicts that" );
+        }
+     }
   }
 }
 
@@ -3045,6 +3063,7 @@ sub write_output_files {
       push @groups, "clm_humanindex_inparm";
       push @groups, "cnmresp_inparm";
       push @groups, "cnfire_inparm";
+      push @groups, "lifire_inparm";
       push @groups, "clm_canopy_inparm";
     }
   }

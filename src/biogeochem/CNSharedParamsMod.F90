@@ -156,6 +156,9 @@ contains
              call endrun(msg='error in reading in ' // namelist_group // ' namelist' // &
                   errMsg(__FILE__, __LINE__))
           end if
+       else
+          call endrun(msg='error in finding ' // namelist_group // ' namelist' // &
+                  errMsg(__FILE__, __LINE__))
        end if
        call relavu( unitn )
 

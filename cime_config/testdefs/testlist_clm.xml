@@ -38,9 +38,9 @@
         <machine compiler="intel" testtype="prebeta" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/ptsRLA">janus</machine>
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/ptsRLA">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/ptsROA">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/ptsRLB">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40ptsRLA">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40ptsROA">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40ptsRLB">yellowstone</machine>
         <machine compiler="gnu" testtype="prebeta" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/ptsRLA">yellowstone</machine>
@@ -55,7 +55,7 @@
   <compset name="I1850">
     <grid name="T31_g37">
       <test name="ERI_D_Ld9">
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/reduceOutput">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40reduceOutput">yellowstone</machine>
       </test>
     </grid>
     <grid name="f02_g16">
@@ -239,7 +239,7 @@
     </grid>
     <grid name="f10_f10">
       <test name="ERP_Ld5">
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/reduceOutput">hobart</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40reduceOutput">hobart</machine>
       </test>
     </grid>
     <grid name="f19_g16">
@@ -256,7 +256,7 @@
     </grid>
     <grid name="f45_g37">
       <test name="ERP_Ld5">
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/reduceOutput">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40reduceOutput">yellowstone</machine>
       </test>
     </grid>
     <grid name="ne120_g16">
@@ -684,7 +684,6 @@
     <grid name="f10_f10">
       <test name="ERP_P15x2_Lm25">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50BGCDVCROPmonthly">yellowstone</machine>
       </test>
       <test name="ERP_P24x2_Lm25">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/monthly">edison</machine>
@@ -779,6 +778,13 @@
       </test>
     </grid>
   </compset>
+  <compset name="ICLM50BGCDVCROP">
+    <grid name="f10_f10">
+      <test name="ERP_P15x2_Lm25">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
+      </test>
+    </grid>
+  </compset>
   <compset name="ICN">
     <grid name="f09_g16">
       <test name="ERP_Ld5">
@@ -791,7 +797,7 @@
         <machine compiler="intel" testtype="aux_clm40">yellowstone</machine>
       </test>
       <test name="ERP_D_Ld5">
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/reduceOutput">hobart</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40reduceOutput">hobart</machine>
       </test>
     </grid>
     <grid name="ne30_g16">
@@ -809,7 +815,7 @@
   <compset name="ICNCROP">
     <grid name="1x1_numaIA">
       <test name="ERP_Lm3">
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/reduceOutput">hobart</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40reduceOutput">hobart</machine>
       </test>
       <test name="SMS_Ld1">
         <machine compiler="intel " testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
@@ -833,7 +839,7 @@
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/crop">edison</machine>
       </test>
       <test name="ERS_D_P112x1_Ld211">
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/crop">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40crop">yellowstone</machine>
       </test>
     </grid>
     <grid name="f19_g16">
@@ -849,7 +855,7 @@
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/crop">edison</machine>
       </test>
       <test name="ERS_P192x1_Ld211">
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/crop">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40crop">yellowstone</machine>
       </test>
     </grid>
   </compset>
@@ -987,14 +993,19 @@
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
+    <grid name="f45_g37">
+      <test name="ERI_Ld9">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/nofire">yellowstone</machine>
+      </test>
+    </grid>
   </compset>
   <compset name="ICRUCLM50BGCCROP">
     <grid name="1x1_numaIA">
       <test name="ERP_Lm40">
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/clm50BGCCROPmonthly" comment="tests mid-year restart, with the restart file being written in the middle of the second year">yellowstone</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/monthly" comment="tests mid-year restart, with the restart file being written in the middle of the second year">yellowstone</machine>
       </test>
       <test name="ERP_Ly5">
-        <machine compiler="nag" testtype="aux_clm45" testmods="clm/clm50BGCCROPmonthly">hobart</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/monthly">hobart</machine>
       </test>
     </grid>
     <grid name="f10_f10">
@@ -1133,7 +1144,7 @@
     </grid>
     <grid name="f19_g16_gl5">
       <test name="ERS_D">
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/reduceOutput">hobart</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40reduceOutput">hobart</machine>
       </test>
     </grid>
   </compset>
@@ -1264,11 +1275,7 @@
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ciso_monthly" comment="Want a multi-year transient case with isotopes, to test isotopes in the transient landuse and harvest code (ideally this would also include crop in order to test the combination of crop and isotopes, but currently you cannot combine crops and isotopes)">yellowstone</machine>
       </test>
       <test name="ERP_P15x2_Lm13">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50BGCmonthly">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
-      </test>
-      <test name="SMS_Ld5_D_P24x1">
-        <machine compiler="nag" testtype="aux_clm45" testmods="clm/clm50BGCmonthly">hobart</machine>
       </test>
     </grid>
     <grid name="f19_g16">
@@ -1286,6 +1293,16 @@
     <grid name="f10_f10">
       <test name="ERS_Ly5_P60x1">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="Want a multi-year global test of transient crops; also want a multi-year transient restart test. Using P60x1 and ERS rather than ERP to get faster turnaround of this long-running test">yellowstone</machine>
+      </test>
+    </grid>
+  </compset>
+  <compset name="IHISTCLM50BGC">
+    <grid name="f10_f10">
+      <test name="ERP_P15x2_Lm13">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/monthly">yellowstone</machine>
+      </test>
+      <test name="SMS_Ld5_D_P24x1">
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/monthly">hobart</machine>
       </test>
     </grid>
   </compset>
@@ -1351,7 +1368,7 @@
     </grid>
     <grid name="f10_f10">
       <test name="SMS_Ld5_P24x1">
-        <machine compiler="nag" testtype="aux_clm40" testmods="clm/reduceOutput">hobart</machine>
+        <machine compiler="nag" testtype="aux_clm40" testmods="clm/40reduceOutput">hobart</machine>
       </test>
     </grid>
     <grid name="f19_g16">
@@ -1397,7 +1414,7 @@
     </grid>
     <grid name="f10_f10">
       <test name="SMS">
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/reduceOutput">hobart</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40reduceOutput">hobart</machine>
       </test>
     </grid>
     <grid name="f19_g16">

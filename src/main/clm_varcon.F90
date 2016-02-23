@@ -45,6 +45,7 @@ module clm_varcon
   real(r8), parameter :: e_ice=6.0                          ! soil ice impedance factor
   real(r8), parameter :: pc = 0.4                           ! threshold probability
   real(r8), parameter :: mu = 0.13889                       ! connectivity exponent 
+  real(r8), parameter :: secsphr = 3600._r8                 ! Seconds in an hour
   real(r8) :: grav   = SHR_CONST_G                          ! gravity constant [m/s2]
   real(r8) :: sb     = SHR_CONST_STEBOL                     ! stefan-boltzmann constant  [W/m2/K4]
   real(r8) :: vkc    = SHR_CONST_KARMAN                     ! von Karman constant [-]

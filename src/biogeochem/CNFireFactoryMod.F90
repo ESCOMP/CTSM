@@ -61,6 +61,8 @@ contains
           if (ierr /= 0) then
              call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
           end if
+       else
+          call endrun(msg="ERROR finding "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
        end if
        call relavu( unitn )
     end if
@@ -77,7 +79,7 @@ contains
   !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
-  function create_cnfire_method() result(cnfire_method)
+  function create_cnfire_method( NLFilename ) result(cnfire_method)
     !
     ! !DESCRIPTION:
     ! Create and return an object of cnfire_method_type. The particular type
@@ -86,11 +88,13 @@ contains
     ! !USES:
     use shr_kind_mod     , only : SHR_KIND_CL
     use CNFireMethodMod  , only : cnfire_method_type
+    use CNFireNoFireMod  , only : cnfire_nofire_type
     use CNFireLi2014Mod  , only : cnfire_li2014_type
     use CNFireLi2016Mod  , only : cnfire_li2016_type
     use decompMod        , only : bounds_type
     !
     ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
     class(cnfire_method_type), allocatable :: cnfire_method  ! function result
     !
     ! !LOCAL VARIABLES:
@@ -99,6 +103,8 @@ contains
     
     select case (trim(fire_method))
        
+    case ("nofire")
+       allocate(cnfire_method, source=cnfire_nofire_type())
     case ("li2014qianfrc")
        allocate(cnfire_method, source=cnfire_li2014_type())
     case ("li2016crufrc")
@@ -109,6 +115,7 @@ contains
        call endrun(msg=errMsg(__FILE__, __LINE__))
 
     end select
+    call cnfire_method%CNFireReadNML( NLFilename )
 
   end function create_cnfire_method
 

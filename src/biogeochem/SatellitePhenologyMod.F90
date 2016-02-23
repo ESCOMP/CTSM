@@ -127,6 +127,8 @@ contains
           if (nml_error /= 0) then
              call endrun(subname // ':: ERROR reading lai_streams namelist')
           end if
+       else
+          call endrun(subname // ':: ERROR finding lai_streams namelist')
        end if
        close(nu_nml)
        call relavu( nu_nml )

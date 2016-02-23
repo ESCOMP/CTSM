@@ -81,6 +81,8 @@ contains
           if (ierr /= 0) then
              call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
           end if
+       else
+          call endrun(msg="ERROR finding "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
        end if
        call relavu( unitn )
     end if

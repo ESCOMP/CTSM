@@ -141,11 +141,62 @@ formulation (1).
 </entry>
 
 <entry id="fire_method" type="char*80" category="clm_physics"
-       group="cnfire_inparm" valid_values="li2014qianfrc,li2016crufrc" >
+       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc" >
 The method type to use for CNFire
 
+nofire:        Turn fire effects off
 li2014qianfrc: Reference paper Li, et. al.(2014) tuned with QIAN atmospheric forcing
 li2016crufrc:  Reference paper Li, et. al.(2016) tuned with CRU-NCEP atmospheric forcing
+</entry>
+
+<entry id="cli_scale" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Global constant for deforestation fires (/day)
+</entry>
+
+<entry id="pot_hmn_ign_counts_alpha" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Potential human ignition counts (/person/month)
+</entry>
+
+<entry id="boreal_peatfire_c" type="real" category="clm_physics"
+       group="lifire_inparm" >
+boreal peat fires (/hr)
+</entry>
+
+<entry id="non_boreal_peatfire_c" type="real" category="clm_physics"
+       group="lifire_inparm" >
+non-boreal peat fires (/hr)
+</entry>
+
+<entry id="cropfire_a1" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Scalar for cropfire (/hr)
+</entry>
+
+<entry id="rh_low" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Critical RH for ignition (0-100)
+</entry>
+
+<entry id="rh_hgh" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Saturation RH for ignition (0-100)
+</entry>
+
+<entry id="bt_max" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Saturation BTRAN for ignition (0-1)
+</entry>
+
+<entry id="bt_min" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Critical BTRAN for ignition (0-1)
+</entry>
+
+<entry id="occur_hi_gdp_tree" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Fire occurance for high GDP areas that are tree dominated (fraction)
 </entry>
 
 <entry id="interception_fraction" type="real" category="clm_physics"
@@ -532,11 +583,6 @@ Turn vegetation snow canopy ON, OFF, or ON with albedo influence (ON_RAD)
 <!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
 <!-- ========================================================================================  -->
-<entry id="use_nofire" type="logical" category="bgc"
-       group="clm_inparm" valid_values="" value=".false.">
-Toggle to make wild-fires inactive for biogeochemistry=CN mode
-</entry>
-
 <entry id="use_lch4" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
 Turn on methane model. Standard part of CLM45BGC model.

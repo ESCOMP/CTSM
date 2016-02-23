@@ -233,7 +233,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
   logical  :: missing_crops                   ! if we need prognostic crop info, but the input dataset is missing this crop info
-  real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
+  real(r8) :: relerr = 0.0001_r8              ! max error: sum overlap wts ne 1
 
   character(len=35)  veg(0:maxpft)            ! vegetation types
   character(len=32) :: subname = 'mkpftMod::mkpft()'
@@ -472,7 +472,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, allow_no_crops, &
         do m = 0, numpft_i - 1
            wst_sum = wst_sum + pctpft_o(no,m)
         enddo
-        if (abs(wst_sum-100._r8) > 0.00001_r8) then
+        if (abs(wst_sum-100._r8) > relerr) then
            write (6,*) subname//'error: pft = ', &
                 (pctpft_o(no,m), m = 0, numpft_i-1), &
                 ' do not sum to 100. at no = ',no,' but to ', wst_sum

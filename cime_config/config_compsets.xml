@@ -242,6 +242,10 @@
     <lname>2000_DATM%QIA_CLM45%BGCDV-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
   <compset>
+    <alias>ICLM50BGCDVCROP</alias>    
+    <lname>2000_DATM%CRU_CLM50%BGCDV-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+  </compset>
+  <compset>
     <alias>ICLM45VIC</alias>          
     <lname>2000_DATM%QIA_CLM45%SP-VIC_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
@@ -278,6 +282,10 @@
   <compset>
     <alias>IHISTCLM45BGC</alias>      
     <lname>HIST_DATM%QIA_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
+  </compset>
+  <compset>
+    <alias>IHISTCLM50BGC</alias>      
+    <lname>HIST_DATM%CRU_CLM50%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
   <!---I cpl history MOAR forcing spinup compsets -->

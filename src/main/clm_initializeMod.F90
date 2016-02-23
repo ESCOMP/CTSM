@@ -343,7 +343,7 @@ contains
          source=create_nutrient_competition_method())
 
     allocate(cnfire_method, &
-         source=create_cnfire_method())
+         source=create_cnfire_method( NLFilename ))
 
     if (use_cn .or. use_ed) then
        call readParameters(nutrient_competition_method)

@@ -32,8 +32,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <bgc_spinup>off</bgc_spinup>
 
 <!-- Spinup state -->
-<spinup_state bgc_spinup="on" >1</spinup_state>
-<spinup_state bgc_spinup="off">0</spinup_state>
+<spinup_state bgc_spinup="on"  phys="clm5_0" >2</spinup_state>
+<spinup_state bgc_spinup="on"  phys="clm4_5" >1</spinup_state>
+<spinup_state bgc_spinup="off"               >0</spinup_state>
 
 <!-- Rain/snow repartitioning -->
 <repartition_rain_snow phys="clm5_0">.true.</repartition_rain_snow>
@@ -87,6 +88,29 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- CN Fire model method defaults -->
 <fire_method phys="clm5_0">li2016crufrc</fire_method>
 <fire_method phys="clm4_5">li2014qianfrc</fire_method>
+
+<rh_low                   fire_method="li2014qianfrc" >30.0d00</rh_low>
+<rh_hgh                   fire_method="li2014qianfrc" >80.0d00</rh_hgh>
+<bt_min                   fire_method="li2014qianfrc" >0.3d00</bt_min>
+<bt_max                   fire_method="li2014qianfrc" >0.7d00</bt_max>
+<cli_scale                fire_method="li2014qianfrc" >0.035d00</cli_scale>
+<boreal_peatfire_c        fire_method="li2014qianfrc" >4.2d-5</boreal_peatfire_c>
+<pot_hmn_ign_counts_alpha fire_method="li2014qianfrc" >0.0035d00</pot_hmn_ign_counts_alpha>
+<non_boreal_peatfire_c    fire_method="li2014qianfrc" >0.001d00</non_boreal_peatfire_c>
+<cropfire_a1              fire_method="li2014qianfrc" >0.3d00</cropfire_a1>
+<occur_hi_gdp_tree        fire_method="li2014qianfrc" >0.39d00</occur_hi_gdp_tree>
+
+<rh_low                   fire_method="li2016crufrc" >30.0d00</rh_low>
+<rh_hgh                   fire_method="li2016crufrc" >80.0d00</rh_hgh>
+<bt_min                   fire_method="li2016crufrc" >0.6d00</bt_min>
+<bt_max                   fire_method="li2016crufrc" >0.85d00</bt_max>
+<cli_scale                fire_method="li2016crufrc" >0.0156d00</cli_scale>
+<boreal_peatfire_c        fire_method="li2016crufrc" >0.4d-4</boreal_peatfire_c>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" >0.0085d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" run="offline">0.012d00</pot_hmn_ign_counts_alpha>
+<non_boreal_peatfire_c    fire_method="li2016crufrc" >3.6d-4</non_boreal_peatfire_c>
+<cropfire_a1              fire_method="li2016crufrc" >0.36d00</cropfire_a1>
+<occur_hi_gdp_tree        fire_method="li2016crufrc" >0.33d00</occur_hi_gdp_tree>
 
 <!-- Canopy hydrology namelist defaults -->
 <use_clm5_fpi phys="clm5_0">.true.</use_clm5_fpi>
@@ -400,8 +424,15 @@ lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_simyr1850_c160127.nc</fsurdat>
 lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_simyr1850_c160127.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_10x15_78pfts_simyr1850_c160127.nc</fsurdat>
+<fsurdat hgrid="4x5"       sim_year="1850" use_crop=".true." >
+lnd/clm2/surfdata_map/surfdata_4x5_78pfts_simyr1850_c160216.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr1850_c160127.nc</fsurdat>
+
+<fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".false." >
+lnd/clm2/surfdata_map/surfdata_ne30np4_78pfts_simyr1850_c160208.nc</fsurdat>
+<fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".false." >
+lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 

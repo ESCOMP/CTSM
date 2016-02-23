@@ -1,4 +1,227 @@
 ===============================================================
+Tag name:  clm4_5_8_r169
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Feb 23 14:35:02 MST 2016
+One-line Summary: Add fire several fire constants to namelist, add some new clm45/50 surface datasets
+
+Purpose of changes
+------------------
+
+   Add a bunch of constants to the namelist for the CN Li fire parameterization.
+   They are added in the new lifire_inparm namelist.
+
+   Work on user interface a bit. 
+     * New lifire_inparm namelist (see above)
+     * Add CLM_ACCELERATED_SPINNUP env_run variable
+     * Turn COMP_RUN_BARRIERS for f09 and f19 resolutions
+     * New compsets: ICLM50BGCDVCROP, IHISTCLM50BGC
+     * Model dies if CLM namelist isn't found
+     * Models dies if use_bedrock=.true. and zbedrock NOT on surface dataset
+     * Remove use_nofire move to fire_method as "nofire" option
+
+   Add some new clm45/50 surface datasets for crop at 1850 for f45, ne30, and ne120
+   Add back in the USUMB PTCLMmkdata dataset directory for testing.
+
+   Work on testing a bit. Remove CLM50 testmods directories just there because of
+   missing CLM50 compsets. Add set of complete clm40 testmod directories. Add nofire
+   test, update USUMB test.  Remove use_dynroot from all but Kitchen sink tests.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): [If none, remove this line]
+   2285 Problem creating ne120 surface dataset
+   2280 (partial) need to set barriers for concurrent PE layouts with I compsets
+   2279 Need new USUMB PTCLMmkdata directory
+   2276 New ne30, ne120, f45 surface datasets for CLM45/50 1850 CROP
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+
+    Introduce new env_run variable: CLM_ACCELERATED_SPINUP (It can be "on" or "off")
+    When "on" it sets the simulation up in such a way for it to run in an accelerated
+    fashion
+
+   (currently all it does is turn "-bgc_spinup on" if 
+
+   NOTE: Turns on COMP_RUN_BARRIERS by default for f09 and f19 resolutions as they
+         are usually run concurrent (f09 is by default).
+
+   Add new CLM namelist: lifire_inparm
+
+   Add new compsets: ICLM50BGCDVCROP, IHISTCLM50BGC
+
+   NOTE: Model will now die if you set use_bedrock=.true., and your surface dataset
+         doesn't have zbedrock on it.
+
+   WARNING: Now if a CLM namelist is NOT found -- the model will abort with an error.
+
+Changes made to namelist defaults (e.g., changed parameter values): Many new namelist items
+
+   New CN fire namelist items: rh_low, rh_hgh, bt_min, bt_max, cli_scale,
+       boreal_peatfire_c, pot_hmn_ign_counts_alpha, non_boreal_peatfire_c,
+       cropfire_a1, and occur_hi_gdp_tree
+   They are set by default according to either fire_method=li2014qianfrc or li2016crufrc
+
+   use_nofire removed and "nofire" added as an option to fire_method
+
+Changes to the datasets (e.g., parameter, surface or initial files): A few new surface datasets
+   New 1850 clm45/50 surface datasets for: f45, ne30, ne120
+   Alos new PTCLMmkdata USUMB directory
+
+Substantial timing or memory changes: None known
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing: regular
+
+  build-namelist tests:
+
+    yellowstone -   OK (36 comparison tests fail because of new namelist)
+
+  unit-tests (components/clm/src):
+
+    yellowstone -  OK
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - OK
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+ Two comparision tests (ro clm4_5_8_r168) fail, because use_dynroot no longer on.
+
+CLM tag used for the baseline comparisons: clm4_5_8_r168
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): None
+
+List all files eliminated:
+
+   Eliminate testmods directories just needed for CLM50 compsets
+   Now that compsets are added they are unneeded.
+
+ D components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCCROPmonthly/include_user_mods
+ D components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCCROPmonthly/shell_commands
+ D components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCDVCROPmonthly/include_user_mods
+ D components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCDVCROPmonthly/shell_commands
+ D components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCmonthly/include_user_mods
+ D   components/clm/cime_config/testdefs/testmods_dirs/clm/clm50BGCmonthly/shell_commands
+
+List all files added and what they do:
+
+A  +    components/clm/src/biogeochem/CNFireNoFireMod.F90 -- No fire option
+
+        New testmods for nofire, clm40 tests, and USUMB PTCLMmkdata directory
+A  +    components/clm/cime_config/testdefs/testmods_dirs/clm/nofire
+A  +    components/clm/cime_config/testdefs/testmods_dirs/clm/40crop
+A  +    components/clm/cime_config/testdefs/testmods_dirs/clm/40pts
+A  +    components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsRLA
+A  +    components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsRLB
+A  +    components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsROA
+A  +    components/clm/cime_config/testdefs/testmods_dirs/clm/40reduceOutput
+A  +    components/clm/cime_config/testdefs/testmods_dirs/clm/USUMB/shell_commands
+
+List all existing files that have been modified, and describe the changes:
+
+ M   components/clm/bld/CLMBuildNamelist.pm --- Add new fire constants and lifire_inparm
+        namelist. Allow spinup state to be 1 or 2, and document better
+ M   components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- When
+       -bgc_spinup on, spinup_state=1 for clm45 and 2 for clm50. Add new
+       fire constants set to values for either lifire2014qianfrc or lifire2016crufrc
+       new f45, ne30, ne120 datasets (bug 2276)
+ M   components/clm/bld/namelist_files/namelist_definition_clm4_5.xml -- Add
+       nofire option to fire_method, remove use_nofire, and add new fire
+       constants
+ M   components/clm/cime_config/buildnml --- Add CLM_ACCELERATED_SPINUP
+       set "-bgc_spinup on" if CLM_ACCELERATED_SPINUP="on"
+
+ M   components/clm/cime_config/config_component.xml -- Set COMP_RUN_BARRIERS (bug 2280)
+         to TRUE for f09 and f19 resolutions. Define CLM_ACCELERATED_SPINUP.
+ M   components/clm/cime_config/config_compsets.xml -- Add ICLM50BGCDVCROP
+         and IHISTCLM50BGC compsets
+
+ M   components/clm/cime_config/testdefs/testlist_clm.xml --- move all clm40
+       tests to have 40 testmods directories, add f45 nofire test, remove clm50
+       testmods just use new CLM50 compsets
+ M   components/clm/cime_config/testdefs/testmods_dirs/clm/USUMB/user_nl_clm -- update (bug 2279)
+ M   components/clm/cime_config/testdefs/testmods_dirs/clm/USUMB/xmlchange_cmnds -- update
+ M   components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_flexCN_FUN/user_nl_clm -- remove use_dynroot
+ M   components/clm/cime_config/testdefs/testmods_dirs/clm/crop/include_user_mods -- point to default NOT 40default
+ M   components/clm/cime_config/testdefs/testmods_dirs/clm/flexCN_FUN/user_nl_clm -- remove use_dynroot
+ M   components/clm/cime_config/testdefs/testmods_dirs/clm/pts/include_user_mods -- point to default not 40default
+ M   components/clm/cime_config/testdefs/testmods_dirs/clm/reduceOutput/shell_commands -- remove -no-fire_emis
+
+ M   components/clm/src/biogeochem/CNFireBaseMod.F90 ----- add cnfire_const object
+        and CNFireReadNML method, put li2016 version of FireFluxes in place (can be
+        shared by li2014 and li2016).
+ M   components/clm/src/biogeochem/CNFireFactoryMod.F90 -- Abort if namelist not
+        found, and add nofire case for fire_method.
+ M   components/clm/src/biogeochem/CNFireLi2014Mod.F90 --- Use constants from cnfire_const 
+        object in CNFireBaseMod, remove use_nofire option
+ M   components/clm/src/biogeochem/CNFireLi2016Mod.F90 --- Use constants from cnfire_const
+        object in CNFireBaseMod, remove use_nofire option, remove CNFireFluxes
+ M   components/clm/src/biogeochem/CNFireMethodMod.F90 --- Add CNFireReadNML_interface
+ M   components/clm/src/biogeochem/CNMRespMod.F90 -------- abort if can't find namelist
+ M   components/clm/src/biogeochem/CNSharedParamsMod.F90 ----- abort if can't find namelist
+ M   components/clm/src/biogeochem/SatellitePhenologyMod.F90 - abort if can't find
+namelist
+ M   components/clm/src/biogeochem/VOCEmissionMod.F90
+ M   components/clm/src/biogeochem/ch4varcon.F90 ---------- abort if can't find namelist
+ M   components/clm/src/biogeophys/CanopyHydrologyMod.F90 - abort if can't find namelist
+ M   components/clm/src/biogeophys/CanopyStateType.F90 ---- abort if can't find namelist
+ M   components/clm/src/biogeophys/HumanIndexMod.F90 ------ abort if can't find namelist
+ M   components/clm/src/biogeophys/RootBiophysMod.F90 ----- abort if can't find namelist
+ M   components/clm/src/biogeophys/SnowHydrologyMod.F90 --- abort if can't find namelist
+ M   components/clm/src/biogeophys/SoilHydrologyType.F90 -- abort if can't find namelist
+ M   components/clm/src/biogeophys/SoilStateInitTimeConstMod.F90 - abort if can't find namelist
+ M   components/clm/src/biogeophys/SoilWaterMovementMod.F90 - abort if can't find namelist
+ M   components/clm/src/biogeophys/SurfaceResistanceMod.F90 - abort if can't find namelist
+ M   components/clm/src/biogeophys/UrbanParamsType.F90 ------ abort if can't find namelist
+ M   components/clm/src/dyn_subgrid/dynSubgridControlMod.F90  abort if can't find namelist
+ M   components/clm/src/dyn_subgrid/dynpftFileMod.F90 ------- abort if can't find namelist
+ M   components/clm/src/init_interp/initInterp.F90 ---------- abort if can't find namelist
+ M   components/clm/src/main/clm_initializeMod.F90 ---------- Pass NL_Filename to create_cnfire_method
+ M   components/clm/src/main/clm_varcon.F90 ----------------- Add secsphr
+ M   components/clm/src/main/clm_varctl.F90 ----------------- Remove use_nofire
+ M   components/clm/src/main/controlMod.F90 ----------------- Remove use_nofire, abort
+        if can't find namelists
+ M   components/clm/src/main/glcBehaviorMod.F90 ------------- abort if can't find namelist
+ M   components/clm/src/main/initVerticalMod.F90 ------------ abort if can't find namelist        and abort if use_bedrock and zbedrock NOT on surface dataset
+ M   components/clm/src/main/ndepStreamMod.F90 -------------- abort if can't find namelist
+
+ M   components/clm/src/main/restFileMod.F90 ---------------- abort if can't find namelist 
+
+ M   components/clm/tools/clm4_5/mksurfdata_map/Makefile.data -- by default create crop
+          1850 f45, ne30, ne120 datasets
+ M   components/clm/tools/clm4_5/mksurfdata_map/src/mkpftMod.F90 - Lower tolerance to
+          relerr = 0.0001 (bug 2285)
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r168
 Originator(s):  Keith Oleson; brought to trunk by Bill Sacks
 Date: Sat Feb 20 20:55:19 MST 2016

@@ -225,7 +225,7 @@ contains
     namelist /clm_inparm/ maxpatch_pft
 
     namelist /clm_inparm/ &
-         use_nofire, use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
+         use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
          use_vichydro, use_century_decomp, use_cn, use_cndv, use_crop, use_fertilizer, use_ozone, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio
 
@@ -273,6 +273,8 @@ contains
           if (ierr /= 0) then
              call endrun(msg='ERROR reading clm_inparm namelist'//errMsg(__FILE__, __LINE__))
           end if
+       else
+          call endrun(msg='ERROR finding clm_inparm namelist'//errMsg(__FILE__, __LINE__))
        end if
        call shr_nl_find_group_name(unitn, 'clm_nitrogen', status=ierr)
        if (ierr == 0) then
@@ -280,6 +282,8 @@ contains
           if (ierr /= 0) then
              call endrun(msg='ERROR reading clm_nitrogen namelist'//errMsg(__FILE__, __LINE__))
           end if
+       else
+          call endrun(msg='ERROR finding clm_nitrogen namelist'//errMsg(__FILE__, __LINE__))
        end if
        call relavu( unitn )
 
@@ -498,7 +502,6 @@ contains
     call mpi_bcast (username, len(username), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (nsrest, 1, MPI_INTEGER, 0, mpicom, ier)
 
-    call mpi_bcast (use_nofire, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_lch4, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_nitrif_denitrif, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vertsoilc, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -701,7 +704,6 @@ contains
     write(iulog,*) '   username              = ',trim(username)
     write(iulog,*) '   hostname              = ',trim(hostname)
     write(iulog,*) 'process control parameters:'
-    write(iulog,*) '    use_nofire = ', use_nofire
     write(iulog,*) '    use_lch4 = ', use_lch4
     write(iulog,*) '    use_nitrif_denitrif = ', use_nitrif_denitrif
     write(iulog,*) '    use_vertsoilc = ', use_vertsoilc

@@ -26,6 +26,7 @@ module initVerticalMod
   use GridcellType      , only : grc                
   use ColumnType        , only : col                
   use SnowHydrologyMod  , only : InitSnowLayers             
+  use abortUtils        , only : endrun    
   use ncdio_pio
   !
   ! !PUBLIC TYPES:
@@ -58,7 +59,6 @@ contains
     use clm_nlUtilsMod , only : find_nlgroup_name
     use clm_varctl     , only : iulog
     use spmdMod        , only : mpicom, masterproc
-    use abortUtils     , only : endrun    
     use controlMod     , only : NLFilename
     !
     ! !ARGUMENTS:
@@ -89,6 +89,8 @@ contains
           if (ierr /= 0) then
              call endrun(msg="ERROR reading '//nl_name//' namelist"//errmsg(__FILE__, __LINE__))
           end if
+       else
+          call endrun(msg="ERROR finding '//nl_name//' namelist"//errmsg(__FILE__, __LINE__))
        end if
        call relavu( unitn )
 
@@ -469,26 +471,21 @@ contains
     !-----------------------------------------------
 
     allocate(zbedrock_in(bounds%begg:bounds%endg))
-    call ncd_io(ncid=ncid, varname='zbedrock', flag='read', data=zbedrock_in, dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) then
-       if (masterproc) then
-          write(iulog,*) 'WARNING:: zbedrock not found on surface data set. All soil columns will have soil depth', &
-               ' set equal to default value.'
+    if (use_bedrock) then
+       call ncd_io(ncid=ncid, varname='zbedrock', flag='read', data=zbedrock_in, dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          if (masterproc) then
+             call endrun( 'ERROR:: zbedrock not found on surface data set, and use_bedrock is true.'//errmsg(__FILE__, __LINE__) )
+          end if
        end if
-       zbedrock_in(:) = zisoi(nlevsoi)
-    end if
 
-!  if use_bedrock = false, set zbedrock to lowest layer bottom interface
-    if (.not. use_bedrock) then
+    !  if use_bedrock = false, set zbedrock to lowest layer bottom interface
+    else
        if (masterproc) write(iulog,*) 'not using use_bedrock!!'
        zbedrock_in(:) = zisoi(nlevsoi)
     endif
 
-!scs: set zbedrock to spatially uniform value
-!    zbedrock_in(:) = min(10.0,zisoi(nlevsoi))
-!    zbedrock_in(:) = min(1.0,zisoi(nlevsoi))
-
-!  determine minimum index of minimum soil depth
+    !  determine minimum index of minimum soil depth
     jmin_bedrock = 3
     do j = 3,nlevsoi 
        if (zisoi(j-1) < zmin_bedrock .and. zisoi(j) >= zmin_bedrock) then

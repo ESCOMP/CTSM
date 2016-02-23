@@ -40,7 +40,7 @@ module CNFireLi2014Mod
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
   use CNFireMethodMod                    , only : cnfire_method_type
-  use CNFireBaseMod                      , only : cnfire_base_type
+  use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const
   !
   implicit none
   private
@@ -54,13 +54,11 @@ module CNFireLi2014Mod
      !
      ! !PUBLIC MEMBER FUNCTIONS:
      procedure, public :: CNFireArea    ! Calculate fire area
-     procedure, public :: CNFireFluxes  ! Calculate fire fluxes
+     procedure, public :: CNFireFluxes
   end type cnfire_li2014_type
 
   !
   ! !PRIVATE MEMBER DATA:
-  real(r8), parameter   :: secsphr = 3600._r8  ! Seconds in an hour
-  real(r8), parameter   :: borealat = 40._r8   ! Latitude for boreal peat fires
   !-----------------------------------------------------------------------
 
   interface cnfire_li2014_type
@@ -90,8 +88,7 @@ contains
     ! !USES:
     use clm_time_manager     , only: get_step_size, get_days_per_year, get_curr_date, get_nstep
     use clm_varpar           , only: max_patch_per_col
-    use clm_varcon           , only: secspday
-    use clm_varctl           , only: use_nofire
+    use clm_varcon           , only: secspday, secsphr
     use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
     use pftconMod            , only: nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
     use dynSubgridControlMod , only: get_do_transient_pfts
@@ -114,27 +111,11 @@ contains
     real(r8)                              , intent(in)    :: t_soi17cm_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
-    real(r8), parameter  :: lfuel=75._r8    ! lower threshold of fuel mass (gC/m2) for ignition, Li et al.(2014)
-    real(r8), parameter  :: ufuel=1050._r8  ! upper threshold of fuel mass(gC/m2) for ignition 
-    real(r8), parameter  :: g0=0.05_r8      ! g(W) when W=0 m/s
-    !
-    ! a1 parameter for cropland fire in (Li et. al., 2014), but changed from
-    ! /timestep to /hr
-    real(r8), parameter :: cropfire_a1 = 0.3_r8
-    !
-    ! c parameter for peatland fire in Li et. al. (2013)
-    ! boreal peat fires (was different in paper),changed from /timestep to /hr
-    real(r8), parameter :: boreal_peatfire_c = 4.2e-5_r8
-    !
-    ! non-boreal peat fires (was different in paper)
-    real(r8), parameter :: non_boreal_peatfire_c = 0.001_r8
-    !
     integer  :: g,l,c,p,pi,j,fc,fp,kyr, kmo, kda, mcsec   ! index variables
     real(r8) :: dt       ! time step variable (s)
     real(r8) :: m        ! top-layer soil moisture (proportion)
     real(r8) :: dayspyr  ! days per year
     real(r8) :: cli      ! effect of climate on deforestation fires (0-1)
-    real(r8), parameter ::cli_scale = 0.035_r8   !global constant for deforestation fires (/d)
     real(r8) :: cri      ! thresholds used for cli, (mm/d), see Eq.(7) in Li et al.(2013)
     real(r8) :: fb       ! availability of fuel for regs A and C
     real(r8) :: fhd      ! impact of hd on agricultural fire
@@ -163,6 +144,17 @@ contains
          totlitc            => totlitc_col                                     , & ! Input:  [real(r8) (:)     ]  (gC/m2) total lit C (column-level mean)           
          decomp_cpools_vr   => decomp_cpools_vr_col                            , & ! Input:  [real(r8) (:,:,:) ]  (gC/m3)  VR decomp. (litter, cwd, soil)
          tsoi17             => t_soi17cm_col                                   , & ! Input:  [real(r8) (:)     ]  (K) soil T for top 0.17 m                             
+         lfuel              => cnfire_const%lfuel                              , & ! Input:  [real(r8)         ]  (gC/m2) Lower threshold of fuel mass
+         ufuel              => cnfire_const%ufuel                              , & ! Input:  [real(r8)         ]  (gC/m2) Upper threshold of fuel mass
+         rh_hgh             => cnfire_const%rh_hgh                             , & ! Input:  [real(r8)         ]  (%) High relative humidity
+         rh_low             => cnfire_const%rh_low                             , & ! Input:  [real(r8)         ]  (%) Low relative humidity
+         bt_min             => cnfire_const%bt_min                             , & ! Input:  [real(r8)         ]  (0-1) Minimum btran
+         bt_max             => cnfire_const%bt_max                             , & ! Input:  [real(r8)         ]  (0-1) Maximum btran
+         cli_scale          => cnfire_const%cli_scale                          , & ! Input:  [real(r8)         ]  (/d) global constant for deforestation fires
+         cropfire_a1        => cnfire_const%cropfire_a1                        , & ! Input:  [real(r8)         ]  (/hr) a1 parameter for cropland fire
+         non_boreal_peatfire_c => cnfire_const%non_boreal_peatfire_c           , & ! Input:  [real(r8)         ]  (/hr) c parameter for non-boreal peatland fire
+         pot_hmn_ign_counts_alpha => cnfire_const%pot_hmn_ign_counts_alpha     , & ! Input:  [real(r8)         ]  (/person/month) Potential human ignition counts
+         boreal_peatfire_c  => cnfire_const%boreal_peatfire_c                  , & ! Input:  [real(r8)         ]  (/hr) c parameter for boreal peatland fire
          
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
@@ -392,7 +384,7 @@ contains
                                   (hdmlf/450._r8)**0.5_r8))*patch%wtcol(p)/lfwt(c)
                           else   ! for trees
                              if( gdp_lf(c)  >  20._r8 )then
-                                lgdp_col(c)  =lgdp_col(c)+0.39_r8*patch%wtcol(p)/(1.0_r8 - cropf_col(c))
+                                lgdp_col(c)  =lgdp_col(c)+cnfire_const%occur_hi_gdp_tree*patch%wtcol(p)/(1.0_r8 - cropf_col(c))
                              else    
                                 lgdp_col(c) = lgdp_col(c)+patch%wtcol(p)/(1.0_r8 - cropf_col(c))
                              end if
@@ -493,7 +485,7 @@ contains
      do fc = 1, num_soilc
         c = filter_soilc(fc)
         g= col%gridcell(c)
-        if(grc%latdeg(g) < borealat )then
+        if(grc%latdeg(g) < cnfire_const%borealat )then
            baf_peatf(c) = non_boreal_peatfire_c/secsphr*max(0._r8, &
                 min(1._r8,(4.0_r8-prec60_col(c)*secspday)/ &
                 4.0_r8))**2*peatf_lf(c)*(1._r8-fsat(c))
@@ -538,21 +530,21 @@ contains
               fb       = max(0.0_r8,min(1.0_r8,(fuelc(c)-lfuel)/(ufuel-lfuel)))
               m        = max(0._r8,wf(c))
               fire_m   = exp(-SHR_CONST_PI *(m/0.69_r8)**2)*(1.0_r8 - max(0._r8, &
-                   min(1._r8,(forc_rh(g)-30._r8)/(80._r8-30._r8))))*  &
+                   min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low))))*  &
                    min(1._r8,exp(SHR_CONST_PI*(forc_t(c)-SHR_CONST_TKFRZ)/10._r8))
-              lh       = 0.0035_r8*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
+              lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
               fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
               ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8*cos(3._r8*grc%lat(g)))*0.25_r8)*(1._r8-fs)*(1._r8-cropf_col(c)) 
               nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
               Lb_lf    = 1._r8+10.0_r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
               if ( wtlf(c) > 0.0_r8 )then
-                 spread_m = (1.0_r8 - max(0._r8,min(1._r8,(btran_col(c)/wtlf(c)-0.3_r8)/ &
-                      (0.7_r8-0.3_r8))))*(1.0_r8-max(0._r8, &
-                      min(1._r8,(forc_rh(g)-30._r8)/(80._r8-30._r8))))
+                 spread_m = (1.0_r8 - max(0._r8,min(1._r8,(btran_col(c)/wtlf(c)-bt_min)/ &
+                       (bt_max-bt_min))))*(1.0_r8-max(0._r8, &
+                       min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low))))
               else
                  spread_m = 0.0_r8
               end if
-              farea_burned(c) = min(1._r8,(g0*spread_m*fsr_col(c)* &
+              farea_burned(c) = min(1._r8,(cnfire_const%g0*spread_m*fsr_col(c)* &
                    fd_col(c)/1000._r8)**2*lgdp1_col(c)* &
                    lpop_col(c)*nfire(c)*SHR_CONST_PI*Lb_lf+ &
                    baf_crop(c)+baf_peatf(c))  ! fraction (0-1) per sec
@@ -586,18 +578,6 @@ contains
 
         else
            farea_burned(c) = min(1._r8,baf_crop(c)+baf_peatf(c))
-        end if
-
-        if (use_nofire) then
-           ! zero out the fire area if NOFIRE flag is on
-
-           farea_burned(c) = 0._r8
-           baf_crop(c)     = 0._r8
-           baf_peatf(c)    = 0._r8
-           fbac(c)         = 0._r8
-           fbac1(c)        = 0._r8
-           ! with NOFIRE, tree carbon is still removed in landuse change regions by the
-           ! landuse code
         end if
 
      end do  ! end of column loop
@@ -1214,7 +1194,7 @@ contains
      do fc = 1,num_soilc
         c = filter_soilc(fc)
         g = col%gridcell(c)
-        if( grc%latdeg(g)  <  borealat)then
+        if( grc%latdeg(g)  <  cnfire_const%borealat)then
            somc_fire(c)= totsomc(c)*baf_peatf(c)*6.0_r8/33.9_r8
         else
            somc_fire(c)= baf_peatf(c)*2.2e3_r8

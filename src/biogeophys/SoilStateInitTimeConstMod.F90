@@ -69,6 +69,8 @@ contains
           if (ierr /= 0) then
              call endrun(msg="ERROR reading '//nl_name//' namelist"//errmsg(__FILE__, __LINE__))
           end if
+       else
+          call endrun(msg="ERROR finding '//nl_name//' namelist"//errmsg(__FILE__, __LINE__))
        end if
        call relavu( unitn )
 

@@ -8,37 +8,38 @@ if ($#ARGV == -1) {
 my ($CASEROOT) = @ARGV;
 chdir "${CASEROOT}";
 
-my $CIMEROOT		= `./xmlquery  CIMEROOT 	   -value`;
-my $SRCROOT		= `./xmlquery  SRCROOT		   -value`;
-my $DIN_LOC_ROOT	= `./xmlquery  DIN_LOC_ROOT	   -value`;
-my $COMPSET	        = `./xmlquery  COMPSET	           -value`;
-my $CCSM_CO2_PPMV	= `./xmlquery  CCSM_CO2_PPMV	   -value`;
-my $CLM_CO2_TYPE	= `./xmlquery  CLM_CO2_TYPE	   -value`;
-my $CLM_USRDAT_NAME	= `./xmlquery  CLM_USRDAT_NAME	   -value`;
-my $CLM_CONFIG_OPTS	= `./xmlquery  CLM_CONFIG_OPTS	   -value`;
-my $CLM_NAMELIST_OPTS	= `./xmlquery  CLM_NAMELIST_OPTS   -value`;
-my $CLM_BLDNML_OPTS	= `./xmlquery  CLM_BLDNML_OPTS	   -value`;
-my $CLM_NML_USE_CASE	= `./xmlquery  CLM_NML_USE_CASE	   -value`;
-my $CLM_FORCE_COLDSTART = `./xmlquery  CLM_FORCE_COLDSTART -value`;
-my $COMP_INTERFACE	= `./xmlquery  COMP_INTERFACE	   -value`;
-my $COMP_GLC		= `./xmlquery  COMP_GLC		   -value`;
-my $DEBUG		= `./xmlquery  DEBUG		   -value`;
-my $GLC_NEC		= `./xmlquery  GLC_NEC		   -value`;
-my $LND_GRID		= `./xmlquery  LND_GRID		   -value`;
-my $LND_NCPL		= `./xmlquery  LND_NCPL		   -value`;
-my $LND_DOMAIN_PATH	= `./xmlquery  LND_DOMAIN_PATH	   -value`;
-my $LND_DOMAIN_FILE	= `./xmlquery  LND_DOMAIN_FILE	   -value`;
-my $MASK_GRID		= `./xmlquery  MASK_GRID	   -value`;
-my $NTHRDS_LND		= `./xmlquery  NTHRDS_LND	   -value`;
-my $NTASKS_LND		= `./xmlquery  NTASKS_LND	   -value`;
-my $NINST_LND		= `./xmlquery  NINST_LND	   -value`;
-my $RUNDIR		= `./xmlquery  RUNDIR		   -value`;
-my $RUN_TYPE		= `./xmlquery  RUN_TYPE		   -value`;
-my $RUN_STARTDATE	= `./xmlquery  RUN_STARTDATE	   -value`;
-my $RUN_REFCASE		= `./xmlquery  RUN_REFCASE	   -value`;
-my $RUN_REFDATE		= `./xmlquery  RUN_REFDATE	   -value`;
-my $RUN_REFTOD		= `./xmlquery  RUN_REFTOD	   -value`;
-my $GLC_SMB		= `./xmlquery  GLC_SMB		   -value`;
+my $CIMEROOT		    = `./xmlquery  CIMEROOT		  -value`;
+my $SRCROOT		    = `./xmlquery  SRCROOT		  -value`;
+my $DIN_LOC_ROOT	    = `./xmlquery  DIN_LOC_ROOT		  -value`;
+my $COMPSET		    = `./xmlquery  COMPSET	          -value`;
+my $CCSM_CO2_PPMV	    = `./xmlquery  CCSM_CO2_PPMV	  -value`;
+my $CLM_CO2_TYPE	    = `./xmlquery  CLM_CO2_TYPE		  -value`;
+my $CLM_USRDAT_NAME	    = `./xmlquery  CLM_USRDAT_NAME	  -value`;
+my $CLM_CONFIG_OPTS	    = `./xmlquery  CLM_CONFIG_OPTS	  -value`;
+my $CLM_NAMELIST_OPTS	    = `./xmlquery  CLM_NAMELIST_OPTS	  -value`;
+my $CLM_BLDNML_OPTS	    = `./xmlquery  CLM_BLDNML_OPTS	  -value`;
+my $CLM_NML_USE_CASE	    = `./xmlquery  CLM_NML_USE_CASE	  -value`;
+my $CLM_FORCE_COLDSTART	    = `./xmlquery  CLM_FORCE_COLDSTART	  -value`;
+my $COMP_INTERFACE	    = `./xmlquery  COMP_INTERFACE	  -value`;
+my $CLM_ACCELERATED_SPINUP  = `./xmlquery  CLM_ACCELERATED_SPINUP -value`;
+my $COMP_GLC		    = `./xmlquery  COMP_GLC		  -value`;
+my $DEBUG		    = `./xmlquery  DEBUG		  -value`;
+my $GLC_NEC		    = `./xmlquery  GLC_NEC		  -value`;
+my $LND_GRID		    = `./xmlquery  LND_GRID		  -value`;
+my $LND_NCPL		    = `./xmlquery  LND_NCPL		  -value`;
+my $LND_DOMAIN_PATH	    = `./xmlquery  LND_DOMAIN_PATH	  -value`;
+my $LND_DOMAIN_FILE	    = `./xmlquery  LND_DOMAIN_FILE	  -value`;
+my $MASK_GRID		    = `./xmlquery  MASK_GRID		  -value`;
+my $NTHRDS_LND		    = `./xmlquery  NTHRDS_LND		  -value`;
+my $NTASKS_LND		    = `./xmlquery  NTASKS_LND		  -value`;
+my $NINST_LND		    = `./xmlquery  NINST_LND		  -value`;
+my $RUNDIR		    = `./xmlquery  RUNDIR		  -value`;
+my $RUN_TYPE		    = `./xmlquery  RUN_TYPE		  -value`;
+my $RUN_STARTDATE	    = `./xmlquery  RUN_STARTDATE	  -value`;
+my $RUN_REFCASE		    = `./xmlquery  RUN_REFCASE		  -value`;
+my $RUN_REFDATE		    = `./xmlquery  RUN_REFDATE		  -value`;
+my $RUN_REFTOD		    = `./xmlquery  RUN_REFTOD		  -value`;
+my $GLC_SMB		    = `./xmlquery  GLC_SMB		  -value`;
 
 my @dirs = ("${CIMEROOT}/utils/perl5lib");
 unshift @INC, @dirs;
@@ -170,13 +171,20 @@ while ($inst_counter <= $NINST_LND) {
     my $ignore = "-ignore_ic_date";
     if (($RUN_STARTDATE =~ /.*-01-01.*/) || ($RUN_STARTDATE =~ /.*-09-01.*/)) {	$ignore = "-ignore_ic_year";}
 
+    my $spinup = "";
+    if ($CLM_ACCELERATED_SPINUP  eq "on") {
+        if ( $CLM_BLDNML_OPTS =~ /-bgc cn/ || $CLM_BLDNML_OPTS =~ /-bgc bgc/) {
+           $spinup = "-bgc_spinup on";
+        }
+    }
+
     $sysmod = "$SRCROOT/components/clm/bld/build-namelist -infile $CASEROOT/Buildconf/clmconf/namelist ";
     $sysmod = "$sysmod -csmdata $DIN_LOC_ROOT -inputdata $CASEROOT/Buildconf/clm.input_data_list $ignore"; 
     $sysmod = "$sysmod -namelist \" \&clm_inparm  start_ymd=$start_ymd $CLM_NAMELIST_OPTS \/\"";
     $sysmod = "$sysmod $usecase $glc_opts -res $resolution $clmusr -clm_start_type $start_type";
     $sysmod = "$sysmod -envxml_dir $CASEROOT -l_ncpl $LND_NCPL -lnd_frac ${LND_DOMAIN_PATH}/${LND_DOMAIN_FILE}";
     $sysmod = "$sysmod -glc_nec $GLC_NEC -co2_ppmv $CCSM_CO2_PPMV -co2_type $CLM_CO2_TYPE ";
-    $sysmod = "$sysmod -config $CASEROOT/Buildconf/clmconf/config_cache.xml $CLM_BLDNML_OPTS";
+    $sysmod = "$sysmod -config $CASEROOT/Buildconf/clmconf/config_cache.xml $CLM_BLDNML_OPTS $spinup";
     system($sysmod) == 0 or die "ERROR clm.buildnml: $sysmod failed: $?\n";
     
     # -----------------------------------------------------

@@ -33,7 +33,7 @@ STANDARD_RES = 360x720cru,48x96,0.9x1.25,1.9x2.5,10x15,ne30np4
 
 STANDARD = \
 	global-present \
-	global-present-45 \
+	global-present-f45 \
 	global-present-0.125 \
 	global-present-ne16np4 \
 	global-present-ne120np4 \
@@ -61,6 +61,9 @@ CROP = \
 	crop-smallville-1850 \
 	crop-global-1850-0.9 \
 	crop-global-1850-1.9 \
+	crop-global-1850-f45 \
+	crop-global-1850-ne30np4 \
+	crop-global-1850-ne120np4 \
 	crop-global-1850-f10
 
 all : standard tropics crop urban landuse-timeseries
@@ -73,7 +76,7 @@ standard : $(STANDARD)
 global-present : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 2000 -res $(STANDARD_RES) $(BACKGROUND)
 
-global-present-45 : FORCE
+global-present-f45 : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 2000 -res 4x5 $(BACKGROUND)
 
 global-present-0.125 : FORCE
@@ -165,6 +168,14 @@ crop-global-1850-1.9 : FORCE
 crop-global-1850-f10 : FORCE
 	$(MKSURFDATA) -crop -glc_nec 10 -y 1850 -r 10x15 $(BACKGROUND)
 
+crop-global-1850-f45 : FORCE
+	$(MKSURFDATA) -crop -glc_nec 10 -y 1850 -r 4x5 $(BACKGROUND)
+
+crop-global-1850-ne30np4 : FORCE
+	$(MKSURFDATA) -crop -glc_nec 10 -y 1850 -r ne30np4 $(BACKGROUND)
+
+crop-global-1850-ne120np4 : FORCE
+	$(MKSURFDATA) -crop -glc_nec 10 -y 1850 -r ne120np4 $(BACKGROUND)
 #
 # urban
 #
