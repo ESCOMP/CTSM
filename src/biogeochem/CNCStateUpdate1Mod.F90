@@ -13,7 +13,7 @@ module CNCStateUpdate1Mod
   use abortutils                         , only : endrun
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
-  use CNVegStateType                     , only : cnveg_state_type
+  use CropType                           , only : crop_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use PatchType                          , only : patch                
@@ -72,7 +72,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       cnveg_state_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
+       crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
        soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
@@ -85,7 +85,7 @@ contains
     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                              , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                              , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    type(cnveg_state_type)               , intent(in)    :: cnveg_state_inst
+    type(crop_type)                      , intent(in)    :: crop_inst
     type(cnveg_carbonflux_type)          , intent(inout) :: cnveg_carbonflux_inst ! See note below for xsmrpool_to_atm_patch
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
@@ -106,7 +106,7 @@ contains
          cascade_donor_pool    => decomp_cascade_con%cascade_donor_pool    , & ! Input:  [integer  (:)     ]  which pool is C taken from for a given decomposition step
          cascade_receiver_pool => decomp_cascade_con%cascade_receiver_pool , & ! Input:  [integer  (:)     ]  which pool is C added to for a given decomposition step
 
-         harvdate              => cnveg_state_inst%harvdate_patch          , & ! Input:  [integer  (:)     ]  harvest date                                       
+         harvdate              => crop_inst%harvdate_patch                 , & ! Input:  [integer  (:)     ]  harvest date                                       
 
          cf_veg                => cnveg_carbonflux_inst                    , & ! Output:
          cs_veg                => cnveg_carbonstate_inst                   , & ! Output:

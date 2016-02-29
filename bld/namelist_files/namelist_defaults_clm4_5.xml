@@ -429,9 +429,9 @@ lnd/clm2/surfdata_map/surfdata_4x5_78pfts_simyr1850_c160216.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_78pfts_simyr1850_c160127.nc</fsurdat>
 
-<fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".false." >
+<fsurdat hgrid="ne30np4"      sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_ne30np4_78pfts_simyr1850_c160208.nc</fsurdat>
-<fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".false." >
+<fsurdat hgrid="ne120np4"     sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->

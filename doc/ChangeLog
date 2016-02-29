@@ -1,4 +1,180 @@
 ===============================================================
+Tag name:  clm4_5_8_r170
+Originator(s):  sacks (Bill Sacks)
+Date: Sun Feb 28 20:33:37 MST 2016
+One-line Summary: Add a wrapper for CN Vegetation
+
+Purpose of changes
+------------------
+
+This tag introduces a wrapper (or "facade" in software design terms) for the CN
+vegetation types and modules.
+
+My main motivations were:
+
+(1) Insulating the rest of the code from changes in the CNVeg
+implementation. For example, I'm about to introduce a class to hold variables
+related to the product pools. With the old implementation, I would have to touch
+a number of modules outside of the biogeochem directory in order to do this; now
+I won't.
+
+(2) Simplifying interfaces to subroutines – reducing the number of arguments.
+
+(3) Starting to put in place a structure that could be leveraged to support CN
+and ED (and SP) side-by-side, polymorphically, so that we don't need 'if use_cn'
+/ 'if use_ed' conditionals scattered throughout the code or direct "use"
+statements of types in CN / ED / etc.
+
+The changes here are a big first step towards these goals, although this isn't
+yet complete. There are some notes in comments in CNVegetationFacade.F90 listing
+some things that should still be done.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2276: Need ne30_g16 surface dataset with crop for CLM45/CLM50
+- 2291: fire emissions NaN with gnu compiler
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: a bit of review by Erik Kluzek and Ben Andre
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - ok
+
+    ok means: all tests pass except expected irrigation failure
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    There was one unexpected baseline failure:
+    SMS_Lm25.f19_g16.ICLM45BGCCROP.yellowstone_gnu.clm-cropMonthOutput
+
+    Upon investigation, it appeared that this was a problem in the previous tag
+    (and possibly earlier): fire emissions differed between the trunk and this
+    branch, and were often NaN in the trunk version (but no longer NaN on this
+    branch). This seems most likely to be a compiler-related problem, since it
+    seems to just appear with gnu. See bug 2291.
+
+CLM tag used for the baseline comparisons: clm4_5_8_r169
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+  (However, see above notes about the baseline failure due to bug 2291.)
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated:
+
+========= Moved some modules from dyn_subgrid into biogeochem (no changes to contents)
+D       components/clm/src/dyn_subgrid/dynCNDVMod.F90
+D       components/clm/src/dyn_subgrid/dynHarvestMod.F90
+D       components/clm/src/dyn_subgrid/dynConsBiogeochemMod.F90
+
+List all files added and what they do:
+
+========= New module, providing a wrapper / facade for the CNVeg stuff;
+          this is the crux of the change
+A       components/clm/src/biogeochem/CNVegetationFacade.F90
+
+========= Moved some modules from dyn_subgrid into biogeochem (no changes to contents)
+A       components/clm/src/biogeochem/dynCNDVMod.F90
+A       components/clm/src/biogeochem/dynHarvestMod.F90
+A       components/clm/src/biogeochem/dynConsBiogeochemMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+========= Moved stuff out of these places into the new CNVeg, and simplified
+          some interfaces
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/main/clm_initializeMod.F90
+M       components/clm/src/main/clm_instMod.F90
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+
+========= Rather than passing CNVeg derived types, instead directly pass the
+          small number of arrays that are needed from CNVeg (removes dependence
+          on the CNVeg types, which is needed if we ever want to make CNVeg
+          polymorphic; also makes the connection between CNVeg and other parts
+          of the model more explicit)
+M       components/clm/src/biogeophys/CanopyFluxesMod.F90
+M       components/clm/src/biogeophys/PhotosynthesisMod.F90
+M       components/clm/src/main/lnd2atmMod.F90
+M       components/clm/src/biogeochem/ch4Mod.F90
+
+========= Added a bit of time manager functionality, and some unit tests
+M       components/clm/src/utils/clm_time_manager.F90
+M       components/clm/src/unit_test_shr/unittestTimeManagerMod.F90
+M       components/clm/src/utils/test/clm_time_manager_test/test_clm_time_manager.pf
+
+========= Moved some crop-specific variables out of CNVegStateType into CropType
+          (but there are still more that need to be moved)
+M       components/clm/src/biogeochem/CNVegStateType.F90
+M       components/clm/src/biogeochem/CropType.F90
+M       components/clm/src/biogeochem/CNPhenologyMod.F90
+M       components/clm/src/biogeochem/CNCStateUpdate1Mod.F90
+M       components/clm/src/biogeochem/NutrientCompetitionCLM45defaultMod.F90
+M       components/clm/src/biogeochem/NutrientCompetitionFlexibleCNMod.F90
+M       components/clm/src/biogeochem/NutrientCompetitionMethodMod.F90
+M       components/clm/src/biogeochem/CNNDynamicsMod.F90
+M       components/clm/src/biogeochem/CNVegStructUpdateMod.F90
+M       components/clm/src/biogeochem/CNRootDynMod.F90
+M       components/clm/src/biogeochem/CNDriverMod.F90
+
+========= Unrelated change: fix xml entries for ne30 and ne120 surface datasets
+          (bug 2276)
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+========= Restore expected failure that seems to have been deleted accidentally
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r169
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Feb 23 14:35:02 MST 2016

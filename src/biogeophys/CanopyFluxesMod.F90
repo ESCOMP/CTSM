@@ -30,7 +30,6 @@ module CanopyFluxesMod
   use SurfaceResistanceMod  , only : do_soilevap_beta,do_soil_resistance_sl14
   use atm2lndType           , only : atm2lnd_type
   use CanopyStateType       , only : canopystate_type
-  use CNVegStateType        , only : cnveg_state_type
   use EnergyFluxType        , only : energyflux_type
   use FrictionvelocityMod   , only : frictionvel_type
   use OzoneBaseMod          , only : ozone_base_type
@@ -49,7 +48,6 @@ module CanopyFluxesMod
   use PatchType             , only : patch                
   use EDTypesMod            , only : ed_site_type
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-  use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
   use LunaMod               , only : Update_Photosynthesis_Capacity, Acc24_Climate_LUNA,Acc240_Climate_LUNA,Clear24_Climate_LUNA
   !
   ! !PUBLIC TYPES:
@@ -76,10 +74,11 @@ contains
 
   !------------------------------------------------------------------------------
   subroutine CanopyFluxes(bounds,  num_exposedvegp, filter_exposedvegp, &
-       ed_allsites_inst,  atm2lnd_inst, canopystate_inst, cnveg_state_inst,            &
+       ed_allsites_inst,  atm2lnd_inst, canopystate_inst, &
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst, &
        temperature_inst, waterflux_inst, waterstate_inst, ch4_inst, ozone_inst, photosyns_inst, &
-       humanindex_inst, soil_water_retention_curve, cnveg_nitrogenstate_inst) 
+       humanindex_inst, soil_water_retention_curve, &
+       downreg_patch, leafn_patch)
     !
     ! !DESCRIPTION:
     ! 1. Calculates the leaf temperature:
@@ -121,7 +120,6 @@ contains
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                     SwampCoolEff, KtoC, VaporPres
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
     !
     ! !ARGUMENTS:
     type(bounds_type)         , intent(in)    :: bounds 
@@ -130,7 +128,6 @@ contains
     type(ed_site_type)                     , intent(inout), target :: ed_allsites_inst( bounds%begg: )
     type(atm2lnd_type)                     , intent(in)            :: atm2lnd_inst
     type(canopystate_type)                 , intent(inout)         :: canopystate_inst
-    type(cnveg_state_type)                 , intent(in)            :: cnveg_state_inst
     type(energyflux_type)                  , intent(inout)         :: energyflux_inst
     type(frictionvel_type)                 , intent(inout)         :: frictionvel_inst
     type(solarabs_type)                    , intent(inout)         :: solarabs_inst
@@ -144,7 +141,8 @@ contains
     type(photosyns_type)                   , intent(inout)         :: photosyns_inst
     type(humanindex_type)                  , intent(inout)         :: humanindex_inst
     class(soil_water_retention_curve_type) , intent(in)            :: soil_water_retention_curve
-    type(cnveg_nitrogenstate_type)         , intent(in)            :: cnveg_nitrogenstate_inst
+    real(r8), intent(in) :: downreg_patch(bounds%begp:) ! fractional reduction in GPP due to N limitation (dimensionless)
+    real(r8), intent(in) :: leafn_patch(bounds%begp:)   ! leaf N (gN/m2)
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: btran0 = 0.0_r8  ! initial value
@@ -294,6 +292,9 @@ contains
 
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(downreg_patch) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(leafn_patch) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
 
     associate(                                                               & 
          soilresis            => soilstate_inst%soilresis_col              , & ! Input:  [real(r8) (:)   ]  soil evaporative resistance
@@ -761,12 +762,13 @@ contains
 
             call Photosynthesis (bounds, fn, filterp, &
                  svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
-                 dayl_factor(begp:endp), atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
-                 canopystate_inst, ozone_inst, photosyns_inst, cnveg_nitrogenstate_inst, phase='sun')
+                 dayl_factor(begp:endp), leafn_patch(begp:endp), &
+                 atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
+                 canopystate_inst, ozone_inst, photosyns_inst, phase='sun')
 
             if ( use_cn .and. use_c13 ) then
-               call Fractionation (bounds, fn, filterp, &
-                    atm2lnd_inst, canopystate_inst, cnveg_state_inst, solarabs_inst, surfalb_inst, photosyns_inst, &
+               call Fractionation (bounds, fn, filterp, downreg_patch(begp:endp), &
+                    atm2lnd_inst, canopystate_inst, solarabs_inst, surfalb_inst, photosyns_inst, &
                     phase='sun')
             endif
 
@@ -786,12 +788,13 @@ contains
 
             call Photosynthesis (bounds, fn, filterp, &
                  svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
-                 dayl_factor(begp:endp), atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
-                 canopystate_inst, ozone_inst, photosyns_inst, cnveg_nitrogenstate_inst, phase='sha')
+                 dayl_factor(begp:endp), leafn_patch(begp:endp), &
+                 atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
+                 canopystate_inst, ozone_inst, photosyns_inst, phase='sha')
 
             if ( use_cn .and. use_c13 ) then
-               call Fractionation (bounds, fn, filterp,  &
-                    atm2lnd_inst, canopystate_inst, cnveg_state_inst, solarabs_inst, surfalb_inst, photosyns_inst, &
+               call Fractionation (bounds, fn, filterp, downreg_patch(begp:endp), &
+                    atm2lnd_inst, canopystate_inst, solarabs_inst, surfalb_inst, photosyns_inst, &
                     phase='sha')
             end if
 

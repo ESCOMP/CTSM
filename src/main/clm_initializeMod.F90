@@ -288,7 +288,6 @@ contains
     use SnowSnicarMod         , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod            , only : lnd2atm_minimal
     use NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
-    use CNFireFactoryMod      , only : create_cnfire_method
     use controlMod            , only : NLFilename
     !
     ! !ARGUMENTS    
@@ -341,9 +340,6 @@ contains
     call clm_instReadNML( NLFilename )
     allocate(nutrient_competition_method, &
          source=create_nutrient_competition_method())
-
-    allocate(cnfire_method, &
-         source=create_cnfire_method( NLFilename ))
 
     if (use_cn .or. use_ed) then
        call readParameters(nutrient_competition_method)
@@ -456,7 +452,7 @@ contains
 
     call t_startf('init_dyn_subgrid')
     call init_subgrid_weights_mod(bounds_proc)
-    call dynSubgrid_init(bounds_proc, dgvs_inst)
+    call dynSubgrid_init(bounds_proc)
     call t_stopf('init_dyn_subgrid')
 
     ! ------------------------------------------------------------------------
@@ -464,7 +460,10 @@ contains
     ! ------------------------------------------------------------------------
 
     if (use_cn) then
-       call CNDriverInit(bounds_proc, NLFilename, cnfire_method)
+       call bgc_vegetation_inst%Init2(bounds_proc, NLFilename)
+
+       ! NOTE(wjs, 2016-02-23) Maybe the rest of the body of this conditional should also
+       ! be moved into bgc_vegetation_inst%Init2
 
        if (n_drydep > 0 .and. drydep_method == DD_XLND) then
           ! Must do this also when drydeposition is used so that estimates of monthly 
@@ -619,9 +618,7 @@ contains
        call ed_phenology_inst%initAccVars(bounds_proc)
     endif
     call canopystate_inst%initAccVars(bounds_proc)
-    if (use_cndv) then
-       call dgvs_inst%initAccVars(bounds_proc)
-    end if
+    call bgc_vegetation_inst%initAccVars(bounds_proc)
     if (crop_prog) then
        call crop_inst%initAccVars(bounds_proc)
     end if

@@ -26,11 +26,9 @@ module  PhotosynthesisMod
   use TemperatureType     , only : temperature_type
   use SolarAbsorbedType   , only : solarabs_type
   use SurfaceAlbedoType   , only : surfalb_type
-  use CNvegStateType      , only : cnveg_state_type
   use OzoneBaseMod        , only : ozone_base_type
   use LandunitType        , only : lun
   use PatchType           , only : patch
-  use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type    
   !
   implicit none
   private
@@ -588,8 +586,9 @@ contains
   !------------------------------------------------------------------------------
   subroutine Photosynthesis ( bounds, fn, filterp, &
        esat_tv, eair, oair, cair, rb, btran, &
-       dayl_factor, atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
-       canopystate_inst, ozone_inst, photosyns_inst, cnveg_nitrogenstate_inst, phase)
+       dayl_factor, leafn, &
+       atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
+       canopystate_inst, ozone_inst, photosyns_inst, phase)
     !
     ! !DESCRIPTION:
     ! Leaf photosynthesis and stomatal conductance calculation as described by
@@ -614,6 +613,7 @@ contains
     real(r8)               , intent(in)    :: rb( bounds%begp: )             ! boundary layer resistance (s/m) [pft]
     real(r8)               , intent(in)    :: btran( bounds%begp: )          ! transpiration wetness factor (0 to 1) [pft]
     real(r8)               , intent(in)    :: dayl_factor( bounds%begp: )    ! scalar (0-1) for daylength
+    real(r8)               , intent(in)    :: leafn( bounds%begp: )          ! leaf N (gN/m2)
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(temperature_type) , intent(in)    :: temperature_inst
     type(surfalb_type)     , intent(in)    :: surfalb_inst
@@ -621,7 +621,6 @@ contains
     type(canopystate_type) , intent(in)    :: canopystate_inst
     class(ozone_base_type) , intent(in)    :: ozone_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
-    type(cnveg_nitrogenstate_type), intent(in) :: cnveg_nitrogenstate_inst   
     character(len=*)       , intent(in)    :: phase                          ! 'sun' or 'sha'
 
     !
@@ -762,6 +761,7 @@ contains
     SHR_ASSERT_ALL((ubound(rb)          == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
     SHR_ASSERT_ALL((ubound(btran)       == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
     SHR_ASSERT_ALL((ubound(dayl_factor) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(leafn)       == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
 
     associate(                                                 &
          c3psn      => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3
@@ -987,11 +987,7 @@ contains
                ! dividing by LAI to convert total leaf nitrogen
                ! from m2 ground to m2 leaf; dividing by sum_nscaler to
                ! convert total leaf N to leaf N at canopy top
-               lnc(p) = cnveg_nitrogenstate_inst%leafn_patch(p) / (tlai(p) * sum_nscaler)
-               ! NOTE(bja, 2015-11) can not associate leafn_patch to a
-               ! shorter name because leafn_patch may not be
-               ! allocated, e.g. SP runs. Using an associate with
-               ! unallocated memory results in a NAG runtime error.
+               lnc(p) = leafn(p) / (tlai(p) * sum_nscaler)
             else                                                                    
                lnc(p) = 0.0_r8                                                      
             end if                                                                  
@@ -1457,8 +1453,8 @@ contains
   end subroutine PhotosynthesisTotal
 
   !------------------------------------------------------------------------------
-  subroutine Fractionation(bounds, fn, filterp, &
-       atm2lnd_inst, canopystate_inst, cnveg_state_inst, solarabs_inst, surfalb_inst, photosyns_inst, &
+  subroutine Fractionation(bounds, fn, filterp, downreg, &
+       atm2lnd_inst, canopystate_inst, solarabs_inst, surfalb_inst, photosyns_inst, &
        phase)
     !
     ! !DESCRIPTION:
@@ -1469,9 +1465,9 @@ contains
     type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: fn                   ! size of pft filter
     integer                , intent(in)    :: filterp(fn)          ! patch filter
+    real(r8)               , intent(in)    :: downreg( bounds%begp: ) ! fractional reduction in GPP due to N limitation (dimensionless)
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(canopystate_type) , intent(in)    :: canopystate_inst
-    type(cnveg_state_type) , intent(in)    :: cnveg_state_inst
     type(solarabs_type)    , intent(in)    :: solarabs_inst
     type(surfalb_type)     , intent(in)    :: surfalb_inst
     type(photosyns_type)   , intent(in)    :: photosyns_inst
@@ -1485,6 +1481,8 @@ contains
     real(r8) :: ci
     !------------------------------------------------------------------------------
 
+    SHR_ASSERT_ALL((ubound(downreg) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+
     associate(                                                  &
          forc_pbot   => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)
          forc_pco2   => atm2lnd_inst%forc_pco2_grc            , & ! Input:  [real(r8) (:)   ]  partial pressure co2 (Pa)
@@ -1492,8 +1490,6 @@ contains
          c3psn       => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3
 
          nrad        => surfalb_inst%nrad_patch               , & ! Input:  [integer  (:)   ]  number of canopy layers, above snow for radiative transfer
-
-         downreg     => cnveg_state_inst%downreg_patch        , & ! Input:  [real(r8) (:)   ]  fractional reduction in GPP due to N limitation (DIM)
 
          an          => photosyns_inst%an_patch               , & ! Input:  [real(r8) (:,:) ]  net leaf photosynthesis (umol CO2/m**2/s)
          gb_mol      => photosyns_inst%gb_mol_patch           , & ! Input:  [real(r8) (:)   ]  leaf boundary layer conductance (umol H2O/m**2/s)

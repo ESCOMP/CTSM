@@ -10,8 +10,8 @@ module clm_driver
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
   use clm_varctl             , only : wrtdia, iulog, create_glacier_mec_landunit, use_ed
-  use clm_varctl             , only : use_cn, use_cndv, use_lch4, use_voc, use_noio, use_c13, use_c14
-  use clm_time_manager       , only : get_step_size, get_curr_date, get_ref_date, get_nstep, is_beg_curr_day
+  use clm_varctl             , only : use_cn, use_lch4, use_voc, use_noio, use_c13, use_c14
+  use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date
   use clm_varpar             , only : nlevsno, nlevgrnd, crop_prog
   use spmdMod                , only : masterproc, mpicom
@@ -48,12 +48,7 @@ module clm_driver
   use SurfaceRadiationMod    , only : SurfaceRadiation
   use UrbanRadiationMod      , only : UrbanRadiation
   !
-  use CNDriverMod            , only : CNDriverNoLeaching, CNDriverLeaching, CNDriverSummary
-  use CNVegStructUpdateMod   , only : CNVegStructUpdate 
-  use CNAnnualUpdateMod      , only : CNAnnualUpdate
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
-  use CNFireMethodMod        , only : cnfire_method_type
-  use CNDVDriverMod          , only : CNDVDriver, CNDVHIST
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
   use ActiveLayerMod         , only : alt_calc
@@ -81,7 +76,6 @@ module clm_driver
   use PatchType              , only : patch                
   use clm_instMod
   use clm_initializeMod      , only : soil_water_retention_curve
-  use CNFireEmissionsMod     , only : CNFireEmisUpdate
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -119,13 +113,8 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer              :: nstep                   ! time step number
-    real(r8)             :: dtime                   ! land model time step (sec)
     integer              :: nc, c, p, l, g          ! indices
     integer              :: nclumps                 ! number of clumps on this processor
-    integer              :: yrp1                    ! year (0, ...) for nstep+1
-    integer              :: monp1                   ! month (1, ..., 12) for nstep+1
-    integer              :: dayp1                   ! day of month (1, ..., 31) for nstep+1
-    integer              :: secp1                   ! seconds into current date for nstep+1
     integer              :: yr                      ! year (0, ...)
     integer              :: mon                     ! month (1, ..., 12)
     integer              :: day                     ! day of month (1, ..., 31)
@@ -134,13 +123,20 @@ contains
     integer              :: mon_prev                ! month (1, ..., 12) at start of timestep
     integer              :: day_prev                ! day of month (1, ..., 31) at start of timestep
     integer              :: sec_prev                ! seconds of the day at start of timestep
-    integer              :: ncdate                  ! current date
-    integer              :: nbdate                  ! base date (reference date)
-    integer              :: kyr                     ! thousand years, equals 2 at end of first year
     character(len=256)   :: filer                   ! restart file name
     integer              :: ier                     ! error code
     type(bounds_type)    :: bounds_clump    
     type(bounds_type)    :: bounds_proc     
+
+    ! COMPILER_BUG(wjs, 2016-02-24, pgi 15.10) These temporary allocatable arrays are
+    ! needed to work around pgi compiler bugs, as noted below
+    real(r8), allocatable :: downreg_patch(:)
+    real(r8), allocatable :: leafn_patch(:)
+    real(r8), allocatable :: agnpp_patch(:)
+    real(r8), allocatable :: bgnpp_patch(:)
+    real(r8), allocatable :: annsum_npp_patch(:)
+    real(r8), allocatable :: rr_patch(:)
+    real(r8), allocatable :: nee_col(:)
 
     ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Workaround for internal compiler error with
     ! pgi 14.7 ('normalize_forall_array: non-conformable'), which appears in the call to
@@ -155,7 +151,7 @@ contains
 
     ! Update time-related info
 
-    call cnveg_state_inst%CropRestIncYear()
+    call crop_inst%CropRestIncYear()
 
     ! ============================================================================
     ! Specified phenology
@@ -226,26 +222,14 @@ contains
     ! ============================================================================
 
     if (use_cn) then
-    !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
-    do nc = 1,nclumps
-       call get_clump_bounds(nc, bounds_clump)
+       !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
+       do nc = 1,nclumps
+          call get_clump_bounds(nc, bounds_clump)
 
           call t_startf('begcnbal')
 
-          call cn_balance_inst%BeginCNBalance( &
-               bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
-               cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
-
-          call cnveg_carbonflux_inst%ZeroDWT(bounds_clump)
-          if (use_c13) then
-             call c13_cnveg_carbonflux_inst%ZeroDWT(bounds_clump)
-          end if
-          if (use_c14) then
-             call c14_cnveg_carbonflux_inst%ZeroDWT(bounds_clump)
-          end if
-          call cnveg_nitrogenflux_inst%ZeroDWT(bounds_clump)
-          call cnveg_carbonstate_inst%ZeroDWT(bounds_clump)
-          call cnveg_nitrogenstate_inst%ZeroDWT(bounds_clump)
+          call bgc_vegetation_inst%InitEachTimeStep(bounds_clump, &
+               filter(nc)%num_soilc, filter(nc)%soilc)
 
           call soilbiogeochem_carbonflux_inst%ZeroDWT(bounds_clump)
           if (use_c13) then
@@ -256,8 +240,8 @@ contains
           end if
 
           call t_stopf('begcnbal')
-    end do
-    !$OMP END PARALLEL DO
+       end do
+       !$OMP END PARALLEL DO
     end if
 
     ! ============================================================================
@@ -270,10 +254,7 @@ contains
     call dynSubgrid_driver(bounds_proc,                                      &
          urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,           &
          waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,             &
-         canopystate_inst, photosyns_inst, dgvs_inst, glc2lnd_inst, cnveg_state_inst,    &
-         cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
-         cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,    &
-         cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                              &
+         canopystate_inst, photosyns_inst, glc2lnd_inst, bgc_vegetation_inst,          &
          soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst, glc_behavior,        &
          atm2lnd_inst)
     call t_stopf('dyn_subgrid')
@@ -313,7 +294,7 @@ contains
     if (use_cn) then
        call t_startf('ndep_interp')
        call ndep_interp(bounds_proc, atm2lnd_inst)
-       call cnfire_method%CNFireInterp(bounds_proc)
+       call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
        call t_stopf('ndep_interp')
     end if
 
@@ -328,7 +309,7 @@ contains
     ! Get time as of beginning of time step
     call get_prev_date(yr_prev, mon_prev, day_prev, sec_prev)
 
-    !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump)
+    !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch)
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
@@ -437,13 +418,27 @@ contains
        ! and leaf water change by evapotranspiration
 
        call t_startf('canflux')
+       ! COMPILER_BUG(wjs, 2016-02-24, pgi 15.10) In principle, we should be able to make
+       ! these function calls inline in the CanopyFluxes argument list. However, with pgi
+       ! 15.10, that results in the dummy arguments having the wrong size (I suspect size
+       ! 0, based on similar pgi compiler bugs that we have run into before). Also note
+       ! that I don't have explicit bounds on the left-hand-side of these assignments:
+       ! excluding these explicit bounds seemed to be needed to get around other compiler
+       ! bugs.
+       allocate(downreg_patch(bounds_clump%begp:bounds_clump%endp))
+       allocate(leafn_patch(bounds_clump%begp:bounds_clump%endp))
+       downreg_patch = bgc_vegetation_inst%get_downreg_patch(bounds_clump)
+       leafn_patch = bgc_vegetation_inst%get_leafn_patch(bounds_clump)
        call CanopyFluxes(bounds_clump,                                                   &
             filter(nc)%num_exposedvegp, filter(nc)%exposedvegp,                             &
             ed_allsites_inst(bounds_clump%begg:bounds_clump%endg),                          &
-            atm2lnd_inst, canopystate_inst, cnveg_state_inst,                               &
+            atm2lnd_inst, canopystate_inst,                                                 &
             energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst, &
             temperature_inst, waterflux_inst, waterstate_inst, ch4_inst, ozone_inst, photosyns_inst, &
-            humanindex_inst, soil_water_retention_curve, cnveg_nitrogenstate_inst) 
+            humanindex_inst, soil_water_retention_curve, &
+            downreg_patch = downreg_patch(bounds_clump%begp:bounds_clump%endp), &
+            leafn_patch = leafn_patch(bounds_clump%begp:bounds_clump%endp))
+       deallocate(downreg_patch, leafn_patch)
        call t_stopf('canflux')
 
        ! Fluxes for all urban landunits
@@ -669,15 +664,10 @@ contains
              
        if (use_cn) then 
           call t_startf('ecosysdyn')
-          call CNDriverNoLeaching(bounds_clump,                                         &
+          call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
                   filter(nc)%num_soilc, filter(nc)%soilc,                       &
                   filter(nc)%num_soilp, filter(nc)%soilp,                       &
                   filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,              &
-               cnveg_state_inst,                                                        &
-               cnveg_carbonflux_inst, cnveg_carbonstate_inst,                           &
-               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,                   &
-               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,                   &
-               cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst,                       &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -685,17 +675,9 @@ contains
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
                atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
-               dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,          &
-               nutrient_competition_method, cnfire_method)
+               photosyns_inst, soilhydrology_inst, energyflux_inst,          &
+               nutrient_competition_method, fireemis_inst)
 
-          ! fire carbon emissions 
-          call CNFireEmisUpdate(bounds_clump, filter(nc)%num_soilp, filter(nc)%soilp, &
-               cnveg_carbonflux_inst, cnveg_carbonstate_inst, fireemis_inst )
-
-          call CNAnnualUpdate(bounds_clump,            &
-               filter(nc)%num_soilc, filter(nc)%soilc, &
-               filter(nc)%num_soilp, filter(nc)%soilp, &
-               cnveg_state_inst, cnveg_carbonflux_inst)
           call t_stopf('ecosysdyn')
 
        end if
@@ -705,13 +687,13 @@ contains
        if ((.not. use_cn) .and. (.not. use_ed) .and. (doalb)) then 
           call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                waterstate_inst, canopystate_inst)
-       end if
+             end if
 
        ! Ecosystem demography
 
        if (use_ed) then
           call ed_clm_inst%SetValues( bounds_clump, 0._r8 )
-       end if
+          end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
           
@@ -738,48 +720,17 @@ contains
 
        call t_stopf('hydro2 drainage')     
 
-       ! ============================================================================
-       ! - Update the nitrogen leaching rate as a function of soluble mineral N 
-       !   and total soil water outflow.
-       ! - Call to all CN summary routines
-       ! - On the radiation time step, use C state variables to diagnose
-       !   vegetation structure (LAI, SAI, height)
-       ! ============================================================================
-
        if (use_cn) then
 
-          ! Update the nitrogen leaching rate as a function of soluble mineral N 
-          ! and total soil water outflow.
-
-          call CNDriverLeaching(bounds_clump,                     &
-               filter(nc)%num_soilc, filter(nc)%soilc,            &
-               filter(nc)%num_soilp, filter(nc)%soilp,            &
-               waterstate_inst, waterflux_inst,                   &
-               cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
-               SoilBiogeochem_nitrogenflux_inst, SoilBiogeochem_nitrogenstate_inst)
-
-          ! Call to all CN summary routines
-          
-          call  CNDriverSummary(bounds_clump,                                           &
-                  filter(nc)%num_soilc, filter(nc)%soilc,               &
-                  filter(nc)%num_soilp, filter(nc)%soilp,               &
-               cnveg_state_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
-               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
-               cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
+          call bgc_vegetation_inst%EcosystemDynamicsPostDrainage(bounds_clump, &
+               filter(nc)%num_soilc, filter(nc)%soilc, &
+               filter(nc)%num_soilp, filter(nc)%soilp, &
+               doalb, crop_inst, &
+               waterstate_inst, waterflux_inst, frictionvel_inst, canopystate_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
-
-          ! On the radiation time step, use C state variables to calculate
-          ! vegetation structure (LAI, SAI, height)
-
-             if (doalb) then   
-                call CNVegStructUpdate(filter(nc)%num_soilp, filter(nc)%soilp, &
-                  waterstate_inst, frictionvel_inst, dgvs_inst, cnveg_state_inst, &
-                  cnveg_carbonstate_inst, canopystate_inst)
-             end if
 
        end if
 
@@ -798,39 +749,47 @@ contains
        ! Check the carbon and nitrogen balance
        ! ============================================================================
 
-          if (use_cn) then
-             nstep = get_nstep()
-             if (nstep < 2 )then
-                if (masterproc) then
-                   write(iulog,*) '--WARNING-- skipping CN balance check for first timestep'
-                end if
-             else
-                call t_startf('cnbalchk')
-
-             call cn_balance_inst%CBalanceCheck( &
-                  bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
-                  soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst)
-
-             call cn_balance_inst%NBalanceCheck( &
-                  bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
-                  soilbiogeochem_nitrogenflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst)
-
-                call t_stopf('cnbalchk')
-             end if
-          end if
+       if (use_cn) then
+          call t_startf('cnbalchk')
+          call bgc_vegetation_inst%BalanceCheck( &
+               bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
+               soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
+          call t_stopf('cnbalchk')
+       end if
 
        ! Calculation of methane fluxes
 
        if (use_lch4) then
           call t_startf('ch4')
+          ! COMPILER_BUG(wjs, 2016-02-24, pgi 15.10) In principle, we should be able to
+          ! make these function calls inline in the CanopyFluxes argument list. However,
+          ! with pgi 15.10, that results in the dummy arguments having the wrong size (I
+          ! suspect size 0, based on similar pgi compiler bugs that we have run into
+          ! before). Also note that I don't have explicit bounds on the left-hand-side of
+          ! these assignments: excluding these explicit bounds seemed to be needed to get
+          ! around other compiler bugs.
+          allocate(agnpp_patch(bounds_clump%begp:bounds_clump%endp))
+          allocate(bgnpp_patch(bounds_clump%begp:bounds_clump%endp))
+          allocate(annsum_npp_patch(bounds_clump%begp:bounds_clump%endp))
+          allocate(rr_patch(bounds_clump%begp:bounds_clump%endp))
+          agnpp_patch = bgc_vegetation_inst%get_agnpp_patch(bounds_clump)
+          bgnpp_patch = bgc_vegetation_inst%get_bgnpp_patch(bounds_clump)
+          annsum_npp_patch = bgc_vegetation_inst%get_annsum_npp_patch(bounds_clump)
+          rr_patch = bgc_vegetation_inst%get_root_respiration_patch(bounds_clump)
+
           call ch4 (bounds_clump,                                                                  &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
                filter(nc)%num_lakec, filter(nc)%lakec,                                             &
                filter(nc)%num_soilp, filter(nc)%soilp,                                             &
                atm2lnd_inst, lakestate_inst, canopystate_inst, soilstate_inst, soilhydrology_inst, &
                temperature_inst, energyflux_inst, waterstate_inst, waterflux_inst,                 &
-               cnveg_carbonflux_inst, soilbiogeochem_carbonflux_inst,                          &
-               soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst)
+               soilbiogeochem_carbonflux_inst,                          &
+               soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst, &
+               agnpp = agnpp_patch(bounds_clump%begp:bounds_clump%endp), &
+               bgnpp = bgnpp_patch(bounds_clump%begp:bounds_clump%endp), &
+               annsum_npp = annsum_npp_patch(bounds_clump%begp:bounds_clump%endp), &
+               rr = rr_patch(bounds_clump%begp:bounds_clump%endp))
+          deallocate(agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch)
           call t_stopf('ch4')
        end if
 
@@ -882,11 +841,22 @@ contains
     ! ============================================================================
 
     call t_startf('lnd2atm')
+    ! COMPILER_BUG(wjs, 2016-02-24, pgi 15.10) In principle, we should be able to make
+    ! this function call inline in the CanopyFluxes argument list. However, with pgi
+    ! 15.10, that results in the dummy argument having the wrong size (I suspect size 0,
+    ! based on similar pgi compiler bugs that we have run into before). Also note that I
+    ! don't have explicit bounds on the left-hand-side of this assignment: excluding these
+    ! explicit bounds seemed to be needed to get around other compiler bugs.
+    allocate(nee_col(bounds_proc%begc:bounds_proc%endc))
+    nee_col = bgc_vegetation_inst%get_nee_col(bounds_proc)
+
     call lnd2atm(bounds_proc,                                            &
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
          waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
-         solarabs_inst, cnveg_carbonflux_inst, drydepvel_inst,       &
-         vocemis_inst, fireemis_inst, dust_inst, ch4_inst, lnd2atm_inst) 
+         solarabs_inst, drydepvel_inst,       &
+         vocemis_inst, fireemis_inst, dust_inst, ch4_inst, lnd2atm_inst, &
+         nee_col = nee_col(bounds_proc%begc:bounds_proc%endc))
+    deallocate(nee_col)
     call t_stopf('lnd2atm')
 
     ! ============================================================================
@@ -944,24 +914,22 @@ contains
                mon, day, sec)
        endif
 
-          if (use_cndv) then
-             ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
-             ! compiling this threaded, I needed to change the dummy arguments to be
-             ! pointers, and get rid of the explicit bounds in the subroutine call.
-             ! call dgvs_inst%UpdateAccVars(bounds_proc, &
-             !      t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
-             !      t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
-             call dgvs_inst%UpdateAccVars(bounds_proc, &
-                  t_a10_patch=temperature_inst%t_a10_patch, &
-                  t_ref2m_patch=temperature_inst%t_ref2m_patch)
-          end if
+       ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
+       ! compiling this threaded, I needed to change the dummy arguments to be
+       ! pointers, and get rid of the explicit bounds in the subroutine call.
+       ! call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
+       !      t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
+       !      t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
+       call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
+            t_a10_patch=temperature_inst%t_a10_patch, &
+            t_ref2m_patch=temperature_inst%t_ref2m_patch)
 
-          if (crop_prog) then
+       if (crop_prog) then
           call crop_inst%CropUpdateAccVars(bounds_proc, &
-               temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col, cnveg_state_inst)
-          end if
+               temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
+       end if
 
-          call t_stopf('accum')
+       call t_stopf('accum')
     end if
 
     ! ============================================================================
@@ -973,38 +941,19 @@ contains
     call t_stopf('hbuf')
 
     ! ============================================================================
-    ! Call dv (dynamic vegetation) at last time step of year
-    ! NOTE: monp1, dayp1, and secp1 correspond to nstep+1
+    ! Call dv (dynamic vegetation)
     ! ============================================================================
 
-    if (use_cndv) then
-       call t_startf('d2dgvm')
-       dtime = get_step_size()
-       call get_curr_date(yrp1, monp1, dayp1, secp1, offset=int(dtime))
-       if (monp1==1 .and. dayp1==1 .and. secp1==dtime .and. nstep>0)  then
-
-          ! Get date info.  kyr is used in lpj().  At end of first year, kyr = 2.
-          call get_curr_date(yr, mon, day, sec)
-          ncdate = yr*10000 + mon*100 + day
-          call get_ref_date(yr, mon, day, sec)
-          nbdate = yr*10000 + mon*100 + day
-          kyr = ncdate/10000 - nbdate/10000 + 1
-
-          if (masterproc) write(iulog,*) 'End of year. CNDV called now: ncdate=', &
-               ncdate,' nbdate=',nbdate,' kyr=',kyr,' nstep=', nstep
-
-          nclumps = get_proc_clumps()
-
-          !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
-          do nc = 1,nclumps
-             call get_clump_bounds(nc, bounds_clump)
-             call CNDVDriver(bounds_clump,                                           &
-                  filter(nc)%num_natvegp, filter(nc)%natvegp, kyr,                   &
-                  atm2lnd_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
-          end do
-          !$OMP END PARALLEL DO
-       end if
-       call t_stopf('d2dgvm')
+    if (use_cn) then
+       nclumps = get_proc_clumps()
+       !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
+       do nc = 1,nclumps
+          call get_clump_bounds(nc, bounds_clump)
+          call bgc_vegetation_inst%EndOfTimeStepVegDynamics(bounds_clump, &
+               filter(nc)%num_natvegp, filter(nc)%natvegp, &
+               atm2lnd_inst)
+       end do
+       !$OMP END PARALLEL DO
     end if
 
     ! ============================================================================
@@ -1069,14 +1018,8 @@ contains
 
        call t_stopf('clm_drv_io_htapes')
 
-       ! Write to CNDV history buffer if appropriate
-       if (use_cndv) then
-          if (monp1==1 .and. dayp1==1 .and. secp1==dtime .and. nstep>0)  then
-             call t_startf('clm_drv_io_hdgvm')
-             call CNDVHist( bounds_proc, dgvs_inst )
-             if (masterproc) write(iulog,*) 'Annual CNDV calculations are complete'
-             call t_stopf('clm_drv_io_hdgvm')
-          end if
+       if (use_cn) then
+          call bgc_vegetation_inst%WriteHistory(bounds_proc)
        end if
 
        ! Write restart/initial files if appropriate

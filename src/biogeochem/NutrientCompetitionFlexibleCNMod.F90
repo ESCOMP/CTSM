@@ -127,7 +127,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine calc_plant_nutrient_competition (this, &
        bounds, num_soilp, filter_soilp, &
-       cnveg_state_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+       cnveg_state_inst, crop_inst, canopystate_inst, cnveg_carbonstate_inst, &
+       cnveg_carbonflux_inst, &
        c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
        cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
        soilbiogeochem_nitrogenstate_inst, &
@@ -135,6 +136,7 @@ contains
     !
     ! !USES:
     use CNVegStateType        , only : cnveg_state_type
+    use CropType              , only : crop_type
     use CanopyStateType        , only : canopystate_type
     use CNVegCarbonStateType   , only : cnveg_carbonstate_type
     use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
@@ -148,6 +150,7 @@ contains
     integer                         , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
+    type(crop_type)                 , intent(in)    :: crop_inst
     type(canopystate_type)          , intent(in)    :: canopystate_inst
     type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
@@ -161,12 +164,13 @@ contains
     real(r8), intent(in)    :: fpg_col (bounds%begc:)
 
     call this%calc_plant_cn_alloc(bounds, num_soilp, filter_soilp,   &
-       cnveg_state_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
-       c14_cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
-       soilbiogeochem_nitrogenstate_inst, &
-       aroot=aroot(bounds%begp:bounds%endp),                               &
-       arepr=arepr(bounds%begp:bounds%endp),                               &
-       fpg_col=fpg_col(bounds%begc:bounds%endc))
+         cnveg_state_inst, crop_inst, canopystate_inst, &
+         cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
+         c14_cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
+         soilbiogeochem_nitrogenstate_inst, &
+         aroot=aroot(bounds%begp:bounds%endp),                               &
+         arepr=arepr(bounds%begp:bounds%endp),                               &
+         fpg_col=fpg_col(bounds%begc:bounds%endc))
 
   end subroutine calc_plant_nutrient_competition
 
@@ -233,7 +237,8 @@ contains
 
 !-----------------------------------------------------------------------
   subroutine calc_plant_cn_alloc(this, bounds, num_soilp, filter_soilp,   &
-       cnveg_state_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
+       cnveg_state_inst, crop_inst, canopystate_inst, &
+       cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
        c14_cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
        soilbiogeochem_nitrogenstate_inst, &
        aroot, arepr, fpg_col)
@@ -246,6 +251,7 @@ contains
     use clm_varctl            , only : CN_partition_opt
     use clm_time_manager       , only : get_step_size
     use CNVegStateType        , only : cnveg_state_type
+    use CropType              , only : crop_type
     use CanopyStateType        , only : canopystate_type
     use CNVegCarbonStateType   , only : cnveg_carbonstate_type
     use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
@@ -261,6 +267,7 @@ contains
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
+    type(crop_type)                 , intent(in)    :: crop_inst
     type(canopystate_type)          , intent(in)    :: canopystate_inst
     type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
@@ -368,7 +375,8 @@ contains
          grpnow                       => pftcon%grpnow                                             , & ! Input:  growth respiration parameter
          evergreen                    => pftcon%evergreen                                          , & ! Input:  binary flag for evergreen leaf habit (0 or 1)
 
-         croplive                     => cnveg_state_inst%croplive_patch                           , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
+         croplive                     => crop_inst%croplive_patch                                  , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
+
          peaklai                      => cnveg_state_inst%peaklai_patch                            , & ! Input:  [integer  (:)   ]  1: max allowed lai; 0: not at max
          aleaf                        => cnveg_state_inst%aleaf_patch                              , & ! Output: [real(r8) (:)   ]  leaf allocation coefficient
          astem                        => cnveg_state_inst%astem_patch                              , & ! Output: [real(r8) (:)   ]  stem allocation coefficient
@@ -1337,11 +1345,11 @@ contains
 
          hui                   => crop_inst%gddplant_patch                          , & ! Input:  [real(r8) (:)   ]  =gdd since planting (gddplant)
          leafout               => crop_inst%gddtsoi_patch                           , & ! Input:  [real(r8) (:)   ]  =gdd from top soil layer temperature
+         croplive              => crop_inst%croplive_patch                          , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
 
          gddmaturity           => cnveg_state_inst%gddmaturity_patch                , & ! Input:  [real(r8) (:)   ]  gdd needed to harvest
          huileaf               => cnveg_state_inst%huileaf_patch                    , & ! Input:  [real(r8) (:)   ]  heat unit index needed from planting to leaf emergence
          huigrain              => cnveg_state_inst%huigrain_patch                   , & ! Input:  [real(r8) (:)   ]  same to reach vegetative maturity
-         croplive              => cnveg_state_inst%croplive_patch                   , & ! Input:  [logical  (:)   ]  flag, true if planted, not harvested
          peaklai               => cnveg_state_inst%peaklai_patch                    , & ! Input:  [integer  (:)   ]  1: max allowed lai; 0: not at max
          aleafi                => cnveg_state_inst%aleafi_patch                     , & ! Output: [real(r8) (:)   ]  saved allocation coefficient from phase 2
          astemi                => cnveg_state_inst%astemi_patch                     , & ! Output: [real(r8) (:)   ]  saved allocation coefficient from phase 2

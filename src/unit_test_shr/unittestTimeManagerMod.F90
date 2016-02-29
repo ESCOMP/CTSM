@@ -10,6 +10,9 @@ module unittestTimeManagerMod
   ! (2) optionally (if the unit test needs a specific date/time): call
   !     unittest_timemgr_set_curr_date
   !
+  ! (3) optionally (if the unit test needs a specific time step number): call
+  !     unittest_timemgr_set_nstep
+  !
   ! In the teardown for any test that called unittest_timemgr_init, the following should
   ! be done:
   !
@@ -32,6 +35,7 @@ module unittestTimeManagerMod
   public :: unittest_timemgr_set_curr_date ! set the current date
   public :: unittest_timemgr_teardown      ! tear down the time manager at the end of a test
   public :: unittest_timemgr_set_curr_year ! set the current year, keeping other date components unchanged
+  public :: unittest_timemgr_set_nstep     ! set the time step number
 
 contains
 
@@ -154,6 +158,33 @@ contains
     call unittest_timemgr_set_curr_date(yr, curr_mon, curr_day, curr_tod)
 
   end subroutine unittest_timemgr_set_curr_year
+
+  !-----------------------------------------------------------------------
+  subroutine unittest_timemgr_set_nstep(nstep)
+    !
+    ! !DESCRIPTION:
+    ! Set the time step number
+    !
+    ! Note that the starting time step number is 0, so calling this with nstep = 1
+    ! advances the time step beyond the starting time step.
+    !
+    ! !USES:
+    use clm_time_manager, only : advance_timestep
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: nstep
+    !
+    ! !LOCAL VARIABLES:
+    integer :: n
+
+    character(len=*), parameter :: subname = 'unittest_timemgr_set_nstep'
+    !-----------------------------------------------------------------------
+
+    do n = 1, nstep
+       call advance_timestep()
+    end do
+
+  end subroutine unittest_timemgr_set_nstep
 
 
 

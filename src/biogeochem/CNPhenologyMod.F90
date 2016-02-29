@@ -200,7 +200,7 @@ contains
     type(waterstate_type)          , intent(in)    :: waterstate_inst
     type(temperature_type)         , intent(inout) :: temperature_inst
     type(atm2lnd_type)             , intent(in)    :: atm2lnd_inst
-    type(crop_type)                , intent(in)    :: crop_inst
+    type(crop_type)                , intent(inout) :: crop_inst
     type(canopystate_type)         , intent(in)    :: canopystate_inst
     type(soilstate_type)           , intent(in)    :: soilstate_inst
     type(dgvs_type)                , intent(inout) :: dgvs_inst
@@ -222,7 +222,7 @@ contains
 
     if ( phase == 1 ) then
        call CNPhenologyClimate(num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
-            temperature_inst, cnveg_state_inst)
+            temperature_inst, cnveg_state_inst, crop_inst)
    
        call CNEvergreenPhenology(num_soilp, filter_soilp, &
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
@@ -338,7 +338,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
-       temperature_inst, cnveg_state_inst)
+       temperature_inst, cnveg_state_inst, crop_inst)
     !
     ! !DESCRIPTION:
     ! For coupled carbon-nitrogen code (CN).
@@ -354,6 +354,7 @@ contains
     integer                , intent(in)    :: filter_pcropp(:)! filter for prognostic crop patches
     type(temperature_type) , intent(inout) :: temperature_inst
     type(cnveg_state_type) , intent(inout) :: cnveg_state_inst
+    type(crop_type)        , intent(in)    :: crop_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: p       ! indices
@@ -399,7 +400,7 @@ contains
       if (num_pcropp > 0) then
          ! get time-related info
          call get_curr_date(kyr, kmo, kda, mcsec)
-         nyrs = cnveg_state_inst%CropRestYear
+         nyrs = crop_inst%CropRestYear
       end if
 
       do fp = 1,num_pcropp
@@ -1367,7 +1368,7 @@ contains
     integer                        , intent(in)    :: filter_pcropp(:) ! filter for prognostic crop patches
     type(waterstate_type)          , intent(in)    :: waterstate_inst
     type(temperature_type)         , intent(in)    :: temperature_inst
-    type(crop_type)                , intent(in)    :: crop_inst
+    type(crop_type)                , intent(inout) :: crop_inst
     type(canopystate_type)         , intent(in)    :: canopystate_inst
     type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
@@ -1415,19 +1416,19 @@ contains
 
          hui               =>    crop_inst%gddplant_patch                      , & ! Input:  [real(r8) (:) ]  gdd since planting (gddplant)                    
          leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature              
+         harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
+         croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
+         cropplant         =>    crop_inst%cropplant_patch                     , & ! Output: [logical  (:) ]  Flag, true if crop may be planted                  
+         vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
          
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
          idop              =>    cnveg_state_inst%idop_patch                   , & ! Output: [integer  (:) ]  date of planting                                   
-         harvdate          =>    cnveg_state_inst%harvdate_patch               , & ! Output: [integer  (:) ]  harvest date                                       
-         croplive          =>    cnveg_state_inst%croplive_patch               , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
-         cropplant         =>    cnveg_state_inst%cropplant_patch              , & ! Output: [logical  (:) ]  Flag, true if crop may be planted                  
          gddmaturity       =>    cnveg_state_inst%gddmaturity_patch            , & ! Output: [real(r8) (:) ]  gdd needed to harvest                             
          huileaf           =>    cnveg_state_inst%huileaf_patch                , & ! Output: [real(r8) (:) ]  heat unit index needed from planting to leaf emergence
          huigrain          =>    cnveg_state_inst%huigrain_patch               , & ! Output: [real(r8) (:) ]  same to reach vegetative maturity                 
          cumvd             =>    cnveg_state_inst%cumvd_patch                  , & ! Output: [real(r8) (:) ]  cumulative vernalization d?ependence?             
          hdidx             =>    cnveg_state_inst%hdidx_patch                  , & ! Output: [real(r8) (:) ]  cold hardening index?                             
-         vf                =>    cnveg_state_inst%vf_patch                     , & ! Output: [real(r8) (:) ]  vernalization factor                              
          bglfr             =>    cnveg_state_inst%bglfr_patch                  , & ! Output: [real(r8) (:) ]  background litterfall rate (1/s)                  
          bgtr              =>    cnveg_state_inst%bgtr_patch                   , & ! Output: [real(r8) (:) ]  background transfer growth rate (1/s)             
          lgsf              =>    cnveg_state_inst%lgsf_patch                   , & ! Output: [real(r8) (:) ]  long growing season factor [0-1]                  
@@ -1749,7 +1750,8 @@ contains
             if (t_ref2m_min(p) < 1.e30_r8 .and. vf(p) /= 1._r8 .and. &
                (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat)) then
                call vernalization(p, &
-                    canopystate_inst, temperature_inst, waterstate_inst, cnveg_state_inst)
+                    canopystate_inst, temperature_inst, waterstate_inst, cnveg_state_inst, &
+                    crop_inst)
             end if
 
             ! days past planting may determine harvest
@@ -1904,7 +1906,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine vernalization(p, &
-       canopystate_inst, temperature_inst, waterstate_inst, cnveg_state_inst)
+       canopystate_inst, temperature_inst, waterstate_inst, cnveg_state_inst, crop_inst)
     !
     ! !DESCRIPTION:
     !
@@ -1921,7 +1923,8 @@ contains
     type(canopystate_type) , intent(in)    :: canopystate_inst
     type(temperature_type) , intent(in)    :: temperature_inst
     type(waterstate_type)  , intent(in)    :: waterstate_inst
-    type(cnveg_state_type)     , intent(inout) :: cnveg_state_inst
+    type(cnveg_state_type) , intent(inout) :: cnveg_state_inst
+    type(crop_type)        , intent(inout) :: crop_inst
     !
     ! LOCAL VARAIBLES:
     real(r8) tcrown                     ! ?
@@ -1941,9 +1944,10 @@ contains
 
          hdidx       => cnveg_state_inst%hdidx_patch       , & ! Output: [real(r8) (:) ]  cold hardening index?                             
          cumvd       => cnveg_state_inst%cumvd_patch       , & ! Output: [real(r8) (:) ]  cumulative vernalization d?ependence?             
-         vf          => cnveg_state_inst%vf_patch          , & ! Output: [real(r8) (:) ]  vernalization factor for cereal                   
          gddmaturity => cnveg_state_inst%gddmaturity_patch , & ! Output: [real(r8) (:) ]  gdd needed to harvest                             
-         huigrain    => cnveg_state_inst%huigrain_patch          & ! Output: [real(r8) (:) ]  heat unit index needed to reach vegetative maturity
+         huigrain    => cnveg_state_inst%huigrain_patch    , & ! Output: [real(r8) (:) ]  heat unit index needed to reach vegetative maturity
+
+         vf          => crop_inst%vf_patch                   & ! Output: [real(r8) (:) ]  vernalization factor for cereal
          )
 
       c = patch%column(p)

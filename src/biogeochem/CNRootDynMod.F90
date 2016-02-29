@@ -85,7 +85,6 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
     roota_par              => pftcon%roota_par                                  , & ! Input:  [real(r8) (:)] pft's roota index
     rootb_par              => pftcon%rootb_par                                  , & ! Input:  [real(r8) (:)] pft's rootb index
     root_dmx               => pftcon%root_dmx                                   , & ! Input:  [real(r8) (:)] crop maximum root depth
-    croplive               => cnveg_state_inst%croplive_patch                   , & ! Input:  [logical (:)]  flag, true if planted, not harvested
     cpool_to_frootc        => cnveg_carbonflux_inst%cpool_to_frootc_patch       , & ! Input:  [real(r8) (:)] allocation to fine root C (gC/m2/s)
     frootc_xfer_to_frootc  => cnveg_carbonflux_inst%frootc_xfer_to_frootc_patch , & ! Input:  [real(r8) (:)] fine root C growth from storage (gC/m2/s)
     dormant_flag           => cnveg_state_inst%dormant_flag_patch               , & ! Input:  [real(r8) (:)]  dormancy flag
@@ -98,6 +97,7 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
     sminn_vr               => soilbiogeochem_nitrogenstate_inst%sminn_vr_col    , & ! Iniput:  [real(r8) (:,:)]  (gN/m3) soil mineral N
     frootc                 => cnveg_carbonstate_inst%frootc_patch               , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C
     hui                    => crop_inst%gddplant_patch                          , & ! Input:  [real(r8) (:)]  =gdd since planting (gddplant)
+    croplive               => crop_inst%croplive_patch                          , & ! Input:  [logical (:)]  flag, true if planted, not harvested
     huigrain               => cnveg_state_inst%huigrain_patch                     & ! Input: [real(r8) (:)]  same to reach vegetative maturity
     )
    

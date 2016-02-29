@@ -163,7 +163,7 @@ contains
     type(canopystate_type)                  , intent(inout)    :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst
-    type(crop_type)                         , intent(in)    :: crop_inst
+    type(crop_type)                         , intent(inout) :: crop_inst
     type(ch4_type)                          , intent(in)    :: ch4_inst
     type(dgvs_type)                         , intent(inout) :: dgvs_inst
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
@@ -376,7 +376,8 @@ contains
 
     call nutrient_competition_method%calc_plant_nutrient_competition ( &
          bounds, num_soilp, filter_soilp, &
-         cnveg_state_inst, canopystate_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
+         cnveg_state_inst, crop_inst, canopystate_inst, &
+         cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
          cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
          soilbiogeochem_nitrogenstate_inst, &
@@ -508,16 +509,16 @@ contains
 
     ! Update all prognostic carbon state variables (except for gap-phase mortality and fire fluxes)
     call CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         cnveg_state_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
+         crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
          soilbiogeochem_carbonflux_inst)
     if ( use_c13 ) then
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            cnveg_state_inst, c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
+            crop_inst, c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
             c13_soilbiogeochem_carbonflux_inst)
     end if
     if ( use_c14 ) then
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
-            cnveg_state_inst, c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
+            crop_inst, c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
             c14_soilbiogeochem_carbonflux_inst)
     end if
 

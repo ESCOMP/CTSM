@@ -5,6 +5,7 @@ module lnd2atmMod
   ! Handle lnd2atm mapping
   !
   ! !USES:
+#include "shr_assert.h"
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod          , only : errMsg => shr_log_errMsg
@@ -12,14 +13,13 @@ module lnd2atmMod
   use shr_fire_emis_mod    , only : shr_fire_emis_mechcomps_n
   use clm_varpar           , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon           , only : rair, grav, cpair, hfus, tfrz, spval
-  use clm_varctl           , only : iulog, use_c13, use_cn, use_lch4, use_voc
+  use clm_varctl           , only : iulog, use_lch4, use_voc
   use seq_drydep_mod       , only : n_drydep, drydep_method, DD_XLND
   use decompMod            , only : bounds_type
   use subgridAveMod        , only : p2g, c2g 
   use lnd2atmType          , only : lnd2atm_type
   use atm2lndType          , only : atm2lnd_type
   use ch4Mod               , only : ch4_type
-  use CNVegCarbonFluxType  , only : cnveg_carbonflux_type
   use DUSTMod              , only : dust_type
   use DryDepVelocity       , only : drydepvel_type
   use VocEmissionMod       , only : vocemis_type
@@ -112,8 +112,9 @@ contains
   subroutine lnd2atm(bounds, &
        atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
        waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
-       solarabs_inst, cnveg_carbonflux_inst, drydepvel_inst,  &
-       vocemis_inst, fireemis_inst, dust_inst, ch4_inst, lnd2atm_inst) 
+       solarabs_inst, drydepvel_inst,  &
+       vocemis_inst, fireemis_inst, dust_inst, ch4_inst, lnd2atm_inst, &
+       nee_col) 
     !
     ! !DESCRIPTION:
     ! Compute lnd2atm_inst component of gridcell derived type
@@ -133,13 +134,13 @@ contains
     type(irrigation_type)       , intent(in)    :: irrigation_inst
     type(energyflux_type)       , intent(in)    :: energyflux_inst
     type(solarabs_type)         , intent(in)    :: solarabs_inst
-    type(cnveg_carbonflux_type) , intent(in)    :: cnveg_carbonflux_inst
     type(drydepvel_type)        , intent(in)    :: drydepvel_inst
     type(vocemis_type)          , intent(in)    :: vocemis_inst
     type(fireemis_type)         , intent(in)    :: fireemis_inst
     type(dust_type)             , intent(in)    :: dust_inst
     type(ch4_type)              , intent(in)    :: ch4_inst
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst 
+    real(r8)                    , intent(in)    :: nee_col( bounds%begc: )  ! net ecosystem exchange of carbon, including all fluxes between land and atmosphere, positive for source (gC/m2/s)
     !
     ! !LOCAL VARIABLES:
     integer  :: c, g  ! indices
@@ -150,6 +151,8 @@ contains
     ! The following converts g of C to kg of CO2
     real(r8), parameter :: convertgC2kgCO2 = 1.0e-3_r8 * (amCO2/amC)
     !------------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(nee_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
     !----------------------------------------------------
     ! lnd -> atm
@@ -223,31 +226,23 @@ contains
          lnd2atm_inst%eflx_lh_tot_grc      (bounds%begg:bounds%endg), &
          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-    if (use_cn) then
-       call c2g(bounds, &
-            cnveg_carbonflux_inst%nee_col(bounds%begc:bounds%endc), &
-            lnd2atm_inst%nee_grc         (bounds%begg:bounds%endg), &
-            c2l_scale_type= 'unity', l2g_scale_type='unity')
-
-       if (use_lch4) then
-          if (.not. ch4offline) then
-             ! Adjust flux of CO2 by the net conversion of mineralizing C to CH4
-             do g = bounds%begg,bounds%endg
-                ! nem is in g C/m2/sec
-                lnd2atm_inst%nee_grc(g) = lnd2atm_inst%nee_grc(g) + lnd2atm_inst%nem_grc(g) 
-             end do
-          end if
+    call c2g(bounds, &
+         nee_col(bounds%begc:bounds%endc), &
+         lnd2atm_inst%nee_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type= 'unity', l2g_scale_type='unity')
+    if (use_lch4) then
+       if (.not. ch4offline) then
+          ! Adjust flux of CO2 by the net conversion of mineralizing C to CH4
+          do g = bounds%begg,bounds%endg
+             ! nem is in g C/m2/sec
+             lnd2atm_inst%nee_grc(g) = lnd2atm_inst%nee_grc(g) + lnd2atm_inst%nem_grc(g) 
+          end do
        end if
-
-       ! Convert from gC/m2/s to kgCO2/m2/s
-       do g = bounds%begg,bounds%endg
-          lnd2atm_inst%nee_grc(g) = lnd2atm_inst%nee_grc(g)*convertgC2kgCO2
-       end do
-    else
-       do g = bounds%begg,bounds%endg
-          lnd2atm_inst%nee_grc(g) = 0._r8
-       end do
     end if
+    ! Convert from gC/m2/s to kgCO2/m2/s
+    do g = bounds%begg,bounds%endg
+       lnd2atm_inst%nee_grc(g) = lnd2atm_inst%nee_grc(g)*convertgC2kgCO2
+    end do
 
     ! drydepvel
     if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then

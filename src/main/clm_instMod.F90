@@ -21,7 +21,6 @@ module clm_instMod
   use UrbanParamsType                    , only : urbanparams_type   ! Constants 
   use UrbanParamsType                    , only : IsSimpleBuildTemp, IsProgBuildTemp
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use CNDVType                           , only : dgv_ecophyscon     ! Constants 
   use EDEcophysConType                   , only : EDecophyscon       ! ED Constants
 
   !-----------------------------------------
@@ -31,18 +30,12 @@ module clm_instMod
   use AerosolMod                      , only : aerosol_type
   use CanopyStateType                 , only : canopystate_type
   use ch4Mod                          , only : ch4_type
-  use CNBalanceCheckMod               , only : cn_balance_type
-  use CNVegStateType                  , only : cnveg_state_type
-  use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
-  use CNVegCarbonStateType            , only : cnveg_carbonstate_type
-  use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
-  use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
+  use CNVegetationFacade              , only : cn_vegetation_type
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use CNDVType                        , only : dgvs_type
   use CropType                        , only : crop_type
   use DryDepVelocity                  , only : drydepvel_type
   use DUSTMod                         , only : dust_type
@@ -79,7 +72,6 @@ module clm_instMod
   use EDCLMLinkMod                    , only : ed_clm_type
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
-  use CNFireMethodMod                 , only : cnfire_method_type
   !
   use SoilStateInitTimeConstMod       , only : SoilStateInitTimeConst
   use SoilHydrologyInitTimeConstMod   , only : SoilHydrologyInitTimeConst
@@ -119,19 +111,11 @@ module clm_instMod
   type(glc_behavior_type)                 :: glc_behavior
   class(soil_water_retention_curve_type) , allocatable :: soil_water_retention_curve
 
-  ! CN vegetation types  
-  type(cnveg_state_type)                  :: cnveg_state_inst
-  type(cnveg_carbonstate_type)            :: cnveg_carbonstate_inst
-  type(cnveg_carbonstate_type)            :: c13_cnveg_carbonstate_inst
-  type(cnveg_carbonstate_type)            :: c14_cnveg_carbonstate_inst
-  type(cnveg_carbonflux_type)             :: cnveg_carbonflux_inst
-  type(cnveg_carbonflux_type)             :: c13_cnveg_carbonflux_inst
-  type(cnveg_carbonflux_type)             :: c14_cnveg_carbonflux_inst
-  type(cnveg_nitrogenstate_type)          :: cnveg_nitrogenstate_inst
-  type(cnveg_nitrogenflux_type)           :: cnveg_nitrogenflux_inst
-  type(cn_balance_type)                   :: cn_balance_inst
+  ! CN vegetation types
+  ! Eventually bgc_vegetation_inst will be an allocatable instance of an abstract
+  ! interface
+  type(cn_vegetation_type)                :: bgc_vegetation_inst
   class(nutrient_competition_method_type), allocatable :: nutrient_competition_method
-  class(cnfire_method_type)              , allocatable :: cnfire_method
 
   ! Soil biogeochem types 
   type(soilbiogeochem_state_type)         :: soilbiogeochem_state_inst
@@ -146,7 +130,6 @@ module clm_instMod
 
   ! General biogeochem types
   type(ch4_type)                          :: ch4_inst
-  type(dgvs_type)                         :: dgvs_inst
   type(crop_type)                         :: crop_inst
   type(dust_type)                         :: dust_inst
   type(vocemis_type)                      :: vocemis_inst
@@ -326,9 +309,6 @@ contains
     ! Note - always initialize the memory for ch4_inst
     call ch4_inst%Init(bounds, soilstate_inst%cellorg_col(begc:endc, 1:), fsurdat)
 
-    ! Note - always initialize the memory for cnveg_state_inst (used in biogeophys/)
-    call cnveg_state_inst%Init(bounds)
-
     if (use_voc ) then
        call vocemis_inst%Init(bounds)
     end if
@@ -338,13 +318,6 @@ contains
     call drydepvel_inst%Init(bounds)
 
     if (use_cn) then
-
-       ! Note - always initialize the memory for the c13_xxx_inst and
-       ! c14_xxx_inst data structure so that they can be used in 
-       ! associate statements (nag compiler complains otherwise)
-
-       ! Note that SoillBiogeochem types must ALWAYS be allocated first - since CNVeg_xxxType
-       ! can reference SoilBiogeochem types (for both carbon and nitrogen)
 
        ! Initialize soilbiogeochem_state_inst
 
@@ -386,42 +359,14 @@ contains
        end if
        call soilbiogeochem_nitrogenflux_inst%Init(bounds) 
 
-       ! Initalize cnveg carbon and nitrogen types
-
-       call cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8)
-       if (use_c13) then
-          call c13_cnveg_carbonstate_inst%Init(bounds, carbon_type='c13', ratio=c13ratio, &
-               c12_cnveg_carbonstate_inst=cnveg_carbonstate_inst)
-       end if
-       if (use_c14) then
-          call c14_cnveg_carbonstate_inst%Init(bounds, carbon_type='c14', ratio=c14ratio, &
-               c12_cnveg_carbonstate_inst=cnveg_carbonstate_inst)
-       end if
-       call cnveg_carbonflux_inst%Init(bounds, carbon_type='c12')
-       if (use_c13) then
-          call c13_cnveg_carbonflux_inst%Init(bounds, carbon_type='c13')
-       end if
-       if (use_c14) then
-          call c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14')
-       end if
-       call cnveg_nitrogenstate_inst%Init(bounds,                  &
-            cnveg_carbonstate_inst%leafc_patch(begp:endp),         &
-            cnveg_carbonstate_inst%leafc_storage_patch(begp:endp), &
-            cnveg_carbonstate_inst%frootc_patch(begp:endp), &
-            cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
-            cnveg_carbonstate_inst%deadstemc_patch(begp:endp))
-       call cnveg_nitrogenflux_inst%Init(bounds) 
-
-       call cn_balance_inst%Init(bounds)
-
-       ! Note - always initialize the memory for the dgvs_inst data structure so
-       ! that it can be used in associate statements (nag compiler complains otherwise)
-
-       call dgvs_inst%Init(bounds)
-
-       call crop_inst%Init(bounds)
-       
     end if ! end of if use_cn 
+
+    ! Note - always call Init for bgc_vegetation_inst: some pieces need to be initialized always
+    call bgc_vegetation_inst%Init(bounds, nlfilename)
+
+    if (use_cn) then
+       call crop_inst%Init(bounds)
+    end if
 
     ! NOTE (MV, 10-24-2014): because ed_allsites is currently passed as arguments to
     ! biogeophys routines in the present implementation - it needs to be allocated - 
@@ -460,9 +405,7 @@ contains
 
     call canopystate_inst%InitAccBuffer(bounds)
 
-    if (use_cndv) then
-       call dgvs_inst%InitAccBuffer(bounds)
-    end if
+    call bgc_vegetation_inst%InitAccBuffer(bounds)
 
     if (crop_prog) then
        call crop_inst%InitAccBuffer(bounds)
@@ -550,24 +493,9 @@ contains
        call soilbiogeochem_nitrogenstate_inst%restart(bounds, ncid, flag=flag)
        call soilbiogeochem_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
 
-       call cnveg_state_inst%restart(bounds, ncid, flag=flag)
-       call cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12')
-       if (use_c13) then
-          call c13_cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c13', &
-               c12_cnveg_carbonstate_inst=cnveg_carbonstate_inst)
-       end if
-       if (use_c14) then
-          call c14_cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c14', &
-               c12_cnveg_carbonstate_inst=cnveg_carbonstate_inst)
-       end if
-       call cnveg_carbonflux_inst%restart(bounds, ncid, flag=flag)
-       call cnveg_nitrogenstate_inst%restart(bounds, ncid, flag=flag)
-       call cnveg_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
+       call bgc_vegetation_inst%restart(bounds, ncid, flag=flag)
 
-    end if
-
-    if (use_cndv) then
-       call dgvs_inst%Restart(bounds, ncid, flag=flag)
+       call crop_inst%restart(bounds, ncid, flag=flag)
     end if
 
     if (use_ed) then

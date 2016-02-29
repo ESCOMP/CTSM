@@ -47,6 +47,7 @@ module clm_time_manager
         is_beg_curr_day,          &! return true on first timestep in current day
         is_end_curr_day,          &! return true on last timestep in current day
         is_end_curr_month,        &! return true on last timestep in current month
+        is_end_curr_year,         &! return true on last timestep in current year
         is_last_step,             &! return true on last timestep
         is_perpetual,             &! return true if perpetual calendar is in use
         is_restart,               &! return true if this is a restart run
@@ -1534,6 +1535,30 @@ contains
     is_end_curr_month = (day == 1  .and.  tod == 0)
 
   end function is_end_curr_month
+
+  !-----------------------------------------------------------------------
+  logical function is_end_curr_year()
+    !
+    ! !DESCRIPTION:
+    ! Return true if current timestep is last timestep in current year.
+    !
+    ! !LOCAL VARIABLES:
+    integer ::&
+         yr,    &! year
+         mon,   &! month
+         day,   &! day of month
+         tod     ! time of day (seconds past 0Z)
+
+    character(len=*), parameter :: subname = 'is_end_curr_year'
+    !-----------------------------------------------------------------------
+
+    call check_timemgr_initialized(subname)
+
+    call get_curr_date(yr, mon, day, tod)
+    is_end_curr_year = (mon == 1 .and. day == 1 .and. tod == 0)
+    
+  end function is_end_curr_year
+
 
   !=========================================================================================
 

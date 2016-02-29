@@ -1,0 +1,1022 @@
+module CNVegetationFacade
+
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
+  ! Facade for the CN Vegetation subsystem.
+  !
+  ! (A "facade", in software engineering terms, is a unified interface to a set of
+  ! interfaces in a subsystem. The facade defines a higher-level interface that makes the
+  ! subsystem easier to use.)
+  !
+  ! NOTE(wjs, 2016-02-19) I envision that we will introduce an abstract base class
+  ! (VegBase). Then both CNVeg and EDVeg will extend VegBase. The rest of the CLM code can
+  ! then have an instance of VegBase, which depending on the run, can be either a CNVeg or
+  ! EDVeg instance.
+  !
+  ! In addition, we probably want an implementation when running without CN or ED - i.e.,
+  ! an SPVeg inst. This would provide implementations for get_leafn_patch,
+  ! get_downreg_patch, etc., so that we don't need to handle the non-cn case here (note
+  ! that, currently, we return NaN for most of these getters, because these arrays are
+  ! invalid and shouldn't be used when running in SP mode). Also, in its EcosystemDynamics
+  ! routine, it would call SatellitePhenology (but note that the desired interface for
+  ! EcosystemDynamics would be quite different... could just pass everything needed by any
+  ! model, and ignore unneeded arguments). Then we can get rid of comments in this module
+  ! like, "only call if use_cn is true", as well as use_cn conditionals in this module.
+  !
+  ! NOTE(wjs, 2016-02-23) Currently, SatellitePhenology is called even when running with
+  ! CN, for the sake of dry deposition. This seems weird to me, and my gut feeling -
+  ! without understanding it well - is that this should be rewritten to depend on LAI from
+  ! CN rather than from satellite phenology. Until that is done, the separation between SP
+  ! and other Veg modes will be messier.
+  !
+  ! NOTE(wjs, 2016-02-23) Currently, this class coordinates calls to soil BGC routines as
+  ! well as veg BGC routines (even though it doesn't contain any soil BGC types). This is
+  ! because CNDriver coordinates both the veg & soil BGC. We should probably split up
+  ! CNDriver so that there is a cleaner separation between veg BGC and soil BGC, to allow
+  ! easier swapping of (for example) CN and ED. At that point, this class could
+  ! coordinate just the calls to veg BGC routines, with a similar facade class
+  ! coordinating the calls to soil BGC routines.
+  !
+  ! !USES:
+#include "shr_assert.h"
+  use shr_kind_mod                    , only : r8 => shr_kind_r8
+  use shr_infnan_mod                  , only : nan => shr_infnan_nan, assignment(=)
+  use shr_log_mod                     , only : errMsg => shr_log_errMsg
+  use perf_mod                        , only : t_startf, t_stopf
+  use decompMod                       , only : bounds_type
+  use clm_varctl                      , only : iulog, use_cn, use_cndv, use_c13, use_c14
+  use spmdMod                         , only : masterproc
+  use clm_time_manager                , only : get_curr_date, get_ref_date
+  use clm_time_manager                , only : get_nstep, is_end_curr_year, is_first_step
+  use CNBalanceCheckMod               , only : cn_balance_type
+  use CNVegStateType                  , only : cnveg_state_type
+  use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
+  use CNVegCarbonStateType            , only : cnveg_carbonstate_type
+  use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
+  use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
+  use CNFireMethodMod                 , only : cnfire_method_type
+  use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
+  use CanopyStateType                 , only : canopystate_type
+  use PhotosynthesisMod               , only : photosyns_type
+  use atm2lndType                     , only : atm2lnd_type
+  use WaterstateType                  , only : waterstate_type
+  use WaterfluxType                   , only : waterflux_type
+  use SoilStateType                   , only : soilstate_type
+  use TemperatureType                 , only : temperature_type 
+  use CropType                        , only : crop_type
+  use ch4Mod                          , only : ch4_type
+  use CNDVType                        , only : dgvs_type
+  use CNDVDriverMod                   , only : CNDVDriver, CNDVHIST
+  use EnergyFluxType                  , only : energyflux_type
+  use SoilHydrologyType               , only : soilhydrology_type
+  use FrictionVelocityMod             , only : frictionvel_type
+  use SoilBiogeochemStateType         , only : soilBiogeochem_state_type
+  use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
+  use SoilBiogeochemCarbonFluxType    , only : soilBiogeochem_carbonflux_type
+  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use CNFireEmissionsMod              , only : fireemis_type, CNFireEmisUpdate
+  use CNDriverMod                     , only : CNDriverInit, CNDriverSummary
+  use CNDriverMod                     , only : CNDriverNoLeaching, CNDriverLeaching
+  use CNVegStructUpdateMod            , only : CNVegStructUpdate 
+  use CNAnnualUpdateMod               , only : CNAnnualUpdate
+  use dynConsBiogeochemMod            , only : dyn_cnbal_patch
+  use dynCNDVMod                      , only : dynCNDV_init, dynCNDV_interp
+  !
+  implicit none
+  private
+
+  ! !PUBLIC TYPES:
+
+  type, public :: cn_vegetation_type
+     private
+
+     type(cnveg_state_type)         :: cnveg_state_inst
+     type(cnveg_carbonstate_type)   :: cnveg_carbonstate_inst
+     type(cnveg_carbonstate_type)   :: c13_cnveg_carbonstate_inst
+     type(cnveg_carbonstate_type)   :: c14_cnveg_carbonstate_inst
+     type(cnveg_carbonflux_type)    :: cnveg_carbonflux_inst
+     type(cnveg_carbonflux_type)    :: c13_cnveg_carbonflux_inst
+     type(cnveg_carbonflux_type)    :: c14_cnveg_carbonflux_inst
+     type(cnveg_nitrogenstate_type) :: cnveg_nitrogenstate_inst
+     type(cnveg_nitrogenflux_type)  :: cnveg_nitrogenflux_inst
+     type(cn_balance_type)          :: cn_balance_inst
+     class(cnfire_method_type), allocatable :: cnfire_method
+     type(dgvs_type)                :: dgvs_inst
+
+     ! TODO(wjs, 2016-02-19) Evaluate whether some other variables should be moved in
+     ! here. Whether they should be moved in depends on how tightly they are tied in with
+     ! the other CN Vegetation stuff. A question to ask is: Is this module used when
+     ! running with SP or ED? If so, then it should probably remain outside of CNVeg.
+     !
+     ! From the clm_instMod section on "CN vegetation types":
+     ! - nutrient_competition_method
+     !   - I'm pretty sure this should be moved into here; it's just a little messy to do
+     !     so, because of how it's initialized (specifically, the call to readParameters
+     !     in clm_initializeMod).
+     !
+     ! From the clm_instMod section on "general biogeochem types":
+     ! - ch4_inst
+     !   - probably not: really seems to belong in soilbiogeochem
+     ! - crop_inst
+     ! - dust_inst
+     ! - vocemis_inst
+     ! - fireemis_inst
+     ! - drydepvel_inst
+     
+   contains
+     procedure, public :: Init
+     procedure, public :: InitAccBuffer
+     procedure, public :: InitAccVars
+     procedure, public :: UpdateAccVars
+     procedure, public :: Restart
+
+     procedure, public :: Init2                         ! Do initialization in initialize phase, after subgrid weights are determined
+     procedure, public :: InitEachTimeStep              ! Do initializations at the start of each time step
+     procedure, public :: InterpFileInputs              ! Interpolate inputs from files
+     procedure, public :: UpdateSubgridWeights          ! Update subgrid weights if running with prognostic patch weights
+     procedure, public :: DynamicAreaConservation       ! Conserve C & N with updates in subgrid weights
+     procedure, public :: EcosystemDynamicsPreDrainage  ! Do the main science that needs to be done before hydrology-drainage
+     procedure, public :: EcosystemDynamicsPostDrainage ! Do the main science that needs to be done after hydrology-drainage
+     procedure, public :: BalanceCheck                  ! Check the carbon and nitrogen balance
+     procedure, public :: EndOfTimeStepVegDynamics      ! Do vegetation dynamics that should be done at the end of each time step
+     procedure, public :: WriteHistory                  ! Do any history writes that are specific to veg dynamics
+
+     procedure, public :: get_nee_col                   ! Get col-level net ecosystem exchange array
+     procedure, public :: get_leafn_patch               ! Get patch-level leaf nitrogen array
+     procedure, public :: get_downreg_patch             ! Get patch-level downregulation array
+     procedure, public :: get_root_respiration_patch    ! Get patch-level root respiration array
+     procedure, public :: get_annsum_npp_patch          ! Get patch-level annual sum NPP array
+     procedure, public :: get_agnpp_patch               ! Get patch-level aboveground NPP array
+     procedure, public :: get_bgnpp_patch               ! Get patch-level belowground NPP array
+  end type cn_vegetation_type
+
+contains
+
+  !-----------------------------------------------------------------------
+  subroutine Init(this, bounds, NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Initialize a CNVeg object.
+    !
+    ! Should be called regardless of whether use_cn is true
+    !
+    ! !USES:
+    use CNFireFactoryMod , only : create_cnfire_method
+    use clm_varcon       , only : c13ratio, c14ratio
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(inout) :: this
+    type(bounds_type), intent(in)    :: bounds
+    character(len=*) , intent(in)    :: NLFilename ! namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: begp, endp
+
+    character(len=*), parameter :: subname = 'Init'
+    !-----------------------------------------------------------------------
+
+    begp = bounds%begp
+    endp = bounds%endp
+
+    ! Note - always initialize the memory for cnveg_state_inst (used in biogeophys/)
+    call this%cnveg_state_inst%Init(bounds)
+    
+    if (use_cn) then
+       call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8)
+       if (use_c13) then
+          call this%c13_cnveg_carbonstate_inst%Init(bounds, carbon_type='c13', ratio=c13ratio, &
+               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+       end if
+       if (use_c14) then
+          call this%c14_cnveg_carbonstate_inst%Init(bounds, carbon_type='c14', ratio=c14ratio, &
+               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+       end if
+       call this%cnveg_carbonflux_inst%Init(bounds, carbon_type='c12')
+       if (use_c13) then
+          call this%c13_cnveg_carbonflux_inst%Init(bounds, carbon_type='c13')
+       end if
+       if (use_c14) then
+          call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14')
+       end if
+       call this%cnveg_nitrogenstate_inst%Init(bounds,                  &
+            this%cnveg_carbonstate_inst%leafc_patch(begp:endp),         &
+            this%cnveg_carbonstate_inst%leafc_storage_patch(begp:endp), &
+            this%cnveg_carbonstate_inst%frootc_patch(begp:endp), &
+            this%cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
+            this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp))
+       call this%cnveg_nitrogenflux_inst%Init(bounds) 
+
+       call this%cn_balance_inst%Init(bounds)
+
+       ! Initialize the memory for the dgvs_inst data structure regardless of whether
+       ! use_cndv is true so that it can be used in associate statements (nag compiler
+       ! complains otherwise)
+       call this%dgvs_inst%Init(bounds)
+    end if
+
+    allocate(this%cnfire_method, &
+         source=create_cnfire_method(NLFilename))
+
+  end subroutine Init
+
+  !-----------------------------------------------------------------------
+  subroutine InitAccBuffer(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Initialize accumulation buffer for types contained here 
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(inout) :: this
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitAccBuffer'
+    !-----------------------------------------------------------------------
+
+    if (use_cndv) then
+       call this%dgvs_inst%InitAccBuffer(bounds)
+    end if
+
+  end subroutine InitAccBuffer
+
+  !-----------------------------------------------------------------------
+  subroutine InitAccVars(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Initialize variables that are associated with accumulated fields
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(inout) :: this
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitAccVars'
+    !-----------------------------------------------------------------------
+
+    if (use_cndv) then
+       call this%dgvs_inst%initAccVars(bounds)
+    end if
+
+  end subroutine InitAccVars
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateAccVars(this, bounds, t_a10_patch, t_ref2m_patch)
+    !
+    ! !DESCRIPTION:
+    ! Update accumulated variables
+    !
+    ! Should be called every time step
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(inout) :: this
+    type(bounds_type), intent(in)    :: bounds
+    ! NOTE(wjs, 2016-02-23) These need to be pointers to agree with the interface of
+    ! UpdateAccVars in CNDVType (they are pointers there as a workaround for a compiler
+    ! bug).
+    real(r8), pointer , intent(in)   :: t_a10_patch(:)      ! 10-day running mean of the 2 m temperature (K)
+    real(r8), pointer , intent(in)   :: t_ref2m_patch(:)    ! 2 m height surface air temperature (K)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'UpdateAccVars'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(t_a10_patch) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_ref2m_patch) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+
+    if (use_cndv) then
+       call this%dgvs_inst%UpdateAccVars(bounds, &
+            t_a10_patch = t_a10_patch, &
+            t_ref2m_patch = t_ref2m_patch)
+    end if
+
+  end subroutine UpdateAccVars
+
+
+  !-----------------------------------------------------------------------
+  subroutine Restart(this, bounds, ncid, flag)
+    !
+    ! !DESCRIPTION:
+    ! Handle restart (read / write) for CNVeg
+    !
+    ! Should be called regardless of whether use_cn is true
+    !
+    ! !USES:
+    use ncdio_pio, only : file_desc_t
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(inout) :: this
+    type(bounds_type), intent(in)    :: bounds 
+    type(file_desc_t), intent(inout) :: ncid   
+    character(len=*) , intent(in)    :: flag   
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'Restart'
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       call this%cnveg_state_inst%restart(bounds, ncid, flag=flag)
+       call this%cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12')
+       if (use_c13) then
+          call this%c13_cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c13', &
+               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+       end if
+       if (use_c14) then
+          call this%c14_cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c14', &
+               c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
+       end if
+       call this%cnveg_carbonflux_inst%restart(bounds, ncid, flag=flag)
+       call this%cnveg_nitrogenstate_inst%restart(bounds, ncid, flag=flag)
+       call this%cnveg_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
+    end if
+
+    if (use_cndv) then
+       call this%dgvs_inst%Restart(bounds, ncid, flag=flag)
+    end if
+
+  end subroutine Restart
+
+  !-----------------------------------------------------------------------
+  subroutine Init2(this, bounds, NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Do initialization that is needed in the initialize phase, after subgrid weights are
+    ! determined
+    !
+    ! Should only be called if use_cn is true
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type) , intent(inout) :: this
+    type(bounds_type) , intent(in)    :: bounds
+    character(len=*)  , intent(in)    :: NLFilename ! namelist filename
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'Init2'
+    !-----------------------------------------------------------------------
+
+    call CNDriverInit(bounds, NLFilename, this%cnfire_method)
+
+    if (use_cndv) then
+       call dynCNDV_init(bounds, this%dgvs_inst)
+    end if
+
+  end subroutine Init2
+
+
+  !-----------------------------------------------------------------------
+  subroutine InitEachTimeStep(this, bounds, num_soilc, filter_soilc)
+    !
+    ! !DESCRIPTION:
+    ! Do initializations that need to be done at the start of every time step
+    !
+    ! This includes initializing the balance check and zeroing fluxes
+    !
+    ! Should only be called if use_cn is true
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type) , intent(inout) :: this
+    type(bounds_type) , intent(in)    :: bounds
+    integer           , intent(in)    :: num_soilc       ! number of soil columns filter
+    integer           , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitEachTimeStep'
+    !-----------------------------------------------------------------------
+
+    call this%cn_balance_inst%BeginCNBalance( &
+         bounds, num_soilc, filter_soilc, &
+         this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
+
+    call this%cnveg_carbonflux_inst%ZeroDWT(bounds)
+    if (use_c13) then
+       call this%c13_cnveg_carbonflux_inst%ZeroDWT(bounds)
+    end if
+    if (use_c14) then
+       call this%c14_cnveg_carbonflux_inst%ZeroDWT(bounds)
+    end if
+    call this%cnveg_nitrogenflux_inst%ZeroDWT(bounds)
+    call this%cnveg_carbonstate_inst%ZeroDWT(bounds)
+    call this%cnveg_nitrogenstate_inst%ZeroDWT(bounds)
+
+  end subroutine InitEachTimeStep
+
+  !-----------------------------------------------------------------------
+  subroutine InterpFileInputs(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Interpolate inputs from files
+    !
+    ! NOTE(wjs, 2016-02-23) Stuff done here could probably be done at the end of
+    ! InitEachTimeStep, rather than in this separate routine, except for the fact that
+    ! (currently) this Interp stuff is done with proc bounds rather thna clump bounds. I
+    ! think that is needed so that you don't update a given stream multiple times. If we
+    ! rework the handling of threading / clumps so that there is a separate object for
+    ! each clump, then I think this problem would disappear - at which point we could
+    ! remove this Interp routine, moving its body to the end of InitEachTimeStep.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type) , intent(inout) :: this
+    type(bounds_type) , intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InterpFileInputs'
+    !-----------------------------------------------------------------------
+
+    call this%cnfire_method%CNFireInterp(bounds)
+
+  end subroutine InterpFileInputs
+
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateSubgridWeights(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Update subgrid weights if running with prognostic patch weights
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type) , intent(inout) :: this
+    type(bounds_type) , intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'UpdateSubgridWeights'
+    !-----------------------------------------------------------------------
+
+    if (use_cndv) then
+       call dynCNDV_interp(bounds, this%dgvs_inst)
+    end if
+
+  end subroutine UpdateSubgridWeights
+
+
+  !-----------------------------------------------------------------------
+  subroutine DynamicAreaConservation(this, bounds, &
+       prior_weights, first_step_cold_start, &
+       canopystate_inst, photosyns_inst, &
+       soilbiogeochem_carbonflux_inst, soilbiogeochem_state_inst)
+    !
+    ! !DESCRIPTION:
+    ! Conserve C & N with updates in subgrid weights
+    !
+    ! Should only be called if use_cn is true
+    !
+    ! !USES:
+    use dynPriorWeightsMod           , only : prior_weights_type
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(inout) :: this
+    type(bounds_type)                    , intent(in)    :: bounds        
+    type(prior_weights_type)             , intent(in)    :: prior_weights ! weights prior to the subgrid weight updates
+    logical                              , intent(in)    :: first_step_cold_start ! true if this is the first step since cold start
+    type(canopystate_type)               , intent(inout) :: canopystate_inst
+    type(photosyns_type)                 , intent(inout) :: photosyns_inst
+    type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_state_type)      , intent(in)    :: soilbiogeochem_state_inst
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'DynamicAreaConservation'
+    !-----------------------------------------------------------------------
+
+    call dyn_cnbal_patch(bounds, prior_weights, first_step_cold_start, &
+         canopystate_inst, photosyns_inst, &
+         this%cnveg_state_inst, &
+         this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, this%c14_cnveg_carbonstate_inst, &
+         this%cnveg_carbonflux_inst, this%c13_cnveg_carbonflux_inst, this%c14_cnveg_carbonflux_inst, &
+         this%cnveg_nitrogenstate_inst, this%cnveg_nitrogenflux_inst, &
+         soilbiogeochem_carbonflux_inst, soilbiogeochem_state_inst)
+
+  end subroutine DynamicAreaConservation
+
+  !-----------------------------------------------------------------------
+  subroutine EcosystemDynamicsPreDrainage(this, bounds, &
+       num_soilc, filter_soilc, &
+       num_soilp, filter_soilp, &
+       num_pcropp, filter_pcropp, &
+       doalb, &
+       soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
+       c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
+       c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
+       soilbiogeochem_state_inst,                                               &
+       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
+       atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
+       canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+       photosyns_inst, soilhydrology_inst, energyflux_inst,          &
+       nutrient_competition_method, fireemis_inst)
+    !
+    ! !DESCRIPTION:
+    ! Do the main science for CN vegetation that needs to be done before hydrology-drainage
+    !
+    ! Should only be called if use_cn is true
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type)               , intent(inout) :: this
+    type(bounds_type)                       , intent(in)    :: bounds  
+    integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
+    integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
+    integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
+    integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
+    logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
+    type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
+    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c13_soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c14_soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst 
+    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+    type(waterflux_type)                    , intent(inout) :: waterflux_inst
+    type(canopystate_type)                  , intent(inout) :: canopystate_inst
+    type(soilstate_type)                    , intent(inout) :: soilstate_inst
+    type(temperature_type)                  , intent(inout) :: temperature_inst
+    type(crop_type)                         , intent(inout) :: crop_inst
+    type(ch4_type)                          , intent(in)    :: ch4_inst
+    type(photosyns_type)                    , intent(in)    :: photosyns_inst
+    type(soilhydrology_type)                , intent(in)    :: soilhydrology_inst
+    type(energyflux_type)                   , intent(in)    :: energyflux_inst
+    class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
+    type(fireemis_type)                     , intent(inout) :: fireemis_inst
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'EcosystemDynamicsPreDrainage'
+    !-----------------------------------------------------------------------
+
+    call CNDriverNoLeaching(bounds,                                         &
+         num_soilc, filter_soilc,                       &
+         num_soilp, filter_soilp,                       &
+         num_pcropp, filter_pcropp, doalb,              &
+         this%cnveg_state_inst,                                                        &
+         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst,                           &
+         this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst,                   &
+         this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst,                   &
+         this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst,                       &
+         soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
+         c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_state_inst,                                               &
+         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
+         atm2lnd_inst, waterstate_inst, waterflux_inst,                           &
+         canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+         this%dgvs_inst, photosyns_inst, soilhydrology_inst, energyflux_inst,          &
+         nutrient_competition_method, this%cnfire_method)
+
+    ! fire carbon emissions 
+    call CNFireEmisUpdate(bounds, num_soilp, filter_soilp, &
+         this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, fireemis_inst )
+
+    call CNAnnualUpdate(bounds,            &
+         num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         this%cnveg_state_inst, this%cnveg_carbonflux_inst)
+
+  end subroutine EcosystemDynamicsPreDrainage
+
+  !-----------------------------------------------------------------------
+  subroutine EcosystemDynamicsPostDrainage(this, bounds, &
+       num_soilc, filter_soilc, num_soilp, filter_soilp, doalb, crop_inst, &
+       waterstate_inst, waterflux_inst, frictionvel_inst, canopystate_inst, &
+       soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+       c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
+       c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
+       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+    !
+    ! !DESCRIPTION:
+    ! Do the main science for CN vegetation that needs to be done after hydrology-drainage
+    !
+    ! Should only be called if use_cn is true
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type)               , intent(inout) :: this
+    type(bounds_type)                       , intent(in)    :: bounds  
+    integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
+    integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
+    integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
+    type(crop_type)                         , intent(in)    :: crop_inst
+    type(waterstate_type)                   , intent(in)    :: waterstate_inst
+    type(waterflux_type)                    , intent(inout) :: waterflux_inst
+    type(frictionvel_type)                  , intent(in)    :: frictionvel_inst
+    type(canopystate_type)                  , intent(inout) :: canopystate_inst
+    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c13_soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c14_soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'EcosystemDynamicsPostDrainage'
+    !-----------------------------------------------------------------------
+
+    ! Update the nitrogen leaching rate as a function of soluble mineral N 
+    ! and total soil water outflow.
+    
+    call CNDriverLeaching(bounds, &
+         num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         waterstate_inst, waterflux_inst, &
+         this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
+         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+
+    ! Call to all CN summary routines
+
+    call  CNDriverSummary(bounds, &
+         num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         this%cnveg_state_inst, this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, &
+         this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, &
+         this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, &
+         this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
+         soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+         c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+
+    ! On the radiation time step, use C state variables to calculate
+    ! vegetation structure (LAI, SAI, height)
+
+    if (doalb) then   
+       call CNVegStructUpdate(num_soilp, filter_soilp, &
+            waterstate_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
+            crop_inst, this%cnveg_carbonstate_inst, canopystate_inst)
+    end if
+
+  end subroutine EcosystemDynamicsPostDrainage
+
+  !-----------------------------------------------------------------------
+  subroutine BalanceCheck(this, bounds, num_soilc, filter_soilc, &
+       soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
+    !
+    ! !DESCRIPTION:
+    ! Check the carbon and nitrogen balance
+    !
+    ! Should only be called if use_cn is true
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type)               , intent(inout) :: this
+    type(bounds_type)                       , intent(in)    :: bounds  
+    integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
+    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer              :: nstep                   ! time step number
+
+    character(len=*), parameter :: subname = 'BalanceCheck'
+    !-----------------------------------------------------------------------
+
+    nstep = get_nstep()
+    if (nstep < 2 )then
+       if (masterproc) then
+          write(iulog,*) '--WARNING-- skipping CN balance check for first timestep'
+       end if
+    else
+
+       call this%cn_balance_inst%CBalanceCheck( &
+            bounds, num_soilc, filter_soilc, &
+            soilbiogeochem_carbonflux_inst, &
+            this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst)
+
+       call this%cn_balance_inst%NBalanceCheck( &
+            bounds, num_soilc, filter_soilc, &
+            soilbiogeochem_nitrogenflux_inst, &
+            this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst)
+
+    end if
+
+  end subroutine BalanceCheck
+
+  !-----------------------------------------------------------------------
+  subroutine EndOfTimeStepVegDynamics(this, bounds, num_natvegp, filter_natvegp, &
+       atm2lnd_inst)
+    !
+    ! !DESCRIPTION:
+    ! Do vegetation dynamics that should be done at the end of each time step
+    !
+    ! Should only be called if use_cn is true
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(inout) :: this
+    type(bounds_type)  , intent(in)    :: bounds                  
+    integer            , intent(inout) :: num_natvegp       ! number of naturally-vegetated patches in filter
+    integer            , intent(inout) :: filter_natvegp(:) ! filter for naturally-vegetated patches
+    type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: nstep  ! time step number
+    integer  :: yr     ! year (0, ...)
+    integer  :: mon    ! month (1, ..., 12)
+    integer  :: day    ! day of month (1, ..., 31)
+    integer  :: sec    ! seconds of the day
+    integer  :: ncdate ! current date
+    integer  :: nbdate ! base date (reference date)
+    integer  :: kyr    ! thousand years, equals 2 at end of first year
+
+    character(len=*), parameter :: subname = 'EndOfTimeStepVegDynamics'
+    !-----------------------------------------------------------------------
+
+    if (use_cndv) then
+       ! Call dv (dynamic vegetation) at last time step of year
+
+       call t_startf('d2dgvm')
+       if (is_end_curr_year() .and. .not. is_first_step())  then
+
+          ! Get date info.  kyr is used in lpj().  At end of first year, kyr = 2.
+          call get_curr_date(yr, mon, day, sec)
+          ncdate = yr*10000 + mon*100 + day
+          call get_ref_date(yr, mon, day, sec)
+          nbdate = yr*10000 + mon*100 + day
+          kyr = ncdate/10000 - nbdate/10000 + 1
+
+          if (masterproc) then
+             nstep = get_nstep()
+             write(iulog,*) 'End of year. CNDV called now: ncdate=', &
+                  ncdate,' nbdate=',nbdate,' kyr=',kyr,' nstep=', nstep
+          end if
+
+          call CNDVDriver(bounds, &
+               num_natvegp, filter_natvegp, kyr,  &
+               atm2lnd_inst, &
+               this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, this%dgvs_inst)
+       end if
+       call t_stopf('d2dgvm')
+    end if
+
+  end subroutine EndOfTimeStepVegDynamics
+
+  !-----------------------------------------------------------------------
+  subroutine WriteHistory(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Do any history writes that are specific to vegetation dynamics
+    !
+    ! NOTE(wjs, 2016-02-23) This could probably be combined with
+    ! EndOfTimeStepVegDynamics, except for the fact that (currently) history writes are
+    ! done with proc bounds rather than clump bounds. If that were changed, then the body
+    ! of this could be moved into EndOfTimeStepVegDynamics, inside a "if (.not.
+    ! use_noio)" conditional.
+    !
+    ! Should only be called if use_cn is true
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type)  , intent(in) :: bounds                  
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'WriteHistory'
+    !-----------------------------------------------------------------------
+
+    ! Write to CNDV history buffer if appropriate
+    if (use_cndv) then
+       if (is_end_curr_year() .and. .not. is_first_step())  then
+          call t_startf('clm_drv_io_hdgvm')
+          call CNDVHist( bounds, this%dgvs_inst )
+          if (masterproc) write(iulog,*) 'Annual CNDV calculations are complete'
+          call t_stopf('clm_drv_io_hdgvm')
+       end if
+    end if
+
+  end subroutine WriteHistory
+
+
+  !-----------------------------------------------------------------------
+  function get_nee_col(this, bounds) result(nee_col)
+    !
+    ! !DESCRIPTION:
+    ! Get col-level net ecosystem exchange array
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8) :: nee_col(bounds%begc:bounds%endc)  ! function result: net ecosystem exchange of carbon, includes fire, landuse, harvest, and hrv_xsmrpool flux, positive for source (gC/m2/s)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_nee_col'
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       nee_col(bounds%begc:bounds%endc) = &
+            this%cnveg_carbonflux_inst%nee_col(bounds%begc:bounds%endc)
+    else
+       nee_col(bounds%begc:bounds%endc) = 0._r8
+    end if
+
+  end function get_nee_col
+
+
+  !-----------------------------------------------------------------------
+  function get_leafn_patch(this, bounds) result(leafn_patch)
+    !
+    ! !DESCRIPTION:
+    ! Get patch-level leaf nitrogen array
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8) :: leafn_patch(bounds%begp:bounds%endp)  ! function result: leaf N (gN/m2)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_leafn_patch'
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       leafn_patch(bounds%begp:bounds%endp) = &
+            this%cnveg_nitrogenstate_inst%leafn_patch(bounds%begp:bounds%endp)
+    else
+       leafn_patch(bounds%begp:bounds%endp) = nan
+    end if
+
+  end function get_leafn_patch
+
+  !-----------------------------------------------------------------------
+  function get_downreg_patch(this, bounds) result(downreg_patch)
+    !
+    ! !DESCRIPTION:
+    ! Get patch-level downregulation array
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8) :: downreg_patch(bounds%begp:bounds%endp)  ! function result: fractional reduction in GPP due to N limitation (dimensionless)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_downreg_patch'
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       downreg_patch(bounds%begp:bounds%endp) = &
+            this%cnveg_state_inst%downreg_patch(bounds%begp:bounds%endp)
+    else
+       downreg_patch(bounds%begp:bounds%endp) = nan
+    end if
+
+  end function get_downreg_patch
+
+  !-----------------------------------------------------------------------
+  function get_root_respiration_patch(this, bounds) result(root_respiration_patch)
+    !
+    ! !DESCRIPTION:
+    ! Get patch-level root respiration array
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8) :: root_respiration_patch(bounds%begp:bounds%endp)  ! function result: root respiration (fine root MR + total root GR) (gC/m2/s)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_root_respiration_patch'
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       root_respiration_patch(bounds%begp:bounds%endp) = &
+            this%cnveg_carbonflux_inst%rr_patch(bounds%begp:bounds%endp)
+    else
+       root_respiration_patch(bounds%begp:bounds%endp) = nan
+    end if
+
+  end function get_root_respiration_patch
+
+  ! TODO(wjs, 2016-02-19) annsum_npp, agnpp and bgnpp are all needed for the estimation
+  ! of tillers in ch4Mod. Rather than providing getters for these three things so that
+  ! ch4Mod can estimate tillers, it would probably be better if the tiller estimation
+  ! algorithm was moved into some CNVeg-specific module, and then tillers could be
+  ! queried directly.
+
+  !-----------------------------------------------------------------------
+  function get_annsum_npp_patch(this, bounds) result(annsum_npp_patch)
+    !
+    ! !DESCRIPTION:
+    ! Get patch-level annual sum NPP array
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8) :: annsum_npp_patch(bounds%begp:bounds%endp)  ! function result: annual sum NPP (gC/m2/yr)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_annsum_npp_patch'
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       annsum_npp_patch(bounds%begp:bounds%endp) = &
+            this%cnveg_carbonflux_inst%annsum_npp_patch(bounds%begp:bounds%endp)
+    else
+       annsum_npp_patch(bounds%begp:bounds%endp) = nan
+    end if
+
+  end function get_annsum_npp_patch
+
+  !-----------------------------------------------------------------------
+  function get_agnpp_patch(this, bounds) result(agnpp_patch)
+    !
+    ! !DESCRIPTION:
+    ! Get patch-level aboveground NPP array
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8) :: agnpp_patch(bounds%begp:bounds%endp)  ! function result: aboveground NPP (gC/m2/s)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_agnpp_patch'
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       agnpp_patch(bounds%begp:bounds%endp) = &
+            this%cnveg_carbonflux_inst%agnpp_patch(bounds%begp:bounds%endp)
+    else
+       agnpp_patch(bounds%begp:bounds%endp) = nan
+    end if
+
+  end function get_agnpp_patch
+
+  !-----------------------------------------------------------------------
+  function get_bgnpp_patch(this, bounds) result(bgnpp_patch)
+    !
+    ! !DESCRIPTION:
+    ! Get patch-level belowground NPP array
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8) :: bgnpp_patch(bounds%begp:bounds%endp)  ! function result: belowground NPP (gC/m2/s)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_bgnpp_patch'
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       bgnpp_patch(bounds%begp:bounds%endp) = &
+            this%cnveg_carbonflux_inst%bgnpp_patch(bounds%begp:bounds%endp)
+    else
+       bgnpp_patch(bounds%begp:bounds%endp) = nan
+    end if
+
+  end function get_bgnpp_patch
+
+
+end module CNVegetationFacade

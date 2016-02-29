@@ -23,7 +23,6 @@ module ch4Mod
   use atm2lndType                    , only : atm2lnd_type
   use CanopyStateType                , only : canopystate_type
   use CNSharedParamsMod              , only : CNParamsShareInst
-  use CNVegcarbonfluxType            , only : cnveg_carbonflux_type
   use SoilBiogeochemCarbonFluxType   , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemNitrogenFluxType , only : soilbiogeochem_nitrogenflux_type
   use EnergyFluxType                 , only : energyflux_type
@@ -1293,8 +1292,9 @@ contains
   subroutine ch4 (bounds, num_soilc, filter_soilc, num_lakec, filter_lakec, num_soilp, filter_soilp, &
        atm2lnd_inst, lakestate_inst, canopystate_inst, soilstate_inst, soilhydrology_inst, &
        temperature_inst, energyflux_inst, waterstate_inst, waterflux_inst, &
-       cnveg_carbonflux_inst, soilbiogeochem_carbonflux_inst, &
-       soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst)
+       soilbiogeochem_carbonflux_inst, &
+       soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst, &
+       agnpp, bgnpp, annsum_npp, rr)
     !
     ! !DESCRIPTION:
     ! Driver for the methane emissions model
@@ -1323,11 +1323,14 @@ contains
     type(energyflux_type)                  , intent(inout) :: energyflux_inst
     type(waterstate_type)                  , intent(in)    :: waterstate_inst
     type(waterflux_type)                   , intent(in)    :: waterflux_inst
-    type(cnveg_carbonflux_type)            , intent(inout) :: cnveg_carbonflux_inst
     type(soilbiogeochem_carbonflux_type)   , intent(in)    :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenflux_type) , intent(in)    :: soilbiogeochem_nitrogenflux_inst
     type(ch4_type)                         , intent(inout) :: ch4_inst
     type(lnd2atm_type)                     , intent(inout) :: lnd2atm_inst
+    real(r8)                               , intent(in)    :: agnpp( bounds%begp: ) ! aboveground NPP (gC/m2/s)
+    real(r8)                               , intent(in)    :: bgnpp( bounds%begp: ) ! belowground NPP (gC/m2/s)
+    real(r8)                               , intent(in)    :: annsum_npp( bounds%begp: ) ! annual sum NPP (gC/m2/yr)
+    real(r8)                               , intent(in)    :: rr ( bounds%begp: ) ! root respiration (fine root MR + total root GR) (gC/m2/s)
     !
     ! !LOCAL VARIABLES:
     integer  :: sat                                    ! 0 = unsatured, 1 = saturated
@@ -1359,6 +1362,11 @@ contains
     integer  :: dummyfilter(1)                         ! empty filter
     character(len=32) :: subname='ch4'                 ! subroutine name
     !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
 
     associate(                                                                 & 
          dz                   =>   col%dz                                    , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       
@@ -1552,7 +1560,8 @@ contains
 
       ! Do CH4 Annual Averages
       call ch4_annualupdate(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-           soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, ch4_inst)
+           agnpp(begp:endp), bgnpp(begp:endp), &
+           soilbiogeochem_carbonflux_inst, ch4_inst)
 
       ! Determine rootfr_col and also check for inactive columns
 
@@ -1650,9 +1659,9 @@ contains
 
          ! calculate CH4 production in each soil layer
          call ch4_prod (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-              jwt(begc:endc), sat, lake, &
+              rr(begp:endp), jwt(begc:endc), sat, lake, &
               soilstate_inst, temperature_inst, waterstate_inst, &
-              cnveg_carbonflux_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
+              soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
               ch4_inst)
 
          ! calculate CH4 oxidation in each soil layer
@@ -1665,9 +1674,9 @@ contains
          call ch4_aere (bounds, &
               num_soilc, filter_soilc, &
               num_soilp, filter_soilp, &
-              jwt(begc:endc), sat, lake, &
+              annsum_npp(begp:endp), jwt(begc:endc), sat, lake, &
               canopystate_inst, soilstate_inst, temperature_inst, energyflux_inst, &
-              waterstate_inst, waterflux_inst, cnveg_carbonflux_inst, ch4_inst)
+              waterstate_inst, waterflux_inst, ch4_inst)
 
          ! calculate CH4 ebullition losses in each soil layer
          call ch4_ebul (bounds, &
@@ -1699,9 +1708,9 @@ contains
 
          ! calculate CH4 production in each lake layer
          call ch4_prod (bounds, num_lakec, filter_lakec, 0, dummyfilter, &
-              jwt(begc:endc), sat, lake, &
+              rr(begp:endp), jwt(begc:endc), sat, lake, &
               soilstate_inst, temperature_inst, waterstate_inst, &
-              cnveg_carbonflux_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
+              soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
               ch4_inst)
 
          ! calculate CH4 oxidation in each lake layer
@@ -1713,9 +1722,9 @@ contains
          ! calculate CH4 aerenchyma losses in each lake layer
          ! The p filter will not be used here; the relevant column vars will just be set to 0.
          call ch4_aere (bounds, num_lakec, filter_lakec, 0, dummyfilter, &
-              jwt(begc:endc), sat, lake, &
+              annsum_npp(begp:endp), jwt(begc:endc), sat, lake, &
               canopystate_inst, soilstate_inst, temperature_inst, energyflux_inst, &
-              waterstate_inst, waterflux_inst, cnveg_carbonflux_inst, ch4_inst)
+              waterstate_inst, waterflux_inst, ch4_inst)
 
          ! calculate CH4 ebullition losses in each lake layer
          call ch4_ebul (bounds, num_lakec, filter_lakec, &
@@ -1894,9 +1903,9 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
-       filter_methp, jwt, sat, lake, &
+       filter_methp, rr, jwt, sat, lake, &
        soilstate_inst, temperature_inst, waterstate_inst, &
-       cnveg_carbonflux_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
+       soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst, &
        ch4_inst)
     !
     ! !DESCRIPTION:
@@ -1918,13 +1927,13 @@ contains
     integer                                , intent(in)    :: filter_methc(:)     ! column filter for soil points
     integer                                , intent(in)    :: num_methp           ! number of soil points in patch filter
     integer                                , intent(in)    :: filter_methp(:)     ! patch filter for soil points
+    real(r8)                               , intent(in)    :: rr ( bounds%begp: ) ! root respiration (fine root MR + total root GR) (gC/m2/s)
     integer                                , intent(in)    :: jwt( bounds%begc: ) ! index of the soil layer right above the water table (-) [col]
     integer                                , intent(in)    :: sat                 ! 0 = unsaturated; 1 = saturated
     logical                                , intent(in)    :: lake                ! function called with lake filter
     type(soilstate_type)                   , intent(inout) :: soilstate_inst
     type(temperature_type)                 , intent(in)    :: temperature_inst
     type(waterstate_type)                  , intent(in)    :: waterstate_inst
-    type(cnveg_carbonflux_type)            , intent(in)    :: cnveg_carbonflux_inst
     type(soilbiogeochem_carbonflux_type)   , intent(in)    :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_nitrogenflux_type) , intent(in)    :: soilbiogeochem_nitrogenflux_inst
     type(ch4_type)                         , intent(inout) :: ch4_inst
@@ -1969,6 +1978,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
+    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
     SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
     associate(                                                                    & 
@@ -1984,9 +1994,6 @@ contains
          watsat         =>    soilstate_inst%watsat_col                         , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water at saturation (porosity)  
          rootfr         =>    soilstate_inst%rootfr_patch                       , & ! Input:  [real(r8) (:,:)  ]  fraction of roots in each soil layer  (nlevsoi) 
          rootfr_col     =>    soilstate_inst%rootfr_col                         , & ! Input:  [real(r8) (:,:)  ]  fraction of roots in each soil layer  (nlevsoi) 
-
-         rr             =>    cnveg_carbonflux_inst%rr_patch                    , & ! Input:  [real(r8) (:)    ]  (gC/m2/s) root respiration (fine root MR + total root GR)
-         col_rr         =>    cnveg_carbonflux_inst%rr_col                      , & ! Input:  [real(r8) (:)    ]  (gC/m2/s) root respiration (fine root MR + total root GR)
 
          somhr          =>    soilbiogeochem_carbonflux_inst%somhr_col          , & ! Input:  [real(r8) (:)    ]  (gC/m2/s) soil organic matter heterotrophic respiration
          lithr          =>    soilbiogeochem_carbonflux_inst%lithr_col          , & ! Input:  [real(r8) (:)    ]  (gC/m2/s) litter heterotrophic respiration        
@@ -2200,7 +2207,6 @@ contains
 
             ! Add root respiration
             if (.not. lake) then
-               !o2_decomp_depth(c,j) = o2_decomp_depth(c,j) + col_rr(c)*rootfr(c,j)/catomw/dz(c,j) ! mol/m^3/s
                o2_decomp_depth(c,j) = o2_decomp_depth(c,j) + rr_vr(c,j)/catomw/dz(c,j) ! mol/m^3/s
                ! g C/m2/s ! gC/mol O2 ! m
             end if
@@ -2388,9 +2394,9 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, filter_methp, &
-       jwt, sat, lake, &
+       annsum_npp, jwt, sat, lake, &
        canopystate_inst, soilstate_inst, temperature_inst, energyflux_inst, &
-       waterstate_inst, waterflux_inst, cnveg_carbonflux_inst, ch4_inst)
+       waterstate_inst, waterflux_inst, ch4_inst)
     !
     ! !DESCRIPTION:
     ! Arctic c3 grass (which is often present in fens) and all vegetation in inundated areas is assumed to have
@@ -2411,6 +2417,7 @@ contains
     integer                     , intent(in)    :: filter_methc(:)     ! column filter for soil points
     integer                     , intent(in)    :: num_methp           ! number of soil points in patch filter
     integer                     , intent(in)    :: filter_methp(:)     ! patch filter for soil points
+    real(r8)                    , intent(in)    :: annsum_npp( bounds%begp: ) ! annual sum NPP (gC/m2/yr)
     integer                     , intent(in)    :: jwt( bounds%begc: ) ! index of the soil layer right above the water table (-) [col]
     integer                     , intent(in)    :: sat                 ! 0 = unsaturated; 1 = saturated
     logical                     , intent(in)    :: lake             ! function called with lake filter
@@ -2420,7 +2427,6 @@ contains
     type(energyflux_type)       , intent(in)    :: energyflux_inst
     type(waterstate_type)       , intent(in)    :: waterstate_inst
     type(waterflux_type)        , intent(in)    :: waterflux_inst
-    type(cnveg_carbonflux_type) , intent(in)    :: cnveg_carbonflux_inst
     type(ch4_type)              , intent(inout) :: ch4_inst
     !
     ! !LOCAL VARIABLES:
@@ -2459,6 +2465,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
+    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
     SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
     associate(                                                              & 
@@ -2479,8 +2486,6 @@ contains
          qflx_tran_veg =>    waterflux_inst%qflx_tran_veg_patch           , & ! Input:  [real(r8) (:)    ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
 
          canopy_cond   =>    energyflux_inst%canopy_cond_patch            , & ! Input:  [real(r8) (:)    ]  tracer conductance for canopy [m/s]               
-
-         annsum_npp    =>    cnveg_carbonflux_inst%annsum_npp_patch   , & ! Input:  [real(r8) (:)    ]  annual sum NPP (gC/m2/yr)                         
 
          annavg_agnpp  =>    ch4_inst%annavg_agnpp_patch                  , & ! Input:  [real(r8) (:)    ]  (gC/m2/s) annual average aboveground NPP          
          annavg_bgnpp  =>    ch4_inst%annavg_bgnpp_patch                  , & ! Input:  [real(r8) (:)    ]  (gC/m2/s) annual average belowground NPP          
@@ -3649,7 +3654,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ch4_annualupdate(bounds, num_methc, filter_methc, num_methp, filter_methp, &
-       soilbiogeochem_carbonflux_inst, cnveg_carbonflux_inst, ch4_inst)
+       agnpp, bgnpp, &
+       soilbiogeochem_carbonflux_inst, ch4_inst)
     !
     ! !DESCRIPTION: Annual mean fields.
     !
@@ -3663,8 +3669,9 @@ contains
     integer                              , intent(in)    :: filter_methc(:)   ! filter for soil columns
     integer                              , intent(in)    :: num_methp         ! number of soil points in patch filter
     integer                              , intent(in)    :: filter_methp(:)   ! patch filter for soil points
+    real(r8)                             , intent(in)    :: agnpp( bounds%begp: ) ! aboveground NPP (gC/m2/s)
+    real(r8)                             , intent(in)    :: bgnpp( bounds%begp: ) ! belowground NPP (gC/m2/s)
     type(soilbiogeochem_carbonflux_type) , intent(in)    :: soilbiogeochem_carbonflux_inst
-    type(cnveg_carbonflux_type)          , intent(in)    :: cnveg_carbonflux_inst
     type(ch4_type)                       , intent(inout) :: ch4_inst
     !
     ! !LOCAL VARIABLES:
@@ -3676,10 +3683,10 @@ contains
     logical :: newrun
     !-----------------------------------------------------------------------
 
-    associate(                                                           & 
-         agnpp          =>    cnveg_carbonflux_inst%agnpp_patch        , & ! Input:  [real(r8) (:) ]  (gC/m2/s) aboveground NPP                         
-         bgnpp          =>    cnveg_carbonflux_inst%bgnpp_patch        , & ! Input:  [real(r8) (:) ]  (gC/m2/s) belowground NPP                         
+    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
 
+    associate(                                                           & 
          somhr          =>    soilbiogeochem_carbonflux_inst%somhr_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) soil organic matter heterotrophic respiration
 
          finundated     =>    ch4_inst%finundated_col                  , & ! Input:  [real(r8) (:) ]  fractional inundated area in soil column          

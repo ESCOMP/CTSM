@@ -15,13 +15,8 @@ module dynSubgridDriverMod
   use dynPriorWeightsMod           , only : prior_weights_type
   use dynColumnStateUpdaterMod     , only : column_state_updater_type
   use UrbanParamsType              , only : urbanparams_type
-  use CNDVType                     , only : dgvs_type
   use CanopyStateType              , only : canopystate_type
-  use CNVegStateType               , only : cnveg_state_type
-  use CNVegCarbonStateType         , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType          , only : cnveg_carbonflux_type
-  use CNVegNitrogenStateType       , only : cnveg_nitrogenstate_type
-  use CNVegNitrogenFluxType        , only : cnveg_nitrogenflux_type
+  use CNVegetationFacade           , only : cn_vegetation_type
   use SoilBiogeochemStateType      , only : soilBiogeochem_state_type
   use SoilBiogeochemCarbonFluxType , only : soilBiogeochem_carbonflux_type
   use EnergyFluxType               , only : energyflux_type
@@ -54,7 +49,7 @@ module dynSubgridDriverMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine dynSubgrid_init(bounds, dgvs_inst)
+  subroutine dynSubgrid_init(bounds)
     !
     ! !DESCRIPTION:
     ! Initialize objects needed for prescribed transient PFTs, CNDV, and/or dynamic
@@ -82,11 +77,9 @@ contains
     use dynpftFileMod     , only : dynpft_init
     use dyncropFileMod    , only : dyncrop_init
     use dynHarvestMod     , only : dynHarvest_init
-    use dynCNDVMod        , only : dynCNDV_init
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds     ! processor-level bounds
-    type(dgvs_type)  , intent(inout) :: dgvs_inst
     !
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'dynSubgrid_init'
@@ -115,20 +108,13 @@ contains
        call dynHarvest_init(bounds, harvest_filename=get_flanduse_timeseries())
     end if
 
-    if (use_cndv) then
-       call dynCNDV_init(bounds, dgvs_inst)
-    end if
-
   end subroutine dynSubgrid_init
 
   !-----------------------------------------------------------------------
   subroutine dynSubgrid_driver(bounds_proc,                                            &
        urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,           &
        waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,             &
-       canopystate_inst, photosyns_inst, dgvs_inst, glc2lnd_inst, cnveg_state_inst,    &
-       cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
-       cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,    &
-       cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst,                              &
+       canopystate_inst, photosyns_inst, glc2lnd_inst, bgc_vegetation_inst,          &
        soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst, glc_behavior,        &
        atm2lnd_inst)
     !
@@ -151,11 +137,9 @@ contains
     use dynLandunitAreaMod   , only : update_landunit_weights
     use dynInitColumnsMod    , only : initialize_new_columns
     use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
-    use dynConsBiogeochemMod , only : dyn_cnbal_patch
     use dynpftFileMod        , only : dynpft_interp
     use dynCropFileMod       , only : dyncrop_interp
     use dynHarvestMod        , only : dynHarvest_interp
-    use dynCNDVMod           , only : dynCNDV_interp
     use dynEDMod             , only : dyn_ED
     use reweightMod          , only : reweight_wrapup
     use subgridWeightsMod    , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
@@ -173,17 +157,8 @@ contains
     type(energyflux_type)                , intent(inout) :: energyflux_inst
     type(canopystate_type)               , intent(inout) :: canopystate_inst
     type(photosyns_type)                 , intent(inout) :: photosyns_inst
-    type(dgvs_type)                      , intent(inout) :: dgvs_inst
     type(glc2lnd_type)                   , intent(inout) :: glc2lnd_inst
-    type(cnveg_state_type)               , intent(inout) :: cnveg_state_inst
-    type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
-    type(cnveg_carbonstate_type)         , intent(inout) :: c13_cnveg_carbonstate_inst
-    type(cnveg_carbonstate_type)         , intent(inout) :: c14_cnveg_carbonstate_inst
-    type(cnveg_carbonflux_type)          , intent(inout) :: cnveg_carbonflux_inst
-    type(cnveg_carbonflux_type)          , intent(inout) :: c13_cnveg_carbonflux_inst
-    type(cnveg_carbonflux_type)          , intent(inout) :: c14_cnveg_carbonflux_inst
-    type(cnveg_nitrogenstate_type)       , intent(inout) :: cnveg_nitrogenstate_inst
-    type(cnveg_nitrogenflux_type)        , intent(inout) :: cnveg_nitrogenflux_inst
+    type(cn_vegetation_type)             , intent(inout) :: bgc_vegetation_inst
     type(soilbiogeochem_state_type)      , intent(in)    :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(glc_behavior_type)              , intent(in)    :: glc_behavior
@@ -244,9 +219,7 @@ contains
     do nc = 1, nclumps
        call get_clump_bounds(nc, bounds_clump)
 
-       if (use_cndv) then
-          call dynCNDV_interp(bounds_clump, dgvs_inst)
-       end if
+       call bgc_vegetation_inst%UpdateSubgridWeights(bounds_clump)
        
        if (use_ed) then
           call dyn_ED(bounds_clump)
@@ -293,12 +266,10 @@ contains
             waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
 
        if (use_cn) then
-          call dyn_cnbal_patch(bounds_clump, prior_weights, first_step_cold_start,                           &
-               canopystate_inst, photosyns_inst, cnveg_state_inst,                                &
-               cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst,    &
-               cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,       &
-               cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, soilbiogeochem_carbonflux_inst, &
-               soilbiogeochem_state_inst)
+          call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, &
+               prior_weights, first_step_cold_start, &
+               canopystate_inst, photosyns_inst, &
+               soilbiogeochem_carbonflux_inst, soilbiogeochem_state_inst)
        end if
 
     end do
