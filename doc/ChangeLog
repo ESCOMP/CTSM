@@ -1,4 +1,71 @@
 ===============================================================
+Tag name:  clm4_5_8_r171
+Originator(s):  erik (Erik Kluzek)
+Date:  Wed Mar  2 23:53:40 MST 2016
+One-line Summary: Backout COMP_RUN_BARRIERS setting, and remove all ED tests from testlist (as they all fail)
+
+Purpose of changes
+------------------
+
+Backout the setting of COMP_RUN_BARRIERS. It has a nasty side effect of disabling the
+automatic setting of CONTINUE_RUN=TRUE when RESUBMIT>1. See bug 2280. Now production
+simulations with I compsets will fail because datm is allowed to get ahead of CLM.
+
+Also remove all of the ED tests from the testlists as they currently all fail.
+
+Known bugs introduced in this tag (include bugzilla ID): bug 2280
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes:
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing: short
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  regular tests:
+
+    yellowstone_intel - clm_short_45 -- PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_8_r170
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No, bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M components/clm/cime_config/config_component.xml ------- Remove setting of COMP_RUN_BARRIERS
+   M components/clm/cime_config/testdefs/testlist_clm.xml -- remove all ED tests
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r170
 Originator(s):  sacks (Bill Sacks)
 Date: Sun Feb 28 20:33:37 MST 2016

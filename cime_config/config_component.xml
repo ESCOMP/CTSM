@@ -21,13 +21,6 @@
     </values>
   </entry>
 
-  <entry id="COMP_RUN_BARRIERS">
-    <values>
-      <value grid="l%0.9x1.25" >TRUE</value>
-      <value grid="l%1.9x2.5"  >TRUE</value>
-    </values>
-  </entry>
-
   <entry id="CLM_CONFIG_OPTS" >
     <type>char</type>
     <default_value></default_value>

@@ -716,32 +716,6 @@
       </test>
     </grid>
   </compset>
-  <compset name="ICLM45ED">
-    <grid name="1x1_brazil">
-      <test name="ERS_D_Ld5_Mmpi-serial">
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-      </test>
-    </grid>
-    <grid name="5x5_amazon">
-      <test name="SMS_D_Ld5_Mmpi-serial">
-        <machine compiler="nag" testtype="aux_clm45" testmods="clm/edTest">hobart</machine>
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-      </test>
-    </grid>
-    <grid name="f10_f10">
-      <test name="SMS_Ld5">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-      </test>
-    </grid>
-    <grid name="f19_g16">
-      <test name="SMS_Ld5">
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
-      </test>
-    </grid>
-  </compset>
   <compset name="ICLM45GLCMEC">
     <grid name="f19_g16_gl5">
       <test name="ERP_D_Ld5">

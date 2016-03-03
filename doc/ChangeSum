@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_8_r171     erik 03/02/2016 Backout COMP_RUN_BARRIERS setting, and remove all ED tests from testlist (as they all fail)
    clm4_5_8_r170    sacks 02/28/2016 Add a wrapper for CN Vegetation
    clm4_5_8_r169     erik 02/23/2016 Add fire several fire constants to namelist, add some new clm45/50 surface datasets
    clm4_5_8_r168    sacks 02/20/2016 Fix zero methane production
