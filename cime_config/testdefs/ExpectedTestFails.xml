@@ -8,6 +8,7 @@
    <entry bugz="2240" >RUN ERP_P15x2_Lm36.f10_f10.ICRUCLM50BGCCROP.yellowstone_intel.clm-cropMonth_interp</entry>
    <entry bugz="2256" >RUN ERP_D_Ld5.f19_g16.ICRUCLM50BGC.yellowstone_intel.clm-fire_emis</entry>
    <entry bugz="2277" >RUN ERS_Ly3.f10_f10.I1850CRUCLM50BGCCROP.yellowstone_intel.clm-clm50KSinkMOut</entry>
+   <entry bugz="2291" >FAIL (baseline compare cpl.hi) SMS_Lm25.f19_g16.ICLM45BGCCROP.yellowstone_gnu.clm-cropMonthOutput</entry>
 
    <entry bugz="2239" >RUN ERP_Ld5.f09_g16.ICLM45VIC.yellowstone_pgi.clm-vrtlay_interp</entry>
    <entry bugz="2233" >RUN ERI_N2_Ld9.f19_g16.ICRUCLM45BGCCROP.yellowstone_intel.clm-default</entry>

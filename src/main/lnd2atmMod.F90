@@ -114,7 +114,7 @@ contains
        waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
        solarabs_inst, drydepvel_inst,  &
        vocemis_inst, fireemis_inst, dust_inst, ch4_inst, lnd2atm_inst, &
-       nee_col) 
+       net_carbon_exchange_col) 
     !
     ! !DESCRIPTION:
     ! Compute lnd2atm_inst component of gridcell derived type
@@ -140,7 +140,7 @@ contains
     type(dust_type)             , intent(in)    :: dust_inst
     type(ch4_type)              , intent(in)    :: ch4_inst
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst 
-    real(r8)                    , intent(in)    :: nee_col( bounds%begc: )  ! net ecosystem exchange of carbon, including all fluxes between land and atmosphere, positive for source (gC/m2/s)
+    real(r8)                    , intent(in)    :: net_carbon_exchange_col( bounds%begc: )  ! net carbon exchange between land and atmosphere, positive for source (gC/m2/s)
     !
     ! !LOCAL VARIABLES:
     integer  :: c, g  ! indices
@@ -152,7 +152,7 @@ contains
     real(r8), parameter :: convertgC2kgCO2 = 1.0e-3_r8 * (amCO2/amC)
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(nee_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(net_carbon_exchange_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
     !----------------------------------------------------
     ! lnd -> atm
@@ -227,21 +227,23 @@ contains
          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
     call c2g(bounds, &
-         nee_col(bounds%begc:bounds%endc), &
-         lnd2atm_inst%nee_grc(bounds%begg:bounds%endg), &
+         net_carbon_exchange_col(bounds%begc:bounds%endc), &
+         lnd2atm_inst%net_carbon_exchange_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'unity', l2g_scale_type='unity')
     if (use_lch4) then
        if (.not. ch4offline) then
           ! Adjust flux of CO2 by the net conversion of mineralizing C to CH4
           do g = bounds%begg,bounds%endg
              ! nem is in g C/m2/sec
-             lnd2atm_inst%nee_grc(g) = lnd2atm_inst%nee_grc(g) + lnd2atm_inst%nem_grc(g) 
+             lnd2atm_inst%net_carbon_exchange_grc(g) = &
+                  lnd2atm_inst%net_carbon_exchange_grc(g) + lnd2atm_inst%nem_grc(g)
           end do
        end if
     end if
     ! Convert from gC/m2/s to kgCO2/m2/s
     do g = bounds%begg,bounds%endg
-       lnd2atm_inst%nee_grc(g) = lnd2atm_inst%nee_grc(g)*convertgC2kgCO2
+       lnd2atm_inst%net_carbon_exchange_grc(g) = &
+            lnd2atm_inst%net_carbon_exchange_grc(g)*convertgC2kgCO2
     end do
 
     ! drydepvel

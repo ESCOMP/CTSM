@@ -1,4 +1,166 @@
 ===============================================================
+Tag name:  clm4_5_8_r172
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Mar  8 13:10:19 MST 2016
+One-line Summary: Exclude land use and product pools / fluxes from CN summary diagnostics
+
+Purpose of changes
+------------------
+
+Changed TOTCOLC, TOTECOSYSC, TOTCOLN and TOTECOSYSN (and same for C isotopes) to
+no longer include product pools. Also changed NBP and NEE to no longer include
+land use or product fluxes (dwt_closs and product_closs).
+
+Removed LAND_UPTAKE diagnostic, because NEE now gives this quantity. Added
+NET_CARBON_EXCHANGE, which gives the sum of NEE and the land use flux - i.e.,
+what NEE used to be.
+
+Also, changed TOTPRODN to be consistent with TOTPRODC: no longer includes crop
+product pool.
+
+The main motivation for this change is the upcoming move of product pools to the
+grid cell level. However, this also addresses inconsistencies between CLM's
+definition of NEE, etc., and what would be more typically considered in the
+literature.
+
+These changes to the meaning of these diagnostics were all proposed and/or
+approved by Peter Lawrence.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Changes meaning of a number of diagnostics, as noted above
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - ok
+
+    All pass except expected failure in irrigation
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    All pass or xfail; baseline failures as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_8_r171, but with mods to
+produce FCO2 history field (in order to ensure that this tag hasn't changed the
+co2 flux sent to the atmosphere).
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: many CLM45 / CLM50 - see below for details
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff for prognostic fields, larger than roundoff for some diagnostic fields
+
+      Significant changes in the diagnostic fields noted under "purpose of
+      changes", above, for transient, CNDV and crop runs, and for year-2000 runs
+      that used initial conditions from a transient run (so presumably had
+      non-zero product pools). Changes in these diagnostic fields (if any) are
+      roundoff-level for non-crop, non-CNDV, non-crop 1850 runs.
+
+      Roundoff-level changes in CO2 flux sent to atmosphere and new FCO2
+      diagnostic field for some runs.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes as described above. Some files just changed because some
+          uses of nee have been changed to net_carbon_exchange.
+M       components/clm/src/cpl/lnd_import_export.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+M       components/clm/src/biogeochem/CNVegNitrogenStateType.F90
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/main/lnd2atmMod.F90
+
+========= Since total column C / N no longer includes the product pools, the CN
+          balance checks needed to be changed so that outputs from the system
+          include fluxes into the product pools, but NOT fluxes out of the
+          product pools (the product pools are outside of the system as far as
+          the balance checks are concerned)
+M       components/clm/src/biogeochem/CNBalanceCheckMod.F90
+
+========= Fluxes into the product pools now need to be saved for the sake of the
+          balance checks
+M       components/clm/src/biogeochem/CNPhenologyMod.F90
+M       components/clm/src/biogeochem/CNWoodProductsMod.F90
+M       components/clm/src/biogeochem/CNVegNitrogenFluxType.F90
+
+========= Output FCO2 (co2 flux to atmosphere), since otherwise this isn't
+          covered by any of our tests - since our tests don't turn on this
+          coupling field
+M       components/clm/src/main/lnd2atmType.F90
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/default/user_nl_clm
+
+========= Add expected baseline failure (bug 2291)
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r171
 Originator(s):  erik (Erik Kluzek)
 Date:  Wed Mar  2 23:53:40 MST 2016

@@ -240,6 +240,7 @@ module CNVegCarbonFluxType
      real(r8), pointer :: harvest_c_to_cwdc_col                     (:,:)   ! C fluxes associated with harvest to CWD pool (gC/m3/s)
      real(r8), pointer :: hrv_deadstemc_to_prod10c_col              (:)     ! dead stem C harvest mortality to 10-year product pool (gC/m2/s)        
      real(r8), pointer :: hrv_deadstemc_to_prod100c_col             (:)     ! dead stem C harvest mortality to 100-year product pool (gC/m2/s)        
+     real(r8), pointer :: grainc_to_cropprod1c_col                  (:)     ! grain C to 1-year crop product pool (gC/m2/s)
 
      ! fire fluxes
      real(r8), pointer :: m_decomp_cpools_to_fire_vr_col            (:,:,:) ! vertically-resolved decomposing C fire loss (gC/m3/s)
@@ -330,11 +331,11 @@ module CNVegCarbonFluxType
 
      ! Summary C fluxes. 
      real(r8), pointer :: nep_col        (:) ! (gC/m2/s) net ecosystem production, excludes fire, landuse, and harvest flux, positive for sink
-     real(r8), pointer :: nbp_col        (:) ! (gC/m2/s) net biome production, includes fire, landuse, and harvest flux, positive for sink  
-     real(r8), pointer :: nee_col        (:) ! (gC/m2/s) net ecosystem exchange of carbon, includes fire, landuse, harvest, and hrv_xsmrpool flux, positive for source 
+     real(r8), pointer :: nbp_col        (:) ! (gC/m2/s) net biome production, includes fire, excludes landuse and harvest flux, positive for sink  
+     real(r8), pointer :: nee_col        (:) ! (gC/m2/s) net ecosystem exchange of carbon, includes fire and hrv_xsmrpool, excludes landuse and harvest flux, positive for source 
+     real(r8), pointer :: net_carbon_exchange_col(:) ! (gC/m2/s) net carbon exchange between land and atmosphere, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for source
 
      ! Dynamic landcover fluxnes
-     real(r8), pointer :: landuptake_col (:) ! (gC/m2/s) nee-landuseflux
      real(r8), pointer :: landuseflux_col(:) ! (gC/m2/s) dwt_closs+product_closs
      real(r8), pointer :: npp_Nactive_patch                         (:)     ! C used by mycorrhizal uptake    (gC/m2/s)
      real(r8), pointer :: npp_Nnonmyc_patch                         (:)     ! C used by non-myc uptake        (gC/m2/s)
@@ -635,6 +636,9 @@ contains
     allocate(this%hrv_deadstemc_to_prod100c_col(begc:endc))                                                   
     this%hrv_deadstemc_to_prod100c_col(:)= nan
 
+    allocate(this%grainc_to_cropprod1c_col(begc:endc))
+    this%grainc_to_cropprod1c_col(:) = nan
+
     allocate(this%m_decomp_cpools_to_fire_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                
     this%m_decomp_cpools_to_fire_vr_col(:,:,:)= nan
 
@@ -690,7 +694,7 @@ contains
     allocate(this%nep_col                 (begc:endc)) ; this%nep_col                 (:) = nan
     allocate(this%nbp_col                 (begc:endc)) ; this%nbp_col                 (:) = nan
     allocate(this%nee_col                 (begc:endc)) ; this%nee_col                 (:) = nan
-    allocate(this%landuptake_col          (begc:endc)) ; this%landuptake_col          (:) = nan
+    allocate(this%net_carbon_exchange_col (begc:endc)) ; this%net_carbon_exchange_col (:) = nan
     allocate(this%landuseflux_col         (begc:endc)) ; this%landuseflux_col         (:) = nan
     allocate(this%npp_Nactive_patch       (begp:endp)) ; this%npp_Nactive_patch       (:) = nan
     allocate(this%npp_Nnonmyc_patch       (begp:endp)) ; this%npp_Nnonmyc_patch       (:) = nan
@@ -2876,19 +2880,20 @@ contains
 
        this%nbp_col(begc:endc) = spval
        call hist_addfld1d (fname='NBP', units='gC/m^2/s', &
-            avgflag='A', long_name='net biome production, includes fire, landuse, and harvest flux, positive for sink', &
+            avgflag='A', long_name='net biome production, includes fire, excludes landuse and harvest flux, positive for sink', &
             ptr_col=this%nbp_col)
 
        this%nee_col(begc:endc) = spval
        call hist_addfld1d (fname='NEE', units='gC/m^2/s', &
-            avgflag='A', long_name='net ecosystem exchange of carbon, includes fire, landuse,'&
-            //' harvest, and hrv_xsmrpool flux, positive for source', &
+            avgflag='A', long_name='net ecosystem exchange of carbon, includes fire and hrv_xsmrpool,'&
+            //' excludes landuse and harvest flux, positive for source', &
             ptr_col=this%nee_col)
 
-       this%landuptake_col(begc:endc) = spval
-       call hist_addfld1d (fname='LAND_UPTAKE', units='gC/m^2/s', &
-            avgflag='A', long_name='NEE minus LAND_USE_FLUX, negative for update', &
-            ptr_col=this%landuptake_col)
+       this%net_carbon_exchange_col(begc:endc) = spval
+       call hist_addfld1d (fname='NET_CARBON_EXCHANGE', units='gC/m^2/s', &
+            avgflag='A', long_name='net carbon exchange between land and atmosphere, includes fire, landuse,'&
+            //' harvest and hrv_xsmrpool flux, positive for source', &
+            ptr_col=this%net_carbon_exchange_col)
 
        this%landuseflux_col(begc:endc) = spval
        call hist_addfld1d (fname='LAND_USE_FLUX', units='gC/m^2/s', &
@@ -3286,7 +3291,7 @@ contains
        c = special_col(fc)
        this%dwt_closs_col(c)   = 0._r8
        this%landuseflux_col(c) = 0._r8
-       this%landuptake_col(c)  = 0._r8
+       this%net_carbon_exchange_col(c) = 0._r8
     end do
 
     do p = bounds%begp,bounds%endp
@@ -3740,6 +3745,7 @@ contains
 
        this%hrv_deadstemc_to_prod10c_col(i)  = value_column        
        this%hrv_deadstemc_to_prod100c_col(i) = value_column  
+       this%grainc_to_cropprod1c_col(i)      = value_column
        this%cropprod1c_loss_col(i)           = value_column
        this%prod10c_loss_col(i)              = value_column
        this%prod100c_loss_col(i)             = value_column
@@ -3862,7 +3868,7 @@ contains
     ! !USES:
     use clm_time_manager                   , only: get_step_size
     use clm_varcon                         , only: secspday
-    use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt, use_grainproduct   
+    use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
     use subgridAveMod                      , only: p2c
     use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con
     use CNSharedParamsMod                  , only: use_fun
@@ -4364,17 +4370,13 @@ contains
        ! landcover change flux, and loss from wood & grain products pools, positive for sink (NBP)
        this%nbp_col(c) =  &
             this%nep_col(c)        - &
-            this%fire_closs_col(c) - &
-            this%dwt_closs_col(c)  - &
-            this%product_closs_col(c)
+            this%fire_closs_col(c)
 
        ! net ecosystem exchange of carbon, includes fire flux, landcover change flux, loss
        ! from wood & grain products pools, and hrv_xsmrpool flux, positive for source (NEE)
        this%nee_col(c) = &
             -this%nep_col(c)          + &
             this%fire_closs_col(c)    + &
-            this%dwt_closs_col(c)     + &
-            this%product_closs_col(c) + &
             this%hrv_xsmrpool_to_atm_col(c)
 
        ! land use flux 
@@ -4382,10 +4384,10 @@ contains
             this%dwt_closs_col(c)   + &
             this%product_closs_col(c)
 
-       ! land uptake flux
-       this%landuptake_col(c) = &
-            this%nee_col(c) -   &
-            this%landuseflux_col(c)
+       this%net_carbon_exchange_col(c) = &
+            this%nee_col(c)       + &
+            this%dwt_closs_col(c) + &
+            this%product_closs_col(c)
 
     end do
 

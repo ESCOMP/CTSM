@@ -413,12 +413,12 @@ contains
 
        this%totc_col(begc:endc) = spval
        call hist_addfld1d (fname='TOTCOLC', units='gC/m^2', &
-            avgflag='A', long_name='total column carbon, incl veg and cpool', &
+            avgflag='A', long_name='total column carbon, incl veg and cpool but excl product pools', &
             ptr_col=this%totc_col)
 
        this%totecosysc_col(begc:endc) = spval
        call hist_addfld1d (fname='TOTECOSYSC', units='gC/m^2', &
-            avgflag='A', long_name='total ecosystem carbon, incl veg but excl cpool', &
+            avgflag='A', long_name='total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
 
     end if
@@ -596,12 +596,12 @@ contains
 
        this%totc_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_TOTCOLC', units='gC13/m^2', &
-            avgflag='A', long_name='C13 total column carbon, incl veg and cpool', &
+            avgflag='A', long_name='C13 total column carbon, incl veg and cpool but excl product pools', &
             ptr_col=this%totc_col)
 
        this%totecosysc_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_TOTECOSYSC', units='gC13/m^2', &
-            avgflag='A', long_name='C13 total ecosystem carbon, incl veg but excl cpool', &
+            avgflag='A', long_name='C13 total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
 
     endif
@@ -779,12 +779,12 @@ contains
 
        this%totc_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_TOTCOLC', units='gC14/m^2', &
-            avgflag='A', long_name='C14 total column carbon, incl veg and cpool', &
+            avgflag='A', long_name='C14 total column carbon, incl veg and cpool but excl product pools', &
             ptr_col=this%totc_col)
 
        this%totecosysc_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_TOTECOSYSC', units='gC14/m^2', &
-            avgflag='A', long_name='C14 total ecosystem carbon, incl veg but excl cpool', &
+            avgflag='A', long_name='C14 total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
 
     endif
@@ -2211,7 +2211,6 @@ contains
     !
     ! !USES:
     use subgridAveMod, only : p2c
-    use clm_varctl   , only : use_grainproduct
     !
     ! !DESCRIPTION:
     ! On the radiation time step, perform patch and column-level carbon summary calculations
@@ -2326,8 +2325,6 @@ contains
             soilbiogeochem_cwdc_col(c)    + &
             soilbiogeochem_totlitc_col(c) + &
             soilbiogeochem_totsomc_col(c) + &
-            this%cropprod1c_col(c)         + &
-            this%totprodc_col(c)          + &
             this%totvegc_col(c)
 
        ! total column carbon, including veg and cpool (TOTCOLC)
@@ -2335,8 +2332,6 @@ contains
             soilbiogeochem_cwdc_col(c)      + &
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
-            this%cropprod1c_col(c)           + &
-            this%totprodc_col(c)            + &
             this%seedc_col(c)               + &
             soilbiogeochem_ctrunc_col(c)
 

@@ -62,7 +62,7 @@ module CNVegNitrogenStateType
      real(r8), pointer :: cropprod1n_col           (:) ! (gN/m2) grain product N pool, 1-year lifespan
      real(r8), pointer :: prod10n_col              (:) ! (gN/m2) wood product N pool, 10-year lifespan
      real(r8), pointer :: prod100n_col             (:) ! (gN/m2) wood product N pool, 100-year lifespan
-     real(r8), pointer :: totprodn_col             (:) ! (gN/m2) total wood and grain product N
+     real(r8), pointer :: totprodn_col             (:) ! (gN/m2) total wood product N
 
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: dispvegn_patch           (:) ! (gN/m2) displayed veg nitrogen, excluding storage
@@ -364,17 +364,17 @@ contains
 
     this%totprodn_col(begc:endc) = spval
     call hist_addfld1d (fname='TOTPRODN', units='gN/m^2', &
-         avgflag='A', long_name='total wood & grain product N', &
+         avgflag='A', long_name='total wood product N', &
          ptr_col=this%totprodn_col)
 
     this%totecosysn_col(begc:endc) = spval
     call hist_addfld1d (fname='TOTECOSYSN', units='gN/m^2', &
-         avgflag='A', long_name='total ecosystem N', &
+         avgflag='A', long_name='total ecosystem N, excluding product pools', &
          ptr_col=this%totecosysn_col)
 
     this%totn_col(begc:endc) = spval
     call hist_addfld1d (fname='TOTCOLN', units='gN/m^2', &
-         avgflag='A', long_name='total column-level N', &
+         avgflag='A', long_name='total column-level N, excluding product pools', &
          ptr_col=this%totn_col)
 
   end subroutine InitHistory
@@ -856,7 +856,6 @@ contains
     ! !USES:
     use subgridAveMod, only : p2c
     use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
-    use clm_varctl , only : use_grainproduct
     !
     ! !ARGUMENTS:
     class(cnveg_nitrogenstate_type)                      :: this
@@ -947,7 +946,6 @@ contains
        c = filter_soilc(fc)
 
         this%totprodn_col(c) = &
-             this%cropprod1n_col(c) + &
              this%prod10n_col(c) + &
              this%prod100n_col(c)	 
 
@@ -957,7 +955,6 @@ contains
             soilbiogeochem_nitrogenstate_inst%totlitn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%totsomn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%sminn_col(c)   + &
-            this%totprodn_col(c)                             + &
             this%totvegn_col(c)                              
 
        ! total column nitrogen, including patch (TOTCOLN)
@@ -967,7 +964,6 @@ contains
             soilbiogeochem_nitrogenstate_inst%totlitn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%totsomn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%sminn_col(c)   + &
-            this%totprodn_col(c)                             + &
             this%seedn_col(c)                                + &
             soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
     end do

@@ -290,7 +290,7 @@ contains
        l2x(index_l2x_Fall_evap,i)   = -lnd2atm_inst%qflx_evap_tot_grc(g)
        l2x(index_l2x_Fall_swnet,i)  =  lnd2atm_inst%fsa_grc(g)
        if (index_l2x_Fall_fco2_lnd /= 0) then
-          l2x(index_l2x_Fall_fco2_lnd,i) = -lnd2atm_inst%nee_grc(g)  
+          l2x(index_l2x_Fall_fco2_lnd,i) = -lnd2atm_inst%net_carbon_exchange_grc(g)  
        end if
 
        ! Additional fields for DUST, PROGSSLT, dry-deposition and VOC

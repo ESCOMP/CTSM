@@ -65,7 +65,8 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: hrv_retransn_to_litter_patch              (:)     ! patch retranslocated N pool harvest mortality (gN/m2/s)
      real(r8), pointer :: hrv_deadstemn_to_prod10n_col              (:)     ! col dead stem N harvest mortality to 10-year product pool (gN/m2/s)
      real(r8), pointer :: hrv_deadstemn_to_prod100n_col             (:)     ! col dead stem N harvest mortality to 100-year product pool (gN/m2/s)
-     real(r8), pointer :: m_n_to_litr_met_fire_col                  (:,:)   ! col N from leaf, froot, xfer and storage N to litter labile N by fire (gN/m3/s) 
+     real(r8), pointer :: grainn_to_cropprod1n_col                  (:)     ! col grain N to 1-year crop product pool (gN/m2/s)
+     real(r8), pointer :: m_n_to_litr_met_fire_col                  (:,:)   ! col N from leaf, froot, xfer and storage N to litter labile N by fire (gN/m3/s)
      real(r8), pointer :: m_n_to_litr_cel_fire_col                  (:,:)   ! col N from leaf, froot, xfer and storage N to litter cellulose N by fire (gN/m3/s) 
      real(r8), pointer :: m_n_to_litr_lig_fire_col                  (:,:)   ! col N from leaf, froot, xfer and storage N to litter lignin N by fire (gN/m3/s) 
      real(r8), pointer :: harvest_n_to_litr_met_n_col               (:,:)   ! col N fluxes associated with harvest to litter metabolic pool (gN/m3/s)
@@ -418,6 +419,8 @@ contains
 
     allocate(this%hrv_deadstemn_to_prod10n_col              (begc:endc)) ; this%hrv_deadstemn_to_prod10n_col              (:) = nan
     allocate(this%hrv_deadstemn_to_prod100n_col             (begc:endc)) ; this%hrv_deadstemn_to_prod100n_col             (:) = nan
+    allocate(this%grainn_to_cropprod1n_col                  (begc:endc)) ; this%grainn_to_cropprod1n_col                  (:) = nan
+
     allocate(this%cropprod1n_loss_col                       (begc:endc)) ; this%cropprod1n_loss_col                       (:) = nan
     allocate(this%prod10n_loss_col                          (begc:endc)) ; this%prod10n_loss_col                          (:) = nan
     allocate(this%prod100n_loss_col                         (begc:endc)) ; this%prod100n_loss_col                         (:) = nan
@@ -1679,6 +1682,7 @@ contains
 
        this%hrv_deadstemn_to_prod10n_col(i)  = value_column        
        this%hrv_deadstemn_to_prod100n_col(i) = value_column      
+       this%grainn_to_cropprod1n_col(i)      = value_column
        this%cropprod1n_loss_col(i)               = value_column
        this%prod10n_loss_col(i)              = value_column
        this%prod100n_loss_col(i)             = value_column
@@ -1747,7 +1751,7 @@ contains
     !
     ! !USES:
     use clm_varpar    , only: nlevdecomp,ndecomp_cascade_transitions,ndecomp_pools
-    use clm_varctl    , only: use_nitrif_denitrif, use_grainproduct
+    use clm_varctl    , only: use_nitrif_denitrif
     use subgridAveMod , only: p2c 
     !
     ! !ARGUMENTS:

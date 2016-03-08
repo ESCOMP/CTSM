@@ -9,13 +9,11 @@ module CNWoodProductsMod
   use spmdMod                 , only : masterproc
   use landunit_varcon         , only : istsoil
   use clm_time_manager        , only : get_step_size
-  use clm_varctl              , only : use_c13, use_c14, use_grainproduct
+  use clm_varctl              , only : use_c13, use_c14
   use CNVegCarbonStateType   , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
   use CNVegnitrogenstateType , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType  , only : cnveg_nitrogenflux_type
-  use subgridAveMod          , only : p2c
-  use clm_varpar             , only : crop_prog
   !
   implicit none
   private
@@ -57,10 +55,6 @@ contains
     real(r8) :: kprod1   ! decay constant for 1-year product pool
     real(r8) :: kprod10  ! decay constant for 10-year product pool
     real(r8) :: kprod100 ! decay constant for 100-year product pool
-    real(r8) :: grainn_to_food_col(bounds%begc:bounds%endc)           ! column-level grain product 
-    real(r8) :: grainc_to_food_col(bounds%begc:bounds%endc)           ! column-level grain product 
-    real(r8) :: grainc_to_food_col_c13(bounds%begc:bounds%endc)       ! column-level grain product 
-    real(r8) :: grainc_to_food_col_c14(bounds%begc:bounds%endc)       ! column-level grain product 
     !-----------------------------------------------------------------------
 
     ! calculate column-level losses from product pools
@@ -98,34 +92,6 @@ contains
     ! set time steps
     dt = real( get_step_size(), r8 )
 
-if ( crop_prog )then
-  call p2c (bounds, num_soilc, filter_soilc, cnveg_nitrogenflux_inst%grainn_to_food_patch(bounds%begp:bounds%endp), &
-     grainn_to_food_col(bounds%begc:bounds%endc)) 
-
-  call p2c (bounds, num_soilc, filter_soilc, cnveg_carbonflux_inst%grainc_to_food_patch(bounds%begp:bounds%endp), &
-     grainc_to_food_col(bounds%begc:bounds%endc)) 
-
-  if ( use_c13) then
-  call p2c (bounds, num_soilc, filter_soilc, c13_cnveg_carbonflux_inst%grainc_to_food_patch(bounds%begp:bounds%endp), &
-     grainc_to_food_col_c13(bounds%begc:bounds%endc))
-  end if
-
-  if ( use_c14 ) then
-  call p2c (bounds, num_soilc, filter_soilc, c14_cnveg_carbonflux_inst%grainc_to_food_patch(bounds%begp:bounds%endp), &
-     grainc_to_food_col_c14(bounds%begc:bounds%endc))
-  end if 
-
-else 
-  grainn_to_food_col(bounds%begc:bounds%endc) = 0._r8
-  grainc_to_food_col(bounds%begc:bounds%endc) = 0._r8
-  if ( use_c13) then
-    grainc_to_food_col_c13(bounds%begc:bounds%endc) = 0._r8
-  end if
-  if ( use_c14) then
-    grainc_to_food_col_c14(bounds%begc:bounds%endc) = 0._r8
-  end if
-end if
-
     ! update wood product state variables
     do fc = 1,num_soilc
        c = filter_soilc(fc)
@@ -157,49 +123,41 @@ end if
 
 
        ! fluxes into wood & grain product pools, from harvest
-       if (use_grainproduct) then
-         cnveg_carbonstate_inst%cropprod1c_col(c)    = cnveg_carbonstate_inst%cropprod1c_col(c)    + &
-              grainc_to_food_col(c)*dt
-       end if
+       cnveg_carbonstate_inst%cropprod1c_col(c) = cnveg_carbonstate_inst%cropprod1c_col(c) + &
+            cnveg_carbonflux_inst%grainc_to_cropprod1c_col(c)*dt
        cnveg_carbonstate_inst%prod10c_col(c)    = cnveg_carbonstate_inst%prod10c_col(c)    + &
             cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_col(c)*dt
        cnveg_carbonstate_inst%prod100c_col(c)   = cnveg_carbonstate_inst%prod100c_col(c)   + &
             cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_col(c)*dt
 
        if ( use_c13 ) then
-         if (use_grainproduct) then
-            c13_cnveg_carbonstate_inst%cropprod1c_col(c)    = c13_cnveg_carbonstate_inst%cropprod1c_col(c)    + &
-                 grainc_to_food_col_c13(c)*dt
-         end if
-         c13_cnveg_carbonstate_inst%prod10c_col(c)  = c13_cnveg_carbonstate_inst%prod10c_col(c)  + &
-              c13_cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_col(c)*dt
-         c13_cnveg_carbonstate_inst%prod100c_col(c) = c13_cnveg_carbonstate_inst%prod100c_col(c) + &
-              c13_cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_col(c)*dt
+          c13_cnveg_carbonstate_inst%cropprod1c_col(c) = c13_cnveg_carbonstate_inst%cropprod1c_col(c) + &
+               c13_cnveg_carbonflux_inst%grainc_to_cropprod1c_col(c)*dt
+          c13_cnveg_carbonstate_inst%prod10c_col(c)  = c13_cnveg_carbonstate_inst%prod10c_col(c)  + &
+               c13_cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_col(c)*dt
+          c13_cnveg_carbonstate_inst%prod100c_col(c) = c13_cnveg_carbonstate_inst%prod100c_col(c) + &
+               c13_cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_col(c)*dt
        endif
 
        if ( use_c14 ) then
-         if (use_grainproduct) then
-            c14_cnveg_carbonstate_inst%cropprod1c_col(c)    = c14_cnveg_carbonstate_inst%cropprod1c_col(c)    + &
-                 grainc_to_food_col_c14(c)*dt
-         end if
-         c14_cnveg_carbonstate_inst%prod10c_col(c)  = c14_cnveg_carbonstate_inst%prod10c_col(c)  + &
-              c14_cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_col(c)*dt
-         c14_cnveg_carbonstate_inst%prod100c_col(c) = c14_cnveg_carbonstate_inst%prod100c_col(c) + &
-              c14_cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_col(c)*dt
+          c14_cnveg_carbonstate_inst%cropprod1c_col(c) = c14_cnveg_carbonstate_inst%cropprod1c_col(c) + &
+               c14_cnveg_carbonflux_inst%grainc_to_cropprod1c_col(c)*dt
+          c14_cnveg_carbonstate_inst%prod10c_col(c)  = c14_cnveg_carbonstate_inst%prod10c_col(c)  + &
+               c14_cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_col(c)*dt
+          c14_cnveg_carbonstate_inst%prod100c_col(c) = c14_cnveg_carbonstate_inst%prod100c_col(c) + &
+               c14_cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_col(c)*dt
        endif
 
-       if (use_grainproduct) then 
-         cnveg_nitrogenstate_inst%cropprod1n_col(c) = cnveg_nitrogenstate_inst%cropprod1n_col(c)    + &
-              grainn_to_food_col(c)*dt
-       end if
+       cnveg_nitrogenstate_inst%cropprod1n_col(c) = cnveg_nitrogenstate_inst%cropprod1n_col(c)    + &
+            cnveg_nitrogenflux_inst%grainn_to_cropprod1n_col(c)*dt
        cnveg_nitrogenstate_inst%prod10n_col(c)    = cnveg_nitrogenstate_inst%prod10n_col(c)    + &
             cnveg_nitrogenflux_inst%hrv_deadstemn_to_prod10n_col(c)*dt
        cnveg_nitrogenstate_inst%prod100n_col(c)   = cnveg_nitrogenstate_inst%prod100n_col(c)   + &
             cnveg_nitrogenflux_inst%hrv_deadstemn_to_prod100n_col(c)*dt
 
        ! fluxes out of wood & grain product pools, from decomposition
-          cnveg_carbonstate_inst%cropprod1c_col(c)    = cnveg_carbonstate_inst%cropprod1c_col(c)    - &
-               cnveg_carbonflux_inst%cropprod1c_loss_col(c)*dt
+       cnveg_carbonstate_inst%cropprod1c_col(c)    = cnveg_carbonstate_inst%cropprod1c_col(c)    - &
+            cnveg_carbonflux_inst%cropprod1c_loss_col(c)*dt
        cnveg_carbonstate_inst%prod10c_col(c)    = cnveg_carbonstate_inst%prod10c_col(c)    - &
             cnveg_carbonflux_inst%prod10c_loss_col(c)*dt
        cnveg_carbonstate_inst%prod100c_col(c)   = cnveg_carbonstate_inst%prod100c_col(c)   - &

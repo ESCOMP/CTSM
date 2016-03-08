@@ -136,7 +136,7 @@ contains
     real(r8), allocatable :: bgnpp_patch(:)
     real(r8), allocatable :: annsum_npp_patch(:)
     real(r8), allocatable :: rr_patch(:)
-    real(r8), allocatable :: nee_col(:)
+    real(r8), allocatable :: net_carbon_exchange_col(:)
 
     ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Workaround for internal compiler error with
     ! pgi 14.7 ('normalize_forall_array: non-conformable'), which appears in the call to
@@ -847,16 +847,16 @@ contains
     ! based on similar pgi compiler bugs that we have run into before). Also note that I
     ! don't have explicit bounds on the left-hand-side of this assignment: excluding these
     ! explicit bounds seemed to be needed to get around other compiler bugs.
-    allocate(nee_col(bounds_proc%begc:bounds_proc%endc))
-    nee_col = bgc_vegetation_inst%get_nee_col(bounds_proc)
+    allocate(net_carbon_exchange_col(bounds_proc%begc:bounds_proc%endc))
+    net_carbon_exchange_col = bgc_vegetation_inst%get_net_carbon_exchange_col(bounds_proc)
 
     call lnd2atm(bounds_proc,                                            &
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
          waterstate_inst, waterflux_inst, irrigation_inst, energyflux_inst, &
          solarabs_inst, drydepvel_inst,       &
          vocemis_inst, fireemis_inst, dust_inst, ch4_inst, lnd2atm_inst, &
-         nee_col = nee_col(bounds_proc%begc:bounds_proc%endc))
-    deallocate(nee_col)
+         net_carbon_exchange_col = net_carbon_exchange_col(bounds_proc%begc:bounds_proc%endc))
+    deallocate(net_carbon_exchange_col)
     call t_stopf('lnd2atm')
 
     ! ============================================================================

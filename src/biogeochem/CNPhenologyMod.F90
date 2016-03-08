@@ -257,6 +257,9 @@ contains
        call CNLivewoodTurnover(num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
+       call CNGrainToProductPools(bounds, num_soilc, filter_soilc, &
+            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+
        ! gather all patch-level litterfall fluxes to the column for litter C and N inputs
 
        call CNLitterToColumn(bounds, num_soilc, filter_soilc, &
@@ -2568,6 +2571,48 @@ contains
     end associate 
 
   end subroutine CNLivewoodTurnover
+
+  !-----------------------------------------------------------------------
+  subroutine CNGrainToProductPools(bounds, num_soilc, filter_soilc, &
+       cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
+    !
+    ! !DESCRIPTION:
+    ! If using prognostic crop along with use_grainproduct, then move the patch-level
+    ! grain-to-food fluxes into the column-level grain-to-cropprod fluxes
+    !
+    ! !USES:
+    use clm_varpar    , only : crop_prog
+    use clm_varctl    , only : use_grainproduct
+    use subgridAveMod , only : p2c
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)             , intent(in)    :: bounds
+    integer                       , intent(in)    :: num_soilc       ! number of soil columns in filter
+    integer                       , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    type(cnveg_carbonflux_type)   , intent(inout) :: cnveg_carbonflux_inst
+    type(cnveg_nitrogenflux_type) , intent(inout) :: cnveg_nitrogenflux_inst
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'CNGrainToProductPools'
+    !-----------------------------------------------------------------------
+
+    ! Explicitly checking crop_prog is probably unnecessary here, but we do it for safety
+    ! because the patch-level fluxes are not set if crop_prog is false.
+    if (crop_prog .and. use_grainproduct) then
+       call p2c (bounds, num_soilc, filter_soilc, &
+            cnveg_carbonflux_inst%grainc_to_food_patch(bounds%begp:bounds%endp), &
+            cnveg_carbonflux_inst%grainc_to_cropprod1c_col(bounds%begc:bounds%endc))
+
+       call p2c (bounds, num_soilc, filter_soilc, &
+            cnveg_nitrogenflux_inst%grainn_to_food_patch(bounds%begp:bounds%endp), &
+            cnveg_nitrogenflux_inst%grainn_to_cropprod1n_col(bounds%begc:bounds%endc))
+    end if
+
+    ! No else clause: if use_grainproduct is false, then the column-level
+    ! grain-to-cropprod fluxes will remain at their initial value (0).
+
+  end subroutine CNGrainToProductPools
 
   !-----------------------------------------------------------------------
   subroutine CNLitterToColumn (bounds, num_soilc, filter_soilc,         &

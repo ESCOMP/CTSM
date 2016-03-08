@@ -42,7 +42,7 @@ module lnd2atmType
      real(r8), pointer :: eflx_lwrad_out_grc (:)   => null() ! IR (longwave) radiation (W/m**2)
      real(r8), pointer :: qflx_evap_tot_grc  (:)   => null() ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
      real(r8), pointer :: fsa_grc            (:)   => null() ! solar rad absorbed (total) (W/m**2)
-     real(r8), pointer :: nee_grc            (:)   => null() ! net CO2 flux (kg CO2/m**2/s) [+ to atm]
+     real(r8), pointer :: net_carbon_exchange_grc(:) => null() ! net CO2 flux (kg CO2/m**2/s) [+ to atm]
      real(r8), pointer :: nem_grc            (:)   => null() ! gridcell average net methane correction to CO2 flux (g C/m^2/s)
      real(r8), pointer :: ram1_grc           (:)   => null() ! aerodynamical resistance (s/m)
      real(r8), pointer :: fv_grc             (:)   => null() ! friction velocity (m/s) (for dust model)
@@ -117,7 +117,7 @@ contains
     allocate(this%eflx_lh_tot_grc    (begg:endg))            ; this%eflx_lh_tot_grc    (:)   =ival
     allocate(this%qflx_evap_tot_grc  (begg:endg))            ; this%qflx_evap_tot_grc  (:)   =ival
     allocate(this%fsa_grc            (begg:endg))            ; this%fsa_grc            (:)   =ival
-    allocate(this%nee_grc            (begg:endg))            ; this%nee_grc            (:)   =ival
+    allocate(this%net_carbon_exchange_grc(begg:endg))        ; this%net_carbon_exchange_grc(:) =ival
     allocate(this%nem_grc            (begg:endg))            ; this%nem_grc            (:)   =ival
     allocate(this%ram1_grc           (begg:endg))            ; this%ram1_grc           (:)   =ival
     allocate(this%fv_grc             (begg:endg))            ; this%fv_grc             (:)   =ival
@@ -181,6 +181,13 @@ contains
          long_name='total ice runoff sent to coupler (includes corrections for land use change)', &
          ptr_lnd=this%qflx_rofice_grc)
 
+    this%net_carbon_exchange_grc(begg:endg) = spval
+    call hist_addfld1d(fname='FCO2', units='kgCO2/m2/s', &
+         avgflag='A', &
+         long_name='CO2 flux to atmosphere (+ to atm)', &
+         ptr_lnd=this%net_carbon_exchange_grc, &
+         default='inactive')
+
     if (use_lch4) then
        this%flux_ch4_grc(begg:endg) = 0._r8
        call hist_addfld1d (fname='FCH4', units='kgC/m2/s', &
@@ -189,7 +196,7 @@ contains
 
        this%nem_grc(begg:endg) = spval
        call hist_addfld1d (fname='NEM', units='gC/m2/s', &
-            avgflag='A', long_name='Gridcell net adjustment to NEE passed to atm. for methane production', &
+            avgflag='A', long_name='Gridcell net adjustment to net carbon exchange passed to atm. for methane production', &
             ptr_lnd=this%nem_grc)
     end if
 
