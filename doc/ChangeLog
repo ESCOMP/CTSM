@@ -1,4 +1,254 @@
 ===============================================================
+Tag name:  clm4_5_8_r173
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Mar 17 20:24:45 MDT 2016
+One-line Summary: Major refactor of CN Products
+
+Purpose of changes
+------------------
+
+Variables and code related to CN product pools and fluxes were scattered among
+12 modules. In addition, CNWoodProducts was difficult to understand and modify,
+because the same basic logic was repeated four times: once for carbon, once for
+c13, once for c14 and once for nitrogen.
+
+This tag does a major overhaul of CNWoodProducts - now renamed to CNProducts,
+since it includes grain as well as wood products. This is now an object-oriented
+class. The major benefits of this overhaul are:
+
+- Only 2 modules now contain any information about the number of product pools
+  and their lifetimes: CNProducts and pftconMod. Previously, 12 modules had some
+  information about the fact that there were 10 & 100-year product pools. This
+  makes it easier to change the number or lifetimes of product pools in the
+  future. Code outside CNProducts (and pftconMod) knows that there is some flux
+  to wood and crop product pools in general, but doesn't need to know anything
+  about how this is partitioned into the 10 and 100-year product pools - or even
+  the fact that there are 10 and 100-year product pools.
+
+- Because this product pool information is now self-contained, with a clear
+  interface, CNProductsMod could be used by ED, if this were desired.
+
+- Changes to CNProductsMod no longer need to be replicated four times for the
+  four different species. Instead, there are four instances of cn_products_type
+  declared at a higher level.
+
+This tag also introduces a "species" class (with subclasses for isotope and
+non-isotope species), which can be used to remove duplication in the setting of
+history and restart variables in classes for which we have one instance for each
+species. This is currently used in the new CNProductsMod; eventually it can also
+be used in CNVegCarbonStateType, CNVegCarbonFluxType, and the similar
+SoilBiogeochem Types (at which point this should probably be moved out of the
+biogeochem directory into somewhere like 'utils').
+
+This tag also introduces a utility method for setting one restart field (not
+found on the restart file) from another (which was present). This is used in a
+few places in CNProductsMod, and should be used in other places as well (e.g.,
+see bug 2282).
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2297 (code looks wrong for initializing carbon isotopes from a restart file
+  without isotope information)
+
+Known bugs introduced in this tag (include bugzilla ID):
+- 2256 (Problems with early versions of PIO2 in CLM) -- shows up in more
+  (hobart) tests now, for unclear reasons
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - ok (pass except irrigation expected failure)
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass or xfail, some baseline comparisons failed as noted
+    below
+
+    Two new expected failures appear to be PIO2 issues:
+   <entry bugz="2256" >RUN ERP_Ly5.1x1_numaIA.ICRUCLM50BGCCROP.hobart_nag.clm-monthly</entry>
+   <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.I1850CLM45BGC.hobart_nag.clm-default</entry>
+
+
+CLM tag used for the baseline comparisons: clm4_5_8_r172
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45 / CLM50 - anything other than 1850
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     This is complicated; ready? Let's work backwards:
+
+     Branch tag product_pools_gridcell2_n03_clm4_5_8_r172 (which is becoming
+     this trunk tag) was bit-for-bit with branch tag
+     product_pool_total_fluxes_n01_clm4_5_8_r172 (from branch
+     product_pool_total_fluxes), except for roundoff-level changes in c13 / c14
+     product pools / fluxes for transient cases with ciso. (Those changes
+     remained roundoff-level throughout the simulation, so their roundoff-level
+     nature was obvious from the cprnc output.)
+
+     Determining that the changes in product_pool_total_fluxes_n01_clm4_5_8_r172
+     were no greater than roundoff-level was tricky, because these differences
+     propagated over time. To do this, I created another branch:
+     product_total_roundoff, with branch tag
+     product_total_roundoff_n01_product_pool_total_fluxes_n01_clm4_5_8_r172. This
+     was essentially the same as product_pool_total_fluxes_n01_clm4_5_8_r172,
+     except that hrv_deadstemc_to_prod10c and hrv_deadstemc_to_prod100c (and
+     same for nitrogen) were computed twice: once the old way and once the new
+     way. The updates of deadstemc/n in CStateUpdate2h and NStateUpdate2h (which
+     were the uses that caused differenes to propagate to greater than
+     roundoff-level) were also done twice: once using the "old" hrv_deadstem
+     values, and once with the "new" values. The "old" version was used in the
+     rest of the code, but the two versions were compared for every point in
+     every time step to ensure that they were never more than roundoff-level
+     different. I ran the full test suite on
+     product_total_roundoff_n01_product_pool_total_fluxes_n01_clm4_5_8_r172 and
+     ensured that it differed by no more than roundoff-level from trunk tag
+     clm4_5_8_r172.
+
+     To summarize: I ensured that the only differences greater than
+     roundoff-level in the test suite were attributable to differences in the
+     order of operations when computing the hrv_deadstem*_to_prod* variables,
+     and I also ensured that the new and old calculations of the
+     hrv_deadstem*_to_prod* variables never differed by more than roundoff.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated:
+
+========= Renamed to CNProductsMod.F90
+D       components/clm/src/biogeochem/CNWoodProductsMod.F90
+
+List all files added and what they do:
+
+========= Main change - this used to be CNWoodProductsMod.F90, but has been
+          completely rewritten, as described above
+A       components/clm/src/biogeochem/CNProductsMod.F90
+
+========= Utility classes to hold metadata for classes that can have one
+          instance for each species (carbon, nitrogen, c13, c14) - removing
+          duplication in the calls to hist_addfld and restartvar
+A       components/clm/src/biogeochem/SpeciesNonIsotopeType.F90
+A       components/clm/src/biogeochem/SpeciesBaseType.F90
+A       components/clm/src/biogeochem/SpeciesIsotopeType.F90
+A       components/clm/src/biogeochem/test/Species_test/test_SpeciesNonIsotope.pf
+A       components/clm/src/biogeochem/test/Species_test/CMakeLists.txt
+A       components/clm/src/biogeochem/test/Species_test/test_SpeciesIsotope.pf
+A       components/clm/src/biogeochem/test/Species_test
+A       components/clm/src/biogeochem/test/CMakeLists.txt
+A       components/clm/src/biogeochem/test
+
+========= Add a short ciso transient test (eventually can remove the long ciso
+          transient test and just keep this one)
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_decStart/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_decStart
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes in this tag: remove information about the different
+          product pools that are scattered throughout the code, and add some
+          objects of cn_products_type
+M       components/clm/src/biogeochem/CNCIsoFluxMod.F90
+M       components/clm/src/biogeochem/dynHarvestMod.F90
+M       components/clm/src/biogeochem/CNCStateUpdate2Mod.F90
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90
+M       components/clm/src/biogeochem/dynConsBiogeochemMod.F90
+M       components/clm/src/biogeochem/CNVegNitrogenFluxType.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+M       components/clm/src/biogeochem/CNVegNitrogenStateType.F90
+M       components/clm/src/biogeochem/CNDriverMod.F90
+M       components/clm/src/biogeochem/CNPhenologyMod.F90
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+M       components/clm/src/biogeochem/CNNStateUpdate2Mod.F90
+M       components/clm/src/biogeochem/CNBalanceCheckMod.F90
+
+========= Add utility method for setting an absent restart field from one that
+          was present on the initial conditions file
+M       components/clm/src/utils/restUtilMod.F90.in
+
+========= Move duplicate code into clm_varcon, and fix bug 2297
+M       components/clm/src/main/clm_varcon.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90
+
+========= Add a short ciso transient test (eventually can remove the long ciso
+          transient test and just keep this one)
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+========= Add unit tests of new Species classes
+M       components/clm/src/CMakeLists.txt
+M       components/clm/src/biogeochem/CMakeLists.txt
+
+========= Two new expected failures on hobart; appear to be PIO2-related
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r172
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Mar  8 13:10:19 MST 2016

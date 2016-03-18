@@ -58,14 +58,11 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: hrv_livecrootn_xfer_to_litter_patch       (:)     ! patch live coarse root N transfer harvest mortality (gN/m2/s)
      real(r8), pointer :: hrv_deadcrootn_xfer_to_litter_patch       (:)     ! patch dead coarse root N transfer harvest mortality (gN/m2/s)
      real(r8), pointer :: hrv_livestemn_to_litter_patch             (:)     ! patch live stem N harvest mortality (gN/m2/s)
-     real(r8), pointer :: hrv_deadstemn_to_prod10n_patch            (:)     ! patch dead stem N harvest to 10-year product pool (gN/m2/s)
-     real(r8), pointer :: hrv_deadstemn_to_prod100n_patch           (:)     ! patch dead stem N harvest to 100-year product pool (gN/m2/s)
      real(r8), pointer :: hrv_livecrootn_to_litter_patch            (:)     ! patch live coarse root N harvest mortality (gN/m2/s)
      real(r8), pointer :: hrv_deadcrootn_to_litter_patch            (:)     ! patch dead coarse root N harvest mortality (gN/m2/s)
      real(r8), pointer :: hrv_retransn_to_litter_patch              (:)     ! patch retranslocated N pool harvest mortality (gN/m2/s)
-     real(r8), pointer :: hrv_deadstemn_to_prod10n_col              (:)     ! col dead stem N harvest mortality to 10-year product pool (gN/m2/s)
-     real(r8), pointer :: hrv_deadstemn_to_prod100n_col             (:)     ! col dead stem N harvest mortality to 100-year product pool (gN/m2/s)
-     real(r8), pointer :: grainn_to_cropprod1n_col                  (:)     ! col grain N to 1-year crop product pool (gN/m2/s)
+     real(r8), pointer :: grainn_to_cropprodn_patch                 (:)     ! patch grain N to crop product pool (gN/m2/s)
+     real(r8), pointer :: grainn_to_cropprodn_col                   (:)     ! col grain N to crop product pool (gN/m2/s)
      real(r8), pointer :: m_n_to_litr_met_fire_col                  (:,:)   ! col N from leaf, froot, xfer and storage N to litter labile N by fire (gN/m3/s)
      real(r8), pointer :: m_n_to_litr_cel_fire_col                  (:,:)   ! col N from leaf, froot, xfer and storage N to litter cellulose N by fire (gN/m3/s) 
      real(r8), pointer :: m_n_to_litr_lig_fire_col                  (:,:)   ! col N from leaf, froot, xfer and storage N to litter lignin N by fire (gN/m3/s) 
@@ -195,20 +192,14 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: dwt_seedn_to_leaf_col                     (:)     ! col (gN/m2/s) seed source to patch-level
      real(r8), pointer :: dwt_seedn_to_deadstem_col                 (:)     ! col (gN/m2/s) seed source to patch-level
      real(r8), pointer :: dwt_conv_nflux_col                        (:)     ! col (gN/m2/s) conversion N flux (immediate loss to atm)
-     real(r8), pointer :: dwt_prod10n_gain_col                      (:)     ! col (gN/m2/s) addition to 10-yr wood product pool
-     real(r8), pointer :: dwt_prod100n_gain_col                     (:)     ! col (gN/m2/s) addition to 100-yr wood product pool
+     real(r8), pointer :: dwt_productn_gain_patch                   (:)     ! patch (gN/m2/s) addition to 10-yr wood product pool; even though this is a patch-level flux, it is expressed per unit COLUMN area
+     real(r8), pointer :: dwt_productn_gain_col                     (:)     ! col (gN/m2/s) addition to 10-yr wood product pool
      real(r8), pointer :: dwt_frootn_to_litr_met_n_col              (:,:)   ! col (gN/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_frootn_to_litr_cel_n_col              (:,:)   ! col (gN/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_frootn_to_litr_lig_n_col              (:,:)   ! col (gN/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_livecrootn_to_cwdn_col                (:,:)   ! col (gN/m3/s) live coarse root to CWD due to landcover change
      real(r8), pointer :: dwt_deadcrootn_to_cwdn_col                (:,:)   ! col (gN/m3/s) dead coarse root to CWD due to landcover change
      real(r8), pointer :: dwt_nloss_col                             (:)     ! col (gN/m2/s) total nitrogen loss from product pools and conversion
-
-     ! wood & grain product pool loss fluxes
-     real(r8), pointer :: cropprod1n_loss_col                       (:)     ! col (gN/m2/s) decomposition loss from 1-yr grain product pool
-     real(r8), pointer :: prod10n_loss_col                          (:)     ! col (gN/m2/s) decomposition loss from 10-yr wood product pool
-     real(r8), pointer :: prod100n_loss_col                         (:)     ! col (gN/m2/s) decomposition loss from 100-yr wood product pool
-     real(r8), pointer :: product_nloss_col                         (:)     ! col (gN/m2/s) total wood product nitrogen loss
 
      ! Misc
      real(r8), pointer :: plant_ndemand_patch                       (:)     ! N flux required to support initial GPP (gN/m2/s)
@@ -321,8 +312,6 @@ contains
     allocate(this%hrv_livecrootn_xfer_to_litter_patch       (begp:endp)) ; this%hrv_livecrootn_xfer_to_litter_patch       (:) = nan
     allocate(this%hrv_deadcrootn_xfer_to_litter_patch       (begp:endp)) ; this%hrv_deadcrootn_xfer_to_litter_patch       (:) = nan
     allocate(this%hrv_livestemn_to_litter_patch             (begp:endp)) ; this%hrv_livestemn_to_litter_patch             (:) = nan
-    allocate(this%hrv_deadstemn_to_prod10n_patch            (begp:endp)) ; this%hrv_deadstemn_to_prod10n_patch            (:) = nan
-    allocate(this%hrv_deadstemn_to_prod100n_patch           (begp:endp)) ; this%hrv_deadstemn_to_prod100n_patch           (:) = nan
     allocate(this%hrv_livecrootn_to_litter_patch            (begp:endp)) ; this%hrv_livecrootn_to_litter_patch            (:) = nan
     allocate(this%hrv_deadcrootn_to_litter_patch            (begp:endp)) ; this%hrv_deadcrootn_to_litter_patch            (:) = nan
     allocate(this%hrv_retransn_to_litter_patch              (begp:endp)) ; this%hrv_retransn_to_litter_patch              (:) = nan
@@ -417,14 +406,9 @@ contains
     allocate(this%fert_counter_patch                        (begp:endp)) ; this%fert_counter_patch                        (:) = nan
     allocate(this%soyfixn_patch                             (begp:endp)) ; this%soyfixn_patch                             (:) = nan
 
-    allocate(this%hrv_deadstemn_to_prod10n_col              (begc:endc)) ; this%hrv_deadstemn_to_prod10n_col              (:) = nan
-    allocate(this%hrv_deadstemn_to_prod100n_col             (begc:endc)) ; this%hrv_deadstemn_to_prod100n_col             (:) = nan
-    allocate(this%grainn_to_cropprod1n_col                  (begc:endc)) ; this%grainn_to_cropprod1n_col                  (:) = nan
+    allocate(this%grainn_to_cropprodn_patch                 (begp:endp)) ; this%grainn_to_cropprodn_patch                 (:) = nan
+    allocate(this%grainn_to_cropprodn_col                   (begc:endc)) ; this%grainn_to_cropprodn_col                   (:) = nan
 
-    allocate(this%cropprod1n_loss_col                       (begc:endc)) ; this%cropprod1n_loss_col                       (:) = nan
-    allocate(this%prod10n_loss_col                          (begc:endc)) ; this%prod10n_loss_col                          (:) = nan
-    allocate(this%prod100n_loss_col                         (begc:endc)) ; this%prod100n_loss_col                         (:) = nan
-    allocate(this%product_nloss_col                         (begc:endc)) ; this%product_nloss_col                         (:) = nan
     allocate(this%fire_nloss_col                            (begc:endc)) ; this%fire_nloss_col                            (:) = nan
     allocate(this%fire_nloss_p2c_col                        (begc:endc)) ; this%fire_nloss_p2c_col                        (:) = nan
 
@@ -435,8 +419,8 @@ contains
     allocate(this%dwt_seedn_to_leaf_col        (begc:endc))                   ; this%dwt_seedn_to_leaf_col        (:)   = nan
     allocate(this%dwt_seedn_to_deadstem_col    (begc:endc))                   ; this%dwt_seedn_to_deadstem_col    (:)   = nan
     allocate(this%dwt_conv_nflux_col           (begc:endc))                   ; this%dwt_conv_nflux_col           (:)   = nan
-    allocate(this%dwt_prod10n_gain_col         (begc:endc))                   ; this%dwt_prod10n_gain_col         (:)   = nan
-    allocate(this%dwt_prod100n_gain_col        (begc:endc))                   ; this%dwt_prod100n_gain_col        (:)   = nan
+    allocate(this%dwt_productn_gain_patch      (begp:endp))                   ; this%dwt_productn_gain_patch      (:)   = nan
+    allocate(this%dwt_productn_gain_col        (begc:endc))                   ; this%dwt_productn_gain_col        (:)   = nan
     allocate(this%dwt_nloss_col                (begc:endc))                   ; this%dwt_nloss_col                (:)   = nan
     allocate(this%wood_harvestn_col            (begc:endc))                   ; this%wood_harvestn_col            (:)   = nan
 
@@ -997,36 +981,6 @@ contains
          avgflag='A', long_name='conversion N flux (immediate loss to atm)', &
          ptr_col=this%dwt_conv_nflux_col)
 
-    this%dwt_prod10n_gain_col(begc:endc) = spval
-    call hist_addfld1d (fname='DWT_PROD10N_GAIN', units='gN/m^2/s', &
-         avgflag='A', long_name='addition to 10-yr wood product pool', &
-         ptr_col=this%dwt_prod10n_gain_col)
-
-    this%cropprod1n_loss_col(begc:endc) = spval
-    call hist_addfld1d (fname='CROPPROD1N_LOSS', units='gN/m^2/s', &
-         avgflag='A', long_name='loss from 1-yr grain product pool', &
-         ptr_col=this%cropprod1n_loss_col)
-
-    this%prod10n_loss_col(begc:endc) = spval
-    call hist_addfld1d (fname='PROD10N_LOSS', units='gN/m^2/s', &
-         avgflag='A', long_name='loss from 10-yr wood product pool', &
-         ptr_col=this%prod10n_loss_col)
-
-    this%dwt_prod100n_gain_col(begc:endc) = spval
-    call hist_addfld1d (fname='DWT_PROD100N_GAIN', units='gN/m^2/s', &
-         avgflag='A', long_name='addition to 100-yr wood product pool', &
-         ptr_col=this%dwt_prod100n_gain_col)
-
-    this%prod100n_loss_col(begc:endc) = spval
-    call hist_addfld1d (fname='PROD100N_LOSS', units='gN/m^2/s', &
-         avgflag='A', long_name='loss from 100-yr wood product pool', &
-         ptr_col=this%prod100n_loss_col)
-
-    this%product_nloss_col(begc:endc) = spval
-    call hist_addfld1d (fname='PRODUCT_NLOSS', units='gN/m^2/s', &
-         avgflag='A', long_name='total N loss from wood & grain product pools', &
-         ptr_col=this%product_nloss_col)
-
     this%dwt_frootn_to_litr_met_n_col(begc:endc,:) = spval
     call hist_addfld_decomp (fname='DWT_FROOTN_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
          avgflag='A', long_name='fine root to litter due to landcover change', &
@@ -1547,8 +1501,6 @@ contains
        this%hrv_livecrootn_xfer_to_litter_patch(i)       = value_patch   
        this%hrv_deadcrootn_xfer_to_litter_patch(i)       = value_patch   
        this%hrv_livestemn_to_litter_patch(i)             = value_patch         
-       this%hrv_deadstemn_to_prod10n_patch(i)            = value_patch        
-       this%hrv_deadstemn_to_prod100n_patch(i)           = value_patch       
        this%hrv_livecrootn_to_litter_patch(i)            = value_patch        
        this%hrv_deadcrootn_to_litter_patch(i)            = value_patch        
        this%hrv_retransn_to_litter_patch(i)              = value_patch    
@@ -1632,6 +1584,8 @@ contains
        this%ndeploy_patch(i)                             = value_patch
        this%wood_harvestn_patch(i)                       = value_patch
        this%fire_nloss_patch(i)                          = value_patch
+
+       this%grainn_to_cropprodn_patch(i)                 = value_patch
     end do
 
     if ( crop_prog )then
@@ -1680,13 +1634,7 @@ contains
     do fi = 1,num_column
        i = filter_column(fi)
 
-       this%hrv_deadstemn_to_prod10n_col(i)  = value_column        
-       this%hrv_deadstemn_to_prod100n_col(i) = value_column      
-       this%grainn_to_cropprod1n_col(i)      = value_column
-       this%cropprod1n_loss_col(i)               = value_column
-       this%prod10n_loss_col(i)              = value_column
-       this%prod100n_loss_col(i)             = value_column
-       this%product_nloss_col(i)             = value_column
+       this%grainn_to_cropprodn_col(i)       = value_column
        this%fire_nloss_col(i)                = value_column
 
        ! Zero p2c column fluxes
@@ -1730,8 +1678,7 @@ contains
        this%dwt_seedn_to_leaf_col(c)     = 0._r8
        this%dwt_seedn_to_deadstem_col(c) = 0._r8
        this%dwt_conv_nflux_col(c)        = 0._r8
-       this%dwt_prod10n_gain_col(c)      = 0._r8
-       this%dwt_prod100n_gain_col(c)     = 0._r8
+       this%dwt_productn_gain_col(c)     = 0._r8
     end do
 
     do j = 1, nlevdecomp_full
@@ -1776,11 +1723,6 @@ contains
             this%sminn_to_npool_patch(p) + &
             this%retransn_to_npool_patch(p)
 
-       ! patch-level wood harvest
-       this%wood_harvestn_patch(p) = &
-            this%hrv_deadstemn_to_prod10n_patch(p) + &
-            this%hrv_deadstemn_to_prod100n_patch(p)
-
        ! total patch-level fire N losses
        this%fire_nloss_patch(p) = &
             this%m_leafn_to_fire_patch(p)               + &
@@ -1808,10 +1750,6 @@ contains
     call p2c(bounds, num_soilc, filter_soilc, &
          this%fire_nloss_patch(bounds%begp:bounds%endp), &
          this%fire_nloss_p2c_col(bounds%begc:bounds%endc))
-
-    call p2c(bounds, num_soilc, filter_soilc, &
-         this%wood_harvestn_patch(bounds%begp:bounds%endp), &
-         this%wood_harvestn_col(bounds%begc:bounds%endc))
 
     ! vertically integrate column-level fire N losses
     do k = 1, ndecomp_pools
@@ -1845,13 +1783,6 @@ contains
        ! column-level N losses due to landcover change
        this%dwt_nloss_col(c) = &
             this%dwt_conv_nflux_col(c)
-
-      ! total wood & grain product N loss
-       this%product_nloss_col(c) = &
-            this%cropprod1n_loss_col(c)  + &
-            this%prod10n_loss_col(c) + &
-            this%prod100n_loss_col(c) 
-
     end do
 
   end subroutine Summary_nitrogenflux

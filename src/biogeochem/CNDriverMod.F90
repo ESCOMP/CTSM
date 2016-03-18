@@ -16,6 +16,7 @@ module CNDriverMod
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
+  use CNProductsMod                   , only : cn_products_type
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
@@ -80,6 +81,7 @@ contains
        c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,                              &
        c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,                              &
        cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst,                                  &
+       c_products_inst, c13_products_inst, c14_products_inst, n_products_inst,             &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                    &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst,            &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst,            &
@@ -109,7 +111,6 @@ contains
     use CNFireMethodMod                   , only: cnfire_method_type
     use CNCIsoFluxMod                     , only: CIsoFlux1, CIsoFlux2, CIsoFlux2h, CIsoFlux3
     use CNC14DecayMod                     , only: C14Decay
-    use CNWoodProductsMod                 , only: CNWoodProducts
     use CNCStateUpdate1Mod                , only: CStateUpdate1,CStateUpdate0
     use CNCStateUpdate2Mod                , only: CStateUpdate2, CStateUpdate2h
     use CNCStateUpdate3Mod                , only: CStateUpdate3
@@ -148,6 +149,10 @@ contains
     type(cnveg_carbonstate_type)            , intent(inout) :: c14_cnveg_carbonstate_inst
     type(cnveg_nitrogenflux_type)           , intent(inout) :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
+    type(cn_products_type)                  , intent(inout) :: c_products_inst
+    type(cn_products_type)                  , intent(inout) :: c13_products_inst
+    type(cn_products_type)                  , intent(inout) :: c14_products_inst
+    type(cn_products_type)                  , intent(inout) :: n_products_inst
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
@@ -157,7 +162,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
-    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst 
+    type(atm2lnd_type)                      , intent(in)    :: atm2lnd_inst
     type(waterstate_type)                   , intent(in)    :: waterstate_inst
     type(waterflux_type)                    , intent(inout)    :: waterflux_inst
     type(canopystate_type)                  , intent(inout)    :: canopystate_inst
@@ -646,10 +651,33 @@ contains
     ! and update product pool state variables
     !--------------------------------------------
 
-    call CNWoodProducts(bounds, num_soilc, filter_soilc, &
-         cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
-         cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
-         cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst)
+    call c_products_inst%UpdateProducts(bounds, &
+         num_soilp, filter_soilp, num_soilc, filter_soilc, &
+         dwt_wood_product_gain_patch = cnveg_carbonflux_inst%dwt_productc_gain_patch(begp:endp), &
+         wood_harvest_patch = cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
+         grain_to_cropprod_patch = cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp))
+
+    if (use_c13) then
+       call c13_products_inst%UpdateProducts(bounds, &
+            num_soilp, filter_soilp, num_soilc, filter_soilc, &
+            dwt_wood_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_productc_gain_patch(begp:endp), &
+            wood_harvest_patch = c13_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
+            grain_to_cropprod_patch = c13_cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp))
+    end if
+
+    if (use_c14) then
+       call c14_products_inst%UpdateProducts(bounds, &
+            num_soilp, filter_soilp, num_soilc, filter_soilc, &
+            dwt_wood_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_productc_gain_patch(begp:endp), &
+            wood_harvest_patch = c14_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
+            grain_to_cropprod_patch = c14_cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp))
+    end if
+
+    call n_products_inst%UpdateProducts(bounds, &
+         num_soilp, filter_soilp, num_soilc, filter_soilc, &
+         dwt_wood_product_gain_patch = cnveg_nitrogenflux_inst%dwt_productn_gain_patch(begp:endp), &
+         wood_harvest_patch = cnveg_nitrogenflux_inst%wood_harvestn_patch(begp:endp), &
+         grain_to_cropprod_patch = cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(begp:endp))
 
     !--------------------------------------------
     ! Calculate fire area and fluxes
@@ -770,6 +798,7 @@ contains
        c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
        c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
        cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
+       c_products_inst, c13_products_inst, c14_products_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -798,6 +827,9 @@ contains
     type(cnveg_carbonstate_type)            , intent(inout) :: c14_cnveg_carbonstate_inst
     type(cnveg_nitrogenflux_type)           , intent(inout) :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
+    type(cn_products_type)                  , intent(in)    :: c_products_inst
+    type(cn_products_type)                  , intent(in)    :: c13_products_inst
+    type(cn_products_type)                  , intent(in)    :: c14_products_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c13_soilbiogeochem_carbonflux_inst
@@ -894,7 +926,8 @@ contains
          soilbiogeochem_hr_col=soilbiogeochem_carbonflux_inst%hr_col(begc:endc), &
          soilbiogeochem_lithr_col=soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
          soilbiogeochem_decomp_cascade_ctransfer_col=&
-         soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions))
+         soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+         product_closs_col=c_products_inst%product_loss_col(begc:endc))
 
     if ( use_c13 ) then
        call c13_cnveg_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -902,7 +935,8 @@ contains
             soilbiogeochem_hr_col=c13_soilbiogeochem_carbonflux_inst%hr_col(begc:endc), &
             soilbiogeochem_lithr_col=c13_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
-            c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions))
+            c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+            product_closs_col=c13_products_inst%product_loss_col(begc:endc))
     end if
 
     if ( use_c14 ) then
@@ -911,7 +945,8 @@ contains
             soilbiogeochem_hr_col=c14_soilbiogeochem_carbonflux_inst%hr_col(begc:endc), &
             soilbiogeochem_lithr_col=c14_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
-            c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions))
+            c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+            product_closs_col=c14_products_inst%product_loss_col(begc:endc))
     end if
 
     call cnveg_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)

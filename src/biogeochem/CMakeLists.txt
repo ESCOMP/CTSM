@@ -3,6 +3,9 @@
 
 list(APPEND clm_sources
   CNSharedParamsMod.F90
+  SpeciesBaseType.F90
+  SpeciesIsotopeType.F90
+  SpeciesNonIsotopeType.F90
   )
 
 sourcelist_to_parent(clm_sources)

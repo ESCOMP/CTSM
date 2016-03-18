@@ -55,7 +55,10 @@ module CNVegetationFacade
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNFireMethodMod                 , only : cnfire_method_type
+  use CNProductsMod                   , only : cn_products_type
   use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
+  use SpeciesIsotopeType              , only : species_isotope_type
+  use SpeciesNonIsotopeType           , only : species_non_isotope_type
   use CanopyStateType                 , only : canopystate_type
   use PhotosynthesisMod               , only : photosyns_type
   use atm2lndType                     , only : atm2lnd_type
@@ -100,6 +103,12 @@ module CNVegetationFacade
      type(cnveg_carbonflux_type)    :: c14_cnveg_carbonflux_inst
      type(cnveg_nitrogenstate_type) :: cnveg_nitrogenstate_inst
      type(cnveg_nitrogenflux_type)  :: cnveg_nitrogenflux_inst
+
+     type(cn_products_type)         :: c_products_inst
+     type(cn_products_type)         :: c13_products_inst
+     type(cn_products_type)         :: c14_products_inst
+     type(cn_products_type)         :: n_products_inst
+
      type(cn_balance_type)          :: cn_balance_inst
      class(cnfire_method_type), allocatable :: cnfire_method
      type(dgvs_type)                :: dgvs_inst
@@ -207,6 +216,15 @@ contains
             this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp))
        call this%cnveg_nitrogenflux_inst%Init(bounds) 
 
+       call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))
+       if (use_c13) then
+          call this%c13_products_inst%Init(bounds, species_isotope_type('C', '13'))
+       end if
+       if (use_c14) then
+          call this%c14_products_inst%Init(bounds, species_isotope_type('C', '14'))
+       end if
+       call this%n_products_inst%Init(bounds, species_non_isotope_type('N'))
+
        call this%cn_balance_inst%Init(bounds)
 
        ! Initialize the memory for the dgvs_inst data structure regardless of whether
@@ -312,6 +330,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only : file_desc_t
+    use clm_varcon, only : c3_r2, c14ratio
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -338,6 +357,20 @@ contains
        call this%cnveg_carbonflux_inst%restart(bounds, ncid, flag=flag)
        call this%cnveg_nitrogenstate_inst%restart(bounds, ncid, flag=flag)
        call this%cnveg_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
+
+       call this%c_products_inst%restart(bounds, ncid, flag)
+       if (use_c13) then
+          call this%c13_products_inst%restart(bounds, ncid, flag, &
+               template_for_missing_fields = this%c_products_inst, &
+               template_multiplier = c3_r2)
+       end if
+       if (use_c14) then
+          call this%c14_products_inst%restart(bounds, ncid, flag, &
+               template_for_missing_fields = this%c_products_inst, &
+               template_multiplier = c14ratio)
+       end if
+       call this%n_products_inst%restart(bounds, ncid, flag)
+
     end if
 
     if (use_cndv) then
@@ -579,6 +612,8 @@ contains
          this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst,                   &
          this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst,                   &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst,                       &
+         this%c_products_inst, this%c13_products_inst, this%c14_products_inst,    &
+         this%n_products_inst,                                                    &
          soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
          c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -662,6 +697,7 @@ contains
          this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, &
          this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
+         this%c_products_inst, this%c13_products_inst, this%c14_products_inst, &
          soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
          c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &

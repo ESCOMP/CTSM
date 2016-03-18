@@ -141,11 +141,9 @@ contains
          col_endcb               =>    this%endcb_col                                   , & ! Output: [real(r8) (:) ]  (gC/m2) carbon mass, end of time step 
          beg_vals_set            =>    this%beg_vals_set_col                            , & ! Input:  [logical  (:) ]  Whether begcb/begnb have been set in this time step
          dwt_closs               =>    cnveg_carbonflux_inst%dwt_closs_col              , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total carbon loss from product pools and conversion
-         dwt_prod10c_gain        =>    cnveg_carbonflux_inst%dwt_prod10c_gain_col       , & ! Input:  [real(r8) (:) ]  (gC/m2/s) addition to 10-yr wood product pool
-         dwt_prod100c_gain       =>    cnveg_carbonflux_inst%dwt_prod100c_gain_col      , & ! Input:  [real(r8) (:) ]  (gC/m2/s) addition to 100-yr wood product pool
-         hrv_deadstemc_to_prod10c => cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) dead stem C harvest mortality to 10-year product pool
-         hrv_deadstemc_to_prod100c => cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) dead stem C harvest mortality to 100-year product pool
-         grainc_to_cropprod1c    =>    cnveg_carbonflux_inst%grainc_to_cropprod1c_col   , & ! Input:  [real(r8) (:) ]  (gC/m2/s) grain C to 1-year crop product pool
+         dwt_productc_gain       =>    cnveg_carbonflux_inst%dwt_productc_gain_col      , & ! Input:  [real(r8) (:) ]  (gC/m2/s) addition to wood product pools
+         wood_harvestc           =>    cnveg_carbonflux_inst%wood_harvestc_col          , & ! Input:  [real(r8) (:) ]  (gC/m2/s) wood harvest (to product pools)
+         grainc_to_cropprodc     =>    cnveg_carbonflux_inst%grainc_to_cropprodc_col    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) grain C to 1-year crop product pool
          gpp                     =>    cnveg_carbonflux_inst%gpp_col                    , & ! Input:  [real(r8) (:) ]  (gC/m2/s) gross primary production
          er                      =>    cnveg_carbonflux_inst%er_col                     , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
          col_fire_closs          =>    cnveg_carbonflux_inst%fire_closs_col             , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total column-level fire C loss
@@ -183,9 +181,9 @@ contains
          ! pools are not included in totcolc, so are outside the system with respect to
          ! these balance checks
          col_coutputs = col_coutputs + &
-              dwt_prod10c_gain(c)         + dwt_prod100c_gain(c)         + &
-              hrv_deadstemc_to_prod10c(c) + hrv_deadstemc_to_prod100c(c) + &
-              grainc_to_cropprod1c(c)
+              dwt_productc_gain(c) + &
+              wood_harvestc(c) + &
+              grainc_to_cropprodc(c)
 
          ! subtract leaching flux
          col_coutputs = col_coutputs - som_c_leached(c)
@@ -268,11 +266,9 @@ contains
 
          col_fire_nloss      => cnveg_nitrogenflux_inst%fire_nloss_col                   , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total column-level fire N loss 
          dwt_nloss           => cnveg_nitrogenflux_inst%dwt_nloss_col                    , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total nitrogen loss from product pools and conversion
-         dwt_prod10n_gain    => cnveg_nitrogenflux_inst%dwt_prod10n_gain_col             , & ! Input:  [real(r8) (:) ]  (gN/m2/s) addition to 10-yr wood product pool
-         dwt_prod100n_gain   => cnveg_nitrogenflux_inst%dwt_prod100n_gain_col            , & ! Input:  [real(r8) (:) ]  (gN/m2/s) addition to 100-yr wood product pool
-         hrv_deadstemn_to_prod10n => cnveg_nitrogenflux_inst%hrv_deadstemn_to_prod10n_col , & ! Input:  [real(r8) (:) ]  (gN/m2/s) dead stem N harvest mortality to 10-year product pool
-         hrv_deadstemn_to_prod100n => cnveg_nitrogenflux_inst%hrv_deadstemn_to_prod100n_col , & ! Input:  [real(r8) (:) ]  (gN/m2/s) dead stem N harvest mortality to 100-year product pool
-         grainn_to_cropprod1n => cnveg_nitrogenflux_inst%grainn_to_cropprod1n_col        , & ! Input:  [real(r8) (:) ]  (gN/m2/s) grain N to 1-year crop product pool
+         dwt_productn_gain   => cnveg_nitrogenflux_inst%dwt_productn_gain_col            , & ! Input:  [real(r8) (:) ]  (gN/m2/s) addition to wood product pools
+         wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
+         grainn_to_cropprodn => cnveg_nitrogenflux_inst%grainn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) grain N to 1-year crop product pool
 
          totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
          )
@@ -310,9 +306,9 @@ contains
          ! pools are not included in totcoln, so are outside the system with respect to
          ! these balance checks
          col_noutputs(c) = col_noutputs(c) + &
-              dwt_prod10n_gain(c)         + dwt_prod100n_gain(c)         + &
-              hrv_deadstemn_to_prod10n(c) + hrv_deadstemn_to_prod100n(c) + &
-              grainn_to_cropprod1n(c)
+              dwt_productn_gain(c) + &
+              wood_harvestn(c) + &
+              grainn_to_cropprodn(c)
 
          if (.not. use_nitrif_denitrif) then
             col_noutputs(c) = col_noutputs(c) + sminn_leached(c)

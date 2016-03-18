@@ -643,12 +643,7 @@ contains
            num_soilp                                           , filter_soilp, 1._r8, 0, isotope)
 
       call CIsoFluxCalc(&
-           iso_cnveg_cf%hrv_deadstemc_to_prod10c_patch         , cnveg_cf%hrv_deadstemc_to_prod10c_patch, &
-           iso_cnveg_cs%deadstemc_patch                        , cnveg_cs%deadstemc_patch, &
-           num_soilp                                           , filter_soilp, 1._r8, 0, isotope)
-
-      call CIsoFluxCalc(&
-           iso_cnveg_cf%hrv_deadstemc_to_prod100c_patch        , cnveg_cf%hrv_deadstemc_to_prod100c_patch, &
+           iso_cnveg_cf%wood_harvestc_patch                    , cnveg_cf%wood_harvestc_patch, &
            iso_cnveg_cs%deadstemc_patch                        , cnveg_cs%deadstemc_patch, &
            num_soilp                                           , filter_soilp, 1._r8, 0, isotope)
 
@@ -1160,8 +1155,7 @@ contains
           hrv_leafc_to_litter              => iso_cnveg_carbonflux_inst%hrv_leafc_to_litter_patch              , & ! Input:  [real(r8) (:)   ]                                                    
           hrv_frootc_to_litter             => iso_cnveg_carbonflux_inst%hrv_frootc_to_litter_patch             , & ! Input:  [real(r8) (:)   ]                                                    
           hrv_livestemc_to_litter          => iso_cnveg_carbonflux_inst%hrv_livestemc_to_litter_patch          , & ! Input:  [real(r8) (:)   ]                                                    
-          phrv_deadstemc_to_prod10c        => iso_cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_patch         , & ! Input:  [real(r8) (:)   ]                                                    
-          phrv_deadstemc_to_prod100c       => iso_cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_patch        , & ! Input:  [real(r8) (:)   ]                                                    
+          pwood_harvestc                   => iso_cnveg_carbonflux_inst%wood_harvestc_patch                    , & ! Input:  [real(r8) (:)   ]
           hrv_livecrootc_to_litter         => iso_cnveg_carbonflux_inst%hrv_livecrootc_to_litter_patch         , & ! Input:  [real(r8) (:)   ]                                                    
           hrv_deadcrootc_to_litter         => iso_cnveg_carbonflux_inst%hrv_deadcrootc_to_litter_patch         , & ! Input:  [real(r8) (:)   ]                                                    
           hrv_leafc_storage_to_litter      => iso_cnveg_carbonflux_inst%hrv_leafc_storage_to_litter_patch      , & ! Input:  [real(r8) (:)   ]                                                    
@@ -1178,8 +1172,7 @@ contains
           hrv_livecrootc_xfer_to_litter    => iso_cnveg_carbonflux_inst%hrv_livecrootc_xfer_to_litter_patch    , & ! Input:  [real(r8) (:)   ]                                                    
           hrv_deadcrootc_xfer_to_litter    => iso_cnveg_carbonflux_inst%hrv_deadcrootc_xfer_to_litter_patch    , & ! Input:  [real(r8) (:)   ]                                                    
           hrv_gresp_xfer_to_litter         => iso_cnveg_carbonflux_inst%hrv_gresp_xfer_to_litter_patch         , & ! Input:  [real(r8) (:)   ]                                                    
-          chrv_deadstemc_to_prod10c        => iso_cnveg_carbonflux_inst%hrv_deadstemc_to_prod10c_col           , & ! Output: [real(r8) (:)   ]                                                    
-          chrv_deadstemc_to_prod100c       => iso_cnveg_carbonflux_inst%hrv_deadstemc_to_prod100c_col          , & ! Output: [real(r8) (:)   ]                                                    
+          cwood_harvestc                   => iso_cnveg_carbonflux_inst%wood_harvestc_col                      , & ! Output:  [real(r8) (:)   ]
           harvest_c_to_litr_met_c          => iso_cnveg_carbonflux_inst%harvest_c_to_litr_met_c_col            , & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to litter metabolic pool (gC/m3/s)
           harvest_c_to_litr_cel_c          => iso_cnveg_carbonflux_inst%harvest_c_to_litr_cel_c_col            , & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to litter cellulose pool (gC/m3/s)
           harvest_c_to_litr_lig_c          => iso_cnveg_carbonflux_inst%harvest_c_to_litr_lig_c_col            , & ! Output: [real(r8) (:,:) ]  C fluxes associated with harvest to litter lignin pool (gC/m3/s)
@@ -1266,10 +1259,8 @@ contains
                 p = col%patchi(c) + pi - 1
 
                 if (patch%active(p)) then
-                   chrv_deadstemc_to_prod10c(c)  = chrv_deadstemc_to_prod10c(c)  + &
-                        phrv_deadstemc_to_prod10c(p)  * wtcol(p)
-                   chrv_deadstemc_to_prod100c(c)  = chrv_deadstemc_to_prod100c(c)  + &
-                        phrv_deadstemc_to_prod100c(p)  * wtcol(p)
+                   cwood_harvestc(c) = cwood_harvestc(c) + &
+                        pwood_harvestc(p) * wtcol(p)
                 end if
              end if
           end do

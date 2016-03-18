@@ -179,7 +179,7 @@ contains
             cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + cf_veg%harvest_c_to_cwdc_col(c,j)  * dt
 
-            ! wood to product pools - states updated in CNWoodProducts()
+            ! wood to product pools - states updated in CNProducts
          end do
       end do
 
@@ -196,9 +196,7 @@ contains
          cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p)                   &
               - cf_veg%hrv_livestemc_to_litter_patch(p) * dt
          cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p)                   &
-              - cf_veg%hrv_deadstemc_to_prod10c_patch(p) * dt
-         cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p)                   &
-              - cf_veg%hrv_deadstemc_to_prod100c_patch(p) * dt
+              - cf_veg%wood_harvestc_patch(p) * dt
          cs_veg%livecrootc_patch(p) = cs_veg%livecrootc_patch(p)                 &
               - cf_veg%hrv_livecrootc_to_litter_patch(p) * dt
          cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p)                 &

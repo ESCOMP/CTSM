@@ -257,7 +257,7 @@ contains
        call CNLivewoodTurnover(num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
-       call CNGrainToProductPools(bounds, num_soilc, filter_soilc, &
+       call CNGrainToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
             cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        ! gather all patch-level litterfall fluxes to the column for litter C and N inputs
@@ -2573,7 +2573,7 @@ contains
   end subroutine CNLivewoodTurnover
 
   !-----------------------------------------------------------------------
-  subroutine CNGrainToProductPools(bounds, num_soilc, filter_soilc, &
+  subroutine CNGrainToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
@@ -2587,30 +2587,42 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)             , intent(in)    :: bounds
+    integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
+    integer                       , intent(in)    :: filter_soilp(:) ! filter for soil patches
     integer                       , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                       , intent(in)    :: filter_soilc(:) ! filter for soil columns
     type(cnveg_carbonflux_type)   , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type) , intent(inout) :: cnveg_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
+    integer :: fp, p
 
     character(len=*), parameter :: subname = 'CNGrainToProductPools'
     !-----------------------------------------------------------------------
 
-    ! Explicitly checking crop_prog is probably unnecessary here, but we do it for safety
-    ! because the patch-level fluxes are not set if crop_prog is false.
+    ! Explicitly checking crop_prog is probably unnecessary here (because presumably
+    ! use_grainproduct is only true if crop_prog is true), but we do it for safety because
+    ! the grain*_to_food_patch fluxes are not set if crop_prog is false.
     if (crop_prog .and. use_grainproduct) then
-       call p2c (bounds, num_soilc, filter_soilc, &
-            cnveg_carbonflux_inst%grainc_to_food_patch(bounds%begp:bounds%endp), &
-            cnveg_carbonflux_inst%grainc_to_cropprod1c_col(bounds%begc:bounds%endc))
+       do fp = 1, num_soilp
+          p = filter_soilp(fp)
+          cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = &
+               cnveg_carbonflux_inst%grainc_to_food_patch(p)
+          cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = &
+               cnveg_nitrogenflux_inst%grainn_to_food_patch(p)
+       end do
 
        call p2c (bounds, num_soilc, filter_soilc, &
-            cnveg_nitrogenflux_inst%grainn_to_food_patch(bounds%begp:bounds%endp), &
-            cnveg_nitrogenflux_inst%grainn_to_cropprod1n_col(bounds%begc:bounds%endc))
+            cnveg_carbonflux_inst%grainc_to_cropprodc_patch(bounds%begp:bounds%endp), &
+            cnveg_carbonflux_inst%grainc_to_cropprodc_col(bounds%begc:bounds%endc))
+
+       call p2c (bounds, num_soilc, filter_soilc, &
+            cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(bounds%begp:bounds%endp), &
+            cnveg_nitrogenflux_inst%grainn_to_cropprodn_col(bounds%begc:bounds%endc))
     end if
 
-    ! No else clause: if use_grainproduct is false, then the column-level
-    ! grain-to-cropprod fluxes will remain at their initial value (0).
+    ! No else clause: if use_grainproduct is false, then the grain*_to_cropprod fluxes
+    ! will remain at their initial value (0).
 
   end subroutine CNGrainToProductPools
 

@@ -50,7 +50,7 @@ contains
     use shr_const_mod      , only : SHR_CONST_PDB
     use landunit_varcon    , only : istsoil, istcrop
     use clm_varpar         , only : numveg, nlevdecomp, max_patch_per_col
-    use clm_varcon         , only : c13ratio, c14ratio
+    use clm_varcon         , only : c13ratio, c14ratio, c3_r2, c4_r2
     use clm_time_manager   , only : get_step_size
     use dynPriorWeightsMod , only : prior_weights_type
     !
@@ -90,17 +90,15 @@ contains
     real(r8), allocatable, target :: dwt_livecrootn_to_litter(:)   ! patch-level mass loss due to weight shift
     real(r8), allocatable, target :: dwt_deadcrootn_to_litter(:)   ! patch-level mass loss due to weight shift
     real(r8), allocatable         :: conv_cflux(:)                 ! patch-level mass loss due to weight shift
-    real(r8), allocatable         :: prod10_cflux(:)               ! patch-level mass loss due to weight shift
-    real(r8), allocatable         :: prod100_cflux(:)              ! patch-level mass loss due to weight shift
+    real(r8), allocatable         :: product_cflux(:)              ! patch-level mass loss due to weight shift
     real(r8), allocatable, target :: conv_nflux(:)                 ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: prod10_nflux(:)               ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: prod100_nflux(:)              ! patch-level mass loss due to weight shift
+    real(r8), allocatable         :: product_nflux(:)              ! patch-level mass loss due to weight shift
     real(r8)                      :: t1,t2,wt_new,wt_old
     real(r8)                      :: init_state, change_state, new_state
     real(r8)                      :: tot_leaf, pleaf, pstor, pxfer
     real(r8)                      :: leafc_seed, leafn_seed
     real(r8)                      :: deadstemc_seed, deadstemn_seed
-    real(r8), pointer             :: dwt_ptr0, dwt_ptr1, dwt_ptr2, dwt_ptr3, ptr
+    real(r8), pointer             :: dwt_ptr0, dwt_ptr1, ptr
     character(len=32)             :: subname='dyn_cbal'            ! subroutine name
     !! C13
     real(r8), allocatable         :: dwt_leafc13_seed(:)           ! patch-level mass gain due to seeding of new area
@@ -109,14 +107,7 @@ contains
     real(r8), allocatable, target :: dwt_livecrootc13_to_litter(:) ! patch-level mass loss due to weight shift
     real(r8), allocatable, target :: dwt_deadcrootc13_to_litter(:) ! patch-level mass loss due to weight shift
     real(r8), allocatable, target :: conv_c13flux(:)               ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: prod10_c13flux(:)             ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: prod100_c13flux(:)            ! patch-level mass loss due to weight shift
-    real(r8)                      :: c3_del13c                     ! typical del13C for C3 photosynthesis (permil, relative to PDB)
-    real(r8)                      :: c4_del13c                     ! typical del13C for C4 photosynthesis (permil, relative to PDB)
-    real(r8)                      :: c3_r1_c13                     ! isotope ratio (13c/12c) for C3 photosynthesis
-    real(r8)                      :: c4_r1_c13                     ! isotope ratio (13c/12c) for C4 photosynthesis
-    real(r8)                      :: c3_r2_c13                     ! isotope ratio (13c/[12c+13c]) for C3 photosynthesis
-    real(r8)                      :: c4_r2_c13                     ! isotope ratio (13c/[12c+13c]) for C4 photosynthesis
+    real(r8), allocatable         :: product_c13flux(:)            ! patch-level mass loss due to weight shift
     real(r8)                      :: leafc13_seed, deadstemc13_seed
     !! C14
     real(r8), allocatable         :: dwt_leafc14_seed(:)           ! patch-level mass gain due to seeding of new area
@@ -125,14 +116,9 @@ contains
     real(r8), allocatable, target :: dwt_livecrootc14_to_litter(:) ! patch-level mass loss due to weight shift
     real(r8), allocatable, target :: dwt_deadcrootc14_to_litter(:) ! patch-level mass loss due to weight shift
     real(r8), allocatable, target :: conv_c14flux(:)               ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: prod10_c14flux(:)             ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: prod100_c14flux(:)            ! patch-level mass loss due to weight shift
+    real(r8), allocatable         :: product_c14flux(:)            ! patch-level mass loss due to weight shift
     real(r8)                      :: c3_del14c                     ! typical del14C for C3 photosynthesis (permil, relative to PDB)
     real(r8)                      :: c4_del14c                     ! typical del14C for C4 photosynthesis (permil, relative to PDB)
-    real(r8)                      :: c3_r1_c14                     ! isotope ratio (14c/12c) for C3 photosynthesis
-    real(r8)                      :: c4_r1_c14                     ! isotope ratio (14c/12c) for C4 photosynthesis
-    real(r8)                      :: c3_r2_c14                     ! isotope ratio (14c/[12c+14c]) for C3 photosynthesis
-    real(r8)                      :: c4_r2_c14                     ! isotope ratio (14c/[12c+14c]) for C4 photosynthesis
     real(r8)                      :: leafc14_seed, deadstemc14_seed
     !-----------------------------------------------------------------------
     
@@ -192,14 +178,9 @@ contains
           write(iulog,*)subname,' allocation error for conv_cflux'
           call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
-    allocate(prod10_cflux(bounds%begp:bounds%endp), stat=ier)
+    allocate(product_cflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod10_cflux'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
-    end if
-    allocate(prod100_cflux(bounds%begp:bounds%endp), stat=ier)
-    if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod100_cflux'
+          write(iulog,*)subname,' allocation error for product_cflux'
           call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     allocate(conv_nflux(bounds%begp:bounds%endp), stat=ier)
@@ -207,14 +188,9 @@ contains
           write(iulog,*)subname,' allocation error for conv_nflux'
           call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
-    allocate(prod10_nflux(bounds%begp:bounds%endp), stat=ier)
+    allocate(product_nflux(bounds%begp:bounds%endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod10_nflux'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
-    end if
-    allocate(prod100_nflux(bounds%begp:bounds%endp), stat=ier)
-    if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod100_nflux'
+          write(iulog,*)subname,' allocation error for product_nflux'
           call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
 
@@ -249,14 +225,9 @@ contains
           write(iulog,*)subname,' allocation error for conv_c13flux'
           call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
-       allocate(prod10_c13flux(bounds%begp:bounds%endp), stat=ier)
+       allocate(product_c13flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod10_c13flux'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
-       end if
-       allocate(prod100_c13flux(bounds%begp:bounds%endp), stat=ier)
-       if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod100_c13flux'
+          write(iulog,*)subname,' allocation error for product_c13flux'
           call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
     endif
@@ -291,14 +262,9 @@ contains
           write(iulog,*)subname,' allocation error for conv_c14flux'
           call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
-       allocate(prod10_c14flux(bounds%begp:bounds%endp), stat=ier)
+       allocate(product_c14flux(bounds%begp:bounds%endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod10_c14flux'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
-       end if
-       allocate(prod100_c14flux(bounds%begp:bounds%endp), stat=ier)
-       if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for prod100_c14flux'
+          write(iulog,*)subname,' allocation error for product_c14flux'
           call endrun(msg=errMsg(__FILE__, __LINE__))
        end if
     endif
@@ -320,11 +286,9 @@ contains
        dwt_livecrootn_to_litter(p) = 0._r8
        dwt_deadcrootn_to_litter(p) = 0._r8
        conv_cflux(p) = 0._r8
-       prod10_cflux(p) = 0._r8
-       prod100_cflux(p) = 0._r8
+       product_cflux(p) = 0._r8
        conv_nflux(p) = 0._r8
-       prod10_nflux(p) = 0._r8
-       prod100_nflux(p) = 0._r8
+       product_nflux(p) = 0._r8
        
        if ( use_c13 ) then
           dwt_leafc13_seed(p) = 0._r8
@@ -333,8 +297,7 @@ contains
           dwt_livecrootc13_to_litter(p) = 0._r8
           dwt_deadcrootc13_to_litter(p) = 0._r8
           conv_c13flux(p) = 0._r8
-          prod10_c13flux(p) = 0._r8
-          prod100_c13flux(p) = 0._r8
+          product_c13flux(p) = 0._r8
        endif
        
        if ( use_c14 ) then
@@ -344,8 +307,7 @@ contains
           dwt_livecrootc14_to_litter(p) = 0._r8
           dwt_deadcrootc14_to_litter(p) = 0._r8
           conv_c14flux(p) = 0._r8
-          prod10_c14flux(p) = 0._r8
-          prod100_c14flux(p) = 0._r8
+          product_c14flux(p) = 0._r8
        endif
        
        l = patch%landunit(p)
@@ -569,25 +531,12 @@ contains
                 end if
                 
                 if ( use_c13 ) then
-                   ! 13c state is initialized assuming del13c = -28 permil for C3, and -13 permil for C4.
-                   ! That translates to ratios of (13c/(12c+13c)) of 0.01080455 for C3, and 0.01096945 for C4
-                   ! based on the following formulae: 
-                   ! r1 (13/12) = PDB + (del13c * PDB)/1000.0
-                   ! r2 (13/(13+12)) = r1/(1+r1)
-                   ! PDB = 0.0112372_R8  (ratio of 13C/12C in Pee Dee Belemnite, C isotope standard)
-                   c3_del13c = -28._r8
-                   c4_del13c = -13._r8
-                   c3_r1_c13 = SHR_CONST_PDB + ((c3_del13c*SHR_CONST_PDB)/1000._r8)
-                   c3_r2_c13 = c3_r1_c13/(1._r8 + c3_r1_c13)
-                   c4_r1_c13 = SHR_CONST_PDB + ((c4_del13c*SHR_CONST_PDB)/1000._r8)
-                   c4_r2_c13 = c4_r1_c13/(1._r8 + c4_r1_c13)
-                   
                    if (pftcon%c3psn(patch%itype(p)) == 1._r8) then
-                      leafc13_seed     = leafc_seed     * c3_r2_c13
-                      deadstemc13_seed = deadstemc_seed * c3_r2_c13
+                      leafc13_seed     = leafc_seed     * c3_r2
+                      deadstemc13_seed = deadstemc_seed * c3_r2
                    else
-                      leafc13_seed     = leafc_seed     * c4_r2_c13
-                      deadstemc13_seed = deadstemc_seed * c4_r2_c13
+                      leafc13_seed     = leafc_seed     * c4_r2
+                      deadstemc13_seed = deadstemc_seed * c4_r2
                    end if
                 endif
                 
@@ -840,9 +789,8 @@ contains
              ! if the pft lost weight on the timestep, then the carbon and nitrogen state
              ! variables are directed to litter, CWD, and wood product pools.
              
-             ! N.B. : the conv_cflux, prod10_cflux, and prod100_cflux fluxes are accumulated
-             ! as negative values, but the fluxes for pft-to-litter are accumulated as 
-             ! positive values
+             ! N.B. : the conv_cflux and product_cflux fluxes are accumulated as negative
+             ! values, but the fluxes for pft-to-litter are accumulated as positive values
              
              ! set local weight variables for this pft
              wt_new = patch%wtcol(p)
@@ -977,13 +925,13 @@ contains
              if (wt_new /= 0._r8) then
                 ptr = new_state/wt_new
                 conv_cflux(p) = conv_cflux(p) + change_state * pftcon%pconv(patch%itype(p))
-                prod10_cflux(p) = prod10_cflux(p) + change_state * pftcon%pprod10(patch%itype(p))
-                prod100_cflux(p) = prod100_cflux(p) + change_state * pftcon%pprod100(patch%itype(p))
+                product_cflux(p) = product_cflux(p) + &
+                     change_state * (1._r8 - pftcon%pconv(patch%itype(p)))
              else
                 ptr = 0._r8
                 conv_cflux(p) = conv_cflux(p) - init_state * pftcon%pconv(patch%itype(p))
-                prod10_cflux(p) = prod10_cflux(p) - init_state * pftcon%pprod10(patch%itype(p))
-                prod100_cflux(p) = prod100_cflux(p) - init_state * pftcon%pprod100(patch%itype(p))
+                product_cflux(p) = product_cflux(p) - &
+                     init_state * (1._r8 - pftcon%pconv(patch%itype(p)))
              end if
              
              ! deadstemc_storage 
@@ -1163,8 +1111,6 @@ contains
                 ! set pointers to the conversion and product pool fluxes for this pft
                 ! dwt_ptr0 is reserved for local assignment to dwt_xxx_to_litter fluxes
                 dwt_ptr1 => conv_c13flux(p)
-                dwt_ptr2 => prod10_c13flux(p)
-                dwt_ptr3 => prod100_c13flux(p)
                 
                 ! leafc 
                 ptr => cnveg_carbonstate_inst%leafc_patch(p)
@@ -1292,13 +1238,13 @@ contains
                 if (wt_new /= 0._r8) then
                    ptr = new_state/wt_new
                    dwt_ptr1 = dwt_ptr1 + change_state * pftcon%pconv(patch%itype(p))
-                   dwt_ptr2 = dwt_ptr2 + change_state * pftcon%pprod10(patch%itype(p))
-                   dwt_ptr3 = dwt_ptr3 + change_state * pftcon%pprod100(patch%itype(p))
+                   product_c13flux(p) = product_c13flux(p) + &
+                        change_state * (1._r8 - pftcon%pconv(patch%itype(p)))
                 else
                    ptr = 0._r8
                    dwt_ptr1 = dwt_ptr1 - init_state * pftcon%pconv(patch%itype(p))
-                   dwt_ptr2 = dwt_ptr2 - init_state * pftcon%pprod10(patch%itype(p))
-                   dwt_ptr3 = dwt_ptr3 - init_state * pftcon%pprod100(patch%itype(p))
+                   product_c13flux(p) = product_c13flux(p) - &
+                        init_state * (1._r8 - pftcon%pconv(patch%itype(p)))
                 end if
                 
                 ! deadstemc_storage 
@@ -1469,8 +1415,6 @@ contains
                 ! set pointers to the conversion and product pool fluxes for this patch
                 ! dwt_ptr0 is reserved for local assignment to dwt_xxx_to_litter fluxes
                 dwt_ptr1 => conv_c14flux(p)
-                dwt_ptr2 => prod10_c14flux(p)
-                dwt_ptr3 => prod100_c14flux(p)
                 
                 ! leafc 
                 ptr => cnveg_carbonstate_inst%leafc_patch(p)
@@ -1598,13 +1542,13 @@ contains
                 if (wt_new /= 0._r8) then
                    ptr = new_state/wt_new
                    dwt_ptr1 = dwt_ptr1 + change_state * pftcon%pconv(patch%itype(p))
-                   dwt_ptr2 = dwt_ptr2 + change_state * pftcon%pprod10(patch%itype(p))
-                   dwt_ptr3 = dwt_ptr3 + change_state * pftcon%pprod100(patch%itype(p))
+                   product_c14flux(p) = product_c14flux(p) + &
+                        change_state * (1._r8 - pftcon%pconv(patch%itype(p)))
                 else
                    ptr = 0._r8
                    dwt_ptr1 = dwt_ptr1 - init_state * pftcon%pconv(patch%itype(p))
-                   dwt_ptr2 = dwt_ptr2 - init_state * pftcon%pprod10(patch%itype(p))
-                   dwt_ptr3 = dwt_ptr3 - init_state * pftcon%pprod100(patch%itype(p))
+                   product_c14flux(p) = product_c14flux(p) - &
+                        init_state * (1._r8 - pftcon%pconv(patch%itype(p)))
                 end if
                 
                 ! deadstemc_storage 
@@ -1774,8 +1718,6 @@ contains
              ! set pointers to the conversion and product pool fluxes for this patch
              ! dwt_ptr0 is reserved for local assignment to dwt_xxx_to_litter fluxes
              dwt_ptr1 => conv_nflux(p)
-             dwt_ptr2 => prod10_nflux(p)
-             dwt_ptr3 => prod100_nflux(p)
              
              ! leafn 
              ptr => cnveg_nitrogenstate_inst%leafn_patch(p)
@@ -1903,13 +1845,13 @@ contains
              if (wt_new /= 0._r8) then
                 ptr = new_state/wt_new
                 dwt_ptr1 = dwt_ptr1 + change_state * pftcon%pconv(patch%itype(p))
-                dwt_ptr2 = dwt_ptr2 + change_state * pftcon%pprod10(patch%itype(p))
-                dwt_ptr3 = dwt_ptr3 + change_state * pftcon%pprod100(patch%itype(p))
+                product_nflux(p) = product_nflux(p) + &
+                     change_state * (1._r8 - pftcon%pconv(patch%itype(p)))
              else
                 ptr = 0._r8
                 dwt_ptr1 = dwt_ptr1 - init_state * pftcon%pconv(patch%itype(p))
-                dwt_ptr2 = dwt_ptr2 - init_state * pftcon%pprod10(patch%itype(p))
-                dwt_ptr3 = dwt_ptr3 - init_state * pftcon%pprod100(patch%itype(p))
+                product_nflux(p) = product_nflux(p) - &
+                     init_state * (1._r8 - pftcon%pconv(patch%itype(p)))
              end if
              
              ! deadstemn_storage 
@@ -2216,20 +2158,42 @@ contains
        end do
     end do
 
+    ! ------------------------------------------------------------------------
     ! calculate patch-to-column for fluxes into product pools and conversion flux
+    ! ------------------------------------------------------------------------
+
+    ! First store temporary values that are needed elsewhere. Note that the temporary
+    ! conv_cflux, product_cflux (and similar) fluxes are accumulated as negative values,
+    ! but the values stored in carbonflux_inst and nitrogenflux_inst are positive values.
+    do p = bounds%begp, bounds%endp
+       cnveg_carbonflux_inst%dwt_productc_gain_patch(p) = -product_cflux(p)/dt
+       if (use_c13) then
+          c13_cnveg_carbonflux_inst%dwt_productc_gain_patch(p) = -product_c13flux(p)/dt
+       end if
+       if (use_c14) then
+          c14_cnveg_carbonflux_inst%dwt_productc_gain_patch(p) = -product_c14flux(p)/dt
+       end if
+       cnveg_nitrogenflux_inst%dwt_productn_gain_patch(p) = -product_nflux(p)/dt
+    end do
+
+    ! Now set column-level fluxes
+
     do pi = 1,max_patch_per_col
        do c = bounds%begc,bounds%endc
           if (pi <= col%npatches(c)) then
              p = col%patchi(c) + pi - 1
              
              ! column-level fluxes are accumulated as positive fluxes.
-             ! column-level C flux updates
+             !
+             ! Note that patch-level fluxes are stored per unit COLUMN area - thus, we
+             ! don't need to multiply by the patch's column weight when translating
+             ! patch-level fluxes into column-level fluxes.
+
              cnveg_carbonflux_inst%dwt_conv_cflux_col(c) = &
                   cnveg_carbonflux_inst%dwt_conv_cflux_col(c) - conv_cflux(p)/dt
-             cnveg_carbonflux_inst%dwt_prod10c_gain_col(c) = &
-                  cnveg_carbonflux_inst%dwt_prod10c_gain_col(c) - prod10_cflux(p)/dt
-             cnveg_carbonflux_inst%dwt_prod100c_gain_col(c) = &
-                  cnveg_carbonflux_inst%dwt_prod100c_gain_col(c) - prod100_cflux(p)/dt
+             cnveg_carbonflux_inst%dwt_productc_gain_col(c) = &
+                  cnveg_carbonflux_inst%dwt_productc_gain_col(c) + &
+                  cnveg_carbonflux_inst%dwt_productc_gain_patch(p)
 
              ! These magic constants should be replaced with: nbrdlf_evr_trp_tree and nbrdlf_dcd_trp_tree
              if(patch%itype(p)==4.or.patch%itype(p)==6)then
@@ -2241,34 +2205,29 @@ contains
                 ! C13 column-level flux updates
                 c13_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) = &
                      c13_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) - conv_c13flux(p)/dt
-                c13_cnveg_carbonflux_inst%dwt_prod10c_gain_col(c) = &
-                     c13_cnveg_carbonflux_inst%dwt_prod10c_gain_col(c) - prod10_c13flux(p)/dt
-                c13_cnveg_carbonflux_inst%dwt_prod100c_gain_col(c) = &
-                     c13_cnveg_carbonflux_inst%dwt_prod100c_gain_col(c) - prod100_c13flux(p)/dt
+                c13_cnveg_carbonflux_inst%dwt_productc_gain_col(c) = &
+                     c13_cnveg_carbonflux_inst%dwt_productc_gain_col(c) + &
+                     c13_cnveg_carbonflux_inst%dwt_productc_gain_patch(p)
              endif
              
              if ( use_c14 ) then
                 ! C14 column-level flux updates
                 c14_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) = &
                      c14_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) - conv_c14flux(p)/dt
-                c14_cnveg_carbonflux_inst%dwt_prod10c_gain_col(c) = &
-                     c14_cnveg_carbonflux_inst%dwt_prod10c_gain_col(c) - prod10_c14flux(p)/dt
-                c14_cnveg_carbonflux_inst%dwt_prod100c_gain_col(c) = &
-                     c14_cnveg_carbonflux_inst%dwt_prod100c_gain_col(c) - prod100_c14flux(p)/dt
+                c14_cnveg_carbonflux_inst%dwt_productc_gain_col(c) = &
+                     c14_cnveg_carbonflux_inst%dwt_productc_gain_col(c) + &
+                     c14_cnveg_carbonflux_inst%dwt_productc_gain_patch(p)
              endif
              
-             ! column-level N flux updates
              cnveg_nitrogenflux_inst%dwt_conv_nflux_col(c) = &
                   cnveg_nitrogenflux_inst%dwt_conv_nflux_col(c) - conv_nflux(p)/dt
-             cnveg_nitrogenflux_inst%dwt_prod10n_gain_col(c) = &
-                  cnveg_nitrogenflux_inst%dwt_prod10n_gain_col(c) - prod10_nflux(p)/dt
-             cnveg_nitrogenflux_inst%dwt_prod100n_gain_col(c) = &
-                  cnveg_nitrogenflux_inst%dwt_prod100n_gain_col(c) - prod100_nflux(p)/dt
-             
+             cnveg_nitrogenflux_inst%dwt_productn_gain_col(c) = &
+                  cnveg_nitrogenflux_inst%dwt_productn_gain_col(c) + &
+                  cnveg_nitrogenflux_inst%dwt_productn_gain_patch(p)
           end if
        end do
     end do
-    
+
     ! Deallocate patch-level flux arrays
     deallocate(dwt_leafc_seed)
     deallocate(dwt_leafn_seed)
@@ -2281,11 +2240,9 @@ contains
     deallocate(dwt_livecrootn_to_litter)
     deallocate(dwt_deadcrootn_to_litter)
     deallocate(conv_cflux)
-    deallocate(prod10_cflux)
-    deallocate(prod100_cflux)
+    deallocate(product_cflux)
     deallocate(conv_nflux)
-    deallocate(prod10_nflux)
-    deallocate(prod100_nflux)
+    deallocate(product_nflux)
              
     if ( use_c13 ) then
        deallocate(dwt_leafc13_seed)
@@ -2294,8 +2251,7 @@ contains
        deallocate(dwt_livecrootc13_to_litter)
        deallocate(dwt_deadcrootc13_to_litter)
        deallocate(conv_c13flux)
-       deallocate(prod10_c13flux)
-       deallocate(prod100_c13flux)
+       deallocate(product_c13flux)
     endif
              
     if ( use_c14 ) then
@@ -2305,8 +2261,7 @@ contains
        deallocate(dwt_livecrootc14_to_litter)
        deallocate(dwt_deadcrootc14_to_litter)
        deallocate(conv_c14flux)
-       deallocate(prod10_c14flux)
-       deallocate(prod100_c14flux)
+       deallocate(product_c14flux)
     endif
     
    end subroutine dyn_cnbal_patch

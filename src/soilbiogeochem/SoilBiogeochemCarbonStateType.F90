@@ -6,7 +6,7 @@ module SoilBiogeochemCarbonStateType
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, crop_prog, nlevdecomp
-  use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi
+  use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi, c3_r2
   use clm_varctl                         , only : iulog, use_vertsoilc, spinup_state 
   use landunit_varcon                    , only : istcrop, istsoil
   use abortutils                         , only : endrun
@@ -449,9 +449,6 @@ contains
     real(r8), pointer :: ptr2d(:,:) ! temp. pointers for slicing larger arrays
     real(r8), pointer :: ptr1d(:)   ! temp. pointers for slicing larger arrays
     character(len=128) :: varname   ! temporary
-    real(r8) :: c3_del13c           ! typical del13C for C3 photosynthesis (permil, relative to PDB)
-    real(r8) :: c3_r1               ! isotope ratio (13c/12c) for C3 photosynthesis
-    real(r8) :: c3_r2               ! isotope ratio (13c/[12c+13c]) for C3 photosynthesis
     logical  :: readvar
     integer  :: idata
     logical  :: exit_spinup  = .false.
@@ -461,10 +458,6 @@ contains
     ! flags for comparing the model and restart decomposition cascades
     integer  :: decomp_cascade_state, restart_file_decomp_cascade_state 
     !------------------------------------------------------------------------
-
-    c3_del13c = -28._r8
-    c3_r1 = SHR_CONST_PDB + ((c3_del13c*SHR_CONST_PDB)/1000._r8)
-    c3_r2 = c3_r1/(1._r8 + c3_r1)
 
     if (carbon_type == 'c12') then
 

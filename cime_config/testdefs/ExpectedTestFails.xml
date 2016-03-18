@@ -15,6 +15,8 @@
    <entry bugz="2279" >RUN SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PTCLM45.yellowstone_pgi.clm-USUMB</entry>
 
 
+   <entry bugz="2256" >RUN ERP_Ly5.1x1_numaIA.ICRUCLM50BGCCROP.hobart_nag.clm-monthly</entry>
+   <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.I1850CLM45BGC.hobart_nag.clm-default</entry>
    <entry bugz="2258" >RUN ERP_Ly5.1x1_numaIA.ICRUCLM50BGCCROP.hobart_nag.clm-clm50BGCCROPmonthly</entry>
 
 </expectedFails> 

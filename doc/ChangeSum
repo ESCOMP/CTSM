@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_8_r173    sacks 03/17/2016 Major refactor of CN Products
    clm4_5_8_r172    sacks 03/08/2016 Exclude land use and product pools / fluxes from CN summary diagnostics
    clm4_5_8_r171     erik 03/02/2016 Backout COMP_RUN_BARRIERS setting, and remove all ED tests from testlist (as they all fail)
    clm4_5_8_r170    sacks 02/28/2016 Add a wrapper for CN Vegetation

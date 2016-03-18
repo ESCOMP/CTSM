@@ -3,6 +3,8 @@ module restUtilMod
   !-----------------------------------------------------------------------
   ! provies generic routines and types for use with restart files
   !
+#include "shr_assert.h"
+  use shr_log_mod , only: errMsg => shr_log_errMsg
   use shr_kind_mod, only: r8=>shr_kind_r8, r4 => shr_kind_r4, i4=>shr_kind_i4
   use shr_sys_mod,  only: shr_sys_abort
   use spmdMod,      only: masterproc
@@ -35,6 +37,10 @@ module restUtilMod
   integer,parameter, public :: iflag_switchdim   = 1
 
   public :: restartvar
+
+  ! Set values of a missing restart field from a template field, with some constant
+  ! multiplier
+  public :: set_missing_from_template
 
   private :: is_restart
 
@@ -485,6 +491,42 @@ contains
     end if
 
   end subroutine restartvar_2d_{TYPE}_bounds
+
+  !-----------------------------------------------------------------------
+  subroutine set_missing_from_template(my_var, template_var, multiplier)
+    !
+    ! !DESCRIPTION:
+    ! Set values of a missing restart field from a template field, with some constant
+    ! multiplier
+    !
+    ! !USES:
+    use shr_infnan_mod, only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(out) :: my_var(:)
+    real(r8), intent(in)  :: template_var(:)
+    real(r8), intent(in)  :: multiplier
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'set_missing_from_template'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(template_var) == ubound(my_var)), errMsg(__FILE__, __LINE__))
+
+    do i = 1, size(my_var)
+       if (isnan(template_var(i))) then
+          my_var(i) = nan
+       else if (template_var(i) == spval) then
+          my_var(i) = spval
+       else
+          my_var(i) = template_var(i) * multiplier
+       end if
+    end do
+
+  end subroutine set_missing_from_template
+
 
 
   !-----------------------------------------------------------------------

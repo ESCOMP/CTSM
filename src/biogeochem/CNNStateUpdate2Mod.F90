@@ -193,9 +193,7 @@ contains
          ns_veg%livestemn_patch(p) = ns_veg%livestemn_patch(p)                   &
               - nf_veg%hrv_livestemn_to_litter_patch(p) * dt
          ns_veg%deadstemn_patch(p) = ns_veg%deadstemn_patch(p)                   &
-              - nf_veg%hrv_deadstemn_to_prod10n_patch(p) * dt
-         ns_veg%deadstemn_patch(p) = ns_veg%deadstemn_patch(p)                   &
-              - nf_veg%hrv_deadstemn_to_prod100n_patch(p)* dt
+              - nf_veg%wood_harvestn_patch(p) * dt
          ns_veg%livecrootn_patch(p) = ns_veg%livecrootn_patch(p)                 &
               - nf_veg%hrv_livecrootn_to_litter_patch(p) * dt
          ns_veg%deadcrootn_patch(p) = ns_veg%deadcrootn_patch(p)                 &
