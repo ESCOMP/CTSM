@@ -171,12 +171,13 @@ contains
                                          soilbiogeochem_nitrogenflux_inst,canopystate_inst)
     !
     ! !USES:
-    use clm_varctl       , only: cnallocate_carbon_only
+    use clm_varctl       , only: cnallocate_carbon_only, iulog
     use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
     use clm_varcon       , only: nitrif_n2o_loss_frac
     use CNSharedParamsMod, only: use_fun
     use CNFUNMod         , only: CNFUN
     use subgridAveMod    , only: p2c_2d
+    use perf_mod         , only : t_startf, t_stopf
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds
@@ -203,6 +204,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: c,p,l,pi,j                                            ! indices
     integer  :: fc                                                    ! filter column index
+    logical :: local_use_fun                                          ! local version of use_fun
     real(r8) :: compet_plant_no3                                      ! (unitless) relative compettiveness of plants for NO3
     real(r8) :: compet_plant_nh4                                      ! (unitless) relative compettiveness of plants for NH4
     real(r8) :: compet_decomp_no3                                     ! (unitless) relative competitiveness of immobilizers for NO3
@@ -275,6 +277,8 @@ contains
       ! column loops to resolve plant/heterotroph competition for mineral N
 
       sminn_to_plant_new(bounds%begc:bounds%endc)  =  0._r8
+
+      local_use_fun = use_fun
 
       if (.not. use_nitrif_denitrif) then
 
@@ -357,7 +361,8 @@ contains
             end do
          end do
 
-         if ( use_fun ) then
+         if ( local_use_fun ) then
+            call t_startf( 'CNFUN' )
             call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstate_inst                 ,&
                       waterflux_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
@@ -367,6 +372,7 @@ contains
                       cnveg_nitrogenflux_inst%sminn_to_plant_fun_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                       soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_vr_col(bounds%begc:bounds%endc,1:nlevdecomp), &
                       'unity')
+            call t_stopf( 'CNFUN' )
          end if
 
          ! sum up N fluxes to plant
@@ -374,7 +380,7 @@ contains
             do fc=1,num_soilc
                c = filter_soilc(fc)    
                sminn_to_plant(c) = sminn_to_plant(c) + sminn_to_plant_vr(c,j) * dzsoi_decomp(j)
-               if ( use_fun ) then
+               if ( local_use_fun ) then
                   if (sminn_to_plant_fun_vr(c,j).gt.sminn_to_plant_vr(c,j)) then
                       sminn_to_plant_fun_vr(c,j)  = sminn_to_plant_vr(c,j)
                   end if
@@ -427,7 +433,7 @@ contains
             do fc=1,num_soilc
                c = filter_soilc(fc)    
                sminn_to_plant(c) = sminn_to_plant(c) + sminn_to_plant_vr(c,j) * dzsoi_decomp(j)
-               if ( .not. use_fun ) then
+               if ( .not. local_use_fun ) then
                   sum_ndemand_vr(c,j) = potential_immob_vr(c,j) + sminn_to_plant_vr(c,j)
                else
                   sminn_to_plant_new(c)  = sminn_to_plant_new(c)   + sminn_to_plant_fun_vr(c,j) * dzsoi_decomp(j)
@@ -442,7 +448,7 @@ contains
          do j = 1, nlevdecomp
             do fc=1,num_soilc
                c = filter_soilc(fc)    
-               if ( .not. use_fun ) then
+               if ( .not. local_use_fun ) then
                   if ((sminn_to_plant_vr(c,j) + actual_immob_vr(c,j))*dt < sminn_vr(c,j)) then
                      sminn_to_denit_excess_vr(c,j) = max(bdnr*((sminn_vr(c,j)/dt) - sum_ndemand_vr(c,j)),0._r8)
                   else
@@ -472,7 +478,7 @@ contains
             ! calculate the fraction of potential growth that can be
             ! acheived with the N available to plants      
             if (plant_ndemand(c) > 0.0_r8) then
-               if ( .not. use_fun ) then
+               if ( .not. local_use_fun ) then
                   fpg(c) = sminn_to_plant(c) / plant_ndemand(c)
                else
                   fpg(c) = sminn_to_plant_new(c) / plant_ndemand(c)
@@ -544,8 +550,13 @@ contains
                   nlimit_nh4(c,j) = 0
                   fpi_nh4_vr(c,j) = 1.0_r8
                   actual_immob_nh4_vr(c,j) = potential_immob_vr(c,j)
-                  smin_nh4_to_plant_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
-
+                  !RF added new term. 
+                  if ( .not. local_use_fun ) then
+                     smin_nh4_to_plant_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
+                  else
+                     smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j)
+                  
+                  end if
                   f_nit_vr(c,j) = pot_f_nit_vr(c,j)
 
                else
@@ -555,10 +566,19 @@ contains
                   ! soil mineral NH4 resource.
                   nlimit_nh4(c,j) = 1
                   if (sum_nh4_demand(c,j) > 0.0_r8) then
+                  ! RF microbes compete based on the hypothesised plant demand. 
                      actual_immob_nh4_vr(c,j) = min((smin_nh4_vr(c,j)/dt)*(potential_immob_vr(c,j)* &
                           compet_decomp_nh4 / sum_nh4_demand_scaled(c,j)), potential_immob_vr(c,j))
-                     smin_nh4_to_plant_vr(c,j) = min((smin_nh4_vr(c,j)/dt)*(plant_ndemand(c)* &
+                                                 
+                     if ( .not. local_use_fun ) then
+                         smin_nh4_to_plant_vr(c,j) = min((smin_nh4_vr(c,j)/dt)*(plant_ndemand(c)* &
                           nuptake_prof(c,j)*compet_plant_nh4 / sum_nh4_demand_scaled(c,j)), plant_ndemand(c)*nuptake_prof(c,j))
+                          
+                     else
+                        ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
+                        smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j)
+                     end if
+                    
                      f_nit_vr(c,j) =  min((smin_nh4_vr(c,j)/dt)*(pot_f_nit_vr(c,j)*compet_nit / &
                           sum_nh4_demand_scaled(c,j)), pot_f_nit_vr(c,j))
                   else
@@ -575,9 +595,9 @@ contains
 
                end if
           
-               ! next compete for no3
               
-               if(.not.use_fun)then
+              
+               if(.not.local_use_fun)then
                    sum_no3_demand(c,j) = (plant_ndemand(c)*nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j)) + &
                   (potential_immob_vr(c,j)-actual_immob_nh4_vr(c,j)) + pot_f_denit_vr(c,j)
                    sum_no3_demand_scaled(c,j) = (plant_ndemand(c)*nuptake_prof(c,j) &
@@ -599,13 +619,17 @@ contains
                   nlimit_no3(c,j) = 1
                   fpi_no3_vr(c,j) = 1.0_r8 -  fpi_nh4_vr(c,j)
                   actual_immob_no3_vr(c,j) = (potential_immob_vr(c,j)-actual_immob_nh4_vr(c,j))
-                  if(.not.use_fun)then
+                  if(.not.local_use_fun)then
                      smin_no3_to_plant_vr(c,j) = (plant_ndemand(c)*nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j))
                   else
                      ! This restricts the N uptake of a single layer to the value determined from the total demands and the 
                      ! hypothetical uptake profile above. Which is a strange thing to do, since that is independent of FUN
                      ! do we need this at all? 
                      smin_no3_to_plant_vr(c,j) = plant_ndemand(c)*nuptake_prof(c,j)
+                     ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
+                     if ( local_use_fun ) then
+                        smin_no3_to_plant_vr(c,j) = smin_no3_vr(c,j)/dt - actual_immob_no3_vr(c,j)
+                     end if
                   endif
                   
 
@@ -619,7 +643,7 @@ contains
                   nlimit_no3(c,j) = 1
                                   
                   if (sum_no3_demand(c,j) > 0.0_r8) then
-                     if(.not.use_fun)then
+                     if(.not.local_use_fun)then
                         actual_immob_no3_vr(c,j) = min((smin_no3_vr(c,j)/dt)*((potential_immob_vr(c,j)- &
                         actual_immob_nh4_vr(c,j))*compet_decomp_no3 / sum_no3_demand_scaled(c,j)), &
                                   potential_immob_vr(c,j)-actual_immob_nh4_vr(c,j))
@@ -637,9 +661,13 @@ contains
         
                         smin_no3_to_plant_vr(c,j) = (smin_no3_vr(c,j)/dt)*((plant_ndemand(c)* &
                                   nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j))*compet_plant_no3 / sum_no3_demand_scaled(c,j))
-        
+                                  
+                        ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
+                        smin_no3_to_plant_vr(c,j) = (smin_no3_vr(c,j) / dt) - actual_immob_no3_vr(c,j)
+                        
                         f_denit_vr(c,j) = min((smin_no3_vr(c,j)/dt)*(pot_f_denit_vr(c,j)*compet_denit / &
                         sum_no3_demand_scaled(c,j)), pot_f_denit_vr(c,j))
+  
                      end if ! use_fun
 
                   else ! no no3 demand. no uptake fluxes.
@@ -698,12 +726,15 @@ contains
             end do
          end do
 
-         if ( use_fun ) then
+         if ( local_use_fun ) then
+            call t_startf( 'CNFUN' )
             call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstate_inst                 ,&
                       waterflux_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
                       soilbiogeochem_nitrogenflux_inst,soilbiogeochem_carbonflux_inst,canopystate_inst,      &
                       soilbiogeochem_nitrogenstate_inst)
+                      
+            ! sminn_to_plant_fun is output of actual N uptake from FUN
             call p2c_2d(bounds,nlevdecomp, &
                        cnveg_nitrogenflux_inst%sminn_to_plant_fun_no3_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                        soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_no3_vr_col(bounds%begc:bounds%endc,1:nlevdecomp),&
@@ -713,11 +744,12 @@ contains
                        cnveg_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                        soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_col(bounds%begc:bounds%endc,1:nlevdecomp),&
                        'unity')
+            call t_stopf( 'CNFUN' )
          end if
 
 
 
-         if(.not.use_fun)then
+         if(.not.local_use_fun)then
             do fc=1,num_soilc
                c = filter_soilc(fc)
                ! sum up N fluxes to plant after initial competition
@@ -736,21 +768,21 @@ contains
                sminn_to_plant(c) = 0._r8 !this isn't use in fun. 
                do j = 1, nlevdecomp
                   if ((sminn_to_plant_fun_no3_vr(c,j)-smin_no3_to_plant_vr(c,j)).gt.0.0000000000001_r8) then
-                      write(*,*) 'problem with limitations on no3 uptake', &
+                      write(iulog,*) 'problem with limitations on no3 uptake', &
                                  sminn_to_plant_fun_no3_vr(c,j),smin_no3_to_plant_vr(c,j)
                       call endrun("too much NO3 uptake predicted by FUN")
                   end if
                   if ((sminn_to_plant_fun_nh4_vr(c,j)-smin_nh4_to_plant_vr(c,j)).gt.0.0000000000001_r8) then
-                      write(*,*) 'problem with limitations on nh4 uptake', &
+                      write(iulog,*) 'problem with limitations on nh4 uptake', &
                                   sminn_to_plant_fun_nh4_vr(c,j),smin_nh4_to_plant_vr(c,j)
-                      call endrun("too much NO3 uptake predicted by FUN")
+                      call endrun("too much NH4 uptake predicted by FUN")
                   end if
                end do
             end do
 
          end if
 
-         if(.not.use_fun)then
+         if(.not.local_use_fun)then
             ! give plants a second pass to see if there is any mineral N left over with which to satisfy residual N demand.
             ! first take frm nh4 pool; then take from no3 pool
             do fc=1,num_soilc
@@ -833,7 +865,19 @@ contains
             end do
    
          else !use_fun
-
+         !calculate maximum N available to plants. 
+            do fc=1,num_soilc
+               c = filter_soilc(fc)
+               sminn_to_plant(c) = 0._r8
+            end do
+            do j = 1, nlevdecomp
+               do fc=1,num_soilc
+                  c = filter_soilc(fc)
+                  sminn_to_plant_vr(c,j) = smin_nh4_to_plant_vr(c,j) + smin_no3_to_plant_vr(c,j)
+                  sminn_to_plant(c) = sminn_to_plant(c) + (sminn_to_plant_vr(c,j)) * dzsoi_decomp(j)
+               end do
+            end do
+   
 
              ! add up fun fluxes from SMINN to plant. 
              do j = 1, nlevdecomp
@@ -841,11 +885,12 @@ contains
                    c = filter_soilc(fc)
                    sminn_to_plant_new(c)  = sminn_to_plant_new(c) + &
                              (sminn_to_plant_fun_no3_vr(c,j) + sminn_to_plant_fun_nh4_vr(c,j)) * dzsoi_decomp(j)
+                      
                 end do
              end do
-         end if !use_fun
-
-
+                             
+                              
+         end if !use_f
          ! sum up N fluxes to immobilization
          do fc=1,num_soilc
             c = filter_soilc(fc)
@@ -859,13 +904,17 @@ contains
                potential_immob(c) = potential_immob(c) + potential_immob_vr(c,j) * dzsoi_decomp(j)
             end do
          end do
-
+        
+        
+     
+       
          do fc=1,num_soilc
             c = filter_soilc(fc)   
             ! calculate the fraction of potential growth that can be
             ! acheived with the N available to plants
             ! calculate the fraction of immobilization realized (for diagnostic purposes)
-            if(.not.use_fun)then !FUN has no concept of FPG.
+            if(.not.local_use_fun)then !FUN has no concept of FPG.
+            
                if (plant_ndemand(c) > 0.0_r8) then
                   fpg(c) = sminn_to_plant(c) / plant_ndemand(c)
                else

@@ -339,7 +339,7 @@ contains
 
     call clm_instReadNML( NLFilename )
     allocate(nutrient_competition_method, &
-         source=create_nutrient_competition_method())
+         source=create_nutrient_competition_method(bounds_proc))
 
     if (use_cn .or. use_ed) then
        call readParameters(nutrient_competition_method)

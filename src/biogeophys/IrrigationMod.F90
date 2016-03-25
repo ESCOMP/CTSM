@@ -523,7 +523,7 @@ contains
        this%qflx_irrig_noh2olimit_patch(p) = this%qflx_irrig_patch(p)
 
        if (limit_irrigation) then
-          if (volr(g) < (this%params%irrig_volr_threshold*grc%area(g)*1e6)) then
+          if (volr(g) < (this%params%irrig_volr_threshold*grc%area(g)*1e6_r8)) then
              this%qflx_irrig_patch(p) = 0._r8
           end if
        end if

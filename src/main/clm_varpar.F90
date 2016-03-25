@@ -6,6 +6,7 @@ module clm_varpar
   !
   ! !USES:
   use shr_kind_mod , only: r8 => shr_kind_r8
+  use spmdMod      , only: masterproc
   use clm_varctl   , only: use_extralakelayers, use_vertsoilc, use_crop
   use clm_varctl   , only: use_century_decomp, use_c13, use_c14
   use clm_varctl   , only: iulog, create_crop_landunit, irrigate
@@ -143,7 +144,7 @@ contains
 
     nlevsoifl   =  10
     nlevurb     =  5
-    write(iulog, *) 'soil_layerstruct varpar ',soil_layerstruct
+    if ( masterproc ) write(iulog, *) 'soil_layerstruct varpar ',soil_layerstruct
     if ( soil_layerstruct == '10SL_3.5m' ) then
        nlevsoi     =  nlevsoifl
        nlevgrnd    =  15
@@ -158,7 +159,7 @@ contains
       nlevsoi     =  20 
       nlevgrnd    =  nlevsoi+5
     endif
-    write(iulog, *) 'soil_layerstruct varpar ',soil_layerstruct,nlevsoi,nlevgrnd
+    if ( masterproc ) write(iulog, *) 'soil_layerstruct varpar ',soil_layerstruct,nlevsoi,nlevgrnd
 
     if (use_vichydro) then
        nlayert     =  nlayer + (nlevgrnd -nlevsoi)
@@ -180,13 +181,15 @@ contains
        nlevlak     =  25     ! number of lake layers (Yields better results for site simulations)
     end if
 
-    write(iulog, *) 'CLM varpar subsurface discretization levels '
-    write(iulog, '(a, i3)') '    nlevsoi = ', nlevsoi
-    write(iulog, '(a, i3)') '    nlevgrnd = ', nlevgrnd
-    write(iulog, '(a, i3)') '    nlevdecomp = ', nlevdecomp
-    write(iulog, '(a, i3)') '    nlevdecomp_full = ', nlevdecomp_full
-    write(iulog, '(a, i3)') '    nlevlak = ', nlevlak
-    write(iulog, *)
+    if ( masterproc )then
+       write(iulog, *) 'CLM varpar subsurface discretization levels '
+       write(iulog, '(a, i3)') '    nlevsoi = ', nlevsoi
+       write(iulog, '(a, i3)') '    nlevgrnd = ', nlevgrnd
+       write(iulog, '(a, i3)') '    nlevdecomp = ', nlevdecomp
+       write(iulog, '(a, i3)') '    nlevdecomp_full = ', nlevdecomp_full
+       write(iulog, '(a, i3)') '    nlevlak = ', nlevlak
+       write(iulog, *)
+    end if
 
     if (use_century_decomp) then
        ndecomp_pools = 7

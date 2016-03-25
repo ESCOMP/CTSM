@@ -330,6 +330,7 @@ module CNVegCarbonFluxType
      ! Dynamic landcover fluxnes
      real(r8), pointer :: landuseflux_col(:) ! (gC/m2/s) dwt_closs+product_closs
      real(r8), pointer :: npp_Nactive_patch                         (:)     ! C used by mycorrhizal uptake    (gC/m2/s)
+     real(r8), pointer :: npp_burnedoff_patch                       (:)     ! C that cannot be used for N uptake   (gC/m2/s)
      real(r8), pointer :: npp_Nnonmyc_patch                         (:)     ! C used by non-myc uptake        (gC/m2/s)
      real(r8), pointer :: npp_Nam_patch                             (:)     ! C used by AM plant              (gC/m2/s)
      real(r8), pointer :: npp_Necm_patch                            (:)     ! C used by ECM plant             (gC/m2/s)
@@ -347,6 +348,7 @@ module CNVegCarbonFluxType
      real(r8), pointer :: npp_growth_patch                         (:)     ! Total C u for growth in FUN      (gC/m2/s)   
      real(r8), pointer :: leafc_change_patch                        (:)     ! Total used C from leaves        (gC/m2/s)
      real(r8), pointer :: soilc_change_patch                        (:)     ! Total used C from soil          (gC/m2/s)
+ 
 !     real(r8), pointer :: soilc_change_col                          (:)     ! Total used C from soil          (gC/m2/s)
    contains
 
@@ -674,6 +676,7 @@ contains
     allocate(this%net_carbon_exchange_col (begc:endc)) ; this%net_carbon_exchange_col (:) = nan
     allocate(this%landuseflux_col         (begc:endc)) ; this%landuseflux_col         (:) = nan
     allocate(this%npp_Nactive_patch       (begp:endp)) ; this%npp_Nactive_patch       (:) = nan
+    allocate(this%npp_burnedoff_patch     (begp:endp)) ; this%npp_burnedoff_patch     (:) = nan
     allocate(this%npp_Nnonmyc_patch       (begp:endp)) ; this%npp_Nnonmyc_patch       (:) = nan
     allocate(this%npp_Nam_patch           (begp:endp)) ; this%npp_Nam_patch           (:) = nan
     allocate(this%npp_Necm_patch          (begp:endp)) ; this%npp_Necm_patch          (:) = nan
@@ -1493,6 +1496,11 @@ contains
           call hist_addfld1d (fname='NPP_NACTIVE', units='gC/m^2/s',     &
                avgflag='A', long_name='Mycorrhizal N uptake used C',     &
                ptr_patch=this%npp_Nactive_patch)
+  
+          this%npp_burnedoff_patch(begp:endp)  = spval
+          call hist_addfld1d (fname='NPP_BURNEDOFF', units='gC/m^2/s',     &
+               avgflag='A', long_name='C that cannot be used for N uptake',     &
+               ptr_patch=this%npp_burnedoff_patch)
   
           this%npp_Nnonmyc_patch(begp:endp)  = spval
           call hist_addfld1d (fname='NPP_NNONMYC', units='gC/m^2/s',     &
@@ -3649,6 +3657,7 @@ contains
        this%coutputs_patch(i)      = value_patch
        this%fire_closs_patch(i)    = value_patch
        this%npp_Nactive_patch(i)     = value_patch
+       this%npp_burnedoff_patch(i)     = value_patch
        this%npp_Nnonmyc_patch(i)     = value_patch
        this%npp_Nam_patch(i)         = value_patch
        this%npp_Necm_patch(i)        = value_patch
@@ -3859,38 +3868,25 @@ contains
                this%mr_patch(p)      + &
                this%gr_patch(p)      + &
                this%xsmrpool_to_atm_patch(p) ! xsmr... is -ve (slevis)
-       else
-          if ( .not. use_fun ) then
+       else         
              this%ar_patch(p) =           &
                   this%mr_patch(p)      + &
-                  this%gr_patch(p)
-          else
-             this%ar_patch(p) =           &
-                  this%mr_patch(p)      + &
-                  this%gr_patch(p)      + &
-                  this%soilc_change_patch(p)
-                  
-          end if
+                  this%gr_patch(p)         
        end if
-
+       
+       if (use_fun) then
+          this%ar_patch(p) = this%ar_patch(p) + this%soilc_change_patch(p)
+       end if
+      
        ! gross primary production (GPP)
        this%gpp_patch(p) = &
             this%psnsun_to_cpool_patch(p) + &
             this%psnshade_to_cpool_patch(p)
 
-       ! net primary production (NPP)
-       if ( .not. use_fun ) then
-          this%npp_patch(p) =      &
+       ! net primary production (NPP)      
+       this%npp_patch(p) =      &
                this%gpp_patch(p) - &
-               this%ar_patch(p)
-       else
-          this%npp_patch(p) =      &
-               this%gpp_patch(p) - &
-               this%ar_patch(p)
-          this%npp_patch(p) =      &
-               this%npp_patch(p) !- &
-              
-       end if
+               this%ar_patch(p)     
 
        ! root respiration (RR)
        this%rr_patch(p) =         &

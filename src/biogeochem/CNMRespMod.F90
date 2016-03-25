@@ -143,6 +143,8 @@ contains
     ! !DESCRIPTION:
     !
     ! !ARGUMENTS:
+    use clm_varcon  , only : tfrz
+    
     type(bounds_type)              , intent(in)    :: bounds          
     integer                        , intent(in)    :: num_soilc       ! number of soil points in column filter
     integer                        , intent(in)    :: filter_soilc(:) ! column filter for soil points
@@ -162,6 +164,7 @@ contains
     real(r8):: br      ! base rate (gC/gN/s)
     real(r8):: br_root ! root base rate (gC/gN/s)
     real(r8):: q10     ! temperature dependence
+
     real(r8):: tc      ! temperature correction, 2m air temp (unitless)
     real(r8):: tcsoi(bounds%begc:bounds%endc,nlevgrnd) ! temperature correction by soil layer (unitless)
     !-----------------------------------------------------------------------
@@ -180,8 +183,11 @@ contains
          t_soisno       =>    temperature_inst%t_soisno_col             , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
          t_ref2m        =>    temperature_inst%t_ref2m_patch            , & ! Input:  [real(r8) (:)   ]  2 m height surface air temperature (Kelvin)       
 
+         t10            => temperature_inst%t_a10_patch                 , & ! Input:  [real(r8) (:)   ]  10-day running mean of the 2 m temperature (K)
+ 
          lmrsun         =>    photosyns_inst%lmrsun_patch               , & ! Input:  [real(r8) (:)   ]  sunlit leaf maintenance respiration rate (umol CO2/m**2/s)
          lmrsha         =>    photosyns_inst%lmrsha_patch               , & ! Input:  [real(r8) (:)   ]  shaded leaf maintenance respiration rate (umol CO2/m**2/s)
+         rootstem_acc   =>    photosyns_inst%rootstem_acc               , & ! Input:  [logical        ]  root and stem acclimation switch
 
          frootn         =>    cnveg_nitrogenstate_inst%frootn_patch     , & ! Input:  [real(r8) (:)   ]  (gN/m2) fine root N                               
          livestemn      =>    cnveg_nitrogenstate_inst%livestemn_patch  , & ! Input:  [real(r8) (:)   ]  (gN/m2) live stem N                               
@@ -204,7 +210,7 @@ contains
       ! set constants
       br      = params_inst%br
       br_root = params_inst%br_root
-
+     
       ! Peter Thornton: 3/13/09 
       ! Q10 was originally set to 2.0, an arbitrary choice, but reduced to 1.5 as part of the tuning
       ! to improve seasonal cycle of atmospheric CO2 concentration in global
@@ -231,6 +237,15 @@ contains
          ! Leaf and live wood MR
 
          tc = Q10**((t_ref2m(p)-SHR_CONST_TKFRZ - 20.0_r8)/10.0_r8)
+         
+         !RF: acclimation of root and stem respiration fluxes
+         ! n.b. we do not yet know if this is defensible scientifically (awaiting data analysis)
+         ! turning this on will increase R and decrease productivity in boreal forests, A LOT. :)
+
+         if(rootstem_acc)then 
+           br      = br      * 10._r8**(-0.00794_r8*((t10(p)-tfrz)-25._r8))
+           br_root = br_root * 10._r8**(-0.00794_r8*((t10(p)-tfrz)-25._r8))
+         end if
 
          if (frac_veg_nosno(p) == 1) then
 
@@ -265,8 +280,11 @@ contains
             ! layer.  This is used with the layer temperature correction
             ! to estimate the total fine root maintenance respiration as a
             ! function of temperature and N content.
-
+            if(rootstem_acc)then
+               br_root = br_root * 10._r8**(-0.00794_r8*((t10(p)-tfrz)-25._r8))
+            end if
             froot_mr(p) = froot_mr(p) + frootn(p)*br_root*tcsoi(c,j)*rootfr(p,j)
+            
          end do
       end do
 

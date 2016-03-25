@@ -672,7 +672,6 @@ contains
     ! On the radiation time step, column-level carbon summary calculations
     !
     ! !USES:
-    use CNSharedParamsMod,  only : use_fun
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonflux_type)           :: this
     type(bounds_type)               , intent(in)    :: bounds          
@@ -769,19 +768,11 @@ contains
     ! total heterotrophic respiration (HR)
     do fc = 1,num_soilc
        c = filter_soilc(fc)
-       if ( .not. use_fun )then
+       
           this%hr_col(c) = &
                this%lithr_col(c) + &
                this%somhr_col(c)
-          this%hr_col(c) = &
-               this%lithr_col(c) + &
-               this%somhr_col(c)
-       else
-          this%hr_col(c) = &
-               this%lithr_col(c) + &
-               this%somhr_col(c) !+ &
-
-       end if
+       
     end do
 
   end subroutine Summary

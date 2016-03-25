@@ -221,10 +221,6 @@ module pftconMod
      real(r8), allocatable :: ffrootcn      (:)   ! C:N during grain fill; fine root
      real(r8), allocatable :: fstemcn       (:)   ! C:N during grain fill; stem
 
-     real(r8), allocatable :: i_vc          (:)   
-     real(r8), allocatable :: s_vc          (:)   
-     real(r8), allocatable :: i_vca         (:)   
-     real(r8), allocatable :: s_vca         (:)   
      real(r8), allocatable :: i_vcad        (:)   
      real(r8), allocatable :: s_vcad        (:)   
      real(r8), allocatable :: i_flnr        (:)   
@@ -250,6 +246,11 @@ module pftconMod
      real(r8), allocatable :: kn_nonmyc     (:)   ! A non-mycorrhizal uptake parameter
      real(r8), allocatable :: kr_resorb     (:)   ! A retrasnlcation parameter
      real(r8), allocatable :: perecm        (:)   ! The fraction of ECM-associated PFT 
+     real(r8), allocatable :: fun_cn_flex_a (:)   ! Parameter a of FUN-flexcn link code (def 5)
+     real(r8), allocatable :: fun_cn_flex_b (:)   ! Parameter b of FUN-flexcn link code (def 200)
+     real(r8), allocatable :: fun_cn_flex_c (:)   ! Parameter b of FUN-flexcn link code (def 80)         
+     real(r8), allocatable :: FUN_fracfixers(:)   ! Fraction of C that can be used for fixation.    
+
 
      ! pft parameters for dynamic root code
      real(r8), allocatable :: root_dmx(:)     !maximum root depth
@@ -398,10 +399,6 @@ contains
     allocate( this%fleafcn       (0:mxpft) )  
     allocate( this%ffrootcn      (0:mxpft) ) 
     allocate( this%fstemcn       (0:mxpft) )  
-    allocate( this%i_vc          (0:mxpft) )
-    allocate( this%s_vc          (0:mxpft) )
-    allocate( this%i_vca         (0:mxpft) )
-    allocate( this%s_vca         (0:mxpft) )
     allocate( this%i_vcad        (0:mxpft) )
     allocate( this%s_vcad        (0:mxpft) )
     allocate( this%i_flnr        (0:mxpft) )
@@ -424,7 +421,12 @@ contains
     allocate( this%kr_resorb     (0:mxpft) )
     allocate( this%perecm        (0:mxpft) )
     allocate( this%root_dmx      (0:mxpft) )
-
+    allocate( this%fun_cn_flex_a (0:mxpft) )
+    allocate( this%fun_cn_flex_b (0:mxpft) )
+    allocate( this%fun_cn_flex_c (0:mxpft) )
+    allocate( this%FUN_fracfixers(0:mxpft) )
+    
+ 
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -754,6 +756,18 @@ contains
     call ncd_io('perecm', this%perecm, 'read', ncid, readvar=readv,         posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
 
+    call ncd_io('fun_cn_flex_a', this%fun_cn_flex_a, 'read', ncid, readvar=readv,         posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
+    call ncd_io('fun_cn_flex_b', this%fun_cn_flex_b, 'read', ncid, readvar=readv,         posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
+    call ncd_io('fun_cn_flex_c', this%fun_cn_flex_c, 'read', ncid, readvar=readv,         posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+  
+    call ncd_io('FUN_fracfixers', this%FUN_fracfixers, 'read', ncid, readvar=readv,         posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
     call ncd_io('fertnitro', this%fertnitro, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
 
@@ -922,18 +936,6 @@ contains
     ! clm 5 nitrogen variables
     !
     if (use_flexibleCN) then
-       call ncd_io('i_vc', this%i_vc, 'read', ncid, readvar=readv) 
-       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
-       
-       call ncd_io('s_vc', this%s_vc, 'read', ncid, readvar=readv) 
-       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
-
-       call ncd_io('i_vca', this%i_vca, 'read', ncid, readvar=readv) 
-       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
-       
-       call ncd_io('s_vca', this%s_vca, 'read', ncid, readvar=readv) 
-       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
-       
        call ncd_io('i_vcad', this%i_vcad, 'read', ncid, readvar=readv) 
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__)) 
        

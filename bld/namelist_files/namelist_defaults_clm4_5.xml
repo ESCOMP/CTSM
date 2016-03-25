@@ -40,6 +40,26 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <repartition_rain_snow phys="clm5_0">.true.</repartition_rain_snow>
 <repartition_rain_snow phys="clm4_5">.false.</repartition_rain_snow>
 
+<!-- Root and stem acclimation -->
+<rootstem_acc phys="clm5_0">.false.</rootstem_acc>
+<rootstem_acc phys="clm4_5">.false.</rootstem_acc>
+
+<!-- Leaf acclimation -->
+<leaf_acc phys="clm5_0">.true.</leaf_acc>
+<leaf_acc phys="clm4_5">.false.</leaf_acc>
+
+<!-- Light inhibition of photosynthesis -->
+<light_inhibit phys="clm5_0">.true.</light_inhibit>
+<light_inhibit phys="clm4_5">.false.</light_inhibit>
+
+<!-- Light inhibition of photosynthesis -->
+<light_inhibit phys="clm5_0">.true.</light_inhibit>
+
+<!-- Method to calculate leaf maintenance respiration for canopy top at 25C -->
+<leafresp_method phys="clm5_0" use_cn=".true." >2</leafresp_method>
+<leafresp_method phys="clm4_5" use_cn=".true." >1</leafresp_method>
+<leafresp_method               use_cn=".false.">0</leafresp_method>
+
 <!-- Irrigation default -->
 <irrig>.false.</irrig>
 
@@ -74,7 +94,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <soil_layerstruct phys="clm5_0">20SL_8.5m</soil_layerstruct>
 <soil_layerstruct phys="clm4_5">10SL_3.5m</soil_layerstruct>
 
-<use_bedrock phys="clm5_0">.false.</use_bedrock>
+<use_bedrock phys="clm5_0">.true.</use_bedrock>
 <use_bedrock phys="clm4_5">.false.</use_bedrock>
 
 <!-- Rooting profile namelist defaults -->
@@ -147,7 +167,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Snow pack settings-->
 <nlevsno phys="clm5_0" >12</nlevsno>
 <nlevsno phys="clm4_5" >5</nlevsno>
-<h2osno_max phys="clm5_0" >20000.0</h2osno_max>
+<h2osno_max phys="clm5_0" >10000.0</h2osno_max>
 <h2osno_max phys="clm4_5" >1000.0</h2osno_max>
 <wind_dependent_snow_density phys="clm5_0" >.true.</wind_dependent_snow_density>
 <wind_dependent_snow_density phys="clm4_5" >.false.</wind_dependent_snow_density>
@@ -174,32 +194,45 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile                 >lnd/clm2/paramdata/clm_params.c151208.nc</paramfile>
-<paramfile use_ed=".true." >lnd/clm2/paramdata/clm_params.ED.c151023.nc</paramfile>
+<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.c160316.nc</paramfile>
+<paramfile phys="clm4_5" use_ed=".false.">lnd/clm2/paramdata/clm_params.c160225.nc</paramfile>
+<paramfile               use_ed=".true." >lnd/clm2/paramdata/clm_params.ED.c151023.nc</paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
 <!-- ========================================================================================  -->
-<use_flexibleCN>.false.</use_flexibleCN>
-<MM_Nuptake_opt use_flexibleCN=".true." >.true.</MM_Nuptake_opt>
-<dynamic_plant_alloc_opt use_flexibleCN=".true." >.false.</dynamic_plant_alloc_opt>
-<downreg_opt use_flexibleCN=".true." >.false.</downreg_opt>
-<plant_ndemand_opt use_flexibleCN=".true." >3</plant_ndemand_opt>
-<substrate_term_opt use_flexibleCN=".true." >.true.</substrate_term_opt>
-<nscalar_opt use_flexibleCN=".true." >.true.</nscalar_opt>
-<temp_scalar_opt use_flexibleCN=".true." >.true.</temp_scalar_opt>
-<CNratio_floating use_flexibleCN=".true." >.true.</CNratio_floating>
-<lnc_opt use_flexibleCN=".true." >.true.</lnc_opt>
-<reduce_dayl_factor use_flexibleCN=".true." >.false.</reduce_dayl_factor>
-<vcmax_opt use_flexibleCN=".true." >3</vcmax_opt>
-<CN_residual_opt use_flexibleCN=".true." >1</CN_residual_opt>
-<CN_partition_opt use_flexibleCN=".true." >1</CN_partition_opt>
-<carbon_excess_opt use_flexibleCN=".true." >0</carbon_excess_opt>
-<carbon_storage_excess_opt use_flexibleCN=".true." >0</carbon_storage_excess_opt>
-<CN_evergreen_phenology_opt use_flexibleCN=".true." >1</CN_evergreen_phenology_opt>
-<carbon_resp_opt use_flexibleCN=".true.">1</carbon_resp_opt>
+<use_flexibleCN phys="clm5_0" use_cn=".true.">.true.</use_flexibleCN>
+<use_flexibleCN phys="clm5_0"                >.false.</use_flexibleCN>
+<use_flexibleCN phys="clm4_5"                >.false.</use_flexibleCN>
 
-<use_luna>.false.</use_luna>
+<!-- LUNA model: Leaf Utilization of Nitrogen for Assimilation -->
+<use_luna phys="clm5_0" use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_luna>
+<use_luna phys="clm5_0"                                             >.false.</use_luna>
+<use_luna phys="clm4_5"                                             >.false.</use_luna>
+
+<!-- Flexible CN options -->
+<MM_Nuptake_opt             use_flexibleCN=".true." >.true.</MM_Nuptake_opt>
+<downreg_opt                use_flexibleCN=".true." >.false.</downreg_opt>
+<plant_ndemand_opt          use_flexibleCN=".true." >3</plant_ndemand_opt>
+<substrate_term_opt         use_flexibleCN=".true." >.true.</substrate_term_opt>
+<nscalar_opt                use_flexibleCN=".true." >.true.</nscalar_opt>
+<temp_scalar_opt            use_flexibleCN=".true." >.true.</temp_scalar_opt>
+<CNratio_floating           use_flexibleCN=".true." >.true.</CNratio_floating>
+<reduce_dayl_factor         use_flexibleCN=".true." >.false.</reduce_dayl_factor>
+<vcmax_opt                  use_flexibleCN=".true." >3</vcmax_opt>
+<CN_residual_opt            use_flexibleCN=".true." >1</CN_residual_opt>
+<CN_partition_opt           use_flexibleCN=".true." >1</CN_partition_opt>
+<CN_evergreen_phenology_opt use_flexibleCN=".true." >1</CN_evergreen_phenology_opt>
+<carbon_resp_opt            use_flexibleCN=".true." use_fun=".false.">1</carbon_resp_opt>
+<carbon_resp_opt            use_flexibleCN=".true." use_fun=".true." >0</carbon_resp_opt>
+
+
+<!-- LUNA options -->
+<!-- lnc_opt determines how nitrogen is made available for luna -->
+<!-- lnc_opt true means use leaf-N from BGC model -->
+<!-- lnc_opt false means base on LAI and CN ratio from parameter file -->
+<lnc_opt use_cn=".true."   >.true.</lnc_opt>
+<lnc_opt use_cn=".false."  >.false.</lnc_opt>
 
 <use_fertilizer>.false.</use_fertilizer>
 <use_fertilizer use_crop=".true." phys="clm4_5">.true.</use_fertilizer>
@@ -224,6 +257,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_dynroot phys="clm5_0" bgc_mode="cn">.false.</use_dynroot>
 <use_dynroot phys="clm5_0" bgc_mode="bgc">.false.</use_dynroot>
 
+<!-- Guardrail for ensuring leaf-Nitrogen doesn't go too small or negative on updates -->
+<use_nguardrail phys="clm4_5"                 >.false.</use_nguardrail>
+<use_nguardrail phys="clm5_0" use_cn=".false.">.false.</use_nguardrail>
+<use_nguardrail phys="clm5_0" use_cn=".true." >.true.</use_nguardrail>
 
 <!--
 
@@ -534,13 +571,14 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
  use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_rcp2.6_16pfts_simyr1850-2100_c160127.nc</flanduse_timeseries>
 
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
-<use_fun phys="clm5_0" use_cn=".true.">.false.</use_fun>
-<use_fun                              >.false.</use_fun>
+<use_fun phys="clm5_0" use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
+<use_fun                                                           >.false.</use_fun>
+
 <br_root phys="clm5_0" use_cn=".true." use_fun=".true.">2.525d-06</br_root>
 
 
 <!-- Scalar of leaf respiration to vcmax (used for SP mode and with luna)-->
-<leaf_mr_vcm phys="clm5_0" >0.032d00</leaf_mr_vcm> <!-- From Atkin 2015 -->
+<leaf_mr_vcm phys="clm5_0" >0.015d00</leaf_mr_vcm>
 <leaf_mr_vcm phys="clm4_5" >0.015d00</leaf_mr_vcm>
 
 <!-- SNICAR (SNow, ICe, and Aerosol Radiative model) datasets -->

@@ -209,7 +209,6 @@ module clm_varctl
   !  appropriate module.
   logical, public :: use_flexibleCN = .false.
   logical, public :: MM_Nuptake_opt = .false.
-  logical, public :: dynamic_plant_alloc_opt = .false.
   logical, public :: downreg_opt = .true.
   integer, public :: plant_ndemand_opt = 0
   logical, public :: substrate_term_opt = .true.
@@ -221,8 +220,6 @@ module clm_varctl
   integer, public :: vcmax_opt = 0
   integer, public :: CN_residual_opt = 0
   integer, public :: CN_partition_opt = 0
-  integer, public :: carbon_excess_opt = 0
-  integer, public :: carbon_storage_excess_opt = 0
   integer, public :: CN_evergreen_phenology_opt = 0
   integer, public :: carbon_resp_opt = 0
 
@@ -331,6 +328,8 @@ module clm_varctl
   logical, public :: use_vancouver       = .false.
   logical, public :: use_mexicocity      = .false.
   logical, public :: use_noio            = .false.
+
+  logical, public :: use_nguardrail      = .false.
 
   !----------------------------------------------------------
   ! To retrieve namelist

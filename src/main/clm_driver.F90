@@ -333,6 +333,7 @@ contains
 
        ! Update filters that depend on variables set in clm_drv_init
        
+       call t_startf('irrigation')
        call setExposedvegpFilter(bounds_clump, &
             canopystate_inst%frac_veg_nosno_patch(bounds_clump%begp:bounds_clump%endp))
 
@@ -340,6 +341,7 @@ contains
 
        call irrigation_inst%ApplyIrrigation(bounds_clump, &
             volr = atm2lnd_inst%volr_grc(bounds_clump%begg:bounds_clump%endg))
+       call t_stopf('irrigation')
 
        ! ============================================================================
        ! Canopy Hydrology
@@ -463,6 +465,7 @@ contains
             atm2lnd_inst, solarabs_inst, frictionvel_inst, temperature_inst, &
             energyflux_inst, waterstate_inst, waterflux_inst, lakestate_inst,&  
             humanindex_inst) 
+       call t_stopf('bgplake')
 
        ! ============================================================================
        ! Determine irrigation needed for future time steps
@@ -470,6 +473,7 @@ contains
 
        ! This needs to be called after btran is computed
 
+       call t_startf('irrigationneeded')
        call irrigation_inst%CalcIrrigationNeeded( &
             bounds             = bounds_clump, &
             num_exposedvegp    = filter(nc)%num_exposedvegp, &
@@ -481,6 +485,7 @@ contains
             t_soisno           = temperature_inst%t_soisno_col(bounds_clump%begc:bounds_clump%endc  , 1:nlevgrnd), &
             eff_porosity       = soilstate_inst%eff_porosity_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
             h2osoi_liq         = waterstate_inst%h2osoi_liq_col(bounds_clump%begc:bounds_clump%endc , 1:nlevgrnd))
+       call t_stopf('irrigationneeded')
 
        ! ============================================================================
        ! DUST and VOC emissions
@@ -514,12 +519,13 @@ contains
 
        ! Set lake temperature 
 
+       call t_startf('lakeTemp')
        call LakeTemperature(bounds_clump,                                             &
             filter(nc)%num_lakec, filter(nc)%lakec,                                   &
             filter(nc)%num_lakep, filter(nc)%lakep,                                   & 
             solarabs_inst, soilstate_inst, waterstate_inst, waterflux_inst, ch4_inst, &
             energyflux_inst, temperature_inst, lakestate_inst)
-       call t_stopf('bgplake')
+       call t_stopf('lakeTemp')
 
        ! Set soil/snow temperatures including ground temperature
 
@@ -685,15 +691,17 @@ contains
                 ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
 
        if ((.not. use_cn) .and. (.not. use_ed) .and. (doalb)) then 
+          call t_startf('SatellitePhenology')
           call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                waterstate_inst, canopystate_inst)
-             end if
+          call t_stopf('SatellitePhenology')
+       end if
 
        ! Ecosystem demography
 
        if (use_ed) then
           call ed_clm_inst%SetValues( bounds_clump, 0._r8 )
-          end if
+       end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
           
@@ -722,6 +730,7 @@ contains
 
        if (use_cn) then
 
+          call t_startf('EcosysDynPostDrainage')     
           call bgc_vegetation_inst%EcosystemDynamicsPostDrainage(bounds_clump, &
                filter(nc)%num_soilc, filter(nc)%soilc, &
                filter(nc)%num_soilp, filter(nc)%soilp, &
@@ -731,6 +740,7 @@ contains
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+          call t_stopf('EcosysDynPostDrainage')     
 
        end if
 
@@ -896,7 +906,7 @@ contains
     ! use_ed) then statement ... double check if this is required and why
 
     if (nstep > 0) then
-          call t_startf('accum')
+       call t_startf('accum')
 
        call atm2lnd_inst%UpdateAccVars(bounds_proc)
 
@@ -945,6 +955,7 @@ contains
     ! ============================================================================
 
     if (use_cn) then
+       call t_startf('endTSdynveg')
        nclumps = get_proc_clumps()
        !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
        do nc = 1,nclumps
@@ -954,6 +965,7 @@ contains
                atm2lnd_inst)
        end do
        !$OMP END PARALLEL DO
+       call t_stopf('endTSdynveg')
     end if
 
     ! ============================================================================
@@ -962,6 +974,7 @@ contains
     
     if ( use_ed  .and. is_beg_curr_day() ) then ! run ED at the start of each day
 
+       call t_startf('ED')
        if ( masterproc ) then
           write(iulog,*)  'edtime ed call edmodel ',get_nstep()
        end if
@@ -994,9 +1007,10 @@ contains
                aerosol_inst, canopystate_inst, waterstate_inst, &
                lakestate_inst, temperature_inst, surfalb_inst)
 
-          end do
-          !$OMP END PARALLEL DO
+       end do
+       !$OMP END PARALLEL DO
 
+       call t_stopf('ED')
     end if ! use_ed branch
 
     ! ============================================================================

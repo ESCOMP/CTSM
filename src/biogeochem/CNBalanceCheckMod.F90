@@ -196,8 +196,8 @@ contains
             err_found = .true.
             err_index = c
          end if
-          if (abs(col_errcb(c)) > 1e-10_r8) then
-            write(*,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
+          if (abs(col_errcb(c)) > 1e-9_r8) then
+            write(iulog,*) 'cbalance warning',c,col_errcb(c),col_endcb(c)
          end if
 
 
@@ -206,11 +206,11 @@ contains
 
       if (err_found) then
          c = err_index
-         write(*,*)'column cbalance error = ', col_errcb(c), c
-         write(*,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-         write(*,*)'begcb       = ',col_begcb(c)
-         write(*,*)'endcb       = ',col_endcb(c)
-         write(*,*)'delta store = ',col_endcb(c)-col_begcb(c)
+         write(iulog,*)'column cbalance error = ', col_errcb(c), c
+         write(iulog,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+         write(iulog,*)'begcb       = ',col_begcb(c)
+         write(iulog,*)'endcb       = ',col_endcb(c)
+         write(iulog,*)'delta store = ',col_endcb(c)-col_begcb(c)
          call endrun(msg=errMsg(__FILE__, __LINE__))
       end if
 
@@ -291,6 +291,7 @@ contains
 
          ! calculate total column-level inputs
          col_ninputs(c) = ndep_to_sminn(c) + nfix_to_sminn(c) + supplement_to_sminn(c)
+         
          if(use_fun)then
             col_ninputs(c) = col_ninputs(c) + ffix_to_sminn(c) ! for FUN, free living fixation is a seprate flux. RF. 
          endif
@@ -329,25 +330,25 @@ contains
          end if
          
          if (abs(col_errnb(c)) > 1e-8_r8) then
-            write(*,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
-            write(*,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-            write(*,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+            write(iulog,*) 'nbalance warning',c,col_errnb(c),col_endnb(c)
+            write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+            write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
          end if
 
       end do ! end of columns loop
 
       if (err_found) then
          c = err_index
-         write(*,*)'column nbalance error = ',col_errnb(c), c
-         write(*,*)'Latdeg,Londeg         = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-         write(*,*)'begnb                 = ',col_begnb(c)
-         write(*,*)'endnb                 = ',col_endnb(c)
-         write(*,*)'delta store           = ',col_endnb(c)-col_begnb(c)
-         write(*,*)'input mass            = ',col_ninputs(c)*dt
-         write(*,*)'output mass           = ',col_noutputs(c)*dt
-         write(*,*)'net flux              = ',(col_ninputs(c)-col_noutputs(c))*dt
-         write(*,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-         write(*,*)'outputs,ffix,nfix,ndep = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+         write(iulog,*)'column nbalance error = ',col_errnb(c), c
+         write(iulog,*)'Latdeg,Londeg         = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+         write(iulog,*)'begnb                 = ',col_begnb(c)
+         write(iulog,*)'endnb                 = ',col_endnb(c)
+         write(iulog,*)'delta store           = ',col_endnb(c)-col_begnb(c)
+         write(iulog,*)'input mass            = ',col_ninputs(c)*dt
+         write(iulog,*)'output mass           = ',col_noutputs(c)*dt
+         write(iulog,*)'net flux              = ',(col_ninputs(c)-col_noutputs(c))*dt
+         write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+         write(iulog,*)'outputs,ffix,nfix,ndep = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
         
          
          

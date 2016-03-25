@@ -428,7 +428,7 @@ contains
        ! in this case, set nlevurb to zero
        if (.not. has_numurbl) then
          nlevurb = 0
-         write(iulog,*)'PCT_URBAN is not multi-density, nlevurb set to 0'
+         if (masterproc) write(iulog,*)'PCT_URBAN is not multi-density, nlevurb set to 0'
        end if
 
        if ( nlevurb == 0 ) return
@@ -901,8 +901,10 @@ contains
        call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
     !
-    write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
-    write(iulog,*) '   urban traffic flux   = ', urban_traffic
+    if ( masterproc )then
+       write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
+       write(iulog,*) '   urban traffic flux   = ', urban_traffic
+    end if
 
     ReadNamelist = .true.
 

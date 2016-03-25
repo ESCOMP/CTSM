@@ -688,7 +688,7 @@ contains
        if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
           if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools out of AD spinup mode'
           exit_spinup = .true.
-          write(iulog, *) 'Multiplying stemn and crootn by 10 for exit spinup '
+          if ( masterproc ) write(iulog, *) 'Multiplying stemn and crootn by 10 for exit spinup '
           do i = bounds%begp,bounds%endp
              this%deadstemn_patch(i) = this%deadstemn_patch(i) * 10._r8
              this%deadcrootn_patch(i) = this%deadcrootn_patch(i) * 10._r8
@@ -696,7 +696,7 @@ contains
        else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 ) then
           if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools into AD spinup mode'
           enter_spinup = .true.
-          write(iulog, *) 'Dividing stemn and crootn by 10 for enter spinup '
+          if ( masterproc ) write(iulog, *) 'Dividing stemn and crootn by 10 for enter spinup '
           do i = bounds%begp,bounds%endp
              this%deadstemn_patch(i) = this%deadstemn_patch(i) / 10._r8
              this%deadcrootn_patch(i) = this%deadcrootn_patch(i) / 10._r8

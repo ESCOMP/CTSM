@@ -840,7 +840,9 @@ sub setup_cmdl_bgc {
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     my $var = "use_fun";
     if ( ! defined($nl->get_value($var)) ) {
-       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                   'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 
+                   'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'} );
     }
     if ( (! value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) && value_is_true($nl->get_value('use_fun')) ) {
        fatal_error("When FUN is on, use_nitrif_denitrif MUST also be on!\n");
@@ -1479,6 +1481,11 @@ sub process_namelist_inline_logic {
   # namelist group: cnmresp_inparm #
   ##################################
   setup_logic_cnmresp($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  ####################################
+  # namelist group: photosyns_inparm #
+  ####################################
+  setup_logic_photosyns($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #################################
   # namelist group: popd_streams  #
@@ -2491,14 +2498,13 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") &&
        value_is_true($nl_flags->{'use_cn'}) ) {
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_flexibleCN' );
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_flexibleCN',
+                'phys'=>$physv->as_string(), 'use_cn'=>$nl_flags->{'use_cn'} );
     $nl_flags->{'use_flexibleCN'} = $nl->get_value('use_flexibleCN');
 
     if ( $nl_flags->{'use_flexibleCN'} eq '.true.' ) {
       # TODO(bja, 2015-04) make this depend on > clm 5.0 and bgc mode at some point.
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'MM_Nuptake_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dynamic_plant_alloc_opt' ,
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'downreg_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
@@ -2512,8 +2518,6 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CNratio_floating',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lnc_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reduce_dayl_factor',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vcmax_opt',
@@ -2522,14 +2526,13 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_partition_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'carbon_excess_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'carbon_storage_excess_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'CN_evergreen_phenology_opt',
                   'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'carbon_resp_opt',
-                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
+                  'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'}, 'use_fun'=>$nl->get_value('use_fun') );
+      if ( $nl->get_value('carbon_resp_opt') == 1 && value_is_true($nl->get_value('use_fun')) ) {
+        fatal_error("carbon_resp_opt should NOT be set to 1 when FUN is also on\n");
+      }
     }
   } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") && ! value_is_true($nl_flags->{'use_cn'}) ) {
      if ( value_is_true($nl->get_value('use_flexibleCN')) ) {
@@ -2547,9 +2550,25 @@ sub setup_logic_luna {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_luna', 
+                'phys'=>$physv->as_string(), 'use_cn'=>$nl_flags->{'use_cn'}, 
+                'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'} );
+
+    if ( value_is_true( $nl_flags->{'use_cn'} ) ) {
+       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_nguardrail',
+                     'use_cn'=>$nl_flags->{'use_cn'} );
+    }
     $nl_flags->{'use_luna'} = $nl->get_value('use_luna');
-    # TODO(bja, 2015-04) make this depend on > clm 5.0 and bgc mode at some point.
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_luna' );
+    my $vcmax_opt= $nl->get_value('vcmax_opt');
+    # lnc_opt only applies if luna is on or for vcmax_opt=3/4
+    if ( value_is_true( $nl_flags->{'use_luna'} ) || $vcmax_opt == 3 || $vcmax_opt == 4 ) {
+       # lnc_opt can be set for both CN on and off
+       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lnc_opt',
+                  'use_cn'=>$nl_flags->{'use_cn'} );
+    }
+    if ( value_is_true($nl->get_value('lnc_opt') ) && not value_is_true( $nl_flags->{'use_cn'}) ) {
+       fatal_error("Cannot turn lnc_opt to true when bgc=sp\n" );
+    }
   }
 }
 
@@ -2738,6 +2757,38 @@ sub setup_logic_cnmresp {
     if ( defined($nl->get_value('br_root'))) {
       fatal_error("br_root can NOT be set when phys==clm4_0 or bgc_mode==sp!\n");
     }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_photosyns {
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  #
+  # Photo synthesis
+  #
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, 
+                 $nl, 'rootstem_acc', 'phys'=>$nl_flags->{'phys'});
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, 
+                 $nl, 'leaf_acc', 'phys'=>$nl_flags->{'phys'});
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, 
+                 $nl, 'light_inhibit', 'phys'=>$nl_flags->{'phys'});
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, 
+                 $nl, 'leafresp_method', 'phys'=>$nl_flags->{'phys'},
+                 'use_cn'=>$nl_flags->{'use_cn'});
+     # When CN on, must NOT be scaled by vcmax25top
+     if ( value_is_true( $nl_flags->{'use_cn'} ) )  {
+       if ( $nl->get_value('leafresp_method') == 0 ) {
+         fatal_error("leafresp_method can NOT be set to scaled to vcmax (0) when CN is on!\n");
+       }
+     # And when CN off, must NOT be anything besides scaled by vxmac25top
+     } else {
+       if ( $nl->get_value('leafresp_method') != 0 ) {
+         fatal_error("leafresp_method can NOT be set to anything besides scaled to vcmax (0) when bgc_mode==sp!\n");
+       }
+     }
   }
 }
 
@@ -3062,6 +3113,7 @@ sub write_output_files {
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
       push @groups, "clm_humanindex_inparm";
       push @groups, "cnmresp_inparm";
+      push @groups, "photosyns_inparm";
       push @groups, "cnfire_inparm";
       push @groups, "lifire_inparm";
       push @groups, "clm_canopy_inparm";

@@ -20,17 +20,18 @@ module NutrientCompetitionFactoryMod
 contains
 
   !-----------------------------------------------------------------------
-  function create_nutrient_competition_method() result(nutrient_competition_method)
+  function create_nutrient_competition_method(bounds) result(nutrient_competition_method)
     !
     ! !DESCRIPTION:
     ! Create and return an object of nutrient_competition_method_type. The particular type
     ! is determined based on a namelist parameter.
     !
     ! !USES:
-    use shr_kind_mod, only : SHR_KIND_CL
-    use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
+    use shr_kind_mod                      , only : SHR_KIND_CL
+    use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
     use NutrientCompetitionCLM45defaultMod, only : nutrient_competition_clm45default_type
-    use NutrientCompetitionFlexibleCNMod, only : nutrient_competition_FlexibleCN_type
+    use NutrientCompetitionFlexibleCNMod  , only : nutrient_competition_FlexibleCN_type
+    use decompMod                         , only : bounds_type
 
     ! FIXME(bja, 2015-06) need to pass method control in as a parameter
     ! instead of relying on a global!
@@ -39,6 +40,7 @@ contains
     !
     ! !ARGUMENTS:
     class(nutrient_competition_method_type), allocatable :: nutrient_competition_method  ! function result
+    type(bounds_type),                       intent(in)  :: bounds
     !
     ! !LOCAL VARIABLES:
 
@@ -75,6 +77,7 @@ contains
        call endrun(msg=errMsg(__FILE__, __LINE__))
 
     end select
+    call nutrient_competition_method%Init(bounds)
 
   end function create_nutrient_competition_method
 

@@ -17,6 +17,11 @@ module CNPrecisionControlMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public:: CNPrecisionControl
+
+  ! !PUBLIC DATA:
+  real(r8), public, parameter :: ccrit = 1.e-8_r8         ! critical carbon state value for truncation (gC/m2)
+  real(r8), public, parameter :: ncrit = 1.e-8_r8         ! critical nitrogen state value for truncation (gN/m2)
+  real(r8), public, parameter :: n_min = 0.000000001_r8   ! Minimum Nitrogen value to use when calculating CN ratio (gN/m2)
   !----------------------------------------------------------------------- 
 
 contains
@@ -49,8 +54,6 @@ contains
     real(r8):: pc13     ! truncation terms for patch-level corrections
     real(r8):: pc14     ! truncation terms for patch-level corrections
     real(r8):: cc14     ! truncation terms for column-level corrections
-    real(r8):: ccrit    ! critical carbon state value for truncation
-    real(r8):: ncrit    ! critical nitrogen state value for truncation
     !-----------------------------------------------------------------------
 
     ! cnveg_carbonstate_inst%cpool_patch                     Output:  [real(r8) (:)     ]  (gC/m2) temporary photosynthate C pool            
@@ -111,12 +114,6 @@ contains
          c13cs  => c13_cnveg_carbonstate_inst          , &
          c14cs  => c14_cnveg_carbonstate_inst            &
          )
-
-      ! set the critical carbon state value for truncation (gC/m2)
-      ccrit = 1.e-8_r8
-
-      ! set the critical nitrogen state value for truncation (gN/m2)
-      ncrit = 1.e-8_r8
 
       ! patch loop
       do fp = 1,num_soilp

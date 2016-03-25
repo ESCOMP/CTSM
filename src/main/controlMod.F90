@@ -202,11 +202,10 @@ contains
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
 
-    namelist /clm_nitrogen/ MM_Nuptake_opt, dynamic_plant_alloc_opt, downreg_opt, &
+    namelist /clm_nitrogen/ MM_Nuptake_opt, downreg_opt, &
          plant_ndemand_opt, substrate_term_opt, nscalar_opt, temp_scalar_opt, &
          CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, CN_residual_opt, &
-         CN_partition_opt, carbon_excess_opt, carbon_storage_excess_opt, &
-         CN_evergreen_phenology_opt, carbon_resp_opt  
+         CN_partition_opt, CN_evergreen_phenology_opt, carbon_resp_opt  
 
     namelist /clm_inparm / use_lai_streams
 
@@ -227,7 +226,8 @@ contains
     namelist /clm_inparm/ &
          use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
          use_vichydro, use_century_decomp, use_cn, use_cndv, use_crop, use_fertilizer, use_ozone, &
-         use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio
+         use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
+         use_nguardrail
 
 
     ! ----------------------------------------------------------------------
@@ -510,6 +510,7 @@ contains
     call mpi_bcast (use_century_decomp, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cndv, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_nguardrail, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -563,7 +564,6 @@ contains
     call mpi_bcast (use_flexibleCN, 1, MPI_LOGICAL, 0, mpicom, ier)
     ! TODO(bja, 2015-08) need to move some of these into a module with limited scope.
     call mpi_bcast (MM_Nuptake_opt, 1, MPI_LOGICAL, 0, mpicom, ier)             
-    call mpi_bcast (dynamic_plant_alloc_opt, 1, MPI_LOGICAL, 0, mpicom, ier)    
     call mpi_bcast (downreg_opt, 1, MPI_LOGICAL, 0, mpicom, ier)                
     call mpi_bcast (plant_ndemand_opt, 1, MPI_INTEGER, 0, mpicom, ier)          
     call mpi_bcast (substrate_term_opt, 1, MPI_LOGICAL, 0, mpicom, ier)         
@@ -575,8 +575,6 @@ contains
     call mpi_bcast (vcmax_opt, 1, MPI_INTEGER, 0, mpicom, ier)                  
     call mpi_bcast (CN_residual_opt, 1, MPI_INTEGER, 0, mpicom, ier)            
     call mpi_bcast (CN_partition_opt, 1, MPI_INTEGER, 0, mpicom, ier)           
-    call mpi_bcast (carbon_excess_opt, 1, MPI_INTEGER, 0, mpicom, ier)          
-    call mpi_bcast (carbon_storage_excess_opt, 1, MPI_INTEGER, 0, mpicom, ier)  
     call mpi_bcast (CN_evergreen_phenology_opt, 1, MPI_INTEGER, 0, mpicom, ier) 
     call mpi_bcast (carbon_resp_opt, 1, MPI_INTEGER, 0, mpicom, ier) 
 
@@ -883,7 +881,6 @@ contains
     write(iulog, *) '  use_flexibleCN = ', use_flexibleCN                       
     if (use_flexibleCN) then
        write(iulog, *) '    MM_Nuptake_opt = ', MM_Nuptake_opt                       
-       write(iulog, *) '    dynamic_plant_alloc_opt = ', dynamic_plant_alloc_opt     
        write(iulog, *) '    downreg_opt = ', downreg_opt                       	  
        write(iulog, *) '    plant_ndemand_opt = ', plant_ndemand_opt           
        write(iulog, *) '    substrate_term_opt = ', substrate_term_opt                   
@@ -895,8 +892,6 @@ contains
        write(iulog, *) '    vcmax_opt = ', vcmax_opt                            
        write(iulog, *) '    CN_residual_opt = ', CN_residual_opt
        write(iulog, *) '    CN_partition_opt = ', CN_partition_opt
-       write(iulog, *) '    carbon_excess_opt = ', carbon_excess_opt
-       write(iulog, *) '    carbon_storage_excess_opt = ', carbon_storage_excess_opt
        write(iulog, *) '    CN_evergreen_phenology_opt = ', CN_evergreen_phenology_opt
        write(iulog, *) '    carbon_resp_opt = ', carbon_resp_opt
     end if

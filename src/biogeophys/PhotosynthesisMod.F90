@@ -34,9 +34,9 @@ module  PhotosynthesisMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: Photosynthesis       ! Leaf stomatal resistance and leaf photosynthesis
-  public :: PhotosynthesisTotal  ! Determine of total photosynthesis
-  public :: Fractionation        ! C13 fractionation during photosynthesis
+  public :: Photosynthesis        ! Leaf stomatal resistance and leaf photosynthesis
+  public :: PhotosynthesisTotal   ! Determine of total photosynthesis
+  public :: Fractionation         ! C13 fractionation during photosynthesis
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: hybrid         ! hybrid solver for ci
@@ -45,6 +45,10 @@ module  PhotosynthesisMod
   private :: ft             ! photosynthesis temperature response
   private :: fth            ! photosynthesis temperature inhibition
   private :: fth25          ! scaling factor for photosynthesis temperature inhibition
+
+  ! !PRIVATE DATA:
+  integer, parameter, private :: leafresp_mtd_ryan1991  = 1  ! Ryan 1991 method for lmr25top
+  integer, parameter, private :: leafresp_mtd_atkin2015 = 2  ! Atkin 2015 method for lmr25top
 
   ! !PUBLIC VARIABLES:
   type, public :: photosyns_type
@@ -122,11 +126,18 @@ module  PhotosynthesisMod
      real(r8), pointer, public  :: pnlc_z_patch      (:,:) ! patch proportion of leaf nitrogen allocated for light capture for canopy layer
      real(r8), pointer, public  :: enzs_z_patch      (:,:) ! enzyme decay status 1.0-fully active; 0-all decayed during stress
      real(r8), pointer, public  :: fpsn24_patch      (:)   ! 24 hour mean patch photosynthesis (umol CO2/m**2 ground/day)
+
+     ! Logical switches for different options
+     logical, public  :: rootstem_acc                      ! Respiratory acclimation for roots and stems
+     logical, public  :: leaf_acc                          ! Respiratory acclimation for leaves
+     logical, private :: light_inhibit                     ! If light should inhibit respiration
+     integer, private :: leafresp_method                   ! leaf maintencence respiration at 25C for canopy top method to use
    contains
 
      ! Public procedures
      procedure, public  :: Init
      procedure, public  :: Restart
+     procedure, public  :: ReadNML
      procedure, public  :: TimeStepInit
      procedure, public  :: NewPatchInit
 
@@ -366,11 +377,11 @@ contains
        if(nlevcan>1)then
          call hist_addfld2d (fname='Vcmx25Z', units='umol/m2/s', type2d='nlevcan', &
             avgflag='A', long_name='canopy profile of vcmax25 predicted by LUNA model', &
-            ptr_patch=this%vcmx25_z_patch,default='inactive')
+            ptr_patch=this%vcmx25_z_patch)
  
          call hist_addfld2d (fname='Jmx25Z', units='umol/m2/s', type2d='nlevcan', &
             avgflag='A', long_name='canopy profile of  vcmax25 predicted by LUNA model', &
-            ptr_patch=this%jmx25_z_patch,default='inactive')
+            ptr_patch=this%jmx25_z_patch)
 
          call hist_addfld2d (fname='PNLCZ', units='unitless', type2d='nlevcan', &
             avgflag='A', long_name='Proportion of nitrogen allocated for light capture', &
@@ -379,11 +390,11 @@ contains
          ptr_1d => this%vcmx25_z_patch(:,1)
          call hist_addfld1d (fname='Vcmx25Z', units='umol/m2/s',&
             avgflag='A', long_name='canopy profile of vcmax25 predicted by LUNA model', &
-            ptr_patch=ptr_1d,default='inactive')
+            ptr_patch=ptr_1d)
          ptr_1d => this%jmx25_z_patch(:,1)
          call hist_addfld1d (fname='Jmx25Z', units='umol/m2/s',&
             avgflag='A', long_name='canopy profile of  vcmax25 predicted by LUNA model', &
-            ptr_patch=ptr_1d,default='inactive')
+            ptr_patch=ptr_1d)
          ptr_1d => this%pnlc_z_patch(:,1)
          call hist_addfld1d (fname='PNLCZ', units='unitless', &
             avgflag='A', long_name='Proportion of nitrogen allocated for light capture', &
@@ -433,6 +444,75 @@ contains
     end do
 
   end subroutine InitCold
+
+  !------------------------------------------------------------------------
+  subroutine ReadNML(this, NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for Photosynthesis
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use clm_varctl     , only : iulog
+    !
+    ! !ARGUMENTS:
+    class(photosyns_type) :: this
+    character(len=*), intent(IN) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'Photosyn::ReadNML'
+    character(len=*), parameter :: nmlname = 'photosyns_inparm'
+    logical :: rootstem_acc    = .false.               ! Respiratory acclimation for roots and stems
+    logical :: leaf_acc        = .false.               ! Respiratory acclimation for leaves
+    logical :: light_inhibit   = .false.               ! If light should inhibit respiration
+    integer :: leafresp_method = leafresp_mtd_ryan1991 ! leaf maintencence respiration at 25C for canopy top method to use
+    !-----------------------------------------------------------------------
+
+    namelist /photosyns_inparm/ leafresp_method, light_inhibit, leaf_acc, &
+              rootstem_acc
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=photosyns_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+       end if
+       call relavu( unitn )
+       this%rootstem_acc    = rootstem_acc
+       this%leaf_acc        = leaf_acc
+       this%leafresp_method = leafresp_method
+       this%light_inhibit   = light_inhibit
+    end if
+
+    call shr_mpi_bcast (this%rootstem_acc   , mpicom)
+    call shr_mpi_bcast (this%leaf_acc       , mpicom)
+    call shr_mpi_bcast (this%leafresp_method, mpicom)
+    call shr_mpi_bcast (this%light_inhibit  , mpicom)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=photosyns_inparm)
+       write(iulog,*) ' '
+    end if
+
+  end subroutine ReadNML
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
@@ -738,9 +818,6 @@ contains
     real(r8) , pointer :: alphapsnsun (:)
     real(r8) , pointer :: alphapsnsha (:)
 
-    !integer  :: lnc_opt                  
-    !integer  :: reduce_dayl_factor              
-    !integer  :: vcmax_opt                               
     real(r8) :: sum_nscaler              
     real(r8) :: total_lai                
     integer  :: nptreemax                
@@ -770,10 +847,6 @@ contains
          flnr       => pftcon%flnr                           , & ! Input:  fraction of leaf N in the Rubisco enzyme (gN Rubisco / gN leaf)
          fnitr      => pftcon%fnitr                          , & ! Input:  foliage nitrogen limitation factor (-)
          slatop     => pftcon%slatop                         , & ! Input:  specific leaf area at top of canopy, projected area basis [m^2/gC]
-         i_vc       => pftcon%i_vc                           , & ! Input:  [real(r8) (:)   ]  
-         s_vc       => pftcon%s_vc                           , & ! Input:  [real(r8) (:)   ]  
-         i_vca      => pftcon%i_vca                          , & ! Input:  [real(r8) (:)   ]  
-         s_vca      => pftcon%s_vca                          , & ! Input:  [real(r8) (:)   ]  
          i_vcad     => pftcon%i_vcad                         , & ! Input:  [real(r8) (:)   ]  
          s_vcad     => pftcon%s_vcad                         , & ! Input:  [real(r8) (:)   ]  
          i_flnr     => pftcon%i_flnr                         , & ! Input:  [real(r8) (:)   ]  
@@ -807,6 +880,9 @@ contains
          mbb        => photosyns_inst%mbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship
          rh_leaf    => photosyns_inst%rh_leaf_patch          , & ! Output: [real(r8) (:)   ]  fractional humidity at leaf surface (dimensionless)
          lnc        => photosyns_inst%lnca_patch             , & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
+         leaf_acc   => photosyns_inst%leaf_acc               , & ! Input:  [logical        ]  flag for respiratory acclimation of leaves
+         light_inhibit=> photosyns_inst%light_inhibit        , & ! Input:  [logical        ]  flag if light should inhibit respiration
+         leafresp_method=> photosyns_inst%leafresp_method    , & ! Input:  [integer        ]  method type to use for leaf-maint.-respiration at 25C canopy top
          leaf_mr_vcm => canopystate_inst%leaf_mr_vcm           & ! Input:  [real(r8)       ]  scalar constant of leaf respiration with Vcmax
          )
 
@@ -1003,7 +1079,7 @@ contains
          end if                                                                     
 
 
-         ! vcmax_opt = 3  
+         ! Default
          if (vcmax_opt == 0) then                                                   
             ! vcmax25 at canopy top, as in CN but using lnc at top of the canopy
             vcmax25top = lnc(p) * flnr(patch%itype(p)) * fnr * act25 * dayl_factor(p)
@@ -1012,21 +1088,9 @@ contains
             else
                if ( CNAllocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
             end if
-         end if                                                                                     
-
-         if (vcmax_opt == 1) then                                                                   
-            vcmax25top = ( i_vc(patch%itype(p)) + s_vc(patch%itype(p)) * lnc(p) ) * dayl_factor(p)      
-         end if                                                                                     
-
-         if (vcmax_opt == 2) then                                                                   
-            vcmax25top = ( i_vca(patch%itype(p)) + s_vca(patch%itype(p)) * lnc(p) ) * dayl_factor(p)    
-         end if                                                                                     
-
-         if (vcmax_opt == 3) then                                                                   
+         else if (vcmax_opt == 3) then                                                                   
             vcmax25top = ( i_vcad(patch%itype(p)) + s_vcad(patch%itype(p)) * lnc(p) ) * dayl_factor(p)  
-         end if                                                                                     
-
-         if (vcmax_opt == 4) then                                                                   
+         else if (vcmax_opt == 4) then                                                                   
             nptreemax = 9  ! is this number correct? check later 
             if (patch%itype(p) >= nptreemax) then   ! if not tree 
                ! for shrubs and herbs 
@@ -1061,6 +1125,7 @@ contains
          end if
 
          if (use_cn) then
+            if ( leafresp_method == leafresp_mtd_ryan1991 ) then
             ! Leaf maintenance respiration to match the base rate used in CN
             ! but with the new temperature functions for C3 and C4 plants.
             !
@@ -1077,8 +1142,22 @@ contains
             !
             ! Then scale this value at the top of the canopy for canopy depth
 
-            lmr25top = 2.525e-6_r8 * (1.5_r8 ** ((25._r8 - 20._r8)/10._r8))
-            lmr25top = lmr25top * lnc(p) / 12.e-06_r8
+               lmr25top = 2.525e-6_r8 * (1.5_r8 ** ((25._r8 - 20._r8)/10._r8))
+               lmr25top = lmr25top * lnc(p) / 12.e-06_r8
+            
+            else if ( leafresp_method == leafresp_mtd_atkin2015 ) then
+            ! Alternative calculation for (higher) leaf maintenance respiration (Rdark)
+            ! Taken from Atkin et al. (2015) New Phytologist meta analysis.
+            ! Slope values from table S3 for N_area vs Rd_area for all plants with 
+            ! growth temp 20-25C (to avoid confusion from acclimation processes). 
+            ! Other slope values are potentially availble from that paper. 
+            ! This is the simplest implementation. NB. THIS COULD BE INSIDE A SWITCH. 
+               if ( lnc(p) /= 0.0_r8 ) then
+                  lmr25top = 10._r8**(-0.256_r8+log10(lnc(p))*1.141_r8) 
+               else
+                  lmr25top = 0.0_r8
+               end if
+            end if
 
          else
             ! Leaf maintenance respiration in proportion to vcmax25top
@@ -1117,8 +1196,17 @@ contains
 
             lmr25 = lmr25top * nscaler
 
+            ! Respiratory Acclimation term, from Atkin, Fisher et al. (2008) and Lombardozzi et al. (2015)                   
+            ! RF added Nov 11 2015. Adjust base rate for growth temperature. 
+            ! Increases R in cold places, decreases it in hot places.
+            if ( leaf_acc ) then
+               lmr25 = lmr25 * 10._r8**(-0.00794_r8*((t10(p)-tfrz)-25._r8))
+            end if
+ 
             if(use_luna.and.c3flag(p).and.crop(patch%itype(p))== 0) then
-                lmr25 = leaf_mr_vcm * photosyns_inst%vcmx25_z_patch(p,iv)
+                if(.not.use_cn)then ! If CN is on, use leaf N to predict respiration (above). Otherwise, use Vcmax term from LUNA.  RF
+                  lmr25 = leaf_mr_vcm * photosyns_inst%vcmx25_z_patch(p,iv)
+                endif
             endif
           
             if (c3flag(p)) then
@@ -1178,6 +1266,13 @@ contains
 
             vcmax_z(p,iv) = vcmax_z(p,iv) * btran(p)
             lmr_z(p,iv) = lmr_z(p,iv) * btran(p)
+            
+           ! Change to add in light inhibition of respiration. 0.67 from Lloyd et al. 2010, & Metcalfe et al. 2012 
+           ! Also pers. comm from Peter Reich (Nov 2015). Might potentially be updated pending findings of Atkin et al. (in prep)
+           ! review of light inhibition database. 
+           if ( light_inhibit .and. par_z(p,1) > 0._r8) then ! are the lights on? 
+              lmr_z(p,iv) = lmr_z(p,iv) * 0.67_r8 ! inhibit respiration accordingly. 
+           end if
 
          end do       ! canopy layer loop
       end do          ! patch loop

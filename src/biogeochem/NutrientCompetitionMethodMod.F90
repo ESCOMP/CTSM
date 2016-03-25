@@ -6,6 +6,7 @@ module NutrientCompetitionMethodMod
   !
   ! Created by Jinyun Tang, following Bill Sack's implementation of polymorphism
   ! !USES:
+  use shr_kind_mod           , only : r8 => shr_kind_r8
   implicit none
   private
   !
@@ -16,8 +17,11 @@ module NutrientCompetitionMethodMod
      private
    contains
 
-     ! read in nutrient competition kinetic parameters
-     procedure(readParams_interface), public, deferred :: readParams
+     ! initialization
+     procedure(init_interface), public, deferred :: init
+
+     ! Read in parameters
+     procedure, public :: readParams
 
       ! compute plant nutrient demand
      procedure(calc_plant_nutrient_demand_interface), public, deferred :: calc_plant_nutrient_demand
@@ -26,6 +30,12 @@ module NutrientCompetitionMethodMod
      procedure(calc_plant_nutrient_competition_interface), public, deferred :: calc_plant_nutrient_competition
 
   end type nutrient_competition_method_type
+
+  type, public :: params_type
+     real(r8) :: dayscrecover      ! number of days to recover negative cpool
+  end type params_type
+  !
+  type(params_type), public, protected  :: params_inst  ! params_inst is populated in readParamsMod
 
   abstract interface
 
@@ -43,19 +53,19 @@ module NutrientCompetitionMethodMod
      !   consistent between different implementations.
      !
      !---------------------------------------------------------------------------
-     subroutine readParams_interface(this, ncid)
+     subroutine init_interface(this, bounds)
        ! !DESCRIPTION:
        ! read in kinetic parameters that are needed for doing nutrient competition
        !
        ! !USES:
-       use ncdio_pio, only : file_desc_t
+       use decompMod              , only : bounds_type       
        import :: nutrient_competition_method_type
        !
        ! !ARGUMENTS:
-       class(nutrient_competition_method_type) , intent(in)    :: this
-       type(file_desc_t)                       , intent(inout) :: ncid   ! pio netCDF file id
+       class(nutrient_competition_method_type)                 :: this
+       type(bounds_type)                       , intent(in)    :: bounds
 
-     end subroutine readParams_interface
+     end subroutine init_interface
 
      !---------------------------------------------------------------------------     
      subroutine calc_plant_nutrient_demand_interface (this, bounds, num_soilp, filter_soilp, &
@@ -154,5 +164,36 @@ module NutrientCompetitionMethodMod
      end subroutine calc_plant_nutrient_competition_interface
 
   end interface
+
+contains
+
+  !-----------------------------------------------------------------------
+  subroutine readParams (this, ncid )
+    !
+    ! !USES:
+    use shr_log_mod , only : errMsg => shr_log_errMsg
+    use ncdio_pio   , only : file_desc_t,ncd_io
+    use abortutils  , only : endrun
+    !
+    ! !ARGUMENTS:
+    class(nutrient_competition_method_type), intent(in) :: this
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'CNAllocParamsType'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
+    logical            :: readv ! has variable been read in or not
+    real(r8)           :: tempr ! temporary to read in parameter
+    character(len=100) :: tString ! temp. var for reading
+    !-----------------------------------------------------------------------
+
+    ! read in parameters
+
+    tString='dayscrecover'
+    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    params_inst%dayscrecover=tempr
+
+  end subroutine readParams
 
 end module NutrientCompetitionMethodMod

@@ -216,7 +216,7 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine setupIrrigation(irrigation_inputs, irrigation, maxpft)
+  subroutine setupIrrigation(irrigation_inputs, irrigation, maxpft, test_limit_irrigation)
     !
     ! !DESCRIPTION:
     ! Do the setup needed for most tests.
@@ -229,12 +229,20 @@ contains
     type(irrigation_inputs_type), intent(out) :: irrigation_inputs
     type(irrigation_type), intent(out) :: irrigation
     integer, intent(in) :: maxpft ! max pft type
+    logical, intent(in), optional :: test_limit_irrigation
     !
     ! !LOCAL VARIABLES:
+    logical :: limit_irrigation
     !-----------------------------------------------------------------------
     
     irrigation_inputs = irrigation_inputs_type()
-    call setupEnvironment(maxpft=maxpft)
+
+    limit_irrigation = .false.
+    if (present(test_limit_irrigation)) then
+       limit_irrigation = test_limit_irrigation
+    end if
+
+    call setupEnvironment(maxpft=maxpft, test_limit_irrigation=limit_irrigation)
     call irrigation%InitForTesting(bounds, irrigation_inputs%irrigation_params, &
          dtime, irrigation_inputs%relsat_so)
 
@@ -269,7 +277,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine setupEnvironment(maxpft)
+  subroutine setupEnvironment(maxpft, test_limit_irrigation)
     !
     ! !DESCRIPTION:
     ! Sets up the external environment used by Irrigation - i.e., things accessed via
@@ -285,6 +293,7 @@ contains
     !
     ! !ARGUMENTS:
     integer, intent(in) :: maxpft  ! max pft type that needs to be supported
+    logical, intent(in) :: test_limit_irrigation
     !
     !-----------------------------------------------------------------------
 
@@ -295,7 +304,9 @@ contains
     ! slightly greater than 1 hour offset
     grc%londeg(:) = 15.1_r8
 
-    limit_irrigation = .true.
+    limit_irrigation = test_limit_irrigation
+
+    grc%area(:) = 1.0_r8
     
   end subroutine setupEnvironment
 

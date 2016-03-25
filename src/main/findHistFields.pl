@@ -96,6 +96,8 @@ sub matchKeyword {
            $match = undef;
         } elsif ( $line =~ /long_name\s*=\s*long_name/ ) {
            $match = undef;
+        } elsif ( $line =~ /long_name\s*=\s*lname/ ) {
+           $match = undef;
         } elsif ( $line =~ /long_name\s*=\s*longname/ ) {
            print STDERR "Found variable used for longname = $line\n";
            $match = "longname_var";
@@ -126,6 +128,18 @@ sub getFieldInfo {
           die "ERROR: Still have meg_cmp in a line\n";
        }
     }
+    if ( $line =~ /^(.+)this\%species\%hist_fname\(\s*['"]*([^'"]+)['"]\s*[,]*([^\)]*)\)(.*)/ ) {
+       my $suffix = "";
+       my $beg = $1;
+       my $mid = $2;
+       my $suf = $3;
+       my $end = $4;
+       if ( $suf =~ /suffix\s*=\s*['"]([^'"]+)['"]/ ) {
+          $suffix=$1;
+       }
+       $line = "$beg 'ISO_${mid}ELEM_${suffix}' $end";
+    }
+    $line -~ s|['"]\s*\/\/\s*this\%species\%get_species\(\)\s*\/\/\s*['"]|ELEM_|g;
     if ( ! defined($fname) ) {
        $fname = &matchKeyword( "fname",     $line, $fh );
     }
@@ -143,6 +157,7 @@ sub getFieldInfo {
   } until( (defined($fname) && defined($units) && defined($longn)) ||
            ! defined($line) || defined($endin) );
   if ( ! defined($fname) ) {
+     print "fname: $fname units: $units longn: $longn endin: $endin\n";
      die "ERROR: name undefined for field ending with: $line\n";
   }
   return( $fname, $longn, $units );
@@ -179,7 +194,6 @@ sub XML_Header {
 #
   my $outfh       = shift;
   my $outfilename = shift;
-  my $filename    = shift;
 
   print STDERR " Write out header to history fields file to: $outfilename\n";
   my $svnurl = '$URL: https://svn-ccsm-models.cgd.ucar.edu/clm2/trunk_tags/clm4_0_40/models/lnd/clm/src/main/findHistFields.pl $';
@@ -191,7 +205,7 @@ sub XML_Header {
 
 \<\!--
   List of history file field names, long-names and units for all the fields output
-  by CLM. This was created by reading in the file: $filename
+  by CLM.
   SVN version information:
   $svnurl
   $svnid
@@ -214,56 +228,21 @@ sub XML_Footer {
 my $pwd = `pwd`;
 chomp( $pwd );
 my @megcmpds  =  $definition->get_valid_values( "megan_cmpds", 'noquotes'=>1 );
-my @filenames = ( 
-                    "$pwd/../biogeochem/ch4Mod.F90",
-                    "$pwd/../biogeochem/CNDVType.F90",
-                    "$pwd/../biogeochem/CNFireMod.F90",
-                    "$pwd/../biogeochem/CNVegCarbonFluxType.F90",
-                    "$pwd/../biogeochem/CNVegCarbonStateType.F90",
-                    "$pwd/../biogeochem/CNVegNitrogenFluxType.F90",
-                    "$pwd/../biogeochem/CNVegNitrogenStateType.F90",
-                    "$pwd/../biogeochem/CNVegStateType.F90",
-                    "$pwd/../biogeochem/CropType.F90",
-                    "$pwd/../biogeochem/DUSTMod.F90",
-                    "$pwd/../biogeochem/VOCEmissionMod.F90",
-                    "$pwd/../biogeophys/AerosolMod.F90",
-                    "$pwd/../biogeophys/CanopyStateType.F90",
-                    "$pwd/../biogeophys/EnergyFluxType.F90",
-                    "$pwd/../biogeophys/FrictionVelocityMod.F90",
-                    "$pwd/../biogeophys/HumanIndexMod.F90",
-                    "$pwd/../biogeophys/IrrigationMod.F90",
-                    "$pwd/../biogeophys/LakeStateType.F90",
-                    "$pwd/../biogeophys/OzoneMod.F90",
-                    "$pwd/../biogeophys/PhotosynthesisMod.F90",
-                    "$pwd/../biogeophys/SoilHydrologyType.F90",
-                    "$pwd/../biogeophys/SoilStateType.F90",
-                    "$pwd/../biogeophys/SolarAbsorbedType.F90",
-                    "$pwd/../biogeophys/SurfaceAlbedoType.F90",
-                    "$pwd/../biogeophys/SurfaceRadiationMod.F90",
-                    "$pwd/../biogeophys/TemperatureType.F90",
-                    "$pwd/../biogeophys/WaterfluxType.F90",
-                    "$pwd/../biogeophys/WaterStateType.F90",
-                    "$pwd/atm2lndType.F90",
-                    "$pwd/clm_initializeMod.F90",
-                    "$pwd/glc2lndMod.F90",
-                    "$pwd/glcDiagnosticsMod.F90",
-                    "$pwd/histFileMod.F90",
-                    "$pwd/lnd2atmType.F90",
-                    "$pwd/lnd2glcMod.F90",
-                    "$pwd/subgridWeightsMod.F90",
-                    "$pwd/../soilbiogeochem/SoilBiogeochemCarbonFluxType.F90",
-                    "$pwd/../soilbiogeochem/SoilBiogeochemCarbonStateType.F90",
-                    "$pwd/../soilbiogeochem/SoilBiogeochemNitrogenFluxType.F90",
-                    "$pwd/../soilbiogeochem/SoilBiogeochemNitrogenStateType.F90",
-                    "$pwd/../soilbiogeochem/SoilBiogeochemStateType.F90",
-                );
+my @filenames = glob( "$pwd/*.F90" );
+push( @filenames, glob( "$pwd/../biogeochem/*.F90" ) );
+push( @filenames, glob( "$pwd/../soilbiogeochem/*.F90" ) );
+push( @filenames, glob( "$pwd/../biogeophys/*.F90" ) );
 
 #
 # Loop over all files that have hist_addfld calls in them
 #
 foreach my $filename ( @filenames ) {
 
+   if ( $filename =~ /histFileMod.F90$/ ) {
+     next;
+   }
    my $fh = IO::File->new($filename, '<') or die "** $ProgName - can't open history Fields file: $filename\n";
+   print( "Filename: $filename\n" );
    #
    # Read in the list of fields from the source file
    #
@@ -273,16 +252,28 @@ foreach my $filename ( @filenames ) {
       if ($line =~ /(.*)\!/) {
         $line = $1;
       }
-      if ($line =~ /end subroutine/) {
-        last;
-      }
+      #if ($line =~ /end subroutine/) {
+      #  last;
+      #}
       my $format = "\n<field name='%s' units='%s'\n long_name='%s'\n/>\n";
       if ($line =~ /call\s*hist_addfld/i ) {
          (my $name, my $longn, my $units) = &getFieldInfo( $fh, $line );
-         if ( $name ne "MEG_megancmpd" ) {
+         if ( $name ne "MEG_megancmpd" && $name =~ /ISO_/ ) {
             &setField( $name, $longn, $units );
             printf( <STDERR>, $format, $name, $units, $longn );
-         } else {
+         } elsif ( $name =~ /ISO_/ ) {
+            foreach my $iso ( "C12", "C13", "C14", "N" ) {
+               my $elem = substr( $iso, 0, 1 );
+               $name  =~ s/ISO_/$iso/g;
+               $name  =~ s/ELEM_/$elem/g;
+               $longn =~ s/ISO_/$elem/g;
+               $longn =~ s/ELEM_/$elem/g;
+               $units =~ s/ISO_/$iso/g;
+               $units =~ s/ELEM_/$elem/g;
+               &setField( $name, $longn, $units );
+               printf( <STDERR>, $format, $name, $units, $longn );
+            }
+         } elsif ( $name eq "MEG_megancmpd" ) {
             foreach my $megcmpd ( @megcmpds ) {
                my $name = "MEG_${megcmpd}";
                &setField( $name, $longn, $units );
@@ -525,8 +516,7 @@ $rcvr\n";
 my $outfilename = "$pwd/../../bld/namelist_files/history_fields_clm4_5.xml";
 
 my $outfh = IO::File->new($outfilename, '>') or die "** $ProgName - can't open output history Fields XML file: $outfilename\n";
-foreach my $filename ( @filenames ) {
-&XML_Header( $outfh, $outfilename, $filename );
+&XML_Header( $outfh, $outfilename );
 foreach my $name ( sort(keys(%fields)) ) {
    my $len;
    if ( length($name) > 20 ) {
@@ -537,7 +527,6 @@ foreach my $name ( sort(keys(%fields)) ) {
    printf( "%-${len}s = %s\n", $name, $fields{$name}{'field'} );
    printf( $outfh "\n<field name='%s' units='%s'\n long_name='%s'\n/>\n", 
            $name, $fields{$name}{'units'}, $fields{$name}{'longn'} );
-}
 }
 
 &XML_Footer( $outfh );

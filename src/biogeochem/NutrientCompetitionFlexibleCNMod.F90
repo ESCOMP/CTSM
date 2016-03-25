@@ -24,6 +24,7 @@ module NutrientCompetitionFlexibleCNMod
   use ColumnType          , only : col
   use PatchType           , only : patch
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
+  use NutrientCompetitionMethodMod, only : params_inst
   !
   implicit none
   private
@@ -33,19 +34,19 @@ module NutrientCompetitionFlexibleCNMod
   !
   type, extends(nutrient_competition_method_type) :: nutrient_competition_FlexibleCN_type
      private
-     real(r8), pointer :: actual_leafcn(:)
+     real(r8), pointer :: actual_leafcn(:)                    ! leaf CN ratio used by flexible CN
+     real(r8), pointer :: actual_storage_leafcn(:)            ! storage leaf CN ratio used by flexible CN
    contains
      ! public methocs
-     procedure, public  :: Init
-     procedure, public :: readParams
+     procedure, public :: Init                                ! Initialization
      procedure, public :: calc_plant_nutrient_competition     ! calculate nutrient yield rate from competition
      procedure, public :: calc_plant_nutrient_demand          ! calculate plant nutrient demand
      !
      ! private methods
      procedure, private :: InitAllocate
+     procedure, private :: InitHistory
      procedure, private :: calc_plant_cn_alloc
      procedure, private :: calc_plant_nitrogen_demand
-     procedure, private :: dynamic_plant_alloc
   end type nutrient_competition_FlexibleCN_type
   !
   interface nutrient_competition_FlexibleCN_type
@@ -53,11 +54,6 @@ module NutrientCompetitionFlexibleCNMod
      module procedure constructor
   end interface nutrient_competition_FlexibleCN_type
   !
-  type, private :: params_type
-     real(r8), private :: dayscrecover      ! number of days to recover negative cpool
-  end type params_type
-  !
-  type(params_type), private :: params_inst  ! params_inst is populated in readParamsMod
   !------------------------------------------------------------------------
 
 contains
@@ -80,6 +76,7 @@ contains
     type(bounds_type), intent(in) :: bounds
 
     call this%InitAllocate(bounds)
+    call this%InitHistory(bounds)
 
   end subroutine Init
 
@@ -89,40 +86,47 @@ contains
     ! !DESCRIPTION:
     ! Allocate memory for the class data
     !
+    ! !USES:
+    use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type) :: this
     type(bounds_type), intent(in) :: bounds
 
-    allocate(this%actual_leafcn(bounds%begp:bounds%endp))
+    allocate(this%actual_leafcn(bounds%begp:bounds%endp))         ; this%actual_leafcn(:)         = nan
+    allocate(this%actual_storage_leafcn(bounds%begp:bounds%endp)) ; this%actual_storage_leafcn(:) = nan
 
   end subroutine InitAllocate
 
-  !-----------------------------------------------------------------------
-  subroutine readParams (this, ncid )
+  !------------------------------------------------------------------------
+  subroutine InitHistory(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Send data to history file
     !
     ! !USES:
-    use ncdio_pio , only : file_desc_t,ncd_io
-    use abortutils, only : endrun
+    use histFileMod    , only : hist_addfld1d
+    use clm_varcon     , only : spval
     !
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type), intent(in) :: this
-    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
-    character(len=100) :: errCode = '-Error reading in parameters file:'
-    logical            :: readv ! has variable been read in or not
-    real(r8)           :: tempr ! temporary to read in parameter
-    character(len=100) :: tString ! temp. var for reading
-    !-----------------------------------------------------------------------
+    integer           :: begp, endp
+    !------------------------------------------------------------------------
 
-    ! read in parameters
+    begp = bounds%begp; endp= bounds%endp
 
-    tString='dayscrecover'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
-    params_inst%dayscrecover=tempr
+    this%actual_leafcn(begp:endp) = spval
+    call hist_addfld1d (fname='LEAFCN', units='gC/gN', &
+         avgflag='A', long_name='Leaf CN ratio used for flexible CN', &
+         ptr_patch=this%actual_leafcn )
+    this%actual_storage_leafcn(begp:endp) = spval
+    call hist_addfld1d (fname='LEAFCN_STORAGE', units='gC/gN', &
+         avgflag='A', long_name='Storage Leaf CN ratio used for flexible CN', &
+         ptr_patch=this%actual_storage_leafcn, default='inactive')
 
-  end subroutine readParams
+  end subroutine InitHistory
 
   !-----------------------------------------------------------------------
   subroutine calc_plant_nutrient_competition (this, &
@@ -174,67 +178,6 @@ contains
 
   end subroutine calc_plant_nutrient_competition
 
-  !-----------------------------------------------------------------------
-
-  subroutine dynamic_plant_alloc(this, wat_scalar, nit_scalar, LAIndex, alloc_leaf, alloc_stem, alloc_froot)
-    ! subroutine for dynamic plant allocation for different plant parts
-
-    implicit none
-
-    class(nutrient_competition_FlexibleCN_type), intent(inout) :: this
-    real(r8), intent(in) :: wat_scalar
-    real(r8), intent(in) :: nit_scalar
-    real(r8), intent(in) :: LAIndex
-
-    real(r8), intent(out) :: alloc_leaf   ! fine root allocation
-    real(r8), intent(out) :: alloc_stem   ! stem allocation
-    real(r8), intent(out) :: alloc_froot   ! leaf allocation
-
-    real(r8) :: water_scalar
-    real(r8) :: nitrogen_scalar
-    real(r8) :: LAIndex_max = 10    ! maximum lai
-    real(r8) :: allocmin_leaf = 0.2  ! minimum leaf allocation
-    real(r8) :: allocmax_leaf = 0.5  ! maximum leaf allocation
-    real(r8) :: alloc_r0 = 0.3     ! initial allocation to roots for unlimiting conditions
-    real(r8) :: alloc_s0 = 0.3     ! initial allocation to stem for unlimiting conditions
-    real(r8) :: klight_ex = 0.5   ! light extinction parameter
-    real(r8) :: light_scalar ! scalar for light limitation
-    real(r8) :: BGr_scalar  ! scalar for belowground root processes
-
-    water_scalar = max( 0.1_r8, min( 1.0_r8, wat_scalar ) )
-    nitrogen_scalar = max( 0.1_r8, min( 1.0_r8, nit_scalar ) )
-
-    BGr_scalar = min(water_scalar, nitrogen_scalar)
-
-    if (LAIndex < 10) then
-       light_scalar = exp (-klight_ex * LAIndex)
-    else
-       light_scalar = 0.1_r8
-    end if
-    light_scalar = max( 0.1_r8, min( 1.0_r8, light_scalar ) )
-
-    ! initial root allocation
-    alloc_froot = alloc_r0 * 3.0_r8 * light_scalar / (light_scalar + 2.0_r8 * BGr_scalar)
-    alloc_froot = max (0.15_r8, alloc_froot)
-
-    ! stem allocation
-    alloc_stem = alloc_s0 * 3.0_r8 *  BGr_scalar / (2.0_r8 * light_scalar + BGr_scalar)
-
-    ! leaf allocation
-    alloc_leaf = 1.0_r8 - (alloc_froot + alloc_stem)
-    alloc_leaf = max( allocmin_leaf, min( alloc_leaf, allocmax_leaf) )
-
-    ! final root allocation
-    alloc_froot = 1.0_r8 - (alloc_stem + alloc_leaf)
-
-    ! if lai greater than laimax then no allocation to leaf; leaf allocation goes to stem
-    if (LAIndex > LAIndex_max) then
-       alloc_stem = alloc_stem + alloc_leaf
-       alloc_leaf = 0.0_r8
-    end if
-
-  end subroutine dynamic_plant_alloc
-
 !-----------------------------------------------------------------------
   subroutine calc_plant_cn_alloc(this, bounds, num_soilp, filter_soilp,   &
        cnveg_state_inst, crop_inst, canopystate_inst, &
@@ -259,6 +202,8 @@ contains
     use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
     use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
     use CNSharedParamsMod     , only : use_fun
+    use CNPrecisionControlMod , only : n_min
+    use clm_varcon            , only : spval
     
     !
     ! !ARGUMENTS:
@@ -293,8 +238,6 @@ contains
     real(r8) :: dt                 ! model time step
     real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes
 
-    real(r8):: leafcn_storage_actual 					
-    real(r8):: leafcn_actual       									
     real(r8):: frootcn_storage_actual       										
     real(r8):: frootcn_actual               	
     real(r8):: livestemcn_storage_actual    	
@@ -354,6 +297,8 @@ contains
     SHR_ASSERT_ALL((ubound(aroot)   == (/bounds%endp/)) , errMsg(__FILE__, __LINE__))
     SHR_ASSERT_ALL((ubound(arepr)   == (/bounds%endp/)) , errMsg(__FILE__, __LINE__))
     SHR_ASSERT_ALL((ubound(fpg_col) == (/bounds%endc/)) , errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(this%actual_storage_leafcn) >= (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((lbound(this%actual_storage_leafcn) <= (/bounds%begp/)), errMsg(__FILE__, __LINE__))
 
     associate(                                                                                       &
          fpg                          => fpg_col                                                   , & ! Input:  [real(r8) (:)   ]  fraction of potential gpp (no units)
@@ -984,22 +929,25 @@ contains
             cpool_to_livecrootc_storage_resp(p) = 0.0_r8
             cpool_to_livestemc_resp(p) = 0.0_r8
             cpool_to_livestemc_storage_resp(p) = 0.0_r8
+
+            if ( laisun(p)+laisha(p) > 0.0_r8 ) then
+               if (cnveg_nitrogenstate_inst%leafn_storage_patch(p) == 0.0_r8 ) then
+                  ! to avoid division by zero, and also to make actual_leafncn(p) a very large number if leafn(p) is zero 
+                  this%actual_storage_leafcn(p) = cnveg_carbonstate_inst%leafc_storage_patch(p) / n_min
+               else                        	
+                  ! leaf CN ratio 
+                  this%actual_storage_leafcn(p) = cnveg_carbonstate_inst%leafc_storage_patch(p)  &
+                  / cnveg_nitrogenstate_inst%leafn_storage_patch(p)
+               end if
+            end if
             
-            if(.not.use_fun)then ! FUN does not need to have this burning-off option. We could make it so that carbon_resp_opt is 0 when FUN is on? (RF)
             if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then   
                ! computing carbon to nitrogen ratio of different plant parts 
 
-               if (cnveg_nitrogenstate_inst%leafn_storage_patch(p) == 0.0_r8) then
-                  ! to avoid division by zero, and also to make leafcn_actual(p) a very large number if leafn(p) is zero 
-                  leafcn_actual = cnveg_carbonstate_inst%leafc_storage_patch(p) / 0.000000001_r8    				
-               else                        	
-                  ! leaf CN ratio 
-                  leafcn_actual = cnveg_carbonstate_inst%leafc_storage_patch(p)  / cnveg_nitrogenstate_inst%leafn_storage_patch(p)
-               end if
           
                if (cnveg_nitrogenstate_inst%frootn_storage_patch(p) == 0.0_r8) then
                   ! to avoid division by zero, and also to make frootcn_actual(p) a very large number if frootc(p) is zero 
-                  frootcn_actual = cnveg_carbonstate_inst%frootc_storage_patch(p) / 0.000000001_r8    			
+                  frootcn_actual = cnveg_carbonstate_inst%frootc_storage_patch(p) / n_min
                else
                   ! fine root CN ratio 
                   frootcn_actual = cnveg_carbonstate_inst%frootc_storage_patch(p) / cnveg_nitrogenstate_inst%frootn_storage_patch(p)
@@ -1009,7 +957,7 @@ contains
 
                   if (cnveg_nitrogenstate_inst%livestemn_storage_patch(p) == 0.0_r8) then
                      ! to avoid division by zero, and also to make livestemcn_actual(p) a very large number if livestemc(p) is zero 
-                     livestemcn_actual = cnveg_carbonstate_inst%livestemc_storage_patch(p) / 0.000000001_r8    		
+                     livestemcn_actual = cnveg_carbonstate_inst%livestemc_storage_patch(p) / n_min
                   else                        										
                      ! live stem CN ratio 
                      livestemcn_actual =  cnveg_carbonstate_inst%livestemc_storage_patch(p) / &
@@ -1018,7 +966,7 @@ contains
               
                   if (cnveg_nitrogenstate_inst%livecrootn_storage_patch(p) == 0.0_r8) then
                      ! to avoid division by zero, and also to make livecrootcn_actual(p) a very large number if livecrootc(p) is zero 
-                     livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / 0.000000001_r8    	
+                     livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / n_min
                   else
                      ! live coarse root CN ratio
                      livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / &
@@ -1030,7 +978,7 @@ contains
 														              
                   if (cnveg_nitrogenstate_inst%livestemn_storage_patch(p) == 0.0_r8) then
                      ! to avoid division by zero, and also to make livestemcn_actual(p) a very large number if livestemc(p) is zero 
-                     livestemcn_actual = cnveg_carbonstate_inst%livestemc_storage_patch(p) / 0.000000001_r8    		
+                     livestemcn_actual = cnveg_carbonstate_inst%livestemc_storage_patch(p) / n_min
                   else                        										
                      ! live stem CN ratio 
                      livestemcn_actual =  cnveg_carbonstate_inst%livestemc_storage_patch(p) / &
@@ -1039,7 +987,7 @@ contains
               
                   if (cnveg_nitrogenstate_inst%livecrootn_storage_patch(p) == 0.0_r8) then
                      ! to avoid division by zero, and also to make livecrootcn_actual(p) a very large number if livecrootc(p) is zero 
-                     livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / 0.000000001_r8    	
+                     livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / n_min
                   else
                      ! live coarse root CN ratio
                      livecrootcn_actual = cnveg_carbonstate_inst%livecrootc_storage_patch(p) / &
@@ -1052,9 +1000,9 @@ contains
             
                ! Note that for high CN ratio stress the plant part does not retranslocate nitrogen as the plant part will need the N 
                ! if high leaf CN ratio (i.e., high leaf C compared to N) then turnover extra C           
-               if (leafcn_actual > leafcn_max) then   
+               if (this%actual_storage_leafcn(p) > leafcn_max) then   
                
-                  frac_resp =  (leafcn_actual - leafcn_max) / 10.0_r8
+                  frac_resp =  (this%actual_storage_leafcn(p) - leafcn_max) / 10.0_r8
                   frac_resp = min(1.0_r8, max(0.0_r8, frac_resp))
                
                   cpool_to_leafc_resp(p)          = frac_resp * cpool_to_leafc(p) 
@@ -1152,7 +1100,11 @@ contains
                     cpool_to_livestemc_resp(p) + cpool_to_livestemc_storage_resp(p)
 
             end if   ! end of if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then   
-            end if
+
+            !if (cnveg_nitrogenstate_inst%leafn_storage_patch(p) < n_min .or. laisun(p)+laisha(p) <= 0.0_r8) then
+               !! to make output on history missing value
+               !this%actual_storage_leafcn(p) = spval
+            !end if
 									
          end if    ! end of if (downreg_opt .eqv. .false. .AND. CN_partition_opt == 1) then
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1235,7 +1187,6 @@ contains
     use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
     use clm_varcon             , only : secspday, dzsoi_decomp
     use clm_varctl             , only : use_c13, use_c14
-    use clm_varctl             , only : dynamic_plant_alloc_opt
     use clm_varctl             , only : nscalar_opt, plant_ndemand_opt, substrate_term_opt, temp_scalar_opt
     use clm_varpar             , only : nlevdecomp
     use clm_time_manager       , only : get_step_size
@@ -1251,6 +1202,8 @@ contains
     use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
     use EnergyFluxType         , only : energyflux_type     !
     use CNSharedParamsMod      , only : use_fun
+    use CNPrecisionControlMod  , only : n_min
+    use clm_varcon             , only : spval
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type), intent(inout) :: this
     type(bounds_type)               , intent(in)    :: bounds
@@ -1286,7 +1239,6 @@ contains
     real(r8) :: dt                                         ! model time step
     real(r8) :: dayscrecover                               ! number of days to recover negative cpool
     real(r8) :: f_N              (bounds%begp:bounds%endp)
-    real(r8) :: leafcn_actual    (bounds%begp:bounds%endp)
     real(r8) :: Kmin
     real(r8) :: leafcn_max
     real(r8) :: leafcn_min
@@ -1303,6 +1255,8 @@ contains
 
     SHR_ASSERT_ALL((ubound(aroot) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
     SHR_ASSERT_ALL((ubound(arepr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(this%actual_leafcn) >= (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((lbound(this%actual_leafcn) <= (/bounds%begp/)), errMsg(__FILE__, __LINE__))
 
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type
@@ -1523,36 +1477,6 @@ contains
          cndw = deadwdcn(ivt(p))
 
 
-         ! dynamic allocation for leaf, stem and roots based on resource limitation, and floating CN ratio
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         if (dynamic_plant_alloc_opt) then
-            ! should the leafcn_actual also be based on storage pool, think about this later
-            if (leafn(p) == 0.0_r8) then   ! to avoid division by zero, and also to make leafcn_actual(p) a very large number if leafn(p) is zero
-               this%actual_leafcn(p) = leafc(p) / 0.000000001_r8
-            else
-               this%actual_leafcn(p) = leafc(p)  / leafn(p)   ! leaf CN ratio
-            end if
-
-            leafcn_min = leafcn(ivt(p)) - 10.0_r8
-            leafcn_max = leafcn(ivt(p)) + 10.0_r8
-
-            f_N(p) = min(max(0.0_r8, (leafcn_max - this%actual_leafcn(p)) / (leafcn_max - leafcn_min)),1.0_r8)    ! Nitrogen stress factor
-
-            call this%dynamic_plant_alloc(btran(p), f_N(p), laisun(p)+laisha(p), allocation_leaf(p), &
-                 allocation_stem(p), allocation_froot(p))    ! subroutine for performing dynamic allocation
-
-            if (allocation_leaf(p) == 0.0_r8) then
-               f1 = 0.0_r8
-               f3 = 0.0_r8
-            else
-               f1 = allocation_froot(p) / allocation_leaf(p)  ! ratio of new fine root : new leaf carbon allocation
-               f3 = allocation_stem(p) / allocation_leaf(p)   ! ratio of new stem : new leaf carbon allocation
-            end if
-
-         end if
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
          ! calculate f1 to f5 for prog crops following AgroIBIS subr phenocrop
 
          f5 = 0._r8 ! continued intializations from above
@@ -1712,26 +1636,32 @@ contains
 	         end if
          end if !FUN
 
+         ! when we have "if (leafn(p) == 0.0_r8)" below then we
+         ! have floating overflow (out of floating point range)
+         ! error in "actual_leafcn(p) = leafc(p) / leafn(p)"
+         if (leafn(p) < n_min ) then
+            ! to avoid division by zero, and to set leafcn to missing value for history files
+            this%actual_leafcn(p) = leafc(p) / n_min
+         else                        	
+            ! leaf CN ratio 
+            this%actual_leafcn(p) = leafc(p)  / leafn(p)
+         end if
+            
 
          if (nscalar_opt) then
-             ! when we have "if (leafn(p) == 0.0_r8)" below then we
-             ! have floating overflow (out of floating point range)
-             ! error in "leafcn_actual(p) = leafc(p) / leafn(p)"
-            if (leafn(p) < 0.000000001_r8) then
-               ! to avoid division by zero, and also to make leafcn_actual(p) a very large number if leafn(p) is zero
-               leafcn_actual(p) = leafc(p) / 0.000000001_r8
-            else
-               leafcn_actual(p) = leafc(p)  / leafn(p)   ! leaf CN ratio
-            end if
 
             leafcn_min = leafcn(ivt(p)) - 10.0_r8
             leafcn_max = leafcn(ivt(p)) + 10.0_r8
 
-            nscalar = (leafcn_actual(p) - leafcn_min ) / (leafcn_max - leafcn_min)  ! Nitrogen scaler factor
+            this%actual_leafcn(p) = max( this%actual_leafcn(p), leafcn_min-0.0001_r8 )
+            this%actual_leafcn(p) = min( this%actual_leafcn(p), leafcn_max )
+
+            nscalar = (this%actual_leafcn(p) - leafcn_min ) / (leafcn_max - leafcn_min)  ! Nitrogen scaler factor
             nscalar = min( max(0.0_r8, nscalar), 1.0_r8 )
          else ! if (nscalar_opt == .false.) then
             nscalar = 1.0_r8
          end if
+
 
          if (substrate_term_opt) then
             c = patch%column(p)
@@ -1777,13 +1707,17 @@ contains
 	               plant_ndemand(p) = 0.0_r8
 	            end if
 
-	            if (leafcn_actual(p) < leafcn_min) then
+	            if (this%actual_leafcn(p) < leafcn_min )then
 	               plant_ndemand(p) = 0.0_r8
 	            end if
 
 	         end if
          end if  !FUN
 
+         !if (leafn(p) < n_min ) then
+            !! to set leafcn to missing value for history files
+            !this%actual_leafcn(p) = spval
+         !end if
 
          ! retranslocated N deployment depends on seasonal cycle of potential GPP
          ! (requires one year run to accumulate demand)

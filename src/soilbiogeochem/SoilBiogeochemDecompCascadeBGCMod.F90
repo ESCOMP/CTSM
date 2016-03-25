@@ -14,6 +14,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
+  use spmdMod                            , only : masterproc
   use abortutils                         , only : endrun
   use CNSharedParamsMod                  , only : CNParamsShareInst, anoxia_wtsat, nlev_soildecomp_standard 
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
@@ -464,8 +465,10 @@ contains
       spinup_factor(i_soil2) = max(1._r8, (speedup_fac * params_inst%tau_s2_bgc))
       spinup_factor(i_soil3) = max(1._r8, (speedup_fac * params_inst%tau_s3_bgc))
 
-      write(iulog,*) 'Spinup_state ',spinup_state
-      write(iulog,*) 'Spinup factors ',spinup_factor
+      if ( masterproc ) then
+         write(iulog,*) 'Spinup_state ',spinup_state
+         write(iulog,*) 'Spinup factors ',spinup_factor
+      end if
 
 
       !----------------  list of transitions and their time-independent coefficients  ---------------!

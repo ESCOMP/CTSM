@@ -344,6 +344,33 @@ CN Maintenence Respiration base rate for roots
 (if NOT set, use the value for br_mr on the params file)
 </entry>
 
+<entry id="rootstem_acc" type="logical" category="clm_physics"
+       group="photosyns_inparm" >
+Switch to turn on root and stem respiratory acclimation
+Atkin, Fisher et al. (2008) and Lombardozzi et al. (2015)
+</entry>
+
+<entry id="leaf_acc" type="logical" category="clm_physics"
+       group="photosyns_inparm" >
+Switch to turn on leaf respiratory acclimation
+Atkin, Fisher et al. (2008) and Lombardozzi et al. (2015)
+</entry>
+
+<entry id="light_inhibit" type="logical" category="clm_physics"
+       group="photosyns_inparm" >
+Switch to inihibit photosynthesis in daytime
+Lloyd et al. 2010, & Metcalfe et al. 2012
+</entry>
+
+<entry id="leafresp_method" type="integer" category="clm_physics"
+       group="photosyns_inparm" >
+Leaf maintencence respiration for canopy top at 25C method to use
+
+    0  Scaled by vcmax25top
+    1  Ryan 1991
+    2  Atkin 2015
+</entry>
+
 <entry id="leaf_mr_vcm" type="real" category="clm_physics"
        group="clm_canopy_inparm" >
 Scalar of leaf respiration to vcmax
@@ -382,7 +409,16 @@ Toggle to turn on spit fire (only relevant if ED is being used).
 
 <entry id="use_luna" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on the LUNA model, not supporting CLM(ED) yet
+Toggle to turn on the LUNA model, to effect Photosynthesis by leaf Nitrogen
+LUNA operates on C3 and non-crop vegetation (see vcmax_opt for how other veg is handled)
+LUNA: Leaf Utilization of Nitrogen for Assimilation
+</entry>
+
+<entry id="lnc_opt" type="logical" category="clm_nitrogen"
+       group="clm_nitrogen" value=".false.">
+How LUNA and Photosynthesis (if needed) will get Leaf nitrogen content
+   lnc_opt = true  get from leaf N from CN model
+   lnc_opt = false get based on LAI and fixed CN ratio from parameter file
 </entry>
 
 
@@ -1460,127 +1496,99 @@ If TRUE, weight btran (vegetation soil moisture availability) by the active laye
 If TRUE use additional stress deciduous onset trigger
 </entry>
 
+<entry id="use_nguardrail" type="logical" category="clm_physics"
+       group="clm_inparm" value=".false.">
+Apply the guardrail for leaf-Nitrogen that ensures it doesn't go negative or too small
+</entry>
+
 
 <!-- ========================================================================================  -->
-<!-- namelist elements associated with the clm 5.0 BGC nitrogen model                          -->
+<!-- namelist elements associated with the clm 5.0 BGC flexible CN Model                       -->
 <!-- ========================================================================================  -->
 <entry id="use_flexibleCN" type="logical" category="clm_nitrogen"
        group="clm_inparm" value=".false.">
-Turn on the clm 5.0 nitrogen model in clm 4.5/5.0 compsets.
+Allow the CN ratio to flexibly change with the simulation, rather than being fixed
 </entry>
 
 <entry id="MM_Nuptake_opt" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".false.">
    Michaelis Menten nitrogen uptake kinetics
-   clm 5.0: MM_Nuptake_opt = true
-   clm 4.5: MM_Nuptake_opt = false
-</entry>
-
-<entry id="dynamic_plant_alloc_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".false.">
-   Dynamic plant allocation of nitrogen
-   clm 5.0: dynamic_plant_alloc_opt = false
-   clm 4.5: dynamic_plant_alloc_opt = false
 </entry>
 
 <entry id="downreg_opt" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".false.">
-   GPP downregulation
-   clm 5.0: downreg_opt = false
-   clm 4.5: downreg_opt = true
+   GPP downregulation for use_flexibleCN option
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="plant_ndemand_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,1,2,3">
-   Plant nitrogen demand
-   clm 5.0: plant_ndemand_opt = 3
-   clm 4.5: plant_ndemand_opt = 0
+   Plant nitrogen demand for use_flexibleCN option
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="substrate_term_opt" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".true.">
-   Michaelis Menten substrate limitation
-   clm 5.0: substrate_term_opt = true
-   clm 4.5: substrate_term_opt = true
+   Michaelis Menten substrate limitation for use_flexibleCN option
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="nscalar_opt" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".true.">
-   Michaelis Menten nitrogen limitation
-   clm 5.0: nscalar_opt = true
-   clm 4.5: nscalar_opt = true
+   Michaelis Menten nitrogen limitation for use_flexibleCN option
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="temp_scalar_opt" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".true.">
-   Michaelis Menten temperature limitation
-   clm 5.0: temp_scalar_opt = true
-   clm 4.5: temp_scalar_opt = true
+   Michaelis Menten temperature limitation for use_flexibleCN option
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="CNratio_floating" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".false.">
-   Flexible CN ratio
-   clm 5.0: CNratio_floating = true
-   clm 4.5: CNratio_floating = false
-</entry>
-
-<entry id="lnc_opt" type="logical" category="clm_nitrogen"
-       group="clm_nitrogen" value=".false.">
-   Leaf nitrogen content
-   clm 5.0: lnc_opt = true
-   clm 4.5: lnc_opt = false
+   Flexible CN ratio used for Phenology
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="reduce_dayl_factor" type="logical" category="clm_nitrogen"
        group="clm_nitrogen" value=".false.">
    Reduce day length factor
-   clm 5.0: reduce_dayl_factor = false
-   clm 4.5: reduce_dayl_factor = false
+(NOT implemented)
 </entry>
 
 <entry id="vcmax_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1,2,3,4">
-   Vcmax calculation
-   clm 5.0: vcmax_opt = 3
-   clm 4.5: vcmax_opt = 0
+       group="clm_nitrogen" valid_values="0,3,4">
+Vcmax calculation for Photosynthesis
+    vcmax_opt = 4 As for vcmax_opt=0, but using leafN, and exponential if tree  (EXPERIMENTAL NOT TESTED!)
+    vcmax_opt = 3 Based on leafN and VCAD (used with Luna for crop and C4 vegetation)
+    vcmax_opt = 0 Based on canopy top and foilage Nitrogen limitation factor from params file (clm4.5)
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="CN_residual_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,1">
-   clm 5.0: CN_residual_opt = 1
-   clm 4.5: CN_residual_opt = 0
+Residual option for flexible-CN
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="CN_partition_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,1">
-   clm 5.0: CN_partition_opt = 1
-   clm 4.5: CN_partition_opt = 0
-</entry>
-
-<entry id="carbon_excess_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-   clm 5.0: carbon_excess_opt = 0
-   clm 4.5: carbon_excess_opt = 0           
-</entry>
-
-<entry id="carbon_storage_excess_opt" type="integer" category="clm_nitrogen"
-       group="clm_nitrogen" valid_values="0,1">
-   clm 5.0: carbon_storage_excess_opt = 0
-   clm 4.5: carbon_storage_excess_opt = 0
-
+Partition option for flexible-CN
+   CN_partition_opt = 1
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="CN_evergreen_phenology_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,1">
-   clm 5.0: CN_evergreen_phenology_opt = 1
-   clm 4.5: CN_evergreen_phenology_opt = 0
+Evergreen phenology option for CNPhenology
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="carbon_resp_opt" type="integer" category="clm_nitrogen"
        group="clm_nitrogen" valid_values="0,1">
-   clm 5.0: carbon_resp_opt = 1
-   clm 4.5: carbon_resp_opt = 0
+Carbon respiration option to burn off carbon when CN ratio is too high (do NOT use when FUN is on)
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 

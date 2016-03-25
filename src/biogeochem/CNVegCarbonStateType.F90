@@ -1142,11 +1142,11 @@ contains
        end if
 
        if (flag == 'read' .and. spinup_state /= restart_file_spinup_state .and. .not. use_cndv) then
-          write(iulog, *) 'exit_spinup ',exit_spinup,' restart_file_spinup_state ',restart_file_spinup_state
+          if ( masterproc ) write(iulog, *) 'exit_spinup ',exit_spinup,' restart_file_spinup_state ',restart_file_spinup_state
           if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
              if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools out of AD spinup mode'
              exit_spinup = .true.
-             write(iulog, *) 'Multiplying stemc and crootc by 10 for exit spinup'
+             if ( masterproc ) write(iulog, *) 'Multiplying stemc and crootc by 10 for exit spinup'
              do i = bounds%begp,bounds%endp
                 this%deadstemc_patch(i) = this%deadstemc_patch(i) * 10._r8
                 this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * 10._r8
@@ -1154,7 +1154,7 @@ contains
           else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 ) then
              if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools into AD spinup mode'
              enter_spinup = .true.
-             write(iulog, *) 'Dividing stemc and crootc by 10 for enter spinup '
+             if ( masterproc ) write(iulog, *) 'Dividing stemc and crootc by 10 for enter spinup '
              do i = bounds%begp,bounds%endp
                 this%deadstemc_patch(i) = this%deadstemc_patch(i) / 10._r8
                 this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / 10._r8
@@ -1173,7 +1173,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_patch)
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%leafc with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%leafc with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%leafc_patch(i) = c12_cnveg_carbonstate_inst%leafc_patch(i) * c3_r2
@@ -1187,7 +1187,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%leafc_storage with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%leafc_storage with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%leafc_storage_patch(i) = c12_cnveg_carbonstate_inst%leafc_storage_patch(i) * c3_r2
@@ -1201,7 +1201,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%leafc_xfer with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%leafc_xfer with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%leafc_xfer_patch(i) = c12_cnveg_carbonstate_inst%leafc_xfer_patch(i) * c3_r2
@@ -1215,7 +1215,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%frootc with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%frootc with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%frootc_patch(i) = c12_cnveg_carbonstate_inst%frootc_patch(i) * c3_r2
@@ -1229,7 +1229,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%frootc_storage with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%frootc_storage with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%frootc_storage_patch(i) = c12_cnveg_carbonstate_inst%frootc_storage_patch(i) * c3_r2
@@ -1243,7 +1243,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%frootc_xfer with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%frootc_xfer with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%frootc_xfer_patch(i) = c12_cnveg_carbonstate_inst%frootc_xfer_patch(i) * c3_r2
@@ -1257,7 +1257,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livestemc with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livestemc with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%livestemc_patch(i) = c12_cnveg_carbonstate_inst%livestemc_patch(i) * c3_r2
@@ -1271,7 +1271,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livestemc_storage with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livestemc_storage with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%livestemc_storage_patch(i) = c12_cnveg_carbonstate_inst%livestemc_storage_patch(i) * c3_r2
@@ -1285,7 +1285,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livestemc_xfer with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livestemc_xfer with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%livestemc_xfer_patch(i) = c12_cnveg_carbonstate_inst%livestemc_xfer_patch(i) * c3_r2
@@ -1299,7 +1299,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadstemc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadstemc with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadstemc with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%deadstemc_patch(i) = c12_cnveg_carbonstate_inst%deadstemc_patch(i) * c3_r2
@@ -1313,7 +1313,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadstemc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadstemc_storage with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadstemc_storage with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%deadstemc_storage_patch(i) = c12_cnveg_carbonstate_inst%deadstemc_storage_patch(i) * c3_r2
@@ -1327,7 +1327,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadstemc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadstemc_xfer with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadstemc_xfer with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%deadstemc_xfer_patch(i) = c12_cnveg_carbonstate_inst%deadstemc_xfer_patch(i) * c3_r2
@@ -1341,7 +1341,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livecrootc with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livecrootc with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%livecrootc_patch(i) = c12_cnveg_carbonstate_inst%livecrootc_patch(i) * c3_r2
@@ -1355,7 +1355,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livecrootc_storage with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livecrootc_storage with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%livecrootc_storage_patch(i) = c12_cnveg_carbonstate_inst%livecrootc_storage_patch(i) * c3_r2
@@ -1369,7 +1369,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livecrootc_xfer with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livecrootc_xfer with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%livecrootc_xfer_patch(i) = c12_cnveg_carbonstate_inst%livecrootc_xfer_patch(i) * c3_r2
@@ -1383,7 +1383,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadcrootc with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadcrootc with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%deadcrootc_patch(i) = c12_cnveg_carbonstate_inst%deadcrootc_patch(i) * c3_r2
@@ -1397,7 +1397,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadcrootc_storage with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadcrootc_storage with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%deadcrootc_storage_patch(i) = c12_cnveg_carbonstate_inst%deadcrootc_storage_patch(i) * c3_r2
@@ -1411,7 +1411,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadcrootc_xfer with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadcrootc_xfer with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%deadcrootc_xfer_patch(i) = c12_cnveg_carbonstate_inst%deadcrootc_xfer_patch(i) * c3_r2
@@ -1425,7 +1425,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%gresp_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%gresp_storage with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%gresp_storage with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%gresp_storage_patch(i) = c12_cnveg_carbonstate_inst%gresp_storage_patch(i) * c3_r2
@@ -1440,7 +1440,7 @@ contains
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%gresp_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%gresp_xfer with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%gresp_xfer with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%gresp_xfer_patch(i) = c12_cnveg_carbonstate_inst%gresp_xfer_patch(i) * c3_r2
@@ -1454,7 +1454,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%cpool_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%cpool with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%cpool with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%cpool_patch(i) = c12_cnveg_carbonstate_inst%cpool_patch(i) * c3_r2
@@ -1469,7 +1469,7 @@ contains
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%xsmrpool with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%xsmrpool with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%xsmrpool_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_patch(i) * c3_r2
@@ -1483,7 +1483,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%ctrunc with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%ctrunc with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%ctrunc_patch(i) = c12_cnveg_carbonstate_inst%ctrunc_patch(i) * c3_r2
@@ -1507,7 +1507,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%leafc_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%leafc_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%leafc_patch(i) /= spval .and. &
                   .not. isnan(this%leafc_patch(i)) ) then
@@ -1520,7 +1520,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%leafc_storage_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%leafc_storage_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%leafc_storage_patch(i) /= spval .and. &
                   .not. isnan(this%leafc_storage_patch(i)) ) then
@@ -1533,7 +1533,7 @@ contains
             dim1name='pft',    long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%leafc_xfer_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%leafc_xfer_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%leafc_xfer_patch(i) /= spval .and. .not. isnan(this%leafc_xfer_patch(i)) ) then
                 this%leafc_xfer_patch(i) = c12_cnveg_carbonstate_inst%leafc_xfer_patch(i) * c14ratio
@@ -1545,7 +1545,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%frootc_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%frootc_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%frootc_patch(i) /= spval .and. &
                   .not. isnan(this%frootc_patch(i)) ) then
@@ -1558,7 +1558,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%frootc_storage_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%frootc_storage_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%frootc_storage_patch(i) /= spval .and. &
                   .not. isnan(this%frootc_storage_patch(i)) ) then
@@ -1571,7 +1571,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%frootc_xfer_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%frootc_xfer_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%frootc_xfer_patch(i) /= spval .and. &
                   .not. isnan(this%frootc_xfer_patch(i)) ) then
@@ -1584,7 +1584,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livestemc_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livestemc_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%livestemc_patch(i) /= spval .and. .not. isnan(this%livestemc_patch(i)) ) then
                 this%livestemc_patch(i) = c12_cnveg_carbonstate_inst%livestemc_patch(i) * c14ratio
@@ -1596,7 +1596,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livestemc_storage_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livestemc_storage_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%livestemc_storage_patch(i) /= spval .and. .not. isnan(this%livestemc_storage_patch(i)) ) then
                 this%livestemc_storage_patch(i) = c12_cnveg_carbonstate_inst%livestemc_storage_patch(i) * c14ratio
@@ -1608,7 +1608,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livestemc_xfer_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livestemc_xfer_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%livestemc_xfer_patch(i) /= spval .and. .not. isnan(this%livestemc_xfer_patch(i)) ) then
                 this%livestemc_xfer_patch(i) = c12_cnveg_carbonstate_inst%livestemc_xfer_patch(i) * c14ratio
@@ -1620,7 +1620,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadstemc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadstemc_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadstemc_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%deadstemc_patch(i) /= spval .and. .not. isnan(this%deadstemc_patch(i)) ) then
                 this%deadstemc_patch(i) = c12_cnveg_carbonstate_inst%deadstemc_patch(i) * c14ratio
@@ -1632,7 +1632,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadstemc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadstemc_storage_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadstemc_storage_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%deadstemc_storage_patch(i) /= spval .and. .not. isnan(this%deadstemc_storage_patch(i)) ) then
                 this%deadstemc_storage_patch(i) = c12_cnveg_carbonstate_inst%deadstemc_storage_patch(i) * c14ratio
@@ -1644,7 +1644,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadstemc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadstemc_xfer_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadstemc_xfer_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%deadstemc_xfer_patch(i) /= spval .and. .not. isnan(this%deadstemc_xfer_patch(i)) ) then
                 this%deadstemc_xfer_patch(i) = c12_cnveg_carbonstate_inst%deadstemc_xfer_patch(i) * c14ratio
@@ -1656,7 +1656,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livecrootc_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livecrootc_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%livecrootc_patch(i) /= spval .and. .not. isnan(this%livecrootc_patch(i)) ) then
                 this%livecrootc_patch(i) = c12_cnveg_carbonstate_inst%livecrootc_patch(i) * c14ratio
@@ -1668,7 +1668,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livecrootc_storage_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livecrootc_storage_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%livecrootc_storage_patch(i) /= spval .and. .not. isnan(this%livecrootc_storage_patch(i)) ) then
                 this%livecrootc_storage_patch(i) = c12_cnveg_carbonstate_inst%livecrootc_storage_patch(i) * c14ratio
@@ -1680,7 +1680,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%livecrootc_xfer_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%livecrootc_xfer_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%livecrootc_xfer_patch(i) /= spval .and. .not. isnan(this%livecrootc_xfer_patch(i)) ) then
                 this%livecrootc_xfer_patch(i) = c12_cnveg_carbonstate_inst%livecrootc_xfer_patch(i) * c14ratio
@@ -1692,7 +1692,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadcrootc_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadcrootc_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%deadcrootc_patch(i) /= spval .and. .not. isnan(this%deadcrootc_patch(i)) ) then
                 this%deadcrootc_patch(i) = c12_cnveg_carbonstate_inst%deadcrootc_patch(i) * c14ratio
@@ -1704,7 +1704,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadcrootc_storage_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadcrootc_storage_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%deadcrootc_storage_patch(i) /= spval .and. .not. isnan(this%deadcrootc_storage_patch(i)) ) then
                 this%deadcrootc_storage_patch(i) = c12_cnveg_carbonstate_inst%deadcrootc_storage_patch(i) * c14ratio
@@ -1716,7 +1716,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%deadcrootc_xfer_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%deadcrootc_xfer_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%deadcrootc_xfer_patch(i) /= spval .and. .not. isnan(this%deadcrootc_xfer_patch(i)) ) then
                 this%deadcrootc_xfer_patch(i) = c12_cnveg_carbonstate_inst%deadcrootc_xfer_patch(i) * c14ratio
@@ -1728,7 +1728,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%gresp_storage_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%gresp_storage_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%gresp_storage_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%gresp_storage_patch(i) /= spval .and. .not. isnan(this%gresp_storage_patch(i)) ) then
                 this%gresp_storage_patch(i) = c12_cnveg_carbonstate_inst%gresp_storage_patch(i) * c14ratio
@@ -1740,7 +1740,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%gresp_xfer_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%gresp_xfer_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%gresp_xfer_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%gresp_xfer_patch(i) /= spval .and. .not. isnan(this%gresp_xfer_patch(i)) ) then
                 this%gresp_xfer_patch(i) = c12_cnveg_carbonstate_inst%gresp_xfer_patch(i) * c14ratio
@@ -1752,7 +1752,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%cpool_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%cpool_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%cpool_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%cpool_patch(i) /= spval .and. .not. isnan(this%cpool_patch(i)) ) then
                 this%cpool_patch(i) = c12_cnveg_carbonstate_inst%cpool_patch(i) * c14ratio
@@ -1764,7 +1764,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%xsmrpool_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%xsmrpool_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%xsmrpool_patch(i) /= spval .and. .not. isnan(this%xsmrpool_patch(i)) ) then
                 this%xsmrpool_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_patch(i) * c14ratio
@@ -1776,7 +1776,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%ctrunc_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%ctrunc_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%ctrunc_patch(i) /= spval .and. .not. isnan(this%ctrunc_patch(i)) ) then
                 this%ctrunc_patch(i) = c12_cnveg_carbonstate_inst%ctrunc_patch(i) * c14ratio
@@ -1843,7 +1843,7 @@ contains
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%seedc_col) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%seedc_col with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%seedc_col with atmospheric c14 value'
           do i = bounds%begc,bounds%endc
              if (this%seedc_col(i) /= spval .and. &
                   .not. isnan(this%seedc_col(i)) ) then
@@ -1880,7 +1880,7 @@ contains
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing cnveg_carbonstate_inst%totvegc with atmospheric c13 value'
+          if ( masterproc ) write(iulog,*) 'initializing cnveg_carbonstate_inst%totvegc with atmospheric c13 value'
           do i = bounds%begp,bounds%endp
              if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
                 this%totvegc_patch(i) = c12_cnveg_carbonstate_inst%totvegc_patch(i) * c3_r2
@@ -1900,7 +1900,7 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
        if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%totvegc_patch with atmospheric c14 value'
+          if ( masterproc ) write(iulog,*) 'initializing this%totvegc_patch with atmospheric c14 value'
           do i = bounds%begp,bounds%endp
              if (this%totvegc_patch(i) /= spval .and. &
                   .not. isnan(this%totvegc_patch(i)) ) then

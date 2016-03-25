@@ -70,9 +70,7 @@ contains
       do c = bounds%begc, bounds%endc
          g = col%gridcell(c)
          ndep_to_sminn(c) = forc_ndep(g)
-         if ( use_fun ) then
-            ndep_to_sminn(c) = 0.0_r8
-         end if
+
       end do
 
     end associate
@@ -107,6 +105,7 @@ contains
        do fc = 1,num_soilc
            c = filter_soilc(fc)
           ffix_to_sminn(c) = (0.0006_r8*(max(0._r8,AnnET(c))*secs_per_year) + 0.0117_r8 )/secs_per_year !(units g N m-2 s-1)  
+
        end do
 
   end associate
@@ -125,6 +124,7 @@ contains
     use clm_time_manager , only : get_days_per_year, get_step_size
     use shr_sys_mod      , only : shr_sys_flush
     use clm_varcon       , only : secspday, spval
+    use CNSharedParamsMod    , only: use_fun
     !
     ! !ARGUMENTS:
     integer                                , intent(in)    :: num_soilc       ! number of soil columns in filter
@@ -170,6 +170,9 @@ contains
             nfix_to_sminn(c) = max(0._r8,t)
          end do
       endif
+      if(use_fun)then
+        nfix_to_sminn(c) = 0.0_r8
+      end if
 
     end associate
 

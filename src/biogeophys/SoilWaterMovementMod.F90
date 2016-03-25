@@ -991,15 +991,6 @@ contains
             h2osoi_liq(c,j) = h2osoi_liq(c,j) + dwat2(c,j)*dzmm(c,j)
          end do
 
-!scs===========================================================
-         do j = 1, nlevsoi+1
-            if(h2osoi_liq(c,j) < -20.) then
-               write(*,*) 'negative!!!!!!!!!!!!!!!!!!!'
-               write(*,'(2i12,f12.4)') c, j, h2osoi_liq(c,j)
-           endif
-         end do
-!scs===========================================================
-
          ! calculate qcharge for case jwt < nlevsoi
          if(jwt(c) < nlevsoi) then
             wh_zwt = 0._r8   !since wh_zwt = -sucsat - zq_zwt, where zq_zwt = -sucsat
@@ -1367,12 +1358,12 @@ contains
                ! copy); however, intent(inout)
 
                ! get a copy of the input vectors
-               dLow = amx(filter_hydrologyc(fc),2:nlayers)
-               diag = bmx(filter_hydrologyc(fc),1:nlayers)
-               dUpp = cmx(filter_hydrologyc(fc),1:nlayers-1)
+               dLow(1:nlayers-1) = amx(filter_hydrologyc(fc),2:nlayers)
+               diag(1:nlayers)   = bmx(filter_hydrologyc(fc),1:nlayers)
+               dUpp(1:nlayers-1) = cmx(filter_hydrologyc(fc),1:nlayers-1)
 
                ! get a copy of the residual vector
-               rhs = rmx(filter_hydrologyc(fc),1:nlayers)
+               rhs(1:nlayers) = rmx(filter_hydrologyc(fc),1:nlayers)
 
                ! call the lapack tri-diagonal solver
                call dgtsv(nlayers,   & ! intent(in):    [integer]       number of state variables

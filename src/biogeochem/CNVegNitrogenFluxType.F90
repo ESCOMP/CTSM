@@ -231,6 +231,10 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: sminn_to_plant_fun_vr_patch               (:,:)   ! Total layer soil N uptake of FUN  (gN/m2/s)
      real(r8), pointer :: sminn_to_plant_fun_no3_vr_patch           (:,:)   ! Total layer no3 uptake of FUN     (gN/m2/s)
      real(r8), pointer :: sminn_to_plant_fun_nh4_vr_patch           (:,:)   ! Total layer nh4 uptake of FUN     (gN/m2/s)
+     real(r8), pointer :: cost_nfix_patch                           (:)     ! Average cost of fixation          (gN/m2/s)
+     real(r8), pointer :: cost_nactive_patch                        (:)     ! Average cost of active uptake     (gN/m2/s)
+     real(r8), pointer :: cost_nretrans_patch                       (:)     ! Average cost of retranslocation   (gN/m2/s)
+     real(r8), pointer :: nuptake_npp_fraction_patch                (:)    ! frac of npp spent on N acquisition   (gN/m2/s)
 
    contains
 
@@ -495,6 +499,10 @@ contains
     this%sminn_to_plant_fun_no3_vr_patch      (:,:) = nan
     allocate(this%sminn_to_plant_fun_nh4_vr_patch (begp:endp,1:nlevdecomp_full))  
     this%sminn_to_plant_fun_nh4_vr_patch      (:,:) = nan
+    allocate(this%cost_nfix_patch              (begp:endp)) ;    this%cost_nfix_patch            (:) = nan
+    allocate(this%cost_nactive_patch           (begp:endp)) ;    this%cost_nactive_patch         (:) = nan
+    allocate(this%cost_nretrans_patch          (begp:endp)) ;    this%cost_nretrans_patch        (:) = nan
+    allocate(this%nuptake_npp_fraction_patch   (begp:endp)) ;    this%nuptake_npp_fraction_patch            (:) = nan
 
   end subroutine InitAllocate
 
@@ -1127,8 +1135,29 @@ contains
        this%sminn_to_plant_fun_patch(begp:endp) = spval
        call hist_addfld1d (fname='SMINN_TO_PLANT_FUN', units='gN/m^2/s',&
             avgflag='A', long_name='Total soil N uptake of FUN',        &
-            ptr_patch=this%sminn_to_plant_fun_patch)
-
+            ptr_patch=this%sminn_to_plant_fun_patch)      
+       
+       this%cost_nfix_patch(begp:endp)     = spval
+       call hist_addfld1d (fname='COST_NFIX', units='gN/gC',            &
+            avgflag='A', long_name='Cost of fixation',       &
+            ptr_patch=this%cost_nfix_patch)
+            
+       this%cost_nactive_patch(begp:endp)     = spval
+       call hist_addfld1d (fname='COST_NACTIVE', units='gN/gC',            &
+            avgflag='A', long_name='Cost of active uptake',       &
+            ptr_patch=this%cost_nactive_patch)
+            
+       this%cost_nretrans_patch(begp:endp)     = spval
+       call hist_addfld1d (fname='COST_NRETRANS', units='gN/gC',            &
+            avgflag='A', long_name='Cost of retranslocation',       &
+            ptr_patch=this%cost_nretrans_patch)
+            
+      this%nuptake_npp_fraction_patch(begp:endp)     = spval
+       call hist_addfld1d (fname='NUPTAKE_NPP_FRACTION', units='-',            &
+            avgflag='A', long_name='frac of NPP used in N uptake',       &
+            ptr_patch=this%nuptake_npp_fraction_patch)
+                  
+     
     end if
 
   end subroutine InitHistory
@@ -1214,13 +1243,18 @@ contains
                 this%Necm_no3_patch(p)          = spval
                 this%Necm_nh4_patch(p)          = spval
              end if
-             this%Nfix_patch(p)                 = spval
+             this%Nfix_patch(p)                      = spval
              this%Nretrans_patch(p)             = spval
              this%Nretrans_org_patch(p)         = spval
              this%Nretrans_season_patch(p)      = spval
              this%Nretrans_stress_patch(p)      = spval
              this%Nuptake_patch(p)              = spval
              this%sminn_to_plant_fun_patch(p)   = spval
+             this%cost_nfix_patch               = spval
+             this%cost_nactive_patch            = spval
+             this%cost_nretrans_patch           = spval          
+             this%nuptake_npp_fraction_patch    = spval
+                             
              do j = 1, nlevdecomp
                 this%sminn_to_plant_fun_vr_patch(p,j)       = spval
                 this%sminn_to_plant_fun_no3_vr_patch(p,j)   = spval

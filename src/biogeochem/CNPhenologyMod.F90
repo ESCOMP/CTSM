@@ -1149,7 +1149,7 @@ contains
                   onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
                end if
 
-               ! if soils are wet, accumulate soil water index for onset trigger
+              ! if soils are wet, accumulate soil water index for onset trigger
                additional_onset_condition = .true.
                if(CNParamsShareInst%constrain_stress_deciduous_onset) then
                   ! if additional constraint condition not met,  set to false
@@ -1158,7 +1158,7 @@ contains
                   endif
                endif
 
-               if (psi >= soilpsi_on .and. additional_onset_condition) then
+               if (psi >= soilpsi_on) then
                   onset_swi(p) = onset_swi(p) + fracday
                endif
 
@@ -1166,10 +1166,10 @@ contains
                ! then test for soil temperature criteria
 
                ! Adding in Kyla's rainfall trigger when fun on. RF. prec10 (mm/s) needs to be higher than 8mm over 10 days. 
-           
-               if (onset_swi(p) > crit_onset_swi.and.(.not. use_fun .or. (prec10(p)*24.0_r8*3600.0_r8*10._r8.gt.8.0_r8)) ) then
-                  onset_flag(p) = 1._r8
 
+               if (onset_swi(p) > crit_onset_swi.and. additional_onset_condition)  then
+                  onset_flag(p) = 1._r8
+              
                   ! only check soil temperature criteria if freeze flag set since
                   ! beginning of last dormancy.  If freeze flag set and growing
                   ! degree day sum (since freeze trigger) is lower than critical
@@ -2267,6 +2267,17 @@ contains
                frootc_to_litter(p) = prev_frootc_to_litter(p) + t1*(frootc(p) - prev_frootc_to_litter(p)*offset_counter(p))
 
             end if
+            
+            if ( use_fun ) then
+               if(leafc_to_litter(p)*dt.gt.leafc(p))then
+                   leafc_to_litter(p) = leafc(p)/dt
+               endif
+               if(frootc_to_litter(p)*dt.gt.frootc(p))then
+                   frootc_to_litter(p) = frootc(p)/dt
+               endif
+            end if
+            
+            
             if ( use_fun ) then
                leafc_to_litter_fun(p)      =  leafc_to_litter(p)
                leafn_to_retransn(p)        =  Nretrans(p)
@@ -2318,7 +2329,13 @@ contains
                 else    
                    frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))   
                 end if   
-            end if    
+            end if  
+            
+            if ( use_fun ) then
+               if(frootn_to_litter(p)*dt.gt.frootn(p))then
+                   frootn_to_litter(p) = frootn(p)/dt
+               endif    
+            end if
 
             if (ivt(p) >= npcropmin) then
                ! NOTE(slevis, 2014-12) results in -ve livestemn and -ve totpftn
@@ -2456,6 +2473,12 @@ contains
                    frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))   
                 end if   
             end if    
+
+            if ( use_fun ) then
+               if(frootn_to_litter(p)*dt.gt.frootn(p))then
+                    frootn_to_litter(p) = frootn(p)/dt
+               endif
+            end if
 
          end if
 

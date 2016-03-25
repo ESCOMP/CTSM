@@ -156,6 +156,7 @@ contains
     character(len=*), intent(IN) :: NLFilename ! Namelist filename
     ! Read in any namelists that must be read for any clm object instances that need it
     call canopystate_inst%ReadNML( NLFilename )
+    call photosyns_inst%ReadNML(   NLFilename )
 
   end subroutine clm_instReadNML
 

@@ -1480,6 +1480,9 @@ contains
     real(r8)   :: icefrac                          ! fraction of ice mass w.r.t. total mass [unitless]
     real(r8)   :: frac_adjust                      ! fraction of mass remaining after capping
     integer    :: fc, c                            ! counters
+    ! Always keep at least this fraction of the bottom snow layer when doing snow capping
+    ! This needs to be slightly greater than 0 to avoid roundoff problems
+    real(r8), parameter :: min_snow_to_keep = 1.e-9  ! fraction of bottom snow layer to keep with capping
 
     !-----------------------------------------------------------------------
     associate( &
@@ -1513,7 +1516,7 @@ contains
 
        if (h2osno(c) > h2osno_max) then
           mss_snow_bottom_lyr = h2osoi_ice(c,0) + h2osoi_liq(c,0) 
-          mss_snwcp_tot = min(h2osno(c)-h2osno_max, mss_snow_bottom_lyr) ! Can't remove more mass than available
+          mss_snwcp_tot = min(h2osno(c)-h2osno_max, mss_snow_bottom_lyr * (1._r8 - min_snow_to_keep)) ! Can't remove more mass than available
 
           ! Ratio of snow/liquid in bottom layer determines partitioning of runoff fluxes
           icefrac = h2osoi_ice(c,0) / mss_snow_bottom_lyr
@@ -1527,6 +1530,7 @@ contains
           ! Check that water capacity is still positive
           if (h2osoi_ice(c,0) < 0._r8 .or. h2osoi_liq(c,0) < 0._r8 ) then
              write(iulog,*)'ERROR: capping procedure failed (negative mass remaining) c = ',c
+             write(iulog,*)'h2osoi_ice = ', h2osoi_ice(c,0), ' hwosoi_liq = ', h2osoi_liq(c,0)
              call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
           end if
 

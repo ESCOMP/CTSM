@@ -195,6 +195,8 @@ contains
          ! phenology: litterfall fluxes
          cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) - cf_veg%leafc_to_litter_patch(p)*dt
          cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) - cf_veg%frootc_to_litter_patch(p)*dt
+         
+        
         
 
          ! livewood turnover fluxes
@@ -381,13 +383,6 @@ contains
             cs_veg%grainc_xfer_patch(p)        = cs_veg%grainc_xfer_patch(p)       + cf_veg%grainc_storage_to_xfer_patch(p)*dt
          end if
          
-         
-         if(abs(cs_veg%cpool_patch(p)-check_cpool).ge.0.0000000001_r8)then
-             write(*,*) 'cpool imbalance',p,cs_veg%cpool_patch(p)  ,check_cpool,cs_veg%cpool_patch(p)-check_cpool,woody(ivt(p))
-         endif 
- !endif           
-         
-
       end do ! end of patch loop
 
     end associate 
