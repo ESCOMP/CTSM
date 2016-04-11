@@ -12,12 +12,13 @@ module filterMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
-  use clm_varctl     , only : iulog
+  use clm_varctl     , only : iulog, create_glacier_mec_landunit
   use decompMod      , only : bounds_type  
   use GridcellType   , only : grc
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
-  use PatchType      , only : patch                
+  use PatchType      , only : patch
+  use glcBehaviorMod , only : glc_behavior_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -227,22 +228,22 @@ contains
   end subroutine allocFiltersOneGroup
 
   !------------------------------------------------------------------------
-  subroutine setFilters(bounds, icemask_grc)
+  subroutine setFilters(bounds, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Set CLM filters.
     use decompMod , only : BOUNDS_LEVEL_CLUMP
     !
     ! !ARGUMENTS:
-    type(bounds_type) , intent(in) :: bounds  
-    real(r8)          , intent(in) :: icemask_grc( bounds%begg: ) ! ice sheet grid coverage mask [gridcell]
+    type(bounds_type)       , intent(in) :: bounds
+    type(glc_behavior_type) , intent(in) :: glc_behavior
     !------------------------------------------------------------------------
 
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
 
     call setFiltersOneGroup(bounds, &
          filter, include_inactive = .false., &
-         icemask_grc = icemask_grc(bounds%begg:bounds%endg))
+         glc_behavior = glc_behavior)
 
     ! At least as of June, 2013, the 'inactive_and_active' version of the filters is
     ! static in time. Thus, we could have some logic saying whether we're in
@@ -257,13 +258,13 @@ contains
     
     call setFiltersOneGroup(bounds, &
          filter_inactive_and_active, include_inactive = .true., &
-         icemask_grc = icemask_grc(bounds%begg:bounds%endg))
+         glc_behavior = glc_behavior)
     
   end subroutine setFilters
 
 
   !------------------------------------------------------------------------
-  subroutine setFiltersOneGroup(bounds, this_filter, include_inactive, icemask_grc )
+  subroutine setFiltersOneGroup(bounds, this_filter, include_inactive, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Set CLM filters for one group of filters.
@@ -284,10 +285,10 @@ contains
     use column_varcon   , only : is_hydrologically_active
     !
     ! !ARGUMENTS:
-    type(bounds_type) , intent(in)    :: bounds  
-    type(clumpfilter) , intent(inout) :: this_filter(:)              ! the group of filters to set
-    logical           , intent(in)    :: include_inactive            ! whether inactive points should be included in the filters
-    real(r8)          , intent(in)    :: icemask_grc( bounds%begg: ) ! ice sheet grid coverage mask [gridcell]
+    type(bounds_type)       , intent(in)    :: bounds  
+    type(clumpfilter)       , intent(inout) :: this_filter(:)   ! the group of filters to set
+    logical                 , intent(in)    :: include_inactive ! whether inactive points should be included in the filters
+    type(glc_behavior_type) , intent(in)    :: glc_behavior
     !
     ! LOCAL VARAIBLES:
     integer :: nc          ! clump index
@@ -300,7 +301,6 @@ contains
     !------------------------------------------------------------------------
 
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(icemask_grc) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
 
     nc = bounds%clump_index
 
@@ -479,14 +479,21 @@ contains
        end if
     end do
     this_filter(nc)%num_icemecc = f
-    
+
     f = 0
     do c = bounds%begc,bounds%endc
        if (col%active(c) .or. include_inactive) then
           l = col%landunit(c)
           g = col%gridcell(c)
+
+          ! In addition to istice_mec columns, we also compute SMB for any soil column
+          ! where we're using virtual glacier columns: These are the gridcells where we
+          ! want SMB forcing for all elevation classes, so it follows that we want SMB
+          ! forcing for the bare ground elevation class (elevation class 0) as well.
           if ( lun%itype(l) == istice_mec .or. &
-             (lun%itype(l) == istsoil .and. icemask_grc(g) > 0.)) then
+               (lun%itype(l) == istsoil .and. &
+               create_glacier_mec_landunit .and. &
+               glc_behavior%has_virtual_columns_grc(g))) then
              f = f + 1
              this_filter(nc)%do_smb_c(f) = c
           end if

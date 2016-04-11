@@ -255,8 +255,7 @@ contains
          urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,           &
          waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,             &
          canopystate_inst, photosyns_inst, glc2lnd_inst, bgc_vegetation_inst,          &
-         soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst, glc_behavior,        &
-         atm2lnd_inst)
+         soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst, glc_behavior)
     call t_stopf('dyn_subgrid')
 
     ! ============================================================================
@@ -324,9 +323,13 @@ contains
             filter(nc)%num_soilp  , filter(nc)%soilp,   &
             canopystate_inst, waterstate_inst, waterflux_inst, energyflux_inst)
 
+       call topo_inst%UpdateTopo(bounds_clump, &
+            filter(nc)%num_icemecc, filter(nc)%icemecc, &
+            glc2lnd_inst, glc_behavior, &
+            atm_topo = atm2lnd_inst%forc_topo_grc(bounds_clump%begg:bounds_clump%endg))
+
        call downscale_forcings(bounds_clump, &
-            filter(nc)%num_do_smb_c, filter(nc)%do_smb_c, &
-            atm2lnd_inst, &
+            topo_inst, atm2lnd_inst, &
             eflx_sh_precip_conversion = energyflux_inst%eflx_sh_precip_conversion_col(bounds_clump%begc:bounds_clump%endc))
 
        call t_stopf('drvinit')
@@ -880,7 +883,7 @@ contains
           call get_clump_bounds(nc, bounds_clump)
           call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
                filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
-               temperature_inst, waterflux_inst,               &
+               temperature_inst, waterflux_inst, topo_inst,    &
                init=.false.)           
        end do
        !$OMP END PARALLEL DO
@@ -990,7 +993,9 @@ contains
                atm2lnd_inst, soilstate_inst, temperature_inst,        &
                waterstate_inst, canopystate_inst)
 
-          call setFilters( bounds_clump, glc2lnd_inst%icemask_grc )
+          ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
+          ! call to reweight_wrapup, if it's needed at all.
+          call setFilters( bounds_clump, glc_behavior )
 
              !reset surface albedo fluxes in case there is a mismatch between elai and canopy absorbtion. 
              call SurfaceAlbedo(bounds_clump,                      &

@@ -26,7 +26,7 @@ module reweightMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine reweight_wrapup(bounds, icemask_grc, glc_behavior)
+  subroutine reweight_wrapup(bounds, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Do additional modifications and error-checks that should be done after modifying subgrid
@@ -43,7 +43,6 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds                      ! clump bounds
-    real(r8)          , intent(in) :: icemask_grc( bounds%begg: ) ! ice sheet grid coverage mask [gridcell]
     type(glc_behavior_type), intent(in) :: glc_behavior
     !------------------------------------------------------------------------
 
@@ -52,7 +51,7 @@ contains
     call set_active(bounds, glc_behavior)
     call check_weights(bounds, active_only=.false.)
     call check_weights(bounds, active_only=.true.)
-    call setFilters(bounds, icemask_grc(bounds%begg:bounds%endg))
+    call setFilters(bounds, glc_behavior)
 
   end subroutine reweight_wrapup
 

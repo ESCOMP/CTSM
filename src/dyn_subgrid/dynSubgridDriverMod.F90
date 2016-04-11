@@ -28,7 +28,6 @@ module dynSubgridDriverMod
   use WaterstateType               , only : waterstate_type
   use TemperatureType              , only : temperature_type
   use glc2lndMod                   , only : glc2lnd_type
-  use atm2lndType                  , only : atm2lnd_type
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -115,8 +114,7 @@ contains
        urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,           &
        waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,             &
        canopystate_inst, photosyns_inst, glc2lnd_inst, bgc_vegetation_inst,          &
-       soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst, glc_behavior,        &
-       atm2lnd_inst)
+       soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Update subgrid weights for prescribed transient PFTs, CNDV, and/or dynamic
@@ -162,7 +160,6 @@ contains
     type(soilbiogeochem_state_type)      , intent(in)    :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(glc_behavior_type)              , intent(in)    :: glc_behavior
-    type(atm2lnd_type)                   , intent(in)    :: atm2lnd_inst
     !
     ! !LOCAL VARIABLES:
     integer           :: nclumps      ! number of clumps on this processor
@@ -226,10 +223,9 @@ contains
        end if
 
        if (create_glacier_mec_landunit) then
-          call glc2lnd_inst%update_glc2lnd( &
+          call glc2lnd_inst%update_glc2lnd_non_topo( &
                bounds = bounds_clump, &
-               glc_behavior = glc_behavior, &
-               atm_topo = atm2lnd_inst%forc_topo_grc(bounds_clump%begg:bounds_clump%endg))
+               glc_behavior = glc_behavior)
        end if
 
        ! ========================================================================
@@ -249,9 +245,7 @@ contains
        call compute_higher_order_weights(bounds_clump)
 
        ! Here: filters are re-made
-       call reweight_wrapup(bounds_clump, &
-            glc2lnd_inst%icemask_grc(bounds_clump%begg:bounds_clump%endg), &
-            glc_behavior)
+       call reweight_wrapup(bounds_clump, glc_behavior)
 
        call column_state_updater%set_new_weights(bounds_clump)
 

@@ -1,4 +1,5 @@
 set(pfunit_sources
+  test_downscale_forcings.pf
   test_partition_precip.pf
   test_sens_heat_from_precip_conversion.pf)
 

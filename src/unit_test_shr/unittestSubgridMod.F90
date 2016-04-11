@@ -34,6 +34,9 @@ module unittestSubgridMod
   ! In the teardown for a test, the following should be done:
   ! 
   ! (1) call unittest_subgrid_teardown
+  !
+  !    Note: This can be done conditionally based on whether unittest_subgrid_needs_teardown
+  !    is true.
 
   use shr_kind_mod , only : r8 => shr_kind_r8
   use decompMod    , only : bounds_type, BOUNDS_LEVEL_PROC
@@ -65,6 +68,10 @@ module unittestSubgridMod
   ! use, in contrast to the module-level endg, endl, etc., which give the final indices
   ! of the allocated arrays.
   type(bounds_type), public, protected :: bounds
+
+  ! Whether subgrid stuff has been initialized. A teardown method can test against this
+  ! to determine whether unittest_subgrid_teardown is needed.
+  logical, public, protected :: unittest_subgrid_needs_teardown = .false.
   
   ! Indices of last grid cell / landunit / column / patch added
   integer, public, protected :: gi
@@ -73,7 +80,7 @@ module unittestSubgridMod
   integer, public, protected :: pi
 
   ! Maximum array sizes at each level
-  integer, parameter, public :: numg = 3
+  integer, parameter, public :: numg = 6
   integer, parameter, public :: numl = 30
   integer, parameter, public :: numc = 50
   integer, parameter, public :: nump = 100
@@ -133,6 +140,8 @@ contains
     ! Initialize other variables needed for the subgrid setup
     
     natpft_lb = 0
+
+    unittest_subgrid_needs_teardown = .true.
     
   end subroutine unittest_subgrid_setup_start
 
@@ -248,6 +257,8 @@ contains
     call patch%clean
 
     call reset_nlevsno()
+
+    unittest_subgrid_needs_teardown = .false.
 
   end subroutine unittest_subgrid_teardown
 

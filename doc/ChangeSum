@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_8_r175    sacks 04/09/2016 For glc_mec, change downscaling and where SMB is computed
    clm4_5_8_r174     erik 03/25/2016 Bring Rosie's respiration changes to the trunk
    clm4_5_8_r173    sacks 03/17/2016 Major refactor of CN Products
    clm4_5_8_r172    sacks 03/08/2016 Exclude land use and product pools / fluxes from CN summary diagnostics

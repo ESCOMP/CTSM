@@ -32,17 +32,19 @@ module glcBehaviorMod
      ! If has_virtual_columns_grc(g) is true, then grid cell g has virtual columns for
      ! all possible glc_mec columns.
      !
-     ! In principle, this should only be needed within the icemask, where we need virtual
-     ! columns for the sake of coupling with CISM. This is needed in order to (1) provide
-     ! SMB in all elevation classes, in case it is being used with 1-way coupling (or to
-     ! force a later TG run); (2) even with two-way coupling, provide SMB in the
-     ! elevation classes above and below existing elevation classes, for the sake of
-     ! vertical interpolation; (3) provide place-holder columns (which are already
-     ! spun-up) for dynamic landunits. 
+     ! For the sake of coupling with CISM, this should only be needed within the icemask,
+     ! where we need virtual columns for the sake of coupling with CISM. This is needed in
+     ! order to (1) provide SMB in all elevation classes, in case it is being used with
+     ! 1-way coupling (or to force a later TG run); (2) even with two-way coupling,
+     ! provide SMB in the elevation classes above and below existing elevation classes,
+     ! for the sake of vertical interpolation; (3) provide place-holder columns (which are
+     ! already spun-up) for dynamic landunits.
      !
      ! However, by making this part of the user-modifiable "glc behavior", we make it easy
      ! for the user to add virtual columns, if this is desired for diagnostic
-     ! purposes. (Also, we cannot use icemask for all purposes, because it isn't known at
+     ! purposes. One important reason why this may be desired is to produce coupler
+     ! history forcings to force a later TG run, with SMB forcings outside the original
+     ! CISM area. (Also, we cannot use icemask for all purposes, because it isn't known at
      ! initialization.)
      logical, allocatable, public :: has_virtual_columns_grc(:)
 
@@ -80,9 +82,9 @@ module glcBehaviorMod
      ! potentially changing at runtime)
      procedure, public  :: cols_have_dynamic_type
 
-     ! update topographic height and class of glc_mec columns in regions where these are
-     ! collapsed to a single column
-     procedure, public  :: update_collapsed_columns
+     ! Sets a column-level logical array to true for any ice_mec column that needs
+     ! downscaling, false for any ice_mec column that does not need downscaling
+     procedure, public  :: icemec_cols_need_downscaling
 
      ! update the column class types of any glc_mec columns that need to be updated
      procedure, public  :: update_glc_classes
@@ -592,55 +594,61 @@ contains
   end function cols_have_dynamic_type
 
   !-----------------------------------------------------------------------
-  subroutine update_collapsed_columns(this, bounds, atm_topo)
+  subroutine icemec_cols_need_downscaling(this, bounds, num_icemecc, filter_icemecc, &
+       needs_downscaling_col)
     !
     ! !DESCRIPTION:
-    ! Update topographic height and class of glc_mec columns in regions where these are
-    ! collapsed to a single column, whose topographic height matches the atmosphere's
-    ! topographic height.
+    ! Sets needs_downscaling_col to true for any ice_mec column that needs downscaling,
+    ! false for any ice_mec column that does not need downscaling.
+    !
+    ! Outside of filter_icemecc, leaves needs_downscaling_col untouched.
+    !
+    ! !USES:
     !
     ! !ARGUMENTS:
-    class(glc_behavior_type), intent(in) :: this
-    type(bounds_type), intent(in) :: bounds
-    real(r8), intent(in) :: atm_topo(bounds%begg:)  ! atmosphere's topographic height (m)
+    class(glc_behavior_type) , intent(in) :: this
+    type(bounds_type)        , intent(in) :: bounds
+    integer                  , intent(in) :: num_icemecc       ! number of points in filter_icemecc
+    integer                  , intent(in) :: filter_icemecc(:) ! col filter for ice_mec
+    logical                  , intent(inout) :: needs_downscaling_col( bounds%begc: )
     !
     ! !LOCAL VARIABLES:
-    type(filter_col_type) :: collapse_filterc
-    integer :: fc         ! filter index
-    integer :: c          ! column index
-    integer :: g          ! grid cell index
+    integer :: fc
+    integer :: c
+    integer :: g
 
-    character(len=*), parameter :: subname = 'update_collapsed_columns'
+    character(len=*), parameter :: subname = 'icemec_cols_need_downscaling'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(atm_topo) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(needs_downscaling_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
 
-    collapse_filterc = this%collapse_to_atm_topo_icemec_filterc(bounds)
-
-    do fc = 1, collapse_filterc%num
-       c = collapse_filterc%indices(fc)
+    do fc = 1, num_icemecc
+       c = filter_icemecc(fc)
        g = col%gridcell(c)
 
-       col%glc_topo(c) = atm_topo(g)
+       if (this%collapse_to_atm_topo_grc(g)) then
+          needs_downscaling_col(c) = .false.
+       else
+          needs_downscaling_col(c) = .true.
+       end if
     end do
 
-    call this%update_collapsed_columns_classes(collapse_filterc)
-
-  end subroutine update_collapsed_columns
+  end subroutine icemec_cols_need_downscaling
 
   !-----------------------------------------------------------------------
-  subroutine update_glc_classes(this, bounds)
+  subroutine update_glc_classes(this, bounds, topo_col)
     !
     ! !DESCRIPTION:
     ! Update the column class types of any glc_mec columns that need to be updated.
     !
-    ! Assumes that col%glc_topo has already been set appropriately.
+    ! Assumes that topo_col has already been set appropriately.
     !
     ! !USES:
     !
     ! !ARGUMENTS:
     class(glc_behavior_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
+    real(r8), intent(in) :: topo_col( bounds%begc: )
     !
     ! !LOCAL VARIABLES:
     type(filter_col_type) :: collapse_filterc
@@ -649,18 +657,18 @@ contains
     !-----------------------------------------------------------------------
 
     collapse_filterc = this%collapse_to_atm_topo_icemec_filterc(bounds)
-    call this%update_collapsed_columns_classes(collapse_filterc)
+    call this%update_collapsed_columns_classes(bounds, collapse_filterc, topo_col)
 
   end subroutine update_glc_classes
 
   !-----------------------------------------------------------------------
-  subroutine update_collapsed_columns_classes(this, collapse_filterc)
+  subroutine update_collapsed_columns_classes(this, bounds, collapse_filterc, topo_col)
     !
     ! !DESCRIPTION:
     ! Update class of glc_mec columns in regions where these are collapsed to a single
     ! column, given a filter.
     !
-    ! Assumes that glc_topo has already been updated appropriately for these columns.
+    ! Assumes that topo_col has already been updated appropriately for these columns.
     !
     ! !USES:
     use glc_elevclass_mod, only : glc_get_elevation_class, GLC_ELEVCLASS_ERR_NONE
@@ -670,7 +678,9 @@ contains
     !
     ! !ARGUMENTS:
     class(glc_behavior_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
     type(filter_col_type), intent(in) :: collapse_filterc
+    real(r8), intent(in) :: topo_col( bounds%begc: )
     !
     ! !LOCAL VARIABLES:
     integer :: fc         ! filter index
@@ -681,10 +691,12 @@ contains
     character(len=*), parameter :: subname = 'update_collapsed_columns_classes'
     !-----------------------------------------------------------------------
 
+    SHR_ASSERT_ALL((ubound(topo_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+
     do fc = 1, collapse_filterc%num
        c = collapse_filterc%indices(fc)
 
-       call glc_get_elevation_class(col%glc_topo(c), elev_class, err_code)
+       call glc_get_elevation_class(topo_col(c), elev_class, err_code)
        if ( err_code == GLC_ELEVCLASS_ERR_NONE .or. &
             err_code == GLC_ELEVCLASS_ERR_TOO_LOW .or. &
             err_code == GLC_ELEVCLASS_ERR_TOO_HIGH) then
@@ -695,7 +707,7 @@ contains
           ! Do nothing
        else
           write(iulog,*) subname, ': ERROR getting elevation class for topo = ', &
-               col%glc_topo(c)
+               topo_col(c)
           write(iulog,*) glc_errcode_to_string(err_code)
           call endrun(msg=subname//': ERROR getting elevation class')
        end if
@@ -737,7 +749,8 @@ contains
     filter = col_filter_from_grcflags_ltypes( &
          bounds = bounds, &
          grcflags = this%collapse_to_atm_topo_grc(bounds%begg:bounds%endg), &
-         ltypes = [istice_mec])
+         ltypes = [istice_mec], &
+         include_inactive = .true.)
 
   end function collapse_to_atm_topo_icemec_filterc
 

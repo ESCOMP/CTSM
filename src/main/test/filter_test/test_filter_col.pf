@@ -7,6 +7,9 @@ module test_filter_col
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestSubgridMod
   use unittestSimpleSubgridSetupsMod
+  use unittestArrayMod
+  use ColumnType, only : col
+  use landunit_varcon, only : istsoil
 
   implicit none
 
@@ -28,20 +31,251 @@ contains
   subroutine tearDown(this)
     class(TestFilterCol), intent(inout) :: this
 
-    call unittest_subgrid_teardown()
+    if (unittest_subgrid_needs_teardown) then
+       call unittest_subgrid_teardown()
+    end if
   end subroutine tearDown
 
-  subroutine assertFilterCorrect(expected_indices, filter, msg)
-    integer, intent(in) :: expected_indices(:)
-    type(filter_col_type), intent(in) :: filter
-    character(len=*), intent(in) :: msg
-
-    @assertEqual(size(expected_indices), filter%num, message=msg//': num')
-    @assertEqual(expected_indices, filter%indices(1:filter%num), message=msg//': indices')
-  end subroutine assertFilterCorrect
+  ! ------------------------------------------------------------------------
+  ! Tests of equals method
+  ! ------------------------------------------------------------------------
 
   @Test
-  subroutine grcflags_ltypes_multipleGridcells(this)
+  subroutine equals_true(this)
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter1, filter2
+    
+    call setup_ncells_single_veg_patch(ncells = 4, pft_type = 1)
+    filter1 = col_filter_from_index_array(bounds, [bounds%begc, bounds%begc+2])
+    filter2 = col_filter_from_index_array(bounds, [bounds%begc, bounds%begc+2])
+
+    @assertTrue(filter1 == filter2)
+
+  end subroutine equals_true
+
+  @Test
+  subroutine equals_different_size(this)
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter1, filter2
+    
+    call setup_ncells_single_veg_patch(ncells = 4, pft_type = 1)
+    filter1 = col_filter_from_index_array(bounds, [bounds%begc, bounds%begc+2])
+    filter2 = col_filter_from_index_array(bounds, [bounds%begc])
+
+    @assertFalse(filter1 == filter2)
+
+  end subroutine equals_different_size
+
+  @Test
+  subroutine equals_different_points(this)
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter1, filter2
+    
+    call setup_ncells_single_veg_patch(ncells = 4, pft_type = 1)
+    filter1 = col_filter_from_index_array(bounds, [bounds%begc, bounds%begc+2])
+    filter2 = col_filter_from_index_array(bounds, [bounds%begc, bounds%begc+1])
+
+    @assertFalse(filter1 == filter2)
+  end subroutine equals_different_points
+
+  ! ------------------------------------------------------------------------
+  ! Tests of col_filter_from_logical_array
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine logicalArray_true(this)
+    ! Test col_filter_from_logical_array with logical true
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+    logical, parameter :: logical_col(1) = [.true.]
+
+    call setup_single_veg_patch(pft_type = 1)
+    expected = col_filter_from_index_array(bounds, [ci])
+
+    filter = col_filter_from_logical_array(bounds, logical_col, include_inactive = .false.)
+
+    @assertTrue(filter == expected)
+  end subroutine logicalArray_true
+
+  @Test
+  subroutine logicalArray_false(this)
+    ! Test col_filter_from_logical_array with logical false
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+    logical, parameter :: logical_col(1) = [.false.]
+
+    call setup_single_veg_patch(pft_type = 1)
+    expected = col_filter_empty(bounds)
+
+    filter = col_filter_from_logical_array(bounds, logical_col, include_inactive = .false.)
+
+    @assertTrue(filter == expected)
+  end subroutine logicalArray_false
+
+  @Test
+  subroutine logicalArray_excludes_inactive(this)
+    ! Test col_filter_from_logical_array with an inactive point
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+    logical, parameter :: logical_col(1) = [.true.]
+
+    call setup_single_veg_patch(pft_type = 1)
+    expected = col_filter_empty(bounds)
+    col%active(ci) = .false.
+
+    filter = col_filter_from_logical_array(bounds, logical_col, include_inactive = .false.)
+
+    @assertTrue(filter == expected)
+  end subroutine logicalArray_excludes_inactive
+
+  @Test
+  subroutine logicalArray_includeInactive_includes_inactive(this)
+    ! Test col_filter_from_logical_array with an inactive point, with include_inactive true
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+    logical, parameter :: logical_col(1) = [.true.]
+
+    call setup_single_veg_patch(pft_type = 1)
+    expected = col_filter_from_index_array(bounds, [ci])
+    col%active(ci) = .false.
+
+    filter = col_filter_from_logical_array(bounds, logical_col, include_inactive = .true.)
+
+    @assertTrue(filter == expected)
+  end subroutine logicalArray_includeInactive_includes_inactive
+
+  @Test
+  subroutine logicalArray_multiple_points(this)
+    ! Test col_filter_from_logical_array with multiple points, some in and some out of
+    ! the filter
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+    logical, parameter :: logical_col(4) = [.true., .false., .true., .false.]
+
+    call setup_ncells_single_veg_patch(ncells = 4, pft_type = 1)
+    expected = col_filter_from_index_array(bounds, [bounds%begc, bounds%begc+2])
+
+    filter = col_filter_from_logical_array(bounds, logical_col, include_inactive = .false.)
+
+    @assertTrue(filter == expected)
+  end subroutine logicalArray_multiple_points
+
+  ! ------------------------------------------------------------------------
+  ! Tests of col_filter_from_ltype
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine ltype_includes_point(this)
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+
+    call setup_single_veg_patch(pft_type = 1)
+    expected = col_filter_from_index_array(bounds, [bounds%begc])
+
+    filter = col_filter_from_ltype(bounds = bounds, &
+         ltype = istsoil, &
+         include_inactive = .false.)
+
+    @assertTrue(filter == expected)
+  end subroutine ltype_includes_point
+
+  @Test
+  subroutine ltype_excludes_point(this)
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+
+    call setup_single_veg_patch(pft_type = 1)
+    expected = col_filter_empty(bounds)
+
+    filter = col_filter_from_ltype(bounds = bounds, &
+         ltype = istsoil + 1, &
+         include_inactive = .false.)
+
+    @assertTrue(filter == expected)
+  end subroutine ltype_excludes_point
+
+  @Test
+  subroutine ltype_excludes_inactive(this)
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+
+    call setup_single_veg_patch(pft_type = 1)
+    col%active(bounds%begc) = .false.
+    expected = col_filter_empty(bounds)
+
+    filter = col_filter_from_ltype(bounds = bounds, &
+         ltype = istsoil, &
+         include_inactive = .false.)
+
+    @assertTrue(filter == expected)
+  end subroutine ltype_excludes_inactive
+
+  ! ------------------------------------------------------------------------
+  ! Tests of col_filter_from_grcflags_ltypes
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine grcflagsLtypes_includes_point(this)
+    ! Basic test of col_filter_from_grcflags_ltypes, with an included point
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+
+    call setup_single_veg_patch(pft_type = 1)
+    expected = col_filter_from_index_array(bounds, [bounds%begc])
+
+    filter = col_filter_from_grcflags_ltypes(bounds = bounds, &
+         grcflags = grc_array(.true.), ltypes = [istsoil], &
+         include_inactive = .false.)
+
+    @assertTrue(filter == expected)
+  end subroutine grcflagsLtypes_includes_point
+
+  @Test
+  subroutine grcflagsLtypes_excludes_inactive(this)
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+
+    call setup_single_veg_patch(pft_type = 1)
+    col%active(bounds%begc) = .false.
+    expected = col_filter_empty(bounds)
+
+    filter = col_filter_from_grcflags_ltypes(bounds = bounds, &
+         grcflags = grc_array(.true.), ltypes = [istsoil], &
+         include_inactive = .false.)
+
+    @assertTrue(filter == expected)
+  end subroutine grcflagsLtypes_excludes_inactive
+
+  @Test
+  subroutine grcflagsLtypes_includeInactive_includes_inactive(this)
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+
+    call setup_single_veg_patch(pft_type = 1)
+    col%active(bounds%begc) = .false.
+    expected = col_filter_from_index_array(bounds, [bounds%begc])
+
+    filter = col_filter_from_grcflags_ltypes(bounds = bounds, &
+         grcflags = grc_array(.true.), ltypes = [istsoil], &
+         include_inactive = .true.)
+
+    @assertTrue(filter == expected)
+  end subroutine grcflagsLtypes_includeInactive_includes_inactive
+
+
+  @Test
+  subroutine grcflagsLtypes_multipleGridcells(this)
     ! Test col_filter_from_grcflags_ltypes with multiple grid cells, some with flag true
     ! and some with flag false
     class(TestFilterCol), intent(inout) :: this
@@ -49,6 +283,7 @@ contains
     logical, parameter :: grcflags(3) = [.false., .true., .false.]
     integer, allocatable :: expected_indices(:)
     type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
 
     call unittest_subgrid_setup_start()
     call my_add_gridcell()
@@ -56,12 +291,13 @@ contains
     expected_indices = [ci - 1, ci]
     call my_add_gridcell()
     call unittest_subgrid_setup_end()
+    expected = col_filter_from_index_array(bounds, expected_indices)
 
     filter = col_filter_from_grcflags_ltypes(bounds = bounds, &
-         grcflags = grcflags, ltypes = [target_ltype])
+         grcflags = grcflags, ltypes = [target_ltype], &
+         include_inactive = .false.)
 
-    call assertFilterCorrect(expected_indices, filter, &
-         'grcflags_ltypes_multipleGridcells')
+    @assertTrue(filter == expected)
   contains
     subroutine my_add_gridcell
       call unittest_add_gridcell()
@@ -69,10 +305,10 @@ contains
            ctypes = [1, 2], cweights = [0.5_r8, 0.5_r8])
     end subroutine my_add_gridcell
 
-  end subroutine grcflags_ltypes_multipleGridcells
+  end subroutine grcflagsLtypes_multipleGridcells
 
   @Test
-  subroutine grcflags_ltypes_multipleLandunits(this)
+  subroutine grcflagsLtypes_multipleLandunits(this)
     ! Test col_filter_from_grcflags_ltypes with multiple landunits, some in the landunit
     ! type array and some not
     class(TestFilterCol), intent(inout) :: this
@@ -81,6 +317,7 @@ contains
     logical, parameter :: grcflags(1) = [.true.]
     integer, allocatable :: expected_indices(:)
     type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
 
     call unittest_subgrid_setup_start()
     call unittest_add_gridcell()
@@ -91,13 +328,14 @@ contains
     expected_indices = [expected_indices, ci - 1, ci]
     call my_add_landunit(target_ltype2 + 1)
     call unittest_subgrid_setup_end()
+    expected = col_filter_from_index_array(bounds, expected_indices)
 
     filter = col_filter_from_grcflags_ltypes(bounds = bounds, &
-         grcflags = grcflags, ltypes = [target_ltype1, target_ltype2])
+         grcflags = grcflags, ltypes = [target_ltype1, target_ltype2], &
+         include_inactive = .false.)
 
-    call assertFilterCorrect(expected_indices, filter, &
-         'grcflags_ltypes_multipleLandunits')
-
+    @assertTrue(filter == expected)
+    
   contains
     subroutine my_add_landunit(ltype)
       integer, intent(in) :: ltype
@@ -106,10 +344,10 @@ contains
            ctypes = [1, 2], cweights = [0.5_r8, 0.5_r8])
     end subroutine my_add_landunit
 
-  end subroutine grcflags_ltypes_multipleLandunits
+  end subroutine grcflagsLtypes_multipleLandunits
 
   @Test
-  subroutine glcflags_ltypes_ltypeNotPresent(this)
+  subroutine grcflagsLtypes_ltypeNotPresent(this)
     ! Test col_filter_from_grcflags_ltypes with a landunit type not present. It should
     ! skip over that absent landunit type, but still include the present landunit type
     ! that comes later.
@@ -119,6 +357,7 @@ contains
     logical, parameter :: grcflags(1) = [.true.]
     integer, allocatable :: expected_indices(:)
     type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
 
     call unittest_subgrid_setup_start()
     call unittest_add_gridcell()
@@ -126,12 +365,13 @@ contains
          ctypes = [1, 2], cweights = [0.5_r8, 0.5_r8])
     expected_indices = [ci - 1, ci]
     call unittest_subgrid_setup_end()
+    expected = col_filter_from_index_array(bounds, expected_indices)
 
     filter = col_filter_from_grcflags_ltypes(bounds = bounds, &
-         grcflags = grcflags, ltypes = [target_ltype_not_present, target_ltype_present])
+         grcflags = grcflags, ltypes = [target_ltype_not_present, target_ltype_present], &
+         include_inactive = .false.)
 
-    call assertFilterCorrect(expected_indices, filter, &
-         'glcflags_ltypes_ltypeNotPresent')
-  end subroutine glcflags_ltypes_ltypeNotPresent
+    @assertTrue(filter == expected)
+  end subroutine grcflagsLtypes_ltypeNotPresent
 
 end module test_filter_col

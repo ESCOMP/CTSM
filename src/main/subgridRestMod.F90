@@ -20,7 +20,6 @@ module subgridRestMod
   use ColumnType         , only : col                
   use PatchType          , only : patch                
   use restUtilMod
-  use glcBehaviorMod     , only : glc_behavior_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -36,7 +35,6 @@ module subgridRestMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: subgridRest_write_only     ! handle restart of subgrid variables that only need to be written, not read
   private :: subgridRest_write_and_read ! handle restart of subgrid variables that need to be read as well as written
-  private :: subgridRest_set_derived    ! set variables derived from others
   private :: save_old_weights
 
   ! !PRIVATE TYPES:
@@ -68,7 +66,7 @@ contains
 
 
   !------------------------------------------------------------------------
-  subroutine subgridRestRead(bounds, ncid, glc_behavior )
+  subroutine subgridRestRead(bounds, ncid)
     !
     ! !DESCRIPTION:
     ! Handle restart reads of subgrid variables
@@ -76,14 +74,12 @@ contains
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds ! bounds
     type(file_desc_t), intent(inout) :: ncid   ! netCDF dataset id
-    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     character(len=32) :: subname='subgridRestRead' ! subroutine name
     !------------------------------------------------------------------------
 
     call subgridRest_write_and_read(bounds, ncid, 'read')
-    call subgridRest_set_derived(bounds, glc_behavior)
 
   end subroutine subgridRestRead
 
@@ -413,15 +409,6 @@ contains
          long_name='pft active flag (1=active, 0=inactive)', units='',            &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    do p=bounds%begp,bounds%endp
-       c = patch%column(p)
-       rparr(p) = col%glc_topo(c)
-    enddo
-    call restartvar(ncid=ncid, flag=flag, varname='pfts1d_topoglc', xtype=ncd_double,   &
-         dim1name='pft',                                                             &
-         long_name='mean elevation on glacier elevation classes', units='m',            &
-         interpinic_flag='skip', readvar=readvar, data=rparr)
-
     allocate(temp2d_i(bounds%begp:bounds%endp, 1:nlevgrnd))
     do p=bounds%begp,bounds%endp
        c = patch%column(p)
@@ -487,11 +474,6 @@ contains
          long_name='column weight relative to corresponding landunit', units=' ',   &
          interpinic_flag='skip', readvar=readvar, data=col%wtlunit)
 
-    call restartvar(ncid=ncid, flag=flag, varname='cols1d_topoglc', xtype=ncd_double,   &
-         dim1name='column',                                                             &
-         long_name='mean elevation on glacier elevation classes', units='m',            &
-         interpinic_flag='skip', readvar=readvar, data=col%glc_topo)
-
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_wtxy', xtype=ncd_double,  &
          dim1name='pft',                                                            &
          long_name='pft weight relative to corresponding gridcell', units='',       &  
@@ -554,31 +536,6 @@ contains
     deallocate(temp2d)
 
   end subroutine subgridRest_write_and_read
-
-  !-----------------------------------------------------------------------
-  subroutine subgridRest_set_derived(bounds, glc_behavior)
-    !
-    ! !DESCRIPTION:
-    ! Set subgrid variables that are not on the restart file, but can be derived from
-    ! variables that are on the restart file.
-    !
-    ! This should be called after reading the subgrid variables from the restart file.
-    !
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds
-    type(glc_behavior_type), intent(in) :: glc_behavior
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'subgridRest_set_derived'
-    !-----------------------------------------------------------------------
-
-    call glc_behavior%update_glc_classes(bounds)
-
-  end subroutine subgridRest_set_derived
-
 
   !-----------------------------------------------------------------------
   subroutine save_old_weights(bounds)

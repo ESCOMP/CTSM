@@ -46,7 +46,7 @@ module ColumnType
      logical , pointer :: type_is_dynamic      (:)   ! true=>itype can change throughout the run
 
      ! topography
-     real(r8), pointer :: glc_topo             (:)   ! surface elevation (m)
+     ! TODO(wjs, 2016-04-05) Probably move these things into topoMod
      real(r8), pointer :: micro_sigma          (:)   ! microtopography pdf sigma (m)
      real(r8), pointer :: n_melt               (:)   ! SCA shape parameter
      real(r8), pointer :: topo_slope           (:)   ! gridcell topographic slope
@@ -120,7 +120,6 @@ contains
 
     allocate(this%nbedrock   (begc:endc))                     ; this%nbedrock   (:)   = ispval  
     allocate(this%levgrnd_class(begc:endc,nlevgrnd))           ; this%levgrnd_class(:,:) = ispval
-    allocate(this%glc_topo    (begc:endc))                     ; this%glc_topo    (:)   = nan
     allocate(this%micro_sigma (begc:endc))                     ; this%micro_sigma (:)   = nan
     allocate(this%n_melt      (begc:endc))                     ; this%n_melt      (:)   = nan 
     allocate(this%topo_slope  (begc:endc))                     ; this%topo_slope  (:)   = nan
@@ -153,7 +152,6 @@ contains
     deallocate(this%lakedepth  )
     deallocate(this%dz_lake    )
     deallocate(this%z_lake     )
-    deallocate(this%glc_topo   )
     deallocate(this%micro_sigma)
     deallocate(this%n_melt     )
     deallocate(this%topo_slope )

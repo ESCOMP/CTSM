@@ -1,4 +1,231 @@
 ===============================================================
+Tag name:  clm4_5_8_r175
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Apr  9 15:48:47 MDT 2016
+One-line Summary: For glc_mec, change downscaling and where SMB is computed
+
+Purpose of changes
+------------------
+
+Two main purposes:
+
+(1) Change some aspects of the downscaling of atmospheric fields that is done
+    when running with glc_mec. These change answers for glc_mec cases (i.e.,
+    cases with CISM):
+
+    (a) Change the downscaling equations for forc_th (potential temperature) and
+    forc_rho (atmospheric density): Previously, these gave different answers
+    from the gridcell value even if the column's topographic height exactly
+    matched the atmosphere's topographic height. The new equations are based on
+    deltas, ensuring that the downscaled values match the atmospheric forcings
+    if topographic heights match.
+
+    Now all downscaled fields should match the atmosphere forcings if the
+    topographic heights match, *except* rain and snow (potentially large
+    differences, by design), and longwave radiation (roundoff-level differences
+    can be introduced by the normalization).
+
+    (b) Perform downscaling over all column types inside the
+    icemask. Previously, downscaling was done only for istice_mec and istsoil
+    columns (because those were the only ones that computed SMB). I realized
+    that this could result in some undesirable inconsistencies between the
+    different columns in a gridcell, which could be especially problematic if a
+    glacier advanced over (e.g.) a lake column. In practice, this seems to
+    affect a few lake points inside Greenland.
+
+    (c) Do *not* perform downscaling over glacier columns with the
+    single_at_atm_topo behavior. This is for consistency with other column types
+    whose topographic height (implicitly) matches the atmosphere's. In practice,
+    this shouldn't effect the simulation much, if at all (due to the change in
+    (a)).
+
+    (d) Extracted a function to compute forc_rho, and pulled out some magic
+    numbers from this calculation
+
+(2) When running with glc_mec, compute SMB for all vegetated columns in the
+    'virtual' glacier region, rather than just in the icemask. This affects the
+    CLM fields sent to the coupler for elevation class 0, but otherwise has no
+    direct effect on CLM evolution.
+
+    This is important if you want coupler forcings that can drive a later TG
+    run: Typically you will want these forcings in the same place where you
+    wanted virtual columns (for the same reason: so that forcings are available
+    in every elevation class, including elevation class 0).
+
+In order to accomplish these changes, I have separated the logic for where to
+compute SMB from the logic for where to do downscaling.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: Bill Lipscomb reviewed the new equations for forc_th and
+forc_rho. Other changes have not been reviewed.
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass or xfail, except for expected baseline comparison
+    failures, as noted below.
+
+    Also: There were failures in CLM5 ERP tests with threading, just in the
+    NPP_BURNEDOFF field, due to bug 2292, which was introduced in the previous
+    tag. I confirmed that the same tests failed in a fresh checkout of r174.
+
+CLM tag used for the baseline comparisons: clm4_5_8_r174
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, for CLM45/CLM5 with CISM (IG compsets)
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM5 with CISM (IG compsets)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+      Not investigated closely, but expected to be larger than roundoff/same
+      climate
+
+      Differences are due to:
+
+      (1) New downscaling equations for forc_th and forc_rho. I have confirmed
+      that these differences are relatively small in one test run (one-day
+      average differences < 0.31 deg for forc_th and < 1e-10 for forc_rho).
+
+      (2) Downscaling now done over all column types within the icemask
+      (including lakes)
+
+      (3) Small change in constants used in calculation of forc_rho downscaling,
+      to be consistent with shr_const_mod
+
+      (4) Now compute SMB for all vegetated columns in the 'virtual' glacier
+      region, rather than just columns in the icemask. This affects fields sent
+      from CLM to the coupler in elevation class 0.
+    
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated:
+
+========= Changed to a .in file processed by genf90
+D       components/clm/src/unit_test_shr/unittestArrayMod.F90
+
+List all files added and what they do:
+
+========= New module to handle coordination of updating topographic heights, as
+          well as determining which columns need downscaling
+A       components/clm/src/main/TopoMod.F90
+
+========= New unit tests
+A       components/clm/src/main/test/atm2lnd_test/test_downscale_forcings.pf
+A       components/clm/src/main/test/topo_test/test_topo.pf
+A       components/clm/src/main/test/topo_test/CMakeLists.txt
+A       components/clm/src/main/test/topo_test
+
+========= Changed to a .in file processed by genf90
+A       components/clm/src/unit_test_shr/unittestArrayMod.F90.in
+
+========= Routines that assist unit tests working with glc_mec landunits
+A       components/clm/src/unit_test_shr/unittestGlcMec.F90
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as described above. Some of these changes have to do
+          with the creation of TopoMod: topo_type, and the move of glc_topo into
+          there - now called topo_col
+M       components/clm/src/main/restFileMod.F90
+M       components/clm/src/main/clm_varcon.F90
+M       components/clm/src/main/filterMod.F90
+M       components/clm/src/main/glcBehaviorMod.F90
+M       components/clm/src/main/subgridRestMod.F90
+M       components/clm/src/main/ColumnType.F90
+M       components/clm/src/main/clm_instMod.F90
+M       components/clm/src/main/reweightMod.F90
+M       components/clm/src/main/glc2lndMod.F90
+M       components/clm/src/main/lnd2glcMod.F90
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/main/clm_initializeMod.F90
+M       components/clm/src/main/atm2lndMod.F90
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+
+========= New routines for creating filters - some for production code, some for
+          unit tests
+M       components/clm/src/main/filterColMod.F90
+
+========= Add some unit tests and some unit test helper functionality
+M       components/clm/src/main/CMakeLists.txt
+M       components/clm/src/main/test/filter_test/test_filter_col.pf
+M       components/clm/src/main/test/glcBehavior_test/test_glcBehavior.pf
+M       components/clm/src/main/test/CMakeLists.txt
+M       components/clm/src/main/test/atm2lnd_test/CMakeLists.txt
+M       components/clm/src/unit_test_shr/unittestFilterBuilderMod.F90
+M       components/clm/src/unit_test_shr/unittestSimpleSubgridSetupsMod.F90
+M       components/clm/src/unit_test_shr/unittestSubgridMod.F90
+M       components/clm/src/unit_test_shr/CMakeLists.txt
+M       components/clm/src/unit_test_shr/test/unittestArray_test/test_unittestArray.pf
+
+========= Add a bit of documentation
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r174
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Mar 25 01:57:24 MDT 2016

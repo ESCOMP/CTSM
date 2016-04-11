@@ -14,6 +14,7 @@ module glc2lndMod
   ! 'ice' refers to sea ice, not land ice.
   !
   ! !USES:
+#include "shr_assert.h"
   use decompMod      , only : bounds_type
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod   , only : r8 => shr_kind_r8
@@ -42,6 +43,10 @@ module glc2lndMod
      real(r8), pointer :: topo_grc    (:,:) => null()
      real(r8), pointer :: hflx_grc    (:,:) => null()
 
+     ! TODO(wjs, 2016-04-01) If the setting of icemask and icemask_coupled_fluxes were
+     ! moved out of lnd_import_export into this module, then these two variables could be
+     ! made private.
+
      ! Total ice sheet grid coverage mask, received from glc (0-1)
      real(r8), pointer :: icemask_grc (:)   => null()
 
@@ -68,8 +73,9 @@ module glc2lndMod
      ! ------------------------------------------------------------------------
 
      procedure, public  :: Init
-     procedure, public  :: Restart
-     procedure, public  :: update_glc2lnd
+     procedure, public  :: Clean
+     procedure, public  :: update_glc2lnd_non_topo  ! update everything except topographic heights
+     procedure, public  :: update_glc2lnd_topo      ! update topographic heights
 
      ! ------------------------------------------------------------------------
      ! Private routines
@@ -90,9 +96,6 @@ module glc2lndMod
 
      ! update subgrid fractions based on input from GLC
      procedure, private :: update_glc2lnd_fracs
-
-     ! update column-level topographic heights based on input from GLC
-     procedure, private :: update_glc2lnd_topo
 
   end type glc2lnd_type
 
@@ -213,53 +216,43 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine Restart(this, bounds, ncid, flag)
+  subroutine Clean(this)
     !
     ! !DESCRIPTION:
-    ! Read/Write glc2lnd information to/from restart file.
-    !
-    ! !USES:
-    use ncdio_pio , only : ncd_double, file_desc_t
-    use decompMod , only : bounds_type
-    use restUtilMod
+    ! Deallocate memory in this object
     !
     ! !ARGUMENTS:
-    class(glc2lnd_type) , intent(inout) :: this
-    type(bounds_type)   , intent(in)    :: bounds 
-    type(file_desc_t)   , intent(inout) :: ncid ! netcdf id
-    character(len=*)    , intent(in)    :: flag ! 'read' or 'write'
+    class(glc2lnd_type), intent(inout) :: this
     !
     ! !LOCAL VARIABLES:
-    logical :: readvar      ! determine if variable is on initial file
-    
-    character(len=*), parameter :: subname = 'Restart'
+
+    character(len=*), parameter :: subname = 'Clean'
     !-----------------------------------------------------------------------
 
-    call restartvar(ncid=ncid, flag=flag, varname='icemask', xtype=ncd_double, &
-         dim1name='gridcell', &
-         long_name='total ice-sheet grid coverage mask', units='fraction', &
-         interpinic_flag='skip', readvar=readvar, data=this%icemask_grc)
+    deallocate(this%frac_grc)
+    deallocate(this%topo_grc)
+    deallocate(this%hflx_grc)
+    deallocate(this%icemask_grc)
+    deallocate(this%icemask_coupled_fluxes_grc)
+    deallocate(this%glc_dyn_runoff_routing_grc)
 
-  end subroutine Restart
+  end subroutine Clean
 
 
   !-----------------------------------------------------------------------
-  subroutine update_glc2lnd(this, bounds, glc_behavior, atm_topo)
+  subroutine update_glc2lnd_non_topo(this, bounds, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Update values to derived-type CLM variables based on input from GLC (via the coupler)
     !
-    ! icemask, icemask_coupled_fluxes, glc_dyn_runoff_routing, and topo are always updated
+    ! This does NOT update topographic heights: those are updated in the separate
+    ! update_glc2lnd_topo routine
+    !
+    ! icemask, icemask_coupled_fluxes, and glc_dyn_runoff_routing are always updated
     ! (although note that this routine should only be called when
     ! create_glacier_mec_landunit is true, or some similar condition; this should be
     ! controlled in a conditional around the call to this routine); fracs are updated if
     ! glc_do_dynglacier is true
-    !
-    ! This routine also updates the topographic height and class of glc_mec columns in
-    ! regions where glaciers are collapsed down to a single topographic height that
-    ! matches the atmosphere's topographic height. This update has more to do with the
-    ! atm -> lnd coupling than the glc -> lnd coupling, but it is put here because it
-    ! updates the same variables as are updated in the glc -> lnd coupling.
     !
     ! !USES:
     use clm_varctl , only : glc_do_dynglacier
@@ -268,11 +261,10 @@ contains
     class(glc2lnd_type)     , intent(inout) :: this
     type(bounds_type)       , intent(in)    :: bounds
     type(glc_behavior_type) , intent(in)    :: glc_behavior
-    real(r8)                , intent(in)    :: atm_topo(bounds%begg:)
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'update_glc2lnd'
+    character(len=*), parameter :: subname = 'update_glc2lnd_non_topo'
     !-----------------------------------------------------------------------
 
     ! Note that nothing is needed to update icemask or icemask_coupled_fluxes here,
@@ -287,11 +279,7 @@ contains
        call this%update_glc2lnd_fracs(bounds)
     end if
 
-    call this%update_glc2lnd_topo(bounds)
-
-    call glc_behavior%update_collapsed_columns(bounds, atm_topo)
-
-  end subroutine update_glc2lnd
+  end subroutine update_glc2lnd_non_topo
 
   !-----------------------------------------------------------------------
   subroutine check_glc2lnd_icemask(this, bounds, glc_behavior)
@@ -485,18 +473,28 @@ contains
   end subroutine update_glc2lnd_fracs
 
   !-----------------------------------------------------------------------
-  subroutine update_glc2lnd_topo(this, bounds)
+  subroutine update_glc2lnd_topo(this, bounds, topo_col, needs_downscaling_col)
     !
     ! !DESCRIPTION:
-    ! Update column-level topographic heights based on input from GLC (via the coupler)
+    ! Update column-level topographic heights based on input from GLC (via the coupler).
+    !
+    ! Also updates the logical array, needs_downscaling_col: Sets this array to true
+    ! anywhere where topo_col is updated, because these points will need downscaling.
+    ! (Leaves other array elements in needs_downscaling_col untouched.)
+    !
+    ! This should only be called when create_glacier_mec_landunit is true, or some
+    ! similar condition (this should be controlled in a conditional around the call to
+    ! this routine).
     !
     ! !USES:
     use landunit_varcon , only : istice_mec
     use column_varcon   , only : col_itype_to_icemec_class
     !
     ! !ARGUMENTS:
-    class(glc2lnd_type), intent(in) :: this
-    type(bounds_type)  , intent(in) :: bounds ! bounds
+    class(glc2lnd_type) , intent(in)    :: this
+    type(bounds_type)   , intent(in)    :: bounds                   ! bounds
+    real(r8)            , intent(inout) :: topo_col( bounds%begc: ) ! topographic height (m)
+    logical             , intent(inout) :: needs_downscaling_col( bounds%begc: )
     !
     ! !LOCAL VARIABLES:
     integer :: c, l, g      ! indices
@@ -504,21 +502,10 @@ contains
 
     character(len=*), parameter :: subname = 'update_glc2lnd_topo'
     !-----------------------------------------------------------------------
-    
-    ! It is tempting to use the do_smb_c filter here, since we only need glc_topo inside
-    ! this filter. But the problem with using the filter is that this routine is called
-    ! before the filters are updated to reflect the updated weights. As long as
-    ! glacier_mec, natural veg and any other landunit within the smb filter are always
-    ! active, regardless of their weights, this isn't a problem. But we don't want to
-    ! build in assumptions that those rules will be in place regarding active flags.
-    ! Other ways around this problem would be:
-    ! (1) Use the inactive_and_active filter  - but we're trying to avoid use of that
-    !     filter if possible, because it can be confusing
-    ! (2) Call this topo update routine later in the driver loop, after filters have been
-    !     updated  - but that leads to greater complexity in the driver loop.
-    ! So it seems simplest just to take the minor performance hit of setting glc_topo
-    ! over all columns, even those outside the do_smb_c filter.
-    
+
+    SHR_ASSERT_ALL((ubound(topo_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(needs_downscaling_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
        g = col%gridcell(c)
@@ -532,7 +519,11 @@ contains
              icemec_class = 0
           end if
 
-          col%glc_topo(c) = this%topo_grc(g, icemec_class)
+          ! Note that we do downscaling over all column types. This is for consistency:
+          ! interpretation of results would be difficult if some non-glacier column types
+          ! were downscaled but others were not.
+          topo_col(c) = this%topo_grc(g, icemec_class)
+          needs_downscaling_col(c) = .true.
        end if
     end do
 

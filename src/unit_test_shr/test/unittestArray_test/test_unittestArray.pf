@@ -60,4 +60,20 @@ contains
     @assertEqual([17._r8, 17._r8], arr)
   end subroutine col_array_setsVal
 
+  @Test
+  subroutine col_array_uninit(this)
+    class(TestUnittestArray), intent(inout) :: this
+    real(r8), allocatable :: arr(:)
+
+    call unittest_subgrid_setup_start()
+    call create_gridcell_single_veg_patch(1)
+    call create_gridcell_single_veg_patch(2)
+    call unittest_subgrid_setup_end()
+
+    arr = col_array()
+
+    @assertIsNan(arr(1))
+    @assertIsNan(arr(2))
+  end subroutine col_array_uninit
+
 end module test_unittestArray

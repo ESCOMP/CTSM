@@ -7,9 +7,36 @@ module unittestFilterBuilderMod
   private
   save
 
+  public :: filter_empty  ! build a filter that doesn't contain any points
+
   public :: filter_from_range ! build a filter that includes all points between a start and end index
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine filter_empty(numf, filter)
+    !
+    ! !DESCRIPTION:
+    ! Build a filter that doesn't contain any points
+    !
+    ! Allocates the 'filter' argument
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    integer, intent(out) :: numf ! number of points in the filter
+    integer, allocatable, intent(out) :: filter(:)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'filter_empty'
+    !-----------------------------------------------------------------------
+
+    numf = 0
+    allocate(filter(0))
+
+  end subroutine filter_empty
+
 
   !-----------------------------------------------------------------------
   subroutine filter_from_range(start, end, numf, filter)

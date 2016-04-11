@@ -158,6 +158,7 @@ contains
 
     ncols = size(ctypes)
     SHR_ASSERT((size(cweights) == ncols), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(gi >= begg, 'must call unittest_add_gridcell first: ' // errMsg(__FILE__, __LINE__))
 
     call unittest_add_landunit(my_gi=gi, ltype=ltype, wtgcell=lweight)
     do c = 1, ncols

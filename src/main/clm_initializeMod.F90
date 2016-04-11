@@ -42,7 +42,6 @@ contains
     use clm_varpar       , only: clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
     use clm_varcon       , only: clm_varcon_init
     use landunit_varcon  , only: landunit_varcon_init, max_lunit, istice_mec
-    use column_varcon    , only: col_itype_to_icemec_class
     use clm_varctl       , only: fsurdat, fatmlndfrc, noland, version  
     use pftconMod        , only: pftcon       
     use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
@@ -61,7 +60,6 @@ contains
     integer           :: nl                      ! gdc and glo lnd indices
     integer           :: ns, ni, nj              ! global grid sizes
     integer           :: begg, endg              ! processor bounds
-    integer           :: icemec_class            ! current icemec class (1..maxpatch_glcmec)
     type(bounds_type) :: bounds_proc             
     integer ,pointer  :: amask(:)                ! global land mask
     character(len=32) :: subname = 'initialize1' ! subroutine name
@@ -226,25 +224,6 @@ contains
 
     call t_stopf('clm_init1')
 
-    ! initialize glc_topo
-    ! TODO - does this belong here?
-    do c = bounds_proc%begc, bounds_proc%endc
-       l = col%landunit(c)
-       g = col%gridcell(c)
-
-       if (lun%itype(l) == istice_mec) then
-          ! For ice_mec landunits, initialize glc_topo based on surface dataset; this
-          ! will get overwritten in the run loop by values sent from CISM
-          icemec_class = col_itype_to_icemec_class(col%itype(c))
-          col%glc_topo(c) = topo_glc_mec(g, icemec_class)
-       else
-          ! For other landunits, arbitrarily initialize glc_topo to 0 m; for landunits
-          ! where this matters, this will get overwritten in the run loop by values sent
-          ! from CISM
-          col%glc_topo(c) = 0._r8
-       end if
-    end do
-
   end subroutine initialize1
 
 
@@ -408,12 +387,6 @@ contains
     ! First put in history calls for subgrid data structures - these cannot appear in the
     ! module for the subgrid data definition due to circular dependencies that are introduced
 
-    ! Note that we do NOT set glc_topo to spval, because it has already been initialized
-    ! at this point
-    call hist_addfld1d(fname='GLC_TOPO', units='m', &
-         avgflag='A', long_name='glacier topographic height', &
-         ptr_col=col%glc_topo, l2g_scale_type='ice', default='inactive')
-
     data2dptr => col%dz(:,-nlevsno+1:0)
     col%dz(bounds_proc%begc:bounds_proc%endc,:) = spval
     call hist_addfld2d (fname='SNO_Z', units='m', type2d='levsno',  &
@@ -549,9 +522,7 @@ contains
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1, nclumps
           call get_clump_bounds(nc, bounds_clump)
-          call reweight_wrapup(bounds_clump, &
-               glc2lnd_inst%icemask_grc(bounds_clump%begg:bounds_clump%endg), &
-               glc_behavior)
+          call reweight_wrapup(bounds_clump, glc_behavior)
        end do
        !$OMP END PARALLEL DO
 
@@ -574,9 +545,7 @@ contains
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1, nclumps
        call get_clump_bounds(nc, bounds_clump)
-       call reweight_wrapup(bounds_clump, &
-            glc2lnd_inst%icemask_grc(bounds_clump%begg:bounds_clump%endg), &
-            glc_behavior)
+       call reweight_wrapup(bounds_clump, glc_behavior)
     end do
     !$OMP END PARALLEL DO
 
@@ -662,7 +631,8 @@ contains
           call t_startf('init_lnd2glc')
           call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
                filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
-               temperature_inst, waterflux_inst, init=.true.)
+               temperature_inst, waterflux_inst, topo_inst, &
+               init=.true.)
           call t_stopf('init_lnd2glc')
        end do
        !$OMP END PARALLEL DO

@@ -7,7 +7,8 @@ list(APPEND clm_sources
   FuncPedotransferMod.F90
   GridcellType.F90
   LandunitType.F90
-  PatchType.F90 
+  PatchType.F90
+  TopoMod.F90
   abortutils.F90
   atm2lndMod.F90
   atm2lndType.F90
@@ -19,6 +20,7 @@ list(APPEND clm_sources
   column_varcon.F90
   decompMod.F90
   filterColMod.F90
+  glc2lndMod.F90
   glcBehaviorMod.F90
   initSubgridMod.F90
   landunit_varcon.F90

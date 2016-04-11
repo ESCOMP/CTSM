@@ -1,0 +1,134 @@
+module unittestArrayMod
+
+  ! Provides utility functions for working with array inputs to (or outputs from)
+  ! subroutines.
+  !
+  ! The routines here assume that the subgrid structure has been set up via
+  ! unittestSubgridMod.
+
+  use shr_kind_mod, only : r8 => shr_kind_r8, i4 => shr_kind_i4
+  use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
+  use unittestSubgridMod, only : bounds
+
+  implicit none
+  private
+  save
+
+  ! Create a gridcell-level array filled with a single value; the type of the array is the
+  ! same as the type of the input value. If no value is given, an r8 array is returned,
+  ! filled with NaNs.
+  public :: grc_array
+
+  ! Create a column-level array filled with a single value; the type of the array is the
+  ! same as the type of the input value. If no value is given, an r8 array is returned,
+  ! filled with NaNs.
+  public :: col_array
+
+  interface grc_array
+     module procedure grc_array_uninit
+
+     !TYPE logical,int,double
+     module procedure grc_array_{TYPE}
+  end interface grc_array
+
+  interface col_array
+     module procedure col_array_uninit
+
+     !TYPE logical,int,double
+     module procedure col_array_{TYPE}
+  end interface col_array
+
+contains
+
+  !-----------------------------------------------------------------------
+  pure function grc_array_uninit() result(grc_array)
+    !
+    ! !DESCRIPTION:
+    ! Creates a gridcell-level array of r8 values. All elements are set to NaN.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    real(r8), allocatable :: grc_array(:)  ! function result
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'grc_array_uninit'
+    !-----------------------------------------------------------------------
+
+    allocate(grc_array(bounds%begg:bounds%endg))
+    grc_array(:) = nan
+
+  end function grc_array_uninit
+
+  !-----------------------------------------------------------------------
+  !TYPE logical,int,double
+  pure function grc_array_{TYPE}(val) result(grc_array)
+    !
+    ! !DESCRIPTION:
+    ! Creates a gridcell-level array with the same type as val. All elements are set to val.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    {VTYPE}, allocatable :: grc_array(:) ! function result
+    {VTYPE}, intent(in)  :: val ! all elements in grc_array are set to val
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'grc_array_{TYPE}'
+    !-----------------------------------------------------------------------
+
+    allocate(grc_array(bounds%begg:bounds%endg))
+    grc_array(:) = val
+
+  end function grc_array_{TYPE}
+
+
+  !-----------------------------------------------------------------------
+  pure function col_array_uninit() result(col_array)
+    !
+    ! !DESCRIPTION:
+    ! Creates a column-level array of r8 values. All elements are set to NaN.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    real(r8), allocatable :: col_array(:)  ! function result
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'col_array_uninit'
+    !-----------------------------------------------------------------------
+
+    allocate(col_array(bounds%begc:bounds%endc))
+    col_array(:) = nan
+
+  end function col_array_uninit
+
+
+  !-----------------------------------------------------------------------
+  !TYPE logical,int,double
+  pure function col_array_{TYPE}(val) result(col_array)
+    !
+    ! !DESCRIPTION:
+    ! Creates a column-level array with the same type as val. All elements are set to val.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    {VTYPE}, allocatable :: col_array(:) ! function result
+    {VTYPE}, intent(in)  :: val ! all elements in col_array are set to val
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'col_array_{TYPE}'
+    !-----------------------------------------------------------------------
+
+    allocate(col_array(bounds%begc:bounds%endc))
+    col_array(:) = val
+
+  end function col_array_{TYPE}
+
+
+end module unittestArrayMod

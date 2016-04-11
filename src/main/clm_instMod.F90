@@ -63,10 +63,11 @@ module clm_instMod
   use lnd2glcMod                      , only : lnd2glc_type 
   use glc2lndMod                      , only : glc2lnd_type
   use glcBehaviorMod                  , only : glc_behavior_type
+  use TopoMod                         , only : topo_type
   use GridcellType                    , only : grc
   use LandunitType                    , only : lun                
   use ColumnType                      , only : col                
-  use PatchType                       , only : patch                
+  use PatchType                       , only : patch
   use EDTypesMod                      , only : ed_site_type
   use EDPhenologyType                 , only : ed_phenology_type
   use EDCLMLinkMod                    , only : ed_clm_type
@@ -109,6 +110,7 @@ module clm_instMod
   type(lnd2atm_type)                      :: lnd2atm_inst
   type(lnd2glc_type)                      :: lnd2glc_inst
   type(glc_behavior_type)                 :: glc_behavior
+  type(topo_type)                         :: topo_inst
   class(soil_water_retention_curve_type) , allocatable :: soil_water_retention_curve
 
   ! CN vegetation types
@@ -242,6 +244,9 @@ contains
     ! Initialize glc2lnd and lnd2glc even if running without create_glacier_mec_landunit,
     ! because at least some variables (such as the icemask) are referred to in code that
     ! is executed even when running without glc_mec.
+    !
+    ! NOTE(wjs, 2016-04-01) I'm not sure if that's true any more (it isn't true for
+    ! icemask), but I'm keeping this as is for now anyway.
 
     call glc2lnd_inst%Init( bounds, glc_behavior )
     call lnd2glc_inst%Init( bounds )
@@ -306,6 +311,8 @@ contains
          source=create_soil_water_retention_curve())
 
     call irrigation_inst%init(bounds, soilstate_inst, soil_water_retention_curve)
+
+    call topo_inst%Init(bounds)
 
     ! Note - always initialize the memory for ch4_inst
     call ch4_inst%Init(bounds, soilstate_inst%cellorg_col(begc:endc, 1:), fsurdat)
@@ -473,6 +480,8 @@ contains
     call surfalb_inst%restart (bounds, ncid, flag=flag, &
          tlai_patch=canopystate_inst%tlai_patch(bounds%begp:bounds%endp), &
          tsai_patch=canopystate_inst%tsai_patch(bounds%begp:bounds%endp))
+
+    call topo_inst%restart (bounds, ncid, flag=flag)
 
     if (use_lch4) then
        call ch4_inst%restart(bounds, ncid, flag=flag)

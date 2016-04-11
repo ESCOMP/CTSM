@@ -28,7 +28,8 @@ module lnd2glcMod
   use WaterFluxType   , only : waterflux_type
   use TemperatureType , only : temperature_type
   use LandunitType    , only : lun                
-  use ColumnType      , only : col                
+  use ColumnType      , only : col
+  use TopoMod         , only : topo_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -144,7 +145,7 @@ contains
 
   !------------------------------------------------------------------------------
   subroutine update_lnd2glc(this, bounds, num_do_smb_c, filter_do_smb_c, &
-       temperature_inst, waterflux_inst, init)
+       temperature_inst, waterflux_inst, topo_inst, init)
     !
     ! !DESCRIPTION:
     ! Assign values to lnd2glc+
@@ -156,6 +157,7 @@ contains
     integer                , intent(in)    :: filter_do_smb_c(:) ! column filter: columns where smb calculations are performed
     type(temperature_type) , intent(in)    :: temperature_inst
     type(waterflux_type)   , intent(in)    :: waterflux_inst
+    type(topo_type)        , intent(in)    :: topo_inst
     logical                , intent(in)    :: init               ! if true=>only set a subset of fields
     !
     ! !LOCAL VARIABLES:
@@ -210,13 +212,13 @@ contains
       end if
 
       ! Send surface temperature, topography, and SMB flux (qice) to coupler.
-      ! t_soisno and glc_topo are valid even in initialization, so tsrf and topo
+      ! t_soisno and topo_col are valid even in initialization, so tsrf and topo
       ! are set here regardless of the value of init. But qflx_glcice is not valid
       ! until the run loop; thus, in initialization, we will use the default value
       ! for qice, as set above.
       fields_assigned(g,n) = .true.
       this%tsrf_grc(g,n) = temperature_inst%t_soisno_col(c,1)
-      this%topo_grc(g,n) = col%glc_topo(c)
+      this%topo_grc(g,n) = topo_inst%topo_col(c)
       if (.not. init) then
          this%qice_grc(g,n) = waterflux_inst%qflx_glcice_col(c) * flux_normalization
 

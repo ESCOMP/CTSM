@@ -315,7 +315,9 @@ Allowed values are:
 'multiple': grid cells can potentially have multiple glacier elevation classes,
    but no virtual columns
 'virtual': grid cells have virtual columns: values are computed for every glacier
-   elevation class, even those with 0 area
+   elevation class, even those with 0 area (in order to provide surface mass
+   balance for every glacier elevation class). In addition, surface mass balance is
+   computed for the vegetated column in this region.
 'single_at_atm_topo': glacier landunits in these grid cells have a single column,
    whose elevation matches the atmosphere's topographic height (so that there is no
    adjustment due to downscaling)

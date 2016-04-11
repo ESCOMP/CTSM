@@ -12,7 +12,8 @@ module clm_varcon
                            SHR_CONST_LATSUB,SHR_CONST_LATICE,SHR_CONST_RHOFW, &
                            SHR_CONST_RHOICE,SHR_CONST_TKFRZ,SHR_CONST_REARTH, &
                            SHR_CONST_PDB, SHR_CONST_PI, SHR_CONST_CDAY,       &
-                           SHR_CONST_RGAS, SHR_CONST_PSTD
+                           SHR_CONST_RGAS, SHR_CONST_PSTD,                    &
+                           SHR_CONST_MWDAIR, SHR_CONST_MWWV
   use clm_varpar   , only: numrad, nlevgrnd, nlevlak, nlevdecomp_full
   use clm_varpar   , only: ngases
   use clm_varpar   , only: nlayer
@@ -62,6 +63,11 @@ module clm_varcon
   real(r8) :: denice = SHR_CONST_RHOICE                     ! density of ice [kg/m3]
   real(r8) :: rgas   = SHR_CONST_RGAS                       ! universal gas constant [J/K/kmole]
   real(r8) :: pstd   = SHR_CONST_PSTD                       ! standard pressure [Pa]
+
+  ! TODO(wjs, 2016-04-08) The following should be used in place of hard-coded constants
+  ! of 0.622 and 0.378 (which is 1 - 0.622) in various places in the code:
+  real(r8), parameter :: wv_to_dair_weight_ratio = SHR_CONST_MWWV/SHR_CONST_MWDAIR ! ratio of molecular weight of water vapor to that of dry air [-]
+
   real(r8) :: tkair  = 0.023_r8                             ! thermal conductivity of air   [W/m/K]
   real(r8) :: tkice  = 2.290_r8                             ! thermal conductivity of ice   [W/m/K]
   real(r8) :: tkwat  = 0.57_r8                              ! thermal conductivity of water [W/m/K]
