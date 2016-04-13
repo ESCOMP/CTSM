@@ -7,7 +7,7 @@ module clm_initializeMod
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use spmdMod         , only : masterproc
-  use decompMod       , only : bounds_type, get_proc_bounds 
+  use decompMod       , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, is_cold_start
   use clm_varctl      , only : create_glacier_mec_landunit, iulog
@@ -20,6 +20,8 @@ module clm_initializeMod
   use LandunitType    , only : lun           ! instance          
   use ColumnType      , only : col           ! instance          
   use PatchType       , only : patch         ! instance            
+  use reweightMod     , only : reweight_wrapup
+  use filterMod       , only : allocFilters, filter
   use EDVecCohortType , only : ed_vec_cohort ! instance, used for domain decomp
   use clm_instMod   
   ! 
@@ -61,6 +63,9 @@ contains
     integer           :: ns, ni, nj              ! global grid sizes
     integer           :: begg, endg              ! processor bounds
     type(bounds_type) :: bounds_proc             
+    type(bounds_type) :: bounds_clump
+    integer           :: nclumps                 ! number of clumps on this processor
+    integer           :: nc                      ! clump index
     integer ,pointer  :: amask(:)                ! global land mask
     character(len=32) :: subname = 'initialize1' ! subroutine name
     !-----------------------------------------------------------------------
@@ -204,6 +209,18 @@ contains
 
     call decompInit_glcp(ns, ni, nj, glc_behavior)
 
+    ! Set filters
+
+    call allocFilters()
+
+    nclumps = get_proc_clumps()
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1, nclumps
+       call get_clump_bounds(nc, bounds_clump)
+       call reweight_wrapup(bounds_clump, glc_behavior)
+    end do
+    !$OMP END PARALLEL DO
+
     ! ------------------------------------------------------------------------
     ! Remainder of initialization1
     ! ------------------------------------------------------------------------
@@ -248,12 +265,9 @@ contains
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart
     use C14BombSpikeMod       , only : C14_init_BombSpike, use_c14_bombspike 
     use DaylengthMod          , only : InitDaylength, daylength
-    use decompMod             , only : get_proc_clumps, get_proc_bounds, get_clump_bounds, bounds_type
     use dynSubgridDriverMod   , only : dynSubgrid_init
     use fileutils             , only : getfil
-    use filterMod             , only : allocFilters, filter
     use initInterpMod         , only : initInterp
-    use reweightMod           , only : reweight_wrapup
     use subgridWeightsMod     , only : init_subgrid_weights_mod
     use histFileMod           , only : hist_htapes_build, htapes_fieldlist, hist_printflds
     use histFileMod           , only : hist_addfld1d, hist_addfld2d, no_snow_normal
@@ -500,14 +514,6 @@ contains
     end if
 
     ! ------------------------------------------------------------------------
-    ! Initialize filters and weights
-    ! ------------------------------------------------------------------------
-    
-    call t_startf('init_filters')
-    call allocFilters()
-    call t_stopf('init_filters')
-
-    ! ------------------------------------------------------------------------
     ! If appropriate, create interpolated initial conditions
     ! ------------------------------------------------------------------------
 
@@ -518,13 +524,6 @@ contains
           call endrun(msg='ERROR clm_initializeMod: '//&
                'finidat and finidat_interp_source cannot both be non-blank')
        end if
-
-       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-       do nc = 1, nclumps
-          call get_clump_bounds(nc, bounds_clump)
-          call reweight_wrapup(bounds_clump, glc_behavior)
-       end do
-       !$OMP END PARALLEL DO
 
        ! Create new template file using cold start
        call restFile_write(bounds_proc, finidat_interp_dest)
@@ -541,13 +540,6 @@ contains
        finidat = trim(finidat_interp_dest)
 
     end if
-
-    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-    do nc = 1, nclumps
-       call get_clump_bounds(nc, bounds_clump)
-       call reweight_wrapup(bounds_clump, glc_behavior)
-    end do
-    !$OMP END PARALLEL DO
 
     ! ------------------------------------------------------------------------
     ! Initialize nitrogen deposition

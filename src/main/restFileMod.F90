@@ -5,8 +5,10 @@ module restFileMod
   ! Reads from or writes to/ the CLM restart file.
   !
   ! !USES:
+#include "shr_assert.h"
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use decompMod        , only : bounds_type
+  use decompMod        , only : bounds_type, get_proc_clumps, get_clump_bounds
+  use decompMod        , only : BOUNDS_LEVEL_PROC
   use spmdMod          , only : masterproc, mpicom
   use abortutils       , only : endrun
   use shr_log_mod      , only : errMsg => shr_log_errMsg
@@ -21,6 +23,7 @@ module restFileMod
   use ncdio_pio        , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim
   use ncdio_pio        , only : check_att, ncd_getatt
   use glcBehaviorMod   , only : glc_behavior_type
+  use reweightMod      , only : reweight_wrapup
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -132,20 +135,30 @@ contains
   end subroutine restFile_write
 
   !-----------------------------------------------------------------------
-  subroutine restFile_read( bounds, file, glc_behavior )
+  subroutine restFile_read( bounds_proc, file, glc_behavior )
     !
     ! !DESCRIPTION:
     ! Read a CLM restart file.
     !
     ! !ARGUMENTS:
-    type(bounds_type) , intent(in) :: bounds          
+    type(bounds_type) , intent(in) :: bounds_proc      ! processor-level bounds
     character(len=*)  , intent(in) :: file             ! output netcdf restart file
     type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
-    type(file_desc_t) :: ncid ! netcdf id
-    integer :: i              ! index
+    type(file_desc_t) :: ncid    ! netcdf id
+    integer           :: i       ! index
+    integer           :: nclumps ! number of clumps on this processor
+    integer           :: nc      ! clump index
+    type(bounds_type) :: bounds_clump
+
+    character(len=*), parameter :: subname = 'restFile_read'
     !-----------------------------------------------------------------------
+
+    ! The provided bounds need to be proc-level bounds. This is in part because of logic
+    ! below that divides this into clump-level bounds for the sake of reweight_wrapup.
+    ! But it *MAY* also be necessary to have proc-level bounds for these i/o routines.
+    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     ! Open file
 
@@ -155,19 +168,34 @@ contains
 
     call restFile_dimcheck( ncid )
 
-    call subgridRestRead(bounds, ncid)
+    call subgridRestRead(bounds_proc, ncid)
+
+    ! Now that we have updated subgrid information, update the filters, active flags,
+    ! etc. accordingly. We do these updates as soon as possible so that the updated
+    ! filters and active flags are available to other restart routines - e.g., for the
+    ! sake of subgridAveMod calls like c2g.
+    !
+    ! The reweight_wrapup call needs to be done inside a clump loop, so we set that up
+    ! here.
+    nclumps = get_proc_clumps()
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1, nclumps
+       call get_clump_bounds(nc, bounds_clump)
+       call reweight_wrapup(bounds_clump, glc_behavior)
+    end do
+    !$OMP END PARALLEL DO
 
     call accumulRest( ncid, flag='read' )
 
-    call clm_instRest( bounds, ncid, flag='read' )
+    call clm_instRest( bounds_proc, ncid, flag='read' )
 
-    call restFile_set_derived(bounds, glc_behavior)
+    call restFile_set_derived(bounds_proc, glc_behavior)
 
-    call hist_restart_ncd (bounds, ncid, flag='read' )
+    call hist_restart_ncd (bounds_proc, ncid, flag='read' )
 
     ! Do error checking on file
     
-    call restFile_check_consistency(bounds, ncid)
+    call restFile_check_consistency(bounds_proc, ncid)
 
     ! Close file 
 

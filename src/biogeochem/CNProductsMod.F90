@@ -33,10 +33,10 @@ module CNProductsMod
      class(species_base_type), allocatable :: species    ! C, N, C13, C14, etc.
 
      ! States
-     real(r8), pointer :: cropprod1_col(:)  ! (g[C or N]/m2) grain product pool, 1-year lifespan
-     real(r8), pointer :: prod10_col(:)     ! (g[C or N]/m2) wood product pool, 10-year lifespan
-     real(r8), pointer :: prod100_col(:)    ! (g[C or N]/m2) wood product pool, 100-year lifespan
-     real(r8), pointer :: totprod_col(:)    ! (g[C or N]/m2) total WOOD product pool
+     real(r8), pointer :: cropprod1_col(:)    ! (g[C or N]/m2) grain product pool, 1-year lifespan
+     real(r8), pointer :: prod10_col(:)       ! (g[C or N]/m2) wood product pool, 10-year lifespan
+     real(r8), pointer :: prod100_col(:)      ! (g[C or N]/m2) wood product pool, 100-year lifespan
+     real(r8), pointer :: tot_woodprod_col(:) ! (g[C or N]/m2) total wood product pool
 
      ! Fluxes: gains
      real(r8), pointer :: dwt_prod10_gain_col(:)  ! (g[C or N]/m2/s) dynamic landcover addition to 10-year wood product pool
@@ -46,9 +46,10 @@ module CNProductsMod
      real(r8), pointer :: grain_to_cropprod1_col(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
 
      ! Fluxes: losses
-     real(r8), pointer :: cropprod1_loss_col(:) ! (g[C or N]/m2/s) decomposition loss from 1-yr grain product pool
-     real(r8), pointer :: prod10_loss_col(:)    ! (g[C or N]/m2/s) decomposition loss from 10-yr wood product pool
-     real(r8), pointer :: prod100_loss_col(:)   ! (g[C or N]/m2/s) decomposition loss from 100-yr wood product pool
+     real(r8), pointer :: cropprod1_loss_col(:)    ! (g[C or N]/m2/s) decomposition loss from 1-yr grain product pool
+     real(r8), pointer :: prod10_loss_col(:)       ! (g[C or N]/m2/s) decomposition loss from 10-yr wood product pool
+     real(r8), pointer :: prod100_loss_col(:)      ! (g[C or N]/m2/s) decomposition loss from 100-yr wood product pool
+     real(r8), pointer :: tot_woodprod_loss_col(:) ! (g[C or N]/m2/s) decompomposition loss from all wood product pools
 
    contains
 
@@ -113,7 +114,7 @@ contains
     allocate(this%cropprod1_col(begc:endc)) ; this%cropprod1_col(:) = nan
     allocate(this%prod10_col(begc:endc)) ; this%prod10_col(:) = nan
     allocate(this%prod100_col(begc:endc)) ; this%prod100_col(:) = nan
-    allocate(this%totprod_col(begc:endc)) ; this%totprod_col(:) = nan
+    allocate(this%tot_woodprod_col(begc:endc)) ; this%tot_woodprod_col(:) = nan
 
     allocate(this%dwt_prod10_gain_col(begc:endc)) ; this%dwt_prod10_gain_col(:) = nan
     allocate(this%dwt_prod100_gain_col(begc:endc)) ; this%dwt_prod100_gain_col(:) = nan
@@ -124,6 +125,7 @@ contains
     allocate(this%cropprod1_loss_col(begc:endc)) ; this%cropprod1_loss_col(:) = nan
     allocate(this%prod10_loss_col(begc:endc)) ; this%prod10_loss_col(:) = nan
     allocate(this%prod100_loss_col(begc:endc)) ; this%prod100_loss_col(:) = nan
+    allocate(this%tot_woodprod_loss_col(begc:endc)) ; this%tot_woodprod_loss_col(:) = nan
     allocate(this%product_loss_col(begc:endc)) ; this%product_loss_col(:) = nan
 
   end subroutine InitAllocate
@@ -171,13 +173,13 @@ contains
          long_name = '100-yr wood product ' // this%species%get_species(), &
          ptr_col = this%prod100_col)
 
-    this%totprod_col(begc:endc) = spval
+    this%tot_woodprod_col(begc:endc) = spval
     call hist_addfld1d( &
-         fname = this%species%hist_fname('TOTPROD'), &
+         fname = this%species%hist_fname('TOT_WOODPROD'), &
          units = 'g' // this%species%get_species() // '/m^2', &
          avgflag = 'A', &
          long_name = 'total wood product ' // this%species%get_species(), &
-         ptr_col = this%totprod_col)
+         ptr_col = this%tot_woodprod_col)
 
     this%dwt_prod10_gain_col(begc:endc) = spval
     call hist_addfld1d( &
@@ -219,13 +221,13 @@ contains
          long_name = 'loss from 100-yr wood product pool', &
          ptr_col = this%prod100_loss_col)
 
-    this%product_loss_col(begc:endc) = spval
+    this%tot_woodprod_loss_col(begc:endc) = spval
     call hist_addfld1d( &
-         fname = this%species%hist_fname('PRODUCT_', suffix='LOSS'), &
+         fname = this%species%hist_fname('TOT_WOODPROD', suffix='_LOSS'), &
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'total loss from wood product pools', &
-         ptr_col = this%product_loss_col)
+         ptr_col = this%tot_woodprod_loss_col)
 
   end subroutine InitHistory
 
@@ -245,7 +247,7 @@ contains
        this%cropprod1_col(c) = 0._r8
        this%prod10_col(c) = 0._r8
        this%prod100_col(c) = 0._r8
-       this%totprod_col(c) = 0._r8
+       this%tot_woodprod_col(c) = 0._r8
     end do
 
     ! TODO(wjs, 2016-03-11) I think the only reason this should be necessary is to set the
@@ -261,6 +263,7 @@ contains
        this%cropprod1_loss_col(c) = 0._r8
        this%prod10_loss_col(c) = 0._r8
        this%prod100_loss_col(c) = 0._r8
+       this%tot_woodprod_loss_col(c) = 0._r8
        this%product_loss_col(c) = 0._r8
     end do
 
@@ -618,9 +621,14 @@ contains
        c = filter_soilc(fc)
 
        ! total wood products
-       this%totprod_col(c) = &
+       this%tot_woodprod_col(c) = &
             this%prod10_col(c) + &
             this%prod100_col(c)
+
+       ! total loss from wood products
+       this%tot_woodprod_loss_col(c) = &
+            this%prod10_loss_col(c) + &
+            this%prod100_loss_col(c)
 
        ! total loss from ALL products
        this%product_loss_col(c) = &

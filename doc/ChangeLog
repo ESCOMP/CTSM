@@ -1,4 +1,112 @@
 ===============================================================
+Tag name:  clm4_5_8_r176
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Apr 13 09:32:56 MDT 2016
+One-line Summary: Calculate active flags and filters earlier in initialization
+
+Purpose of changes
+------------------
+
+Main purpose is to compute the active flags and filters (via reweight_wrapup)
+earlier in initialization. These are now computed initially before the restart
+file is read, and tehn updated as soon as possible in the midst of the restart
+file read. This is useful in case any of the clm_instMod restart routines want
+to use the active flags or filters, directly or indirectly (e.g., via a call to
+subgridAveMod) - e.g., for the sake of backwards compatibility. This is
+something that's needed in an upcoming tag.
+
+Also: change some CN product history fields, so that they are more consistent -
+so totals just give totals for wood:
+
+- Renamed TOTPROD to TOT_WOODPROD
+
+- Removed PRODUCT_CLOSS and similar fields, added TOT_WOODPRODC_LOSS and similar
+  fields: now just include losses from wood product pools
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- renamed CN product history fields: see above
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass or xfail, plus expected failures in CLM5 ERP tests with
+    threading, just in the NPP_BURNEDOFF field, due to bug 2292 (leading to
+    differences both in the baseline comparison and in the comparison of the
+    restart to the baseline)
+
+CLM tag used for the baseline comparisons: clm4_5_8_r175
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Compute active flags and filters earlier in initialization
+M       components/clm/src/main/clm_initializeMod.F90
+M       components/clm/src/main/restFileMod.F90
+
+========= Change CN product history fields (see above for details)
+M       components/clm/src/biogeochem/CNProductsMod.F90
+
+========= Unrelated change: fix argument intent
+M       components/clm/src/biogeochem/CNPhenologyMod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r175
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Apr  9 15:48:47 MDT 2016
