@@ -288,7 +288,7 @@ lnd/clm2/initdata_map/clmi.ICRUCLM45SP.2000-01-01.0.9x1.25_g1v6_simyr2000_c16012
 <!-- (works for cent/no-cent; Vertical layers and Nitrification/Denitrification NEED to be on) -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" use_cn=".true." use_cndv=".false." ic_ymd="20000101" use_nitrif_denitrif=".true." use_vertsoilc=".true."
          ic_tod="0" sim_year="2000" glc_nec="0" use_crop=".false." >
-lnd/clm2/initdata_map/clmi.I2000CLM45CRUBGC.2000-01-01.0.9x1.25_gx1v6_simyr2000_c160127.nc
+lnd/clm2/initdata_map/clmi.I2000CLM45CRUBGC.2000-01-01.0.9x1.25_gx1v6_simyr2000_c160413.nc
 </finidat>
 
 <!--

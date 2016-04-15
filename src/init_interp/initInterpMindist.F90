@@ -37,7 +37,7 @@ module initInterpMindist
   end type subgrid_special_indices_type
 
   type, public :: subgrid_type
-     character(len=16) :: name               ! pft, column, landunit
+     character(len=16) :: name               ! pft, column, landunit, gridcell
      integer , pointer :: ptype(:) => null() ! used for patch type 
      integer , pointer :: ctype(:) => null() ! used for patch or col type
      integer , pointer :: ltype(:) => null() ! used for pft, col or lun type
@@ -267,6 +267,8 @@ contains
        if (subgridi%ltype(ni) == subgrido%ltype(no)) then
           is_sametype = .true.
        end if
+    else if (trim(subgridi%name) == 'gridcell' .and. trim(subgrido%name) == 'gridcell') then
+       is_sametype = .true.
     else 
        if (masterproc) then
           write(iulog,*)'ERROR interpinic: is_sametype check on input and output type not supported'

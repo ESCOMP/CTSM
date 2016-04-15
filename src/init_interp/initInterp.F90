@@ -39,8 +39,7 @@ module initInterpMod
   private :: check_dim_subgrid
   private :: check_dim_level
   private :: findMinDist
-  private :: set_subgrid_dist
-  private :: set_subgrid_glob
+  private :: set_subgrid_info
   private :: interp_0d_copy
   private :: interp_1d_double
   private :: interp_1d_int
@@ -162,7 +161,8 @@ contains
     integer , pointer  :: grcindx(:) 
     logical , pointer  :: pft_activei(:), pft_activeo(:) 
     logical , pointer  :: col_activei(:), col_activeo(:) 
-    logical , pointer  :: lun_activei(:), lun_activeo(:) 
+    logical , pointer  :: lun_activei(:), lun_activeo(:)
+    logical , pointer  :: grc_activei(:), grc_activeo(:)
     integer , pointer  :: sgridindex(:)
     type(subgrid_special_indices_type) :: subgrid_special_indices
     type(interp_multilevel_container_type) :: interp_multilevel_container
@@ -250,30 +250,35 @@ contains
     end if
 
     ! --------------------------------------------
-    ! Find closest values for pfts, cols, landunits
+    ! Find closest values for pfts, cols, landunits, gridcells
     ! --------------------------------------------
 
     bounds_i = interp_bounds_type( &
          begp = 1, endp = npftsi, &
          begc = 1, endc = ncolsi, &
-         begl = 1, endl = nlunsi)
+         begl = 1, endl = nlunsi, &
+         begg = 1, endg = ngrcsi)
 
     bounds_o = interp_bounds_type( &
          begp = bounds%begp, endp = bounds%endp, &
          begc = bounds%begc, endc = bounds%endc, &
-         begl = bounds%begl, endl = bounds%endl)
+         begl = bounds%begl, endl = bounds%endl, &
+         begg = bounds%begg, endg = bounds%endg)
 
     allocate(pft_activei(bounds_i%get_begp():bounds_i%get_endp()))
     allocate(col_activei(bounds_i%get_begc():bounds_i%get_endc()))
     allocate(lun_activei(bounds_i%get_begl():bounds_i%get_endl()))
+    allocate(grc_activei(bounds_i%get_begg():bounds_i%get_endg()))
 
     allocate(pft_activeo(bounds_o%get_begp():bounds_o%get_endp()))
     allocate(col_activeo(bounds_o%get_begc():bounds_o%get_endc()))
     allocate(lun_activeo(bounds_o%get_begl():bounds_o%get_endl()))
+    allocate(grc_activeo(bounds_o%get_begg():bounds_o%get_endg()))
 
     allocate(pftindx(bounds_o%get_begp():bounds_o%get_endp()))
     allocate(colindx(bounds_o%get_begc():bounds_o%get_endc()))
     allocate(lunindx(bounds_o%get_begl():bounds_o%get_endl()))
+    allocate(grcindx(bounds_o%get_begg():bounds_o%get_endg()))
 
     ! For each output pft, find the input pft, pftindx, that is closest
 
@@ -304,6 +309,16 @@ contains
     call findMinDist(vec_dimname, bounds_i%get_begl(), bounds_i%get_endl(), &
          bounds_o%get_begl(), bounds_o%get_endl(), ncidi, ncido, &
          subgrid_special_indices, lun_activei, lun_activeo, lunindx )
+
+    ! For each output gridcell, find the input gridcell, grcindx, that is closest
+
+    if (masterproc) then
+       write(iulog,*)'finding minimum distance for gridcells'
+    end if
+    vec_dimname = 'gridcell'
+    call findMinDist(vec_dimname, bounds_i%get_begg(), bounds_i%get_endg(), &
+         bounds_o%get_begg(), bounds_o%get_endg(), ncidi, ncido, &
+         subgrid_special_indices, grc_activei, grc_activeo, grcindx)
 
     ! ------------------------------------------------------------------------
     ! Set up interpolators for multi-level variables
@@ -490,6 +505,8 @@ contains
              sgridindex => colindx
           else if ( vec_dimname == 'landunit' )then
              sgridindex => lunindx
+          else if ( vec_dimname == 'gridcell' )then
+             sgridindex => grcindx
           else
              call endrun(msg='ERROR interpinic: 1D variable '//trim(varname)//&
                   'with unknown subgrid dimension: '//trim(vec_dimname)//&
@@ -541,6 +558,8 @@ contains
              sgridindex => colindx
           else if ( vec_dimname == 'landunit' )then
              sgridindex => lunindx
+          else if ( vec_dimname == 'gridcell' )then
+             sgridindex => grcindx
           else
              call endrun(msg='ERROR interpinic: 2D variable with unknown subgrid dimension: '//&
                   trim(varname)//errMsg(__FILE__, __LINE__))
@@ -626,14 +645,16 @@ contains
     ! --------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*)'calling set_subgrid_glob for ',trim(dimname)
+       write(iulog,*)'calling set_subgrid_info for ',trim(dimname), ' for input'
     end if
-    call set_subgrid_glob(begi, endi, dimname, ncidi, activei, subgridi)
+    call set_subgrid_info(beg=begi, end=endi, dimname=dimname, use_glob=.true., &
+         ncid=ncidi, active=activei, subgrid=subgridi)
 
     if (masterproc) then
-       write(iulog,*)'calling set_subgrid_dist',trim(dimname)
+       write(iulog,*)'calling set_subgrid_info for ',trim(dimname), ' for output'
     end if
-    call set_subgrid_dist(bego, endo, dimname, ncido, activeo, subgrido)
+    call set_subgrid_info(beg=bego, end=endo, dimname=dimname, use_glob=.false., &
+         ncid=ncido, active=activeo, subgrid=subgrido)
 
     if (masterproc) then
        write(iulog,*)'calling set_mindist for ',trim(dimname)
@@ -648,14 +669,15 @@ contains
 
  !=======================================================================
 
-  subroutine set_subgrid_dist(beg, end, dimname, ncid, active, subgrid)
+  subroutine set_subgrid_info(beg, end, dimname, use_glob, ncid, active, subgrid)
 
     ! --------------------------------------------------------------------
     ! arguments
     integer            , intent(in)    :: beg, end
     type(file_desc_t)  , intent(inout) :: ncid
-    character(len=*)   , intent(inout) :: dimname
-    logical            , intent(inout) :: active(beg:end)    
+    character(len=*)   , intent(in)    :: dimname
+    logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
+    logical            , intent(out)   :: active(beg:end)    
     type(subgrid_type) , intent(inout) :: subgrid
     !
     ! local variables
@@ -684,29 +706,35 @@ contains
     end if
 
     if (dimname == 'pft') then
-       call ncd_io(ncid=ncid, varname='pfts1d_lon'    , flag='read', data=subgrid%lon  , dim1name='pft') 
-       call ncd_io(ncid=ncid, varname='pfts1d_lat'    , flag='read', data=subgrid%lat  , dim1name='pft') 
-       call ncd_io(ncid=ncid, varname='pfts1d_itypveg', flag='read', data=subgrid%ptype, dim1name='pft')
-       call ncd_io(ncid=ncid, varname='pfts1d_itypcol', flag='read', data=subgrid%ctype, dim1name='pft')
-       call ncd_io(ncid=ncid, varname='pfts1d_ityplun', flag='read', data=subgrid%ltype, dim1name='pft')
-       call ncd_io(ncid=ncid, varname='pfts1d_active' , flag='read', data=itemp        , dim1name='pft')
+       call read_var_double(ncid=ncid, varname='pfts1d_lon'    , data=subgrid%lon  , dim1name='pft', use_glob=use_glob) 
+       call read_var_double(ncid=ncid, varname='pfts1d_lat'    , data=subgrid%lat  , dim1name='pft', use_glob=use_glob) 
+       call read_var_int(ncid=ncid, varname='pfts1d_itypveg', data=subgrid%ptype, dim1name='pft', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='pfts1d_itypcol', data=subgrid%ctype, dim1name='pft', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='pfts1d_ityplun', data=subgrid%ltype, dim1name='pft', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='pfts1d_active' , data=itemp        , dim1name='pft', use_glob=use_glob)
        if (associated(subgrid%topoglc)) then
-          call ncd_io(ncid=ncid, varname='pfts1d_topoglc', flag='read', data=subgrid%topoglc, dim1name='pft')
+          call read_var_double(ncid=ncid, varname='pfts1d_topoglc', data=subgrid%topoglc, dim1name='pft', use_glob=use_glob)
        end if
     else if (dimname == 'column') then
-       call ncd_io(ncid=ncid, varname='cols1d_lon'    , flag='read', data=subgrid%lon  , dim1name='column') 
-       call ncd_io(ncid=ncid, varname='cols1d_lat'    , flag='read', data=subgrid%lat  , dim1name='column')  
-       call ncd_io(ncid=ncid, varname='cols1d_ityp'   , flag='read', data=subgrid%ctype, dim1name='column') 
-       call ncd_io(ncid=ncid, varname='cols1d_ityplun', flag='read', data=subgrid%ltype, dim1name='column') 
-       call ncd_io(ncid=ncid, varname='cols1d_active' , flag='read', data=itemp        , dim1name='column')
+       call read_var_double(ncid=ncid, varname='cols1d_lon'    , data=subgrid%lon  , dim1name='column', use_glob=use_glob) 
+       call read_var_double(ncid=ncid, varname='cols1d_lat'    , data=subgrid%lat  , dim1name='column', use_glob=use_glob)  
+       call read_var_int(ncid=ncid, varname='cols1d_ityp'   , data=subgrid%ctype, dim1name='column', use_glob=use_glob) 
+       call read_var_int(ncid=ncid, varname='cols1d_ityplun', data=subgrid%ltype, dim1name='column', use_glob=use_glob) 
+       call read_var_int(ncid=ncid, varname='cols1d_active' , data=itemp        , dim1name='column', use_glob=use_glob)
        if (associated(subgrid%topoglc)) then
-          call ncd_io(ncid=ncid, varname='cols1d_topoglc', flag='read', data=subgrid%topoglc, dim1name='column') 
+          call read_var_double(ncid=ncid, varname='cols1d_topoglc', data=subgrid%topoglc, dim1name='column', use_glob=use_glob) 
        end if
     else if (dimname == 'landunit') then
-       call ncd_io(ncid=ncid, varname='land1d_lon'    , flag='read', data=subgrid%lon  , dim1name='landunit') 
-       call ncd_io(ncid=ncid, varname='land1d_lat'    , flag='read', data=subgrid%lat  , dim1name='landunit') 
-       call ncd_io(ncid=ncid, varname='land1d_ityplun', flag='read', data=subgrid%ltype, dim1name='landunit')
-       call ncd_io(ncid=ncid, varname='land1d_active' , flag='read', data=itemp        , dim1name='landunit') 
+       call read_var_double(ncid=ncid, varname='land1d_lon'    , data=subgrid%lon  , dim1name='landunit', use_glob=use_glob) 
+       call read_var_double(ncid=ncid, varname='land1d_lat'    , data=subgrid%lat  , dim1name='landunit', use_glob=use_glob) 
+       call read_var_int(ncid=ncid, varname='land1d_ityplun', data=subgrid%ltype, dim1name='landunit', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='land1d_active' , data=itemp        , dim1name='landunit', use_glob=use_glob) 
+    else if (dimname == 'gridcell') then
+       call read_var_double(ncid=ncid, varname='grid1d_lon'    , data=subgrid%lon  , dim1name='gridcell', use_glob=use_glob) 
+       call read_var_double(ncid=ncid, varname='grid1d_lat'    , data=subgrid%lat  , dim1name='gridcell', use_glob=use_glob) 
+
+       ! All gridcells in the restart file are active
+       itemp(beg:end) = 1
     end if
 
     do n = beg,end
@@ -722,85 +750,41 @@ contains
 
     deallocate(itemp)
 
-  end subroutine set_subgrid_dist
+  contains
 
-  !=======================================================================
+    subroutine read_var_double(ncid, varname, data, dim1name, use_glob)
+      ! Wraps the ncd_io call, providing logic related to whether we're using the 'glob'
+      ! form of ncd_io
+      type(file_desc_t)  , intent(inout) :: ncid
+      character(len=*)   , intent(in)    :: varname
+      real(r8), pointer  , intent(inout) :: data(:)
+      character(len=*)   , intent(in)    :: dim1name
+      logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
 
-  subroutine set_subgrid_glob(beg, end, dimname, ncid, active, subgrid)
+      if (use_glob) then
+         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data)
+      else
+         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data, dim1name=dim1name)
+      end if
+    end subroutine read_var_double
 
-    ! --------------------------------------------------------------------
-    ! arguments
-    integer            , intent(in)    :: beg, end
-    type(file_desc_t)  , intent(inout) :: ncid
-    character(len=*)   , intent(inout) :: dimname
-    logical            , intent(out)   :: active(beg:end)    
-    type(subgrid_type) , intent(inout) :: subgrid
-    !
-    ! local variables
-    integer              :: n
-    integer , pointer    :: itemp(:) 
-    real(r8), parameter  :: deg2rad  = SHR_CONST_PI/180._r8
-    !-----------------------------------------------------------------------
+    subroutine read_var_int(ncid, varname, data, dim1name, use_glob)
+      ! Wraps the ncd_io call, providing logic related to whether we're using the 'glob'
+      ! form of ncd_io
+      type(file_desc_t)  , intent(inout) :: ncid
+      character(len=*)   , intent(in)    :: varname
+      integer, pointer   , intent(inout) :: data(:)
+      character(len=*)   , intent(in)    :: dim1name
+      logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
 
-    subgrid%name = dimname
+      if (use_glob) then
+         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data)
+      else
+         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data, dim1name=dim1name)
+      end if
+    end subroutine read_var_int
 
-    allocate(itemp(beg:end))
-    allocate(subgrid%lat(beg:end), subgrid%lon(beg:end), subgrid%coslat(beg:end))
-    if (dimname == 'pft') then
-       allocate(subgrid%ptype(beg:end), subgrid%ctype(beg:end), subgrid%ltype(beg:end))
-    else if (dimname == 'column') then
-       allocate(subgrid%ctype(beg:end), subgrid%ltype(beg:end))
-    else if (dimname == 'landunit') then
-       allocate(subgrid%ltype(beg:end))
-    end if
-
-    ! determine if is_glcmec from global attributes
-    if (trim(created_glacier_mec_landunits) == 'true') then
-       if  (dimname == 'pft' .or. dimname == 'column') then
-          allocate(subgrid%topoglc(beg:end))
-       end if
-    end if
-
-    if (dimname == 'pft') then
-       call ncd_io(ncid=ncid, varname='pfts1d_lon'    , flag='read', data=subgrid%lon  ) 
-       call ncd_io(ncid=ncid, varname='pfts1d_lat'    , flag='read', data=subgrid%lat  ) 
-       call ncd_io(ncid=ncid, varname='pfts1d_itypveg', flag='read', data=subgrid%ptype)
-       call ncd_io(ncid=ncid, varname='pfts1d_itypcol', flag='read', data=subgrid%ctype)
-       call ncd_io(ncid=ncid, varname='pfts1d_ityplun', flag='read', data=subgrid%ltype)
-       call ncd_io(ncid=ncid, varname='pfts1d_active' , flag='read', data=itemp)
-       if (associated(subgrid%topoglc)) then
-          call ncd_io(ncid=ncid, varname='pfts1d_topoglc', flag='read', data=subgrid%topoglc)
-       end if
-    else if (dimname == 'column') then
-       call ncd_io(ncid=ncid, varname='cols1d_lon'    , flag='read', data=subgrid%lon) 
-       call ncd_io(ncid=ncid, varname='cols1d_lat'    , flag='read', data=subgrid%lat) 
-       call ncd_io(ncid=ncid, varname='cols1d_ityp'   , flag='read', data=subgrid%ctype)
-       call ncd_io(ncid=ncid, varname='cols1d_ityplun', flag='read', data=subgrid%ltype)
-       call ncd_io(ncid=ncid, varname='cols1d_active' , flag='read', data=itemp)
-       if (associated(subgrid%topoglc)) then
-          call ncd_io(ncid=ncid, varname='cols1d_topoglc', flag='read', data=subgrid%topoglc)
-       end if
-    else if (dimname == 'landunit') then
-       call ncd_io(ncid=ncid, varname='land1d_lon'    , flag='read', data=subgrid%lon  ) 
-       call ncd_io(ncid=ncid, varname='land1d_lat'    , flag='read', data=subgrid%lat  ) 
-       call ncd_io(ncid=ncid, varname='land1d_ityplun', flag='read', data=subgrid%ltype)
-       call ncd_io(ncid=ncid, varname='land1d_active' , flag='read', data=itemp) 
-    end if
-
-    do n = beg,end
-       if (itemp(n) > 0) then
-          active(n) = .true.
-       else
-          active(n) = .false.
-       end if
-       subgrid%lat(n) = subgrid%lat(n)*deg2rad
-       subgrid%lon(n) = subgrid%lon(n)*deg2rad
-       subgrid%coslat(n) = cos(subgrid%lat(n))
-    end do
-
-    deallocate(itemp)
-
-  end subroutine set_subgrid_glob
+  end subroutine set_subgrid_info
 
   !=======================================================================
 

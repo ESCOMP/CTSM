@@ -12,7 +12,8 @@ module CNProductsMod
   use abortutils              , only : endrun
   use clm_time_manager        , only : get_step_size
   use SpeciesBaseType         , only : species_base_type
-  use PatchType               , only : patch   
+  use PatchType               , only : patch
+  use ColumnType              , only : col
   !
   implicit none
   private
@@ -24,7 +25,7 @@ module CNProductsMod
      ! Public instance variables
      ! ------------------------------------------------------------------------
 
-     real(r8), pointer, public :: product_loss_col(:)   ! (g[C or N]/m2/s) total decomposition loss from ALL product pools
+     real(r8), pointer, public :: product_loss_grc(:)   ! (g[C or N]/m2/s) total decomposition loss from ALL product pools
 
      ! ------------------------------------------------------------------------
      ! Private instance variables
@@ -33,23 +34,26 @@ module CNProductsMod
      class(species_base_type), allocatable :: species    ! C, N, C13, C14, etc.
 
      ! States
-     real(r8), pointer :: cropprod1_col(:)    ! (g[C or N]/m2) grain product pool, 1-year lifespan
-     real(r8), pointer :: prod10_col(:)       ! (g[C or N]/m2) wood product pool, 10-year lifespan
-     real(r8), pointer :: prod100_col(:)      ! (g[C or N]/m2) wood product pool, 100-year lifespan
-     real(r8), pointer :: tot_woodprod_col(:) ! (g[C or N]/m2) total wood product pool
+     real(r8), pointer :: cropprod1_grc(:)    ! (g[C or N]/m2) grain product pool, 1-year lifespan
+     real(r8), pointer :: prod10_grc(:)       ! (g[C or N]/m2) wood product pool, 10-year lifespan
+     real(r8), pointer :: prod100_grc(:)      ! (g[C or N]/m2) wood product pool, 100-year lifespan
+     real(r8), pointer :: tot_woodprod_grc(:) ! (g[C or N]/m2) total wood product pool
 
      ! Fluxes: gains
-     real(r8), pointer :: dwt_prod10_gain_col(:)  ! (g[C or N]/m2/s) dynamic landcover addition to 10-year wood product pool
-     real(r8), pointer :: dwt_prod100_gain_col(:) ! (g[C or N]/m2/s) dynamic landcover addition to 100-year wood product pool
-     real(r8), pointer :: hrv_deadstem_to_prod10_col(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
-     real(r8), pointer :: hrv_deadstem_to_prod100_col(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
-     real(r8), pointer :: grain_to_cropprod1_col(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
+     real(r8), pointer :: dwt_prod10_gain_grc(:)  ! (g[C or N]/m2/s) dynamic landcover addition to 10-year wood product pool
+     real(r8), pointer :: dwt_prod100_gain_grc(:) ! (g[C or N]/m2/s) dynamic landcover addition to 100-year wood product pool
+     real(r8), pointer :: hrv_deadstem_to_prod10_patch(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
+     real(r8), pointer :: hrv_deadstem_to_prod10_grc(:)  ! (g[C or N]/m2/s) dead stem harvest to 10-year wood product pool
+     real(r8), pointer :: hrv_deadstem_to_prod100_patch(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
+     real(r8), pointer :: hrv_deadstem_to_prod100_grc(:) ! (g[C or N]/m2/s) dead stem harvest to 100-year wood product pool
+     real(r8), pointer :: grain_to_cropprod1_patch(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
+     real(r8), pointer :: grain_to_cropprod1_grc(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
 
      ! Fluxes: losses
-     real(r8), pointer :: cropprod1_loss_col(:)    ! (g[C or N]/m2/s) decomposition loss from 1-yr grain product pool
-     real(r8), pointer :: prod10_loss_col(:)       ! (g[C or N]/m2/s) decomposition loss from 10-yr wood product pool
-     real(r8), pointer :: prod100_loss_col(:)      ! (g[C or N]/m2/s) decomposition loss from 100-yr wood product pool
-     real(r8), pointer :: tot_woodprod_loss_col(:) ! (g[C or N]/m2/s) decompomposition loss from all wood product pools
+     real(r8), pointer :: cropprod1_loss_grc(:)    ! (g[C or N]/m2/s) decomposition loss from 1-yr grain product pool
+     real(r8), pointer :: prod10_loss_grc(:)       ! (g[C or N]/m2/s) decomposition loss from 10-yr wood product pool
+     real(r8), pointer :: prod100_loss_grc(:)      ! (g[C or N]/m2/s) decomposition loss from 100-yr wood product pool
+     real(r8), pointer :: tot_woodprod_loss_grc(:) ! (g[C or N]/m2/s) decompomposition loss from all wood product pools
 
    contains
 
@@ -103,30 +107,39 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: begc,endc
+    integer :: begp,endp
+    integer :: begg,endg
 
     character(len=*), parameter :: subname = 'InitAllocate'
     !-----------------------------------------------------------------------
 
-    begc = bounds%begc
-    endc = bounds%endc
+    begp = bounds%begp
+    endp = bounds%endp
+    begg = bounds%begg
+    endg = bounds%endg
 
-    allocate(this%cropprod1_col(begc:endc)) ; this%cropprod1_col(:) = nan
-    allocate(this%prod10_col(begc:endc)) ; this%prod10_col(:) = nan
-    allocate(this%prod100_col(begc:endc)) ; this%prod100_col(:) = nan
-    allocate(this%tot_woodprod_col(begc:endc)) ; this%tot_woodprod_col(:) = nan
+    allocate(this%cropprod1_grc(begg:endg)) ; this%cropprod1_grc(:) = nan
+    allocate(this%prod10_grc(begg:endg)) ; this%prod10_grc(:) = nan
+    allocate(this%prod100_grc(begg:endg)) ; this%prod100_grc(:) = nan
+    allocate(this%tot_woodprod_grc(begg:endg)) ; this%tot_woodprod_grc(:) = nan
 
-    allocate(this%dwt_prod10_gain_col(begc:endc)) ; this%dwt_prod10_gain_col(:) = nan
-    allocate(this%dwt_prod100_gain_col(begc:endc)) ; this%dwt_prod100_gain_col(:) = nan
-    allocate(this%hrv_deadstem_to_prod10_col(begc:endc)) ; this%hrv_deadstem_to_prod10_col(:) = nan
-    allocate(this%hrv_deadstem_to_prod100_col(begc:endc)) ; this%hrv_deadstem_to_prod100_col(:) = nan
-    allocate(this%grain_to_cropprod1_col(begc:endc)) ; this%grain_to_cropprod1_col(:) = nan
+    allocate(this%dwt_prod10_gain_grc(begg:endg)) ; this%dwt_prod10_gain_grc(:) = nan
+    allocate(this%dwt_prod100_gain_grc(begg:endg)) ; this%dwt_prod100_gain_grc(:) = nan
 
-    allocate(this%cropprod1_loss_col(begc:endc)) ; this%cropprod1_loss_col(:) = nan
-    allocate(this%prod10_loss_col(begc:endc)) ; this%prod10_loss_col(:) = nan
-    allocate(this%prod100_loss_col(begc:endc)) ; this%prod100_loss_col(:) = nan
-    allocate(this%tot_woodprod_loss_col(begc:endc)) ; this%tot_woodprod_loss_col(:) = nan
-    allocate(this%product_loss_col(begc:endc)) ; this%product_loss_col(:) = nan
+    allocate(this%hrv_deadstem_to_prod10_patch(begp:endp)) ; this%hrv_deadstem_to_prod10_patch(:) = nan
+    allocate(this%hrv_deadstem_to_prod10_grc(begg:endg)) ; this%hrv_deadstem_to_prod10_grc(:) = nan
+
+    allocate(this%hrv_deadstem_to_prod100_patch(begp:endp)) ; this%hrv_deadstem_to_prod100_patch(:) = nan
+    allocate(this%hrv_deadstem_to_prod100_grc(begg:endg)) ; this%hrv_deadstem_to_prod100_grc(:) = nan
+
+    allocate(this%grain_to_cropprod1_patch(begp:endp)) ; this%grain_to_cropprod1_patch(:) = nan
+    allocate(this%grain_to_cropprod1_grc(begg:endg)) ; this%grain_to_cropprod1_grc(:) = nan
+
+    allocate(this%cropprod1_loss_grc(begg:endg)) ; this%cropprod1_loss_grc(:) = nan
+    allocate(this%prod10_loss_grc(begg:endg)) ; this%prod10_loss_grc(:) = nan
+    allocate(this%prod100_loss_grc(begg:endg)) ; this%prod100_loss_grc(:) = nan
+    allocate(this%tot_woodprod_loss_grc(begg:endg)) ; this%tot_woodprod_loss_grc(:) = nan
+    allocate(this%product_loss_grc(begg:endg)) ; this%product_loss_grc(:) = nan
 
   end subroutine InitAllocate
 
@@ -141,93 +154,93 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: begc,endc
+    integer :: begg,endg
 
     character(len=*), parameter :: subname = 'InitHistory'
     !-----------------------------------------------------------------------
 
-    begc = bounds%begc
-    endc = bounds%endc
+    begg = bounds%begg
+    endg = bounds%endg
 
-    this%cropprod1_col(begc:endc) = spval
+    this%cropprod1_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('CROPPROD1'), &
          units = 'g' // this%species%get_species() // '/m^2', &
          avgflag = 'A', &
          long_name = '1-yr grain product ' // this%species%get_species(), &
-         ptr_col = this%cropprod1_col)
+         ptr_gcell = this%cropprod1_grc)
 
-    this%prod10_col(begc:endc) = spval
+    this%prod10_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('PROD10'), &
          units = 'g' // this%species%get_species() // '/m^2', &
          avgflag = 'A', &
          long_name = '10-yr wood product ' // this%species%get_species(), &
-         ptr_col = this%prod10_col)
+         ptr_gcell = this%prod10_grc)
 
-    this%prod100_col(begc:endc) = spval
+    this%prod100_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('PROD100'), &
          units = 'g' // this%species%get_species() // '/m^2', &
          avgflag = 'A', &
          long_name = '100-yr wood product ' // this%species%get_species(), &
-         ptr_col = this%prod100_col)
+         ptr_gcell = this%prod100_grc)
 
-    this%tot_woodprod_col(begc:endc) = spval
+    this%tot_woodprod_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('TOT_WOODPROD'), &
          units = 'g' // this%species%get_species() // '/m^2', &
          avgflag = 'A', &
          long_name = 'total wood product ' // this%species%get_species(), &
-         ptr_col = this%tot_woodprod_col)
+         ptr_gcell = this%tot_woodprod_grc)
 
-    this%dwt_prod10_gain_col(begc:endc) = spval
+    this%dwt_prod10_gain_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('DWT_PROD10', suffix='_GAIN'), &
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'landcover change-driven addition to 10-yr wood product pool', &
-         ptr_col = this%dwt_prod10_gain_col)
+         ptr_gcell = this%dwt_prod10_gain_grc)
 
-    this%dwt_prod100_gain_col(begc:endc) = spval
+    this%dwt_prod100_gain_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('DWT_PROD100', suffix='_GAIN'), &
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'landcover change-driven addition to 100-yr wood product pool', &
-         ptr_col = this%dwt_prod100_gain_col)
+         ptr_gcell = this%dwt_prod100_gain_grc)
 
-    this%cropprod1_loss_col(begc:endc) = spval
+    this%cropprod1_loss_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('CROPPROD1', suffix='_LOSS'), &
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'loss from 1-yr grain product pool', &
-         ptr_col = this%cropprod1_loss_col)
+         ptr_gcell = this%cropprod1_loss_grc)
 
-    this%prod10_loss_col(begc:endc) = spval
+    this%prod10_loss_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('PROD10', suffix='_LOSS'), &
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'loss from 10-yr wood product pool', &
-         ptr_col = this%prod10_loss_col)
+         ptr_gcell = this%prod10_loss_grc)
 
-    this%prod100_loss_col(begc:endc) = spval
+    this%prod100_loss_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('PROD100', suffix='_LOSS'), &
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'loss from 100-yr wood product pool', &
-         ptr_col = this%prod100_loss_col)
+         ptr_gcell = this%prod100_loss_grc)
 
-    this%tot_woodprod_loss_col(begc:endc) = spval
+    this%tot_woodprod_loss_grc(begg:endg) = spval
     call hist_addfld1d( &
          fname = this%species%hist_fname('TOT_WOODPROD', suffix='_LOSS'), &
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
          long_name = 'total loss from wood product pools', &
-         ptr_col = this%tot_woodprod_loss_col)
+         ptr_gcell = this%tot_woodprod_loss_grc)
 
   end subroutine InitHistory
 
@@ -238,33 +251,24 @@ contains
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: c
+    integer :: g, p
 
     character(len=*), parameter :: subname = 'InitCold'
     !-----------------------------------------------------------------------
 
-    do c = bounds%begc, bounds%endc
-       this%cropprod1_col(c) = 0._r8
-       this%prod10_col(c) = 0._r8
-       this%prod100_col(c) = 0._r8
-       this%tot_woodprod_col(c) = 0._r8
+    do g = bounds%begg, bounds%endg
+       this%cropprod1_grc(g) = 0._r8
+       this%prod10_grc(g) = 0._r8
+       this%prod100_grc(g) = 0._r8
+       this%tot_woodprod_grc(g) = 0._r8
     end do
 
-    ! TODO(wjs, 2016-03-11) I think the only reason this should be necessary is to set the
-    ! fluxes to 0 for special landunits. After I move the states and fluxes to the
-    ! gridcell level, I'd like to try removing this zeroing.
-    do c = bounds%begc, bounds%endc
-       this%dwt_prod10_gain_col(c) = 0._r8
-       this%dwt_prod100_gain_col(c) = 0._r8
-       this%hrv_deadstem_to_prod10_col(c) = 0._r8
-       this%hrv_deadstem_to_prod100_col(c) = 0._r8
-       this%grain_to_cropprod1_col(c) = 0._r8
-
-       this%cropprod1_loss_col(c) = 0._r8
-       this%prod10_loss_col(c) = 0._r8
-       this%prod100_loss_col(c) = 0._r8
-       this%tot_woodprod_loss_col(c) = 0._r8
-       this%product_loss_col(c) = 0._r8
+    ! Need to set these patch-level fluxes to 0 everywhere for the sake of special
+    ! landunits (because they don't get set over special landunits in the run loop)
+    do p = bounds%begp, bounds%endp
+       this%hrv_deadstem_to_prod10_patch(p) = 0._r8
+       this%hrv_deadstem_to_prod100_patch(p) = 0._r8
+       this%grain_to_cropprod1_patch(p) = 0._r8
     end do
 
   end subroutine InitCold
@@ -274,7 +278,7 @@ contains
        template_for_missing_fields, template_multiplier)
     ! !USES:
     use ncdio_pio  , only : file_desc_t, ncd_double
-    use restUtilMod, only : restartvar, set_missing_from_template
+    use restUtilMod, only : restartvar, set_missing_from_template, set_grc_field_from_col_field
     !
     ! !ARGUMENTS:
     class(cn_products_type), intent(inout) :: this
@@ -316,37 +320,83 @@ contains
        template_provided = .false.
     end if
 
+    ! NOTE(wjs, 2016-03-29) Adding '_g' suffixes to the end of the restart field names to
+    ! distinguish these gridcell-level restart fields from the obsolete column-level
+    ! restart fields that are present on old restart files.
+
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%species%rest_fname('cropprod1'), &
-         xtype=ncd_double, dim1name='column', &
+         varname=this%species%rest_fname('cropprod1', suffix='_g'), &
+         xtype=ncd_double, dim1name='gridcell', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%cropprod1_col)
-    if (flag == 'read' .and. .not. readvar .and. template_provided) then
-       call set_missing_from_template(this%cropprod1_col, &
-            template_for_missing_fields%cropprod1_col, &
-            multiplier = template_multiplier)
+         interpinic_flag='interp', readvar=readvar, data=this%cropprod1_grc)
+    if (flag == 'read' .and. .not. readvar) then
+       ! BACKWARDS_COMPATIBILITY(wjs, 2016-03-31) If the gridcell-level field isn't
+       ! present, try to find a column-level field (which may be present on an older
+       ! restart file).
+       call set_grc_field_from_col_field( &
+            bounds = bounds, &
+            ncid = ncid, &
+            varname = this%species%rest_fname('cropprod1'), &
+            data_grc = this%cropprod1_grc, &
+            readvar = readvar)
+
+       ! If we still haven't found an appropriate field on the restart file, then set
+       ! this field from the template, if provided
+       if (.not. readvar .and. template_provided) then
+          call set_missing_from_template(this%cropprod1_grc, &
+               template_for_missing_fields%cropprod1_grc, &
+               multiplier = template_multiplier)
+       end if
     end if
 
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%species%rest_fname('prod10'), &
-         xtype=ncd_double, dim1name='column', &
+         varname=this%species%rest_fname('prod10', suffix='_g'), &
+         xtype=ncd_double, dim1name='gridcell', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%prod10_col)
-    if (flag == 'read' .and. .not. readvar .and. template_provided) then
-       call set_missing_from_template(this%prod10_col, &
-            template_for_missing_fields%prod10_col, &
-            multiplier = template_multiplier)
+         interpinic_flag='interp', readvar=readvar, data=this%prod10_grc)
+    if (flag == 'read' .and. .not. readvar) then
+       ! BACKWARDS_COMPATIBILITY(wjs, 2016-03-31) If the gridcell-level field isn't
+       ! present, try to find a column-level field (which may be present on an older
+       ! restart file).
+       call set_grc_field_from_col_field( &
+            bounds = bounds, &
+            ncid = ncid, &
+            varname = this%species%rest_fname('prod10'), &
+            data_grc = this%prod10_grc, &
+            readvar = readvar)
+
+       ! If we still haven't found an appropriate field on the restart file, then set
+       ! this field from the template, if provided
+       if (.not. readvar .and. template_provided) then
+          call set_missing_from_template(this%prod10_grc, &
+               template_for_missing_fields%prod10_grc, &
+               multiplier = template_multiplier)
+       end if
     end if
 
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%species%rest_fname('prod100'), &
-         xtype=ncd_double, dim1name='column', &
+         varname=this%species%rest_fname('prod100', suffix='_g'), &
+         xtype=ncd_double, dim1name='gridcell', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%prod100_col)
-    if (flag == 'read' .and. .not. readvar .and. template_provided) then
-       call set_missing_from_template(this%prod100_col, &
-            template_for_missing_fields%prod100_col, &
-            multiplier = template_multiplier)
+         interpinic_flag='interp', readvar=readvar, data=this%prod100_grc)
+    if (flag == 'read' .and. .not. readvar) then
+       ! BACKWARDS_COMPATIBILITY(wjs, 2016-03-31) If the gridcell-level field isn't
+       ! present, try to find a column-level field (which may be present on an older
+       ! restart file).
+       call set_grc_field_from_col_field( &
+            bounds = bounds, &
+            ncid = ncid, &
+            varname = this%species%rest_fname('prod100'), &
+            data_grc = this%prod100_grc, &
+            readvar = readvar)
+
+       ! If we still haven't found an appropriate field on the restart file, then set
+       ! this field from the template, if provided
+       if (.not. readvar .and. template_provided) then
+          call set_missing_from_template(this%prod100_grc, &
+               template_for_missing_fields%prod100_grc, &
+               multiplier = template_multiplier)
+       end if
     end if
 
   end subroutine Restart
@@ -354,7 +404,6 @@ contains
   !-----------------------------------------------------------------------
   subroutine UpdateProducts(this, bounds, &
        num_soilp, filter_soilp, &
-       num_soilc, filter_soilc, &
        dwt_wood_product_gain_patch, &
        wood_harvest_patch, &
        grain_to_cropprod_patch)
@@ -368,8 +417,6 @@ contains
     type(bounds_type)       , intent(in)    :: bounds
     integer                 , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                 , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    integer                 , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
 
     ! dynamic landcover addition to wood product pools (g/m2/s) [patch]; although this is
     ! a patch-level flux, it is expressed per unit COLUMN area
@@ -382,8 +429,7 @@ contains
     real(r8), intent(in) :: grain_to_cropprod_patch( bounds%begp: )
     !
     ! !LOCAL VARIABLES:
-    integer  :: fc       ! column filter indices
-    integer  :: c        ! indices
+    integer  :: g        ! indices
     real(r8) :: dt       ! time step (seconds)
     real(r8) :: kprod1   ! decay constant for 1-year product pool
     real(r8) :: kprod10  ! decay constant for 10-year product pool
@@ -396,62 +442,56 @@ contains
 
     call this%PartitionWoodFluxes(bounds, &
          num_soilp, filter_soilp, &
-         num_soilc, filter_soilc, &
          dwt_wood_product_gain_patch(bounds%begp:bounds%endp), &
          wood_harvest_patch(bounds%begp:bounds%endp))
 
     call this%PartitionGrainFluxes(bounds, &
          num_soilp, filter_soilp, &
-         num_soilc, filter_soilc, &
          grain_to_cropprod_patch(bounds%begp:bounds%endp))
 
-    ! calculate column-level losses from product pools
+    ! calculate losses from product pools
     ! the following (1/s) rate constants result in ~90% loss of initial state over 1, 10 and 100 years,
     ! respectively, using a discrete-time fractional decay algorithm.
     kprod1  = 7.2e-8
     kprod10 = 7.2e-9
     kprod100 = 7.2e-10
 
-    do fc = 1,num_soilc
-       c = filter_soilc(fc)
-
+    do g = bounds%begg, bounds%endg
        ! calculate fluxes out of product pools (1/sec)
-       this%cropprod1_loss_col(c) = this%cropprod1_col(c) * kprod1
-       this%prod10_loss_col(c)    = this%prod10_col(c)    * kprod10
-       this%prod100_loss_col(c)   = this%prod100_col(c)   * kprod100
+       this%cropprod1_loss_grc(g) = this%cropprod1_grc(g) * kprod1
+       this%prod10_loss_grc(g)    = this%prod10_grc(g)    * kprod10
+       this%prod100_loss_grc(g)   = this%prod100_grc(g)   * kprod100
     end do
 
     ! set time steps
     dt = real( get_step_size(), r8 )
 
     ! update product state variables
-    do fc = 1,num_soilc
-       c = filter_soilc(fc)
+    do g = bounds%begg, bounds%endg
 
        ! fluxes into wood product pools, from landcover change
-       this%prod10_col(c)  = this%prod10_col(c)  + this%dwt_prod10_gain_col(c)*dt
-       this%prod100_col(c) = this%prod100_col(c) + this%dwt_prod100_gain_col(c)*dt
+       this%prod10_grc(g)  = this%prod10_grc(g)  + this%dwt_prod10_gain_grc(g)*dt
+       this%prod100_grc(g) = this%prod100_grc(g) + this%dwt_prod100_gain_grc(g)*dt
 
        ! fluxes into wood & grain product pools, from harvest
-       this%cropprod1_col(c) = this%cropprod1_col(c) + this%grain_to_cropprod1_col(c)*dt
-       this%prod10_col(c)    = this%prod10_col(c)    + this%hrv_deadstem_to_prod10_col(c)*dt
-       this%prod100_col(c)   = this%prod100_col(c)   + this%hrv_deadstem_to_prod100_col(c)*dt
+       this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%grain_to_cropprod1_grc(g)*dt
+       this%prod10_grc(g)    = this%prod10_grc(g)    + this%hrv_deadstem_to_prod10_grc(g)*dt
+       this%prod100_grc(g)   = this%prod100_grc(g)   + this%hrv_deadstem_to_prod100_grc(g)*dt
 
        ! fluxes out of wood & grain product pools, from decomposition
-       this%cropprod1_col(c) = this%cropprod1_col(c) - this%cropprod1_loss_col(c)*dt
-       this%prod10_col(c)    = this%prod10_col(c)    - this%prod10_loss_col(c)*dt
-       this%prod100_col(c)   = this%prod100_col(c)   - this%prod100_loss_col(c)*dt
+       this%cropprod1_grc(g) = this%cropprod1_grc(g) - this%cropprod1_loss_grc(g)*dt
+       this%prod10_grc(g)    = this%prod10_grc(g)    - this%prod10_loss_grc(g)*dt
+       this%prod100_grc(g)   = this%prod100_grc(g)   - this%prod100_loss_grc(g)*dt
 
     end do
 
-    call this%ComputeSummaryVars(bounds, num_soilc, filter_soilc)
+    call this%ComputeSummaryVars(bounds)
 
   end subroutine UpdateProducts
 
   !-----------------------------------------------------------------------
   subroutine PartitionWoodFluxes(this, bounds, &
        num_soilp, filter_soilp, &
-       num_soilc, filter_soilc, &
        dwt_wood_product_gain_patch, &
        wood_harvest_patch)
     !
@@ -460,15 +500,13 @@ contains
     !
     ! !USES:
     use pftconMod    , only : pftcon
-    use subgridAveMod, only : p2c
+    use subgridAveMod, only : p2g
     !
     ! !ARGUMENTS:
     class(cn_products_type) , intent(inout) :: this
     type(bounds_type)       , intent(in)    :: bounds
     integer                 , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                 , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    integer                 , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
 
     ! dynamic landcover addition to wood product pools (g/m2/s) [patch]; although this is
     ! a patch-level flux, it is expressed per unit COLUMN area
@@ -482,8 +520,7 @@ contains
     integer :: fp
     integer :: p
     integer :: c
-    real(r8) :: hrv_deadstem_to_prod10_patch(bounds%begp:bounds%endp)
-    real(r8) :: hrv_deadstem_to_prod100_patch(bounds%begp:bounds%endp)
+    integer :: g
     real(r8) :: pprod10       ! PFT proportion of deadstem to 10-year product pool
     real(r8) :: pprod100      ! PFT proportion of deadstem to 100-year product pool
     real(r8) :: pprod_tot     ! PFT proportion of deadstem to any product pool
@@ -496,28 +533,37 @@ contains
     ! Partition patch-level harvest fluxes to 10 and 100-year product pools
     do fp = 1, num_soilp
        p = filter_soilp(fp)
-       hrv_deadstem_to_prod10_patch(p)  = wood_harvest_patch(p) * pftcon%pprodharv10(patch%itype(p))
-       hrv_deadstem_to_prod100_patch(p) = wood_harvest_patch(p) * (1.0_r8 - pftcon%pprodharv10(patch%itype(p)))
+       this%hrv_deadstem_to_prod10_patch(p)  = &
+            wood_harvest_patch(p) * pftcon%pprodharv10(patch%itype(p))
+       this%hrv_deadstem_to_prod100_patch(p) = &
+            wood_harvest_patch(p) * (1.0_r8 - pftcon%pprodharv10(patch%itype(p)))
     end do
 
-    ! Average harvest fluxes from patch to column
-    call p2c(bounds, num_soilc, filter_soilc, &
-         hrv_deadstem_to_prod10_patch(bounds%begp:bounds%endp), &
-         this%hrv_deadstem_to_prod10_col(bounds%begc:bounds%endc))
+    ! Average harvest fluxes from patch to gridcell
+    call p2g(bounds, &
+         this%hrv_deadstem_to_prod10_patch(bounds%begp:bounds%endp), &
+         this%hrv_deadstem_to_prod10_grc(bounds%begg:bounds%endg), &
+         p2c_scale_type = 'unity', &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
 
-    call p2c(bounds, num_soilc, filter_soilc, &
-         hrv_deadstem_to_prod100_patch(bounds%begp:bounds%endp), &
-         this%hrv_deadstem_to_prod100_col(bounds%begc:bounds%endc))
+    call p2g(bounds, &
+         this%hrv_deadstem_to_prod100_patch(bounds%begp:bounds%endp), &
+         this%hrv_deadstem_to_prod100_grc(bounds%begg:bounds%endg), &
+         p2c_scale_type = 'unity', &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
 
     ! Zero the dwt gains
-    do c = bounds%begc, bounds%endc
-       this%dwt_prod10_gain_col(c) = 0._r8
-       this%dwt_prod100_gain_col(c) = 0._r8
+    do g = bounds%begg, bounds%endg
+       this%dwt_prod10_gain_grc(g) = 0._r8
+       this%dwt_prod100_gain_grc(g) = 0._r8
     end do
 
     ! Partition dynamic land cover fluxes to 10 and 100-year product pools.
     do p = bounds%begp, bounds%endp
        c = patch%column(p)
+       g = patch%gridcell(p)
 
        ! Note that pprod10 + pprod100 do NOT sum to 1: some fraction of the dwt changes
        ! was lost to other fluxes. dwt_wood_product_gain_patch gives the amount that goes
@@ -535,13 +581,13 @@ contains
           pprod100_frac = 0._r8
        end if
 
-       ! Note that the patch-level fluxes are expressed per unit column area, so we add
-       ! the patch-level values to get a column-level value, without any need for
-       ! multiplying by patch weights.
-       this%dwt_prod10_gain_col(c) = this%dwt_prod10_gain_col(c) + &
-            dwt_wood_product_gain_patch(p) * pprod10_frac
-       this%dwt_prod100_gain_col(c) = this%dwt_prod100_gain_col(c) + &
-            dwt_wood_product_gain_patch(p) * pprod100_frac
+       ! Note that the patch-level fluxes are expressed per unit column area. So, to go
+       ! from patch-level fluxes to gridcell-level fluxes, we multiply by col%wtgcell
+       ! rather than patch%wtgcell.
+       this%dwt_prod10_gain_grc(g) = this%dwt_prod10_gain_grc(g) + &
+            dwt_wood_product_gain_patch(p) * pprod10_frac * col%wtgcell(c)
+       this%dwt_prod100_gain_grc(g) = this%dwt_prod100_gain_grc(g) + &
+            dwt_wood_product_gain_patch(p) * pprod100_frac * col%wtgcell(c)
     end do
 
   end subroutine PartitionWoodFluxes
@@ -549,7 +595,6 @@ contains
   !-----------------------------------------------------------------------
   subroutine PartitionGrainFluxes(this, bounds, &
        num_soilp, filter_soilp, &
-       num_soilc, filter_soilc, &
        grain_to_cropprod_patch)
     !
     ! !DESCRIPTION:
@@ -561,15 +606,13 @@ contains
     ! symmetry with the wood fluxes.
     !
     ! !USES:
-    use subgridAveMod, only : p2c
+    use subgridAveMod, only : p2g
     !
     ! !ARGUMENTS:
     class(cn_products_type) , intent(inout) :: this
     type(bounds_type)       , intent(in)    :: bounds
     integer                 , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                 , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    integer                 , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
 
     ! grain to crop product pool(s) (g/m2/s) [patch]
     real(r8)                , intent(in)    :: grain_to_cropprod_patch( bounds%begp: )
@@ -577,7 +620,6 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fp
     integer :: p
-    real(r8) :: grain_to_cropprod1_patch(bounds%begp:bounds%endp)
 
     character(len=*), parameter :: subname = 'PartitionGrainFluxes'
     !-----------------------------------------------------------------------
@@ -586,18 +628,21 @@ contains
        p = filter_soilp(fp)
 
        ! For now all crop product is put in the 1-year crop product pool
-       grain_to_cropprod1_patch(p) = grain_to_cropprod_patch(p)
+       this%grain_to_cropprod1_patch(p) = grain_to_cropprod_patch(p)
     end do
 
-    call p2c(bounds, num_soilc, filter_soilc, &
-         grain_to_cropprod1_patch(bounds%begp:bounds%endp), &
-         this%grain_to_cropprod1_col(bounds%begc:bounds%endc))
+    call p2g(bounds, &
+         this%grain_to_cropprod1_patch(bounds%begp:bounds%endp), &
+         this%grain_to_cropprod1_grc(bounds%begg:bounds%endg), &
+         p2c_scale_type = 'unity', &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
 
   end subroutine PartitionGrainFluxes
 
 
   !-----------------------------------------------------------------------
-  subroutine ComputeSummaryVars(this, bounds, num_soilc, filter_soilc)
+  subroutine ComputeSummaryVars(this, bounds)
     !
     ! !DESCRIPTION:
     ! Compute summary variables in this object: sums across multiple product pools
@@ -607,34 +652,30 @@ contains
     ! !ARGUMENTS:
     class(cn_products_type) , intent(inout) :: this
     type(bounds_type)       , intent(in)    :: bounds
-    integer                 , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
     !
     ! !LOCAL VARIABLES:
-    integer  :: fc       ! column filter indices
-    integer  :: c        ! indices
+    integer  :: g        ! indices
 
     character(len=*), parameter :: subname = 'ComputeSummaryVars'
     !-----------------------------------------------------------------------
 
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do g = bounds%begg, bounds%endg
 
        ! total wood products
-       this%tot_woodprod_col(c) = &
-            this%prod10_col(c) + &
-            this%prod100_col(c)
+       this%tot_woodprod_grc(g) = &
+            this%prod10_grc(g) + &
+            this%prod100_grc(g)
 
        ! total loss from wood products
-       this%tot_woodprod_loss_col(c) = &
-            this%prod10_loss_col(c) + &
-            this%prod100_loss_col(c)
+       this%tot_woodprod_loss_grc(g) = &
+            this%prod10_loss_grc(g) + &
+            this%prod100_loss_grc(g)
 
        ! total loss from ALL products
-       this%product_loss_col(c) = &
-            this%cropprod1_loss_col(c) + &
-            this%prod10_loss_col(c) + &
-            this%prod100_loss_col(c)
+       this%product_loss_grc(g) = &
+            this%cropprod1_loss_grc(g) + &
+            this%prod10_loss_grc(g) + &
+            this%prod100_loss_grc(g)
     end do
 
   end subroutine ComputeSummaryVars

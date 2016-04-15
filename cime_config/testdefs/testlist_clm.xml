@@ -192,9 +192,6 @@
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/default">edison</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
-      <test name="LII_D_Ld3">
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default" comment="This test is mostly redundant with LII_D.f10_f10.ICLM45BGCCROP.yellowstone_gnu.clm-crop. However, the initial conditions file for the crop test has O2_DECOMP_DEPTH_UNSAT = 0 everywhere. That failed to catch a problem that appears when there are non-zero values in O2_DECOMP_DEPTH_UNSAT. Once the initial conditions file for the crop LII test has non-zero values for O2_DECOMP_DEPTH_UNSAT, this non-crop LII test can be removed.">yellowstone</machine>
-      </test>
       <test name="SSP_D_Ld10">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
@@ -510,6 +507,9 @@
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cn_conly">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/drydepnomegan">yellowstone</machine>
+      </test>
+      <test name="LII_D_Ld3">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default" comment="Include a LII test with a year-2000 restart file, so that the restart file has non-zero product pools, so that we exercise the gridcell-level code in init_interp. This test is largely redundant with LII_D.f10_f10.ICLM45BGCCROP.yellowstone_gnu.clm-crop, but currently the initial conditions file for that test has 0 product pools and O2_DECOMP_DEPTH_UNSAT = 0 everywhere. That failed to catch a problem that appears when there are non-zero values in O2_DECOMP_DEPTH_UNSAT. Once the initial conditions file for the crop LII test has non-zero values for O2_DECOMP_DEPTH_UNSAT and product pools, this non-crop LII test can be removed.">yellowstone</machine>
       </test>
     </grid>
     <grid name="f10_f10">

@@ -695,7 +695,7 @@ contains
 
     call t_startf('CNWoodProducts')
     call c_products_inst%UpdateProducts(bounds, &
-         num_soilp, filter_soilp, num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
          dwt_wood_product_gain_patch = cnveg_carbonflux_inst%dwt_productc_gain_patch(begp:endp), &
          wood_harvest_patch = cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
          grain_to_cropprod_patch = cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp))
@@ -703,7 +703,7 @@ contains
 
     if (use_c13) then
        call c13_products_inst%UpdateProducts(bounds, &
-            num_soilp, filter_soilp, num_soilc, filter_soilc, &
+            num_soilp, filter_soilp, &
             dwt_wood_product_gain_patch = c13_cnveg_carbonflux_inst%dwt_productc_gain_patch(begp:endp), &
             wood_harvest_patch = c13_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             grain_to_cropprod_patch = c13_cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp))
@@ -711,14 +711,14 @@ contains
 
     if (use_c14) then
        call c14_products_inst%UpdateProducts(bounds, &
-            num_soilp, filter_soilp, num_soilc, filter_soilc, &
+            num_soilp, filter_soilp, &
             dwt_wood_product_gain_patch = c14_cnveg_carbonflux_inst%dwt_productc_gain_patch(begp:endp), &
             wood_harvest_patch = c14_cnveg_carbonflux_inst%wood_harvestc_patch(begp:endp), &
             grain_to_cropprod_patch = c14_cnveg_carbonflux_inst%grainc_to_cropprodc_patch(begp:endp))
     end if
 
     call n_products_inst%UpdateProducts(bounds, &
-         num_soilp, filter_soilp, num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
          dwt_wood_product_gain_patch = cnveg_nitrogenflux_inst%dwt_productn_gain_patch(begp:endp), &
          wood_harvest_patch = cnveg_nitrogenflux_inst%wood_harvestn_patch(begp:endp), &
          grain_to_cropprod_patch = cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(begp:endp))
@@ -898,9 +898,11 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begc,endc
+    integer :: begg,endg
     !-----------------------------------------------------------------------
   
     begc = bounds%begc; endc= bounds%endc
+    begg = bounds%begg; endg = bounds%endg
 
     ! Call to all summary routines
 
@@ -988,7 +990,7 @@ contains
          soilbiogeochem_lithr_col=soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
          soilbiogeochem_decomp_cascade_ctransfer_col=&
          soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-         product_closs_col=c_products_inst%product_loss_col(begc:endc))
+         product_closs_grc=c_products_inst%product_loss_grc(begg:endg))
 
     if ( use_c13 ) then
        call c13_cnveg_carbonflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -997,7 +999,7 @@ contains
             soilbiogeochem_lithr_col=c13_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
             c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-            product_closs_col=c13_products_inst%product_loss_col(begc:endc))
+            product_closs_grc=c13_products_inst%product_loss_grc(begg:endg))
     end if
 
     if ( use_c14 ) then
@@ -1007,7 +1009,7 @@ contains
             soilbiogeochem_lithr_col=c14_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
             c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
-            product_closs_col=c14_products_inst%product_loss_col(begc:endc))
+            product_closs_grc=c14_products_inst%product_loss_grc(begg:endg))
     end if
 
     call cnveg_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp)

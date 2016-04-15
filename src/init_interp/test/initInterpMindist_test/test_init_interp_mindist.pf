@@ -535,4 +535,31 @@ contains
     end associate
   end subroutine fill_missing_uses_natveg
 
+  @Test
+  subroutine gridcell_finds_closest_latlon(this)
+    ! For gridcell-level variables, should find closest gridcell in lat-lon space
+    class(TestInitInterpMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer :: i
+    integer :: mindist_index(1)
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         name = 'gridcell', &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'gridcell', &
+         lat = [my_lat - 10._r8, my_lat - 1._r8, my_lat + 10._r8], &
+         lon = [(my_lon, i=1,3)])
+
+    call wrap_set_mindist(subgridi, subgrido, mindist_index)
+
+    @assertEqual(2, mindist_index(1))
+  end subroutine gridcell_finds_closest_latlon
+
 end module test_init_interp_mindist

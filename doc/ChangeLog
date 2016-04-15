@@ -1,4 +1,182 @@
 ===============================================================
+Tag name:  clm4_5_8_r177
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Apr 14 14:00:25 MDT 2016
+One-line Summary: Move CN product pools to gridcell level
+
+Purpose of changes
+------------------
+
+Move CN product pools from column-level to gridcell-level. This is needed for C
+& N conservation with dynamic landunits, because there was no obvious way to
+handle column-level product pools.
+
+This also required moving some of the related fluxes to the gridcell-level.
+
+Also added capability for init_interp to handle gridcell-level fields.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- If you run an old restart file through init_interp, product pools will be
+  zeroed out. This is an issue for restart files that come from a transient run
+  or from a clm5 crop run. Solution: run your old file through the new code for
+  at least one time step without init_interp, then you can init_interp that
+  file.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+- clmi.I2000CLM45CRUBGC.2000-01-01.0.9x1.25_gx1v6_simyr2000_c160127.nc replaced
+  by clmi.I2000CLM45CRUBGC.2000-01-01.0.9x1.25_gx1v6_simyr2000_c160413.nc. This
+  is basically the same, but run for one extra time step using compset ICLM45BGC
+  with this branch.
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass or xfail, some baseline comparisons fail, as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_8_r176
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all CLM45/CLM5 with CN/BGC
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+    All CLM45/CLM5 CN/BGC cases have roundoff-level changes in product pools and
+    related fluxes. In addition:
+
+    (1) Bigger answer changes for CN/BGC cases using the f09 year-2000 initial
+    conditions file: this file has been run through the new code for one
+    additional time step. Differences were larger than I expected for this
+    seemingly-minor change; I did not spend time tracking down the cause for
+    those differences.
+
+    (2) Cases doing interpolation (init_interp) from some other out-of-the-box
+    initial conditions files have normalized RMS differences greater than
+    roundoff. This is because some other initial conditions files (including
+    some 1850 files) have non-zero product pools, which are zeroed out by
+    init_interp: see the caveat for users above. However, in an absolute sense,
+    RMS differences are small, because the product pools on these files are very
+    small.
+
+    (3) Greater than roundoff-level changes in product pools and related fluxes
+    in transient crop cases. This shows up in the test
+    ERS_Ly5_P60x1.f10_f10.IHISTCLM45BGCCROP.yellowstone_intel.clm-cropMonthOutput. This
+    is expected: in the old code, the product pools grew or shrank as the
+    columns they were on grew or shrank. This was essentially the motivation for
+    this tag.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+      Based on RMS errors in baseline comparisons
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Move product pools from column to gridcell-level, as described above
+M       components/clm/src/biogeochem/CNProductsMod.F90
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+M       components/clm/src/biogeochem/CNDriverMod.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/main/lnd2atmMod.F90
+
+========= Allow suffix on restart field name
+M       components/clm/src/biogeochem/SpeciesBaseType.F90
+M       components/clm/src/biogeochem/SpeciesIsotopeType.F90
+M       components/clm/src/biogeochem/SpeciesNonIsotopeType.F90
+M       components/clm/src/biogeochem/test/Species_test/test_SpeciesNonIsotope.pf
+M       components/clm/src/biogeochem/test/Species_test/test_SpeciesIsotope.pf
+
+========= Add a routine to assist with backwards compatibility:
+          set_grc_field_from_col_field: Set a gridcell-level field from a
+          column-level field on the restart file
+M       components/clm/src/utils/restUtilMod.F90.in
+
+========= Add capability for init_interp to handle gridcell-level fields. This
+          is needed for the new gridcell-level product pools.
+M       components/clm/src/init_interp/test/initInterpMindist_test/test_init_interp_mindist.pf
+M       components/clm/src/init_interp/initInterp.F90
+M       components/clm/src/init_interp/initInterpMindist.F90
+M       components/clm/src/init_interp/initInterpBounds.F90
+
+========= Point to new year-2000 initial conditions file. This is basically the
+          same as the old one, but has been run for one timestep using the new
+          code, in order to have gridcell-level product pools. This is needed
+          for LII testing.
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+========= Replace a year-1850 LII test with a year-2000 LII test to exercise the
+          gridcell-level init_interp code (need non-zero product pools to test
+          that code fully)
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r176
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Apr 13 09:32:56 MDT 2016

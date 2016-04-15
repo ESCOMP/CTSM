@@ -24,6 +24,8 @@ module initInterpBounds
      integer :: endc  ! ending col-level index
      integer :: begl  ! beginning landunit-level index
      integer :: endl  ! ending landunit-level index
+     integer :: begg  ! beginning gridcell-level index
+     integer :: endg  ! ending gridcell-level index
    contains
      procedure :: get_begp
      procedure :: get_endp
@@ -31,6 +33,8 @@ module initInterpBounds
      procedure :: get_endc
      procedure :: get_begl
      procedure :: get_endl
+     procedure :: get_begg
+     procedure :: get_endg
      procedure :: get_beg  ! get beginning index for a given subgrid level
      procedure :: get_end  ! get ending index for a given subgrid level
   end type interp_bounds_type
@@ -46,7 +50,7 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  function constructor(begp, endp, begc, endc, begl, endl) result(this)
+  function constructor(begp, endp, begc, endc, begl, endl, begg, endg) result(this)
     !
     ! !DESCRIPTION:
     ! Create an interp_bounds_type instance
@@ -58,6 +62,7 @@ contains
     integer, intent(in) :: begp, endp
     integer, intent(in) :: begc, endc
     integer, intent(in) :: begl, endl
+    integer, intent(in) :: begg, endg
     !
     ! !LOCAL VARIABLES:
 
@@ -70,6 +75,8 @@ contains
     this%endc = endc
     this%begl = begl
     this%endl = endl
+    this%begg = begg
+    this%endg = endg
 
   end function constructor
 
@@ -107,6 +114,16 @@ contains
     get_endl = this%endl
   end function get_endl
 
+  integer function get_begg(this)
+    class(interp_bounds_type), intent(in) :: this
+    get_begg = this%begg
+  end function get_begg
+
+  integer function get_endg(this)
+    class(interp_bounds_type), intent(in) :: this
+    get_endg = this%endg
+  end function get_endg
+
   !-----------------------------------------------------------------------
   function get_beg(this, subgrid_level) result(beg_index)
     !
@@ -118,7 +135,7 @@ contains
     ! !ARGUMENTS:
     integer :: beg_index  ! function result
     class(interp_bounds_type), intent(in) :: this
-    character(len=*), intent(in) :: subgrid_level  ! 'pft', 'column' or 'landunit'
+    character(len=*), intent(in) :: subgrid_level  ! 'pft', 'column', 'landunit' or 'gridcell'
     !
     ! !LOCAL VARIABLES:
 
@@ -132,6 +149,8 @@ contains
        beg_index = this%begc
     case('landunit')
        beg_index = this%begl
+    case('gridcell')
+       beg_index = this%begg
     case default
        call endrun(msg=subname//' ERROR: Unknown subgrid level: '//trim(subgrid_level)// &
             errMsg(__FILE__, __LINE__))
@@ -150,7 +169,7 @@ contains
     ! !ARGUMENTS:
     integer :: end_index  ! function result
     class(interp_bounds_type), intent(in) :: this
-    character(len=*), intent(in) :: subgrid_level  ! 'pft', 'column' or 'landunit'
+    character(len=*), intent(in) :: subgrid_level  ! 'pft', 'column', 'landunit' or 'gridcell'
     !
     ! !LOCAL VARIABLES:
 
@@ -164,6 +183,8 @@ contains
        end_index = this%endc
     case('landunit')
        end_index = this%endl
+    case('gridcell')
+       end_index = this%endg
     case default
        call endrun(msg=subname//' ERROR: Unknown subgrid level: '//trim(subgrid_level)// &
             errMsg(__FILE__, __LINE__))

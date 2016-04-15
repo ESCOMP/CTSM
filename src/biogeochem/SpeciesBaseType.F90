@@ -40,15 +40,19 @@ module SpeciesBaseType
        character(len=*)         , optional, intent(in) :: suffix
      end function hist_fname_interface
 
-     function rest_fname_interface(this, basename) result(fname)
+     function rest_fname_interface(this, basename, suffix) result(fname)
        ! Get a restart field name for this species
        !
        ! basename gives the base name of the restart field
+       !
+       ! suffix, if provided, gives a suffix that appears after all species information
+       ! in the field name
        import :: species_base_type
 
        character(len=:)         , allocatable :: fname  ! function result
        class(species_base_type) , intent(in)  :: this
        character(len=*)         , intent(in)  :: basename
+       character(len=*)         , optional, intent(in) :: suffix
      end function rest_fname_interface
 
      pure function get_species_interface(this) result(species_name)

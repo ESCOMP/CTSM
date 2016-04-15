@@ -325,10 +325,10 @@ module CNVegCarbonFluxType
      real(r8), pointer :: nep_col        (:) ! (gC/m2/s) net ecosystem production, excludes fire, landuse, and harvest flux, positive for sink
      real(r8), pointer :: nbp_col        (:) ! (gC/m2/s) net biome production, includes fire, excludes landuse and harvest flux, positive for sink  
      real(r8), pointer :: nee_col        (:) ! (gC/m2/s) net ecosystem exchange of carbon, includes fire and hrv_xsmrpool, excludes landuse and harvest flux, positive for source 
-     real(r8), pointer :: net_carbon_exchange_col(:) ! (gC/m2/s) net carbon exchange between land and atmosphere, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for source
+     real(r8), pointer :: net_carbon_exchange_grc(:) ! (gC/m2/s) net carbon exchange between land and atmosphere, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for source
 
      ! Dynamic landcover fluxnes
-     real(r8), pointer :: landuseflux_col(:) ! (gC/m2/s) dwt_closs+product_closs
+     real(r8), pointer :: landuseflux_grc(:) ! (gC/m2/s) dwt_closs+product_closs
      real(r8), pointer :: npp_Nactive_patch                         (:)     ! C used by mycorrhizal uptake    (gC/m2/s)
      real(r8), pointer :: npp_burnedoff_patch                       (:)     ! C that cannot be used for N uptake   (gC/m2/s)
      real(r8), pointer :: npp_Nnonmyc_patch                         (:)     ! C used by non-myc uptake        (gC/m2/s)
@@ -389,10 +389,12 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
     integer           :: begc,endc
+    integer           :: begg,endg
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
+    begg = bounds%begg; endg = bounds%endg
 
     allocate(this%m_leafc_to_litter_patch                   (begp:endp)) ; this%m_leafc_to_litter_patch                   (:) = nan
     allocate(this%m_frootc_to_litter_patch                  (begp:endp)) ; this%m_frootc_to_litter_patch                  (:) = nan
@@ -673,8 +675,8 @@ contains
     allocate(this%nep_col                 (begc:endc)) ; this%nep_col                 (:) = nan
     allocate(this%nbp_col                 (begc:endc)) ; this%nbp_col                 (:) = nan
     allocate(this%nee_col                 (begc:endc)) ; this%nee_col                 (:) = nan
-    allocate(this%net_carbon_exchange_col (begc:endc)) ; this%net_carbon_exchange_col (:) = nan
-    allocate(this%landuseflux_col         (begc:endc)) ; this%landuseflux_col         (:) = nan
+    allocate(this%net_carbon_exchange_grc (begg:endg)) ; this%net_carbon_exchange_grc (:) = nan
+    allocate(this%landuseflux_grc         (begg:endg)) ; this%landuseflux_grc         (:) = nan
     allocate(this%npp_Nactive_patch       (begp:endp)) ; this%npp_Nactive_patch       (:) = nan
     allocate(this%npp_burnedoff_patch     (begp:endp)) ; this%npp_burnedoff_patch     (:) = nan
     allocate(this%npp_Nnonmyc_patch       (begp:endp)) ; this%npp_Nnonmyc_patch       (:) = nan
@@ -720,6 +722,7 @@ contains
     character(10)     :: active
     integer           :: begp,endp
     integer           :: begc,endc
+    integer           :: begg,endg
     character(24)     :: fieldname
     character(100)    :: longname
     real(r8), pointer :: data1dptr(:)   ! temp. pointer for slicing larger arrays
@@ -728,6 +731,7 @@ contains
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
+    begg = bounds%begg; endg = bounds%endg
 
     if (nlevdecomp > 1) then
        vr_suffix = "_vr"
@@ -1496,11 +1500,13 @@ contains
           call hist_addfld1d (fname='NPP_NACTIVE', units='gC/m^2/s',     &
                avgflag='A', long_name='Mycorrhizal N uptake used C',     &
                ptr_patch=this%npp_Nactive_patch)
-  
+
+          ! BUG(wjs, 2016-04-13, bugz 2292) This field has a threading bug. Making it
+          ! inactive for now.
           this%npp_burnedoff_patch(begp:endp)  = spval
           call hist_addfld1d (fname='NPP_BURNEDOFF', units='gC/m^2/s',     &
                avgflag='A', long_name='C that cannot be used for N uptake',     &
-               ptr_patch=this%npp_burnedoff_patch)
+               ptr_patch=this%npp_burnedoff_patch, default='inactive')
   
           this%npp_Nnonmyc_patch(begp:endp)  = spval
           call hist_addfld1d (fname='NPP_NNONMYC', units='gC/m^2/s',     &
@@ -2844,17 +2850,17 @@ contains
             //' excludes landuse and harvest flux, positive for source', &
             ptr_col=this%nee_col)
 
-       this%net_carbon_exchange_col(begc:endc) = spval
+       this%net_carbon_exchange_grc(begg:endg) = spval
        call hist_addfld1d (fname='NET_CARBON_EXCHANGE', units='gC/m^2/s', &
             avgflag='A', long_name='net carbon exchange between land and atmosphere, includes fire, landuse,'&
             //' harvest and hrv_xsmrpool flux, positive for source', &
-            ptr_col=this%net_carbon_exchange_col)
+            ptr_gcell=this%net_carbon_exchange_grc)
 
-       this%landuseflux_col(begc:endc) = spval
+       this%landuseflux_grc(begg:endg) = spval
        call hist_addfld1d (fname='LAND_USE_FLUX', units='gC/m^2/s', &
             avgflag='A', &
             long_name='total C emitted from land cover conversion and wood and grain product pools (NOTE: not a net value)', &
-            ptr_col=this%landuseflux_col)
+            ptr_gcell=this%landuseflux_grc)
 
    end if
     !-------------------------------
@@ -3181,8 +3187,6 @@ contains
     do fc = 1,num_special_col
        c = special_col(fc)
        this%dwt_closs_col(c)   = 0._r8
-       this%landuseflux_col(c) = 0._r8
-       this%net_carbon_exchange_col(c) = 0._r8
     end do
 
     do p = bounds%begp,bounds%endp
@@ -3745,7 +3749,7 @@ contains
        bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        isotope, soilbiogeochem_hr_col, soilbiogeochem_lithr_col, &
        soilbiogeochem_decomp_cascade_ctransfer_col, &
-       product_closs_col)
+       product_closs_grc)
     !
     ! !DESCRIPTION:
     ! Perform patch and column-level carbon summary calculations
@@ -3754,7 +3758,7 @@ contains
     use clm_time_manager                   , only: get_step_size
     use clm_varcon                         , only: secspday
     use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
-    use subgridAveMod                      , only: p2c
+    use subgridAveMod                      , only: p2c, c2g
     use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con
     use CNSharedParamsMod                  , only: use_fun
     !
@@ -3769,16 +3773,18 @@ contains
     real(r8)          , intent(in) :: soilbiogeochem_hr_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_lithr_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_decomp_cascade_ctransfer_col(bounds%begc:,1:)
-    real(r8)          , intent(in) :: product_closs_col(bounds%begc:)
+    real(r8)          , intent(in) :: product_closs_grc(bounds%begg:)
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,p,j,k,l       ! indices
+    integer  :: c,p,j,k,l,g     ! indices
     integer  :: fp,fc           ! lake filter indices
     real(r8) :: nfixlags, dtime ! temp variables for making lagged npp
     real(r8) :: maxdepth        ! depth to integrate soil variables
+    real(r8) :: dwt_closs_grc(bounds%begg:bounds%endg)  ! dwt_closs_col averaged to gridcell
+    real(r8) :: nee_grc(bounds%begg:bounds%endg)        ! nee_col averaged to gridcell
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(product_closs_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(product_closs_grc) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
 
     ! calculate patch-level summary carbon fluxes and states
 
@@ -4237,16 +4243,28 @@ contains
             this%fire_closs_col(c)    + &
             this%hrv_xsmrpool_to_atm_col(c)
 
-       ! land use flux 
-       this%landuseflux_col(c) =      &
-            this%dwt_closs_col(c)   + &
-            product_closs_col(c)
+    end do
 
-       this%net_carbon_exchange_col(c) = &
-            this%nee_col(c)       + &
-            this%dwt_closs_col(c) + &
-            product_closs_col(c)
+    call c2g( bounds = bounds, &
+         carr = this%dwt_closs_col(bounds%begc:bounds%endc), &
+         garr = dwt_closs_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
 
+    call c2g( bounds = bounds, &
+         carr = this%nee_col(bounds%begc:bounds%endc), &
+         garr = nee_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+
+    do g = bounds%begg, bounds%endg
+       this%landuseflux_grc(g) = &
+            dwt_closs_grc(g)   + &
+            product_closs_grc(g)
+
+       this%net_carbon_exchange_grc(g) = &
+            nee_grc(g)                 + &
+            this%landuseflux_grc(g)
     end do
 
     ! coarse woody debris C loss

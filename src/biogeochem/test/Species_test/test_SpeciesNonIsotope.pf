@@ -54,7 +54,7 @@ contains
   end subroutine histFname_withSuffix
 
   @Test
-  subroutine restFname(this)
+  subroutine restFname_noSuffix(this)
     class(TestSpeciesNonIsotope), intent(inout) :: this
     type(species_non_isotope_type) :: species
     character(len=:), allocatable :: fname
@@ -64,8 +64,20 @@ contains
     fname = species%rest_fname('foo')
 
     @assertEqual('fooc', fname)
-  end subroutine restFname
+  end subroutine restFname_noSuffix
 
+  @Test
+  subroutine restFname_withSuffix(this)
+    class(TestSpeciesNonIsotope), intent(inout) :: this
+    type(species_non_isotope_type) :: species
+    character(len=:), allocatable :: fname
+
+    species = species_non_isotope_type('C')
+
+    fname = species%rest_fname('foo', suffix='_bar')
+
+    @assertEqual('fooc_bar', fname)
+  end subroutine restFname_withSuffix
 
 
 end module test_SpeciesNonIsotope

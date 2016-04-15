@@ -10,6 +10,7 @@ module restUtilMod
   use spmdMod,      only: masterproc
   use clm_varctl,   only: iulog
   use clm_varcon,   only: spval, ispval
+  use decompMod,    only: bounds_type
   use ncdio_pio
   use pio
   use ncdio_utils,  only: find_var_on_file
@@ -41,6 +42,9 @@ module restUtilMod
   ! Set values of a missing restart field from a template field, with some constant
   ! multiplier
   public :: set_missing_from_template
+
+  ! Set a gridcell-level field from a column-level field
+  public :: set_grc_field_from_col_field
 
   private :: is_restart
 
@@ -526,6 +530,56 @@ contains
     end do
 
   end subroutine set_missing_from_template
+
+  !-----------------------------------------------------------------------
+  subroutine set_grc_field_from_col_field(bounds, ncid, varname, data_grc, readvar)
+    !
+    ! !DESCRIPTION:
+    ! Set a gridcell-level field from a column-level field on the restart file.
+    !
+    ! If the column-level field isn't found, then 'data' remains unchanged, and readvar
+    ! is set to .false.
+    !
+    ! This can be useful for backwards compatibility: If a field that was previously on
+    ! the column level has been moved to the gridcell-level, then this routine can be
+    ! used to read the old column-level field and then average it to the gridcell-level.
+    !
+    ! We may want to make this more general, so that a single routine can set a
+    ! gridcell-level field from a patch-, column- or landunit-level field - and maybe
+    ! also set a column-level field from a patch-level field, etc.
+    !
+    ! !USES:
+    use subgridAveMod, only : c2g
+    !
+    ! !ARGUMENTS:
+    type(bounds_type) , intent(in)    :: bounds
+    type(file_desc_t) , intent(inout) :: ncid        ! netcdf file id
+    character(len=*)  , intent(in)    :: varname     ! variable name
+    real(r8)          , intent(inout) :: data_grc( bounds%begg: ) ! gridcell-level data to set
+    logical           , intent(out)   :: readvar     ! was var read?
+    !
+    ! !LOCAL VARIABLES:
+    real(r8), pointer :: data_col(:)
+
+    character(len=*), parameter :: subname = 'set_grc_field_from_col_field'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(data_grc) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+
+    allocate(data_col(bounds%begc:bounds%endc))
+    call ncd_io(varname=trim(varname), data=data_col, &
+         dim1name='column', &
+         ncid=ncid, flag='read', readvar=readvar)
+
+    if (readvar) then
+       call c2g(bounds, data_col, data_grc, &
+            c2l_scale_type = 'unity', &
+            l2g_scale_type = 'unity')
+    end if
+
+    deallocate(data_col)
+  end subroutine set_grc_field_from_col_field
+
 
 
 

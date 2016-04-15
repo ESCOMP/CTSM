@@ -151,7 +151,7 @@ module CNVegetationFacade
      procedure, public :: EndOfTimeStepVegDynamics      ! Do vegetation dynamics that should be done at the end of each time step
      procedure, public :: WriteHistory                  ! Do any history writes that are specific to veg dynamics
 
-     procedure, public :: get_net_carbon_exchange_col   ! Get col-level net carbon exchange array
+     procedure, public :: get_net_carbon_exchange_grc   ! Get gridcell-level net carbon exchange array
      procedure, public :: get_leafn_patch               ! Get patch-level leaf nitrogen array
      procedure, public :: get_downreg_patch             ! Get patch-level downregulation array
      procedure, public :: get_root_respiration_patch    ! Get patch-level root respiration array
@@ -859,31 +859,31 @@ contains
 
 
   !-----------------------------------------------------------------------
-  function get_net_carbon_exchange_col(this, bounds) result(net_carbon_exchange_col)
+  function get_net_carbon_exchange_grc(this, bounds) result(net_carbon_exchange_grc)
     !
     ! !DESCRIPTION:
-    ! Get col-level net carbon exchange array
+    ! Get gridcell-level net carbon exchange array
     !
     ! !USES:
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
-    real(r8) :: net_carbon_exchange_col(bounds%begc:bounds%endc)  ! function result: net carbon exchange between land and atmosphere, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for source (gC/m2/s)
+    real(r8) :: net_carbon_exchange_grc(bounds%begg:bounds%endg)  ! function result: net carbon exchange between land and atmosphere, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for source (gC/m2/s)
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'get_net_carbon_exchange_col'
+    character(len=*), parameter :: subname = 'get_net_carbon_exchange_grc'
     !-----------------------------------------------------------------------
 
     if (use_cn) then
-       net_carbon_exchange_col(bounds%begc:bounds%endc) = &
-            this%cnveg_carbonflux_inst%net_carbon_exchange_col(bounds%begc:bounds%endc)
+       net_carbon_exchange_grc(bounds%begg:bounds%endg) = &
+            this%cnveg_carbonflux_inst%net_carbon_exchange_grc(bounds%begg:bounds%endg)
     else
-       net_carbon_exchange_col(bounds%begc:bounds%endc) = 0._r8
+       net_carbon_exchange_grc(bounds%begg:bounds%endg) = 0._r8
     end if
 
-  end function get_net_carbon_exchange_col
+  end function get_net_carbon_exchange_grc
 
 
   !-----------------------------------------------------------------------

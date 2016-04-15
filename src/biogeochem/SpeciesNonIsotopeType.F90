@@ -83,21 +83,28 @@ contains
 
   end function hist_fname
 
-  function rest_fname(this, basename) result(fname)
+  function rest_fname(this, basename, suffix) result(fname)
     ! Get a restart field name for this species
     !
     ! basename gives the base name of the restart field
+    !
+    ! suffix, if provided, gives a suffix that appears after all species information in
+    ! the field name
     use shr_string_mod, only : shr_string_toLower
 
     character(len=:), allocatable :: fname  ! function result
     class(species_non_isotope_type) , intent(in)  :: this
     character(len=*), intent(in)  :: basename
+    character(len=*), optional, intent(in) :: suffix
 
     character(len=:), allocatable :: species_name_lcase
     !-----------------------------------------------------------------------
 
     species_name_lcase = shr_string_toLower(trim(this%species_name))
     fname = trim(basename) // species_name_lcase
+    if (present(suffix)) then
+       fname = fname // suffix
+    end if
 
   end function rest_fname
 
