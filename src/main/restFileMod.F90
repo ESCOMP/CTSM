@@ -50,7 +50,6 @@ module restFileMod
   private :: restFile_enddef
   private :: restFile_check_consistency   ! Perform consistency checks on the restart file
   private :: restFile_read_consistency_nl ! Read namelist associated with consistency checks
-  private :: restFile_check_fsurdat       ! Check consistency of fsurdat on the restart file
   private :: restFile_check_year          ! Check consistency of year on the restart file
   !
   ! !PRIVATE TYPES: None
@@ -728,7 +727,6 @@ contains
     type(file_desc_t), intent(inout) :: ncid    ! netcdf id
     !
     ! !LOCAL VARIABLES:
-    logical :: check_finidat_fsurdat_consistency ! whether to check consistency between fsurdat on finidat file and current fsurdat
     logical :: check_finidat_year_consistency    ! whether to check consistency between year on finidat file and current year
     logical :: check_finidat_pct_consistency     ! whether to check consistency between pct_pft on finidat file and surface dataset
     
@@ -736,13 +734,8 @@ contains
     !-----------------------------------------------------------------------
     
     call restFile_read_consistency_nl( &
-         check_finidat_fsurdat_consistency, &
          check_finidat_year_consistency, &
          check_finidat_pct_consistency)
-
-    if (check_finidat_fsurdat_consistency) then
-       call restFile_check_fsurdat(ncid)
-    end if
 
     if (check_finidat_year_consistency) then
        call restFile_check_year(ncid)
@@ -756,7 +749,6 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine restFile_read_consistency_nl( &
-       check_finidat_fsurdat_consistency, &
        check_finidat_year_consistency, &
        check_finidat_pct_consistency)
 
@@ -771,7 +763,6 @@ contains
     use shr_mpi_mod    , only : shr_mpi_bcast
     !
     ! !ARGUMENTS:
-    logical, intent(out) :: check_finidat_fsurdat_consistency
     logical, intent(out) :: check_finidat_year_consistency
     logical, intent(out) :: check_finidat_pct_consistency
     !
@@ -783,12 +774,10 @@ contains
     !-----------------------------------------------------------------------
 
     namelist /finidat_consistency_checks/ &
-         check_finidat_fsurdat_consistency, &
          check_finidat_year_consistency, &
          check_finidat_pct_consistency
 
     ! Set default namelist values
-    check_finidat_fsurdat_consistency = .true.
     check_finidat_year_consistency = .true.
     check_finidat_pct_consistency = .true.
 
@@ -809,7 +798,6 @@ contains
        call relavu( nu_nml )
     endif
 
-    call shr_mpi_bcast (check_finidat_fsurdat_consistency, mpicom)
     call shr_mpi_bcast (check_finidat_year_consistency, mpicom)
     call shr_mpi_bcast (check_finidat_pct_consistency, mpicom)
 
@@ -821,64 +809,6 @@ contains
     end if
 
   end subroutine restFile_read_consistency_nl
-
-  !-----------------------------------------------------------------------
-  subroutine restFile_check_fsurdat(ncid)
-    !
-    ! !DESCRIPTION:
-    ! Check consistency of the fsurdat value on the restart file and the current fsurdat
-    !
-    ! !USES:
-    use fileutils            , only : get_filename
-    use clm_varctl           , only : fname_len, fsurdat
-    use dynSubgridControlMod , only : get_flanduse_timeseries
-    !
-    ! !ARGUMENTS:
-    type(file_desc_t), intent(inout) :: ncid    ! netcdf id
-    !
-    ! !LOCAL VARIABLES:
-    character(len=fname_len) :: fsurdat_rest  ! fsurdat from the restart file (includes full path)
-    character(len=fname_len) :: filename_cur  ! current fsurdat file name
-    character(len=fname_len) :: filename_rest ! fsurdat file name from restart file (does NOT include full path)
-    
-    character(len=*), parameter :: subname = 'restFile_check_fsurdat'
-    !-----------------------------------------------------------------------
-    
-    ! Only do this check for a transient run. The problem with doing this check for a non-
-    ! transient run is the transition from transient to non-transient: It is legitimate to
-    ! run with an 1850 surface dataset and a pftdyn file, then use the restart file from
-    ! that run to start a present-day (non-transient) run, which would use a 2000 surface
-    ! dataset.
-    if (get_flanduse_timeseries() /= ' ') then
-       call ncd_getatt(ncid, NCD_GLOBAL, 'surface_dataset', fsurdat_rest)
-
-       ! Compare file names, ignoring path
-       filename_cur = get_filename(fsurdat)
-       filename_rest = get_filename(fsurdat_rest)
-
-       if (filename_rest /= filename_cur) then
-          if (masterproc) then
-             write(iulog,*) 'ERROR: Initial conditions file (finidat) was generated from a different surface dataset'
-             write(iulog,*) 'than the one being used for the current simulation (fsurdat).'
-             write(iulog,*) 'Current fsurdat: ', trim(filename_cur)
-             write(iulog,*) 'Surface dataset used to generate initial conditions file: ', trim(filename_rest)
-             write(iulog,*)
-             write(iulog,*) 'Possible solutions to this problem:'
-             write(iulog,*) '(1) Make sure you are using the correct surface dataset and initial conditions file'
-             write(iulog,*) '(2) If you generated the surface dataset and/or initial conditions file yourself,'
-             write(iulog,*) '    then you may need to manually change the surface_dataset global attribute on the'
-             write(iulog,*) '    initial conditions file (e.g., using ncatted)'
-             write(iulog,*) '(3) If you are confident that you are using the correct surface dataset and initial conditions file,'
-             write(iulog,*) '    yet are still experiencing this error, then you can bypass this check by setting:'
-             write(iulog,*) '      check_finidat_fsurdat_consistency = .false.'
-             write(iulog,*) '    in user_nl_clm'
-             write(iulog,*) ' '
-          end if
-          call endrun(msg=errMsg(__FILE__, __LINE__))
-       end if
-    end if
-
-  end subroutine restFile_check_fsurdat
 
   !-----------------------------------------------------------------------
   subroutine restFile_check_year(ncid)

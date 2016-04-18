@@ -1,5 +1,4 @@
 finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.IG1850CRUCLM50BGC.0481-01-01.1.9x2.5_g1v6_gl5_simyr1850_c160127.nc'
-init_interp_fill_missing_with_natveg = .true.
 limit_irrigation = .false.
 leaf_mr_vcm = 0.015d00
 use_bedrock = .true.

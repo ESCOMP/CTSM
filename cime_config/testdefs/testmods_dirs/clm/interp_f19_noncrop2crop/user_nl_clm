@@ -1,3 +1,0 @@
-! Because this testmod directory is used for interpolation from non-crop to crop
-! (which adds a crop landunit), we need the following setting:
-init_interp_fill_missing_with_natveg = .true.

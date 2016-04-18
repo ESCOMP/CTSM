@@ -51,6 +51,7 @@ module initInterpMindist
 
   ! Private methods
 
+  private :: do_fill_missing_with_natveg
   private :: is_sametype
   private :: is_baresoil
 
@@ -107,6 +108,10 @@ contains
     ! If false: if an output type cannot be found in the input, code aborts
     ! If true: if an output type cannot be found in the input, fill with closest natural
     ! veg column (using bare soil for patch-level variables)
+    !
+    ! NOTE: always treated as true for natural veg and crop landunits/columns/patches in
+    ! the output - e.g., if we can't find the right column type to fill crop, we always
+    ! use the closest natural veg column, regardless of the value of this flag.
     logical            , intent(in)  :: fill_missing_with_natveg
 
     integer            , intent(out) :: mindist_index(bego:endo)
@@ -171,8 +176,11 @@ contains
              end if
           end do
           
-          ! If output type is not contained in input dataset, then use closest bare soil 
-          if ( fill_missing_with_natveg .and. distmin == spval) then
+          ! If output type is not contained in input dataset, then use closest bare soil,
+          ! if this point is one for which we fill missing with natveg.
+          if ( distmin == spval .and. &
+               do_fill_missing_with_natveg( &
+               fill_missing_with_natveg, no, subgrido, subgrid_special_indices)) then
              do ni = begi, endi
                 if (activei(ni)) then
                    if ( is_baresoil(ni, subgridi, subgrid_special_indices)) then
@@ -201,9 +209,6 @@ contains
              write(iulog,*) 'with the closest natural veg column in the input'
              write(iulog,*) '(using bare soil for patch-level variables).'
              write(iulog,*) 'So, you should consider whether that is what you want.'
-             write(iulog,*) ' '
-             write(iulog,*) 'If you are interpolating a non-crop case to a crop case,'
-             write(iulog,*) 'then this IS what you should do.'
              call endrun(msg=errMsg(__FILE__, __LINE__))
           end if
 
@@ -214,6 +219,48 @@ contains
 !$OMP END PARALLEL DO
     
   end subroutine set_mindist
+
+  !-----------------------------------------------------------------------
+  function do_fill_missing_with_natveg(fill_missing_with_natveg, &
+       no, subgrido, subgrid_special_indices)
+    !
+    ! !DESCRIPTION:
+    ! Returns true if the given output point, if missing, should be filled with the
+    ! closest natural veg point.
+    !
+    ! !ARGUMENTS:
+    logical :: do_fill_missing_with_natveg  ! function result
+
+    ! whether we should fill ALL missing points with natveg
+    logical, intent(in) :: fill_missing_with_natveg
+
+    integer           , intent(in)  :: no
+    type(subgrid_type), intent(in)  :: subgrido
+    type(subgrid_special_indices_type), intent(in) :: subgrid_special_indices
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'do_fill_missing_with_natveg'
+    !-----------------------------------------------------------------------
+
+    if (subgrido%name == 'gridcell') then
+       ! It makes no sense to try to fill missing with natveg for gridcell-level values
+       do_fill_missing_with_natveg = .false.
+    else if (fill_missing_with_natveg) then
+       ! User has asked for all missing points to be filled with natveg
+       do_fill_missing_with_natveg = .true.
+    else if (subgrid_special_indices%is_vegetated_landunit(subgrido%ltype(no))) then
+       ! Even if user hasn't asked for it, we fill missing vegetated points (natural veg
+       ! and crop) with the closest natveg point. This is mainly to support the common
+       ! use case of interpolating non-crop to crop, but also supports adding a new PFT
+       ! type.
+       do_fill_missing_with_natveg = .true.
+    else
+       do_fill_missing_with_natveg = .false.
+    end if
+
+  end function do_fill_missing_with_natveg
+
 
   !=======================================================================
 

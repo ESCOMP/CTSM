@@ -9,7 +9,7 @@ module pftconMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
   use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub
-  use clm_varctl  , only : iulog, use_cndv, use_vertsoilc
+  use clm_varctl  , only : iulog, use_cndv, use_vertsoilc, use_crop
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -440,7 +440,7 @@ contains
     use fileutils   , only : getfil
     use ncdio_pio   , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
-    use clm_varctl  , only : paramfile, use_ed, use_flexibleCN, use_crop, use_dynroot
+    use clm_varctl  , only : paramfile, use_ed, use_flexibleCN, use_dynroot
     use spmdMod     , only : masterproc
     use EDPftvarcon , only : EDpftconrd
     !

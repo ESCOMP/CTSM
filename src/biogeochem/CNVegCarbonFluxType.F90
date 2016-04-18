@@ -11,9 +11,9 @@ module CNVegCarbonFluxType
   use decompMod                          , only : bounds_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : crop_prog, nlevdecomp_full, nlevgrnd, nlevdecomp
+  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp
   use clm_varcon                         , only : spval, dzsoi_decomp
-  use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif
+  use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use pftconMod                          , only : npcropmin
   use LandunitType                       , only : lun                
@@ -745,7 +745,7 @@ contains
 
     if (carbon_type == 'c12') then
 
-       if (crop_prog) then
+       if (use_crop) then
           this%grainc_to_food_patch(begp:endp) = spval
           call hist_addfld1d (fname='GRAINC_TO_FOOD', units='gC/m^2/s', &
                avgflag='A', long_name='grain C to food', &
@@ -3255,7 +3255,7 @@ contains
     logical :: readvar      ! determine if variable is on initial file
     !------------------------------------------------------------------------
 
-    if (crop_prog) then
+    if (use_crop) then
 
        call restartvar(ncid=ncid, flag=flag,  varname='grainc_xfer_to_grainc', xtype=ncd_double,  &
             dim1name='pft', &
@@ -3577,7 +3577,7 @@ contains
        this%grainc_to_cropprodc_patch(i)                 = value_patch
     end do
 
-    if ( crop_prog )then
+    if ( use_crop )then
        do fi = 1,num_patch
           i = filter_patch(fi)
           this%xsmrpool_to_atm_patch(i)         = value_patch
@@ -3813,7 +3813,7 @@ contains
                this%livestem_mr_patch(p) + &
                this%livecroot_mr_patch(p)
        end if
-       if ( crop_prog .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%mr_patch(p) = &
                this%mr_patch(p) + &
                this%grain_mr_patch(p)
@@ -3829,7 +3829,7 @@ contains
             this%cpool_deadstem_gr_patch(p)  + &
             this%cpool_livecroot_gr_patch(p) + &
             this%cpool_deadcroot_gr_patch(p)
-       if ( crop_prog .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%current_gr_patch(p) = this%current_gr_patch(p) + &
                this%cpool_grain_gr_patch(p)
        end if
@@ -3843,7 +3843,7 @@ contains
             this%transfer_deadstem_gr_patch(p)  + &
             this%transfer_livecroot_gr_patch(p) + &
             this%transfer_deadcroot_gr_patch(p)
-       if ( crop_prog .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%transfer_gr_patch(p) = this%transfer_gr_patch(p) + &
                this%transfer_grain_gr_patch(p)
        end if
@@ -3857,7 +3857,7 @@ contains
             this%cpool_livecroot_storage_gr_patch(p) + &
             this%cpool_deadcroot_storage_gr_patch(p)
 
-       if ( crop_prog .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%storage_gr_patch(p) = this%storage_gr_patch(p) + &
                this%cpool_grain_storage_gr_patch(p)
        end if
@@ -3869,7 +3869,7 @@ contains
             this%storage_gr_patch(p)
 
        ! autotrophic respiration (AR) adn 
-       if ( crop_prog .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%ar_patch(p) =           &
                this%mr_patch(p)      + &
                this%gr_patch(p)      + &
@@ -3927,7 +3927,7 @@ contains
             this%cpool_to_deadstemc_patch(p)              + &
             this%deadstemc_xfer_to_deadstemc_patch(p)
 
-       if ( crop_prog .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%agnpp_patch(p) =      &
                this%agnpp_patch(p) + &
                this%cpool_to_grainc_patch(p)            + &
@@ -4014,7 +4014,7 @@ contains
             this%hrv_gresp_storage_to_litter_patch(p)         + &
             this%hrv_gresp_xfer_to_litter_patch(p)
 
-       if ( crop_prog .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%litfall_patch(p) =      &
                this%litfall_patch(p) + &
                this%livestemc_to_litter_patch(p)          + &

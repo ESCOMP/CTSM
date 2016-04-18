@@ -226,7 +226,7 @@ contains
     ! Perform nitrogen mass conservation check
     !
     ! !USES:
-    use clm_varpar, only : crop_prog
+    use clm_varctl, only : use_crop
     !
     ! !ARGUMENTS:
     class(cn_balance_type)                  , intent(inout) :: this
@@ -296,7 +296,7 @@ contains
             col_ninputs(c) = col_ninputs(c) + ffix_to_sminn(c) ! for FUN, free living fixation is a seprate flux. RF. 
          endif
      
-         if (crop_prog) then
+         if (use_crop) then
             col_ninputs(c) = col_ninputs(c) + fert_to_sminn(c) + soyfixn_to_sminn(c)
          end if
 

@@ -449,13 +449,14 @@ contains
     !
     ! Note about the ltype input argument: This provides the value for this landunit index
     ! (i.e., the crop landunit index). This may differ from the landunit's 'itype' value,
-    ! since itype is istsoil if we are running with create_crop_landunit but crop_prog = false.
+    ! since itype is istsoil if we are running with create_crop_landunit but use_crop = false.
     !
     ! !USES
     use clm_instur      , only : wt_lunit, wt_cft
     use landunit_varcon , only : istcrop, istsoil
     use subgridMod      , only : subgrid_get_info_crop, crop_patch_exists
-    use clm_varpar      , only : maxpatch_pft, crop_prog, cft_lb, cft_ub
+    use clm_varpar      , only : maxpatch_pft, cft_lb, cft_ub
+    use clm_varctl      , only : use_crop
     !
     ! !ARGUMENTS:
     integer , intent(in)    :: ltype             ! landunit type
@@ -483,7 +484,7 @@ contains
 
        ! Note that we cannot simply use the 'ltype' argument to set itype here,
        ! because ltype will always indicate istcrop
-       if ( crop_prog )then
+       if ( use_crop )then
           my_ltype = istcrop
        else
           my_ltype = istsoil

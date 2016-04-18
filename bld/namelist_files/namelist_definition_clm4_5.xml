@@ -1792,12 +1792,6 @@ If TRUE, apply harvest from flanduse_timeseries file.
 <!-- Namelist options related to finidat consistency checks                                    -->
 <!-- ========================================================================================  -->
 
-<entry id="check_finidat_fsurdat_consistency" type="logical" category="clm_restart"
-       group="finidat_consistency_checks" valid_values="" >
-If TRUE (which is the default), check consistency between surface dataset used to create the finidat file
-and the current fsurdat. This check is only done for a transient run.
-</entry>
-
 <entry id="check_finidat_year_consistency" type="logical" category="clm_restart"
        group="finidat_consistency_checks" valid_values="" >
 If TRUE (which is the default), check consistency between year on the finidat file
@@ -1857,6 +1851,11 @@ If FALSE (which is the default): If an output type cannot be found in the input 
 code aborts
 If TRUE: If an output type cannot be found in the input, fill with closest natural veg column
 (using bare soil for patch-level variables)
+
+NOTE: Natural vegetation and crop landunits always behave as if this were true. e.g., if
+we can't find a column with the same type as a given crop column in the output, then we
+always fill with the closest natural veg patch / column, regardless of the value of this
+flag. So interpolation from non-crop to crop cases can be done without setting this flag.
 </entry>
 
 </namelist_definition>

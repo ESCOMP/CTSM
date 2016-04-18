@@ -13,7 +13,7 @@ module surfrdMod
   use landunit_varcon , only : numurbl
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog, scmlat, scmlon, single_column
-  use clm_varctl      , only : create_glacier_mec_landunit, use_cndv
+  use clm_varctl      , only : create_glacier_mec_landunit, use_cndv, use_crop
   use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
   use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid
@@ -601,7 +601,6 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size
-    use clm_varpar      , only : crop_prog
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft
     use landunit_varcon , only : istsoil, istcrop
     !
@@ -679,7 +678,7 @@ contains
     end if
 
 
-    if (crop_prog) then
+    if (use_crop) then
        call collapse_crop_types(wt_cft(begg:endg, :), begg, endg, verbose=.true.)
     end if
 

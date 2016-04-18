@@ -154,7 +154,7 @@ contains
     ! Check consistency of namelist settingsn
     !
     ! !USES:
-    use clm_varctl     , only : iulog, use_cndv, use_ed, use_crop, use_cn
+    use clm_varctl     , only : iulog, use_cndv, use_ed, use_cn, use_crop
     !
     ! !ARGUMENTS:
     !

@@ -113,19 +113,21 @@ module clm_varctl
   character(len=fname_len), public :: finidat_interp_dest   = 'finidat_interp_dest.nc'     
 
   !----------------------------------------------------------
-  ! Irrigate logic
+  ! Crop & Irrigation logic
   !----------------------------------------------------------
 
-  ! do not irrigate by default
-  logical, public :: irrigate = .false.            
-
-  !----------------------------------------------------------
-  ! Landunit logic
-  !----------------------------------------------------------
+  ! If prognostic crops are turned on
+  logical, public :: use_crop = .false.
 
   ! true => separate crop landunit is not created by default
   logical, public :: create_crop_landunit = .false.     
   
+  ! do not irrigate by default
+  logical, public :: irrigate = .false.            
+
+  ! true => limit irrigation when river storage
+  logical, public :: limit_irrigation = .false.
+
   !----------------------------------------------------------
   ! Other subgrid logic
   !----------------------------------------------------------
@@ -243,12 +245,6 @@ module clm_varctl
   logical, public :: use_dynroot = .false. ! true => use dynamic root module
 
   !----------------------------------------------------------
-  ! lake evaporation / irrigation limitation switch
-  !----------------------------------------------------------
-
-  logical, public ::  limit_irrigation = .false. ! true => limit irrigation when river storage 
-
-  !----------------------------------------------------------
   ! glacier_mec control variables: default values (may be overwritten by namelist)
   ! NOTE: glc_smb must have the same values for CLM and GLC
   !----------------------------------------------------------
@@ -320,7 +316,6 @@ module clm_varctl
   logical, public :: use_century_decomp  = .false.
   logical, public :: use_cn              = .false.
   logical, public :: use_cndv            = .false.
-  logical, public :: use_crop            = .false.
   logical, public :: use_grainproduct    = .false.
   logical, public :: use_fertilizer      = .false.
   logical, public :: use_ozone           = .false.

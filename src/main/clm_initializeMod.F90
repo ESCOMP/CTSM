@@ -255,10 +255,11 @@ contains
     use shr_scam_mod          , only : shr_scam_getCloseLatLon
     use seq_drydep_mod        , only : n_drydep, drydep_method, DD_XLND
     use accumulMod            , only : print_accum_fields 
-    use clm_varpar            , only : nlevsno, crop_prog
+    use clm_varpar            , only : nlevsno
     use clm_varcon            , only : spval
     use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
     use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_ed
+    use clm_varctl            , only : use_crop
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size, get_curr_calday
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
@@ -580,7 +581,7 @@ contains
     endif
     call canopystate_inst%initAccVars(bounds_proc)
     call bgc_vegetation_inst%initAccVars(bounds_proc)
-    if (crop_prog) then
+    if (use_crop) then
        call crop_inst%initAccVars(bounds_proc)
     end if
 

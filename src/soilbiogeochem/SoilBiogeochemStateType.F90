@@ -6,11 +6,11 @@ module SoilBiogeochemStateType
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoifl, nlevsoi, crop_prog
+  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoifl, nlevsoi
   use clm_varpar     , only : ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full
   use clm_varcon     , only : spval, ispval, c14ratio, grlnd
   use landunit_varcon, only : istsoil, istcrop
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, crop_prog 
+  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
   use clm_varctl     , only : use_vertsoilc, use_cn 
   use clm_varctl     , only : iulog
   use LandunitType   , only : lun                

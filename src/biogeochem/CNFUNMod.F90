@@ -204,7 +204,7 @@ module CNFUNMod
 
 ! !USES:
    use clm_time_manager, only : get_step_size, get_curr_date, get_days_per_year 
-   use clm_varpar      , only : nlevdecomp, crop_prog
+   use clm_varpar      , only : nlevdecomp
    use clm_varcon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
    use clm_varctl      , only : use_nitrif_denitrif
    use PatchType       , only : patch

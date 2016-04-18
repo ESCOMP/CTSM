@@ -397,8 +397,7 @@ contains
   @Test
   subroutine noncrop_to_crop_specific_crop_from_natveg(this)
     ! For interpolation from a non-crop case to a crop case, ensure that crop columns
-    ! take their info from the natural veg column in the input. This requires
-    ! fill_missing_with_natveg = .true.
+    ! take their info from the natural veg column in the input.
     class(TestInitInterpMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     integer :: my_ctype
@@ -431,13 +430,67 @@ contains
          lat = [(my_lat, i=1,3)], &
          lon = [(my_lon, i=1,3)])
 
+    ! For most landunits, we would need to set fill_missing_with_natveg to accomplish
+    ! this. However, it should be done for a crop output point even with
+    ! fill_missing_with_natveg .false.
     call wrap_set_mindist(subgridi, subgrido, mindist_index, &
-         fill_missing_with_natveg = .true.)
+         fill_missing_with_natveg = .false.)
 
     @assertEqual(2, mindist_index(1))
 
     end associate
   end subroutine noncrop_to_crop_specific_crop_from_natveg
+
+  @Test
+  subroutine newveg_uses_baresoil(this)
+    ! If there's a new vegetation (patch) type, this should take inputs from the closest
+    ! bare soil point.
+    !
+    ! In terms of code coverage, this is largely redundant with
+    ! noncrop_to_crop_specific_crop_from_natveg. But I'm keeping it for now since it
+    ! tests a different use case.
+    class(TestInitInterpMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    integer, parameter :: my_ptype = 5
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: i
+    integer :: mindist_index(1)
+
+    associate( &
+         ipft_bare   => subgrid_special_indices%ipft_not_vegetated, &
+         icol_natveg => subgrid_special_indices%icol_vegetated_or_bare_soil, &
+         ilun_natveg => subgrid_special_indices%ilun_vegetated_or_bare_soil &
+         )
+
+    subgrido = create_subgrid_info( &
+         npts = 1, &
+         name = 'pft', &
+         ptype = [my_ptype], &
+         ctype = [icol_natveg], &
+         ltype = [ilun_natveg], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    subgridi = create_subgrid_info( &
+         npts = 3, &
+         name = 'pft', &
+         ptype = [ipft_bare + 1, ipft_bare, ipft_bare + 2], &
+         ctype = [(icol_natveg, i=1,3)], &
+         ltype = [(ilun_natveg, i=1,3)], &
+         lat = [(my_lat, i=1,3)], &
+         lon = [(my_lon, i=1,3)])
+
+    ! For most landunits, we would need to set fill_missing_with_natveg to accomplish
+    ! this. However, it should be done for a natural veg output point even with
+    ! fill_missing_with_natveg .false.
+    call wrap_set_mindist(subgridi, subgrido, mindist_index, &
+         fill_missing_with_natveg = .false.)
+
+    @assertEqual(2, mindist_index(1))
+
+    end associate
+  end subroutine newveg_uses_baresoil
 
   @Test
   subroutine baresoil_ignores_special_landunits(this)

@@ -657,7 +657,7 @@
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld3">
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/interp_f19_noncrop2crop" comment="test interpolation of non-crop to crop (also change resolution, but that is not an essential part of this test)">yellowstone</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/interp_f19_noncrop" comment="test interpolation of non-crop to crop (also change resolution, but that is not an essential part of this test)">yellowstone</machine>
       </test>
       <test name="SMS_Lm1_D">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/snowlayers_3_monthly" comment="nlevsno less than 5 is not important scientifically, but is useful for making sure no code assumes that there are 5 snow layers (because this should result in an array bounds exception); this test can be removed once CLM5 is released and most new branches are based off of CLM5 (which will have a runtime-set number of snow layers, rather than assuming 5 snow layers)... until then, I want this test to catch any new code that assumes 5 snow layers">yellowstone</machine>

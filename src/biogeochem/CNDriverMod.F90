@@ -11,6 +11,7 @@ module CNDriverMod
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif, use_nguardrail
+  use clm_varctl                      , only : use_crop
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
@@ -99,7 +100,7 @@ contains
     ! stays synchronized with albedo calculations.
     !
     ! !USES:
-    use clm_varpar                        , only: crop_prog, nlevgrnd, nlevdecomp_full 
+    use clm_varpar                        , only: nlevgrnd, nlevdecomp_full 
     use clm_varpar                        , only: nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
     use subgridAveMod                     , only: p2c, p2c_2d
     use CropType                          , only: crop_type
@@ -182,8 +183,8 @@ contains
     real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
     real(r8):: p_decomp_cpool_loss(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential C loss from one pool to another
     real(r8):: pmnf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
-    real(r8):: arepr(bounds%begp:bounds%endp) ! reproduction allocation coefficient (only used for crop_prog)
-    real(r8):: aroot(bounds%begp:bounds%endp) ! root allocation coefficient (only used for crop_prog)
+    real(r8):: arepr(bounds%begp:bounds%endp) ! reproduction allocation coefficient (only used for use_crop)
+    real(r8):: aroot(bounds%begp:bounds%endp) ! root allocation coefficient (only used for use_crop)
     integer :: begp,endp
     integer :: begc,endc
 
@@ -276,7 +277,7 @@ contains
 	    call t_stopf('CNFFixation')
     end if
 
-    if (crop_prog) then
+    if (use_crop) then
        call CNNFert(bounds, num_soilc,filter_soilc, &
             cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst)
 

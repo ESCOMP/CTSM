@@ -7,9 +7,9 @@ module clm_varpar
   ! !USES:
   use shr_kind_mod , only: r8 => shr_kind_r8
   use spmdMod      , only: masterproc
-  use clm_varctl   , only: use_extralakelayers, use_vertsoilc, use_crop
+  use clm_varctl   , only: use_extralakelayers, use_vertsoilc
   use clm_varctl   , only: use_century_decomp, use_c13, use_c14
-  use clm_varctl   , only: iulog, create_crop_landunit, irrigate
+  use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
   use clm_varctl   , only: use_vichydro, soil_layerstruct
   !
   ! !PUBLIC TYPES:
@@ -51,7 +51,6 @@ module clm_varpar
 
   integer :: numpft      = mxpft   ! actual # of pfts (without bare)
   integer :: numcft      =  64     ! actual # of crops (includes unused CFTs that are merged into other CFTs)
-  logical :: crop_prog   = .true.  ! If prognostic crops is turned on
   integer :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
 
   integer :: maxpatch_pft        ! max number of plant functional types in naturally vegetated landunit (namelist setting)
@@ -110,11 +109,9 @@ contains
     if (use_crop) then
        numpft      = mxpft   ! actual # of patches (without bare)
        numcft      =  64     ! actual # of crops
-       crop_prog   = .true.  ! If prognostic crops is turned on
     else
        numpft      = numveg  ! actual # of patches (without bare)
        numcft      =   2     ! actual # of crops
-       crop_prog   = .false. ! If prognostic crops is turned on
     end if
 
     ! For arrays containing all Patches (natural veg & crop), determine lower and upper bounds

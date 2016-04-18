@@ -1,7 +1,0 @@
-This testmods directory allows interpolating non-crop to crop; this requires
-init_interp_fill_missing_with_natveg since we have a new crop landunit that
-doesn't exist in the input file.
-
-Note: if we stop supporting out-of-the-box f19 initial conditions files, this
-could be changed to f09 (or whatever resolution we provide initial conditions
-for).

@@ -281,7 +281,7 @@ contains
     !
     ! !USES:
     use clm_time_manager, only: get_step_size
-    use clm_varpar      , only: crop_prog
+    use clm_varctl      , only: use_crop
     use clm_varcon      , only: secspday
     !
     ! !ARGUMENTS:
@@ -335,7 +335,7 @@ contains
     ! Call any subroutine specific initialization routines
     ! -----------------------------------------
 
-    if ( crop_prog ) call CropPhenologyInit(bounds)
+    if ( use_crop ) call CropPhenologyInit(bounds)
 
   end subroutine CNPhenologyInit
 
@@ -2604,7 +2604,7 @@ contains
     ! grain-to-food fluxes into the column-level grain-to-cropprod fluxes
     !
     ! !USES:
-    use clm_varpar    , only : crop_prog
+    use clm_varctl    , only : use_crop
     use clm_varctl    , only : use_grainproduct
     use subgridAveMod , only : p2c
     !
@@ -2623,10 +2623,10 @@ contains
     character(len=*), parameter :: subname = 'CNGrainToProductPools'
     !-----------------------------------------------------------------------
 
-    ! Explicitly checking crop_prog is probably unnecessary here (because presumably
-    ! use_grainproduct is only true if crop_prog is true), but we do it for safety because
-    ! the grain*_to_food_patch fluxes are not set if crop_prog is false.
-    if (crop_prog .and. use_grainproduct) then
+    ! Explicitly checking use_crop is probably unnecessary here (because presumably
+    ! use_grainproduct is only true if use_crop is true), but we do it for safety because
+    ! the grain*_to_food_patch fluxes are not set if use_crop is false.
+    if (use_crop .and. use_grainproduct) then
        do fp = 1, num_soilp
           p = filter_soilp(fp)
           cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = &

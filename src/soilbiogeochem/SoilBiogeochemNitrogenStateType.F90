@@ -9,7 +9,7 @@ module SoilBiogeochemNitrogenStateType
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, crop_prog
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
@@ -123,7 +123,7 @@ contains
     !
     ! !USES:
     use clm_varpar , only : ndecomp_cascade_transitions, ndecomp_pools
-    use clm_varpar , only : nlevdecomp, nlevdecomp_full,crop_prog, nlevgrnd
+    use clm_varpar , only : nlevdecomp, nlevdecomp_full, nlevgrnd
     use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
     use decompMod  , only : bounds_type
     !
@@ -261,7 +261,6 @@ contains
     ! Initializes time varying variables used only in coupled carbon-nitrogen mode (CN):
     !
     ! !USES:
-    use clm_varpar     , only : crop_prog
     use decompMod      , only : bounds_type
     !
     ! !ARGUMENTS:

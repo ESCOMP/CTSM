@@ -7,9 +7,9 @@ module clm_instMod
   ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use decompMod       , only : bounds_type
-  use clm_varpar      , only : crop_prog, ndecomp_pools, nlevdecomp_full
+  use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_ed, use_voc
-  use clm_varctl      , only : use_century_decomp
+  use clm_varctl      , only : use_century_decomp, use_crop
   use clm_varcon      , only : h2osno_max, bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice, istice_mec, istsoil
   use perf_mod        , only : t_startf, t_stopf
@@ -166,7 +166,7 @@ contains
   subroutine clm_instInit(bounds)
     !
     ! !USES: 
-    use clm_varpar                         , only : nlevsno, numpft, crop_prog
+    use clm_varpar                         , only : nlevsno, numpft
     use controlMod                         , only : nlfilename, fsurdat
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
@@ -415,7 +415,7 @@ contains
 
     call bgc_vegetation_inst%InitAccBuffer(bounds)
 
-    if (crop_prog) then
+    if (use_crop) then
        call crop_inst%InitAccBuffer(bounds)
     end if
 

@@ -11,9 +11,10 @@ module clm_driver
   use shr_kind_mod           , only : r8 => shr_kind_r8
   use clm_varctl             , only : wrtdia, iulog, create_glacier_mec_landunit, use_ed
   use clm_varctl             , only : use_cn, use_lch4, use_voc, use_noio, use_c13, use_c14
+  use clm_varctl             , only : use_crop
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date
-  use clm_varpar             , only : nlevsno, nlevgrnd, crop_prog
+  use clm_varpar             , only : nlevsno, nlevgrnd
   use spmdMod                , only : masterproc, mpicom
   use decompMod              , only : get_proc_clumps, get_clump_bounds, get_proc_bounds, bounds_type
   use filterMod              , only : filter, filter_inactive_and_active
@@ -937,7 +938,7 @@ contains
             t_a10_patch=temperature_inst%t_a10_patch, &
             t_ref2m_patch=temperature_inst%t_ref2m_patch)
 
-       if (crop_prog) then
+       if (use_crop) then
           call crop_inst%CropUpdateAccVars(bounds_proc, &
                temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
        end if

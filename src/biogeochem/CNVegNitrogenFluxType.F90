@@ -4,9 +4,9 @@ module CNVegNitrogenFluxType
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, crop_prog
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc
+  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop
   use CNSharedParamsMod                  , only : use_fun
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
@@ -514,7 +514,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar     , only : nlevsno, nlevgrnd, crop_prog 
+    use clm_varpar     , only : nlevsno, nlevgrnd
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp
     !
     ! !ARGUMENTS:
@@ -922,21 +922,21 @@ contains
          avgflag='A', long_name='total patch-level fire N loss', &
          ptr_patch=this%fire_nloss_patch)
 
-    if (crop_prog) then
+    if (use_crop) then
        this%fert_patch(begp:endp) = spval
        call hist_addfld1d (fname='FERT', units='gN/m^2/s', &
             avgflag='A', long_name='fertilizer added', &
             ptr_patch=this%fert_patch)
     end if
 
-    if (crop_prog) then
+    if (use_crop) then
        this%soyfixn_patch(begp:endp) = spval
        call hist_addfld1d (fname='SOYFIXN', units='gN/m^2/s', &
             avgflag='A', long_name='soybean fixation', &
             ptr_patch=this%soyfixn_patch)
     end if
 
-    if (crop_prog) then
+    if (use_crop) then
        this%fert_counter_patch(begp:endp) = spval
        call hist_addfld1d (fname='FERT_COUNTER', units='seconds', &
             avgflag='A', long_name='time left to fertilize', &
@@ -1169,7 +1169,6 @@ contains
     ! Initializes time varying variables used only in coupled carbon-nitrogen mode (CN):
     !
     ! !USES:
-    use clm_varpar      , only : crop_prog
     use landunit_varcon , only : istsoil, istcrop
     !
     ! !ARGUMENTS:
@@ -1214,7 +1213,7 @@ contains
     do p = bounds%begp,bounds%endp
        l = patch%landunit(p)
 
-       if ( crop_prog )then
+       if ( use_crop )then
           this%fert_counter_patch(p)  = spval
           this%fert_patch(p)          = 0._r8 
           this%soyfixn_patch(p)       = 0._r8 
@@ -1284,7 +1283,6 @@ contains
     ! Read/write CN restart data for carbon state
     !
     ! !USES:
-    use clm_varpar, only : crop_prog
     use restUtilMod
     use ncdio_pio
     !
@@ -1301,7 +1299,7 @@ contains
     real(r8), pointer :: ptr1d(:)   ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
-    if (crop_prog) then
+    if (use_crop) then
        call restartvar(ncid=ncid, flag=flag, varname='fert_counter', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='', units='', &
@@ -1313,42 +1311,42 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%fert_patch)
     end if
 
-    if (crop_prog) then
+    if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='grainn_xfer_to_grainn', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='grain N growth from storage', units='gN/m2/s', &
             interpinic_flag='interp', readvar=readvar, data=this%grainn_xfer_to_grainn_patch)
     end if
 
-    if (crop_prog) then
+    if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='livestemn_to_litter', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='livestem N to litter', units='gN/m2/s', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemn_to_litter_patch)
     end if
 
-    if (crop_prog) then
+    if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='grainn_to_food', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='grain N to food', units='gN/m2/s', &
             interpinic_flag='interp', readvar=readvar, data=this%grainn_to_food_patch)
     end if
 
-    if (crop_prog) then
+    if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='npool_to_grainn', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='allocation to grain N', units='gN/m2/s', &
             interpinic_flag='interp', readvar=readvar, data=this%npool_to_grainn_patch)
     end if
 
-    if (crop_prog) then
+    if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='npool_to_grainn_storage', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='allocation to grain N storage', units='gN/m2/s', &
             interpinic_flag='interp', readvar=readvar, data=this%npool_to_grainn_storage_patch)
     end if
 
-    if (crop_prog) then
+    if (use_crop) then
        call restartvar(ncid=ncid, flag=flag, varname='grainn_storage_to_xfer', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='grain N shift storage to transfer', units='gN/m2/s', &
@@ -1622,7 +1620,7 @@ contains
        this%grainn_to_cropprodn_patch(i)                 = value_patch
     end do
 
-    if ( crop_prog )then
+    if ( use_crop )then
        do fi = 1,num_patch
           i = filter_patch(fi)
           this%livestemn_to_litter_patch(i)              = value_patch

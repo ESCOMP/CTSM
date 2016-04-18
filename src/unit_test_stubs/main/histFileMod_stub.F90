@@ -88,7 +88,7 @@ contains
 
     !
     ! !USES:
-    use clm_varpar  , only : nlevdecomp_full, crop_prog
+    use clm_varpar  , only : nlevdecomp_full
     use clm_varctl  , only : iulog
     use abortutils  , only : endrun
     use shr_log_mod , only : errMsg => shr_log_errMsg

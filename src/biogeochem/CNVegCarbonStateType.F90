@@ -10,9 +10,8 @@ module CNVegCarbonStateType
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use pftconMod	     , only : noveg, npcropmin, pftcon
-  use clm_varpar     , only : crop_prog
   use clm_varcon     , only : spval, c3_r2, c4_r2
-  use clm_varctl     , only : iulog, use_cndv
+  use clm_varctl     , only : iulog, use_cndv, use_crop
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc 
@@ -214,7 +213,7 @@ contains
 
     if (carbon_type == 'c12') then
 
-       if (crop_prog) then
+       if (use_crop) then
           this%grainc_patch(begp:endp) = spval
           call hist_addfld1d (fname='GRAINC', units='gC/m^2', &
                avgflag='A', long_name='grain C (does not equal yield)', &
@@ -863,7 +862,7 @@ contains
           this%woodc_patch(p)              = 0._r8
           this%totc_patch(p)               = 0._r8 
 
-          if ( crop_prog )then
+          if ( use_crop )then
              this%grainc_patch(p)         = 0._r8 
              this%grainc_storage_patch(p) = 0._r8 
              this%grainc_xfer_patch(p)    = 0._r8 
@@ -895,7 +894,7 @@ contains
                this%gresp_xfer_patch(p)         + &
                this%cpool_patch(p)
 
-          if ( crop_prog )then
+          if ( use_crop )then
              this%totvegc_patch(p) =         &
                   this%totvegc_patch(p)    + &
                   this%grainc_patch(p)         + &
@@ -1793,7 +1792,7 @@ contains
     ! patch prognostic crop variables
     !--------------------------------
 
-    if (crop_prog) then
+    if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='grainc', xtype=ncd_double,  &
             dim1name='pft', long_name='grain C', units='gC/m2', &
             interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
@@ -1965,7 +1964,7 @@ contains
        this%woodc_patch(i)              = value_patch
        this%totvegc_patch(i)            = value_patch
        this%totc_patch(i)               = value_patch
-       if ( crop_prog ) then
+       if ( use_crop ) then
           this%grainc_patch(i)          = value_patch
           this%grainc_storage_patch(i)  = value_patch
           this%grainc_xfer_patch(i)     = value_patch
@@ -2073,7 +2072,7 @@ contains
             this%gresp_storage_patch(p)      + &
             this%gresp_xfer_patch(p)
 
-       if ( crop_prog .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%storvegc_patch(p) =            &
                this%storvegc_patch(p)       + &
                this%grainc_storage_patch(p) + &

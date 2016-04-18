@@ -6,8 +6,8 @@ module CNVegStateType
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoi, crop_prog
-  use clm_varctl     , only : use_cn, iulog, fsurdat 
+  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoi
+  use clm_varctl     , only : use_cn, iulog, fsurdat, use_crop
   use clm_varcon     , only : spval, ispval, grlnd
   use landunit_varcon, only : istsoil, istcrop
   use LandunitType   , only : lun                
@@ -247,7 +247,7 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
 
-    if ( crop_prog) then
+    if ( use_crop) then
        this%gddmaturity_patch(begp:endp) = spval
        call hist_addfld1d (fname='GDDHARV', units='ddays', &
             avgflag='A', long_name='Growing degree days (gdd) needed to harvest', &
@@ -795,7 +795,7 @@ contains
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%annavg_t2m_col) 
 
-    if (crop_prog) then
+    if (use_crop) then
 
        call restartvar(ncid=ncid, flag=flag,  varname='htmx', xtype=ncd_double,  &
             dim1name='pft', long_name='max height attained by a crop during year', units='m', &

@@ -181,7 +181,7 @@ contains
     !
     ! !USES:
     use clm_varpar , only : ndecomp_cascade_transitions, ndecomp_pools
-    use clm_varpar , only : nlevdecomp, nlevdecomp_full, crop_prog
+    use clm_varpar , only : nlevdecomp, nlevdecomp_full
     use clm_varcon , only : spval
     use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
     !

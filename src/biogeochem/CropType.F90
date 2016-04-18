@@ -16,8 +16,7 @@ module CropType
   use abortutils          , only : endrun
   use decompMod           , only : bounds_type
   use clm_varcon          , only : spval
-  use clm_varpar          , only : crop_prog
-  use clm_varctl          , only : iulog
+  use clm_varctl          , only : iulog, use_crop
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -77,7 +76,7 @@ contains
     
     call this%InitAllocate(bounds)
 
-    if (crop_prog) then
+    if (use_crop) then
        call this%InitHistory(bounds)
     end if
 
@@ -155,7 +154,7 @@ contains
     ! To accumulate a field, it must first be defined in subroutine [initAccVars] 
     ! and then accumulated by calls to [updateAccVars].
     !
-    ! Should only be called if crop_prog is true
+    ! Should only be called if use_crop is true
     !
     ! !USES 
     use accumulMod       , only : init_accum_field
@@ -249,7 +248,7 @@ contains
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
 
-    if (crop_prog) then
+    if (use_crop) then
        allocate(temp1d(bounds%begp:bounds%endp))
        if (flag == 'write') then 
           do p= bounds%begp,bounds%endp
@@ -324,7 +323,7 @@ contains
     !
     ! !DESCRIPTION:
     ! Update accumulated variables. Should be called every time step.
-    ! Should only be called if crop_prog is true.
+    ! Should only be called if use_crop is true.
     !
     ! !USES:
     use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
@@ -438,7 +437,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Update restyear only when running with prognostic crop
-    if ( crop_prog )then
+    if ( use_crop )then
 
        ! Update restyear when it's the start of a new year - but don't do that at the
        ! very start of the run

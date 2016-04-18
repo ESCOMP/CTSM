@@ -6,11 +6,12 @@ module CNVegNitrogenStateType
   use shr_infnan_mod                     , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, crop_prog
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi
   use landunit_varcon                    , only : istcrop, istsoil 
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump
+  use clm_varctl                         , only : use_crop
   use CNSharedParamsMod                  , only : use_fun
   use decompMod                          , only : bounds_type
   use pftconMod                          , only : npcropmin, noveg, pftcon
@@ -186,7 +187,7 @@ contains
     ! patch state variables 
     !-------------------------------
     
-    if (crop_prog) then
+    if (use_crop) then
        this%grainn_patch(begp:endp) = spval
        call hist_addfld1d (fname='GRAINN', units='gN/m^2', &
             avgflag='A', long_name='grain N', &
@@ -434,7 +435,7 @@ contains
           this%leafn_storage_xfer_acc_patch(p)        = 0._r8
           this%storage_ndemand_patch(p)   = 0._r8
 
-          if ( crop_prog )then
+          if ( use_crop )then
              this%grainn_patch(p)         = 0._r8
              this%grainn_storage_patch(p) = 0._r8
              this%grainn_xfer_patch(p)    = 0._r8
@@ -640,7 +641,7 @@ contains
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%ntrunc_patch) 
 
-    if (crop_prog) then
+    if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='grainn', xtype=ncd_double,  &
             dim1name='pft',    long_name='grain N', units='gN/m2', &
             interpinic_flag='interp', readvar=readvar, data=this%grainn_patch)
@@ -760,7 +761,7 @@ contains
        this%totn_patch(i)               = value_patch
     end do
 
-    if ( crop_prog )then
+    if ( use_crop )then
        do fi = 1,num_patch
           i = filter_patch(fi)
           this%grainn_patch(i)          = value_patch
@@ -858,7 +859,7 @@ contains
             this%npool_patch(p)              + &
             this%retransn_patch(p)
 
-       if ( crop_prog .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%dispvegn_patch(p) = &
                this%dispvegn_patch(p) + &
                this%grainn_patch(p)

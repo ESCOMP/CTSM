@@ -148,7 +148,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, crop_prog 
+    use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
     implicit none
     !
     ! !ARGUMENTS:
@@ -252,7 +252,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar     , only : nlevsno, nlevgrnd, crop_prog 
+    use clm_varpar     , only : nlevsno, nlevgrnd
     use clm_varctl     , only : use_cn
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use ncdio_pio      , only : ncd_inqvdlen

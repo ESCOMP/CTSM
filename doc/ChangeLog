@@ -1,4 +1,151 @@
 ===============================================================
+Tag name:  clm4_5_8_r178
+Originator(s):  sacks (Bill Sacks)
+Date: Sun Apr 17 19:28:55 MDT 2016
+One-line Summary: Remove some consistency checks, and merge crop_prog with use_crop in code
+
+Purpose of changes
+------------------
+
+(1) Remove some consistency checks that were doing more harm than good:
+
+    (a) Make init_interp_fill_missing_with_natveg unnecessary for natural veg
+        and crop output points. This is mainly to support the common use case of
+        interpolating from non-crop to crop, without requiring the user to set
+        this flag.
+
+    (b) Remove check_finidat_fsurdat_consistency - now never do this check. This
+        consistency check was causing more problems than it solved, both for
+        users and developers (e.g., requiring us to change initial conditions
+        files whenever we made new versions of the surface dataset).
+
+(2) Remove crop_prog logical variable from the code. This was identical to
+    use_crop, and so it was confusing to have these two separate variables. Uses
+    of crop_prog have been replaced by uses of use_crop.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- No longer need to set init_interp_fill_missing_with_natveg when interpolating
+from non-crop to crop
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - pass (ran bld/unit_testers tests)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - pass
+
+CLM tag used for the baseline comparisons: clm4_5_8_r177
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated:
+
+========= Make init_interp_fill_missing_with_natveg unnecessary for natural veg
+          and crop output points
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop2crop/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop2crop/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop2crop/README
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/interp_f19_noncrop2crop
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+========= Make init_interp_fill_missing_with_natveg unnecessary for natural veg
+          and crop output points
+M       components/clm/src/init_interp/initInterpMindist.F90
+M       components/clm/src/init_interp/test/initInterpMindist_test/test_init_interp_mindist.pf
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50KitchenSink/user_nl_clm
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+========= Remove check_finidat_fsurdat_consistency - now never do this check
+M       components/clm/src/main/restFileMod.F90
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+
+========= Remove crop_prog - use use_crop in its place
+M       components/clm/src/ED/main/EDCLMLinkMod.F90
+M       components/clm/src/biogeophys/EnergyFluxType.F90
+M       components/clm/src/biogeophys/TemperatureType.F90
+M       components/clm/src/biogeophys/WaterStateType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNStateUpdate1Mod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemStateType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenFluxType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90
+M       components/clm/src/dyn_subgrid/dynSubgridControlMod.F90
+M       components/clm/src/unit_test_stubs/main/histFileMod_stub.F90
+M       components/clm/src/biogeochem/CNFUNMod.F90
+M       components/clm/src/biogeochem/CNVegNitrogenStateType.F90
+M       components/clm/src/biogeochem/CNPrecisionControlMod.F90
+M       components/clm/src/biogeochem/CNPhenologyMod.F90
+M       components/clm/src/biogeochem/CropType.F90
+M       components/clm/src/biogeochem/CNVegNitrogenFluxType.F90
+M       components/clm/src/biogeochem/CNDriverMod.F90
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90
+M       components/clm/src/biogeochem/CNNStateUpdate1Mod.F90
+M       components/clm/src/biogeochem/CNBalanceCheckMod.F90
+M       components/clm/src/biogeochem/CNVegStateType.F90
+M       components/clm/src/main/clm_varctl.F90
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/main/clm_initializeMod.F90
+M       components/clm/src/main/initGridCellsMod.F90
+M       components/clm/src/main/histFileMod.F90
+M       components/clm/src/main/clm_varpar.F90
+M       components/clm/src/main/pftconMod.F90
+M       components/clm/src/main/surfrdMod.F90
+M       components/clm/src/main/clm_instMod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r177
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Apr 14 14:00:25 MDT 2016

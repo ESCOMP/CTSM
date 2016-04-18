@@ -35,8 +35,7 @@ contains
     ! Force leaf and deadstem c and n to 0 if they get too small.
     !
     ! !USES:
-    use clm_varctl , only : iulog, use_c13, use_c14
-    use clm_varpar , only : crop_prog
+    use clm_varctl , only : iulog, use_c13, use_c14, use_crop
     use pftconMod  , only : nc3crop
     !
     ! !ARGUMENTS:
@@ -237,7 +236,7 @@ contains
             endif
          end if
 
-         if ( crop_prog .and. patch%itype(p) >= nc3crop )then
+         if ( use_crop .and. patch%itype(p) >= nc3crop )then
             ! grain C and N
             if (abs(cs%grainc_patch(p)) < ccrit) then
                pc = pc + cs%grainc_patch(p)
@@ -524,7 +523,7 @@ contains
             endif
          end if
 
-         if ( crop_prog .and. patch%itype(p) >= nc3crop )then
+         if ( use_crop .and. patch%itype(p) >= nc3crop )then
             ! xsmrpool (C only)
             if (abs(cs%xsmrpool_patch(p)) < ccrit) then
                pc = pc + cs%xsmrpool_patch(p)

@@ -4,10 +4,10 @@ module SoilBiogeochemNitrogenFluxType
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, crop_prog
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use decompMod                          , only : bounds_type
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc
+  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use abortutils                         , only : endrun
   use LandunitType                       , only : lun                
@@ -814,14 +814,14 @@ contains
             ptr_col=this%f_n2o_denit_col)
     end if
 
-    if (crop_prog) then
+    if (use_crop) then
        this%fert_to_sminn_col(begc:endc) = spval
        call hist_addfld1d (fname='FERT_TO_SMINN', units='gN/m^2/s', &
             avgflag='A', long_name='fertilizer to soil mineral N', &
             ptr_col=this%fert_to_sminn_col)
     end if
 
-    if (crop_prog) then
+    if (use_crop) then
        this%soyfixn_to_sminn_col(begc:endc) = spval
        call hist_addfld1d (fname='SOYFIXN_TO_SMINN', units='gN/m^2/s', &
             avgflag='A', long_name='Soybean fixation to soil mineral N', &
@@ -837,7 +837,6 @@ contains
     ! Initializes time varying variables used only in coupled carbon-nitrogen mode (CN):
     !
     ! !USES:
-    use clm_varpar      , only : crop_prog
     use landunit_varcon , only : istsoil, istcrop
     !
     ! !ARGUMENTS:
@@ -877,7 +876,6 @@ contains
     ! Read/write CN restart data for carbon state
     !
     ! !USES:
-    use clm_varpar, only : crop_prog
     use restUtilMod
     use ncdio_pio
     !
