@@ -60,6 +60,8 @@ module CNVegNitrogenStateType
 
      ! wood product pools, for dynamic landcover
      real(r8), pointer :: seedn_col                (:) ! (gN/m2) column-level pool for seeding new Patches
+     real(r8), pointer :: dyn_nbal_adjustments_col(:) ! (gN/m2) adjustments to each column made in this timestep via dynamic column area adjustments (note: this variable only makes sense at the column-level: it is meaningless if averaged to the gridcell-level)
+     real(r8), pointer :: dyn_nbal_adjustments_veg_plus_soil_col(:) ! (gN/m2) sum of veg's dyn_nbal_adjustments_col and soil's dyn_nbal_adjustments_col
 
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: dispvegn_patch           (:) ! (gN/m2) displayed veg nitrogen, excluding storage
@@ -67,7 +69,8 @@ module CNVegNitrogenStateType
      real(r8), pointer :: totvegn_patch            (:) ! (gN/m2) total vegetation nitrogen
      real(r8), pointer :: totvegn_col              (:) ! (gN/m2) total vegetation nitrogen (p2c)
      real(r8), pointer :: totn_patch               (:) ! (gN/m2) total patch-level nitrogen
-     real(r8), pointer :: totn_col                 (:) ! (gN/m2) total column nitrogen, incl veg   
+     real(r8), pointer :: totn_p2c_col             (:) ! (gN/m2) totn_patch averaged to col
+     real(r8), pointer :: totn_col                 (:) ! (gN/m2) total column nitrogen, incl veg
      real(r8), pointer :: totecosysn_col           (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
 
    contains
@@ -77,12 +80,17 @@ module CNVegNitrogenStateType
      procedure , public  :: SetValues
      procedure , public  :: ZeroDWT
      procedure , public  :: Summary => Summary_nitrogenstate
+     procedure , public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
 
   end type cnveg_nitrogenstate_type
   !------------------------------------------------------------------------
+
+  ! !PRIVATE DATA:
+  character(len=*), parameter :: filename = &
+       __FILE__
 
 contains
 
@@ -152,7 +160,10 @@ contains
     allocate(this%totn_patch               (begp:endp)) ; this%totn_patch               (:) = nan
 
     allocate(this%seedn_col                (begc:endc)) ; this%seedn_col                (:) = nan
+    allocate(this%dyn_nbal_adjustments_col (begc:endc)) ; this%dyn_nbal_adjustments_col (:) = nan
+    allocate(this%dyn_nbal_adjustments_veg_plus_soil_col(begc:endc)); this%dyn_nbal_adjustments_veg_plus_soil_col(:) = nan
     allocate(this%totvegn_col              (begc:endc)) ; this%totvegn_col              (:) = nan
+    allocate(this%totn_p2c_col             (begc:endc)) ; this%totn_p2c_col             (:) = nan
     allocate(this%totn_col                 (begc:endc)) ; this%totn_col                 (:) = nan
     allocate(this%totecosysn_col           (begc:endc)) ; this%totecosysn_col           (:) = nan
 
@@ -350,6 +361,20 @@ contains
          avgflag='A', long_name='total column-level N, excluding product pools', &
          ptr_col=this%totn_col)
 
+    this%dyn_nbal_adjustments_col(begc:endc) = spval
+    call hist_addfld1d (fname='DYN_COL_VEG_ADJUSTMENTS_N', units='gN/m^2', &
+         avgflag='SUM', &
+         long_name='Adjustments in vegetation nitrogen due to dynamic column areas; &
+         &only makes sense at the column level: should not be averaged to gridcell', &
+         ptr_col=this%dyn_nbal_adjustments_col, default='inactive')
+
+    this%dyn_nbal_adjustments_veg_plus_soil_col(begc:endc) = spval
+    call hist_addfld1d (fname='DYN_COL_VEG_PLUS_SOIL_ADJUSTMENTS_N', units='gN/m^2', &
+         avgflag='SUM', &
+         long_name='Adjustments in vegetation + soil nitrogen due to dynamic column areas; &
+         &only makes sense at the column level: should not be averaged to gridcell', &
+         ptr_col=this%dyn_nbal_adjustments_veg_plus_soil_col, default='inactive')
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -377,11 +402,11 @@ contains
     integer :: special_patch (bounds%endp-bounds%begp+1) ! special landunit filter - patches
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leafc_patch)          == (/bounds%endp/)),                               errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(leafc_storage_patch)  == (/bounds%endp/)),                               errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(frootc_patch)         == (/bounds%endp/)),                               errMsg(__FILE__, __LINE__))   
-    SHR_ASSERT_ALL((ubound(frootc_storage_patch) == (/bounds%endp/)),                               errMsg(__FILE__, __LINE__))   
-    SHR_ASSERT_ALL((ubound(deadstemc_patch)      == (/bounds%endp/)),                               errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(leafc_patch)          == (/bounds%endp/)), errMsg(filename, __LINE__))
+    SHR_ASSERT_ALL((ubound(leafc_storage_patch)  == (/bounds%endp/)), errMsg(filename, __LINE__))
+    SHR_ASSERT_ALL((ubound(frootc_patch)         == (/bounds%endp/)), errMsg(filename, __LINE__))   
+    SHR_ASSERT_ALL((ubound(frootc_storage_patch) == (/bounds%endp/)), errMsg(filename, __LINE__))   
+    SHR_ASSERT_ALL((ubound(deadstemc_patch)      == (/bounds%endp/)), errMsg(filename, __LINE__))
 
     ! Set column filters
 
@@ -489,6 +514,7 @@ contains
 
           ! total nitrogen pools
           this%totecosysn_col(c) = 0._r8
+          this%totn_p2c_col(c)   = 0._r8
           this%totn_col(c)       = 0._r8
        end if
     end do
@@ -774,6 +800,8 @@ contains
        i = filter_column(fi)
 
        this%totecosysn_col(i) = value_column
+       this%totvegn_col(i)    = value_column
+       this%totn_p2c_col(i)   = value_column
        this%totn_col(i)       = value_column
     end do
 
@@ -803,7 +831,8 @@ contains
   end subroutine ZeroDwt
 
   !-----------------------------------------------------------------------
-  subroutine Summary_nitrogenstate(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp,&
+  subroutine Summary_nitrogenstate(this, bounds, num_allc, filter_allc, &
+       num_soilc, filter_soilc, num_soilp, filter_soilp,&
        soilbiogeochem_nitrogenstate_inst)
     !
     ! !USES:
@@ -813,6 +842,8 @@ contains
     ! !ARGUMENTS:
     class(cnveg_nitrogenstate_type)                      :: this
     type(bounds_type)                       , intent(in) :: bounds  
+    integer                                 , intent(in) :: num_allc        ! number of columns in allc filter
+    integer                                 , intent(in) :: filter_allc(:)  ! filter for all active columns
     integer                                 , intent(in) :: num_soilc       ! number of soil columns in filter
     integer                                 , intent(in) :: filter_soilc(:) ! filter for soil columns
     integer                                 , intent(in) :: num_soilp       ! number of soil patches in filter
@@ -892,10 +923,10 @@ contains
 
     call p2c(bounds, num_soilc, filter_soilc, &
          this%totn_patch(bounds%begp:bounds%endp), &
-         this%totn_col(bounds%begc:bounds%endc))
+         this%totn_p2c_col(bounds%begc:bounds%endc))
 
-    do fc = 1,num_soilc
-       c = filter_soilc(fc)
+    do fc = 1,num_allc
+       c = filter_allc(fc)
 
        ! total ecosystem nitrogen, including veg (TOTECOSYSN)
        this%totecosysn_col(c) =    &
@@ -907,18 +938,48 @@ contains
 
        ! total column nitrogen, including patch (TOTCOLN)
 
-       this%totn_col(c) = this%totn_col(c)                   + &
+       this%totn_col(c) = this%totn_p2c_col(c)               + &
             soilbiogeochem_nitrogenstate_inst%cwdn_col(c)    + &
             soilbiogeochem_nitrogenstate_inst%totlitn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%totsomn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%sminn_col(c)   + &
             this%seedn_col(c)                                + &
             soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
+
+       this%dyn_nbal_adjustments_veg_plus_soil_col(c) = &
+            this%dyn_nbal_adjustments_col(c) + &
+            soilbiogeochem_nitrogenstate_inst%dyn_nbal_adjustments_col(c)
     end do
     
     
     
 
   end subroutine Summary_nitrogenstate
+
+  !-----------------------------------------------------------------------
+  subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)
+    !
+    ! !DESCRIPTION:
+    ! Adjust state variables when column areas change due to dynamic landuse
+    !
+    ! !USES:
+    use dynColumnStateUpdaterMod, only : column_state_updater_type
+    !
+    ! !ARGUMENTS:
+    class(cnveg_nitrogenstate_type) , intent(inout) :: this
+    type(bounds_type)               , intent(in)    :: bounds
+    type(column_state_updater_type) , intent(in)    :: column_state_updater
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'DynamicColumnAdjustments'
+    !-----------------------------------------------------------------------
+
+    call column_state_updater%update_column_state_no_special_handling( &
+         bounds = bounds, &
+         var    = this%seedn_col(bounds%begc:bounds%endc), &
+         adjustment = this%dyn_nbal_adjustments_col(bounds%begc:bounds%endc))
+
+  end subroutine DynamicColumnAdjustments
 
 end module CNVegNitrogenStateType

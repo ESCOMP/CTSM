@@ -151,7 +151,8 @@ contains
 
          som_c_leached           =>    soilbiogeochem_carbonflux_inst%som_c_leached_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) total SOM C loss from vertical transport 
 
-         totcolc                 =>    cnveg_carbonstate_inst%totc_col                    & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
+         totcolc                 =>    cnveg_carbonstate_inst%totc_col,                   & ! Input:  [real(r8) (:) ]  (gC/m2) total column carbon, incl veg and cpool
+         tot_dyn_cbal_adjustments =>   cnveg_carbonstate_inst%dyn_cbal_adjustments_veg_plus_soil_col & ! Input: [real(r8) (:)] (gC/m2) total (veg + soil) adjustments to column-level values made via dynamic column area adjustments
          )
 
       ! set time steps
@@ -189,7 +190,8 @@ contains
          col_coutputs = col_coutputs - som_c_leached(c)
 
          ! calculate the total column-level carbon balance error for this time step
-         col_errcb(c) = (col_cinputs - col_coutputs)*dt - (col_endcb(c) - col_begcb(c))
+         col_errcb(c) = (col_cinputs - col_coutputs)*dt - &
+              (col_endcb(c) - (col_begcb(c) + tot_dyn_cbal_adjustments(c)))
 
          ! check for significant errors
          if (abs(col_errcb(c)) > 1e-8_r8) then
@@ -206,11 +208,12 @@ contains
 
       if (err_found) then
          c = err_index
-         write(iulog,*)'column cbalance error = ', col_errcb(c), c
+         write(iulog,*)'column cbalance error    = ', col_errcb(c), c
          write(iulog,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-         write(iulog,*)'begcb       = ',col_begcb(c)
-         write(iulog,*)'endcb       = ',col_endcb(c)
-         write(iulog,*)'delta store = ',col_endcb(c)-col_begcb(c)
+         write(iulog,*)'begcb                    = ',col_begcb(c)
+         write(iulog,*)'endcb                    = ',col_endcb(c)
+         write(iulog,*)'tot_dyn_cbal_adjustments = ',tot_dyn_cbal_adjustments(c)
+         write(iulog,*)'delta store              = ',col_endcb(c)-col_begcb(c)
          call endrun(msg=errMsg(__FILE__, __LINE__))
       end if
 
@@ -270,7 +273,8 @@ contains
          wood_harvestn       => cnveg_nitrogenflux_inst%wood_harvestn_col                , & ! Input:  [real(r8) (:) ]  (gN/m2/s) wood harvest (to product pools)
          grainn_to_cropprodn => cnveg_nitrogenflux_inst%grainn_to_cropprodn_col          , & ! Input:  [real(r8) (:) ]  (gN/m2/s) grain N to 1-year crop product pool
 
-         totcoln             => cnveg_nitrogenstate_inst%totn_col                          & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
+         totcoln             => cnveg_nitrogenstate_inst%totn_col                        , & ! Input:  [real(r8) (:) ]  (gN/m2) total column nitrogen, incl veg 
+         tot_dyn_nbal_adjustments => cnveg_nitrogenstate_inst%dyn_nbal_adjustments_veg_plus_soil_col & ! Input: [real(r8) (:)] (gN/m2) total (veg + soil) adjustments to column-level values made via dynamic column area adjustments
          )
 
       ! set time steps
@@ -322,7 +326,8 @@ contains
          col_noutputs(c) = col_noutputs(c) - som_n_leached(c)
 
          ! calculate the total column-level nitrogen balance error for this time step
-         col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - (col_endnb(c) - col_begnb(c))
+         col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
+              (col_endnb(c) - (col_begnb(c) + tot_dyn_nbal_adjustments(c)))
 
          if (abs(col_errnb(c)) > 1e-6_r8) then
             err_found = .true.
@@ -339,16 +344,17 @@ contains
 
       if (err_found) then
          c = err_index
-         write(iulog,*)'column nbalance error = ',col_errnb(c), c
-         write(iulog,*)'Latdeg,Londeg         = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
-         write(iulog,*)'begnb                 = ',col_begnb(c)
-         write(iulog,*)'endnb                 = ',col_endnb(c)
-         write(iulog,*)'delta store           = ',col_endnb(c)-col_begnb(c)
-         write(iulog,*)'input mass            = ',col_ninputs(c)*dt
-         write(iulog,*)'output mass           = ',col_noutputs(c)*dt
-         write(iulog,*)'net flux              = ',(col_ninputs(c)-col_noutputs(c))*dt
-         write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-         write(iulog,*)'outputs,ffix,nfix,ndep = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+         write(iulog,*)'column nbalance error    = ',col_errnb(c), c
+         write(iulog,*)'Latdeg,Londeg            = ',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
+         write(iulog,*)'begnb                    = ',col_begnb(c)
+         write(iulog,*)'endnb                    = ',col_endnb(c)
+         write(iulog,*)'tot_dyn_nbal_adjustments = ',tot_dyn_nbal_adjustments(c)
+         write(iulog,*)'delta store              = ',col_endnb(c)-col_begnb(c)
+         write(iulog,*)'input mass               = ',col_ninputs(c)*dt
+         write(iulog,*)'output mass              = ',col_noutputs(c)*dt
+         write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
+         write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
+         write(iulog,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
         
          
          

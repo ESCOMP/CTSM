@@ -46,6 +46,13 @@ module restUtilMod
   ! Set a gridcell-level field from a column-level field
   public :: set_grc_field_from_col_field
 
+  ! Set any NaN or spval entries in a field to some constant value
+  interface set_missing_vals_to_constant
+     !DIMS 1,2
+     module procedure set_missing_vals_to_constant_{DIMS}d
+  end interface set_missing_vals_to_constant
+  public :: set_missing_vals_to_constant
+
   private :: is_restart
 
 contains
@@ -580,8 +587,34 @@ contains
     deallocate(data_col)
   end subroutine set_grc_field_from_col_field
 
+  !-----------------------------------------------------------------------
+  ! DIMS 1,2
+  subroutine set_missing_vals_to_constant_{DIMS}d(data, val)
+    !
+    ! !DESCRIPTION:
+    ! Set missing values (NaN or spval) of a restart field to some constant value
+    !
+    ! !USES:
+    use shr_infnan_mod, only : isnan => shr_infnan_isnan
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(inout) :: data{DIMSTR}  ! variable to modify
+    real(r8), intent(in)    :: val           ! value to replace any NaNs or spvals
+    !
+    ! !LOCAL VARIABLES:
 
+    character(len=*), parameter :: subname = 'set_missing_vals_to_constant_{DIMS}d'
+    !-----------------------------------------------------------------------
 
+    where (isnan(data))
+       data = val
+    elsewhere (data == spval)
+       data = val
+    end where
+
+  end subroutine set_missing_vals_to_constant_{DIMS}d
+
+  
 
   !-----------------------------------------------------------------------
   logical function is_restart( )

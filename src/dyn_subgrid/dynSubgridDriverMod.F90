@@ -19,6 +19,9 @@ module dynSubgridDriverMod
   use CNVegetationFacade           , only : cn_vegetation_type
   use SoilBiogeochemStateType      , only : soilBiogeochem_state_type
   use SoilBiogeochemCarbonFluxType , only : soilBiogeochem_carbonflux_type
+  use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
+  use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+  use ch4Mod,                        only : ch4_type
   use EnergyFluxType               , only : energyflux_type
   use LakeStateType                , only : lakestate_type
   use PhotosynthesisMod            , only : photosyns_type
@@ -39,10 +42,10 @@ module dynSubgridDriverMod
   ! !PRIVATE TYPES:
 
   ! saved weights from before the subgrid weight updates
-  type(prior_weights_type) :: prior_weights
+  type(prior_weights_type), target :: prior_weights
 
   ! object used to update column-level states after subgrid weight updates
-  type(column_state_updater_type) :: column_state_updater
+  type(column_state_updater_type), target :: column_state_updater
   !---------------------------------------------------------------------------
 
 contains
@@ -65,7 +68,9 @@ contains
     !
     ! However, the above note is only relevant for a cold start run: For a restart run or
     ! a run with initial conditions, subgrid weights will be read from the restart file
-    ! after this routine is called.
+    ! after this routine is called. This is also relevant for a run that uses
+    ! interpolated initial conditions (use_init_interp = .true.), since subgrid weights
+    ! are not interpolated, so start at their cold start values.
     !
     ! Note that dynpft_init needs to be called from outside any loops over clumps - so
     ! this routine needs to be called from outside any loops over clumps.
@@ -114,7 +119,10 @@ contains
        urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,           &
        waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,             &
        canopystate_inst, photosyns_inst, glc2lnd_inst, bgc_vegetation_inst,          &
-       soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst, glc_behavior)
+       soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
+       c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,       &
+       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
+       glc_behavior)
     !
     ! !DESCRIPTION:
     ! Update subgrid weights for prescribed transient PFTs, CNDV, and/or dynamic
@@ -158,7 +166,12 @@ contains
     type(glc2lnd_type)                   , intent(inout) :: glc2lnd_inst
     type(cn_vegetation_type)             , intent(inout) :: bgc_vegetation_inst
     type(soilbiogeochem_state_type)      , intent(in)    :: soilbiogeochem_state_inst
+    type(soilbiogeochem_carbonstate_type), intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type), intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type), intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenstate_type), intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
+    type(ch4_type)                       , intent(inout) :: ch4_inst
     type(glc_behavior_type)              , intent(in)    :: glc_behavior
     !
     ! !LOCAL VARIABLES:
@@ -166,6 +179,15 @@ contains
     integer           :: nc           ! clump index
     type(bounds_type) :: bounds_clump ! clump-level bounds
     logical           :: first_step_cold_start ! true if this is the first step since cold start
+
+    ! These are used if this is the first step of a cold start
+    type(prior_weights_type), target :: new_weights
+    type(column_state_updater_type), target :: column_state_updater_new_weights
+
+    ! These point to the appropriate prior_weights and column_state_updater instances,
+    ! depending on whether it's a cold start
+    type(prior_weights_type), pointer :: my_prior_weights
+    type(column_state_updater_type), pointer :: my_column_state_updater
 
     character(len=*), parameter :: subname = 'dynSubgrid_driver'
     !-----------------------------------------------------------------------
@@ -178,6 +200,12 @@ contains
     ! ==========================================================================
     ! Do initialization, prior to land cover change
     ! ==========================================================================
+
+    if (first_step_cold_start) then
+       ! These objects need to be constructed outside a loop over clumps
+       new_weights = prior_weights_type(bounds_proc)
+       column_state_updater_new_weights = column_state_updater_type(bounds_proc)
+    end if
 
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1, nclumps
@@ -255,15 +283,34 @@ contains
             prior_weights%cactive(bounds_clump%begc:bounds_clump%endc), &
             temperature_inst)
 
+       if (first_step_cold_start) then
+          ! In the first timestep of a cold start run, we want to avoid doing any state
+          ! adjustments. This is because we expect big transients in the first time step,
+          ! since transient subgrid weights aren't updated in initialization. To
+          ! accomplish this, we set up a prior_weights object and a column_state_updater
+          ! object that say that there were no weight updates in this time step - i.e.,
+          ! that the old weights are the same as the new weights.
+          call new_weights%set_prior_weights(bounds_clump)
+          call column_state_updater_new_weights%set_old_weights(bounds_clump)
+          call column_state_updater_new_weights%set_new_weights(bounds_clump)
+          my_prior_weights => new_weights
+          my_column_state_updater => column_state_updater_new_weights
+       else
+          my_prior_weights => prior_weights
+          my_column_state_updater => column_state_updater
+       end if
+
        call dyn_hwcontent_final(bounds_clump, first_step_cold_start, &
             urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst, &
             waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
 
        if (use_cn) then
           call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, &
-               prior_weights, first_step_cold_start, &
+               my_prior_weights, my_column_state_updater, &
                canopystate_inst, photosyns_inst, &
-               soilbiogeochem_carbonflux_inst, soilbiogeochem_state_inst)
+               soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+               c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+               soilbiogeochem_nitrogenstate_inst, ch4_inst, soilbiogeochem_state_inst)
        end if
 
     end do

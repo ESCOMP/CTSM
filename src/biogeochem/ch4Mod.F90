@@ -10,12 +10,12 @@ module ch4Mod
   !
   ! !USES:
   use shr_kind_mod                   , only : r8 => shr_kind_r8
-  use shr_infnan_mod                 , only : nan => shr_infnan_nan, assignment(=)
+  use shr_infnan_mod                 , only : nan => shr_infnan_nan, assignment(=), shr_infnan_isnan
   use shr_log_mod                    , only : errMsg => shr_log_errMsg
   use clm_varpar                     , only : nlevsoi, ngases, nlevsno, nlevdecomp
   use clm_varcon                     , only : denh2o, denice, tfrz, grav, spval, rgas, grlnd
   use clm_varcon                     , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
-  use landunit_varcon                , only : istdlak
+  use landunit_varcon                , only : istsoil, istcrop, istdlak
   use clm_time_manager               , only : get_step_size, get_nstep
   use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4
   use abortutils                     , only : endrun
@@ -47,6 +47,7 @@ module ch4Mod
 
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: readParams
+  public  :: ch4_init_balance_check
   public  :: ch4
 
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -56,6 +57,7 @@ module ch4Mod
   private :: ch4_ebul
   private :: ch4_tran
   private :: ch4_annualupdate
+  private :: ch4_totcolch4
   private :: get_jwt
 
   type, private :: params_type
@@ -149,9 +151,9 @@ module ch4Mod
      real(r8), pointer, private :: ch4_dfsat_flux_col         (:)   ! col CH4 flux to atm due to decreasing fsat (kg C/m^2/s) [+]
 
      real(r8), pointer, private :: zwt_ch4_unsat_col          (:)   ! col depth of water table for unsaturated fraction (m)
-     real(r8), pointer, private :: fsat_bef_col               (:)   ! col fsat from previous timestep
      real(r8), pointer, private :: lake_soilc_col             (:,:) ! col total soil organic matter found in level (g C / m^3) (nlevsoi)
      real(r8), pointer, private :: totcolch4_col              (:)   ! col total methane found in soil col (g C / m^2)
+     real(r8), pointer, private :: totcolch4_bef_col          (:)   ! col total methane found in soil col, start of timestep (g C / m^2)
      real(r8), pointer, private :: annsum_counter_col         (:)   ! col seconds since last annual accumulator turnover
      real(r8), pointer, private :: tempavg_somhr_col          (:)   ! col temporary average SOM heterotrophic resp. (gC/m2/s)
      real(r8), pointer, private :: annavg_somhr_col           (:)   ! col annual average SOM heterotrophic resp. (gC/m2/s)
@@ -168,6 +170,8 @@ module ch4Mod
      real(r8), pointer, private :: p3_col                     (:)   ! col coefficient for determining finundated (m)
      real(r8), pointer, private :: pH_col                     (:)   ! col pH values for methane production
      !
+     real(r8), pointer, private :: dyn_ch4bal_adjustments_col (:)   ! adjustments to each column made in this timestep via dynamic column area adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level) (g C / m^2)
+     !
      real(r8), pointer, private :: c_atm_grc                  (:,:) ! grc atmospheric conc of CH4, O2, CO2 (mol/m3)
      real(r8), pointer, private :: ch4co2f_grc                (:)   ! grc CO2 production from CH4 oxidation (g C/m**2/s)
      real(r8), pointer, private :: ch4prodg_grc               (:)   ! grc average CH4 production (g C/m^2/s)
@@ -177,6 +181,16 @@ module ch4Mod
      real(r8), pointer, private :: annavg_bgnpp_patch         (:)   ! patch (gC/m2/s) annual average belowground NPP
      real(r8), pointer, private :: tempavg_agnpp_patch        (:)   ! patch (gC/m2/s) temp. average aboveground NPP
      real(r8), pointer, private :: tempavg_bgnpp_patch        (:)   ! patch (gC/m2/s) temp. average belowground NPP
+     !
+     ! The following variable reports whether this is the first timestep that includes
+     ! ch4. It is true in the first timestep of the run, and remains true until the
+     ! methane code is first run - at which point it becomes false, and remains
+     ! false. This could be a scalar, but scalars cause problems with threading, so we use
+     ! a column-level array (column-level for convenience, because it is referenced in
+     ! column-level loops).
+     logical , pointer, private :: ch4_first_time_col         (:)   ! col whether this is the first time step that includes ch4
+     !
+     logical , pointer, private :: beg_vals_set_col           (:)   ! col whether start-of-timestep totcolch4_bef has been set for this column in this time step
      !
      real(r8), pointer, public :: finundated_col             (:)   ! col fractional inundated area (excluding dedicated wetland cols)
      real(r8), pointer, public :: o2stress_unsat_col         (:,:) ! col Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
@@ -197,6 +211,7 @@ module ch4Mod
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
      procedure, public  :: Restart         
+     procedure, public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
 
   end type ch4_type
   !------------------------------------------------------------------------
@@ -281,9 +296,9 @@ contains
     allocate(this%conc_o2_lake_col           (begc:endc,1:nlevgrnd)) ;  this%conc_o2_lake_col           (:,:) = nan 
     allocate(this%ch4_dfsat_flux_col         (begc:endc))            ;  this%ch4_dfsat_flux_col         (:)   = nan
     allocate(this%zwt_ch4_unsat_col          (begc:endc))            ;  this%zwt_ch4_unsat_col          (:)   = nan
-    allocate(this%fsat_bef_col               (begc:endc))            ;  this%fsat_bef_col               (:)   = nan
     allocate(this%lake_soilc_col             (begc:endc,1:nlevgrnd)) ;  this%lake_soilc_col             (:,:) = spval !first time-step
     allocate(this%totcolch4_col              (begc:endc))            ;  this%totcolch4_col              (:)   = nan
+    allocate(this%totcolch4_bef_col          (begc:endc))            ;  this%totcolch4_bef_col          (:)   = nan
     allocate(this%annsum_counter_col         (begc:endc))            ;  this%annsum_counter_col         (:)   = nan 
     allocate(this%tempavg_somhr_col          (begc:endc))            ;  this%tempavg_somhr_col          (:)   = nan
     allocate(this%annavg_somhr_col           (begc:endc))            ;  this%annavg_somhr_col           (:)   = nan 
@@ -300,15 +315,20 @@ contains
     allocate(this%p3_col                     (begc:endc))            ;  this%p3_col                     (:)   = nan
     allocate(this%pH_col                     (begc:endc))            ;  this%pH_col                     (:)   = nan
     allocate(this%ch4_surf_flux_tot_col      (begc:endc))            ;  this%ch4_surf_flux_tot_col      (:)   = nan
+    allocate(this%dyn_ch4bal_adjustments_col (begc:endc))            ; this%dyn_ch4bal_adjustments_col  (:)   = nan
 
     allocate(this%c_atm_grc                  (begg:endg,1:ngases))   ;  this%c_atm_grc                  (:,:) = nan
     allocate(this%ch4co2f_grc                (begg:endg))            ;  this%ch4co2f_grc                (:)   = nan
     allocate(this%ch4prodg_grc               (begg:endg))            ;  this%ch4prodg_grc               (:)   = nan
 
-    allocate(this%tempavg_agnpp_patch        (begp:endp))            ;  this%tempavg_agnpp_patch        (:)   = spval
-    allocate(this%tempavg_bgnpp_patch        (begp:endp))            ;  this%tempavg_bgnpp_patch        (:)   = spval
+    allocate(this%tempavg_agnpp_patch        (begp:endp))            ;  this%tempavg_agnpp_patch        (:)   = nan
+    allocate(this%tempavg_bgnpp_patch        (begp:endp))            ;  this%tempavg_bgnpp_patch        (:)   = nan
     allocate(this%annavg_agnpp_patch         (begp:endp))            ;  this%annavg_agnpp_patch         (:)   = spval ! To detect first year
     allocate(this%annavg_bgnpp_patch         (begp:endp))            ;  this%annavg_bgnpp_patch         (:)   = spval ! To detect first year
+
+    allocate(this%ch4_first_time_col         (begc:endc))            ; this%ch4_first_time_col          (:)   = .true.
+
+    allocate(this%beg_vals_set_col           (begc:endc))            ; this%beg_vals_set_col            (:)   = .false.
 
     allocate(this%finundated_col             (begc:endc))            ;  this%finundated_col             (:)   = nan          
     allocate(this%o2stress_unsat_col         (begc:endc,1:nlevgrnd)) ;  this%o2stress_unsat_col         (:,:) = nan          
@@ -360,14 +380,20 @@ contains
     end if
 
     this%finundated_col(begc:endc) = spval
+    ! Using l2g_scale_type='veg' to exclude values in special landunits, which can change
+    ! from dynamic column adjustments (also want to exclude lakes here, for which
+    ! finundated is implicitly 1).
     call hist_addfld1d (fname='FINUNDATED', units='unitless', &
          avgflag='A', long_name='fractional inundated area of vegetated columns', &
-         ptr_col=this%finundated_col)
+         ptr_col=this%finundated_col, l2g_scale_type='veg')
 
     this%finundated_lag_col(begc:endc) = spval
+    ! Using l2g_scale_type='veg' to exclude values in special landunits, which can change
+    ! from dynamic column adjustments (also want to exclude lakes here, for which
+    ! finundated is implicitly 1).
     call hist_addfld1d (fname='FINUNDATED_LAG', units='unitless',  &
          avgflag='A', long_name='time-lagged inundated fraction of vegetated columns', &
-         ptr_col=this%finundated_lag_col)
+         ptr_col=this%finundated_lag_col, l2g_scale_type='veg')
 
     this%ch4_surf_diff_sat_col(begc:endc) = spval
     call hist_addfld1d (fname='CH4_SURF_DIFF_SAT', units='mol/m2/s',  &
@@ -410,19 +436,28 @@ contains
          ptr_col=this%ch4_surf_aere_unsat_col)
 
     this%totcolch4_col(begc:endc) = spval
+    ! Unlike other ch4 diagnostic fields, TOTCOLCH4 includes all landunits. Values will
+    ! typically be 0 for non-lake special landunits, but may be non-zero due to the state
+    ! adjustments from dynamic landunits.
     call hist_addfld1d (fname='TOTCOLCH4', units='gC/m2',  &
-         avgflag='A', long_name='total belowground CH4, (0 for non-lake special landunits)', &
+         avgflag='A', &
+         long_name='total belowground CH4 (0 for non-lake special landunits in the absence of dynamic landunits)', &
          ptr_col=this%totcolch4_col)
 
     this%conc_ch4_sat_col(begc:endc,1:nlevgrnd) = spval
+    ! Using l2g_scale_type='veg_plus_lake' to exclude mass in non-lake special landunits,
+    ! which can arise from dynamic column adjustments
     call hist_addfld2d (fname='CONC_CH4_SAT', units='mol/m3', type2d='levgrnd', &
          avgflag='A', long_name='CH4 soil Concentration for inundated / lake area', &
-         ptr_col=this%conc_ch4_sat_col, default='inactive')
+         ptr_col=this%conc_ch4_sat_col, l2g_scale_type='veg_plus_lake', default='inactive')
 
     this%conc_ch4_unsat_col(begc:endc,1:nlevgrnd) = spval
+    ! Using l2g_scale_type='veg' to exclude mass in special landunits, which can arise
+    ! from dynamic column adjustments. (We also exclude lakes here, because they don't
+    ! have any unsaturated area.)
     call hist_addfld2d (fname='CONC_CH4_UNSAT', units='mol/m3', type2d='levgrnd', &
          avgflag='A', long_name='CH4 soil Concentration for non-inundated area', &
-         ptr_col=this%conc_ch4_unsat_col, default='inactive')
+         ptr_col=this%conc_ch4_unsat_col, l2g_scale_type='veg', default='inactive')
 
     if (hist_wrtch4diag) then
        this%ch4_prod_depth_sat_col(begc:endc,1:nlevgrnd) = spval
@@ -593,9 +628,12 @@ contains
 
     if (hist_wrtch4diag) then
        this%layer_sat_lag_col(begc:endc,1:nlevgrnd) = spval
+       ! Using l2g_scale_type='veg' to exclude mass in special landunits, which can arise
+       ! from dynamic column adjustments. (We also exclude lakes here, because they don't
+       ! have any unsaturated area.)
        call hist_addfld2d (fname='LAYER_SAT_LAG', units='unitless', type2d='levgrnd',  &
             avgflag='A', long_name='lagged saturation status of layer in unsat. zone', &
-            ptr_col=this%layer_sat_lag_col)
+            ptr_col=this%layer_sat_lag_col, l2g_scale_type='veg')
     end if
 
     if (hist_wrtch4diag) then
@@ -613,14 +651,19 @@ contains
     end if
 
     this%conc_o2_sat_col(begc:endc,1:nlevgrnd) = spval
+    ! Using l2g_scale_type='veg_plus_lake' to exclude mass in non-lake special landunits,
+    ! which can arise from dynamic column adjustments
     call hist_addfld2d (fname='CONC_O2_SAT', units='mol/m3', type2d='levgrnd', &
          avgflag='A', long_name='O2 soil Concentration for inundated / lake area', &
-         ptr_col=this%conc_o2_sat_col)
+         ptr_col=this%conc_o2_sat_col, l2g_scale_type='veg_plus_lake')
 
     this%conc_o2_unsat_col(begc:endc,1:nlevgrnd) = spval
+    ! Using l2g_scale_type='veg' to exclude mass in special landunits, which can arise
+    ! from dynamic column adjustments. (We also exclude lakes here, because they don't
+    ! have any unsaturated area.)
     call hist_addfld2d (fname='CONC_O2_UNSAT', units='mol/m3', type2d='levgrnd', &
          avgflag='A', long_name='O2 soil Concentration for non-inundated area', &
-         ptr_col=this%conc_o2_unsat_col)
+         ptr_col=this%conc_o2_unsat_col, l2g_scale_type='veg')
 
     this%ch4co2f_grc(begg:endg) = spval
     call hist_addfld1d (fname='FCH4TOCO2', units='gC/m2/s', &
@@ -658,6 +701,13 @@ contains
     call hist_addfld1d (fname='WTGQ', units='m/s',  &
          avgflag='A', long_name='surface tracer conductance', &
          ptr_col=this%grnd_ch4_cond_col)
+
+    this%dyn_ch4bal_adjustments_col(begc:endc) = spval
+    call hist_addfld1d (fname='DYN_COL_ADJUSTMENTS_CH4', units='gC/m^2', &
+         avgflag='SUM', &
+         long_name='Adjustments in ch4 due to dynamic column areas; &
+         &only makes sense at the column level: should not be averaged to gridcell', &
+         ptr_col=this%dyn_ch4bal_adjustments_col, default='inactive')
 
   end subroutine InitHistory
 
@@ -766,53 +816,56 @@ contains
 
     do c = bounds%begc,bounds%endc
 
-       ! To detect first time-step
-       this%fsat_bef_col       (c) = spval 
-       this%annsum_counter_col (c) = spval
-       this%totcolch4_col      (c) = spval 
-
        ! To detect first year
        this%annavg_somhr_col(c)   = spval 
        this%annavg_finrw_col(c)   = spval 
 
        ! To detect file input
        this%qflx_surf_lag_col  (c)   = spval
-       this%finundated_lag_col (c)   = spval
-       this%layer_sat_lag_col  (c,:) = spval
-       this%conc_ch4_sat_col   (c,:) = spval
-       this%conc_ch4_unsat_col (c,:) = spval
-       this%conc_o2_sat_col    (c,:) = spval 
-       this%conc_o2_unsat_col  (c,:) = spval 
        this%o2stress_sat_col   (c,:) = spval
        this%o2stress_unsat_col (c,:) = spval
        this%ch4stress_sat_col  (c,:) = spval
        this%ch4stress_unsat_col(c,:) = spval
        this%lake_soilc_col     (c,:) = spval 
 
+       ! The following variables need to be initialized for all columns, for the sake of
+       ! DynamicColumnAdjustments
+       !
+       ! TODO(wjs, 2016-02-11) Should the initial value of finundated depend on landunit
+       ! type? I am setting it to 1, because that's the appropriate value for lakes (and
+       ! probably other landunits, like wetlands and glaciers) - but this may not be
+       ! appropriate for urban. (The setting here should agree with the setting of
+       ! finundated_col where it was spval in subroutine Restart.) Note that
+       ! finundated_col is overwritten for istsoil / istcrop below.
+       this%finundated_col(c) = 1._r8
+       this%finundated_lag_col(c) = 1._r8
+       this%layer_sat_lag_col  (c,1:nlevsoi) = 1._r8
+       this%conc_ch4_sat_col   (c,1:nlevsoi) = 0._r8
+       this%conc_ch4_unsat_col (c,1:nlevsoi) = 0._r8
+       this%conc_o2_sat_col    (c,1:nlevsoi) = 0._r8
+       this%conc_o2_unsat_col  (c,1:nlevsoi) = 0._r8
+
        l = col%landunit(c)
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop .or. &
+            lun%itype(l) == istdlak) then
+          this%annsum_counter_col(c) = 0._r8
+          this%tempavg_somhr_col(c) = 0._r8
+          this%tempavg_finrw_col(c) = 0._r8
+       end if
+
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
-          this%conc_ch4_sat_col   (c,1:nlevsoi) = 0._r8
-          this%conc_ch4_unsat_col (c,1:nlevsoi) = 0._r8
-          this%conc_o2_sat_col    (c,1:nlevsoi) = 0._r8
-          this%conc_o2_unsat_col  (c,1:nlevsoi) = 0._r8
           this%o2stress_sat_col   (c,1:nlevsoi) = 1._r8
           this%o2stress_unsat_col (c,1:nlevsoi) = 1._r8
-          this%layer_sat_lag_col  (c,1:nlevsoi) = 1._r8
           this%o2_decomp_depth_sat_col(c,1:nlevsoi) = 0._r8
           this%o2_decomp_depth_unsat_col(c,1:nlevsoi) = 0._r8
 
           this%qflx_surf_lag_col  (c)           = 0._r8
+          this%finundated_col     (c)           = 0._r8
           this%finundated_lag_col (c)           = 0._r8
-          this%finundated_col(c)                = 0._r8
-          ! finundated will be used to calculate soil decomposition if anoxia is used 
-          ! Note that finundated will be overwritten with this%fsat_bef_col upon reading
-          ! a restart file - either in a continuation, branch or startup spun-up case
 
        else if (lun%itype(l) == istdlak) then
 
-          this%conc_ch4_sat_col(c,1:nlevsoi) = 0._r8
-          this%conc_o2_sat_col (c,1:nlevsoi) = 0._r8
           this%lake_soilc_col  (c,1:nlevsoi) = 580._r8 * cellorg_col(c,1:nlevsoi)
 
        end if
@@ -887,7 +940,6 @@ contains
           this%sif_col                    (c)   = spval
           this%o2stress_unsat_col         (c,:) = spval
           this%ch4stress_unsat_col        (c,:) = spval
-          this%finundated_col             (c)   = spval
 
        else  ! Inactive CH4 columns
 
@@ -934,13 +986,21 @@ contains
           this%o2stress_sat_col           (c,:) = spval
           this%ch4stress_unsat_col        (c,:) = spval
           this%ch4stress_sat_col          (c,:) = spval
-          this%finundated_col             (c)   = spval
           this%grnd_ch4_cond_col          (c)   = spval
 
           ! totcolch4 Set to zero for inactive columns so that this can be used
           ! as an appropriate area-weighted gridcell average soil methane content.
           this%totcolch4_col              (c)   = 0._r8  
 
+       end if
+    end do
+
+    do p = bounds%begp, bounds%endp
+       l = patch%landunit(p)
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop .or. &
+            lun%itype(l) == istdlak) then
+          this%tempavg_agnpp_patch(p) = 0._r8
+          this%tempavg_bgnpp_patch(p) = 0._r8
        end if
     end do
 
@@ -957,6 +1017,8 @@ contains
     use pio       , only : file_desc_t
     use decompMod , only : bounds_type
     use restUtilMod
+    use filterColMod, only : filter_col_type
+    use filterColMod, only : col_filter_from_ltypes, col_filter_from_lunflags
     !
     ! !ARGUMENTS:
     class(ch4_type) :: this
@@ -965,18 +1027,36 @@ contains
     character(len=*),  intent(in)    :: flag   ! 'read' or 'write'
     !
     ! !LOCAL VARIABLES:
+    integer :: c, p, j
     logical :: readvar      ! determine if variable is on initial file
+    logical :: ch4_information_on_file
+    type(filter_col_type) :: nolake_filter
+    type(filter_col_type) :: lake_filter
     !-----------------------------------------------------------------------
+
+    ch4_information_on_file = .false.
 
     call restartvar(ncid=ncid, flag=flag, varname='tempavg_agnpp', xtype=ncd_double,  &
          dim1name='pft',&
          long_name='Temp. Average AGNPP',units='gC/m^2/s', &
          readvar=readvar, interpinic_flag='interp', data=this%tempavg_agnpp_patch)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-16) The following is needed for backwards
+    ! compatibility with older restart files, where this variable was nan or spval rather
+    ! than 0 over inactive points
+    if (flag == 'read' .and. readvar) then
+       call set_missing_vals_to_constant(this%tempavg_agnpp_patch, 0._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='tempavg_bgnpp', xtype=ncd_double,  &
          dim1name='pft',&
          long_name='Temp. Average BGNPP',units='gC/m^2/s', &
          readvar=readvar, interpinic_flag='interp', data=this%tempavg_bgnpp_patch)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-16) The following is needed for backwards
+    ! compatibility with older restart files, where this variable was nan or spval rather
+    ! than 0 over inactive points
+    if (flag == 'read' .and. readvar) then
+       call set_missing_vals_to_constant(this%tempavg_bgnpp_patch, 0._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='annavg_agnpp', xtype=ncd_double,  &
          dim1name='pft',&
@@ -992,11 +1072,23 @@ contains
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='oxygen soil concentration', units='mol/m^3', &
          readvar=readvar, interpinic_flag='interp', data=this%conc_o2_sat_col)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-17) The following is needed for backwards
+    ! compatibility with restart files generated from older versions of the code, where
+    ! this variable was initialized to spval rather than 0 for special landunits.
+    if (flag == 'read' .and. readvar) then
+       call set_missing_vals_to_constant(this%conc_o2_sat_col, 0._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='CONC_O2_UNSAT', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='oxygen soil concentration', units='mol/m^3', &
          readvar=readvar, interpinic_flag='interp', data=this%conc_o2_unsat_col)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-17) The following is needed for backwards
+    ! compatibility with restart files generated from older versions of the code, where
+    ! this variable was initialized to spval rather than 0 for special landunits.
+    if (flag == 'read' .and. readvar) then
+       call set_missing_vals_to_constant(this%conc_o2_unsat_col, 0._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='O2STRESS_SAT', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
@@ -1022,16 +1114,35 @@ contains
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='methane soil concentration', units='mol/m^3', &
          readvar=readvar, interpinic_flag='interp', data=this%conc_ch4_sat_col)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2016-02-11) The following is needed for backwards
+    ! compatibility with restart files generated from older versions of the code, where
+    ! this variable was initialized to spval rather than 0 for special landunits.
+    if (flag == 'read' .and. readvar) then
+       call set_missing_vals_to_constant(this%conc_ch4_sat_col, 0._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='CONC_CH4_UNSAT', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='methane soil concentration', units='mol/m^3', &
          readvar=readvar, interpinic_flag='interp', data=this%conc_ch4_unsat_col)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2016-02-11) The following is needed for backwards
+    ! compatibility with restart files generated from older versions of the code, where
+    ! this variable was initialized to spval rather than 0 for special landunits.
+    if (flag == 'read' .and. readvar) then
+       call set_missing_vals_to_constant(this%conc_ch4_unsat_col, 0._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='LAYER_SAT_LAG', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='lagged saturation status of layer in unsat. zone', units='', &
          readvar=readvar, interpinic_flag='interp', data=this%layer_sat_lag_col)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-18) The following is needed for backwards
+    ! compatibility with restart files generated from older versions of the code, where
+    ! this variable was initialized to spval rather than 1 for special landunits.
+    if (flag == 'read' .and. readvar) then
+       ! The value here (1) should agree with the setting for special landunits in initCold
+       call set_missing_vals_to_constant(this%layer_sat_lag_col, 1._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='QFLX_SURF_LAG', xtype=ncd_double, &
          dim1name='column', &
@@ -1042,11 +1153,33 @@ contains
          dim1name='column', &
          long_name='time-lagged inundated fraction', units='', &
          readvar=readvar, interpinic_flag='interp', data=this%finundated_lag_col)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-18) The following is needed for backwards
+    ! compatibility with restart files generated from older versions of the code, where
+    ! this variable was initialized to spval rather than 1 for special landunits.
+    if (flag == 'read' .and. readvar) then
+       ! The value here (1) should agree with the setting for special landunits in initCold
+       call set_missing_vals_to_constant(this%finundated_lag_col, 1._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='FINUNDATED', xtype=ncd_double, &
             dim1name='column', &
             long_name='inundated fraction', units='', &
-            readvar=readvar, interpinic_flag='interp', data=this%fsat_bef_col)
+            readvar=readvar, interpinic_flag='interp', data=this%finundated_col)
+    if (flag == 'read' .and. readvar) then
+       ! Determine whether the methane model was present in the run that generated the
+       ! restart file based on whether FINUNDATED is present on the restart file. We
+       ! could use any methane variable, but FINUNDATED is a good choice because this
+       ! "first time" variable is used in connection with FINUNDATED.
+       this%ch4_first_time_col(bounds%begc:bounds%endc) = .false.
+       ch4_information_on_file = .true.
+
+       ! BACKWARDS_COMPATIBILITY(wjs, 2016-02-11) The following is needed for backwards
+       ! compatibility with restart files generated from older versions of the code, where
+       ! these variables were initialized to spval rather than 1 for special landunits.
+       !
+       ! The value here (1) should agree with the setting for special landunits in initCold
+       call set_missing_vals_to_constant(this%finundated_col, 1._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='annavg_somhr', xtype=ncd_double,  &
          dim1name='column',&
@@ -1062,23 +1195,183 @@ contains
          dim1name='column',&
          long_name='CH4 Ann. Sum Time Counter',units='s', &
          readvar=readvar, interpinic_flag='interp', data=this%annsum_counter_col)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-16) The following is needed for backwards
+    ! compatibility with older restart files, where this variable was nan or spval rather
+    ! than 0 over inactive points
+    if (flag == 'read' .and. readvar) then
+       call set_missing_vals_to_constant(this%annsum_counter_col, 0._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='tempavg_somhr', xtype=ncd_double,  &
          dim1name='column',&
          long_name='Temp. Average SOMHR',units='gC/m^2/s', &
          readvar=readvar, interpinic_flag='interp', data=this%tempavg_somhr_col)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-16) The following is needed for backwards
+    ! compatibility with older restart files, where this variable was nan or spval rather
+    ! than 0 over inactive points
+    if (flag == 'read' .and. readvar) then
+       call set_missing_vals_to_constant(this%tempavg_somhr_col, 0._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='tempavg_finrw', xtype=ncd_double,  &
          dim1name='column',&
          long_name='Temp. Average Respiration-Weighted FINUNDATED',units='', &
          readvar=readvar, interpinic_flag='interp', data=this%tempavg_finrw_col)
+    ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-16) The following is needed for backwards
+    ! compatibility with older restart files, where this variable was nan or spval rather
+    ! than 0 over inactive points
+    if (flag == 'read' .and. readvar) then
+       call set_missing_vals_to_constant(this%tempavg_finrw_col, 0._r8)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='LAKE_SOILC', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true.,&
          long_name='lake soil carbon concentration', units='g/m^3', &
          readvar=readvar, interpinic_flag='interp', data=this%lake_soilc_col)
 
+    ! Set variables that can be derived from others on the restart file
+    if (flag == 'read' .and. ch4_information_on_file) then
+       ! NOTE(wjs, 2016-05-13) We create filters on the fly here rather than using
+       ! existing filters because it's currently awkward to access the existing filters
+       ! from this routine that operates outside a loop over clumps: we'd need a clump
+       ! loop within this Restart routine. If we rework CLM's threading so that there is
+       ! a separate instance of each object for each clump (so we'd have multiple
+       ! instances of ch4_type, each corresponding to one clump, each with its own
+       ! corresponding filters) then it would become easier to use the existing filters
+       ! rather than creating them here.
+       !
+       ! NOTE(wjs, 2016-05-13) I'm not sure if we need include_inactive=.true., here, but
+       ! it shouldn't hurt, and may be necessary in order to set values for points that
+       ! are not active at this stage in initialization, but will become active.
+       nolake_filter = col_filter_from_lunflags(bounds, &
+            lunflags = (.not. lun%lakpoi(bounds%begl:bounds%endl)), &
+            include_inactive = .true.)
+       lake_filter = col_filter_from_lunflags(bounds, &
+            lunflags = lun%lakpoi(bounds%begl:bounds%endl), &
+            include_inactive = .true.)
+
+       call ch4_totcolch4(bounds, &
+            nolake_filter%num, nolake_filter%indices, &
+            lake_filter%num, lake_filter%indices, &
+            this)
+    end if
+
   end subroutine Restart
+
+  !-----------------------------------------------------------------------
+  subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)
+    !
+    ! !DESCRIPTION:
+    ! Adjust state variables when column areas change due to dynamic landuse
+    !
+    ! !USES:
+    use dynColumnStateUpdaterMod, only : column_state_updater_type
+    !
+    ! !ARGUMENTS:
+    class(ch4_type)                 , intent(inout) :: this
+    type(bounds_type)               , intent(in)    :: bounds
+    type(column_state_updater_type) , intent(in)    :: column_state_updater
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: finundated_new_col(bounds%begc:bounds%endc)    ! finundated after column adjustments
+    real(r8) :: f_uninundated_col(bounds%begc:bounds%endc)     ! 1 - finundated_col
+    real(r8) :: f_uninundated_new_col(bounds%begc:bounds%endc) ! f_uninundated after column adjustments
+    real(r8) :: adjustment_one_level(bounds%begc:bounds%endc)
+    integer :: j, c
+    integer :: begc, endc
+
+    character(len=*), parameter :: subname = 'DynamicColumnAdjustments'
+    !-----------------------------------------------------------------------
+
+    ! BUG(wjs, 2016-02-16, bugz 2283) Need to do some special handling of finundated for
+    ! increases in lake area, since lakes are assumed to be 100% inundated. Probably it's
+    ! most appropriate for this special handling to happen elsewhere - i.e., within this
+    ! routine, we do the standard adjustments as they are currently done, but then in the
+    ! "science" code in this module, there is a check of whether a lake has finundated <
+    ! 1, and if so, variables are adjusted so that it is once again fully inundated.
+
+    ! Note that some of the variables updated here aren't strictly needed for
+    ! conservation purposes (because they don't represent any mass in the system), but it
+    ! seems like a good idea to update these anyway so that growing columns will be in a
+    ! more self-consistent state.
+
+    begc = bounds%begc
+    endc = bounds%endc
+
+    finundated_new_col(begc:endc) = &
+         this%finundated_col(begc:endc)
+    call column_state_updater%update_column_state_no_special_handling( &
+         bounds = bounds, &
+         var    = finundated_new_col(begc:endc))
+
+    f_uninundated_col(begc:endc) = &
+         1._r8 - this%finundated_col(begc:endc)
+    f_uninundated_new_col(begc:endc) = &
+         f_uninundated_col(begc:endc)
+    call column_state_updater%update_column_state_no_special_handling( &
+         bounds = bounds, &
+         var    = f_uninundated_new_col(begc:endc))
+
+    call column_state_updater%update_column_state_no_special_handling( &
+         bounds = bounds, &
+         var = this%finundated_lag_col(begc:endc))
+
+    this%dyn_ch4bal_adjustments_col(begc:endc) = 0._r8
+
+    do j = 1, nlevsoi
+       call column_state_updater%update_column_state_no_special_handling( &
+            bounds = bounds, &
+            var    = this%conc_ch4_sat_col(begc:endc, j), &
+            fractional_area_old = this%finundated_col(begc:endc), &
+            fractional_area_new = finundated_new_col(begc:endc), &
+            adjustment = adjustment_one_level(begc:endc))
+       do c = bounds%begc, bounds%endc
+          this%dyn_ch4bal_adjustments_col(c) = &
+               this%dyn_ch4bal_adjustments_col(c) + &
+               adjustment_one_level(c) * col%dz(c,j) * catomw
+       end do
+
+       call column_state_updater%update_column_state_no_special_handling( &
+            bounds = bounds, &
+            var    = this%conc_ch4_unsat_col(begc:endc, j), &
+            fractional_area_old = f_uninundated_col(begc:endc), &
+            fractional_area_new = f_uninundated_new_col(begc:endc), &
+            adjustment = adjustment_one_level(begc:endc))
+       do c = bounds%begc, bounds%endc
+          this%dyn_ch4bal_adjustments_col(c) = &
+               this%dyn_ch4bal_adjustments_col(c) + &
+               adjustment_one_level(c) * col%dz(c,j) * catomw
+       end do
+
+       ! layer_sat_lag just applies to the UNinundated portion of the column
+       call column_state_updater%update_column_state_no_special_handling( &
+            bounds = bounds, &
+            var    = this%layer_sat_lag_col(begc:endc, j), &
+            fractional_area_old = f_uninundated_col(begc:endc), &
+            fractional_area_new = f_uninundated_new_col(begc:endc))
+
+       ! We don't bother tracking the adjustment terms for the following o2 state
+       ! variables, because they're not needed for balance checks and because people are
+       ! less likely to be interested in viewing those adjustment terms.
+
+       call column_state_updater%update_column_state_no_special_handling( &
+            bounds = bounds, &
+            var    = this%conc_o2_sat_col(begc:endc, j), &
+            fractional_area_old = this%finundated_col(begc:endc), &
+            fractional_area_new = finundated_new_col(begc:endc))
+
+       call column_state_updater%update_column_state_no_special_handling( &
+            bounds = bounds, &
+            var    = this%conc_o2_unsat_col(begc:endc, j), &
+            fractional_area_old = f_uninundated_col(begc:endc), &
+            fractional_area_new = f_uninundated_new_col(begc:endc))
+    end do
+
+    this%finundated_col(begc:endc) = &
+         finundated_new_col(begc:endc)
+
+  end subroutine DynamicColumnAdjustments
+
 
   !-----------------------------------------------------------------------
   subroutine readParams ( ncid )
@@ -1289,7 +1582,72 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine ch4 (bounds, num_soilc, filter_soilc, num_lakec, filter_lakec, num_soilp, filter_soilp, &
+  subroutine ch4_init_balance_check(bounds, num_soilc, filter_soilc, num_lakec, filter_lakec, &
+       ch4_inst)
+    !
+    ! !DESCRIPTION:
+    ! Calculate beginning column-level ch4 balance, for mass conservation check
+    !
+    ! This should be called before weight updates due to dynamic landunits
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(bounds_type) , intent(in)    :: bounds   
+    integer           , intent(in)    :: num_soilc       ! number of column soil points in column filter
+    integer           , intent(in)    :: filter_soilc(:) ! column filter for soil points
+    integer           , intent(in)    :: num_lakec       ! number of column lake points in column filter
+    integer           , intent(in)    :: filter_lakec(:) ! column filter for lake points
+    type(ch4_type)    , intent(inout) :: ch4_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+
+    character(len=*), parameter       :: subname = 'ch4_init_balance_check'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         totcolch4      => ch4_inst%totcolch4_col      , & ! Input
+         ch4_first_time => ch4_inst%ch4_first_time_col , & ! Input
+         totcolch4_bef  => ch4_inst%totcolch4_bef_col  , & ! Output
+         beg_vals_set   => ch4_inst%beg_vals_set_col     & ! Output
+         )
+
+    beg_vals_set(bounds%begc:bounds%endc) = .false.
+    totcolch4_bef(bounds%begc:bounds%endc) = nan
+
+    ! beg_vals_set will remain false for inactive points. This allows us to skip the
+    ! balance checks for newly-active columns. (This relies on the fact that this routine
+    ! is called before weight updates due to dynamic landunits - so the filters tell us
+    ! what was active in the previous time step.)
+    !
+    ! In addition, beg_vals_set remains false if this is the first timestep where the ch4
+    ! model is active: we also want to skip the balance check in that case.
+
+    do fc = 1, num_soilc
+       c = filter_soilc(fc)
+       if (.not. ch4_first_time(c)) then
+          totcolch4_bef(c) = totcolch4(c)
+          beg_vals_set(c) = .true.
+       end if
+    end do
+
+    do fc = 1, num_lakec
+       c = filter_lakec(fc)
+       if (.not. ch4_first_time(c)) then
+          totcolch4_bef(c) = totcolch4(c)
+          beg_vals_set(c) = .true.
+       end if
+    end do
+
+    end associate
+
+  end subroutine ch4_init_balance_check
+
+
+  !-----------------------------------------------------------------------
+  subroutine ch4 (bounds, num_soilc, filter_soilc, num_lakec, filter_lakec, &
+       num_nolakec, filter_nolakec, num_soilp, filter_soilp, &
        atm2lnd_inst, lakestate_inst, canopystate_inst, soilstate_inst, soilhydrology_inst, &
        temperature_inst, energyflux_inst, waterstate_inst, waterflux_inst, &
        soilbiogeochem_carbonflux_inst, &
@@ -1312,6 +1670,8 @@ contains
     integer                                , intent(in)    :: filter_soilc(:)    ! column filter for soil points
     integer                                , intent(in)    :: num_lakec          ! number of column lake points in column filter
     integer                                , intent(in)    :: filter_lakec(:)    ! column filter for lake points
+    integer                                , intent(in)    :: num_nolakec        ! number of column non-lake points in column filter
+    integer                                , intent(in)    :: filter_nolakec(:)  ! column filter for non-lake points
     integer                                , intent(in)    :: num_soilp          ! number of soil points in patch filter
     integer                                , intent(in)    :: filter_soilp(:)    ! patch filter for soil points
     type(atm2lnd_type)                     , intent(inout) :: atm2lnd_inst       ! output ONLY for forcp_ch4 in ch4offline mode
@@ -1347,7 +1707,7 @@ contains
     real(r8) :: totalunsat
     real(r8) :: dfsat
     real(r8) :: rootfraction(bounds%begp:bounds%endp, 1:nlevgrnd) 
-    real(r8) :: totcolch4_bef(bounds%begc:bounds%endc) ! g C / m^2
+    real(r8) :: fsat_bef(bounds%begc:bounds%endc)      ! finundated from previous timestep
     real(r8) :: errch4                                 ! g C / m^2
     real(r8) :: zwt_actual
     real(r8) :: qflxlags                               ! Time to lag qflx_surf_lag (s)
@@ -1392,6 +1752,9 @@ contains
          zwt0                 =>   ch4_inst%zwt0_col                         , & ! Input:  [real(r8) (:)   ]  decay factor for finundated (m)                   
          f0                   =>   ch4_inst%f0_col                           , & ! Input:  [real(r8) (:)   ]  maximum gridcell fractional inundated area        
          p3                   =>   ch4_inst%p3_col                           , & ! Input:  [real(r8) (:)   ]  coefficient for qflx_surf_lag for finunated (s/mm)
+         dyn_ch4bal_adjustments => ch4_inst%dyn_ch4bal_adjustments_col       , & ! Input:  [real(r8) (:)   ]  adjustments made via dynamic column area adjustments (g C / m^2)
+         totcolch4_bef        =>   ch4_inst%totcolch4_bef_col                , & ! Input:  [real(r8) (:)   ]  total methane in soil column, start of timestep (g C / m^2)
+         beg_vals_set         =>   ch4_inst%beg_vals_set_col                 , & ! Input:  [logical  (:)   ]  whether start-of-timestep totcolch4_bef has been set for this column in this time step
 
          grnd_ch4_cond_patch  =>   ch4_inst%grnd_ch4_cond_patch              , & ! Input:  [real(r8) (:)   ]  tracer conductance for boundary layer [m/s]       
          grnd_ch4_cond_col    =>   ch4_inst%grnd_ch4_cond_col                , & ! Output: [real(r8) (:)   ]  tracer conductance for boundary layer [m/s] (p2c)      
@@ -1404,7 +1767,6 @@ contains
          ch4_surf_ebul_lake   =>   ch4_inst%ch4_surf_ebul_lake_col           , & ! Output: [real(r8) (:)   ]  CH4 ebullition to atmosphere (mol/m2/s)           
          ch4_surf_aere_sat    =>   ch4_inst%ch4_surf_aere_sat_col            , & ! Output: [real(r8) (:)   ]  Total column CH4 aerenchyma (mol/m2/s)            
          ch4_surf_aere_unsat  =>   ch4_inst%ch4_surf_aere_unsat_col          , & ! Output: [real(r8) (:)   ]  Total column CH4 aerenchyma (mol/m2/s)            
-         fsat_bef             =>   ch4_inst%fsat_bef_col                     , & ! Output: [real(r8) (:)   ]  finundated from previous timestep                 
          ch4_oxid_depth_sat   =>   ch4_inst%ch4_oxid_depth_sat_col           , & ! Output: [real(r8) (:,:) ]  CH4 consumption rate via oxidation in each soil layer (mol/m3/s) (nlevsoi)
          ch4_oxid_depth_unsat =>   ch4_inst%ch4_oxid_depth_unsat_col         , & ! Output: [real(r8) (:,:) ]  CH4 consumption rate via oxidation in each soil layer (mol/m3/s) (nlevsoi)
          ch4_oxid_depth_lake  =>   ch4_inst%ch4_oxid_depth_lake_col          , & ! Output: [real(r8) (:,:) ]  CH4 consumption rate via oxidation in each soil layer (mol/m3/s) (nlevsoi)
@@ -1420,7 +1782,8 @@ contains
          zwt_ch4_unsat        =>   ch4_inst%zwt_ch4_unsat_col                , & ! Output: [real(r8) (:)   ]  depth of water table for unsaturated fraction (m) 
          totcolch4            =>   ch4_inst%totcolch4_col                    , & ! Output: [real(r8) (:)   ]  total methane in soil column (g C / m^2)          
          finundated           =>   ch4_inst%finundated_col                   , & ! Output: [real(r8) (:)   ]  fractional inundated area in soil column (excluding dedicated wetland columns)
-         qflx_surf_lag        =>   ch4_inst%qflx_surf_lag_col                , & ! Output: [real(r8) (:)   ]  time-lagged surface runoff (mm H2O /s)            
+         ch4_first_time       =>   ch4_inst%ch4_first_time_col               , & ! Output: [logical  (:)   ]  whether this is the first time step that includes ch4
+         qflx_surf_lag        =>   ch4_inst%qflx_surf_lag_col                , & ! Output: [real(r8) (:)   ]  time-lagged surface runoff (mm H2O /s)
          finundated_lag       =>   ch4_inst%finundated_lag_col               , & ! Output: [real(r8) (:)   ]  time-lagged fractional inundated area             
          layer_sat_lag        =>   ch4_inst%layer_sat_lag_col                , & ! Output: [real(r8) (:,:) ]  Lagged saturation status of soil layer in the unsaturated zone (1 = sat)
          c_atm                =>   ch4_inst%c_atm_grc                        , & ! Output: [real(r8) (:,:) ]  CH4, O2, CO2 atmospheric conc  (mol/m3)         
@@ -1452,7 +1815,6 @@ contains
       rgasm = rgas / 1000._r8
 
       jwt(begc:endc)            = huge(1)
-      totcolch4_bef(begc:endc)  = nan
 
       ! Initialize local fluxes to zero: necessary for columns outside the filters because averaging up to gridcell will be done
       ch4_surf_flux_tot(begc:endc) = 0._r8
@@ -1480,13 +1842,12 @@ contains
          c_atm(g,3) =  forc_pco2(g) / rgasm / forc_t(g) ! [mol/m3 air]
       end do
 
-      ! Initialize CH4 balance and calculate finundated
+      ! Calculate finundated
       do fc = 1, num_soilc
          c = filter_soilc(fc)
          g = col%gridcell(c)
 
-         totcolch4_bef(c) = totcolch4(c)
-         totcolch4(c) = 0._r8
+         fsat_bef(c) = finundated(c)
 
          ! Update lagged surface runoff
 
@@ -1525,13 +1886,6 @@ contains
 
       end do
 
-      do fc = 1, num_lakec
-         c = filter_lakec(fc)
-
-         totcolch4_bef(c) = totcolch4(c)
-         totcolch4(c) = 0._r8
-      end do
-
       ! Check to see if finundated changed since the last timestep.  If it increased, then reduce conc_ch4_sat
       ! proportionally.  If it decreased, then add flux to atm.
 
@@ -1543,12 +1897,15 @@ contains
                ch4_dfsat_flux(c) = 0._r8
             end if
 
-            if (fsat_bef(c) /= spval .and. finundated(c) > fsat_bef(c)) then !Reduce conc_ch4_sat
-               dfsat = finundated(c) - fsat_bef(c)
-               conc_ch4_sat(c,j) = (fsat_bef(c)*conc_ch4_sat(c,j) + dfsat*conc_ch4_unsat(c,j)) / finundated(c)
-            else if (fsat_bef(c) /= spval .and. finundated(c) < fsat_bef(c)) then
-               ch4_dfsat_flux(c) = ch4_dfsat_flux(c) + (fsat_bef(c) - finundated(c))*(conc_ch4_sat(c,j) - conc_ch4_unsat(c,j)) * &
-                    dz(c,j) / dtime * catomw / 1000._r8 ! mol --> kg
+            if (.not. ch4_first_time(c)) then
+               if (finundated(c) > fsat_bef(c)) then !Reduce conc_ch4_sat
+                  dfsat = finundated(c) - fsat_bef(c)
+                  conc_ch4_sat(c,j) = (fsat_bef(c)*conc_ch4_sat(c,j) + dfsat*conc_ch4_unsat(c,j)) / finundated(c)
+               else if (finundated(c) < fsat_bef(c)) then
+                  ch4_dfsat_flux(c) = ch4_dfsat_flux(c) + &
+                       (fsat_bef(c) - finundated(c))*(conc_ch4_sat(c,j) - conc_ch4_unsat(c,j)) * &
+                       dz(c,j) / dtime * catomw / 1000._r8 ! mol --> kg
+               end if
             end if
          end do
       end do
@@ -1778,10 +2135,7 @@ contains
       do fc = 1, num_soilc
          c = filter_soilc(fc)
 
-         if (fsat_bef(c) /= spval) then ! not first timestep
-            ch4_surf_flux_tot(c) = ch4_surf_flux_tot(c) + ch4_dfsat_flux(c)
-         end if
-         fsat_bef(c) = finundated(c)
+         ch4_surf_flux_tot(c) = ch4_surf_flux_tot(c) + ch4_dfsat_flux(c)
       end do
 
       if (allowlakeprod) then
@@ -1838,51 +2192,62 @@ contains
 
       ! Finalize CH4 balance and check for errors
 
-      do j=1,nlevsoi
-         do fc = 1, num_soilc
-            c = filter_soilc(fc)
+      call ch4_totcolch4(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
+           ch4_inst)
 
-            totcolch4(c) = totcolch4(c) + &
-                 (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j))*dz(c,j)*catomw
-            ! mol CH4 --> g C
+      do fc = 1, num_soilc
+         c = filter_soilc(fc)
 
-            if (j == nlevsoi .and. totcolch4_bef(c) /= spval) then ! not first timestep
+         if (beg_vals_set(c)) then
+            ! Check balance
+            errch4 = totcolch4(c) - (totcolch4_bef(c) + dyn_ch4bal_adjustments(c)) &
+                 - dtime*(ch4_prod_tot(c) - ch4_oxid_tot(c) &
+                 - ch4_surf_flux_tot(c)*1000._r8) ! kg C --> g C
+            if (abs(errch4) > 1.e-7_r8) then ! g C / m^2 / timestep
+               write(iulog,*)'CH4 Conservation Error in CH4Mod driver, nstep, c, errch4 (gC /m^2.timestep)', &
+                    nstep,c,errch4
+               g = col%gridcell(c)
+               write(iulog,*)'Latdeg,Londeg,col%itype=',grc%latdeg(g),grc%londeg(g),col%itype(c)
+               write(iulog,*)'totcolch4                    = ', totcolch4(c)
+               write(iulog,*)'totcolch4_bef                = ', totcolch4_bef(c)
+               write(iulog,*)'dyn_ch4bal_adjustments       = ', dyn_ch4bal_adjustments(c)
+               write(iulog,*)'dtime*ch4_prod_tot           = ', dtime*ch4_prod_tot(c)
+               write(iulog,*)'dtime*ch4_oxid_tot           = ', dtime*ch4_oxid_tot(c)
+               write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
+                    ch4_surf_flux_tot(c)*1000._r8
+               call endrun(msg=' ERROR: Methane conservation error'//errMsg(__FILE__, __LINE__))
+            end if
+         end if
+
+      end do
+      if (allowlakeprod) then
+         do fc = 1, num_lakec
+            c = filter_lakec(fc)
+
+            if (beg_vals_set(c)) then
                ! Check balance
-               errch4 = totcolch4(c) - totcolch4_bef(c) - dtime*(ch4_prod_tot(c) - ch4_oxid_tot(c) &
+               errch4 = totcolch4(c) - (totcolch4_bef(c) + dyn_ch4bal_adjustments(c)) &
+                    - dtime*(ch4_prod_tot(c) - ch4_oxid_tot(c) &
                     - ch4_surf_flux_tot(c)*1000._r8) ! kg C --> g C
                if (abs(errch4) > 1.e-7_r8) then ! g C / m^2 / timestep
-                  write(iulog,*)'CH4 Conservation Error in CH4Mod driver, nstep, c, errch4 (gC /m^2.timestep)', &
+                  write(iulog,*)'CH4 Conservation Error in CH4Mod driver for lake column, nstep, c, errch4 (gC/m^2.timestep)', &
                        nstep,c,errch4
                   g = col%gridcell(c)
                   write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-                  call endrun(msg=' ERROR: Methane conservation error'//errMsg(__FILE__, __LINE__))
+                  write(iulog,*)'totcolch4                    = ', totcolch4(c)
+                  write(iulog,*)'totcolch4_bef                = ', totcolch4_bef(c)
+                  write(iulog,*)'dyn_ch4bal_adjustments       = ', dyn_ch4bal_adjustments(c)
+                  write(iulog,*)'dtime*ch4_prod_tot           = ', dtime*ch4_prod_tot(c)
+                  write(iulog,*)'dtime*ch4_oxid_tot           = ', dtime*ch4_oxid_tot(c)
+                  write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
+                       ch4_surf_flux_tot(c)*1000._r8
+                  call endrun(msg=' ERROR: Methane conservation error, allowlakeprod'//&
+                       errMsg(__FILE__, __LINE__))
                end if
             end if
 
          end do
-         if (allowlakeprod) then
-            do fc = 1, num_lakec
-               c = filter_lakec(fc)
-
-               totcolch4(c) = totcolch4(c) + conc_ch4_sat(c,j)*dz(c,j)*catomw ! mol CH4 --> g C
-
-               if (j == nlevsoi .and. totcolch4_bef(c) /= spval) then ! not first timestep
-                  ! Check balance
-                  errch4 = totcolch4(c) - totcolch4_bef(c) - dtime*(ch4_prod_tot(c) - ch4_oxid_tot(c) &
-                       - ch4_surf_flux_tot(c)*1000._r8) ! kg C --> g C
-                  if (abs(errch4) > 1.e-7_r8) then ! g C / m^2 / timestep
-                     write(iulog,*)'CH4 Conservation Error in CH4Mod driver for lake column, nstep, c, errch4 (gC/m^2.timestep)', &
-                          nstep,c,errch4
-                     g = col%gridcell(c)
-                     write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-                     call endrun(msg=' ERROR: Methane conservation error, allowlakeprod'//&
-                          errMsg(__FILE__, __LINE__))
-                  end if
-               end if
-
-            end do
-         end if
-      end do
+      end if
 
       ! Now average up to gridcell for fluxes
       call c2g( bounds, &
@@ -1896,6 +2261,8 @@ contains
       call c2g( bounds, &
            nem_col(begc:endc), nem_grc(begg:endg),               &
            c2l_scale_type= 'unity', l2g_scale_type='unity' )
+
+      ch4_first_time(begc:endc) = .false.
 
     end associate
 
@@ -3680,7 +4047,6 @@ contains
     integer :: fp        ! soil patch filter indices
     real(r8):: dt        ! time step (seconds)
     real(r8):: secsperyear
-    logical :: newrun
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
@@ -3705,32 +4071,9 @@ contains
       dt = real(get_step_size(), r8)
       secsperyear = real( get_days_per_year() * secspday, r8)
 
-      newrun = .false.
-
-      ! column loop
       do fc = 1,num_methc
          c = filter_methc(fc)
-
-         if (annsum_counter(c) == spval) then
-            ! These variables are now in restart files for completeness, but might not be in inicFile and are not.
-            ! set for arbinit.
-            newrun = .true.
-            annsum_counter(c)    = 0._r8
-            tempavg_somhr(c)     = 0._r8
-            tempavg_finrw(c)     = 0._r8
-         end if
-
          annsum_counter(c) = annsum_counter(c) + dt
-      end do
-
-      ! patch loop
-      do fp = 1,num_methp
-         p = filter_methp(fp)
-
-         if (newrun .or. tempavg_agnpp(p) == spval) then ! Extra check needed because for back-compatibility
-            tempavg_agnpp(p) = 0._r8
-            tempavg_bgnpp(p) = 0._r8
-         end if
       end do
 
       do fc = 1,num_methc
@@ -3780,6 +4123,72 @@ contains
     end associate
 
   end subroutine ch4_annualupdate
+
+  !-----------------------------------------------------------------------
+  subroutine ch4_totcolch4(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
+       ch4_inst)
+    !
+    ! !DESCRIPTION:
+    ! Computes and sets ch4_inst%totcolch4_col
+    !
+    ! !USES:
+    use ch4varcon  , only : allowlakeprod
+    !
+    ! !ARGUMENTS:
+    type(bounds_type) , intent(in)    :: bounds   
+    integer           , intent(in)    :: num_nolakec       ! number of column non-lake points in column filter
+    integer           , intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
+    integer           , intent(in)    :: num_lakec       ! number of column lake points in column filter
+    integer           , intent(in)    :: filter_lakec(:) ! column filter for lake points
+    type(ch4_type)    , intent(inout) :: ch4_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fc, c
+    integer :: j
+
+    character(len=*), parameter       :: subname = 'ch4_totcolch4'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         dz             =>   col%dz                      , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       
+         finundated     =>   ch4_inst%finundated_col     , & ! Input: [real(r8) (:)   ]  fractional inundated area in soil column (excluding dedicated wetland columns)
+         conc_ch4_sat   =>   ch4_inst%conc_ch4_sat_col   , & ! Input: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
+         conc_ch4_unsat =>   ch4_inst%conc_ch4_unsat_col , & ! Input: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
+
+         totcolch4      =>   ch4_inst%totcolch4_col        & ! Output: [real(r8) (:)   ]  total methane in soil column (g C / m^2)          
+         )
+
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+       totcolch4(c) = 0._r8
+    end do
+
+    do fc = 1, num_lakec
+       c = filter_lakec(fc)
+       totcolch4(c) = 0._r8
+    end do
+
+    do j = 1, nlevsoi
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+          totcolch4(c) = totcolch4(c) + &
+               (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
+               dz(c,j)*catomw
+          ! mol CH4 --> g C
+       end do
+
+       if (allowlakeprod) then
+          do fc = 1, num_lakec
+             c = filter_lakec(fc)
+             totcolch4(c) = totcolch4(c) + conc_ch4_sat(c,j)*dz(c,j)*catomw ! mol CH4 --> g C
+          end do
+       end if
+    end do
+
+    end associate
+
+  end subroutine ch4_totcolch4
+
 
 end module ch4Mod
 

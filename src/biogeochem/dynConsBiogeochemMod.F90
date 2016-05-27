@@ -10,7 +10,7 @@ module dynConsBiogeochemMod
   use shr_log_mod                  , only : errMsg => shr_log_errMsg
   use decompMod                    , only : bounds_type
   use abortutils                   , only : endrun
-  use clm_varctl                   , only : iulog, use_c13, use_c14
+  use clm_varctl                   , only : iulog, use_c13, use_c14, use_lch4
   use pftconMod                    , only : pftcon
   use CanopyStateType              , only : canopystate_type
   use PhotosynthesisMod            , only : photosyns_type
@@ -21,6 +21,9 @@ module dynConsBiogeochemMod
   use CNVegNitrogenFluxType        , only : cnveg_nitrogenflux_type
   use SoilBiogeochemStateType      , only : soilBiogeochem_state_type
   use SoilBiogeochemCarbonFluxType , only : soilBiogeochem_carbonflux_type
+  use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
+  use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+  use ch4Mod                       , only : ch4_type
   use LandunitType                 , only : lun                
   use ColumnType                   , only : col                
   use PatchType                    , only : patch                
@@ -30,12 +33,13 @@ module dynConsBiogeochemMod
   private
   !
   public :: dyn_cnbal_patch
+  public :: dyn_cnbal_col
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine dyn_cnbal_patch(bounds, prior_weights, first_step_cold_start,                           &
+  subroutine dyn_cnbal_patch(bounds, prior_weights, &
        canopystate_inst, photosyns_inst, cnveg_state_inst,                                &
        cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst,    &
        cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,       &
@@ -57,7 +61,6 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds        
     type(prior_weights_type)             , intent(in)    :: prior_weights ! weights prior to the subgrid weight updates
-    logical                              , intent(in)    :: first_step_cold_start ! true if this is the first step since cold start
     type(canopystate_type)               , intent(inout) :: canopystate_inst
     type(photosyns_type)                 , intent(inout) :: photosyns_inst
     type(cnveg_state_type)               , intent(inout) :: cnveg_state_inst
@@ -314,16 +317,7 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           
           ! calculate the change in weight for the timestep
-          !
-          ! If this is the first time step since cold start, then we set dwt to 0 to avoid
-          ! doing any adjustments on the first time step after cold start. This is because
-          ! we expect big transients in the first time step, since transient subgrid
-          ! weights aren't updated in initialization.
-          if (first_step_cold_start) then
-             dwt = 0._r8
-          else
-             dwt = patch%wtcol(p)-prior_weights%pwtcol(p)
-          end if
+          dwt = patch%wtcol(p)-prior_weights%pwtcol(p)
           CNveg_state_inst%lfpftd_patch(p) = -dwt
 
           ! Patches for which weight increases on this timestep
@@ -2197,6 +2191,10 @@ contains
 
              ! These magic constants should be replaced with: nbrdlf_evr_trp_tree and nbrdlf_dcd_trp_tree
              if(patch%itype(p)==4.or.patch%itype(p)==6)then
+                ! TODO(wjs, 2016-02-03) It seems like lf_conv_cflux_col belongs in
+                ! cnveg_carbonflux rather than soilbiogeochem_carbonflux, both
+                ! conceptually and because this is the only routine that uses it (and
+                ! nothing else from soilbiogeochem_carbonflux is used here).
                 soilbiogeochem_carbonflux_inst%lf_conv_cflux_col(c) = &
                      soilbiogeochem_carbonflux_inst%lf_conv_cflux_col(c) - conv_cflux(p)/dt
              end if
@@ -2265,5 +2263,70 @@ contains
     endif
     
    end subroutine dyn_cnbal_patch
+
+   !-----------------------------------------------------------------------
+   subroutine dyn_cnbal_col(bounds, column_state_updater, &
+        cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
+        cnveg_nitrogenstate_inst, &
+        soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+        c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, &
+        ch4_inst)
+     !
+     ! !DESCRIPTION:
+     ! Modify column-level state variables to maintain carbon and nitrogen balance with
+     ! dynamic column weights.
+     !
+     ! !USES:
+     use dynColumnStateUpdaterMod, only : column_state_updater_type
+     !
+     ! !ARGUMENTS:
+     type(bounds_type)                       , intent(in)    :: bounds        
+     type(column_state_updater_type)         , intent(in)    :: column_state_updater
+     type(cnveg_carbonstate_type)            , intent(inout) :: cnveg_carbonstate_inst
+     type(cnveg_carbonstate_type)            , intent(inout) :: c13_cnveg_carbonstate_inst
+     type(cnveg_carbonstate_type)            , intent(inout) :: c14_cnveg_carbonstate_inst
+     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
+     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+     type(ch4_type)                          , intent(inout) :: ch4_inst
+     !
+     ! !LOCAL VARIABLES:
+
+     character(len=*), parameter :: subname = 'dyn_cnbal_col'
+     !-----------------------------------------------------------------------
+
+     call cnveg_carbonstate_inst%DynamicColumnAdjustments(bounds, column_state_updater)
+     if (use_c13) then
+        call c13_cnveg_carbonstate_inst%DynamicColumnAdjustments(bounds, &
+             column_state_updater)
+     end if
+     if (use_c14) then
+        call c14_cnveg_carbonstate_inst%DynamicColumnAdjustments(bounds, &
+             column_state_updater)
+     end if
+
+     call cnveg_nitrogenstate_inst%DynamicColumnAdjustments(bounds, column_state_updater)
+
+     call soilbiogeochem_carbonstate_inst%DynamicColumnAdjustments(bounds, &
+          column_state_updater)
+     if (use_c13) then
+        call c13_soilbiogeochem_carbonstate_inst%DynamicColumnAdjustments(bounds, &
+             column_state_updater)
+     end if
+     if (use_c14) then
+        call c14_soilbiogeochem_carbonstate_inst%DynamicColumnAdjustments(bounds, &
+             column_state_updater)
+     end if
+     
+     call soilbiogeochem_nitrogenstate_inst%DynamicColumnAdjustments(bounds, column_state_updater)
+
+     if (use_lch4) then
+        call ch4_inst%DynamicColumnAdjustments(bounds, column_state_updater)
+     end if
+
+   end subroutine dyn_cnbal_col
+
 
 end module dynConsBiogeochemMod

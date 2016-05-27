@@ -137,7 +137,7 @@ contains
        this%glc2lnd_inst%topo_grc(:,:) = glc_topo_default
     end if
 
-    filter_icemecc = col_filter_from_ltype(bounds, istice_mec, include_inactive = .false.)
+    filter_icemecc = col_filter_from_ltypes(bounds, [istice_mec], include_inactive = .false.)
 
     if (present(atm_topo_grc)) then
        atm_topo = atm_topo_grc

@@ -45,8 +45,11 @@ module filterColMod
   ! Create a filter from a column-level logical array
   public :: col_filter_from_logical_array
 
-  ! Create a filter that contains a single landunit of interest
-  public :: col_filter_from_ltype
+  ! Create a filter that contains one or more landunit type(s) of interest
+  public :: col_filter_from_ltypes
+
+  ! Create a filter from a landunit-level logical array
+  public :: col_filter_from_lunflags
 
   ! Create a filter from a gridcell-level logical array and an array of landunit type(s)
   ! of interest
@@ -150,18 +153,18 @@ contains
   end function col_filter_from_logical_array
 
   !-----------------------------------------------------------------------
-  function col_filter_from_ltype(bounds, ltype, include_inactive) &
+  function col_filter_from_ltypes(bounds, ltypes, include_inactive) &
        result(filter)
     !
     ! !DESCRIPTION:
-    ! Create a column-level filter that includes a single landunit type of interest
+    ! Create a column-level filter that includes one or more landunit type(s) of interest
     !
     ! !USES:
     !
     ! !ARGUMENTS:
     type(filter_col_type) :: filter  ! function result
     type(bounds_type), intent(in) :: bounds
-    integer, intent(in) :: ltype  ! landunit type of interest
+    integer, intent(in) :: ltypes(:)  ! landunit type(s) of interest
     logical, intent(in) :: include_inactive ! whether inactive points should be included in the filter
     !
     ! !LOCAL VARIABLES:
@@ -174,16 +177,54 @@ contains
     filter = col_filter_empty(bounds)
 
     do c = bounds%begc, bounds%endc
-       l = col%landunit(c)
        if (include_based_on_active(c, include_inactive)) then
-          if (lun%itype(l) == ltype) then
+          l = col%landunit(c)
+          if (any(ltypes(:) == lun%itype(l))) then
              filter%num = filter%num + 1
              filter%indices(filter%num) = c
           end if
        end if
     end do
 
-  end function col_filter_from_ltype
+  end function col_filter_from_ltypes
+
+  !-----------------------------------------------------------------------
+  function col_filter_from_lunflags(bounds, lunflags, include_inactive) &
+       result(filter)
+    !
+    ! !DESCRIPTION:
+    ! Create a column-level filter from a landunit-level logical array.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(filter_col_type) :: filter  ! function result
+    type(bounds_type), intent(in) :: bounds
+    logical, intent(in) :: lunflags(bounds%begl:)  ! landunit-level logical array
+    logical, intent(in) :: include_inactive ! whether inactive points should be included in the filter
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c
+    integer :: l
+
+    character(len=*), parameter :: subname = 'col_filter_from_lunflags'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(lunflags) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+
+    filter = col_filter_empty(bounds)
+
+    do c = bounds%begc, bounds%endc
+       if (include_based_on_active(c, include_inactive)) then
+          l = col%landunit(c)
+          if (lunflags(l)) then
+             filter%num = filter%num + 1
+             filter%indices(filter%num) = c
+          end if
+       end if
+    end do
+
+  end function col_filter_from_lunflags
 
 
   !-----------------------------------------------------------------------

@@ -53,7 +53,7 @@ module clm_driver
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
   use ActiveLayerMod         , only : alt_calc
-  use ch4Mod                 , only : ch4
+  use ch4Mod                 , only : ch4, ch4_init_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
   use VOCEmissionMod         , only : VOCEmission
   use EDMainMod              , only : ed_driver
@@ -232,6 +232,11 @@ contains
           call bgc_vegetation_inst%InitEachTimeStep(bounds_clump, &
                filter(nc)%num_soilc, filter(nc)%soilc)
 
+          call ch4_init_balance_check(bounds_clump, &
+               filter(nc)%num_soilc, filter(nc)%soilc, &
+               filter(nc)%num_lakec, filter(nc)%lakec, &
+               ch4_inst)
+
           call soilbiogeochem_carbonflux_inst%ZeroDWT(bounds_clump)
           if (use_c13) then
              call c13_soilbiogeochem_carbonflux_inst%ZeroDWT(bounds_clump)
@@ -252,11 +257,14 @@ contains
     ! ============================================================================
 
     call t_startf('dyn_subgrid')
-    call dynSubgrid_driver(bounds_proc,                                      &
-         urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,           &
-         waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,             &
-         canopystate_inst, photosyns_inst, glc2lnd_inst, bgc_vegetation_inst,          &
-         soilbiogeochem_state_inst, soilbiogeochem_carbonflux_inst, glc_behavior)
+    call dynSubgrid_driver(bounds_proc,                                               &
+         urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,        &
+         waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,          &
+         canopystate_inst, photosyns_inst, glc2lnd_inst, bgc_vegetation_inst,         &
+         soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst,                  &
+         c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,    &
+         soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
+         glc_behavior)
     call t_stopf('dyn_subgrid')
 
     ! ============================================================================
@@ -559,7 +567,8 @@ contains
        ! ============================================================================
 
        call t_startf('patch2col')
-       call clm_drv_patch2col(bounds_clump, filter(nc)%num_nolakec, filter(nc)%nolakec, &
+       call clm_drv_patch2col(bounds_clump, &
+            filter(nc)%num_allc, filter(nc)%allc, filter(nc)%num_nolakec, filter(nc)%nolakec, &
             waterstate_inst, energyflux_inst, waterflux_inst)
        call t_stopf('patch2col')
 
@@ -736,6 +745,7 @@ contains
 
           call t_startf('EcosysDynPostDrainage')     
           call bgc_vegetation_inst%EcosystemDynamicsPostDrainage(bounds_clump, &
+               filter(nc)%num_allc, filter(nc)%allc, &
                filter(nc)%num_soilc, filter(nc)%soilc, &
                filter(nc)%num_soilp, filter(nc)%soilp, &
                doalb, crop_inst, &
@@ -794,6 +804,7 @@ contains
           call ch4 (bounds_clump,                                                                  &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
                filter(nc)%num_lakec, filter(nc)%lakec,                                             &
+               filter(nc)%num_nolakec, filter(nc)%nolakec,                                         &
                filter(nc)%num_soilp, filter(nc)%soilp,                                             &
                atm2lnd_inst, lakestate_inst, canopystate_inst, soilstate_inst, soilhydrology_inst, &
                temperature_inst, energyflux_inst, waterstate_inst, waterflux_inst,                 &
@@ -1165,7 +1176,8 @@ contains
   end subroutine clm_drv_init
   
   !-----------------------------------------------------------------------
-  subroutine clm_drv_patch2col (bounds, num_nolakec, filter_nolakec, &
+  subroutine clm_drv_patch2col (bounds, &
+       num_allc, filter_allc, num_nolakec, filter_nolakec, &
        waterstate_inst, energyflux_inst, waterflux_inst)
     !
     ! !DESCRIPTION:
@@ -1182,6 +1194,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds  
+    integer               , intent(in)    :: num_allc          ! number of column points in allc filter
+    integer               , intent(in)    :: filter_allc(:)    ! column filter for all active points
     integer               , intent(in)    :: num_nolakec       ! number of column non-lake points in column filter
     integer               , intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
     type(waterstate_type) , intent(inout) :: waterstate_inst
@@ -1190,20 +1204,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: c,fc              ! indices
-    integer :: num_allc          ! number of active column points
-    integer :: filter_allc(bounds%endp-bounds%begp+1)    ! filter for all active column points
     ! -----------------------------------------------------------------
-
-    ! Set up a filter for all active column points
-
-    fc = 0
-    do c = bounds%begc,bounds%endc
-       if (col%active(c)) then
-          fc = fc + 1
-          filter_allc(fc) = c
-       end if
-    end do
-    num_allc = fc
 
     ! Note: lake points are excluded from many of the following
     ! averages. For some fields, this is because the field doesn't

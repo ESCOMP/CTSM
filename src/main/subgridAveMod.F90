@@ -1310,6 +1310,10 @@ contains
         scale_lookup(isturb_MIN:isturb_MAX) = spval
      else if (l2g_scale_type == 'lake') then
         scale_lookup(istdlak) = 1.0_r8
+     else if (l2g_scale_type == 'veg_plus_lake') then
+        scale_lookup(istsoil) = 1.0_r8
+        scale_lookup(istcrop) = 1.0_r8
+        scale_lookup(istdlak) = 1.0_r8
      else
         write(iulog,*)'scale_l2g_lookup_array error: scale type ',l2g_scale_type,' not supported'
         call endrun(msg=errMsg(__FILE__, __LINE__))

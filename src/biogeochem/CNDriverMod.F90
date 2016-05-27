@@ -851,7 +851,8 @@ contains
   end subroutine CNDriverLeaching
 
   !-----------------------------------------------------------------------
-  subroutine CNDriverSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine CNDriverSummary(bounds, num_allc, filter_allc, &
+       num_soilc, filter_soilc, num_soilp, filter_soilp, &
        cnveg_state_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
        c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
        c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
@@ -872,6 +873,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
+    integer                                 , intent(in)    :: num_allc          ! number of columns in allc filter
+    integer                                 , intent(in)    :: filter_allc(:)    ! filter for all active columns
     integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
@@ -930,14 +933,14 @@ contains
     ! soilbiogeochem carbon/nitrogen state summary
     ! ----------------------------------------------
 
-    call soilbiogeochem_carbonstate_inst%summary(bounds, num_soilc, filter_soilc)
+    call soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc)
     if ( use_c13 ) then
-       call c13_soilbiogeochem_carbonstate_inst%summary(bounds, num_soilc, filter_soilc)
+       call c13_soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc)
     end if
     if ( use_c14 ) then
-       call c14_soilbiogeochem_carbonstate_inst%summary(bounds, num_soilc, filter_soilc)
+       call c14_soilbiogeochem_carbonstate_inst%summary(bounds, num_allc, filter_allc)
     end if
-    call soilbiogeochem_nitrogenstate_inst%summary(bounds, num_soilc, filter_soilc)
+    call soilbiogeochem_nitrogenstate_inst%summary(bounds, num_allc, filter_allc)
 
     ! ----------------------------------------------
     ! soilbiogeochem carbon/nitrogen flux summary
@@ -956,29 +959,36 @@ contains
     ! cnveg carbon/nitrogen state summary
     ! ----------------------------------------------
 
-    call cnveg_carbonstate_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+    call cnveg_carbonstate_inst%Summary(bounds, num_allc, filter_allc, &
+         num_soilc, filter_soilc, num_soilp, filter_soilp, &
          soilbiogeochem_cwdc_col=soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
          soilbiogeochem_totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
          soilbiogeochem_totsomc_col=soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-         soilbiogeochem_ctrunc_col=soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+         soilbiogeochem_ctrunc_col=soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), &
+         soilbiogeochem_dyn_cbal_adjustments_col=soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments_col(begc:endc))
 
     if ( use_c13 ) then
-       call c13_cnveg_carbonstate_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       call c13_cnveg_carbonstate_inst%Summary(bounds, num_allc, filter_allc, &
+            num_soilc, filter_soilc, num_soilp, filter_soilp, &
             soilbiogeochem_cwdc_col=c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
             soilbiogeochem_totlitc_col=c13_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
             soilbiogeochem_totsomc_col=c13_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-            soilbiogeochem_ctrunc_col=c13_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+            soilbiogeochem_ctrunc_col=c13_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), &
+            soilbiogeochem_dyn_cbal_adjustments_col=c13_soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments_col(begc:endc))
     end if
 
     if ( use_c14 ) then
-       call c14_cnveg_carbonstate_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       call c14_cnveg_carbonstate_inst%Summary(bounds, num_allc, filter_allc, &
+            num_soilc, filter_soilc, num_soilp, filter_soilp, &
             soilbiogeochem_cwdc_col=c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
             soilbiogeochem_totlitc_col=c14_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
             soilbiogeochem_totsomc_col=c14_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-            soilbiogeochem_ctrunc_col=c14_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
+            soilbiogeochem_ctrunc_col=c14_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), &
+            soilbiogeochem_dyn_cbal_adjustments_col=c14_soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments_col(begc:endc))
     end if
 
-    call cnveg_nitrogenstate_inst%Summary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+    call cnveg_nitrogenstate_inst%Summary(bounds, num_allc, filter_allc, &
+         num_soilc, filter_soilc, num_soilp, filter_soilp, &
          soilbiogeochem_nitrogenstate_inst)
 
     ! ----------------------------------------------

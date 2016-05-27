@@ -1,0 +1,30 @@
+! Use spun-up initial conditions so that it's easier to confirm that dynamic landunits
+! are working correctly. Once we have out-of-the-box initial conditions for this test,
+! these lines can be removed
+finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.IG1850CRUCLM50BGC.0481-01-01.1.9x2.5_g1v6_gl5_simyr1850_c160127.nc'
+use_init_interp = .true.
+
+! Add 1-d output for all variables that are conserved with dynamic landunits
+!
+! Most of these are already on the primary history tape; for those that aren't, we add
+! them to the primary history tape, too
+!
+! Variables in CNVegCarbonStateType
+hist_fincl2 += 'SEEDC'
+! Variables in CNVegNitrogenStateType
+hist_fincl2 += 'SEEDN'
+! Variables in SoilBiogeochemCarbonStateType (note that TOTSOMC is taken to be a
+! representative sample of the conserved variable decomp_cpools_vr_col)
+hist_fincl2 += 'TOTSOMC', 'COL_CTRUNC'
+! Variables in SoilBiogeochemNitrogenStateType (note that TOTSOMN is taken to be
+! a representative sample of the conserved variable decomp_npools_vr_col)
+hist_fincl2 += 'TOTSOMN', 'COL_NTRUNC', 'SMINN', 'SMIN_NO3', 'SMIN_NH4'
+! Variables in ch4Mod
+hist_wrtch4diag = .true.
+hist_fincl1 += 'CONC_CH4_SAT', 'CONC_CH4_UNSAT'
+hist_fincl2 += 'FINUNDATED', 'FINUNDATED_LAG', 'LAYER_SAT_LAG',
+               'CONC_CH4_SAT', 'CONC_CH4_UNSAT',
+               'CONC_O2_SAT', 'CONC_O2_UNSAT',
+               'TOTCOLCH4'
+
+

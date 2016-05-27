@@ -166,43 +166,50 @@ contains
   end subroutine logicalArray_multiple_points
 
   ! ------------------------------------------------------------------------
-  ! Tests of col_filter_from_ltype
+  ! Tests of col_filter_from_ltypes
   ! ------------------------------------------------------------------------
 
   @Test
-  subroutine ltype_includes_point(this)
+  subroutine ltypes_multipleTargetLandunits(this)
+    ! Tests col_filter_from_ltypes with multiple target landunits and multiple landunits
+    ! present on a gridcell - some of which are in the list of target landunits and some
+    ! of which are not.
     class(TestFilterCol), intent(inout) :: this
     type(filter_col_type) :: filter
     type(filter_col_type) :: expected
+    integer, allocatable :: expected_indices(:)
+    integer, parameter :: target_ltype1 = 2
+    integer, parameter :: target_ltype2 = 3
 
-    call setup_single_veg_patch(pft_type = 1)
-    expected = col_filter_from_index_array(bounds, [bounds%begc])
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call my_add_landunit(target_ltype1 - 1)
+    call my_add_landunit(target_ltype1)
+    expected_indices = [ci - 1, ci]
+    call my_add_landunit(target_ltype2)
+    expected_indices = [expected_indices, ci - 1, ci]
+    call my_add_landunit(target_ltype2 + 1)
+    call unittest_subgrid_setup_end()
+    expected = col_filter_from_index_array(bounds, expected_indices)
 
-    filter = col_filter_from_ltype(bounds = bounds, &
-         ltype = istsoil, &
+    filter = col_filter_from_ltypes(bounds = bounds, &
+         ltypes = [target_ltype1, target_ltype2], &
          include_inactive = .false.)
 
     @assertTrue(filter == expected)
-  end subroutine ltype_includes_point
+
+  contains
+    subroutine my_add_landunit(ltype)
+      integer, intent(in) :: ltype
+
+      call create_landunit_ncols(ltype = ltype, lweight = 0.25_r8, &
+           ctypes = [1, 2], cweights = [0.5_r8, 0.5_r8])
+    end subroutine my_add_landunit
+
+  end subroutine ltypes_multipleTargetLandunits
 
   @Test
-  subroutine ltype_excludes_point(this)
-    class(TestFilterCol), intent(inout) :: this
-    type(filter_col_type) :: filter
-    type(filter_col_type) :: expected
-
-    call setup_single_veg_patch(pft_type = 1)
-    expected = col_filter_empty(bounds)
-
-    filter = col_filter_from_ltype(bounds = bounds, &
-         ltype = istsoil + 1, &
-         include_inactive = .false.)
-
-    @assertTrue(filter == expected)
-  end subroutine ltype_excludes_point
-
-  @Test
-  subroutine ltype_excludes_inactive(this)
+  subroutine ltypes_excludes_inactive(this)
     class(TestFilterCol), intent(inout) :: this
     type(filter_col_type) :: filter
     type(filter_col_type) :: expected
@@ -211,12 +218,64 @@ contains
     col%active(bounds%begc) = .false.
     expected = col_filter_empty(bounds)
 
-    filter = col_filter_from_ltype(bounds = bounds, &
-         ltype = istsoil, &
+    filter = col_filter_from_ltypes(bounds = bounds, &
+         ltypes = [istsoil], &
          include_inactive = .false.)
 
     @assertTrue(filter == expected)
-  end subroutine ltype_excludes_inactive
+  end subroutine ltypes_excludes_inactive
+
+  ! ------------------------------------------------------------------------
+  ! Tests of col_filter_from_lunflags
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine lunflags_multipleLandunits(this)
+    ! Multiple landunits, with two columns on each: some landunits have flag true, some
+    ! have flag false
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+    integer, allocatable :: expected_indices(:)
+    logical :: lunflags(3)
+
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call create_landunit_ncols(ltype = 1, lweight = 0.25_r8, &
+         ctypes = [1, 2], cweights = [0.5_8, 0.5_r8])
+    call create_landunit_ncols(ltype = 2, lweight = 0.25_r8, &
+         ctypes = [1, 2], cweights = [0.5_8, 0.5_r8])
+    call create_landunit_ncols(ltype = 3, lweight = 0.5_r8, &
+         ctypes = [1, 2], cweights = [0.5_8, 0.5_r8])
+    call unittest_subgrid_setup_end()
+
+    lunflags = [.false., .true., .false.]
+    expected_indices = [begc + 2, begc + 3]
+    expected = col_filter_from_index_array(bounds, expected_indices)
+
+    filter = col_filter_from_lunflags(bounds = bounds, &
+         lunflags = lunflags, &
+         include_inactive = .false.)
+
+    @assertTrue(filter == expected)
+  end subroutine lunflags_multipleLandunits
+
+  @Test
+  subroutine lunflags_excludes_inactive(this)
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+
+    call setup_single_veg_patch(pft_type = 1)
+    col%active(bounds%begc) = .false.
+    expected = col_filter_empty(bounds)
+
+    filter = col_filter_from_lunflags(bounds = bounds, &
+         lunflags = [.true.], &
+         include_inactive = .false.)
+
+    @assertTrue(filter == expected)
+  end subroutine lunflags_excludes_inactive
 
   ! ------------------------------------------------------------------------
   ! Tests of col_filter_from_grcflags_ltypes

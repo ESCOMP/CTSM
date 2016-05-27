@@ -1,0 +1,4 @@
+enable_frac_overrides = .true.
+increase_frac = 0.25
+decrease_override_delay = 8
+decrease_frac = 0.25

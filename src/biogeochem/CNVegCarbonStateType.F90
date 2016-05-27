@@ -64,6 +64,8 @@ module CNVegCarbonStateType
 
      ! pools for dynamic landcover
      real(r8), pointer :: seedc_col                (:) ! (gC/m2) column-level pool for seeding new Patches
+     real(r8), pointer :: dyn_cbal_adjustments_col (:) ! (gC/m2) adjustments to each column made in this timestep via dynamic column area adjustments (note: this variable only makes sense at the column-level: it is meaningless if averaged to the gridcell-level)
+     real(r8), pointer :: dyn_cbal_adjustments_veg_plus_soil_col(:) ! (gC/m2) sum of veg's dyn_cbal_adjustments_col and soil's dyn_cbal_adjustments_col
 
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: dispvegc_patch           (:) ! (gC/m2) displayed veg carbon, excluding storage and cpool
@@ -72,7 +74,8 @@ module CNVegCarbonStateType
      real(r8), pointer :: totvegc_col              (:) ! (gC/m2) total vegetation carbon, excluding cpool averaged to column (p2c)
 
      ! Total C pools       
-     real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool 
+     real(r8), pointer :: totc_p2c_col             (:) ! (gC/m2) totc_patch averaged to col
+     real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool
      real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
 
    contains
@@ -82,11 +85,16 @@ module CNVegCarbonStateType
      procedure , public  :: ZeroDWT
      procedure , public  :: Restart
      procedure , public  :: Summary => Summary_carbonstate
+     procedure , public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
 
   end type cnveg_carbonstate_type
+
+  ! !PRIVATE DATA:
+  character(len=*), parameter :: filename = &
+       __FILE__
 
   !------------------------------------------------------------------------
 
@@ -162,6 +170,8 @@ contains
     allocate(this%woodc_patch              (begp:endp)) ; this%woodc_patch              (:) = nan     
 
     allocate(this%seedc_col                (begc:endc)) ; this%seedc_col                (:) = nan
+    allocate(this%dyn_cbal_adjustments_col (begc:endc)) ; this%dyn_cbal_adjustments_col (:) = nan
+    allocate(this%dyn_cbal_adjustments_veg_plus_soil_col(begc:endc)); this%dyn_cbal_adjustments_veg_plus_soil_col(:) = nan
     allocate(this%rootc_col                (begc:endc)) ; this%rootc_col                (:) = nan
     allocate(this%leafc_col                (begc:endc)) ; this%leafc_col                (:) = nan
     allocate(this%deadstemc_col            (begc:endc)) ; this%deadstemc_col            (:) = nan
@@ -171,6 +181,7 @@ contains
     allocate(this%totvegc_patch            (begp:endp)) ; this%totvegc_patch            (:) = nan
     allocate(this%totvegc_col              (begc:endc)) ; this%totvegc_col              (:) = nan
 
+    allocate(this%totc_p2c_col             (begc:endc)) ; this%totc_p2c_col             (:) = nan
     allocate(this%totc_col                 (begc:endc)) ; this%totc_col                 (:) = nan
     allocate(this%totecosysc_col           (begc:endc)) ; this%totecosysc_col           (:) = nan
 
@@ -390,6 +401,20 @@ contains
             avgflag='A', long_name='total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
 
+       this%dyn_cbal_adjustments_col(begc:endc) = spval
+       call hist_addfld1d (fname='DYN_COL_VEG_ADJUSTMENTS_C', units='gC/m^2', &
+            avgflag='SUM', &
+            long_name='Adjustments in vegetation carbon due to dynamic column areas; &
+            &only makes sense at the column level: should not be averaged to gridcell', &
+            ptr_col=this%dyn_cbal_adjustments_col, default='inactive')
+
+       this%dyn_cbal_adjustments_veg_plus_soil_col(begc:endc) = spval
+       call hist_addfld1d (fname='DYN_COL_VEG_PLUS_SOIL_ADJUSTMENTS_C', units='gC/m^2', &
+            avgflag='SUM', &
+            long_name='Adjustments in vegetation + soil carbon due to dynamic column areas; &
+            &only makes sense at the column level: should not be averaged to gridcell', &
+            ptr_col=this%dyn_cbal_adjustments_veg_plus_soil_col, default='inactive')
+
     end if
 
     !-------------------------------
@@ -552,6 +577,20 @@ contains
        call hist_addfld1d (fname='C13_TOTECOSYSC', units='gC13/m^2', &
             avgflag='A', long_name='C13 total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
+
+       this%dyn_cbal_adjustments_col(begc:endc) = spval
+       call hist_addfld1d (fname='C13_DYN_COL_VEG_ADJUSTMENTS_C', units='gC13/m^2', &
+            avgflag='SUM', &
+            long_name='C13 adjustments in vegetation carbon due to dynamic column areas; &
+            &only makes sense at the column level: should not be averaged to gridcell', &
+            ptr_col=this%dyn_cbal_adjustments_col, default='inactive')
+
+       this%dyn_cbal_adjustments_veg_plus_soil_col(begc:endc) = spval
+       call hist_addfld1d (fname='C13_DYN_COL_VEG_PLUS_SOIL_ADJUSTMENTS_C', units='gC13/m^2', &
+            avgflag='SUM', &
+            long_name='C13 adjustments in vegetation + soil carbon due to dynamic column areas; &
+            &only makes sense at the column level: should not be averaged to gridcell', &
+            ptr_col=this%dyn_cbal_adjustments_veg_plus_soil_col, default='inactive')
 
     endif
 
@@ -716,6 +755,20 @@ contains
             avgflag='A', long_name='C14 total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
 
+       this%dyn_cbal_adjustments_col(begc:endc) = spval
+       call hist_addfld1d (fname='C14_DYN_COL_VEG_ADJUSTMENTS_C', units='gC14/m^2', &
+            avgflag='SUM', &
+            long_name='C14 adjustments in vegetation carbon due to dynamic column areas; &
+            &only makes sense at the column level: should not be averaged to gridcell', &
+            ptr_col=this%dyn_cbal_adjustments_col, default='inactive')
+
+       this%dyn_cbal_adjustments_veg_plus_soil_col(begc:endc) = spval
+       call hist_addfld1d (fname='C14_DYN_COL_VEG_PLUS_SOIL_ADJUSTMENTS_C', units='gC14/m^2', &
+            avgflag='SUM', &
+            long_name='C14 adjustments in vegetation + soil carbon due to dynamic column areas; &
+            &only makes sense at the column level: should not be averaged to gridcell', &
+            ptr_col=this%dyn_cbal_adjustments_veg_plus_soil_col, default='inactive')
+
     endif
 
   end subroutine InitHistory
@@ -750,7 +803,7 @@ contains
     if (carbon_type == 'c13' .or. carbon_type == 'c14') then
        if (.not. present(c12_cnveg_carbonstate_inst)) then
           call endrun(msg=' ERROR: for C13 or C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
-               errMsg(__FILE__, __LINE__))
+               errMsg(filename, __LINE__))
        end if
     end if
 
@@ -919,6 +972,7 @@ contains
 
           ! total carbon pools
           this%totecosysc_col(c) = 0._r8
+          this%totc_p2c_col(c)   = 0._r8
           this%totc_col(c)       = 0._r8
        end if
     end do
@@ -1004,7 +1058,7 @@ contains
     if (carbon_type == 'c13' .or. carbon_type == 'c14') then
        if (.not. present(c12_cnveg_carbonstate_inst)) then
           call endrun(msg=' ERROR: for C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
-               errMsg(__FILE__, __LINE__))
+               errMsg(filename, __LINE__))
        end if
     end if
 
@@ -1855,7 +1909,7 @@ contains
     if (carbon_type == 'c13' .or. carbon_type == 'c14') then
        if (.not. present(c12_cnveg_carbonstate_inst)) then
           call endrun(msg=' ERROR: for C13 or C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
-               errMsg(__FILE__, __LINE__))
+               errMsg(filename, __LINE__))
        end if
     end if
 
@@ -1979,6 +2033,7 @@ contains
        this%fuelc_col(i)                = value_column
        this%fuelc_crop_col(i)           = value_column
        this%totvegc_col(i)              = value_column
+       this%totc_p2c_col(i)             = value_column
        this%totc_col(i)                 = value_column
        this%totecosysc_col(i)           = value_column
     end do
@@ -2008,19 +2063,22 @@ contains
   end subroutine ZeroDwt
 
   !-----------------------------------------------------------------------
-  subroutine Summary_carbonstate(this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine Summary_carbonstate(this, bounds, num_allc, filter_allc, &
+       num_soilc, filter_soilc, num_soilp, filter_soilp, &
        soilbiogeochem_cwdc_col, soilbiogeochem_totlitc_col, soilbiogeochem_totsomc_col, &
-       soilbiogeochem_ctrunc_col)
+       soilbiogeochem_ctrunc_col, soilbiogeochem_dyn_cbal_adjustments_col)
     !
     ! !USES:
     use subgridAveMod, only : p2c
     !
     ! !DESCRIPTION:
-    ! On the radiation time step, perform patch and column-level carbon summary calculations
+    ! Perform patch and column-level carbon summary calculations
     !
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)  :: this
     type(bounds_type) , intent(in) :: bounds          
+    integer           , intent(in) :: num_allc        ! number of columns in allc filter
+    integer           , intent(in) :: filter_allc(:)  ! filter for all active columns
     integer           , intent(in) :: num_soilc       ! number of soil columns in filter
     integer           , intent(in) :: filter_soilc(:) ! filter for soil columns
     integer           , intent(in) :: num_soilp       ! number of soil patches in filter
@@ -2029,16 +2087,18 @@ contains
     real(r8)          , intent(in) :: soilbiogeochem_totlitc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_totsomc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_ctrunc_col(bounds%begc:)
+    real(r8)          , intent(in) :: soilbiogeochem_dyn_cbal_adjustments_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,j,k,l       ! indices
     integer  :: fp,fc           ! lake filter indices
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_cwdc_col)    == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_totlitc_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_totsomc_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_ctrunc_col)  == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(soilbiogeochem_cwdc_col)    == (/bounds%endc/)), errMsg(filename, __LINE__))
+    SHR_ASSERT_ALL((ubound(soilbiogeochem_totlitc_col) == (/bounds%endc/)), errMsg(filename, __LINE__))
+    SHR_ASSERT_ALL((ubound(soilbiogeochem_totsomc_col) == (/bounds%endc/)), errMsg(filename, __LINE__))
+    SHR_ASSERT_ALL((ubound(soilbiogeochem_ctrunc_col)  == (/bounds%endc/)), errMsg(filename, __LINE__))
+    SHR_ASSERT_ALL((ubound(soilbiogeochem_dyn_cbal_adjustments_col) == (/bounds%endc/)), errMsg(filename, __LINE__))
 
     ! calculate patch -level summary of carbon state
 
@@ -2113,10 +2173,10 @@ contains
 
     call p2c(bounds, num_soilc, filter_soilc, &
          this%totc_patch(bounds%begp:bounds%endp), &
-         this%totc_col(bounds%begc:bounds%endc))
+         this%totc_p2c_col(bounds%begc:bounds%endc))
 
-    do fc = 1,num_soilc
-       c = filter_soilc(fc)
+    do fc = 1,num_allc
+       c = filter_allc(fc)
 
        ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
        this%totecosysc_col(c) =    &
@@ -2126,15 +2186,46 @@ contains
             this%totvegc_col(c)
 
        ! total column carbon, including veg and cpool (TOTCOLC)
-       this%totc_col(c) =  this%totc_col(c) + &
+       this%totc_col(c) =  this%totc_p2c_col(c) + &
             soilbiogeochem_cwdc_col(c)      + &
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
             this%seedc_col(c)               + &
             soilbiogeochem_ctrunc_col(c)
 
+       this%dyn_cbal_adjustments_veg_plus_soil_col(c) = &
+            this%dyn_cbal_adjustments_col(c) + &
+            soilbiogeochem_dyn_cbal_adjustments_col(c)
+
     end do
 
   end subroutine Summary_carbonstate
+
+  !-----------------------------------------------------------------------
+  subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)
+    !
+    ! !DESCRIPTION:
+    ! Adjust state variables when column areas change due to dynamic landuse
+    !
+    ! !USES:
+    use dynColumnStateUpdaterMod, only : column_state_updater_type
+    !
+    ! !ARGUMENTS:
+    class(cnveg_carbonstate_type)   , intent(inout) :: this
+    type(bounds_type)               , intent(in)    :: bounds
+    type(column_state_updater_type) , intent(in)    :: column_state_updater
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'DynamicColumnAdjustments'
+    !-----------------------------------------------------------------------
+
+    call column_state_updater%update_column_state_no_special_handling( &
+         bounds = bounds, &
+         var    = this%seedc_col(bounds%begc:bounds%endc), &
+         adjustment = this%dyn_cbal_adjustments_col(bounds%begc:bounds%endc))
+
+  end subroutine DynamicColumnAdjustments
+
 
 end module CNVegCarbonStateType

@@ -1,4 +1,237 @@
 ===============================================================
+Tag name:  clm4_5_8_r179
+Originator(s):  sacks (Bill Sacks)
+Date: Fri May 27 10:39:15 MDT 2016
+One-line Summary: Update column-level BGC state variables with dynamic landunits
+
+Purpose of changes
+------------------
+
+Update column-level BGC state variables as column areas change due to dynamic
+landunits. This does NOT yet update column-level biogeophysical variables, NOR
+does it handle patch-level variables appropriately.
+
+Note that some variables that used to only exist on vegetated landunits (soil &
+crop landunits) now exist on all landunits. When columns in special landunits
+expand, they take on the carbon, nitrogen and methane state variables from the
+columns they expanded into. These C / N / CH4 quantities essentially get trapped
+underneath the glacier (or lake / urban / whatever), staying fixed until that
+column eventually shrinks. If that special column shrinks and is replaced by a
+vegetated column, then the vegetated column takes on the state that had been
+trapped under the glacier (or whatever). In this way, we avoid destroying or
+creating mass when special landunits grow and shrink. This change explains why
+summary variables that used to be computed for just soil & crop columns are now
+computed for all columns.
+
+Note: In some testing (particularly in the 6-year Smallville test case), I found
+that there was a huge decrease (order of magnitude or more) in methane
+concentrations in the unsaturated portion of the growing column after column
+area adjustments. As far as I can tell, the state variable is being updated
+correctly due to the changing column areas, but then within the timestep evolves
+rapidly to a different value. From talking with Dave Lawrence, we assume this is
+due to the adjustment of carbon content in the column, since the carbon state
+can have a big effect on methane fluxes.
+
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include bugzilla ID):
+- 2283: dynamic landunits: handle methane with changing lake area [enhancement]
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+   When using use_init_interp in cases with CISM (IG/JG/FG/BG) compsets, there
+   is a large adjustment in Greenland glacier area in the first timestep of the
+   run, even if glacier evolution is off. (This is because, in initialization,
+   glacier area comes from CLM's surface dataset; then glacier area is updated
+   to match CISM in the first timestep, even if glacier evolution is off.) This
+   results in big adjustments in column-level carbon, nitrogen and methane
+   content in the first timestep, because it looks to CLM like some glacier
+   columns have grown significantly (trapping C / N / CH4), while others have
+   shrunk significantly, causing a significant decrease in area-average C / N /
+   CH4 in the growing vegetated columns.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests all pass or xfail; expected baseline comparison failures as
+    noted below
+
+CLM tag used for the baseline comparisons: clm4_5_8_r178
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM50 with CN/BGC, either with CISM (IG)
+      or transient crops (historical / RCP compsets with CROP)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff; potentially new climate
+
+   The evolution of C / N / CH4 state variables is now completely different with
+   transient glacier or crop areas, causing significant answer changes.
+
+   These transient crop tests change answers:
+     ERS_Ly5_P60x1.f10_f10.IHISTCLM45BGCCROP.yellowstone_intel.clm-cropMonthOutput
+     SMS_D_Ly6.1x1_smallvilleIA.IHISTCLM45BGCCROP.yellowstone_pgi.clm-cropMonthOutput
+   
+   For glacier, typically changes will only be seen if ice evolution is turned
+   on, but changes will be seen even with ice evolution off - or ice evolution on
+   in a test too short to actually see any ice evolution - if use_init_interp
+   is used, as noted in the "caveats" section above. This affects these tests:
+     ERS_D_Ld3.f09_g16_gl5.IG1850CRUCLM50BGCCROP.yellowstone_intel.clm-clm50KitchenSink
+     SMS_Lm1.f09_g16_gl5.IG1850CRUCLM50BGC.yellowstone_intel.clm-clm50KitchenSink
+
+   In addition, there are FILLDIFFs in a few methane variables. The new code
+   seems correct, in that the fill pattern (over special landunits) is the same
+   for all vertical levels: the old code had different fill patterns in lower
+   soil layers. This affects these variables: CONC_O2_SAT, CONC_O2_UNSAT,
+   CONC_CH4_SAT, CONC_CH4_UNSAT, LAYER_SAT_LAG.
+
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.):
+   cism2_1_10 -> cism2_1_17: Update to latest CISM trunk tag (main purpose is to
+      bring in new capabilities for overriding glacier areas for testing purposes)
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= Add a test that has both increases and decreases in glacier together
+          with BGC
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_inc_dec_bgc/user_nl_cism
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_inc_dec_bgc/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_inc_dec_bgc/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_inc_dec_bgc/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_inc_dec_bgc
+
+List all existing files that have been modified, and describe the changes:
+
+========= Add capabilities to the column state updater: fractional areas (needed
+          for methane) and keeping track of the adjustments made to each variable
+M       components/clm/src/dyn_subgrid/dynColumnStateUpdaterMod.F90
+M       components/clm/src/dyn_subgrid/test/dynColumnStateUpdater_test/test_column_state_updater.pf
+
+========= Update BGC column-level state variables when column areas change
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+M       components/clm/src/biogeochem/dynConsBiogeochemMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+M       components/clm/src/biogeochem/CNDriverMod.F90
+M       components/clm/src/biogeochem/CNBalanceCheckMod.F90
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90
+M       components/clm/src/biogeochem/CNVegNitrogenStateType.F90
+M       components/clm/src/main/clm_driver.F90
+
+========= Update ch4 column-level state variables when column areas change. Also
+          did a bunch of refactoring that was either needed or nice to have to
+          support these changes, especially related to (1) determining whether
+          it's the first timestep where ch4 is included; (2) how variables that
+          keep track of states in the previous timestep are set (this needed to
+          be reworked to simplify what we need to adjust in the column
+          conservation); (3) initializing conserved state variables to 0 (rather
+          than spval) over special landunits (this required putting in place
+          backwards compatibility with old restart files in subroutine Restart);
+          (4) where start-of-timestep balance check initialization is done
+M       components/clm/src/biogeochem/ch4Mod.F90
+
+========= Add new routine to support restart file backwards compatibility:
+          set_missing_vals_to_constant
+M       components/clm/src/utils/restUtilMod.F90.in
+
+========= Add a new history averaging option: SUM. Also refactored some handling
+          of avgflag to remove duplication, and allowed l2g_scale_type in more
+          contexts
+M       components/clm/src/main/histFileMod.F90
+
+
+========= Add a new l2g_scale_type: veg_plus_lake (needed for some methane
+          variables)
+M       components/clm/src/main/subgridAveMod.F90
+
+========= Add a new fiter: allc - all (active) columns
+M       components/clm/src/main/filterMod.F90
+
+========= Add col_filter_from_lunflags, change col_filter_from_ltype to
+          col_filter_from_ltypes (allowing multiple landunit types)
+M       components/clm/src/main/filterColMod.F90
+M       components/clm/src/main/test/filter_test/test_filter_col.pf
+M       components/clm/src/main/test/topo_test/test_topo.pf
+
+========= Updates for modified interface in new CISM
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_decrease/user_nl_cism
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_increase/user_nl_cism
+
+========= Add a test that has both increases and decreases in glacier together
+          with BGC; remove a long test for which we have sufficient coverage
+          with a similar, shorter test
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r178
 Originator(s):  sacks (Bill Sacks)
 Date: Sun Apr 17 19:28:55 MDT 2016

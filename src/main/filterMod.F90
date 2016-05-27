@@ -26,6 +26,9 @@ module filterMod
   private
   !
   type clumpfilter
+     integer, pointer :: allc(:)         ! all columns
+     integer :: num_allc                 ! number of points in allc filter
+
      integer, pointer :: natvegp(:)      ! CNDV nat-vegetated (present) filter (pfts)
      integer :: num_natvegp              ! number of pfts in nat-vegetated filter
 
@@ -184,6 +187,8 @@ contains
     do nc = 1, nclumps
        call get_clump_bounds(nc, bounds)
 
+       allocate(this_filter(nc)%allc(bounds%endc-bounds%begc+1))
+
        allocate(this_filter(nc)%lakep(bounds%endp-bounds%begp+1))
        allocate(this_filter(nc)%nolakep(bounds%endp-bounds%begp+1))
        allocate(this_filter(nc)%nolakeurbanp(bounds%endp-bounds%begp+1))
@@ -303,6 +308,16 @@ contains
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
 
     nc = bounds%clump_index
+
+    ! Create filter of all columns
+    fl = 0
+    do c = bounds%begc,bounds%endc
+       if (col%active(c) .or. include_inactive) then
+          fl = fl + 1
+          this_filter(nc)%allc(fl) = c
+       end if
+    end do
+    this_filter(nc)%num_allc = fl
 
     ! Create lake and non-lake filters at column-level 
 

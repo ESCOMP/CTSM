@@ -1,0 +1,13 @@
+In this test, glaciers:
+- increase to 100% over 4 days
+- then stay constant for 4 days
+- then decrease to 0% over 4 days
+
+This also includes some extra bgc fields on the history file, because this test
+is meant to be used to test bgc evolution as glaciers grow and shrink.
+
+This also includes spun-up initial conditions, in order to provide a more
+reasonable test of BGC state variable evolution with dynamic landunits. (With a
+cold start run, the state variables are evolving so fast that it's hard to see
+the effects of dynamic landunits.) The explicitly-listed finidat file can be
+removed once we have out-of-the-box initial conditions for this test.

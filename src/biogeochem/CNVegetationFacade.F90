@@ -83,7 +83,7 @@ module CNVegetationFacade
   use CNDriverMod                     , only : CNDriverNoLeaching, CNDriverLeaching
   use CNVegStructUpdateMod            , only : CNVegStructUpdate 
   use CNAnnualUpdateMod               , only : CNAnnualUpdate
-  use dynConsBiogeochemMod            , only : dyn_cnbal_patch
+  use dynConsBiogeochemMod            , only : dyn_cnbal_patch, dyn_cnbal_col
   use dynCNDVMod                      , only : dynCNDV_init, dynCNDV_interp
   !
   implicit none
@@ -505,9 +505,11 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine DynamicAreaConservation(this, bounds, &
-       prior_weights, first_step_cold_start, &
+       prior_weights, column_state_updater, &
        canopystate_inst, photosyns_inst, &
-       soilbiogeochem_carbonflux_inst, soilbiogeochem_state_inst)
+       soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+       c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+       soilbiogeochem_nitrogenstate_inst, ch4_inst, soilbiogeochem_state_inst)
     !
     ! !DESCRIPTION:
     ! Conserve C & N with updates in subgrid weights
@@ -515,30 +517,43 @@ contains
     ! Should only be called if use_cn is true
     !
     ! !USES:
-    use dynPriorWeightsMod           , only : prior_weights_type
+    use dynPriorWeightsMod      , only : prior_weights_type
+    use dynColumnStateUpdaterMod, only : column_state_updater_type
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
-    type(bounds_type)                    , intent(in)    :: bounds        
-    type(prior_weights_type)             , intent(in)    :: prior_weights ! weights prior to the subgrid weight updates
-    logical                              , intent(in)    :: first_step_cold_start ! true if this is the first step since cold start
-    type(canopystate_type)               , intent(inout) :: canopystate_inst
-    type(photosyns_type)                 , intent(inout) :: photosyns_inst
-    type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
-    type(soilbiogeochem_state_type)      , intent(in)    :: soilbiogeochem_state_inst
+    type(bounds_type)                       , intent(in)    :: bounds        
+    type(prior_weights_type)                , intent(in)    :: prior_weights         ! weights prior to the subgrid weight updates
+    type(column_state_updater_type)         , intent(in)    :: column_state_updater
+    type(canopystate_type)                  , intent(inout) :: canopystate_inst
+    type(photosyns_type)                    , intent(inout) :: photosyns_inst
+    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(ch4_type)                          , intent(inout) :: ch4_inst
+    type(soilbiogeochem_state_type)         , intent(in)    :: soilbiogeochem_state_inst
     !
     ! !LOCAL VARIABLES:
 
     character(len=*), parameter :: subname = 'DynamicAreaConservation'
     !-----------------------------------------------------------------------
 
-    call dyn_cnbal_patch(bounds, prior_weights, first_step_cold_start, &
+    call dyn_cnbal_patch(bounds, prior_weights, &
          canopystate_inst, photosyns_inst, &
          this%cnveg_state_inst, &
          this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, this%c14_cnveg_carbonstate_inst, &
          this%cnveg_carbonflux_inst, this%c13_cnveg_carbonflux_inst, this%c14_cnveg_carbonflux_inst, &
          this%cnveg_nitrogenstate_inst, this%cnveg_nitrogenflux_inst, &
          soilbiogeochem_carbonflux_inst, soilbiogeochem_state_inst)
+
+    call dyn_cnbal_col(bounds, column_state_updater, &
+         this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, this%c14_cnveg_carbonstate_inst, &
+         this%cnveg_nitrogenstate_inst, &
+         soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, &
+         ch4_inst)
 
   end subroutine DynamicAreaConservation
 
@@ -636,7 +651,7 @@ contains
   end subroutine EcosystemDynamicsPreDrainage
 
   !-----------------------------------------------------------------------
-  subroutine EcosystemDynamicsPostDrainage(this, bounds, &
+  subroutine EcosystemDynamicsPostDrainage(this, bounds, num_allc, filter_allc, &
        num_soilc, filter_soilc, num_soilp, filter_soilp, doalb, crop_inst, &
        waterstate_inst, waterflux_inst, frictionvel_inst, canopystate_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
@@ -654,6 +669,8 @@ contains
     ! !ARGUMENTS:
     class(cn_vegetation_type)               , intent(inout) :: this
     type(bounds_type)                       , intent(in)    :: bounds  
+    integer                                 , intent(in)    :: num_allc          ! number of columns in allc filter
+    integer                                 , intent(in)    :: filter_allc(:)    ! filter for all active columns
     integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
     integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
@@ -691,6 +708,7 @@ contains
     ! Call to all CN summary routines
 
     call  CNDriverSummary(bounds, &
+         num_allc, filter_allc, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
          this%cnveg_state_inst, this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, &
