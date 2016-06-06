@@ -1,0 +1,317 @@
+module test_patch_state_updater
+
+  ! Tests of dynPatchStateUpdaterMod
+
+  use pfunit_mod
+  use dynPatchStateUpdaterMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSubgridMod
+  use unittestSimpleSubgridSetupsMod
+  use unittestFilterBuilderMod
+  use PatchType
+  use subgridWeightsMod, only : compute_higher_order_weights
+  use clm_varpar, only : mxpft
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestPSUpdater
+     ! filter
+     integer :: numf
+     integer, allocatable :: filter(:)
+
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: do_all_setup_with_n_vegetated_patches
+  end type TestPSUpdater
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  ! ========================================================================
+  ! Test helpers
+  ! ========================================================================
+
+  subroutine setUp(this)
+    class(TestPSUpdater), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestPSUpdater), intent(inout) :: this
+  end subroutine tearDown
+
+  !-----------------------------------------------------------------------
+  subroutine do_all_setup_with_n_vegetated_patches(this, ps_updater, &
+       pwtcol_old, pwtcol_new, pft_types)
+    !
+    ! !DESCRIPTION:
+    ! Does all setup needed when setting up one grid cell with a single vegetated column
+    ! containing n patches
+    !
+    ! !ARGUMENTS:
+    class(TestPSUpdater), intent(inout) :: this
+    type(patch_state_updater_type), intent(out) :: ps_updater
+    real(r8), intent(in) :: pwtcol_old(begp:)
+    real(r8), intent(in) :: pwtcol_new(begp:)
+    integer, intent(in), optional :: pft_types(:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p
+
+    character(len=*), parameter :: subname = 'do_all_setup_with_n_vegetated_patches'
+    !-----------------------------------------------------------------------
+
+    call setup_n_veg_patches(pwtcol_old, pft_types)
+    call filter_from_range(bounds%begp, bounds%endp, this%numf, this%filter)
+    ps_updater = patch_state_updater_type(bounds)
+    call ps_updater%set_old_weights(bounds)
+
+    do p = bounds%begp, bounds%endp
+       patch%wtcol(p) = pwtcol_new(p)
+    end do
+    call compute_higher_order_weights(bounds)
+
+    call ps_updater%set_new_weights(bounds)
+
+  end subroutine do_all_setup_with_n_vegetated_patches
+
+
+  ! ========================================================================
+  ! Actual tests
+  !
+  ! Note: in most tests, there are 3 patches; the 2nd patch is the patch of interest
+  ! ========================================================================
+
+  @Test
+  subroutine noAreaChange(this)
+    ! no area change => no change in value, flux stays the same
+    class(TestPSUpdater), intent(inout) :: this
+    real(r8), parameter :: pwtcol_old(3) = [0.25_r8, 0.5_r8, 0.25_r8]
+    real(r8), parameter :: pwtcol_new(3) = pwtcol_old
+    type(patch_state_updater_type) :: ps_updater
+    real(r8) :: var(3), expected_var(3)
+    real(r8) :: flux(3), expected_flux(3)
+
+    ! Setup
+
+    call this%do_all_setup_with_n_vegetated_patches(ps_updater, &
+         pwtcol_old = pwtcol_old, &
+         pwtcol_new = pwtcol_new)
+
+    var = [2._r8, 3._r8, 4._r8]
+    expected_var = var
+    flux = [12._r8, 13._r8, 14._r8]
+    expected_flux = flux
+
+    ! Exercise
+    call ps_updater%update_patch_state(bounds, &
+         this%numf, this%filter, &
+         var, flux)
+
+    ! Verify
+    @assertEqual(expected_var, var)
+    @assertEqual(expected_flux, flux)
+  end subroutine noAreaChange
+
+  @Test
+  subroutine areaIncreases(this)
+    ! if area increases from non-zero, then value is decreased appropriately; there
+    ! should be no change in flux
+    class(TestPSUpdater), intent(inout) :: this
+    ! The second patch is the patch of interest
+    real(r8), parameter :: pwtcol_old(3) = [0.3_r8, 0.2_r8, 0.5_r8]
+    real(r8), parameter :: pwtcol_new(3) = [0.2_r8, 0.3_r8, 0.5_r8]
+    type(patch_state_updater_type) :: ps_updater
+    real(r8) :: var(3)
+    real(r8) :: flux(3)
+
+    call this%do_all_setup_with_n_vegetated_patches(ps_updater, &
+         pwtcol_old = pwtcol_old, &
+         pwtcol_new = pwtcol_new)
+
+    var = [2._r8, 3._r8, 4._r8]
+    flux = [12._r8, 13._r8, 14._r8]
+
+    ! Exercise
+    call ps_updater%update_patch_state(bounds, &
+         this%numf, this%filter, &
+         var, flux)
+
+    ! Verify
+    @assertEqual(2._r8, var(2))
+    ! same as starting flux:
+    @assertEqual(13._r8, flux(2), tolerance=tol)
+  end subroutine areaIncreases
+
+  @Test
+  subroutine areaIncreasesFromZero(this)
+    ! if area increases from zero, var should be set to 0
+    class(TestPSUpdater), intent(inout) :: this
+    real(r8), parameter :: pwtcol_old(3) = [0.5_r8, 0.0_r8, 0.5_r8]
+    real(r8), parameter :: pwtcol_new(3) = [0.4_r8, 0.1_r8, 0.5_r8]
+    type(patch_state_updater_type) :: ps_updater
+    real(r8) :: var(3), flux(3)
+
+    ! Setup
+
+    call this%do_all_setup_with_n_vegetated_patches(ps_updater, &
+         pwtcol_old = pwtcol_old, &
+         pwtcol_new = pwtcol_new)
+
+    var = [2._r8, 3._r8, 4._r8]
+    flux = [12._r8, 13._r8, 14._r8]
+
+    ! Exercise
+    call ps_updater%update_patch_state(bounds, &
+         this%numf, this%filter, &
+         var, flux)
+
+    ! Verify
+    @assertEqual(0._r8, var(2))
+  end subroutine areaIncreasesFromZero
+
+  @Test
+  subroutine areaIncreases_withSeed(this)
+    ! area increases from non-zero with an additional seed amount
+    class(TestPSUpdater), intent(inout) :: this
+    ! The second patch is the patch of interest
+    real(r8), parameter :: pwtcol_old(3) = [0.3_r8, 0.2_r8, 0.5_r8]
+    real(r8), parameter :: pwtcol_new(3) = [0.2_r8, 0.3_r8, 0.5_r8]
+    type(patch_state_updater_type) :: ps_updater
+    real(r8) :: var(3)
+    real(r8) :: flux(3)
+    real(r8) :: seed(3)
+    real(r8) :: seed_addition(3)
+    real(r8) :: expected_seed_addition
+
+    call this%do_all_setup_with_n_vegetated_patches(ps_updater, &
+         pwtcol_old = pwtcol_old, &
+         pwtcol_new = pwtcol_new)
+
+    var = [2._r8, 3._r8, 4._r8]
+    flux = [12._r8, 13._r8, 14._r8]
+    seed = [0._r8, 9._r8, 0._r8]
+    seed_addition = [22._r8, 23._r8, 24._r8]
+    expected_seed_addition = seed_addition(2) + seed(2) * 0.1_r8
+
+    ! Exercise
+    call ps_updater%update_patch_state(bounds, &
+         this%numf, this%filter, &
+         var, flux, &
+         seed = seed, &
+         seed_addition = seed_addition)
+
+    ! Verify
+    @assertEqual(5._r8, var(2), tolerance=tol)
+    @assertEqual(expected_seed_addition, seed_addition(2))
+  end subroutine areaIncreases_withSeed
+
+  @Test
+  subroutine areaDecreases(this)
+    ! if area decreases, var should stay the same, and there should be a flux out
+    class(TestPSUpdater), intent(inout) :: this
+    ! The second patch is the patch of interest
+    real(r8), parameter :: pwtcol_old(3) = [0.2_r8, 0.3_r8, 0.5_r8]
+    real(r8), parameter :: pwtcol_new(3) = [0.3_r8, 0.2_r8, 0.5_r8]
+    type(patch_state_updater_type) :: ps_updater
+    real(r8) :: var(3)
+    real(r8) :: flux(3)
+
+    call this%do_all_setup_with_n_vegetated_patches(ps_updater, &
+         pwtcol_old = pwtcol_old, &
+         pwtcol_new = pwtcol_new)
+
+    var = [2._r8, 3._r8, 4._r8]
+    flux = [12._r8, 13._r8, 14._r8]
+
+    ! Exercise
+    call ps_updater%update_patch_state(bounds, &
+         this%numf, this%filter, &
+         var, flux)
+
+    ! Verify
+    ! flux(2) changes by dwt(2) * var(2)
+    @assertEqual(13._r8 - 0.3_r8, flux(2), tolerance=tol)
+    ! same as starting state:
+    @assertEqual(3._r8, var(2))
+  end subroutine areaDecreases
+
+  @Test
+  subroutine multiplePatches_increase_zero_decrease(this)
+    ! Test multiple patches: one that increases, one with zero change, and one that
+    ! decreases. Make sure that new var and flux are correct in all of them
+    class(TestPSUpdater), intent(inout) :: this
+    real(r8), parameter :: pwtcol_old(3) = [0.2_r8, 0.5_r8, 0.3_r8]
+    real(r8), parameter :: pwtcol_new(3) = [0.3_r8, 0.5_r8, 0.2_r8]
+    type(patch_state_updater_type) :: ps_updater
+    real(r8) :: var(3), expected_var(3)
+    real(r8) :: flux(3), expected_flux(3)
+
+    call this%do_all_setup_with_n_vegetated_patches(ps_updater, &
+         pwtcol_old = pwtcol_old, &
+         pwtcol_new = pwtcol_new)
+
+    var = [2._r8, 3._r8, 4._r8]
+    expected_var = var
+    expected_var(1) = 4._r8 / 3._r8
+    flux = [12._r8, 13._r8, 14._r8]
+    expected_flux = flux
+    expected_flux(3) = flux(3) - 0.4_r8
+
+    ! Exercise
+    call ps_updater%update_patch_state(bounds, &
+         this%numf, this%filter, &
+         var, flux)
+
+    ! Verify
+    @assertEqual(expected_var, var, tolerance=tol)
+    @assertEqual(expected_flux, flux, tolerance=tol)
+  end subroutine multiplePatches_increase_zero_decrease
+
+  @Test
+  subroutine areaDecreases_partitionFluxByType(this)
+    ! Test decrease in area with flux out partitioned into two pieces based on a variable
+    ! indexed by pft type
+    class(TestPSUpdater), intent(inout) :: this
+    ! The second patch is the patch of interest
+    real(r8), parameter :: pwtcol_old(3) = [0.2_r8, 0.3_r8, 0.5_r8]
+    real(r8), parameter :: pwtcol_new(3) = [0.3_r8, 0.2_r8, 0.5_r8]
+    integer, parameter :: patch2_type = 4
+    integer, parameter :: pft_types(3) = [1, patch2_type, 1]
+    real(r8) :: flux1_fraction(0:mxpft)
+    real(r8), parameter :: patch2_flux_fraction = 0.6_r8
+    type(patch_state_updater_type) :: ps_updater
+    real(r8) :: var(3)
+    real(r8) :: expected_total_flux, expected_flux1, expected_flux2
+    real(r8) :: flux1(3), flux2(3)
+
+    call this%do_all_setup_with_n_vegetated_patches(ps_updater, &
+         pwtcol_old = pwtcol_old, &
+         pwtcol_new = pwtcol_new, &
+         pft_types = pft_types)
+
+    var = [2._r8, 3._r8, 4._r8]
+    flux1 = [12._r8, 13._r8, 14._r8]
+    flux2 = [22._r8, 23._r8, 24._r8]
+
+    flux1_fraction(:) = 0._r8
+    flux1_fraction(patch2_type) = patch2_flux_fraction
+
+    ! Exercise
+    call ps_updater%update_patch_state_partition_flux_by_type(bounds, &
+         this%numf, this%filter, flux1_fraction, &
+         var, flux1, flux2)
+
+    ! Verify
+    ! total flux is dwt(2) * var(2)
+    expected_total_flux = -0.3_r8
+    expected_flux1 = expected_total_flux * patch2_flux_fraction
+    expected_flux2 = expected_total_flux * (1._r8 - patch2_flux_fraction)
+    ! For these assertions, we add the expected new flux to the original value of the flux:
+    @assertEqual(13._r8 + expected_flux1, flux1(2), tolerance=tol)
+    @assertEqual(23._r8 + expected_flux2, flux2(2), tolerance=tol)
+  end subroutine areaDecreases_partitionFluxByType
+
+end module test_patch_state_updater

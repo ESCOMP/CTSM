@@ -10,7 +10,7 @@ module CNVegCarbonStateType
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use pftconMod	     , only : noveg, npcropmin, pftcon
-  use clm_varcon     , only : spval, c3_r2, c4_r2
+  use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
   use clm_varctl     , only : iulog, use_cndv, use_crop
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
@@ -18,13 +18,19 @@ module CNVegCarbonStateType
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use PatchType      , only : patch
+  use CNSpeciesMod   , only : species_from_string, CN_SPECIES_C12
+  use dynPatchStateUpdaterMod, only : patch_state_updater_type
+  use CNVegComputeSeedMod, only : ComputeSeedAmounts
   ! 
   ! !PUBLIC TYPES:
   implicit none
   private
   !
+
   type, public :: cnveg_carbonstate_type
-     
+
+     integer :: species  ! c12, c13, c14
+
      real(r8), pointer :: grainc_patch             (:) ! (gC/m2) grain C (crop model)
      real(r8), pointer :: grainc_storage_patch     (:) ! (gC/m2) grain C storage (crop model)
      real(r8), pointer :: grainc_xfer_patch        (:) ! (gC/m2) grain C transfer (crop model)
@@ -81,14 +87,16 @@ module CNVegCarbonStateType
    contains
 
      procedure , public  :: Init   
-     procedure , public  :: SetValues 
+     procedure , public  :: SetValues
      procedure , public  :: ZeroDWT
      procedure , public  :: Restart
      procedure , public  :: Summary => Summary_carbonstate
+     procedure , public  :: DynamicPatchAdjustments   ! adjust state variables when patch areas change
      procedure , public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
-     procedure , private :: InitAllocate 
+     
+     procedure , private :: InitAllocate
      procedure , private :: InitHistory  
-     procedure , private :: InitCold     
+     procedure , private :: InitCold
 
   end type cnveg_carbonstate_type
 
@@ -106,9 +114,11 @@ contains
     class(cnveg_carbonstate_type)                       :: this
     type(bounds_type)            , intent(in)           :: bounds  
     real(r8)                     , intent(in)           :: ratio
-    character(len=3)             , intent(in)           :: carbon_type
+    character(len=*)             , intent(in)           :: carbon_type
     type(cnveg_carbonstate_type) , intent(in), optional :: c12_cnveg_carbonstate_inst
     !-----------------------------------------------------------------------
+
+    this%species = species_from_string(carbon_type)
 
     call this%InitAllocate ( bounds)
     call this%InitHistory ( bounds, carbon_type)
@@ -200,7 +210,7 @@ contains
     ! !ARGUMENTS:
     class (cnveg_carbonstate_type) :: this
     type(bounds_type)         , intent(in) :: bounds 
-    character(len=3)          , intent(in) :: carbon_type ! one of ['c12', c13','c14']
+    character(len=*)          , intent(in) :: carbon_type ! one of ['c12', c13','c14']
     !
     ! !LOCAL VARIABLES:
     integer           :: k,l,ii,jj 
@@ -788,7 +798,7 @@ contains
     class(cnveg_carbonstate_type)                       :: this 
     type(bounds_type)            , intent(in)           :: bounds  
     real(r8)                     , intent(in)           :: ratio
-    character(len=3)             , intent(in)           :: carbon_type ! 'c12' or 'c13' or 'c14'
+    character(len=*)             , intent(in)           :: carbon_type ! 'c12' or 'c13' or 'c14'
     type(cnveg_carbonstate_type) , optional, intent(in) :: c12_cnveg_carbonstate_inst
     !
     ! !LOCAL VARIABLES:
@@ -1026,7 +1036,6 @@ contains
     !
     ! !USES:
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
-    use clm_varcon       , only : c14ratio
     use clm_varctl       , only : spinup_state, use_cndv
     use clm_time_manager , only : get_nstep
     use restUtilMod
@@ -1037,7 +1046,7 @@ contains
     type(bounds_type)                     , intent(in)           :: bounds 
     type(file_desc_t)                     , intent(inout)        :: ncid   ! netcdf id
     character(len=*)                      , intent(in)           :: flag   !'read' or 'write'
-    character(len=3)                      , intent(in)           :: carbon_type ! 'c12' or 'c13' or 'c14'
+    character(len=*)                      , intent(in)           :: carbon_type ! 'c12' or 'c13' or 'c14'
     type (cnveg_carbonstate_type)         , intent(in), optional :: c12_cnveg_carbonstate_inst 
     !
     ! !LOCAL VARIABLES:
@@ -2202,6 +2211,234 @@ contains
   end subroutine Summary_carbonstate
 
   !-----------------------------------------------------------------------
+  subroutine DynamicPatchAdjustments(this, bounds, &
+       num_soilp_with_inactive, filter_soilp_with_inactive, &
+       patch_state_updater, &
+       leafc_seed, deadstemc_seed, &
+       conv_cflux, product_cflux, &
+       dwt_frootc_to_litter, &
+       dwt_livecrootc_to_litter, &
+       dwt_deadcrootc_to_litter, &
+       dwt_leafc_seed, &
+       dwt_deadstemc_seed)
+    !
+    ! !DESCRIPTION:
+    ! Adjust state variables and compute associated fluxes when patch areas change due to
+    ! dynamic landuse
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cnveg_carbonstate_type)   , intent(inout) :: this
+    type(bounds_type)               , intent(in)    :: bounds
+    integer                         , intent(in)    :: num_soilp_with_inactive ! number of points in filter
+    integer                         , intent(in)    :: filter_soilp_with_inactive(:) ! soil patch filter that includes inactive points
+    type(patch_state_updater_type)  , intent(in)    :: patch_state_updater
+    real(r8)                        , intent(in)    :: leafc_seed  ! seed amount for leaf C
+    real(r8)                        , intent(in)    :: deadstemc_seed ! seed amount for deadstem C
+    real(r8)                        , intent(inout) :: conv_cflux( bounds%begp: )  ! patch-level conversion C flux to atm
+    real(r8)                        , intent(inout) :: product_cflux( bounds%begp: ) ! patch-level product C flux
+    real(r8)                        , intent(inout) :: dwt_frootc_to_litter( bounds%begp: ) ! patch-level fine root C to litter
+    real(r8)                        , intent(inout) :: dwt_livecrootc_to_litter( bounds%begp: ) ! patch-level live coarse root C to litter
+    real(r8)                        , intent(inout) :: dwt_deadcrootc_to_litter( bounds%begp: ) ! patch-level live coarse root C to litter
+    real(r8)                        , intent(inout) :: dwt_leafc_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: leaf C
+    real(r8)                        , intent(inout) :: dwt_deadstemc_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: deadstem C
+    !
+    ! !LOCAL VARIABLES:
+    integer :: begp, endp
+
+    logical  :: old_weight_was_zero(bounds%begp:bounds%endp)
+    logical  :: patch_grew(bounds%begp:bounds%endp)
+
+    ! The following are only set for growing patches:
+    real(r8) :: seed_leafc_patch(bounds%begp:bounds%endp)
+    real(r8) :: seed_leafc_storage_patch(bounds%begp:bounds%endp)
+    real(r8) :: seed_leafc_xfer_patch(bounds%begp:bounds%endp)
+    real(r8) :: seed_deadstemc_patch(bounds%begp:bounds%endp)
+
+    character(len=*), parameter :: subname = 'DynamicPatchAdjustments'
+    !-----------------------------------------------------------------------
+
+    begp = bounds%begp
+    endp = bounds%endp
+
+    SHR_ASSERT_ALL((ubound(conv_cflux) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(product_cflux) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_frootc_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_livecrootc_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_deadcrootc_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_leafc_seed) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_deadstemc_seed) == (/endp/)), errMsg(__FILE__, __LINE__))
+
+    old_weight_was_zero = patch_state_updater%old_weight_was_zero(bounds)
+    patch_grew = patch_state_updater%patch_grew(bounds)
+
+    call ComputeSeedAmounts(bounds, &
+         num_soilp_with_inactive, filter_soilp_with_inactive, &
+         species = this%species, &
+         leafc_seed = leafc_seed, &
+         deadstemc_seed = deadstemc_seed, &
+         leaf_patch = this%leafc_patch(begp:endp), &
+         leaf_storage_patch = this%leafc_storage_patch(begp:endp), &
+         leaf_xfer_patch = this%leafc_xfer_patch(begp:endp), &
+
+         ! Calculations only needed for patches that grew:
+         compute_here_patch = patch_grew(begp:endp), &
+
+         ! For patches that previously had zero area, ignore the current state for the
+         ! sake of computing leaf proportions:
+         ignore_current_state_patch = old_weight_was_zero(begp:endp), &
+
+         seed_leaf_patch = seed_leafc_patch(begp:endp), &
+         seed_leaf_storage_patch = seed_leafc_storage_patch(begp:endp), &
+         seed_leaf_xfer_patch = seed_leafc_xfer_patch(begp:endp), &
+         seed_deadstem_patch = seed_deadstemc_patch(begp:endp))
+
+    call update_patch_state( &
+         var = this%leafc_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp), &
+         seed = seed_leafc_patch(begp:endp), &
+         seed_addition = dwt_leafc_seed(begp:endp))
+
+    call update_patch_state( &
+         var = this%leafc_storage_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp), &
+         seed = seed_leafc_storage_patch(begp:endp), &
+         seed_addition = dwt_leafc_seed(begp:endp))
+
+    call update_patch_state( &
+         var = this%leafc_xfer_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp), &
+         seed = seed_leafc_xfer_patch(begp:endp), &
+         seed_addition = dwt_leafc_seed(begp:endp))
+
+    call update_patch_state( &
+         var = this%frootc_patch(begp:endp), &
+         flux_out = dwt_frootc_to_litter(begp:endp))
+
+    call update_patch_state( &
+         var = this%frootc_storage_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%frootc_xfer_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%livestemc_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%livestemc_storage_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%livestemc_xfer_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call patch_state_updater%update_patch_state_partition_flux_by_type(bounds, &
+         num_soilp_with_inactive, filter_soilp_with_inactive, &
+         flux1_fraction_by_pft_type = pftcon%pconv, &
+         var = this%deadstemc_patch(begp:endp), &
+         flux1_out = conv_cflux(begp:endp), &
+         flux2_out = product_cflux(begp:endp), &
+         seed = seed_deadstemc_patch(begp:endp), &
+         seed_addition = dwt_deadstemc_seed(begp:endp))
+
+    call update_patch_state( &
+         var = this%deadstemc_storage_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%deadstemc_xfer_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%livecrootc_patch(begp:endp), &
+         flux_out = dwt_livecrootc_to_litter(begp:endp))
+
+    call update_patch_state( &
+         var = this%livecrootc_storage_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%livecrootc_xfer_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%deadcrootc_patch(begp:endp), &
+         flux_out = dwt_deadcrootc_to_litter(begp:endp))
+
+    call update_patch_state( &
+         var = this%deadcrootc_storage_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%deadcrootc_xfer_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%gresp_storage_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%gresp_xfer_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%cpool_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    ! BUG(wjs, 2016-06-01, bugz 2316) Probably the behavior should be the same for carbon
+    ! isotopes as for standard c12, but for now I'm preserving the old behavior.
+    if (this%species == CN_SPECIES_C12) then
+       call update_patch_state( &
+            var = this%xsmrpool_patch(begp:endp), &
+            flux_out = conv_cflux(begp:endp))
+    else
+       call update_patch_state( &
+            var = this%xsmrpool_patch(begp:endp))
+    end if
+
+    call update_patch_state( &
+         var = this%ctrunc_patch(begp:endp), &
+         flux_out = conv_cflux(begp:endp))
+
+    ! The following are summary diagnostic variables, not involved in mass balance.
+    ! Hence, they do not have associated fluxes for area decreases.
+
+    call update_patch_state( &
+         var = this%dispvegc_patch(begp:endp))
+    
+    call update_patch_state( &
+         var = this%storvegc_patch(begp:endp))
+
+    call update_patch_state( &
+         var = this%totc_patch(begp:endp))
+
+    call update_patch_state( &
+         var = this%totvegc_patch(begp:endp))
+
+  contains
+    subroutine update_patch_state(var, flux_out, seed, seed_addition)
+      ! Wraps call to update_patch_state, in order to remove duplication
+      real(r8), intent(inout) :: var( bounds%begp: )
+      real(r8), intent(inout), optional :: flux_out( bounds%begp: )
+      real(r8), intent(in), optional :: seed( bounds%begp: )
+      real(r8), intent(inout), optional :: seed_addition( bounds%begp: )
+
+      call patch_state_updater%update_patch_state(bounds, &
+         num_soilp_with_inactive, filter_soilp_with_inactive, &
+         var = var, &
+         flux_out = flux_out, &
+         seed = seed, &
+         seed_addition = seed_addition)
+    end subroutine update_patch_state
+
+  end subroutine DynamicPatchAdjustments
+
+
+  !-----------------------------------------------------------------------
   subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)
     !
     ! !DESCRIPTION:
@@ -2226,6 +2463,5 @@ contains
          adjustment = this%dyn_cbal_adjustments_col(bounds%begc:bounds%endc))
 
   end subroutine DynamicColumnAdjustments
-
 
 end module CNVegCarbonStateType

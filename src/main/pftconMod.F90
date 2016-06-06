@@ -258,6 +258,8 @@ module pftconMod
    contains
 
      procedure, public  :: Init
+     procedure, public  :: InitForTesting ! version of Init meant for unit testing
+     procedure, public  :: Clean
      procedure, private :: InitAllocate   
      procedure, private :: InitRead
      procedure, private :: set_is_pft_known_to_model   ! Set is_pft_known_to_model based on mergetoclmpft
@@ -290,6 +292,20 @@ contains
     call this%InitRead()
 
   end subroutine Init
+
+  !------------------------------------------------------------------------
+  subroutine InitForTesting(this)
+    ! Version of Init meant for unit testing
+    !
+    ! Allocate arrays, but don't try to read from file.
+    !
+    ! Values can then be set by tests as needed
+
+    class(pftcon_type) :: this
+
+    call this%InitAllocate()
+
+  end subroutine InitForTesting
 
   !-----------------------------------------------------------------------
   subroutine InitAllocate (this)
@@ -373,7 +389,7 @@ contains
     allocate( this%fr_flab       (0:mxpft) )      
     allocate( this%fr_fcel       (0:mxpft) )      
     allocate( this%fr_flig       (0:mxpft) )      
-    allocate( this%leaf_long     (0:mxpft) )   
+    allocate( this%leaf_long     (0:mxpft) )
     allocate( this%evergreen     (0:mxpft) )    
     allocate( this%stress_decid  (0:mxpft) ) 
     allocate( this%season_decid  (0:mxpft) ) 
@@ -1189,6 +1205,148 @@ contains
     end do
 
   end subroutine set_num_cfts_known_to_model
+
+  !-----------------------------------------------------------------------
+  subroutine Clean(this)
+    !
+    ! !DESCRIPTION:
+    ! Deallocate memory
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(pftcon_type), intent(inout) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'Clean'
+    !-----------------------------------------------------------------------
+
+    deallocate( this%noveg)
+    deallocate( this%tree)
+
+    deallocate( this%dleaf)
+    deallocate( this%c3psn)
+    deallocate( this%xl)
+    deallocate( this%rhol)
+    deallocate( this%rhos)
+    deallocate( this%taul)
+    deallocate( this%taus)
+    deallocate( this%z0mr)
+    deallocate( this%displar)
+    deallocate( this%roota_par)
+    deallocate( this%rootb_par)
+    deallocate( this%crop)
+    deallocate( this%mergetoclmpft)
+    deallocate( this%is_pft_known_to_model)
+    deallocate( this%irrigated)
+    deallocate( this%smpso)
+    deallocate( this%smpsc)
+    deallocate( this%fnitr)
+    deallocate( this%slatop)
+    deallocate( this%dsladlai)
+    deallocate( this%leafcn)
+    deallocate( this%flnr)
+    deallocate( this%woody)
+    deallocate( this%lflitcn)
+    deallocate( this%frootcn)
+    deallocate( this%livewdcn)
+    deallocate( this%deadwdcn)
+    deallocate( this%grperc)
+    deallocate( this%grpnow)
+    deallocate( this%rootprof_beta)
+    deallocate( this%graincn)
+    deallocate( this%mxtmp)
+    deallocate( this%baset)
+    deallocate( this%declfact)
+    deallocate( this%bfact)
+    deallocate( this%aleaff)
+    deallocate( this%arootf)
+    deallocate( this%astemf)
+    deallocate( this%arooti)
+    deallocate( this%fleafi)
+    deallocate( this%allconsl)
+    deallocate( this%allconss)
+    deallocate( this%ztopmx)
+    deallocate( this%laimx)
+    deallocate( this%gddmin)
+    deallocate( this%hybgdd)
+    deallocate( this%lfemerg)
+    deallocate( this%grnfill)
+    deallocate( this%mxmat)
+    deallocate( this%mnNHplantdate)
+    deallocate( this%mxNHplantdate)
+    deallocate( this%mnSHplantdate)
+    deallocate( this%mxSHplantdate)
+    deallocate( this%planttemp)
+    deallocate( this%minplanttemp)
+    deallocate( this%froot_leaf)
+    deallocate( this%stem_leaf)
+    deallocate( this%croot_stem)
+    deallocate( this%flivewd)
+    deallocate( this%fcur)
+    deallocate( this%fcurdv)
+    deallocate( this%lf_flab)
+    deallocate( this%lf_fcel)
+    deallocate( this%lf_flig)
+    deallocate( this%fr_flab)
+    deallocate( this%fr_fcel)
+    deallocate( this%fr_flig)
+    deallocate( this%leaf_long)
+    deallocate( this%evergreen)
+    deallocate( this%stress_decid)
+    deallocate( this%season_decid)
+    deallocate( this%dwood)
+    deallocate( this%pconv)
+    deallocate( this%pprod10)
+    deallocate( this%pprod100)
+    deallocate( this%pprodharv10)
+    deallocate( this%cc_leaf)
+    deallocate( this%cc_lstem)
+    deallocate( this%cc_dstem)
+    deallocate( this%cc_other)
+    deallocate( this%fm_leaf)
+    deallocate( this%fm_lstem)
+    deallocate( this%fm_dstem)
+    deallocate( this%fm_other)
+    deallocate( this%fm_root)
+    deallocate( this%fm_lroot)
+    deallocate( this%fm_droot)
+    deallocate( this%fsr_pft)
+    deallocate( this%fd_pft)
+    deallocate( this%fertnitro)
+    deallocate( this%fleafcn)
+    deallocate( this%ffrootcn)
+    deallocate( this%fstemcn)
+    deallocate( this%i_vcad)
+    deallocate( this%s_vcad)
+    deallocate( this%i_flnr)
+    deallocate( this%s_flnr)
+    deallocate( this%pftpar20)
+    deallocate( this%pftpar28)
+    deallocate( this%pftpar29)
+    deallocate( this%pftpar30)
+    deallocate( this%pftpar31)
+    deallocate( this%a_fix)
+    deallocate( this%b_fix)
+    deallocate( this%c_fix)
+    deallocate( this%s_fix)
+    deallocate( this%akc_active)
+    deallocate( this%akn_active)
+    deallocate( this%ekc_active)
+    deallocate( this%ekn_active)
+    deallocate( this%kc_nonmyc)
+    deallocate( this%kn_nonmyc)
+    deallocate( this%kr_resorb)
+    deallocate( this%perecm)
+    deallocate( this%root_dmx)
+    deallocate( this%fun_cn_flex_a)
+    deallocate( this%fun_cn_flex_b)
+    deallocate( this%fun_cn_flex_c)
+    deallocate( this%FUN_fracfixers)
+    
+  end subroutine Clean
+
 
 end module pftconMod
 

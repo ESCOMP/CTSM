@@ -21,7 +21,10 @@ module CNVegNitrogenStateType
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
-  ! 
+  use dynPatchStateUpdaterMod, only : patch_state_updater_type
+  use CNSpeciesMod   , only : CN_SPECIES_N
+  use CNVegComputeSeedMod, only : ComputeSeedAmounts
+  !
   ! !PUBLIC TYPES:
   implicit none
 
@@ -80,6 +83,7 @@ module CNVegNitrogenStateType
      procedure , public  :: SetValues
      procedure , public  :: ZeroDWT
      procedure , public  :: Summary => Summary_nitrogenstate
+     procedure , public  :: DynamicPatchAdjustments   ! adjust state variables when patch areas change
      procedure , public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
@@ -955,6 +959,219 @@ contains
     
 
   end subroutine Summary_nitrogenstate
+
+  !-----------------------------------------------------------------------
+  subroutine DynamicPatchAdjustments(this, bounds, &
+       num_soilp_with_inactive, filter_soilp_with_inactive, &
+       patch_state_updater, &
+       leafc_seed, deadstemc_seed, &
+       conv_nflux, product_nflux, &
+       dwt_frootn_to_litter, &
+       dwt_livecrootn_to_litter, &
+       dwt_deadcrootn_to_litter, &
+       dwt_leafn_seed, &
+       dwt_deadstemn_seed)
+    !
+    ! !DESCRIPTION:
+    ! Adjust state variables and compute associated fluxes when patch areas change due to
+    ! dynamic landuse
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cnveg_nitrogenstate_type) , intent(inout) :: this
+    type(bounds_type)               , intent(in)    :: bounds
+    integer                         , intent(in)    :: num_soilp_with_inactive ! number of points in filter
+    integer                         , intent(in)    :: filter_soilp_with_inactive(:) ! soil patch filter that includes inactive points
+    type(patch_state_updater_type)  , intent(in)    :: patch_state_updater
+    real(r8)                        , intent(in)    :: leafc_seed  ! seed amount for leaf C
+    real(r8)                        , intent(in)    :: deadstemc_seed ! seed amount for deadstem C
+    real(r8)                        , intent(inout) :: conv_nflux( bounds%begp: )  ! patch-level conversion N flux to atm
+    real(r8)                        , intent(inout) :: product_nflux( bounds%begp: ) ! patch-level product N flux
+    real(r8)                        , intent(inout) :: dwt_frootn_to_litter( bounds%begp: ) ! patch-level fine root N to litter
+    real(r8)                        , intent(inout) :: dwt_livecrootn_to_litter( bounds%begp: ) ! patch-level live coarse root N to litter
+    real(r8)                        , intent(inout) :: dwt_deadcrootn_to_litter( bounds%begp: ) ! patch-level live coarse root N to litter
+    real(r8)                        , intent(inout) :: dwt_leafn_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: leaf N
+    real(r8)                        , intent(inout) :: dwt_deadstemn_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: deadstem N
+    !
+    ! !LOCAL VARIABLES:
+    integer :: begp, endp
+
+    logical  :: old_weight_was_zero(bounds%begp:bounds%endp)
+    logical  :: patch_grew(bounds%begp:bounds%endp)
+
+    ! The following are only set for growing patches:
+    real(r8) :: seed_leafn_patch(bounds%begp:bounds%endp)
+    real(r8) :: seed_leafn_storage_patch(bounds%begp:bounds%endp)
+    real(r8) :: seed_leafn_xfer_patch(bounds%begp:bounds%endp)
+    real(r8) :: seed_deadstemn_patch(bounds%begp:bounds%endp)
+
+    character(len=*), parameter :: subname = 'DynamicPatchAdjustments'
+    !-----------------------------------------------------------------------
+
+    begp = bounds%begp
+    endp = bounds%endp
+
+    SHR_ASSERT_ALL((ubound(conv_nflux) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(product_nflux) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_frootn_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_livecrootn_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_deadcrootn_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_leafn_seed) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_deadstemn_seed) == (/endp/)), errMsg(__FILE__, __LINE__))
+
+    old_weight_was_zero = patch_state_updater%old_weight_was_zero(bounds)
+    patch_grew = patch_state_updater%patch_grew(bounds)
+
+    call ComputeSeedAmounts(bounds, &
+         num_soilp_with_inactive, filter_soilp_with_inactive, &
+         species = CN_SPECIES_N, &
+         leafc_seed = leafc_seed, &
+         deadstemc_seed = deadstemc_seed, &
+         leaf_patch = this%leafn_patch(begp:endp), &
+         leaf_storage_patch = this%leafn_storage_patch(begp:endp), &
+         leaf_xfer_patch = this%leafn_xfer_patch(begp:endp), &
+
+         ! Calculations only needed for patches that grew:
+         compute_here_patch = patch_grew(begp:endp), &
+
+         ! For patches that previously had zero area, ignore the current state for the
+         ! sake of computing leaf proportions:
+         ignore_current_state_patch = old_weight_was_zero(begp:endp), &
+
+         seed_leaf_patch = seed_leafn_patch(begp:endp), &
+         seed_leaf_storage_patch = seed_leafn_storage_patch(begp:endp), &
+         seed_leaf_xfer_patch = seed_leafn_xfer_patch(begp:endp), &
+         seed_deadstem_patch = seed_deadstemn_patch(begp:endp))
+
+    call update_patch_state( &
+         var = this%leafn_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp), &
+         seed = seed_leafn_patch(begp:endp), &
+         seed_addition = dwt_leafn_seed(begp:endp))
+
+    call update_patch_state( &
+         var = this%leafn_storage_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp), &
+         seed = seed_leafn_storage_patch(begp:endp), &
+         seed_addition = dwt_leafn_seed(begp:endp))
+
+    call update_patch_state( &
+         var = this%leafn_xfer_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp), &
+         seed = seed_leafn_xfer_patch(begp:endp), &
+         seed_addition = dwt_leafn_seed(begp:endp))
+
+    call update_patch_state( &
+         var = this%frootn_patch(begp:endp), &
+         flux_out = dwt_frootn_to_litter(begp:endp))
+
+    call update_patch_state( &
+         var = this%frootn_storage_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%frootn_xfer_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%livestemn_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%livestemn_storage_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%livestemn_xfer_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call patch_state_updater%update_patch_state_partition_flux_by_type(bounds, &
+         num_soilp_with_inactive, filter_soilp_with_inactive, &
+         flux1_fraction_by_pft_type = pftcon%pconv, &
+         var = this%deadstemn_patch(begp:endp), &
+         flux1_out = conv_nflux(begp:endp), &
+         flux2_out = product_nflux(begp:endp), &
+         seed = seed_deadstemn_patch(begp:endp), &
+         seed_addition = dwt_deadstemn_seed(begp:endp))
+
+    call update_patch_state( &
+         var = this%deadstemn_storage_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%deadstemn_xfer_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%livecrootn_patch(begp:endp), &
+         flux_out = dwt_livecrootn_to_litter(begp:endp))
+
+    call update_patch_state( &
+         var = this%livecrootn_storage_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%livecrootn_xfer_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%deadcrootn_patch(begp:endp), &
+         flux_out = dwt_deadcrootn_to_litter(begp:endp))
+
+    call update_patch_state( &
+         var = this%deadcrootn_storage_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%deadcrootn_xfer_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%retransn_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%npool_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    call update_patch_state( &
+         var = this%ntrunc_patch(begp:endp), &
+         flux_out = conv_nflux(begp:endp))
+
+    ! The following are summary diagnostic variables, not involved in mass balance.
+    ! Hence, they do not have associated fluxes for area decreases.
+
+    call update_patch_state( &
+         var = this%dispvegn_patch(begp:endp))
+
+    call update_patch_state( &
+         var = this%storvegn_patch(begp:endp))
+
+    call update_patch_state( &
+         var = this%totvegn_patch(begp:endp))
+
+    call update_patch_state( &
+         var = this%totn_patch(begp:endp))
+
+  contains
+    subroutine update_patch_state(var, flux_out, seed, seed_addition)
+      ! Wraps call to update_patch_state, in order to remove duplication
+      real(r8), intent(inout) :: var( bounds%begp: )
+      real(r8), intent(inout), optional :: flux_out( bounds%begp: )
+      real(r8), intent(in), optional :: seed( bounds%begp: )
+      real(r8), intent(inout), optional :: seed_addition( bounds%begp: )
+      
+      call patch_state_updater%update_patch_state(bounds, &
+         num_soilp_with_inactive, filter_soilp_with_inactive, &
+         var = var, &
+         flux_out = flux_out, &
+         seed = seed, &
+         seed_addition = seed_addition)
+    end subroutine update_patch_state
+
+
+  end subroutine DynamicPatchAdjustments
 
   !-----------------------------------------------------------------------
   subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)

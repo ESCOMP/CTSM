@@ -13,6 +13,7 @@ module dynSubgridDriverMod
   use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops
   use dynSubgridControlMod         , only : get_do_harvest
   use dynPriorWeightsMod           , only : prior_weights_type
+  use dynPatchStateUpdaterMod      , only : patch_state_updater_type
   use dynColumnStateUpdaterMod     , only : column_state_updater_type
   use UrbanParamsType              , only : urbanparams_type
   use CanopyStateType              , only : canopystate_type
@@ -31,6 +32,7 @@ module dynSubgridDriverMod
   use WaterstateType               , only : waterstate_type
   use TemperatureType              , only : temperature_type
   use glc2lndMod                   , only : glc2lnd_type
+  use filterMod                    , only : filter_inactive_and_active
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -43,6 +45,9 @@ module dynSubgridDriverMod
 
   ! saved weights from before the subgrid weight updates
   type(prior_weights_type), target :: prior_weights
+
+  ! object used to update patch-level states after subgrid weight updates
+  type(patch_state_updater_type), target :: patch_state_updater
 
   ! object used to update column-level states after subgrid weight updates
   type(column_state_updater_type), target :: column_state_updater
@@ -92,6 +97,7 @@ contains
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     prior_weights = prior_weights_type(bounds)
+    patch_state_updater = patch_state_updater_type(bounds)
     column_state_updater = column_state_updater_type(bounds)
 
     ! Initialize stuff for prescribed transient Patches
@@ -182,11 +188,13 @@ contains
 
     ! These are used if this is the first step of a cold start
     type(prior_weights_type), target :: new_weights
+    type(patch_state_updater_type), target :: patch_state_updater_new_weights
     type(column_state_updater_type), target :: column_state_updater_new_weights
 
-    ! These point to the appropriate prior_weights and column_state_updater instances,
-    ! depending on whether it's a cold start
+    ! These point to the appropriate prior_weights, patch_state_updater and
+    ! column_state_updater instances, depending on whether it's a cold start
     type(prior_weights_type), pointer :: my_prior_weights
+    type(patch_state_updater_type), pointer :: my_patch_state_updater
     type(column_state_updater_type), pointer :: my_column_state_updater
 
     character(len=*), parameter :: subname = 'dynSubgrid_driver'
@@ -204,6 +212,7 @@ contains
     if (first_step_cold_start) then
        ! These objects need to be constructed outside a loop over clumps
        new_weights = prior_weights_type(bounds_proc)
+       patch_state_updater_new_weights = patch_state_updater_type(bounds_proc)
        column_state_updater_new_weights = column_state_updater_type(bounds_proc)
     end if
 
@@ -216,6 +225,7 @@ contains
             waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
 
        call prior_weights%set_prior_weights(bounds_clump)
+       call patch_state_updater%set_old_weights(bounds_clump)
        call column_state_updater%set_old_weights(bounds_clump)
     end do
     !$OMP END PARALLEL DO
@@ -275,6 +285,7 @@ contains
        ! Here: filters are re-made
        call reweight_wrapup(bounds_clump, glc_behavior)
 
+       call patch_state_updater%set_new_weights(bounds_clump)
        call column_state_updater%set_new_weights(bounds_clump)
 
        call set_subgrid_diagnostic_fields(bounds_clump)
@@ -291,12 +302,16 @@ contains
           ! object that say that there were no weight updates in this time step - i.e.,
           ! that the old weights are the same as the new weights.
           call new_weights%set_prior_weights(bounds_clump)
+          call patch_state_updater_new_weights%set_old_weights(bounds_clump)
+          call patch_state_updater_new_weights%set_new_weights(bounds_clump)
           call column_state_updater_new_weights%set_old_weights(bounds_clump)
           call column_state_updater_new_weights%set_new_weights(bounds_clump)
           my_prior_weights => new_weights
+          my_patch_state_updater => patch_state_updater_new_weights
           my_column_state_updater => column_state_updater_new_weights
        else
           my_prior_weights => prior_weights
+          my_patch_state_updater => patch_state_updater
           my_column_state_updater => column_state_updater
        end if
 
@@ -306,7 +321,8 @@ contains
 
        if (use_cn) then
           call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, &
-               my_prior_weights, my_column_state_updater, &
+               filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
+               my_prior_weights, my_patch_state_updater, my_column_state_updater, &
                canopystate_inst, photosyns_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &

@@ -1,4 +1,175 @@
 ===============================================================
+Tag name:  clm4_5_8_r180
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Jun  6 06:13:57 MDT 2016
+One-line Summary: Refactor dyn_cnbal_patch
+
+Purpose of changes
+------------------
+
+There was a lot of duplicated code, as well as almost-but-not-quite-duplicated
+code in dyn_cnbal_patch (the code used for updating patch-level BGC variables
+when patch weights change). This tag consolidates this duplicated code into some
+new shared infrastructure, similar to what is done for column-level variables.
+
+In addition, do not zero states when patch weights go to zero. (I expected this
+to change answers for 1-d history files, but it didn't.)
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2317: incorrect handling of isotopes with transient PFTs starting in clm4_5_1_r097
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: small timing increase: about 10% increase
+in dyn_cnbal_patch, amounting to a 0.3% increase in total CLM runtime (for both
+transient and non-transient runs).
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+NOTE: testing done on
+refactor_seed_calculation_n01_maintain_state_zero_weight_n01_dynlu_conserve_cn3_n03_clm4_5_8_r179;
+very minor changes since then tested with
+SMS_Ld5_D_P24x1.f10_f10.IRCP45CLM45BGC.hobart_nag.clm-decStart
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass, expected baseline failures as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_8_r179
+   CLM40 compared with clm4_5_8_r178 (baselines missing for r179)
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45 / CLM50 transient and CNDV runs
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+    Roundoff-level changes
+
+    Greater than roundoff-level for transient runs with isotopes, due to fixing
+    bug 2317
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   Created a branch (dynlu_conserve_cn3_oneoff) that was as similar as possible
+   to the trunk, with just those changes needed to get bit-for-bit behavior with
+   my new code (e.g., reordering some calculations). Confirmed that my new code
+   is bit-for-bit with that.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= New, shared infrastructure for updating patch-level variables
+A       components/clm/src/dyn_subgrid/dynPatchStateUpdaterMod.F90
+A       components/clm/src/dyn_subgrid/test/dynPatchStateUpdater_test/CMakeLists.txt
+A       components/clm/src/dyn_subgrid/test/dynPatchStateUpdater_test/test_patch_state_updater.pf
+A       components/clm/src/dyn_subgrid/test/dynPatchStateUpdater_test
+
+========= Extract code common to carbon and nitrogen, for computing seed amounts
+A       components/clm/src/biogeochem/CNVegComputeSeedMod.F90
+A       components/clm/src/biogeochem/test/CNVegComputeSeed_test/CMakeLists.txt
+A       components/clm/src/biogeochem/test/CNVegComputeSeed_test/test_ComputeSeedAmounts.pf
+A       components/clm/src/biogeochem/test/CNVegComputeSeed_test
+
+========= Define constants for identifying whether we're operating on c12, c13,
+          c14 or n (used in CNVegComputeSeedMod)
+A       components/clm/src/biogeochem/CNSpeciesMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+========= Remove a bunch of code - moved to new infrastructure
+M       components/clm/src/biogeochem/dynConsBiogeochemMod.F90
+
+========= Make calls to new patch state updater for each necessary variable
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90
+M       components/clm/src/biogeochem/CNVegNitrogenStateType.F90
+
+========= Set up patch state updater
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+
+========= Other minor changes needed to use the new infrastructure
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+
+========= Add some unit tests, and some related unit testing infrastructure
+M       components/clm/src/biogeochem/test/CMakeLists.txt
+M       components/clm/src/main/pftconMod.F90
+M       components/clm/src/biogeochem/CMakeLists.txt
+M       components/clm/src/dyn_subgrid/CMakeLists.txt
+M       components/clm/src/dyn_subgrid/test/CMakeLists.txt
+M       components/clm/src/unit_test_shr/unittestSimpleSubgridSetupsMod.F90
+
+========= Remove a bit of unused code
+M       components/clm/src/dyn_subgrid/dynColumnStateUpdaterMod.F90
+
+========= Remove a test that has been passing for a while, and one that no longer exists
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r179
 Originator(s):  sacks (Bill Sacks)
 Date: Fri May 27 10:39:15 MDT 2016

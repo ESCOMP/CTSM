@@ -505,7 +505,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine DynamicAreaConservation(this, bounds, &
-       prior_weights, column_state_updater, &
+       num_soilp_with_inactive, filter_soilp_with_inactive, &
+       prior_weights, patch_state_updater, column_state_updater, &
        canopystate_inst, photosyns_inst, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -518,12 +519,16 @@ contains
     !
     ! !USES:
     use dynPriorWeightsMod      , only : prior_weights_type
+    use dynPatchStateUpdaterMod, only : patch_state_updater_type
     use dynColumnStateUpdaterMod, only : column_state_updater_type
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
     type(bounds_type)                       , intent(in)    :: bounds        
+    integer                                 , intent(in)    :: num_soilp_with_inactive ! number of points in filter
+    integer                                 , intent(in)    :: filter_soilp_with_inactive(:) ! soil patch filter that includes inactive points
     type(prior_weights_type)                , intent(in)    :: prior_weights         ! weights prior to the subgrid weight updates
+    type(patch_state_updater_type)          , intent(in)    :: patch_state_updater
     type(column_state_updater_type)         , intent(in)    :: column_state_updater
     type(canopystate_type)                  , intent(inout) :: canopystate_inst
     type(photosyns_type)                    , intent(inout) :: photosyns_inst
@@ -540,20 +545,26 @@ contains
     character(len=*), parameter :: subname = 'DynamicAreaConservation'
     !-----------------------------------------------------------------------
 
-    call dyn_cnbal_patch(bounds, prior_weights, &
+    call t_startf('dyn_cnbal_patch')
+    call dyn_cnbal_patch(bounds, &
+         num_soilp_with_inactive, filter_soilp_with_inactive, &
+         prior_weights, patch_state_updater, &
          canopystate_inst, photosyns_inst, &
          this%cnveg_state_inst, &
          this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, this%c14_cnveg_carbonstate_inst, &
          this%cnveg_carbonflux_inst, this%c13_cnveg_carbonflux_inst, this%c14_cnveg_carbonflux_inst, &
          this%cnveg_nitrogenstate_inst, this%cnveg_nitrogenflux_inst, &
          soilbiogeochem_carbonflux_inst, soilbiogeochem_state_inst)
+    call t_stopf('dyn_cnbal_patch')
 
+    call t_startf('dyn_cnbal_col')
     call dyn_cnbal_col(bounds, column_state_updater, &
          this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, this%c14_cnveg_carbonstate_inst, &
          this%cnveg_nitrogenstate_inst, &
          soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, &
          ch4_inst)
+    call t_stopf('dyn_cnbal_col')
 
   end subroutine DynamicAreaConservation
 

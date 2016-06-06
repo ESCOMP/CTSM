@@ -222,13 +222,12 @@ contains
     type(bounds_type)                , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: c, g
+    integer :: c
 
     character(len=*), parameter :: subname = 'set_new_weights'
     !-----------------------------------------------------------------------
 
     do c = bounds%begc, bounds%endc
-       g = col%gridcell(c)
        this%cwtgcell_new(c)     = col%wtgcell(c)
        this%area_gained_col(c)  = this%cwtgcell_new(c) - this%cwtgcell_old(c)
     end do

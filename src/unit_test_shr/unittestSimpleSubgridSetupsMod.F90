@@ -21,6 +21,9 @@ module unittestSimpleSubgridSetupsMod
   ! Create a grid that has a single gridcell with a single vegetated patch
   public :: setup_single_veg_patch
 
+  ! Create a grid that has a single gridcell with N vegetated patches
+  public :: setup_n_veg_patches
+
   ! Create a grid that has N grid cells, each with a single vegetated patch
   public :: setup_ncells_single_veg_patch
 
@@ -68,6 +71,53 @@ contains
     call setup_ncells_single_veg_patch(ncells=1, pft_type=pft_type)
 
   end subroutine setup_single_veg_patch
+
+  !-----------------------------------------------------------------------
+  subroutine setup_n_veg_patches(pwtcol, pft_types)
+    !
+    ! !DESCRIPTION:
+    ! Create a grid that has a single gridcell with N vegetated patches on one column.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(in) :: pwtcol(:)
+
+    ! If given, this gives the pft type for each patch. If not given, pft types go 1..N.
+    integer, optional, intent(in) :: pft_types(:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: npatches
+    integer :: p
+    integer, allocatable :: l_pft_types(:)
+
+    character(len=*), parameter :: subname = 'setup_n_veg_patches'
+    !-----------------------------------------------------------------------
+
+    npatches = size(pwtcol)
+    allocate(l_pft_types(npatches))
+    if (present(pft_types)) then
+       SHR_ASSERT((size(pft_types) == npatches), errMsg(__FILE__, __LINE__))
+       l_pft_types = pft_types
+    else
+       do p = 1, npatches
+          l_pft_types(p) = p
+       end do
+    end if
+
+    call unittest_subgrid_setup_start()
+
+    call unittest_add_gridcell()
+    call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=1._r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=1._r8)
+    do p = 1, npatches
+       call unittest_add_patch(my_ci=ci, ptype=l_pft_types(p), wtcol=pwtcol(p))
+    end do
+
+    call unittest_subgrid_setup_end()
+
+  end subroutine setup_n_veg_patches
+
 
   !-----------------------------------------------------------------------
   subroutine setup_ncells_single_veg_patch(ncells, pft_type)

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_8_r180    sacks 06/06/2016 Refactor dyn_cnbal_patch
    clm4_5_8_r179    sacks 05/27/2016 Update column-level BGC state variables with dynamic landunits
    clm4_5_8_r178    sacks 04/17/2016 Remove some consistency checks, and merge crop_prog with use_crop in code
    clm4_5_8_r177    sacks 04/14/2016 Move CN product pools to gridcell level
