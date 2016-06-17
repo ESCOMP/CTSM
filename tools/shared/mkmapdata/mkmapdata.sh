@@ -279,7 +279,7 @@ elif [ "$phys" = "clm4_5" ]; then
            "0.5x0.5_AVHRR"     \
            "0.5x0.5_MODIS"     \
            "3x3min_LandScan2004" \
-           "3x3min_MODIS"      \
+           "3x3min_MODIS-wCsp" \
            "3x3min_USGS"       \
            "5x5min_nomask"     \
            "5x5min_IGBP-GSDP"  \

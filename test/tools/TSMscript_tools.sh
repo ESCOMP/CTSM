@@ -61,7 +61,7 @@ if [[ "$2" == "PTCLM" ]]; then
   # Copy map files so we can use them
   subdir=1x1pt_US-UMB
   mkdir $rundir/$subdir
-  cp $CSMDATA/lnd/clm2/PTCLMmydatafiles/$subdir/map_* $rundir/$subdir
+  cp $CSMDATA/lnd/clm2/PTCLMmydatafiles.c160208/$subdir/map_* $rundir/$subdir
 elif [ "$optfile" != "$4" ]; then
   echo "TSMscript_tools.sh: calling TCBtools.sh to prepare $1 $2 executable"
   ${CLM_SCRIPTDIR}/TCBtools.sh $1 $2 $cfgfile

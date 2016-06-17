@@ -101,17 +101,28 @@ OPTIONS
                                          use_century_decomp=true, use_nitrif_denitrif=true, and use_lch4=true)
                                     This toggles on the namelist variables:
                                           use_cn, use_lch4, use_nitrif_denitrif, use_vertsoilc, use_century_decomp
+     -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
+                              land-mask is valid.
+     -clm_accelerated_spinup "on|off" Setup in a configuration to run as fast as possible for doing a throw-away
+                              simulation in order to get the model to a spun-up state. So do things like
+                              turn off expensive options and setup for a low level of history output.
+ 
+                              If CLM4.5/CLM5.0 and bgc it also includes a prognostic Carbon model (cn or bgc)
+                              , also by default turn on Accelerated Decomposition mode which 
+                              is controlled by the namelist variable spinup_state.
 
-     -bgc_spinup "on|off"     CLM 4.5/5.0 Only. For CLM 4.0, spinup is controlled from configure.
+                              BGC Spinup for CLM4.5/5.0 Only (for CLM4.0 BGC spinup is
+controlled from configure)
+
                               Turn on given spinup mode for BGC setting of CN
                                   on : Turn on Accelerated Decomposition   (spinup_state = 1 or 2)
                                   off : run in normal mode                 (spinup_state = 0)
 
-                              Default is off.
+                              Default is set by clm_accelerated_spinup mode.
 
                               Spinup is now a two step procedure. First, run the model
-                              with spinup = "on". Then run the model for a while with
-                              spinup = "off". The exit spinup step happens automatically
+                              with clm_accelerated_spinup = "on". Then run the model for a while with
+                              spinup_state = 0. The exit spinup step happens automatically
                               on the first timestep when using a restart file from spinup
                               mode.
 
@@ -128,8 +139,6 @@ OPTIONS
                               a parameter and want to rapidly re-equilibrate without doing
                               a cold start.
 
-     -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
-                              land-mask is valid.
      -clm_demand "list"       List of variables to require on clm namelist besides the usuals.
                               "-clm_demand list" to list valid options.
                               (can include a list member "null" which does nothing)
@@ -196,6 +205,7 @@ OPTIONS
                               Seek surface datasets with irrigation turned on.  (for CLM4.0 physics)
                               Default: .false.
      -l_ncpl "LND_NCPL"       Number of CLM coupling time-steps in a day.
+     -lnd_tuning_mode "value" Use the parameters tuned for the given configuration (CLM version and atmospheric forcing)
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
                               "-mask list" to list valid land masks.
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying
@@ -222,7 +232,7 @@ OPTIONS
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
       0. namelist values set by specific command-line options, like, -d, -sim_year
-             (i.e.  compset choice and CLM_BLDNML_OPTS env_run variable)
+             (i.e.  compset choice and CLM_BLDNML_OPTS, CLM_ACCELERATED_SPINUP, LND_TUNING_MODE env_run variables)
      (NOTE: If you try to contradict these settings by methods below, an error will be triggered)
       1. values set on the command-line using the -namelist option,
              (i.e. CLM_NAMELIST_OPTS env_run variable)
@@ -258,16 +268,17 @@ sub process_commandline {
                glc_present           => 0,
                glc_smb               => "default",
                l_ncpl                => undef,
+               lnd_tuning_mode       => "default",
                lnd_frac              => undef,
                dir                   => "$cwd",
                rcp                   => "default",
                sim_year              => "default",
-               bgc_spinup            => "default",
+               clm_accelerated_spinup=> "default",
                chk_res               => undef,
                note                  => undef,
                drydep                => 0,
                fire_emis             => 0,
-               megan                 => 1,
+               megan                 => "default",
                irrig                 => "default",
                res                   => "default",
                silent                => 0,
@@ -305,6 +316,7 @@ sub process_commandline {
              "ignore_ic_year"            => \$opts{'ignore_ic_year'},
              "infile=s"                  => \$opts{'infile'},
              "lnd_frac=s"                => \$opts{'lnd_frac'},
+             "lnd_tuning_mode=s"         => \$opts{'lnd_tuning_mode'},
              "l_ncpl=i"                  => \$opts{'l_ncpl'},
              "inputdata=s"               => \$opts{'inputdata'},
              "mask=s"                    => \$opts{'mask'},
@@ -313,7 +325,7 @@ sub process_commandline {
              "rcp=s"                     => \$opts{'rcp'},
              "s|silent"                  => \$opts{'silent'},
              "sim_year=s"                => \$opts{'sim_year'},
-             "bgc_spinup=s"              => \$opts{'bgc_spinup'},
+             "clm_accelerated_spinup=s"  => \$opts{'clm_accelerated_spinup'},
              "clm_start_type=s"          => \$opts{'clm_start_type'},
              "test"                      => \$opts{'test'},
              "use_case=s"                => \$opts{'use_case'},
@@ -442,6 +454,7 @@ sub read_namelist_definition {
   my $phys = $physv->as_filename( );
   my @nl_definition_files = ( "$drvblddir/namelist_files/namelist_definition_drv.xml",
                               "$drvblddir/namelist_files/namelist_definition_modio.xml",
+                              "$drvblddir/namelist_files/namelist_definition_drv_flds.xml",
                               "$nl_flags->{'cfgdir'}/namelist_files/namelist_definition_$phys.xml" );
   foreach my $nl_defin_file  ( @nl_definition_files ) {
     (-f "$nl_defin_file")  or  fatal_error("Cannot find namelist definition file \"$nl_defin_file\"\n");
@@ -617,7 +630,7 @@ sub process_namelist_commandline_options {
   #
   # First get the command-line specified overall values or their defaults
   # Obtain default values for the following build-namelist input arguments
-  # : res, mask, rcp, sim_year, sim_year_range, and bgc_spinup.
+  # : res, mask, rcp, sim_year, sim_year_range, and clm_accelerated_spinup.
   #
   # NOTE: cfg only needs to be passed to functions that work with
   # clm4_0 compile time functionality!
@@ -628,12 +641,12 @@ sub process_namelist_commandline_options {
   setup_cmdl_resolution($opts, $nl_flags, $definition, $defaults);
   setup_cmdl_mask($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_bgc($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
+  setup_cmdl_spinup($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
   setup_cmdl_crop($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
   setup_cmdl_maxpft($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
   setup_cmdl_glc_nec($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_irrigation($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_cmdl_rcp($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_cmdl_bgc_spinup($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
   setup_cmdl_simulation_year($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_run_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_dynamic_vegetation($opts, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -1043,42 +1056,45 @@ sub setup_cmdl_rcp {
 
 #-------------------------------------------------------------------------------
 
-sub setup_cmdl_bgc_spinup {
-  # CLM 4.0 --> spinup mode controlled from "spinup" in configure
-  # CLM 4.5 --> spinup mode controlled from "bgc_spinup" in build-namelist
+sub setup_cmdl_spinup {
+  # CLM 4.0 --> BGC spinup mode controlled from "spinup" in configure
+  # CLM 4.5/5.0 --> BGC spinup mode controlled from "clm_accelerated_spinup" in build-namelist
   my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv) = @_;
 
   my $val;
   my $var;
   $nl_flags->{'spinup'} = undef;
-  $nl_flags->{'bgc_spinup'} = undef;
+  $var = "clm_accelerated_spinup";
+  if ( $opts->{$var} ne "default" ) {
+    $val = $opts->{$var};
+  } else {
+    $val = $defaults->get_value($var);
+  }
+  $nl_flags->{$var} = $val;
+  my $group = $definition->get_group_name($var);
+  $nl->set_variable_value($group, $var, quote_string($val) );
+  if (  ! $definition->is_valid_value( $var, $val , 'noquotes' => 1) ) {
+    my @valid_values   = $definition->get_valid_values( $var );
+    fatal_error("$var has an invalid value ($val). Valid values are: @valid_values\n");
+  }
+  verbose_message("CLM accelerated spinup mode is $val");
   if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
     $nl_flags->{'spinup'} = $cfg->get('spinup');
-    if ($opts->{"bgc_spinup"} ne "default") {
-      fatal_error("bgc_spinup can not be controlled from the namelist in CLM 4.0. Try configure using CLM_CONFIG_OPTS (-spinup).");
-    }
   } elsif ( $physv->as_long() >= $physv->as_long("clm4_5")) {
-    $var = "bgc_spinup";
-    if ( $opts->{$var} ne "default" ) {
-      $val = $opts->{$var};
+    add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition,
+                $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{$var},
+                use_cn=>$nl_flags->{'use_cn'} );
+    if ( $nl->get_value("spinup_state") ne 0 ) {
+      $nl_flags->{'bgc_spinup'} = "on";
+      if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
+         fatal_error("spinup_state is accelerated (=1 or 2) which is for a BGC mode of CN or BGC," .
+                     " but the BGC mode is Satellite Phenology, change one or the other\n");
+      }
+      if ( $nl_flags->{'clm_accelerated_spinup'} eq "off" ) {
+         fatal_error("spinup_state is accelerated, but clm_accelerated_spinup is off, change one or the other\n");
+      }
     } else {
-      $val = $defaults->get_value($var);
-    }
-    $nl_flags->{$var} = $val;
-    my $group = $definition->get_group_name($var);
-    $nl->set_variable_value($group, $var, quote_string($val) );
-    if (  ! $definition->is_valid_value( $var, $val , 'noquotes' => 1) ) {
-      my @valid_values   = $definition->get_valid_values( $var );
-      fatal_error("$var has an invalid value ($val). Valid values are: @valid_values\n");
-    }
-    if ( $nl_flags->{'bgc_spinup'} eq "on" && $nl_flags->{'use_cn'} ne ".true.") {
-      fatal_error("$var can not be '$nl_flags->{'bgc_spinup'}' if CN is turned off (use_cn=$nl_flags->{'use_cn'}).");
-    }
-    if ( $nl->get_value("spinup_state") eq 0 && $nl_flags->{'bgc_spinup'} eq "on" ) {
-      fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
-    }
-    if ( ($nl->get_value("spinup_state") eq 1 || $nl->get_value("spinup_state") eq 2) && $nl_flags->{'bgc_spinup'} eq "off" ) {
-      fatal_error("Namelist spinup_state contradicts the command line option bgc_spinup" );
+      $nl_flags->{'bgc_spinup'} = "off";
     }
   }
 
@@ -1314,7 +1330,7 @@ sub process_namelist_commandline_clm_usr_name {
     $settings{'sim_year'}       = $nl_flags->{'sim_year'};
     $settings{'rcp'}            = $nl_flags->{'rcp'};
     $settings{'sim_year_range'} = $nl_flags->{'sim_year_range'};
-    $settings{'bgc_spinup'}     = $nl_flags->{'bgc_spinup'};
+    $settings{'clm_accelerated_spinup'} = $nl_flags->{'clm_accelerated_spinup'};
     $settings{'clm_usr_name'}   = $opts->{'clm_usr_name'};
 
     if ( $nl_flags->{'inputdata_rootdir'} eq "\$DIN_LOC_ROOT" ) {
@@ -1416,6 +1432,8 @@ sub process_namelist_inline_logic {
   # namelist variables that have not been previously set.
   my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $envxml_ref, $physv) = @_;
 
+  setup_logic_lnd_tuning($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref, $physv);
+
   ##############################
   # namelist group: clm_inparm #
   ##############################
@@ -1440,7 +1458,7 @@ sub process_namelist_inline_logic {
   setup_logic_surface_dataset($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_dynamic_subgrid($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
-  setup_logic_bgc_spinup($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_spinup($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_supplemental_nitrogen($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_snowpack($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_atm_forcing($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -1456,11 +1474,6 @@ sub process_namelist_inline_logic {
   #################################
   setup_logic_cnfire($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
-  #######################################################################
-  # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
-  #######################################################################
-  setup_logic_hydrology_switches($nl);
-
   ###############################
   # namelist group: clmu_inparm #
   ###############################
@@ -1470,7 +1483,7 @@ sub process_namelist_inline_logic {
   # namelist group: ch4par_in   #
   ###############################
   setup_logic_methane($opts->{'test'}, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_c_isotope($nl_flags, $definition, $defaults, $nl);
+  setup_logic_c_isotope($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   ###############################
   # namelist group: ndepdyn_nml #
@@ -1481,6 +1494,11 @@ sub process_namelist_inline_logic {
   # namelist group: cnmresp_inparm #
   ##################################
   setup_logic_cnmresp($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #################################
+  # namelist group: nitrif_inparm #
+  #################################
+  #setup_logic_nitrif_params( $nl_flags, $definition, $defaults, $nl );  # Comment out
 
   ####################################
   # namelist group: photosyns_inparm #
@@ -1528,7 +1546,7 @@ sub process_namelist_inline_logic {
   setup_logic_soilwater_movement($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #############################################
-  # namelist group: rooting_profile_inparm #
+  # namelist group: rooting_profile_inparm    #
   #############################################
   setup_logic_rooting_profile($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
@@ -1546,6 +1564,17 @@ sub process_namelist_inline_logic {
   # namelist group: clm_canopy_inparm #
   #####################################
   setup_logic_canopy($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  ########################################
+  # namelist group: soilhydrology_inparm #
+  ########################################
+  #setup_logic_hydrology_params($nl_flags, $definition, $defaults, $nl);  # comment out
+
+  #######################################################################
+  # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
+  #######################################################################
+  setup_logic_hydrology_switches($nl, $physv);
+
 }
 
 #-------------------------------------------------------------------------------
@@ -1588,6 +1617,34 @@ sub setup_logic_site_specific {
     }
   }
 }
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_lnd_tuning {
+
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref, $physv) = @_;
+
+  my $var    = "lnd_tuning_mode";
+  if ( $opts->{$var} eq "default" ) {
+     my %settings;
+     $settings{'phys'} = $nl_flags->{'phys'};
+     $nl_flags->{$var} = $defaults->get_value($var, \%settings );
+  } else {
+     $nl_flags->{$var} = $opts->{$var};
+  }
+  my $group = $definition->get_group_name($var);
+  $nl->set_variable_value($group, $var, quote_string( $nl_flags->{$var} ) );
+  if (  ! $definition->is_valid_value( $var, quote_string( $nl_flags->{$var}) ) ) {
+    my @valid_values   = $definition->get_valid_values( $var );
+    fatal_error("$var has a value (".$nl_flags->{$var}.") that is NOT valid. Valid values are: @valid_values\n");
+  }
+  verbose_message("Using $nl_flags->{$var} for lnd_tuning_mode");
+  my $phys = $physv->as_string();
+  if ( $nl_flags->{$var} !~ /^${phys}_/ ) {
+     fatal_error("First part of lnd_tuning_mode MUST match the CLM version you are using.\n");
+  }
+}
+
 
 #-------------------------------------------------------------------------------
 
@@ -1894,7 +1951,8 @@ sub setup_logic_cnfire {
               fatal_error( "fire_method is no_fire and yet $item is being set, which contradicts that" );
            }
         } else {
-           add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, 'fire_method'=>$fire_method);
+           add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, 
+                       'fire_method'=>$fire_method, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'});
         }
      }
   } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
@@ -2342,18 +2400,20 @@ sub setup_logic_do_harvest {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_bgc_spinup {
+sub setup_logic_spinup {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5")) {
-    if ( $nl_flags->{'bgc_mode'} ne "sp" ) {
-      # only set bgc_spinup state if CN is on.
-      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'spinup_state', 'bgc_spinup'=>$nl_flags->{'bgc_spinup'} );
-    }
-
     if ( $nl_flags->{'bgc_mode'} eq "sp" && defined($nl->get_value('override_bgc_restart_mismatch_dump'))) {
       fatal_error("CN must be on if override_bgc_restart_mismatch_dump is set.\n");
     }
+  }
+  if ( $nl_flags->{'clm_accelerated_spinup'} eq "on" ) {
+     foreach my $var ( "hist_nhtfrq", "hist_fincl1", "hist_empty_htapes", "hist_mfilt" ) {
+         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                     $var, use_cn=>$nl_flags->{'use_cn'}, use_ed=>$nl_flags->{'use_ed'},
+                     use_cndv=>$nl_flags->{'use_cndv'} );
+     }
   }
 }
 
@@ -2410,20 +2470,88 @@ sub setup_logic_supplemental_nitrogen {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_hydrology_params {
+  #
+  # Logic for hydrology parameters
+  #
+  my ($nl_flags, $definition, $defaults, $nl) = @_;
+
+  my $lower = $nl->get_value( 'lower_boundary_condition'  );
+  my $var   = "baseflow_scalar";
+  my $val   = $nl->get_value( $var );
+  if ( defined($val) ) {
+     if ( $lower != 1 && $lower != 2 ) {
+        fatal_error("baseflow_scalar is only used for lower_boundary_condition of flux or zero-flux");
+     }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_nitrif_params {
+  #
+  # Logic for nitrification parameters
+  #
+  my ($nl_flags, $definition, $defaults, $nl) = @_;
+
+  if ( !  value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) {
+    my @vars = ( "k_nitr_max", "denitrif_respiration_coefficient", "denitrif_respiration_exponent",
+                 "denitrif_nitrateconc_coefficient", "denitrif_nitrateconc_exponent" );
+    foreach my $var ( @vars ) {
+       if ( defined($nl->get_value( $var ) ) ) {
+         fatal_error("$var is only used when use_nitrif_denitrif is turned on");
+       }
+    }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_hydrology_switches {
   #
   # Check on Switches for hydrology
   #
-  my ($nl) = @_;
+  my ($nl, $physv) = @_;
 
-  my $subgrid    = $nl->get_value('subgridflag' ) || 0;
-  my $origflag   = $nl->get_value('origflag'    ) || 0;
-  my $h2osfcflag = $nl->get_value('h2osfcflag'  ) || 0;
+  my $subgrid    = $nl->get_value('subgridflag' );
+  my $origflag   = $nl->get_value('origflag'    );
+  my $h2osfcflag = $nl->get_value('h2osfcflag'  );
   if ( $origflag == 1 && $subgrid == 1 ) {
     fatal_error("if origflag is ON, subgridflag can NOT also be on!");
   }
   if ( $h2osfcflag == 1 && $subgrid != 1 ) {
     fatal_error("if h2osfcflag is ON, subgridflag can NOT be off!");
+  }
+  # These should NOT be set for CLM5.0 and beyond
+  if ( $physv->as_long() > $physv->as_long("clm4_5") ) {
+     foreach my $var ( "origflag", "h2osfcflag", "oldfflag" ) {
+        my $val = $nl->get_value($var);
+        if ( defined($val) ) {
+           fatal_error( "ERROR:: $val is deprecated and can only be used with CLM4.5" );
+        }
+     }
+  }
+  # Test bad configurations
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     my $lower   = $nl->get_value( 'lower_boundary_condition'  );
+     my $use_vic = $nl->get_value( 'use_vichydro'              );
+     my $use_bed = $nl->get_value( 'use_bedrock'               );
+     my $soilmtd = $nl->get_value( 'soilwater_movement_method' );
+     if ( defined($soilmtd) && defined($lower) && $soilmtd == 0 && $lower != 4 ) {
+         fatal_error( "If soil water movement method is zeng-decker -- lower_boundary_condition can only be aquifer" );
+     }
+     if ( defined($use_bed) && defined($lower) && (value_is_true($use_bed)) && $lower != 2 ) {
+        fatal_error( "If use_bedrock is on -- lower_boundary_condition can only be flux" );
+     }
+     if ( defined($use_vic) && defined($lower) && (value_is_true($use_vic)) && $lower != 3 && $lower != 4) {
+        fatal_error( "If use_vichydro is on -- lower_boundary_condition can only be table or aquifer" );
+     }
+     if ( defined($origflag) && defined($use_vic) && (value_is_true($use_vic)) && $origflag != 1 ) {
+        fatal_error( "If use_vichydro is on -- origflag can NOT be equal to 1" );
+     }
+     if ( defined($h2osfcflag) && defined($lower) && $h2osfcflag == 0 && $lower != 4 ) {
+        fatal_error( "If h2osfcflag is 0 lower_boundary_condition can only be aquifer" );
+     }
   }
 }
 
@@ -2626,7 +2754,7 @@ sub setup_logic_c_isotope {
   #
   # Error checking for C-isotope options
   #
-  my ($nl_flags, $definition, $defaults, $nl) = @_;
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   my $use_c13 = $nl->get_value('use_c13');
   my $use_c14 = $nl->get_value('use_c14');
@@ -2650,9 +2778,9 @@ sub setup_logic_c_isotope {
     if ( defined($use_c14) ) {
       if ( $use_c14 =~ /$TRUE/i ) {
         my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
-        if ( defined($use_c14_bombspike) && $use_c14_bombspike =~ /$TRUE/i &&
-             ! defined($nl->get_value('atm_c14_filename')) ) {
-          fatal_error("use_c14_bombspike TRUE but atm_c14_filename NOT set\n");
+        if ( defined($use_c14_bombspike) && value_is_true($use_c14_bombspike) ) {
+           add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
+                   'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'} );
         }
       } else {
         if ( defined($nl->get_value('use_c14_bombspike')) ||
@@ -2687,7 +2815,8 @@ sub setup_logic_nitrogen_deposition {
 
   if ( $physv->as_long() == $physv->as_long("clm4_0") && $nl_flags->{'bgc_mode'} ne "none" ) {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'}, 
-                'bgc'=>$nl_flags->{'bgc_mode'}, 'hgrid'=>$nl_flags->{'res'} );
+                'bgc'=>$nl_flags->{'bgc_mode'}, 'hgrid'=>$nl_flags->{'res'},
+                'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep', 'phys'=>$nl_flags->{'phys'},
                 'bgc'=>$nl_flags->{'bgc_mode'}, 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
@@ -2707,7 +2836,8 @@ sub setup_logic_nitrogen_deposition {
 
   } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") && $nl_flags->{'bgc_mode'} ne "sp" ) {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
-                'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'} );
+                'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
+                'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
@@ -2813,7 +2943,8 @@ sub setup_logic_popd_streams {
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     if ( $nl_flags->{'bgc_mode'} ne "sp" ) {
-      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdensmapalgo', 'hgrid'=>$nl_flags->{'res'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdensmapalgo', 'hgrid'=>$nl_flags->{'res'}, 
+                  'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_popdens', 'phys'=>$nl_flags->{'phys'},
                   'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
@@ -2851,7 +2982,8 @@ sub setup_logic_lightning_streams {
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     if ( $nl_flags->{'bgc_mode'} ne "sp" ) {
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 'use_cn'=>$nl_flags->{'use_cn'},
-                  'hgrid'=>$nl_flags->{'res'} );
+                  'hgrid'=>$nl_flags->{'res'},
+                  'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
                   'sim_year'=>$nl_flags->{'sim_year'},
                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
@@ -2921,7 +3053,17 @@ sub setup_logic_fire_emis {
 sub setup_logic_megan {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  if ($opts->{'megan'} ) {
+  my $var   = "megan";
+
+  if ( $opts->{$var} eq "default" ) {
+    add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+'megan', clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
+    $nl_flags->{$var} = $nl->get_value($var);
+  } else {
+    $nl_flags->{$var} = $opts->{$var};
+  }
+
+  if ($nl_flags->{'megan'} ) {
     if ( value_is_true( $nl_flags->{'use_ed'} ) ) {
        fatal_error("MEGAN can NOT be on when ED is also on.\n" . 
                    "   Use the '-no-megan' option when '-ed_mode' is activated");
@@ -3096,6 +3238,7 @@ sub write_output_files {
                  clm_soilhydrology_inparm dynamic_subgrid 
                  finidat_consistency_checks dynpft_consistency_checks 
                  clm_initinterp_inparm
+                 soilhydrology_inparm
                  soilwater_movement_inparm rooting_profile_inparm 
                  soil_resis_inparm  bgc_shared
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
@@ -3115,6 +3258,7 @@ sub write_output_files {
       push @groups, "cnmresp_inparm";
       push @groups, "photosyns_inparm";
       push @groups, "cnfire_inparm";
+      push @groups, "nitrif_inparm";
       push @groups, "lifire_inparm";
       push @groups, "clm_canopy_inparm";
     }
@@ -3126,12 +3270,10 @@ sub write_output_files {
   verbose_message("Writing clm namelist to $outfile");
 
   # Drydep, fire-emission or MEGAN namelist for driver
-  if ($opts->{'drydep'} || $opts->{'megan'} || $opts->{'fire_emis'} ) {
-    @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl);
-    $outfile = "$opts->{'dir'}/drv_flds_in";
-    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
-    verbose_message("Writing @groups namelists to $outfile");
-  }
+  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm);
+  $outfile = "$opts->{'dir'}/drv_flds_in";
+  $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+  verbose_message("Writing @groups namelists to $outfile");
 }
 
 #-------------------------------------------------------------------------------

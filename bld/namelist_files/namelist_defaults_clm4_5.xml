@@ -28,13 +28,30 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Default Biogeochemistry mode -->
 <bgc_mode >sp</bgc_mode>
 
-<!-- BGC spinup mode -->
-<bgc_spinup>off</bgc_spinup>
+<lnd_tuning_mode phys="clm4_0">clm4_0_default</lnd_tuning_mode>
+<lnd_tuning_mode phys="clm4_5">clm4_5_CRUNCEP</lnd_tuning_mode>
+<lnd_tuning_mode phys="clm5_0">clm5_0_cam5.5</lnd_tuning_mode>
 
-<!-- Spinup state -->
-<spinup_state bgc_spinup="on"  phys="clm5_0" >2</spinup_state>
-<spinup_state bgc_spinup="on"  phys="clm4_5" >1</spinup_state>
-<spinup_state bgc_spinup="off"               >0</spinup_state>
+<!-- Accelerated spinup mode -->
+<clm_accelerated_spinup>off</clm_accelerated_spinup>
+
+<!-- Spinup state for BGC -->
+<spinup_state clm_accelerated_spinup="on"  use_cn=".true." phys="clm5_0" >2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_cn=".true." phys="clm4_5" >1</spinup_state>
+<spinup_state clm_accelerated_spinup="off"                               >0</spinup_state>
+
+<!-- In accelerated spinup mode reduce the amount of history output -->
+<hist_empty_htapes clm_accelerated_spinup="on">.true.</hist_empty_htapes>
+<hist_fincl1 clm_accelerated_spinup="on" use_cn=".true." use_cndv=".true."
+>'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS','TSAI','HTOP','HBOT'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="on" use_cn=".true."
+>'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="on" use_ed=".true."
+>'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="on" use_cn=".false."
+>'TLAI','TWS'</hist_fincl1>
+<hist_nhtfrq clm_accelerated_spinup="on">-8760</hist_nhtfrq>
+<hist_mfilt  clm_accelerated_spinup="on">20</hist_mfilt>
 
 <!-- Rain/snow repartitioning -->
 <repartition_rain_snow phys="clm5_0">.true.</repartition_rain_snow>
@@ -60,8 +77,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <leafresp_method phys="clm4_5" use_cn=".true." >1</leafresp_method>
 <leafresp_method               use_cn=".false.">0</leafresp_method>
 
+<!-- C14 concentration file -->
+<atm_c14_filename use_c14=".true." use_c14_bombspike=".true." >lnd/clm2/isotopes/atm_delta_C14_data_1850-2007_monthly_23082011.nc</atm_c14_filename>
+
 <!-- Irrigation default -->
 <irrig>.false.</irrig>
+
+<!-- MEGAN model -->
+<megan clm_accelerated_spinup="on" >0</megan>
+<megan clm_accelerated_spinup="off">1</megan>
 
 <!-- Supplmental Nitrogen mode -->
 <suplnitro use_cn=".true." >NONE</suplnitro>
@@ -126,8 +150,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <bt_max                   fire_method="li2016crufrc" >0.85d00</bt_max>
 <cli_scale                fire_method="li2016crufrc" >0.0156d00</cli_scale>
 <boreal_peatfire_c        fire_method="li2016crufrc" >0.4d-4</boreal_peatfire_c>
-<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" >0.0085d00</pot_hmn_ign_counts_alpha>
-<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" run="offline">0.012d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.5">0.0085d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_GSWP3" >0.012d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc"                                >0.0085d00</pot_hmn_ign_counts_alpha>
 <non_boreal_peatfire_c    fire_method="li2016crufrc" >3.6d-4</non_boreal_peatfire_c>
 <cropfire_a1              fire_method="li2016crufrc" >0.36d00</cropfire_a1>
 <occur_hi_gdp_tree        fire_method="li2016crufrc" >0.33d00</occur_hi_gdp_tree>
@@ -718,11 +743,12 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 <!-- Performance issues                         -->
 <!-- =========================================  -->
 
-<nsegspc                   >20</nsegspc>
+<nsegspc                   >35</nsegspc>
 
 <!-- =========================================  -->
 <!-- Mapping Data                               -->
 <!-- =========================================  -->
+
 
 <!-- mapping files for 0.1x0.1 START added on Wed Jul 25 17:01:27 2012--> 
 
@@ -738,6 +764,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/0.1x0.1/map_10x10min_nomask_to_0.1x0.1_nomask_aave_da_c120406.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="0.1x0.1"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.1x0.1/map_3x3min_MODIS_to_0.1x0.1_nomask_aave_da_c120406.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="0.1x0.1"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/0.1x0.1/map_3x3min_MODIS-wCsp_to_0.1x0.1_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="5x5min"    frm_lmask="IGBP-GSDP"  to_hgrid="0.1x0.1"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.1x0.1/map_5x5min_IGBP-GSDP_to_0.1x0.1_nomask_aave_da_c120406.nc</map>
 <map frm_hgrid="5x5min"    frm_lmask="ISRIC-WISE"  to_hgrid="0.1x0.1"   to_lmask="nomask" 
@@ -773,6 +801,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1x1_asphaltjungleNJ/map_10x10min_nomask_to_1x1_asphaltjungleNJ_nomask_aave_da_c120717.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="1x1_asphaltjungleNJ"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_asphaltjungleNJ/map_3x3min_MODIS_to_1x1_asphaltjungleNJ_nomask_aave_da_c120717.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="1x1_asphaltjungleNJ"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/1x1_asphaltjungleNJ/map_3x3min_MODIS-wCsp_to_1x1_asphaltjungleNJ_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"   to_hgrid="1x1_asphaltjungleNJ"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_asphaltjungleNJ/map_3x3min_USGS_to_1x1_asphaltjungleNJ_nomask_aave_da_c120927.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="LandScan2004" to_hgrid="1x1_asphaltjungleNJ"   to_lmask="nomask" 
@@ -808,6 +838,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1x1_brazil/map_10x10min_nomask_to_1x1_brazil_nomask_aave_da_c120717.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="1x1_brazil"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_brazil/map_3x3min_MODIS_to_1x1_brazil_nomask_aave_da_c120717.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="1x1_brazil"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/1x1_brazil/map_3x3min_MODIS-wCsp_to_1x1_brazil_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"   to_hgrid="1x1_brazil"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_brazil/map_3x3min_USGS_to_1x1_brazil_nomask_aave_da_c120927.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="LandScan2004" to_hgrid="1x1_brazil"   to_lmask="nomask" 
@@ -843,6 +875,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_10x10min_nomask_to_1x1_camdenNJ_nomask_aave_da_c120717.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="1x1_camdenNJ"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_3x3min_MODIS_to_1x1_camdenNJ_nomask_aave_da_c120717.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="1x1_camdenNJ"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_3x3min_MODIS-wCsp_to_1x1_camdenNJ_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"   to_hgrid="1x1_camdenNJ"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_3x3min_USGS_to_1x1_camdenNJ_nomask_aave_da_c120927.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="LandScan2004" to_hgrid="1x1_camdenNJ"   to_lmask="nomask" 
@@ -878,6 +912,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1x1_mexicocityMEX/map_10x10min_nomask_to_1x1_mexicocityMEX_nomask_aave_da_c120717.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="1x1_mexicocityMEX"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_mexicocityMEX/map_3x3min_MODIS_to_1x1_mexicocityMEX_nomask_aave_da_c120717.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="1x1_mexicocityMEX"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/1x1_mexicocityMEX/map_3x3min_MODIS-wCsp_to_1x1_mexicocityMEX_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"   to_hgrid="1x1_mexicocityMEX"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_mexicocityMEX/map_3x3min_USGS_to_1x1_mexicocityMEX_nomask_aave_da_c120927.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="LandScan2004" to_hgrid="1x1_mexicocityMEX"   to_lmask="nomask" 
@@ -913,6 +949,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1x1_numaIA/map_10x10min_nomask_to_1x1_numaIA_nomask_aave_da_c120717.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="1x1_numaIA"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_numaIA/map_3x3min_MODIS_to_1x1_numaIA_nomask_aave_da_c120717.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="1x1_numaIA"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/1x1_numaIA/map_3x3min_MODIS-wCsp_to_1x1_numaIA_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"   to_hgrid="1x1_numaIA"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_numaIA/map_3x3min_USGS_to_1x1_numaIA_nomask_aave_da_c120927.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="LandScan2004" to_hgrid="1x1_numaIA"   to_lmask="nomask" 
@@ -948,6 +986,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1x1_smallvilleIA/map_10x10min_nomask_to_1x1_smallvilleIA_nomask_aave_da_c120717.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="1x1_smallvilleIA"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_smallvilleIA/map_3x3min_MODIS_to_1x1_smallvilleIA_nomask_aave_da_c120717.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="1x1_smallvilleIA"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/1x1_smallvilleIA/map_3x3min_MODIS-wCsp_to_1x1_smallvilleIA_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"   to_hgrid="1x1_smallvilleIA"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_smallvilleIA/map_3x3min_USGS_to_1x1_smallvilleIA_nomask_aave_da_c120927.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="LandScan2004" to_hgrid="1x1_smallvilleIA"   to_lmask="nomask" 
@@ -983,6 +1023,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_10x10min_nomask_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_MODIS_to_1x1_tropicAtl_nomask_aave_da_c120718.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_MODIS-wCsp_to_1x1_tropicAtl_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"   to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_tropicAtl/map_3x3min_USGS_to_1x1_tropicAtl_nomask_aave_da_c120927.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="LandScan2004" to_hgrid="1x1_tropicAtl"   to_lmask="nomask" 
@@ -1018,6 +1060,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1x1_urbanc_alpha/map_10x10min_nomask_to_1x1_urbanc_alpha_nomask_aave_da_c120717.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="1x1_urbanc_alpha"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_urbanc_alpha/map_3x3min_MODIS_to_1x1_urbanc_alpha_nomask_aave_da_c120717.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="1x1_urbanc_alpha"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/1x1_urbanc_alpha/map_3x3min_MODIS-wCsp_to_1x1_urbanc_alpha_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"   to_hgrid="1x1_urbanc_alpha"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_urbanc_alpha/map_3x3min_USGS_to_1x1_urbanc_alpha_nomask_aave_da_c120928.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="LandScan2004" to_hgrid="1x1_urbanc_alpha"   to_lmask="nomask" 
@@ -1053,6 +1097,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1x1_vancouverCAN/map_10x10min_nomask_to_1x1_vancouverCAN_nomask_aave_da_c120717.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="1x1_vancouverCAN"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_vancouverCAN/map_3x3min_MODIS_to_1x1_vancouverCAN_nomask_aave_da_c120717.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="1x1_vancouverCAN"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/1x1_vancouverCAN/map_3x3min_MODIS-wCsp_to_1x1_vancouverCAN_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"   to_hgrid="1x1_vancouverCAN"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_vancouverCAN/map_3x3min_USGS_to_1x1_vancouverCAN_nomask_aave_da_c120927.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="LandScan2004" to_hgrid="1x1_vancouverCAN"   to_lmask="nomask" 
@@ -1090,6 +1136,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/0.9x1.25/map_5x5min_ISRIC-WISE_to_0.9x1.25_nomask_aave_da_c120525.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="0.9x1.25"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/0.9x1.25/map_3x3min_MODIS_to_0.9x1.25_nomask_aave_da_c120523.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="0.9x1.25"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.9x1.25/map_3x3min_MODIS-wCsp_to_0.9x1.25_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="0.9x1.25"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/0.9x1.25/map_3x3min_USGS_to_0.9x1.25_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="0.9x1.25" to_lmask="nomask"
@@ -1119,6 +1167,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1.9x2.5/map_5x5min_ISRIC-WISE_to_1.9x2.5_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="1.9x2.5"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/1.9x2.5/map_3x3min_MODIS_to_1.9x2.5_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="1.9x2.5"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/1.9x2.5/map_3x3min_MODIS-wCsp_to_1.9x2.5_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="1.9x2.5"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/1.9x2.5/map_3x3min_USGS_to_1.9x2.5_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="1.9x2.5" to_lmask="nomask"
@@ -1149,6 +1199,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/10x15/map_5x5min_ISRIC-WISE_to_10x15_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="10x15"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/10x15/map_3x3min_MODIS_to_10x15_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="10x15"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/10x15/map_3x3min_MODIS-wCsp_to_10x15_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="10x15"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/10x15/map_3x3min_USGS_to_10x15_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="10x15" to_lmask="nomask"
@@ -1178,6 +1230,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/360x720/map_5x5min_ISRIC-WISE_to_360x720_nomask_aave_da_c120830.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"      to_hgrid="360x720cru"   to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/360x720/map_3x3min_MODIS_to_360x720_nomask_aave_da_c120830.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp" to_hgrid="360x720cru"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/360x720/map_3x3min_MODIS-wCsp_to_360x720cru_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"       to_hgrid="360x720cru"   to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/360x720/map_3x3min_USGS_to_360x720_nomask_aave_da_c121128.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="360x720cru" to_lmask="nomask"
@@ -1208,6 +1262,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/512x1024/map_5x5min_ISRIC-WISE_to_512x1024_nomask_aave_da_c120906.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="512x1024"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/512x1024/map_3x3min_MODIS_to_512x1024_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp" to_hgrid="512x1024"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/512x1024/map_3x3min_MODIS-wCsp_to_512x1024_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="512x1024"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/512x1024/map_3x3min_USGS_to_512x1024_nomask_aave_da_c120927.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="512x1024" to_lmask="nomask"
@@ -1238,6 +1294,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/128x256/map_5x5min_ISRIC-WISE_to_128x256_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="128x256"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/128x256/map_3x3min_MODIS_to_128x256_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="128x256"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/128x256/map_3x3min_MODIS-wCsp_to_128x256_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="128x256"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/128x256/map_3x3min_USGS_to_128x256_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="128x256" to_lmask="nomask"
@@ -1268,6 +1326,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/64x128/map_5x5min_ISRIC-WISE_to_64x128_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="64x128"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/64x128/map_3x3min_MODIS_to_64x128_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="64x128"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/64x128/map_3x3min_MODIS-wCsp_to_64x128_nomask_aave_da_c160428.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="64x128"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/64x128/map_3x3min_USGS_to_64x128_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="64x128" to_lmask="nomask"
@@ -1297,6 +1357,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/48x96/map_5x5min_ISRIC-WISE_to_48x96_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="48x96"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/48x96/map_3x3min_MODIS_to_48x96_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="48x96"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/48x96/map_3x3min_MODIS-wCsp_to_48x96_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="48x96"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/48x96/map_3x3min_USGS_to_48x96_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="48x96" to_lmask="nomask"
@@ -1326,6 +1388,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/32x64/map_5x5min_ISRIC-WISE_to_32x64_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="32x64"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/32x64/map_3x3min_MODIS_to_32x64_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="32x64"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/32x64/map_3x3min_MODIS-wCsp_to_32x64_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="32x64"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/32x64/map_3x3min_USGS_to_32x64_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="32x64" to_lmask="nomask"
@@ -1355,6 +1419,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/8x16/map_5x5min_ISRIC-WISE_to_8x16_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="8x16"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/8x16/map_3x3min_MODIS_to_8x16_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="8x16"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/8x16/map_3x3min_MODIS-wCsp_to_8x16_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="8x16"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/8x16/map_3x3min_USGS_to_8x16_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="8x16" to_lmask="nomask"
@@ -1384,6 +1450,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/4x5/map_5x5min_ISRIC-WISE_to_4x5_nomask_aave_da_c120906.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="4x5"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/4x5/map_3x3min_MODIS_to_4x5_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="4x5"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/4x5/map_3x3min_MODIS-wCsp_to_4x5_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="4x5"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/4x5/map_3x3min_USGS_to_4x5_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="4x5" to_lmask="nomask"
@@ -1413,6 +1481,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/0.23x0.31/map_5x5min_ISRIC-WISE_to_0.23x0.31_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="0.23x0.31"   to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/0.23x0.31/map_3x3min_MODIS_to_0.23x0.31_nomask_aave_da_c110930.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="0.23x0.31"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.23x0.31/map_3x3min_MODIS-wCsp_to_0.23x0.31_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="0.23x0.31"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/0.23x0.31/map_3x3min_USGS_to_0.23x0.31_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="0.23x0.31" to_lmask="nomask"
@@ -1445,6 +1515,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/2.5x3.33/map_5x5min_ISRIC-WISE_to_2.5x3.33_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="2.5x3.33"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/2.5x3.33/map_3x3min_MODIS_to_2.5x3.33_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="2.5x3.33"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/2.5x3.33/map_3x3min_MODIS-wCsp_to_2.5x3.33_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="2.5x3.33"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/2.5x3.33/map_3x3min_USGS_to_2.5x3.33_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="2.5x3.33" to_lmask="nomask"
@@ -1479,6 +1551,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/0.5x0.5/map_5x5min_nomask_to_0.5x0.5_nomask_aave_da_c111021.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="0.5x0.5"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.5x0.5/map_3x3min_MODIS_to_0.5x0.5_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="0.5x0.5"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_3x3min_MODIS-wCsp_to_0.5x0.5_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="5x5min"    frm_lmask="ISRIC-WISE"  to_hgrid="0.5x0.5"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.5x0.5/map_5x5min_ISRIC-WISE_to_0.5x0.5_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="LandScan2004"  to_hgrid="0.5x0.5"   to_lmask="nomask" 
@@ -1522,6 +1596,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/ne4np4/map_5x5min_ISRIC-WISE_to_ne4np4_nomask_aave_da_c120906.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne4np4"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne4np4/map_3x3min_MODIS_to_ne4np4_nomask_aave_da_c120906.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="ne4np4"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne4np4/map_3x3min_MODIS-wCsp_to_ne4np4_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="ne4np4"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne4np4/map_3x3min_USGS_to_ne4np4_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="ne4np4" to_lmask="nomask"
@@ -1556,6 +1632,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/ne16np4/map_5x5min_ISRIC-WISE_to_ne16np4_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne16np4"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne16np4/map_3x3min_MODIS_to_ne16np4_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="ne16np4"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne16np4/map_3x3min_MODIS-wCsp_to_ne16np4_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="ne16np4"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne16np4/map_3x3min_USGS_to_ne16np4_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="ne16np4" to_lmask="nomask"
@@ -1588,6 +1666,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/ne30np4/map_5x5min_ISRIC-WISE_to_ne30np4_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne30np4"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne30np4/map_3x3min_MODIS_to_ne30np4_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="ne30np4"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne30np4/map_3x3min_MODIS-wCsp_to_ne30np4_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="ne30np4"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne30np4/map_3x3min_USGS_to_ne30np4_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="ne30np4" to_lmask="nomask"
@@ -1620,6 +1700,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/ne60np4/map_5x5min_ISRIC-WISE_to_ne60np4_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne60np4"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne60np4/map_3x3min_MODIS_to_ne60np4_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="ne60np4"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne60np4/map_3x3min_MODIS-wCsp_to_ne60np4_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="ne60np4"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne60np4/map_3x3min_USGS_to_ne60np4_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="ne60np4" to_lmask="nomask"
@@ -1651,6 +1733,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/ne120np4/map_5minx5min_irrig_to_ne120np4_aave_da_110817.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne120np4" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne120np4/map_3x3min_MODIS_to_ne120np4_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="ne120np4" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne120np4/map_3x3min_MODIS-wCsp_to_ne120np4_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="ne120np4" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne120np4/map_3x3min_USGS_to_ne120np4_nomask_aave_da_c120913.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="ne120np4" to_lmask="nomask"
@@ -1659,12 +1743,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/ne120np4/map_3x3min_GLOBE-Gardner_to_ne120np4_nomask_aave_da_c120924.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="GLOBE-Gardner-mergeGIS" to_hgrid="ne120np4" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne120np4/map_3x3min_GLOBE-Gardner-mergeGIS_to_ne120np4_nomask_aave_da_c120924.nc</map>
-<map frm_hgrid="3x3min"   frm_lmask="MODIS" to_hgrid="ne120np4" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/ne120np4/map_3x3min_MODIS_to_ne120np4_nomask_aave_da_c111111.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="ne120np4" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne120np4/map_3x3min_USGS_to_ne120np4_nomask_aave_da_c120913.nc</map>
-<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="ne120np4" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/ne120np4/map_5x5min_ISRIC-WISE_to_ne120np4_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="0.9x1.25"    frm_lmask="GRDC"  to_hgrid="ne120np4"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/ne120np4/map_0.9x1.25_GRDC_to_ne120np4_nomask_aave_da_c130308.nc</map>
 <map frm_hgrid="360x720cru"    frm_lmask="cruncep"  to_hgrid="ne120np4"   to_lmask="nomask" 
@@ -1677,8 +1757,6 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 
 <map frm_hgrid="0.1x0.1"    frm_lmask="nomask"  to_hgrid="ne120np4"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/ne120np4/map_0.1x0.1_nomask_to_ne120np4_nomask_aave_da_c120706.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="USGS"  to_hgrid="ne120np4"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/ne120np4/map_3x3min_USGS_to_ne120np4_nomask_aave_da_c120913.nc</map>
 
 <!-- mapping files for ne120np4 END --> 
 
@@ -1696,6 +1774,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/5x5_amazon/map_5x5min_ISRIC-WISE_to_5x5_amazon_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="5x5_amazon"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/5x5_amazon/map_3x3min_MODIS_to_5x5_amazon_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="5x5_amazon"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/5x5_amazon/map_3x3min_MODIS-wCsp_to_5x5_amazon_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="5x5_amazon"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/5x5_amazon/map_3x3min_USGS_to_5x5_amazon_nomask_aave_da_c120927.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="5x5_amazon" to_lmask="nomask"
@@ -1725,6 +1805,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/ne240np4/map_5x5min_ISRIC-WISE_to_ne240np4_nomask_aave_da_c111115.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne240np4"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne240np4/map_3x3min_MODIS_to_ne240np4_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS-wCsp"  to_hgrid="ne240np4"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne240np4/map_3x3min_MODIS-wCsp_to_ne240np4_nomask_aave_da_c160425.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="USGS"   to_hgrid="ne240np4"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne240np4/map_3x3min_USGS_to_ne240np4_nomask_aave_da_c120926.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="ne240np4" to_lmask="nomask"
@@ -1767,6 +1849,8 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_LandScan2004_to_0.125x0.125_nomask_aave_da_c140702.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="MODIS"  to_hgrid="0.125x0.125"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_MODIS_to_0.125x0.125_nomask_aave_da_c140702.nc</map>
+<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="0.125x0.125"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_MODIS-wCsp_to_0.125x0.125_nomask_aave_da_c160427.nc</map>
 <map frm_hgrid="3x3min"    frm_lmask="USGS"  to_hgrid="0.125x0.125"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.125x0.125/map_3x3min_USGS_to_0.125x0.125_nomask_aave_da_c140702.nc</map>
 <map frm_hgrid="5x5min"    frm_lmask="IGBP-GSDP"  to_hgrid="0.125x0.125"   to_lmask="nomask" 

@@ -214,6 +214,14 @@ If TRUE use clm5 equation for fraction of intercepted precipitation
 Maximum fraction of leaf that may be wet prior to drip occuring
 </entry>
 
+<!-- Comment out for now...
+<entry id="baseflow_scalar" type="real" category="clm_physics"
+       group="soilhydrology_inparm" valid_values="" >
+Scalar multiplier for base flow rate
+(ONLY used if lower_boundary_condition is not aquifer or table)
+</entry>
+-->
+
 <entry id="soilwater_movement_method" type="integer" category="clm_physics"
        group="soilwater_movement_inparm" valid_values="0,1" >
 Index of solution method of Richards equation.
@@ -236,9 +244,7 @@ Index of upper boundary condition for Richards equation.
        group="soilwater_movement_inparm" valid_values="1,2,3,4" >
 Index of lower boundary condition for Richards equation.
 
-CLM 4.5 - default lower_boundary_condition = 4
-CLM 5.0 - default lower_boundary_condition = 3
-
+lower_boundary_condition = 1 : flux lower boundary condition
 lower_boundary_condition = 2 : zero-flux lower boundary condition
 lower_boundary_condition = 3 : water table head-based lower boundary condition w/ aquifer layer.
 lower_boundary_condition = 4 : 11-layer solution w/ aquifer layer
@@ -650,6 +656,38 @@ Nitrification/denitrification splits the prognostic mineral N pool into two
    mineral N pools: NO3 and NH4, and includes the transformations between them.
 Requires the CN model to work (either CN or CNDV).
 </entry>
+
+<!-- Comment out for now
+<entry id="denitrif_respiration_coefficient" type="real" category="bgc"
+       group="nitrif_inparm" valid_values="" >
+Multiplier for heterotrophic respiration for max denitrification rates
+(ONLY used if use_nitrif_denitrif is enabled)
+</entry>
+
+<entry id="denitrif_respiration_exponent" type="real" category="bgc"
+       group="nitrif_inparm" valid_values="" >
+Exponent power for heterotrophic respiration for max denitrification rates
+(ONLY used if use_nitrif_denitrif is enabled)
+</entry>
+
+<entry id="denitrif_nitrateconc_coefficient" type="real" category="bgc"
+       group="nitrif_inparm" valid_values="" >
+Multiplier for nitrate concentration for max denitrification rates
+(ONLY used if use_nitrif_denitrif is enabled)
+</entry>
+
+<entry id="denitrif_nitrateconc_exponent" type="real" category="bgc"
+       group="nitrif_inparm" valid_values="" >
+Exponent power for nitrate concentrationfor max denitrification rates
+(ONLY used if use_nitrif_denitrif is enabled)
+</entry>
+
+<entry id="k_nitr_max" type="real" category="bgc"
+       group="nitrif_inparm" valid_values="" >
+Maximum nitrification rate constant (1/s)
+(ONLY used if use_nitrif_denitrif is enabled)
+</entry>
+-->
 
 <entry id="use_vertsoilc" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
@@ -1284,9 +1322,23 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 Land mask description
 </entry> 
 
+<entry id="lnd_tuning_mode" type="char*20" category="default_settings"
+       group="default_settings"
+       valid_values="clm4_5_CRUNCEP,clm5_0_cam5.5,clm5_0_GSWP">
+General configuration of model version and atmospheric forcing to tune the model to run under.
+This sets the model to run with constants that were set to run well under the configuration
+of model version and atmospheric forcing. To run well constants would need to be changed
+to run with a different type of atmospheric forcing.
+</entry> 
+
 <entry id="irrig" type="logical" category="default_settings"
        group="default_settings"  >
 If TRUE, irrigation will be active (find surface datasets with active irrigation).
+</entry> 
+
+<entry id="megan" type="integer" category="default_settings"
+       group="default_settings"  valid_values="0,1">
+If 1, turn on the MEGAN model for BVOC's (Biogenic Volitile Organic Compounds)
 </entry> 
 
 <entry id="sim_year" type="integer" category="default_settings"
@@ -1318,46 +1370,26 @@ Namelist entries to demand be provided on the namelist.
 Description of the use case selected.
 </entry>
 
-<entry id="bgc_spinup" type="char*3" category="default_settings"
+<entry id="clm_accelerated_spinup" type="char*3" category="default_settings"
        group="default_settings" valid_values="on,off" >
-Command line arguement for turning on CN spinup mode.
+Command line argument for setting up your simulation in a mode for faster
+throughput. By default turns off some options, and sets up for a lower level
+of output. When bgc_mode is some level of prognostic BGC (so NOT Satellite Phenology)
+it also sets up for accelerated decomposition.
+NOTE: THIS CORRESPONDS DIRECTLY TO THE env_run.xml VARIABLE OF THE SAME NAME.
+      Set the env_run variable, rather than setting this directly.
 </entry>
 
 <entry id="bgc_mode" type="char*4" category="default_settings"
        group="default_settings" valid_values="sp,cn,bgc" >
-Command line arguement for biogeochemistry mode for CLM4.5
-   sp  = Satellitte Phenology
+Command line argument for biogeochemistry mode for CLM4.5
+   sp  = Satellite Phenology
    cn  = Carbon Nitrogen model
    bgc = CLM4.5 BGC model with: 
         CENTURY model pools 
         Nitrification/De-nitrification
         Methane model
         Vertically resolved Carbon
-</entry>
-
-<!-- ========================================================================================  -->
-<!-- drydep Namelists                                                                          -->
-<!-- ========================================================================================  -->
-
-<entry id="drydep_method" type="char*16" category="dry-deposition"
-       group="drydep_inparm" 
-       valid_values="xactive_lnd,xactive_atm,table">
-Where dry deposition is calculated (from land, atmosphere, or from a table)
-</entry>
-
-<!-- List of all of the potential Chemical species that can be use for Dry-Deposition 
-     Anything NOT in this list - can NOT be used. As species are added in
-       seq_drydep_mod.F90 this list needs to be updated.
-     Note: Species from H2 and thereafter are species that "map" 
-           to other previous species in the list. The mapping is laid
-           out in seq_drydep_mod.F90.
--->
-<entry id="drydep_list" type="char*32(100)" category="dry-deposition"
-       group="drydep_inparm" 
-       valid_values=
-"OX,H2O2,OH,HO2,CO,CH4,CH3O2,CH3OOH,CH2O,CHOOH,NO,NO2,HNO3,CO2,NH3,N2O5,NO3,CH3OH,HO2NO2,O1D,C2H6,C2H5O2,PO2,MACRO2,ISOPO2,C4H10,CH3CHO,C2H5OOH,C3H6,POOH,C2H4,PAN,CH3COOOH,C10H16,CHOCHO,CH3COCHO,GLYALD,CH3CO3,C3H8,C3H7O2,CH3COCH3,C3H7OOH,RO2,ROOH,Rn,ISOP,MVK,MACR,C2H5OH,ONITR,ONIT,ISOPNO3,HYDRALD,HCN,CH3CN,H2,'HYAC','CH3COOH','O3S','O3INERT','MPAN','ISOPOOH','MACROOH','Pb','XOOH','H2SO4','ALKOOH','MEKOOH','TOLOOH','BENOOH','XYLOOH','TERPOOH','SOGM','SOGI','SOGT','SOGB','SOGX','SOA','SO2','SO4','CB1','CB2','OC1','OC2','NH3','NH4','SA1','SA2','SA3','SA4','HCN','CH3CN','HCOOH','SOAM','SOAI','SOAT','SOAB','SOAX','O3A','XMPAN','XPAN','XNO','XNO2','XHNO3','XONIT','XONITR',XHO2NO2','XNH4NO3','COhc','COme','CO01','CO02','CO03','CO04','CO05','CO06','CO07','CO08','CO09','CO10','CO11','CO12','CO13','CO14','CO15','CO16','CO17','CO18','CO19','CO20','CO21','CO22','CO23','CO24','CO25','CO26','CO27','CO28','CO29','CO30','CO31','CO32','CO33','CO34','CO35','CO36','CO37','CO38','CO39','CO40','CO41','CO42','CO43','CO44','CO45','CO46','CO47','CO48','CO49','CO50','NH4NO3'"
->
-List of chemical constituents that dry deposition will be calculated for
 </entry>
 
 <!-- ========================================================================================  -->
@@ -1371,11 +1403,12 @@ Flag for overriding the crash that should occur if user tries to start the model
 
 <entry id="spinup_state" type="integer" category="clm_vertcn"
        group="clm_inparm" valid_values="0,1,2" >
-Flag for setting the state of the Accelerated decomposition spinup state for the model.  
+Flag for setting the state of the Accelerated decomposition spinup state for the BGC model.  
    0 = normal model behavior; 
    1 = AD spinup (standard)
    2 = AD spinup (accelerated spinup from Ricciuto, doesn't work for CNDV and not implemented for CN soil decomposition)
 Entering and exiting spinup mode occurs automatically by comparing the namelist and restart file values for this variable.
+NOTE: THIS CAN ONLY BE SET TO NON-ZERO WHEN BGC_MODE IS NOT SATELITE PHENOLOGY!
 </entry>
 
 <!-- vertical mixing switches    -->
@@ -1470,8 +1503,8 @@ Flag to use the atmospheric time series of C14 concentrations from bomb fallout,
 (EXPERIMENTAL and NOT tested)
 </entry>
 
-<entry id="atm_c14_filename" type="char*256" category="clm_isotope"
-       group="clm_inparm" valid_values="" >
+<entry id="atm_c14_filename" type="char*256"    category="clm_isotope"
+       input_pathname="abs"  group="clm_inparm" valid_values="" >
 Filename with time series of atmospheric Delta C14 data.  variables in file are "time" and "atm_delta_c14".  time variable is in format 1950.0, and time values must be monotonically increasing for interpolation, however spacing can be unequal. atm_delta_c14 variable has units of permil.  
 (EXPERIMENTAL and NOT tested)
 </entry>
@@ -1697,65 +1730,6 @@ If TRUE, run the methane submodel decoupled from the atmosphere. The atmospheric
 atmch4, the methane flux is not passed to the atmosphere, and the CO2 flux to the atmosphere is not adjusted for
 net methane production. NOTE: Currently this must be TRUE.
 (EXPERIMENTAL and NOT functional)
-</entry>
-
-<!-- ========================================================================================  -->
-<!-- MEGAN VOC emissions namelist options                                                      -->
-<!-- ========================================================================================  -->
-
-<entry id="megan_factors_file" type="char*256" input_pathname="abs" category="drv_physics"
-       group="megan_emis_nl" valid_values="" >
-File containing MEGAN emissions factors. Includes the list of MEGAN compounds that can be
-used in the Comp_Name variable on the file.
-</entry>
-
-<entry id="megan_specifier" type="char*1024(100)" category="drv_physics"
-       group="megan_emis_nl" valid_values="" >
-MEGAN specifier. This is in the form of: Chem-compound = megan_compound(s)
-where megan_compound(s) can be the sum of megan compounds with a "+" between them.
-In each equation, the item to the left of the equal sign is a CAM chemistry compound, the
-items to the right are compounds known to the MEGAN model (single or combinations). 
-For example,
-megan_specifier = 'ISOP = isoprene',
-                  'C10H16 = pinene_a + carene_3 + thujene_a'
-</entry>
-
-<entry id="megan_mapped_emisfctrs" type="logical" category="drv_physics"
-       group="megan_emis_nl" >
-MEGAN mapped isoprene emissions factors switch
-If TRUE then use mapped MEGAN emissions factors for isoprene.
-</entry>
-
-<entry id="megan_cmpds" type="char*32(150)" category="drv_physics"
-       group="drv_physics" 
-       valid_values=
-"isoprene,myrcene,sabinene,limonene,carene_3,ocimene_t_b,pinene_b,pinene_a,2met_styrene,cymene_p,cymene_o,phellandrene_a,thujene_a,terpinene_a,terpinene_g,terpinolene,phellandrene_b,camphene,bornene,fenchene_a,ocimene_al,ocimene_c_b,tricyclene,estragole,camphor,fenchone,piperitone,thujone_a,thujone_b,cineole_1_8,borneol,linalool,terpineol_4,terpineol_a,linalool_OXD_c,linalool_OXD_t,ionone_b,bornyl_ACT,farnescene_a,caryophyllene_b,acoradiene,aromadendrene,bergamotene_a,bergamotene_b,bisabolene_a,bisabolene_b,bourbonene_b,cadinene_d,cadinene_g,cedrene_a,copaene_a,cubebene_a,cubebene_b,elemene_b,farnescene_b,germacrene_B,germacrene_D,gurjunene_b,humulene_a,humulene_g,isolongifolene,longifolene,longipinene,muurolene_a,muurolene_g,selinene_b,selinene_d,nerolidol_c,nerolidol_t,cedrol,MBO_2m3e2ol,methanol,acetone,methane,ammonia,nitrous_OXD,nitric_OXD,acetaldehyde,ethanol,formic_acid,formaldehyde,acetic_acid,MBO_3m2e1ol,MBO_3m3e1ol,benzaldehyde,butanone_2,decanal,dodecene_1,geranyl_acetone,heptanal,heptane,hexane,met_benzoate,met_heptenone,neryl_acetone,nonanal,nonenal,octanal,octanol,octenol_1e3ol,oxopentanal,pentane,phenyl_CCO,pyruvic_acid,terpinyl_ACT_a,tetradecene_1,toluene,carbon_monoxide,butene,ethane,ethene,hydrogen_cyanide,propane,propene,carbon_2s,carbonyl_s,diallyl_2s,2met_2s,2met_s,met_chloride,met_bromide,met_iodide,hydrogen_s,met_mercaptan,met_propenyl_2s,PPPP_2s,2met_nonatriene,met_salicylate,indole,jasmone,met_jasmonate,3met_3DCTT,hexanal,hexanol_1,hexenal_c3,hexenal_t2,hexenol_c3,hexenyl_ACT_c3,homosalate,Ehsalate,pentanal,heptanone,anisole,verbenene,benzyl-acetate,myrtenal,benzyl-alcohol,meta-cymenene,ipsenol,Napthalene"
->
-List of possible MEGAN compounds to use
-  (the list used by the simulation is on the megan_factors_file as the Comp_Name)
-</entry> 
-
-<!-- ========================================================================================  -->
-<!-- Fire emissions fluxes                                                                     -->
-<!-- ========================================================================================  -->
-
-<entry id="fire_emis_factors_file" type="char*256" input_pathname="abs" category="Fire_emissions"
-       group="fire_emis_nl" valid_values="" >
-File containing fire emissions factors.
-Default: none
-</entry>
-
-<entry id="fire_emis_specifier" type="char*1024(100)" category="Fire_emissions"
-       group="fire_emis_nl" valid_values="" >
-Fire emissions specifier.
-Default: none
-</entry>
-
-<entry id="fire_emis_elevated" type="logical" category="Fire_emissions"
-       group="fire_emis_nl" valid_values="" >
-If ture fire emissions are input into atmosphere as elevated forcings.
-Otherwise they are treated as surface emissions.
-Default: TRUE
 </entry>
 
 <!-- ========================================================================================  -->

@@ -69,7 +69,7 @@ export MAKE_CMD="gmake -j "
 export CFG_STRING=""
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export MACH_WORKSPACE="/glade/scratch"
-CPRNC_EXE="$CESMDATAROOT/tools/cprnc/cprnc"
+export CPRNC_EXE="$CESMDATAROOT/tools/cprnc/cprnc"
 dataroot="$CESMDATAROOT"
 export TOOLSLIBS=""
 export TOOLS_CONF_STRING=""
@@ -221,6 +221,7 @@ esac
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat >> ./${submit_script} << EOF
 
+export CPRNC_OPT=""
 if [ -n "\${CLM_JOBID}" ]; then
     export JOBID=\${CLM_JOBID}
 fi

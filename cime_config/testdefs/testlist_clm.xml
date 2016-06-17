@@ -32,18 +32,18 @@
     </grid>
     <grid name="f45_f45">
       <test name="SMS_Ld1">
-        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/ptsRLA">edison</machine>
-        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/ptsROA">edison</machine>
-        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/ptsRLB">edison</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/ptsRLA">hobart</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/ptsRLA">hobart</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/ptsRLA">janus</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/40ptsRLA">edison</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/40ptsROA">edison</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/40ptsRLB">edison</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLA">hobart</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40ptsRLA">hobart</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLA">janus</machine>
         <machine compiler="intel" testtype="aux_clm40" testmods="clm/40ptsRLA">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm40" testmods="clm/40ptsROA">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40ptsRLB">yellowstone</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/ptsRLA">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/ptsRLA">yellowstone</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/ptsRLA">yellowstone</machine>
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40ptsRLA">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLA">yellowstone</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40ptsRLA">yellowstone</machine>
       </test>
     </grid>
     <grid name="f45_g37">
@@ -810,7 +810,7 @@
     </grid>
     <grid name="f10_f10">
       <test name="ERP_D_P144x1_Ld211">
-        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/crop">edison</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/40crop">edison</machine>
       </test>
       <test name="ERS_D_P112x1_Ld211">
         <machine compiler="intel" testtype="aux_clm40" testmods="clm/40crop">yellowstone</machine>
@@ -826,7 +826,7 @@
   <compset name="ICNDVCROP">
     <grid name="f19_g16">
       <test name="ERP_P192x1_Ld211">
-        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/crop">edison</machine>
+        <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/40crop">edison</machine>
       </test>
       <test name="ERS_P192x1_Ld211">
         <machine compiler="intel" testtype="aux_clm40" testmods="clm/40crop">yellowstone</machine>
@@ -1206,11 +1206,6 @@
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
-    <grid name="ne16_g37">
-      <test name="SBN">
-        <machine compiler="null" testtype="null">null</machine>
-      </test>
-    </grid>
     <grid name="ne30_g16">
       <test name="SBN">
         <machine compiler="null" testtype="null">null</machine>
@@ -1513,7 +1508,7 @@
       </test>
     </grid>
     <grid name="f19_g16">
-      <test name="ERI_Ld5">
+      <test name="ERI_Ld9">
         <machine compiler="intel" testtype="prebeta" testmods="clm/40default">edison</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40default">hobart</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">hobart</machine>
@@ -1528,16 +1523,16 @@
     </grid>
     <grid name="f45_f45">
       <test name="SMS_Ld5">
-        <machine compiler="intel" testtype="prebeta" testmods="clm/ptsROA">edison</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/ptsROA">hopper</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/ptsRLB">janus</machine>
-        <machine compiler="gnu" testtype="prebeta" testmods="clm/ptsRLB">yellowstone</machine>
-        <machine compiler="intel" testtype="prebeta" testmods="clm/ptsRLB">yellowstone</machine>
-        <machine compiler="pgi" testtype="prebeta" testmods="clm/ptsRLB">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsROA">edison</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40ptsROA">hopper</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLB">janus</machine>
+        <machine compiler="gnu" testtype="prebeta" testmods="clm/40ptsRLB">yellowstone</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLB">yellowstone</machine>
+        <machine compiler="pgi" testtype="prebeta" testmods="clm/40ptsRLB">yellowstone</machine>
       </test>
     </grid>
     <grid name="f45_g37">
-      <test name="ERI_Ld5">
+      <test name="ERI_Ld9">
         <machine compiler="intel" testtype="prebeta" testmods="clm/40default">hobart</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">hobart</machine>
         <machine compiler="intel" testtype="prealpha" testmods="clm/40default">janus</machine>

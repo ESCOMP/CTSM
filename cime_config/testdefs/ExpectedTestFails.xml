@@ -15,5 +15,10 @@
 
    <entry bugz="2256" >RUN ERP_Ly5.1x1_numaIA.ICRUCLM50BGCCROP.hobart_nag.clm-monthly</entry>
    <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.I1850CLM45BGC.hobart_nag.clm-default</entry>
+   <entry cime="453"  >RUN ERP_E_Ld5.f19_g16.I1850CRUCLM45CN.yellowstone_intel.clm-default</entry>
+   <entry cime="453"  >RUN ERP_D_E_Ld5.f19_g16.I1850CLM45BGC.yellowstone_intel.rtm-rtmOnIceOff</entry>
+   <entry cime="453"  >RUN ERP_E_Ld5.f19_g16.I1850.yellowstone_intel.clm-40default</entry>
+   <entry cime="453"  >RUN CME_Ly4.f10_f10.I1850CLM45BGC.yellowstone_intel.clm-monthly</entry>
+   <entry cime="453"  >RUN CME_Ld5.f10_f10.ICN.yellowstone_intel</entry>
 
 </expectedFails> 

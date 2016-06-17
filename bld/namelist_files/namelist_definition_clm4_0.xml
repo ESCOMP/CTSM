@@ -694,9 +694,33 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 Land mask description
 </entry> 
 
+<entry id="clm_accelerated_spinup" type="char*3" category="default_settings"
+       group="default_settings" valid_values="on,off" >
+Command line argument for setting up your simulation in a mode for faster
+throughput. By default turns off some options, and sets up for a lower level
+of output. When bgc_mode is some level of prognostic BGC (so NOT Satellite Phenology)
+it also sets up for accelerated decomposition.
+NOTE: THIS CORRESPONDS DIRECTLY TO THE env_run.xml VARIABLE OF THE SAME NAME.
+      Set the env_run variable, rather than setting this directly.
+</entry>
+
+<entry id="lnd_tuning_mode" type="char*20" category="default_settings"
+       group="default_settings"
+       valid_values="clm4_0_default">
+General configuration of model version and atmospheric forcing to tune the model to run under.
+This sets the model to run with constants that were set to run well under the configuration
+of model version and atmospheric forcing. To run well constants would need to be changed
+to run with a different type of atmospheric forcing.
+</entry>
+
 <entry id="irrig" type="logical" category="default_settings"
        group="default_settings"  >
 If TRUE, irrigation will be active (find surface datasets with active irrigation).
+</entry> 
+
+<entry id="megan" type="integer" category="default_settings"
+       group="default_settings"  valid_values="0,1">
+If 1, turn on the MEGAN model for BVOC's (Biogenic Volitile Organic Compounds)
 </entry> 
 
 <entry id="sim_year" type="integer" category="default_settings"

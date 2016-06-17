@@ -46,6 +46,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata hgrid="ne4np4"   lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne4np4_nomask_c110808.nc</scripgriddata>
 
 <!-- Regular lat/lon grids -->
+<scripgriddata hgrid="0.125x0.125" lmask="nomask"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.125x0.125_nomask_c140702.nc</scripgriddata>
 <scripgriddata hgrid="0.33x0.33" lmask="navy"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.33x0.33_navy_c111207.nc</scripgriddata>
 <scripgriddata hgrid="0.1x0.1"   lmask="nomask"    
@@ -68,7 +70,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_IGBPmergeICESatGIS_c110818.nc</scripgriddata>
 <scripgriddata hgrid="3x3min"    lmask="MODIS"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_MODIS_c110915.nc</scripgriddata>
-<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="MODIS">64bit_offset</scripgriddata_lrgfile_needed>
+<scripgriddata hgrid="3x3min"    lmask="MODIS-wCsp"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_MODISwcspsea_c151020.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="MODIS"     >64bit_offset</scripgriddata_lrgfile_needed>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="MODIS-wCsp">64bit_offset</scripgriddata_lrgfile_needed>
 <scripgriddata hgrid="3x3min"    lmask="USGS"     
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3x3_USGS_c120912.nc</scripgriddata>
 <scripgriddata_lrgfile_needed hgrid="3x3min" lmask="USGS">64bit_offset</scripgriddata_lrgfile_needed>
@@ -117,7 +122,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata hgrid="tx0.1v2"    lmask="tx0.1v2"   >/glade/proj3/cseg/mapping/grids/tx0.1v2_090127.nc</scripgriddata>
 
 <!-- land masks for different types of mksurfdata_map input files -->
-<lmask type="lak"              >MODIS</lmask>
+<lmask type="lak"              >MODIS-wCsp</lmask>
 <lmask type="wet"              >AVHRR</lmask>
 <lmask type="voc"              >AVHRR</lmask>
 <lmask type="lai"              >MODIS</lmask>
@@ -213,8 +218,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/mksrf_fmax_3x3min_USGS_c120911.nc</mksrf_fmax>
 
 <!-- Lake and wetlands -->
-<mksrf_flakwat  hgrid="3x3min"   lmask="MODIS"
->lnd/clm2/rawdata/mksrf_LakePnDepth_3x3min_simyr2004_c111116.nc</mksrf_flakwat>
+<mksrf_flakwat  hgrid="3x3min"   lmask="MODIS-wCsp"
+>lnd/clm2/rawdata/mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc</mksrf_flakwat>
 
 <mksrf_fwetlnd  hgrid="0.5x0.5"  lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_lanwat.050425.nc</mksrf_fwetlnd>

@@ -1,4 +1,204 @@
 ===============================================================
+Tag name:  clm4_5_8_r181
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Jun 17 16:39:22 MDT 2016
+One-line Summary: Update cime version which fixes several issues and changes answers
+
+Purpose of changes
+------------------
+
+   Update for CIME: This includes several key important changes and bug-fixes
+      - Now there is a CLMGSWP3 option for DATM_MODE
+      - When running with datm driver has a barrier each day (so MP_EAGER_LIMIT is no longer needed)
+      - PIO1 is now the default (PIO2 still exists as an option, but now both exist and you can choose which one)
+      - Driver now merges CLM's drv_flds_in file with CAM's and aborts on a conflict
+      - The drv_flds_in namelists are defined in the driver where the source exists
+      - The drv_flds_in file is recreated just like other namelist files (no longer have to delete earlier one)
+      - Changes answers because of shr_orb (see below)
+
+   Changes to tools to include Caspian Sea as a CLM Lake on surface datasets
+
+   Add LND_TUNING_MODE as an env_run.xml variable. The default setting is determined by which major physics
+   version is being used (clm4_0, clm4_5, or clm5_0). We intend to use this in order to tune parameters
+   for clm5_0 offline with GSWP3 forcing versus clm5_0 with CAM5.5.
+
+   CLM_ACCELERATED_SPINUP="on" now cuts back I/O and is much faster (only outputs a few fields yearly). It
+   also applies for both with and without CN. If CN is on, it will by default turn Accellerated Decomposition
+   on.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+     2308 prebeta clm40 compsets are using the wrong testmods directories
+     2307 MOSART assumes no-leap calendar
+     2303 user_compset gives different settings than expected for options defined in config_compsets.xml
+     2280 Need to set barriers for I compsets with PE layouts where datm runs concurrently to CLM
+     2256 Problems with early versions of PIO2 in CLM
+     2252 Changing megan_specifier for I cases doesn't actually change the megan_specifier in the resolved namelist
+     1674 RTM assumes no-leap calendar
+
+CIME Issues fixed (include issue #):
+     #315 Add CLMGSWP3
+     #324 Merge drv_flds_in in driver from different components
+     #56 SSP test treats ref1 case as the main case
+
+Known bugs introduced in this tag (include bugzilla ID): cime issue #453 (ESMF tests fail)
+   cime issue #455 (have to delete Macros file if switch to mpi-serial)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users: CLM_ACCELERATED_SPINUP mean is different (see below)
+
+Changes to CLM's user interface: Add LND_TUNING_MODE, CLM_ACCELERATED_SPINUP changed.
+
+    LND_TUNING_MODE added in with defaults for each CLM physics option (clm4_0, clm4_5, and clm5_0)
+    clm4_0 wasn't tuned for a specific forcing, clm4_5 was tuned for CRUNCEP forcing, clm5_0 is
+    currently tuned for running with CAM5.5. We eventually expect to have tunings for clm5_0
+    for running offline and also with CAM5.5.
+
+    Also CLM_ACCELERATED_SPINUP is now changed and available whether CN is on or not. For a SP
+    (Satelite Phenology) case this mode reduces output in order to speed up the simulation.
+    For a CN case it does that as well as turning on spinup_state to an accelerated decomposition
+    mode. If you don't want CN to be in accelerated decomposition set spinup_state=0 in your user_nl_clm
+    (for final spinup after AD mode).
+
+Changes made to namelist defaults: nsegspc is now 35 instead of 20
+
+Changes to the datasets:  None
+
+Changes for tools:
+   Files for surface dataset creation now set Caspian sea as a Lake
+   new maps for mksurfdata with Caspian Sea
+
+Substantial timing or memory changes: The change in nsegspc should improve performance slightly
+    Running with CLM_ACCELERATED_SPINUP="on" will make a good 20% improvement in performance
+    from less history output and turning megan off
+
+
+Code reviews and testing
+------------------------
+
+Code reviewed by: self
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - OK (All PASS, but 121 tests are different that r180, because nsegspc changes, new namelists, and spinup_state)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - OK (Some mksurfdata compare tests fail because of Caspian as lake)
+                      PTCLM compare tests for clm4_5 fail because of new mapping files being used)
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone -  OK (all but one PASS and 44 compare tests are different as expected)
+     U-UMB ------- Testing this resolution works
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel -  OK
+    yellowstone_pgi -  OK
+    yellowstone_gnu (clm45 only) -  OK
+    hobart_nag - PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_8_r180
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:   Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:  all including clm4_0 and clm4_5/clm5_0
+    - what platforms/compilers:  all
+    - nature of change: same climate
+
+   The cime update includes a change to shr_orb that changes answers
+   for all simulations. There is also a change in vertical_gradient
+   calculations for glacier model that changes answers when CISM
+   is active (IG compsets).
+       
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, cism, etc.): cime, rtm, mosart
+
+   cime   to clm4_5_8_r180_cime4.5.14 (This includes option for DATM=CLMGSWP3)
+   rtm    to rtm1_0_56
+   mosart to mosart1_0_16
+
+List all files eliminated: Remove NCL script to compare files (can now use -m option to FORTRAN cprnc program)
+
+   D    components/clm/tools/shared/ncl_scripts/cprnc.pl --- use FORTRAN cprnc
+   D    components/clm/tools/shared/ncl_scripts/cprnc.ncl -- use FORTRAN cprnc
+   D    components/clm/bld/namelist_files/namelist_definition_drv_flds.xml --- Now in driver
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+::::::::::::::::::: Replace setting of CPRNC_EXE with CPRNC_OPT="-m"
+   M    components/clm/test/tools/CLM_compare.sh ----- Add use of CPRNC_OPT
+   M    components/clm/test/tools/test_driver.sh ----- Export CPRNC_EXE and set default CPRNC_OPT to blank
+   M    components/clm/test/tools/TBLCFGtools.sh ----- Replace CRPNC_EXE with CPRNC_OPT="-m"
+   M    components/clm/test/tools/TOPtools.sh -------- Replace CRPNC_EXE with CPRNC_OPT="-m"
+   M    components/clm/test/tools/TBLscript_tools.sh - Replace CRPNC_EXE with CPRNC_OPT="-m"
+   M    components/clm/test/tools/TBLtools.sh -------- Replace CRPNC_EXE with CPRNC_OPT="-m"
+   M    components/clm/test/tools/TSMscript_tools.sh - Use $CSMDATA/lnd/clm2/PTCLMmydatafiles.c160208 directory
+            rather than older directory
+   M    components/clm/test/tools/nl_files/PTCLM_USUMB_clm4_5 -------- Update map date to 160208
+   M    components/clm/test/tools/nl_files/PTCLM_USUMB_Cycle_clm4_5 -- Update map date to 160208
+   M    components/clm/test/tools/nl_files/PTCLM_USUMB_Global_clm4_5 - Update map date to 160208
+
+   M    components/clm/tools/shared/ncl_scripts/README - Remove mention of cprnc.pl/cprnc.ncl
+
+   M    components/clm/tools/shared/mkmapdata/mkmapdata.sh -------- Create map for 3x3min_MODIS-wCsp instead of 3x3min_MODIS
+   M    components/clm/tools/clm4_5/mksurfdata_map/Makefile.data -- By default also create f45 1850 and transient datasets
+
+   M    components/clm/bld/unit_testers/build-namelist_test.pl --------------- Add a ton more testing
+   M    components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ------- Add lnd_tuning_mod, clm_accelerated_spinup,
+            megan, atm_c14_filename use_c14. Set spinup_state by clm_accelerated_spinup, set hist settings by
+           clm_accelerated_spinup cutting back history output drastically. Set pot_hmn_ign_counts_alpha by
+           lnd_tuning_mode. Set nsegspc=35. Change maps from 3x3min_MODIS to 3x3min_MODIS_wCsp to add Caspian Sea to
+           lake mask
+   M    components/clm/bld/namelist_files/namelist_definition_clm4_0.xml ----- Add lnd_tuning_mod, clm_accelerated_spinup, megan.
+   M    components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - Add SCRIP grid file for 0.125x0.125 resolution.
+          add SCRIP grid for 3x3min_MODIS-wCsp, lake mask is now MODIS-wCsp, update mksrf_flakwat to include Caspian Sea
+   M    components/clm/bld/namelist_files/namelist_definition_clm4_5.xml ----- Add some commented out namelist variables that
+           will be added later. Correct or clarify some definitions. Add lnd_tuning_mode, clm_accelerated_spinup and megan.
+           Remove MEGAN, drydep, and fire-emission namelist items as in drv namelist_definition now.
+   M    components/clm/bld/namelist_files/namelist_defaults_clm4_0.xml ------- Set lnd_tuning_mod, clm_accelerated_spinup, and megan.
+           Also use history options to cut back history output drastically for clm_accelerated_spinup="on".
+   M    components/clm/bld/CLMBuildNamelist.pm ----- Add clm_accelerated_spinup, lnd_tuning_mode, remove bgc_spinup. Read
+           in driver namelist-definition for drv_flds_in. Add nitrif_inparm, and soilhydrology_inparm although empty. Always
+           write out (and overwrite) the drv_flds_in namelist even if empty. Driver now reads clm's version and merges it with
+           CAM's version and terminates on a contradiction.
+
+   M    components/clm/cime_config/testdefs/testlist_clm.xml - Work on test lists.
+   M    components/clm/cime_config/user_nl_clm --------------- Remove note about drv_flds_in file only be written out if certain
+           build-namelist options are on as no longer true.
+   M    components/clm/cime_config/buildnml ------------------ Turn megan off if NOT datm. Send LND_TUNING_MODE to build-namelist.
+           Remove setting of bgc_spinup based on CLM_ACCELERATED_SPINUP (build-namelist itself figures this out). Leave drv_flds_in
+           in clmconf directory and let the driver merge it's contents with CAM and create a version in RUNDIR. Copy 
+           CASEROOT/Buildconf/clmconf/user_nl_clm${inst_string} to clmconf (doesn't really need to be done).
+   M    components/clm/cime_config/config_component.xml ------ Add LND_TUNING_MODE (clm4_0_default,clm5_0_cam5.5,clm5_0_GSW3P,clm4_5_CRUNCEP)
+           Right now default for CLM5.0 is clm5_0_cam5.5 for all cases. For clm4_0 or clm4_5 the one given default is used.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r180
 Originator(s):  sacks (Bill Sacks)
 Date: Mon Jun  6 06:13:57 MDT 2016

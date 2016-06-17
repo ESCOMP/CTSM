@@ -11,7 +11,7 @@ echo "                with      $2"
 
 ##note syntax here as stderr and stdout from cprnc command go 
 ##to separate places!
-${CPRNC_EXE} $1 $2 2>&1 > cprnc.out
+${CPRNC_EXE} ${CPRNC_OPT} $1 $2 2>&1 > cprnc.out
 rc=$?
 if [ $rc -ne 0 ]; then
     echo "CLM_compare.sh: error doing comparison, cprnc error= $rc" 

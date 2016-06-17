@@ -21,6 +21,22 @@
     </values>
   </entry>
 
+  <entry id="LND_TUNING_MODE">
+    <type>char</type>
+    <group>run_component_clm</group>
+    <file>env_run.xml</file>
+    <desc>Tuning parameters should be optimized for what CLM model version and what meteorlogical forcing combination?
+    </desc>
+    <default_value>UNSET</default_value>
+    <valid_values>clm4_0_default,clm5_0_cam5.5,clm5_0_GSW3P,clm4_5_CRUNCEP</valid_values>
+    <values>
+      <value compset="_CLM40"      >clm4_0_default</value>
+      <value compset="_CLM45"      >clm4_5_CRUNCEP</value>
+      <value compset="_CLM50"      >clm5_0_cam5.5</value>
+      <value compset="CAM.+_CLM50" >clm5_0_cam5.5</value>
+    </values>
+  </entry>
+
   <entry id="CLM_CONFIG_OPTS" >
     <type>char</type>
     <default_value></default_value>
