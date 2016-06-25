@@ -330,6 +330,7 @@ contains
     use WaterSTateType       , only : waterstate_type
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use PatchType            , only : patch
+    use clm_varctl           , only : iulog, use_hydrstress
     !
     ! !ARGUMENTS:
     implicit none
@@ -406,7 +407,9 @@ contains
                end if
 
                !it is possible to further separate out a btran function, but I will leave it for the moment, jyt
-               btran(p)    = btran(p) + max(rootr(p,j),0._r8)
+               if ( .not.(use_hydrstress) ) then
+                  btran(p)    = btran(p) + max(rootr(p,j),0._r8)
+               end if
 
                !smp_node_lf = max(smpsc(patch%itype(p)), -sucsat(c,j)*(h2osoi_vol(c,j)/watsat(c,j))**(-bsw(c,j)))
                s_node = h2osoi_vol(c,j)/watsat(c,j)

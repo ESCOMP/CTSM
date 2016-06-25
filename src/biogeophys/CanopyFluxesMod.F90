@@ -13,14 +13,15 @@ module CanopyFluxesMod
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
-  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_ed, use_luna
+  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_ed, &
+                                     use_luna, use_hydrstress
   use clm_varpar            , only : nlevgrnd, nlevsno
   use clm_varcon            , only : namep 
   use pftconMod             , only : nbrdlf_dcd_tmp_shrub, pftcon
   use pftconMod             , only : ntmp_soybean, nirrig_tmp_soybean
   use pftconMod             , only : ntrp_soybean, nirrig_trp_soybean
   use decompMod             , only : bounds_type
-  use PhotosynthesisMod     , only : Photosynthesis, PhotosynthesisTotal, Fractionation
+  use PhotosynthesisMod     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
   use EDPhotosynthesisMod   , only : Photosynthesis_ED
   use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
   use EDBtranMod            , only : Btran_ED
@@ -145,6 +146,8 @@ contains
     real(r8), intent(in) :: leafn_patch(bounds%begp:)   ! leaf N (gN/m2)
     !
     ! !LOCAL VARIABLES:
+    real(r8), pointer   :: bsun(:)          ! sunlit canopy transpiration wetness factor (0 to 1)
+    real(r8), pointer   :: bsha(:)          ! shaded canopy transpiration wetness factor (0 to 1)
     real(r8), parameter :: btran0 = 0.0_r8  ! initial value
     real(r8), parameter :: zii = 1000.0_r8  ! convective boundary layer height [m]
     real(r8), parameter :: beta = 1.0_r8    ! coefficient of conective velocity [-]
@@ -445,6 +448,10 @@ contains
          begg                   => bounds%begg                                  , &
          endg                   => bounds%endg                                    &
          )
+      if (use_hydrstress) then
+        bsun                    => energyflux_inst%bsun_patch                       ! Output: [real(r8) (:)   ]  sunlit canopy transpiration wetness factor (0 to 1)
+        bsha                    => energyflux_inst%bsha_patch                       ! Output: [real(r8) (:)   ]  sunlit canopy transpiration wetness factor (0 to 1)
+      end if
 
       ! Determine step size
 
@@ -722,6 +729,8 @@ contains
          ! BUG MV 4/7/2014 - is this the correct place to have it in the iteration? 
          ! THIS SHOULD BE MOVED OUT OF THE ITERATION but will change answers -
          
+         ! NOTE: KO 6/22/2016  Btran using plant hydraulic stress is not available yet.
+         !         But will this section be moved?
          do f = 1, fn
             p = filterp(f)
             c = patch%column(p)
@@ -760,18 +769,29 @@ contains
 
          else ! not use_ed
 
-            call Photosynthesis (bounds, fn, filterp, &
-                 svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
-                 dayl_factor(begp:endp), leafn_patch(begp:endp), &
-                 atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
-                 canopystate_inst, ozone_inst, photosyns_inst, phase='sun')
+            if ( use_hydrstress ) then
+               call PhotosynthesisHydraulicStress (bounds, fn, filterp, &
+                    svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), bsun(begp:endp), &
+                    bsha(begp:endp), btran(begp:endp), dayl_factor(begp:endp), leafn_patch(begp:endp), &
+                    qsatl(begp:endp), qaf(begp:endp),     &
+                    atm2lnd_inst, temperature_inst, soilstate_inst, waterstate_inst, surfalb_inst, solarabs_inst,    &
+                    canopystate_inst, ozone_inst, photosyns_inst, waterflux_inst)
+            else
+               call Photosynthesis (bounds, fn, filterp, &
+                    svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
+                    dayl_factor(begp:endp), leafn_patch(begp:endp), &
+                    atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
+                    canopystate_inst, ozone_inst, photosyns_inst, phase='sun')
+            endif
 
+            !KO  Fractionation must be changed so that gs_mol_sun_patch is used
             if ( use_cn .and. use_c13 ) then
                call Fractionation (bounds, fn, filterp, downreg_patch(begp:endp), &
                     atm2lnd_inst, canopystate_inst, solarabs_inst, surfalb_inst, photosyns_inst, &
                     phase='sun')
             endif
 
+           !KO This should be OK for plant hydraulic stress since final btran has been calculated
             do f = 1, fn
                p = filterp(f)
                c = patch%column(p)
@@ -786,12 +806,15 @@ contains
                end if
             end do
 
-            call Photosynthesis (bounds, fn, filterp, &
-                 svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
-                 dayl_factor(begp:endp), leafn_patch(begp:endp), &
-                 atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
-                 canopystate_inst, ozone_inst, photosyns_inst, phase='sha')
+            if ( .not.(use_hydrstress) ) then
+               call Photosynthesis (bounds, fn, filterp, &
+                    svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
+                    dayl_factor(begp:endp), leafn_patch(begp:endp), &
+                    atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
+                    canopystate_inst, ozone_inst, photosyns_inst, phase='sha')
+            end if
 
+            !KO  Fractionation must be changed so that gs_mol_sha_patch is used
             if ( use_cn .and. use_c13 ) then
                call Fractionation (bounds, fn, filterp, downreg_patch(begp:endp), &
                     atm2lnd_inst, canopystate_inst, solarabs_inst, surfalb_inst, photosyns_inst, &
@@ -851,21 +874,37 @@ contains
 
             efpot = forc_rho(c)*wtl*(qsatl(p)-qaf(p))
 
-            if (efpot > 0._r8) then
-               if (btran(p) > btran0) then
-                  qflx_tran_veg(p) = efpot*rppdry
-                  rpp = rppdry + fwet(p)
-               else
-                  !No transpiration if btran below 1.e-10
-                  rpp = fwet(p)
-                  qflx_tran_veg(p) = 0._r8
-               end if
-               !Check total evapotranspiration from leaves
-               rpp = min(rpp, (qflx_tran_veg(p)+h2ocan(p)/dtime)/efpot)
+            if ( use_hydrstress ) then
+              if (efpot > 0._r8) then
+                 if (btran(p) > btran0) then
+                   rpp = rppdry + fwet(p)
+                 else
+                   !No transpiration if btran below 1.e-10
+                   rpp = fwet(p)
+                 end if
+                 !Check total evapotranspiration from leaves
+                 rpp = min(rpp, (qflx_tran_veg(p)+h2ocan(p)/dtime)/efpot)
+              else
+                 !No transpiration if potential evaporation less than zero
+                 rpp = 1._r8
+              end if
             else
-               !No transpiration if potential evaporation less than zero
-               rpp = 1._r8
-               qflx_tran_veg(p) = 0._r8
+              if (efpot > 0._r8) then
+                 if (btran(p) > btran0) then
+                    qflx_tran_veg(p) = efpot*rppdry
+                    rpp = rppdry + fwet(p)
+                 else
+                    !No transpiration if btran below 1.e-10
+                    rpp = fwet(p)
+                    qflx_tran_veg(p) = 0._r8
+                 end if
+                 !Check total evapotranspiration from leaves
+                 rpp = min(rpp, (qflx_tran_veg(p)+h2ocan(p)/dtime)/efpot)
+              else
+                 !No transpiration if potential evaporation less than zero
+                 rpp = 1._r8
+                 qflx_tran_veg(p) = 0._r8
+              end if
             end if
 
             ! Update conductances for changes in rpp
@@ -953,14 +992,24 @@ contains
             ! during the timestep.  This energy is later added to the
             ! sensible heat flux.
 
-            ecidif = 0._r8
-            if (efpot > 0._r8 .and. btran(p) > btran0) then
-               qflx_tran_veg(p) = efpot*rppdry
+            !KO Not sure what to do about this.  If we adjust qflx_tran_veg for
+            !use_hydrstress, it will no longer be consistent with that calculated in
+            !hydraulic stress routines
+            if ( use_hydrstress ) then
+               ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan(p)/dtime)
+               qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan(p)/dtime)
+!              write(iulog,*)'qflx_tran_veg after efpot recalculation: ',qflx_tran_veg(p)
             else
-               qflx_tran_veg(p) = 0._r8
+               ecidif = 0._r8
+               if (efpot > 0._r8 .and. btran(p) > btran0) then
+                  qflx_tran_veg(p) = efpot*rppdry
+               else
+                  qflx_tran_veg(p) = 0._r8
+               end if
+               ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan(p)/dtime)
+               qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan(p)/dtime)
+!              write(iulog,*)'qflx_tran_veg after efpot recalculation: ',qflx_tran_veg(p)
             end if
-            ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan(p)/dtime)
-            qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan(p)/dtime)
 
             ! The energy loss due to above two limits is added to
             ! the sensible heat flux.

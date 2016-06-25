@@ -9,7 +9,7 @@ module SoilStateType
   use abortutils      , only : endrun
   use clm_varpar      , only : nlevsoi, nlevgrnd, nlevlak, nlayer, nlevsno
   use clm_varcon      , only : spval
-  use clm_varctl      , only : use_cn, use_lch4, use_dynroot
+  use clm_varctl      , only : use_hydrstress, use_cn, use_lch4, use_dynroot
   use clm_varctl      , only : iulog, hist_wrtch4diag
   use LandunitType    , only : lun                
   use ColumnType      , only : col                
@@ -36,6 +36,7 @@ module SoilStateType
      real(r8), pointer :: hksat_min_col        (:,:) ! col mineral hydraulic conductivity at saturation (hksat) (mm/s)
      real(r8), pointer :: hk_l_col             (:,:) ! col hydraulic conductivity (mm/s)
      real(r8), pointer :: smp_l_col            (:,:) ! col soil matric potential (mm)
+     real(r8), pointer :: djk_l_col            (:,:) ! col soil transpiration sink by layer
      real(r8), pointer :: smpmin_col           (:)   ! col restriction for min of soil potential (mm) 
      real(r8), pointer :: bsw_col              (:,:) ! col Clapp and Hornberger "b" (nlevgrnd)  
      real(r8), pointer :: watsat_col           (:,:) ! col volumetric soil water at saturation (porosity) 
@@ -131,6 +132,9 @@ contains
     allocate(this%hksat_min_col        (begc:endc,nlevgrnd))            ; this%hksat_min_col        (:,:) = spval
     allocate(this%hk_l_col             (begc:endc,nlevgrnd))            ; this%hk_l_col             (:,:) = nan   
     allocate(this%smp_l_col            (begc:endc,nlevgrnd))            ; this%smp_l_col            (:,:) = nan   
+    if (use_hydrstress) then
+      allocate(this%djk_l_col          (begc:endc,nlevgrnd))            ; this%djk_l_col            (:,:) = spval
+    end if
     allocate(this%smpmin_col           (begc:endc))                     ; this%smpmin_col           (:)   = nan
 
     allocate(this%bsw_col              (begc:endc,nlevgrnd))            ; this%bsw_col              (:,:) = nan
@@ -204,7 +208,13 @@ contains
     end if
     call hist_addfld2d (fname='SMP',  units='mm', type2d='levgrnd',  &
          avgflag='A', long_name='soil matric potential (vegetated landunits only)', &
-         ptr_col=this%smp_l_col, set_spec=spval, l2g_scale_type='veg', default=active)
+         ptr_col=this%smp_l_col, set_spec=spval, l2g_scale_type='veg')
+
+    if (use_hydrstress) then
+      call hist_addfld2d (fname='DJK',  units='tbd', type2d='levgrnd',  &
+           avgflag='A', long_name='soil transpiration sink by layer', &
+           ptr_col=this%djk_l_col, set_spec=spval, l2g_scale_type='veg')
+    end if
 
     if (use_cn) then
        this%bsw_col(begc:endc,:) = spval 
@@ -306,9 +316,10 @@ contains
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds)
     !
-    ! Initialize module surface albedos to reasonable values
+    ! Initialize module soil state variables to reasonable values
     !
     ! !USES:
+    use clm_varpar      , only : nlevgrnd
     !
     ! !ARGUMENTS:
     class(soilstate_type) :: this
@@ -317,7 +328,7 @@ contains
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
 
-    ! Nothing for now
+    this%smp_l_col(bounds%begc:bounds%endc,1:nlevgrnd) = -1000._r8
 
   end subroutine InitCold
 
@@ -351,6 +362,16 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='SOILRESIS', xtype=ncd_double,  &
          dim1name='column', long_name='soil resistance', units='s/m', &
          interpinic_flag='interp', readvar=readvar, data=this%soilresis_col)
+
+    call restartvar(ncid=ncid, flag=flag, varname='SMP', xtype=ncd_double,  &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='soil matric potential', units='mm', &
+         interpinic_flag='interp', readvar=readvar, data=this%smp_l_col)
+
+    call restartvar(ncid=ncid, flag=flag, varname='HK', xtype=ncd_double,  &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='hydraulic conductivity', units='mm/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%hk_l_col)
 
      if( use_dynroot ) then
          call restartvar(ncid=ncid, flag=flag, varname='root_depth', xtype=ncd_double,  &

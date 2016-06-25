@@ -9,6 +9,7 @@ module SoilWaterMovementMod
   ! created by Jinyun Tang, Mar 12, 2014
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod      , only : r8 => shr_kind_r8
+  use shr_sys_mod         , only : shr_sys_flush
 
   !
   implicit none
@@ -33,6 +34,7 @@ module SoilWaterMovementMod
   ! The following is only public for the sake of unit testing; it should not be called
   ! directly by CLM code outside this module
   public :: Compute_EffecRootFrac_And_VertTranSink
+  public :: Compute_VertTranSink_PHS
   public :: BaseflowSink
   public :: use_aquifer_layer
   !
@@ -211,7 +213,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine SoilWater(bounds, num_hydrologyc, filter_hydrologyc, &
        num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-       waterflux_inst, waterstate_inst, temperature_inst, soil_water_retention_curve)
+       waterflux_inst, waterstate_inst, temperature_inst, &
+       canopystate_inst, energyflux_inst, soil_water_retention_curve)
     !
     ! DESCRIPTION
     ! select one subroutine to do the soil and root water coupling
@@ -226,7 +229,9 @@ contains
     use SoilStateType     , only : soilstate_type
     use TemperatureType   , only : temperature_type
     use WaterFluxType     , only : waterflux_type
+    use EnergyFluxType    , only : energyflux_type
     use WaterStateType    , only : waterstate_type
+    use CanopyStateType   , only : canopystate_type
     use ColumnType        , only : col
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use clm_varcon        , only : denh2o, denice
@@ -241,7 +246,9 @@ contains
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(waterflux_type)     , intent(inout) :: waterflux_inst
+    type(energyflux_type)    , intent(in)    :: energyflux_inst
     type(waterstate_type)    , intent(inout) :: waterstate_inst
+    type(canopystate_type)   , intent(inout) :: canopystate_inst
     type(temperature_type)   , intent(in)    :: temperature_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
@@ -266,14 +273,15 @@ contains
 
        call soilwater_zengdecker2009(bounds, num_hydrologyc, filter_hydrologyc, &
             num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-            waterflux_inst, waterstate_inst, temperature_inst, soil_water_retention_curve)
+            waterflux_inst, waterstate_inst, temperature_inst, &
+            canopystate_inst, energyflux_inst, soil_water_retention_curve)
 
     case (moisture_form)
 
        call soilwater_moisture_form(bounds, num_hydrologyc, filter_hydrologyc, &
             num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
             waterflux_inst, waterstate_inst, temperature_inst, &
-            soil_water_retention_curve)
+            canopystate_inst, energyflux_inst, soil_water_retention_curve)
 
     case (mixed_form)
 
@@ -352,6 +360,8 @@ contains
     use WaterFluxType    , only : waterflux_type
     use PatchType        , only : patch
     use ColumnType       , only : col
+    use clm_varctl       , only : use_hydrstress
+    use column_varcon    , only : icol_road_perv
     !
     ! !ARGUMENTS:
     type(bounds_type)    , intent(in)    :: bounds                          ! bounds
@@ -386,50 +396,209 @@ contains
 
     temp(bounds%begc : bounds%endc) = 0._r8
 
-    do j = 1, nlevsoi
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          rootr_col(c,j) = 0._r8
+    !KO  For use_hydrstress, still need to use old approach for urban pervious road
+    if (use_hydrstress) then
+       do j = 1, nlevsoi
+          do fc = 1, num_hydrologyc
+             c = filter_hydrologyc(fc)
+             if (col%itype(c) == icol_road_perv) then
+                rootr_col(c,j) = 0._r8
+             end if
+          end do
        end do
-    end do
+    else
+       do j = 1, nlevsoi
+          do fc = 1, num_hydrologyc
+             c = filter_hydrologyc(fc)
+             rootr_col(c,j) = 0._r8
+          end do
+       end do
+    end if
 
-    do pi = 1,max_patch_per_col
-       do j = 1,nlevsoi
+    if (use_hydrstress) then
+       do pi = 1,max_patch_per_col
+          do j = 1,nlevsoi
+             do fc = 1, num_hydrologyc
+                c = filter_hydrologyc(fc)
+                if (col%itype(c) == icol_road_perv) then
+                   if (pi <= col%npatches(c)) then
+                      p = col%patchi(c) + pi - 1
+                      if (patch%active(p)) then
+                         rootr_col(c,j) = rootr_col(c,j) + rootr_patch(p,j) * &
+                         qflx_tran_veg_patch(p) * patch%wtcol(p)
+                      end if
+                   end if
+                end if
+             end do
+          end do
+          do fc = 1, num_hydrologyc
+             c = filter_hydrologyc(fc)
+             if (col%itype(c) == icol_road_perv) then
+                if (pi <= col%npatches(c)) then
+                   p = col%patchi(c) + pi - 1
+                   if (patch%active(p)) then
+                      temp(c) = temp(c) + qflx_tran_veg_patch(p) * patch%wtcol(p)
+                   end if
+                end if
+             end if
+          end do
+       end do
+    else
+       do pi = 1,max_patch_per_col
+          do j = 1,nlevsoi
+             do fc = 1, num_hydrologyc
+                c = filter_hydrologyc(fc)
+                if (pi <= col%npatches(c)) then
+                   p = col%patchi(c) + pi - 1
+                   if (patch%active(p)) then
+                      rootr_col(c,j) = rootr_col(c,j) + rootr_patch(p,j) * &
+                      qflx_tran_veg_patch(p) * patch%wtcol(p)
+                   end if
+                end if
+             end do
+          end do
           do fc = 1, num_hydrologyc
              c = filter_hydrologyc(fc)
              if (pi <= col%npatches(c)) then
                 p = col%patchi(c) + pi - 1
                 if (patch%active(p)) then
-                   rootr_col(c,j) = rootr_col(c,j) + rootr_patch(p,j) * qflx_tran_veg_patch(p) * patch%wtcol(p)
+                   temp(c) = temp(c) + qflx_tran_veg_patch(p) * patch%wtcol(p)
                 end if
              end if
           end do
        end do
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          if (pi <= col%npatches(c)) then
-             p = col%patchi(c) + pi - 1
-             if (patch%active(p)) then
-                temp(c) = temp(c) + qflx_tran_veg_patch(p) * patch%wtcol(p)
+    end if
+
+    if (use_hydrstress) then
+       do j = 1, nlevsoi
+          do fc = 1, num_hydrologyc
+             c = filter_hydrologyc(fc)
+             if (col%itype(c) == icol_road_perv) then
+                if (temp(c) /= 0._r8) then
+                   rootr_col(c,j) = rootr_col(c,j)/temp(c)
+                end if
+                vert_tran_sink(c,j) = rootr_col(c,j)*qflx_tran_veg_col(c)
              end if
-          end if
+          end do
        end do
-    end do
-
-    do j = 1, nlevsoi
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          if (temp(c) /= 0._r8) then
-             rootr_col(c,j) = rootr_col(c,j)/temp(c)
-          end if
-          vert_tran_sink(c,j) = rootr_col(c,j)*qflx_tran_veg_col(c)
-
+    else
+       do j = 1, nlevsoi
+          do fc = 1, num_hydrologyc
+             c = filter_hydrologyc(fc)
+             if (temp(c) /= 0._r8) then
+                rootr_col(c,j) = rootr_col(c,j)/temp(c)
+             end if
+             vert_tran_sink(c,j) = rootr_col(c,j)*qflx_tran_veg_col(c)
+          end do
        end do
-    end do
+    end if
 
   end associate
 
   end subroutine Compute_EffecRootFrac_And_VertTranSink
+
+  !-----------------------------------------------------------------------   
+  subroutine Compute_VertTranSink_PHS(bounds, num_hydrologyc, &
+       filter_hydrologyc, vert_tran_sink, waterflux_inst, soilstate_inst, &
+       canopystate_inst, energyflux_inst)
+    !
+    ! Generic routine to apply transpiration as a sink condition that
+    ! is vertically distributed over the soil column. Plant hydraulic
+    ! stress version
+    !
+    !USES:
+    use decompMod        , only : bounds_type
+    use shr_kind_mod     , only : r8 => shr_kind_r8
+    use clm_varpar       , only : nlevsoi, max_patch_per_col
+    use SoilStateType    , only : soilstate_type
+    use WaterFluxType    , only : waterflux_type
+    use CanopyStateType  , only : canopystate_type
+    use EnergyFluxType   , only : energyflux_type
+    use PatchType        , only : patch
+    use ColumnType       , only : col
+    use clm_varctl       , only : iulog
+    use PhotosynthesisMod, only : plc
+    use column_varcon    , only : icol_road_perv
+    use shr_infnan_mod   , only : isnan => shr_infnan_isnan
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)    , intent(in)    :: bounds                          ! bounds
+    integer              , intent(in)    :: num_hydrologyc                  ! number of column soil points in column filter
+    integer              , intent(in)    :: filter_hydrologyc(:)            ! column filter for soil points
+    real(r8)             , intent(out)   :: vert_tran_sink(bounds%begc:,1:) ! vertically distributed transpiration sink (mm H2O/s) (+ = to atm)
+    type(waterflux_type) , intent(inout) :: waterflux_inst
+    type(soilstate_type) , intent(inout) :: soilstate_inst
+    type(canopystate_type) , intent(inout) :: canopystate_inst
+    type(energyflux_type), intent(in)    :: energyflux_inst
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) , pointer :: vegwp(:,:)  ! vegetation water matric potential (mm)
+    integer  :: p,c,fc,j                                              ! do loop indices
+    integer  :: pi                                                    ! patch index
+    real(r8) :: temp(bounds%begc:bounds%endc)                         ! accumulator for rootr weighting
+    !KO Eventually krmax will be 2D with the first index being patch%itype(p) and
+    !KO  the second index corresponding to 1:nlevsoi
+    real(r8) :: krmax(nlevsoi)        !
+    real(r8) :: fs(nlevsoi)
+    real(r8) :: rai(nlevsoi)          ! 
+    real(r8) :: grav2                 !
+    !-----------------------------------------------------------------------   
+
+    ! Enforce expected array sizes
+    SHR_ASSERT_ALL((ubound(vert_tran_sink)  == (/bounds%endc, nlevsoi/)), errMsg(__FILE__, __LINE__))
+
+    associate(&
+         qflx_tran_veg_col   => waterflux_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
+         qflx_tran_veg_patch => waterflux_inst%qflx_tran_veg_patch , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
+         rootr_col           => soilstate_inst%rootr_col           , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
+         rootr_patch         => soilstate_inst%rootr_patch         , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
+         smp                 => soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]
+         djk                 => soilstate_inst%djk_l_col           , & ! Output: [real(r8) (:,:) ] col soil transpiration sink by layer
+         bsw                 => soilstate_inst%bsw_col             , & ! Input: [real(r8) (:,:) ]  Clapp and Hornberger "b"
+          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)
+         hksat             =>    soilstate_inst%hksat_col           , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
+         sucsat              => soilstate_inst%sucsat_col          , & ! Input: [real(r8) (:,:) ]  minimum soil suction (mm)
+         tsai                => canopystate_inst%tsai_patch        , & ! Input: [real(r8) (:)   ]  patch canopy one-sided stem area index, no burying by snow
+         btran               => energyflux_inst%btran_patch        , & ! Input: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) (integrated soil water stress)
+         frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)  ] fraction of vegetation not covered by snow (0 OR 1) [-]  
+         rootfr              => soilstate_inst%rootfr_patch        , & ! Input: [real(r8) (:,:) ]  fraction of roots in each soil layer
+         z                   => col%z                                & ! Input: [real(r8) (:,:) ]  layer node depth (m)
+         )
+    vegwp                    => canopystate_inst%vegwp_patch           ! Input/Output: [real(r8) (:,:) ]  vegetation water matric potential (mm)
+
+    krmax(:) = 2.e-9_r8
+
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
+       if (col%itype(c) /= icol_road_perv) then
+          do j = 1, nlevsoi
+             grav2 = z(c,j) * 1000._r8
+             temp(c) = 0._r8
+             do pi = 1,max_patch_per_col
+                if (pi <= col%npatches(c)) then
+                   p = col%patchi(c) + pi - 1
+                   if (patch%active(p).and.frac_veg_nosno(p)>0) then 
+                      if (patch%wtcol(p) > 0._r8) then
+                         if (.not.isnan(smp(c,j))) then
+                            rai(j) = tsai(p) * rootfr(p,j)
+                            fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)*plc(-50000._r8,p,c,j,1,bsw(c,j),sucsat(c,j))))  
+                            temp(c) = temp(c) + rai(j) * krmax(j) * fs(j) * (smp(c,j) - vegwp(p,4) - grav2)* patch%wtcol(p)
+                         endif
+                      end if
+                      !new jawn, zqz should be updated if hk formula changes
+                      !zqz, also: is this actually right and good wrt PFTs sharing a column??
+                   end if
+                end if
+             end do
+             vert_tran_sink(c,j) = temp(c)
+             djk(c,j) = temp(c)
+          end do
+       end if
+    end do
+
+  end associate
+
+  end subroutine Compute_VertTranSink_PHS
 
 !#5
   !-----------------------------------------------------------------------   
@@ -475,7 +644,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine soilwater_zengdecker2009(bounds, num_hydrologyc, filter_hydrologyc, &
        num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-       waterflux_inst, waterstate_inst, temperature_inst, soil_water_retention_curve)
+       waterflux_inst, waterstate_inst, temperature_inst, &
+       canopystate_inst, energyflux_inst, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
     ! Soil hydrology
@@ -548,17 +718,20 @@ contains
     use clm_varpar                 , only : nlevsoi, max_patch_per_col, nlevgrnd
     use clm_time_manager           , only : get_step_size, get_nstep
     use column_varcon              , only : icol_roof, icol_road_imperv
-    use clm_varctl                 , only : use_flexibleCN
+    use clm_varctl                 , only : use_flexibleCN, use_hydrstress
     use TridiagonalMod             , only : Tridiagonal
     use abortutils                 , only : endrun     
     use SoilStateType              , only : soilstate_type
     use SoilHydrologyType          , only : soilhydrology_type
     use TemperatureType            , only : temperature_type
     use WaterFluxType              , only : waterflux_type
+    use EnergyFluxType             , only : energyflux_type
     use WaterStateType             , only : waterstate_type
+    use CanopyStateType            , only : canopystate_type
     use SoilWaterRetentionCurveMod , only : soil_water_retention_curve_type
     use PatchType                  , only : patch
     use ColumnType                 , only : col
+    use clm_varctl                 , only : iulog
     !
     ! !ARGUMENTS:
     type(bounds_type)       , intent(in)    :: bounds               ! bounds
@@ -570,7 +743,9 @@ contains
     type(soilstate_type)    , intent(inout) :: soilstate_inst
     type(waterflux_type)    , intent(inout) :: waterflux_inst
     type(waterstate_type)   , intent(inout) :: waterstate_inst
+    type(canopystate_type)  , intent(inout) :: canopystate_inst
     type(temperature_type)  , intent(in)    :: temperature_inst
+    type(energyflux_type)   , intent(in)    :: energyflux_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
@@ -665,8 +840,16 @@ contains
       dtime = get_step_size()
 
       call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
-           filter_hydrologyc, vert_trans_sink(bounds%begc:bounds%endc, 1:), &
-           waterflux_inst, soilstate_inst)
+         filter_hydrologyc, vert_trans_sink(bounds%begc:bounds%endc, 1:), &
+         waterflux_inst, soilstate_inst)
+
+      if ( use_hydrstress ) then
+!        write(iulog,*)'CALL Compute_VerTranSink_PHS in soilwater_zengdecker2009'
+!        call shr_sys_flush(iulog)
+         call Compute_VertTranSink_PHS(bounds, num_hydrologyc, &
+              filter_hydrologyc, vert_trans_sink(bounds%begc:bounds%endc, 1:), &
+              waterflux_inst, soilstate_inst, canopystate_inst, energyflux_inst)
+      end if
 
       ! Because the depths in this routine are in mm, use local
       ! variable arrays instead of pointers
@@ -1058,7 +1241,7 @@ contains
    subroutine soilwater_moisture_form(bounds, num_hydrologyc, &
         filter_hydrologyc, num_urbanc, filter_urbanc, soilhydrology_inst, &
         soilstate_inst, waterflux_inst, waterstate_inst, temperature_inst, &
-        soil_water_retention_curve)
+        canopystate_inst, energyflux_inst, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
     ! Soil hydrology
@@ -1135,6 +1318,7 @@ contains
     use shr_const_mod        , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE,SHR_CONST_G
     use abortutils           , only : endrun
     use decompMod            , only : bounds_type
+    use clm_varctl           , only : iulog, use_hydrstress
     use clm_varcon           , only : denh2o, denice
     use clm_varpar           , only : nlevsoi
     use clm_time_manager     , only : get_step_size, get_nstep
@@ -1143,6 +1327,8 @@ contains
     use TemperatureType      , only : temperature_type
     use WaterFluxType        , only : waterflux_type
     use WaterStateType       , only : waterstate_type
+    use EnergyFluxType       , only : energyflux_type
+    use CanopyStateType      , only : canopystate_type
     use SoilWaterRetentionCurveMod , only : soil_water_retention_curve_type
     use PatchType            , only : patch
     use ColumnType           , only : col
@@ -1159,6 +1345,8 @@ contains
     type(waterflux_type)    , intent(inout) :: waterflux_inst
     type(waterstate_type)   , intent(inout) :: waterstate_inst
     type(temperature_type)  , intent(in)    :: temperature_inst
+    type(canopystate_type)  , intent(inout) :: canopystate_inst
+    type(energyflux_type)   , intent(in)    :: energyflux_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
 
     ! !LOCAL VARIABLES:
@@ -1255,6 +1443,14 @@ contains
       call Compute_EffecRootFrac_And_VertTranSink(bounds, num_hydrologyc, &
          filter_hydrologyc, vert_trans_sink(bounds%begc:bounds%endc, 1:), &
          waterflux_inst, soilstate_inst)
+
+      if ( use_hydrstress ) then
+!        write(iulog,*)'CALL Compute_VerTranSink_PHS in soilwater_moisture_form'
+!        call shr_sys_flush(iulog)
+         call Compute_VertTranSink_PHS(bounds, num_hydrologyc, &
+              filter_hydrologyc, vert_trans_sink(bounds%begc:bounds%endc, 1:), &
+              waterflux_inst, soilstate_inst, canopystate_inst, energyflux_inst)
+      end if
     
       ! main spatial loop
       do fc = 1, num_hydrologyc

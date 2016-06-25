@@ -1448,6 +1448,7 @@ sub process_namelist_inline_logic {
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref, $physv);
   setup_logic_dynamic_plant_nitrogen_alloc($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_luna($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_hydrstress($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_dynamic_roots($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_create_crop_landunit($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -2702,6 +2703,24 @@ sub setup_logic_luna {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_hydrstress {
+  #
+  # Plant hydraulic stress model
+  #
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    # TODO(kwo, 2015-09) make this depend on > clm 5.0 at some point.
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hydrstress' );
+    $nl_flags->{'use_hydrstress'} = $nl->get_value('use_hydrstress');
+    if ( value_is_true( $nl_flags->{'use_ed'} ) && value_is_true( $nl_flags->{'use_hydrstress'} ) ) {
+       fatal_error("Cannot turn use_hydrstress on when use_ed is on\n" );
+    }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_fertilizer {
   #
   # Flags to control fertilizer application 
@@ -2744,6 +2763,9 @@ sub setup_logic_dynamic_roots {
     if ( ($use_dynroot eq ".true.") && ($nl_flags->{'bgc_mode'} eq "sp") ) {
       fatal_error("Cannot turn dynroot mode on mode bgc=sp\n" .
                   "Set the bgc mode to 'cn' or 'bgc'.\n");
+    }
+    if ( value_is_true( $use_dynroot ) && value_is_true( $nl_flags->{'use_hydrstress'} ) ) {
+       fatal_error("Cannot turn use_dynroot on when use_hydrstress is on\n" );
     }
   } # else - not relevant in clm4_0, not part of namelist definition, will not run.
 }

@@ -1,4 +1,147 @@
 ===============================================================
+Tag name:  clm4_5_8_r182
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Jun 24 23:33:36 MDT 2016
+One-line Summary: Bring in option for plant hydraulic stress for clm50
+
+Purpose of changes
+------------------
+
+Add in option for plant hydraulic stress (PHS). Does Leaf stomatal resistance and leaf photosynthesis
+simultaneous solution of sunlit/shaded per Pierre Gentine/Daniel Kennedy PHS method. Vegetation
+water potential is calculated for four conductance segments: sun, shade, xylem, and root. 
+
+The main impact in the code is in CanopyFluxes where either the PHS or non-PHS version of Photosynthesis is
+called and the sun and shade segments are solved simultaneously. Then it impacts soil water movement
+for transpiration.
+
+PHS is turned on by adding use_hydrstress=.true. in your user_nl_clm file for your case.
+
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include bugzilla ID): 2323 (duplication in Photosynthesis)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users: use_dynroots and use_hydrstress can NOT both be on at the same time!
+
+Changes to CLM's user interface: None
+
+Changes made to namelist defaults: Add use_hydrstress=.false.
+
+Changes to the datasets: None
+
+Substantial timing or memory changes: Maybe 4% slower with PHS, memory only increases by 0.1MB
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers: PhotosynthesisMod is duplicated for PHS and non-PHS
+    PhotosynthesisMod more than doubles in size from 2k to 4.5k. Most of it
+    is duplicated. Thus changes to one part of the code, have to be duplicated
+    in the other part, causing double maintence. Also the effects of 6 namelist
+    control items are duplicated meaning those items have to be tested in both
+    branches to ensure they are working correctly. (bug 2323)
+
+Changes to tests or testing: Add use_hydrstress=T to KitchenSink tests
+     add clm50dynroots test directory
+
+Code reviewed by: self,oleson,Daniel Kennedy
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - OK (78 compare tests fail compared to r181 
+                      because of addition of use_hydrstress=.false.)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - No
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - No
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_8_r181
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (only changes answers if use_hydrstress=.true.)
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+::::::::::: Add specific tests for dynamic roots
+   A   components/clm/cime_config/testdefs/testmods_dirs/clm/clm50dynroots/user_nl_clm
+   A   components/clm/cime_config/testdefs/testmods_dirs/clm/clm50dynroots/include_user_mods
+
+List all existing files that have been modified, and describe the changes:
+
+::::::::::: Add in use_hydrstress namelist item, add in vegetation water columns mainly handled in Photosynthesis and
+::::::::::: then impacts soil water transpiration in soil water movement.
+   M   components/clm/src/main/controlMod.F90 ------------ Read in use_hydrstress, check it
+   M   components/clm/src/main/clm_varctl.F90 ------------ Add use_hydrstress
+   M   components/clm/src/main/clm_driver.F90 ------------ Pass canopystate to HydrologyDrainage
+   M   components/clm/src/main/histFileMod.F90 ----------- Add ability to handle nvegwcs dimension
+   M   components/clm/src/main/restFileMod.F90 ----------- Write out nvegwcs dimension if use_hydrstress
+   M   components/clm/src/main/clm_varpar.F90 ------------ Set nvegwcs number of vegetation water conductance segments to 4
+   M   components/clm/src/biogeophys/PhotosynthesisMod.F90 ------ Add PHS versions of subroutines
+   M   components/clm/src/biogeophys/SoilStateType.F90 ---------- Add djk column soil transpiration sink by layer, add
+           SMP and HK to restart file. Set SMP to -1000 for cold start.
+   M   components/clm/src/biogeophys/CanopyFluxesMod.F90 -------- Call PHS or regular version of Photosynthesis
+           don't limit or adjust qflx_trans_veg by btran0 for PHS
+   M   components/clm/src/biogeophys/SoilWaterMovementMod.F90 --- Add Compute_VertTranSink_PHS, pass canopystate, energyfluxstate
+          down to soilwater zengdecker and moisture_form, for PHS rootr_col is zeroed only for pervious road.
+          Compute_VertTranSink_PHS apply transpiration as a sink condition that is vertically distributed over the soil column.
+   M   components/clm/src/biogeophys/SoilMoistStressMod.F90 ----- btran only set if NOT PHS
+   M   components/clm/src/biogeophys/EnergyFluxType.F90 --------- Add bsun/bsha canopy transpiration wetness factor for PHS
+   M   components/clm/src/biogeophys/CanopyStateType.F90 -------- Add vegwp_patch for PHS, add to restart and history
+          (vegetation water matric potential for sun/sha canopy,xyl,root segments)
+   M   components/clm/src/biogeophys/HydrologyNoDrainageMod.F90 - Pass in canopystate and pass canopystate, energystate
+          to SoilWater
+
+::::::::::: Handle use_hydrstress in namelist
+   M   components/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Define use_hydrstress
+   M   components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Set default use_hydrstress to .false.
+   M   components/clm/bld/CLMBuildNamelist.pm --------------------------- Add setup_logic_hydrstress, use_hydrstress
+          and use_dynroots cannot both be on at the same time.
+   M   components/clm/bld/unit_testers/build-namelist_test.pl ----------- Add checks that can't use PHS with ED or dynroot
+
+::::::::::: Add dynroot tests and turn on use_hydrstress for KitchenSink tests
+   M   components/clm/cime_config/testdefs/testmods_dirs/clm/clm50KitchenSink/user_nl_clm - Add use_hydrstress=T, remove use_dynroots=T
+   M   components/clm/cime_config/testdefs/testmods_dirs/clm/clm50KSinkMOut/user_nl_clm --- Add init_interp_fill_missing_with_natveg=T
+          so test will pass as SMP is now required.
+   M   components/clm/cime_config/testdefs/testlist_clm.xml - Add 3 clm50dynroots testing, remove ESMF tests
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r181
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Jun 17 16:39:22 MDT 2016

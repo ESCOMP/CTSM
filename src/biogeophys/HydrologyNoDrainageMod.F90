@@ -17,6 +17,7 @@ Module HydrologyNoDrainageMod
   use SoilStateType     , only : soilstate_type
   use WaterfluxType     , only : waterflux_type
   use WaterstateType    , only : waterstate_type
+  use CanopyStateType   , only : canopystate_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   !
@@ -40,7 +41,7 @@ contains
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
        waterflux_inst, waterstate_inst, &
        soilhydrology_inst, aerosol_inst, &
-       soil_water_retention_curve)
+       canopystate_inst, soil_water_retention_curve)
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
@@ -92,6 +93,7 @@ contains
     type(waterstate_type)    , intent(inout) :: waterstate_inst
     type(aerosol_type)       , intent(inout) :: aerosol_inst
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
+    type(canopystate_type)   , intent(inout) :: canopystate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     !
     ! !LOCAL VARIABLES:
@@ -183,7 +185,7 @@ contains
 
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
             soilhydrology_inst, soilstate_inst, waterflux_inst, waterstate_inst, temperature_inst, &
-            soil_water_retention_curve)
+            canopystate_inst, energyflux_inst, soil_water_retention_curve)
 
       if (use_vichydro) then
          ! mapping soilmoist from CLM to VIC layers for runoff calculations

@@ -589,7 +589,7 @@ contains
             filter(nc)%num_nosnowc, filter(nc)%nosnowc,                      &
             atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst,   &
             waterflux_inst, waterstate_inst, soilhydrology_inst, aerosol_inst, &
-            soil_water_retention_curve)
+            canopystate_inst, soil_water_retention_curve)
 
        !  Calculate column-integrated aerosol masses, and
        !  mass concentrations for radiative calculations and output

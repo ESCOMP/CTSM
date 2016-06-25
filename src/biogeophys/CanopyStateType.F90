@@ -8,9 +8,9 @@ module CanopyStateType
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type
   use landunit_varcon , only : istsoil, istcrop
-  use clm_varpar      , only : nlevcan
+  use clm_varpar      , only : nlevcan, nvegwcs
   use clm_varcon      , only : spval  
-  use clm_varctl      , only : iulog, use_cn, use_ed
+  use clm_varctl      , only : iulog, use_cn, use_ed, use_hydrstress
   use LandunitType    , only : lun                
   use ColumnType      , only : col                
   use PatchType       , only : patch                
@@ -54,6 +54,7 @@ module CanopyStateType
 
      real(r8) , pointer :: rscanopy_patch           (:)   ! patch canopy stomatal resistance (s/m) (ED specific)
      real(r8) , pointer :: gccanopy_patch           (:)   ! patch (ED specific)
+     real(r8) , pointer :: vegwp_patch              (:,:) ! patch vegetation water matric potential (mm)
 
      real(r8)           :: leaf_mr_vcm = spval            ! Scalar constant of leaf respiration with Vcmax
 
@@ -140,7 +141,11 @@ contains
 
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
     allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8     
-
+    if( use_hydrstress )then
+       ! NOTE(kwo, 2015-09) because these variables are only allocated when use_hydrstress
+       ! is turned on, they can not be placed into associate statements.
+       allocate(this%vegwp_patch           (begp:endp,1:nvegwcs)) ; this%vegwp_patch              (:,:) = nan
+    end if
 
   end subroutine InitAllocate
 
@@ -283,6 +288,13 @@ contains
     call hist_addfld1d (fname='GCCANOPY', units='none',  &
          avgflag='A', long_name='Canopy Conductance: mmol m-2 s-1', &
          ptr_patch=this%GCcanopy_patch, set_lake=0._r8, set_urb=0._r8)  
+
+    if ( use_hydrstress ) then
+       this%vegwp_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='VEGWP',  units='mm', type2d='nvegwcs', &
+            avgflag='A', long_name='vegetation water matric potential for sun/sha canopy,xyl,root segments', &
+            ptr_patch=this%vegwp_patch)
+    end if
 
   end subroutine InitHistory
 
@@ -502,6 +514,9 @@ contains
        this%htop_patch(p)       = 0._r8
        this%hbot_patch(p)       = 0._r8
        this%dewmx_patch(p)      = 0.1_r8
+       if ( use_hydrstress ) then
+          this%vegwp_patch(p,:) = -2.5e4_r8
+       end if
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%laisun_patch(p) = 0._r8
@@ -609,6 +624,14 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='altmax_lastyear_indx', xtype=ncd_int,  &
             dim1name='column', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%altmax_lastyear_indx_col) 
+    end if
+
+    if ( use_hydrstress ) then
+       call restartvar(ncid=ncid, flag=flag, varname='vegwp', xtype=ncd_double,  &
+            dim1name='pft', dim2name='vegwcs', switchdim=.true., &
+            long_name='vegetation water matric potential', units='mm', &
+            interpinic_flag='interp', readvar=readvar, data=this%vegwp_patch) 
+
     end if
 
   end subroutine Restart

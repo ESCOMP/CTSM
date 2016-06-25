@@ -32,6 +32,7 @@ module clm_varpar
   integer            :: nlevsno     =  -1     ! maximum number of snow layers
   integer, parameter :: ngases      =   3     ! CH4, O2, & CO2
   integer, parameter :: nlevcan     =   1     ! number of leaf layers in canopy layer
+  integer, parameter :: nvegwcs     =   4     ! number of vegetation water conductance segments
   !ED variables
   integer, parameter :: nlevcan_ed  =   40    ! number of leaf layers in canopy layer
   integer, parameter :: nclmax      =   2     ! max number of canopy layers

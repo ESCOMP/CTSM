@@ -32,9 +32,12 @@ Changes to the datasets (e.g., parameter, surface or initial files):
 
 Substantial timing or memory changes:
 
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
 
-Code reviews and testing
-------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
 
 Code reviewed by:
 
@@ -106,7 +109,7 @@ Changes answers relative to baseline:
 Detailed list of changes
 ------------------------
 
-List any svn externals directories updated (cime, rtm, cism, etc.):
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
 
 List all files eliminated:
 

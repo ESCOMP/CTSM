@@ -211,6 +211,8 @@ contains
 
     namelist /clm_inparm/ use_bedrock
 
+    namelist /clm_inparm/ use_hydrstress
+
     namelist /clm_inparm/ use_dynroot
 
     namelist /clm_inparm/ limit_irrigation
@@ -433,6 +435,11 @@ contains
             errMsg(__FILE__, __LINE__))
     end if
 
+    if ( use_dynroot .and. use_hydrstress ) then
+       call endrun(msg=' ERROR:: dynroot and hydrstress can NOT be on at the same time'//&
+            errMsg(__FILE__, __LINE__))
+    end if
+
     ! Check on run type
     if (nsrest == iundef) then
        call endrun(msg=' ERROR:: must set nsrest'//& 
@@ -583,6 +590,8 @@ contains
     call mpi_bcast (use_lai_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_bedrock, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -848,6 +857,8 @@ contains
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   soil layer structure = ', soil_layerstruct
+    write(iulog,*) '   plant hydraulic stress = ', use_hydrstress
+    write(iulog,*) '   dynamic roots          = ', use_dynroot
     if (nsrest == nsrContinue) then
        write(iulog,*) 'restart warning:'
        write(iulog,*) '   Namelist not checked for agreement with initial run.'

@@ -17,7 +17,7 @@ module restFileMod
   use accumulMod       , only : accumulRest
   use clm_instMod      , only : clm_instRest
   use histFileMod      , only : hist_restart_ncd
-  use clm_varctl       , only : create_glacier_mec_landunit, iulog, use_ed 
+  use clm_varctl       , only : create_glacier_mec_landunit, iulog, use_ed, use_hydrstress
   use clm_varcon       , only : nameg, namel, namec, namep, nameCohort
   use ncdio_pio        , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
   use ncdio_pio        , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim
@@ -480,7 +480,7 @@ contains
     use clm_varctl           , only : conventions, source
     use dynSubgridControlMod , only : get_flanduse_timeseries
     use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevurb, nlevcan
-    use clm_varpar           , only : maxpatch_glcmec
+    use clm_varpar           , only : maxpatch_glcmec, nvegwcs
     use decompMod            , only : get_proc_global
     !
     ! !ARGUMENTS:
@@ -519,6 +519,9 @@ contains
     call ncd_defdim(ncid , 'levtot'  , nlevsno+nlevgrnd, dimid)
     call ncd_defdim(ncid , 'numrad'  , numrad         ,  dimid)
     call ncd_defdim(ncid , 'levcan'  , nlevcan        ,  dimid)
+    if ( use_hydrstress ) then
+      call ncd_defdim(ncid , 'vegwcs'  , nvegwcs        ,  dimid)
+    end if
     call ncd_defdim(ncid , 'string_length', 64        ,  dimid)
     if (create_glacier_mec_landunit) then
        call ncd_defdim(ncid , 'glc_nec', maxpatch_glcmec, dimid)

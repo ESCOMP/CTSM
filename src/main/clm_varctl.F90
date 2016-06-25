@@ -239,6 +239,12 @@ module clm_varctl
   character(len=16), public :: soil_layerstruct = '10SL_3.5m'
 
   !----------------------------------------------------------
+  ! plant hydraulic stress switch
+  !----------------------------------------------------------
+
+  logical, public :: use_hydrstress = .false. ! true => use plant hydraulic stress calculation
+
+  !----------------------------------------------------------
   ! dynamic root switch
   !----------------------------------------------------------
 

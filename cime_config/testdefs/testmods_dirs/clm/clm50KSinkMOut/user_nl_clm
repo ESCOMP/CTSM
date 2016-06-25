@@ -1,2 +1,3 @@
  hist_nhtfrq    = 0,-240
  hist_mfilt     = 1,1
+ init_interp_fill_missing_with_natveg = .true.
