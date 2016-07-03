@@ -1,4 +1,109 @@
 ===============================================================
+Tag name:  clm4_5_9_r183
+Originator(s):  erik (Erik Kluzek)
+Date: Sat Jul  2 18:23:09 MDT 2016
+One-line Summary: Decomposition is not water limited after reaching a field capacity parameter (maxpsi_hr) rather 
+                  than only at soil saturation
+
+Purpose of changes
+------------------
+
+Replaces the hard-coded assumption present in prior versions of the model that soil respiration was 
+water-limited whenever it fell below saturation. Now it's no longer water-limited from maxpsi_hr up
+to saturation.
+
+This was due to a wrong interpretation/implementation of the following paper.
+
+Andren, O., and K. Paustian, 1987. Barley straw decomposition in the field: a comparison of models. Ecology, 68(5):1190-1200
+
+Also see notes in..
+
+http://bb.cgd.ucar.edu/cesm12z-clm45-important-bad-interpretation-maximum-rate-constant-soil-water-content
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2324 Bad interpretation of maximum rate constant for soil water content in SoilbiogeochemDecompCascade
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users: None
+
+Changes to CLM's user interface: None
+
+Changes made to namelist defaults: new params files
+
+Changes to the datasets: parameter files
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   maxpsi_hr is a scalar constant but read in on the parameter file (should change to namelist)
+
+Changes to tests or testing: Removed RTM ESMF test
+
+Code reviewed by: self, ckoven, dlawren
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - OK (70 comparision tests fail, because of the new params files)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_8_r182
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, for CLM4_5/CLM5_0 for BGC and CN cases
+
+  Summarize any changes to answers:
+    - what code configurations: clm4_5 and clm5_0 with BGC or CN
+    - what platforms/compilers: all
+    - nature of change: should be similar climate 
+
+    Charlie Koven did some work with sensitivity analysis to find a good value for maxpsi_hr
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): rtm
+
+    rtm to rtm1_0_57 -- remove ESMF test
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- new params file with maxpsi_hr on them
+
+   M components/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeBGCMod.F90 - Use maxpsi_hr from params file
+       rather than max soil saturation
+   M components/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeCNMod.F90 -- Use maxpsi_hr from params file
+       rather than max soil saturation
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_8_r182
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Jun 24 23:33:36 MDT 2016
