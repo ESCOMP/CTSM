@@ -505,7 +505,7 @@ contains
 
     if ( use_nguardrail ) then
        call t_startf('CNPrecisionControl')
-       call CNPrecisionControl(num_soilp, filter_soilp, &
+       call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, &
             c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
        call t_stopf('CNPrecisionControl')
@@ -559,7 +559,7 @@ contains
 
     if ( use_nguardrail ) then
        call t_startf('CNPrecisionControl')
-       call CNPrecisionControl(num_soilp, filter_soilp, &
+       call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, &
             c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
        call t_stopf('CNPrecisionControl')
@@ -684,7 +684,7 @@ contains
 
     if ( use_nguardrail ) then
        call t_startf('CNPrecisionControl')
-       call CNPrecisionControl(num_soilp, filter_soilp, &
+       call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, &
             c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
        call t_stopf('CNPrecisionControl')
@@ -791,7 +791,7 @@ contains
 
     if ( use_nguardrail ) then
        call t_startf('CNPrecisionControl')
-       call CNPrecisionControl(num_soilp, filter_soilp, &
+       call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, &
             c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
        call t_stopf('CNPrecisionControl')
@@ -914,7 +914,7 @@ contains
     ! Set controls on very low values in critical state variables 
 
     call t_startf('CNPrecisionControl')
-    call CNPrecisionControl(num_soilp, filter_soilp, &
+    call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
          cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, &
          c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
     call t_stopf('CNPrecisionControl')

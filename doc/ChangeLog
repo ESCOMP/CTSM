@@ -1,4 +1,189 @@
 ===============================================================
+Tag name:  clm4_5_9_r184
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Jul  6 14:55:45 MDT 2016
+One-line Summary: CLM50 changes: Atkin form of lmr changed, new parameters and files, turn PHS on by default, new 
+                  cold snow density, reseed at exit AD spinup, fix fire bug, fix npool and cpool errors
+
+Purpose of changes
+------------------
+
+The CLM50 Atkin method of leaf maintenence respiration was changed by Dr. Rosie Fisher according to communication with Atkin.
+New parameter file for CLM50 with new parameters. Plant Hydraulic Stress is now on by default for CLM50. New formulation
+for snow density below -15C from Dr. Andrew Slater and Dr. David Lawrence. If plants are dead at the exit AD spinup stage, reseed.
+Fix a fire bug which allowed negative nitrogen pools. Fix some npool and cpool errors.
+
+Work on CNFUNMod, correct indentation, and headers and comments. Remove unused arrays. Initialize arrays in filter loops. Do
+some changes to increase performance. Make logic for CNPrecisionControl into three subroutines, when especially negative abort.
+
+ -- Changes from Rosie Fisher to remove leaf_acc term, and implement changes to the Atkin form of lmr25top based on personal communication
+with Atkin.
+ -- new params file
+ -- Read in PHS parameters from PFT params file.
+ -- CNPrecisionControl modularization
+ -- new method for snow density and a change to how wind_dependent_snow_density is done for clm5.0. upplim_destruct_metamorph and
+ -- overburden_compress_tfactor for clm5
+ -- Put mbbopt on params file and use it
+ -- removed deciduous retranslocation adjustment to plant_ndemand to fix cpool error
+ -- Checkin Keith's changes to reseed Carbon for forests if in spinup mode and returning to regular mode, this should help in making it so
+ -- that you can always use spunup initial conditions rather than always having to do a cold start
+ -- Some FUN optimization.
+ -- Set barriers, ATM_PIO_TYPENAME
+ -- removed deciduous retranslocation adjustment to plant_ndemand to fix cpool error
+ -- If leafn small set leaf-CN and storage_leaf-CN to missing value in NutrientCompetitionFlexibleCNMod
+ -- add in free N flux direct to npool
+ -- Move update of grainn_to_food side by side to grainc_to_food with the same equation, from Rosie and Keith (bug 2327)
+ -- fire (bug 2314)
+ -- soybean CNDV shrub (bug 2326)
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2255, 2314, 2326, 2327
+
+   2327 Change location of where grainn_to_food is updated for CROP
+   2326 Bad multiplication of btran for soybean or nbrdlf_dcd_tmp_shrub with CNDV in CanopyFluxes (partial see below)
+   2314 Negative carbon pools due to issue in fire model
+   2255 bug in soil resistance, likely causes crop soil resistance to remain unset
+
+Known bugs introduced in this tag (include bugzilla ID): 2326, 2328, 2330
+  2330 Issue with frootc/frootn for C4 crops
+  2328 Discontinuities in new CLM50 snow density formulation
+  The issue that created the need for bug 2326 was removed for both CLM45 and CLM50 in this tag
+ (The same code was left in the CLM40 version)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users: None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist items: ncrit, ccrit, nnegcrit, cnegcrit,
+           baseflow_scalar, denitrif_respiration_coefficient/exponent (and nitrconc), lotmp_snowdensity_method,
+           upplim_destruct_metamorph, overburden_compress_Tfactor, min_wind_snowcompact,  remove leaf_acc
+
+Changes made to namelist defaults: Set new namelist items, update CLM50 params file
+
+Changes to the datasets: CLM50 params file with updated parameters
+
+Substantial timing or memory changes: CLM50BGC is a good bit faster
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers:  Now reading some mxpft dimensioned arrays in local readParams
+   SnowHydrologyMod parameters should go into a params_type
+
+Changes to tests or testing: None
+
+Code reviewed by: self,oleson,rfisher,dlawren,aslater@cu.edu,lifang
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - OK (78 compare tests FAIL because of namelist changes)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi -   OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag -  PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_9_r183
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for CLM50 and CLM45CROP
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM50 or CLM45CROP
+    - what platforms/compilers: All
+    - nature of change: 
+        CLM50 ------ Modified climate
+        CLM45CROP -- soybean results and grainn_to_food (all CFTS) will be different
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename:  rfisher: respmods_n30_clm4_5_8_r182_4x5_bareground_AD_1 (has some other SourceMods too)
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated:
+
+   D components/clm/bld/namelist_files/namelist_definition_drv_flds.xml
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M components/clm/src/main/clm_initializeMod.F90 ------------ Always call readParameters
+   M components/clm/src/main/controlMod.F90 ------------------- Add calls to: soilHydReadNML, nitrifReadNML, CNPrecisionControlReadNML
+   M components/clm/src/main/clm_driver.F90 ------------------- Work with timing calls
+   M components/clm/src/main/pftconMod.F90 -------------------- Read in mbbopt
+   M components/clm/src/main/readParamsMod.F90 ---------------- Add some comments, pass in photosyns_inst and call it's readParams
+   M components/clm/src/biogeophys/SoilWaterMovementMod.F90 --- Use Photosyns_inst->params_inst%psi_soil_ref in place of -50000
+   M components/clm/src/biogeophys/SoilHydrologyMod.F90 ------- Add soilHydReadNML, read in baseflow_scalar
+   M components/clm/src/biogeophys/SnowHydrologyMod.F90 ------- New namelist items: lotmp_snowdensity_method, 
+          upplim_destruct_metamorph, overburden_compress_Tfactor, min_wind_snowcompact, new_snowdensity method has
+          lower density for < -15C, change to wind_dependent_snow_density
+   M components/clm/src/biogeophys/PhotosynthesisMod.F90 ------ New parameters for Plant Hydralic Stress: krmax, kmax, 
+           psi50, psi_soil_ref, lmr_intercept_atkin, remove leaf_acc. Add: allocParams, readParams methods
+           remove mbbopt and move into pftcon. Atkin method of leaf respiration modified per communication with Atkin.
+   M components/clm/src/biogeophys/SurfaceResistanceMod.F90 --- Properly use land-unit rather than column (bug 2255)
+   M components/clm/src/biogeophys/CanopyFluxesMod.F90 -------- Remove multiplication of btran for soybean or nbrdlf_dcd_tmp_shrub
+           for CNDV, inside the ITERATION loop (bug 2326). This means the reason that brought this code is no longer addressed.
+   M components/clm/src/soilbiogeochem/SoilBiogeochemNitrifDenitrifMod.F90 --- Add nitrifReadNML, read in:
+           denitrif_respiration_coefficient, denitrif_respiration_exponent, denitrif_nitrateconc_coefficient,
+           denitrif_nitrateconc_exponent. Remove k_nitr_max
+   M components/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeBGCMod.F90 - Remove hardwired minpsi
+   M components/clm/src/biogeochem/CNFireBaseMod.F90 --------- Multiply several terms by (1-cc_other) (bug 2314)
+   M components/clm/src/biogeochem/CNPrecisionControlMod.F90 - Add CNPrecisionControlReadNML, cnegcrit, nnegcrit
+           do actual truncation inside new subroutines: TruncateCandNStates, TruncateCState, TruncateNState
+           Die if C or N is very negative < cnegcrit or < nnegcrit (currently set to very large negative numbers -60 and -6)
+   M components/clm/src/biogeochem/NutrientCompetitionFlexibleCNMod.F90 Set actual_storage_leafcn to missing value if
+           leafn_storage is zero. actual_leafcn to missing if leafn is < n_min, remove modification of plant_ndemand if FUN off
+   M components/clm/src/biogeochem/CNVegCarbonStateType.F90 - Reseed if plants are dead and going from Accel. Decomp. to regular mode
+   M components/clm/src/biogeochem/CNNStateUpdate1Mod.F90 --- Add handling of npool and retransn
+   M components/clm/src/biogeochem/CNFUNMod.F90 ------------- Add more comments, correct indentation, speed up, and remove
+           extra garbage, use filters to zero out arrays
+           add free_Nretrans and fraction of N retranslocation which is automatic/free
+   M components/clm/src/biogeochem/CNVegNitrogenFluxType.F90  Add free_retransn_to_npool_patch, write out to history, write
+           LEAFN_TO_LITTER to history by default
+   M components/clm/src/biogeochem/CNDriverMod.F90 ----------- Pass bounds to CNPrecisionControl
+   M components/clm/src/biogeochem/CNPhenologyMod.F90 -------- grainn_to_food modified to be similar to Carbon version (bug 2327)
+           for FUN leafn_to_retransn is paid_retransn_to_npool plus free_retransn_to_npool
+
+   M components/clm/bld/unit_testers/build-namelist_test.pl ----------- Add in new tests for new parameters
+   M components/clm/bld/namelist_files/namelist_definition_clm4_5.xml - New namelist items: ncrit, ccrit, nnegcrit, cnegcrit,
+           baseflow_scalar, denitrif_respiration_coefficient/exponent (and nitrconc), lotmp_snowdensity_method,
+           upplim_destruct_metamorph, overburden_compress_Tfactor, min_wind_snowcompact,  remove leaf_acc
+   M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Add CPOOL to history for clm_accelerated_spinup
+           remove leaf_acc, set: lotmp_snowdensity_method, upplim_destruct_metamorph, overburden_compress_tfactor, new
+           params file for CLM50, set ncrit, turn use_hydrstress=T for CLM50
+   M components/clm/bld/CLMBuildNamelist.pm --------------------------- Add setup_logic_cnprec, call setup_logic_nitrif_params,
+           setup_logic_hydrology_params, add in cnprecision_inparm namelist
+
+   M components/clm/cime_config/buildnml ------------ Don't need to copy user_nl_clm to Buildconf use CASEROOT version
+           be sure to set $tuning options for build-namelist
+   M components/clm/cime_config/config_component.xml  Add BARRIER_N/OPTION, ATM_PIO_TYPENAME settings
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_9_r183
 Originator(s):  erik (Erik Kluzek)
 Date: Sat Jul  2 18:23:09 MDT 2016

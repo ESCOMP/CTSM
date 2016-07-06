@@ -24,6 +24,7 @@ module SoilHydrologyMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
+  public :: SoilHydReadNML       ! Read in the Soil hydrology namelist
   public :: SurfaceRunoff        ! Calculate surface runoff
   public :: Infiltration         ! Calculate infiltration into surface soil layer
   public :: WaterTable           ! Calculate water table before imposing drainage
@@ -36,8 +37,67 @@ module SoilHydrologyMod
   public :: RenewCondensation    ! Misc. corrections
 
   !-----------------------------------------------------------------------
+  real(r8), private :: baseflow_scalar = 1.e-2_r8
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine soilHydReadNML( NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for soil hydrology
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use clm_varctl     , only : iulog
+    use shr_log_mod    , only : errMsg => shr_log_errMsg
+    use abortutils     , only : endrun
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'soilHydReadNML'
+    character(len=*), parameter :: nmlname = 'soilhydrology_inparm'
+    !-----------------------------------------------------------------------
+    namelist /soilhydrology_inparm/ baseflow_scalar
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=soilhydrology_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast (baseflow_scalar, mpicom)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=soilhydrology_inparm)
+       write(iulog,*) ' '
+    end if
+
+  end subroutine soilhydReadNML
 
   !-----------------------------------------------------------------------
   subroutine SurfaceRunoff (bounds, num_hydrologyc, filter_hydrologyc, &
@@ -1899,7 +1959,6 @@ contains
      real(r8) :: icefracsum                              ! summation of icefrac*dzmm of layers below water table (-)
      real(r8) :: fracice_rsub(bounds%begc:bounds%endc)   ! fractional impermeability of soil layers (-)
      real(r8) :: available_h2osoi_liq                    ! available soil liquid water in a layer
-     real(r8) :: rsub_top_max
      real(r8) :: h2osoi_vol
      real(r8) :: imped
      real(r8) :: rsub_top_tot
@@ -2020,48 +2079,12 @@ contains
              dzsum  = dzsum + dzmm(c,j)
              icefracsum = icefracsum + icefrac(c,j) * dzmm(c,j)
           end do
-          ! add ice impedance factor to baseflow
-          if(origflag == 1) then 
-             if (use_vichydro) then
-                call endrun(msg="VICHYDRO is not available for origflag=1"//errmsg(__FILE__, __LINE__))
-             else
-                fracice_rsub(c) = max(0._r8,exp(-3._r8*(1._r8-(icefracsum/dzsum))) &
-                     - exp(-3._r8))/(1.0_r8-exp(-3._r8))
-                imped=(1._r8 - fracice_rsub(c))
-                rsub_top_max = 5.5e-3_r8
-             end if
-          else
-             if (use_vichydro) then
-                imped=10._r8**(-e_ice*min(1.0_r8,ice(c,nlayer)/max_moist(c,nlayer)))
-                dsmax_tmp(c) = Dsmax(c) * dtime/ secspday !mm/day->mm/dtime
-                rsub_top_max = dsmax_tmp(c)
-             else
-                imped=10._r8**(-e_ice*(icefracsum/dzsum))
-                rsub_top_max = 10._r8 * sin((rpi/180.) * col%topo_slope(c))
-             end if
-          endif
-          if (use_vichydro) then
-             ! ARNO model for the bottom soil layer (based on bottom soil layer 
-             ! moisture from previous time step
-             ! use watmin instead for resid_moist to be consistent with default hydrology
-             rel_moist = (moist(c,nlayer) - watmin)/(max_moist(c,nlayer)-watmin) 
-             frac = (Ds(c) * rsub_top_max )/Wsvic(c)
-             rsub_tmp = (frac * rel_moist)/dtime
-             if(rel_moist > Wsvic(c))then
-                frac = (rel_moist - Wsvic(c))/(1.0_r8 - Wsvic(c))
-                rsub_tmp = rsub_tmp + (rsub_top_max * (1.0_r8 - Ds(c)/Wsvic(c)) *frac**c_param(c))/dtime
-             end if
-             rsub_top(c) = imped * rsub_tmp
-             ! make sure baseflow isn't negative
-             rsub_top(c) = max(0._r8, rsub_top(c))
-          else
-             rsub_top(c)    = imped * rsub_top_max* exp(-fff(c)*zwt(c))
-          end if
+          imped=10._r8**(-e_ice*(icefracsum/dzsum))
           !@@
           ! baseflow is power law expression relative to bedrock layer
           if(zwt(c) <= zi(c,nbedrock(c))) then 
-             rsub_top(c)    = imped * 1.e-5_r8* (zi(c,nbedrock(c)) - zwt(c))**(n_baseflow)
-
+             rsub_top(c)    = imped * baseflow_scalar * tan(rpi/180._r8*col%topo_slope(c))* &
+                              (zi(c,nbedrock(c)) - zwt(c))**(n_baseflow)
           else
              rsub_top(c) = 0._r8
           endif
@@ -2074,40 +2097,26 @@ contains
              call endrun(msg="RSUB_TOP IS POSITIVE in Drainage!"//errmsg(__FILE__, __LINE__))
              
           else ! deepening water table
-             if (use_vichydro) then
-                wtsub_vic = 0._r8
-                do j = (nlvic(1)+nlvic(2)+1), nlevsoi
-                   wtsub_vic = wtsub_vic + hk_l(c,j)*dzmm(c,j)
-                end do
+             do j = jwt(c)+1, nbedrock(c)
+                ! use analytical expression for specific yield
+                s_y = watsat(c,j) &
+                     * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
+                s_y=max(s_y,0.02_r8)
                 
-                do j = (nlvic(1)+nlvic(2)+1), nlevsoi
-                   rsub_top_layer=max(rsub_top_tot, rsub_top_tot*hk_l(c,j)*dzmm(c,j)/wtsub_vic)
-                   rsub_top_layer=min(rsub_top_layer,0._r8)
-                   h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
-                   rsub_top_tot = rsub_top_tot - rsub_top_layer
-                end do
-             else
-                do j = jwt(c)+1, nbedrock(c)
-                   ! use analytical expression for specific yield
-                   s_y = watsat(c,j) &
-                        * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                   s_y=max(s_y,0.02_r8)
+                rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
+                rsub_top_layer=min(rsub_top_layer,0._r8)
+                h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
                    
-                   rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
-                   rsub_top_layer=min(rsub_top_layer,0._r8)
-                   h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
+                rsub_top_tot = rsub_top_tot - rsub_top_layer
                    
-                   rsub_top_tot = rsub_top_tot - rsub_top_layer
+                if (rsub_top_tot >= 0.) then 
+                   zwt(c) = zwt(c) - rsub_top_layer/s_y/1000._r8
                    
-                   if (rsub_top_tot >= 0.) then 
-                      zwt(c) = zwt(c) - rsub_top_layer/s_y/1000._r8
-                      
-                      exit
-                   else
-                      zwt(c) = zi(c,j)
-                   endif
-                enddo
-             end if
+                   exit
+                else
+                   zwt(c) = zi(c,j)
+                endif
+             enddo
              
              !--  remove residual rsub_top  ---------------------------------------------
              ! make sure no extra water removed from soil column
@@ -2142,14 +2151,9 @@ contains
           if (lun%urbpoi(col%landunit(c))) then
              qflx_rsub_sat(c)     = xs1(c) / dtime
           else
-             if(h2osfcflag == 1) then
-                ! send this water up to h2osfc rather than sending to drainage
-                h2osfc(c) = h2osfc(c) + xs1(c)
-                qflx_rsub_sat(c)     = 0._r8
-             else
-                ! use original code to send water to drainage (non-h2osfc case)
-                qflx_rsub_sat(c)     = xs1(c) / dtime
-             endif
+             ! send this water up to h2osfc rather than sending to drainage
+             h2osfc(c) = h2osfc(c) + xs1(c)
+             qflx_rsub_sat(c)     = 0._r8
           endif
           ! add in ice check
           xs1(c)          = max(max(h2osoi_ice(c,1),0._r8)-max(0._r8,(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_liq(c,1))),0._r8)
@@ -2205,8 +2209,6 @@ contains
           ! Instead of removing water from aquifer where it eventually
           ! shows up as excess drainage to the ocean, take it back out of 
           ! drainage
-!switch xs to rsub_sat
-!          rsub_top(c) = rsub_top(c) - xs(c)/dtime
           qflx_rsub_sat(c) = qflx_rsub_sat(c) - xs(c)/dtime
 
        end do

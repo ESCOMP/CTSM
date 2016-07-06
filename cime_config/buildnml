@@ -154,10 +154,8 @@ while ($inst_counter <= $NINST_LND) {
     my $infile_text = "";
     if ($clmicfile) {$infile_text .= "$startfiletype = \'$clm_startfile\' \n"; }
 
-    system( "cp $CASEROOT/user_nl_clm${inst_string} $CASEROOT/Buildconf/clmconf/user_nl_clm${inst_string}" );
-
     SetupTools::create_namelist_infile("$CASEROOT", 
-                                       "$CASEROOT/Buildconf/clmconf/user_nl_clm${inst_string}",
+                                       "$CASEROOT/user_nl_clm${inst_string}",
 				       "$CASEROOT/Buildconf/clmconf/namelist", 
 				       "$infile_text");
 
@@ -188,7 +186,7 @@ while ($inst_counter <= $NINST_LND) {
     $sysmod = "$sysmod $usecase $glc_opts -res $resolution $clmusr -clm_start_type $start_type";
     $sysmod = "$sysmod -envxml_dir $CASEROOT -l_ncpl $LND_NCPL -lnd_frac ${LND_DOMAIN_PATH}/${LND_DOMAIN_FILE}";
     $sysmod = "$sysmod -glc_nec $GLC_NEC -co2_ppmv $CCSM_CO2_PPMV -co2_type $CLM_CO2_TYPE ";
-    $sysmod = "$sysmod -config $CASEROOT/Buildconf/clmconf/config_cache.xml $CLM_BLDNML_OPTS $spinup";
+    $sysmod = "$sysmod -config $CASEROOT/Buildconf/clmconf/config_cache.xml $CLM_BLDNML_OPTS $spinup $tuning";
     #$sysmod = "$sysmod -config $CASEROOT/Buildconf/clmconf/config_cache.xml $CLM_BLDNML_OPTS $spinup $tuning";
     system($sysmod) == 0 or die "ERROR clm.buildnml: $sysmod failed: $?\n";
     

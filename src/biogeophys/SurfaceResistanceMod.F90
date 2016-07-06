@@ -353,9 +353,10 @@ contains
 
    do fc = 1,num_nolakec
       c = filter_nolakec(fc)
-      if (col%itype(c)/=istwet .AND. col%itype(c)/=istice  &
-                              .AND. col%itype(c)/=istice_mec) then
-         if (col%itype(c) == istsoil .or. col%itype(c) == istcrop) then
+      l = col%landunit(c)  
+      if (lun%itype(l)/=istwet .AND. lun%itype(l)/=istice  &
+           .AND. lun%itype(l)/=istice_mec) then
+         if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
             vwc_liq = max(h2osoi_liq(c,1),1.0e-6_r8)/(dz(c,1)*denh2o)
 ! eff_porosity not calculated til SoilHydrology
              eff_por_top = max(0.01_r8,watsat(c,1)-min(watsat(c,1), h2osoi_ice(c,1)/(dz(c,1)*denice)))

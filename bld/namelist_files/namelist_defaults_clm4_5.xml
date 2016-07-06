@@ -45,7 +45,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true." use_cndv=".true."
 >'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS','TSAI','HTOP','HBOT'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true."
->'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS'</hist_fincl1>
+>'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','CPOOL','NPP','TWS'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_ed=".true."
 >'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".false."
@@ -60,10 +60,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Root and stem acclimation -->
 <rootstem_acc phys="clm5_0">.false.</rootstem_acc>
 <rootstem_acc phys="clm4_5">.false.</rootstem_acc>
-
-<!-- Leaf acclimation -->
-<leaf_acc phys="clm5_0">.true.</leaf_acc>
-<leaf_acc phys="clm4_5">.false.</leaf_acc>
 
 <!-- Light inhibition of photosynthesis -->
 <light_inhibit phys="clm5_0">.true.</light_inhibit>
@@ -197,6 +193,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <wind_dependent_snow_density phys="clm5_0" >.true.</wind_dependent_snow_density>
 <wind_dependent_snow_density phys="clm4_5" >.false.</wind_dependent_snow_density>
 
+<lotmp_snowdensity_method phys="clm5_0">'Slater2017'</lotmp_snowdensity_method>
+<lotmp_snowdensity_method phys="clm4_5">'TruncatedAnderson1976'</lotmp_snowdensity_method>
+
+<upplim_destruct_metamorph   phys="clm5_0">150.d00</upplim_destruct_metamorph>
+<overburden_compress_tfactor phys="clm5_0">0.04d00</overburden_compress_tfactor>
+
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo
      Greenland: virtual
@@ -219,7 +221,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.c160701a.nc</paramfile>
+<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.c160701.nc</paramfile>
 <paramfile phys="clm4_5" use_ed=".false.">lnd/clm2/paramdata/clm_params.c160701.nc</paramfile>
 <paramfile               use_ed=".true." >lnd/clm2/paramdata/clm_params.ED.c151023.nc</paramfile>
 
@@ -287,9 +289,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_nguardrail phys="clm5_0" use_cn=".false.">.false.</use_nguardrail>
 <use_nguardrail phys="clm5_0" use_cn=".true." >.true.</use_nguardrail>
 
+<ncrit    phys="clm5_0" use_cn=".true.">1.d-9</ncrit>
+
 <!-- Plant hydraulic stress -->
-<use_hydrstress phys="clm4_5" >.false.</use_hydrstress>
-<use_hydrstress phys="clm5_0" >.false.</use_hydrstress>
+<use_hydrstress phys="clm4_5"                 >.false.</use_hydrstress>
+<use_hydrstress phys="clm5_0" use_ed=".true." >.false.</use_hydrstress>
+<use_hydrstress phys="clm5_0" use_ed=".false.">.true.</use_hydrstress>
 <!--
 
      Original initial condition file at 1 degree resolution

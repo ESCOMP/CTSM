@@ -2220,6 +2220,8 @@ contains
          livestemn             =>    cnveg_nitrogenstate_inst%livestemn_patch          , & ! Input:  [real(r8) (:) ]  (gN/m2) livestem N
 
          cpool_to_grainc       =>    cnveg_carbonflux_inst%cpool_to_grainc_patch       , & ! Input:  [real(r8) (:) ]  allocation to grain C (gC/m2/s)                   
+         npool_to_grainn       =>    cnveg_nitrogenflux_inst%npool_to_grainn_patch     , & ! Input: [real(r8) (:)  ]  allocation to grain N (gN/m2/s)
+         grainn                =>    cnveg_nitrogenstate_inst%grainn_patch             , & ! Input: [real(r8) (:)  ]  (kgN/m2) grain N
          cpool_to_livestemc    =>    cnveg_carbonflux_inst%cpool_to_livestemc_patch    , & ! Input:  [real(r8) (:) ]  allocation to live stem C (gC/m2/s)               
          cpool_to_leafc        =>    cnveg_carbonflux_inst%cpool_to_leafc_patch        , & ! Input:  [real(r8) (:) ]  allocation to leaf C (gC/m2/s)                    
          cpool_to_frootc       =>    cnveg_carbonflux_inst%cpool_to_frootc_patch       , & ! Input:  [real(r8) (:) ]  allocation to fine root C (gC/m2/s)               
@@ -2235,11 +2237,12 @@ contains
          livestemn_to_litter   =>    cnveg_nitrogenflux_inst%livestemn_to_litter_patch , & ! Output: [real(r8) (:) ]  livestem N to litter (gN/m2/s)                    
          grainn_to_food        =>    cnveg_nitrogenflux_inst%grainn_to_food_patch      , & ! Output: [real(r8) (:) ]  grain N to food (gN/m2/s)                         
          leafn_to_litter       =>    cnveg_nitrogenflux_inst%leafn_to_litter_patch     , & ! Output: [real(r8) (:) ]  leaf N litterfall (gN/m2/s)                       
-         leafn_to_retransn     =>    cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Output: [real(r8) (:) ]  leaf N to retranslocated N pool (gN/m2/s)         
+         leafn_to_retransn     =>    cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Input: [real(r8) (:) ]  leaf N to retranslocated N pool (gN/m2/s)         
+         free_retransn_to_npool=>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch  , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
+         paid_retransn_to_npool=>    cnveg_nitrogenflux_inst%retransn_to_npool_patch, & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
          frootn_to_litter      =>    cnveg_nitrogenflux_inst%frootn_to_litter_patch    , & ! Output: [real(r8) (:) ]  fine root N litterfall (gN/m2/s)                  
          leafc_to_litter_fun   =>    cnveg_carbonflux_inst%leafc_to_litter_fun_patch   , & ! Output:  [real(r8) (:) ]  leaf C litterfall used by FUN (gC/m2/s)
-         leafcn_offset         =>    cnveg_state_inst%leafcn_offset_patch              , & ! Output:  [real(r8) (:) ]  Leaf C:N used by FUN
-         Nretrans              =>    cnveg_nitrogenflux_inst%Nretrans_patch              & ! Input:   [real(r8) (:) ]  Retranslocation N uptake (gN/m2/s)
+         leafcn_offset         =>    cnveg_state_inst%leafcn_offset_patch               & ! Output:  [real(r8) (:) ]  Leaf C:N used by FUN
          )
 
       ! The litterfall transfer rate starts at 0.0 and increases linearly
@@ -2259,6 +2262,7 @@ contains
                ! if this were ever changed, we'd need to add code to the "else"
                if (ivt(p) >= npcropmin) then
                   grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) 
+                  grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p) 
                   livestemc_to_litter(p) = t1 * livestemc(p)  + cpool_to_livestemc(p)
                end if
             else
@@ -2280,7 +2284,7 @@ contains
             
             if ( use_fun ) then
                leafc_to_litter_fun(p)      =  leafc_to_litter(p)
-               leafn_to_retransn(p)        =  Nretrans(p)
+               leafn_to_retransn(p)        =  paid_retransn_to_npool(p) + free_retransn_to_npool(p)
                if (leafn(p).gt.0._r8) then
                   if (leafn(p)-leafn_to_retransn(p)*dt.gt.0._r8) then
                       leafcn_offset(p)     =  leafc(p)/(leafn(p)-leafn_to_retransn(p)*dt)
@@ -2342,7 +2346,6 @@ contains
                !X! livestemn_to_litter(p) = livestemc_to_litter(p) / livewdcn(ivt(p))
                ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
                livestemn_to_litter(p) = livestemn(p) / dt
-               grainn_to_food(p) = grainc_to_food(p) / graincn(ivt(p))
             end if
 
             ! save the current litterfall fluxes
@@ -2408,7 +2411,8 @@ contains
          frootn_to_litter  =>    cnveg_nitrogenflux_inst%frootn_to_litter_patch  , & ! Output: [real(r8) (:) ]                                                    
          leafc_to_litter_fun   => cnveg_carbonflux_inst%leafc_to_litter_fun_patch, & ! Output:  [real(r8) (:) ] leaf C litterfall used by FUN (gC/m2/s)
          leafcn_offset         => cnveg_state_inst%leafcn_offset_patch           , & ! Output:  [real(r8) (:) ] Leaf C:N used by FUN
-         Nretrans              => cnveg_nitrogenflux_inst%Nretrans_patch           & ! Input:   [real(r8) (:) ] Retranslocation N uptake (gN/m2/s)
+         free_retransn_to_npool=>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch  , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
+         paid_retransn_to_npool=>    cnveg_nitrogenflux_inst%retransn_to_npool_patch   & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
          )
 
       ! patch loop
@@ -2422,7 +2426,7 @@ contains
             frootc_to_litter(p) = bglfr(p) * frootc(p)
             if ( use_fun ) then
                leafc_to_litter_fun(p)     = leafc_to_litter(p)
-               leafn_to_retransn(p)       = Nretrans(p)
+               leafn_to_retransn(p)       = paid_retransn_to_npool(p) + free_retransn_to_npool(p)
                if (leafn(p).gt.0._r8) then
                   if (leafn(p)-leafn_to_retransn(p)*dt.gt.0._r8) then
                      leafcn_offset(p)     = leafc(p)/(leafn(p)-leafn_to_retransn(p)*dt)

@@ -517,7 +517,7 @@ contains
     use PatchType        , only : patch
     use ColumnType       , only : col
     use clm_varctl       , only : iulog
-    use PhotosynthesisMod, only : plc
+    use PhotosynthesisMod, only : plc, params_inst
     use column_varcon    , only : icol_road_perv
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan
     !
@@ -562,7 +562,9 @@ contains
          btran               => energyflux_inst%btran_patch        , & ! Input: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) (integrated soil water stress)
          frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)  ] fraction of vegetation not covered by snow (0 OR 1) [-]  
          rootfr              => soilstate_inst%rootfr_patch        , & ! Input: [real(r8) (:,:) ]  fraction of roots in each soil layer
+         ivt                 => patch%itype                        , & ! Input: [integer (:)    ]  patch vegetation type
          z                   => col%z                                & ! Input: [real(r8) (:,:) ]  layer node depth (m)
+
          )
     vegwp                    => canopystate_inst%vegwp_patch           ! Input/Output: [real(r8) (:,:) ]  vegetation water matric potential (mm)
 
@@ -581,7 +583,8 @@ contains
                       if (patch%wtcol(p) > 0._r8) then
                          if (.not.isnan(smp(c,j))) then
                             rai(j) = tsai(p) * rootfr(p,j)
-                            fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)*plc(-50000._r8,p,c,j,1,bsw(c,j),sucsat(c,j))))  
+                            fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)* &
+                                    plc(params_inst%psi_soil_ref(ivt(p)),p,c,j,1,bsw(c,j),sucsat(c,j))))
                             temp(c) = temp(c) + rai(j) * krmax(j) * fs(j) * (smp(c,j) - vegwp(p,4) - grav2)* patch%wtcol(p)
                          endif
                       end if

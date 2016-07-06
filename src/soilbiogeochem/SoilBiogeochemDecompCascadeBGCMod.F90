@@ -583,7 +583,6 @@ contains
     ! !LOCAL VARIABLES:
     real(r8):: frw(bounds%begc:bounds%endc) ! rooting fraction weight
     real(r8), allocatable:: fr(:,:)         ! column-level rooting fraction by soil depth
-    real(r8):: minpsi, maxpsi               ! limits for soil water scalar for decomp
     real(r8):: psi                          ! temporary soilpsi for water scalar
     real(r8):: rate_scalar                  ! combined rate scalar for decomp
     real(r8):: k_l1                         ! decomposition rate constant litter 1 (1/sec)
@@ -831,8 +830,6 @@ contains
          ! Orchard, V.A., and F.J. Cook, 1983. Relationship between soil respiration
          ! and soil moisture. Soil Biol. Biochem., 15(4):447-453.
 
-         minpsi = -10.0_r8;
-
          do j = 1,nlev_soildecomp_standard
             do fc = 1,num_soilc
                c = filter_soilc(fc)
@@ -927,7 +924,6 @@ contains
          ! Orchard, V.A., and F.J. Cook, 1983. Relationship between soil respiration
          ! and soil moisture. Soil Biol. Biochem., 15(4):447-453.
 
-         minpsi = -10.0_r8;
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)

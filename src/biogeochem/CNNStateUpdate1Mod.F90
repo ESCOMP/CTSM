@@ -152,7 +152,10 @@ contains
          ! deployment from retranslocation pool
          ns_veg%npool_patch(p)    = ns_veg%npool_patch(p)    + nf_veg%retransn_to_npool_patch(p)*dt
          ns_veg%retransn_patch(p) = ns_veg%retransn_patch(p) - nf_veg%retransn_to_npool_patch(p)*dt
-
+         
+         ns_veg%npool_patch(p)    = ns_veg%npool_patch(p)    + nf_veg%free_retransn_to_npool_patch(p)*dt
+         ns_veg%retransn_patch(p) = ns_veg%retransn_patch(p) - nf_veg%free_retransn_to_npool_patch(p)*dt !how is retransn a state? 
+         
          ! allocation fluxes
          ns_veg%npool_patch(p)           = ns_veg%npool_patch(p)          - nf_veg%npool_to_leafn_patch(p)*dt
          ns_veg%leafn_patch(p)           = ns_veg%leafn_patch(p)          + nf_veg%npool_to_leafn_patch(p)*dt

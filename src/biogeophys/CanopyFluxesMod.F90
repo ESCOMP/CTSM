@@ -720,31 +720,6 @@ contains
             rhaf(p) = eah(p)/svpts(p)
          end do
 
-         ! Modification for shrubs proposed by X.D.Z 
-         ! Equivalent modification for soy following AgroIBIS
-         ! NOTE: the following block of code was moved out of Photosynthesis subroutine and 
-         ! into here by M. Vertenstein on 4/6/2014 as part of making the photosynthesis
-         ! routine a separate module. This move was also suggested by S. Levis in the previous
-         ! version of the code. 
-         ! BUG MV 4/7/2014 - is this the correct place to have it in the iteration? 
-         ! THIS SHOULD BE MOVED OUT OF THE ITERATION but will change answers -
-         
-         ! NOTE: KO 6/22/2016  Btran using plant hydraulic stress is not available yet.
-         !         But will this section be moved?
-         do f = 1, fn
-            p = filterp(f)
-            c = patch%column(p)
-            if (use_cndv) then
-               if (patch%itype(p) == nbrdlf_dcd_tmp_shrub) then
-                  btran(p) = min(1._r8, btran(p) * 3.33_r8)
-               end if
-            end if
-            if (patch%itype(p) == ntmp_soybean .or. patch%itype(p) == nirrig_tmp_soybean .or. &
-                patch%itype(p) == ntrp_soybean .or. patch%itype(p) == nirrig_trp_soybean) then
-               btran(p) = min(1._r8, btran(p) * 1.25_r8)
-            end if
-         end do
-
          if ( use_ed ) then      
 
             call t_startf('edpsn')

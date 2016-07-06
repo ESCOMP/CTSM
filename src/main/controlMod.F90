@@ -33,12 +33,14 @@ module controlMod
   use SurfaceAlbedoMod                 , only: albice, lake_melt_icealb
   use UrbanParamsType                  , only: UrbanReadNML
   use HumanIndexMod                    , only: HumanIndexReadNML
+  use CNPrecisionControlMod            , only: CNPrecisionControlReadNML
   use CNSharedParamsMod                , only: anoxia_wtsat, use_fun
   use C14BombSpikeMod                  , only: use_c14_bombspike, atm_c14_filename
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: exponential_rooting_profile, rootprof_exp, surfprof_exp, pftspecific_rootingprofile 
-  use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
+  use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif, nitrifReadNML
+  use SoilHydrologyMod                 , only: soilHydReadNML
   use CNFireFactoryMod                 , only: CNFireReadNML
   use clm_varctl                       
   !
@@ -420,8 +422,11 @@ contains
        call CNMRespReadNML( NLFilename )
     end if
 
+    call soilHydReadNML(   NLFilename )
     if ( use_cn ) then
-       call CNFireReadNML( NLFilename )
+       call nitrifReadNML(             NLFilename )
+       call CNFireReadNML(             NLFilename )
+       call CNPrecisionControlReadNML( NLFilename )
     end if
 
     ! ----------------------------------------------------------------------

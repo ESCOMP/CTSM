@@ -1475,6 +1475,11 @@ sub process_namelist_inline_logic {
   #################################
   setup_logic_cnfire($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
+  ######################################
+  # namelist group: cnprecision_inparm #
+  ######################################
+  setup_logic_cnprec($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
   ###############################
   # namelist group: clmu_inparm #
   ###############################
@@ -1499,7 +1504,7 @@ sub process_namelist_inline_logic {
   #################################
   # namelist group: nitrif_inparm #
   #################################
-  #setup_logic_nitrif_params( $nl_flags, $definition, $defaults, $nl );  # Comment out
+  setup_logic_nitrif_params( $nl_flags, $definition, $defaults, $nl );
 
   ####################################
   # namelist group: photosyns_inparm #
@@ -1569,7 +1574,7 @@ sub process_namelist_inline_logic {
   ########################################
   # namelist group: soilhydrology_inparm #
   ########################################
-  #setup_logic_hydrology_params($nl_flags, $definition, $defaults, $nl);  # comment out
+  setup_logic_hydrology_params($nl_flags, $definition, $defaults, $nl);
 
   #######################################################################
   # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
@@ -1965,6 +1970,16 @@ sub setup_logic_cnfire {
   }
 }
 
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cnprec {
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm5_0") && &value_is_true($nl->get_value('use_cn')) ) {
+     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, 
+                 $nl, 'ncrit', 'use_cn'=>$nl_flags->{'use_cn'});
+  }
+}
 #-------------------------------------------------------------------------------
 
 sub setup_logic_humanindex {
@@ -2924,8 +2939,6 @@ sub setup_logic_photosyns {
      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, 
                  $nl, 'rootstem_acc', 'phys'=>$nl_flags->{'phys'});
      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, 
-                 $nl, 'leaf_acc', 'phys'=>$nl_flags->{'phys'});
-     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, 
                  $nl, 'light_inhibit', 'phys'=>$nl_flags->{'phys'});
      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, 
                  $nl, 'leafresp_method', 'phys'=>$nl_flags->{'phys'},
@@ -3212,6 +3225,12 @@ sub setup_logic_snowpack {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'nlevsno');
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'h2osno_max');
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'wind_dependent_snow_density');
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lotmp_snowdensity_method');
+  }
+  # Set some defaults for only CLM5.0
+  if ($physv->as_long() >= $physv->as_long("clm5_0")) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'upplim_destruct_metamorph');
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'overburden_compress_tfactor');
   }
 }
 
@@ -3264,7 +3283,7 @@ sub write_output_files {
                  soilwater_movement_inparm rooting_profile_inparm 
                  soil_resis_inparm  bgc_shared
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
-                 clm_glacier_behavior );
+                 cnprecision_inparm clm_glacier_behavior );
 
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);

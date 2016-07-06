@@ -173,6 +173,7 @@ module pftconMod
      real(r8), allocatable :: lfemerg       (:)   ! parameter used in CNPhenology
      real(r8), allocatable :: grnfill       (:)   ! parameter used in CNPhenology
      integer , allocatable :: mxmat         (:)   ! parameter used in CNPhenology
+     real(r8), allocatable :: mbbopt        (:)   ! Ball-Berry equation slope used in Photosynthesis
      integer , allocatable :: mnNHplantdate (:)   ! minimum planting date for NorthHemisphere (YYYYMMDD)
      integer , allocatable :: mxNHplantdate (:)   ! maximum planting date for NorthHemisphere (YYYYMMDD)
      integer , allocatable :: mnSHplantdate (:)   ! minimum planting date for SouthHemisphere (YYYYMMDD)
@@ -370,6 +371,7 @@ contains
     allocate( this%hybgdd        (0:mxpft) )       
     allocate( this%lfemerg       (0:mxpft) )      
     allocate( this%grnfill       (0:mxpft) )      
+    allocate( this%mbbopt        (0:mxpft) )      
     allocate( this%mxmat         (0:mxpft) )        
     allocate( this%mnNHplantdate (0:mxpft) )
     allocate( this%mxNHplantdate (0:mxpft) )
@@ -876,6 +878,9 @@ contains
     call ncd_io('grnfill', this%grnfill, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
 
+    call ncd_io('mbbopt', this%mbbopt, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
+
     call ncd_io('mxmat', this%mxmat, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
 
@@ -1273,6 +1278,7 @@ contains
     deallocate( this%hybgdd)
     deallocate( this%lfemerg)
     deallocate( this%grnfill)
+    deallocate( this%mbbopt)
     deallocate( this%mxmat)
     deallocate( this%mnNHplantdate)
     deallocate( this%mxNHplantdate)

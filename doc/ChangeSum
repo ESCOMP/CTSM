@@ -1,6 +1,9 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-   clm4_5_9_r183     erik 07/02/2016 Decomposition is not water limited after reaching a field capacity parameter (maxpsi_hr) rather than only at soil saturation
+   clm4_5_9_r184     erik 07/06/2016 CLM50 changes: Atkin form of lmr changed, new parameters and files, turn PHS on by default, 
+                                     new cold snow density, reseed at exit AD spinup, fix fire bug, fix npool and cpool errors
+   clm4_5_9_r183     erik 07/02/2016 Decomposition is not water limited after reaching a field capacity parameter (maxpsi_hr) 
+                                     rather than only at soil saturation
    clm4_5_8_r182     erik 06/24/2016 Bring in option for plant hydraulic stress for clm50
    clm4_5_8_r181     erik 06/17/2016 Update cime version which fixes several issues and changes answers
    clm4_5_8_r180    sacks 06/06/2016 Refactor dyn_cnbal_patch

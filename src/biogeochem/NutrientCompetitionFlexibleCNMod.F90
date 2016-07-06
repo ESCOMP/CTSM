@@ -933,7 +933,7 @@ contains
             if ( laisun(p)+laisha(p) > 0.0_r8 ) then
                if (cnveg_nitrogenstate_inst%leafn_storage_patch(p) == 0.0_r8 ) then
                   ! to avoid division by zero, and also to make actual_leafncn(p) a very large number if leafn(p) is zero 
-                  this%actual_storage_leafcn(p) = cnveg_carbonstate_inst%leafc_storage_patch(p) / n_min
+                  this%actual_storage_leafcn(p) = spval
                else                        	
                   ! leaf CN ratio 
                   this%actual_storage_leafcn(p) = cnveg_carbonstate_inst%leafc_storage_patch(p)  &
@@ -1641,7 +1641,7 @@ contains
          ! error in "actual_leafcn(p) = leafc(p) / leafn(p)"
          if (leafn(p) < n_min ) then
             ! to avoid division by zero, and to set leafcn to missing value for history files
-            this%actual_leafcn(p) = leafc(p) / n_min
+            this%actual_leafcn(p) = spval
          else                        	
             ! leaf CN ratio 
             this%actual_leafcn(p) = leafc(p)  / leafn(p)
@@ -1755,10 +1755,6 @@ contains
 
          if ( .not. use_fun ) then
             plant_ndemand(p) = plant_ndemand(p) - retransn_to_npool(p)
-         else
-            if (season_decid(ivt(p)) == 1._r8.or.stress_decid(ivt(p))==1._r8) then
-               plant_ndemand(p) = plant_ndemand(p) - retransn_to_npool(p)
-            end if
          end if
 
       end do ! end patch loop

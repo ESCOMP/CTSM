@@ -16,7 +16,7 @@ module  PhotosynthesisMod
   use abortutils          , only : endrun
   use clm_varctl          , only : use_c13, use_c14, use_cn, use_cndv, use_ed, use_luna, use_hydrstress
   use clm_varctl          , only : iulog
-  use clm_varpar          , only : nlevcan, nvegwcs
+  use clm_varpar          , only : nlevcan, nvegwcs, mxpft
   use clm_varcon          , only : namep, c14ratio, spval
   use decompMod           , only : bounds_type
   use QuadraticMod        , only : quadratic
@@ -70,6 +70,20 @@ module  PhotosynthesisMod
   integer, parameter, private :: leafresp_mtd_atkin2015 = 2  ! Atkin 2015 method for lmr25top
 
   ! !PUBLIC VARIABLES:
+
+  type :: photo_params_type
+     real(r8), allocatable, private :: krmax              (:)
+     real(r8), allocatable, private :: kmax               (:,:)
+     real(r8), allocatable, private :: psi50              (:,:)
+     real(r8), allocatable, private :: ck                 (:,:)
+     real(r8), allocatable, public  :: psi_soil_ref       (:)
+     real(r8), allocatable, private :: lmr_intercept_atkin(:)
+  contains
+     procedure, private :: allocParams
+  end type photo_params_type
+  !
+  type(photo_params_type), public, protected :: params_inst  ! params_inst is populated in readParamsMod 
+
   type, public :: photosyns_type
 
      logical , pointer, private :: c3flag_patch      (:)   ! patch true if C3 and false if C4
@@ -161,7 +175,6 @@ module  PhotosynthesisMod
 
      ! Logical switches for different options
      logical, public  :: rootstem_acc                      ! Respiratory acclimation for roots and stems
-     logical, public  :: leaf_acc                          ! Respiratory acclimation for leaves
      logical, private :: light_inhibit                     ! If light should inhibit respiration
      integer, private :: leafresp_method                   ! leaf maintencence respiration at 25C for canopy top method to use
    contains
@@ -170,6 +183,7 @@ module  PhotosynthesisMod
      procedure, public  :: Init
      procedure, public  :: Restart
      procedure, public  :: ReadNML
+     procedure, public  :: ReadParams
      procedure, public  :: TimeStepInit
      procedure, public  :: NewPatchInit
 
@@ -493,6 +507,93 @@ contains
 
   end subroutine InitCold
 
+  !-----------------------------------------------------------------------
+  subroutine allocParams ( this )
+    !
+    implicit none
+
+    ! !ARGUMENTS:
+    class(photo_params_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'allocParams'
+    !-----------------------------------------------------------------------
+
+    ! allocate parameters
+
+    allocate( this%krmax       (0:mxpft) )          ; this%krmax(:)        = nan
+    allocate( this%kmax        (0:mxpft,nvegwcs) )  ; this%kmax(:,:)       = nan
+    allocate( this%psi50       (0:mxpft,nvegwcs) )  ; this%psi50(:,:)      = nan
+    allocate( this%ck          (0:mxpft,nvegwcs) )  ; this%ck(:,:)         = nan
+    allocate( this%psi_soil_ref(0:mxpft) )          ; this%psi_soil_ref(:) = nan
+
+  end subroutine allocParams
+
+  !-----------------------------------------------------------------------
+  subroutine readParams ( this, ncid )
+    !
+    ! !USES:
+    use ncdio_pio , only : file_desc_t,ncd_io
+    implicit none
+
+    ! !ARGUMENTS:
+    class(photosyns_type) :: this
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'readParams'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
+    logical            :: readv ! has variable been read in or not
+    real(r8)           :: temp1d(0:mxpft) ! temporary to read in parameter
+    real(r8)           :: temp2d(0:mxpft,nvegwcs) ! temporary to read in parameter
+    character(len=100) :: tString ! temp. var for reading
+    !-----------------------------------------------------------------------
+
+    ! read in parameters
+
+
+    call params_inst%allocParams()
+
+    tString = "krmax"
+    !write(iulog,*) tString
+    !call shr_sys_flush(iulog)
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    params_inst%krmax=temp1d
+    tString = "psi_soil_ref"
+    !write(iulog,*) tString
+    !call shr_sys_flush(iulog)
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    params_inst%psi_soil_ref=temp1d
+    tString = "lmr_intercept_atkin"
+    !write(iulog,*) tString
+    !call shr_sys_flush(iulog)
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    params_inst%lmr_intercept_atkin=temp1d
+    tString = "kmax"
+    !write(iulog,*) tString
+    !call shr_sys_flush(iulog)
+    call ncd_io(varname=trim(tString),data=temp2d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    params_inst%kmax=temp2d
+    tString = "psi50"
+    !write(iulog,*) tString
+    call shr_sys_flush(iulog)
+    call ncd_io(varname=trim(tString),data=temp2d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    params_inst%psi50=temp2d
+    tString = "ck"
+    !write(iulog,*) tString
+    !call shr_sys_flush(iulog)
+    call ncd_io(varname=trim(tString),data=temp2d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    params_inst%ck=temp2d
+
+  end subroutine readParams
+
+
   !------------------------------------------------------------------------
   subroutine ReadNML(this, NLFilename)
     !
@@ -517,12 +618,11 @@ contains
     character(len=*), parameter :: subname = 'Photosyn::ReadNML'
     character(len=*), parameter :: nmlname = 'photosyns_inparm'
     logical :: rootstem_acc    = .false.               ! Respiratory acclimation for roots and stems
-    logical :: leaf_acc        = .false.               ! Respiratory acclimation for leaves
     logical :: light_inhibit   = .false.               ! If light should inhibit respiration
     integer :: leafresp_method = leafresp_mtd_ryan1991 ! leaf maintencence respiration at 25C for canopy top method to use
     !-----------------------------------------------------------------------
 
-    namelist /photosyns_inparm/ leafresp_method, light_inhibit, leaf_acc, &
+    namelist /photosyns_inparm/ leafresp_method, light_inhibit, &
               rootstem_acc
 
     ! Initialize options to default values, in case they are not specified in
@@ -543,13 +643,11 @@ contains
        end if
        call relavu( unitn )
        this%rootstem_acc    = rootstem_acc
-       this%leaf_acc        = leaf_acc
        this%leafresp_method = leafresp_method
        this%light_inhibit   = light_inhibit
     end if
 
     call shr_mpi_bcast (this%rootstem_acc   , mpicom)
-    call shr_mpi_bcast (this%leaf_acc       , mpicom)
     call shr_mpi_bcast (this%leafresp_method, mpicom)
     call shr_mpi_bcast (this%light_inhibit  , mpicom)
 
@@ -758,7 +856,6 @@ contains
     real(r8) :: jmax_z(bounds%begp:bounds%endp,nlevcan)  ! maximum electron transport rate (umol electrons/m**2/s)
     !real(r8) :: lnc(bounds%begp:bounds%endp)   ! leaf N concentration (gN leaf/m^2)
     real(r8) :: bbbopt(bounds%begp:bounds%endp)! Ball-Berry minimum leaf conductance, unstressed (umol H2O/m**2/s)
-    real(r8) :: mbbopt(bounds%begp:bounds%endp)! Ball-Berry slope of conductance-photosynthesis relationship, unstressed
     real(r8) :: kn(bounds%begp:bounds%endp)    ! leaf nitrogen decay coefficient
     real(r8) :: vcmax25top     ! canopy top: maximum rate of carboxylation at 25C (umol CO2/m**2/s)
     real(r8) :: jmax25top      ! canopy top: maximum electron transport rate at 25C (umol electrons/m**2/s)
@@ -899,6 +996,8 @@ contains
          s_vcad     => pftcon%s_vcad                         , & ! Input:  [real(r8) (:)   ]  
          i_flnr     => pftcon%i_flnr                         , & ! Input:  [real(r8) (:)   ]  
          s_flnr     => pftcon%s_flnr                         , & ! Input:  [real(r8) (:)   ]  
+         mbbopt     => pftcon%mbbopt                         , & ! Input:  [real(r8) (:)   ]  Ball-Berry slope of conduct/photosyn (umol H2O/umol CO2)
+         ivt        => patch%itype                           , & ! Input:  [integer  (:)   ]  patch vegetation type
          forc_pbot  => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)
 
          t_veg      => temperature_inst%t_veg_patch          , & ! Input:  [real(r8) (:)   ]  vegetation temperature (Kelvin)
@@ -928,7 +1027,6 @@ contains
          mbb        => photosyns_inst%mbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship
          rh_leaf    => photosyns_inst%rh_leaf_patch          , & ! Output: [real(r8) (:)   ]  fractional humidity at leaf surface (dimensionless)
          lnc        => photosyns_inst%lnca_patch             , & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
-         leaf_acc   => photosyns_inst%leaf_acc               , & ! Input:  [logical        ]  flag for respiratory acclimation of leaves
          light_inhibit=> photosyns_inst%light_inhibit        , & ! Input:  [logical        ]  flag if light should inhibit respiration
          leafresp_method=> photosyns_inst%leafresp_method    , & ! Input:  [integer        ]  method type to use for leaf-maint.-respiration at 25C canopy top
          leaf_mr_vcm => canopystate_inst%leaf_mr_vcm           & ! Input:  [real(r8)       ]  scalar constant of leaf respiration with Vcmax
@@ -1030,18 +1128,16 @@ contains
             qe(p) = 0._r8
             theta_cj(p) = 0.98_r8
             bbbopt(p) = 10000._r8
-            mbbopt(p) = 9._r8
          else
             qe(p) = 0.05_r8
             theta_cj(p) = 0.80_r8
             bbbopt(p) = 40000._r8
-            mbbopt(p) = 4._r8
          end if
 
          ! Soil water stress applied to Ball-Berry parameters
 
          bbb(p) = max (bbbopt(p)*btran(p), 1._r8)
-         mbb(p) = mbbopt(p)
+         mbb(p) = mbbopt(patch%itype(p))
 
          ! kc, ko, cp, from: Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
          !
@@ -1194,14 +1290,10 @@ contains
                lmr25top = lmr25top * lnc(p) / 12.e-06_r8
             
             else if ( leafresp_method == leafresp_mtd_atkin2015 ) then
-            ! Alternative calculation for (higher) leaf maintenance respiration (Rdark)
-            ! Taken from Atkin et al. (2015) New Phytologist meta analysis.
-            ! Slope values from table S3 for N_area vs Rd_area for all plants with 
-            ! growth temp 20-25C (to avoid confusion from acclimation processes). 
-            ! Other slope values are potentially availble from that paper. 
-            ! This is the simplest implementation. NB. THIS COULD BE INSIDE A SWITCH. 
-               if ( lnc(p) /= 0.0_r8 ) then
-                  lmr25top = 10._r8**(-0.256_r8+log10(lnc(p))*1.141_r8) 
+               !using new form for respiration base rate from Atkin
+               !communication. 
+               if ( lnc(p) > 0.0_r8 ) then
+                  lmr25top = params_inst%lmr_intercept_atkin(ivt(p)) + (lnc(p) * 0.2061_r8) - (0.0402_r8 * (t10(p)-tfrz))
                else
                   lmr25top = 0.0_r8
                end if
@@ -1244,13 +1336,6 @@ contains
 
             lmr25 = lmr25top * nscaler
 
-            ! Respiratory Acclimation term, from Atkin, Fisher et al. (2008) and Lombardozzi et al. (2015)                   
-            ! RF added Nov 11 2015. Adjust base rate for growth temperature. 
-            ! Increases R in cold places, decreases it in hot places.
-            if ( leaf_acc ) then
-               lmr25 = lmr25 * 10._r8**(-0.00794_r8*((t10(p)-tfrz)-25._r8))
-            end if
- 
             if(use_luna.and.c3flag(p).and.crop(patch%itype(p))== 0) then
                 if(.not.use_cn)then ! If CN is on, use leaf N to predict respiration (above). Otherwise, use Vcmax term from LUNA.  RF
                   lmr25 = leaf_mr_vcm * photosyns_inst%vcmx25_z_patch(p,iv)
@@ -2368,6 +2453,7 @@ contains
          i_flnr     => pftcon%i_flnr                         , & ! Input:  [real(r8) (:)   ]  
          s_flnr     => pftcon%s_flnr                         , & ! Input:  [real(r8) (:)   ]  
          forc_pbot  => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)
+         ivt        => patch%itype                           , & ! Input:  [integer  (:)   ]  patch vegetation type
 
          t_veg      => temperature_inst%t_veg_patch          , & ! Input:  [real(r8) (:)   ]  vegetation temperature (Kelvin)
          t10        => temperature_inst%t_a10_patch          , & ! Input:  [real(r8) (:)   ]  10-day running mean of the 2 m temperature (K)
@@ -2393,7 +2479,6 @@ contains
          mbb        => photosyns_inst%mbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship
          rh_leaf    => photosyns_inst%rh_leaf_patch          , & ! Output: [real(r8) (:)   ]  fractional humidity at leaf surface (dimensionless)
          lnc        => photosyns_inst%lnca_patch             , & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
-         leaf_acc   => photosyns_inst%leaf_acc               , & ! Input:  [logical        ]  flag for respiratory acclimation of leaves
          light_inhibit=> photosyns_inst%light_inhibit        , & ! Input:  [logical        ]  flag if light should inhibit respiration
          leafresp_method=> photosyns_inst%leafresp_method    , & ! Input:  [integer        ]  method type to use for leaf-maint.-respiration at 25C canopy top
          leaf_mr_vcm => canopystate_inst%leaf_mr_vcm           & ! Input:  [real(r8)       ]  scalar constant of leaf respiration with Vcmax
@@ -2659,14 +2744,10 @@ contains
                lmr25top = lmr25top * lnc(p) / 12.e-06_r8
 
             else if ( leafresp_method == leafresp_mtd_atkin2015 ) then
-            ! Alternative calculation for (higher) leaf maintenance respiration (Rdark)
-            ! Taken from Atkin et al. (2015) New Phytologist meta analysis.
-            ! Slope values from table S3 for N_area vs Rd_area for all plants with
-            ! growth temp 20-25C (to avoid confusion from acclimation processes).
-            ! Other slope values are potentially availble from that paper.
-            ! This is the simplest implementation. NB. THIS COULD BE INSIDE A SWITCH.
-               if ( lnc(p) /= 0.0_r8 ) then
-                  lmr25top = 10._r8**(-0.256_r8+log10(lnc(p))*1.141_r8)
+               !using new form for respiration base rate from Atkin
+               !communication. 
+               if ( lnc(p) > 0.0_r8 ) then
+                  lmr25top = params_inst%lmr_intercept_atkin(ivt(p)) + (lnc(p) * 0.2061_r8) - (0.0402_r8 * (t10(p)-tfrz))
                else
                   lmr25top = 0.0_r8
                end if
@@ -2715,15 +2796,6 @@ contains
 
             lmr25_sun = lmr25top * nscaler_sun
             lmr25_sha = lmr25top * nscaler_sha
-
-            ! Respiratory Acclimation term, from Atkin, Fisher et al. (2008) and
-            ! Lombardozzi et al. (2015)
-            ! RF added Nov 11 2015. Adjust base rate for growth temperature.
-            ! Increases R in cold places, decreases it in hot places.
-            if ( leaf_acc ) then
-               lmr25_sun = lmr25_sun * 10._r8**(-0.00794_r8*((t10(p)-tfrz)-25._r8))
-               lmr25_sha = lmr25_sha * 10._r8**(-0.00794_r8*((t10(p)-tfrz)-25._r8))
-            end if
 
             if(use_luna.and.c3flag(p).and.crop(patch%itype(p))== 0)then
                 if(.not.use_cn)then ! If CN is on, use leaf N to predict respiration (above). Otherwise, use Vcmax term from LUNA.  RF
@@ -3977,12 +4049,6 @@ contains
     real(r8) :: grav1                 ! canopy top height (mm)
     real(r8) :: rai(nlevsoi)          !
     real(r8) :: invfactor
-    !KO Eventually krmax will be 2D with the first index being patch%itype(p) and
-    !KO  the second index corresponding to 1:nlevsoi
-    real(r8) :: krmax(nlevsoi)        !
-    !KO Eventually kmax will be 2D with the first index being patch%itype(p) and
-    !KO  the second index corresponding to sun=1,sha=2,xyl=3
-    real(r8) :: kmax(3)               !
     real(r8), parameter :: tol_lai=.001_r8
     integer  :: j                     ! index
     real(r8), parameter :: EPS=1.e-14_r8
@@ -3997,6 +4063,7 @@ contains
          smp           => soilstate_inst%smp_l_col              , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]
          rootfr        => soilstate_inst%rootfr_patch           , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
          bsw           => soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"
+         ivt           => patch%itype                           , & ! Input:  [integer  (:)   ]  patch vegetation type
          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)
          hksat             =>    soilstate_inst%hksat_col           , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
          sucsat        => soilstate_inst%sucsat_col               & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)
@@ -4006,8 +4073,6 @@ contains
     A = 0._r8
     invA = 0._r8
 
-    kmax(:) = 1.e-7_r8
-    krmax(:) = 2.e-9_r8  !refactor: is hard-coded in 4 places
     grav1 = htop(p)*1000._r8
     do j = 1,nlevsoi
        rai(j) = tsai(p) * rootfr(p,j)
@@ -4019,7 +4084,7 @@ contains
     fx=     plc(x(xyl),p,c,xyl,veg,bsw(c,1),sucsat(c,1))
     fr=     plc(x(root),p,c,root,veg,bsw(c,1),sucsat(c,1))
     do j = 1,nlevsoi
-       fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)*plc(-50000._r8,p,c,j,1,bsw(c,j),sucsat(c,j))))  
+       fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)*plc(params_inst%psi_soil_ref(ivt(p)),p,c,j,1,bsw(c,j),sucsat(c,j))))  
     end do
     
     !compute 1st deriv of conductance attenuation for each segment
@@ -4029,28 +4094,28 @@ contains
     dfr=     d1plc(x(root),p,c,root,veg,bsw(c,1),sucsat(c,1))
     
     !A
-    A(1,1)= - laisun(p) * kmax(sun) * fx&
+    A(1,1)= - laisun(p) * params_inst%kmax(ivt(p),sun) * fx&
          - qflx_sun * dfsto1
-    A(1,3)= laisun(p) * kmax(sun) * dfx * (x(xyl)-x(sun))&
-         + laisun(p) * kmax(sun) * fx
-    A(2,2)= - laisha(p) * kmax(sha) * fx&
+    A(1,3)= laisun(p) * params_inst%kmax(ivt(p),sun) * dfx * (x(xyl)-x(sun))&
+         + laisun(p) * params_inst%kmax(ivt(p),sun) * fx
+    A(2,2)= - laisha(p) * params_inst%kmax(ivt(p),sha) * fx&
          - qflx_sha * dfsto2
-    A(2,3)= laisha(p) * kmax(sha) * dfx * (x(xyl)-x(sha))&
-         + laisha(p) * kmax(sha) * fx
-    A(3,1)= laisun(p) * kmax(sun) * fx
-    A(3,2)= laisha(p) * kmax(sha) * fx
-    A(3,3)= - laisun(p) * kmax(sun) * dfx * (x(xyl)-x(sun))&
-         - laisun(p) * kmax(sun) * fx&
-         - laisha(p) * kmax(sha) * dfx * (x(xyl)-x(sha))&
-         - laisha(p) * kmax(sha) * fx&
-         - tsai(p) * kmax(xyl) / htop(p) * fr!&
+    A(2,3)= laisha(p) * params_inst%kmax(ivt(p),sha) * dfx * (x(xyl)-x(sha))&
+         + laisha(p) * params_inst%kmax(ivt(p),sha) * fx
+    A(3,1)= laisun(p) * params_inst%kmax(ivt(p),sun) * fx
+    A(3,2)= laisha(p) * params_inst%kmax(ivt(p),sha) * fx
+    A(3,3)= - laisun(p) * params_inst%kmax(ivt(p),sun) * dfx * (x(xyl)-x(sun))&
+         - laisun(p) * params_inst%kmax(ivt(p),sun) * fx&
+         - laisha(p) * params_inst%kmax(ivt(p),sha) * dfx * (x(xyl)-x(sha))&
+         - laisha(p) * params_inst%kmax(ivt(p),sha) * fx&
+         - tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * fr!&
     !+ C/deltat  zqz
-    A(3,4)= tsai(p) * kmax(xyl) / htop(p) * dfr * (x(root)-x(xyl)-grav1)&
-         + tsai(p) * kmax(xyl) / htop(p) * fr
-    A(4,3)= tsai(p) * kmax(xyl) / htop(p) * fr
-    A(4,4)= - tsai(p) * kmax(xyl) / htop(p) * fr&
-         - tsai(p) * kmax(xyl) / htop(p) * dfr * (x(root)-x(xyl)-grav1)&
-         - sum(rai(:) * krmax(:) * fs(:))
+    A(3,4)= tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * dfr * (x(root)-x(xyl)-grav1)&
+         + tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * fr
+    A(4,3)= tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * fr
+    A(4,4)= - tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * fr&
+         - tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * dfr * (x(root)-x(xyl)-grav1)&
+         - sum(rai(:) * params_inst%krmax(ivt(p)) * fs(:))
     invfactor=1._r8
     A=invfactor*A
 
@@ -4172,12 +4237,6 @@ contains
     real(r8) :: grav2(nlevsoi)        !
     real(r8) :: rai(nlevsoi)          !
     
-    !KO Eventually krmax will be 2D with the first index being patch%itype(p) and
-    !KO  the second index corresponding to 1:nlevsoi
-    real(r8) :: krmax(nlevsoi)        !
-    !KO Eventually kmax will be 2D with the first index being patch%itype(p) and
-    !KO  the second index corresponding to sun=1,sha=2,xyl=3
-    real(r8) :: kmax(3)               !
     real(r8) :: temp
     real(r8), parameter :: tol_lai=.001_r8  ! needs to be the same as in calcstress and spacA (poor form, refactor)<
     integer  :: j                     ! index
@@ -4192,6 +4251,7 @@ contains
          smp           => soilstate_inst%smp_l_col              , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]
          rootfr        => soilstate_inst%rootfr_patch           , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
          bsw           => soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"
+         ivt           => patch%itype                           , & ! Input:  [integer  (:)   ]  patch vegetation type
          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)
          hksat             =>    soilstate_inst%hksat_col           , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
          qflx_tran_veg => waterflux_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
@@ -4199,8 +4259,6 @@ contains
          z             => col%z                                   & ! Input:  [real(r8) (:,:) ]  layer node depth (m)
          )
     
-    kmax(:) = 1.e-7_r8
-    krmax(:) = 2.e-9_r8
     grav1 = htop(p) * 1000._r8
     do j = 1,nlevsoi
        rai(j)   = tsai(p) * rootfr(p,j)
@@ -4212,20 +4270,20 @@ contains
     fx=     plc(x(xyl),p,c,xyl,veg,bsw(c,1),sucsat(c,1))
     fr=     plc(x(root),p,c,root,veg,bsw(c,1),sucsat(c,1))
     do j=1,nlevsoi
-       fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)*plc(-50000._r8,p,c,j,1,bsw(c,j),sucsat(c,j))))  
+       fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)*plc(params_inst%psi_soil_ref(ivt(p)),p,c,j,1,bsw(c,j),sucsat(c,j))))  
     end do
     
-    f(1)= qflx_sun * fsto1 - laisun(p) * kmax(sun) * fx * (x(xyl)-x(sun))
-    f(2)= qflx_sha * fsto2 - laisha(p) * kmax(sha) * fx * (x(xyl)-x(sha))
-    f(3)= laisun(p) * kmax(sun) * fx * (x(xyl)-x(sun))&
-         + laisha(p) * kmax(sha) * fx * (x(xyl)-x(sha)) &
-         - tsai(p) * kmax(xyl) / htop(p) * fr * (x(root)-x(xyl)-grav1)
-    f(4)= tsai(p) * kmax(xyl) / htop(p) * fr * (x(root)-x(xyl)-grav1) &
-         + sum( rai(1:nlevsoi) * krmax(1:nlevsoi) * fs * (x(root)+grav2(1:nlevsoi)) ) &
-         - sum( rai(1:nlevsoi) * krmax(1:nlevsoi) * fs * smp(c,1:nlevsoi) )
+    f(1)= qflx_sun * fsto1 - laisun(p) * params_inst%kmax(ivt(p),sun) * fx * (x(xyl)-x(sun))
+    f(2)= qflx_sha * fsto2 - laisha(p) * params_inst%kmax(ivt(p),sha) * fx * (x(xyl)-x(sha))
+    f(3)= laisun(p) * params_inst%kmax(ivt(p),sun) * fx * (x(xyl)-x(sun))&
+         + laisha(p) * params_inst%kmax(ivt(p),sha) * fx * (x(xyl)-x(sha)) &
+         - tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * fr * (x(root)-x(xyl)-grav1)
+    f(4)= tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * fr * (x(root)-x(xyl)-grav1) &
+         + sum( rai(1:nlevsoi) * params_inst%krmax(ivt(p)) * fs * (x(root)+grav2(1:nlevsoi)) ) &
+         - sum( rai(1:nlevsoi) * params_inst%krmax(ivt(p)) * fs * smp(c,1:nlevsoi) )
     lvl1 = qflx_sun*fsto1+qflx_sha*fsto2
-    lvl4 = -sum( rai(1:nlevsoi) * krmax(1:nlevsoi) * fs(1:nlevsoi) * (x(root)+grav2(1:nlevsoi)) )&
-         +sum( rai(1:nlevsoi) * krmax(1:nlevsoi) * fs(1:nlevsoi) * smp(c,1:nlevsoi) )
+    lvl4 = -sum( rai(1:nlevsoi) * params_inst%krmax(ivt(p)) * fs(1:nlevsoi) * (x(root)+grav2(1:nlevsoi)) )&
+         +sum( rai(1:nlevsoi) * params_inst%krmax(ivt(p)) * fs(1:nlevsoi) * smp(c,1:nlevsoi) )
 
     if (laisha(p)<tol_lai) then
        ! special case for laisha ~ 0
@@ -4282,12 +4340,6 @@ contains
     real(r8) :: grav1                    ! canopy top height (mm)
     real(r8) :: grav2(nlevsoi)           !
     real(r8) :: rai(nlevsoi)             !
-    !KO Eventually krmax will be 2D with the first index being patch%itype(p) and
-    !KO  the second index corresponding to 1:nlevsoi
-    real(r8) :: krmax(nlevsoi)           !
-    !KO Eventually kmax will be 2D with the first index being patch%itype(p) and
-    !KO  the second index corresponding to sun=1,sha=2,xyl=3
-    real(r8) :: kmax(nvegwcs)            !
     integer  :: j                        ! index
     real(r8), parameter :: EPS=1.e-14_r8 !
     logical :: havegs
@@ -4300,14 +4352,13 @@ contains
          smp           => soilstate_inst%smp_l_col              , & ! Input: [real(r8) (:,:) ]  soil matrix potential [mm]
          rootfr        => soilstate_inst%rootfr_patch           , & ! Input: [real(r8) (:,:) ]  fraction of roots in each soil layer
          bsw           => soilstate_inst%bsw_col                , & ! Input: [real(r8) (:,:) ]  Clapp and Hornberger "b"
+         ivt           => patch%itype                           , & ! Input: [integer  (:)   ]  patch vegetation type
          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)
          hksat             =>    soilstate_inst%hksat_col           , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
          sucsat        => soilstate_inst%sucsat_col             , & ! Input: [real(r8) (:,:) ]  minimum soil suction (mm)
          z             => col%z                                   & ! Input: [real(r8) (:,:) ]  layer node depth (m)
          )
     
-    kmax(:) = 1.e-7_r8
-    krmax(:) = 2.e-9_r8
     grav1 = 1000._r8 *htop(p)
     do j = 1,nlevsoi
        rai(j)   = tsai(p) * rootfr(p,j)
@@ -4321,18 +4372,19 @@ contains
     
     !calculate root water potential
     do j=1,nlevsoi
-       fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)*plc(-50000._r8,p,c,j,1,bsw(c,j),sucsat(c,j))))  
+       fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)*plc(params_inst%psi_soil_ref(ivt(p)),p,c,j,1,bsw(c,j),sucsat(c,j))))  
     end do
-    if ( abs(sum(krmax(:)*rai(:)*fs(:))) == 0._r8 ) then
+    if ( abs(sum(params_inst%krmax(ivt(p))*rai(:)*fs(:))) == 0._r8 ) then
        x(root) = sum(smp(c,1:nlevsoi) - grav2)/nlevsoi
     else
-       x(root) = (sum(krmax(:)*rai(:)*fs(:)*(smp(c,1:nlevsoi)-grav2))-qflx_sun-qflx_sha)/sum(krmax(:)*rai(:)*fs(:))
+       x(root) = (sum(params_inst%krmax(ivt(p))*rai(:)*fs(:)*(smp(c,1:nlevsoi)-grav2))-qflx_sun-qflx_sha) &
+                  /sum(params_inst%krmax(ivt(p))*rai(:)*fs(:))
     endif
     
     !calculate xylem water potential
     fr = plc(x(root),p,c,root,veg,bsw(c,1),sucsat(c,1))
     if ( (tsai(p) > 0._r8) .and. (fr > 0._r8) ) then
-       x(xyl) = x(root) - grav1 - (qflx_sun+qflx_sha)/(fr*kmax(root)/htop(p)*tsai(p))!removed htop conversion
+       x(xyl) = x(root) - grav1 - (qflx_sun+qflx_sha)/(fr*params_inst%kmax(ivt(p),root)/htop(p)*tsai(p))!removed htop conversion
     else
        x(xyl) = x(root) - grav1
     endif
@@ -4340,12 +4392,12 @@ contains
     !calculate sun/sha leaf water potential
     fx = plc(x(xyl),p,c,xyl,veg,bsw(c,1),sucsat(c,1))
     if ( (laisha(p) > 0._r8) .and. (fx > 0._r8) ) then
-       x(sha) = x(xyl) - (qflx_sha/(fx*kmax(xyl)*laisha(p)))
+       x(sha) = x(xyl) - (qflx_sha/(fx*params_inst%kmax(ivt(p),xyl)*laisha(p)))
     else
        x(sha) = x(xyl)
     endif
     if ( (laisun(p) > 0._r8) .and. (fx > 0._r8) ) then
-       x(sun) = x(xyl) - (qflx_sun/(fx*kmax(xyl)*laisun(p)))
+       x(sun) = x(xyl) - (qflx_sun/(fx*params_inst%kmax(ivt(p),xyl)*laisun(p)))
     else
        x(sun) = x(xyl)
     endif
@@ -4353,7 +4405,7 @@ contains
     !calculate soil flux
     soilflux = 0._r8
     do j = 1,nlevsoi
-       soilflux = soilflux + krmax(j)*rai(j)*fs(j)*(smp(c,j)-x(root)-grav2(j))
+       soilflux = soilflux + params_inst%krmax(ivt(p))*rai(j)*fs(j)*(smp(c,j)-x(root)-grav2(j))
     enddo
 
     end associate
@@ -4463,21 +4515,17 @@ contains
     real(r8)               :: plc           ! attenuated conductance [0:1] 0=no flow
     !
     ! !PARAMETERS
-    !KO Eventually psi50 and ck will be 2D with the first index being patch%itype(p) and 
-    !KO  the second index corresponding to sun=1,sha=2,xyl=3,root=4
-    real(r8)            :: psi50(nvegwcs)        ! vulnerability curve parameter
-    real(r8)            :: ck(nvegwcs)           ! vulnerability curve parameter
     integer , parameter :: vegetation_weibull=0  ! case number
     integer , parameter :: soil_clapp=1          ! case number
     !------------------------------------------------------------------------------
+    associate(                                                    &
+         ivt           => patch%itype                             & ! Input: [integer  (:)   ]  patch vegetation type
+             )
     
-    psi50(:)  = -200000._r8
-    ck(:)     = 3.95_r8
-
     select case (plc_method)
        !possible to add other methods later
     case (vegetation_weibull)
-       plc=2._r8**(-(x/psi50(level))**ck(level))
+       plc=2._r8**(-(x/params_inst%psi50(ivt(p),level))**params_inst%ck(ivt(p),level))
        if ( plc < 0.005_r8) plc = 0._r8
     case (soil_clapp)
        plc=(-x/sucsat)**(-2._r8-3._r8/bsw)
@@ -4485,6 +4533,7 @@ contains
        print *,'must choose plc method'
     end select
 
+    end associate
     
   end function plc
   !--------------------------------------------------------------------------------
@@ -4505,26 +4554,26 @@ contains
     real(r8)              :: d1plc            ! first deriv of plc curve at x
     !
     ! !PARAMETERS
-    !KO Eventually psi50 and ck will be 2D with the first index being patch%itype(p) and 
-    !KO  the second index corresponding to sun=1,sha=2,xyl=3,root=4
-    real(r8)            :: psi50(nvegwcs)        ! vulnerability curve parameter
-    real(r8)            :: ck(nvegwcs)           ! vulnerability curve parameter
     integer , parameter :: vegetation_weibull=0  ! case number
     integer , parameter :: soil_clapp=1          ! case number
     !------------------------------------------------------------------------------
+    associate(                                                    &
+         ivt           => patch%itype                             & ! Input: [integer  (:)   ]  patch vegetation type
+             )
 
-    psi50(:) = -200000._r8
-    ck(:) = 3.95_r8
-    
     select case (plc_method)
        !possible to add other methods later
     case (vegetation_weibull)
-       d1plc= -ck(level) * log(2._r8) * (2._r8**(-(x/psi50(level))**ck(level))) * ((x/psi50(level))**ck(level)) / x
+       d1plc= -params_inst%ck(ivt(p),level) * log(2._r8) * (2._r8**(-(x/params_inst%psi50(ivt(p),level)) &
+              **params_inst%ck(ivt(p),level))) &
+              * ((x/params_inst%psi50(ivt(p),level))**params_inst%ck(ivt(p),level)) / x
     case (soil_clapp)
        d1plc= (-x/sucsat)**(-2._r8-3._r8/bsw) * (-2._r8-3._r8/bsw) / x
     case default
        print *,'must choose plc method'
     end select
+
+    end associate
     
   end function d1plc  
   

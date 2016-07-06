@@ -149,11 +149,6 @@ li2014qianfrc: Reference paper Li, et. al.(2014) tuned with QIAN atmospheric for
 li2016crufrc:  Reference paper Li, et. al.(2016) tuned with CRU-NCEP atmospheric forcing
 </entry>
 
-<entry id="cli_scale" type="real" category="clm_physics"
-       group="lifire_inparm" >
-Global constant for deforestation fires (/day)
-</entry>
-
 <entry id="pot_hmn_ign_counts_alpha" type="real" category="clm_physics"
        group="lifire_inparm" >
 Potential human ignition counts (/person/month)
@@ -194,9 +189,34 @@ Saturation BTRAN for ignition (0-1)
 Critical BTRAN for ignition (0-1)
 </entry>
 
+<entry id="cli_scale" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Global constant for deforestation fires (/day)
+</entry>
+
 <entry id="occur_hi_gdp_tree" type="real" category="clm_physics"
        group="lifire_inparm" >
 Fire occurance for high GDP areas that are tree dominated (fraction)
+</entry>
+
+<entry id="ncrit" type="real" category="clm_physics"
+       group="cnprecision_inparm" >
+Critical threshold for truncation of Nitrogen (truncate Nitrogen states to zero below this value)
+</entry>
+
+<entry id="ccrit" type="real" category="clm_physics"
+       group="cnprecision_inparm" >
+Critical threshold for truncation of Carbon (truncate Carbon states to zero below this value)
+</entry>
+
+<entry id="nnegcrit" type="real" category="clm_physics"
+       group="cnprecision_inparm" >
+Critical threshold of negative Nitrogen to die (abort when Nitrogen states are below this value)
+</entry>
+
+<entry id="cnegcrit" type="real" category="clm_physics"
+       group="cnprecision_inparm" >
+Critical threshold of negative Carbon to die (abort when Carbon states are below this value)
 </entry>
 
 <entry id="interception_fraction" type="real" category="clm_physics"
@@ -214,13 +234,11 @@ If TRUE use clm5 equation for fraction of intercepted precipitation
 Maximum fraction of leaf that may be wet prior to drip occuring
 </entry>
 
-<!-- Comment out for now...
 <entry id="baseflow_scalar" type="real" category="clm_physics"
        group="soilhydrology_inparm" valid_values="" >
 Scalar multiplier for base flow rate
 (ONLY used if lower_boundary_condition is not aquifer or table)
 </entry>
--->
 
 <entry id="soilwater_movement_method" type="integer" category="clm_physics"
        group="soilwater_movement_inparm" valid_values="0,1" >
@@ -355,12 +373,6 @@ CN Maintenence Respiration base rate for roots
 <entry id="rootstem_acc" type="logical" category="clm_physics"
        group="photosyns_inparm" >
 Switch to turn on root and stem respiratory acclimation
-Atkin, Fisher et al. (2008) and Lombardozzi et al. (2015)
-</entry>
-
-<entry id="leaf_acc" type="logical" category="clm_physics"
-       group="photosyns_inparm" >
-Switch to turn on leaf respiratory acclimation
 Atkin, Fisher et al. (2008) and Lombardozzi et al. (2015)
 </entry>
 
@@ -661,7 +673,6 @@ Nitrification/denitrification splits the prognostic mineral N pool into two
 Requires the CN model to work (either CN or CNDV).
 </entry>
 
-<!-- Comment out for now
 <entry id="denitrif_respiration_coefficient" type="real" category="bgc"
        group="nitrif_inparm" valid_values="" >
 Multiplier for heterotrophic respiration for max denitrification rates
@@ -691,7 +702,6 @@ Exponent power for nitrate concentrationfor max denitrification rates
 Maximum nitrification rate constant (1/s)
 (ONLY used if use_nitrif_denitrif is enabled)
 </entry>
--->
 
 <entry id="use_vertsoilc" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
@@ -1817,6 +1827,28 @@ Changes in this value should possibly be accompanied by changes in:
        group="clm_snowhydrology_inparm" valid_values="" >
 If TRUE, the density of new snow depends on wind speed, and there is also
 wind-dependent snow compaction.
+</entry>
+
+<entry id="lotmp_snowdensity_method" type="char*25" category="clm_physics"
+       group="clm_snowhydrology_inparm"    valid_values="Slater2017,TruncatedAnderson1976" >
+Snow density method to use for low temperatures (below -15C)
+TruncatedAnderson1976 -- Truncate the Anderson-1976 equation at the value for -15C
+Slater2017 ------------- Use equation from Slater that increases snow density for very cold temperatures  (Arctic, Antarctic)
+</entry>
+
+<entry id="upplim_destruct_metamorph" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm"   >
+Upper Limit on Destructive Metamorphism Compaction [kg/m3]
+</entry>
+
+<entry id="overburden_compress_Tfactor" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm"   >
+Snow compaction overburden exponential factor (1/K)
+</entry>
+
+<entry id="min_wind_snowcompact" type="real" category="clm_physics"
+       group="clm_snowhydrology_inparm"   >
+Minimum wind speed tht results in compaction (m/s)
 </entry>
 
 <!-- ========================================================================================  -->

@@ -21,6 +21,24 @@
     </values>
   </entry>
 
+  <entry id="BARRIER_N">
+    <values>
+      <value compset="_DATM" >1</value>
+    </values>
+  </entry>
+
+  <entry id="BARRIER_OPTION">
+    <values>
+      <value compset="_DATM" >ndays</value>
+    </values>
+  </entry>
+
+  <entry id="ATM_PIO_TYPENAME">
+    <values>
+      <value compset="DATM.*_CLM" >netcdf</value>
+    </values>
+  </entry>
+
   <entry id="LND_TUNING_MODE">
     <type>char</type>
     <group>run_component_clm</group>

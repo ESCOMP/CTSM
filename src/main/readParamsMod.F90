@@ -22,7 +22,7 @@ module readParamsMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine readParameters (nutrient_competition_method)
+  subroutine readParameters (nutrient_competition_method, photosyns_inst)
     !
     ! ! USES:
     use EDSharedParamsMod                 , only : EDParamsReadShared
@@ -44,8 +44,10 @@ contains
     use ch4Mod                            , only : readCH4Params                          => readParams
     use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
     use clm_varctl,                         only : NLFilename_in
+    use PhotosynthesisMod                 , only : photosyns_type
     !
     ! !ARGUMENTS:
+    type(photosyns_type)                   , intent(in) :: photosyns_inst
     class(nutrient_competition_method_type), intent(in) :: nutrient_competition_method
     !
     ! !LOCAL VARIABLES:
@@ -57,7 +59,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*) 'paramMod.F90::'//trim(subname)//' :: reading ED '//' parameters '
+       write(iulog,*) 'paramMod.F90::'//trim(subname)//' :: reading CLM '//' parameters '
     end if
 
     call getfil (paramfile, locfn, 0)
@@ -65,12 +67,18 @@ contains
     call ncd_inqdid(ncid,'pft',dimid) 
     call ncd_inqdlen(ncid,dimid,npft) 
 
+    !
+    ! Ecosystem Dynamics model
+    !
     if (use_ed) then
        call EDParamsReadShared(ncid)
        call EDParamsRead(ncid)
        call SFParamsRead(ncid)
     end if
 
+    !
+    ! Above ground biogeochemistry...
+    !
     if (use_cn) then
        call CNParamsReadShared(ncid, NLFilename_in)
        call nutrient_competition_method%readParams(ncid)
@@ -80,17 +88,29 @@ contains
        call readCNPhenolParams(ncid)
     end if
 
-    call readSoilBiogeochemCompetitionParams(ncid)
-    call readSoilBiogeochemDecompBgcParams(ncid)
-    call readSoilBiogeochemDecompCnParams(ncid)
-    call readSoilBiogeochemDecompParams(ncid)
-    call readSoilBiogeochemLittVertTranspParams(ncid)
-    call readSoilBiogeochemNitrifDenitrifParams(ncid)
-    call readSoilBiogeochemNLeachingParams(ncid)
-    call readSoilBiogeochemPotentialParams(ncid)
+    !
+    ! Soil biogeochemistry...
+    !
+    if (use_cn) then
+       call readSoilBiogeochemCompetitionParams(ncid)
+       call readSoilBiogeochemDecompBgcParams(ncid)
+       call readSoilBiogeochemDecompCnParams(ncid)
+       call readSoilBiogeochemDecompParams(ncid)
+       call readSoilBiogeochemLittVertTranspParams(ncid)
+       call readSoilBiogeochemNitrifDenitrifParams(ncid)
+       call readSoilBiogeochemNLeachingParams(ncid)
+       call readSoilBiogeochemPotentialParams(ncid)
 
-    call readCH4Params (ncid)
+       call readCH4Params (ncid)
+    end if
 
+    !
+    ! Biogeophysics
+    !
+    call photosyns_inst%ReadParams( ncid )
+
+
+    !
     call ncd_pio_closefile(ncid)
 
   end subroutine readParameters

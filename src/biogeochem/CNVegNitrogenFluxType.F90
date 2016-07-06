@@ -137,7 +137,8 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: frootn_to_litter_patch                    (:)     ! patch fine root N litterfall (gN/m2/s)
 
      ! allocation fluxes
-     real(r8), pointer :: retransn_to_npool_patch                   (:)     ! patch deployment of retranslocated N (gN/m2/s)       
+     real(r8), pointer :: retransn_to_npool_patch                   (:)     ! patch deployment of retranslocated N (gN/m2/s)  
+     real(r8), pointer :: free_retransn_to_npool_patch              (:)     ! patch deployment of free retranslocated N (gN/m2/s)           
      real(r8), pointer :: sminn_to_npool_patch                      (:)     ! patch deployment of soil mineral N uptake (gN/m2/s)
      real(r8), pointer :: npool_to_grainn_patch                     (:)     ! patch allocation to grain N for prognostic crop (gN/m2/s)
      real(r8), pointer :: npool_to_grainn_storage_patch             (:)     ! patch allocation to grain N storage for prognostic crop (gN/m2/s)
@@ -373,6 +374,7 @@ contains
     allocate(this%frootn_to_retransn_patch                  (begp:endp)) ; this%frootn_to_retransn_patch                  (:) = nan
     allocate(this%frootn_to_litter_patch                    (begp:endp)) ; this%frootn_to_litter_patch                    (:) = nan
     allocate(this%retransn_to_npool_patch                   (begp:endp)) ; this%retransn_to_npool_patch                   (:) = nan
+    allocate(this%free_retransn_to_npool_patch              (begp:endp)) ; this%free_retransn_to_npool_patch              (:) = nan
     allocate(this%sminn_to_npool_patch                      (begp:endp)) ; this%sminn_to_npool_patch                      (:) = nan
 
     allocate(this%npool_to_leafn_patch                      (begp:endp)) ; this%npool_to_leafn_patch                      (:) = nan
@@ -775,7 +777,7 @@ contains
     this%leafn_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_TO_LITTER', units='gN/m^2/s', &
          avgflag='A', long_name='leaf N litterfall', &
-         ptr_patch=this%leafn_to_litter_patch, default='inactive')
+         ptr_patch=this%leafn_to_litter_patch)
 
     this%leafn_to_retransn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_TO_RETRANSN', units='gN/m^2/s', &
@@ -791,6 +793,11 @@ contains
     call hist_addfld1d (fname='RETRANSN_TO_NPOOL', units='gN/m^2/s', &
          avgflag='A', long_name='deployment of retranslocated N', &
          ptr_patch=this%retransn_to_npool_patch)
+         
+    this%free_retransn_to_npool_patch(begp:endp) = spval
+    call hist_addfld1d (fname='FREE_RETRANSN_TO_NPOOL', units='gN/m^2/s', &
+         avgflag='A', long_name='deployment of retranslocated N', &
+         ptr_patch=this%free_retransn_to_npool_patch)
 
     this%sminn_to_npool_patch(begp:endp) = spval
     call hist_addfld1d (fname='SMINN_TO_NPOOL', units='gN/m^2/s', &
@@ -1590,6 +1597,7 @@ contains
        this%leafn_to_retransn_patch(i)                   = value_patch
        this%frootn_to_litter_patch(i)                    = value_patch
        this%retransn_to_npool_patch(i)                   = value_patch
+       this%free_retransn_to_npool_patch(i)              = value_patch
        this%sminn_to_npool_patch(i)                      = value_patch
        this%npool_to_leafn_patch(i)                      = value_patch
        this%npool_to_leafn_storage_patch(i)              = value_patch
@@ -1753,7 +1761,8 @@ contains
        ! total N deployment (from sminn and retranslocated N pool) (NDEPLOY)
        this%ndeploy_patch(p) = &
             this%sminn_to_npool_patch(p) + &
-            this%retransn_to_npool_patch(p)
+            this%retransn_to_npool_patch(p) + &
+            this%free_retransn_to_npool_patch(p)  
 
        ! total patch-level fire N losses
        this%fire_nloss_patch(p) = &

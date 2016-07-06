@@ -91,10 +91,15 @@ module SnowHydrologyMod
   !
   ! !PRIVATE DATA MEMBERS:
 
+  integer, parameter :: LoTmpDnsSlater2017            = 2    ! For temperature below -15C use equation from Slater 2017
+  integer, parameter :: LoTmpDnsTruncatedAnderson1976 = 1    ! Truncate low temp. snow density from the Anderson-1976 version at -15C
   ! If true, the density of new snow depends on wind speed, and there is also
   ! wind-dependent snow compaction
-  logical :: wind_dependent_snow_density
-
+  logical  :: wind_dependent_snow_density                      ! If snow density depends on wind or not
+  integer  :: new_snow_density            = LoTmpDnsSlater2017 ! Snow density type
+  real(r8) :: upplim_destruct_metamorph   = 100.0_r8           ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
+  real(r8) :: overburden_compress_Tfactor = 0.08_r8            ! snow compaction overburden exponential factor (1/K)
+  real(r8) :: min_wind_snowcompact        = 5._r8              ! minimum wind speed tht results in compaction (m/s)
   !-----------------------------------------------------------------------
 
 contains
@@ -121,8 +126,10 @@ contains
     character(len=*), parameter :: subname = 'SnowHydrology_readnl'
     !-----------------------------------------------------------------------
 
+    character(len=25) :: lotmp_snowdensity_method
     namelist /clm_snowhydrology_inparm/ &
-         wind_dependent_snow_density
+         wind_dependent_snow_density, lotmp_snowdensity_method, upplim_destruct_metamorph, &
+         overburden_compress_Tfactor, min_wind_snowcompact
 
     ! Initialize options to default values, in case they are not specified in the namelist
     wind_dependent_snow_density = .false.
@@ -144,6 +151,10 @@ contains
     end if
 
     call shr_mpi_bcast (wind_dependent_snow_density, mpicom)
+    call shr_mpi_bcast (lotmp_snowdensity_method   , mpicom)
+    call shr_mpi_bcast (upplim_destruct_metamorph  , mpicom)
+    call shr_mpi_bcast (overburden_compress_Tfactor, mpicom)
+    call shr_mpi_bcast (min_wind_snowcompact       , mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -151,6 +162,13 @@ contains
        write(iulog,nml=clm_snowhydrology_inparm)
        write(iulog,*) ' '
     end if
+    if (      trim(lotmp_snowdensity_method) == 'Slater2017' ) then
+       new_snow_density = LoTmpDnsSlater2017
+    else if ( trim(lotmp_snowdensity_method) == 'TruncatedAnderson1976' ) then
+       new_snow_density = LoTmpDnsTruncatedAnderson1976
+    else
+       call endrun(msg="ERROR bad lotmp_snowdensity_method name"//errmsg(__FILE__, __LINE__))
+    end if 
 
   end subroutine SnowHydrology_readnl
 
@@ -533,7 +551,6 @@ contains
     real(r8), parameter :: c3 = 2.777e-6_r8     ! [1/s]
     real(r8), parameter :: c4 = 0.04_r8         ! [1/K]
     real(r8), parameter :: c5 = 2.0_r8          !
-    real(r8), parameter :: dm = 100.0_r8        ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
     real(r8), parameter :: eta0 = 9.e+5_r8      ! The Viscosity Coefficient Eta0 [kg-s/m2]
     !
     real(r8) :: burden(bounds%begc:bounds%endc) ! pressure of overlying snow [kg/m2]
@@ -602,7 +619,7 @@ contains
                 ! Settling as a result of destructive metamorphism
 
                 ddz1 = -c3*dexpf
-                if (bi > dm) ddz1 = ddz1*exp(-46.0e-3_r8*(bi-dm))
+                if (bi > upplim_destruct_metamorph) ddz1 = ddz1*exp(-46.0e-3_r8*(bi-upplim_destruct_metamorph))
 
                 ! Liquid water term
 
@@ -617,7 +634,7 @@ contains
                 else
                    windcomp = 1.0_r8
                 end if
-                ddz2 = -(burden(c)+wx/2._r8)*windcomp*exp(-0.08_r8*td - c2*bi)/eta0
+                ddz2 = -(burden(c)+wx/2._r8)*windcomp*exp(-overburden_compress_Tfactor*td - c2*bi)/eta0
 
                 ! Compaction occurring during melt
 
@@ -1484,7 +1501,8 @@ contains
     ! This needs to be slightly greater than 0 to avoid roundoff problems
     real(r8), parameter :: min_snow_to_keep = 1.e-9  ! fraction of bottom snow layer to keep with capping
 
-    !-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
     associate( &
         qflx_snwcp_ice     => waterflux_inst%qflx_snwcp_ice_col   , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
         qflx_snwcp_liq     => waterflux_inst%qflx_snwcp_liq_col   , & ! Output: [real(r8) (:)   ]  excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
@@ -1588,20 +1606,35 @@ contains
        c = filter_c(fc)
        g = col%gridcell(c)
 
-       if (forc_t(c) > tfrz + 2._r8) then
-          bifall(c) = 50._r8 + 1.7_r8*(17.0_r8)**1.5_r8
-       else if (forc_t(c) > tfrz - 15._r8) then
-          bifall(c) = 50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
-       else
-          bifall(c) = 50._r8
+       if (new_snow_density == LoTmpDnsTruncatedAnderson1976) then
+          if (forc_t(c) > tfrz + 2._r8) then
+             bifall(c) = 50._r8 + 1.7_r8*(17.0_r8)**1.5_r8
+          else if (forc_t(c) > tfrz - 15._r8) then
+             bifall(c) = 50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
+          else
+             bifall(c) = 50._r8
+          end if
+
+       else if (new_snow_density == LoTmpDnsSlater2017) then 
+       ! Andrew Slater: A temp of about -15C gives the nicest
+       ! "blower" powder, but as you get colder the flake size decreases so
+       ! density goes up. e.g. the smaller snow crystals from the Arctic and Antarctic
+       ! winters
+
+          if (forc_t(c) > tfrz + 2._r8) then
+             bifall(c) = 170._r8
+          else if (forc_t(c) > tfrz - 15._r8) then
+             bifall(c) = 50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
+          else
+             bifall(c) = -3.8333_r8*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)*(forc_t(c)-tfrz)
+          end if
        end if
 
        if (wind_dependent_snow_density) then
-          ! Density offset for wind-driven compaction, based on Glen Liston et.al.
-          ! Journal of Glaciology, Vol. 53, No. 181, 2007
-          if (forc_wind(g) >= 5._r8) then
-             bifall(c) = bifall(c) + 25._r8 + 250._r8 * (1._r8 - exp(-0.2_r8 * (forc_wind(g) - 5._r8)))
-          end if
+       ! Density offset for wind-driven compaction, initial ideas based on Liston et. al (2007) J. Glaciology,
+       ! 53(181), 241-255. Modified for a continuous wind impact and slightly more sensitive
+       ! to wind - Andrew Slater, 2016
+          bifall(c) = bifall(c) + (266.861_r8 * ((1._r8 + TANH(forc_wind(g)/5.0_r8))/2._r8)**8.8_r8)
        end if
 
     end do
@@ -1634,9 +1667,6 @@ contains
     !
     ! !LOCAL VARIABLES:
 
-    ! minimum wind speed tht results in compaction (m/s)
-    real(r8), parameter :: min_wind = 5._r8
-
     ! wind compaction factor at min_wind (E1 from Liston et al.)
     real(r8), parameter :: min_factor = 5._r8
 
@@ -1655,9 +1685,9 @@ contains
 
     ! Only apply wind compaction to top snow layer
     if (layer == snl+1) then
-       if (forc_wind >= min_wind) then
+       if (forc_wind >= min_wind_snowcompact) then
           windcomp = min_factor + max_additional_factor * &
-               (1.0_r8 - exp(-progression_factor * (forc_wind - min_wind)))
+               (1.0_r8 - exp(-progression_factor * (forc_wind - min_wind_snowcompact)))
        else
           windcomp = 1.0_r8
        end if

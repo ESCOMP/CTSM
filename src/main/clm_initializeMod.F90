@@ -335,9 +335,7 @@ contains
     allocate(nutrient_competition_method, &
          source=create_nutrient_competition_method(bounds_proc))
 
-    if (use_cn .or. use_ed) then
-       call readParameters(nutrient_competition_method)
-    end if
+    call readParameters(nutrient_competition_method, photosyns_inst)
 
     ! ------------------------------------------------------------------------
     ! Initialize time manager
