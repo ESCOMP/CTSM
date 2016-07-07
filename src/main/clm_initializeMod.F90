@@ -43,7 +43,7 @@ contains
     ! !USES:
     use clm_varpar       , only: clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
     use clm_varcon       , only: clm_varcon_init
-    use landunit_varcon  , only: landunit_varcon_init, max_lunit, istice_mec
+    use landunit_varcon  , only: landunit_varcon_init, max_lunit
     use clm_varctl       , only: fsurdat, fatmlndfrc, noland, version  
     use pftconMod        , only: pftcon       
     use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
@@ -622,7 +622,7 @@ contains
           call t_startf('init_lnd2glc')
           call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
                filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
-               temperature_inst, waterflux_inst, topo_inst, &
+               temperature_inst, glacier_smb_inst, topo_inst, &
                init=.true.)
           call t_stopf('init_lnd2glc')
        end do

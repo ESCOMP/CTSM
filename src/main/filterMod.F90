@@ -501,14 +501,16 @@ contains
           l = col%landunit(c)
           g = col%gridcell(c)
 
-          ! In addition to istice_mec columns, we also compute SMB for any soil column
-          ! where we're using virtual glacier columns: These are the gridcells where we
-          ! want SMB forcing for all elevation classes, so it follows that we want SMB
-          ! forcing for the bare ground elevation class (elevation class 0) as well.
-          if ( lun%itype(l) == istice_mec .or. &
-               (lun%itype(l) == istsoil .and. &
-               create_glacier_mec_landunit .and. &
-               glc_behavior%has_virtual_columns_grc(g))) then
+          ! Only compute SMB in regions where we replace ice melt with new ice:
+          ! Elsewhere (where ice melt remains in place), we cannot compute a sensible
+          ! negative SMB.
+          !
+          ! In addition to istice_mec columns, we also compute SMB for any soil column in
+          ! this region, in order to provide SMB forcing for the bare ground elevation
+          ! class (elevation class 0).
+          if ( glc_behavior%melt_replaced_by_ice_grc(g) .and. &
+               (lun%itype(l) == istice_mec .or. &
+               (lun%itype(l) == istsoil .and. create_glacier_mec_landunit))) then
              f = f + 1
              this_filter(nc)%do_smb_c(f) = c
           end if

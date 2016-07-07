@@ -90,9 +90,6 @@ module WaterfluxType
      real(r8), pointer :: qflx_rsub_sat_col        (:)   ! col soil saturation excess [mm/s]
      real(r8), pointer :: qflx_snofrz_lyr_col      (:,:) ! col snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
      real(r8), pointer :: qflx_snofrz_col          (:)   ! col column-integrated snow freezing rate (positive definite) (col) [kg m-2 s-1]
-     real(r8), pointer :: qflx_glcice_col          (:)   ! col net flux of new glacial ice (growth - melt) (mm H2O/s), passed to GLC
-     real(r8), pointer :: qflx_glcice_frz_col      (:)   ! col ice growth (positive definite) (mm H2O/s)
-     real(r8), pointer :: qflx_glcice_melt_col     (:)   ! col ice melt (positive definite) (mm H2O/s)
      real(r8), pointer :: qflx_drain_vr_col        (:,:) ! col liquid water losted as drainage (m /time step)
      real(r8), pointer :: snow_sources_col         (:)   ! col snow sources (mm H2O/s)
      real(r8), pointer :: snow_sinks_col           (:)   ! col snow sinks (mm H2O/s)
@@ -224,9 +221,6 @@ contains
     allocate(this%qflx_ice_runoff_snwcp_col(begc:endc))              ; this%qflx_ice_runoff_snwcp_col(:)   = nan
     allocate(this%qflx_ice_runoff_xs_col   (begc:endc))              ; this%qflx_ice_runoff_xs_col   (:)   = nan
     allocate(this%qflx_rsub_sat_col        (begc:endc))              ; this%qflx_rsub_sat_col        (:)   = nan
-    allocate(this%qflx_glcice_col          (begc:endc))              ; this%qflx_glcice_col          (:)   = nan
-    allocate(this%qflx_glcice_frz_col      (begc:endc))              ; this%qflx_glcice_frz_col      (:)   = nan
-    allocate(this%qflx_glcice_melt_col     (begc:endc))              ; this%qflx_glcice_melt_col     (:)   = nan
     allocate(this%snow_sources_col         (begc:endc))              ; this%snow_sources_col         (:)   = nan   
     allocate(this%snow_sinks_col           (begc:endc))              ; this%snow_sinks_col           (:)   = nan   
 
@@ -324,27 +318,6 @@ contains
     call hist_addfld1d (fname='QSNOFRZ', units='kg/m2/s', &
          avgflag='A', long_name='column-integrated snow freezing rate', &
          ptr_col=this%qflx_snofrz_col, set_lake=spval, c2l_scale_type='urbanf')
-
-    if (create_glacier_mec_landunit) then
-       this%qflx_glcice_col(begc:endc) = spval
-       call hist_addfld1d (fname='QICE',  units='mm/s',  &
-            avgflag='A', long_name='ice growth/melt', &
-            ptr_col=this%qflx_glcice_col, l2g_scale_type='ice')
-    end if
-
-    if (create_glacier_mec_landunit) then
-       this%qflx_glcice_frz_col(begc:endc) = spval
-       call hist_addfld1d (fname='QICE_FRZ',  units='mm/s',  &
-            avgflag='A', long_name='ice growth', &
-            ptr_col=this%qflx_glcice_frz_col, l2g_scale_type='ice')
-    end if
-
-    if (create_glacier_mec_landunit) then
-       this%qflx_glcice_melt_col(begc:endc) = spval
-       call hist_addfld1d (fname='QICE_MELT',  units='mm/s',  &
-            avgflag='A', long_name='ice melt', &
-            ptr_col=this%qflx_glcice_melt_col, l2g_scale_type='ice')
-    end if
 
     this%qflx_prec_intr_patch(begp:endp) = spval
     call hist_addfld1d (fname='QINTR', units='mm/s',  &

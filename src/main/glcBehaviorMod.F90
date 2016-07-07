@@ -48,6 +48,18 @@ module glcBehaviorMod
      ! initialization.)
      logical, allocatable, public :: has_virtual_columns_grc(:)
 
+     ! If allow_multiple_columns_grc(g) is true, then grid cell g may have multiple
+     ! glacier columns, for the different elevation classes. If
+     ! allow_multiple_columns_grc(g) is false, then grid cell g is guaranteed to have at
+     ! most one glacier column.
+     logical, allocatable, public :: allow_multiple_columns_grc(:)
+
+     ! If melt_replaced_by_ice_grc(g) is true, then any glacier ice melt in gridcell g
+     ! runs off and is replaced by ice. Note that SMB cannot be computed in gridcell g if
+     ! melt_replaced_by_ice_grc(g) is false, since we can't compute a sensible negative
+     ! smb in that case.
+     logical, allocatable, public :: melt_replaced_by_ice_grc(:)
+
      ! ------------------------------------------------------------------------
      ! Private data
      ! ------------------------------------------------------------------------
@@ -120,11 +132,15 @@ module glcBehaviorMod
 
   ! !PRIVATE MEMBER DATA:
 
-  ! Longest name allowed for glacier_region_behavior
+  ! Longest name allowed for glacier_region_behavior and glacier_region_melt_behavior
   integer, parameter :: max_behavior_name_len = 32
 
-  ! Largest allowed value for a glacier region ID
+  ! Smallest and largest allowed values for a glacier region ID
+  integer, parameter :: min_glacier_region_id = 0
   integer, parameter :: max_glacier_region_id = 10
+
+  ! Value indicating that a namelist item has not been set
+  character(len=*), parameter :: behavior_str_unset = 'UNSET'
 
 contains
 
@@ -147,23 +163,24 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer, allocatable :: glacier_region_map(:)
-    character(len=max_behavior_name_len) :: glacier_region_behavior(0:max_glacier_region_id)
+    character(len=max_behavior_name_len) :: glacier_region_behavior(min_glacier_region_id:max_glacier_region_id)
+    character(len=max_behavior_name_len) :: glacier_region_melt_behavior(min_glacier_region_id:max_glacier_region_id)
 
     character(len=*), parameter :: subname = 'Init'
     !-----------------------------------------------------------------------
 
     allocate(glacier_region_map(begg:endg))
     call this%read_surface_dataset(begg, endg, glacier_region_map(begg:endg))
-    call this%read_namelist(NLFilename, glacier_region_behavior)
+    call this%read_namelist(NLFilename, glacier_region_behavior, glacier_region_melt_behavior)
 
     call this%InitFromInputs(begg, endg, &
-         glacier_region_map(begg:endg), glacier_region_behavior)
+         glacier_region_map(begg:endg), glacier_region_behavior, glacier_region_melt_behavior)
 
   end subroutine Init
 
   !-----------------------------------------------------------------------
   subroutine InitFromInputs(this, begg, endg, &
-       glacier_region_map, glacier_region_behavior_str)
+       glacier_region_map, glacier_region_behavior_str, glacier_region_melt_behavior_str)
     !
     ! !DESCRIPTION:
     ! Initialize a glc_behavior_type object given a map of glacier region IDs and an
@@ -191,36 +208,65 @@ contains
     ! - 'single_at_atm_topo': glacier landunits in these grid cells have a single column,
     !   whose elevation matches the atmosphere's topographic height (so that there is no
     !   adjustment due to downscaling)
-    character(len=*), intent(in) :: glacier_region_behavior_str(0:)
+    character(len=*), intent(in) :: glacier_region_behavior_str(min_glacier_region_id:)
+
+    ! string giving treatment of ice melt for each glacier region ID
+    ! allowed values are:
+    ! - 'replaced_by_ice'
+    ! - 'remains_in_place'
+    character(len=*), intent(in) :: glacier_region_melt_behavior_str(min_glacier_region_id:)
+
     !
     ! !LOCAL VARIABLES:
+    ! whether each glacier region ID is present in the glacier_region_map
+    logical :: glacier_region_present(min_glacier_region_id:max_glacier_region_id)
+
     ! integer codes corresponding to glacier_region_behavior_str
-    integer, allocatable :: glacier_region_behavior(:)
+    integer :: glacier_region_behavior(min_glacier_region_id:max_glacier_region_id)
+
+    ! integer codes corresponding to glacier_region_melt_behavior_str
+    integer :: glacier_region_melt_behavior(min_glacier_region_id:max_glacier_region_id)
+
     integer :: g
     integer :: my_id
     integer :: my_behavior
+    integer :: my_melt_behavior
 
     ! possible glacier_region_behavior codes
     integer, parameter :: BEHAVIOR_MULTIPLE = 1
     integer, parameter :: BEHAVIOR_VIRTUAL = 2
     integer, parameter :: BEHAVIOR_SINGLE_AT_ATM_TOPO = 3
 
+    ! possible glacier_region_melt_behavior codes
+    integer, parameter :: MELT_BEHAVIOR_REPLACED_BY_ICE = 1
+    integer, parameter :: MELT_BEHAVIOR_REMAINS_IN_PLACE = 2
+
+    ! value indicating that a behavior code has not been set (either for
+    ! glacier_region_behavior or glacier_region_melt_behavior)
+    integer, parameter :: BEHAVIOR_UNSET = -1
+
     character(len=*), parameter :: subname = 'InitFromInputs'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(glacier_region_map) == (/endg/)), errMsg(__FILE__, __LINE__))
 
-    allocate(glacier_region_behavior( &
-         lbound(glacier_region_behavior_str, 1):ubound(glacier_region_behavior_str, 1)))
+    call check_glacier_region_map
+
+    call determine_region_presence
+
     call translate_glacier_region_behavior
+    call translate_glacier_region_melt_behavior
 
     call this%InitAllocate(begg, endg)
-
-    call check_glacier_region_map
 
     do g = begg, endg
        my_id = glacier_region_map(g)
        my_behavior = glacier_region_behavior(my_id)
+       my_melt_behavior = glacier_region_melt_behavior(my_id)
+
+       ! This should only happen due to a programming error, not due to a user input error
+       SHR_ASSERT(my_behavior /= BEHAVIOR_UNSET, errMsg(__FILE__, __LINE__))
+       SHR_ASSERT(my_melt_behavior /= BEHAVIOR_UNSET, errMsg(__FILE__, __LINE__))
 
        if (my_behavior == BEHAVIOR_VIRTUAL) then
           this%has_virtual_columns_grc(g) = .true.
@@ -228,53 +274,120 @@ contains
           this%has_virtual_columns_grc(g) = .false.
        end if
 
+       if (my_melt_behavior == MELT_BEHAVIOR_REMAINS_IN_PLACE) then
+          this%melt_replaced_by_ice_grc(g) = .false.
+       else
+          this%melt_replaced_by_ice_grc(g) = .true.
+       end if
+
+       ! For now, allow_multiple_columns_grc is simply the opposite of
+       ! collapse_to_atm_topo_grc. However, we maintain the separate
+       ! allow_multiple_columns_grc so that the public interface can stay the same if we
+       ! differentiate between the two in the future - e.g., allowing for the possibility
+       ! of a behavior where we have at most one glacier column, but not forced to the
+       ! atmosphere's elevation.
        if (my_behavior == BEHAVIOR_SINGLE_AT_ATM_TOPO) then
           this%collapse_to_atm_topo_grc(g) = .true.
+          this%allow_multiple_columns_grc(g) = .false.
        else
           this%collapse_to_atm_topo_grc(g) = .false.
+          this%allow_multiple_columns_grc(g) = .true.
        end if
     end do
 
   contains
     subroutine check_glacier_region_map
-      if (minval(glacier_region_map) < 0) then
-         write(iulog,*) subname//' ERROR: Expect GLACIER_REGION to be >= 0'
+      if (minval(glacier_region_map) < min_glacier_region_id) then
+         write(iulog,*) subname//' ERROR: Expect GLACIER_REGION to be >= ', min_glacier_region_id
          write(iulog,*) 'minval = ', minval(glacier_region_map)
-         call endrun(msg=' ERROR: Expect GLACIER_REGION to be >= 0 '// &
+         call endrun(msg=' ERROR: GLACIER_REGION smaller than expected'// &
               errMsg(__FILE__, __LINE__))
       end if
 
-      if (maxval(glacier_region_map) > ubound(glacier_region_behavior, 1)) then
+      if (maxval(glacier_region_map) > max_glacier_region_id) then
          write(iulog,*) subname//' ERROR: Max GLACIER_REGION is ', &
               maxval(glacier_region_map)
-         write(iulog,*) 'but glacier_region_behavior only specifies behavior up to ', &
-              ubound(glacier_region_behavior, 1)
+         write(iulog,*) 'but max_glacier_region_id is only ', max_glacier_region_id
          write(iulog,*) 'Try increasing max_glacier_region_id in ', __FILE__
          call endrun(msg=' ERROR: GLACIER_REGION larger than expected'// &
               errMsg(__FILE__, __LINE__))
       end if
     end subroutine check_glacier_region_map
 
+    subroutine determine_region_presence
+      integer :: g
+      integer :: my_id
+
+      glacier_region_present(:) = .false.
+      do g = begg, endg
+         my_id = glacier_region_map(g)
+         glacier_region_present(my_id) = .true.
+      end do
+    end subroutine determine_region_presence
+
     subroutine translate_glacier_region_behavior
       integer :: i
 
-      do i = lbound(glacier_region_behavior_str, 1), ubound(glacier_region_behavior_str, 1)
-         select case (glacier_region_behavior_str(i))
-         case ('multiple')
-            glacier_region_behavior(i) = BEHAVIOR_MULTIPLE
-         case ('virtual')
-            glacier_region_behavior(i) = BEHAVIOR_VIRTUAL
-         case ('single_at_atm_topo')
-            glacier_region_behavior(i) = BEHAVIOR_SINGLE_AT_ATM_TOPO
-         case default
-            write(iulog,*) ' ERROR: Unknown glacier_region_behavior for ID ', i
-            write(iulog,*) glacier_region_behavior_str(i)
-            write(iulog,*) 'Allowable values are: multiple, virtual, single_at_atm_topo'
-            call endrun(msg=' ERROR: Unknown glacier_region_behavior'// &
-                 errMsg(__FILE__, __LINE__))
-         end select
+      do i = min_glacier_region_id, max_glacier_region_id
+         glacier_region_behavior(i) = BEHAVIOR_UNSET
+
+         if (glacier_region_present(i)) then
+            SHR_ASSERT_ALL((ubound(glacier_region_behavior_str) >= (/i/)), errMsg(__FILE__, __LINE__))
+
+            select case (glacier_region_behavior_str(i))
+            case ('multiple')
+               glacier_region_behavior(i) = BEHAVIOR_MULTIPLE
+            case ('virtual')
+               glacier_region_behavior(i) = BEHAVIOR_VIRTUAL
+            case ('single_at_atm_topo')
+               glacier_region_behavior(i) = BEHAVIOR_SINGLE_AT_ATM_TOPO
+            case (behavior_str_unset)
+               write(iulog,*) ' ERROR: glacier_region_behavior not specified for ID ', i
+               write(iulog,*) 'You probably need to extend the glacier_region_behavior namelist array'
+               call endrun(msg=' ERROR: glacier_region_behavior not specified for ID '// &
+                    errMsg(__FILE__, __LINE__))
+            case default
+               write(iulog,*) ' ERROR: Unknown glacier_region_behavior for ID ', i
+               write(iulog,*) glacier_region_behavior_str(i)
+               write(iulog,*) 'Allowable values are: multiple, virtual, single_at_atm_topo'
+               call endrun(msg=' ERROR: Unknown glacier_region_behavior'// &
+                    errMsg(__FILE__, __LINE__))
+            end select
+
+         end if
       end do
     end subroutine translate_glacier_region_behavior
+
+    subroutine translate_glacier_region_melt_behavior
+      integer :: i
+
+      do i = min_glacier_region_id, max_glacier_region_id
+         glacier_region_melt_behavior(i) = BEHAVIOR_UNSET
+
+         if (glacier_region_present(i)) then
+            SHR_ASSERT_ALL((ubound(glacier_region_melt_behavior_str) >= (/i/)), errMsg(__FILE__, __LINE__))
+
+            select case (glacier_region_melt_behavior_str(i))
+            case ('replaced_by_ice')
+               glacier_region_melt_behavior(i) = MELT_BEHAVIOR_REPLACED_BY_ICE
+            case ('remains_in_place')
+               glacier_region_melt_behavior(i) = MELT_BEHAVIOR_REMAINS_IN_PLACE
+            case (behavior_str_unset)
+               write(iulog,*) ' ERROR: glacier_region_melt_behavior not specified for ID ', i
+               write(iulog,*) 'You probably need to extend the glacier_region_melt_behavior namelist array'
+               call endrun(msg=' ERROR: glacier_region_melt_behavior not specified for ID '// &
+                    errMsg(__FILE__, __LINE__))
+            case default
+               write(iulog,*) ' ERROR: Unknown glacier_region_melt_behavior for ID ', i
+               write(iulog,*) glacier_region_melt_behavior_str(i)
+               write(iulog,*) 'Allowable values are: replaced_by_ice, remains_in_place'
+               call endrun(msg=' ERROR: Unknown glacier_region_melt_behavior'// &
+                    errMsg(__FILE__, __LINE__))
+            end select
+
+         end if
+      end do
+    end subroutine translate_glacier_region_melt_behavior
 
   end subroutine InitFromInputs
 
@@ -330,6 +443,8 @@ contains
     !-----------------------------------------------------------------------
 
     allocate(this%has_virtual_columns_grc (begg:endg)); this%has_virtual_columns_grc (:) = .false.
+    allocate(this%allow_multiple_columns_grc(begg:endg)); this%allow_multiple_columns_grc(:) = .false.
+    allocate(this%melt_replaced_by_ice_grc(begg:endg)); this%melt_replaced_by_ice_grc(:) = .false.
     allocate(this%collapse_to_atm_topo_grc(begg:endg)); this%collapse_to_atm_topo_grc(:) = .false.
 
   end subroutine InitAllocate
@@ -381,7 +496,7 @@ contains
   end subroutine read_surface_dataset
 
   !-----------------------------------------------------------------------
-  subroutine read_namelist(NLFilename, glacier_region_behavior)
+  subroutine read_namelist(NLFilename, glacier_region_behavior, glacier_region_melt_behavior)
     !
     ! !DESCRIPTION:
     ! Read local namelist items
@@ -395,22 +510,22 @@ contains
     !
     ! !ARGUMENTS:
     character(len=*), intent(in)  :: NLFilename ! Namelist filename
-    character(len=max_behavior_name_len), intent(out) :: glacier_region_behavior(0:max_glacier_region_id)
+    character(len=max_behavior_name_len), intent(out) :: glacier_region_behavior(min_glacier_region_id:max_glacier_region_id)
+    character(len=max_behavior_name_len), intent(out) :: glacier_region_melt_behavior(min_glacier_region_id:max_glacier_region_id)
     !
     ! !LOCAL VARIABLES:
     integer :: unitn     ! unit for namelist file
     integer :: nml_error ! namelist i/o error flag
 
-    character(len=*), parameter :: glacier_region_behavior_default = 'multiple'
-
     character(len=*), parameter :: subname = 'read_namelist'
     !-----------------------------------------------------------------------
 
     namelist /clm_glacier_behavior/ &
-         glacier_region_behavior
+         glacier_region_behavior, glacier_region_melt_behavior
 
     ! Initialize options to default values
-    glacier_region_behavior(:) = glacier_region_behavior_default
+    glacier_region_behavior(:) = behavior_str_unset
+    glacier_region_melt_behavior(:) = behavior_str_unset
 
     if (masterproc) then
        unitn = getavu()
@@ -430,6 +545,7 @@ contains
     endif
 
     call shr_mpi_bcast(glacier_region_behavior, mpicom)
+    call shr_mpi_bcast(glacier_region_melt_behavior, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '

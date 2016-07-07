@@ -41,6 +41,7 @@ module clm_instMod
   use DUSTMod                         , only : dust_type
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
+  use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
   use IrrigationMod                   , only : irrigation_type
   use LakeStateType                   , only : lakestate_type
   use OzoneBaseMod                    , only : ozone_base_type
@@ -91,6 +92,7 @@ module clm_instMod
   type(canopystate_type)                  :: canopystate_inst
   type(energyflux_type)                   :: energyflux_inst
   type(frictionvel_type)                  :: frictionvel_inst
+  type(glacier_smb_type)                  :: glacier_smb_inst
   type(irrigation_type)                   :: irrigation_inst
   type(lakestate_type)                    :: lakestate_inst
   class(ozone_base_type), allocatable     :: ozone_inst
@@ -232,6 +234,7 @@ contains
     ! Initialize vertical data components 
 
     call initVertical(bounds,               &
+         glc_behavior, &
          snow_depth_col(begc:endc),              &
          urbanparams_inst%thick_wall(begl:endl), &
          urbanparams_inst%thick_roof(begl:endl))
@@ -272,6 +275,8 @@ contains
          temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:) )
 
     call waterflux_inst%Init(bounds)
+
+    call glacier_smb_inst%Init(bounds)
 
     ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Without the following assignment, the
     ! assertion in energyflux_inst%Init fails with pgi 14.7 on yellowstone, presumably due

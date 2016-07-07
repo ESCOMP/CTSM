@@ -140,9 +140,8 @@ contains
     use clm_varpar               , only : nlevsno, nlevgrnd, nlevurb
     use clm_varctl               , only : iulog
     use clm_varcon               , only : cnfac, cpice, cpliq, denh2o
-    use landunit_varcon          , only : istice, istice_mec, istsoil, istcrop
+    use landunit_varcon          , only : istsoil, istcrop
     use column_varcon            , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
-    use landunit_varcon          , only : istwet, istice, istice_mec, istsoil, istcrop
     use BandDiagonalMod          , only : BandDiagonal
     use UrbanParamsType          , only : IsSimpleBuildTemp, IsProgBuildTemp
     use UrbBuildTempOleson2015Mod, only : BuildingTemperature
@@ -1088,8 +1087,6 @@ contains
          qflx_snow_drain  =>    waterflux_inst%qflx_snow_drain_col  , & ! Output: [real(r8) (:)   ] drainage from snow pack                           
          qflx_snofrz_lyr  =>    waterflux_inst%qflx_snofrz_lyr_col  , & ! Output: [real(r8) (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
          qflx_snofrz_col  =>    waterflux_inst%qflx_snofrz_col      , & ! Output: [real(r8) (:)   ] column-integrated snow freezing rate (positive definite) [kg m-2 s-1]
-         qflx_glcice      =>    waterflux_inst%qflx_glcice_col      , & ! Output: [real(r8) (:)   ] flux of new glacier ice (mm H2O/s) [+ = ice grows]
-         qflx_glcice_melt =>    waterflux_inst%qflx_glcice_melt_col , & ! Output: [real(r8) (:)   ] ice melt (positive definite) (mm H2O/s)  
          qflx_snomelt     =>    waterflux_inst%qflx_snomelt_col     , & ! Output: [real(r8) (:)   ] snow melt (mm H2O /s)                   
          
          eflx_snomelt     =>    energyflux_inst%eflx_snomelt_col    , & ! Output: [real(r8) (:)   ] snow melt heat flux (W/m**2)             
@@ -1117,7 +1114,6 @@ contains
          xmf(c) = 0._r8
          qflx_snofrz_lyr(c,-nlevsno+1:0) = 0._r8
          qflx_snofrz_col(c) = 0._r8
-         qflx_glcice_melt(c) = 0._r8
          qflx_snow_drain(c) = 0._r8
       end do
 
@@ -1350,25 +1346,6 @@ contains
                endif   ! end of snow layer if-block
 
             endif
-
-            ! For glacier_mec columns, compute negative ice flux from melted ice.
-            ! Note that qflx_glcice can also include a positive component from excess snow,
-            ! as computed in HydrologyDrainageMod.F90.
-
-            l = col%landunit(c)
-            if (lun%itype(l)==istice_mec) then
-
-               if (j>=1 .and. h2osoi_liq(c,j) > 0._r8) then   ! ice layer with meltwater
-                  ! melting corresponds to a negative ice flux
-                  qflx_glcice_melt(c) = qflx_glcice_melt(c) + h2osoi_liq(c,j)/dtime
-                  qflx_glcice(c) = qflx_glcice(c) - h2osoi_liq(c,j)/dtime
-
-                  ! convert layer back to pure ice by "borrowing" ice from below the column
-                  h2osoi_ice(c,j) = h2osoi_ice(c,j) + h2osoi_liq(c,j)
-                  h2osoi_liq(c,j) = 0._r8
-
-               endif  ! liquid water is present
-            endif     ! istice_mec
 
          end do   ! end of column-loop
       enddo   ! end of level-loop

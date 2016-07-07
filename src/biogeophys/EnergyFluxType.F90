@@ -618,7 +618,7 @@ contains
     use shr_const_mod   , only : SHR_CONST_TKFRZ
     use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
     use clm_varcon      , only : denice, denh2o, sb
-    use landunit_varcon , only : istice, istwet, istsoil, istdlak, istice_mec
+    use landunit_varcon , only : istwet, istsoil, istdlak
     use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
     use column_varcon   , only : icol_shadewall, icol_road_perv
     use clm_varctl      , only : iulog, use_vancouver, use_mexicocity

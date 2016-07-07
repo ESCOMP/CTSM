@@ -40,6 +40,8 @@ contains
 
   subroutine tearDown(this)
     class(TestPSUpdater), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
   end subroutine tearDown
 
   !-----------------------------------------------------------------------

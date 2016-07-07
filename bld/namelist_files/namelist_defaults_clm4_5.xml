@@ -205,6 +205,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      Antarctica: multiple -->
 <glacier_region_behavior>'single_at_atm_topo','virtual','multiple'</glacier_region_behavior>
 
+<!-- Default glacier melt behavior is:
+     Mountain glaciers: remains_in_place
+     Greenland: replaced_by_ice
+     Antarctica: replaced_by_ice -->
+<glacier_region_melt_behavior>'remains_in_place','replaced_by_ice','replaced_by_ice'</glacier_region_melt_behavior>
+
 <!-- Determine whether to perform certain downscaling operations over glc_mec landunits -->
 <glcmec_downscale_longwave>.true.</glcmec_downscale_longwave>
 

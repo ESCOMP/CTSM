@@ -531,7 +531,7 @@ contains
     ! !USES:
     use clm_time_manager, only : get_step_size
     use clm_varcon      , only : denice, denh2o, tfrz, rpi
-    use landunit_varcon , only : istice_mec, istdlak, istsoil, istcrop
+    use landunit_varcon , only : istdlak, istsoil, istcrop
     use clm_varctl      , only : subgridflag
     !
     ! !ARGUMENTS:

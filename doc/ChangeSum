@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_9_r185    sacks 07/07/2016 Revert glacial melt behavior to the old treatment for mountain glaciers
    clm4_5_9_r184     erik 07/06/2016 CLM50 changes: Atkin form of lmr changed, new parameters and files, turn PHS on by default, 
                                      new cold snow density, reseed at exit AD spinup, fix fire bug, fix npool and cpool errors
    clm4_5_9_r183     erik 07/02/2016 Decomposition is not water limited after reaching a field capacity parameter (maxpsi_hr) 

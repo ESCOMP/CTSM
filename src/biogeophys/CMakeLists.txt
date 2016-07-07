@@ -4,6 +4,7 @@
 list(APPEND clm_sources 
   AerosolMod.F90
   DaylengthMod.F90
+  GlacierSurfaceMassBalanceMod.F90
   HumanIndexMod.F90
   IrrigationMod.F90
   LakeCon.F90

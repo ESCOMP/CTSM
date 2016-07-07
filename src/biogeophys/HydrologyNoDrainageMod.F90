@@ -59,7 +59,7 @@ contains
     !
     ! !USES:
     use clm_varcon           , only : denh2o, denice, hfus, grav, tfrz
-    use landunit_varcon      , only : istice, istwet, istsoil, istice_mec, istcrop, istdlak 
+    use landunit_varcon      , only : istwet, istsoil, istcrop, istdlak 
     use column_varcon        , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall
     use column_varcon        , only : icol_shadewall
     use clm_varctl           , only : use_cn

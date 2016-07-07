@@ -1,4 +1,124 @@
 ===============================================================
+Tag name:  clm4_5_9_r185
+Originator(s):  sacks (Bill Sacks)
+Date:  Thu Jul  7 13:54:09 MDT 2016
+One-line Summary: Revert glacial melt behavior to the old treatment for mountain glaciers
+
+Purpose of changes
+------------------
+
+[Fill this in with details]
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): [If none, remove this line]
+CIME Issues fixed (include issue #): [If none, remove this line]
+
+Known bugs introduced in this tag (include bugzilla ID): [If none, remove this line]
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Substantial timing or memory changes:
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+Code reviewed by:
+
+CLM testing:
+
+[... Remove before making trunk_tag.  Available test levels:
+
+    a) regular (must be run before handing off a tag to SEs and must be run
+     before committing a tag)
+    b) build_namelist (if namelists and/or build_system changed))
+    c) tools (only if tools are modified and no CLM source is modified)
+    d) short (for use during development and in rare cases where only a small
+          change with known behavior is added ... eg. a minor bug fix)
+    e) doc (no source testing required)
+
+... ]
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - 
+
+  unit-tests (components/clm/src):
+
+    yellowstone - 
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - 
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - 
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - 
+    yellowstone_pgi - 
+    yellowstone_gnu (clm45 only) - 
+    hobart_nag - 
+
+CLM tag used for the baseline comparisons: 
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: 
+
+   URL for LMWG diagnostics output used to validate new climate:
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+
+List all files eliminated:
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_9_r184
 Originator(s):  erik (Erik Kluzek)
 Date: Wed Jul  6 14:55:45 MDT 2016

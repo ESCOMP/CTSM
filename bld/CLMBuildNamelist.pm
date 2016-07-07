@@ -1864,7 +1864,6 @@ sub setup_logic_glacier {
     }
 
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-      add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_behavior');
       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glcmec_downscale_longwave');
       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glc_snow_persistence_max_days');
     }
@@ -1907,6 +1906,12 @@ sub setup_logic_glacier {
   }
 
   add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'albice', 'glc_nec'=>$nl_flags->{'glc_nec'});
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     # These controls over glacier region behavior are needed even when running without glc_mec in order to satisfy some error checks in the code
+     # (And since we'll eventually move to always having glc_mec, it's not worth adding some complex logic to determine when they're really needed.)
+     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_behavior');
+     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_melt_behavior');
+  }
 }
 
 #-------------------------------------------------------------------------------

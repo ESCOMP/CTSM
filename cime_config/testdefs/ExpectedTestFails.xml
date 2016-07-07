@@ -1,24 +1,8 @@
 <?xml version= "1.0"?>
 
 <expectedFails>
-   <entry bugz="2256" >RUN ERP_D_P4x30_Ld5.ne30_g16.ICN.yellowstone_intel.clm-40default</entry>
-   <entry bugz="2256" >RUN ERS_P192x1_Ld211.f19_g16.ICNDVCROP.yellowstone_intel.clm-40crop</entry>
-   
    <entry bugz="2239" >RUN ERP_D_Ld5.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay_interp</entry>
-   <entry bugz="2240" >RUN ERP_P15x2_Lm36.f10_f10.ICRUCLM50BGCCROP.yellowstone_intel.clm-cropMonth_interp</entry>
-   <entry bugz="2256" >RUN ERP_D_Ld5.f19_g16.ICRUCLM50BGC.yellowstone_intel.clm-fire_emis</entry>
-   <entry bugz="2277" >RUN ERS_Ly3.f10_f10.I1850CRUCLM50BGCCROP.yellowstone_intel.clm-clm50KSinkMOut</entry>
-   <entry bugz="2291" >FAIL (baseline compare cpl.hi) SMS_Lm25.f19_g16.ICLM45BGCCROP.yellowstone_gnu.clm-cropMonthOutput</entry>
-
    <entry bugz="2239" >RUN ERP_Ld5.f09_g16.ICLM45VIC.yellowstone_pgi.clm-vrtlay_interp</entry>
-   <entry bugz="2233" >RUN ERI_N2_Ld9.f19_g16.ICRUCLM45BGCCROP.yellowstone_intel.clm-default</entry>
-
-   <entry bugz="2256" >RUN ERP_Ly5.1x1_numaIA.ICRUCLM50BGCCROP.hobart_nag.clm-monthly</entry>
-   <entry bugz="2256" >RUN ERP_Ld5_P24x1.f10_f10.I1850CLM45BGC.hobart_nag.clm-default</entry>
-   <entry cime="453"  >RUN ERP_E_Ld5.f19_g16.I1850CRUCLM45CN.yellowstone_intel.clm-default</entry>
-   <entry cime="453"  >RUN ERP_D_E_Ld5.f19_g16.I1850CLM45BGC.yellowstone_intel.rtm-rtmOnIceOff</entry>
-   <entry cime="453"  >RUN ERP_E_Ld5.f19_g16.I1850.yellowstone_intel.clm-40default</entry>
-   <entry cime="453"  >RUN CME_Ly4.f10_f10.I1850CLM45BGC.yellowstone_intel.clm-monthly</entry>
-   <entry cime="453"  >RUN CME_Ld5.f10_f10.ICN.yellowstone_intel</entry>
-
+   <entry bugz="2332" >RUN ERP_D_Ld5.f19_g16.ICRUCLM50BGC.yellowstone_intel.clm-fire_emis</entry>
+   <entry bugz="2291" >FAIL (baseline compare cpl.hi) SMS_Lm25.f19_g16.ICLM45BGCCROP.yellowstone_gnu.clm-cropMonthOutput</entry>
 </expectedFails> 

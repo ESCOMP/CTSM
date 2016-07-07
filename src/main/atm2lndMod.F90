@@ -67,7 +67,6 @@ contains
     !
     ! !USES:
     use clm_varcon      , only : rair, cpair, grav, lapse_glcmec
-    use landunit_varcon , only : istice_mec 
     use QsatMod         , only : Qsat
     !
     ! !ARGUMENTS:
@@ -389,7 +388,6 @@ contains
     ! Must be done AFTER temperature downscaling
     !
     ! !USES:
-    use landunit_varcon , only : istice_mec 
     use clm_varcon      , only : lapse_glcmec
     use clm_varctl      , only : glcmec_downscale_longwave
     !

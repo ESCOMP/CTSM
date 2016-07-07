@@ -348,6 +348,23 @@ Allowed values are:
 Only applies when glc_nec is greater than 0.
 </entry>
 
+<entry id="glacier_region_melt_behavior" type="char*32(10)" category="clm_physics"
+       group="clm_glacier_behavior"
+       valid_values="replaced_by_ice,remains_in_place" >
+Treatment of ice melt for each glacier region (GLACIER_REGION in surface dataset).
+First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
+second to GLACIER_REGION with ID 1, etc.
+Allowed values are:
+'replaced_by_ice': any melted ice runs off and is immediately replaced by solid ice;
+   this results in positive liquid runoff and negative ice runoff
+'remains_in_place': any melted ice remains in place as liquid until it refreezes;
+   thus, ice melt does not result in any runoff
+IMPORTANT NOTE: Regions with the 'remains_in_place' behavior also do not
+generate generate SMB (because negative SMB would be pretty much meaningless in
+those regions). Thus, you cannot use this behavior where GLC is operating.
+Only applies when glc_nec is greater than 0.
+</entry>
+
 <entry id="glc_snow_persistence_max_days" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="" >
 Number of days before one considers the perennially snow-covered point 'land ice'
