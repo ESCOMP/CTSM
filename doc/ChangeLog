@@ -1,4 +1,188 @@
 ===============================================================
+Tag name:  clm4_5_9_r186
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Jul 13 07:17:04 MDT 2016
+One-line Summary: Initialize biogeochem balance checks AFTER column area updates
+
+Purpose of changes
+------------------
+
+Reworking the conservation of patch-level CN variables with dynamic landunits
+will make the column-level CN balance checks very tricky to determine, as they
+were written before - where the starting point for the comparison was determined
+before all of the area adjustments (i.e., the dyn subgrid stuff). This becomes
+much more straightforward if the initialization of the balance checks is done
+after the dyn subgrid stuff is complete. This tag makes that change.
+
+In order to accomplish that, we need to re-compute the CN state summaries after
+the dyn subgrid stuff is complete - near the beginning of the time step. We
+still need the summary routine at the end of the time step for the sake of
+diagnostics (e.g., history output). So now we call the summary routines twice
+for states. We do NOT need to call the flux summary routines at the beginning of
+the time step - and doing so doesn't really make sense (how do you summarize
+fluxes that haven't yet been computed) - so I have split the top-level summary
+routine into a SummarizeStates and SummarizeFluxes.
+
+I also reworked the ch4 balance check similarly, in order to be consistent with
+the CN balance checks.
+
+Longer-term, we'll add another set of balance checks that operate on
+gridcell-level quantities, which WILL cover the dyn subgrid stuff. So the
+overall sequence will look like:
+
+   Initialize gridcell-level balance checks
+   Dyn subgrid stuff (adjust patch, column, landunit areas, and do associated
+      state updates)
+   Initialize column-level balance checks
+   Science routines
+   Check column-level balance
+   Check gridcell-level balance
+
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+ok means tests pass, some answers change as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_9_r185
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM50 runs with BGC that involve changes
+      in subgrid areas (including HIST, RCP, DV and IG cases)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated closely; expected to be larger than roundoff / same climate
+
+      Answer changes come from the fact that some code (e.g., the fire code)
+      uses the summarized state variables. Previously, this code was using the
+      state summaries from the previous time step. With this change, the code is
+      now using the updated state summaries. These updated state summaries can
+      differ from the ones computed at the end of the last time step if subgrid
+      areas have changed.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Move initialization of CN and ch4 balance checks to AFTER dyn subgrid
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+
+========= Split the CNDriverSummary into separate SummarizeStates and
+          SummarizeFluxes: Only SummarizeStates needs to be done near the start
+          of the time step. Also move calls to PrecisionControl to a higher
+          level, since these aren't needed in the initial call to
+          SummarizeStates.
+M       components/clm/src/biogeochem/CNDriverMod.F90
+
+========= Change which terms (from transient landcover) are included in the
+          balance checks, due to new placement in the driver sequence
+M       components/clm/src/biogeochem/CNBalanceCheckMod.F90
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+M       components/clm/src/biogeochem/CNVegNitrogenFluxType.F90
+M       components/clm/src/biogeochem/dynConsBiogeochemMod.F90
+
+========= Rework timing of ch4 balance check initialization, too, for
+          consistency
+M       components/clm/src/biogeochem/ch4Mod.F90
+
+========= Remove some variables from Restart, now that we call the Summary
+          routines early in the time step. Also no longer update summary
+          diagnostic variables in DynamicPatchAdjustments
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90
+M       components/clm/src/biogeochem/CNVegNitrogenStateType.F90
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90
+
+========= No longer need to do p2c of totvegc in fire code: this is done in the
+          initial call to the summary routines
+M       components/clm/src/biogeochem/CNFireLi2014Mod.F90
+M       components/clm/src/biogeochem/CNFireLi2016Mod.F90
+M       components/clm/src/biogeochem/CNFireNoFireMod.F90
+
+========= Replace __FILE__ with filename parameter to avoid too-long lines with pgi
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrifDenitrifMod.F90
+
+========= Remove
+          SMS_Lm25.f19_g16.ICLM45BGCCROP.yellowstone_gnu.clm-cropMonthOutput:
+          baseline comparisons have been passing for me recently
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_9_r185
 Originator(s):  sacks (Bill Sacks)
 Date:  Thu Jul  7 13:54:09 MDT 2016
@@ -7,115 +191,283 @@ One-line Summary: Revert glacial melt behavior to the old treatment for mountain
 Purpose of changes
 ------------------
 
-[Fill this in with details]
+The primary change in this tag is reverting glacial melt behavior to the old
+scheme (i.e., the scheme used in standard glacier landunits) for mountain
+glaciers: The old scheme involves glacial melt remaining in place until it
+refreezes (thus, not generating any runoff), whereas the new scheme involves
+glacial melt running off and being replaced by ice from below (generating
+positive liquid runoff and negative ice runoff).
 
+The main motivation for this change is that mountain glaciers were generating
+substantial negative ice runoff in coupled cases when using the new scheme. This
+is presumably because CAM's topographic height is significantly lower than the
+real-world topographic height in mountainous regions, so mountain glaciers were
+seeing too-warm temperatures. The LIWG, in consultation with members of the
+LMWG, decided to revert mountain glaciers to their old behavior to avoid
+detrimentally impacting a coupled simulation. Because the LIWG is not currently
+concerned with the SMB of mountain glaciers - and because mountain glacier SMB
+cannot be realistically simulated yet anyway - this reversion was not considered
+a problem from their perspective.
 
-Bugs fixed or introduced
-------------------------
+To accomplish this, this tag introduces a new namelist variable,
+glacier_region_melt_behavior. Like glacier_region_behavior, this keys off of the
+GLACIER_REGION field on the surface dataset. Thus, different melt behavior can
+be used for each glacier region. By default, Greenland and Antarctica use the
+new (glc_mec) behavior ('replaced_by_ice'), whereas other regions use the old
+behavior ('remains_in_place').
 
-Bugs fixed (include bugzilla ID): [If none, remove this line]
-CIME Issues fixed (include issue #): [If none, remove this line]
+For glacier columns that use the 'remains_in_place' melt behavior, we do NOT
+compute surface mass balance (SMB). This is because the negative component of
+SMB is non-sensical in those columns. To make this clear, the QICE, QICE_FRZ and
+QICE_MELT diagnostic fields are filled with missing values in the
+'remains_in_place' region. (However, the qice fields sent to the coupler, along
+with QICE_FORC, are 0 in that region - giving the values that are actually sent
+to the coupler.)
 
-Known bugs introduced in this tag (include bugzilla ID): [If none, remove this line]
+Note that this means that different glacier regions now have different
+physics. And, in order to compute SMB, you would need to change the melt
+behavior, thus significantly changing the behavior of mountain glaciers.
+
+This tag also refactors the code that computes glacier surface mass balance so
+that this is centralized in one module: GlacierSurfaceMassBalanceMod.F90.
+
+Other behavior changes in this tag are:
+
+(1) The subgrid snow parameterization (subgrid topographic variability) now
+    differentiates between 'single_at_atm_topo' istice_mec columns and other
+    istice_mec columns. Previously, istice_mec columns were treated differently
+    from others because they already have some representation of subgrid
+    variability. However, 'single_at_atm_topo' columns should be treated more
+    like other columns, because they do not allow for this elevation class
+    variability; this has been fixed here.
+
+(2) Vegetated SMB is computed for all grid cells where we compute glacier
+    SMB. Previously vegetated SMB was only generated in the 'virtual' glacier
+    region, but that added complexity to the code logic without having a good
+    reason (as far as I can tell). This change just affects the lnd -> glc
+    fields for elevation class 0 (changing where these are valid, rather than
+    being set to 0): it does not affect the evolution of CLM.
+
+(3) Adds some error checking for the glacier_region_behavior namelist item as
+    well as for the new glacier_region_melt_behavior namelist item.
+
+Between the primary change in this tag and the change in (1), it is now possible
+to make the evolution of glacier_mec landunits exactly match the evolution of
+standard glacier landunits - by using a glacier_region_behavior of
+'single_at_atm_topo' and a glacier_region_melt_behavior of 'remains_in_place'.
 
 
 Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions):
+- Surface mass balance (SMB) is no longer computed for mountain glaciers. In
+  order to compute SMB, you would need to change the
+  glacier_region_melt_behavior, which will change behavior significantly for
+  mountain glaciers.
 
 Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variable, glacier_region_melt_behavior - as described above. This
+  variable and glacier_region_behavior both appear in the default namelist for
+  all clm45/clm50 cases, but only affect the operation of CLM if running with
+  glc_mec (i.e., a case with CISM).
 
-Changes made to namelist defaults (e.g., changed parameter values):
+Changes made to namelist defaults (e.g., changed parameter values): none
 
-Changes to the datasets (e.g., parameter, surface or initial files):
+Changes to the datasets (e.g., parameter, surface or initial files): none
 
-Substantial timing or memory changes:
+Substantial timing or memory changes: none
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+Caveats for developers: none
 
-Changes to tests or testing:
+Changes to tests or testing: none
 
-Code reviewed by:
+Code reviewed by: self
 
 CLM testing:
-
-[... Remove before making trunk_tag.  Available test levels:
-
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CLM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
-
-... ]
 
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
   build-namelist tests:
 
-    yellowstone - 
+    yellowstone - ok (tests pass, expected differences from baseline; but see
+    bug 2331)
 
   unit-tests (components/clm/src):
 
-    yellowstone - 
+    yellowstone - pass
 
   tools-tests (components/clm/test/tools):
 
-    yellowstone - 
+    yellowstone - not run
 
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
-     yellowstone - 
+     yellowstone - not run
 
   regular tests (aux_clm40, aux_clm45):
 
-    yellowstone_intel - 
-    yellowstone_pgi - 
-    yellowstone_gnu (clm45 only) - 
-    hobart_nag - 
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
 
-CLM tag used for the baseline comparisons: 
+  ok means tests pass, some answer changes as noted below
+
+In addition, ran 100-year runs to confirm that glc_mec (istice_mec) landunits
+can now be made to operate exactly the same as standard glacier (istice) with
+the appropriate namelist settings:
+
+  IG run: 1850_DATM%QIA_CLM50%BGC_SICE_SOCN_RTM_CISM1_SWAV
+  I run: 1850_DATM%QIA_CLM50%BGC_SICE_SOCN_RTM_SGLC_SWAV
+
+  For the IG run, put the following in user_nl_clm:
+
+      glacier_region_behavior = 'single_at_atm_topo','single_at_atm_topo','single_at_atm_topo'
+      glacier_region_melt_behavior = 'remains_in_place','remains_in_place','remains_in_place'
+
+  and with the following sourceMods to allow running an IG compset with
+  single_at_atm_topo & remains_in_place behavior over Greenland (because we
+  currently cannot run with SGLC with glc_mec):
+
+     --- ../../../components/clm/src/cpl/lnd_import_export.F90    2016-07-01 06:11:13.117799391 -0600
+     +++ SourceMods/src.clm/lnd_import_export.F90    2016-07-04 09:58:37.130458468 -0600
+     @@ -228,8 +228,8 @@
+                   glc2lnd_inst%topo_grc(g,num)  = x2l(index_x2l_Sg_topo(num),i)
+                   glc2lnd_inst%hflx_grc(g,num)  = x2l(index_x2l_Flgg_hflx(num),i)
+                end do
+     -          glc2lnd_inst%icemask_grc(g)  = x2l(index_x2l_Sg_icemask,i)
+     -          glc2lnd_inst%icemask_coupled_fluxes_grc(g)  = x2l(index_x2l_Sg_icemask_coupled_fluxes,i)
+     +          glc2lnd_inst%icemask_grc(g)  = 0._r8
+     +          glc2lnd_inst%icemask_coupled_fluxes_grc(g)  = 0._r8
+             end if
+
+          end do
+
+  Both run at T31_g37 for 100 years; compared last CLM and RTM history files;
+  these were bit-for-bit except for expected differences in PCT_LANDUNIT
+
+  Also ran similar sets of runs, but with all temperatures increased by 10 deg
+  (along with setting initial glacier h2osno to 0) or decreased by 10 deg (along
+  with setting initial glacier h2osno to 10000) to try to make sure we're
+  exercising both glacier increases and decreases (though I didn't confirm that
+  we're definitely exercising increases and decreases in those). Ran those hot &
+  cold runs with both CLM50 and CLM45.
+
+CLM tag used for the baseline comparisons: clm4_5_9_r184
 
 
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: YES
 
   If a tag changes answers relative to baseline comparison the
   following should be filled in (otherwise remove this section):
 
   Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
+    - what code configurations: CLM45/CLM50 with glc_mec (i.e., compsets with CISM)
+    - what platforms/compilers: all
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      expected to be new climate, at least regionally - but not investigated closely
+
+      Answers change over glaciers outside of Greenland and Antarctica (i.e.,
+      mountain glaciers). In addition, fields sent to coupler are now present
+      for elevation class 0 (bare ground) over Antarctica.
 
    If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
+   than roundoff? N/A
 
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)
-       - casename: 
+       - casename: N/A
 
-   URL for LMWG diagnostics output used to validate new climate:
+   URL for LMWG diagnostics output used to validate new climate: N/A
 	
 
 Detailed list of changes
 ------------------------
 
-List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
 
-List all files eliminated:
+List all files eliminated: none
 
 List all files added and what they do:
 
+========= Consolidate code that computes glacier surface mass balance. This code
+          was primarily taken from SoilTemperatureMod and HydrologyDrainageMod,
+          with some other code also removed from BalanceCheckMod and
+          clm_driver. Relevant fluxes have also been moved here (from
+          WaterfluxType)
+A       components/clm/src/biogeophys/GlacierSurfaceMassBalanceMod.F90
+
 List all existing files that have been modified, and describe the changes:
+
+========= Add new glacier_region_melt_behavior namelist item; always add
+          glacier_region_behavior and glacier_region_melt_behavior to namelist,
+          so error checks pass (these currently aren't needed in cases without
+          CISM, but will always be needed soon, once glc_mec becomes the only
+          glacier option - so it seemed reasonable to go ahead and always add
+          them to the namelist)
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+
+========= Add differentiation on glacier_region_melt_behavior, add an
+          'allow_multiple_columns_grc' flag that can be used elsewhere, improve
+          error checking, and some other tweaks
+M       components/clm/src/main/glcBehaviorMod.F90
+M       components/clm/src/main/test/glcBehavior_test/test_glcBehavior.pf
+
+========= Move code out, into new GlacierSurfaceMassBalanceMod
+M       components/clm/src/biogeophys/BalanceCheckMod.F90
+M       components/clm/src/biogeophys/HydrologyDrainageMod.F90
+M       components/clm/src/biogeophys/SoilTemperatureMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+
+========= Call new routines, move initialization to 0 out of clm_drv_init into
+          new GlacierSurfaceMassBalanceMod
+M       components/clm/src/main/clm_driver.F90
+
+========= Change do_smb filter: (1) only includes points where
+          melt_replaced_by_ice is true; (2) includes vegetated points for the
+          same grid cells as glacier points, rather than using the
+          has_virtual_columns mask
+M       components/clm/src/main/filterMod.F90
+
+========= For glc_mec columns: Subgrid topographic variability depends on
+          whether a gridcell allows multiple elevation classes
+M       components/clm/src/main/initVerticalMod.F90
+
+========= Add new glacier_smb_inst, and pass it where needed
+M       components/clm/src/main/clm_instMod.F90
+M       components/clm/src/main/clm_initializeMod.F90
+M       components/clm/src/main/lnd2glcMod.F90
+
+========= Do some additional error checking
+M       components/clm/src/main/glc2lndMod.F90
+
+========= Build new code for unit tests
+M       components/clm/src/biogeophys/CMakeLists.txt
+
+========= Unrelated change: do necessary teardown
+M       components/clm/src/dyn_subgrid/test/dynPatchStateUpdater_test/test_patch_state_updater.pf
+
+========= Just remove unneeded use statements
+M       components/clm/src/biogeochem/DUSTMod.F90
+M       components/clm/src/biogeophys/EnergyFluxType.F90
+M       components/clm/src/biogeophys/HydrologyNoDrainageMod.F90
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+M       components/clm/src/main/atm2lndMod.F90
+M       components/clm/src/main/histFileMod.F90
+
+========= Remove a bunch of tests that no longer fail (due to changes in r184 or
+          earlier) or have been removed from the test list; also change bug
+          associated with one test
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
 
 ===============================================================
 ===============================================================

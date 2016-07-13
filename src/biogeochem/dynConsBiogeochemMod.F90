@@ -502,7 +502,13 @@ contains
                   cnveg_carbonflux_inst%dwt_seedc_to_leaf_col(c) + dwt_leafc_seed(p)/dt
              cnveg_carbonflux_inst%dwt_seedc_to_deadstem_col(c) = &
                   cnveg_carbonflux_inst%dwt_seedc_to_deadstem_col(c) + dwt_deadstemc_seed(p)/dt
-             
+
+             ! FIXME(wjs, 2016-07-08) This is temporary. It can be removed once we update
+             ! column states immediately after dyn_cnbal_patch.
+             cnveg_carbonflux_inst%dwt_seedc_col(c) = &
+                  cnveg_carbonflux_inst%dwt_seedc_col(c) + &
+                  dwt_leafc_seed(p)/dt + dwt_deadstemc_seed(p)/dt
+
              if ( use_c13 ) then
                 c13_cnveg_carbonflux_inst%dwt_seedc_to_leaf_col(c) = &
                      c13_cnveg_carbonflux_inst%dwt_seedc_to_leaf_col(c) + dwt_leafc13_seed(p)/dt
@@ -522,6 +528,12 @@ contains
                   cnveg_nitrogenflux_inst%dwt_seedn_to_leaf_col(c) + dwt_leafn_seed(p)/dt
              cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_col(c) = &
                   cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_col(c) + dwt_deadstemn_seed(p)/dt
+
+             ! FIXME(wjs, 2016-07-08) This is temporary. It can be removed once we update
+             ! column states immediately after dyn_cnbal_patch.
+             cnveg_nitrogenflux_inst%dwt_seedn_col(c) = &
+                  cnveg_nitrogenflux_inst%dwt_seedn_col(c) + &
+                  dwt_leafn_seed(p)/dt + dwt_deadstemn_seed(p)/dt
           end if
        end do
     end do
@@ -646,13 +658,32 @@ contains
        end do
     end do
 
-    ! ------------------------------------------------------------------------
-    ! calculate patch-to-column for fluxes into product pools and conversion flux
-    ! ------------------------------------------------------------------------
+    ! FIXME(wjs, 2016-07-08) This is temporary. It can be removed once we update column
+    ! states immediately after dyn_cnbal_patch
+    do pi = 1,max_patch_per_col
+       do c = bounds%begc, bounds%endc
+          if ( pi <=  col%npatches(c) ) then
+             p = col%patchi(c) + pi - 1
 
-    ! First store temporary values that are needed elsewhere. Note that the temporary
-    ! conv_cflux, product_cflux (and similar) fluxes are accumulated as negative values,
-    ! but the values stored in carbonflux_inst and nitrogenflux_inst are positive values.
+             cnveg_carbonflux_inst%dwt_to_litrc_col(c) = &
+                  cnveg_carbonflux_inst%dwt_to_litrc_col(c) + &
+                  dwt_frootc_to_litter(p) / dt + &
+                  dwt_livecrootc_to_litter(p) / dt + &
+                  dwt_deadcrootc_to_litter(p) / dt
+
+             cnveg_nitrogenflux_inst%dwt_to_litrn_col(c) = &
+                  cnveg_nitrogenflux_inst%dwt_to_litrn_col(c) + &
+                  dwt_frootn_to_litter(p) / dt + &
+                  dwt_livecrootn_to_litter(p) / dt + &
+                  dwt_deadcrootn_to_litter(p) / dt
+
+          end if
+       end do
+    end do
+
+    ! Store fluxes into product pools. Note that the temporary conv_cflux, product_cflux
+    ! (and similar) fluxes are accumulated as negative values, but the values stored in
+    ! carbonflux_inst and nitrogenflux_inst are positive values.
     do p = begp, endp
        cnveg_carbonflux_inst%dwt_productc_gain_patch(p) = -product_cflux(p)/dt
        if (use_c13) then
@@ -664,7 +695,7 @@ contains
        cnveg_nitrogenflux_inst%dwt_productn_gain_patch(p) = -product_nflux(p)/dt
     end do
 
-    ! Now set column-level fluxes
+    ! Set column-level conversion fluxes
 
     do pi = 1,max_patch_per_col
        do c = bounds%begc,bounds%endc
@@ -679,9 +710,6 @@ contains
 
              cnveg_carbonflux_inst%dwt_conv_cflux_col(c) = &
                   cnveg_carbonflux_inst%dwt_conv_cflux_col(c) - conv_cflux(p)/dt
-             cnveg_carbonflux_inst%dwt_productc_gain_col(c) = &
-                  cnveg_carbonflux_inst%dwt_productc_gain_col(c) + &
-                  cnveg_carbonflux_inst%dwt_productc_gain_patch(p)
 
              ! These magic constants should be replaced with: nbrdlf_evr_trp_tree and nbrdlf_dcd_trp_tree
              if(patch%itype(p)==4.or.patch%itype(p)==6)then
@@ -697,25 +725,16 @@ contains
                 ! C13 column-level flux updates
                 c13_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) = &
                      c13_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) - conv_c13flux(p)/dt
-                c13_cnveg_carbonflux_inst%dwt_productc_gain_col(c) = &
-                     c13_cnveg_carbonflux_inst%dwt_productc_gain_col(c) + &
-                     c13_cnveg_carbonflux_inst%dwt_productc_gain_patch(p)
              endif
              
              if ( use_c14 ) then
                 ! C14 column-level flux updates
                 c14_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) = &
                      c14_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) - conv_c14flux(p)/dt
-                c14_cnveg_carbonflux_inst%dwt_productc_gain_col(c) = &
-                     c14_cnveg_carbonflux_inst%dwt_productc_gain_col(c) + &
-                     c14_cnveg_carbonflux_inst%dwt_productc_gain_patch(p)
              endif
              
              cnveg_nitrogenflux_inst%dwt_conv_nflux_col(c) = &
                   cnveg_nitrogenflux_inst%dwt_conv_nflux_col(c) - conv_nflux(p)/dt
-             cnveg_nitrogenflux_inst%dwt_productn_gain_col(c) = &
-                  cnveg_nitrogenflux_inst%dwt_productn_gain_col(c) + &
-                  cnveg_nitrogenflux_inst%dwt_productn_gain_patch(p)
           end if
        end do
     end do

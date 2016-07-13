@@ -693,10 +693,6 @@ contains
          dim1name='column', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%seedn_col) 
 
-    call restartvar(ncid=ncid, flag=flag, varname='totcoln', xtype=ncd_double,  &
-         dim1name='column', long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%totn_col) 
-
     if (flag == 'read') then
        call restartvar(ncid=ncid, flag=flag, varname='spinup_state', xtype=ncd_int, &
          long_name='Spinup state of the model that wrote this restart file: ' &
@@ -1138,21 +1134,6 @@ contains
     call update_patch_state( &
          var = this%ntrunc_patch(begp:endp), &
          flux_out = conv_nflux(begp:endp))
-
-    ! The following are summary diagnostic variables, not involved in mass balance.
-    ! Hence, they do not have associated fluxes for area decreases.
-
-    call update_patch_state( &
-         var = this%dispvegn_patch(begp:endp))
-
-    call update_patch_state( &
-         var = this%storvegn_patch(begp:endp))
-
-    call update_patch_state( &
-         var = this%totvegn_patch(begp:endp))
-
-    call update_patch_state( &
-         var = this%totn_patch(begp:endp))
 
   contains
     subroutine update_patch_state(var, flux_out, seed, seed_addition)

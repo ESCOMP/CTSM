@@ -94,18 +94,12 @@ contains
          fbac               => cnveg_state_inst%fbac_col                       , & ! Output: [real(r8) (:)     ]  total burned area out of conversion (/sec)
          fbac1              => cnveg_state_inst%fbac1_col                      , & ! Output: [real(r8) (:)     ]  burned area out of conversion region due to land use fire
          lfc                => cnveg_state_inst%lfc_col                        , & ! Output: [real(r8) (:)     ]  conversion area frac. of BET+BDT that haven't burned before
-         totvegc            => cnveg_carbonstate_inst%totvegc_patch            , & ! Input:  [real(r8) (:)     ]  (gC/m2) total vegetation carbon, excluding cpool  
-         totvegc_col        => cnveg_carbonstate_inst%totvegc_col              , & ! Output: [real(r8) (:)     ]  totvegc at column level  
          leafc              => cnveg_carbonstate_inst%leafc_patch              , & ! Input:  [real(r8) (:)     ]  (gC/m2) leaf C                                    
          leafc_col          => cnveg_carbonstate_inst%leafc_col                , & ! Output: [real(r8) (:)     ]  leaf carbon at column level 
          farea_burned       => cnveg_state_inst%farea_burned_col                 & ! Output: [real(r8) (:)     ]  total fractional area burned (/sec)
          )
  
       !pft to column average 
-      call p2c(bounds, num_soilc, filter_soilc, &
-           totvegc(bounds%begp:bounds%endp), &
-           totvegc_col(bounds%begc:bounds%endc))
-
       call p2c(bounds, num_soilc, filter_soilc, &
            leafc(bounds%begp:bounds%endp), &
            leafc_col(bounds%begc:bounds%endc))

@@ -484,14 +484,6 @@ contains
 
     if (carbon_type == 'c12') then
 
-       call restartvar(ncid=ncid, flag=flag, varname='totlitc', xtype=ncd_double,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%totlitc_col) 
-
-       call restartvar(ncid=ncid, flag=flag, varname='totsomc', xtype=ncd_double,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%totsomc_col) 
-
        do k = 1, ndecomp_pools
           varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c'
           if (use_vertsoilc) then
@@ -536,15 +528,6 @@ contains
     !--------------------------------
 
     if ( carbon_type == 'c13' ) then
-
-       call restartvar(ncid=ncid, flag=flag, varname='totlitc_13', xtype=ncd_double,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%totlitc_col) 
-       if (flag=='read' .and. .not. readvar) then
-          if (this%totlitc_col(i) /= spval .and. .not. isnan( this%totlitc_col(i) ) ) then
-             this%totlitc_col(i) = c12_soilbiogeochem_carbonstate_inst%totlitc_col(i) * c3_r2
-          end if
-       end if
 
        do k = 1, ndecomp_pools
           varname = trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c_13'
@@ -592,16 +575,6 @@ contains
     !--------------------------------
 
     if ( carbon_type == 'c14' ) then
-
-       call restartvar(ncid=ncid, flag=flag, varname='totlitc_14', xtype=ncd_double,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%totlitc_col) 
-       if (flag=='read' .and. .not. readvar) then
-          write(iulog,*) 'initializing this%totlitc_col with atmospheric c14 value'
-          if (this%totlitc_col(i) /= spval .and. .not. isnan(this%totlitc_col(i)) ) then
-             this%totlitc_col(i) = c12_soilbiogeochem_carbonstate_inst%totlitc_col(i) * c14ratio
-          endif
-       end if
 
        do k = 1, ndecomp_pools
           varname = trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c_14'

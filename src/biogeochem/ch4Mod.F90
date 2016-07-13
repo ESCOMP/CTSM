@@ -190,8 +190,6 @@ module ch4Mod
      ! column-level loops).
      logical , pointer, private :: ch4_first_time_col         (:)   ! col whether this is the first time step that includes ch4
      !
-     logical , pointer, private :: beg_vals_set_col           (:)   ! col whether start-of-timestep totcolch4_bef has been set for this column in this time step
-     !
      real(r8), pointer, public :: finundated_col             (:)   ! col fractional inundated area (excluding dedicated wetland cols)
      real(r8), pointer, public :: o2stress_unsat_col         (:,:) ! col Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
      real(r8), pointer, public :: o2stress_sat_col           (:,:) ! col Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
@@ -327,8 +325,6 @@ contains
     allocate(this%annavg_bgnpp_patch         (begp:endp))            ;  this%annavg_bgnpp_patch         (:)   = spval ! To detect first year
 
     allocate(this%ch4_first_time_col         (begc:endc))            ; this%ch4_first_time_col          (:)   = .true.
-
-    allocate(this%beg_vals_set_col           (begc:endc))            ; this%beg_vals_set_col            (:)   = .false.
 
     allocate(this%finundated_col             (begc:endc))            ;  this%finundated_col             (:)   = nan          
     allocate(this%o2stress_unsat_col         (begc:endc,1:nlevgrnd)) ;  this%o2stress_unsat_col         (:,:) = nan          
@@ -1018,7 +1014,6 @@ contains
     use decompMod , only : bounds_type
     use restUtilMod
     use filterColMod, only : filter_col_type
-    use filterColMod, only : col_filter_from_ltypes, col_filter_from_lunflags
     !
     ! !ARGUMENTS:
     class(ch4_type) :: this
@@ -1029,12 +1024,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: c, p, j
     logical :: readvar      ! determine if variable is on initial file
-    logical :: ch4_information_on_file
-    type(filter_col_type) :: nolake_filter
-    type(filter_col_type) :: lake_filter
     !-----------------------------------------------------------------------
-
-    ch4_information_on_file = .false.
 
     call restartvar(ncid=ncid, flag=flag, varname='tempavg_agnpp', xtype=ncd_double,  &
          dim1name='pft',&
@@ -1171,7 +1161,6 @@ contains
        ! could use any methane variable, but FINUNDATED is a good choice because this
        ! "first time" variable is used in connection with FINUNDATED.
        this%ch4_first_time_col(bounds%begc:bounds%endc) = .false.
-       ch4_information_on_file = .true.
 
        ! BACKWARDS_COMPATIBILITY(wjs, 2016-02-11) The following is needed for backwards
        ! compatibility with restart files generated from older versions of the code, where
@@ -1228,33 +1217,6 @@ contains
          dim1name='column', dim2name='levgrnd', switchdim=.true.,&
          long_name='lake soil carbon concentration', units='g/m^3', &
          readvar=readvar, interpinic_flag='interp', data=this%lake_soilc_col)
-
-    ! Set variables that can be derived from others on the restart file
-    if (flag == 'read' .and. ch4_information_on_file) then
-       ! NOTE(wjs, 2016-05-13) We create filters on the fly here rather than using
-       ! existing filters because it's currently awkward to access the existing filters
-       ! from this routine that operates outside a loop over clumps: we'd need a clump
-       ! loop within this Restart routine. If we rework CLM's threading so that there is
-       ! a separate instance of each object for each clump (so we'd have multiple
-       ! instances of ch4_type, each corresponding to one clump, each with its own
-       ! corresponding filters) then it would become easier to use the existing filters
-       ! rather than creating them here.
-       !
-       ! NOTE(wjs, 2016-05-13) I'm not sure if we need include_inactive=.true., here, but
-       ! it shouldn't hurt, and may be necessary in order to set values for points that
-       ! are not active at this stage in initialization, but will become active.
-       nolake_filter = col_filter_from_lunflags(bounds, &
-            lunflags = (.not. lun%lakpoi(bounds%begl:bounds%endl)), &
-            include_inactive = .true.)
-       lake_filter = col_filter_from_lunflags(bounds, &
-            lunflags = lun%lakpoi(bounds%begl:bounds%endl), &
-            include_inactive = .true.)
-
-       call ch4_totcolch4(bounds, &
-            nolake_filter%num, nolake_filter%indices, &
-            lake_filter%num, lake_filter%indices, &
-            this)
-    end if
 
   end subroutine Restart
 
@@ -1582,22 +1544,25 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine ch4_init_balance_check(bounds, num_soilc, filter_soilc, num_lakec, filter_lakec, &
+  subroutine ch4_init_balance_check(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
        ch4_inst)
     !
     ! !DESCRIPTION:
     ! Calculate beginning column-level ch4 balance, for mass conservation check
     !
-    ! This should be called before weight updates due to dynamic landunits
+    ! This sets ch4_inst%totcolch4_bef
+    !
+    ! This should be called after the weight updates due to dynamic landunits, and the
+    ! associated filter updates - i.e., using the new version of the filters.
     !
     ! !USES:
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds   
-    integer           , intent(in)    :: num_soilc       ! number of column soil points in column filter
-    integer           , intent(in)    :: filter_soilc(:) ! column filter for soil points
-    integer           , intent(in)    :: num_lakec       ! number of column lake points in column filter
-    integer           , intent(in)    :: filter_lakec(:) ! column filter for lake points
+    integer           , intent(in)    :: num_nolakec       ! number of column non-lake points in column filter
+    integer           , intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
+    integer           , intent(in)    :: num_lakec         ! number of column lake points in column filter
+    integer           , intent(in)    :: filter_lakec(:)   ! column filter for lake points
     type(ch4_type)    , intent(inout) :: ch4_inst
     !
     ! !LOCAL VARIABLES:
@@ -1606,41 +1571,11 @@ contains
     character(len=*), parameter       :: subname = 'ch4_init_balance_check'
     !-----------------------------------------------------------------------
 
-    associate( &
-         totcolch4      => ch4_inst%totcolch4_col      , & ! Input
-         ch4_first_time => ch4_inst%ch4_first_time_col , & ! Input
-         totcolch4_bef  => ch4_inst%totcolch4_bef_col  , & ! Output
-         beg_vals_set   => ch4_inst%beg_vals_set_col     & ! Output
-         )
-
-    beg_vals_set(bounds%begc:bounds%endc) = .false.
-    totcolch4_bef(bounds%begc:bounds%endc) = nan
-
-    ! beg_vals_set will remain false for inactive points. This allows us to skip the
-    ! balance checks for newly-active columns. (This relies on the fact that this routine
-    ! is called before weight updates due to dynamic landunits - so the filters tell us
-    ! what was active in the previous time step.)
-    !
-    ! In addition, beg_vals_set remains false if this is the first timestep where the ch4
-    ! model is active: we also want to skip the balance check in that case.
-
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
-       if (.not. ch4_first_time(c)) then
-          totcolch4_bef(c) = totcolch4(c)
-          beg_vals_set(c) = .true.
-       end if
-    end do
-
-    do fc = 1, num_lakec
-       c = filter_lakec(fc)
-       if (.not. ch4_first_time(c)) then
-          totcolch4_bef(c) = totcolch4(c)
-          beg_vals_set(c) = .true.
-       end if
-    end do
-
-    end associate
+    ! This is only really needed for soilc and lakec, but we use nolakec rather than just
+    ! soilc for consistency with the other call to ch4_totcolch4 (which computes
+    ! ch4_inst%totcolch4 over all columns for diagnostic purposes).
+    call ch4_totcolch4(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
+         ch4_inst, ch4_inst%totcolch4_bef_col(bounds%begc:bounds%endc))
 
   end subroutine ch4_init_balance_check
 
@@ -1752,9 +1687,7 @@ contains
          zwt0                 =>   ch4_inst%zwt0_col                         , & ! Input:  [real(r8) (:)   ]  decay factor for finundated (m)                   
          f0                   =>   ch4_inst%f0_col                           , & ! Input:  [real(r8) (:)   ]  maximum gridcell fractional inundated area        
          p3                   =>   ch4_inst%p3_col                           , & ! Input:  [real(r8) (:)   ]  coefficient for qflx_surf_lag for finunated (s/mm)
-         dyn_ch4bal_adjustments => ch4_inst%dyn_ch4bal_adjustments_col       , & ! Input:  [real(r8) (:)   ]  adjustments made via dynamic column area adjustments (g C / m^2)
          totcolch4_bef        =>   ch4_inst%totcolch4_bef_col                , & ! Input:  [real(r8) (:)   ]  total methane in soil column, start of timestep (g C / m^2)
-         beg_vals_set         =>   ch4_inst%beg_vals_set_col                 , & ! Input:  [logical  (:)   ]  whether start-of-timestep totcolch4_bef has been set for this column in this time step
 
          grnd_ch4_cond_patch  =>   ch4_inst%grnd_ch4_cond_patch              , & ! Input:  [real(r8) (:)   ]  tracer conductance for boundary layer [m/s]       
          grnd_ch4_cond_col    =>   ch4_inst%grnd_ch4_cond_col                , & ! Output: [real(r8) (:)   ]  tracer conductance for boundary layer [m/s] (p2c)      
@@ -2193,14 +2126,14 @@ contains
       ! Finalize CH4 balance and check for errors
 
       call ch4_totcolch4(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-           ch4_inst)
+           ch4_inst, totcolch4(bounds%begc:bounds%endc))
 
       do fc = 1, num_soilc
          c = filter_soilc(fc)
 
-         if (beg_vals_set(c)) then
+         if (.not. ch4_first_time(c)) then
             ! Check balance
-            errch4 = totcolch4(c) - (totcolch4_bef(c) + dyn_ch4bal_adjustments(c)) &
+            errch4 = totcolch4(c) - totcolch4_bef(c) &
                  - dtime*(ch4_prod_tot(c) - ch4_oxid_tot(c) &
                  - ch4_surf_flux_tot(c)*1000._r8) ! kg C --> g C
             if (abs(errch4) > 1.e-7_r8) then ! g C / m^2 / timestep
@@ -2210,7 +2143,6 @@ contains
                write(iulog,*)'Latdeg,Londeg,col%itype=',grc%latdeg(g),grc%londeg(g),col%itype(c)
                write(iulog,*)'totcolch4                    = ', totcolch4(c)
                write(iulog,*)'totcolch4_bef                = ', totcolch4_bef(c)
-               write(iulog,*)'dyn_ch4bal_adjustments       = ', dyn_ch4bal_adjustments(c)
                write(iulog,*)'dtime*ch4_prod_tot           = ', dtime*ch4_prod_tot(c)
                write(iulog,*)'dtime*ch4_oxid_tot           = ', dtime*ch4_oxid_tot(c)
                write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
@@ -2224,9 +2156,9 @@ contains
          do fc = 1, num_lakec
             c = filter_lakec(fc)
 
-            if (beg_vals_set(c)) then
+            if (.not. ch4_first_time(c)) then
                ! Check balance
-               errch4 = totcolch4(c) - (totcolch4_bef(c) + dyn_ch4bal_adjustments(c)) &
+               errch4 = totcolch4(c) - totcolch4_bef(c) &
                     - dtime*(ch4_prod_tot(c) - ch4_oxid_tot(c) &
                     - ch4_surf_flux_tot(c)*1000._r8) ! kg C --> g C
                if (abs(errch4) > 1.e-7_r8) then ! g C / m^2 / timestep
@@ -2236,7 +2168,6 @@ contains
                   write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
                   write(iulog,*)'totcolch4                    = ', totcolch4(c)
                   write(iulog,*)'totcolch4_bef                = ', totcolch4_bef(c)
-                  write(iulog,*)'dyn_ch4bal_adjustments       = ', dyn_ch4bal_adjustments(c)
                   write(iulog,*)'dtime*ch4_prod_tot           = ', dtime*ch4_prod_tot(c)
                   write(iulog,*)'dtime*ch4_oxid_tot           = ', dtime*ch4_oxid_tot(c)
                   write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
@@ -4126,10 +4057,13 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ch4_totcolch4(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       ch4_inst)
+       ch4_inst, totcolch4)
     !
     ! !DESCRIPTION:
-    ! Computes and sets ch4_inst%totcolch4_col
+    ! Computes total column ch4, returned in totcolch4
+    !
+    ! totcolch4 is set over both the nolakec and the lakec filters; elsewhere, it retains
+    ! its original values
     !
     ! !USES:
     use ch4varcon  , only : allowlakeprod
@@ -4140,7 +4074,8 @@ contains
     integer           , intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
     integer           , intent(in)    :: num_lakec       ! number of column lake points in column filter
     integer           , intent(in)    :: filter_lakec(:) ! column filter for lake points
-    type(ch4_type)    , intent(inout) :: ch4_inst
+    type(ch4_type)    , intent(in)    :: ch4_inst
+    real(r8)          , intent(inout) :: totcolch4( bounds%begc: )  ! total methane in soil column (g C / m^2)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
@@ -4149,13 +4084,13 @@ contains
     character(len=*), parameter       :: subname = 'ch4_totcolch4'
     !-----------------------------------------------------------------------
 
+    SHR_ASSERT_ALL((ubound(totcolch4) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+
     associate( &
          dz             =>   col%dz                      , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       
          finundated     =>   ch4_inst%finundated_col     , & ! Input: [real(r8) (:)   ]  fractional inundated area in soil column (excluding dedicated wetland columns)
          conc_ch4_sat   =>   ch4_inst%conc_ch4_sat_col   , & ! Input: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
-         conc_ch4_unsat =>   ch4_inst%conc_ch4_unsat_col , & ! Input: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
-
-         totcolch4      =>   ch4_inst%totcolch4_col        & ! Output: [real(r8) (:)   ]  total methane in soil column (g C / m^2)          
+         conc_ch4_unsat =>   ch4_inst%conc_ch4_unsat_col   & ! Input: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
          )
 
     do fc = 1, num_nolakec

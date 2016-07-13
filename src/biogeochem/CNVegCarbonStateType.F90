@@ -931,40 +931,6 @@ contains
              this%grainc_xfer_patch(p)    = 0._r8 
           end if
 
-          ! calculate totvegc explicitly so that it is available for the isotope 
-          ! code on the first time step.
-
-          this%totvegc_patch(p) = &
-               this%leafc_patch(p)              + &
-               this%leafc_storage_patch(p)      + &
-               this%leafc_xfer_patch(p)         + &
-               this%frootc_patch(p)             + &
-               this%frootc_storage_patch(p)     + &
-               this%frootc_xfer_patch(p)        + &
-               this%livestemc_patch(p)          + &
-               this%livestemc_storage_patch(p)  + &
-               this%livestemc_xfer_patch(p)     + &
-               this%deadstemc_patch(p)          + &
-               this%deadstemc_storage_patch(p)  + &
-               this%deadstemc_xfer_patch(p)     + &
-               this%livecrootc_patch(p)         + &
-               this%livecrootc_storage_patch(p) + &
-               this%livecrootc_xfer_patch(p)    + &
-               this%deadcrootc_patch(p)         + &
-               this%deadcrootc_storage_patch(p) + &
-               this%deadcrootc_xfer_patch(p)    + &
-               this%gresp_storage_patch(p)      + &
-               this%gresp_xfer_patch(p)         + &
-               this%cpool_patch(p)
-
-          if ( use_crop )then
-             this%totvegc_patch(p) =         &
-                  this%totvegc_patch(p)    + &
-                  this%grainc_patch(p)         + &
-                  this%grainc_storage_patch(p) + &
-                  this%grainc_xfer_patch(p)
-          end if
-
        endif
 
     end do
@@ -1189,10 +1155,6 @@ contains
             dim1name='pft', &
             long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafcmax_patch)
-
-       call restartvar(ncid=ncid, flag=flag, varname='totcolc', xtype=ncd_double,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%totc_col) 
 
        if (flag == 'read') then
           call restartvar(ncid=ncid, flag=flag, varname='spinup_state', xtype=ncd_int, &
@@ -1774,9 +1736,6 @@ contains
           end do
        end if
 
-       call restartvar(ncid=ncid, flag=flag, varname='totcolc_13', xtype=ncd_double,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%totc_col) 
     end if
 
     !--------------------------------
@@ -2065,9 +2024,6 @@ contains
           end do
        end if
 
-       call restartvar(ncid=ncid, flag=flag, varname='totcolc_14', xtype=ncd_double,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%totc_col) 
     end if
 
     !--------------------------------
@@ -2138,56 +2094,6 @@ contains
        if (.not. present(c12_cnveg_carbonstate_inst)) then
           call endrun(msg=' ERROR: for C13 or C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
                errMsg(filename, __LINE__))
-       end if
-    end if
-
-    !--------------------------------
-    ! C12 carbon state variables
-    !--------------------------------
-
-    if (carbon_type == 'c12') then
-       call restartvar(ncid=ncid, flag=flag, varname='totvegc', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
-    end if
-
-    !--------------------------------
-    ! C13 carbon state variables 
-    !--------------------------------
-
-    if ( carbon_type == 'c13')  then
-       call restartvar(ncid=ncid, flag=flag, varname='totvegc_13', xtype=ncd_double,  &
-            dim1name='pft', &
-            long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
-       if (flag=='read' .and. .not. readvar) then
-          if ( masterproc ) write(iulog,*) 'initializing cnveg_carbonstate_inst%totvegc with atmospheric c13 value'
-          do i = bounds%begp,bounds%endp
-             if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
-                this%totvegc_patch(i) = c12_cnveg_carbonstate_inst%totvegc_patch(i) * c3_r2
-             else
-                this%totvegc_patch(i) = c12_cnveg_carbonstate_inst%totvegc_patch(i) * c4_r2
-             endif
-          end do
-       end if
-    endif
-
-    !--------------------------------
-    ! C14 patch carbon state variables 
-    !--------------------------------
-
-    if ( carbon_type == 'c14')  then
-       call restartvar(ncid=ncid, flag=flag, varname='totvegc_14', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%totvegc_patch) 
-       if (flag=='read' .and. .not. readvar) then
-          if ( masterproc ) write(iulog,*) 'initializing this%totvegc_patch with atmospheric c14 value'
-          do i = bounds%begp,bounds%endp
-             if (this%totvegc_patch(i) /= spval .and. &
-                  .not. isnan(this%totvegc_patch(i)) ) then
-                this%totvegc_patch(i) = c12_cnveg_carbonstate_inst%totvegc_patch(i) * c14ratio
-             endif
-          end do
        end if
     end if
 
@@ -2622,21 +2528,6 @@ contains
     call update_patch_state( &
          var = this%ctrunc_patch(begp:endp), &
          flux_out = conv_cflux(begp:endp))
-
-    ! The following are summary diagnostic variables, not involved in mass balance.
-    ! Hence, they do not have associated fluxes for area decreases.
-
-    call update_patch_state( &
-         var = this%dispvegc_patch(begp:endp))
-    
-    call update_patch_state( &
-         var = this%storvegc_patch(begp:endp))
-
-    call update_patch_state( &
-         var = this%totc_patch(begp:endp))
-
-    call update_patch_state( &
-         var = this%totvegc_patch(begp:endp))
 
   contains
     subroutine update_patch_state(var, flux_out, seed, seed_addition)

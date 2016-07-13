@@ -48,6 +48,10 @@ module SoilBiogeochemNitrifDenitrifMod
   type(params_type), private :: params_inst
 
   logical, public :: no_frozen_nitrif_denitrif = .false.  ! stop nitrification and denitrification in frozen soils
+
+  character(len=*), parameter, private :: filename = &
+       __FILE__
+
   !-----------------------------------------------------------------------
 
 contains
@@ -72,32 +76,32 @@ contains
     !
     tString='surface_tension_water'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(filename, __LINE__))
     params_inst%surface_tension_water=tempr
 
     tString='rij_kro_a'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(filename, __LINE__))
     params_inst%rij_kro_a=tempr
 
     tString='rij_kro_alpha'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(filename, __LINE__))
     params_inst%rij_kro_alpha=tempr
 
     tString='rij_kro_beta'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(filename, __LINE__))
     params_inst%rij_kro_beta=tempr
 
     tString='rij_kro_gamma'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(filename, __LINE__))
     params_inst%rij_kro_gamma=tempr
 
     tString='rij_kro_delta'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(filename, __LINE__))
     params_inst%rij_kro_delta=tempr
 
   end subroutine readParams
@@ -364,7 +368,7 @@ contains
                ! otherwise diffusivity will be zeroed out here. EBK CDK 10/18/2011
                anaerobic_frac(c,j) = 0._r8
                diffus (c,j) = 0._r8
-               !call endrun(msg=' ERROR: NITRIF_DENITRIF requires Methane model to be active'//errMsg(__FILE__, __LINE__) )
+               !call endrun(msg=' ERROR: NITRIF_DENITRIF requires Methane model to be active'//errMsg(filename, __LINE__) )
             end if
 
 

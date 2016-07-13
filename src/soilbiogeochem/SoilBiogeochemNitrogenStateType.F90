@@ -501,18 +501,6 @@ contains
        end if
     end if
 
-    ! Set the integrated sminn based on sminn_vr, as is done in CNSummaryMod (this may
-    ! not be the most appropriate method or place to do this)
-
-    this%sminn_col(bounds%begc:bounds%endc) = 0._r8
-    do j = 1, nlevdecomp
-       do c = bounds%begc, bounds%endc
-          this%sminn_col(c) = &
-               this%sminn_col(c) + &
-               this%sminn_vr_col(c,j) * dzsoi_decomp(j)
-       end do
-    end do
-
     ! decomp_cascade_state - the purpose of this is to check to make sure the bgc used 
     ! matches what the restart file was generated with.  
     ! add info about the SOM decomposition cascade

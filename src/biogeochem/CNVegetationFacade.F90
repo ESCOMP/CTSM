@@ -79,12 +79,15 @@ module CNVegetationFacade
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use CNFireEmissionsMod              , only : fireemis_type, CNFireEmisUpdate
-  use CNDriverMod                     , only : CNDriverInit, CNDriverSummary
+  use CNDriverMod                     , only : CNDriverInit
+  use CNDriverMod                     , only : CNDriverSummarizeStates, CNDriverSummarizeFluxes
   use CNDriverMod                     , only : CNDriverNoLeaching, CNDriverLeaching
   use CNVegStructUpdateMod            , only : CNVegStructUpdate 
   use CNAnnualUpdateMod               , only : CNAnnualUpdate
   use dynConsBiogeochemMod            , only : dyn_cnbal_patch, dyn_cnbal_col
   use dynCNDVMod                      , only : dynCNDV_init, dynCNDV_interp
+  use CNPrecisionControlMod           , only: CNPrecisionControl
+  use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
   !
   implicit none
   private
@@ -145,6 +148,7 @@ module CNVegetationFacade
      procedure, public :: InterpFileInputs              ! Interpolate inputs from files
      procedure, public :: UpdateSubgridWeights          ! Update subgrid weights if running with prognostic patch weights
      procedure, public :: DynamicAreaConservation       ! Conserve C & N with updates in subgrid weights
+     procedure, public :: InitColumnBalance             ! Set the starting point for col-level balance checks
      procedure, public :: EcosystemDynamicsPreDrainage  ! Do the main science that needs to be done before hydrology-drainage
      procedure, public :: EcosystemDynamicsPostDrainage ! Do the main science that needs to be done after hydrology-drainage
      procedure, public :: BalanceCheck                  ! Check the carbon and nitrogen balance
@@ -415,7 +419,7 @@ contains
     ! !DESCRIPTION:
     ! Do initializations that need to be done at the start of every time step
     !
-    ! This includes initializing the balance check and zeroing fluxes
+    ! This includes zeroing fluxes
     !
     ! Should only be called if use_cn is true
     !
@@ -431,10 +435,6 @@ contains
 
     character(len=*), parameter :: subname = 'InitEachTimeStep'
     !-----------------------------------------------------------------------
-
-    call this%cn_balance_inst%BeginCNBalance( &
-         bounds, num_soilc, filter_soilc, &
-         this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
 
     call this%cnveg_carbonflux_inst%ZeroDWT(bounds)
     if (use_c13) then
@@ -567,6 +567,61 @@ contains
     call t_stopf('dyn_cnbal_col')
 
   end subroutine DynamicAreaConservation
+
+  !-----------------------------------------------------------------------
+  subroutine InitColumnBalance(this, bounds, num_allc, filter_allc, &
+       num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       soilbiogeochem_carbonstate_inst, &
+       c13_soilbiogeochem_carbonstate_inst, &
+       c14_soilbiogeochem_carbonstate_inst, &
+       soilbiogeochem_nitrogenstate_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set the starting point for column-level balance checks.
+    !
+    ! This should be called after DynamicAreaConservation, since the changes made by
+    ! DynamicAreaConservation can break column-level conservation checks.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type)               , intent(inout) :: this
+    type(bounds_type)                       , intent(in)    :: bounds  
+    integer                                 , intent(in)    :: num_allc          ! number of columns in allc filter
+    integer                                 , intent(in)    :: filter_allc(:)    ! filter for all active columns
+    integer                                 , intent(in)    :: num_soilc         ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_soilc(:)   ! filter for soil columns
+    integer                                 , intent(in)    :: num_soilp         ! number of soil patches in filter
+    integer                                 , intent(in)    :: filter_soilp(:)   ! filter for soil patches
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitColumnBalance'
+    !-----------------------------------------------------------------------
+
+    call CNDriverSummarizeStates(bounds, &
+         num_allc, filter_allc, &
+         num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         this%cnveg_carbonstate_inst, &
+         this%c13_cnveg_carbonstate_inst, &
+         this%c14_cnveg_carbonstate_inst, &
+         this%cnveg_nitrogenstate_inst, &
+         soilbiogeochem_carbonstate_inst, &
+         c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_nitrogenstate_inst)
+
+    call this%cn_balance_inst%BeginCNBalance( &
+         bounds, num_soilc, filter_soilc, &
+         this%cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
+
+  end subroutine InitColumnBalance
+
 
   !-----------------------------------------------------------------------
   subroutine EcosystemDynamicsPreDrainage(this, bounds, &
@@ -716,21 +771,47 @@ contains
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
 
+    ! Set controls on very low values in critical state variables 
+
+    call t_startf('CNPrecisionControl')
+    call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
+         this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, &
+         this%c14_cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
+    call t_stopf('CNPrecisionControl')
+
+    call t_startf('SoilBiogeochemPrecisionControl')
+    call SoilBiogeochemPrecisionControl(num_soilc, filter_soilc,  &
+         soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst,soilbiogeochem_nitrogenstate_inst)
+    call t_stopf('SoilBiogeochemPrecisionControl')
+
     ! Call to all CN summary routines
 
-    call  CNDriverSummary(bounds, &
+    call  CNDriverSummarizeStates(bounds, &
          num_allc, filter_allc, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
-         this%cnveg_state_inst, this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, &
-         this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, &
-         this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, &
-         this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
+         this%cnveg_carbonstate_inst, &
+         this%c13_cnveg_carbonstate_inst, &
+         this%c14_cnveg_carbonstate_inst, &
+         this%cnveg_nitrogenstate_inst, &
+         soilbiogeochem_carbonstate_inst, &
+         c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst, &
+         soilbiogeochem_nitrogenstate_inst)
+
+    call  CNDriverSummarizeFluxes(bounds, &
+         num_soilc, filter_soilc, &
+         num_soilp, filter_soilp, &
+         this%cnveg_carbonflux_inst, &
+         this%c13_cnveg_carbonflux_inst, &
+         this%c14_cnveg_carbonflux_inst, &
+         this%cnveg_nitrogenflux_inst, &
          this%c_products_inst, this%c13_products_inst, this%c14_products_inst, &
-         soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
-         c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
-         c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-         soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+         soilbiogeochem_carbonflux_inst, &
+         c13_soilbiogeochem_carbonflux_inst, &
+         c14_soilbiogeochem_carbonflux_inst, &
+         soilbiogeochem_nitrogenflux_inst)
 
     ! On the radiation time step, use C state variables to calculate
     ! vegetation structure (LAI, SAI, height)

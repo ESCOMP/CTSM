@@ -211,8 +211,7 @@ contains
          lfc                => cnveg_state_inst%lfc_col                        , & ! Output: [real(r8) (:)     ]  conversion area frac. of BET+BDT that haven't burned before
          wtlf               => cnveg_state_inst%wtlf_col                       , & ! Output: [real(r8) (:)     ]  fractional coverage of non-crop Patches              
          
-         totvegc            => cnveg_carbonstate_inst%totvegc_patch            , & ! Input:  [real(r8) (:)     ]  (gC/m2) total vegetation carbon, excluding cpool  
-         totvegc_col        => cnveg_carbonstate_inst%totvegc_col              , & ! Output: [real(r8) (:)     ]  totvegc at column level                           
+         totvegc            => cnveg_carbonstate_inst%totvegc_col              , & ! Input: [real(r8) (:)     ]  totvegc at column level                           
          deadcrootc         => cnveg_carbonstate_inst%deadcrootc_patch         , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C                        
          deadcrootc_storage => cnveg_carbonstate_inst%deadcrootc_storage_patch , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C storage                
          deadcrootc_xfer    => cnveg_carbonstate_inst%deadcrootc_xfer_patch    , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C transfer               
@@ -251,10 +250,6 @@ contains
            rh30(bounds%begp:bounds%endp), &
            rh30_col(bounds%begc:bounds%endc))  
       
-     call p2c(bounds, num_soilc, filter_soilc, &
-           totvegc(bounds%begp:bounds%endp), &
-           totvegc_col(bounds%begc:bounds%endc))
-
       call p2c(bounds, num_soilc, filter_soilc, &
            leafc(bounds%begp:bounds%endp), &
            leafc_col(bounds%begc:bounds%endc))
@@ -547,7 +542,7 @@ contains
         g = col%gridcell(c)
         hdmlf=this%forc_hdm(g)
         if( cropf_col(c)  <  1._r8 )then
-           fuelc(c) = totlitc(c)+totvegc_col(c)-rootc_col(c)-fuelc_crop(c)*cropf_col(c)
+           fuelc(c) = totlitc(c)+totvegc(c)-rootc_col(c)-fuelc_crop(c)*cropf_col(c)
            if (spinup_state == 2) then
               fuelc(c) = fuelc(c) + ((10._r8 - 1._r8)*deadstemc_col(c))
               do j = 1, nlevdecomp  

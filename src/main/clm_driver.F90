@@ -227,15 +227,10 @@ contains
        do nc = 1,nclumps
           call get_clump_bounds(nc, bounds_clump)
 
-          call t_startf('begcnbal')
+          call t_startf('cninit')
 
           call bgc_vegetation_inst%InitEachTimeStep(bounds_clump, &
                filter(nc)%num_soilc, filter(nc)%soilc)
-
-          call ch4_init_balance_check(bounds_clump, &
-               filter(nc)%num_soilc, filter(nc)%soilc, &
-               filter(nc)%num_lakec, filter(nc)%lakec, &
-               ch4_inst)
 
           call soilbiogeochem_carbonflux_inst%ZeroDWT(bounds_clump)
           if (use_c13) then
@@ -245,7 +240,7 @@ contains
              call c14_soilbiogeochem_carbonflux_inst%ZeroDWT(bounds_clump)
           end if
 
-          call t_stopf('begcnbal')
+          call t_stopf('cninit')
        end do
        !$OMP END PARALLEL DO
     end if
@@ -268,15 +263,18 @@ contains
     call t_stopf('dyn_subgrid')
 
     ! ============================================================================
-    ! Initialize the mass balance checks for water.
+    ! Initialize the column-level mass balance checks for water, carbon & nitrogen.
     !
-    ! Currently, I believe this needs to be done after weights are updated for
-    ! prescribed transient patches or CNDV, because column-level water is not
-    ! generally conserved when weights change (instead the difference is put in
-    ! the grid cell-level terms, qflx_liq_dynbal, etc.). In the future, we may
-    ! want to change the balance checks to ensure that the grid cell-level water
-    ! is conserved, considering qflx_liq_dynbal; in this case, the call to
-    ! BeginWaterBalance should be moved to before the weight updates.
+    ! For water: Currently, I believe this needs to be done after weights are updated for
+    ! prescribed transient patches or CNDV, because column-level water is not generally
+    ! conserved when weights change (instead the difference is put in the grid cell-level
+    ! terms, qflx_liq_dynbal, etc.). In the future, we may want to change the balance
+    ! checks to ensure that the grid cell-level water is conserved, considering
+    ! qflx_liq_dynbal; in this case, the call to BeginWaterBalance should be moved to
+    ! before the weight updates.
+    !
+    ! For carbon & nitrogen: This needs to be done after dynSubgrid_driver, because the
+    ! changes due to dynamic area adjustments can break column-level conservation
     ! ============================================================================
 
     !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
@@ -290,6 +288,27 @@ contains
             filter(nc)%num_hydrologyc, filter(nc)%hydrologyc, &
             soilhydrology_inst, waterstate_inst)
        call t_stopf('begwbal')
+
+       call t_startf('begcnbal_col')
+       if (use_cn) then
+          call bgc_vegetation_inst%InitColumnBalance(bounds_clump, &
+               filter(nc)%num_allc, filter(nc)%allc, &
+               filter(nc)%num_soilc, filter(nc)%soilc, &
+               filter(nc)%num_soilp, filter(nc)%soilp, &
+               soilbiogeochem_carbonstate_inst, &
+               c13_soilbiogeochem_carbonstate_inst, &
+               c14_soilbiogeochem_carbonstate_inst, &
+               soilbiogeochem_nitrogenstate_inst)
+       end if
+
+       if (use_lch4) then
+          call ch4_init_balance_check(bounds_clump, &
+               filter(nc)%num_nolakec, filter(nc)%nolakec, &
+               filter(nc)%num_lakec, filter(nc)%lakec, &
+               ch4_inst)
+       end if
+       call t_stopf('begcnbal_col')
+       
     end do
     !$OMP END PARALLEL DO
 

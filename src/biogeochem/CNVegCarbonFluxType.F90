@@ -252,13 +252,17 @@ module CNVegCarbonFluxType
      real(r8), pointer :: dwt_seedc_to_deadstem_col                 (:)     ! (gC/m2/s) seed source to patch-level
      real(r8), pointer :: dwt_conv_cflux_col                        (:)     ! (gC/m2/s) conversion C flux (immediate loss to atm)
      real(r8), pointer :: dwt_productc_gain_patch                   (:)     ! (gC/m2/s) addition to wood product pools; although this is a patch-level flux, it is expressed per unit COLUMN area
-     real(r8), pointer :: dwt_productc_gain_col                     (:)     ! (gC/m2/s) addition to wood product pools
      real(r8), pointer :: dwt_frootc_to_litr_met_c_col              (:,:)   ! (gC/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_frootc_to_litr_cel_c_col              (:,:)   ! (gC/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_frootc_to_litr_lig_c_col              (:,:)   ! (gC/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_livecrootc_to_cwdc_col                (:,:)   ! (gC/m3/s) live coarse root to CWD due to landcover change
      real(r8), pointer :: dwt_deadcrootc_to_cwdc_col                (:,:)   ! (gC/m3/s) dead coarse root to CWD due to landcover change
      real(r8), pointer :: dwt_closs_col                             (:)     ! (gC/m2/s) total carbon loss from product pools and conversion
+
+     ! FIXME(wjs, 2016-07-08) Remove these once we update column states immediately after
+     ! dyn_cnbal_patch
+     real(r8), pointer :: dwt_to_litrc_col(:)
+     real(r8), pointer :: dwt_seedc_col(:)
 
      ! summary (diagnostic) flux variables, not involved in mass balance
      real(r8), pointer :: gpp_before_downreg_patch                  (:)     ! (gC/m2/s) gross primary production before down regulation
@@ -614,7 +618,9 @@ contains
     allocate(this%dwt_seedc_to_deadstem_col         (begc:endc))                  ; this%dwt_seedc_to_deadstem_col (:)  =nan
     allocate(this%dwt_conv_cflux_col                (begc:endc))                  ; this%dwt_conv_cflux_col        (:)  =nan
     allocate(this%dwt_productc_gain_patch           (begp:endp))                  ; this%dwt_productc_gain_patch   (:)  =nan
-    allocate(this%dwt_productc_gain_col             (begc:endc))                  ; this%dwt_productc_gain_col     (:)  =nan
+
+    allocate(this%dwt_to_litrc_col(begc:endc)); this%dwt_to_litrc_col(:) = nan
+    allocate(this%dwt_seedc_col(begc:endc)); this%dwt_seedc_col(:) = nan
 
     allocate(this%cwdc_hr_col                       (begc:endc))                  ; this%cwdc_hr_col               (:)  =nan
     allocate(this%cwdc_loss_col                     (begc:endc))                  ; this%cwdc_loss_col             (:)  =nan
@@ -3170,7 +3176,6 @@ contains
           this%dwt_seedc_to_leaf_col(c)     = 0._r8
           this%dwt_seedc_to_deadstem_col(c) = 0._r8
           this%dwt_conv_cflux_col(c)        = 0._r8
-          this%dwt_productc_gain_col(c)     = 0._r8
           do j = 1, nlevdecomp_full
              this%dwt_frootc_to_litr_met_c_col(c,j) = 0._r8
              this%dwt_frootc_to_litr_cel_c_col(c,j) = 0._r8
@@ -3179,6 +3184,8 @@ contains
              this%dwt_deadcrootc_to_cwdc_col(c,j)   = 0._r8
           end do
           this%dwt_closs_col(c)  = 0._r8
+          this%dwt_to_litrc_col(c) = 0._r8
+          this%dwt_seedc_col(c) = 0._r8
        end if
     end do
 
@@ -3729,7 +3736,8 @@ contains
        this%dwt_seedc_to_leaf_col(c)        = 0._r8
        this%dwt_seedc_to_deadstem_col(c)    = 0._r8
        this%dwt_conv_cflux_col(c)           = 0._r8
-       this%dwt_productc_gain_col(c)        = 0._r8
+       this%dwt_to_litrc_col(c) = 0._r8
+       this%dwt_seedc_col(c) = 0._r8
     end do
 
     do j = 1, nlevdecomp_full

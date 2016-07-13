@@ -194,13 +194,17 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: dwt_seedn_to_deadstem_col                 (:)     ! col (gN/m2/s) seed source to patch-level
      real(r8), pointer :: dwt_conv_nflux_col                        (:)     ! col (gN/m2/s) conversion N flux (immediate loss to atm)
      real(r8), pointer :: dwt_productn_gain_patch                   (:)     ! patch (gN/m2/s) addition to 10-yr wood product pool; even though this is a patch-level flux, it is expressed per unit COLUMN area
-     real(r8), pointer :: dwt_productn_gain_col                     (:)     ! col (gN/m2/s) addition to 10-yr wood product pool
      real(r8), pointer :: dwt_frootn_to_litr_met_n_col              (:,:)   ! col (gN/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_frootn_to_litr_cel_n_col              (:,:)   ! col (gN/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_frootn_to_litr_lig_n_col              (:,:)   ! col (gN/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_livecrootn_to_cwdn_col                (:,:)   ! col (gN/m3/s) live coarse root to CWD due to landcover change
      real(r8), pointer :: dwt_deadcrootn_to_cwdn_col                (:,:)   ! col (gN/m3/s) dead coarse root to CWD due to landcover change
      real(r8), pointer :: dwt_nloss_col                             (:)     ! col (gN/m2/s) total nitrogen loss from product pools and conversion
+
+     ! FIXME(wjs, 2016-07-08) Remove these once we update column states immediately after
+     ! dyn_cnbal_patch
+     real(r8), pointer :: dwt_to_litrn_col(:)
+     real(r8), pointer :: dwt_seedn_col(:)
 
      ! Misc
      real(r8), pointer :: plant_ndemand_patch                       (:)     ! N flux required to support initial GPP (gN/m2/s)
@@ -426,7 +430,6 @@ contains
     allocate(this%dwt_seedn_to_deadstem_col    (begc:endc))                   ; this%dwt_seedn_to_deadstem_col    (:)   = nan
     allocate(this%dwt_conv_nflux_col           (begc:endc))                   ; this%dwt_conv_nflux_col           (:)   = nan
     allocate(this%dwt_productn_gain_patch      (begp:endp))                   ; this%dwt_productn_gain_patch      (:)   = nan
-    allocate(this%dwt_productn_gain_col        (begc:endc))                   ; this%dwt_productn_gain_col        (:)   = nan
     allocate(this%dwt_nloss_col                (begc:endc))                   ; this%dwt_nloss_col                (:)   = nan
     allocate(this%wood_harvestn_col            (begc:endc))                   ; this%wood_harvestn_col            (:)   = nan
 
@@ -435,6 +438,9 @@ contains
     allocate(this%dwt_frootn_to_litr_lig_n_col (begc:endc,1:nlevdecomp_full)) ; this%dwt_frootn_to_litr_lig_n_col (:,:) = nan
     allocate(this%dwt_livecrootn_to_cwdn_col   (begc:endc,1:nlevdecomp_full)) ; this%dwt_livecrootn_to_cwdn_col   (:,:) = nan
     allocate(this%dwt_deadcrootn_to_cwdn_col   (begc:endc,1:nlevdecomp_full)) ; this%dwt_deadcrootn_to_cwdn_col   (:,:) = nan
+
+    allocate(this%dwt_to_litrn_col(begc:endc)); this%dwt_to_litrn_col(:) = nan
+    allocate(this%dwt_seedn_col(begc:endc)); this%dwt_seedn_col(:) = nan
 
     allocate(this%m_decomp_npools_to_fire_vr_col    (begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
     allocate(this%m_decomp_npools_to_fire_col       (begc:endc,1:ndecomp_pools                  ))
@@ -1718,7 +1724,8 @@ contains
        this%dwt_seedn_to_leaf_col(c)     = 0._r8
        this%dwt_seedn_to_deadstem_col(c) = 0._r8
        this%dwt_conv_nflux_col(c)        = 0._r8
-       this%dwt_productn_gain_col(c)     = 0._r8
+       this%dwt_to_litrn_col(c) = 0._r8
+       this%dwt_seedn_col(c) = 0._r8
     end do
 
     do j = 1, nlevdecomp_full
