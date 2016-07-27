@@ -199,7 +199,7 @@ contains
     !integer  , intent(in)    :: altmax_lastyear_indx_col(bounds%begc:)  ! frost table depth (m)
 
     associate(                                                                    &
-         rootfr_patch              => soilstate_inst%rootfr_patch               , & ! fraction of roots in each soil layer  (nlevgrnd)
+         crootfr_patch             => soilstate_inst%crootfr_patch              , & ! fraction of roots for carbon in each soil layer  (nlevgrnd)
          altmax_lastyear_indx_col  => canopystate_inst%altmax_lastyear_indx_col , & ! frost table depth (m)
          laisun                    => canopystate_inst%laisun_patch             , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index        
          laisha                    => canopystate_inst%laisha_patch             , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index        

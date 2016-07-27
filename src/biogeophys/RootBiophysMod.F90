@@ -13,15 +13,16 @@ module RootBiophysMod
   !
   public  :: init_vegrootfr
   public  :: init_rootprof
-  private :: zeng2001_rootfr
-  private :: jackson1996_rootfr
-  private :: exponential_rootfr
 
-  integer, parameter :: zeng_2001_root = 0    !the zeng 2001 root profile function
-  integer, parameter :: jackson_1996_root = 1 !the jackson 1996 root profile function
-  integer, parameter :: koven_exp_root = 2    !the koven exponential root profile function
+  integer, private, parameter :: zeng_2001_root    = 0 !the zeng 2001 root profile function
+  integer, private, parameter :: jackson_1996_root = 1 !the jackson 1996 root profile function
+  integer, private, parameter :: koven_exp_root    = 2 !the koven exponential root profile function
 
-  integer, public :: rooting_profile_method   !select the type of rooting profile parameterization   
+  integer, public :: rooting_profile_method_water     !select the type of rooting profile parameterization for water  
+  integer, public :: rooting_profile_method_carbon    !select the type of rooting profile parameterization for carbon   
+  integer, public :: rooting_profile_varindex_water   !select the variant number of rooting profile parameterization for water  
+  integer, public :: rooting_profile_varindex_carbon  !select the variant number of rooting profile parameterization for carbon   
+
   !-------------------------------------------------------------------------------------- 
 
 contains
@@ -52,11 +53,15 @@ contains
     !-----------------------------------------------------------------------
 
 ! MUST agree with name in namelist and read statement
-    namelist /rooting_profile_inparm/ rooting_profile_method
+    namelist /rooting_profile_inparm/ rooting_profile_method_water, rooting_profile_method_carbon, &
+                                      rooting_profile_varindex_water, rooting_profile_varindex_carbon
 
     ! Default values for namelist
 
-    rooting_profile_method = zeng_2001_root
+    rooting_profile_method_water    = zeng_2001_root
+    rooting_profile_method_carbon   = zeng_2001_root
+    rooting_profile_varindex_water  = 1
+    rooting_profile_varindex_carbon = 2
 
     ! Read rooting_profile namelist
     if (masterproc) then
@@ -76,22 +81,30 @@ contains
 
     endif
 
-    call shr_mpi_bcast(rooting_profile_method, mpicom)
+    call shr_mpi_bcast(rooting_profile_method_water,    mpicom)
+    call shr_mpi_bcast(rooting_profile_method_carbon,   mpicom)
+    call shr_mpi_bcast(rooting_profile_varindex_water,  mpicom)
+    call shr_mpi_bcast(rooting_profile_varindex_carbon, mpicom)
 
     if (masterproc) then
 
        write(iulog,*) ' '
        write(iulog,*) 'rooting_profile settings:'
-       write(iulog,*) '  rooting_profile_method  = ',rooting_profile_method
+       write(iulog,*) '  rooting_profile_method_water  = ',rooting_profile_method_water
+       if ( rooting_profile_method_water == jackson_1996_root )then
+          write(iulog,*) '  (rooting_profile_varindex_water  = ',rooting_profile_varindex_water, ')'
+       end if
+       write(iulog,*) '  rooting_profile_method_carbon = ',rooting_profile_method_carbon
+       if ( rooting_profile_method_carbon == jackson_1996_root )then
+          write(iulog,*) '  (rooting_profile_varindex_carbon  = ',rooting_profile_varindex_carbon, ')'
+       end if
 
     endif
-
-!    rooting_profile_method = zeng_2001_root
 
   end subroutine init_rootprof
 
   !-------------------------------------------------------------------------------------- 
-  subroutine init_vegrootfr(bounds, nlevsoi, nlevgrnd, rootfr)
+  subroutine init_vegrootfr(bounds, nlevsoi, nlevgrnd, rootfr, water_carbon)
     !
     !DESCRIPTION
     !initialize plant root profiles
@@ -102,43 +115,51 @@ contains
     use shr_log_mod    , only : errMsg => shr_log_errMsg
     use decompMod      , only : bounds_type
     use abortutils     , only : endrun         
-        use ColumnType            , only : col                
+    use ColumnType            , only : col                
     use PatchType             , only : patch                
         !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds                     ! bounds
     integer,           intent(in) :: nlevsoi                    ! number of hydactive layers
     integer,           intent(in) :: nlevgrnd                   ! number of soil layers
-    real(r8),          intent(out):: rootfr(bounds%begp: , 1: ) !
+    real(r8),          intent(out):: rootfr(bounds%begp: , 1: ) ! root fraction by layer
+    character(len=*),  intent(in) :: water_carbon               ! roots for water or carbon
+
     !
     ! !LOCAL VARIABLES:
     character(len=32) :: subname = 'init_vegrootfr'  ! subroutine name
     integer           :: c,p
-!scs    
+    integer           :: rooting_profile_method      ! Rooting profile method to use
+    integer           :: rooting_profile_varidx      ! Rooting profile variant index to use
     !------------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(rootfr) == (/bounds%endp, nlevgrnd/)), errMsg(__FILE__, __LINE__))
 
-    select case (rooting_profile_method)
+    if (     water_carbon == 'water' ) then 
+       rooting_profile_method = rooting_profile_method_water
+       rooting_profile_varidx = rooting_profile_varindex_water
+    else if (water_carbon == 'carbon') then
+       rooting_profile_method = rooting_profile_method_carbon
+       rooting_profile_varidx = rooting_profile_varindex_carbon
+    else
+       call endrun(subname // ':: input type can only be water or carbon = '//water_carbon )
+    end if
+ 
+    select case( rooting_profile_method )
+
     case (zeng_2001_root)
        rootfr(bounds%begp:bounds%endp, 1 : nlevsoi) = zeng2001_rootfr(bounds, nlevsoi)
-
     case (jackson_1996_root)
-       rootfr(bounds%begp:bounds%endp, 1 : nlevsoi) = jackson1996_rootfr(bounds, nlevsoi)
+       rootfr(bounds%begp:bounds%endp, 1 : nlevsoi) = jackson1996_rootfr(bounds, nlevsoi, rooting_profile_varidx, water_carbon)
     case (koven_exp_root)
        rootfr(bounds%begp:bounds%endp, 1 : nlevsoi) = exponential_rootfr(bounds, nlevsoi)
-       !jackson root, 1996, to be defined later
-       !rootfr(bounds%begp:bounds%endp, 1 : ubj) = jackson1996_rootfr(bounds, ubj, pcolumn, ivt, zi)
-       !case (schenk_jackson_2002_root)
-       !schenk and Jackson root, 2002, to be defined later
-       !rootfr(bounds%begp:bounds%endp, 1 : ubj) = schenk2002_rootfr(bounds, ubj, pcolumn, ivt, zi)        
     case default
        call endrun(subname // ':: a root fraction function must be specified!')   
     end select
     rootfr(bounds%begp:bounds%endp,nlevsoi+1:nlevgrnd)=0._r8   
 
-!scs: shift roots up above bedrock boundary (distribute equally to each layer)
-!scs: may not matter if normalized later
+    ! shift roots up above bedrock boundary (distribute equally to each layer)
+    ! may not matter if normalized later
     do p = bounds%begp,bounds%endp   
        c = patch%column(p)
        rootfr(p,1:col%nbedrock(c)) = rootfr(p,1:col%nbedrock(c)) &
@@ -204,7 +225,7 @@ contains
   end function zeng2001_rootfr
 
   !-------------------------------------------------------------------------   
-  function jackson1996_rootfr(bounds, ubj) result(rootfr)
+  function jackson1996_rootfr(bounds, ubj, varindx, water_carbon) result(rootfr)
     !
     ! DESCRIPTION
     ! compute root profile for soil water uptake
@@ -222,13 +243,15 @@ contains
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds                  ! bounds
     integer           , intent(in)    :: ubj                     ! ubnd
+    integer           , intent(in)    :: varindx                 ! variant index
+    character(len=*)  , intent(in)    :: water_carbon            ! roots for water or carbon
     !
     ! !RESULT
     real(r8) :: rootfr(bounds%begp:bounds%endp , 1:ubj ) !
     !
     ! !LOCAL VARIABLES:
-    real, parameter :: m_to_cm = 1.e2_r8
-    real :: beta !patch specific shape parameter
+    real(r8), parameter :: m_to_cm = 1.e2_r8
+    real(r8) :: beta !patch specific shape parameter
     integer :: p, lev, c
     !------------------------------------------------------------------------
 
@@ -239,12 +262,11 @@ contains
     do p = bounds%begp,bounds%endp   
        c = patch%column(p)       
        if (patch%itype(p) /= noveg) then
-          beta = pftcon%rootprof_beta(patch%itype(p))
+          beta = pftcon%rootprof_beta(patch%itype(p),varindx)
           do lev = 1, ubj
              rootfr(p,lev) = ( &
                   beta ** (col%zi(c,lev-1)*m_to_cm) - &
                   beta ** (col%zi(c,lev)*m_to_cm) )
-             
           end do
        else
           rootfr(p,:) = 0.

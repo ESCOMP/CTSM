@@ -178,7 +178,7 @@ contains
          laisun         =>    canopystate_inst%laisun_patch             , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index                  
          laisha         =>    canopystate_inst%laisha_patch             , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index                  
 
-         rootfr         =>    soilstate_inst%rootfr_patch               , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer  (nlevgrnd)
+         crootfr        =>    soilstate_inst%crootfr_patch              , & ! Input:  [real(r8) (:,:) ]  fraction of roots for carbon in each soil layer  (nlevgrnd)
 
          t_soisno       =>    temperature_inst%t_soisno_col             , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
          t_ref2m        =>    temperature_inst%t_ref2m_patch            , & ! Input:  [real(r8) (:)   ]  2 m height surface air temperature (Kelvin)       
@@ -275,15 +275,15 @@ contains
             c = patch%column(p)
 
             ! Fine root MR
-            ! rootfr(j) sums to 1.0 over all soil layers, and
-            ! describes the fraction of root mass that is in each
+            ! crootfr(j) sums to 1.0 over all soil layers, and
+            ! describes the fraction of root mass for carbon that is in each
             ! layer.  This is used with the layer temperature correction
             ! to estimate the total fine root maintenance respiration as a
             ! function of temperature and N content.
             if(rootstem_acc)then
                br_root = br_root * 10._r8**(-0.00794_r8*((t10(p)-tfrz)-25._r8))
             end if
-            froot_mr(p) = froot_mr(p) + frootn(p)*br_root*tcsoi(c,j)*rootfr(p,j)
+            froot_mr(p) = froot_mr(p) + frootn(p)*br_root*tcsoi(c,j)*crootfr(p,j)
             
          end do
       end do

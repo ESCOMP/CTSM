@@ -70,7 +70,8 @@ module SoilStateType
      real(r8), pointer :: rootr_patch          (:,:) ! patch effective fraction of roots in each soil layer (nlevgrnd)
      real(r8), pointer :: rootr_col            (:,:) ! col effective fraction of roots in each soil layer (nlevgrnd)  
      real(r8), pointer :: rootfr_col           (:,:) ! col fraction of roots in each soil layer (nlevgrnd) 
-     real(r8), pointer :: rootfr_patch         (:,:) ! patch fraction of roots in each soil layer (nlevgrnd)
+     real(r8), pointer :: rootfr_patch         (:,:) ! patch fraction of roots for water in each soil layer (nlevgrnd)
+     real(r8), pointer :: crootfr_patch        (:,:) ! patch fraction of roots for carbon in each soil layer (nlevgrnd)
      real(r8), pointer :: root_depth_patch     (:)   ! root depth
      real(r8), pointer :: rootr_road_perv_col  (:,:) ! col effective fraction of roots in each soil layer of urban pervious road
      real(r8), pointer :: rootfr_road_perv_col (:,:) ! col effective fraction of roots in each soil layer of urban pervious road
@@ -165,6 +166,7 @@ contains
     allocate(this%rootr_col            (begc:endc,nlevgrnd))            ; this%rootr_col            (:,:) = nan
     allocate(this%rootr_road_perv_col  (begc:endc,1:nlevgrnd))          ; this%rootr_road_perv_col  (:,:) = nan
     allocate(this%rootfr_patch         (begp:endp,1:nlevgrnd))          ; this%rootfr_patch         (:,:) = nan
+    allocate(this%crootfr_patch        (begp:endp,1:nlevgrnd))          ; this%crootfr_patch        (:,:) = nan
     allocate(this%rootfr_col           (begc:endc,1:nlevgrnd))          ; this%rootfr_col           (:,:) = nan 
     allocate(this%rootfr_road_perv_col (begc:endc,1:nlevgrnd))          ; this%rootfr_road_perv_col (:,:) = nan
 
@@ -228,7 +230,17 @@ contains
        call hist_addfld2d (fname='ROOTFR', units='proportion', type2d='levgrnd', &
             avgflag='A', long_name='fraction of roots in each soil layer', &
             ptr_patch=this%rootfr_patch, default='active')
+    else
+       this%rootfr_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='ROOTFR', units='proportion', type2d='levgrnd', &
+          avgflag='A', long_name='fraction of roots for water in each soil layer', &
+          ptr_patch=this%rootfr_patch, default='active')
+       this%crootfr_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='CROOTFR', units='proportion', type2d='levgrnd', &
+          avgflag='A', long_name='fraction of roots for carbon in each soil layer', &
+          ptr_patch=this%crootfr_patch, default='active')
     end if
+
 
     if ( use_dynroot ) then
        this%root_depth_patch(begp:endp) = spval
@@ -379,6 +391,7 @@ contains
               long_name='root depth', units='m', &
               interpinic_flag='interp', readvar=readvar, data=this%root_depth_patch)
  
+     end if
          call restartvar(ncid=ncid, flag=flag, varname='rootfr', xtype=ncd_double,  &
               dim1name='pft', dim2name='levgrnd', switchdim=.true., &
               long_name='root fraction', units='', &
@@ -389,9 +402,10 @@ contains
                write(iulog,*) "Initialize rootfr to default"
             end if
             call init_vegrootfr(bounds, nlevsoi, nlevgrnd, &
-            this%rootfr_patch(bounds%begp:bounds%endp,1:nlevgrnd))
+            this%rootfr_patch(bounds%begp:bounds%endp,1:nlevgrnd), 'water')
+            call init_vegrootfr(bounds, nlevsoi, nlevgrnd, &
+            this%crootfr_patch(bounds%begp:bounds%endp,1:nlevgrnd), 'carbon')
          end if
-     end if
     
   end subroutine Restart
 

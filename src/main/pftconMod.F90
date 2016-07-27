@@ -141,7 +141,7 @@ module pftconMod
      real(r8), allocatable :: deadwdcn      (:)   ! dead wood (xylem and heartwood) C:N (gC/gN)
      real(r8), allocatable :: grperc        (:)   ! growth respiration parameter
      real(r8), allocatable :: grpnow        (:)   ! growth respiration parameter
-     real(r8), allocatable :: rootprof_beta (:)   ! CLM rooting distribution parameter for C and N inputs [unitless]
+     real(r8), allocatable :: rootprof_beta (:,:) ! CLM rooting distribution parameter for C and N inputs [unitless]
 
      !  crop
 
@@ -315,6 +315,8 @@ contains
     ! Read and initialize vegetation (PFT) constants
     !
     ! !USES:
+    use clm_varpar  ,  only: nvariants
+    implicit none
     !
     ! !ARGUMENTS:
     class(pftcon_type) :: this
@@ -352,7 +354,7 @@ contains
     allocate( this%deadwdcn      (0:mxpft) )     
     allocate( this%grperc        (0:mxpft) )       
     allocate( this%grpnow        (0:mxpft) )       
-    allocate( this%rootprof_beta (0:mxpft) )
+    allocate( this%rootprof_beta (0:mxpft,nvariants) )
     allocate( this%graincn       (0:mxpft) )      
     allocate( this%mxtmp         (0:mxpft) )        
     allocate( this%baset         (0:mxpft) )        

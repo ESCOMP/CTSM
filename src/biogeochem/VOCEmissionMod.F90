@@ -99,6 +99,7 @@ contains
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
     use shr_megan_mod   , only : shr_megan_factors_file
     use MEGANFactorsMod , only : megan_factors_init, megan_factors_get
+    use clm_varpar      , only : mxpft
     !
     ! !ARGUMENTS:
     class(vocemis_type) :: this
@@ -107,7 +108,7 @@ contains
     ! !LOCAL VARIABLES:
     integer            :: i, imeg
     integer            :: class_num
-    real(r8)           :: factors(numpft)
+    real(r8)           :: factors(mxpft+1)
     real(r8)           :: molec_wght
     integer            :: begg, endg
     integer            :: begp, endp
@@ -124,7 +125,7 @@ contains
     do while(associated(meg_cmp))
        allocate(meg_cmp%emis_factors(numpft))
        call megan_factors_get( trim(meg_cmp%name), factors, class_num, molec_wght )
-       meg_cmp%emis_factors = factors
+       meg_cmp%emis_factors(1:numpft) = factors(1:numpft)
        meg_cmp%class_number = class_num
        meg_cmp%molec_weight = molec_wght
        meg_cmp => meg_cmp%next_megcomp

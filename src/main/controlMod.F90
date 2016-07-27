@@ -38,10 +38,11 @@ module controlMod
   use C14BombSpikeMod                  , only: use_c14_bombspike, atm_c14_filename
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
-  use SoilBiogeochemVerticalProfileMod , only: exponential_rooting_profile, rootprof_exp, surfprof_exp, pftspecific_rootingprofile 
+  use SoilBiogeochemVerticalProfileMod , only: surfprof_exp 
   use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif, nitrifReadNML
   use SoilHydrologyMod                 , only: soilHydReadNML
   use CNFireFactoryMod                 , only: CNFireReadNML
+  use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use clm_varctl                       
   !
   ! !PUBLIC TYPES:
@@ -193,7 +194,7 @@ contains
 
     ! C and N input vertical profiles
     namelist /clm_inparm/  & 
-          exponential_rooting_profile, rootprof_exp, surfprof_exp, pftspecific_rootingprofile
+          surfprof_exp
 
     namelist /clm_inparm/ no_frozen_nitrif_denitrif
 
@@ -403,6 +404,7 @@ contains
     call init_hydrology( NLFilename )
 
     call soil_resistance_readnl ( NLFilename )
+    call CanopyFluxesReadNML    ( NLFilename )
     call CanopyHydrology_readnl ( NLFilename )
     call SnowHydrology_readnl   ( NLFilename )
     call UrbanReadNML           ( NLFilename )
@@ -608,10 +610,7 @@ contains
        call mpi_bcast (max_depth_cryoturb, 1, MPI_REAL8,  0, mpicom, ier)
 
        ! C and N input vertical profiles
-       call mpi_bcast (exponential_rooting_profile,       1, MPI_LOGICAL,  0, mpicom, ier)
-       call mpi_bcast (rootprof_exp,            1, MPI_REAL8,  0, mpicom, ier)
        call mpi_bcast (surfprof_exp,            1, MPI_REAL8,  0, mpicom, ier)
-       call mpi_bcast (pftspecific_rootingprofile,        1, MPI_LOGICAL,  0, mpicom, ier)
     end if
 
     if (use_cn .and. use_nitrif_denitrif) then 
@@ -779,11 +778,7 @@ contains
     if (use_cn .and. use_vertsoilc) then
        write(iulog, *) '   som_adv_flux, the advection term in soil mixing (m/s) : ', som_adv_flux
        write(iulog, *) '   max_depth_cryoturb (m)                                : ', max_depth_cryoturb
-       
-       write(iulog, *) '   exponential_rooting_profile                           : ', exponential_rooting_profile
-       write(iulog, *) '   rootprof_exp                                          : ', rootprof_exp
        write(iulog, *) '   surfprof_exp                                          : ', surfprof_exp
-       write(iulog, *) '   pftspecific_rootingprofile                            : ', pftspecific_rootingprofile
     end if
        
     if (use_cn .and. .not. use_nitrif_denitrif) then

@@ -123,9 +123,45 @@ specify spatially variable soil thickness. If not present, use bottom
 of soil column (nlevsoi).
 </entry>
 
-<entry id="rooting_profile_method" type="integer" category="clm_physics"
+<entry id="rooting_profile_method_water" type="integer" category="clm_physics"
        group="rooting_profile_inparm" valid_values="0,1,2" >
-Index of rooting profile.
+Index of rooting profile for water
+
+Changes rooting profile from Zeng 2001 double exponential (0) to
+Jackson 1996 single exponential (1) to Koven uniform exponential (2).
+</entry>
+
+<entry id="rooting_profile_method_carbon" type="integer" category="clm_physics"
+       group="rooting_profile_inparm" valid_values="0,1,2" >
+Index of rooting profile for carbon
+
+Changes rooting profile from Zeng 2001 double exponential (0) to
+Jackson 1996 single exponential (1) to Koven uniform exponential (2).
+</entry>
+
+<entry id="rooting_profile_method_soilcarbon" type="integer" category="clm_physics"
+       group="rooting_profile_inparm" valid_values="0,1,2" >
+Index of rooting profile for soil carbon
+
+Changes rooting profile from Zeng 2001 double exponential (0) to
+Jackson 1996 single exponential (1) to Koven uniform exponential (2).
+</entry>
+
+<entry id="rooting_profile_varindex_water" type="integer" category="clm_physics"
+       group="rooting_profile_inparm" valid_values="1,2" >
+Variant index of rooting profile for water
+(Currently only used for Jackson 1996 method)
+</entry>
+
+<entry id="rooting_profile_varindex_carbon" type="integer" category="clm_physics"
+       group="rooting_profile_inparm" valid_values="1,2" >
+Variant index of rooting profile for carbon and soil carbon
+(Currently only used for Jackson 1996 method)
+</entry>
+
+<entry id="rooting_profile_method_carbon" type="integer" category="clm_physics"
+       group="rooting_profile_inparm" valid_values="0,1,2" >
+Index of rooting profile for carbon
 
 Changes rooting profile from Zeng 2001 double exponential (0) to
 Jackson 1996 single exponential (1) to Koven uniform exponential (2).
@@ -217,6 +253,11 @@ Critical threshold of negative Nitrogen to die (abort when Nitrogen states are b
 <entry id="cnegcrit" type="real" category="clm_physics"
        group="cnprecision_inparm" >
 Critical threshold of negative Carbon to die (abort when Carbon states are below this value)
+</entry>
+
+<entry id="use_undercanopy_stability" type="logical" category="clm_physics"
+       group="canopyfluxes_inparm" valid_values="" >
+If TRUE use the undercanopy stability term used with CLM4.5 (Sakaguchi&Zeng, 2008)
 </entry>
 
 <entry id="interception_fraction" type="real" category="clm_physics"
@@ -1478,22 +1519,6 @@ separate q10 for frozen soil respiration rates.  default to same as above zero r
 </entry>
 
 <!-- rooting parameters    -->
-
-<entry id="pftspecific_rootingprofile" type="logical" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
-If TRUE, rooting profile depends on specific PFT
-</entry>
-
-<entry id="exponential_rooting_profile" type="logical" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
-If true, use a single exponential function to define the profile for distributing C and N from belowground components (following Jackson et al., 1999). If False, use the default CLM rootfrac double exponential for distributing C and N from belowground components.
-(EXPERIMENTAL and NOT tested)
-</entry>
-
-<entry id="rootprof_exp" type="real" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
-If pftspecific_rootingprofile is set to false, this sets a single exponential profile over which to distribute C and N coming from root pools (leaves, stem, grain).
-</entry>
 
 <entry id="hist_wrtch4diag" type="logical" category="history"
        group="clm_inparm" valid_values="" >

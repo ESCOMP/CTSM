@@ -1562,6 +1562,11 @@ sub process_namelist_inline_logic {
   setup_logic_soil_resis($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #############################################
+  # namelist group: canopyfluxes_inparm #
+  #############################################
+  setup_logic_canopyfluxes($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #############################################
   # namelist group: canopyhydrology_inparm #
   #############################################
   setup_logic_canopyhydrology($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -2731,7 +2736,8 @@ sub setup_logic_hydrstress {
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     # TODO(kwo, 2015-09) make this depend on > clm 5.0 at some point.
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hydrstress' );
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hydrstress',
+                'use_ed'=>$nl_flags->{'use_ed'} );
     $nl_flags->{'use_hydrstress'} = $nl->get_value('use_hydrstress');
     if ( value_is_true( $nl_flags->{'use_ed'} ) && value_is_true( $nl_flags->{'use_hydrstress'} ) ) {
        fatal_error("Cannot turn use_hydrstress on when use_ed is on\n" );
@@ -3190,7 +3196,8 @@ sub setup_logic_rooting_profile {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'rooting_profile_method' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'rooting_profile_method_water' ); 
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'rooting_profile_method_carbon' ); 
   }
 }
 
@@ -3202,6 +3209,16 @@ sub setup_logic_soil_resis {
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_resis_method' ); 
+  }
+}
+#-------------------------------------------------------------------------------
+
+sub setup_logic_canopyfluxes {
+  # 
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_undercanopy_stability' ); 
   }
 }
 
@@ -3286,7 +3303,7 @@ sub write_output_files {
                  clm_initinterp_inparm
                  soilhydrology_inparm
                  soilwater_movement_inparm rooting_profile_inparm 
-                 soil_resis_inparm  bgc_shared
+                 soil_resis_inparm  bgc_shared canopyfluxes_inparm
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
                  cnprecision_inparm clm_glacier_behavior );
 

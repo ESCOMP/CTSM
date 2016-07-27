@@ -2290,7 +2290,7 @@ contains
          h2osoi_vol     =>    waterstate_inst%h2osoi_vol_col                    , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
 
          watsat         =>    soilstate_inst%watsat_col                         , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water at saturation (porosity)  
-         rootfr         =>    soilstate_inst%rootfr_patch                       , & ! Input:  [real(r8) (:,:)  ]  fraction of roots in each soil layer  (nlevsoi) 
+         crootfr        =>    soilstate_inst%crootfr_patch                      , & ! Input:  [real(r8) (:,:)  ]  fraction of roots for carbon in each soil layer  (nlevsoi) 
          rootfr_col     =>    soilstate_inst%rootfr_col                         , & ! Input:  [real(r8) (:,:)  ]  fraction of roots in each soil layer  (nlevsoi) 
 
          somhr          =>    soilbiogeochem_carbonflux_inst%somhr_col          , & ! Input:  [real(r8) (:)    ]  (gC/m2/s) soil organic matter heterotrophic respiration
@@ -2354,7 +2354,7 @@ contains
                c = patch%column(p)
 
                if (wtcol(p) > 0._r8 .and. patch%itype(p) /= noveg) then
-                  rr_vr(c,j) = rr_vr(c,j) + rr(p)*rootfr(p,j)*wtcol(p)
+                  rr_vr(c,j) = rr_vr(c,j) + rr(p)*crootfr(p,j)*wtcol(p)
                end if
             end do
          end do

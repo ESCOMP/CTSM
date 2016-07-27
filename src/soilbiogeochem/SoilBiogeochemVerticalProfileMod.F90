@@ -15,9 +15,6 @@ module SoilBiogeochemVerticalProfileMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public:: SoilBiogeochemVerticalProfile
   !
-  logical , public :: exponential_rooting_profile = .true.
-  logical , public :: pftspecific_rootingprofile = .true.
-  real(r8), public :: rootprof_exp  = 3.  ! how steep profile is for root C inputs (1/ e-folding depth) (1/m)      
   real(r8), public :: surfprof_exp  = 10. ! how steep profile is for surface components (1/ e_folding depth) (1/m)      
   !-----------------------------------------------------------------------
 
@@ -92,7 +89,7 @@ contains
     associate(                                                                  & 
          altmax_lastyear_indx => canopystate_inst%altmax_lastyear_indx_col    , & ! Input:  [integer   (:)   ]  frost table depth (m)                              
 
-         rootfr               => soilstate_inst%rootfr_patch                  , & ! Input:  [real(r8)  (:,:) ]  fraction of roots in each soil layer  (nlevgrnd)
+         crootfr              => soilstate_inst%crootfr_patch                 , & ! Input:  [real(r8)  (:,:) ]  fraction of roots in each soil layer  (nlevgrnd)
          
          nfixation_prof       => soilbiogeochem_state_inst%nfixation_prof_col , & ! Input  :  [real(r8) (:,:) ]  (1/m) profile for N fixation additions          
          ndep_prof            => soilbiogeochem_state_inst%ndep_prof_col      , & ! Input  :  [real(r8) (:,:) ]  (1/m) profile for N fixation additions          
@@ -126,50 +123,18 @@ contains
          cinput_rootfr(begp:endp, :)     = 0._r8
          col_cinput_rootfr(begc:endc, :) = 0._r8
 
-         if ( exponential_rooting_profile ) then
-            if ( .not. pftspecific_rootingprofile ) then
-               ! define rooting profile from exponential parameters
+         do fp = 1,num_soilp
+            p = filter_soilp(fp)
+            c = patch%column(p)
+            if (patch%itype(p) /= noveg) then
                do j = 1, nlevdecomp
-                  do fp = 1,num_soilp
-                     p = filter_soilp(fp)
-                     cinput_rootfr(p,j) = exp(-rootprof_exp * zsoi(j)) / dzsoi_decomp(j)
-                  end do
+                  cinput_rootfr(p,j) = crootfr(p,j) / dzsoi_decomp(j)
                end do
-            else
-               ! use beta distribution parameter from Jackson et al., 1996
-               do fp = 1,num_soilp
-                  p = filter_soilp(fp)
-                  c = patch%column(p)
-                  if (patch%itype(p) /= noveg) then
-                     do j = 1, nlevdecomp
-                        cinput_rootfr(p,j) = ( pftcon%rootprof_beta(patch%itype(p)) ** (zisoi(j-1)*100._r8) - &
-                             pftcon%rootprof_beta(patch%itype(p)) ** (zisoi(j)*100._r8) ) &
-                             / dzsoi_decomp(j)
-                        ! NOTE(dml, 201509) if use_bedrock = 1, then use the rootfr from RootBiophysMod
-                        ! which also should modify code such that all root info is
-                        ! calculated in RootBiophysMod, but this will make it
-                        ! hard to be backwards compatible to CLM4.5 which
-                        ! unrealistically uses Jackson for BGC and Zeng for biogeophys
-                        if (use_bedrock) then 
-                           cinput_rootfr(p,j) = rootfr(p,j) / dzsoi_decomp(j)
-                        endif
-                     end do
 
-                  else
-                     cinput_rootfr(p,1) = 0.
-!scs: in future use this   cinput_rootfr(p,1) = 0.
-                  endif
-               end do
+            else
+               cinput_rootfr(p,1) = 0.
             endif
-         else
-            do j = 1, nlevdecomp
-               ! use standard CLM root fraction profiles
-               do fp = 1,num_soilp
-                  p = filter_soilp(fp)
-                  cinput_rootfr(p,j) = rootfr(p,j) / dzsoi_decomp(j)
-               end do
-            end do
-         endif
+         end do
 
          do fp = 1,num_soilp
             p = filter_soilp(fp)

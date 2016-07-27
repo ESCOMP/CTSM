@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_10_r187     erik 07/26/2016 CLM45/50 changes: seperate carbon and water root profile, turn off undercanopystability, 
+                                     really turn PHS on, LUNA predict sunlit fraction N fractionation
    clm4_5_9_r186    sacks 07/13/2016 Initialize biogeochem balance checks AFTER column area updates
    clm4_5_9_r185    sacks 07/07/2016 Revert glacial melt behavior to the old treatment for mountain glaciers
    clm4_5_9_r184     erik 07/06/2016 CLM50 changes: Atkin form of lmr changed, new parameters and files, turn PHS on by default, 

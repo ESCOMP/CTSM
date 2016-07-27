@@ -709,8 +709,8 @@ module CNFUNMod
          !   vegetation transpiration (mm H2O/s) (+ = to atm)
          t_soisno               => temperature_inst%t_soisno_col                                 , & ! Input:   [real(r8) (:,:)]
          !   soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-         rootfr                 => soilstate_inst%rootfr_patch                                     & ! Input:   [real(r8) (:,:)]
-         !   fraction of roots in each soil layer  (nlevgrnd)
+         crootfr                => soilstate_inst%crootfr_patch                                    & ! Input:   [real(r8) (:,:)]
+         !   fraction of roots for carbon in each soil layer  (nlevgrnd)
          )
   !--------------------------------------------------------------------
   !-----------
@@ -994,7 +994,7 @@ pft:do fp = 1,num_soilp        ! PFT Starts
 
       if (availc_pool(p) > 0._r8) then
          do j = 1, nlevdecomp
-            rootc_dens(p,j)     =  rootfr(p,j) * rootC(p)
+            rootc_dens(p,j)     =  crootfr(p,j) * rootC(p)
          end do
       end if
 
@@ -1063,7 +1063,7 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
                  fixer=0
                endif
                costNit(j,icostFix)     = fun_cost_fix(fixer,a_fix(ivt(p)),b_fix(ivt(p))&
-               ,c_fix(ivt(p)) ,big_cost,rootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
+               ,c_fix(ivt(p)) ,big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
             end do
             cost_fix(p,1:nlevdecomp)      = costNit(:,icostFix)
             
@@ -1084,9 +1084,9 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
             do j = 1,nlevdecomp
                rootc_dens_step            = rootc_dens(p,j) *  permyc(p,istp)
                costNit(j,icostActiveNO3)  = fun_cost_active(sminn_no3_layer_step(p,j,istp) &
-               ,big_cost,kc_active(p,istp),kn_active(p,istp) ,rootc_dens_step,rootfr(p,j),smallValue)
+               ,big_cost,kc_active(p,istp),kn_active(p,istp) ,rootc_dens_step,crootfr(p,j),smallValue)
                costNit(j,icostActiveNH4)  = fun_cost_active(sminn_nh4_layer_step(p,j,istp) &
-               ,big_cost,kc_active(p,istp),kn_active(p,istp) ,rootc_dens_step,rootfr(p,j),smallValue)
+               ,big_cost,kc_active(p,istp),kn_active(p,istp) ,rootc_dens_step,crootfr(p,j),smallValue)
             end do
             cost_active_no3(p,1:nlevdecomp)  = costNit(:,icostActiveNO3) 
             cost_active_nh4(p,1:nlevdecomp)  = costNit(:,icostActiveNH4)
@@ -1096,9 +1096,9 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
             do j = 1,nlevdecomp
                rootc_dens_step             = rootc_dens(p,j)  *  permyc(p,istp)
                costNit(j,icostnonmyc_no3)   = fun_cost_nonmyc(sminn_no3_layer_step(p,j,istp) &
-               ,big_cost,kc_nonmyc(ivt(p)),kn_nonmyc(ivt(p)) ,rootc_dens_step,rootfr(p,j),smallValue)
+               ,big_cost,kc_nonmyc(ivt(p)),kn_nonmyc(ivt(p)) ,rootc_dens_step,crootfr(p,j),smallValue)
                costNit(j,icostnonmyc_nh4)   = fun_cost_nonmyc(sminn_nh4_layer_step(p,j,istp) &
-               ,big_cost,kc_nonmyc(ivt(p)),kn_nonmyc(ivt(p)) ,rootc_dens_step,rootfr(p,j),smallValue)
+               ,big_cost,kc_nonmyc(ivt(p)),kn_nonmyc(ivt(p)) ,rootc_dens_step,crootfr(p,j),smallValue)
             end do
             cost_nonmyc_no3(p,1:nlevdecomp)   = costNit(:,icostnonmyc_no3)
             cost_nonmyc_nh4(p,1:nlevdecomp)   = costNit(:,icostnonmyc_nh4)
@@ -1118,6 +1118,8 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                  fixerfrac = 1.0_r8 - FUN_fracfixers(ivt(p))
                endif 
                npp_to_spend = npp_remaining(p,istp)  * fixerfrac !put parameter here.
+
+
 
                n_from_active_no3(1:nlevdecomp) = 0._r8
                n_from_active_nh4(1:nlevdecomp) = 0._r8
@@ -1207,6 +1209,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   
                !---------- add retrans fluxes in to total budgets. --------
                ! remove C from available pool, both directly spent and accounted for by N uptake
+
                npp_to_spend  = npp_to_spend - total_c_spent_retrans - total_c_accounted_retrans
                npp_retrans_acc(p,istp) = npp_retrans_acc(p,istp) + total_c_spent_retrans 
                ! add to to C spent pool                              
@@ -1249,6 +1252,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                       excess_carbon =  npp_to_spend/(1.0_r8+grperc(ivt(p)))
                  endif
                  excess_carbon_acc             = excess_carbon_acc + excess_carbon
+
                  ! spend less C than you have to to meet the target, thus allowing C:N ratios to rise. 
                  npp_to_spend         = npp_to_spend - excess_carbon*(1.0_r8+grperc(ivt(p)))
             
@@ -1512,6 +1516,8 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       npp_Nuptake(p)            = soilc_change(p)
       ! how much carbon goes to growth of tissues?  
       npp_growth(p)             = (Nuptake(p)- free_retransn_to_npool(p))*plantCN(p)+(excess_carbon_acc/dt) !does not include gresp, since this is calculated from growth
+
+
      
       !-----------------------Diagnostic Fluxes------------------------------!
       if(availc(p).gt.0.0_r8)then !what happens in the night? 
@@ -1551,7 +1557,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   end associate
   end subroutine CNFUN
 !=========================================================================================
-  real(r8) function fun_cost_fix(fixer,a_fix,b_fix,c_fix,big_cost,rootfr,s_fix, tc_soisno)
+  real(r8) function fun_cost_fix(fixer,a_fix,b_fix,c_fix,big_cost,crootfr,s_fix, tc_soisno)
 
 ! Description:
 !   Calculate the cost of fixing N by nodules.
@@ -1572,11 +1578,11 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   real(r8), intent(in) :: b_fix     ! As in Houlton et al. (Nature) 2008
   real(r8), intent(in) :: c_fix     ! As in Houlton et al. (Nature) 2008
   real(r8), intent(in) :: big_cost  ! an arbitrary large cost (gC/gN)
-  real(r8), intent(in) :: rootfr    ! fraction of roots that are in this layer
+  real(r8), intent(in) :: crootfr   ! fraction of roots for carbon that are in this layer
   real(r8), intent(in) :: s_fix     ! Inverts Houlton et al. 2008 and constrains between 7.5 and 12.5
   real(r8), intent(in) :: tc_soisno ! soil temperature (degrees Celsius)
 
-  if (fixer == 1.and.rootfr > 1.e-6_r8) then
+  if (fixer == 1 .and. crootfr > 1.e-6_r8) then
      fun_cost_fix  = s_fix * (exp(a_fix + b_fix * tc_soisno * (1._r8 - 0.5_r8 * tc_soisno / c_fix)) - 2._r8)
      
      
@@ -1601,7 +1607,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   
   end function fun_cost_fix
 !=========================================================================================
-  real(r8) function fun_cost_active(sminn_layer,big_cost,kc_active,kn_active,rootc_dens,rootfr,smallValue)         
+  real(r8) function fun_cost_active(sminn_layer,big_cost,kc_active,kn_active,rootc_dens,crootfr,smallValue)         
 
 ! Description:
 !    Calculate the cost of active uptake of N frm the soil.
@@ -1617,7 +1623,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   real(r8), intent(in) :: kc_active     !  Constant for cost of active uptake (gC/m2).
   real(r8), intent(in) :: kn_active     !  Constant for cost of active uptake (gC/m2).
   real(r8), intent(in) :: rootc_dens    !  Root carbon density in layer (gC/m3).
-  real(r8), intent(in) :: rootfr        !  Fraction of roots that are in this layer.
+  real(r8), intent(in) :: crootfr        !  Fraction of roots that are in this layer.
   real(r8), intent(in) :: smallValue    !  A small number.
 
   if (rootc_dens > 1.e-6_r8.and.sminn_layer > smallValue) then
@@ -1629,7 +1635,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
  
   end function fun_cost_active
 !=========================================================================================
-  real(r8) function fun_cost_nonmyc(sminn_layer,big_cost,kc_nonmyc,kn_nonmyc,rootc_dens,rootfr,smallValue)         
+  real(r8) function fun_cost_nonmyc(sminn_layer,big_cost,kc_nonmyc,kn_nonmyc,rootc_dens,crootfr,smallValue)         
 
 ! Description:
 !    Calculate the cost of nonmyc uptake of N frm the soil.
@@ -1645,7 +1651,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   real(r8), intent(in) :: kc_nonmyc     !  Constant for cost of nonmyc uptake (gC/m2).
   real(r8), intent(in) :: kn_nonmyc     !  Constant for cost of nonmyc uptake (gC/m2).
   real(r8), intent(in) :: rootc_dens   !  Root carbon density in layer (gC/m3).
-  real(r8), intent(in) :: rootfr        !  Fraction of roots that are in this layer.
+  real(r8), intent(in) :: crootfr        !  Fraction of roots that are in this layer.
   real(r8), intent(in) :: smallValue    !  A small number.
 
   if (rootc_dens > 1.e-6_r8.and.sminn_layer > smallValue) then
@@ -1772,6 +1778,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
          ! really be solved simultaneously)
          ! then remove the error from the expenditure. This changes the notional cost, 
          ! but only by a bit and prevents cpool errors. 
+
          total_c_spent_retrans  = total_c_spent_retrans + npp_to_spend_temp 
       endif 
       ! leaf CN is too high

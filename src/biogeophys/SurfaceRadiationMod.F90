@@ -381,7 +381,6 @@ contains
      real(r8)                  :: shalai                          ! intermediate for calculating canopy fsha
      integer                   :: CL                              ! Canopy Layer index
      integer                   :: FT                              ! clm patch index
-     real                      :: gaib, rib                       ! for debugging
      type (ed_patch_type),  pointer :: currentPatch               ! Import fapar matrix for each patch from ED data structure.
      !------------------------------------------------------------------------------
 

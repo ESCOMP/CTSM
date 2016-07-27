@@ -55,7 +55,8 @@ module CanopyFluxesMod
   implicit none
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CanopyFluxes
+  public :: CanopyFluxesReadNML     ! Read in namelist settings
+  public :: CanopyFluxes            ! Calculate canopy fluxes
   !
   ! !PUBLIC DATA MEMBERS:
   ! true => btran is based only on unfrozen soil levels
@@ -67,11 +68,68 @@ module CanopyFluxesMod
   !
   ! !PRIVATE DATA MEMBERS:
   ! Snow in vegetation canopy namelist options.
-  logical, private :: snowveg_on     = .false.  ! snowveg_flag = 'ON'
-  logical, private :: snowveg_onrad  = .true.   ! snowveg_flag = 'ON_RAD'
+  logical, private :: snowveg_on     = .false.                ! snowveg_flag = 'ON'
+  logical, private :: snowveg_onrad  = .true.                 ! snowveg_flag = 'ON_RAD'
+  logical, private :: use_undercanopy_stability = .true.      ! use undercanopy stability term or not
   !------------------------------------------------------------------------------
 
 contains
+
+  !------------------------------------------------------------------------
+  subroutine CanopyFluxesReadNML(NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for Canopy Fluxes
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use clm_varctl     , only : iulog
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(IN) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'CanopyFluxeseadNML'
+    character(len=*), parameter :: nmlname = 'canopyfluxes_inparm'
+    !-----------------------------------------------------------------------
+
+    namelist /canopyfluxes_inparm/ use_undercanopy_stability
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=canopyfluxes_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast (use_undercanopy_stability, mpicom)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=canopyfluxes_inparm)
+       write(iulog,*) ' '
+    end if
+
+  end subroutine CanopyFluxesReadNML
 
   !------------------------------------------------------------------------------
   subroutine CanopyFluxes(bounds,  num_exposedvegp, filter_exposedvegp, &
@@ -695,7 +753,7 @@ contains
 
             !! modify csoilc value (0.004) if the under-canopy is in stable condition
 
-            if ( (taf(p) - t_grnd(c) ) > 0._r8) then
+            if (use_undercanopy_stability .and. (taf(p) - t_grnd(c) ) > 0._r8) then
                ! decrease the value of csoilc by dividing it with (1+gamma*min(S, 10.0))
                ! ria ("gmanna" in Sakaguchi&Zeng, 2008) is a constant (=0.5)
                ricsoilc = csoilc / (1.00_r8 + ria*min( ri, 10.0_r8) )

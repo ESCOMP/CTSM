@@ -72,7 +72,7 @@ module  PhotosynthesisMod
   ! !PUBLIC VARIABLES:
 
   type :: photo_params_type
-     real(r8), allocatable, private :: krmax              (:)
+     real(r8), allocatable, public :: krmax              (:)
      real(r8), allocatable, private :: kmax               (:,:)
      real(r8), allocatable, private :: psi50              (:,:)
      real(r8), allocatable, private :: ck                 (:,:)
@@ -943,7 +943,6 @@ contains
     real(r8) :: gscan             ! canopy sum of leaf conductance
     real(r8) :: laican            ! canopy sum of lai_z
     real(r8) :: rh_can
-
     real(r8) , pointer :: lai_z       (:,:)
     real(r8) , pointer :: par_z       (:,:)
     real(r8) , pointer :: vcmaxcint   (:)
@@ -992,6 +991,7 @@ contains
          flnr       => pftcon%flnr                           , & ! Input:  fraction of leaf N in the Rubisco enzyme (gN Rubisco / gN leaf)
          fnitr      => pftcon%fnitr                          , & ! Input:  foliage nitrogen limitation factor (-)
          slatop     => pftcon%slatop                         , & ! Input:  specific leaf area at top of canopy, projected area basis [m^2/gC]
+         dsladlai   => pftcon%dsladlai                       , & ! Input:  change in sla per unit lai  
          i_vcad     => pftcon%i_vcad                         , & ! Input:  [real(r8) (:)   ]  
          s_vcad     => pftcon%s_vcad                         , & ! Input:  [real(r8) (:)   ]  
          i_flnr     => pftcon%i_flnr                         , & ! Input:  [real(r8) (:)   ]  
@@ -1169,7 +1169,8 @@ contains
 
          if (lnc_opt .eqv. .false.) then     
             ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
-            lnc(p) = 1._r8 / (slatop(patch%itype(p)) * leafcn(patch%itype(p)))
+            
+           lnc(p) = 1._r8 / (slatop(patch%itype(p)) * leafcn(patch%itype(p)))
          end if   
 
          ! Using the actual nitrogen allocated to the leaf after
@@ -1365,7 +1366,14 @@ contains
                if(use_luna.and.c3flag(p).and.crop(patch%itype(p))== 0)then
                   vcmax25 = photosyns_inst%vcmx25_z_patch(p,iv)
                   jmax25 = photosyns_inst%jmx25_z_patch(p,iv)
-                  tpu25 = 0.167_r8 * vcmax25        
+                  tpu25 = 0.167_r8 * vcmax25 
+                  !Implement scaling of Vcmax25 from sunlit average to shaded canopy average value. RF & GBB. 1 July 2016
+                  if(phase == 'sha'.and.surfalb_inst%vcmaxcintsun_patch(p).gt.0._r8.and.nlevcan==1) then
+                     vcmax25 = vcmax25 * surfalb_inst%vcmaxcintsha_patch(p)/surfalb_inst%vcmaxcintsun_patch(p)
+                     jmax25  = jmax25  * surfalb_inst%vcmaxcintsha_patch(p)/surfalb_inst%vcmaxcintsun_patch(p) 
+                     tpu25   = tpu25   * surfalb_inst%vcmaxcintsha_patch(p)/surfalb_inst%vcmaxcintsun_patch(p) 
+                  end if
+                         
                else
                   vcmax25 = vcmax25top * nscaler
                   jmax25 = jmax25top * nscaler
@@ -2263,7 +2271,6 @@ contains
     ! Leaf photosynthesis parameters
     real(r8) :: jmax_z(bounds%begp:bounds%endp,2,nlevcan) ! maximum electron transport rate (umol electrons/m**2/s)
     real(r8) :: bbbopt(bounds%begp:bounds%endp)           ! Ball-Berry minimum leaf conductance, unstressed (umol H2O/m**2/s)
-    real(r8) :: mbbopt(bounds%begp:bounds%endp)           ! Ball-Berry slope of conductance-photosynthesis relationship, unstressed
     real(r8) :: kn(bounds%begp:bounds%endp)               ! leaf nitrogen decay coefficient
     real(r8) :: vcmax25top     ! canopy top: maximum rate of carboxylation at 25C (umol CO2/m**2/s)
     real(r8) :: jmax25top      ! canopy top: maximum electron transport rate at 25C (umol electrons/m**2/s)
@@ -2415,7 +2422,6 @@ contains
     real(r8) , pointer :: o3coefg_sha     (:)   ! o3 coefficient used in rs calculation, shaded
     real(r8) , pointer :: gs_mol_sha      (:,:) ! shaded leaf stomatal conductance (umol H2O/m**2/s)
     real(r8) , pointer :: vegwp           (:,:) ! vegetation water matric potential (mm)
-
     real(r8) :: sum_nscaler
     real(r8) :: total_lai                
     integer  :: nptreemax                
@@ -2448,10 +2454,12 @@ contains
          flnr       => pftcon%flnr                           , & ! Input:  fraction of leaf N in the Rubisco enzyme (gN Rubisco / gN leaf)
          fnitr      => pftcon%fnitr                          , & ! Input:  foliage nitrogen limitation factor (-)
          slatop     => pftcon%slatop                         , & ! Input:  specific leaf area at top of canopy, projected area basis [m^2/gC]
+         dsladlai   => pftcon%dsladlai                       , & ! Input:  change in sla per unit lai
          i_vcad     => pftcon%i_vcad                         , & ! Input:  [real(r8) (:)   ]  
          s_vcad     => pftcon%s_vcad                         , & ! Input:  [real(r8) (:)   ]  
          i_flnr     => pftcon%i_flnr                         , & ! Input:  [real(r8) (:)   ]  
          s_flnr     => pftcon%s_flnr                         , & ! Input:  [real(r8) (:)   ]  
+         mbbopt     => pftcon%mbbopt                         , & 
          forc_pbot  => atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)
          ivt        => patch%itype                           , & ! Input:  [integer  (:)   ]  patch vegetation type
 
@@ -2581,19 +2589,15 @@ contains
             qe(p) = 0._r8
             theta_cj(p) = 0.98_r8
             bbbopt(p) = 10000._r8
-            mbbopt(p) = 9._r8
          else
             qe(p) = 0.05_r8
             theta_cj(p) = 0.80_r8
             bbbopt(p) = 40000._r8
-            mbbopt(p) = 4._r8
          end if
-
+ 
          ! Soil water stress applied to Ball-Berry parameters later in ci_func_PHS
          bbb(p) = bbbopt(p) 
-
-         mbb(p) = mbbopt(p)
-
+         mbb(p) = mbbopt(patch%itype(p))
          ! kc, ko, cp, from: Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
          !
          !       kc25 = 404.9 umol/mol
@@ -2840,6 +2844,11 @@ contains
                   jmax25_sha = photosyns_inst%jmx25_z_patch(p,iv)
                   tpu25_sun = 0.167_r8 * vcmax25_sun        
                   tpu25_sha = 0.167_r8 * vcmax25_sha        
+                  if(surfalb_inst%vcmaxcintsun_patch(p).gt.0._r8.and.nlevcan==1) then
+                    vcmax25_sha = vcmax25_sun * surfalb_inst%vcmaxcintsha_patch(p)/surfalb_inst%vcmaxcintsun_patch(p)
+                    jmax25_sha  = jmax25_sun  * surfalb_inst%vcmaxcintsha_patch(p)/surfalb_inst%vcmaxcintsun_patch(p) 
+                    tpu25_sha   = tpu25_sun   * surfalb_inst%vcmaxcintsha_patch(p)/surfalb_inst%vcmaxcintsun_patch(p) 
+                  end if
                else
                   vcmax25_sun = vcmax25top * nscaler_sun
                   jmax25_sun = jmax25top * nscaler_sun

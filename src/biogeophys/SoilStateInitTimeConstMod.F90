@@ -211,7 +211,9 @@ contains
 
     if (.not. use_ed) then
         call init_vegrootfr(bounds, nlevsoi, nlevgrnd, &
-             soilstate_inst%rootfr_patch(begp:endp,1:nlevgrnd))
+             soilstate_inst%rootfr_patch(begp:endp,1:nlevgrnd),'water')
+        call init_vegrootfr(bounds, nlevsoi, nlevgrnd, &
+             soilstate_inst%crootfr_patch(begp:endp,1:nlevgrnd),'carbon')
      end if
 
     ! --------------------------------------------------------------------

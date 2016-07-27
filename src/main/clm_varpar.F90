@@ -49,6 +49,7 @@ module clm_varpar
   integer, parameter :: numveg      =  16     ! number of veg types (without specific crop)
   integer, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
   integer            :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
+  integer, parameter :: nvariants   =   2     ! number of variants of PFT constants
 
   integer :: numpft      = mxpft   ! actual # of pfts (without bare)
   integer :: numcft      =  64     ! actual # of crops (includes unused CFTs that are merged into other CFTs)

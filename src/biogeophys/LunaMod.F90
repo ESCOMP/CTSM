@@ -594,6 +594,7 @@ subroutine Acc24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns_i
           tlaii = lai_sun_z(p,z) + lai_sha_z(p,z)          
           if(tlaii > 0._r8)then
               TRad = (par_sun_z(p,z)*lai_sun_z(p,z)+par_sha_z(p,z)*lai_sha_z(p,z))/tlaii
+              TRad = par_sun_z(p,z) !RF & GBB. Make LUNA predict sunlit fraction N fractionation, scale in PhotosynthesisMod. 
               par24d_z(p,z)=   par24d_z(p,z)+ dtime * TRad 
              if(TRad > par24x_z(p,z))then
                 par24x_z(p,z) = TRad

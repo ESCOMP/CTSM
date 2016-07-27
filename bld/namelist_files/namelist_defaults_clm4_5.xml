@@ -118,8 +118,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_bedrock phys="clm4_5">.false.</use_bedrock>
 
 <!-- Rooting profile namelist defaults -->
-<rooting_profile_method phys="clm5_0">1</rooting_profile_method>
-<rooting_profile_method phys="clm4_5">0</rooting_profile_method>
+<rooting_profile_method_water  phys="clm5_0">1</rooting_profile_method_water>
+<rooting_profile_method_water  phys="clm4_5">0</rooting_profile_method_water>
+
+<rooting_profile_method_carbon phys="clm5_0">1</rooting_profile_method_carbon>
+<rooting_profile_method_carbon phys="clm4_5">0</rooting_profile_method_carbon>
 
 <!-- Soil evaporative resistance namelist defaults -->
 <soil_resis_method phys="clm5_0">1</soil_resis_method>
@@ -152,6 +155,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <non_boreal_peatfire_c    fire_method="li2016crufrc" >3.6d-4</non_boreal_peatfire_c>
 <cropfire_a1              fire_method="li2016crufrc" >0.36d00</cropfire_a1>
 <occur_hi_gdp_tree        fire_method="li2016crufrc" >0.33d00</occur_hi_gdp_tree>
+
+<!-- Canopy fluxes namelist defaults -->
+<use_undercanopy_stability phys="clm5_0">.false.</use_undercanopy_stability>
+<use_undercanopy_stability phys="clm4_5">.true.</use_undercanopy_stability>
 
 <!-- Canopy hydrology namelist defaults -->
 <use_clm5_fpi phys="clm5_0">.true.</use_clm5_fpi>
@@ -227,8 +234,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.c160701.nc</paramfile>
-<paramfile phys="clm4_5" use_ed=".false.">lnd/clm2/paramdata/clm_params.c160701.nc</paramfile>
+<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.c160713.nc</paramfile>
+<paramfile phys="clm4_5" use_ed=".false.">lnd/clm2/paramdata/clm_params.c160713.nc</paramfile>
 <paramfile               use_ed=".true." >lnd/clm2/paramdata/clm_params.ED.c151023.nc</paramfile>
 
 <!-- ========================================================================================  -->

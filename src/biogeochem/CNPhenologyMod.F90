@@ -2274,10 +2274,10 @@ contains
             
             if ( use_fun ) then
                if(leafc_to_litter(p)*dt.gt.leafc(p))then
-                   leafc_to_litter(p) = leafc(p)/dt
+                   leafc_to_litter(p) = leafc(p)/dt + cpool_to_leafc(p)
                endif
                if(frootc_to_litter(p)*dt.gt.frootc(p))then
-                   frootc_to_litter(p) = frootc(p)/dt
+                   frootc_to_litter(p) = frootc(p)/dt + cpool_to_frootc(p)
                endif
             end if
             

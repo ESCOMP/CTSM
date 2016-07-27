@@ -76,8 +76,8 @@ sub comparefiles {
    my $compdir   = shift;
    my $nm = ref($self)."\:\:comparefiles";
 
-   $type      =~ s/ /+/g;
-   $comp_mode =~ s/ /+/g;
+   $type      =~ s#[ '&/]#+#g;
+   $comp_mode =~ s#[ '&/]#+#g;
    my $confdir  = $self->{'dir'};
    my $diffref   = $self->{'diffref'};
    if ( ! defined($type)    ) {
@@ -126,8 +126,8 @@ sub copyfiles {
    my $mode    = shift;
    my $nm = ref($self)."\:\:copyfiles";
 
-   $type =~ s/ /+/g;
-   $mode =~ s/ /+/g;
+   $type =~ s#[ '&/]#+#g;
+   $mode =~ s#[ '&/]#+#g;
    my $diffref   = $self->{'diffref'};
    my $filesref = $self->{'files'};
    my $confdir  = $self->{'dir'};
@@ -151,8 +151,8 @@ sub shownmldiff {
    my $comp_mode = shift;
    my $nm = ref($self)."\:\:shownmldiff";
 
-   $type      =~ s/ /+/g;
-   $comp_mode =~ s/ /+/g;
+   $type      =~ s#[ '&/]#+#g;
+   $comp_mode =~ s#[ '&/]#+#g;
    my $filesref = $self->{'files'};
    my $confdir  = $self->{'dir'};
    foreach my $file ( @$filesref ) {
@@ -184,8 +184,8 @@ sub dodiffonfile {
   my $mode    = shift;
   my $nm = ref($self)."\:\:dodiffonfile";
 
-  $type =~ s/ /+/g;
-  $mode =~ s/ /+/g;
+  $type =~ s#[ '&/]#+#g;
+  $mode =~ s#[ '&/]#+#g;
   my $diffref   = $self->{'diffref'};
   if ( ! defined($type) ) {
      $type = "default";
@@ -204,8 +204,8 @@ sub doNOTdodiffonfile {
   my $mode    = shift;
   my $nm = ref($self)."\:\:doNOTdodiffonfile";
 
-  $type =~ s/ /+/g;
-  $mode =~ s/ /+/g;
+  $type =~ s#[ '&/]#+#g;
+  $mode =~ s#[ '&/]#+#g;
   my $diffref   = $self->{'diffref'};
   if ( ! defined($type) ) {
      $type = "default";
