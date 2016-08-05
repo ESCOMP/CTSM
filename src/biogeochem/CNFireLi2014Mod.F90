@@ -18,7 +18,7 @@ module CNFireLi2014Mod
   use shr_const_mod                      , only : SHR_CONST_PI,SHR_CONST_TKFRZ
   use shr_infnan_mod                     , only : shr_infnan_isnan
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varctl                         , only : iulog
+  use clm_varctl                         , only : iulog, spinup_state
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
   use clm_varcon                         , only : dzsoi_decomp
   use pftconMod                          , only : noveg, pftcon
@@ -632,6 +632,7 @@ contains
    integer :: g,c,p,j,l,pi,kyr, kmo, kda, mcsec   ! indices
    integer :: fp,fc                ! filter indices
    real(r8):: f                    ! rate for fire effects (1/s)
+   real(r8):: m                    ! acceleration factor for fuel carbon
    real(r8):: dt                   ! time step variable (s)
    real(r8):: dayspyr              ! days per year
    logical :: do_transient_pfts    ! whether transient pfts are active in this run
@@ -873,13 +874,18 @@ contains
         ! apply this rate to the patch state variables to get flux rates
         ! biomass burning
         ! carbon fluxes
+        m = 1._r8
+        if (spinup_state == 2) then
+           m = 10._r8
+        end if
+
         m_leafc_to_fire(p)               =  leafc(p)              * f * cc_leaf(patch%itype(p))
         m_leafc_storage_to_fire(p)       =  leafc_storage(p)      * f * cc_other(patch%itype(p))
         m_leafc_xfer_to_fire(p)          =  leafc_xfer(p)         * f * cc_other(patch%itype(p))
         m_livestemc_to_fire(p)           =  livestemc(p)          * f * cc_lstem(patch%itype(p))
         m_livestemc_storage_to_fire(p)   =  livestemc_storage(p)  * f * cc_other(patch%itype(p))
         m_livestemc_xfer_to_fire(p)      =  livestemc_xfer(p)     * f * cc_other(patch%itype(p))
-        m_deadstemc_to_fire(p)           =  deadstemc(p)          * f * cc_dstem(patch%itype(p))
+        m_deadstemc_to_fire(p)           =  deadstemc(p)          * f * cc_dstem(patch%itype(p)) * m
         m_deadstemc_storage_to_fire(p)   =  deadstemc_storage(p)  * f * cc_other(patch%itype(p))
         m_deadstemc_xfer_to_fire(p)      =  deadstemc_xfer(p)     * f * cc_other(patch%itype(p))
         m_frootc_to_fire(p)              =  frootc(p)             * f * 0._r8
@@ -902,7 +908,7 @@ contains
         m_livestemn_to_fire(p)           =  livestemn(p)          * f * cc_lstem(patch%itype(p))
         m_livestemn_storage_to_fire(p)   =  livestemn_storage(p)  * f * cc_other(patch%itype(p))
         m_livestemn_xfer_to_fire(p)      =  livestemn_xfer(p)     * f * cc_other(patch%itype(p))
-        m_deadstemn_to_fire(p)           =  deadstemn(p)          * f * cc_dstem(patch%itype(p))
+        m_deadstemn_to_fire(p)           =  deadstemn(p)          * f * cc_dstem(patch%itype(p)) * m
         m_deadstemn_storage_to_fire(p)   =  deadstemn_storage(p)  * f * cc_other(patch%itype(p))
         m_deadstemn_xfer_to_fire(p)      =  deadstemn_xfer(p)     * f * cc_other(patch%itype(p))
         m_frootn_to_fire(p)              =  frootn(p)             * f * 0._r8
@@ -939,7 +945,7 @@ contains
         m_livestemc_to_deadstemc_fire(p)            =  livestemc(p) * f * &
              (1._r8 - cc_lstem(patch%itype(p))) * &
              (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
-        m_deadstemc_to_litter_fire(p)               =  deadstemc(p) * f * &
+        m_deadstemc_to_litter_fire(p)               =  deadstemc(p) * f * m * &
              (1._r8 - cc_dstem(patch%itype(p))) * &
              fm_droot(patch%itype(p))    
         m_deadstemc_storage_to_litter_fire(p)       =  deadstemc_storage(p) * f * &
@@ -951,22 +957,28 @@ contains
         m_frootc_to_litter_fire(p)                  =  frootc(p)             * f * &
              fm_root(patch%itype(p))
         m_frootc_storage_to_litter_fire(p)          =  frootc_storage(p)     * f * &
+             (1._r8- cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
         m_frootc_xfer_to_litter_fire(p)             =  frootc_xfer(p)        * f * &
+             (1._r8- cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
         m_livecrootc_to_litter_fire(p)              =  livecrootc(p)         * f * &
              fm_droot(patch%itype(p))
         m_livecrootc_storage_to_litter_fire(p)      =  livecrootc_storage(p) * f * &
+             (1._r8- cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p)) 
         m_livecrootc_xfer_to_litter_fire(p)         =  livecrootc_xfer(p)    * f * &
+             (1._r8- cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p)) 
         m_livecrootc_to_deadcrootc_fire(p)          =  livecrootc(p)         * f * &
              (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
-        m_deadcrootc_to_litter_fire(p)              =  deadcrootc(p)         * f * &
+        m_deadcrootc_to_litter_fire(p)              =  deadcrootc(p)         * f * m * &
              fm_droot(patch%itype(p))
         m_deadcrootc_storage_to_litter_fire(p)      =  deadcrootc_storage(p) * f * &
+             (1._r8- cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
         m_deadcrootc_xfer_to_litter_fire(p)         =  deadcrootc_xfer(p)    * f * &
+             (1._r8- cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))      
         m_gresp_storage_to_litter_fire(p)           =  gresp_storage(p) * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
@@ -998,9 +1010,9 @@ contains
         m_livestemn_to_deadstemn_fire(p)           =  livestemn(p) * f * &
              (1._r8 - cc_lstem(patch%itype(p))) * &
              (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
-        m_deadstemn_to_litter_fire(p)              =  deadstemn(p) * f * &
+        m_deadstemn_to_litter_fire(p)              =  deadstemn(p) * f * m * &
              (1._r8 - cc_dstem(patch%itype(p))) * &
-             fm_droot(patch%itype(p))
+             fm_droot(patch%itype(p))    
         m_deadstemn_storage_to_litter_fire(p)      =  deadstemn_storage(p) * f * &
              (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
@@ -1010,22 +1022,28 @@ contains
         m_frootn_to_litter_fire(p)                 =  frootn(p)             * f * &
              fm_root(patch%itype(p))
         m_frootn_storage_to_litter_fire(p)         =  frootn_storage(p)     * f * &
+             (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
         m_frootn_xfer_to_litter_fire(p)            =  frootn_xfer(p)        * f * &
+             (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
         m_livecrootn_to_litter_fire(p)             =  livecrootn(p)         * f * &
              fm_droot(patch%itype(p))
         m_livecrootn_storage_to_litter_fire(p)     =  livecrootn_storage(p) * f * &
+             (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
         m_livecrootn_xfer_to_litter_fire(p)        =  livecrootn_xfer(p)    * f * &
+             (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p)) 
         m_livecrootn_to_deadcrootn_fire(p)         =  livecrootn(p)         * f * &
              (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
-        m_deadcrootn_to_litter_fire(p)             =  deadcrootn(p)         * f * &
+        m_deadcrootn_to_litter_fire(p)             =  deadcrootn(p)         * f * m * &
              fm_droot(patch%itype(p))
         m_deadcrootn_storage_to_litter_fire(p)     =  deadcrootn_storage(p) * f * &
+             (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
         m_deadcrootn_xfer_to_litter_fire(p)        =  deadcrootn_xfer(p)    * f * &
+             (1._r8 - cc_other(patch%itype(p))) * &
              fm_other(patch%itype(p))
         m_retransn_to_litter_fire(p)               =  retransn(p)           * f * &
              (1._r8 - cc_other(patch%itype(p))) * &

@@ -1,4 +1,171 @@
 ===============================================================
+Tag name:  clm4_5_11_r188
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Aug  5 13:53:01 MDT 2016
+One-line Summary: A set of small answer changing issues for both clm45 and clm50
+
+Purpose of changes
+------------------
+
+Changes to CLM45 and CLM50:
+
+Some adjustments to methane output (for both CLM45BGC) and CLM50BGC from Xiyan Xu. This calculates 
+finundated from before snow, and rather than multiplying m_tiller by LAI it multiples by a constant four.
+
+Update Li2014 FireFluxes subroutine for spinupstate=2 capability (so can be shared). Changes to
+roundoff, while also allowing spinupstate==2 and fixing bug 2243 to deal with deadstem for CLM45 
+from Charlie Koven.
+
+Carbon and Nitrogen state missing accounting of of live to dead from fire in StateUpdate3.
+
+Nitrogen uptake code error from Xiaojuan Yang and Charlie Koven. This is dependent on use_nitrif_denitrif=T
+so will only affect CLM45BGC/CLM50BGC, but not SP or CN alone simualtions. This is for the 2nd pass at 
+Nitrogen uptake.
+
+Issue with carbon Isotopes. Brett Raczka and Henrique Duarte at Univ. Utah have identified a bug in the 
+CLM4.5 C isotope code, in which isotope ratios are not stabilizing when fire turns on.  Turning off the 
+fire code produces reasonable isotope ratios.  We've identified that the problem is that the variables 
+for the fire fluxes associated with the new fire code were never copied over into CNCIsoFluxMod.F90. Fix
+from Charlie Koven, and Brett verified it worked in his version. Also update the C14 half-life value. Used
+to be the Libbey value, now use the updated one.
+
+Changes to CLM50 only:
+
+Remove discontiniues in new CLM50 snow density. Also if wind is zero (< 0.1m/s), wind_dependent_snowdensity
+is increase is also zero. Some changes to fire injection height for fire-emissions from Simone Tilmes, and a unit-conversion
+error fix from Fang Li.
+
+Summary:
+
+ciso errors bug 2116 (isotopes both clm45/clm5)
+Bug 2224 N uptake code clm45/clm50BGC
+Transfer of live to dead bug 2264 clm45/clm5)
+2326 for shade part clm5
+snow density discontinuities (2328) clm5
+Methane change on mechanges branch clm45/clm5 2338
+2340 Fire emission change from Simone clm5
+Units conversion error in CNfire-emissions bug 2342 clm5
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+
+2116  C isotope (13C and 14C) errors in fire code
+2141  Precision of constants in SoilTemperature.F90 is not double
+2224  plant N uptake second pass error 
+2243  Deadstem not taken into account in fire-fluxes for clm4_5 (koven) (FOR CLM45 SIDE)
+2264  Fire is missing accounting of C/N for transfer of live to dead
+2326  Bad multiplication of btran for soybean or nbrdlf_dcd_tmp_shrub with CNDV in CanopyFluxes
+2328  Discontinuities in new CLM50 snow density formulation
+2338  Use the pre-snow values to calculate finundated, and use constant for m_tiller rather than elai
+2340  Adjustments to fire-emission from Simone Tilmes
+2342  Units conversion error in CNfire-emissions
+
+Known bugs introduced in this tag (include bugzilla ID): 
+
+2332  fire_emiss tests don't work (cime issue)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users: None
+
+Changes to CLM's user interface: None
+
+Changes made to namelist defaults: None
+
+Changes to the datasets: None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers:  None
+
+Changes to tests or testing: None
+
+Code reviewed by: self,fangli,slater,stilmes,koven
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_10_r187
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:   Yes! for clm4_5 and clm5_0
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm4_5 BGC and CN compsets and Carbon isotopes 
+                                clm5_0 all (BGC, CN, SP)
+                                any fire-emission
+    - what platforms/compilers: All
+    - nature of change: similar climate
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): cime
+   Add changes to cime branch tag to be able to run on hobart
+
+   cime to clm4_5_11_r188_cime4.5.14
+
+List all files eliminated: None
+
+List all files added and what they do: Add unit tests for new snow bulk density
+
+   M components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology_newSnowBulkDensity.pf
+
+List all existing files that have been modified, and describe the changes:
+
+   M components/clm/src/biogeochem/CNNStateUpdate3Mod.F90 - Subtract live to dead from fire Nitrogen for 
+        live/dead and stem/root (both CLM45CN/BGC and CLM50CN/BGC)
+   M components/clm/src/biogeochem/CNC14DecayMod.F90 ------ Adjust C14 half-life from Libby 5568 to 5730 a
+       more recent value used (this affects both clm45 and clm50 when use_c14 is on)
+   M components/clm/src/biogeochem/ch4Mod.F90 ------------- Calculate finundated from before snowfall, and don't multiply
+        m_tiller by LAI, but by 4.0.
+   M components/clm/src/biogeochem/CNCStateUpdate3Mod.F90 - Subtract live to dead from fire Nitrogen for 
+        live/dead and stem/root (both CLM45CN/BGC and CLM50CN/BGC)
+   M components/clm/src/biogeochem/CNCIsoFluxMod.F90 ------ Missing isotope flux calculations (changes for CLM45/50 with c13/c14)
+   M components/clm/src/biogeochem/CNFireEmissionsMod.F90 - Changes from Simone Tilmes adjusting the fire
+        injection heights for different PFTS and also use indices rather than hard-coded magic integers
+   M components/clm/src/biogeochem/CNFireLi2014Mod.F90 ---- Use same version of FireFluxes as in Li2016, 
+        so can use spinup_state==2 and apply a previous bug-fix (). Outside of that answers are roundoff
+        different. And this allows the base version of the subroutine to be used for both Li2014 and Li2016
+        to reduce code duplication.
+
+   M components/clm/src/biogeophys/CanopyFluxesMod.F90 ---- Remove 2nd adjustment to btran for soybean 
+        and nbrdlf_dcd_tmp_shrub for CNDV (both clm45crop/cndv and clm50crop/cndv)
+   M components/clm/src/biogeophys/SnowHydrologyMod.F90 --- Make new snow bulk density continuous (only CLM50)
+        add unit-test function: SnowHydrologySetControlForTesting. Apply new wind dependent density increase
+        only for wind > 0.1m/sec (so no density increase at zero wind)
+
+   M components/clm/src/soilbiogeochem/SoilBiogeochemCompetitionMod.F90 --- Bug 2224
+
+   M components/clm/src/biogeophys/test/SnowHydrology_test/CMakeLists.txt - add tests for snow density
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_10_r187
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Jul 26 21:45:51 MDT 2016
@@ -164,6 +331,112 @@ List all existing files that have been modified, and describe the changes:
 ===============================================================
 Tag name:  clm4_5_9_r186
 Originator(s):  sacks (Bill Sacks)
+Date: Wed Jul 13 07:17:04 MDT 2016
+One-line Summary: Initialize biogeochem balance checks AFTER column area updates
+
+Purpose of changes
+------------------
+
+Reworking the conservation of patch-level CN variables with dynamic landunits
+will make the column-level CN balance checks very tricky to determine, as they
+were written before - where the starting point for the comparison was determined
+before all of the area adjustments (i.e., the dyn subgrid stuff). This becomes
+much more straightforward if the initialization of the balance checks is done
+after the dyn subgrid stuff is complete. This tag makes that change.
+
+In order to accomplish that, we need to re-compute the CN state summaries after
+the dyn subgrid stuff is complete - near the beginning of the time step. We
+still need the summary routine at the end of the time step for the sake of
+diagnostics (e.g., history output). So now we call the summary routines twice
+for states. We do NOT need to call the flux summary routines at the beginning of
+the time step - and doing so doesn't really make sense (how do you summarize
+fluxes that haven't yet been computed) - so I have split the top-level summary
+routine into a SummarizeStates and SummarizeFluxes.
+
+I also reworked the ch4 balance check similarly, in order to be consistent with
+the CN balance checks.
+
+Longer-term, we'll add another set of balance checks that operate on
+gridcell-level quantities, which WILL cover the dyn subgrid stuff. So the
+overall sequence will look like:
+
+   Initialize gridcell-level balance checks
+   Dyn subgrid stuff (adjust patch, column, landunit areas, and do associated
+      state updates)
+   Initialize column-level balance checks
+   Science routines
+   Check column-level balance
+   Check gridcell-level balance
+
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+ok means tests pass, some answers change as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_9_r185
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM50 runs with BGC that involve changes
+      in subgrid areas (including HIST, RCP, DV and IG cases)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
       Not investigated closely; expected to be larger than roundoff / same climate
 
       Answer changes come from the fact that some code (e.g., the fire code)
@@ -11683,6 +11956,176 @@ Known bugs (include bugzilla ID): 2180, 2182
 
 Known Limitations:
                                  1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: n/a
+
+Describe any changes made to the namelist: n/a
+
+List any changes to the defaults for the boundary datasets:
+    Regenerate surface data sets and land use timeseries to increase the number of
+    pfts and crops with data from Levis. New raw datasets:
+        rawdata/pftlanduse.3minx3min.simyr2000.c110913/mksrf_78pft_landuse_rc2000_c130927.nc
+        rawdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_78pft_landuse_rc2000_c150130.nc
+
+Describe any substantial timing or memory changes:
+    Increased memory usage for all crop runs. Exact consequences requires further study.
+
+Code reviewed by: andre, levis
+
+List any svn externals directories updated (cime, rtm, cism, etc.): n/a
+
+List all files eliminated: n/a
+
+List all files added and what they do:
+    components/clm/cimetest/ExpectedTestFails.xml - new expected fails file for upcoming cime xfail integration
+    components/clm/tools/clm4_5/mksurfdata_map/Makefile.data - automate generating all surface data sets 
+
+List all existing files that have been modified, and describe the changes:
+	clm/bld/CLMBuildNamelist.pm - increase max pft, add info to error message, fix quoted empty string processing (bug 2146)
+	clm/bld/namelist_files/namelist_defaults_clm4_5.xml - point to new datasets
+	clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - update rawdata sets
+	clm/bld/namelist_files/namelist_definition_clm4_5.xml - update sim year range to avoid special cases for testing
+	clm/bld/test_build_namelist/t/test_do_harvest.pm - update test (bug 2146)
+	clm/bld/test_build_namelist/t/test_do_transient_crops.pm - update test (bug 2146)
+	clm/bld/test_build_namelist/t/test_do_transient_pfts.pm - update test (bug 2146)
+
+	clm/cimetest/testmods_dirs/clm/crop_trans_f10/user_nl_clm - point to new datafiles
+	clm/cimetest/testmods_dirs/clm/crop_trans_sville/user_nl_clm - point to new datafiles
+
+	clm/src/biogeophys/WaterStateType.F90 - workaround for pgi compiler bug
+
+	clm/src/biogeochem/CNNDynamicsMod.F90 - new crop model
+	clm/src/biogeochem/CNPhenologyMod.F90
+	clm/src/biogeochem/CNVegStructUpdateMod.F90
+	clm/src/biogeochem/CropType.F90
+	clm/src/biogeochem/NutrientCompetitionCLM45defaultMod.F90
+	clm/src/biogeochem/VOCEmissionMod.F90
+	clm/src/biogeophys/CanopyFluxesMod.F90
+	clm/src/biogeophys/PhotosynthesisMod.F90
+	clm/src/main/PatchType.F90
+	clm/src/main/clm_varpar.F90
+	clm/src/main/pftconMod.F90
+	clm/src/main/subgridRestMod.F90
+	clm/src/main/surfrdMod.F90
+
+	clm/tools/clm4_5/mksurfdata_map/README
+	clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl - move file writes into functions. write to __dataset_name__.namelist
+	clm/tools/clm4_5/mksurfdata_map/src/mklaiMod.F90 - update for new crops
+	clm/tools/clm4_5/mksurfdata_map/src/mkpftConstantsMod.F90
+	clm/tools/clm4_5/mksurfdata_map/src/mkpftMod.F90 - update for new crops, fix bug 2155.
+
+	clm/tools/clm4_5/mksurfdata_map/src/mksurfdat.F90 - work around for an issue causing abort during urban dataset generation
+	clm/tools/clm4_5/mksurfdata_map/src/mkurbanparMod.F90
+
+
+CLM testing: regular
+
+	build-namelist tests:
+
+    yellowstone unit tests - ok
+
+  unit-tests (components/clm/src):
+
+    yellowstone_intel - ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    - yellowstone aux clm40 intel - ok
+    - yellowstone aux clm40 pgi - ok
+    - yellowstone aux clm45 intel - ok
+      - all namelist fail - new datasets and parameters
+      - crop - new crop model - baseline failures expected
+      - ed - new parameters file - baseline failures expected, ok'd by rfisher
+      - ERP_D_Ld5.f19_g16.ICLM45GLCMEC.yellowstone_intel.clm-glcMEC_changeFlags - baseline compare fails, roundoff level, unknown cause, ok'd by sacks
+      - ERP_E_Ld5.f19_g16.I1850CRUCLM45CN.yellowstone_intel.clm-default - baseline compare fails, only occurs with esmf - ok'd by mvertens
+    - yellowstone aux clm45 gnu - ok
+      - all namelist fail - new datasets and parameters
+      - crop - new crop model - baseline failures expected
+    - yellowstone aux clm45 pgi -
+      - all namelist fail - new datasets and parameters
+      - crop - new crop model - baseline failures expected
+      - ed - new parameters file - baseline failures expected, ok'd by rfisher
+      - ERI_D_Ld9.f19_g16.I1850CLM45CN.yellowstone_pgi - roundoff in cpl baseline
+      - ERI_D_Ld9.f19_g16.I1850CLM45CN.yellowstone_pgi.clm-drydepnomegan - roundoff in baseline
+      - ERP_P15x2_Lm13.f10_f10.IHISTCLM45BGC.yellowstone_pgi.clm-monthly - new xfail, #2182, dies at runtime in optimized, threaded pgi builds only.
+    - yellowstone mksurfdata_map unit_testers - ok
+    - yellowstone tools tests - ok, known issues with PTCLMmkdata (bug 2180)
+
+CLM tag used for the baseline comparisons: clm4_5_1_r106 (bit for bit with clm4_5_1_r107)
+
+Changes answers relative to baseline: yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: crop, ed
+    - what platforms/compilers: all
+    - nature of change : answer changes updated crop model. approved by levis.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - simulations with all pfts everywhere were run with merged code. Levis compared current runs with his archived runs.
+
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_1_r107
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Tue May 19 10:05:49 MDT 2015
+One-line Summary: Update externals to use github version of cime1.0.7.
+
+Purpose of changes: Switch the cime external from using svn to github. Update cime to cime1.0.7.
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self
+
+List any svn externals directories updated (cime, rtm, cism, etc.): cime 1.0.7
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes: N/A
+
+CLM testing: regular
+
+  build-namelist tests:
+    unit-tests: ok
+    system-tests: not run
+
+  unit-tests (models/lnd/clm/src):
+    yellowstone: ok
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel 40 - ok; 45 - ok
+    yellowstone_pgi 40 - ok; 45 - ok
+    yellowstone_gnu (clm45 only) 45 - ok
 
 CLM tag used for the baseline comparisons: clm4_5_1_r106
 
@@ -22178,6 +22621,267 @@ Purpose of changes: Convert clm4_5 CPP flags in controlMod.F90
 	to generate cases with namelist variables for bgc
 	(CN, CNDV, methane, vsoilc_centbgc), crop, extra lake layers,
 	vic, nofire, noio, sitespf_pt, snicarfrc, maxpatch_pft.
+
+Requirements for tag:
+
+Test level of tag: regular, tools, build_namelist
+
+Bugs fixed (include bugzilla ID): 1728 (scripts4_20131030 tag). 1770 (clm4_5 portion).
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: removed clm4_5 CPP flags:
+    NOFIRE, LCH4, NITRIF, VERTSOILC, EXTRALAKELAYERS, VICHYDRO, CENTURY, CN, 
+    CNDV, CROP, SNICAR, VANCOUVER, NOIO, MEXICOCITY
+
+Describe any changes made to the namelist: added namelist variables:
+
+    use_nofire, use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers,
+    use_vichydro, use_century_decomp, use_cn, use_cndv, use_crop, use_snicar_frc,
+    use_vancouver, use_mexicocity, use_noio
+
+    All new namelist variables are logicals.
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: Erik Kluzek, Bill Sacks
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts4_131030
+
+List all files eliminated:
+D       models/lnd/clm/bld/config_files/config_definition.xml - split into clm4_X variants
+
+List all files added and what they do:
+A       models/lnd/clm/bld/config_files/config_definition_clm4_5.xml
+A       models/lnd/clm/bld/config_files/config_definition_clm4_0.xml
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl - set crop=off by default to pick up correct defaults.
+M       models/lnd/clm/bld/configure - completely remove clm4_5 only cpp flags, add physics dependent logic to clm4_0 flags.
+M       models/lnd/clm/bld/queryDefaultNamelist.pl - point to physics specific config_definitions.xml file
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml - replace xml special characters with alternatives so file can be parsed. Add new build-namelist failures.
+
+M       models/lnd/clm/bld/build-namelist - add logic for all new clm4_5 namelist variables, commandline options, switch defaults to use_N.
+
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml - add new namelist variables
+
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNDynamicsMod.F90 - add CNNDynamicsInit() and logic to set nfix_timeconst from use_nitrif_denitrif namelist instead of CPP.
+M       models/lnd/clm/src/clm4_5/main/clm_varpar.F90 - convert ifdef'd parameters to variables
+M       models/lnd/clm/src/clm4_5/main/controlMod.F90 - final conversion of CPP flags to namelist variables
+
+	Switch the following files to use new namelist variables for attributes:
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/2000_control.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850_control.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/20thC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850_glacierMEC_control.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+
+
+CLM testing:
+
+  build-namelist tests:
+
+    yellowstone - most tests will fail, tests need to be updated in future tag
+    frankfurt
+
+  regular tests (aux_clm):
+    - nlcomp tests fail for all clm4_5 because of the new namelist variables.
+    - SSP tests should now be BFAIL, pass on next tag
+    - All hist comp are bit for bit.
+
+    yellowstone_intel ok
+    yellowstone_pgi ok
+    frankfurt_intel ok
+    frankfurt_pgi ok
+    frankfurt_nag ok
+
+  tools testing:
+
+    yellowstone interactive - smiS4 (getregional) also fails in clm4_5_40
+    frankfurt interactive - N/A
+
+CLM tag used for the baseline comparisons: clm4_5_40
+
+Changes answers relative to baseline: None.
+
+===============================================================
+===============================================================
+Tag name:  clm4_5_40
+Originator(s):  muszala (Stefan Muszala,UCAR/TSS,303-497-1320)
+Date:  Thu Oct 24 07:54:46 MDT 2013
+One-line Summary: fix Bug 1752 - urban conductances depend on weights in an undesirable way
+
+Purpose of changes: 
+
+Three parts to this tag.  Description from Oleson:
+
+1) 
+ fix Bug 1752 - modified UrbanMod.F90 to calculate
+2) 
+ add 2 new diagnostic history fields (FIRE_U, FIRE_R)
+ the conductances correctly.  I created new variables to more clearly
+ distinguish between scaled and unscaled conductances.
+3)
+ fix small bug in which the history field output of some of the
+ anthropogenic heat flux variables are not bfb on restart when finidat is blank.
+ I found this when verifying bfb for the original bug fix.  The cause of this
+ is initialization which sets non-urban to special value, instead of zero, which
+ is what is desired. On restart, this initialization is not done and the history
+ file set_nourb=0 has precedent.  A related issue is that eflx_building_heat is
+ not zero for pervious/impervious road when nlevurb /= nlevgrnd.
+
+Requirements for tag: N/A
+
+Test level of tag: regular
+
+Bugs fixed (include bugzilla ID): 1752
+
+    long test with irrigate=.true. (because irrigation likely never took effect
+    in the old test).
+
+Requirements for tag:
+
+Test level of tag: regular & build_namelist
+
+Bugs fixed (include bugzilla ID):
+   - 1827 / 1830: testmods don't work right for multi-instance tests (fix via
+     scripts update)
+   - 1829: PCT_SAND, PCT_CLAY and SOIL_COLOR are incorrect for some grid cells
+     (fix via new surface datasets)
+   - 1831: turning on irrigation leads to death in initialization (fix via a new
+     initial conditions file)
+
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: see changes in boundary datasets
+
+List any changes to the defaults for the boundary datasets:
+  
+   - new surface datasets for all resolutions for CLM4.5: same as before except
+     for PCT_SAND, PCT_CLAY and SOIL_COLOR: these are no longer zeroed out under
+     points that are believed to be 100% glacier ("believed to be" because this
+     previously zeroed out some points that ended up having some other special
+     landunits, such as lake)
+
+   - new initial conditions file for CLM4.5, irrigate=.true., f10
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   scripts: scripts4_131001 -> scripts4_131003
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= new logic for irrigation for finidat
+M       models/lnd/clm/bld/build-namelist
+
+========= new surface datasets; distinguish finidat based on value of 'irriagte'
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+CLM testing:
+
+  build-namelist tests:
+
+    caldera: OK
+       The following failures were expected due to new surface datasets:
+          413/439 < FAIL> <Test Id: 413> <Desc: lnd_in file the same as expected for phys45>  
+          418/439 < FAIL> <Test Id: 418> <Desc: lnd_in file the same as expected for phys45>  
+          423/439 < FAIL> <Test Id: 423> <Desc: lnd_in file the same as expected for phys45>  
+          428/439 < FAIL> <Test Id: 428> <Desc: lnd_in file the same as expected for phys45>  
+          433/439 < FAIL> <Test Id: 433> <Desc: lnd_in file the same as expected for phys45>  
+          438/439 < FAIL> <Test Id: 438> <Desc: lnd_in file the same as expected for phys45-crop>  
+
+
+  regular tests (aux_clm):
+
+    edison_intel (aux_clm_ys_intel & aux_clm_ys_pgi lists): OK
+    frankfurt_intel: OK
+    frankfurt_pgi: OK
+    frankfurt_nag: OK
+
+  history file comparison with component_gen_comp and summarize_cprnc_diffs:
+
+    edison_intel: aux_clm_ys_intel list: OK
+    edison_intel: aux_clm_ys_pgi list: OK
+
+CLM tag used for the baseline comparisons: clm4_5_35
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM45
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+        Not investigated carefully, but probably larger than roundoff/same climate.
+
+        Answer changes are due to new surface datasets. This is due to fixing
+        bug 1829 (PCT_SAND, PCT_CLAY and SOIL_COLOR are incorrect for some grid
+        cells); it looks like this just affects answers over a small number of
+        lake points (e.g., 9 lake points in an f19 run).
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
+Tag name:  clm4_5_35
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Oct  1 09:47:45 PDT 2013
+One-line Summary: get CLM running on edison
+
+Purpose of changes:
 
    Update scripts and Machines externals to get the CLM test suite running on
    edison; this will be our replacement for yellowstone while yellowstone is

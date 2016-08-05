@@ -191,6 +191,7 @@ module ch4Mod
      logical , pointer, private :: ch4_first_time_col         (:)   ! col whether this is the first time step that includes ch4
      !
      real(r8), pointer, public :: finundated_col             (:)   ! col fractional inundated area (excluding dedicated wetland cols)
+     real(r8), pointer, public :: finundated_pre_snow_col    (:)   ! col fractional inundated area (excluding dedicated wetland cols) before snow
      real(r8), pointer, public :: o2stress_unsat_col         (:,:) ! col Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
      real(r8), pointer, public :: o2stress_sat_col           (:,:) ! col Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
      real(r8), pointer, public :: conc_o2_sat_col            (:,:) ! col O2 conc in each soil layer (mol/m3) (nlevsoi)
@@ -327,6 +328,7 @@ contains
     allocate(this%ch4_first_time_col         (begc:endc))            ; this%ch4_first_time_col          (:)   = .true.
 
     allocate(this%finundated_col             (begc:endc))            ;  this%finundated_col             (:)   = nan          
+    allocate(this%finundated_pre_snow_col    (begc:endc))            ;  this%finundated_pre_snow_col    (:)   = nan          
     allocate(this%o2stress_unsat_col         (begc:endc,1:nlevgrnd)) ;  this%o2stress_unsat_col         (:,:) = nan          
     allocate(this%o2stress_sat_col           (begc:endc,1:nlevgrnd)) ;  this%o2stress_sat_col           (:,:) = nan          
     allocate(this%conc_o2_sat_col            (begc:endc,1:nlevgrnd)) ;  this%conc_o2_sat_col            (:,:) = nan
@@ -834,6 +836,7 @@ contains
        ! finundated_col where it was spval in subroutine Restart.) Note that
        ! finundated_col is overwritten for istsoil / istcrop below.
        this%finundated_col(c) = 1._r8
+       this%finundated_pre_snow_col(c) = 1._r8
        this%finundated_lag_col(c) = 1._r8
        this%layer_sat_lag_col  (c,1:nlevsoi) = 1._r8
        this%conc_ch4_sat_col   (c,1:nlevsoi) = 0._r8
@@ -858,6 +861,7 @@ contains
 
           this%qflx_surf_lag_col  (c)           = 0._r8
           this%finundated_col     (c)           = 0._r8
+          this%finundated_pre_snow_col(c)       = 0._r8
           this%finundated_lag_col (c)           = 0._r8
 
        else if (lun%itype(l) == istdlak) then
@@ -1168,6 +1172,19 @@ contains
        !
        ! The value here (1) should agree with the setting for special landunits in initCold
        call set_missing_vals_to_constant(this%finundated_col, 1._r8)
+    end if
+
+    call restartvar(ncid=ncid, flag=flag, varname='FINUNDATED_PRESNOW', xtype=ncd_double, &
+            dim1name='column', &
+            long_name='inundated fraction before snow', units='', &
+            readvar=readvar, interpinic_flag='interp', data=this%finundated_pre_snow_col)
+    if (flag == 'read' .and. readvar) then
+       ! BACKWARDS_COMPATIBILITY(wjs, 2016-02-11) The following is needed for backwards
+       ! compatibility with restart files generated from older versions of the code, where
+       ! these variables were initialized to spval rather than 1 for special landunits.
+       !
+       ! The value here (1) should agree with the setting for special landunits in initCold
+       call set_missing_vals_to_constant(this%finundated_pre_snow_col, 1._r8)
     end if
 
     call restartvar(ncid=ncid, flag=flag, varname='annavg_somhr', xtype=ncd_double,  &
@@ -1681,6 +1698,7 @@ contains
          rootfr_col           =>   soilstate_inst%rootfr_col                 , & ! Output: [real(r8) (:,:) ]  fraction of roots in each soil layer  (nlevgrnd) (p2c)
 
          frac_h2osfc          =>   waterstate_inst%frac_h2osfc_col           , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+         snow_depth           =>   waterstate_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
          qflx_surf            =>   waterflux_inst%qflx_surf_col              , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)                        
 
          conc_o2_sat          =>   ch4_inst%conc_o2_sat_col                  , & ! Input:  [real(r8) (:,:) ]  O2 conc  in each soil layer (mol/m3) (nlevsoi)  
@@ -1715,6 +1733,7 @@ contains
          zwt_ch4_unsat        =>   ch4_inst%zwt_ch4_unsat_col                , & ! Output: [real(r8) (:)   ]  depth of water table for unsaturated fraction (m) 
          totcolch4            =>   ch4_inst%totcolch4_col                    , & ! Output: [real(r8) (:)   ]  total methane in soil column (g C / m^2)          
          finundated           =>   ch4_inst%finundated_col                   , & ! Output: [real(r8) (:)   ]  fractional inundated area in soil column (excluding dedicated wetland columns)
+         finundated_pre_snow  =>   ch4_inst%finundated_pre_snow_col          , & ! Output: [real(r8) (:)   ]  fractional inundated area in soil column (excluding dedicated wetland columns) before snow
          ch4_first_time       =>   ch4_inst%ch4_first_time_col               , & ! Output: [logical  (:)   ]  whether this is the first time step that includes ch4
          qflx_surf_lag        =>   ch4_inst%qflx_surf_lag_col                , & ! Output: [real(r8) (:)   ]  time-lagged surface runoff (mm H2O /s)
          finundated_lag       =>   ch4_inst%finundated_lag_col               , & ! Output: [real(r8) (:)   ]  time-lagged fractional inundated area             
@@ -1807,8 +1826,14 @@ contains
                finundated(c) = p3(c)*qflx_surf_lag(c)
             end if
          end if
-         finundated(c) = max( min(finundated(c),1._r8), 0._r8)
 
+         if (snow_depth(c) <= 0._r8) then    ! If snow_depth<=0,use the above method to calculate finundated.
+            finundated(c) = max( min(finundated(c),1._r8), 0._r8)
+            finundated_pre_snow(c) = finundated(c)
+          else
+            finundated(c) = finundated_pre_snow(c) !If snow_depth>0, keep finundated from the previous time step of snow season. (by Xiyan Xu, 05/2016)
+          end if
+  
          ! Update lagged finundated for redox calculation
          if (redoxlags > 0._r8) then
             finundated_lag(c) = finundated_lag(c) * exp(-dtime/redoxlags) &
@@ -2881,7 +2906,7 @@ contains
                   ! Note: this calculation is based on Arctic graminoids, and should be refined for woody plants, if not
                   ! done on a patch-specific basis.
 
-                  m_tiller = anpp * nppratio * elai(p)
+                  m_tiller = anpp * nppratio * 4._r8  !replace the elai(p) by constant 4 (by Xiyan Xu, 05/2016)
 
                   n_tiller = m_tiller / 0.22_r8
 

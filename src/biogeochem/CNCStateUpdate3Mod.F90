@@ -100,19 +100,23 @@ contains
          cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p) -                   &
               cf_veg%m_livestemc_to_fire_patch(p) * dt
          cs_veg%livestemc_patch(p) = cs_veg%livestemc_patch(p) -                   &
-              cf_veg%m_livestemc_to_litter_fire_patch(p) * dt
+              cf_veg%m_livestemc_to_litter_fire_patch(p) * dt  -                   &
+              cf_veg%m_livestemc_to_deadstemc_fire_patch(p) * dt
          cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p) -                   &
               cf_veg%m_deadstemc_to_fire_patch(p) * dt
          cs_veg%deadstemc_patch(p) = cs_veg%deadstemc_patch(p) -                   &
-              cf_veg%m_deadstemc_to_litter_fire_patch(p) * dt
+              cf_veg%m_deadstemc_to_litter_fire_patch(p) * dt  +                   &
+              cf_veg%m_livestemc_to_deadstemc_fire_patch(p) * dt
          cs_veg%livecrootc_patch(p) = cs_veg%livecrootc_patch(p) -                 &
               cf_veg%m_livecrootc_to_fire_patch(p) * dt
          cs_veg%livecrootc_patch(p) = cs_veg%livecrootc_patch(p) -                 &
-              cf_veg%m_livecrootc_to_litter_fire_patch(p)* dt
+              cf_veg%m_livecrootc_to_litter_fire_patch(p) * dt   -                 &
+              cf_veg%m_livecrootc_to_deadcrootc_fire_patch(p) * dt
          cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p) -                 &
               cf_veg%m_deadcrootc_to_fire_patch(p) * dt
          cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p) -                 &
-              cf_veg%m_deadcrootc_to_litter_fire_patch(p)* dt
+              cf_veg%m_deadcrootc_to_litter_fire_patch(p)* dt    +                 &
+              cf_veg%m_livecrootc_to_deadcrootc_fire_patch(p) * dt
 
          ! storage pools
          cs_veg%leafc_storage_patch(p) = cs_veg%leafc_storage_patch(p) -           &

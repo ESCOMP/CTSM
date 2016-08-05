@@ -278,7 +278,7 @@ contains
                icomp = emis_cmp%index
                epsilon = emis_cmp%emis_factors(patch%itype(p))
 
-               comp(icomp)%emis(p) = epsilon * fire_flux* 1.e-3*emis_cmp%molec_weight/12.011_r8 ! (to convert gC/m2/sec to kg/m2/sec)
+               comp(icomp)%emis(p) = epsilon * fire_flux* 1.e-3_r8/0.5_r8  ! (to convert gC/m2/sec to kg species/m2/sec)
                emis_flux(icomp) = emis_cmp%coeff*comp(icomp)%emis(p)
 
                emis_cmp => emis_cmp%next_emiscomp
@@ -307,24 +307,71 @@ contains
 ! Private methods
 !-----------------------------------------------------------------------
 !ztop compiled from Val Martin et al ACP 2010, Tosca et al. JGR  2011 and Jian et al., ACP 2013
+!st ztop updated based on Val Martin pers. communication Jan2015 
 !-----------------------------------------------------------------------
-  function vert_dist_top( veg_type ) result(ztop)
+!   not_vegetated    500 m                      
+!PFT1: needleleaf_evergreen_temperate_tree     4000 m
+!2: needleleaf_evergreen_boreal_tree    4000 m
+!3: needleleaf_deciduous_boreal_tree    3000 m    
+!4: broadleaf_evergreen_tropical_tree     2500 m  
+!5: broadleaf_evergreen_temperate_tree   3000 m   
+!6: broadleaf_deciduous_tropical_tree     2500 m  
+!7: broadleaf_deciduous_temperate_tree  3000 m    
+!8: broadleaf_deciduous_boreal_tree      3000 m   
+!9: broadleaf_evergreen_shrub   2000 m            
+!10: broadleaf_deciduous_temperate_shrub  2000 m  
+!11: broadleaf_deciduous_boreal_shrub    2000 m    
+!12: c3_arctic_grass   1000 m                      
+!13: c3_non-arctic_grass  1000 m              
+!14: c4_grass   1000 m                             
+!15: c3_crop      1000 m
+!(and all new crops: 1000m)
 
+  function vert_dist_top( veg_type ) result(ztop)
+    use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
+    use pftconMod       , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree
+    use pftconMod       , only : ndllf_dcd_brl_tree, nbrdlf_evr_tmp_tree
+    use pftconMod       , only : nbrdlf_dcd_tmp_tree, nbrdlf_dcd_brl_tree
+    use pftconMod       , only : nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree
+    use pftconMod       , only : nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
+    use pftconMod       , only : nc3_arctic_grass, nc3_nonarctic_grass
+    use pftconMod       , only : nc3crop, nc3irrig
+    use pftconMod       , only : npcropmin, npcropmax
+    implicit none
     integer, intent(in) :: veg_type
 
     real(r8) :: ztop
 
-    select case (veg_type)
-      case (1,2,3,8)
-         ztop = 1.5e3_r8 ! m
-      case (5,7,9,10,11)
-         ztop = 1.0e3_r8 ! m
-      case (4,6,12,13,14,15,16)
-         ztop = 0.7e3_r8 ! m
-      case default
-         ztop = 3.0e3_r8 ! m
-    end select
+    ! Bare soil, won't be used
+    if (      veg_type == noveg ) then
+       ztop = nan
+    ! temperate and boreal evergreen needleleaf trees
+    else if ( veg_type == ndllf_evr_tmp_tree  .or.  veg_type == ndllf_evr_brl_tree   ) then
+       ztop = 4.e3_r8 ! m
+    ! temperate and boreal trees
+    else if ( veg_type == ndllf_dcd_brl_tree  .or.  veg_type == nbrdlf_evr_tmp_tree .or. &
+              veg_type == nbrdlf_dcd_tmp_tree .or.  veg_type == nbrdlf_dcd_brl_tree  ) then
+       ztop = 3.e3_r8 ! m
+    ! tropical broadleaf trees (evergreen and decidious)
+    else if ( veg_type == nbrdlf_evr_trp_tree .or.  veg_type == nbrdlf_dcd_trp_tree  ) then
+       ztop = 2.5e3_r8 ! m
+    ! shrubs
+    else if ( veg_type >= nbrdlf_evr_shrub    .and. veg_type <= nbrdlf_dcd_brl_shrub ) then
+       ztop = 2.e3_r8 ! m
+    ! grasses
+    else if ( veg_type >= nc3_arctic_grass    .and. veg_type <= nc3_nonarctic_grass  ) then
+       ztop = 1.e3_r8 ! m
+    ! generic unmanaged crops
+    else if ( veg_type == nc3crop             .or.  veg_type <= nc3irrig             ) then
+       ztop = 1.e3_r8 ! m
+    ! Prognostic crops
+    else if ( veg_type >= npcropmin           .and. veg_type <= npcropmax            ) then
+       ztop = 1.e3_r8 ! m
+    else
+       call endrun('ERROR:: undefined veg_type' )
+    end if
 
   end function vert_dist_top
 
 end module CNFireEmissionsMod
+

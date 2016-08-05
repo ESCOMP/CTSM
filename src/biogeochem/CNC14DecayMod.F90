@@ -84,8 +84,7 @@ contains
       dt = real( get_step_size(), r8 )
       days_per_year = get_days_per_year()
 
-      half_life = 5568._r8 * secspday * days_per_year  !! libby half-life value, for comparison against ages calculated with this value
-      ! half_life = 5730._r8 * secspday * days_per_year  !! recent half-life value
+      half_life = 5730._r8 * secspday * days_per_year
       decay_const = - log(0.5_r8) / half_life
 
       ! column loop

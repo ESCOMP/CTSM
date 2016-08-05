@@ -48,7 +48,8 @@ module SnowHydrologyMod
   public :: NewSnowBulkDensity         ! Compute bulk density of any newly-fallen snow
 
   ! The following are public just for the sake of unit testing:
-  public :: WindCompactionFactor       ! Compaction enhancement factor of snowpack due to wind
+  public :: WindCompactionFactor              ! Compaction enhancement factor of snowpack due to wind
+  public :: SnowHydrologySetControlForTesting ! Set some of the control settings
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: Combo                  ! Returns the combined variables: dz, t, wliq, wice.
@@ -1606,31 +1607,21 @@ contains
        c = filter_c(fc)
        g = col%gridcell(c)
 
-       if (new_snow_density == LoTmpDnsTruncatedAnderson1976) then
-          if (forc_t(c) > tfrz + 2._r8) then
-             bifall(c) = 50._r8 + 1.7_r8*(17.0_r8)**1.5_r8
-          else if (forc_t(c) > tfrz - 15._r8) then
-             bifall(c) = 50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
-          else
-             bifall(c) = 50._r8
-          end if
-
+       if (forc_t(c) > tfrz + 2._r8) then
+          bifall(c) = 50._r8 + 1.7_r8*(17.0_r8)**1.5_r8
+       else if (forc_t(c) > tfrz - 15._r8) then
+          bifall(c) = 50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
+       else if ( new_snow_density == LoTmpDnsTruncatedAnderson1976 ) then
+          bifall(c) = 50._r8
        else if (new_snow_density == LoTmpDnsSlater2017) then 
-       ! Andrew Slater: A temp of about -15C gives the nicest
-       ! "blower" powder, but as you get colder the flake size decreases so
-       ! density goes up. e.g. the smaller snow crystals from the Arctic and Antarctic
-       ! winters
-
-          if (forc_t(c) > tfrz + 2._r8) then
-             bifall(c) = 170._r8
-          else if (forc_t(c) > tfrz - 15._r8) then
-             bifall(c) = 50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
-          else
-             bifall(c) = -3.8333_r8*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)*(forc_t(c)-tfrz)
-          end if
+          ! Andrew Slater: A temp of about -15C gives the nicest
+          ! "blower" powder, but as you get colder the flake size decreases so
+          ! density goes up. e.g. the smaller snow crystals from the Arctic and Antarctic
+          ! winters
+          bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)**2
        end if
 
-       if (wind_dependent_snow_density) then
+       if (wind_dependent_snow_density .and. forc_wind(g) > 0.1_r8 ) then
        ! Density offset for wind-driven compaction, initial ideas based on Liston et. al (2007) J. Glaciology,
        ! 53(181), 241-255. Modified for a continuous wind impact and slightly more sensitive
        ! to wind - Andrew Slater, 2016
@@ -1813,5 +1804,22 @@ contains
        end if
     end do
   end subroutine BuildSnowFilter
+
+  subroutine SnowHydrologySetControlForTesting( set_winddep_snowdensity, set_new_snow_density )
+    !
+    ! !DESCRIPTION:
+    ! Sets some of the control settings for SnowHydrologyMod
+    ! NOTE: THIS IS JUST HERE AS AN INTERFACE FOR UNIT TESTING.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    logical, intent(in) :: set_winddep_snowdensity  ! Set wind dependent snow density
+    integer, intent(in) :: set_new_snow_density     ! snow density method
+    !-----------------------------------------------------------------------
+    wind_dependent_snow_density = set_winddep_snowdensity
+    new_snow_density            = set_new_snow_density
+
+  end subroutine SnowHydrologySetControlForTesting
 
 end module SnowHydrologyMod

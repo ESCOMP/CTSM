@@ -740,14 +740,24 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                 &
-         croot_prof            => soilbiogeochem_state_inst%croot_prof_patch , & ! Input: [real(r8) (:,:) ]  (1/m) profile of coarse roots                          
-         stem_prof             => soilbiogeochem_state_inst%stem_prof_patch  , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of stems                                 
-         soilbiogeochem_cs     => soilbiogeochem_carbonstate_inst            , &
-         cnveg_cf              => cnveg_carbonflux_inst                      , &
-         cnveg_cs              => cnveg_carbonstate_inst                     , &
-         iso_cnveg_cf          => iso_cnveg_carbonflux_inst                  , &
-         iso_cnveg_cs          => iso_cnveg_carbonstate_inst                 , &
-         iso_soilbiogeochem_cs => iso_soilbiogeochem_carbonstate_inst          &
+         ivt                                 => patch%itype                                                  , & ! Input:  [integer  (:)   ]  patch vegetation type                                
+         wtcol                               => patch%wtcol                                                  , & ! Input:  [real(r8) (:)   ]  weight (relative to column) for this patch (0-1)    
+         croot_prof                          => soilbiogeochem_state_inst%croot_prof_patch                   , & ! Input: [real(r8) (:,:) ]  (1/m) profile of coarse roots                          
+         stem_prof                           => soilbiogeochem_state_inst%stem_prof_patch                    , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of stems                                 
+         leaf_prof                           => soilbiogeochem_state_inst%leaf_prof_patch                    , & ! Input: [real(r8) (:,:) ]  (1/m) profile of leaves                          
+         froot_prof                          => soilbiogeochem_state_inst%froot_prof_patch                   , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of fine roots                                 
+         soilbiogeochem_cs                   => soilbiogeochem_carbonstate_inst                              , &
+         cnveg_cf                            => cnveg_carbonflux_inst                                        , &
+         cnveg_cs                            => cnveg_carbonstate_inst                                       , &
+         iso_cnveg_cf                        => iso_cnveg_carbonflux_inst                                    , &
+         iso_cnveg_cs                        => iso_cnveg_carbonstate_inst                                   , &
+         iso_soilbiogeochem_cs               => iso_soilbiogeochem_carbonstate_inst                          , &
+         lf_flab                             => pftcon%lf_flab                                               , & ! Input:  [real(r8) (:)   ]  leaf litter labile fraction                       
+         lf_fcel                             => pftcon%lf_fcel                                               , & ! Input:  [real(r8) (:)   ]  leaf litter cellulose fraction                    
+         lf_flig                             => pftcon%lf_flig                                               , & ! Input:  [real(r8) (:)   ]  leaf litter lignin fraction                       
+         fr_flab                             => pftcon%fr_flab                                               , & ! Input:  [real(r8) (:)   ]  fine root litter labile fraction                  
+         fr_fcel                             => pftcon%fr_fcel                                               , & ! Input:  [real(r8) (:)   ]  fine root litter cellulose fraction               
+         fr_flig                             => pftcon%fr_flig                                                 & ! Input:  [real(r8) (:)   ]  fine root litter lignin fraction                  
          )
 
       ! patch-level fire mortality fluxes
@@ -862,6 +872,109 @@ contains
            iso_cnveg_cs%gresp_xfer_patch                   , cnveg_cs%gresp_xfer_patch, &
            num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
 
+
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_leafc_to_litter_fire_patch       , cnveg_cf%m_leafc_to_litter_fire_patch, &
+           iso_cnveg_cs%leafc_patch                        , cnveg_cs%leafc_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_leafc_storage_to_litter_fire_patch, cnveg_cf%m_leafc_storage_to_litter_fire_patch, &
+           iso_cnveg_cs%leafc_patch                        , cnveg_cs%leafc_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_leafc_xfer_to_litter_fire_patch  , cnveg_cf%m_leafc_xfer_to_litter_fire_patch, &
+           iso_cnveg_cs%leafc_patch                        , cnveg_cs%leafc_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_livestemc_to_litter_fire_patch   , cnveg_cf%m_livestemc_to_litter_fire_patch, &
+           iso_cnveg_cs%livestemc_patch                    , cnveg_cs%livestemc_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_livestemc_storage_to_litter_fire_patch, cnveg_cf%m_livestemc_storage_to_litter_fire_patch, &
+           iso_cnveg_cs%livestemc_storage_patch            , cnveg_cs%livestemc_storage_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_livestemc_xfer_to_litter_fire_patch, cnveg_cf%m_livestemc_xfer_to_litter_fire_patch, &
+           iso_cnveg_cs%livestemc_xfer_patch               , cnveg_cs%livestemc_xfer_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_livestemc_to_deadstemc_fire_patch, cnveg_cf%m_livestemc_to_deadstemc_fire_patch, &
+           iso_cnveg_cs%livestemc_patch                    , cnveg_cs%livestemc_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_deadstemc_storage_to_litter_fire_patch, cnveg_cf%m_deadstemc_storage_to_litter_fire_patch, &
+           iso_cnveg_cs%deadstemc_storage_patch            , cnveg_cs%deadstemc_storage_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_deadstemc_xfer_to_litter_fire_patch, cnveg_cf%m_deadstemc_xfer_to_litter_fire_patch, &
+           iso_cnveg_cs%deadstemc_xfer_patch               , cnveg_cs%deadstemc_xfer_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_frootc_to_litter_fire_patch      , cnveg_cf%m_frootc_to_litter_fire_patch, &
+           iso_cnveg_cs%frootc_patch                       , cnveg_cs%frootc_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_frootc_storage_to_litter_fire_patch, cnveg_cf%m_frootc_storage_to_litter_fire_patch, &
+           iso_cnveg_cs%frootc_storage_patch               , cnveg_cs%frootc_storage_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_frootc_xfer_to_litter_fire_patch , cnveg_cf%m_frootc_xfer_to_litter_fire_patch, &
+           iso_cnveg_cs%frootc_xfer_patch                  , cnveg_cs%frootc_xfer_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_livecrootc_to_litter_fire_patch  , cnveg_cf%m_livecrootc_to_litter_fire_patch, &
+           iso_cnveg_cs%livecrootc_patch                   , cnveg_cs%livecrootc_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_livecrootc_storage_to_litter_fire_patch, cnveg_cf%m_livecrootc_storage_to_litter_fire_patch, &
+           iso_cnveg_cs%livecrootc_storage_patch           , cnveg_cs%livecrootc_storage_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_livecrootc_xfer_to_litter_fire_patch, cnveg_cf%m_livecrootc_xfer_to_litter_fire_patch, &
+           iso_cnveg_cs%livecrootc_xfer_patch              , cnveg_cs%livecrootc_xfer_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_livecrootc_to_deadcrootc_fire_patch, cnveg_cf%m_livecrootc_to_deadcrootc_fire_patch, &
+           iso_cnveg_cs%livecrootc_patch                   , cnveg_cs%livecrootc_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_deadcrootc_storage_to_litter_fire_patch, cnveg_cf%m_deadcrootc_storage_to_litter_fire_patch, &
+           iso_cnveg_cs%deadcrootc_storage_patch           , cnveg_cs%deadcrootc_storage_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_deadcrootc_xfer_to_litter_fire_patch, cnveg_cf%m_deadcrootc_xfer_to_litter_fire_patch, &
+           iso_cnveg_cs%deadcrootc_xfer_patch              , cnveg_cs%deadcrootc_xfer_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_gresp_storage_to_litter_fire_patch, cnveg_cf%m_gresp_storage_to_litter_fire_patch, &
+           iso_cnveg_cs%gresp_storage_patch                , cnveg_cs%gresp_storage_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+      
+      call CIsoFluxCalc(&
+           iso_cnveg_cf%m_gresp_xfer_to_litter_fire_patch  , cnveg_cf%m_gresp_xfer_to_litter_fire_patch, &
+           iso_cnveg_cs%gresp_xfer_patch                   , cnveg_cs%gresp_xfer_patch, &
+           num_soilp                                       , filter_soilp, 1._r8, 0, isotope)
+
+
+
       ! calculate the column-level flux of deadstem and deadcrootc to cwdc as the result of fire mortality.
       do pi = 1,max_patch_per_col
          do fc = 1,num_soilc
@@ -872,10 +985,14 @@ contains
                   do j = 1, nlevdecomp
                      iso_cnveg_cf%fire_mortality_c_to_cwdc_col(cc,j) = &
                           iso_cnveg_cf%fire_mortality_c_to_cwdc_col(cc,j) + &
-                          iso_cnveg_cf%m_deadstemc_to_litter_fire_patch(pp) * patch%wtcol(pp) * stem_prof(pp,j)
+                          (iso_cnveg_cf%m_deadstemc_to_litter_fire_patch(pp) + &
+                          iso_cnveg_cf%m_livestemc_to_litter_fire_patch(pp)) * &
+                          patch%wtcol(pp) * stem_prof(pp,j)
                      iso_cnveg_cf%fire_mortality_c_to_cwdc_col(cc,j) = &
                           iso_cnveg_cf%fire_mortality_c_to_cwdc_col(cc,j) + &
-                          iso_cnveg_cf%m_deadcrootc_to_litter_fire_patch(pp) * patch%wtcol(pp) * croot_prof(pp,j)
+                          (iso_cnveg_cf%m_deadcrootc_to_litter_fire_patch(pp) + &
+                          iso_cnveg_cf%m_livecrootc_to_litter_fire_patch(pp)) * &
+                          patch%wtcol(pp) * croot_prof(pp,j)
                   end do
                end if
             end if
@@ -898,6 +1015,45 @@ contains
             end do
          end do
       end do
+
+
+      do pi = 1,max_patch_per_col
+         do fc = 1,num_soilc
+            cc = filter_soilc(fc)
+            if ( pi <=  col%npatches(cc) ) then
+               pp = col%patchi(cc) + pi - 1
+               if (patch%active(pp)) then
+                  do j = 1, nlevdecomp
+                     iso_cnveg_cf%m_c_to_litr_met_fire_col(cc,j) = iso_cnveg_cf%m_c_to_litr_met_fire_col(cc,j) + &
+                          ((iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp)*lf_flab(ivt(pp)) &
+                          +iso_cnveg_cf%m_leafc_storage_to_litter_fire_patch(pp) + &
+                          iso_cnveg_cf%m_leafc_xfer_to_litter_fire_patch(pp) + &
+                          iso_cnveg_cf%m_gresp_storage_to_litter_fire_patch(pp) &
+                          +iso_cnveg_cf%m_gresp_xfer_to_litter_fire_patch(pp))*leaf_prof(pp,j) + &
+                          (iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp)*fr_flab(ivt(pp)) &
+                          +iso_cnveg_cf%m_frootc_storage_to_litter_fire_patch(pp) + &
+                          iso_cnveg_cf%m_frootc_xfer_to_litter_fire_patch(pp))*froot_prof(pp,j) &
+                          +(iso_cnveg_cf%m_livestemc_storage_to_litter_fire_patch(pp) + &
+                          iso_cnveg_cf%m_livestemc_xfer_to_litter_fire_patch(pp) &
+                          +iso_cnveg_cf%m_deadstemc_storage_to_litter_fire_patch(pp) + &
+                          iso_cnveg_cf%m_deadstemc_xfer_to_litter_fire_patch(pp))* stem_prof(pp,j)&
+                          +(iso_cnveg_cf%m_livecrootc_storage_to_litter_fire_patch(pp) + &
+                          iso_cnveg_cf%m_livecrootc_xfer_to_litter_fire_patch(pp) &
+                          +iso_cnveg_cf%m_deadcrootc_storage_to_litter_fire_patch(pp) + &
+                          iso_cnveg_cf%m_deadcrootc_xfer_to_litter_fire_patch(pp))* croot_prof(pp,j)) * patch%wtcol(pp)    
+                     
+                     iso_cnveg_cf%m_c_to_litr_cel_fire_col(cc,j) = iso_cnveg_cf%m_c_to_litr_cel_fire_col(cc,j) + &
+                          (iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp)*lf_fcel(ivt(pp))*leaf_prof(pp,j) + &
+                          iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp)*fr_fcel(ivt(pp))*froot_prof(pp,j)) * patch%wtcol(pp) 
+                     
+                     iso_cnveg_cf%m_c_to_litr_lig_fire_col(cc,j) = iso_cnveg_cf%m_c_to_litr_lig_fire_col(cc,j) + &
+                          (iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp)*lf_flig(ivt(pp))*leaf_prof(pp,j) + &
+                          iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp)*fr_flig(ivt(pp))*froot_prof(pp,j)) * patch%wtcol(pp)  
+                  end do
+               end if
+            end if
+         end do
+      end do                     
 
     end associate
 

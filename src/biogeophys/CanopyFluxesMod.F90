@@ -17,9 +17,7 @@ module CanopyFluxesMod
                                      use_luna, use_hydrstress
   use clm_varpar            , only : nlevgrnd, nlevsno
   use clm_varcon            , only : namep 
-  use pftconMod             , only : nbrdlf_dcd_tmp_shrub, pftcon
-  use pftconMod             , only : ntmp_soybean, nirrig_tmp_soybean
-  use pftconMod             , only : ntrp_soybean, nirrig_trp_soybean
+  use pftconMod             , only : pftcon
   use decompMod             , only : bounds_type
   use PhotosynthesisMod     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
   use EDPhotosynthesisMod   , only : Photosynthesis_ED
@@ -823,21 +821,6 @@ contains
                     atm2lnd_inst, canopystate_inst, solarabs_inst, surfalb_inst, photosyns_inst, &
                     phase='sun')
             endif
-
-           !KO This should be OK for plant hydraulic stress since final btran has been calculated
-            do f = 1, fn
-               p = filterp(f)
-               c = patch%column(p)
-               if (use_cndv) then
-                  if (patch%itype(p) == nbrdlf_dcd_tmp_shrub) then
-                     btran(p) = min(1._r8, btran(p) * 3.33_r8)
-                  end if
-               end if
-            if (patch%itype(p) == ntmp_soybean .or. patch%itype(p) == nirrig_tmp_soybean .or. &
-                patch%itype(p) == ntrp_soybean .or. patch%itype(p) == nirrig_trp_soybean) then
-                  btran(p) = min(1._r8, btran(p) * 1.25_r8)
-               end if
-            end do
 
             if ( .not.(use_hydrstress) ) then
                call Photosynthesis (bounds, fn, filterp, &
