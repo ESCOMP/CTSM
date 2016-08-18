@@ -1,4 +1,177 @@
 ===============================================================
+Tag name:  clm4_5_11_r189
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Aug 18 14:52:36 MDT 2016
+One-line Summary: Bring in time varying streams for urban data (currently triggers AC use)
+
+Purpose of changes
+------------------
+
+Instead of reading in maximum building temperature from surface dataset, read it in from
+a time-varying urban streams file. This allows the urban Air Conditioning use to change
+in time as well as spatially. Other spatially and temporally changing parameters can be added
+(or moved from the surface dataset) to this stream file as well in the future. The new streams
+file has the same kind of controls as other streams file for years to run over, filename, and
+mapping algorithm. The time interpolation is assumed to be linear, and it uses taxmode=extend
+so it will use the first value before the first year and the last value after the last year.
+The current dataset is at one degree resolution (f09_g16). Because of this CLM45 compsets
+will change answers to some extent (because interpolation methods for streams are slightly
+different) -- but answers will be very similar. CLM50 compsets will change because there is
+variation in the max building temperature both spatially and temporally.
+
+Also fix a problem with the humanstress module for GSWP3 forcing because of temperatures that
+are too high for the WetBulb method to converge. WetBulb previously only allowed two iterations
+and now it allows more (10,000). If the method fails to converge it will exit with a warning.
+This was worked on by Jonathan Buzan with Keith Oleson.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+   2348 PTCLMmkdata not able to run for clm5_0
+   2305 Nan for wet bulb temperature
+
+Known bugs introduced in this tag (include bugzilla ID): 
+   2346 Unnecessary arguments to WetBulb subroutine (WONTFIX)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users: No longer reads t_building_max from surface dataset
+   reads it in from the urban time-varying streams
+
+Changes to CLM's user interface: New namelist variables
+    Add: stream_year_first_urbantv, stream_year_last_urbantv
+         model_year_align_urbantv, stream_fldfilename_urbantv, urbantvmapalgo
+
+Changes made to namelist defaults: None
+
+Changes to the datasets: new urban time-varying streams datasets
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers: None
+
+Changes to tests or testing: None
+
+Code reviewed by: self, oleson
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - OK (all tests PASS and 64 compare tests are different because of namelist changes)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - OK
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - PASS
+
+CLM tag used for the baseline comparisons:  clm4_5_11_r188
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm4_5 (to a minor degree) and clm5_0 with urban
+    - what platforms/compilers: All
+    - nature of change: same climate
+
+  CLM45 answers with urban areas may change to a minor degree because of the use of
+  the urban time varying stream file to get the max indoor building temperature rather
+  than reading from the surface dataset. Shorter tests are fairly close and some may be
+  identical (all CLM45 single point cases are identical). Tests of a month or longer likely
+  diverge.
+
+  Five of the 22 CLM45 and CLM45BGC tests with f10_f10 on hobart are different, others are the same.
+  Half of the 46 CLM45 CLM45 tests with f10_f10 on yellowstone are the same.
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): PTCLM
+    update PTCLM to PTCLM2_160818
+
+List all files eliminated: None
+
+List all files added and what they do: Object to handle time-varying urban data
+
+   A components/clm/src/biogeophys/UrbanTimeVarType.F90 -- Read max building temperature from urban time-varying stream
+        for three urban classes (Tall Building Disctrict-TBD, High Density-HD, and Medium Density-MD) add TBUILD_MAX as 
+        possible output to history
+
+List all existing files that have been modified, and describe the changes:
+
+   M components/clm/src/main/clm_instMod.F90 -- Setup urbantv_type and initialize it
+   M components/clm/src/main/clm_driver.F90 --- Interpolate urban-time-varying data and pass it down
+
+   M components/clm/src/biogeophys/HumanIndexMod.F90 ------------- Remove duplicated wbt_ref2m_u_patch,
+         output urban stull wet bulb temp, new convergence routine for Wet-Bulb (increase max iterations
+         from 2 to 10000)
+   M components/clm/src/biogeophys/SoilTemperatureMod.F90 -------- Pass urbantv down, get t_building_max from it
+   M components/clm/src/biogeophys/UrbBuildTempOleson2015Mod.F90 - Pass urbantv down, get t_building_max from it
+   M components/clm/src/biogeophys/UrbanParamsType.F90 ----------- Remove t_building_max and no longer read
+         T_BUILDING_MAX from surface dataset
+   M components/clm/src/biogeophys/test/HumanStress_test/test_humanstress.pf -- Test new WetBulb subroutine
+
+         Add in stream_year_ first/last/align for urbantv for clm5_0
+   M components/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+   M components/clm/bld/namelist_files/use_cases/2000_control.xml
+   M components/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+   M components/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+   M components/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml
+   M components/clm/bld/namelist_files/use_cases/1850_control.xml
+   M components/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+   M components/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+   M components/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+   M components/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+   M components/clm/bld/namelist_files/use_cases/20thC_transient.xml
+   M components/clm/bld/namelist_files/use_cases/1850_glacierMEC_control.xml
+   M components/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+   M components/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+   M components/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+
+   M components/clm/bld/namelist_files/namelist_definition_clm4_5.xml -  Add: stream_year_first_urbantv, stream_year_last_urbantv
+         model_year_align_urbantv, stream_fldfilename_urbantv, urbantvmapalgo
+   M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ---  Defaults for above list.
+         clm4_5 has first, last and align set to 2000 whereas clm5_0 sets it appropriatly by sim_year and sim_year_range
+         there is also a CLM45 urbantv streams file that approximates the previous method of reading from the surface dataset
+         the urbantv streams files are at 0.9x1.25 resolution
+
+   M components/clm/bld/CLMBuildNamelist.pm - Add setup_logic_urbantv_streams, call it and add urbantv_streams namelist
+
+       Remove T_BUILDING_MAX from clm45/clm50 surface datasets
+   M components/clm/test/tools/test_driver.sh --- Make CLM_SOFF default FALSE
+   M components/clm/test/tools/README ----------- Show example usage on yellowstone and update note about CLM_SOFF
+   M components/clm/tools/clm4_5/mksurfdata_map/src/mkfileMod.F90 ----- Don't write T_BUILDING_MAX
+   M components/clm/tools/clm4_5/mksurfdata_map/src/mkurbanparMod.F90 - Remove T_BUILDING_MAX as urban parameter
+   M components/clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl --------- Remove T_BUILDING_MAX from copy for urban single point datasets
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_11_r188
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Aug  5 13:53:01 MDT 2016

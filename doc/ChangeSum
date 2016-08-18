@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_11_r189     erik 08/18/2016 Bring in time varying streams for urban data (currently triggers AC use)
   clm4_5_11_r188     erik 08/05/2016 A set of small answer changing issues for both clm45 and clm50
   clm4_5_10_r187     erik 07/26/2016 CLM45/50 changes: seperate carbon and water root profile, turn off undercanopystability, 
                                      really turn PHS on, LUNA predict sunlit fraction N fractionation

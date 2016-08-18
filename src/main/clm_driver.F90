@@ -27,6 +27,7 @@ module clm_driver
   use BalanceCheckMod        , only : BeginWaterBalance, BalanceCheck
   !
   use CanopyTemperatureMod   , only : CanopyTemperature ! (formerly Biogeophysics1Mod)
+  use UrbanTimeVarType       , only : urbantv_type
   use SoilTemperatureMod     , only : SoilTemperature
   use LakeTemperatureMod     , only : LakeTemperature
   !
@@ -325,6 +326,9 @@ contains
        call t_stopf('bgc_interp')
     end if
 
+    ! Get time varying urban data
+    call urbantv_inst%urbantv_interp(bounds_proc)
+
     ! ============================================================================
     ! Initialize variables from previous time step, downscale atm forcings, and
     ! Determine canopy interception and precipitation onto ground surface.
@@ -562,7 +566,7 @@ contains
             filter(nc)%num_urbanl  , filter(nc)%urbanl,                                        &
             filter(nc)%num_nolakec , filter(nc)%nolakec,                                       &
             atm2lnd_inst, urbanparams_inst, canopystate_inst, waterstate_inst, waterflux_inst, &
-            solarabs_inst, soilstate_inst, energyflux_inst,  temperature_inst)
+            solarabs_inst, soilstate_inst, energyflux_inst,  temperature_inst, urbantv_inst)
 
        ! The following is called immediately after SoilTemperature so that melted ice is
        ! converted back to solid ice as soon as possible

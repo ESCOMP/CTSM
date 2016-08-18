@@ -53,7 +53,6 @@ module UrbanParamsType
      real(r8), pointer :: thick_roof      (:,:)
      integer,  pointer :: nlev_improad    (:,:)
      real(r8), pointer :: t_building_min  (:,:)
-     real(r8), pointer :: t_building_max  (:,:)
   end type urbinp_type
   type (urbinp_type), public :: urbinp   ! urban input derived type
 
@@ -89,7 +88,6 @@ module UrbanParamsType
      real(r8), pointer     :: vf_rw               (:)   ! lun view factor of road for one wall
      real(r8), pointer     :: vf_ww               (:)   ! lun view factor of opposing wall for one wall
 
-     real(r8), pointer     :: t_building_max      (:)   ! lun maximum internal building air temperature (K)
      real(r8), pointer     :: t_building_min      (:)   ! lun minimum internal building air temperature (K)
      real(r8), pointer     :: eflx_traffic_factor (:)   ! lun multiplicative traffic factor for sensible heat flux from urban traffic (-)
    contains
@@ -164,7 +162,6 @@ contains
        allocate(this%cv_wall          (begl:endl,nlevurb))  ; this%cv_wall             (:,:) = nan
        allocate(this%cv_roof          (begl:endl,nlevurb))  ; this%cv_roof             (:,:) = nan
     end if
-    allocate(this%t_building_max      (begl:endl))          ; this%t_building_max      (:)   = nan
     allocate(this%t_building_min      (begl:endl))          ; this%t_building_min      (:)   = nan
     allocate(this%tk_improad          (begl:endl,nlevurb))  ; this%tk_improad          (:,:) = nan
     allocate(this%cv_improad          (begl:endl,nlevurb))  ; this%cv_improad          (:,:) = nan
@@ -234,7 +231,6 @@ contains
           this%thick_roof(l)     = urbinp%thick_roof(g,dindx)
           this%nlev_improad(l)   = urbinp%nlev_improad(g,dindx)
           this%t_building_min(l) = urbinp%t_building_min(g,dindx)
-          this%t_building_max(l) = urbinp%t_building_max(g,dindx)
 
           ! Inferred from Sailor and Lu 2004
           if (urban_traffic) then
@@ -245,12 +241,10 @@ contains
 
           if (use_vancouver .or. use_mexicocity) then
              ! Freely evolving
-             this%t_building_max(l) = 380.00_r8
              this%t_building_min(l) = 200.00_r8
           else
              if (urban_hac == urban_hac_off) then
                 ! Overwrite values read in from urbinp by freely evolving values
-                this%t_building_max(l) = 380.00_r8
                 this%t_building_min(l) = 200.00_r8
              end if
           end if
@@ -351,7 +345,6 @@ contains
        else ! Not urban point 
 
           this%eflx_traffic_factor(l) = spval
-          this%t_building_max(l) = spval
           this%t_building_min(l) = spval
 
           this%vf_sr(l) = spval
@@ -461,7 +454,6 @@ contains
                 urbinp%thick_roof(begg:endg, numurbl), &
                 urbinp%nlev_improad(begg:endg, numurbl), &
                 urbinp%t_building_min(begg:endg, numurbl), &
-                urbinp%t_building_max(begg:endg, numurbl), &
                 stat=ier)
        if (ier /= 0) then
           call endrun(msg="Allocation error "//errmsg(__FILE__, __LINE__))
@@ -574,12 +566,6 @@ contains
             dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
           call endrun( msg=' ERROR: T_BUILDING_MIN NOT on fsurdat file'//errmsg(__FILE__, __LINE__))
-       end if
-
-       call ncd_io(ncid=ncid, varname='T_BUILDING_MAX', flag='read', data=urbinp%t_building_max, &
-            dim1name=grlnd, readvar=readvar)
-       if (.not. readvar) then
-          call endrun( msg=' ERROR: T_BUILDING_MAX NOT on fsurdat file'//errmsg(__FILE__, __LINE__))
        end if
 
        call ncd_io(ncid=ncid, varname='ALB_IMPROAD_DIR', flag='read', data=urbinp%alb_improad_dir, &
@@ -703,7 +689,6 @@ contains
                   urbinp%thick_roof, &
                   urbinp%nlev_improad, &
                   urbinp%t_building_min, &
-                  urbinp%t_building_max, &
                   stat=ier)
        if (ier /= 0) then
           call endrun(msg='initUrbanInput: deallocation error '//errmsg(__FILE__, __LINE__))
@@ -756,7 +741,6 @@ contains
                   urbinp%ht_roof(nl,n)               <= 0._r8 .or. &
                   urbinp%thick_roof(nl,n)            <= 0._r8 .or. &
                   urbinp%thick_wall(nl,n)            <= 0._r8 .or. &
-                  urbinp%t_building_max(nl,n)        <= 0._r8 .or. &
                   urbinp%t_building_min(nl,n)        <= 0._r8 .or. &
                   urbinp%wind_hgt_canyon(nl,n)       <= 0._r8 .or. &
                   urbinp%wtlunit_roof(nl,n)          <= 0._r8 .or. &
@@ -805,7 +789,6 @@ contains
        write(iulog,*)'ht_roof:         ',urbinp%ht_roof(nindx,dindx)
        write(iulog,*)'thick_roof:      ',urbinp%thick_roof(nindx,dindx)
        write(iulog,*)'thick_wall:      ',urbinp%thick_wall(nindx,dindx)
-       write(iulog,*)'t_building_max:  ',urbinp%t_building_max(nindx,dindx)
        write(iulog,*)'t_building_min:  ',urbinp%t_building_min(nindx,dindx)
        write(iulog,*)'wind_hgt_canyon: ',urbinp%wind_hgt_canyon(nindx,dindx)
        write(iulog,*)'wtlunit_roof:    ',urbinp%wtlunit_roof(nindx,dindx)

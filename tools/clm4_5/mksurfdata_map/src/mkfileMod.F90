@@ -358,10 +358,6 @@ contains
             lev1name='numurbl', &
             long_name='thickness of wall', units='meters')
 
-       call ncd_def_spatial_var(ncid=ncid, varname='T_BUILDING_MAX', xtype=xtype, &
-            lev1name='numurbl', &
-            long_name='maximum interior building temperature', units='K')
-
        call ncd_def_spatial_var(ncid=ncid, varname='T_BUILDING_MIN', xtype=xtype, &
             lev1name='numurbl', &
             long_name='minimum interior building temperature', units='K')

@@ -115,6 +115,13 @@ module HumanIndexMod
 !    conditions.  
 ! Modified 03-21-14--- Changed Specific Humidity to Mixing
 !    Ratio.
+! Modified 04-08-16--- Added new convergence routine for
+!          Wet_Bulb.  CLM4.5 Inputs at 50C 100% RH cause NaN.
+!          Davies-Jones is not calibrated for Tw above 40C.
+!          Modification makes all moisture calculations
+!          internal to Wet_Bulb.  External input of RH used,
+!          Not external Q due to differences in QSat_2 and
+!          QSatMod at high RH and T>45C.
 !EOP
 !-----------------------------------------------------------------------
 
@@ -212,7 +219,6 @@ subroutine InitAllocate(this, bounds)
     allocate(this%appar_temp_ref2m_u_patch  (begp:endp))                      ; this%appar_temp_ref2m_u_patch   (:)   = nan
     allocate(this%swbgt_ref2m_u_patch       (begp:endp))                      ; this%swbgt_ref2m_u_patch        (:)   = nan
     allocate(this%wbt_ref2m_u_patch         (begp:endp))                      ; this%wbt_ref2m_u_patch          (:)   = nan
-    allocate(this%wbt_ref2m_u_patch         (begp:endp))                      ; this%wbt_ref2m_u_patch          (:)   = nan
     allocate(this%wb_ref2m_u_patch          (begp:endp))                      ; this%wb_ref2m_u_patch           (:)   = nan
     allocate(this%teq_ref2m_u_patch         (begp:endp))                      ; this%teq_ref2m_u_patch          (:)   = nan
     allocate(this%ept_ref2m_u_patch         (begp:endp))                      ; this%ept_ref2m_u_patch          (:)   = nan
@@ -286,9 +292,14 @@ subroutine InitHistory(this, bounds)
             avgflag='A', long_name='Rural 2 m Humidex', &
             ptr_patch=this%humidex_ref2m_r_patch, set_spec=spval)
 
-    this%wbt_ref2m_u_patch(begp:endp) = spval
+    this%wbt_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='WBT', units='C',  &
             avgflag='A', long_name='2 m Stull Wet Bulb', &
+            ptr_patch=this%wbt_ref2m_patch)
+
+    this%wbt_ref2m_u_patch(begp:endp) = spval
+    call hist_addfld1d (fname='WBT_U', units='C',  &
+            avgflag='A', long_name='Urban 2 m Stull Wet Bulb', &
             ptr_patch=this%wbt_ref2m_u_patch, set_nourb=spval)
 
     this%wbt_ref2m_r_patch(begp:endp) = spval
@@ -768,10 +779,18 @@ end subroutine InitHistory
 !       2008 for calculation of vapor pressure.
 ! Modified JRBuzan 03-21-14:  Minor Revision.  Changed specific humidity to mixing
 !       ratio.
+! Modified JRBuzan 04-08-16:  Added new convergence routine for
+!                             Wet_Bulb.  CLM4.5 Inputs at 50C 100% RH cause NaN.
+!                             Davies-Jones is not calibrated for Tw above 40C.
+!                             Modification makes all moisture calculations
+!                             internal to Wet_Bulb.  External input of RH used,
+!                             Not external Q due to differences in QSat_2 and
+!                             QSatMod at high RH and T>45C.
 !
 ! !USES:
     use shr_kind_mod , only: r8 => shr_kind_r8
     use shr_const_mod, only: SHR_CONST_TKFRZ
+    use clm_varctl   , only: iulog
 !
 ! !ARGUMENTS:
     implicit none
@@ -783,7 +802,7 @@ end subroutine InitHistory
 
     real(r8), intent(out) :: Teq   ! Equivalent Temperature (K)
     real(r8), intent(out) :: epott ! Equivalent Potential Temperature (K)
-    real(r8), intent(out) :: wb_it ! Constant used for extreme cold temparatures (K)
+    real(r8), intent(out) :: wb_it ! Wet bulb Temperature (C)
 
 !
 ! !CALLED FROM:
@@ -834,15 +853,29 @@ end subroutine InitHistory
     real(r8) :: theta_dl            ! Moist Potential Temperature (K)
     real(r8) :: pi                  ! Non dimensional Pressure
     real(r8) :: X                   ! Ratio of equivalent temperature to freezing scaled by Heat Capacity
-
+    real(r8) :: vapemb_sat          ! Saturated vapor pressure (mb)
+    real(r8) :: de_mbdT_sat         ! Saturated d(es)/d(T)
+    real(r8) :: dlnes_mbdT_sat      ! Saturated dln(es)/d(T)
+    real(r8) :: rs_T_sat            ! Saturated humidity (kg/kg)
+    real(r8) :: rsdT_sat            ! Saturated d(qs)/d(T)
+    real(r8) :: foftk_t_sat         ! Saturated Davies-Jones eqn 2.3
+    real(r8) :: fdT_sat             ! Saturated d(f)/d(T)
+    real(r8) :: convergence = 0.00001_r8 ! Convergence value
+    real(r8) :: wb_temp_new              ! Wet Bulb Temperature Subsequent Guess (C)
+    integer  :: iter                     ! Iteration number
+    integer  :: max_iter = 10000         ! Iteration Maximum
+    integer  :: converged                ! Converge Result: 0 = No, 1 = Yes
     integer  :: j                   ! Iteration Step Number
 !-----------------------------------------------------------------------
 
     C = SHR_CONST_TKFRZ             ! Freezing Temperature
     pmb = pin*0.01_r8               ! pa to mb
-    vapemb = vape*0.01_r8           ! pa to mb
     T1 = Tin_1                      ! Use holder for T
-    mixr = qin/(1._r8 - qin) * grms ! change specific humidity to mixing ratio (g/kg)
+
+    call QSat_2(T1, pin, vapemb_sat, de_mbdT_sat, dlnes_mbdT_sat, rs_T_sat, rsdT_sat, foftk_t_sat, fdT_sat)
+
+    vapemb = vapemb_sat * relhum * 0.01_r8    ! vapor pressure (mb) 
+    mixr = rs_T_sat * relhum * 0.01_r8 * grms ! change specific humidity to mixing ratio (g/kg)
                   
     ! Calculate Equivalent Pot. Temp (pmb, T, mixing ratio (g/kg), pott, epott)
     ! Calculate Parameters for Wet Bulb Temp (epott, pmb)
@@ -890,14 +923,28 @@ end subroutine InitHistory
        wb_temp = k1 - 1.21_r8 * cold - 1.45_r8 * hot - (k2 - 1.21_r8 * cold) * X + (0.58_r8 / X) * hot
     endif
 
-    ! Newton-Raphson Method  2 iteration
-    ! May need to put in a second iteration.  Probably best with a do loop.
-    do j = 0, 1
+    converged = 0
+    iter = 0
+    do while ( converged .eq. 0 .and. iter < max_iter)
+
+       iter = iter + 1
+       if ( wb_temp > 100._r8 ) exit
        call QSat_2(wb_temp+C, pin, es_mb_wb_temp, de_mbdwb_temp, dlnes_mbdwb_temp, &
            rs_wb_temp, rsdwb_temp, foftk_wb_temp, fdwb_temp)
-       wb_temp = wb_temp - ((foftk_wb_temp - X)/fdwb_temp)
-       wb_it = wb_temp
+       wb_temp_new = wb_temp - ((foftk_wb_temp - X)/fdwb_temp)
+
+       if ( abs(wb_temp - wb_temp_new) < convergence ) converged = 1
+       wb_temp = (0.9_r8*wb_temp + 0.1_r8*wb_temp_new)
+
     end do
+
+    if ( converged .eq. 1 ) then
+       wb_it = wb_temp
+    else
+       wb_it = T1 - C  ! Place Holder.  wet bulb temperature same as dry bulb (C)
+       write(iulog,*) 'WARNING: Wet_Bulb algorithm failed to converge. Setting to T: WB, P, &
+                       T, RH, Q, VaporP: ',wb_it, pin, T1, relhum, qin, vape
+    endif
 
   end subroutine Wet_Bulb
 !EOP

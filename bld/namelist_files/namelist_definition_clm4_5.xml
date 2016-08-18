@@ -1313,6 +1313,43 @@ Mapping method from human population density input file to the model resolution
     copy     = copy using the same indices
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- urbantv_streams Namelist (when CLM4_5/CLM5_0 is active)                                   -->
+<!-- ========================================================================================  -->
+
+<!-- urban time varying -->
+
+<entry id="stream_year_first_urbantv" type="integer" category="datasets"
+       group="urbantv_streams" valid_values="" >
+First year to loop over for urban time varying data
+</entry>
+
+<entry id="stream_year_last_urbantv" type="integer" category="datasets"
+       group="urbantv_streams" valid_values="" >
+Last year to loop over for urban time varying data
+</entry>
+
+<entry id="model_year_align_urbantv" type="integer" category="datasets"
+       group="urbantv_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_urbantv value
+</entry>
+
+<entry id="stream_fldfilename_urbantv" type="char*256" category="datasets"
+       input_pathname="abs" group="urbantv_streams" valid_values="" >
+Filename of input stream data for urban time varying
+</entry>
+
+<entry id="urbantvmapalgo" type="char*256" category="datasets"
+       group="urbantv_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+Mapping method from urban time varying input file to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    nnoni    = nearest neighbor on the "i" (longitude) axis
+    nnonj    = nearest neighbor on the "j" (latitude) axis
+    spval    = set to special value
+    copy     = copy using the same indices
+</entry>
+
 <entry id="diri" type="char*256" category="datm"
        group="modelio" valid_values="">
 datm input directory

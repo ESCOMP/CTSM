@@ -8,6 +8,33 @@ reference "bug numbers" in this list, but these are things where those "bugs"
 were closed out with a "will-not-fix".
 
 ====================================================================================
+Bug Number: 2346
+Unnecessary arguments to WetBulb subroutine
+
+The WetBulb subroutine inside of HumanStressMod.F90 has three forms of moisture input into it: relative and specific humidity as well as vapor pressure.
+In general you should only need one of these as they should all agree with each other. But, the WetBulb also uses it's own verison of saturation
+vapor pressure calculation (QSat_2) -- which means it's version can be different than the main version used for the rest of CLM. Both of these
+are oddities and make the code less unified and self-consistent and potentially create code maintence problems because of duplication of code.
+
+Here's an explaination from Jonathan Buzan the author:
+The Davies-Jones wet bulb temperature in the HumanIndexMod requires the logarithm of the second derivative of the saturated vapor pressure with respect
+to the air temperature.  The original QSat algorithm does not supply this quantity.  At the time of HumanIndexMod implementation, there were concerns
+for computational speed, which the Flatau calculations were designed for (QSat), thus we made the decision to not attempt change then entire CLM vapor
+pressure calculations.  
+
+We knew that the algorithms diverge once wet bulb temperatures were getting above 40°C (in real world terms this is a change in the global mean surface
+temperature change of ~10°C).  This is due to differing assumptions between QSat and QSat_2.  This was another concern for not changing QSat to QSat_2.  
+
+I was not expecting inputs this high, and this is what caused the original error in the bug report that Keith mentioned.  The result was one could not
+use Q from the model (QSat) because this would result in saturated vapor pressures above 100% (QSat_2) at conditions generating wet bulb temperatures
+above 40°C.  The compromise was using the model derived RH values as an input, and leave the QSat_2 calculation as a function only used to calculate the
+wet bulb temperature.
+
+Both QSat and QSat_2 algorithms blow up at high saturated air temperatures.  This is due to the underlying assumption that the vapor pressure is <<
+total air pressure (a core assumption in both QSat and QSat_2).  At high saturated air temperatures this assumption falls apart.  At what temperatures
+these algorithms blow up is not necessarily important because they imply global mean surface temperature changes greater than 30-40°C.
+
+====================================================================================
 Bug Number: 1355
 tlai is zero for first two time-steps in CLMSP
 

@@ -462,7 +462,7 @@ subroutine mkurbanpar(datfname, ncido, region_o, urbn_classes_gcell_o, urban_ski
    ! (params_scalar, params_rad or params_levurb)
    
    ! Urban parameters with no extra dimensions
-   type(param), parameter :: params_scalar(14) = &
+   type(param), parameter :: params_scalar(13) = &
         (/ param('CANYON_HWR', fill_val_real, .true.), &
            param('EM_IMPROAD', fill_val_real, .true.), &
            param('EM_PERROAD', fill_val_real, .true.), &
@@ -471,7 +471,6 @@ subroutine mkurbanpar(datfname, ncido, region_o, urbn_classes_gcell_o, urban_ski
            param('HT_ROOF', fill_val_real, .true.), &
            param('THICK_ROOF', fill_val_real, .true.), &
            param('THICK_WALL', fill_val_real, .true.), &
-           param('T_BUILDING_MAX', fill_val_real, .true.), &
            param('T_BUILDING_MIN', fill_val_real, .true.), &
            param('WIND_HGT_CANYON', fill_val_real, .true.), &
            param('WTLUNIT_ROOF', fill_val_real, .true.), &

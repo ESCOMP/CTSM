@@ -4,7 +4,7 @@
 #
 # interactive usage on all machines:
 #
-# env CLM_SOFF=FALSE ./test_driver.sh -i
+# env ./test_driver.sh -i
 #
 # valid arguments: 
 # -i    interactive usage
@@ -57,6 +57,11 @@ module load python
 ##omp threads
 if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
    export CLM_THREADS=\$c_threads
+fi
+
+# Stop on first failed test
+if [ -z "\$CLM_SOFF" ]; then   #CLM_SOFF NOT set
+   export CLM_SOFF=FALSE
 fi
 
 export CESM_MACH="yellowstone"
@@ -401,18 +406,10 @@ for test_id in \${test_list}; do
         pending_tests="YES"
     else
         echo " rc=\$rc FAIL" >> \${clm_status}
-	if [ \$interactive = "YES" ]; then
-	    if [ "\$CLM_SOFF" != "FALSE" ]; then
-		echo "stopping on first failure"
-		echo "stopping on first failure" >> \${clm_status}
-		exit 6
-	    fi
-	else
-	    if [ "\$CLM_SOFF" = "TRUE" ]; then
-		echo "stopping on first failure" >> \${clm_status}
-		echo "stopping on first failure" >> \${clm_log}
-		exit 6
-	    fi
+        if [ "\$CLM_SOFF" = "TRUE" ]; then
+           echo "stopping on first failure" >> \${clm_status}
+           echo "stopping on first failure" >> \${clm_log}
+           exit 6
 	fi
     fi
 done

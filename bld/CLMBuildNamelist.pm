@@ -1516,6 +1516,11 @@ sub process_namelist_inline_logic {
   #################################
   setup_logic_popd_streams($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
+  ####################################
+  # namelist group: urbantv_streams  #
+  ####################################
+  setup_logic_urbantv_streams($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
   ##################################
   # namelist group: light_streams  #
   ##################################
@@ -3021,6 +3026,33 @@ sub setup_logic_popd_streams {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_urbantv_streams {
+  # urban time varying streams require clm4_5/clm5_0
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urbantvmapalgo', 
+                  'hgrid'=>$nl_flags->{'res'} );
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_urbantv', 'phys'=>$nl_flags->{'phys'},
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_urbantv', 'phys'=>$nl_flags->{'phys'},
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      # Set align year, if first and last years are different
+      if ( $nl->get_value('stream_year_first_urbantv') != 
+           $nl->get_value('stream_year_last_urbantv') ) {
+           add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                       'model_year_align_urbantv', 'sim_year'=>$nl_flags->{'sim_year'},
+                       'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      }
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'phys'=>$nl_flags->{'phys'},
+                  'hgrid'=>"0.9x1.25" );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_lightning_streams {
   # lightning streams require clm4_5/clm5_0 and CN/BGC
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
@@ -3296,7 +3328,7 @@ sub write_output_files {
     #}
   } else {
 
-    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams 
+    @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams 
                  lai_streams clm_canopyhydrology_inparm 
                  clm_soilhydrology_inparm dynamic_subgrid 
                  finidat_consistency_checks dynpft_consistency_checks 

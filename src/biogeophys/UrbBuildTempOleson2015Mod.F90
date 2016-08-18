@@ -13,7 +13,8 @@ module UrbBuildTempOleson2015Mod
   use abortutils        , only : endrun
   use perf_mod          , only : t_startf, t_stopf
   use clm_varctl        , only : iulog
-  use UrbanParamsType   , only : urbanparams_type  
+  use UrbanParamsType   , only : urbanparams_type
+  use UrbanTimeVarType  , only : urbantv_type  
   use EnergyFluxType    , only : energyflux_type
   use TemperatureType   , only : temperature_type
   use LandunitType      , only : lun                
@@ -39,7 +40,7 @@ contains
 ! !INTERFACE:
   subroutine BuildingTemperature (bounds, num_urbanl, filter_urbanl, num_nolakec, &
                                   filter_nolakec, tk, urbanparams_inst, temperature_inst, &
-                                  energyflux_inst )
+                                  energyflux_inst, urbantv_inst)
 !
 ! !DESCRIPTION:
 ! Solve for t_building, inner surface temperatures of roof, sunw, shdw, and floor temperature
@@ -220,6 +221,7 @@ contains
     type(urbanparams_type), intent(in)    :: urbanparams_inst ! urban parameters
     type(temperature_type), intent(inout) :: temperature_inst ! temperature variables
     type(energyflux_type) , intent(inout) :: energyflux_inst  ! energy flux variables
+    type(urbantv_type)    , intent(in)    :: urbantv_inst     ! urban time varying variables
 !
 ! !LOCAL VARIABLES:
     integer, parameter :: neq = 5          ! number of equation/unknowns
@@ -319,7 +321,7 @@ contains
     t_floor           => temperature_inst%t_floor_lun      , & ! InOut:  [real(r8) (:)]  floor temperature (K)
     t_building        => temperature_inst%t_building_lun   , & ! InOut:  [real(r8) (:)]  internal building air temperature (K)
 
-    t_building_max    => urbanparams_inst%t_building_max   , & ! Input:  [real(r8) (:)]  maximum internal building air temperature (K)
+    t_building_max    => urbantv_inst%t_building_max       , & ! Input:  [real(r8) (:)]  maximum internal building air temperature (K)
     t_building_min    => urbanparams_inst%t_building_min   , & ! Input:  [real(r8) (:)]  minimum internal building air temperature (K)
 
     eflx_building     => energyflux_inst%eflx_building_lun , & ! Output:  [real(r8) (:)]  building heat flux from change in interior building air temperature (W/m**2)

@@ -14,7 +14,8 @@ module SoilTemperatureMod
   use abortutils        , only : endrun
   use perf_mod          , only : t_startf, t_stopf
   use clm_varctl        , only : iulog
-  use UrbanParamsType   , only : urbanparams_type  
+  use UrbanParamsType   , only : urbanparams_type
+  use UrbanTimeVarType  , only : urbantv_type 
   use atm2lndType       , only : atm2lnd_type
   use CanopyStateType   , only : canopystate_type
   use WaterfluxType     , only : waterflux_type
@@ -114,7 +115,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SoilTemperature(bounds, num_urbanl, filter_urbanl, num_nolakec, filter_nolakec, &
        atm2lnd_inst, urbanparams_inst, canopystate_inst, waterstate_inst, waterflux_inst,&
-       solarabs_inst, soilstate_inst, energyflux_inst,  temperature_inst)
+       solarabs_inst, soilstate_inst, energyflux_inst,  temperature_inst, urbantv_inst)
     !
     ! !DESCRIPTION:
     ! Snow and soil temperatures including phase change
@@ -154,6 +155,7 @@ contains
     integer                , intent(in)    :: filter_urbanl(:)                   ! urban landunit filter
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(urbanparams_type) , intent(in)    :: urbanparams_inst
+    type(urbantv_type)     , intent(in)    :: urbantv_inst
     type(canopystate_type) , intent(in)    :: canopystate_inst
     type(waterstate_type)  , intent(inout) :: waterstate_inst
     type(waterflux_type)   , intent(inout) :: waterflux_inst
@@ -201,7 +203,7 @@ contains
          ctype                   => col%itype                               , & ! Input: [integer (:)    ]  column type
 
          
-         t_building_max          => urbanparams_inst%t_building_max         , & ! Input:  [real(r8) (:)   ]  maximum internal building air temperature (K)
+         t_building_max          => urbantv_inst%t_building_max             , & ! Input:  [real(r8) (:)   ]  maximum internal building air temperature (K)
          t_building_min          => urbanparams_inst%t_building_min         , & ! Input:  [real(r8) (:)   ]  minimum internal building air temperature (K)
 
          
@@ -280,7 +282,8 @@ contains
 
       if ( IsSimpleBuildTemp() ) call BuildingHAC( bounds, num_urbanl, &
                                            filter_urbanl, temperature_inst, &
-                                           urbanparams_inst, cool_on, heat_on )
+                                           urbanparams_inst, urbantv_inst, &
+                                           cool_on, heat_on )
 
 
       ! set up compact matrix for band diagonal solver, requires additional
@@ -513,7 +516,7 @@ contains
       if ( IsProgBuildTemp() )then
          call BuildingTemperature(bounds, num_urbanl, filter_urbanl, num_nolakec, filter_nolakec, &
                                   tk(bounds%begc:bounds%endc, :), urbanparams_inst,               &
-                                  temperature_inst, energyflux_inst)
+                                  temperature_inst, energyflux_inst, urbantv_inst)
       end if
 
       do fc = 1,num_nolakec
@@ -4670,7 +4673,8 @@ contains
   ! !IROUTINE: BuildingHAC
   !
   ! !INTERFACE:
-  subroutine BuildingHAC( bounds, num_urbanl, filter_urbanl, temperature_inst, urbanparams_inst, cool_on, heat_on )
+  subroutine BuildingHAC( bounds, num_urbanl, filter_urbanl, temperature_inst, urbanparams_inst, urbantv_inst, &
+                          cool_on, heat_on )
     ! !DESCRIPTION:
     !    Simpler method to manage building temperature (first introduced in CLM4.5). Restricts building
     !    temperature to within bounds, and determine's if heating or cooling is on.
@@ -4680,8 +4684,9 @@ contains
     type(bounds_type), intent(in) :: bounds           ! bounds
     integer          , intent(in) :: num_urbanl       ! number of urban landunits in clump
     integer          , intent(in) :: filter_urbanl(:) ! urban landunit filter
-    type(temperature_type), intent(inout) :: temperature_inst ! Temperature variables
-    type(urbanparams_type), intent(in)    :: urbanparams_inst ! urban parameters
+    type(temperature_type)  , intent(inout) :: temperature_inst ! Temperature variables
+    type(urbanparams_type)  , intent(in)    :: urbanparams_inst ! urban parameters
+    type(urbantv_type)      , intent(in)    :: urbantv_inst     ! urban parameters
     logical, intent(out)  :: cool_on(bounds%begl:)            ! is urban air conditioning on?
     logical, intent(out)  :: heat_on(bounds%begl:)            ! is urban heating on?
     !-----------------------------------------------------------------------
@@ -4699,7 +4704,7 @@ contains
 
     t_building     => temperature_inst%t_building_lun    , & ! Input:  [real(r8) (:)]  internal building air temperature (K)       
 
-    t_building_max => urbanparams_inst%t_building_max    , & ! Input:  [real(r8) (:)]  maximum internal building air temperature (K)
+    t_building_max => urbantv_inst%t_building_max        , & ! Input:  [real(r8) (:)]  maximum internal building air temperature (K)
     t_building_min => urbanparams_inst%t_building_min      & ! Input:  [real(r8) (:)]  minimum internal building air temperature (K)
     )
     ! Restrict internal building temperature to between min and max

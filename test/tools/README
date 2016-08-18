@@ -11,9 +11,11 @@ To use...
 
 ./test_driver.sh -i
 
-Intended for use on NCAR machines: yellowstone, frankfurt.cgd, lynx, mirage, 
-and ORNL machine titan. And works on the MacBook laptop yongi.cgd. For most machines 
-more than one compiler is supported.
+on yellowstone
+
+execgy ./test_driver.sh -i >& run.out &
+
+Intended for use on NCAR machines yellowstone and hobart.
 
 II. RUNNING test_driver.sh TOOLS TESTING:
 
@@ -34,7 +36,7 @@ CLM_FC ----------------- Use given compiler
 CLM_JOBID -------------- Job identification number to use (rather than process ID)
 CLM_THREADS ------------ Number of open-MP threads to use 
                          (by default this is set differently by machine)
-CLM_SOFF --------------- If set to TRUE -- stop on first failed test
+CLM_SOFF --------------- If set to TRUE -- stop on first failed test (default FALSE)
 
 Important files for test_driver tools testing:
 
