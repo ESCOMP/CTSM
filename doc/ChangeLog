@@ -1,4 +1,131 @@
 ===============================================================
+Tag name:  clm4_5_12_r190
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Aug 20 05:53:49 MDT 2016
+One-line Summary: Fix snow capping bug
+
+Purpose of changes
+------------------
+
+   When snow capping was triggered, the bottom snow layer was decreased in mass,
+   but dz remained unchanged, leading to problematic changes in density. This
+   tag fixes that problem, so that dz is decreased appropriately.
+
+   These changes are from Leo van Kampenhout (l.vankampenhout@uu.nl)
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2343 (new snow capping scheme does not conserve density)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+   Changed
+   ERP_P15x2_Lm36.f10_f10.ICRUCLM50BGCCROP.yellowstone_intel.clm-cropMonth_interp
+   to
+   ERP_P30x2_Lm36.f10_f10.ICRUCLM50BGCCROP.yellowstone_intel.clm-cropMonth_interp
+   so that it could reliably finish within 2 hours.
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - pass
+
+    ok means tests pass, some baseline comparisons fail as expected
+
+CLM tag used for the baseline comparisons: clm4_5_11_r189
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: potentially all clm45 / clm50
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+      Larger than roundoff. I have not investigated the size of the change,
+      suspect it is the same climate with respect to land-atmosphere fluxes, but
+      potentially different climate with respect to snow pack properties and SMB
+      sent to CISM. (This changes the density of the bottom layer of deep snow
+      packs.)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? n/a
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: n/a
+
+   URL for LMWG diagnostics output used to validate new climate: n/a
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+
+========= Change a test, as noted above
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_11_r189
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Aug 18 14:52:36 MDT 2016

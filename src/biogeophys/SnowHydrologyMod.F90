@@ -1477,6 +1477,8 @@ contains
     ! This routine is called twice: once for non-lake columns and once for lake columns. 
     ! The initialization of the snow capping fluxes should only be done ONCE for each group,
     ! therefore they are a passed as an extra argument (filter_initc). 
+    ! Density and temperature of the layer are conserved (density needs some work, temperature is a state
+    ! variable)
     !
     ! !USES:
     use clm_time_manager   , only : get_step_size
@@ -1497,13 +1499,13 @@ contains
     real(r8)   :: mss_snow_bottom_lyr              ! total snow mass (ice+liquid) in bottom layer [kg/m2]
     real(r8)   :: icefrac                          ! fraction of ice mass w.r.t. total mass [unitless]
     real(r8)   :: frac_adjust                      ! fraction of mass remaining after capping
+    real(r8)   :: rho                              ! partial density of ice (not scaled with frac_sno) [kg/m3]
     integer    :: fc, c                            ! counters
     ! Always keep at least this fraction of the bottom snow layer when doing snow capping
     ! This needs to be slightly greater than 0 to avoid roundoff problems
     real(r8), parameter :: min_snow_to_keep = 1.e-9  ! fraction of bottom snow layer to keep with capping
 
-
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
     associate( &
         qflx_snwcp_ice     => waterflux_inst%qflx_snwcp_ice_col   , & ! Output: [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]
         qflx_snwcp_liq     => waterflux_inst%qflx_snwcp_liq_col   , & ! Output: [real(r8) (:)   ]  excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]
@@ -1517,7 +1519,8 @@ contains
         mss_dst1           => aerosol_inst%mss_dst1_col           , & ! In/Out: [real(r8) (:,:) ] dust species 1 mass in snow (col,lyr) [kg]
         mss_dst2           => aerosol_inst%mss_dst2_col           , & ! In/Out: [real(r8) (:,:) ] dust species 2 mass in snow (col,lyr) [kg]
         mss_dst3           => aerosol_inst%mss_dst3_col           , & ! In/Out: [real(r8) (:,:) ] dust species 3 mass in snow (col,lyr) [kg]
-        mss_dst4           => aerosol_inst%mss_dst4_col             & ! In/Out: [real(r8) (:,:) ] dust species 4 mass in snow (col,lyr) [kg]
+        mss_dst4           => aerosol_inst%mss_dst4_col           , & ! In/Out: [real(r8) (:,:) ] dust species 4 mass in snow (col,lyr) [kg]
+        dz                 => col%dz                                & ! In/Out: [real(r8) (:,:) ] layer depth (m)
     )
 
     ! Determine model time step
@@ -1542,14 +1545,26 @@ contains
           qflx_snwcp_ice(c) = mss_snwcp_tot/dtime * icefrac
           qflx_snwcp_liq(c) = mss_snwcp_tot/dtime * (1._r8 - icefrac)
 
+          rho = h2osoi_ice(c,0) / dz(c,0) ! ice only
+
           ! Adjust water content
           h2osoi_ice(c,0) = h2osoi_ice(c,0) - qflx_snwcp_ice(c)*dtime
           h2osoi_liq(c,0) = h2osoi_liq(c,0) - qflx_snwcp_liq(c)*dtime
 
+          ! Scale dz such that ice density (or: pore space) is conserved
+          !
+          ! Avoid scaling dz for very low ice densities. This can occur, in principle, if
+          ! the layer is mostly liquid water. Furthermore, this check is critical in the
+          ! unlikely event that rho is 0, which can happen if the layer is entirely liquid
+          ! water.
+          if (rho > 1.0_r8) then
+            dz(c,0) = h2osoi_ice(c,0) / rho 
+          end if
+
           ! Check that water capacity is still positive
           if (h2osoi_ice(c,0) < 0._r8 .or. h2osoi_liq(c,0) < 0._r8 ) then
              write(iulog,*)'ERROR: capping procedure failed (negative mass remaining) c = ',c
-             write(iulog,*)'h2osoi_ice = ', h2osoi_ice(c,0), ' hwosoi_liq = ', h2osoi_liq(c,0)
+             write(iulog,*)'h2osoi_ice = ', h2osoi_ice(c,0), ' h2osoi_liq = ', h2osoi_liq(c,0)
              call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
           end if
 
