@@ -200,11 +200,16 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <wind_dependent_snow_density phys="clm5_0" >.true.</wind_dependent_snow_density>
 <wind_dependent_snow_density phys="clm4_5" >.false.</wind_dependent_snow_density>
 
+<snow_overburden_compaction_method phys="clm5_0">'Vionnet2012'</snow_overburden_compaction_method>
+<snow_overburden_compaction_method phys="clm4_5">'Anderson1976'</snow_overburden_compaction_method>
+
 <lotmp_snowdensity_method phys="clm5_0">'Slater2017'</lotmp_snowdensity_method>
 <lotmp_snowdensity_method phys="clm4_5">'TruncatedAnderson1976'</lotmp_snowdensity_method>
 
-<upplim_destruct_metamorph   phys="clm5_0">150.d00</upplim_destruct_metamorph>
-<overburden_compress_tfactor phys="clm5_0">0.04d00</overburden_compress_tfactor>
+<upplim_destruct_metamorph   phys="clm4_5">100.d00</upplim_destruct_metamorph>
+<upplim_destruct_metamorph   phys="clm5_0">175.d00</upplim_destruct_metamorph>
+
+<overburden_compress_tfactor>0.08d00</overburden_compress_tfactor>
 
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo

@@ -679,7 +679,9 @@ contains
        call check_dim(ncid, namep, nump, msg=msg)
        if ( use_ed ) call check_dim(ncid, nameCohort  , numCohort, msg=msg)
     end if
-    call check_dim(ncid, 'levsno'  , nlevsno)
+    call check_dim(ncid, 'levsno'  , nlevsno, &
+         msg = 'You can deal with this mismatch by rerunning with ' // &
+               'use_init_interp = .true. in user_nl_clm')
     call check_dim(ncid, 'levgrnd' , nlevgrnd)
     call check_dim(ncid, 'levurb'  , nlevurb)
     call check_dim(ncid, 'levlak'  , nlevlak) 

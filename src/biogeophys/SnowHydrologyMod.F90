@@ -48,7 +48,6 @@ module SnowHydrologyMod
   public :: NewSnowBulkDensity         ! Compute bulk density of any newly-fallen snow
 
   ! The following are public just for the sake of unit testing:
-  public :: WindCompactionFactor              ! Compaction enhancement factor of snowpack due to wind
   public :: SnowHydrologySetControlForTesting ! Set some of the control settings
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -92,11 +91,16 @@ module SnowHydrologyMod
   !
   ! !PRIVATE DATA MEMBERS:
 
+  integer, parameter :: OverburdenCompactionMethodAnderson1976 = 1
+  integer, parameter :: OverburdenCompactionMethodVionnet2012  = 2
+
   integer, parameter :: LoTmpDnsSlater2017            = 2    ! For temperature below -15C use equation from Slater 2017
   integer, parameter :: LoTmpDnsTruncatedAnderson1976 = 1    ! Truncate low temp. snow density from the Anderson-1976 version at -15C
+
   ! If true, the density of new snow depends on wind speed, and there is also
   ! wind-dependent snow compaction
   logical  :: wind_dependent_snow_density                      ! If snow density depends on wind or not
+  integer  :: overburden_compaction_method = -1
   integer  :: new_snow_density            = LoTmpDnsSlater2017 ! Snow density type
   real(r8) :: upplim_destruct_metamorph   = 100.0_r8           ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
   real(r8) :: overburden_compress_Tfactor = 0.08_r8            ! snow compaction overburden exponential factor (1/K)
@@ -123,17 +127,20 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
+    character(len=64) :: snow_overburden_compaction_method
+    character(len=25) :: lotmp_snowdensity_method
 
     character(len=*), parameter :: subname = 'SnowHydrology_readnl'
     !-----------------------------------------------------------------------
 
-    character(len=25) :: lotmp_snowdensity_method
     namelist /clm_snowhydrology_inparm/ &
-         wind_dependent_snow_density, lotmp_snowdensity_method, upplim_destruct_metamorph, &
+         wind_dependent_snow_density, snow_overburden_compaction_method, &
+         lotmp_snowdensity_method, upplim_destruct_metamorph, &
          overburden_compress_Tfactor, min_wind_snowcompact
 
     ! Initialize options to default values, in case they are not specified in the namelist
     wind_dependent_snow_density = .false.
+    snow_overburden_compaction_method = ' '
 
     if (masterproc) then
        unitn = getavu()
@@ -152,6 +159,7 @@ contains
     end if
 
     call shr_mpi_bcast (wind_dependent_snow_density, mpicom)
+    call shr_mpi_bcast (snow_overburden_compaction_method, mpicom)
     call shr_mpi_bcast (lotmp_snowdensity_method   , mpicom)
     call shr_mpi_bcast (upplim_destruct_metamorph  , mpicom)
     call shr_mpi_bcast (overburden_compress_Tfactor, mpicom)
@@ -163,13 +171,23 @@ contains
        write(iulog,nml=clm_snowhydrology_inparm)
        write(iulog,*) ' '
     end if
+
     if (      trim(lotmp_snowdensity_method) == 'Slater2017' ) then
        new_snow_density = LoTmpDnsSlater2017
     else if ( trim(lotmp_snowdensity_method) == 'TruncatedAnderson1976' ) then
        new_snow_density = LoTmpDnsTruncatedAnderson1976
     else
        call endrun(msg="ERROR bad lotmp_snowdensity_method name"//errmsg(__FILE__, __LINE__))
-    end if 
+    end if
+
+    if (trim(snow_overburden_compaction_method) == 'Anderson1976') then
+       overburden_compaction_method = OverburdenCompactionMethodAnderson1976
+    else if (trim(snow_overburden_compaction_method) == 'Vionnet2012') then
+       overburden_compaction_method = OverburdenCompactionMethodVionnet2012
+    else
+       call endrun(msg="ERROR bad snow_overburden_compaction_method name"// &
+            errMsg(__FILE__, __LINE__))
+    end if
 
   end subroutine SnowHydrology_readnl
 
@@ -548,26 +566,26 @@ contains
     integer :: g                                ! gridcell index
     real(r8):: dtime                            ! land model time step (sec)
     ! parameters
-    real(r8), parameter :: c2 = 23.e-3_r8       ! [m3/kg]
     real(r8), parameter :: c3 = 2.777e-6_r8     ! [1/s]
     real(r8), parameter :: c4 = 0.04_r8         ! [1/K]
     real(r8), parameter :: c5 = 2.0_r8          !
-    real(r8), parameter :: eta0 = 9.e+5_r8      ! The Viscosity Coefficient Eta0 [kg-s/m2]
     !
-    real(r8) :: burden(bounds%begc:bounds%endc) ! pressure of overlying snow [kg/m2]
-    real(r8) :: ddz1                            ! Rate of settling of snowpack due to destructive metamorphism.
-    real(r8) :: ddz2                            ! Rate of compaction of snowpack due to overburden.
-    real(r8) :: ddz3                            ! Rate of compaction of snowpack due to melt [1/s]
-    real(r8) :: windcomp                        ! Compaction enhancement factor of snowpack due to wind [-]
-    real(r8) :: dexpf                           ! expf=exp(-c4*(273.15-t_soisno)).
-    real(r8) :: fi                              ! Fraction of ice relative to the total water content at current time step
-    real(r8) :: td                              ! t_soisno - tfrz [K]
-    real(r8) :: pdzdtc                          ! Nodal rate of change in fractional-thickness due to compaction [fraction/s]
-    real(r8) :: void                            ! void (1 - vol_ice - vol_liq)
-    real(r8) :: wx                              ! water mass (ice+liquid) [kg/m2]
-    real(r8) :: bi                              ! partial density of ice [kg/m3]
-    real(r8) :: wsum                            ! snowpack total water mass (ice+liquid) [kg/m2]
+    real(r8) :: burden(bounds%begc:bounds%endc)  ! pressure of overlying snow [kg/m2]
+    real(r8) :: zpseudo(bounds%begc:bounds%endc) ! wind drift compaction / pseudo depth (only valid if wind_dependent_snow_density is .true.)
+    logical  :: mobile(bounds%begc:bounds%endc)  ! current snow layer is mobile, i.e. susceptible to wind drift (only valid if wind_dependent_snow_density is .true.)
+    real(r8) :: ddz1   ! Rate of settling of snowpack due to destructive metamorphism.
+    real(r8) :: ddz2   ! Rate of compaction of snowpack due to overburden.
+    real(r8) :: ddz3   ! Rate of compaction of snowpack due to melt [1/s]
+    real(r8) :: dexpf  ! expf=exp(-c4*(273.15-t_soisno)).
+    real(r8) :: fi     ! Fraction of ice relative to the total water content at current time step
+    real(r8) :: td     ! t_soisno - tfrz [K]
+    real(r8) :: pdzdtc ! Nodal rate of change in fractional-thickness due to compaction [fraction/s]
+    real(r8) :: void   ! void (1 - vol_ice - vol_liq)
+    real(r8) :: wx     ! water mass (ice+liquid) [kg/m2]
+    real(r8) :: bi     ! partial density of ice [kg/m3]
+    real(r8) :: wsum   ! snowpack total water mass (ice+liquid) [kg/m2]
     real(r8) :: fsno_melt
+    real(r8) :: ddz4   ! Rate of compaction of snowpack due to wind drift.
     !-----------------------------------------------------------------------
 
     associate( &
@@ -595,7 +613,13 @@ contains
 
     ! Begin calculation - note that the following column loops are only invoked if snl(c) < 0
 
-    burden(bounds%begc : bounds%endc) = 0._r8
+    do fc = 1, num_snowc
+       c = filter_snowc(fc)
+       
+       burden(c)  = 0._r8
+       zpseudo(c) = 0._r8
+       mobile(c)  = .true.
+    end do
 
     do j = -nlevsno+1, 0
        do fc = 1, num_snowc
@@ -603,8 +627,6 @@ contains
           g = col%gridcell(c)
           if (j >= snl(c)+1) then
 
-             wx = h2osoi_ice(c,j) + h2osoi_liq(c,j)
-             void = 1._r8 - (h2osoi_ice(c,j)/denice + h2osoi_liq(c,j)/denh2o) / dz(c,j)
              wx = (h2osoi_ice(c,j) + h2osoi_liq(c,j))
              void = 1._r8 - (h2osoi_ice(c,j)/denice + h2osoi_liq(c,j)/denh2o)&
                   /(frac_sno(c) * dz(c,j))
@@ -626,16 +648,26 @@ contains
 
                 if (h2osoi_liq(c,j) > 0.01_r8*dz(c,j)*frac_sno(c)) ddz1=ddz1*c5
 
-                ! Compaction due to overburden
-                if (wind_dependent_snow_density) then
-                   windcomp = WindCompactionFactor( &
-                        forc_wind = forc_wind(g), &
-                        layer     = j, &
-                        snl       = snl(c))
-                else
-                   windcomp = 1.0_r8
-                end if
-                ddz2 = -(burden(c)+wx/2._r8)*windcomp*exp(-overburden_compress_Tfactor*td - c2*bi)/eta0
+                select case (overburden_compaction_method)
+                case (OverburdenCompactionMethodAnderson1976)
+                   ddz2 = OverburdenCompactionAnderson1976( &
+                        burden = burden(c), &
+                        wx = wx, &
+                        td = td, &
+                        bi = bi)
+
+                case (OverburdenCompactionMethodVionnet2012)
+                   ddz2 = OverburdenCompactionVionnet2012( &
+                        h2osoi_liq = h2osoi_liq(c,j), &
+                        dz = dz(c,j), &
+                        burden = burden(c), &
+                        wx = wx, &
+                        td = td, &
+                        bi = bi)
+
+                case default
+                   call endrun(msg="Unknown overburden_compaction_method")
+                end select
 
                 ! Compaction occurring during melt
 
@@ -659,14 +691,32 @@ contains
                    ddz3 = 0._r8
                 end if
 
-                ! Time rate of fractional change in dz (units of s-1)
+                ! Compaction occurring due to wind drift
+                if (wind_dependent_snow_density) then
+                   call WindDriftCompaction( &
+                        bi = bi, &
+                        forc_wind = forc_wind(g), &
+                        dz = dz(c,j), &
+                        zpseudo = zpseudo(c), &
+                        mobile = mobile(c), &
+                        compaction_rate = ddz4)
+                else
+                   ddz4 = 0.0_r8
+                end if
 
-                pdzdtc = ddz1 + ddz2 + ddz3
+                ! Time rate of fractional change in dz (units of s-1)
+                pdzdtc = ddz1 + ddz2 + ddz3 + ddz4
 
                 ! The change in dz due to compaction
                 ! Limit compaction to be no greater than fully saturated layer thickness
-
                 dz(c,j) = max(dz(c,j) * (1._r8+pdzdtc*dtime),(h2osoi_ice(c,j)/denice+ h2osoi_liq(c,j)/denh2o)/frac_sno(c))
+
+             else
+                ! saturated node is immobile
+                !
+                ! This is only needed if wind_dependent_snow_density is true, but it's
+                ! simplest just to update mobile always
+                mobile(c) = .false.
              end if
 
              ! Pressure of overlying snow
@@ -1650,59 +1700,149 @@ contains
   end subroutine NewSnowBulkDensity
 
   !-----------------------------------------------------------------------
-  function WindCompactionFactor(forc_wind, layer, snl) result(windcomp)
+  pure function OverburdenCompactionAnderson1976(burden, wx, td, bi) &
+       result(compaction_rate)
     !
     ! !DESCRIPTION:
-    ! Computes compaction enhancement factor of snowpack due to wind.
+    ! Compute snow overburden compaction for a single column and level using the Anderson
+    ! 1976 formula
     !
-    ! This is used if wind_dependent_snow_density is true.
+    ! From Anderson 1976: A point energy and mass balance model of a snow cover, NOAA
+    ! Technical Report NWS 19
     !
-    ! Parameterization comes from Glen Liston et al., Journal of Glaciology, Vol. 53, No.
-    ! 181, 2007 (equation 18)
+    ! !ARGUMENTS:
+    real(r8) :: compaction_rate ! function result
+    real(r8) , intent(in) :: burden ! pressure of overlying snow in this column [kg/m2]
+    real(r8) , intent(in) :: wx     ! water mass (ice+liquid) [kg/m2]
+    real(r8) , intent(in) :: td     ! t_soisno - tfrz [K]
+    real(r8) , intent(in) :: bi     ! partial density of ice [kg/m3]
     !
-    ! For forc_wind >= 5 m/s, parameterization varies between 5 (forc_wind = 5 m/s) and
-    ! 20 (forc_wind large); for forc_wind < 5 m/s, returns 1.
+    ! !LOCAL VARIABLES:
+    real(r8), parameter :: c2 = 23.e-3_r8       ! [m3/kg]
+    real(r8), parameter :: eta0 = 9.e+5_r8      ! The Viscosity Coefficient Eta0 [kg-s/m2]
+
+    character(len=*), parameter :: subname = 'OverburdenCompactionAnderson1976'
+    !-----------------------------------------------------------------------
+
+    compaction_rate = -(burden+wx/2._r8)*exp(-overburden_compress_Tfactor*td - c2*bi)/eta0
+
+  end function OverburdenCompactionAnderson1976
+
+  !-----------------------------------------------------------------------
+  pure function OverburdenCompactionVionnet2012(h2osoi_liq, dz, burden, wx, td, bi) &
+       result(compaction_rate)
+    !
+    ! !DESCRIPTION:
+    ! Compute snow overburden compaction for a single column and level using the Vionnet
+    ! et al. 2012 formula
+    !
+    ! From Vionnet V et al. 2012, "The detailed snowpack scheme Crocus and its
+    ! implementation in SURFEX v7.2", Geosci. Model Dev. 5, 773–791.
+    !
+    ! Preconditions (required to avoid divide by 0):
+    ! - dz > 0
+    ! - bi > 0
+    !
+    ! !USES:
+    use clm_varcon, only : denh2o
+    !
+    ! !ARGUMENTS:
+    real(r8) :: compaction_rate ! function result
+    real(r8) , intent(in) :: h2osoi_liq ! liquid water in this column and level [kg/m2]
+    real(r8) , intent(in) :: dz         ! layer depth for this column and level [m]
+    real(r8) , intent(in) :: burden     ! pressure of overlying snow in this column [kg/m2]
+    real(r8) , intent(in) :: wx         ! water mass (ice+liquid) [kg/m2]
+    real(r8) , intent(in) :: td         ! t_soisno - tfrz [K]
+    real(r8) , intent(in) :: bi         ! partial density of ice [kg/m3]
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: f1, f2                          ! overburden compaction modifiers to viscosity
+    real(r8) :: eta                             ! Viscosity
+
+    real(r8), parameter :: ceta = 450._r8       ! overburden compaction constant [kg/m3]
+    real(r8), parameter :: aeta = 0.1_r8        ! overburden compaction constant [1/K]
+    real(r8), parameter :: beta = 0.023_r8      ! overburden compaction constant [m3/kg]
+    real(r8), parameter :: eta0 = 7.62237e6_r8  ! The Viscosity Coefficient Eta0 [kg-s/m2]
+
+    character(len=*), parameter :: subname = 'OverburdenCompactionVionnet2012'
+    !-----------------------------------------------------------------------
+
+    f1 = 1._r8 / (1._r8 + 60._r8 * h2osoi_liq / (denh2o * dz))
+    f2 = 4.0_r8 ! currently fixed to maximum value, holds in absence of angular grains
+    eta = f1*f2*(bi/ceta)*exp(aeta*td + beta*bi)*eta0
+    compaction_rate = -(burden+wx/2._r8) / eta
+
+  end function OverburdenCompactionVionnet2012
+
+  !-----------------------------------------------------------------------
+  subroutine WindDriftCompaction(bi, forc_wind, dz, &
+       zpseudo, mobile, compaction_rate)
+    !
+    ! !DESCRIPTION:
+    !
+    ! Compute wind drift compaction for a single column and level.
+    !
+    ! Also updates zpseudo and mobile for this column. However, zpseudo remains unchanged
+    ! if mobile is already false or becomes false within this subroutine.
+    !
+    ! The structure of the updates done here for zpseudo and mobile requires that this
+    ! subroutine be called first for the top layer of snow, then for the 2nd layer down,
+    ! etc. - and finally for the bottom layer. Before beginning the loops over layers,
+    ! mobile should be initialized to .true. and zpseudo should be initialized to 0.
     !
     ! !USES:
     !
     ! !ARGUMENTS:
-    real(r8) :: windcomp  ! function result
-    real(r8), intent(in) :: forc_wind  ! atmospheric wind speed (m/s)
-    integer , intent(in) :: layer      ! current snow layer index (between snl+1 [top] and 0 [bottom])
-    integer , intent(in) :: snl        ! NEGATIVE number of snow layers
+    real(r8) , intent(in)    :: bi              ! partial density of ice [kg/m3]
+    real(r8) , intent(in)    :: forc_wind       ! atmospheric wind speed [m/s]
+    real(r8) , intent(in)    :: dz              ! layer depth for this column and level [m]
+    real(r8) , intent(inout) :: zpseudo         ! wind drift compaction / pseudo depth for this column at this layer
+    logical  , intent(inout) :: mobile          ! whether this snow column is still mobile at this layer (i.e., susceptible to wind drift)
+    real(r8) , intent(out)   :: compaction_rate ! rate of compaction of snowpack due to wind drift, for the current column and layer
     !
     ! !LOCAL VARIABLES:
+    real(r8) :: Frho        ! Mobility density factor [-]
+    real(r8) :: MO          ! Mobility index [-]
+    real(r8) :: SI          ! Driftability index [-]
+    real(r8) :: gamma_drift ! Scaling factor for wind drift time scale [-]
+    real(r8) :: tau         ! Effective time scale [s]
 
-    ! wind compaction factor at min_wind (E1 from Liston et al.)
-    real(r8), parameter :: min_factor = 5._r8
+    real(r8), parameter :: rho_min = 50._r8      ! wind drift compaction / minimum density [kg/m3]
+    real(r8), parameter :: rho_max = 350._r8     ! wind drift compaction / maximum density [kg/m3]
+    real(r8), parameter :: drift_gs = 0.35e-3_r8 ! wind drift compaction / grain size (fixed value for now)
+    real(r8), parameter :: drift_sph = 1.0_r8    ! wind drift compaction / sphericity
+    real(r8), parameter :: tau_ref = 48._r8 * 3600._r8  ! wind drift compaction / reference time [s]
 
-    ! maximum addition to min_factor for very strong winds (E2 from Liston et al.)
-    real(r8), parameter :: max_additional_factor = 15._r8
-
-    ! factor controlling progression of wind compaction factor from weak to strong winds
-    ! (E3 from Liston et al.)
-    real(r8), parameter :: progression_factor = 0.2_r8
-
-    character(len=*), parameter :: subname = 'WindCompactionFactor'
+    character(len=*), parameter :: subname = 'WindDriftCompaction'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(-snl <= nlevsno, errMsg(__FILE__, __LINE__))
-    SHR_ASSERT(snl+1 <= layer .and. layer <= 0, errMsg(__FILE__, __LINE__))
+    if (mobile) then
+       Frho = 1.25_r8 - 0.0042_r8*(max(rho_min, bi)-rho_min)
+       ! assuming dendricity = 0, sphericity = 1, grain size = 0.35 mm Non-dendritic snow
+       MO = 0.34_r8 * (-0.583_r8*drift_gs - 0.833_r8*drift_sph + 0.833_r8) + 0.66_r8*Frho
+       SI = -2.868_r8 * exp(-0.085_r8*forc_wind) + 1._r8 + MO
 
-    ! Only apply wind compaction to top snow layer
-    if (layer == snl+1) then
-       if (forc_wind >= min_wind_snowcompact) then
-          windcomp = min_factor + max_additional_factor * &
-               (1.0_r8 - exp(-progression_factor * (forc_wind - min_wind_snowcompact)))
-       else
-          windcomp = 1.0_r8
+       if (SI > 0.0_r8) then
+          SI = min(SI, 3.25_r8)
+          ! Increase zpseudo (wind drift / pseudo depth) to the middle of
+          ! the pseudo-node for the sake of the following calculation
+          zpseudo = zpseudo + 0.5_r8 * dz * (3.25_r8 - SI)
+          gamma_drift = SI*exp(-zpseudo/0.1_r8)
+          tau = tau_ref / gamma_drift
+          compaction_rate = -max(0.0_r8, rho_max-bi)/tau
+          ! Further increase zpseudo to the bottom of the pseudo-node for
+          ! the sake of calculations done on the underlying layer (i.e.,
+          ! the next time through the j loop).
+          zpseudo = zpseudo + 0.5_r8 * dz * (3.25_r8 - SI)
+       else  ! SI <= 0
+          mobile = .false.
+          compaction_rate = 0._r8
        end if
-    else
-       windcomp = 1.0_r8
+    else  ! .not. mobile
+       compaction_rate = 0._r8
     end if
 
-  end function WindCompactionFactor
-
+  end subroutine WindDriftCompaction
 
 
   !-----------------------------------------------------------------------

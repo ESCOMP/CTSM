@@ -605,7 +605,7 @@ contains
        ! Note that filter_snowc and filter_nosnowc are returned by
        ! LakeHydrology after the new snow filter is built
 
-       call t_startf('hydro without drainage')
+       call t_startf('hydro_without_drainage')
 
        call HydrologyNoDrainage(bounds_clump,                                &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                      &
@@ -639,7 +639,7 @@ contains
             waterstate_inst=waterstate_inst,                               &
             aerosol_inst=aerosol_inst)                      
 
-       call t_stopf('hydro without drainage')
+       call t_stopf('hydro_without_drainage')
 
        ! ============================================================================
        ! Lake hydrology
@@ -763,7 +763,7 @@ contains
        ! Calculate soil/snow hydrology with drainage (subsurface runoff)
        ! ============================================================================
 
-       call t_startf('hydro2 drainage')
+       call t_startf('hydro2_drainage')
 
        call HydrologyDrainage(bounds_clump,                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
@@ -774,7 +774,7 @@ contains
             soilhydrology_inst, soilstate_inst, waterstate_inst, waterflux_inst, &
             irrigation_inst, glacier_smb_inst)
 
-       call t_stopf('hydro2 drainage')     
+       call t_stopf('hydro2_drainage')     
 
        if (use_cn) then
 

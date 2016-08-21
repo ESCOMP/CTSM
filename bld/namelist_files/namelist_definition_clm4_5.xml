@@ -1908,6 +1908,14 @@ If TRUE, the density of new snow depends on wind speed, and there is also
 wind-dependent snow compaction.
 </entry>
 
+<entry id="snow_overburden_compaction_method" type="char*64" category="clm_physics"
+       group="clm_snowhydrology_inparm"
+       valid_values="Vionnet2012,Anderson1976">
+Method used to compute snow overburden compaction
+Anderson1976 -- older method, default in CLM45
+Vionnet2012 --- newer method, default in CLM50
+</entry>
+
 <entry id="lotmp_snowdensity_method" type="char*25" category="clm_physics"
        group="clm_snowhydrology_inparm"    valid_values="Slater2017,TruncatedAnderson1976" >
 Snow density method to use for low temperatures (below -15C)
@@ -1923,6 +1931,7 @@ Upper Limit on Destructive Metamorphism Compaction [kg/m3]
 <entry id="overburden_compress_Tfactor" type="real" category="clm_physics"
        group="clm_snowhydrology_inparm"   >
 Snow compaction overburden exponential factor (1/K)
+Not used for snow_overburden_compaction_method=Vionnet2012
 </entry>
 
 <entry id="min_wind_snowcompact" type="real" category="clm_physics"

@@ -1,4 +1,161 @@
 ===============================================================
+Tag name:  clm4_5_12_r191
+Originator(s):  sacks (Bill Sacks)
+Date: Sun Aug 21 06:18:04 MDT 2016
+One-line Summary: New parameterizations for snow overburden compaction and wind drift compaction
+
+Purpose of changes
+------------------
+
+   Introduces new parameterizations for snow overburden compaction and wind
+   drift compaction. By default, CLM45 uses the old snow overburden compaction
+   formula and no wind drift compaction, whereas CLM5 uses the new
+   parameterizations.
+
+   Also changes the CLM50 default for the snow compaction parameter
+   upplim_destruct_metamorph
+
+   Scientific changes are from Leo van Kampenhout (l.vankampenhout@uu.nl)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist option: snow_overburden_compaction_method
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   - Changed clm5_0 default for upplim_destruct_metamorph
+   - upplim_destruct_metamorph appears in namelist for clm4_5 as well as clm5_0
+   - upplim_destruct_metamorph default changed for clm5_0 (175 rather than 150)
+   - overburden_compress_tfactor appears in namelist for clm4_5; does not appear
+     when using the new Vionnet2012 snow overburden compaction method (so does
+     not appear by default with clm5_0); no longer has a different default value
+     for clm5_0 (since it doesn't appear by default in clm5_0)
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+   The new parameterizations are more complex, so have a moderate (~ 20%) impact
+   on SnowCompaction timing, but this is a very small part of the overall CLM
+   run time. The timing impacts of extracting routines to compute some of
+   the snow compaction terms were minimal (only increased the SnowCompaction
+   time by a few percent).
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self; Dave Lawrence also reviewed Leo's initial implementation
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - ok
+
+      tests pass; differences from baseline for CLM45 and CLM50 as expected
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass (or xfail); differences from baseline for CLM50 as expected
+
+CLM tag used for the baseline comparisons: clm4_5_12_r190
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM50
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+      Larger than roundoff; I haven't investigated this closely, but suspect
+      these changes result in new climate, at least regionally
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated:
+
+========= Remove unit tests for a function that has been removed
+D       components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology_windCompactionFactor.pf
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as described above
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+
+========= (a) Add namelist option controlling which snow overburden compaction
+          method to use; (b) make upplim_destruct_metamorph appear in the
+          namelist for clm4_5 as well as clm5_0; (c) change default value for
+          upplim_destruct_metamorph; (d) remove clm5_0 default for
+          overburden_compress_tfactor (because it is not used by default in
+          clm5_0), and make sure this namelist item appears with clm4_5 but
+          doesn't appear when using the new Vionnet2012 snow overburden
+          compaction method
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+
+========= Unrelated change: Remove spaces from timer names for easier automated
+          processing of timing output (requested by Sean Santos)
+M       components/clm/src/main/clm_driver.F90
+
+========= Unrelated changes: Add more informative error messages
+M       components/clm/src/main/atm2lndMod.F90
+M       components/clm/src/main/restFileMod.F90
+
+========= Remove unit tests for a function that has been removed
+M       components/clm/src/biogeophys/test/SnowHydrology_test/CMakeLists.txt
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_12_r190
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Aug 20 05:53:49 MDT 2016
