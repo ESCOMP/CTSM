@@ -10,7 +10,9 @@ module SoilBiogeochemCarbonFluxType
   use ch4varcon                          , only : allowlakeprod
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use ColumnType                         , only : col                
-  use LandunitType                       , only : lun                
+  use LandunitType                       , only : lun
+  use clm_varctl                         , only : use_ed
+  
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -45,6 +47,11 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration 
      real(r8), pointer :: somhr_col                                 (:)     ! (gC/m2/s) soil organic matter heterotrophic res   
      real(r8), pointer :: soilc_change_col                          (:)     ! (gC/m2/s) FUN used soil C
+
+     ! fluxes to receive carbon inputs from FATES
+     real(r8), pointer :: FATES_c_to_litr_lab_c_col                 (:,:)   ! total labile    litter coming from ED. gC/m3/s
+     real(r8), pointer :: FATES_c_to_litr_cel_c_col                 (:,:)   ! total cellulose    litter coming from ED. gC/m3/s
+     real(r8), pointer :: FATES_c_to_litr_lig_c_col                 (:,:)   ! total lignin    litter coming from ED. gC/m3/s
 
    contains
 
@@ -128,6 +135,21 @@ contains
      allocate(this%lithr_col               (begc:endc)) ; this%lithr_col               (:) = nan
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
+
+     if ( use_ed ) then
+        ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
+
+        allocate(this%FATES_c_to_litr_lab_c_col(begc:endc,1:nlevdecomp_full))
+        this%FATES_c_to_litr_lab_c_col(begc:endc,1:nlevdecomp_full) = 0._r8
+        
+        allocate(this%FATES_c_to_litr_cel_c_col(begc:endc,1:nlevdecomp_full))
+        this%FATES_c_to_litr_cel_c_col(begc:endc,1:nlevdecomp_full) = 0._r8
+        
+        allocate(this%FATES_c_to_litr_lig_c_col(begc:endc,1:nlevdecomp_full))
+        this%FATES_c_to_litr_lig_c_col(begc:endc,1:nlevdecomp_full) = 0._r8
+
+     endif
+     
    end subroutine InitAllocate 
 
    !------------------------------------------------------------------------
@@ -527,6 +549,23 @@ contains
        end if
     end do
 
+    if ( use_ed ) then
+
+       call hist_addfld_decomp(fname='FATES_c_to_litr_lab_c', units='gC/m^3/s',  type2d='levdcmp', &
+                   avgflag='A', long_name='litter labile carbon flux from FATES to BGC', &
+                   ptr_col=this%FATES_c_to_litr_lab_c_col)
+
+       call hist_addfld_decomp(fname='FATES_c_to_litr_cel_c', units='gC/m^3/s',  type2d='levdcmp', &
+                   avgflag='A', long_name='litter celluluse carbon flux from FATES to BGC', &
+                   ptr_col=this%FATES_c_to_litr_cel_c_col)
+
+       call hist_addfld_decomp(fname='FATES_c_to_litr_lig_c', units='gC/m^3/s',  type2d='levdcmp', &
+                   avgflag='A', long_name='litter lignin carbon flux from FATES to BGC', &
+                   ptr_col=this%FATES_c_to_litr_lig_c_col)
+
+     endif
+
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -566,16 +605,65 @@ contains
     ! !USES:
     use restUtilMod
     use ncdio_pio
+    use clm_varctl, only : use_vertsoilc
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonflux_type) :: this
     type(bounds_type) , intent(in)        :: bounds  
     type(file_desc_t) , intent(inout)     :: ncid   ! netcdf id
     character(len=*)  , intent(in)        :: flag   !'read', 'write', 'define'
+    !
+    ! local vars
+    real(r8), pointer :: ptr1d(:)   ! temp. pointers for slicing larger arrays
+    real(r8), pointer :: ptr2d(:,:) ! temp. pointers for slicing larger arrays
+    logical  :: readvar
     !-----------------------------------------------------------------------
 
-    ! Nothing for now
-
+    !
+    ! if  FATES is enabled, need to restart the variables used to transfer from FATES to CLM as they
+    ! are persistent between daily FATES dynamics calls and half-hourly CLM timesteps
+    !
+    if ( use_ed ) then
+       
+       if (use_vertsoilc) then
+          ptr2d => this%FATES_c_to_litr_lab_c_col
+          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lab_c_col', xtype=ncd_double,  &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=ptr2d) 
+          
+          ptr2d => this%FATES_c_to_litr_cel_c_col
+          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_cel_c_col', xtype=ncd_double,  &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=ptr2d) 
+          
+          ptr2d => this%FATES_c_to_litr_lig_c_col
+          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lig_c_col', xtype=ncd_double,  &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=ptr2d) 
+          
+       else
+          ptr1d => this%FATES_c_to_litr_lab_c_col(:,1)
+          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lab_c_col', xtype=ncd_double,  &
+               dim1name='column', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=ptr1d) 
+          
+          ptr1d => this%FATES_c_to_litr_cel_c_col(:,1)
+          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_cel_c_col', xtype=ncd_double,  &
+               dim1name='column', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=ptr1d) 
+          
+          ptr1d => this%FATES_c_to_litr_lig_c_col(:,1)
+          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lig_c_col', xtype=ncd_double,  &
+               dim1name='column', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=ptr1d) 
+          
+       end if
+       
+    end if
+    
   end subroutine Restart
 
   !-----------------------------------------------------------------------
@@ -639,6 +727,8 @@ contains
        this%soilc_change_col(i)  = value_column
     end do
 
+    ! NOTE: do not zero the ED to BGC C flux variables since they need to persist from the daily ED timestep s to the half-hourly BGC timesteps.  I.e. FATES_c_to_litr_lab_c_col, FATES_c_to_litr_cel_c_col, FATES_c_to_litr_lig_c_col
+    
   end subroutine SetValues
 
   !-----------------------------------------------------------------------

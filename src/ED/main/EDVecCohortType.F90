@@ -12,8 +12,8 @@ module EDVecCohortType
   public
   !
   type, public :: ed_vec_cohort_type
-     integer :: cohorts_per_gridcell
-     integer , pointer :: gridcell(:) !index into gridcell level quantities
+     integer :: cohorts_per_column
+     integer , pointer :: column(:) !index into column level quantities
    contains
      procedure, public :: Init
   end type ed_vec_cohort_type
@@ -35,7 +35,7 @@ contains
 
     ! FIX(SPM,032414) pull this out and put in own ED source
 
-    allocate(this%gridcell(beg:end))
+    allocate(this%column(beg:end))
 
   end subroutine Init
 

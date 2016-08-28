@@ -5,7 +5,7 @@ module EDMainMod
   ! ============================================================================
 
   use shr_kind_mod         , only : r8 => shr_kind_r8
-  use decompMod            , only : bounds_type
+  
   use clm_varctl           , only : iulog
   use atm2lndType          , only : atm2lnd_type
   use SoilStateType        , only : soilstate_type  
@@ -15,9 +15,8 @@ module EDMainMod
   use EDPatchDynamicsMod   , only : disturbance_rates, fuse_patches, spawn_patches, terminate_patches
   use EDPhysiologyMod      , only : canopy_derivs, non_canopy_derivs, phenology, recruitment, trim_canopy
   use SFMainMod            , only : fire_model
-  use EDtypesMod           , only : ncwd, n_sub, numpft_ed, udata
+  use EDtypesMod           , only : ncwd, numpft_ed, udata
   use EDtypesMod           , only : ed_site_type, ed_patch_type, ed_cohort_type
-  use EDPhenologyType      , only : ed_phenology_type
   use EDCLMLinkMod         , only : ed_clm_type
 
   implicit none
@@ -25,109 +24,31 @@ module EDMainMod
 
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public  :: ed_driver
+  public  :: ed_ecosystem_dynamics
   public  :: ed_update_site
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: ed_ecosystem_dynamics
+  
   private :: ed_integrate_state_variables
   private :: ed_total_balance_check
   
-  logical :: DEBUG_main = .false.
+  logical :: DEBUG  = .false.
   !
   ! 10/30/09: Created by Rosie Fisher
   !-----------------------------------------------------------------------
 
 contains
 
-  !-----------------------------------------------------------------------
-  subroutine ed_driver( bounds, ed_allsites_inst, ed_clm_inst, ed_phenology_inst, &
-       atm2lnd_inst, soilstate_inst, temperature_inst, waterstate_inst, canopystate_inst)
-    !
-    ! !DESCRIPTION:
-    ! Main ed model routine containing gridcell loop   
-    !
-    ! !USES:
-    use clm_time_manager     , only : get_days_per_year, get_curr_date
-    use clm_time_manager     , only : get_ref_date, timemgr_datediff 
-    use CanopySTateType      , only : canopystate_type
-    !
-    ! !ARGUMENTS:
-    type(bounds_type)       , intent(in)            :: bounds           
-    type(ed_site_type)      , intent(inout), target :: ed_allsites_inst( bounds%begg: )
-    type(ed_clm_type)       , intent(inout)         :: ed_clm_inst
-    type(ed_phenology_type) , intent(inout)         :: ed_phenology_inst
-    type(atm2lnd_type)      , intent(in)            :: atm2lnd_inst
-    type(soilstate_type)    , intent(in)            :: soilstate_inst
-    type(temperature_type)  , intent(in)            :: temperature_inst
-    type(waterstate_type)   , intent(inout)         :: waterstate_inst
-    type(canopystate_type)  , intent(inout)         :: canopystate_inst
-    !
-    ! !LOCAL VARIABLES:
-    type(ed_site_type), pointer :: currentSite
-    real(r8) :: dayDiff                  ! day of run
-    integer  :: dayDiffInt               ! integer of day of run
-    integer  :: g                        ! gridcell  
-    integer  :: yr                       ! year (0, ...)
-    integer  :: mon                      ! month (1, ..., 12)
-    integer  :: day                      ! day of month (1, ..., 31)
-    integer  :: sec                      ! seconds of the day
-    integer  :: ncdate                   ! current date
-    integer  :: nbdate                   ! base date (reference date)
-    !-----------------------------------------------------------------------
-
-    call ed_clm_inst%SetValues( bounds, 0._r8 )
-
-    ! timing statements. 
-    n_sub = get_days_per_year()
-    udata%deltat = 1.0_r8/n_sub !for working out age of patches in years        
-    if(udata%time_period == 0)then             
-       udata%time_period = n_sub
-    endif
-    
-    call get_curr_date(yr, mon, day, sec)
-    ncdate = yr*10000 + mon*100 + day
-    call get_ref_date(yr, mon, day, sec)
-    nbdate = yr*10000 + mon*100 + day
-
-    call timemgr_datediff(nbdate, 0, ncdate, sec, dayDiff)
-
-    dayDiffInt = floor(dayDiff)
-    udata%time_period = mod( dayDiffInt , n_sub )
-
-    ! where most things happen
-    do g = bounds%begg,bounds%endg
-       if (ed_allsites_inst(g)%istheresoil) then
-          currentSite => ed_allsites_inst(g)
-          call ed_ecosystem_dynamics(currentSite, &
-               ed_clm_inst, ed_phenology_inst, atm2lnd_inst, &
-               soilstate_inst, temperature_inst, waterstate_inst)
-
-          call ed_update_site( ed_allsites_inst(g))
-       endif
-    enddo
-
-    ! updates site & patch information
-
-    ! link to CLM structures
-    call ed_clm_inst%ed_clm_link( bounds, ed_allsites_inst(bounds%begg:bounds%endg),  &
-         ed_phenology_inst, waterstate_inst, canopystate_inst)
-
-    write(iulog,*) 'leaving ed model',bounds%begg,bounds%endg,dayDiffInt
-
-  end subroutine ed_driver
-
   !-------------------------------------------------------------------------------!
   subroutine ed_ecosystem_dynamics(currentSite, &
-       ed_clm_inst, ed_phenology_inst, atm2lnd_inst, &
+       ed_clm_inst, atm2lnd_inst, &
        soilstate_inst, temperature_inst, waterstate_inst)
     !
     ! !DESCRIPTION:
     !  Core of ed model, calling all subsequent vegetation dynamics routines         
     !
     ! !ARGUMENTS:
-    type(ed_site_type)      , intent(inout), pointer :: currentSite
-    type(ed_phenology_type) , intent(in)             :: ed_phenology_inst
+    type(ed_site_type)      , intent(inout), target  :: currentSite
     type(ed_clm_type)       , intent(in)             :: ed_clm_inst
     type(atm2lnd_type)      , intent(in)             :: atm2lnd_inst
     type(soilstate_type)    , intent(in)             :: soilstate_inst
@@ -147,7 +68,7 @@ contains
    
     call ed_total_balance_check(currentSite, 0)
     
-    call phenology(currentSite, ed_phenology_inst, temperature_inst, waterstate_inst)
+    call phenology(currentSite, temperature_inst, waterstate_inst)
 
     call fire_model(currentSite, atm2lnd_inst, temperature_inst)
 
@@ -155,7 +76,7 @@ contains
     call disturbance_rates(currentSite)
 
     ! Integrate state variables from annual rates to daily timestep
-    call ed_integrate_state_variables(currentSite, soilstate_inst, temperature_inst, waterstate_inst) 
+    call ed_integrate_state_variables(currentSite, temperature_inst ) 
 
     !******************************************************************************
     ! Reproduction, Recruitment and Cohort Dynamics : controls cohort organisation 
@@ -175,14 +96,15 @@ contains
     currentPatch => currentSite%oldest_patch
     do while (associated(currentPatch))
 
-       ! kills cohorts that are too small
-       call terminate_cohorts(currentPatch)       
-
        ! puts cohorts in right order
        call sort_cohorts(currentPatch)            
 
        ! fuses similar cohorts
        call fuse_cohorts(currentPatch)            
+
+       ! kills cohorts that are too small
+       call terminate_cohorts(currentPatch)
+
 
        currentPatch => currentPatch%younger
     enddo
@@ -211,7 +133,7 @@ contains
   end subroutine ed_ecosystem_dynamics
 
   !-------------------------------------------------------------------------------!
-  subroutine ed_integrate_state_variables(currentSite, soilstate_inst, temperature_inst, waterstate_inst)
+  subroutine ed_integrate_state_variables(currentSite, temperature_inst )
     !
     ! !DESCRIPTION:
     ! FIX(SPM,032414) refactor so everything goes through interface
@@ -219,10 +141,8 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
-    type(ed_site_type)     , intent(in) :: currentSite
-    type(soilstate_type)   , intent(in) :: soilstate_inst
-    type(temperature_type) , intent(in) :: temperature_inst
-    type(waterstate_type)  , intent(in) :: waterstate_inst
+    type(ed_site_type)     , intent(in)    :: currentSite
+    type(temperature_type) , intent(in)    :: temperature_inst
     !
     ! !LOCAL VARIABLES:
     type(ed_patch_type)  , pointer :: currentPatch
@@ -243,7 +163,7 @@ contains
        currentPatch%age = currentPatch%age + udata%deltat
        ! FIX(SPM,032414) valgrind 'Conditional jump or move depends on uninitialised value'
        if( currentPatch%age  <  0._r8 )then
-          write(iulog,*) 'negative patch age?',currentSite%clmgcell, currentPatch%age, &
+          write(iulog,*) 'negative patch age?',currentPatch%age, &
                currentPatch%patchno,currentPatch%area
        endif
 
@@ -258,7 +178,15 @@ contains
           currentCohort%dbh    = max(small_no,currentCohort%dbh    + currentCohort%ddbhdt    * udata%deltat )
           currentCohort%balive = currentCohort%balive + currentCohort%dbalivedt * udata%deltat 
           currentCohort%bdead  = max(small_no,currentCohort%bdead  + currentCohort%dbdeaddt  * udata%deltat )
+          if ( DEBUG ) then
+             write(iulog,*) 'EDMainMod dbstoredt I ',currentCohort%bstore, &
+                  currentCohort%dbstoredt,udata%deltat
+          end if
           currentCohort%bstore = currentCohort%bstore + currentCohort%dbstoredt * udata%deltat 
+          if ( DEBUG ) then
+             write(iulog,*) 'EDMainMod dbstoredt II ',currentCohort%bstore, &
+                  currentCohort%dbstoredt,udata%deltat
+          end if
 
           if( (currentCohort%balive+currentCohort%bdead+currentCohort%bstore)*currentCohort%n<0._r8)then
             write(iulog,*) 'biomass is negative', currentCohort%n,currentCohort%balive, &
@@ -276,14 +204,17 @@ contains
           currentCohort%gpp_acc  = 0.0_r8
           currentCohort%resp_acc = 0.0_r8
           
-          call allocate_live_biomass(currentCohort)
+          call allocate_live_biomass(currentCohort,1)
   
           currentCohort => currentCohort%taller
 
        enddo
       
-       write(6,*)'DEBUG18: calling non_canopy_derivs with pno= ',currentPatch%clm_pno
-       call non_canopy_derivs( currentPatch, temperature_inst, soilstate_inst, waterstate_inst )
+       if ( DEBUG ) then
+          write(6,*)'DEBUG18: calling non_canopy_derivs with pno= ',currentPatch%clm_pno
+       endif
+
+       call non_canopy_derivs( currentPatch, temperature_inst )
 
        !update state variables simultaneously according to derivatives for this time period. 
        do p = 1,numpft_ed
@@ -321,11 +252,12 @@ contains
 
        do p = 1,numpft_ed
           if(currentPatch%leaf_litter(p)<small_no)then
-            write(iulog,*) 'negative leaf litter', currentPatch%leaf_litter(p),CurrentSite%lat,CurrentSite%lon
+            write(iulog,*) 'negative leaf litter numerical error', currentPatch%leaf_litter(p),CurrentSite%lat,CurrentSite%lon,&
+            currentPatch%dleaf_litter_dt(p),currentPatch%leaf_litter_in(p),currentPatch%leaf_litter_out(p),currentpatch%age
             currentPatch%leaf_litter(p) = small_no
           endif
           if(currentPatch%root_litter(p)<small_no)then
-               write(iulog,*) 'negative root litter', currentPatch%root_litter(p), &
+               write(iulog,*) 'negative root litter numerical error', currentPatch%root_litter(p), &
                currentPatch%droot_litter_dt(p)* udata%deltat, &
                CurrentSite%lat,CurrentSite%lon
             currentPatch%root_litter(p) = small_no
@@ -384,9 +316,10 @@ contains
 
        ! FIX(SPM,040314) why is this needed for BFB restarts? Look into this at some point
        cohort_number = count_cohorts(currentPatch)  
-       if (DEBUG_main) then
+       if ( DEBUG ) then
           write(iulog,*) 'tempCount ',cohort_number
        endif
+
        ! Note (RF)
        ! This breaks the balance check, but if we leave it out, then 
        ! the first new patch that isn't fused has no cohorts at the end of the spawn process
@@ -403,7 +336,7 @@ contains
     enddo
 
     ! FIX(RF,032414). This needs to be monthly, not annual
-    if((udata%time_period == N_SUB-1))then 
+    if((udata%time_period == udata%n_sub-1))then 
        write(iulog,*) 'calling trim canopy' 
        call trim_canopy(currentSite)  
     endif
@@ -448,28 +381,25 @@ contains
     litter_stock    = 0.0_r8
     seed_stock      = 0.0_r8
 
-    if (currentSite%istheresoil) then
-       currentPatch => currentSite%oldest_patch 
-       do while(associated(currentPatch))
+    currentPatch => currentSite%oldest_patch 
+    do while(associated(currentPatch))
 
-          litter_stock = litter_stock + currentPatch%area * (sum(currentPatch%cwd_ag)+ &
-               sum(currentPatch%cwd_bg)+sum(currentPatch%leaf_litter)+sum(currentPatch%root_litter))
-          seed_stock   = seed_stock   + currentPatch%area * sum(currentPatch%seed_bank)
-          currentCohort => currentPatch%tallest;
+       litter_stock = litter_stock + currentPatch%area * (sum(currentPatch%cwd_ag)+ &
+             sum(currentPatch%cwd_bg)+sum(currentPatch%leaf_litter)+sum(currentPatch%root_litter))
+       seed_stock   = seed_stock   + currentPatch%area * sum(currentPatch%seed_bank)
+       currentCohort => currentPatch%tallest;
+       
+       do while(associated(currentCohort))
+          
+          biomass_stock =  biomass_stock + (currentCohort%bdead + currentCohort%balive + &
+                currentCohort%bstore) * currentCohort%n
+          currentCohort => currentCohort%shorter;
+          
+       enddo !end cohort loop 
 
-          do while(associated(currentCohort))
+       currentPatch => currentPatch%younger
 
-             biomass_stock =  biomass_stock + (currentCohort%bdead + currentCohort%balive + &
-                  currentCohort%bstore) * currentCohort%n
-             currentCohort => currentCohort%shorter;
-
-          enddo !end cohort loop 
-
-          currentPatch => currentPatch%younger
-
-       enddo !end patch loop
-
-    endif
+    enddo !end patch loop
 
     total_stock     = biomass_stock + seed_stock +litter_stock
     change_in_stock = total_stock - currentSite%old_stock  
@@ -477,8 +407,12 @@ contains
     error           = abs(net_flux - change_in_stock)   
 
     if ( abs(error) > 10e-6 ) then
-       write(iulog,*) 'total error:in,out,net,dstock,error',call_index, currentSite%flux_in, & 
-            currentSite%flux_out,net_flux,change_in_stock,error
+       write(iulog,*) 'total error: call index: ',call_index, &
+                      'in:  ',currentSite%flux_in,   &
+                      'out: ',currentSite%flux_out,  &
+                      'net: ',net_flux,              &
+                      'dstock: ',change_in_stock,    &
+                      'error=net_flux-dstock:', error
        write(iulog,*) 'biomass,litter,seeds', biomass_stock,litter_stock,seed_stock
        write(iulog,*) 'lat lon',currentSite%lat,currentSite%lon
     endif
@@ -487,6 +421,6 @@ contains
     currentSite%flux_out  = 0.0_r8  
     currentSite%old_stock = total_stock
 
-  end subroutine ed_total_balance_check
+ end subroutine ed_total_balance_check
 
 end module EDMainMod

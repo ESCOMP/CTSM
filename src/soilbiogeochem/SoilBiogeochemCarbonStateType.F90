@@ -7,7 +7,7 @@ module SoilBiogeochemCarbonStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi, c3_r2
-  use clm_varctl                         , only : iulog, use_vertsoilc, spinup_state 
+  use clm_varctl                         , only : iulog, use_vertsoilc, spinup_state, use_ed 
   use landunit_varcon                    , only : istcrop, istsoil
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
@@ -96,7 +96,9 @@ contains
     this%decomp_cpools_vr_col(:,:,:)= nan
 
     allocate(this%ctrunc_col     (begc :endc)) ; this%ctrunc_col     (:) = nan
-    allocate(this%cwdc_col       (begc :endc)) ; this%cwdc_col       (:) = nan
+    if ( .not. use_ed ) then
+       allocate(this%cwdc_col       (begc :endc)) ; this%cwdc_col       (:) = nan
+    endif
     allocate(this%totlitc_col    (begc :endc)) ; this%totlitc_col    (:) = nan
     allocate(this%totsomc_col    (begc :endc)) ; this%totsomc_col    (:) = nan
     allocate(this%totlitc_1m_col (begc :endc)) ; this%totlitc_1m_col (:) = nan
@@ -409,19 +411,20 @@ contains
           endif
        end if
 
-       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-          if (present(c12_soilbiogeochem_carbonstate_inst)) then
-             this%cwdc_col(c)    = c12_soilbiogeochem_carbonstate_inst%cwdc_col(c) * ratio
-          else
-             this%cwdc_col(c)    = 0._r8
+       if ( .not. use_ed ) then
+          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+             if (present(c12_soilbiogeochem_carbonstate_inst)) then
+                this%cwdc_col(c)    = c12_soilbiogeochem_carbonstate_inst%cwdc_col(c) * ratio
+             else
+                this%cwdc_col(c)    = 0._r8
+             end if
+             this%ctrunc_col(c)     = 0._r8
+             this%totlitc_col(c)    = 0._r8
+             this%totsomc_col(c)    = 0._r8
+             this%totlitc_1m_col(c) = 0._r8
+             this%totsomc_1m_col(c) = 0._r8
           end if
-          this%ctrunc_col(c)     = 0._r8
-          this%totlitc_col(c)    = 0._r8
-          this%totsomc_col(c)    = 0._r8
-          this%totlitc_1m_col(c) = 0._r8
-          this%totsomc_1m_col(c) = 0._r8
        end if
-
     end do
 
     ! now loop through special filters and explicitly set the variables that
@@ -713,7 +716,9 @@ contains
 
     do fi = 1,num_column
        i = filter_column(fi)
-       this%cwdc_col(i)       = value_column
+       if ( .not. use_ed ) then
+          this%cwdc_col(i)       = value_column
+       end if
        this%ctrunc_col(i)     = value_column
        this%totlitc_col(i)    = value_column
        this%totlitc_1m_col(i) = value_column
@@ -891,19 +896,22 @@ contains
     end do
 
     ! coarse woody debris carbon
-    do fc = 1,num_allc
-       c = filter_allc(fc)
-       this%cwdc_col(c) = 0._r8
-    end do
-    do l = 1, ndecomp_pools
-       if ( decomp_cascade_con%is_cwd(l) ) then
-          do fc = 1,num_allc
-             c = filter_allc(fc)
-             this%cwdc_col(c) = this%cwdc_col(c) + this%decomp_cpools_col(c,l)
-          end do
-       end if
-    end do
+    if (.not. use_ed ) then
+       do fc = 1,num_allc
+          c = filter_allc(fc)
+          this%cwdc_col(c) = 0._r8
+       end do
+       do l = 1, ndecomp_pools
+          if ( decomp_cascade_con%is_cwd(l) ) then
+             do fc = 1,num_allc
+                c = filter_allc(fc)
+                this%cwdc_col(c) = this%cwdc_col(c) + this%decomp_cpools_col(c,l)
+             end do
+          end if
+       end do
        
+    end if
+
   end subroutine Summary
 
   !-----------------------------------------------------------------------

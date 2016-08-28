@@ -10,7 +10,7 @@ module EDGrowthFunctionsMod
   use clm_varctl       , only : iulog 
   use pftconMod        , only : pftcon
   use EDEcophysContype , only : EDecophyscon
-  use EDTypesMod       , only : ed_cohort_type, nlevcan_ed, dinc_ed
+  use EDTypesMod       , only : ed_cohort_type, cp_nlevcan, dinc_ed
 
   implicit none
   private
@@ -103,6 +103,7 @@ contains
     ! ============================================================================
 
     type(ed_cohort_type), intent(in) :: cohort_in       
+    real(r8) :: slascaler ! changes the target biomass according to the SLA
 
     if(cohort_in%dbh < 0._r8.or.cohort_in%pft == 0.or.cohort_in%dbh > 1000.0_r8)then
        write(iulog,*) 'problems in bleaf',cohort_in%dbh,cohort_in%pft
@@ -111,12 +112,17 @@ contains
     if(cohort_in%dbh <= EDecophyscon%max_dbh(cohort_in%pft))then
        bleaf = 0.0419_r8 * (cohort_in%dbh**1.56) * EDecophyscon%wood_density(cohort_in%pft)**0.55_r8
     else  
-       bleaf = 0.0419_r8 * (EDecophyscon%max_dbh(cohort_in%pft)**1.56) * EDecophyscon%wood_density(cohort_in%pft)**0.55_r8       
-    endif
-
+       bleaf = 0.0419_r8 * (EDecophyscon%max_dbh(cohort_in%pft)**1.56) * EDecophyscon%wood_density(cohort_in%pft)**0.55_r8      
+    endif  
+    slascaler = 0.03_r8/pftcon%slatop(cohort_in%pft)
+    bleaf = bleaf * slascaler
+    
+    !write(iulog,*) 'bleaf',bleaf, slascaler,cohort_in%pft
+    
     !Adjust for canopies that have become so deep that their bottom layer is not producing any carbon... 
     !nb this will change the allometry and the effects of this remain untested. RF. April 2014  
-    bleaf = bleaf*cohort_in%canopy_trim
+    
+     bleaf = bleaf * cohort_in%canopy_trim
 
     return
   end function Bleaf
@@ -140,7 +146,7 @@ contains
 
     if( cohort_in%status_coh  ==  2 ) then ! are the leaves on? 
        slat = 1000.0_r8 * pftcon%slatop(cohort_in%pft) ! m2/g to m2/kg
-       cohort_in%c_area = c_area(cohort_in) ! call the tree area 
+       cohort_in%c_area = c_area(cohort_in) ! call the tree area
        leafc_per_unitarea = cohort_in%bl/(cohort_in%c_area/cohort_in%n) !KgC/m2
        if(leafc_per_unitarea > 0.0_r8)then
           tree_lai = leafc_per_unitarea * slat  !kg/m2 * m2/kg = unitless LAI 
@@ -153,10 +159,10 @@ contains
     cohort_in%treelai = tree_lai
 
     ! here, if the LAI exceeeds the maximum size of the possible array, then we have no way of accomodating it
-    ! at the moments nlevcan_ed default is 40, which is very large, so exceeding this would clearly illustrate a 
+    ! at the moments cp_nlevcan default is 40, which is very large, so exceeding this would clearly illustrate a 
     ! huge error 
-    if(cohort_in%treelai > nlevcan_ed*dinc_ed)then
-       write(iulog,*) 'too much lai' , cohort_in%treelai , cohort_in%pft , nlevcan_ed * dinc_ed
+    if(cohort_in%treelai > cp_nlevcan*dinc_ed)then
+       write(iulog,*) 'too much lai' , cohort_in%treelai , cohort_in%pft , cp_nlevcan * dinc_ed
     endif
 
     return
@@ -190,10 +196,10 @@ contains
     cohort_in%treesai = tree_sai
 
     ! here, if the LAI exceeeds the maximum size of the possible array, then we have no way of accomodating it
-    ! at the moments nlevcan_ed default is 40, which is very large, so exceeding this would clearly illustrate a 
+    ! at the moments cp_nlevcan default is 40, which is very large, so exceeding this would clearly illustrate a 
     ! huge error 
-    if(cohort_in%treesai > nlevcan_ed*dinc_ed)then
-       write(iulog,*) 'too much sai' , cohort_in%treesai , cohort_in%pft , nlevcan_ed * dinc_ed
+    if(cohort_in%treesai > cp_nlevcan*dinc_ed)then
+       write(iulog,*) 'too much sai' , cohort_in%treesai , cohort_in%pft , cp_nlevcan * dinc_ed
     endif
 
     return
@@ -316,7 +322,11 @@ contains
     dblddbh = 1.56_r8*0.0419_r8*(cohort_in%dbh**0.56_r8)*(EDecophyscon%wood_density(cohort_in%pft)**0.55_r8)
     dblddbh = dblddbh*cohort_in%canopy_trim
 
-    dDbhdBl = 1.0_r8/dblddbh
+    if( cohort_in%dbh<EDecophyscon%max_dbh(cohort_in%pft) ) then
+        dDbhdBl = 1.0_r8/dblddbh
+    else
+        dDbhdBl = 1.0d15  ! At maximum size, the leaf biomass is saturated, dbl=0
+    endif
 
     return
 
@@ -324,7 +334,7 @@ contains
 
 ! ============================================================================
 
-  real(r8) function mortality_rates( cohort_in )
+  subroutine mortality_rates( cohort_in,cmort,hmort,bmort )
 
     ! ============================================================================
     !  Calculate mortality rates as a function of carbon storage       
@@ -333,34 +343,41 @@ contains
     use EDParamsMod,  only : ED_val_stress_mort
 
     type (ed_cohort_type), intent(in) :: cohort_in
+    real(r8),intent(out) :: bmort ! background mortality : Fraction per year
+    real(r8),intent(out) :: cmort  ! carbon starvation mortality
+    real(r8),intent(out) :: hmort  ! hydraulic failure mortality
 
     real(r8) :: frac  ! relativised stored carbohydrate
-    real(r8) :: smort ! stress mortality     : Fraction per year
-    real(r8) :: bmort ! background mortality : Fraction per year
 
     ! 'Background' mortality (can vary as a function of density as in ED1.0 and ED2.0, but doesn't here for tractability) 
-    bmort = 0.014_r8 
-   
+    ! bmort = EDecophyscon%b_mort(cohort_in%pft) !0.014_r8 
+    ! RGK:/CX HOLDING OFF ON SENS-ANALYSIS UNTIL MACHINE CONFIGS SQUARED AWAY
+    bmort = 0.014_r8
+
     ! Proxy for hydraulic failure induced mortality. 
-    smort = 0.0_r8
     if(cohort_in%patchptr%btran_ft(cohort_in%pft) <= 0.000001_r8)then 
-       smort = smort + ED_val_stress_mort 
-    endif
+       hmort = ED_val_stress_mort
+     else
+       hmort = 0.0_r8
+     endif 
     
     ! Carbon Starvation induced mortality.
     if ( cohort_in%dbh  >  0._r8 ) then
-       if(Bleaf(cohort_in) > 0._r8.and.cohort_in%bstore <= Bleaf(cohort_in))then
+       if(Bleaf(cohort_in) > 0._r8 .and. cohort_in%bstore <= Bleaf(cohort_in))then
           frac = cohort_in%bstore/(Bleaf(cohort_in))
-          smort = smort + max(0.0_r8,ED_val_stress_mort*(1.0_r8 - frac))
+          cmort = max(0.0_r8,ED_val_stress_mort*(1.0_r8 - frac))
+        else
+          cmort = 0.0_r8
        endif
+
     else
        write(iulog,*) 'dbh problem in mortality_rates', &
             cohort_in%dbh,cohort_in%pft,cohort_in%n,cohort_in%canopy_layer,cohort_in%indexnumber
     endif
 
-    mortality_rates = smort + bmort
+    !mortality_rates = bmort + hmort + cmort
 
-  end function mortality_rates
+ end subroutine mortality_rates
 
 ! ============================================================================
 

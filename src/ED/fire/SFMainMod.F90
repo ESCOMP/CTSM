@@ -640,6 +640,7 @@ contains
 
     use domainMod,     only : ldomain
     use EDParamsMod,   only : ED_val_nfires
+    use PatchType,     only : patch 
 
     type(ed_site_type), intent(inout), target :: currentSite
 
@@ -650,7 +651,7 @@ contains
     real db !distance fire has travelled backward
     real(r8) gridarea
     real(r8) size_of_fire
-    integer g
+    integer g, p
 
     currentSite%frac_burnt = 0.0_r8
 
@@ -683,9 +684,17 @@ contains
 
           ! --- calculate area burnt---
           if(lb > 0.0_r8) then
-             g = currentSite%clmgcell
+             
+             p = currentPatch%clm_pno
+             g = patch%gridcell(p)
+             ! g = currentSite%clmgcell (DEPRECATED VARIABLE)
+
+             ! INTERF-TODO:
+             ! THIS SHOULD HAVE THE COLUMN AND LU AREA WEIGHT ALSO, NO?
+
              gridarea = ldomain%area(g) *1000000.0_r8 !convert from km2 into m2
              currentPatch%NF = ldomain%area(g) * ED_val_nfires * currentPatch%area/area /365
+
              ! If there are 15  lightening strickes per year, per km2. (approx from NASA product) 
              ! then there are 15/365 s/km2 each day. 
      

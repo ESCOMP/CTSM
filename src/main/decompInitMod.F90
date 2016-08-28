@@ -496,7 +496,7 @@ contains
     integer :: begl,endl          ! beg,end landunits
     integer :: begc,endc          ! beg,end columns
     integer :: begp,endp          ! beg,end patches
-    integer :: begCohort,endCohort! beg,end patches
+    integer :: begCohort,endCohort! beg,end cohorts
     integer :: numg               ! total number of gridcells across all processors
     integer :: numl               ! total number of landunits across all processors
     integer :: numc               ! total number of columns across all processors
@@ -728,7 +728,8 @@ contains
        allocate(gindex(begCohort:endCohort))
        ioff(:) = 0
        do coi = begCohort,endCohort
-          gi = ed_vec_cohort%gridcell(coi) !function call to get gcell for this cohort idx
+          ci = ed_vec_cohort%column(coi) ! function call to get column for this cohort idx
+          gi = col%gridcell(ci)          ! convert column into gridcell
           gindex(coi) = coStart(gi) + ioff(gi)
           ioff(gi) = ioff(gi) + 1
        enddo

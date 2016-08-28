@@ -1,4 +1,3 @@
-
 module EDCanopyStructureMod
 
   ! ============================================================================
@@ -7,18 +6,22 @@ module EDCanopyStructureMod
   ! ============================================================================
 
   use shr_kind_mod          , only : r8 => shr_kind_r8;
-  use clm_varpar            , only : nclmax
   use clm_varctl            , only : iulog
   use pftconMod             , only : pftcon
   use EDGrowthFunctionsMod  , only : c_area
   use EDCohortDynamicsMod   , only : copy_cohort, terminate_cohorts, fuse_cohorts
   use EDtypesMod            , only : ed_site_type, ed_patch_type, ed_cohort_type, ncwd
+  use EDtypesMod            , only : cp_nclmax
+  use EDtypesMod            , only : numpft_ed
+  use shr_log_mod           , only : errMsg => shr_log_errMsg
+  use abortutils            , only : endrun
 
   implicit none
   private
 
   public :: canopy_structure
   public :: canopy_spread
+  public :: calc_areaindex
 
   ! 10/30/09: Created by Rosie Fisher
   ! ============================================================================
@@ -65,10 +68,10 @@ contains
     ! Sorts out cohorts into canopy and understorey layers...                              
     !
     ! !USES:
-    use clm_varpar,  only : nlevcan_ed
+
     use EDParamsMod, only : ED_val_comp_excln, ED_val_ag_biomass
     use SFParamsMod, only : SF_val_cwd_frac
-    use EDtypesMod , only : ncwd
+    use EDtypesMod , only : ncwd, min_patch_area, cp_nlevcan
     !
     ! !ARGUMENTS    
     type(ed_site_type) , intent(inout), target   :: currentSite
@@ -82,10 +85,10 @@ contains
     real(r8) :: cc_loss
     real(r8) :: lossarea
     real(r8) :: newarea
-    real(r8) :: arealayer(nlevcan_ed) ! Amount of plant area currently in each canopy layer
-    real(r8) :: sumdiff(nlevcan_ed)   ! The total of the exclusion weights for all cohorts in layer z 
+    real(r8) :: arealayer(cp_nlevcan) ! Amount of plant area currently in each canopy layer
+    real(r8) :: sumdiff(cp_nlevcan)   ! The total of the exclusion weights for all cohorts in layer z 
     real(r8) :: weight                ! The amount of the total lost area that comes from this cohort
-    real(r8) :: sum_weights(nlevcan_ed)
+    real(r8) :: sum_weights(cp_nlevcan)
     real(r8) :: new_total_area_check
     real(r8) :: missing_area, promarea,cc_gain,sumgain
     integer  :: promswitch,lower_cohort_switch
@@ -100,12 +103,15 @@ contains
 
     new_total_area_check = 0._r8
     do while (associated(currentPatch)) ! Patch loop    
+
+       if (currentPatch%area .gt. min_patch_area) then  ! avoid numerical weirdness that shouldn't be happening anyway
+
        excess_area = 1.0_r8   
         
        ! Does any layer have excess area in it? Keep going until it does not...
        
        do while(excess_area > 0.000001_r8)
-          
+
           ! Calculate the area currently in each canopy layer. 
           z = 1 
           arealayer = 0.0_r8
@@ -124,7 +130,7 @@ contains
              z = z + 1
           endif
 
-          currentPatch%NCL_p = min(nclmax,z)   ! Set current canopy layer occupancy indicator.  
+          currentPatch%NCL_p = min(cp_nclmax,z)   ! Set current canopy layer occupancy indicator.  
 
           do i = 1,z ! Loop around the currently occupied canopy layers. 
              
@@ -185,7 +191,7 @@ contains
                          currentCohort%dbh = currentCohort%dbh 
                          copyc%dbh = copyc%dbh !+ 0.000000000001_r8
                          !kill the ones which go into canopy layers that are not allowed... (default nclmax=2) 
-                         if(i+1 > nclmax)then 
+                         if(i+1 > cp_nclmax)then 
                            !put the litter from the terminated cohorts into the fragmenting pools
                           ! write(iulog,*) '3rd canopy layer'
                             do c=1,ncwd
@@ -230,8 +236,8 @@ contains
                          currentCohort%canopy_layer = i + 1 !the whole cohort becomes demoted
                          sumloss = sumloss + currentCohort%c_area 
 
-                         !kill the ones which go into canopy layers that are not allowed... (default nclmax=2) 
-                         if(i+1 > nclmax)then  
+                         !kill the ones which go into canopy layers that are not allowed... (default cp_nclmax=2) 
+                         if(i+1 > cp_nclmax)then  
                            !put the litter from the terminated cohorts into the fragmenting pools
                             do c=1,ncwd
 
@@ -303,7 +309,7 @@ contains
                 excess_area = arealayer(j)-currentPatch%area
              endif
           enddo
-          currentPatch%ncl_p = min(z,nclmax)
+          currentPatch%ncl_p = min(z,cp_nclmax)
 
        enddo !is there still excess area in any layer?      
 
@@ -505,7 +511,7 @@ contains
                 endif
              endif
           enddo
-          currentPatch%ncl_p = min(z,nclmax)
+          currentPatch%ncl_p = min(z,cp_nclmax)
           if(promswitch == 1)then
             ! write(iulog,*) 'missingarea loop',arealayer(1:3),currentPatch%patchno,missing_area,z
           endif
@@ -556,6 +562,11 @@ contains
          ! write(iulog,*) 'end patch loop',currentSite%clmgcell
        endif
 
+       else !terminate  logic to only do if patch_area_sufficiently large
+          write(iulog,*) 'canopy_structure: patch area too small.', currentPatch%area
+       end if 
+       
+
        currentPatch => currentPatch%younger
     enddo !patch  
 
@@ -572,7 +583,7 @@ contains
     !  Calculates the spatial spread of tree canopies based on canopy closure.                             
     !
     ! !USES:
-    use clm_varpar  , only : nlevcan_ed
+    use EDTypesMod  , only : cp_nlevcan
     use EDParamsMod , only : ED_val_maxspread, ED_val_minspread 
     !
     ! !ARGUMENTS    
@@ -581,7 +592,7 @@ contains
     ! !LOCAL VARIABLES:
     type (ed_cohort_type), pointer :: currentCohort
     type (ed_patch_type) , pointer :: currentPatch
-    real(r8) :: arealayer(nlevcan_ed) ! Amount of canopy in each layer. 
+    real(r8) :: arealayer(cp_nlevcan) ! Amount of canopy in each layer. 
     real(r8) :: inc                   ! Arbitrary daily incremental change in canopy area 
     integer  :: z
     !----------------------------------------------------------------------
@@ -604,7 +615,7 @@ contains
        enddo
 
        !If the canopy area is approaching closure, squash the tree canopies and make them taller and thinner
-       do z = 1,nclmax  
+       do z = 1,cp_nclmax  
          
           if(arealayer(z)/currentPatch%area > 0.9_r8)then
              currentPatch%spread(z) = currentPatch%spread(z) - inc
@@ -627,5 +638,70 @@ contains
     enddo !currentPatch
 
   end subroutine canopy_spread
+
+  ! =====================================================================================
+
+  function calc_areaindex(cpatch,ai_type) result(ai)
+
+     ! ----------------------------------------------------------------------------------
+     ! This subroutine calculates the exposed leaf area index of a patch
+     ! this is the square meters of leaf per square meter of ground area
+     ! It does so by integrating over the depth and functional type profile of leaf area
+     ! which are per area of crown.  This value has to be scaled by crown area to convert
+     ! to ground area.
+     ! ----------------------------------------------------------------------------------
+     
+     ! Arguments
+     type(ed_patch_type),intent(in), target :: cpatch
+     character(len=*),intent(in)            :: ai_type
+
+     integer :: cl,ft
+     real(r8) :: ai
+     ! TODO: THIS MIN LAI IS AN ARTIFACT FROM TESTING LONG-AGO AND SHOULD BE REMOVED
+     ! THIS HAS BEEN KEPT THUS FAR TO MAINTAIN B4B IN TESTING OTHER COMMITS
+     real(r8),parameter :: ai_min = 0.1_r8
+     real(r8),pointer   :: ai_profile
+
+     ai = 0._r8
+     if     (trim(ai_type) == 'elai') then
+        do cl = 1,cpatch%NCL_p
+           do ft = 1,numpft_ed
+              ai = ai + sum(cpatch%canopy_area_profile(cl,ft,1:cpatch%nrad(cl,ft)) * &
+                    cpatch%elai_profile(cl,ft,1:cpatch%nrad(cl,ft)))
+           enddo
+        enddo
+     elseif (trim(ai_type) == 'tlai') then
+        do cl = 1,cpatch%NCL_p
+           do ft = 1,numpft_ed
+              ai = ai + sum(cpatch%canopy_area_profile(cl,ft,1:cpatch%nrad(cl,ft)) * &
+                    cpatch%tlai_profile(cl,ft,1:cpatch%nrad(cl,ft)))
+           enddo
+        enddo
+     elseif (trim(ai_type) == 'esai') then
+         do cl = 1,cpatch%NCL_p
+           do ft = 1,numpft_ed
+              ai = ai + sum(cpatch%canopy_area_profile(cl,ft,1:cpatch%nrad(cl,ft)) * &
+                    cpatch%esai_profile(cl,ft,1:cpatch%nrad(cl,ft)))
+           enddo
+        enddo
+     elseif (trim(ai_type) == 'tsai') then
+        do cl = 1,cpatch%NCL_p
+           do ft = 1,numpft_ed
+              ai = ai + sum(cpatch%canopy_area_profile(cl,ft,1:cpatch%nrad(cl,ft)) * &
+                    cpatch%tsai_profile(cl,ft,1:cpatch%nrad(cl,ft)))
+           enddo
+        enddo
+     else
+        write(iulog,*) 'Unsupported area index sent to calc_areaindex'
+        call endrun(msg=errMsg(__FILE__, __LINE__))
+     end if
+     
+     ai = max(ai_min,ai)
+          
+     return
+
+  end function calc_areaindex
+
+
 
 end module EDCanopyStructureMod

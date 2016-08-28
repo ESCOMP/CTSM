@@ -474,6 +474,7 @@
     </grid>
     <grid name="f09_g16">
       <test name="ERI_D_Ld9">
+        <machine compiler="ed" testtype="ed" testmods="clm/default">ed</machine>
         <machine compiler="intel" testtype="aux_clm_ys_pgi" testmods="clm/default">edison</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -540,6 +541,7 @@
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/oldhyd">hobart</machine>
       </test>
       <test name="SMS_D_Ld3">
+        <machine compiler="ed" testtype="ed" testmods="clm/default">ed</machine>
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
@@ -685,6 +687,80 @@
     <grid name="f19_g16">
       <test name="SMS_Ld1">
         <machine compiler="intel" testtype="prebeta" testmods="clm/default">yellowstone</machine>
+      </test>
+    </grid>
+  </compset>
+  <compset name="ICLM45ED">
+    <grid name="1x1_brazil">
+      <test name="ERS_D_Mmpi-serial_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/edTest">hobart</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="5x5_amazon">
+      <test name="ERS_D_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Mmpi-serial_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/edTest">hobart</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f09_g16">
+      <test name="ERS_D_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f10_f10">
+      <test name="ERS_D_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="ed" testtype="ed" testmods="clm/edNoFire">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/edTest">hobart</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/edTest">hobart</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+      </test>
+      <test name="SMS_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f19_g16">
+      <test name="ERS_D_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+      </test>
+      <test name="SMS_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f45_f45">
+      <test name="SMS_D_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+      </test>
+      <test name="SMS_D_Lm6">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/edTest">yellowstone</machine>
+      </test>
+    </grid>
+    <grid name="f45_g37">
+      <test name="ERS_D_Ld5">
+        <machine compiler="ed" testtype="ed" testmods="clm/edTest">ed</machine>
       </test>
     </grid>
   </compset>

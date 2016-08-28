@@ -397,7 +397,11 @@ contains
        write(iulog,*)' ERROR: surfdata/fatmgrid lon/lat mismatch error', rmaxlon,rmaxlat
        call endrun(msg=errMsg(__FILE__, __LINE__))
     end if
-    call domain_clean(surfdata_domain)
+
+    !~! TODO(SPM, 022015) - if we deallocate and clean ldomain here, then you
+    !~! get errors in htape_timeconst where the information is needed to write
+    !~! the *.h0* file
+    !~!call domain_clean(surfdata_domain)
 
     ! Obtain special landunit info
 

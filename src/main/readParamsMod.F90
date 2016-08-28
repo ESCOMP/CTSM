@@ -80,7 +80,6 @@ contains
     ! Above ground biogeochemistry...
     !
     if (use_cn) then
-       call CNParamsReadShared(ncid, NLFilename_in)
        call nutrient_competition_method%readParams(ncid)
        call readCNGapMortParams(ncid)
        call readCNMRespParams(ncid)
@@ -91,7 +90,7 @@ contains
     !
     ! Soil biogeochemistry...
     !
-    if (use_cn) then
+    if (use_cn .or. use_ed) then
        call readSoilBiogeochemCompetitionParams(ncid)
        call readSoilBiogeochemDecompBgcParams(ncid)
        call readSoilBiogeochemDecompCnParams(ncid)
@@ -100,6 +99,7 @@ contains
        call readSoilBiogeochemNitrifDenitrifParams(ncid)
        call readSoilBiogeochemNLeachingParams(ncid)
        call readSoilBiogeochemPotentialParams(ncid)
+       call CNParamsReadShared(ncid, NLFilename_in)  ! this is called CN params but really is for the soil biogeochem parameters
 
        call readCH4Params (ncid)
     end if

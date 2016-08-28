@@ -13,7 +13,7 @@ use parent qw(Test::Class);
 # Common test fixture for all tests:
 #
 #-------------------------------------------------------------------------------
-sub startup : Test(startup => 3) {
+sub startup : Test(startup => 4) {
   my $self = shift;
   # provide common fixture for all tests, only created once at the
   # start of the tests.
@@ -23,8 +23,14 @@ sub startup : Test(startup => 3) {
   $self->{definition} = Build::NamelistDefinition->new("t/input/namelist_definition_clm4_5_test.xml");
   isnt($self->{definition}, undef, (caller(0))[3] . " : namelist_definition object created.");
 
-  $self->{defaults} = Build::NamelistDefaults->new("t/input/namelist_defaults_clm4_5_test.xml");
+  $self->{defaults} = Build::NamelistDefaults->new("t/input/namelist_defaults_clm4_5_test.xml",$self->{cfg});
   isnt($self->{defaults}, undef,  (caller(0))[3] . " : namelist_defaults object created.");
+
+#  The next line may be usefull (set startup => 4) in arg call above:
+  $self->{physv} = config_files::clm_phys_vers->new( $self->{cfg}->get('phys') );
+  isnt($self->{physv}, undef,  (caller(0))[3] . " : phys_vers object created.");
+
+
 }
 
 sub shutdown : Test(shutdown) {

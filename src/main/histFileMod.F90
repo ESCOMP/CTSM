@@ -12,7 +12,7 @@ module histFileMod
   use shr_sys_mod    , only : shr_sys_flush
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
-  use clm_varctl     , only : iulog, use_vertsoilc
+  use clm_varctl     , only : iulog, use_vertsoilc, use_ed
   use clm_varcon     , only : spval, ispval, dzsoi_decomp 
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
   use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type
@@ -21,6 +21,7 @@ module histFileMod
   use ColumnType     , only : col                
   use PatchType      , only : patch                
   use ncdio_pio
+  use EDtypesMod      , only : nlevsclass_ed
   !
   implicit none
   save
@@ -1043,7 +1044,7 @@ contains
     if (type1d_out == nameg .or. type1d_out == grlnd) then
        if (type1d == namep) then
           ! In this and the following calls, we do NOT explicitly subset field using
-	  ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
+          ! bounds (e.g., we do NOT do field(bounds%begp:bounds%endp). This is because,
           ! for some fields, the lower bound has been reset to 1 due to taking a pointer
           ! to an array slice. Thus, this code will NOT work properly if done within a
           ! threaded region! (See also bug 1786)
@@ -1676,6 +1677,7 @@ contains
     ! !USES:
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad, nlevcan, nvegwcs
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
+    use clm_varpar      , only : mxpft
     use landunit_varcon , only : max_lunit
     use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
     use clm_varctl      , only : version, hostname, username, conventions, source
@@ -1842,6 +1844,11 @@ contains
     call ncd_defdim(lnfid, 'scale_type_string_length', scale_type_strlen, dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
     
+    if(use_ed)then
+       call ncd_defdim(lnfid, 'levscls', nlevsclass_ed, dimid)
+       call ncd_defdim(lnfid, 'levscpf', nlevsclass_ed*mxpft, dimid)
+    end if
+
     if ( .not. lhistrest )then
        call ncd_defdim(lnfid, 'hist_interval', 2, hist_interval_dimid)
        call ncd_defdim(lnfid, 'time', ncd_unlimited, time_dimid)
@@ -2254,6 +2261,7 @@ contains
     use domainMod       , only : ldomain, lon1d, lat1d
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
     use clm_time_manager, only : get_ref_date, get_calendar, NO_LEAP_C, GREGORIAN_C
+    use EDTypesMod,       only : levsclass_ed, pft_levscpf_ed, scls_levscpf_ed
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t              ! tape index
@@ -2303,6 +2311,16 @@ contains
                long_name='coordinate lake levels', units='m', ncid=nfid(t))
           call ncd_defvar(varname='levdcmp', xtype=tape(t)%ncprec, dim1name='levdcmp', &
                long_name='coordinate soil levels', units='m', ncid=nfid(t))
+      
+          if(use_ed)then
+             call ncd_defvar(varname='levscls', xtype=tape(t)%ncprec, dim1name='levscls', &
+                  long_name='diameter size class lower bound', units='cm', ncid=nfid(t))
+             call ncd_defvar(varname='pft_levscpf',xtype=ncd_int, dim1name='levscpf', &
+                  long_name='pft index of the combined pft-size class dimension', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='scls_levscpf',xtype=ncd_int, dim1name='levscpf', &
+                  long_name='size index of the combined pft-size class dimension', units='-', ncid=nfid(t))
+          end if
+
        elseif (mode == 'write') then
           if ( masterproc ) write(iulog, *) ' zsoi:',zsoi
           call ncd_io(varname='levgrnd', data=zsoi, ncid=nfid(t), flag='write')
@@ -2313,6 +2331,12 @@ contains
              zsoi_1d(1) = 1._r8
              call ncd_io(varname='levdcmp', data=zsoi_1d, ncid=nfid(t), flag='write')
           end if
+          if(use_ed)then
+             call ncd_io(varname='levscls',data=levsclass_ed, ncid=nfid(t), flag='write')
+             call ncd_io(varname='pft_levscpf',data=pft_levscpf_ed, ncid=nfid(t), flag='write')
+             call ncd_io(varname='scls_levscpf',data=scls_levscpf_ed, ncid=nfid(t), flag='write')
+          end if
+
        endif
     endif
 
@@ -3168,7 +3192,9 @@ contains
                      trim(locfnh(t)),' at nstep = ', get_nstep()
                 write(iulog,*)
              endif
-	     call ncd_pio_closefile(nfid(t))
+
+            call ncd_pio_closefile(nfid(t))
+
              if (.not.if_stop .and. (tape(t)%ntimes/=tape(t)%mfilt)) then
                 call ncd_pio_openfile (nfid(t), trim(locfnh(t)), ncd_write)
              end if
@@ -4330,7 +4356,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, nlevcan, nvegwcs
-    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec
+    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec, mxpft
     use landunit_varcon , only : max_lunit
     !
     ! !ARGUMENTS:
@@ -4408,6 +4434,10 @@ contains
        num2d = numrad
     case ('levdcmp')
        num2d = nlevdecomp_full
+    case ('levscls')
+       num2d = nlevsclass_ed
+    case ('levscpf')
+       num2d = nlevsclass_ed*mxpft
     case('ltype')
        num2d = max_lunit
     case('natpft')

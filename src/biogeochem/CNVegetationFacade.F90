@@ -95,13 +95,17 @@ module CNVegetationFacade
   ! !PUBLIC TYPES:
 
   type, public :: cn_vegetation_type
-     private
-
+     ! FIXME(bja, 2016-06) These need to be public for use when ED is
+     ! turned on. Should either be moved out of here or create some ED
+     ! version of the facade....
      type(cnveg_state_type)         :: cnveg_state_inst
      type(cnveg_carbonstate_type)   :: cnveg_carbonstate_inst
+     type(cnveg_carbonflux_type)    :: cnveg_carbonflux_inst
+
+     !X!private
+
      type(cnveg_carbonstate_type)   :: c13_cnveg_carbonstate_inst
      type(cnveg_carbonstate_type)   :: c14_cnveg_carbonstate_inst
-     type(cnveg_carbonflux_type)    :: cnveg_carbonflux_inst
      type(cnveg_carbonflux_type)    :: c13_cnveg_carbonflux_inst
      type(cnveg_carbonflux_type)    :: c14_cnveg_carbonflux_inst
      type(cnveg_nitrogenstate_type) :: cnveg_nitrogenstate_inst
@@ -645,6 +649,7 @@ contains
     ! Should only be called if use_cn is true
     !
     ! !USES:
+
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type)               , intent(inout) :: this

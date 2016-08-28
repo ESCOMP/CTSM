@@ -17,6 +17,7 @@ module CNCStateUpdate1Mod
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use PatchType                          , only : patch                
+  use clm_varctl                         , only : use_ed, use_cn, iulog
   !
   implicit none
   private
@@ -119,6 +120,7 @@ contains
       ! Below is the input into the soil biogeochemistry model
 
       ! plant to litter fluxes
+      if (.not. use_ed) then    
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -133,7 +135,18 @@ contains
                  ( cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) *dt
          end do
       end do
-
+      else  !use_ed
+         ! here add all ed litterfall and CWD breakdown to litter fluxes
+         do j = 1,nlevdecomp
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = cf_soil%FATES_c_to_litr_lab_c_col(c,j) * dt
+               cf_soil%decomp_cpools_sourcesink_col(c,j,i_cel_lit) = cf_soil%FATES_c_to_litr_cel_c_col(c,j) * dt
+               cf_soil%decomp_cpools_sourcesink_col(c,j,i_lig_lit) = cf_soil%FATES_c_to_litr_lig_c_col(c,j) * dt
+            end do
+         end do
+      endif
+         
       ! litter and SOM HR fluxes
       do k = 1, ndecomp_cascade_transitions
          do j = 1,nlevdecomp
@@ -158,6 +171,7 @@ contains
          end if
       end do
 
+    if (.not. use_ed) then    
       ! seeding fluxes, from dynamic landcover
       do fc = 1,num_soilc
          c = filter_soilc(fc)
@@ -384,9 +398,10 @@ contains
          end if
          
       end do ! end of patch loop
-
-    end associate 
-
+    end if
+    
+    end associate
+  
   end subroutine CStateUpdate1
 
 end module CNCStateUpdate1Mod

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_12_r192    andre 08/27/2016 ED bugfixes and initial refactoring for a standalone library
   clm4_5_12_r191    sacks 08/21/2016 New parameterizations for snow overburden compaction and wind drift compaction
   clm4_5_12_r190    sacks 08/20/2016 Fix snow capping bug
   clm4_5_11_r189     erik 08/18/2016 Bring in time varying streams for urban data (currently triggers AC use)

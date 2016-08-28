@@ -17,6 +17,7 @@ module subgridMod
   use clm_varctl     , only : iulog
   use clm_instur     , only : wt_lunit, urban_valid, wt_cft
   use glcBehaviorMod , only : glc_behavior_type
+  use EDtypesMod, only : cohorts_per_col
 
   implicit none
   private   
@@ -75,9 +76,8 @@ contains
     nlunits  = 0
     ncohorts = 0
 
-    call subgrid_get_info_natveg(gi, ncohorts_temp, npatches_temp, ncols_temp, nlunits_temp)
+    call subgrid_get_info_natveg(gi, ncohorts, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
-    ncohorts = ncohorts + ncohorts_temp
 
     call subgrid_get_info_urban_tbd(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
@@ -103,6 +103,7 @@ contains
 
     call subgrid_get_info_crop(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
+   
 
   contains
     subroutine accumulate_counters
@@ -113,6 +114,7 @@ contains
       npatches = npatches + npatches_temp
       ncols = ncols + ncols_temp
       nlunits = nlunits + nlunits_temp
+
     end subroutine accumulate_counters
 
   end subroutine subgrid_get_gcellinfo
@@ -125,7 +127,6 @@ contains
     !
     ! !USES
     use clm_varpar, only : natpft_size
-    use EDtypesMod, only : cohorts_per_gcell
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -150,7 +151,16 @@ contains
     nlunits = 1
     ncols = 1
 
-    ncohorts = cohorts_per_gcell
+    ! -------------------------------------------------------------------------
+    ! Number of cohorts is set here
+    ! ED cohorts (via FATES) populate all natural vegetation columns.
+    ! Current implementations mostly assume that only one column contains
+    ! natural vegetation, which is synonomous with the soil column. 
+    ! For restart output however, we will allocate the cohort vector space
+    ! based on all columns.
+    ! -------------------------------------------------------------------------
+
+    ncohorts = ncols*cohorts_per_col
 
   end subroutine subgrid_get_info_natveg
 

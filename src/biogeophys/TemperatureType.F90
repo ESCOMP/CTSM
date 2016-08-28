@@ -7,7 +7,7 @@ module TemperatureType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varctl      , only : use_ed, use_cndv, iulog, use_luna, use_crop
+  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop
   use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevlak, nlevurb
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
@@ -1106,14 +1106,6 @@ contains
             subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
     end if
 
-    if ( use_ed ) then
-
-       call init_accum_field (name='ED_GDD0', units='K', &
-            desc='growing degree-days base 0C from planting', accum_type='runaccum', accum_period=not_used, &
-            subgrid_type='pft', numlev=1, init_value=0._r8)
-
-    end if
-
     if ( use_crop )then
 
        ! All GDD summations are relative to the planting date (Kucharik & Brye 2003)
@@ -1218,11 +1210,6 @@ contains
        this%t_ref2m_min_inst_u_patch(begp:endp) =  spval
     end if
 
-    if ( use_ed ) then
-       call extract_accum_field ('ED_GDD0', rbufslp, nstep)
-       this%gdd0_patch(begp:endp) = rbufslp(begp:endp)
-    end if
-
     if ( use_crop ) then
 
        call extract_accum_field ('GDD0', rbufslp, nstep)
@@ -1235,7 +1222,6 @@ contains
        this%gdd10_patch(begp:endp) = rbufslp(begp:endp)
 
     end if
-
 
     deallocate(rbufslp)
 

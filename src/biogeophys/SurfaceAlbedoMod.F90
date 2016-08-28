@@ -26,7 +26,7 @@ module SurfaceAlbedoMod
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use PatchType         , only : patch                
-  use EDSurfaceAlbedoMod, only : ED_Norman_Radiation
+  
   use CanopyHydrologyMod, only : IsSnowvegFlagOn, IsSnowvegFlagOnRad
   !
   implicit none
@@ -168,13 +168,14 @@ contains
   end subroutine SurfaceAlbedoInitTimeConst
 
   !-----------------------------------------------------------------------
-  subroutine SurfaceAlbedo(bounds,     &
+  subroutine SurfaceAlbedo(bounds,nc,  &
         num_nourbanc, filter_nourbanc, &
         num_nourbanp, filter_nourbanp, &
         num_urbanc   , filter_urbanc,  &
         num_urbanp   , filter_urbanp,  &
         nextsw_cday  , declinp1,       &
-        ed_allsites_inst, aerosol_inst, canopystate_inst, waterstate_inst, &
+        clm_fates,                     &
+        aerosol_inst, canopystate_inst, waterstate_inst, &
         lakestate_inst, temperature_inst, surfalb_inst)
     !
     ! !DESCRIPTION:
@@ -202,11 +203,11 @@ contains
     use clm_time_manager   , only : get_nstep
     use abortutils         , only : endrun
     use clm_varctl         , only : subgridflag, use_snicar_frc, use_ed
-    use EDTypesMod         , only : ed_site_type
-    use EDSurfaceAlbedoMod
-    !
+    use CLMFatesInterfaceMod, only : hlm_fates_interface_type
+
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)            :: bounds             ! bounds
+    integer                , intent(in)            :: nc                 ! clump index
     integer                , intent(in)            :: num_nourbanc       ! number of columns in non-urban filter
     integer                , intent(in)            :: filter_nourbanc(:) ! column filter for non-urban points
     integer                , intent(in)            :: num_nourbanp       ! number of patches in non-urban filter
@@ -217,7 +218,7 @@ contains
     integer                , intent(in)            :: filter_urbanp(:)   ! patch filter for rban points
     real(r8)               , intent(in)            :: nextsw_cday        ! calendar day at Greenwich (1.00, ..., days/year)
     real(r8)               , intent(in)            :: declinp1           ! declination angle (radians) for next time step
-    type(ed_site_type)     , intent(inout), target :: ed_allsites_inst( bounds%begg: )
+    type(hlm_fates_interface_type), intent(inout)  :: clm_fates
     type(aerosol_type)     , intent(in)            :: aerosol_inst
     type(canopystate_type) , intent(in)            :: canopystate_inst
     type(waterstate_type)  , intent(in)            :: waterstate_inst
@@ -916,10 +917,9 @@ contains
 
     if (use_ed) then
           
-       call ED_Norman_Radiation (bounds, &
-            filter_vegsol, num_vegsol, filter_nourbanp, num_nourbanp, &
-            coszen_patch(bounds%begp:bounds%endp), ed_allsites_inst(bounds%begg:bounds%endg), &
-            surfalb_inst)
+       call clm_fates%wrap_canopy_radiation(bounds, nc, &
+            num_vegsol, filter_vegsol, &
+            coszen_patch(bounds%begp:bounds%endp), surfalb_inst)
 
     else
 

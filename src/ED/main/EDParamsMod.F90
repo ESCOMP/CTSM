@@ -3,6 +3,7 @@ module EDParamsMod
    ! module that deals with reading the ED parameter file
    !
    use shr_kind_mod      , only: r8 => shr_kind_r8
+   use EDtypesMod        , only: maxPft
 
    implicit none
    save
@@ -16,7 +17,7 @@ module EDParamsMod
    real(r8),protected :: ED_val_comp_excln
    real(r8),protected :: ED_val_stress_mort
    real(r8),protected :: ED_val_dispersal
-   real(r8),protected :: ED_val_grperc
+   real(r8),protected :: ED_val_grperc(maxPft)
    real(r8),protected :: ED_val_maxspread
    real(r8),protected :: ED_val_minspread
    real(r8),protected :: ED_val_init_litter

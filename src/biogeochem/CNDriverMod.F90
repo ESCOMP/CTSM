@@ -31,7 +31,6 @@ module CNDriverMod
   use WaterfluxType                   , only : waterflux_type
   use atm2lndType                     , only : atm2lnd_type
   use SoilStateType                   , only : soilstate_type
-  use CanopyStateType                 , only : canopystate_type
   use TemperatureType                 , only : temperature_type 
   use PhotosynthesisMod               , only : photosyns_type
   use ch4Mod                          , only : ch4_type

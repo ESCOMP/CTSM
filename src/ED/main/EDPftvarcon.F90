@@ -38,6 +38,7 @@ module EDPftvarcon
      real(r8) :: clone_alloc        (0:mxpft) ! fraction of carbon balance allocated to clonal reproduction.
      real(r8) :: seed_alloc         (0:mxpft) ! fraction of carbon balance allocated to seeds.
      real(r8) :: sapwood_ratio      (0:mxpft) ! amount of sapwood per unit leaf carbon and m of height. gC/gC/m
+     real(r8) :: dbh2h_m            (0:mxpft) ! allocation parameter m from dbh to height
   end type EDPftvarcon_type
 
   type(EDPftvarcon_type), public :: EDPftvarcon_inst
@@ -131,6 +132,10 @@ contains
 
     call ncd_io('sapwood_ratio',EDPftvarcon_inst%sapwood_ratio, 'read', ncid,  readvar=readv)
     if   ( .not. readv) call endrun(trim(subname)// ' ERROR : error in reading in pft data')
+ 
+! HOLDING ON SEW ENSITIVITY-ANALYSIS PARAMETERS UNTIL MACHINE CONFIGS SET RGK/CX
+!    call ncd_io('dbh2h_m',EDPftvarcon_inst%dbh2h_m, 'read', ncid,  readvar=readv)
+!    if   ( .not. readv) call endrun(trim(subname)// ' ERROR : error in reading in pft data')   
 
   end subroutine EDpftconrd
 

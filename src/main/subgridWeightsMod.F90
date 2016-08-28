@@ -732,10 +732,11 @@ contains
 
     ! Note: (MV, 10-17-14): The following has an use_ed if-block around it since
     ! the pct_pft_diagnostics referens to patch%itype(p) which is not used by ED
+    ! Note: (SPM, 10-20-15): If this isn't set then debug mode with intel and 
+    ! yellowstone will fail when trying to write pct_nat_pft since it contains
+    ! all NaN's.
 
-    if (.not. use_ed) then
-       call set_pct_pft_diagnostics(bounds)
-    end if
+    call set_pct_pft_diagnostics(bounds)
 
     call set_pct_glc_mec_diagnostics(bounds)
 

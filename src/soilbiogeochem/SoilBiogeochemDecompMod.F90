@@ -11,7 +11,7 @@ module SoilBiogeochemDecompMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4
+  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_ed
   use clm_varcon                         , only : dzsoi_decomp
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
@@ -132,6 +132,7 @@ contains
       ! column loop to calculate actual immobilization and decomp rates, following
       ! resolution of plant/heterotroph  competition for mineral N
 
+   if ( .not. use_ed) then
       ! calculate c:n ratios of applicable pools
       do l = 1, ndecomp_pools
          if ( floating_cn_ratio_decomp_pools(l) ) then
@@ -203,6 +204,20 @@ contains
             end do
          end do
       end do
+   else
+      do k = 1, ndecomp_cascade_transitions
+         do j = 1,nlevdecomp
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               !
+               decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
+               !
+               decomp_cascade_ctransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k)) * p_decomp_cpool_loss(c,j,k)
+               !
+            end do
+         end do
+      end do
+   end if
 
       if (use_lch4) then
          ! Calculate total fraction of potential HR, for methane code
@@ -221,13 +236,14 @@ contains
             end do
          end do
 
-         ! Nitrogen limitation / (low)-moisture limitation
+
+        ! Nitrogen limitation / (low)-moisture limitation                                                                    
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                if (phr_vr(c,j) > 0._r8) then
                   fphr(c,j) = hrsum(c,j) / phr_vr(c,j) * w_scalar(c,j)
-                  fphr(c,j) = max(fphr(c,j), 0.01_r8) ! Prevent overflow errors for 0 respiration
+                  fphr(c,j) = max(fphr(c,j), 0.01_r8) ! Prevent overflow errors for 0 respiration                          
                else
                   fphr(c,j) = 1._r8
                end if
@@ -235,12 +251,19 @@ contains
          end do
       end if
 
-      ! vertically integrate net and gross mineralization fluxes for diagnostic output
-      do j = 1,nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            net_nmin(c) = net_nmin(c) + net_nmin_vr(c,j) * dzsoi_decomp(j)
-            gross_nmin(c) = gross_nmin(c) + gross_nmin_vr(c,j) * dzsoi_decomp(j)   
+      
+      ! vertically integrate net and gross mineralization fluxes for diagnostic output                                     
+
+     do fc = 1,num_soilc
+       c = filter_soilc(fc)
+         do j = 1,nlevdecomp
+            if(.not.use_ed)then
+              net_nmin(c) = net_nmin(c) + net_nmin_vr(c,j) * dzsoi_decomp(j)
+              gross_nmin(c) = gross_nmin(c) + gross_nmin_vr(c,j) * dzsoi_decomp(j)
+            ! else
+            !   net_nmin(c) = 0.0_r8
+            !   gross_nmin(c) = 0.0_r8
+            endif
          end do
       end do
 

@@ -75,6 +75,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Plant function types (relative to {csmdata}) -->
 <paramfile       >lnd/clm2/paramdata/clm_params.c130821.nc</paramfile>
 
+
+<!--- ========================================  -->
+<!--- Defaults for use_ed = .true.              -->
+<!--  ========================================  -->
+
+<use_vertsoilc use_ed=".true.">.true.</use_vertsoilc>
+<use_century_decomp use_ed=".true."  >.true.</use_century_decomp>
+<use_ed_spit_fire use_ed=".true.">.true.</use_ed_spit_fire>
+<use_lch4 use_ed=".true.">.false.</use_lch4>
+<use_nitrif_denitrif use_ed=".true.">.false.</use_nitrif_denitrif>
+
+
 <!--
 
      Original initial condition file at 1 degree resolution
@@ -318,6 +330,8 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130927.nc</fsurdat>
  use_crop=".false." >lnd/clm2/surfdata_map/surfdata.pftdyn_48x96_rcp2.6_simyr1850-2100_c130524.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4"       rcp="2.6" sim_year_range="1850-2100"
  use_crop=".false." >lnd/clm2/surfdata_map/surfdata.pftdyn_ne30np4_rcp2.6_simyr1850-2100_c130524.nc</flanduse_timeseries>
+
+<use_fun                                                           >.false.</use_fun>
 
 <!-- GLC mask datasets (relative to {csmdata}) -->
 <fglcmask hgrid="48x96"    >glc/cism/griddata/glcmaskdata_48x96_gland_c141105.nc</fglcmask>
@@ -1472,5 +1486,6 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130927.nc</fsurdat>
 <fin_use_fsat use_cn=".true.">.true.</fin_use_fsat>
 
 <use_aereoxid_prog use_cn=".true.">.true.</use_aereoxid_prog>
+
 
 </namelist_defaults>

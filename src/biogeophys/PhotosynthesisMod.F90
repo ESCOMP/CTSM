@@ -163,8 +163,8 @@ module  PhotosynthesisMod
      real(r8), pointer, public  :: rssha_patch       (:)   ! patch shaded stomatal resistance (s/m)
 
      ! ED specific variables
-     real(r8), pointer, public  :: psncanopy_patch   (:)   ! patch sunlit leaf photosynthesis (umol CO2 /m**2/ s) (ED specific)
-     real(r8), pointer, public  :: lmrcanopy_patch   (:)   ! sunlit leaf maintenance respiration rate (umol CO2/m**2/s) (ED specific)
+!     real(r8), pointer, public  :: psncanopy_patch   (:)   ! patch sunlit leaf photosynthesis (umol CO2 /m**2/ s) (ED specific)
+!     real(r8), pointer, public  :: lmrcanopy_patch   (:)   ! sunlit leaf maintenance respiration rate (umol CO2/m**2/s) (ED specific)
 
      ! LUNA specific variables
      real(r8), pointer, public  :: vcmx25_z_patch    (:,:) ! patch  leaf Vc,max25 (umol CO2/m**2/s) for canopy layer 
@@ -301,8 +301,8 @@ contains
     allocate(this%rssun_patch       (begp:endp))           ; this%rssun_patch       (:)   = nan
     allocate(this%rssha_patch       (begp:endp))           ; this%rssha_patch       (:)   = nan
 
-    allocate(this%psncanopy_patch   (begp:endp))           ; this%psncanopy_patch   (:)   = nan
-    allocate(this%lmrcanopy_patch   (begp:endp))           ; this%lmrcanopy_patch   (:)   = nan
+!    allocate(this%psncanopy_patch   (begp:endp))           ; this%psncanopy_patch   (:)   = nan
+!    allocate(this%lmrcanopy_patch   (begp:endp))           ; this%lmrcanopy_patch   (:)   = nan
     if(use_luna)then
       ! NOTE(bja, 2015-09) because these variables are only allocated
       ! when luna is turned on, they can not be placed into associate
@@ -485,8 +485,6 @@ contains
 
     do p = bounds%begp,bounds%endp
        l = patch%landunit(p)
-
-       this%lmrcanopy_patch(p) =  0.0_r8
 
        this%alphapsnsun_patch(p) = spval
        this%alphapsnsha_patch(p) = spval
@@ -1657,6 +1655,8 @@ contains
          p = filterp(f)
          g = patch%gridcell(p)
 
+         ! INTERFACE-TODO: EDACCUMULATEFLUXES PERFORMS AN ALTERNATIVE TO THIS
+         ! THEY SHOULD BE IN-LINE SOMEWHERE
          if (.not. use_ed) then
             fpsn(p)    = psnsun(p)   *laisun(p) + psnsha(p)   *laisha(p)
             fpsn_wc(p) = psnsun_wc(p)*laisun(p) + psnsha_wc(p)*laisha(p)

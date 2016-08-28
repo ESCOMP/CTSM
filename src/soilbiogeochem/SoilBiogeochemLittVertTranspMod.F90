@@ -5,7 +5,7 @@ module SoilBiogeochemLittVertTranspMod
   !
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varctl                         , only : iulog, use_c13, use_c14, spinup_state, use_vertsoilc
+  use clm_varctl                         , only : iulog, use_c13, use_c14, spinup_state, use_vertsoilc, use_ed, use_cn
   use clm_varcon                         , only : secspday
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
@@ -183,6 +183,9 @@ contains
       if ( use_c14 ) then
          ntype = ntype+1
       endif
+      if ( use_ed ) then
+         ntype = 1
+      endif
       spinup_term = 1._r8
       epsilon = 1.e-30
 
@@ -247,9 +250,11 @@ contains
             source            => soilbiogeochem_carbonflux_inst%decomp_cpools_sourcesink_col
             trcr_tendency_ptr => soilbiogeochem_carbonflux_inst%decomp_cpools_transport_tendency_col
          case (2)  ! N
-            conc_ptr          => soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col
-            source            => soilbiogeochem_nitrogenflux_inst%decomp_npools_sourcesink_col
-            trcr_tendency_ptr => soilbiogeochem_nitrogenflux_inst%decomp_npools_transport_tendency_col
+            if (use_cn ) then
+               conc_ptr          => soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col
+               source            => soilbiogeochem_nitrogenflux_inst%decomp_npools_sourcesink_col
+               trcr_tendency_ptr => soilbiogeochem_nitrogenflux_inst%decomp_npools_transport_tendency_col
+            endif
          case (3)
             if ( use_c13 ) then
                ! C13

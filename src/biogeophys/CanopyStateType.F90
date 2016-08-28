@@ -53,7 +53,7 @@ module CanopyStateType
      real(r8) , pointer :: dewmx_patch              (:)   ! patch maximum allowed dew [mm] 
 
      real(r8) , pointer :: rscanopy_patch           (:)   ! patch canopy stomatal resistance (s/m) (ED specific)
-     real(r8) , pointer :: gccanopy_patch           (:)   ! patch (ED specific)
+
      real(r8) , pointer :: vegwp_patch              (:,:) ! patch vegetation water matric potential (mm)
 
      real(r8)           :: leaf_mr_vcm = spval            ! Scalar constant of leaf respiration with Vcmax
@@ -140,7 +140,7 @@ contains
     allocate(this%dewmx_patch              (begp:endp))           ; this%dewmx_patch              (:)   = nan
 
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
-    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8     
+!    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8     
     if( use_hydrstress )then
        ! NOTE(kwo, 2015-09) because these variables are only allocated when use_hydrstress
        ! is turned on, they can not be placed into associate statements.
@@ -285,9 +285,9 @@ contains
          avgflag='A', long_name='canopy resistance', &
          ptr_patch=this%rscanopy_patch, set_lake=0._r8, set_urb=0._r8)
 
-    call hist_addfld1d (fname='GCCANOPY', units='none',  &
-         avgflag='A', long_name='Canopy Conductance: mmol m-2 s-1', &
-         ptr_patch=this%GCcanopy_patch, set_lake=0._r8, set_urb=0._r8)  
+!    call hist_addfld1d (fname='GCCANOPY', units='none',  &
+!         avgflag='A', long_name='Canopy Conductance: mmol m-2 s-1', &
+!         ptr_patch=this%GCcanopy_patch, set_lake=0._r8, set_urb=0._r8)  
 
     if ( use_hydrstress ) then
        this%vegwp_patch(begp:endp,:) = spval
@@ -608,7 +608,7 @@ contains
        end do
     end if
 
-    if (use_cn) then
+    if (use_cn .or. use_ed) then
        call restartvar(ncid=ncid, flag=flag, varname='altmax', xtype=ncd_double,  &
             dim1name='column', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%altmax_col) 

@@ -31,7 +31,7 @@ contains
     ! they get too small.
     !
     ! !USES:
-    use clm_varctl , only : iulog, use_c13, use_c14, use_nitrif_denitrif
+    use clm_varctl , only : iulog, use_c13, use_c14, use_nitrif_denitrif, use_cn
     use clm_varpar , only : nlevdecomp
     use CNSharedParamsMod, only: use_fun
     !
@@ -98,8 +98,10 @@ contains
                   cc = cc + cs%decomp_cpools_vr_col(c,j,k)
                   cs%decomp_cpools_vr_col(c,j,k) = 0._r8
 
-                  cn = cn + ns%decomp_npools_vr_col(c,j,k)
-                  ns%decomp_npools_vr_col(c,j,k) = 0._r8
+                  if (use_cn) then
+                     cn = cn + ns%decomp_npools_vr_col(c,j,k)
+                     ns%decomp_npools_vr_col(c,j,k) = 0._r8
+                  endif
 
                   if ( use_c13 ) then
                      cc13 = cc13 + c13cs%decomp_cpools_vr_col(c,j,k)
@@ -117,7 +119,10 @@ contains
             ! be getting the N truncation flux anyway.
 
             cs%ctrunc_vr_col(c,j) = cs%ctrunc_vr_col(c,j) + cc
-            ns%ntrunc_vr_col(c,j) = ns%ntrunc_vr_col(c,j) + cn
+
+            if (use_cn) then
+               ns%ntrunc_vr_col(c,j) = ns%ntrunc_vr_col(c,j) + cn
+            endif
             if ( use_c13 ) then
                c13cs%ctrunc_vr_col(c,j) = c13cs%ctrunc_vr_col(c,j) + cc13
             endif

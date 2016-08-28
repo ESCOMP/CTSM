@@ -99,7 +99,7 @@ module LunaMod
   
     ! !USES:
     use clm_time_manager      , only : get_step_size, is_end_curr_day
-    use clm_varpar            , only : nlevcan_ed, nclmax, nlevsoi, mxpft
+    use clm_varpar            , only : nlevsoi, mxpft
     use perf_mod              , only : t_startf, t_stopf
     use clm_varctl            , only : use_cn
     use quadraticMod          , only : quadratic

@@ -764,13 +764,13 @@ Maximum nitrification rate constant (1/s)
 <entry id="use_vertsoilc" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
 Turn on vertical soil carbon.
-Requires the CN model to work (either CN or CNDV).
+Requires the CN or ED model to work (either CN or CNDV).
 </entry>
 
 <entry id="use_century_decomp" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
 Use parameters for decomposition from the CENTURY Carbon model
-Requires the CN model to work (either CN or CNDV).
+Requires the CN or ED model to work (either CN or CNDV).
 </entry>
 
 <entry id="use_extralakelayers" type="logical" category="physics"
@@ -1490,15 +1490,16 @@ NOTE: THIS CORRESPONDS DIRECTLY TO THE env_run.xml VARIABLE OF THE SAME NAME.
 </entry>
 
 <entry id="bgc_mode" type="char*4" category="default_settings"
-       group="default_settings" valid_values="sp,cn,bgc" >
-Command line argument for biogeochemistry mode for CLM4.5
-   sp  = Satellite Phenology
+       group="default_settings" valid_values="sp,cn,bgc,ed" >
+Command line arguement for biogeochemistry mode for CLM4.5
+   sp  = Satellitte Phenology
    cn  = Carbon Nitrogen model
    bgc = CLM4.5 BGC model with: 
         CENTURY model pools 
         Nitrification/De-nitrification
         Methane model
         Vertically resolved Carbon
+   ed  = ED (Ecosystem Demography) model with below ground BGC:
 </entry>
 
 <!-- ========================================================================================  -->

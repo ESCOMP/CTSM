@@ -85,6 +85,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Supplmental Nitrogen mode -->
 <suplnitro use_cn=".true." >NONE</suplnitro>
+<suplnitro use_ed=".true." >NONE</suplnitro>
 
 <!-- Albedo for glaciers -->
 <albice glc_nec="0" >0.60,0.40</albice>
@@ -241,7 +242,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Plant function types (relative to {csmdata}) -->
 <paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.c160713.nc</paramfile>
 <paramfile phys="clm4_5" use_ed=".false.">lnd/clm2/paramdata/clm_params.c160713.nc</paramfile>
-<paramfile               use_ed=".true." >lnd/clm2/paramdata/clm_params.ED.c151023.nc</paramfile>
+<paramfile phys="clm4_5" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c160808.nc</paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -1942,8 +1943,36 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 <!-- Defaults for ch4par_in namelist            -->
 <!-- =========================================  -->
 
-<fin_use_fsat use_cn=".true.">.false.</fin_use_fsat>
-
+<fin_use_fsat      use_cn=".true.">.false.</fin_use_fsat>
 <use_aereoxid_prog use_cn=".true.">.true.</use_aereoxid_prog>
+
+<fin_use_fsat      use_ed=".true.">.false.</fin_use_fsat>
+<use_aereoxid_prog use_ed=".true.">.true.</use_aereoxid_prog>
+
+<!-- =========================================  -->
+<!-- Defaults for different BGC modes           -->
+<!-- =========================================  -->
+
+<use_vertsoilc       bgc_mode="sp"  >.false.</use_vertsoilc>
+<use_century_decomp  bgc_mode="sp"  >.false.</use_century_decomp>
+<use_lch4            bgc_mode="sp"  >.false.</use_lch4>
+<use_nitrif_denitrif bgc_mode="sp"  >.false.</use_nitrif_denitrif>
+
+<use_vertsoilc       bgc_mode="cn"  >.false.</use_vertsoilc>
+<use_century_decomp  bgc_mode="cn"  >.false.</use_century_decomp>
+<use_lch4            bgc_mode="cn"  >.false.</use_lch4>
+<use_nitrif_denitrif bgc_mode="cn"  >.false.</use_nitrif_denitrif>
+
+<use_vertsoilc       bgc_mode="bgc" >.true.</use_vertsoilc>
+<use_century_decomp  bgc_mode="bgc" >.true.</use_century_decomp>
+<use_lch4            bgc_mode="bgc" >.true.</use_lch4>
+<use_nitrif_denitrif bgc_mode="bgc" >.true.</use_nitrif_denitrif>
+
+<use_vertsoilc       bgc_mode="ed"  >.true.</use_vertsoilc>
+<use_century_decomp  bgc_mode="ed"  >.true.</use_century_decomp>
+<use_lch4            bgc_mode="ed"  >.false.</use_lch4>
+<use_nitrif_denitrif bgc_mode="ed"  >.false.</use_nitrif_denitrif>
+
+<use_ed_spit_fire    use_ed=".true.">.true.</use_ed_spit_fire>
 
 </namelist_defaults>

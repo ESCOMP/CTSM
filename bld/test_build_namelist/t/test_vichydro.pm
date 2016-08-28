@@ -20,6 +20,7 @@ sub startup : Test(startup => 4) {
   $self->{cfg} = Build::Config->new("t/input/config_cache_clm4_5_test.xml");
   isnt($self->{cfg}, undef, (caller(0))[3] . " : config object created.");
 
+
   $self->{definition} = Build::NamelistDefinition->new("t/input/namelist_definition_clm4_5_test.xml");
   isnt($self->{definition}, undef, (caller(0))[3] . " : namelist_definition object created.");
 

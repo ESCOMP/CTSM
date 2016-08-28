@@ -19,14 +19,19 @@ module SurfaceRadiationMod
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use PatchType         , only : patch
-  use EDtypesMod        , only : ed_patch_type, ed_site_type, numpft_ed, map_clmpatch_to_edpatch
+
   !
   ! !PRIVATE TYPES:
   implicit none
   private
+
+  logical :: DEBUG = .false.  ! for debugging this module
+
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SurfaceRadiation         ! Solar fluxes absorbed by veg and ground surface
+  public :: CanopySunShadeFracs      ! Sun/Shade fractions and some area indices computations
+
   !
   ! !PRIVATE DATA:
   type, public :: surfrad_type
@@ -291,13 +296,121 @@ contains
     !-----------------------------------------------------------------------
 
     ! nothing for now
-
+    
   end subroutine InitCold
+  
 
+  subroutine CanopySunShadeFracs(filter_nourbanp, num_nourbanp,  &
+                                 atm2lnd_inst, surfalb_inst,     &
+                                 canopystate_inst, solarabs_inst)
+
+    ! ------------------------------------------------------------------------------------
+    ! This subroutine calculates and returns patch vectors of
+    ! 
+    ! 1) absorbed PAR for sunlit leaves in canopy layer
+    ! 2) absorbed PAR for shaded leaves in canopy layer
+    ! 3) sunlit leaf area
+    ! 4) shaded  leaf area
+    ! 5) sunlit leaf area for canopy layer
+    ! 6) shaded leaf area for canopy layer
+    ! 7) sunlit fraction of canopy
+    !
+    ! This routine has a counterpart when the ed model is turned on.  
+    ! CLMEDInterf_CanopySunShadeFracs()
+    ! If changes are applied to this routine, please take a moment to review that 
+    ! subroutine as well and consider if any new information related to these types of 
+    ! variables also needs to be augmented in that routine as well.
+    ! ------------------------------------------------------------------------------------
+
+
+    implicit none
+
+    ! Arguments (in)
+
+    integer, intent(in),dimension(:)      :: filter_nourbanp    ! patch filter for non-urban points
+    integer, intent(in)                   :: num_nourbanp       ! size of the nonurban filter
+    type(atm2lnd_type), intent(in)        :: atm2lnd_inst
+    type(surfalb_type), intent(in)        :: surfalb_inst
+
+    ! Arguments (inout)
+    type(canopystate_type), intent(inout) :: canopystate_inst
+    type(solarabs_type), intent(inout)    :: solarabs_inst
+  
+    ! local variables
+    integer           :: fp                         ! non-urban filter patch index
+    integer           :: p                          ! patch index
+    integer           :: g                          ! gridcell index
+    integer           :: iv                         ! canopy layer index
+    integer,parameter :: ipar = 1                   ! The band index for PAR
+    
+    associate( tlai_z  => surfalb_inst%tlai_z_patch, &    ! tlai increment for canopy layer
+          fsun_z      => surfalb_inst%fsun_z_patch, &     ! sunlit fraction of canopy layer
+          elai        => canopystate_inst%elai_patch, &   ! one-sided leaf area index 
+          forc_solad  => atm2lnd_inst%forc_solad_grc, &   ! direct beam radiation (W/m**2)
+          forc_solai  => atm2lnd_inst%forc_solai_grc, &   ! diffuse radiation (W/m**2)
+          fabd_sun_z  => surfalb_inst%fabd_sun_z_patch, & ! absorbed sunlit leaf direct PAR
+          fabd_sha_z  => surfalb_inst%fabd_sha_z_patch, & ! absorbed shaded leaf direct PAR
+          fabi_sun_z  => surfalb_inst%fabi_sun_z_patch, & ! absorbed sunlit leaf diffuse PAR
+          fabi_sha_z  => surfalb_inst%fabi_sha_z_patch, & ! absorbed shaded leaf diffuse PAR
+          nrad        => surfalb_inst%nrad_patch, &       ! number of canopy layers
+          parsun_z    => solarabs_inst%parsun_z_patch, &  ! absorbed PAR for sunlit leaves
+          parsha_z    => solarabs_inst%parsha_z_patch, &  ! absorbed PAR for shaded leaves
+          laisun      => canopystate_inst%laisun_patch, & ! sunlit leaf area
+          laisha      => canopystate_inst%laisha_patch, & ! shaded  leaf area
+          laisun_z    => canopystate_inst%laisun_z_patch, & ! sunlit leaf area for canopy layer
+          laisha_z    => canopystate_inst%laisha_z_patch, & ! shaded leaf area for canopy layer
+          fsun        => canopystate_inst%fsun_patch)       ! sunlit fraction of canopy
+     
+     do fp = 1,num_nourbanp
+        
+        p = filter_nourbanp(fp)
+        
+        do iv = 1, nrad(p)
+           parsun_z(p,iv) = 0._r8
+           parsha_z(p,iv) = 0._r8
+           laisun_z(p,iv) = 0._r8
+           laisha_z(p,iv) = 0._r8
+        end do
+        
+        ! Loop over patches to calculate laisun_z and laisha_z for each layer.
+        ! Derive canopy laisun, laisha, and fsun from layer sums.
+        ! If sun/shade big leaf code, nrad=1 and fsun_z(p,1) and tlai_z(p,1) from
+        ! SurfaceAlbedo is canopy integrated so that layer value equals canopy value.
+        
+        laisun(p) = 0._r8
+        laisha(p) = 0._r8
+        do iv = 1, nrad(p)
+           laisun_z(p,iv) = tlai_z(p,iv) * fsun_z(p,iv)
+           laisha_z(p,iv) = tlai_z(p,iv) * (1._r8 - fsun_z(p,iv))
+           laisun(p) = laisun(p) + laisun_z(p,iv) 
+           laisha(p) = laisha(p) + laisha_z(p,iv) 
+        end do
+        if (elai(p) > 0._r8) then
+           fsun(p) = laisun(p) / elai(p)
+        else
+           fsun(p) = 0._r8
+        end if
+        
+        ! Absorbed PAR profile through canopy
+        ! If sun/shade big leaf code, nrad=1 and fluxes from SurfaceAlbedo
+        ! are canopy integrated so that layer values equal big leaf values.
+        
+        g = patch%gridcell(p)
+        
+        do iv = 1, nrad(p)
+           parsun_z(p,iv) = forc_solad(g,ipar)*fabd_sun_z(p,iv) + forc_solai(g,ipar)*fabi_sun_z(p,iv)
+           parsha_z(p,iv) = forc_solad(g,ipar)*fabd_sha_z(p,iv) + forc_solai(g,ipar)*fabi_sha_z(p,iv)
+        end do
+        
+     end do ! end of fp = 1,num_nourbanp loop
+   end associate
+   return
+ end subroutine CanopySunShadeFracs
+ 
   !------------------------------------------------------------------------------
   subroutine SurfaceRadiation(bounds, num_nourbanp, filter_nourbanp, &
        num_urbanp, filter_urbanp, num_urbanc, filter_urbanc, &
-       ed_allsites_inst, atm2lnd_inst, waterstate_inst, canopystate_inst, &
+       atm2lnd_inst, waterstate_inst, canopystate_inst, &
        surfalb_inst, solarabs_inst, surfrad_inst)
      !
      ! !DESCRIPTION: 
@@ -333,7 +446,6 @@ contains
      integer                , intent(in)            :: filter_urbanp(:)   ! patch filter for non-urban points
      integer                , intent(in)            :: num_urbanc         ! number of urban columns in clump
      integer                , intent(in)            :: filter_urbanc(:)   ! urban column filter
-     type(ed_site_type)     , intent(inout), target :: ed_allsites_inst( bounds%begg:)
      type(atm2lnd_type)     , intent(in)            :: atm2lnd_inst
      type(waterstate_type)  , intent(in)            :: waterstate_inst
      type(surfalb_type)     , intent(in)            :: surfalb_inst
@@ -375,13 +487,6 @@ contains
      !
      integer, parameter :: noonsec   = isecspday / 2 ! seconds at local noon
      !
-     !ED specific variables 
-     real(r8)                  :: errsol(bounds%begp:bounds%endp) ! solar radiation error Wm-2
-     real(r8)                  :: sunlai                          ! intermediate for calculating canopy fsun
-     real(r8)                  :: shalai                          ! intermediate for calculating canopy fsha
-     integer                   :: CL                              ! Canopy Layer index
-     integer                   :: FT                              ! clm patch index
-     type (ed_patch_type),  pointer :: currentPatch               ! Import fapar matrix for each patch from ED data structure.
      !------------------------------------------------------------------------------
 
      associate(                                                     & 
@@ -394,9 +499,6 @@ contains
           frac_sno        =>    waterstate_inst%frac_sno_col      , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
           
           nrad            =>    surfalb_inst%nrad_patch           , & ! Input:  [integer  (:)   ] number of canopy layers, above snow for radiative transfer
-          fsun_z          =>    surfalb_inst%fsun_z_patch         , & ! Input:  [real(r8) (:,:) ] sunlit fraction of canopy layer       
-          tlai_z          =>    surfalb_inst%tlai_z_patch         , & ! Input:  [real(r8) (:,:) ] tlai increment for canopy layer       
-          tsai_z          =>    surfalb_inst%tsai_z_patch         , & ! Input:  [real(r8) (:,:) ] tsai increment for canopy layer       
           coszen          =>    surfalb_inst%coszen_col           , & ! Input:  [real(r8) (:)   ] column cosine of solar zenith angle            
           albgrd          =>    surfalb_inst%albgrd_col           , & ! Input:  [real(r8) (:,:) ] ground albedo (direct)                
           albgri          =>    surfalb_inst%albgri_col           , & ! Input:  [real(r8) (:,:) ] ground albedo (diffuse)               
@@ -434,12 +536,7 @@ contains
           tlai            =>    canopystate_inst%tlai_patch       , & ! Input:  [real(r8) (:)   ] one-sided leaf area index
           elai            =>    canopystate_inst%elai_patch       , & ! Input:  [real(r8) (:)   ] one-sided leaf area index with burying by snow
           esai            =>    canopystate_inst%esai_patch       , & ! Input:  [real(r8) (:)   ] one-sided stem area index with burying by snow
-          laisun          =>    canopystate_inst%laisun_patch     , & ! Output: [real(r8) (:)   ] sunlit leaf area                        
-          laisha          =>    canopystate_inst%laisha_patch     , & ! Output: [real(r8) (:)   ] shaded leaf area                        
-          laisun_z        =>    canopystate_inst%laisun_z_patch   , & ! Output: [real(r8) (:,:) ] sunlit leaf area for canopy layer     
-          laisha_z        =>    canopystate_inst%laisha_z_patch   , & ! Output: [real(r8) (:,:) ] shaded leaf area for canopy layer     
           fsun            =>    canopystate_inst%fsun_patch       , & ! Output: [real(r8) (:)   ] sunlit fraction of canopy               
-
           fsa             =>    solarabs_inst%fsa_patch           , & ! Output: [real(r8) (:)   ] solar radiation absorbed (total) (W/m**2)
           fsr             =>    solarabs_inst%fsr_patch           , & ! Output: [real(r8) (:)   ] solar radiation reflected (W/m**2)      
           sabv            =>    solarabs_inst%sabv_patch          , & ! Output: [real(r8) (:)   ] solar radiation absorbed by vegetation (W/m**2)
@@ -448,8 +545,6 @@ contains
           sabg_soil       =>    solarabs_inst%sabg_soil_patch     , & ! Output: [real(r8) (:)   ] solar radiation absorbed by soil (W/m**2)
           sabg_snow       =>    solarabs_inst%sabg_snow_patch     , & ! Output: [real(r8) (:)   ] solar radiation absorbed by snow (W/m**2)
           sabg_lyr        =>    solarabs_inst%sabg_lyr_patch      , & ! Output: [real(r8) (:,:) ] absorbed radiative flux (patch,lyr) [W/m2]
-          parsun_z        =>    solarabs_inst%parsun_z_patch      , & ! Output: [real(r8) (:,:) ] absorbed PAR for sunlit leaves in canopy layer
-          parsha_z        =>    solarabs_inst%parsha_z_patch      , & ! Output: [real(r8) (:,:) ] absorbed PAR for shaded leaves in canopy layer
           fsr_nir_d       =>    solarabs_inst%fsr_nir_d_patch     , & ! Output: [real(r8) (:)   ] reflected direct beam nir solar radiation (W/m**2)
           fsr_nir_i       =>    solarabs_inst%fsr_nir_i_patch     , & ! Output: [real(r8) (:)   ] reflected diffuse nir solar radiation (W/m**2)
           fsr_nir_d_ln    =>    solarabs_inst%fsr_nir_d_ln_patch  , & ! Output: [real(r8) (:)   ] reflected direct beam nir solar rad at local noon (W/m**2)
@@ -482,7 +577,9 @@ contains
           fsds_sno_vd     =>    surfrad_inst%fsds_sno_vd_patch    , & ! Output: [real(r8) (:)   ] incident visible, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_nd     =>    surfrad_inst%fsds_sno_nd_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_vi     =>    surfrad_inst%fsds_sno_vi_patch    , & ! Output: [real(r8) (:)   ] incident visible, diffuse radiation on snow (for history files) (patch) [W/m2]
-          fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch      & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
+          fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch    ,  & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
+         frac_sno_eff     => waterstate_inst%frac_sno_eff_col          & !Input: 
+  
           )
 
        ! Determine seconds off current time step
@@ -511,105 +608,16 @@ contains
           sabg_oc(p)    = 0._r8
           sabg_dst(p)   = 0._r8
 
-          if( use_ed )then ! use_ed
-
-             if ( patch%is_veg(p) ) then 
-                currentPatch => map_clmpatch_to_edpatch(ed_allsites_inst(g), p) 
-                currentPatch%ed_parsun_z(:,:,:) = 0._r8
-                currentPatch%ed_parsha_z(:,:,:) = 0._r8
-                currentPatch%ed_laisun_z(:,:,:) = 0._r8     
-                currentPatch%ed_laisha_z(:,:,:) = 0._r8
-                fsun(p) = 0._r8
-             endif
-
-          else ! not use_ed
-
-             do iv = 1, nrad(p)
-                parsun_z(p,iv) = 0._r8
-                parsha_z(p,iv) = 0._r8
-                laisun_z(p,iv) = 0._r8
-                laisha_z(p,iv) = 0._r8
-             end do
-
-          end if ! end of if-use_ed
-
        end do
 
-       ! Loop over patches to calculate laisun_z and laisha_z for each layer.
-       ! Derive canopy laisun, laisha, and fsun from layer sums.
-       ! If sun/shade big leaf code, nrad=1 and fsun_z(p,1) and tlai_z(p,1) from
-       ! SurfaceAlbedo is canopy integrated so that layer value equals canopy value.
-
-       do fp = 1,num_nourbanp
-          p = filter_nourbanp(fp)
-          g = patch%gridcell(p)
-
-          if( use_ed )then
-
-             ! currentPatch%f_sun is calculated in the surface_albedo routine...
-             if (patch%is_veg(p)) then
-                fsun(p) = 0._r8
-                sunlai = 0._r8
-                shalai = 0._r8
-                currentPatch => map_clmpatch_to_edpatch(ed_allsites_inst(g), p) 
-                do CL = 1, currentPatch%NCL_p
-                   do FT = 1,numpft_ed
-                      do iv = 1, currentPatch%nrad(CL,ft) !NORMAL CASE. 
-                         ! FIX(SPM,040114) ** Should this be elai or tlai? Surely we only do radiation for elai? 
-                         currentPatch%ed_laisun_z(CL,ft,iv) = currentPatch%elai_profile(CL,ft,iv) * &
-                              currentPatch%f_sun(CL,ft,iv)
-                         currentPatch%ed_laisha_z(CL,ft,iv) = currentPatch%elai_profile(CL,ft,iv) * &
-                              (1._r8 - currentPatch%f_sun(CL,ft,iv))
-                      end do
-                      sunlai = sunlai + sum(currentPatch%ed_laisun_z(CL,ft,1: currentPatch%nrad(CL,ft)))
-                      shalai = shalai + sum(currentPatch%ed_laisha_z(CL,ft,1: currentPatch%nrad(CL,ft)))
-                      !needed for the VOC emissions, etc. 
-                   end do
-                end do
-                if(sunlai+shalai > 0._r8)then
-                   fsun(p) = sunlai / (sunlai+shalai) 
-                else
-                   fsun(p) = 0._r8
-                endif
-                if(fsun(p) > 1._r8)then
-                   write(iulog,*) 'too much leaf area in profile', fsun(p),currentPatch%lai,sunlai,shalai
-                endif
-
-             else ! not is_veg
-
-               fsun(p) = 0.0_r8
-
-             end if !end of is_veg
-
-          else ! use_ed false.  revert to normal multi-layer canopy.
-
-             laisun(p) = 0._r8
-             laisha(p) = 0._r8
-             do iv = 1, nrad(p)
-                laisun_z(p,iv) = tlai_z(p,iv) * fsun_z(p,iv)
-                laisha_z(p,iv) = tlai_z(p,iv) * (1._r8 - fsun_z(p,iv))
-                laisun(p) = laisun(p) + laisun_z(p,iv) 
-                laisha(p) = laisha(p) + laisha_z(p,iv) 
-             end do
-             if (elai(p) > 0._r8) then
-                fsun(p) = laisun(p) / elai(p)
-             else
-                fsun(p) = 0._r8
-             end if
-
-          end if ! end of if-use_ed  
-
-       end do ! end of fp = 1,num_nourbanp loop
-
-       do ib = 1, numrad
-          do fp = 1,num_urbanp
-             p = filter_urbanp(fp)
-             if (ib == 1) then
-                fsun(p) = 0._r8
-             end if
-          end do
+       ! zero-out fsun for the urban patches
+       ! the non-urban patches were set prior to this call
+       ! and split into ed and non-ed specific functions
+       do fp = 1,num_urbanp
+          p = filter_urbanp(fp)
+          fsun(p) = 0._r8
        end do
-
+       
        ! Loop over nband wavebands
        do ib = 1, nband
           do fp = 1,num_nourbanp
@@ -630,41 +638,6 @@ contains
              if (lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) then
                 fsa_r(p)  = fsa_r(p)  + cad(p,ib) + cai(p,ib)
              end if
-
-             ! Absorbed PAR profile through canopy
-             ! If sun/shade big leaf code, nrad=1 and fluxes from SurfaceAlbedo
-             ! are canopy integrated so that layer values equal big leaf values.
-
-             if (ib == 1) then
-
-                if ( use_ed ) then   
-
-                   if (patch%is_veg(p)) then
-                      currentPatch => map_clmpatch_to_edpatch(ed_allsites_inst(g), p) 
-                      do CL = 1, currentPatch%NCL_p
-                         do FT = 1,numpft_ed
-                            do iv = 1, currentPatch%nrad(CL,ft)
-                               currentPatch%ed_parsun_z(CL,ft,iv) = &
-                                    forc_solad(g,ib)*currentPatch%fabd_sun_z(CL,ft,iv) + &
-                                    forc_solai(g,ib)*currentPatch%fabi_sun_z(CL,ft,iv) 
-                               currentPatch%ed_parsha_z(CL,ft,iv) = &
-                                    forc_solad(g,ib)*currentPatch%fabd_sha_z(CL,ft,iv) + &
-                                    forc_solai(g,ib)*currentPatch%fabi_sha_z(CL,ft,iv)          
-                            end do !iv
-                         end do !FT
-                      end do !CL
-                   end if ! is_veg check
-
-                else ! not use_ed
-
-                   do iv = 1, nrad(p)
-                      parsun_z(p,iv) = forc_solad(g,ib)*fabd_sun_z(p,iv) + forc_solai(g,ib)*fabi_sun_z(p,iv)
-                      parsha_z(p,iv) = forc_solad(g,ib)*fabd_sha_z(p,iv) + forc_solai(g,ib)*fabi_sha_z(p,iv)
-                   end do
-
-                end if  ! end of use_ed
-
-             end if   ! end of if ib is 1
 
              ! Transmitted = solar fluxes incident on ground
 
@@ -928,9 +901,7 @@ contains
           local_secp1 = mod(local_secp1,isecspday)
 
         if(elai(p)==0.0_r8.and.fabd(p,1)>0._r8)then
-           ! FIX(SPM, 051314) - is this necessary ?  puts lots of info in
-           ! lnd.log
-           write(iulog,*) 'absorption without LAI',elai(p),tlai(p),fabd(p,1),p
+           if ( DEBUG ) write(iulog,*) 'absorption without LAI',elai(p),tlai(p),fabd(p,1),p
         endif
           ! Solar incident 
 
@@ -971,20 +942,8 @@ contains
           fsr(p) = fsr_vis_d(p) + fsr_nir_d(p) + fsr_vis_i(p) + fsr_nir_i(p)  
        end do
 
-       do fp = 1,num_nourbanp
-          p = filter_nourbanp(fp)
-          g = patch%gridcell(p)
-          if (use_ed) then
-             errsol(p) = (fsa(p) + fsr(p)  - (forc_solad(g,1) + forc_solad(g,2) + forc_solai(g,1) + forc_solai(g,2)))
-             if(abs(errsol(p)) > 0.1_r8)then
-                g = patch%gridcell(p)
-                write(iulog,*) 'sol error in surf rad',p,g, errsol(p), patch%is_veg(p)
-             endif
-          end if
-       end do
-
      end associate
 
    end subroutine SurfaceRadiation
-  
+
 end module SurfaceRadiationMod

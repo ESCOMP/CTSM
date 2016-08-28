@@ -134,7 +134,8 @@
       <value compset="_CLM45%[^_]*BGCDV"	>-bgc bgc -dynamic_vegetation</value>
       <value compset="_CLM45%[^_]*CNDV-CROP"	>-bgc cn -dynamic_vegetation -crop</value>
       <value compset="_CLM45%[^_]*BGCDV-CROP"	>-bgc bgc -dynamic_vegetation -crop</value>
-      <value compset="_CLM45%[^_]*ED"		>-ed_mode</value>
+      <value compset="_CLM45%[^_]*ED"		>-bgc ed -no-megan</value>
+
       <value compset="_CLM50%[^_]*SP"		>-bgc sp</value>
       <value compset="_CLM50%[^_]*BGC"		>-bgc bgc</value>
       <value compset="_CLM50%[^_]*BGCDV"	>-bgc bgc -dynamic_vegetation</value>

@@ -11,6 +11,8 @@ module clm_varpar
   use clm_varctl   , only: use_century_decomp, use_c13, use_c14
   use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
   use clm_varctl   , only: use_vichydro, soil_layerstruct
+  use clm_varctl   , only: use_ed
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -34,8 +36,6 @@ module clm_varpar
   integer, parameter :: nlevcan     =   1     ! number of leaf layers in canopy layer
   integer, parameter :: nvegwcs     =   4     ! number of vegetation water conductance segments
   !ED variables
-  integer, parameter :: nlevcan_ed  =   40    ! number of leaf layers in canopy layer
-  integer, parameter :: nclmax      =   2     ! max number of canopy layers
   integer, parameter :: numwat      =   5     ! number of water types (soil, ice, 2 lakes, wetland)
   integer, parameter :: numrad      =   2     ! number of solar radiation bands: vis, nir
   integer, parameter :: ivis        =   1     ! index for visible band
@@ -190,21 +190,39 @@ contains
        write(iulog, *)
     end if
 
-    if (use_century_decomp) then
-       ndecomp_pools = 7
-       ndecomp_cascade_transitions = 10
-       i_met_lit = 1
-       i_cel_lit = 2
-       i_lig_lit = 3
-       i_cwd = 4
+    if ( use_ed ) then
+       if (use_century_decomp) then
+          ndecomp_pools = 6
+          ndecomp_cascade_transitions = 8
+          i_met_lit = 1
+          i_cel_lit = 2
+          i_lig_lit = 3
+          i_cwd = 0
+       else
+          ndecomp_pools = 7
+          ndecomp_cascade_transitions = 7
+          i_met_lit = 1
+          i_cel_lit = 2
+          i_lig_lit = 3
+          i_cwd = 0
+       end if
     else
-       ndecomp_pools = 8
-       ndecomp_cascade_transitions = 9
-       i_met_lit = 1
-       i_cel_lit = 2
-       i_lig_lit = 3
-       i_cwd = 4
-    end if
+       if (use_century_decomp) then
+          ndecomp_pools = 7
+          ndecomp_cascade_transitions = 10
+          i_met_lit = 1
+          i_cel_lit = 2
+          i_lig_lit = 3
+          i_cwd = 4
+       else
+          ndecomp_pools = 8
+          ndecomp_cascade_transitions = 9
+          i_met_lit = 1
+          i_cel_lit = 2
+          i_lig_lit = 3
+          i_cwd = 4
+       end if
+    endif
 
   end subroutine clm_varpar_init
 
