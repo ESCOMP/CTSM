@@ -1,4 +1,87 @@
 ===============================================================
+Tag name:  clm4_5_12_r193
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Tue Aug 30 21:08:39 MDT 2016
+One-line Summary: Bugfix in BalanceCheckMod: revert tolerance change and removal of endrun call introduced in r192
+
+Purpose of changes
+------------------
+
+Revert the tolerance change and removal of an endrun call in BalanceCheckMod
+that were introduced in r192.
+
+Bugs fixed or introduced
+------------------------
+
+see above.
+
+Notes of particular relevance for users
+---------------------------------------
+
+none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - n/a, not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - n/a, not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - n/a, not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - n/a, not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+CLM tag used for the baseline comparisons: clm4_5_12_r192
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+    Test suite bit for bit with r191 and r192. Long runs may change from
+    r192 if the tolerance or endrun condition are encountered, but
+    should agree with r191.
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+    components/clm/src/biogeophys/BalanceCheckMod.F90 - revert tolerance
+    change and reinstate endrun call.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_12_r192
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Sat Aug 27 21:32:54 MDT 2016

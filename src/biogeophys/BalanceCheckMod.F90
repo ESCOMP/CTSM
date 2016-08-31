@@ -533,7 +533,7 @@ contains
        found = .false.
        do p = bounds%begp, bounds%endp
           if (patch%active(p)) then
-             if ( (errsol(p) /= spval) .and. (abs(errsol(p)) > 1.e-6_r8) ) then
+             if ( (errsol(p) /= spval) .and. (abs(errsol(p)) > 1.e-7_r8) ) then
                 found = .true.
                 indexp = p
                 indexg = patch%gridcell(indexp)
@@ -636,8 +636,8 @@ contains
           write(iulog,*)'nstep         = ',nstep
           write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
           if (abs(errsoi_col(indexc)) > 1.e-4_r8 .and. (nstep > 2) ) then
-             !write(iulog,*)'clm model is stopping'
-             !call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+             write(iulog,*)'clm model is stopping'
+             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
           end if
        end if
 
