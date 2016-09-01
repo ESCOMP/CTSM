@@ -158,6 +158,9 @@ module CLMFatesInterfaceMod
 
    logical :: DEBUG  = .false.
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
    
    ! ====================================================================================
@@ -351,7 +354,7 @@ contains
          if( this%fates(nc)%nsites == 0 ) then
             write(iulog,*) 'Clump ',nc,' had no valid FATES sites'
             write(iulog,*) 'This will likely cause problems until code is improved'
-            call endrun(msg=errMsg(__FILE__, __LINE__))
+            call endrun(msg=errMsg(sourcefile, __LINE__))
          end if
 
       end do
@@ -385,13 +388,13 @@ contains
             
             write(iulog,*) 'INACTIVE COLUMN WITH ACTIVE FATES SITE'
             write(iulog,*) 'c = ',c
-            call endrun(msg=errMsg(__FILE__, __LINE__))
+            call endrun(msg=errMsg(sourcefile, __LINE__))
 
          elseif (this%f2hmap(nc)%hsites(c)==0 .and. col%active(c)) then
             
             write(iulog,*) 'ACTIVE COLUMN WITH INACTIVE FATES SITE'
             write(iulog,*) 'c = ',c
-            call endrun(msg=errMsg(__FILE__, __LINE__))
+            call endrun(msg=errMsg(sourcefile, __LINE__))
          end if
       end do
 
@@ -1010,7 +1013,7 @@ contains
          if(this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) /= 2)then
             write(iulog,*) 'Not all patches on the natveg column in the photosynthesis'
             write(iulog,*) 'filter ran photosynthesis'
-            call endrun(msg=errMsg(__FILE__, __LINE__))
+            call endrun(msg=errMsg(sourcefile, __LINE__))
          else
             this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) = 3
             rssun(p) = this%fates(nc)%bc_out(s)%rssun_pa(ifp)
@@ -1046,7 +1049,7 @@ contains
        s = this%f2hmap(nc)%hsites(c)
        ifp = p-col%patchi(c)
        if(this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) /= 3)then
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -1129,7 +1132,7 @@ contains
 
        if(.not.this%fates(nc)%bc_in(s)%filter_vegzen_pa(ifp) )then
           write(iulog,*) 'Not all patches on the natveg column were passed to canrad'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        else
           albd(p,:) = this%fates(nc)%bc_out(s)%albd_parb(ifp,:)
           albi(p,:) = this%fates(nc)%bc_out(s)%albi_parb(ifp,:)

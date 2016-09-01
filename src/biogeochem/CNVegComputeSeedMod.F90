@@ -32,6 +32,9 @@ module CNVegComputeSeedMod
   integer, parameter :: COMPONENT_LEAF = 1
   integer, parameter :: COMPONENT_DEADWOOD = 2
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -96,15 +99,15 @@ contains
     begp = bounds%begp
     endp = bounds%endp
 
-    SHR_ASSERT_ALL((ubound(leaf_patch) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(leaf_storage_patch) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(leaf_xfer_patch) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(compute_here_patch) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(ignore_current_state_patch) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(seed_leaf_patch) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(seed_leaf_storage_patch) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(seed_leaf_xfer_patch) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(seed_deadstem_patch) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(leaf_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(leaf_storage_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(leaf_xfer_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(compute_here_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(ignore_current_state_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(seed_leaf_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(seed_leaf_storage_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(seed_leaf_xfer_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(seed_deadstem_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
 
 
     do fp = 1, num_soilp_with_inactive

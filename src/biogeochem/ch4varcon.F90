@@ -70,6 +70,9 @@ module ch4varcon
                                     ! Currently hardwired off; small impact.
 
   public :: ch4conrd ! Read and initialize CH4 constants
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -125,11 +128,11 @@ contains
           read(unitn, ch4par_in, iostat=ierr)
           if (ierr /= 0) then
              call endrun(msg='error in reading in ch4par_in namelist'//&
-                  errMsg(__FILE__, __LINE__))
+                  errMsg(sourcefile, __LINE__))
           end if
        else
           call endrun(msg='error in finding ch4par_in namelist'//&
-                  errMsg(__FILE__, __LINE__))
+                  errMsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
 

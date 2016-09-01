@@ -21,6 +21,9 @@ module EDPhotosynthesisMod
 
   ! PUBLIC MEMBER FUNCTIONS:
   public :: Photosynthesis_ED !ED specific photosynthesis routine
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------------
 
 contains
@@ -739,7 +742,7 @@ contains
                                  if (gs_mol < 0._r8) then
                                     write (iulog,*)'Negative stomatal conductance:'
                                     write (iulog,*)'ifp,iv,gs_mol= ',ifp,iv,gs_mol
-                                    call endrun(msg=errmsg(__FILE__, __LINE__))
+                                    call endrun(msg=errmsg(sourcefile, __LINE__))
                                  end if
 
                                  ! Compare with Ball-Berry model: gs_mol = m * an * hs/cs p + b
@@ -1100,7 +1103,7 @@ function ft1_f(tl, ha) result(ans)
     
      if (a == 0._r8) then
         write (iulog,*) 'Quadratic solution error: a = ',a
-        call endrun(msg=errmsg(__FILE__, __LINE__))
+        call endrun(msg=errmsg(sourcefile, __LINE__))
      end if
    
      if (b >= 0._r8) then

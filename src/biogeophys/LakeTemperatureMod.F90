@@ -33,6 +33,9 @@ module LakeTemperatureMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: SoilThermProp_Lake   ! Set therm conductivities and heat cap of snow/soil layers
   private :: PhaseChange_Lake     ! Calculation of the phase change within snow/soil/lake layers
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -1105,9 +1108,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(cv)           == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-     SHR_ASSERT_ALL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-     SHR_ASSERT_ALL((ubound(tktopsoillay) == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(cv)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL((ubound(tk)           == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL((ubound(tktopsoillay) == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
 
      associate(                                           & 
           snl         => col%snl                        , & ! Input:  [integer (:)]  number of snow layers                    
@@ -1290,9 +1293,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(cv)      == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-     SHR_ASSERT_ALL((ubound(cv_lake) == (/bounds%endc, nlevlak/)),  errMsg(__FILE__, __LINE__))
-     SHR_ASSERT_ALL((ubound(lhabs)   == (/bounds%endc/)),           errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(cv)      == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL((ubound(cv_lake) == (/bounds%endc, nlevlak/)),  errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL((ubound(lhabs)   == (/bounds%endc/)),           errMsg(sourcefile, __LINE__))
 
      associate(                                                   & 
           dz_lake         => col%dz_lake                        , & ! Input:  [real(r8)  (:,:) ] lake layer thickness (m)              

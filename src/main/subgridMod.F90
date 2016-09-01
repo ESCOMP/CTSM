@@ -40,6 +40,9 @@ module subgridMod
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: subgrid_get_info_urban
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -463,8 +466,8 @@ contains
     !-----------------------------------------------------------------------
 
     if (create_crop_landunit) then
-       SHR_ASSERT(cft >= cft_lb, errMsg(__FILE__, __LINE__))
-       SHR_ASSERT(cft <= cft_ub, errMsg(__FILE__, __LINE__))
+       SHR_ASSERT(cft >= cft_lb, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT(cft <= cft_ub, errMsg(sourcefile, __LINE__))
 
        if (get_do_transient_crops()) then
           ! To support dynamic landunits, we have all possible crop columns in every grid

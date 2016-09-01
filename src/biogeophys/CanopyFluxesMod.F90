@@ -68,6 +68,9 @@ module CanopyFluxesMod
   logical, private :: snowveg_on     = .false.                ! snowveg_flag = 'ON'
   logical, private :: snowveg_onrad  = .true.                 ! snowveg_flag = 'ON_RAD'
   logical, private :: use_undercanopy_stability = .true.      ! use undercanopy stability term or not
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------------
 
 contains
@@ -109,10 +112,10 @@ contains
        if (ierr == 0) then
           read(unitn, nml=canopyfluxes_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
     end if
@@ -353,8 +356,8 @@ contains
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(downreg_patch) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(leafn_patch) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(downreg_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(leafn_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                               & 
          soilresis            => soilstate_inst%soilresis_col              , & ! Input:  [real(r8) (:)   ]  soil evaporative resistance
@@ -720,7 +723,7 @@ contains
       if (found) then
          if ( .not. use_ed ) then
             write(iulog,*)'Error: Forcing height is below canopy height for patch index '
-            call endrun(decomp_index=index, clmlevel=namep, msg=errmsg(__FILE__, __LINE__))
+            call endrun(decomp_index=index, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
          end if
       end if
 

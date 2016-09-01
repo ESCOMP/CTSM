@@ -74,6 +74,9 @@ module CNFUNMod
   integer,  private, parameter :: ncost6          = 6             ! Number of
   !  N transport pathways
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 !
 !--------------------------------------------------------------------
   !---
@@ -102,12 +105,12 @@ module CNFUNMod
 
     tString='ndays_on'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%ndays_on=tempr
 
     tString='ndays_off'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%ndays_off=tempr
 
 

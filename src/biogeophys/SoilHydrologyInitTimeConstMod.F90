@@ -22,6 +22,9 @@ module SoilHydrologyInitTimeConstMod
   private :: initSoilParVIC    ! Convert default CLM soil properties to VIC parameters
   private :: initCLMVICMap     ! Initialize map from VIC to CLM layers
   private :: linear_interp     ! function for linear interperation 
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
   !
 contains
@@ -120,19 +123,19 @@ contains
        call ncd_pio_openfile (ncid, locfn, 0)
        call ncd_io(ncid=ncid, varname='binfl', flag='read', data=b2d, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
-          call endrun(msg=' ERROR: binfl NOT on surfdata file'//errMsg(__FILE__, __LINE__))
+          call endrun(msg=' ERROR: binfl NOT on surfdata file'//errMsg(sourcefile, __LINE__))
        end if
        call ncd_io(ncid=ncid, varname='Ds', flag='read', data=ds2d, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
-          call endrun(msg=' ERROR: Ds NOT on surfdata file'//errMsg(__FILE__, __LINE__))
+          call endrun(msg=' ERROR: Ds NOT on surfdata file'//errMsg(sourcefile, __LINE__))
        end if
        call ncd_io(ncid=ncid, varname='Dsmax', flag='read', data=dsmax2d, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
-          call endrun(msg=' ERROR: Dsmax NOT on surfdata file'//errMsg(__FILE__, __LINE__))
+          call endrun(msg=' ERROR: Dsmax NOT on surfdata file'//errMsg(sourcefile, __LINE__))
        end if
        call ncd_io(ncid=ncid, varname='Ws', flag='read', data=ws2d, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
-          call endrun(msg=' ERROR: Ws NOT on surfdata file'//errMsg(__FILE__, __LINE__))
+          call endrun(msg=' ERROR: Ws NOT on surfdata file'//errMsg(sourcefile, __LINE__))
        end if
        call ncd_pio_closefile(ncid)
 
@@ -189,11 +192,11 @@ contains
        call ncd_pio_openfile (ncid, locfn, 0)
        call ncd_io(ncid=ncid, varname='PCT_SAND', flag='read', data=sand3d, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
-          call endrun(msg=' ERROR: PCT_SAND NOT on surfdata file'//errMsg(__FILE__, __LINE__)) 
+          call endrun(msg=' ERROR: PCT_SAND NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
        end if
        call ncd_io(ncid=ncid, varname='PCT_CLAY', flag='read', data=clay3d, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
-          call endrun(msg=' ERROR: PCT_CLAY NOT on surfdata file'//errMsg(__FILE__, __LINE__)) 
+          call endrun(msg=' ERROR: PCT_CLAY NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
        end if
        call ncd_pio_closefile(ncid)
 
@@ -202,7 +205,7 @@ contains
        call ncd_pio_openfile (ncid, trim(locfn), 0)
        call ncd_io(ncid=ncid, varname='organic_max', flag='read', data=organic_max, readvar=readvar)
        if ( .not. readvar ) then
-          call endrun(msg=' ERROR: organic_max not on param file'//errMsg(__FILE__, __LINE__))
+          call endrun(msg=' ERROR: organic_max not on param file'//errMsg(sourcefile, __LINE__))
        end if
        call ncd_pio_closefile(ncid)
 

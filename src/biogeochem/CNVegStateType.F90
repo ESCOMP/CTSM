@@ -111,6 +111,9 @@ module CNVegStateType
   end type cnveg_state_type
   !------------------------------------------------------------------------
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !------------------------------------------------------------------------
@@ -465,7 +468,7 @@ contains
     allocate(gdp(bounds%begg:bounds%endg))
     call ncd_io(ncid=ncid, varname='gdp', flag='read', data=gdp, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: gdp NOT on surfdata file'//errMsg(__FILE__, __LINE__)) 
+       call endrun(msg=' ERROR: gdp NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
     end if
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
@@ -480,7 +483,7 @@ contains
     allocate(peatf(bounds%begg:bounds%endg))
     call ncd_io(ncid=ncid, varname='peatf', flag='read', data=peatf, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: peatf NOT on surfdata file'//errMsg(__FILE__, __LINE__)) 
+       call endrun(msg=' ERROR: peatf NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
     end if
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
@@ -495,7 +498,7 @@ contains
     allocate(abm(bounds%begg:bounds%endg))
     call ncd_io(ncid=ncid, varname='abm', flag='read', data=abm, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: abm NOT on surfdata file'//errMsg(__FILE__, __LINE__)) 
+       call endrun(msg=' ERROR: abm NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
     end if
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)

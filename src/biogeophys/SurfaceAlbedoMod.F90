@@ -74,6 +74,9 @@ module SurfaceAlbedoMod
   real(r8), allocatable, private :: albsat(:,:) ! wet soil albedo by color class and waveband (1=vis,2=nir)
   real(r8), allocatable, private :: albdry(:,:) ! dry soil albedo by color class and waveband (1=vis,2=nir)
   integer , allocatable, private :: isoicol(:)  ! column soil color class
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -120,7 +123,7 @@ contains
     allocate(soic2d(bounds%begg:bounds%endg)) 
     call ncd_io(ncid=ncid, varname='SOIL_COLOR', flag='read', data=soic2d, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: SOIL_COLOR NOT on surfdata file'//errMsg(__FILE__, __LINE__)) 
+       call endrun(msg=' ERROR: SOIL_COLOR NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
     end if
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
@@ -136,7 +139,7 @@ contains
     allocate(albsat(mxsoil_color,numrad), albdry(mxsoil_color,numrad), stat=ier)
     if (ier /= 0) then
        write(iulog,*)'allocation error for albsat, albdry'
-       call endrun(msg=errMsg(__FILE__, __LINE__)) 
+       call endrun(msg=errMsg(sourcefile, __LINE__)) 
     end if
 
     if (masterproc) then
@@ -159,7 +162,7 @@ contains
             0.41_r8,0.39_r8,0.37_r8,0.35_r8,0.33_r8,0.31_r8,0.29_r8,0.27_r8,0.25_r8,0.23_r8,0.21_r8,0.16_r8/)
     else
        write(iulog,*)'maximum color class = ',mxsoil_color,' is not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__)) 
+       call endrun(msg=errMsg(sourcefile, __LINE__)) 
     end if
 
     ! Set alblakwi
@@ -830,7 +833,7 @@ contains
        if (abs(laisum-elai(p)) > 1.e-06_r8 .or. abs(saisum-esai(p)) > 1.e-06_r8) then
           write (iulog,*) 'multi-layer canopy error 01 in SurfaceAlbedo: ',&
                nrad(p),elai(p),laisum,esai(p),saisum
-          call endrun(decomp_index=p, clmlevel=namep, msg=errmsg(__FILE__, __LINE__))
+          call endrun(decomp_index=p, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
        end if
 
        ! Repeat to find canopy layers buried by snow
@@ -870,7 +873,7 @@ contains
           if (abs(laisum-tlai(p)) > 1.e-06_r8 .or. abs(saisum-tsai(p)) > 1.e-06_r8) then
              write (iulog,*) 'multi-layer canopy error 02 in SurfaceAlbedo: ',nrad(p),ncan(p)
              write (iulog,*) tlai(p),elai(p),blai(p),laisum,tsai(p),esai(p),bsai(p),saisum
-             call endrun(decomp_index=p, clmlevel=namep, msg=errmsg(__FILE__, __LINE__))
+             call endrun(decomp_index=p, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
           end if
        end if
 
@@ -994,9 +997,9 @@ contains
     !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(coszen) == (/bounds%endc/)),         errMsg(__FILE__, __LINE__))
-     SHR_ASSERT_ALL((ubound(albsnd) == (/bounds%endc, numrad/)), errMsg(__FILE__, __LINE__))
-     SHR_ASSERT_ALL((ubound(albsni) == (/bounds%endc, numrad/)), errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(coszen) == (/bounds%endc/)),         errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL((ubound(albsnd) == (/bounds%endc, numrad/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL((ubound(albsni) == (/bounds%endc, numrad/)), errMsg(sourcefile, __LINE__))
 
    associate(&
           snl          => col%snl                         , & ! Input:  [integer  (:)   ]  number of snow layers                    
@@ -1157,9 +1160,9 @@ contains
      !-----------------------------------------------------------------------
 
      ! Enforce expected array sizes
-     SHR_ASSERT_ALL((ubound(coszen) == (/bounds%endp/)),         errMsg(__FILE__, __LINE__))
-     SHR_ASSERT_ALL((ubound(rho)    == (/bounds%endp, numrad/)), errMsg(__FILE__, __LINE__))
-     SHR_ASSERT_ALL((ubound(tau)    == (/bounds%endp, numrad/)), errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(coszen) == (/bounds%endp/)),         errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL((ubound(rho)    == (/bounds%endp, numrad/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL((ubound(tau)    == (/bounds%endp, numrad/)), errMsg(sourcefile, __LINE__))
 
    associate(&
           xl           =>    pftcon%xl                           , & ! Input:  ecophys const - leaf/stem orientation index

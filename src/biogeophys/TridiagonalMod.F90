@@ -12,6 +12,9 @@ module TridiagonalMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: Tridiagonal
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -50,12 +53,12 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jtop) == (/bounds%endc/)),      errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(a)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(b)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(c)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(r)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(u)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(jtop) == (/bounds%endc/)),      errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(a)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(b)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(c)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(r)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(u)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
 
     ! Solve the matrix
 

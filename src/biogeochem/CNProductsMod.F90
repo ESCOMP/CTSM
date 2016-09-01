@@ -72,6 +72,9 @@ module CNProductsMod
 
   end type cn_products_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
   !-----------------------------------------------------------------------
 
 contains
@@ -311,11 +314,11 @@ contains
     else if (present(template_for_missing_fields)) then
        call endrun(&
             msg='template_for_missing_fields provided; must also provide template_multiplier' // &
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     else if (present(template_multiplier)) then
        call endrun(&
             msg='template_multiplier provided; must also provide template_for_missing_fields' // &
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     else
        template_provided = .false.
     end if
@@ -436,9 +439,9 @@ contains
     real(r8) :: kprod100 ! decay constant for 100-year product pool
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(dwt_wood_product_gain_patch) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(wood_harvest_patch) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(grain_to_cropprod_patch) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_wood_product_gain_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wood_harvest_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(grain_to_cropprod_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
 
     call this%PartitionWoodFluxes(bounds, &
          num_soilp, filter_soilp, &

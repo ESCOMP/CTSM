@@ -140,6 +140,9 @@ module subgridWeightsMod
   private :: set_pct_landunit_diagnostics ! set pct_landunit diagnostic field
   private :: set_pct_glc_mec_diagnostics  ! set pct_glc_mec diagnostic field
   private :: set_pct_pft_diagnostics      ! set pct_nat_pft & pct_cft diagnostic fields
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -165,7 +168,7 @@ contains
     character(len=*), parameter :: subname = 'init_subgrid_weights_mod'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(sourcefile, __LINE__))
 
     ! ------------------------------------------------------------------------
     ! Allocate variables in subgrid_weights_diagnostics
@@ -276,7 +279,7 @@ contains
        if (col%active(c) .and. .not. lun%active(l)) then
           write(iulog,*) trim(subname),' ERROR: active column found on inactive landunit', &
                          'at c = ', c, ', l = ', l
-          call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
+          call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -286,7 +289,7 @@ contains
        if (patch%active(p) .and. .not. col%active(c)) then
           write(iulog,*) trim(subname),' ERROR: active patch found on inactive column', &
                          'at p = ', p, ', c = ', c
-          call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(__FILE__, __LINE__))
+          call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -503,7 +506,7 @@ contains
     else if (weight > 0._r8) then
        write(iulog,*) subname//' ERROR: Attempt to assign non-zero weight to a non-existent landunit'
        write(iulog,*) 'g, l, ltype, weight = ', g, l, ltype, weight
-       call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
+       call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(sourcefile, __LINE__))
     end if
     
   end subroutine set_landunit_weight
@@ -665,7 +668,7 @@ contains
     deallocate(sumwtcol, sumwtlunit, sumwtgcell)
 
     if (error_found) then
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     ! Success

@@ -39,6 +39,9 @@ module SoilBiogeochemLittVertTranspMod
   real(r8) :: som_diffus                   ! [m^2/sec] = 1 cm^2 / yr
   real(r8) :: cryoturb_diffusion_k         ! [m^2/sec] = 5 cm^2 / yr = 1m^2 / 200 yr
   real(r8) :: max_altdepth_cryoturbation   ! (m) maximum active layer thickness for cryoturbation to occur
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -62,14 +65,14 @@ contains
 
      tString='som_diffus'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      !soilbiogeochem_litt_verttransp_params_inst%som_diffus=tempr
      ! FIX(SPM,032414) - can't be pulled out since division makes things not bfb
      params_inst%som_diffus = 1e-4_r8 / (secspday * 365._r8)  
 
      tString='cryoturb_diffusion_k'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      !soilbiogeochem_litt_verttransp_params_inst%cryoturb_diffusion_k=tempr
      !FIX(SPM,032414) Todo.  This constant cannot be on file since the divide makes things
      !SPM Todo.  This constant cannot be on file since the divide makes things
@@ -78,7 +81,7 @@ contains
 
      tString='max_altdepth_cryoturbation'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%max_altdepth_cryoturbation=tempr
     
    end subroutine readParams
@@ -275,7 +278,7 @@ contains
                trcr_tendency_ptr => c14_soilbiogeochem_carbonflux_inst%decomp_cpools_transport_tendency_col
             else
                write(iulog,*) 'error.  ncase = 4, but c13 and c14 not both enabled.'
-               call endrun(msg=errMsg(__FILE__, __LINE__))
+               call endrun(msg=errMsg(sourcefile, __LINE__))
             endif
          end select
 

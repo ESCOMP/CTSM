@@ -17,6 +17,9 @@ module SoilBiogeochemNitrogenUptakeMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SoilBiogeochemNitrogenUptake
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -43,10 +46,10 @@ contains
     real(r8):: sminn_tot(bounds%begc:bounds%endc)  !vertically integrated mineral nitrogen
     !-----------------------------------------------------------------------
   
-    SHR_ASSERT_ALL((ubound(dzsoi_decomp)   == (/nlevdecomp/))              , errMsg(__FILE__, __LINE__))   
-    SHR_ASSERT_ALL((ubound(sminn_vr)       == (/bounds%endc, nlevdecomp/)) , errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(nfixation_prof) == (/bounds%endc, nlevdecomp/)) , errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(nuptake_prof)   == (/bounds%endc, nlevdecomp/)) , errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(dzsoi_decomp)   == (/nlevdecomp/))              , errMsg(sourcefile, __LINE__))   
+    SHR_ASSERT_ALL((ubound(sminn_vr)       == (/bounds%endc, nlevdecomp/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(nfixation_prof) == (/bounds%endc, nlevdecomp/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(nuptake_prof)   == (/bounds%endc, nlevdecomp/)) , errMsg(sourcefile, __LINE__))
 
     ! init sminn_tot
     do fc=1,num_soilc

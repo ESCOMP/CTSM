@@ -37,6 +37,9 @@ module UrbanRadiationMod
   !
   ! PRIVATE MEMBER FUNCTIONS
   private :: net_longwave     ! Net longwave radiation for road and both walls in urban canyon 
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -433,30 +436,30 @@ contains
 
     ! Enforce expected array sizes
 
-    SHR_ASSERT_ALL((ubound(canyon_hwr)      == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(wtroad_perv)     == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwdown)          == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_roof)         == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_improad)      == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_perroad)      == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_wall)         == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_roof)          == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_improad)       == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_perroad)       == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_sunwall)       == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_shadewall)     == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwnet_roof)      == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwnet_improad)   == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwnet_perroad)   == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwnet_sunwall)   == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwnet_shadewall) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwnet_canyon)    == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwup_roof)       == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwup_improad)    == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwup_perroad)    == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwup_sunwall)    == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwup_shadewall)  == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(lwup_canyon)     == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(canyon_hwr)      == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wtroad_perv)     == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwdown)          == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(em_roof)         == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(em_improad)      == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(em_perroad)      == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(em_wall)         == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_roof)          == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_improad)       == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_perroad)       == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_sunwall)       == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_shadewall)     == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwnet_roof)      == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwnet_improad)   == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwnet_perroad)   == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwnet_sunwall)   == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwnet_shadewall) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwnet_canyon)    == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwup_roof)       == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwup_improad)    == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwup_perroad)    == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwup_sunwall)    == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwup_shadewall)  == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(lwup_canyon)     == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
 
     associate(                             & 
          vf_sr => urbanparams_inst%vf_sr , & ! Input:  [real(r8) (:)]  view factor of sky for road                       
@@ -492,7 +495,7 @@ contains
             write(iulog,*) 'vf_sw      = ',vf_sw(l)
             write(iulog,*) 'canyon_hwr = ',canyon_hwr(l)
             write(iulog,*) 'clm model is stopping'
-            call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(__FILE__, __LINE__))
+            call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
          endif
       end do
 
@@ -672,7 +675,7 @@ contains
          if (iter >= n) then
             write (iulog,*) 'urban net longwave radiation error: no convergence'
             write (iulog,*) 'clm model is stopping'
-            call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(__FILE__, __LINE__))
+            call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
          endif
 
          ! total net longwave radiation for canyon. project wall fluxes to horizontal surface
@@ -697,7 +700,7 @@ contains
          if (abs(err) > .10_r8 ) then
             write (iulog,*) 'urban net longwave radiation balance error',err
             write (iulog,*) 'clm model is stopping'
-            call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(__FILE__, __LINE__))
+            call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
          end if
 
       end do

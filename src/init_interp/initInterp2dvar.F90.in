@@ -66,6 +66,9 @@ module initInterp2dvar
      module procedure constructor
   end interface interp_2dvar_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! ========================================================================
@@ -171,7 +174,7 @@ contains
        write(iulog,*) 'In some cases, this can cause system hangs that affect all users.'
        write(iulog,*) 'If you want to try anyway, you can remove this endrun call.'
        call endrun(msg='Attempt to read all levels at once from source file '// &
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
     allocate(data(this%vec_beg:this%vec_end, this%nlev))
@@ -225,7 +228,7 @@ contains
        ! source file the same way as we handle reads. But since this is untested, I'm
        ! currently aborting in this case.
        call endrun(msg='ERROR: unhandled attempt to write variable to source file '// &
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine writevar_{TYPE}
@@ -258,8 +261,8 @@ contains
     character(len=*), parameter :: subname = 'readlevel'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((lbound(data) == (/this%vec_beg/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(data) == (/this%vec_end/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((lbound(data) == (/this%vec_beg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(data) == (/this%vec_end/)), errMsg(sourcefile, __LINE__))
 
     if (this%file_is_dest) then
        ! NOTE(wjs, 2015-11-22) As far as I can tell, ncdio_pio currently doesn't provide
@@ -267,7 +270,7 @@ contains
        ! this functionality right now, I am aborting rather than trying to either (a) add
        ! the functionality to ncdio_pio, or (b) handle it here with direct calls to pio.
        call endrun(msg='ERROR: unhandled attempt to read one level from dest file '//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     else
        ! TODO(wjs, 2015-11-22) I don't like that we're making direct pio calls here.
        ! Ideally we'd go through ncdio_pio, but currently that module doesn't provide the
@@ -371,7 +374,7 @@ contains
        this%switchdim = .false.
     case default
        write(iulog,*) subname//' ERROR: unknown switchdim_flag: ', switchdim_flag
-       call endrun('ERROR: unknown switchdim flag '//errMsg(__FILE__, __LINE__))
+       call endrun('ERROR: unknown switchdim flag '//errMsg(sourcefile, __LINE__))
     end select
 
   end subroutine set_switchdim

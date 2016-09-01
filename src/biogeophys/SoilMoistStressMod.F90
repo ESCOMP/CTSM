@@ -30,6 +30,9 @@ module SoilMoistStressMod
   integer, parameter :: moist_stress_clm_default  = 0  !default method for calculating root moisture stress
   logical,  private :: perchroot     = .false.  ! true => btran is based only on unfrozen soil levels
   logical,  private :: perchroot_alt = .false.  ! true => btran is based on active layer (defined over two years); 
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !--------------------------------------------------------------------------------
 
 contains
@@ -93,9 +96,9 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(watsat)     == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(eff_por)    == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(watsat)     == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(eff_por)    == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
 
     !main calculation loop
     !it assumes the soil layers start from 1
@@ -144,9 +147,9 @@ contains
     ubj = 0
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jtop)       == (/bounds%endc/))     , errMsg(__FILE__, __LINE__)) 
-    SHR_ASSERT_ALL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(eff_por)    == (/bounds%endc,0/))   , errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(jtop)       == (/bounds%endc/))     , errMsg(sourcefile, __LINE__)) 
+    SHR_ASSERT_ALL((ubound(h2osoi_ice) == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(eff_por)    == (/bounds%endc,0/))   , errMsg(sourcefile, __LINE__))
 
     !main calculation loop
 
@@ -197,10 +200,10 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes  
-    SHR_ASSERT_ALL((ubound(jtop)         == (/bounds%endc/))     , errMsg(__FILE__, __LINE__)) 
-    SHR_ASSERT_ALL((ubound(h2osoi_liq)   == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(eff_porosity) == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(vol_liq)      == (/bounds%endc, ubj/)), errMsg(__FILE__, __LINE__))  
+    SHR_ASSERT_ALL((ubound(jtop)         == (/bounds%endc/))     , errMsg(sourcefile, __LINE__)) 
+    SHR_ASSERT_ALL((ubound(h2osoi_liq)   == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(eff_porosity) == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(vol_liq)      == (/bounds%endc, ubj/)), errMsg(sourcefile, __LINE__))  
 
     !main calculation loop
     do j = lbj, ubj
@@ -353,7 +356,7 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes   
-    SHR_ASSERT_ALL((ubound(rootfr_unf) == (/bounds%endp, nlevgrnd/)), errMsg(__FILE__, __LINE__))  
+    SHR_ASSERT_ALL((ubound(rootfr_unf) == (/bounds%endp, nlevgrnd/)), errMsg(sourcefile, __LINE__))  
 
     associate(                                                &
          smpso         => pftcon%smpso                      , & ! Input:  soil water potential at full stomatal opening (mm)                    

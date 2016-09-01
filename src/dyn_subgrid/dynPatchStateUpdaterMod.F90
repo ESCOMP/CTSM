@@ -80,6 +80,9 @@ module dynPatchStateUpdaterMod
      module procedure constructor
   end interface patch_state_updater_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! ========================================================================
@@ -104,7 +107,7 @@ contains
     character(len=*), parameter :: subname = 'constructor'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(sourcefile, __LINE__))
 
     begp = bounds%begp
     endp = bounds%endp
@@ -230,21 +233,21 @@ contains
     character(len=*), parameter :: subname = 'update_patch_state'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(var) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(var) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
 
     if (present(flux_out)) then
-       SHR_ASSERT_ALL((ubound(flux_out) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+       SHR_ASSERT_ALL((ubound(flux_out) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     end if
 
     if (present(seed)) then
-       SHR_ASSERT_ALL((ubound(seed) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+       SHR_ASSERT_ALL((ubound(seed) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     end if
 
     if (present(seed_addition)) then
        if (.not. present(seed)) then
           call endrun(subname//' ERROR: seed_addition can only be provided if seed is provided')
        end if
-       SHR_ASSERT_ALL((ubound(seed_addition) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+       SHR_ASSERT_ALL((ubound(seed_addition) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     end if
 
     do fp = 1, num_filterp_with_inactive
@@ -309,7 +312,7 @@ contains
     character(len=*), parameter :: subname = 'update_patch_state_partition_flux_by_type'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(flux1_fraction_by_pft_type) == (/mxpft/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(flux1_fraction_by_pft_type) == (/mxpft/)), errMsg(sourcefile, __LINE__))
 
     total_flux_out(bounds%begp:bounds%endp) = 0._r8
     call this%update_patch_state(bounds, &

@@ -55,6 +55,9 @@ module restUtilMod
 
   private :: is_restart
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -524,7 +527,7 @@ contains
     character(len=*), parameter :: subname = 'set_missing_from_template'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(template_var) == ubound(my_var)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(template_var) == ubound(my_var)), errMsg(sourcefile, __LINE__))
 
     do i = 1, size(my_var)
        if (isnan(template_var(i))) then
@@ -571,7 +574,7 @@ contains
     character(len=*), parameter :: subname = 'set_grc_field_from_col_field'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(data_grc) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(data_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     allocate(data_col(bounds%begc:bounds%endc))
     call ncd_io(varname=trim(varname), data=data_col, &

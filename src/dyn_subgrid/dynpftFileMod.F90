@@ -36,6 +36,9 @@ module dynpftFileMod
   type(dyn_var_time_interp_type) :: wtpatch       ! weight of each patch relative to the natural veg landunit
 
   character(len=*), parameter    :: varname = 'PCT_NAT_PFT'  ! name of variable on file
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !---------------------------------------------------------------------------
 
 contains
@@ -69,7 +72,7 @@ contains
 
     if ( maxpatch_pft /= numpft+1 )then
        call endrun(msg=' maxpatch_pft does NOT equal numpft+1 -- this is invalid for dynamic PFT case'//&
-            errMsg(__FILE__, __LINE__) )
+            errMsg(sourcefile, __LINE__) )
     end if
 
     if (masterproc) then
@@ -138,7 +141,7 @@ contains
             dim1name=grlnd, nt=1, readvar=readvar)
        if (.not. readvar) then
           call endrun(msg=' ERROR: ' // trim(varname) // ' NOT on landuse_timeseries file'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
 
        ! Convert from PCT to weight on grid cell
@@ -162,7 +165,7 @@ contains
              write(iulog,*) '  check_dynpft_consistency = .false.'
              write(iulog,*) 'in user_nl_clm'
              write(iulog,*) ' '
-             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
           end if
        end do
 
@@ -208,10 +211,10 @@ contains
        if (nml_error == 0) then
           read(nu_nml, nml=dynpft_consistency_checks,iostat=nml_error)
           if (nml_error /= 0) then
-             call endrun(msg='ERROR reading dynpft_consistency_checks namelist'//errMsg(__FILE__, __LINE__))
+             call endrun(msg='ERROR reading dynpft_consistency_checks namelist'//errMsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg='ERROR finding dynpft_consistency_checks namelist'//errMsg(__FILE__, __LINE__))
+          call endrun(msg='ERROR finding dynpft_consistency_checks namelist'//errMsg(sourcefile, __LINE__))
        end if
        close(nu_nml)
        call relavu( nu_nml )

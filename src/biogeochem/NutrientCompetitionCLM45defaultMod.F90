@@ -44,6 +44,9 @@ module NutrientCompetitionCLM45defaultMod
      module procedure constructor  
   end interface nutrient_competition_clm45default_type
   !
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
   
 contains
@@ -168,9 +171,9 @@ contains
     real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes 
    !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(aroot)   == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(arepr)   == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(fpg_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(aroot)   == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(arepr)   == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fpg_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                                                       &
          fpg                          => fpg_col                                                   , & ! Input:  [real(r8) (:)   ]  fraction of potential gpp (no units)    
@@ -543,8 +546,8 @@ contains
 
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(aroot) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(arepr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(aroot) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(arepr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type                                

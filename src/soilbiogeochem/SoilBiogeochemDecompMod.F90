@@ -32,6 +32,9 @@ module SoilBiogeochemDecompMod
   end type params_type
   !
   type(params_type), private ::  params_inst
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -58,7 +61,7 @@ contains
 
     tString='dnp'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%dnp=tempr 
 
   end subroutine readParams
@@ -95,9 +98,9 @@ contains
    
     begc = bounds%begc; endc = bounds%endc
     
-    SHR_ASSERT_ALL((ubound(cn_decomp_pools)     == (/endc,nlevdecomp,ndecomp_pools/))               , errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(p_decomp_cpool_loss) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(pmnf_decomp_cascade) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(cn_decomp_pools)     == (/endc,nlevdecomp,ndecomp_pools/))               , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(p_decomp_cpool_loss) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(pmnf_decomp_cascade) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , errMsg(sourcefile, __LINE__))
 
     associate(                                                                                                          & 
          cascade_donor_pool               =>    decomp_cascade_con%cascade_donor_pool                                 , & ! Input:  [integer  (:)     ]  which pool is C taken from for a given decomposition step

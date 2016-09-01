@@ -23,6 +23,9 @@ module EDCanopyStructureMod
   public :: canopy_spread
   public :: calc_areaindex
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
   ! 10/30/09: Created by Rosie Fisher
   ! ============================================================================
 
@@ -693,7 +696,7 @@ contains
         enddo
      else
         write(iulog,*) 'Unsupported area index sent to calc_areaindex'
-        call endrun(msg=errMsg(__FILE__, __LINE__))
+        call endrun(msg=errMsg(sourcefile, __LINE__))
      end if
      
      ai = max(ai_min,ai)

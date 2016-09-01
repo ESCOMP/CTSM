@@ -54,6 +54,9 @@ module NutrientCompetitionFlexibleCNMod
      module procedure constructor
   end interface nutrient_competition_FlexibleCN_type
   !
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains
@@ -294,11 +297,11 @@ contains
 
     ! -----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(aroot)   == (/bounds%endp/)) , errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(arepr)   == (/bounds%endp/)) , errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(fpg_col) == (/bounds%endc/)) , errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(this%actual_storage_leafcn) >= (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((lbound(this%actual_storage_leafcn) <= (/bounds%begp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(aroot)   == (/bounds%endp/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(arepr)   == (/bounds%endp/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fpg_col) == (/bounds%endc/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(this%actual_storage_leafcn) >= (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((lbound(this%actual_storage_leafcn) <= (/bounds%begp/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                                                       &
          fpg                          => fpg_col                                                   , & ! Input:  [real(r8) (:)   ]  fraction of potential gpp (no units)
@@ -1253,10 +1256,10 @@ contains
 
     ! -----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(aroot) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(arepr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(this%actual_leafcn) >= (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((lbound(this%actual_leafcn) <= (/bounds%begp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(aroot) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(arepr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(this%actual_leafcn) >= (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((lbound(this%actual_leafcn) <= (/bounds%begp/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type

@@ -55,6 +55,9 @@ module initInterpMindist
   private :: is_sametype
   private :: is_baresoil
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -209,7 +212,7 @@ contains
              write(iulog,*) 'with the closest natural veg column in the input'
              write(iulog,*) '(using bare soil for patch-level variables).'
              write(iulog,*) 'So, you should consider whether that is what you want.'
-             call endrun(msg=errMsg(__FILE__, __LINE__))
+             call endrun(msg=errMsg(sourcefile, __LINE__))
           end if
 
           mindist_index(no) = nmin
@@ -322,7 +325,7 @@ contains
           write(iulog,*)'typei = ',trim(subgridi%name)
           write(iulog,*)'typeo = ',trim(subgrido%name)
        end if
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
   end function is_sametype
@@ -359,7 +362,7 @@ contains
        if (masterproc) then
           write(iulog,*)'ERROR interpinic: is_baresoil subgrid type ',subgrid%name,' not supported'
        end if
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
   end function is_baresoil

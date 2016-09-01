@@ -44,6 +44,9 @@ module initVerticalMod
   private :: hasBedrock  ! true if the given column type includes bedrock layers
   !
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
   !
   !------------------------------------------------------------------------
 
@@ -90,10 +93,10 @@ contains
        if (ierr == 0) then
           read(unit=unitn, nml=clm_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading '//nl_name//' namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading '//nl_name//' namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR finding '//nl_name//' namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR finding '//nl_name//' namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
 
@@ -165,9 +168,9 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begl = bounds%begl; endl= bounds%endl
 
-    SHR_ASSERT_ALL((ubound(snow_depth)  == (/endc/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(thick_wall)  == (/endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(thick_roof)  == (/endl/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(snow_depth)  == (/endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(thick_wall)  == (/endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(thick_roof)  == (/endl/)), errMsg(sourcefile, __LINE__))
 
     ! Open surface dataset to read in data below 
 
@@ -304,7 +307,7 @@ contains
        if (ier /= 0) then
           call shr_sys_abort(' ERROR allocation error for '//&
                'zurb_wall,zurb_roof,dzurb_wall,dzurb_roof,ziurb_wall,ziurb_roof'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
     end if
 
@@ -484,7 +487,7 @@ contains
        call ncd_io(ncid=ncid, varname='zbedrock', flag='read', data=zbedrock_in, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
           if (masterproc) then
-             call endrun( 'ERROR:: zbedrock not found on surface data set, and use_bedrock is true.'//errmsg(__FILE__, __LINE__) )
+             call endrun( 'ERROR:: zbedrock not found on surface data set, and use_bedrock is true.'//errmsg(sourcefile, __LINE__) )
           end if
        end if
 
@@ -629,7 +632,7 @@ contains
           else
 
              write(iulog,*)'Bad lake depth: lakedepth: ', col%lakedepth(c)
-             call shr_sys_abort(errmsg(__FILE__, __LINE__))
+             call shr_sys_abort(errmsg(sourcefile, __LINE__))
 
           end if
 
@@ -684,7 +687,7 @@ contains
     call ncd_io(ncid=ncid, varname='SLOPE', flag='read', data=tslope, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
        call shr_sys_abort(' ERROR: TOPOGRAPHIC SLOPE NOT on surfdata file'//&
-            errMsg(__FILE__, __LINE__)) 
+            errMsg(sourcefile, __LINE__)) 
     end if
     do c = begc,endc
        g = col%gridcell(c)
@@ -697,7 +700,7 @@ contains
     call ncd_io(ncid=ncid, varname='STD_ELEV', flag='read', data=std, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
        call shr_sys_abort(' ERROR: TOPOGRAPHIC STDdev (STD_ELEV) NOT on surfdata file'//&
-            errMsg(__FILE__, __LINE__)) 
+            errMsg(sourcefile, __LINE__)) 
     end if
     do c = begc,endc
        g = col%gridcell(c)

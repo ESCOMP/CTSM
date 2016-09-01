@@ -131,6 +131,9 @@ module dynVarMod
      end subroutine get_current_data_{DIMS}d_interface
 
   end interface
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   
 
 contains
@@ -252,7 +255,7 @@ contains
        call read_variable_2d(this, nt, data)
     else
        call endrun(msg='ERROR: read_variable can only handle 1 or 2 dimensions'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine read_variable
@@ -301,7 +304,7 @@ contains
          dim1name=this%dim1name, nt=nt, readvar=readvar)
     if (.not. readvar) then
        call endrun(msg=' ERROR: ' // trim(this%varname) // ' NOT on file'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
     arrayl = arrayl / this%conversion_factor

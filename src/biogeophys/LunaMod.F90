@@ -75,6 +75,9 @@ module LunaMod
   real(r8), parameter :: mp = 9.0_r8                       ! slope of stomatal conductance; this is used to estimate model parameter, but may need to be updated from the physiology file, 
   real(r8), parameter :: PARLowLim = 200.0_r8              ! minimum photosynthetically active radiation for nitrogen optimization
   real(r8), parameter :: minrelh = 0.25_r8                 ! minimum relative humdity for nitrogen optimization
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------------
   
   contains
@@ -331,7 +334,7 @@ module LunaMod
                                   p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:',FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             call endrun(msg=errmsg(__FILE__, __LINE__))
+                             call endrun(msg=errmsg(sourcefile, __LINE__))
                          endif
                          if(vcmx25_z(p, z)>1000._r8 .or. vcmx25_z(p, z)<0._r8)then
                              write(iulog, *) 'Warning: Vc,mx25 become unrealistic (>1000 or negative) for patch=', &
@@ -345,7 +348,7 @@ module LunaMod
                                   p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:', FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             call endrun(msg=errmsg(__FILE__, __LINE__))
+                             call endrun(msg=errmsg(sourcefile, __LINE__))
                          endif
                          if(jmx25_z(p, z)>2000._r8 .or.  jmx25_z(p, z)<0._r8)then
                              write(iulog, *) 'Warning: Jmx25 become unrealistic (>2000, or negative) for patch=', &

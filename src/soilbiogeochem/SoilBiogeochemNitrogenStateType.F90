@@ -65,6 +65,9 @@ module SoilBiogeochemNitrogenStateType
      procedure , private :: InitCold     
 
   end type soilbiogeochem_nitrogenstate_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains
@@ -306,9 +309,9 @@ contains
     integer :: special_col   (bounds%endc-bounds%begc+1) ! special landunit filter - columns
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(decomp_cpools_col)    == (/bounds%endc,ndecomp_pools/)),                 errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_1m_col) == (/bounds%endc,ndecomp_pools/)),                 errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(decomp_cpools_col)    == (/bounds%endc,ndecomp_pools/)),                 errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(decomp_cpools_1m_col) == (/bounds%endc,ndecomp_pools/)),                 errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), errMsg(sourcefile, __LINE__))
 
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
@@ -422,7 +425,7 @@ contains
     end if
     if (flag=='read' .and. .not. readvar) then
        call endrun(msg='ERROR::'//trim(varname)//' is required on an initialization dataset'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
     ! decomposing N pools
@@ -443,7 +446,7 @@ contains
        end if
        if (flag=='read' .and. .not. readvar) then
           call endrun(msg='ERROR:: '//trim(varname)//' is required on an initialization dataset'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -541,7 +544,7 @@ contains
                 write(iulog,*) 'override_bgc_restart_mismatch_dump to .true. in the namelist'
                 if ( .not. override_bgc_restart_mismatch_dump ) then
                    call endrun(msg= ' CNRest: Stopping. Decomposition cascade mismatch error.'//&
-                        errMsg(__FILE__, __LINE__))
+                        errMsg(sourcefile, __LINE__))
                 endif
              endif
           endif
@@ -593,11 +596,11 @@ contains
        else
           call endrun(msg=' Error in entering/exiting spinup.  spinup_state ' &
                // ' != restart_file_spinup_state, but do not know what to do'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
        if (get_nstep() >= 2) then
           call endrun(msg=' Error in entering/exiting spinup - should occur only when nstep = 1'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        endif
        do k = 1, ndecomp_pools
           if ( exit_spinup ) then

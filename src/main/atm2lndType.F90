@@ -122,6 +122,9 @@ module atm2lndType
      procedure, public  :: Clean
 
   end type atm2lnd_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !----------------------------------------------------
 
 contains
@@ -580,7 +583,7 @@ contains
     if (ier/=0) then
        write(iulog,*)' in '
        call endrun(msg="extract_accum_hist allocation error for rbufslp"//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     endif
 
     ! Determine time step
@@ -673,7 +676,7 @@ contains
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
     ! Accumulate and extract forc_solad24 & forc_solad240 

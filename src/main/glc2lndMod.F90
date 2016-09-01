@@ -100,6 +100,9 @@ module glc2lndMod
 
   end type glc2lnd_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
   !------------------------------------------------------------------------
 
 contains
@@ -316,7 +319,7 @@ contains
              write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
              write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
              write(iulog,'(a)') '- i.e., the region specified as "virtual" in glacier_region_behavior.)'
-             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
           end if
 
           ! Ensure that icemask is a subset of melt_replaced_by_ice. This is needed
@@ -331,7 +334,7 @@ contains
              write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
              write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
              write(iulog,'(a)') '- i.e., the region specified as "replaced_by_ice" in glacier_region_melt_behavior.)'
-             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
           end if
 
        end if
@@ -365,7 +368,7 @@ contains
        ! future can rely on it.
        if (this%icemask_coupled_fluxes_grc(g) > 0._r8 .and. this%icemask_grc(g) == 0._r8) then
           write(iulog,*) subname//' ERROR: icemask_coupled_fluxes must be a subset of icemask.'
-          call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+          call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
        end if
 
     end do
@@ -420,7 +423,7 @@ contains
              write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
              write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
              write(iulog,'(a)') '- i.e., the region specified as "replaced_by_ice" in glacier_region_melt_behavior.)'
-             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
           end if
        end if
     end do
@@ -536,8 +539,8 @@ contains
     character(len=*), parameter :: subname = 'update_glc2lnd_topo'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(topo_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(needs_downscaling_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(topo_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(needs_downscaling_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)

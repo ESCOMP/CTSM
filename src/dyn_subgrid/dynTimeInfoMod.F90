@@ -62,6 +62,9 @@ module dynTimeInfoMod
      module procedure constructor                 ! initialize a time_info_type object
   end interface time_info_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! ======================================================================
@@ -135,7 +138,7 @@ contains
        call get_curr_date(year, mon, day, sec)
     case default
        write(iulog,*) subname, ': unknown year position: ', this%year_position%flag
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end select
 
     call this%set_info_from_year(year)
@@ -198,7 +201,7 @@ contains
        get_yearfrac = get_curr_yearfrac()
     case default
        write(iulog,*) subname, ': unknown year position: ', this%year_position%flag
-       call endrun(errMsg(__FILE__, __LINE__))
+       call endrun(errMsg(sourcefile, __LINE__))
     end select
 
   end function get_yearfrac
@@ -358,7 +361,7 @@ contains
           if (.not. found) then
              write(iulog,*) subname//' ERROR: model year not found in pftdyn timeseries'
              write(iulog,*)'model year = ',cur_year
-             call endrun(msg=errMsg(__FILE__, __LINE__))
+             call endrun(msg=errMsg(sourcefile, __LINE__))
           end if
        end if
     end if

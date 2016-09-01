@@ -16,6 +16,10 @@ implicit none
   interface array_div_vector
     module procedure array_div_vector_filter, array_div_vector_nofilter
   end interface array_div_vector
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 !--------------------------------------------------------------------------------
   subroutine array_normalization_2d(which_dim, arr2d_inout)
@@ -102,7 +106,7 @@ contains
   real(r8) :: arr_sum(lbj1:ubj1)
 
   ! Enforce expected array sizes
-  SHR_ASSERT_ALL((ubound(arr2d_inout) == (/ubj1, ubj2/)),      errMsg(__FILE__, __LINE__))
+  SHR_ASSERT_ALL((ubound(arr2d_inout) == (/ubj1, ubj2/)),      errMsg(sourcefile, __LINE__))
   
 
   arr_sum(:) = 0._r8  
@@ -155,8 +159,8 @@ contains
   integer :: j, f, p
   
   ! Enforce expected array sizes
-  SHR_ASSERT_ALL((ubound(arr2d_inout) == (/ubj1, ubj2/)),      errMsg(__FILE__, __LINE__))
-  SHR_ASSERT_ALL((ubound(arr1d_in) == (/ubj1/)),            errMsg(__FILE__, __LINE__))
+  SHR_ASSERT_ALL((ubound(arr2d_inout) == (/ubj1, ubj2/)),      errMsg(sourcefile, __LINE__))
+  SHR_ASSERT_ALL((ubound(arr1d_in) == (/ubj1/)),            errMsg(sourcefile, __LINE__))
 
 
   do j = lbj2, ubj2
@@ -198,7 +202,7 @@ contains
   
   if(which_dim==1)then
     ! Enforce expected array sizes   
-    call shr_assert(sz1    == size(arr1d_in), errMsg(__FILE__, __LINE__))
+    call shr_assert(sz1    == size(arr1d_in), errMsg(sourcefile, __LINE__))
     
     do j2 = 1, sz2
       do j1 = 1, sz1
@@ -209,7 +213,7 @@ contains
     enddo
   else
     ! Enforce expected array sizes   
-    call shr_assert(sz2    == size(arr1d_in), errMsg(__FILE__, __LINE__))  
+    call shr_assert(sz2    == size(arr1d_in), errMsg(sourcefile, __LINE__))  
 
     do j2 = 1, sz2
       do j1 = 1, sz1

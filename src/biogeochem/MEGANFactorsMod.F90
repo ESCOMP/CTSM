@@ -43,6 +43,9 @@ module MEGANFactorsMod
   !
   character(len=32), allocatable :: comp_names(:)     ! MEGAN compound names
   real(r8),          allocatable :: comp_molecwghts(:)! MEGAN compound molecular weights
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -70,7 +73,7 @@ contains
     if (ndx<1) then 
        errmes = 'megan_factors_get: '//trim(comp_name)//' compound not found in MEGAN table'
        write(iulog,*) trim(errmes)
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
     factors(:) = comp_factors_table( ndx )%eff(:)
@@ -122,7 +125,7 @@ contains
     call ncd_inqdlen( ncid, dimid, n_patchs, name='PFT_Num')
 
     if ( n_patchs /= mxpft+1 )then
-       call endrun(msg='PFT_Num does NOT equal mxpft: '//errMsg(__FILE__, __LINE__))
+       call endrun(msg='PFT_Num does NOT equal mxpft: '//errMsg(sourcefile, __LINE__))
     end if
     npfts = n_patchs
 

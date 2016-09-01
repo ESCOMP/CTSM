@@ -143,6 +143,9 @@ module SnowSnicarMod
   !
   ! !REVISION HISTORY:
   ! Created by Mark Flanner
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -306,14 +309,14 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(coszen)         == (/bounds%endc/)),                 errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osno_liq)     == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osno_ice)     == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(snw_rds)        == (/bounds%endc, 0/)),              errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(mss_cnc_aer_in) == (/bounds%endc, 0, sno_nbr_aer/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(albsfc)         == (/bounds%endc, numrad/)),         errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(albout)         == (/bounds%endc, numrad/)),         errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(flx_abs)        == (/bounds%endc, 1, numrad/)),      errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(coszen)         == (/bounds%endc/)),                 errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(h2osno_liq)     == (/bounds%endc, 0/)),              errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(h2osno_ice)     == (/bounds%endc, 0/)),              errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(snw_rds)        == (/bounds%endc, 0/)),              errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(mss_cnc_aer_in) == (/bounds%endc, 0, sno_nbr_aer/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(albsfc)         == (/bounds%endc, numrad/)),         errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(albout)         == (/bounds%endc, numrad/)),         errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(flx_abs)        == (/bounds%endc, 1, numrad/)),      errMsg(sourcefile, __LINE__))
 
     associate(& 
          snl         =>   col%snl                           , & ! Input:  [integer (:)]  negative number of snow layers (col) [nbr]
@@ -420,7 +423,7 @@ contains
                   write (iulog,*) "column: ", c_idx, " level: ", i, " snl(c)= ", snl_lcl
                   write (iulog,*) "lat= ", lat_coord, " lon= ", lon_coord
                   write (iulog,*) "h2osno(c)= ", h2osno_lcl
-                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
                endif
             enddo
 
@@ -892,7 +895,7 @@ contains
                      write(iulog,*) "column index: ", c_idx
                      write(iulog,*) "landunit type", lun%itype(l_idx)
                      write(iulog,*) "frac_sno: ", frac_sno(c_idx)
-                     call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+                     call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
                   else
                      flg_dover = 0
                   endif
@@ -905,7 +908,7 @@ contains
                if (abs(energy_sum) > 0.00001_r8) then
                   write (iulog,"(a,e12.6,a,i6,a,i6)") "SNICAR ERROR: Energy conservation error of : ", energy_sum, &
                        " at timestep: ", nstep, " at column: ", c_idx
-                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
                endif
 
                albout_lcl(bnd_idx) = albedo
@@ -939,7 +942,7 @@ contains
                   write (iulog,*) "SNICAR STATS: snw_rds(-1)= ", snw_rds(c_idx,-1)
                   write (iulog,*) "SNICAR STATS: snw_rds(0)= ", snw_rds(c_idx,0)
 
-                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
                endif
 
             enddo   ! loop over wvl bands

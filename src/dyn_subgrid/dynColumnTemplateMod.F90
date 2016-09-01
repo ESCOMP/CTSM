@@ -46,6 +46,9 @@ module dynColumnTemplateMod
   ! if no template column was found, this value is returned
   integer, parameter, public :: TEMPLATE_NONE_FOUND = ispval
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! ------------------------------------------------------------------------
@@ -85,7 +88,7 @@ contains
     character(len=*), parameter :: subname = 'template_col_from_landunit'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT_ALL((ubound(cactive) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(cactive) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     found = .false.
     g = col%gridcell(c_target)
@@ -150,8 +153,8 @@ contains
     character(len=*), parameter :: subname = 'template_col_from_natveg_array'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(cactive) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(c_templates) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(cactive) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(c_templates) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     do c = bounds%begc, bounds%endc
        c_templates(c) = template_col_from_landunit(bounds, c, istsoil, &

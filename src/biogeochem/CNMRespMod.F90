@@ -37,6 +37,9 @@ module CNMRespMod
   end type params_type
 
   type(params_type), private :: params_inst
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -79,10 +82,10 @@ contains
        if (ierr == 0) then
           read(unitn, nml=cnmresp_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR finding "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR finding "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
     end if
@@ -124,7 +127,7 @@ contains
 
     tString='br_mr'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%br=tempr
 
     if ( params_inst%br_root == spval ) then

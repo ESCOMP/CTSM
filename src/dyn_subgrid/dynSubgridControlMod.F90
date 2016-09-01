@@ -42,6 +42,9 @@ module dynSubgridControlMod
   
   type(dyn_subgrid_control_type) :: dyn_subgrid_control_inst
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
   
   !-----------------------------------------------------------------------
@@ -118,10 +121,10 @@ contains
        if (nml_error == 0) then
           read(nu_nml, nml=dynamic_subgrid, iostat=nml_error)
           if (nml_error /= 0) then
-             call endrun(msg='ERROR reading dynamic_subgrid namelist'//errMsg(__FILE__, __LINE__))
+             call endrun(msg='ERROR reading dynamic_subgrid namelist'//errMsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg='ERROR finding dynamic_subgrid namelist'//errMsg(__FILE__, __LINE__))
+          call endrun(msg='ERROR finding dynamic_subgrid namelist'//errMsg(sourcefile, __LINE__))
        end if
        close(nu_nml)
        call relavu( nu_nml )
@@ -167,35 +170,35 @@ contains
        if (dyn_subgrid_control_inst%do_transient_pfts) then
           write(iulog,*) 'ERROR: do_transient_pfts can only be true if you are running with'
           write(iulog,*) 'a flanduse_timeseries file (currently flanduse_timeseries is blank)'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
        if (dyn_subgrid_control_inst%do_transient_crops) then
           write(iulog,*) 'ERROR: do_transient_crops can only be true if you are running with'
           write(iulog,*) 'a flanduse_timeseries file (currently flanduse_timeseries is blank)'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
        if (dyn_subgrid_control_inst%do_harvest) then
           write(iulog,*) 'ERROR: do_harvest can only be true if you are running with'
           write(iulog,*) 'a flanduse_timeseries file (currently flanduse_timeseries is blank)'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end if
 
     if (dyn_subgrid_control_inst%do_transient_pfts) then
        if (use_cndv) then
           write(iulog,*) 'ERROR: do_transient_pfts is incompatible with use_cndv'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
        if (use_ed) then
           write(iulog,*) 'ERROR: do_transient_pfts is incompatible with use_ed'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end if
 
     if (dyn_subgrid_control_inst%do_transient_crops) then
        if (.not. use_crop) then
           write(iulog,*) 'ERROR: do_transient_crops can only be true if use_crop is true'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
        if (use_ed) then
           write(iulog,*) 'ERROR: do_transient_crops has not been tested with use_ed;'
@@ -206,11 +209,11 @@ contains
     if (dyn_subgrid_control_inst%do_harvest) then
        if (.not. use_cn) then
           write(iulog,*) 'ERROR: do_harvest can only be true if use_cn is true'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
        if (use_ed) then
           write(iulog,*) 'ERROR: do_harvest currently does not work with use_ed'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end if
 
@@ -224,7 +227,7 @@ contains
     character(len=*), parameter :: subname = 'get_flanduse_timeseries'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
 
     get_flanduse_timeseries = dyn_subgrid_control_inst%flanduse_timeseries
 
@@ -236,7 +239,7 @@ contains
     ! Return the value of the do_transient_pfts control flag
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
 
     get_do_transient_pfts = dyn_subgrid_control_inst%do_transient_pfts
 
@@ -248,7 +251,7 @@ contains
     ! Return the value of the do_transient_crops control flag
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
 
     get_do_transient_crops = dyn_subgrid_control_inst%do_transient_crops
 
@@ -260,7 +263,7 @@ contains
     ! Return the value of the do_harvest control flag
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
 
     get_do_harvest = dyn_subgrid_control_inst%do_harvest
 

@@ -54,6 +54,9 @@ module initInterpMod
   ! patch-level variables)
   logical :: init_interp_fill_missing_with_natveg
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !=======================================================================
@@ -94,10 +97,10 @@ contains
        if (ierr == 0) then
           read(unitn, clm_initinterp_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading clm_initinterp_inparm namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading clm_initinterp_inparm namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR finding clm_initinterp_inparm namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR finding clm_initinterp_inparm namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
     end if
@@ -408,7 +411,7 @@ contains
              write(iulog,*) 'varnames_on_old_files attribute list has changed behavior.'
           end if
           call endrun(msg='ERROR: expect first element in varnames_on_old_files to match varname'// &
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
 
        ! Find which of the list of possible variables actually exists on the input file.
@@ -468,7 +471,7 @@ contains
              status = pio_inq_varid(ncido, trim(varname), vardesc)
              status = pio_get_var(ncido, vardesc, decomp_cascade_state_o)
              if ( decomp_cascade_state_i  /=  decomp_cascade_state_o ) then
-                call endrun(msg='ERROR: Decomposition cascade states are different'//errMsg(__FILE__, __LINE__))
+                call endrun(msg='ERROR: Decomposition cascade states are different'//errMsg(sourcefile, __LINE__))
              else
                 if (masterproc) then
                    write (iulog,*) 'Decomposition cascade states match: Skipping: ', &
@@ -510,7 +513,7 @@ contains
           else
              call endrun(msg='ERROR interpinic: 1D variable '//trim(varname)//&
                   'with unknown subgrid dimension: '//trim(vec_dimname)//&
-                  errMsg(__FILE__, __LINE__))
+                  errMsg(sourcefile, __LINE__))
           end if
 
           if ( xtypeo == pio_int )then
@@ -521,7 +524,7 @@ contains
                   ncidi, ncido, sgridindex )
           else
              call endrun(msg='ERROR interpinic: 1D variable with unknown type: '//&
-                  trim(varname)//errMsg(__FILE__, __LINE__))
+                  trim(varname)//errMsg(sourcefile, __LINE__))
           end if
 
        !---------------------------------------------------          
@@ -532,7 +535,7 @@ contains
 
           if ( xtypeo /= pio_double )then
              call endrun(msg='ERROR interpinic: 2D variable with unknown type: '//&
-                  trim(varname)//errMsg(__FILE__, __LINE__))
+                  trim(varname)//errMsg(sourcefile, __LINE__))
           end if
 
           var2d_i = interp_2dvar_type( &
@@ -562,7 +565,7 @@ contains
              sgridindex => grcindx
           else
              call endrun(msg='ERROR interpinic: 2D variable with unknown subgrid dimension: '//&
-                  trim(varname)//errMsg(__FILE__, __LINE__))
+                  trim(varname)//errMsg(sourcefile, __LINE__))
           end if
           call interp_2d_double(var2d_i, var2d_o, &
                begi, endi, bego, endo, &
@@ -572,7 +575,7 @@ contains
        else
 
           call endrun(msg='ERROR interpinic: variable NOT scalar, 1D or 2D: '//&
-               trim(varname)//errMsg(__FILE__, __LINE__))
+               trim(varname)//errMsg(sourcefile, __LINE__))
 
        end if
        call shr_sys_flush(iulog)
@@ -817,7 +820,7 @@ contains
        if (masterproc) then
           write(iulog,*)'ERROR interpinic: unhandled case for var ',trim(varname),' stopping' 
        end if
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine interp_0d_copy
@@ -931,11 +934,11 @@ contains
     real(r8), pointer   :: rbuf2do_levelsi(:,:) ! array on output horiz grid, but input levels
     ! --------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT(var2di%get_vec_beg() == begi, errMsg(__FILE__, __LINE__))
-    SHR_ASSERT(var2di%get_vec_end() == endi, errMsg(__FILE__, __LINE__))
-    SHR_ASSERT(var2do%get_vec_beg() == bego, errMsg(__FILE__, __LINE__))
-    SHR_ASSERT(var2do%get_vec_end() == endo, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(var2di%get_vec_beg() == begi, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(var2di%get_vec_end() == endi, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(var2do%get_vec_beg() == bego, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(var2do%get_vec_end() == endo, errMsg(sourcefile, __LINE__))
 
     multilevel_interpolator => interp_multilevel_container%find_interpolator( &
          lev_dimname = var2do%get_lev_dimname(), &
@@ -1052,7 +1055,7 @@ contains
        if (must_be_same) then
           write (iulog,*) 'ERROR interpinic: input and output ',trim(dimname),' values disagree'
           write (iulog,*) 'input dimlen = ',dimleni,' output dimlen = ',dimleno
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        else
           if (masterproc) then
              write (iulog,*) 'input and output ',trim(dimname),' values disagree'

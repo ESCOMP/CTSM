@@ -36,6 +36,9 @@ module UrbanAlbedoMod
   private :: incident_direct  ! Direct beam solar rad incident on walls and road in urban canyon 
   private :: incident_diffuse ! Diffuse solar rad incident on walls and road in urban canyon
   private :: net_solar        ! Solar radiation absorbed by road and both walls in urban canyon 
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -443,13 +446,13 @@ contains
 
     ! this code assumes that numrad = 2 , with the following
     ! index values: 1 = visible, 2 = NIR
-    SHR_ASSERT_ALL(numrad == 2, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL(numrad == 2, errMsg(sourcefile, __LINE__))
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(coszen)        == (/bounds%endl/)),         errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(albsn_roof)    == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(albsn_improad) == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(albsn_perroad) == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(coszen)        == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(albsn_roof)    == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(albsn_improad) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(albsn_perroad) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
 
     associate(                            & 
          h2osno =>  waterstate_inst%h2osno_col & ! Input:  [real(r8) (:) ]  snow water (mm H2O)                               
@@ -554,13 +557,13 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(canyon_hwr)     == (/bounds%endl/)),         errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(coszen)         == (/bounds%endl/)),         errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(zen)            == (/bounds%endl/)),         errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir)           == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_road)      == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_sunwall)   == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_shadewall) == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(canyon_hwr)     == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(coszen)         == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(zen)            == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdir)           == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdir_road)      == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdir_sunwall)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdir_shadewall) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
 
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
@@ -601,7 +604,7 @@ contains
              if (abs(err1(l)) > 0.001_r8) then
                 write (iulog,*) 'urban direct beam solar radiation balance error',err1(l)
                 write (iulog,*) 'clm model is stopping'
-                call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(__FILE__, __LINE__))
+                call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
              endif
           endif
        end do
@@ -638,12 +641,12 @@ contains
                 if (abs(err2(l)) > 0.0006_r8 ) then
                    write (iulog,*) 'urban road incident direct beam solar radiation error',err2(l)
                    write (iulog,*) 'clm model is stopping'
-                   call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(__FILE__, __LINE__))
+                   call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
                 endif
                 if (abs(err3(l)) > 0.0006_r8 ) then
                    write (iulog,*) 'urban wall incident direct beam solar radiation error',err3(l)
                    write (iulog,*) 'clm model is stopping'
-                   call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(__FILE__, __LINE__))
+                   call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
                 end if
              end if
           end do
@@ -683,11 +686,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(canyon_hwr)     == (/bounds%endl/)),         errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif)           == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_road)      == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_sunwall)   == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_shadewall) == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(canyon_hwr)     == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdif)           == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdif_road)      == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdif_sunwall)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdif_shadewall) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
 
     associate(                            & 
          vf_sr =>    urbanparams_inst%vf_sr , & ! Input:  [real(r8) (:) ]  view factor of sky for road                       
@@ -715,7 +718,7 @@ contains
             if (abs(err(l)) > 0.001_r8) then
                write (iulog,*) 'urban diffuse solar radiation balance error',err(l) 
                write (iulog,*) 'clm model is stopping'
-               call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(__FILE__, __LINE__))
+               call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
             endif
          end do
 
@@ -857,35 +860,35 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(coszen)             == (/bounds%endl/)),         errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(canyon_hwr)         == (/bounds%endl/)),         errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(wtroad_perv)        == (/bounds%endl/)),         errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir)               == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif)               == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_improad_dir)    == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_perroad_dir)    == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_wall_dir)       == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_roof_dir)       == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_improad_dif)    == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_perroad_dif)    == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_wall_dif)       == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_roof_dif)       == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_road)          == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_sunwall)       == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_shadewall)     == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_road)          == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_sunwall)       == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_shadewall)     == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_improad_dir)   == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_perroad_dir)   == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_improad_dif)   == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_perroad_dif)   == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_sunwall_dir)   == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_sunwall_dif)   == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_shadewall_dir) == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_shadewall_dif) == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_roof_dir)      == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_roof_dif)      == (/bounds%endl, numrad/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(coszen)             == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(canyon_hwr)         == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wtroad_perv)        == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdir)               == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdif)               == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(alb_improad_dir)    == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(alb_perroad_dir)    == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(alb_wall_dir)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(alb_roof_dir)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(alb_improad_dif)    == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(alb_perroad_dif)    == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(alb_wall_dif)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(alb_roof_dif)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdir_road)          == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdir_sunwall)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdir_shadewall)     == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdif_road)          == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdif_sunwall)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sdif_shadewall)     == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sref_improad_dir)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sref_perroad_dir)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sref_improad_dif)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sref_perroad_dif)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sref_sunwall_dir)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sref_sunwall_dif)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sref_shadewall_dir) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sref_shadewall_dif) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sref_roof_dir)      == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sref_roof_dif)      == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                           & 
          vf_sr              =>    urbanparams_inst%vf_sr               , & ! Input:  [real(r8) (:)   ]  view factor of sky for road                       
@@ -1114,7 +1117,7 @@ contains
                if (iter_dir >= n) then
                   write (iulog,*) 'urban net solar radiation error: no convergence, direct beam'
                   write (iulog,*) 'clm model is stopping'
-                  call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(__FILE__, __LINE__))
+                  call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
                endif
 
                ! reflected diffuse
@@ -1186,7 +1189,7 @@ contains
                if (iter_dif >= n) then
                   write (iulog,*) 'urban net solar radiation error: no convergence, diffuse'
                   write (iulog,*) 'clm model is stopping'
-                  call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(__FILE__, __LINE__))
+                  call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
                endif
 
                ! total reflected by canyon - sum of solar reflection to sky from canyon.
@@ -1232,7 +1235,7 @@ contains
                   write(iulog,*)' sref_canyon_dir = ',sref_canyon_dir(l)
                   write(iulog,*)' sref_canyon_dif = ',sref_canyon_dir(l)
                   write(iulog,*) 'clm model is stopping'
-                  call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(__FILE__, __LINE__))
+                  call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
                endif
 
                ! canyon albedo

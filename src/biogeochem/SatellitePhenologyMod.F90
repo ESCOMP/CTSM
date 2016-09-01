@@ -55,6 +55,9 @@ module SatellitePhenologyMod
   real(r8), private, allocatable :: msai2t(:,:) ! sai for interpolation (2 months)
   real(r8), private, allocatable :: mhvt2t(:,:) ! top vegetation height for interpolation (2 months)
   real(r8), private, allocatable :: mhvb2t(:,:) ! bottom vegetation height for interpolation(2 months)
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -279,7 +282,7 @@ contains
     end if
     if (ier /= 0) then
        write(iulog,*) 'EcosystemDynini allocation error'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     mlai2t(bounds%begp : bounds%endp, :) = nan
@@ -495,7 +498,7 @@ contains
     allocate(mlai(bounds%begg:bounds%endg,0:numpft), stat=ier)
     if (ier /= 0) then
        write(iulog,*)subname, 'allocation error ' 
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     if (masterproc) then
@@ -511,7 +514,7 @@ contains
        write(iulog,*)trim(subname), 'ldomain%ni,ni,= ',ldomain%ni,ni
        write(iulog,*)trim(subname), 'ldomain%nj,nj,= ',ldomain%nj,nj
        write(iulog,*)trim(subname), 'ldomain%ns,ns,= ',ldomain%ns,ns
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
     call check_dim(ncid, 'lsmpft', numpft+1)
 
@@ -602,7 +605,7 @@ contains
          stat=ier)
     if (ier /= 0) then
        write(iulog,*)subname, 'allocation big error '
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     ! ----------------------------------------------------------------------
@@ -622,19 +625,19 @@ contains
 
        call ncd_io(ncid=ncid, varname='MONTHLY_LAI', flag='read', data=mlai, dim1name=grlnd, &
             nt=months(k), readvar=readvar)
-       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_LAI NOT on fveg file'//errMsg(__FILE__, __LINE__))
+       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_LAI NOT on fveg file'//errMsg(sourcefile, __LINE__))
 
        call ncd_io(ncid=ncid, varname='MONTHLY_SAI', flag='read', data=msai, dim1name=grlnd, &
             nt=months(k), readvar=readvar)
-       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_SAI NOT on fveg file'//errMsg(__FILE__, __LINE__))
+       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_SAI NOT on fveg file'//errMsg(sourcefile, __LINE__))
 
        call ncd_io(ncid=ncid, varname='MONTHLY_HEIGHT_TOP', flag='read', data=mhgtt, dim1name=grlnd, &
             nt=months(k), readvar=readvar)
-       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file'//errMsg(__FILE__, __LINE__))
+       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file'//errMsg(sourcefile, __LINE__))
 
        call ncd_io(ncid=ncid, varname='MONTHLY_HEIGHT_BOT', flag='read', data=mhgtb, dim1name=grlnd, &
             nt=months(k), readvar=readvar)
-       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file'//errMsg(__FILE__, __LINE__))
+       if (.not. readvar) call endrun(msg=' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file'//errMsg(sourcefile, __LINE__))
 
        ! Only vegetated patches have nonzero values
        ! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] patches

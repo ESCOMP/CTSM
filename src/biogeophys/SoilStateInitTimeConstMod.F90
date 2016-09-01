@@ -22,6 +22,9 @@ module SoilStateInitTimeConstMod
   ! !PRIVATE DATA:
   ! Control variables (from namelist)
   logical, private :: organic_frac_squared ! If organic fraction should be squared (as in CLM4.5)
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
   !
 contains
@@ -67,10 +70,10 @@ contains
        if (ierr == 0) then
           read(unit=unitn, nml=clm_soilstate_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading '//nl_name//' namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading '//nl_name//' namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR finding '//nl_name//' namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR finding '//nl_name//' namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
 
@@ -228,7 +231,7 @@ contains
     call getfil (paramfile, locfn, 0)
     call ncd_pio_openfile (ncid, trim(locfn), 0)
     call ncd_io(ncid=ncid, varname='organic_max', flag='read', data=organic_max, readvar=readvar)
-    if ( .not. readvar ) call endrun(msg=' ERROR: organic_max not on param file'//errMsg(__FILE__, __LINE__))
+    if ( .not. readvar ) call endrun(msg=' ERROR: organic_max not on param file'//errMsg(sourcefile, __LINE__))
     call ncd_pio_closefile(ncid)
 
     ! --------------------------------------------------------------------
@@ -251,12 +254,12 @@ contains
 
     call ncd_io(ncid=ncid, varname='PCT_SAND', flag='read', data=sand3d, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: PCT_SAND NOT on surfdata file'//errMsg(__FILE__, __LINE__)) 
+       call endrun(msg=' ERROR: PCT_SAND NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
     end if
 
     call ncd_io(ncid=ncid, varname='PCT_CLAY', flag='read', data=clay3d, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: PCT_CLAY NOT on surfdata file'//errMsg(__FILE__, __LINE__)) 
+       call endrun(msg=' ERROR: PCT_CLAY NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
     end if
 
     do p = begp,endp
@@ -264,13 +267,13 @@ contains
        if ( sand3d(g,1)+clay3d(g,1) == 0.0_r8 )then
           if ( any( sand3d(g,:)+clay3d(g,:) /= 0.0_r8 ) )then
              call endrun(msg='found depth points that do NOT sum to zero when surface does'//&
-                  errMsg(__FILE__, __LINE__)) 
+                  errMsg(sourcefile, __LINE__)) 
           end if
           sand3d(g,:) = 1.0_r8
           clay3d(g,:) = 1.0_r8
        end if
        if ( any( sand3d(g,:)+clay3d(g,:) == 0.0_r8 ) )then
-          call endrun(msg='after setting, found points sum to zero'//errMsg(__FILE__, __LINE__)) 
+          call endrun(msg='after setting, found points sum to zero'//errMsg(sourcefile, __LINE__)) 
        end if
 
        soilstate_inst%sandfrac_patch(p) = sand3d(g,1)/100.0_r8
@@ -282,7 +285,7 @@ contains
     allocate(gti(begg:endg))
     call ncd_io(ncid=ncid, varname='FMAX', flag='read', data=gti, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: FMAX NOT on surfdata file'//errMsg(__FILE__, __LINE__)) 
+       call endrun(msg=' ERROR: FMAX NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
     end if
     do c = begc, endc
        g = col%gridcell(c)

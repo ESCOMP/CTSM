@@ -69,6 +69,9 @@ module SurfaceAlbedoType
      procedure, public  :: Restart      
 
   end type surfalb_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -278,8 +281,8 @@ contains
     integer :: begc, endc
     !---------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(tlai_patch)  == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(tsai_patch)  == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(tlai_patch)  == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tsai_patch)  == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc

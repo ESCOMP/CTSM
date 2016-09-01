@@ -51,6 +51,9 @@ module dynHarvestMod
 
   real(r8) , allocatable   :: harvest(:) ! harvest rates
   logical                  :: do_harvest ! whether we're in a period when we should do harvest
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !---------------------------------------------------------------------------
 
 contains
@@ -82,7 +85,7 @@ contains
 
     allocate(harvest(bounds%begg:bounds%endg),stat=ier)
     if (ier /= 0) then
-       call endrun(msg=' allocation error for harvest'//errMsg(__FILE__, __LINE__))
+       call endrun(msg=' allocation error for harvest'//errMsg(sourcefile, __LINE__))
     end if
 
     ! Get the year from the END of the timestep for compatibility with how things were

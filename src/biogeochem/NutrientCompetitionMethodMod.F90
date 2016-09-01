@@ -165,6 +165,9 @@ module NutrientCompetitionMethodMod
 
   end interface
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -191,7 +194,7 @@ contains
 
     tString='dayscrecover'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%dayscrecover=tempr
 
   end subroutine readParams

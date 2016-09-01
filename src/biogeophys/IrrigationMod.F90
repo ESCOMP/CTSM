@@ -141,6 +141,9 @@ module IrrigationMod
   interface irrigation_params_type
      module procedure irrigation_params_constructor
   end interface irrigation_params_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   
 contains
 
@@ -221,7 +224,7 @@ contains
     character(len=*), parameter :: subname = 'InitForTesting'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(relsat_so) == (/bounds%endp, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(relsat_so) == (/bounds%endp, nlevgrnd/)), errMsg(sourcefile, __LINE__))
 
     call this%InitAllocate(bounds)
     this%params = params
@@ -504,7 +507,7 @@ contains
 
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(volr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(volr) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     ! This should be called exactly once per time step, so that this counter decrease
     ! works correctly.
@@ -600,12 +603,12 @@ contains
     !-----------------------------------------------------------------------
     
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(elai) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(btran) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(rootfr) == (/bounds%endp, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno) == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(eff_porosity) == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(h2osoi_liq) == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(elai) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(btran) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rootfr) == (/bounds%endp, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(eff_porosity) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(h2osoi_liq) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
 
 
     ! Determine if irrigation is needed (over irrigated soil columns)

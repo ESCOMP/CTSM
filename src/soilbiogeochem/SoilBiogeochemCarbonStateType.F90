@@ -50,6 +50,9 @@ module SoilBiogeochemCarbonStateType
      procedure , private :: InitCold     
 
   end type soilbiogeochem_carbonstate_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains
@@ -503,7 +506,7 @@ contains
           end if
           if (flag=='read' .and. .not. readvar) then
              call endrun(msg='ERROR:: '//trim(varname)//' is required on an initialization dataset'//&
-                  errMsg(__FILE__, __LINE__))
+                  errMsg(sourcefile, __LINE__))
           end if
        end do
 
@@ -521,7 +524,7 @@ contains
        end if
        if (flag=='read' .and. .not. readvar) then
           call endrun(msg='ERROR:: '//trim(varname)//' is required on an initialization dataset'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
 
     end if
@@ -667,11 +670,11 @@ contains
            else
               call endrun(msg=' CNRest: error in entering/exiting spinup.  spinup_state ' &
                    // ' != restart_file_spinup_state, but do not know what to do'//&
-                   errMsg(__FILE__, __LINE__))
+                   errMsg(sourcefile, __LINE__))
            end if
            if (get_nstep() >= 2) then
               call endrun(msg=' CNRest: error in entering/exiting spinup - should occur only when nstep = 1'//&
-                   errMsg(__FILE__, __LINE__))
+                   errMsg(sourcefile, __LINE__))
            endif
            do k = 1, ndecomp_pools
               if ( exit_spinup ) then

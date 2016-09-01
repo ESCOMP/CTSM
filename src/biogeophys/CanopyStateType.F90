@@ -71,6 +71,9 @@ module CanopyStateType
      procedure, public  :: Restart      
 
   end type CanopyState_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains   
@@ -86,7 +89,7 @@ contains
     call this%InitCold(bounds)
 
     if ( this%leaf_mr_vcm == spval ) then
-       call endrun(msg="ERROR canopystate Init called before ReadNML"//errmsg(__FILE__, __LINE__))
+       call endrun(msg="ERROR canopystate Init called before ReadNML"//errmsg(sourcefile, __LINE__))
     end if
 
   end subroutine Init
@@ -362,7 +365,7 @@ contains
     if (ier/=0) then
        write(iulog,*)' in '
        call endrun(msg="extract_accum_hist allocation error for rbufslp"//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     endif
 
     ! Determine time step
@@ -424,10 +427,10 @@ contains
        if (ierr == 0) then
           read(unitn, clm_canopy_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading clm_canopy_inparm namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading clm_canopy_inparm namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR finding clm_canopy_inparm namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR finding clm_canopy_inparm namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
 
@@ -469,7 +472,7 @@ contains
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
     ! Accumulate and extract fsun24 & fsun240   

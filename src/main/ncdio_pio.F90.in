@@ -157,6 +157,9 @@ module ncdio_pio
   integer,parameter      ,private :: max_iodesc = 100
   integer                ,private :: num_iodesc = 0
   type(iodesc_plus_type) ,private, target :: iodesc_list(max_iodesc)
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -362,7 +365,7 @@ contains
        if (present(msg)) then
           write(iulog,'(a)') msg
        end if
-       call shr_sys_abort(errMsg(__FILE__, __LINE__))
+       call shr_sys_abort(errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine check_dim
@@ -511,7 +514,7 @@ contains
 
     if (ni == 0 .or. nj == 0) then
        write(iulog,*) trim(subname),' ERROR: ni,nj = ',ni,nj,' cannot be zero '
-       call shr_sys_abort(errMsg(__FILE__, __LINE__))
+       call shr_sys_abort(errMsg(sourcefile, __LINE__))
     end if
 
     if (nj == 1) then
@@ -985,7 +988,7 @@ contains
     else   ! ndims must be zero if dimid not present
        if (ndims /= 0) then
           write(iulog,*) subname//' ERROR: dimid not supplied and ndims ne 0 ',trim(varname),ndims
-          call shr_sys_abort(errMsg(__FILE__, __LINE__))
+          call shr_sys_abort(errMsg(sourcefile, __LINE__))
        endif
     endif
 
@@ -1021,23 +1024,23 @@ contains
        status = PIO_put_att(ncid,varid,'flag_values',flag_values)
        if ( .not. present(flag_meanings)) then
           write(iulog,*) 'Error in defining variable = ', trim(varname)
-          call shr_sys_abort(" ERROR:: flag_values set -- but not flag_meanings"//errMsg(__FILE__, __LINE__))
+          call shr_sys_abort(" ERROR:: flag_values set -- but not flag_meanings"//errMsg(sourcefile, __LINE__))
        end if
     end if
     if (present(flag_meanings)) then
        if ( .not. present(flag_values)) then
           write(iulog,*) 'Error in defining variable = ', trim(varname)
-          call shr_sys_abort(" ERROR:: flag_meanings set -- but not flag_values"//errMsg(__FILE__, __LINE__) )
+          call shr_sys_abort(" ERROR:: flag_meanings set -- but not flag_values"//errMsg(sourcefile, __LINE__) )
        end if
        if ( size(flag_values) /= size(flag_meanings) ) then
           write(iulog,*) 'Error in defining variable = ', trim(varname)
-          call shr_sys_abort(" ERROR:: flag_meanings and flag_values dimension different"//errMsg(__FILE__, __LINE__))
+          call shr_sys_abort(" ERROR:: flag_meanings and flag_values dimension different"//errMsg(sourcefile, __LINE__))
        end if
        str = flag_meanings(1)
        do n = 1, size(flag_meanings)
           if ( index(flag_meanings(n), ' ') /= 0 )then
              write(iulog,*) 'Error in defining variable = ', trim(varname)
-             call shr_sys_abort(" ERROR:: flag_meanings has an invalid space in it"//errMsg(__FILE__, __LINE__) )
+             call shr_sys_abort(" ERROR:: flag_meanings has an invalid space in it"//errMsg(sourcefile, __LINE__) )
           end if
           if ( n > 1 ) str = trim(str)//" "//flag_meanings(n)
        end do
@@ -1222,7 +1225,7 @@ contains
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
                 call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
-                     errMsg(__FILE__, __LINE__))
+                     errMsg(sourcefile, __LINE__))
              end if
           endif
 #if ({DIMS}==0) 
@@ -1232,13 +1235,13 @@ contains
           else if ( idata == 1 )then
              data = .true.
           else
-             call shr_sys_abort(' ERROR: bad integer value for logical data'//errMsg(__FILE__, __LINE__))
+             call shr_sys_abort(' ERROR: bad integer value for logical data'//errMsg(sourcefile, __LINE__))
           end if
 #else
           allocate(idata1d(size(data))) 
           data = (idata1d == 1)
           if ( any(idata1d /= 0 .and. idata1d /= 1) )then
-             call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
+             call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(sourcefile, __LINE__))
           end if
           deallocate(idata1d)
 #endif
@@ -1322,7 +1325,7 @@ contains
           if (single_column .and. present(posNOTonfile) ) then
              if ( .not. posNOTonfile )then
                 call shr_sys_abort(' ERROR: scalar var is NOT compatable with posNOTonfile = .false.'//&
-                     errMsg(__FILE__, __LINE__))
+                     errMsg(sourcefile, __LINE__))
              end if
           endif
        end if
@@ -1435,7 +1438,7 @@ contains
           start(2) = nt; count(2) = 1
           if ( count(1) > size(tmpString) )then
              call shr_sys_abort( subname//' ERROR: input string size is too large:'//&
-                     errMsg(__FILE__, __LINE__))
+                     errMsg(sourcefile, __LINE__))
           end if
           status = pio_put_var(ncid, varid, start, count, ival=tmpString(1:count(1)))
        else
@@ -1517,7 +1520,7 @@ contains
     if ( present(cnvrtnan2fill) )then
        if (.not. cnvrtnan2fill) then
           call shr_sys_abort(' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        endif
     end if
 #endif
@@ -1547,7 +1550,7 @@ contains
              status = pio_get_var(ncid, varid, start(1:n), count(1:n), idata)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
-                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
+                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(sourcefile, __LINE__))
              end if
              deallocate( idata )
 #else
@@ -1581,7 +1584,7 @@ contains
              call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
-                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(__FILE__, __LINE__))
+                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(sourcefile, __LINE__))
              end if
              deallocate( idata )
 #else
@@ -1634,7 +1637,7 @@ contains
 
        if (masterproc) then
           write(iulog,*) subname//' ERROR: unsupported flag ',trim(flag)
-          call shr_sys_abort(errMsg(__FILE__, __LINE__))
+          call shr_sys_abort(errMsg(sourcefile, __LINE__))
        endif
 
     endif
@@ -1702,7 +1705,7 @@ contains
     if ( present(cnvrtnan2fill) )then
        if (.not. cnvrtnan2fill) then
           call shr_sys_abort( ' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        endif
     end if
 #endif
@@ -1756,7 +1759,7 @@ contains
              status = pio_inq_dimname(ncid, dids(ndims), dimname)
              if (ndims == 0) then
                 write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-                call shr_sys_abort(errMsg(__FILE__, __LINE__))
+                call shr_sys_abort(errMsg(sourcefile, __LINE__))
              end if
              if ('time' == trim(dimname)) then
                 ndims_iod = ndims - 1
@@ -1809,7 +1812,7 @@ contains
        status = pio_inq_vardimid(ncid, vardesc , dids(1:ndims))
        if (ndims == 0) then
           write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-          call shr_sys_abort(errMsg(__FILE__, __LINE__))
+          call shr_sys_abort(errMsg(sourcefile, __LINE__))
        end if
        status = pio_inq_dimname(ncid,dids(ndims),dimname)
        if ('time' == trim(dimname)) then
@@ -1865,7 +1868,7 @@ contains
 
        if (masterproc) then
           write(iulog,*) subname,' error: unsupported flag ',trim(flag)
-          call shr_sys_abort(errMsg(__FILE__, __LINE__))
+          call shr_sys_abort(errMsg(sourcefile, __LINE__))
        endif
 
     endif
@@ -1953,7 +1956,7 @@ contains
              status = pio_inq_dimname(ncid, dids(ndims), dimname)
              if (ndims == 0) then
                 write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-                call shr_sys_abort(errMsg(__FILE__, __LINE__))
+                call shr_sys_abort(errMsg(sourcefile, __LINE__))
              end if
              if ('time' == trim(dimname)) then
                 ndims_iod = ndims - 1
@@ -1981,7 +1984,7 @@ contains
        status = pio_inq_vardimid(ncid, vardesc , dids(1:ndims))
        if (ndims == 0) then
           write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
-          call shr_sys_abort(errMsg(__FILE__, __LINE__))
+          call shr_sys_abort(errMsg(sourcefile, __LINE__))
        end if
        status = pio_inq_dimname(ncid,dids(ndims),dimname)
        if ('time' == trim(dimname)) then
@@ -2004,7 +2007,7 @@ contains
 
        if (masterproc) then
           write(iulog,*) subname,' error: unsupported flag ',trim(flag)
-          call shr_sys_abort(errMsg(__FILE__, __LINE__))
+          call shr_sys_abort(errMsg(sourcefile, __LINE__))
        endif
 
     endif
@@ -2064,7 +2067,7 @@ contains
        if ( posNOTonfile )then
           if ( .not. present(found) )then
              call shr_sys_abort('ERROR: Bad subroutine calling structure posNOTonfile sent, but found was NOT!'//&
-                  errMsg(__FILE__, __LINE__))
+                  errMsg(sourcefile, __LINE__))
           end if
           found = .false.
           return
@@ -2118,7 +2121,7 @@ contains
           end do
           if (ndata == 0) then
              write(iulog,*)'couldnt find any columns for this latitude ',latidx,' and longitude ',lonidx
-             call shr_sys_abort('ERROR:: no columns for this position'//errMsg(__FILE__, __LINE__))
+             call shr_sys_abort('ERROR:: no columns for this position'//errMsg(sourcefile, __LINE__))
           else
              data_offset=cols(1)
           end if
@@ -2154,7 +2157,7 @@ contains
           end do
           if (ndata == 0) then
              write(iulog,*)'couldnt find any pfts for this latitude ',closelat,' and longitude ',closelon
-             call shr_sys_abort('ERROR:: no PFTs for this position'//errMsg(__FILE__, __LINE__))
+             call shr_sys_abort('ERROR:: no PFTs for this position'//errMsg(sourcefile, __LINE__))
           else
              data_offset=pfts(1)
           end if
@@ -2190,7 +2193,7 @@ contains
           end do
           if (ndata == 0) then
              write(iulog,*)'couldnt find any landunits for this latitude ',closelat,' and longitude ',closelon
-             call shr_sys_abort('ERROR:: no landunits for this position'//errMsg(__FILE__, __LINE__))
+             call shr_sys_abort('ERROR:: no landunits for this position'//errMsg(sourcefile, __LINE__))
           else
              data_offset=landunits(1)
           end if
@@ -2283,7 +2286,7 @@ contains
              iodnum = n
              if (iodnum > num_iodesc) then
                 write(iulog,*) trim(subname),' ERROR: iodnum out of range ',iodnum,num_iodesc
-                call shr_sys_abort(errMsg(__FILE__, __LINE__))
+                call shr_sys_abort(errMsg(sourcefile, __LINE__))
              endif
              RETURN
           endif
@@ -2297,7 +2300,7 @@ contains
        num_iodesc = num_iodesc + 1
        if (num_iodesc > max_iodesc) then
           write(iulog,*) trim(subname),' ERROR num_iodesc gt max_iodesc ',max_iodesc
-          call shr_sys_abort(errMsg(__FILE__, __LINE__))
+          call shr_sys_abort(errMsg(sourcefile, __LINE__))
        endif
        iodnum = num_iodesc
        if (masterproc .and. debug > 1) then
@@ -2314,7 +2317,7 @@ contains
        basetype = PIO_INT
     else
        write(iulog,*) trim(subname),'ERROR: no match for xtype = ',xtype
-       call shr_sys_abort(errMsg(__FILE__,__LINE__))
+       call shr_sys_abort(errMsg(sourcefile,__LINE__))
     end if
 
     call get_clmlevel_gsmap(clmlevel,gsmap)
@@ -2332,7 +2335,7 @@ contains
     vsize = fullsize / gsize
     if (mod(fullsize,gsize) /= 0) then
        write(iulog,*) subname,' ERROR in vsize ',fullsize,gsize,vsize
-       call shr_sys_abort(errMsg(__FILE__, __LINE__))
+       call shr_sys_abort(errMsg(sourcefile, __LINE__))
     endif
 
     allocate(compDOF(gsmap_lsize*vsize))
@@ -2348,7 +2351,7 @@ contains
           enddo
        else
           write(iulog,*) subname,' ERROR switch dims present must have switchdim true' 
-          call shr_sys_abort(errMsg(__FILE__, __LINE__))
+          call shr_sys_abort(errMsg(sourcefile, __LINE__))
        end if
     else         ! currently allow for up to two vertical dimensions
        if (vsize /= 1 .and. vsize /= dims(ndims)) then
@@ -2356,7 +2359,7 @@ contains
           vsize2 = dims(ndims)
           if (vsize1*vsize2 /= vsize) then
              write(iulog,*)'vsize1= ',vsize1,' vsize2= ',vsize2,' vsize= ',vsize
-             call shr_sys_abort('error in vsize1 and vsize2 computation'//errMsg(__FILE__, __LINE__))
+             call shr_sys_abort('error in vsize1 and vsize2 computation'//errMsg(sourcefile, __LINE__))
           end if
           cnt = 0
           do k = 1,vsize2

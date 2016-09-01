@@ -67,6 +67,9 @@ module GlacierSurfaceMassBalanceMod
 
   end type glacier_smb_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! ========================================================================
@@ -371,8 +374,8 @@ contains
     character(len=*), parameter :: subname = 'AdjustRunoffTerms'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(qflx_qrgwl) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_ice_runoff_snwcp) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_qrgwl) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(qflx_ice_runoff_snwcp) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate( &
          qflx_glcice_frz        => this%qflx_glcice_frz_col                   , & ! Input: [real(r8) (:)] ice growth (positive definite) (mm H2O/s)

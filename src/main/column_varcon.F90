@@ -33,6 +33,9 @@ module column_varcon
   public :: col_itype_to_icemec_class  ! convert col%itype into an icemec class (1..maxpatch_glcmec)
   public :: write_coltype_metadata     ! write column type metadata to a netcdf file
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -89,7 +92,7 @@ contains
     character(len=*), parameter :: subname = 'icemec_class_to_col_itype'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT((1 <= icemec_class .and. icemec_class <= maxpatch_glcmec), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((1 <= icemec_class .and. icemec_class <= maxpatch_glcmec), errMsg(sourcefile, __LINE__))
 
     col_itype = istice_mec*100 + icemec_class
 
@@ -118,7 +121,7 @@ contains
 
     ! The following assertion is here to ensure that col_itype is really from an
     ! istice_mec landunit
-    SHR_ASSERT((1 <= icemec_class .and. icemec_class <= maxpatch_glcmec), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((1 <= icemec_class .and. icemec_class <= maxpatch_glcmec), errMsg(sourcefile, __LINE__))
 
   end function col_itype_to_icemec_class
 

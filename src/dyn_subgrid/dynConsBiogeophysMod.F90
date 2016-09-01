@@ -33,6 +33,9 @@ module dynConsBiogeophysMod
   !
   ! !PRIVATE MEMBER FUNCTIONS
   private :: dyn_hwcontent                ! do the actual computation of grid-level heat and water content
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !---------------------------------------------------------------------------
 
 contains
@@ -99,9 +102,6 @@ contains
     !
     ! Should be called AFTER all subgrid weight updates this time step
     !
-    ! !USES:
-    use clm_time_manager    , only : get_step_size
-    !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds  
     logical                  , intent(in)    :: first_step_cold_start ! true if this is the first step since cold start
@@ -115,14 +115,20 @@ contains
     type(energyflux_type)    , intent(inout) :: energyflux_inst
     !
     ! !LOCAL VARIABLES:
+    integer  :: begg, endg
     integer  :: g     ! grid cell index
-    real(r8) :: dtime ! land model time step (sec)
+    real(r8) :: delta_liq(bounds%begg:bounds%endg)  ! change in gridcell h2o liq content
+    real(r8) :: delta_ice(bounds%begg:bounds%endg)  ! change in gridcell h2o ice content
+    real(r8) :: delta_heat(bounds%begg:bounds%endg) ! change in gridcell heat content
     !---------------------------------------------------------------------------
 
+    begg = bounds%begg
+    endg = bounds%endg
+
     call dyn_hwcontent( bounds,                                &
-         waterstate_inst%liq2_grc(bounds%begg:bounds%endg),    &
-         waterstate_inst%ice2_grc(bounds%begg:bounds%endg),    &
-         temperature_inst%heat2_grc(bounds%begg:bounds%endg) , &
+         waterstate_inst%liq2_grc(begg:endg),    &
+         waterstate_inst%ice2_grc(begg:endg),    &
+         temperature_inst%heat2_grc(begg:endg) , &
          urbanparams_inst, soilstate_inst, soilhydrology_inst, &
          temperature_inst, waterstate_inst, lakestate_inst)
 
@@ -130,23 +136,33 @@ contains
     ! we expect big transients in this first time step, since transient subgrid weights
     ! aren't updated in initialization.
     if (first_step_cold_start) then
-       do g = bounds%begg, bounds%endg
-          waterflux_inst%qflx_liq_dynbal_grc (g) = 0._r8
-          waterflux_inst%qflx_ice_dynbal_grc (g) = 0._r8
-          energyflux_inst%eflx_dynbal_grc    (g) = 0._r8
+       do g = begg, endg
+          delta_liq(g) = 0._r8
+          delta_ice(g) = 0._r8
+          delta_heat(g) = 0._r8
        end do
-
     else
-       dtime = get_step_size()
-       do g = bounds%begg, bounds%endg
-          waterflux_inst%qflx_liq_dynbal_grc (g) = &
-               (waterstate_inst%liq2_grc  (g) - waterstate_inst%liq1_grc  (g))/dtime
-          waterflux_inst%qflx_ice_dynbal_grc (g) = &
-               (waterstate_inst%ice2_grc  (g) - waterstate_inst%ice1_grc  (g))/dtime
-          energyflux_inst%eflx_dynbal_grc    (g) = &
-               (temperature_inst%heat2_grc(g) - temperature_inst%heat1_grc(g))/dtime
+       do g = begg, endg
+          delta_liq(g)  = waterstate_inst%liq2_grc(g) - waterstate_inst%liq1_grc(g)
+          delta_ice(g)  = waterstate_inst%ice2_grc(g) - waterstate_inst%ice1_grc(g)
+          delta_heat(g) = temperature_inst%heat2_grc(g) - temperature_inst%heat1_grc(g)
        end do
     end if
+
+    call waterflux_inst%qflx_liq_dynbal_dribbler%set_curr_delta(bounds, &
+         delta_liq(begg:endg))
+    call waterflux_inst%qflx_liq_dynbal_dribbler%get_curr_flux(bounds, &
+         waterflux_inst%qflx_liq_dynbal_grc(begg:endg))
+
+    call waterflux_inst%qflx_ice_dynbal_dribbler%set_curr_delta(bounds, &
+         delta_ice(begg:endg))
+    call waterflux_inst%qflx_ice_dynbal_dribbler%get_curr_flux(bounds, &
+         waterflux_inst%qflx_ice_dynbal_grc(begg:endg))
+
+    call energyflux_inst%eflx_dynbal_dribbler%set_curr_delta(bounds, &
+         delta_heat(begg:endg))
+    call energyflux_inst%eflx_dynbal_dribbler%get_curr_flux(bounds, &
+         energyflux_inst%eflx_dynbal_grc(begg:endg))
 
   end subroutine dyn_hwcontent_final
 
@@ -207,9 +223,9 @@ contains
     !-------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(gcell_liq)  == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(gcell_ice)  == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(gcell_heat) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(gcell_liq)  == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(gcell_ice)  == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(gcell_heat) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     snl          => col%snl
     dz           => col%dz

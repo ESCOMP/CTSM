@@ -40,6 +40,9 @@ module UrbanTimeVarType
   !----------------------------------------------------------------------- 
   character(15), private :: stream_var_name(isturb_MIN:isturb_MAX)
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -150,7 +153,7 @@ contains
       if (nml_error == 0) then
          read(nu_nml, nml=urbantv_streams,iostat=nml_error)
          if (nml_error /= 0) then
-            call endrun(msg='ERROR reading urbantv_streams namelist'//errMsg(__FILE__, __LINE__))
+            call endrun(msg='ERROR reading urbantv_streams namelist'//errMsg(sourcefile, __LINE__))
          end if
       end if
       close(nu_nml)
@@ -296,7 +299,7 @@ contains
       write(iulog,*)'landunit type:   ',lun%itype(l)
       write(iulog,*)'urban_valid:     ',urban_valid(gindx)
       write(iulog,*)'t_building_max:  ',this%t_building_max(lindx)
-      call endrun(msg=errmsg(__FILE__, __LINE__))
+      call endrun(msg=errmsg(sourcefile, __LINE__))
    end if
 
 

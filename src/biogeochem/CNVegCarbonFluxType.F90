@@ -366,6 +366,9 @@ module CNVegCarbonFluxType
      procedure , public  :: Summary => Summary_carbonflux 
 
   end type cnveg_carbonflux_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains
@@ -3792,7 +3795,7 @@ contains
     real(r8) :: nee_grc(bounds%begg:bounds%endg)        ! nee_col averaged to gridcell
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(product_closs_grc) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(product_closs_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     ! calculate patch-level summary carbon fluxes and states
 

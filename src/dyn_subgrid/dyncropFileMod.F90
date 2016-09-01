@@ -35,6 +35,9 @@ module dyncropFileMod
   ! Names of variables on file
   character(len=*), parameter :: crop_varname = 'PCT_CROP'
   character(len=*), parameter :: cft_varname  = 'PCT_CFT'
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !---------------------------------------------------------------------------
 
 contains
@@ -165,7 +168,7 @@ contains
           if (col_set(c)) then
              write(iulog,*) subname//' ERROR: attempt to set a column that has already been set.'
              write(iulog,*) 'This may happen if there are multiple crops on a single column.'
-             call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
+             call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
           end if
           
           col%wtlunit(c) = wtcft_cur(g,m)

@@ -28,6 +28,9 @@ module CNDVDriverMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private set_dgvm_filename
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -167,7 +170,7 @@ contains
 
       allocate(rbuf2dg(bounds%begg:bounds%endg,maxpatch_pft), stat=ier)
       if (ier /= 0) call endrun(msg='histCNDV: allocation error for rbuf2dg'//&
-           errMsg(__FILE__, __LINE__))
+           errMsg(sourcefile, __LINE__))
 
       ! Set output precision
 
@@ -193,7 +196,7 @@ contains
 
       call shr_sys_getenv('LOGNAME', str, ier)
       if (ier /= 0) call endrun(msg='error: LOGNAME environment variable not defined'//&
-           errMsg(__FILE__, __LINE__))
+           errMsg(sourcefile, __LINE__))
 
       call ncd_putatt (ncid, ncd_global, 'logname', trim(str))
 

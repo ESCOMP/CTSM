@@ -23,6 +23,7 @@ module clm_time_manager
         get_clock,                &! get the clock from the time-manager
         get_curr_ESMF_Time,       &! get current time in terms of the ESMF_Time
         get_step_size,            &! return step size in seconds
+        get_step_size_real,       &! return step size in seconds, real-valued
         get_rad_step_size,        &! return radiation step size in seconds
         get_nstep,                &! return timestep number
         get_curr_date,            &! return date components at end of current timestep
@@ -47,6 +48,7 @@ module clm_time_manager
         is_beg_curr_day,          &! return true on first timestep in current day
         is_end_curr_day,          &! return true on last timestep in current day
         is_end_curr_month,        &! return true on last timestep in current month
+        is_beg_curr_year,         &! return true on first timestep in current year
         is_end_curr_year,         &! return true on last timestep in current year
         is_last_step,             &! return true on last timestep
         is_perpetual,             &! return true if perpetual calendar is in use
@@ -863,6 +865,16 @@ contains
 
   !=========================================================================================
 
+  real(r8) function get_step_size_real()
+
+    ! Return the step size in seconds, as a real value
+
+    get_step_size_real = real(get_step_size(), r8)
+
+  end function get_step_size_real
+
+  !=========================================================================================
+
   subroutine update_rad_dtime(doalb)
     !---------------------------------------------------------------------------------
     ! called only on doalb timesteps to save off radiation nsteps
@@ -1537,6 +1549,29 @@ contains
   end function is_end_curr_month
 
   !-----------------------------------------------------------------------
+  logical function is_beg_curr_year()
+    !
+    ! !DESCRIPTION:
+    ! Return true if current timestep is first timestep in current year.
+    !
+    ! !LOCAL VARIABLES:
+    integer ::&
+         yr,    &! year
+         mon,   &! month
+         day,   &! day of month
+         tod     ! time of day (seconds past 0Z)
+
+    character(len=*), parameter :: subname = 'is_beg_curr_year'
+    !-----------------------------------------------------------------------
+
+    call check_timemgr_initialized(subname)
+
+    call get_curr_date(yr, mon, day, tod)
+    is_beg_curr_year = (mon == 1 .and. day == 1 .and. tod == dtime)
+    
+  end function is_beg_curr_year
+
+  !-----------------------------------------------------------------------
   logical function is_end_curr_year()
     !
     ! !DESCRIPTION:
@@ -1864,7 +1899,9 @@ contains
   subroutine for_test_set_curr_date(yr, mon, day, tod)
     !
     ! !DESCRIPTION:
+    ! Sets the current date - i.e., the date at the end of the time step
     !
+    ! *** Should only be used in unit tests!!! ***
     !
     ! !USES:
     !

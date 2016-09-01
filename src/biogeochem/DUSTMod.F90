@@ -72,6 +72,9 @@ module DUSTMod
   end type dust_type
   !------------------------------------------------------------------------
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !------------------------------------------------------------------------
@@ -292,7 +295,7 @@ contains
       end do
       if (found) then
          write(iulog,*) 'p2l_1d error: sumwt is greater than 1.0 at l= ',index
-         call endrun(msg=errMsg(__FILE__, __LINE__))
+         call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Loop through patches
@@ -328,7 +331,7 @@ contains
          p = filter_nolakep(fp)
          if (lnd_frc_mbl(p)>1.0_r8 .or. lnd_frc_mbl(p)<0.0_r8) then
             write(iulog,*)'Error dstmbl: pft= ',p,' lnd_frc_mbl(p)= ',lnd_frc_mbl(p)
-            call endrun(msg=errMsg(__FILE__, __LINE__))
+            call endrun(msg=errMsg(sourcefile, __LINE__))
          end if
       end do
 
@@ -719,7 +722,7 @@ contains
 
       if (ryn_nbr_frc_thr_prx_opt < 0.03_r8) then
          write(iulog,*) 'dstmbl: ryn_nbr_frc_thr_prx_opt < 0.03'
-         call endrun(msg=errMsg(__FILE__, __LINE__))
+         call endrun(msg=errMsg(sourcefile, __LINE__))
       else if (ryn_nbr_frc_thr_prx_opt < 10.0_r8) then
          ryn_nbr_frc_thr_opt_fnc = -1.0_r8 + 1.928_r8 * (ryn_nbr_frc_thr_prx_opt**0.0922_r8)
          ryn_nbr_frc_thr_opt_fnc = 0.1291_r8 * 0.1291_r8 / ryn_nbr_frc_thr_opt_fnc
@@ -756,7 +759,7 @@ contains
          end do
       else
          write(iulog,*) 'Dustini error: ndst must equal to 4 with current code'
-         call endrun(msg=errMsg(__FILE__, __LINE__))
+         call endrun(msg=errMsg(sourcefile, __LINE__))
          !see more comments above end if ndst == 4
       end if
 
@@ -882,7 +885,7 @@ contains
             else
                write(iulog,'(a,es9.2)') "ryn_nbr_grv(m) = ",ryn_nbr_grv(m)
                write(iulog,*)'Dustini error: Reynolds number too large in stk_crc_get()'
-               call endrun(msg=errMsg(__FILE__, __LINE__))
+               call endrun(msg=errMsg(sourcefile, __LINE__))
             end if
 
             ! Update terminal velocity based on new Reynolds number and drag coeff

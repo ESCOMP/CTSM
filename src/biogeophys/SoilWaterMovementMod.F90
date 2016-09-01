@@ -75,6 +75,9 @@ module SoilWaterMovementMod
   integer  :: inexpensive
   integer  :: flux_calculation
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
   !-----------------------------------------------------------------------
 
 contains
@@ -378,7 +381,7 @@ contains
     !-----------------------------------------------------------------------   
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(vert_tran_sink)  == (/bounds%endc, nlevsoi/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(vert_tran_sink)  == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
 
     associate(&
          qflx_tran_veg_col   => waterflux_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
@@ -545,7 +548,7 @@ contains
     !-----------------------------------------------------------------------   
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(vert_tran_sink)  == (/bounds%endc, nlevsoi/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(vert_tran_sink)  == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
 
     associate(&
          qflx_tran_veg_col   => waterflux_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
@@ -635,7 +638,7 @@ contains
     !-----------------------------------------------------------------------   
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(baseflow_sink)  == (/bounds%endc, nlevsoi/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(baseflow_sink)  == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
 
 !this is just a placeholder for now
     baseflow_sink = 0.
@@ -2468,11 +2471,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(a)    == (/ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(b)    == (/ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(c)    == (/ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(r)    == (/ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(u)    == (/ubj/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(a)    == (/ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(b)    == (/ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(c)    == (/ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(r)    == (/ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(u)    == (/ubj/)), errMsg(sourcefile, __LINE__))
 
     ! Solve the matrix
 

@@ -64,6 +64,9 @@ module controlMod
 #if (defined _OPENMP)
   integer, external :: omp_get_max_threads  ! max number of threads that can execute concurrently in a single parallel region
 #endif
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -84,15 +87,15 @@ contains
 
     ! Error checking...
     if ( len_trim(NLFile) == 0 )then
-       call endrun(msg=' error: nlfilename entered is not set'//errMsg(__FILE__, __LINE__))
+       call endrun(msg=' error: nlfilename entered is not set'//errMsg(sourcefile, __LINE__))
     end if
     inquire (file = trim(NLFile), exist = lexist)
     if ( .not. lexist )then
        call endrun(msg=' error: NLfilename entered does NOT exist:'//&
-            trim(NLFile)//errMsg(__FILE__, __LINE__))
+            trim(NLFile)//errMsg(sourcefile, __LINE__))
     end if
     if ( len_trim(NLFile) > len(NLFilename) )then
-       call endrun(msg=' error: entered NLFile is too long'//errMsg(__FILE__, __LINE__))
+       call endrun(msg=' error: entered NLFile is too long'//errMsg(sourcefile, __LINE__))
     end if
     ! Set the filename
     NLFilename = NLFile
@@ -267,7 +270,7 @@ contains
        ! ----------------------------------------------------------------------
 
        if ( len_trim(NLFilename) == 0  )then
-          call endrun(msg=' error: nlfilename not set'//errMsg(__FILE__, __LINE__))
+          call endrun(msg=' error: nlfilename not set'//errMsg(sourcefile, __LINE__))
        end if
        unitn = getavu()
        write(iulog,*) 'Read in clm_inparm namelist from: ', trim(NLFilename)
@@ -276,19 +279,19 @@ contains
        if (ierr == 0) then
           read(unitn, clm_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg='ERROR reading clm_inparm namelist'//errMsg(__FILE__, __LINE__))
+             call endrun(msg='ERROR reading clm_inparm namelist'//errMsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg='ERROR finding clm_inparm namelist'//errMsg(__FILE__, __LINE__))
+          call endrun(msg='ERROR finding clm_inparm namelist'//errMsg(sourcefile, __LINE__))
        end if
        call shr_nl_find_group_name(unitn, 'clm_nitrogen', status=ierr)
        if (ierr == 0) then
           read(unitn, clm_nitrogen, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg='ERROR reading clm_nitrogen namelist'//errMsg(__FILE__, __LINE__))
+             call endrun(msg='ERROR reading clm_nitrogen namelist'//errMsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg='ERROR finding clm_nitrogen namelist'//errMsg(__FILE__, __LINE__))
+          call endrun(msg='ERROR finding clm_nitrogen namelist'//errMsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
 
@@ -318,7 +321,7 @@ contains
            if ( override_nsrest /= nsrBranch .and. nsrest /= nsrStartup )then
               call endrun(msg= ' ERROR: can ONLY override clm start-type ' // &
                    'to branch type and ONLY if driver is a startup type'// &
-                   errMsg(__FILE__, __LINE__))
+                   errMsg(sourcefile, __LINE__))
            end if
            call clm_varctl_set( nsrest_in=override_nsrest )
        end if
@@ -331,17 +334,17 @@ contains
 
        if (use_crop .and. (use_c13 .or. use_c14)) then
           call endrun(msg=' ERROR:: CROP and C13/C14 can NOT be on at the same time'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
        end if
        
        if (use_crop .and. .not. create_crop_landunit) then
           call endrun(msg=' ERROR: prognostic crop Patches require create_crop_landunit=.true.'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
        end if
        
        if (.not. use_crop .and. irrigate) then
           call endrun(msg=' ERROR: irrigate = .true. requires CROP model active.'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
        end if
        
        if (use_lch4 .and. use_vertsoilc) then 
@@ -362,7 +365,7 @@ contains
        ! ABORT if use_cn AND use_ed are both true
        if (use_ed .and. use_cn) then
           call endrun(msg=' ERROR: use_cn and use_ed cannot both be set to true.'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
 
        ! If nfix_timeconst is equal to the junk default value, then it was not specified
@@ -382,12 +385,12 @@ contains
        if (nlevsno < 3 .or. nlevsno > 12)  then
           write(iulog,*)'ERROR: nlevsno = ',nlevsno,' is not supported, must be in range 3-12.'
           call endrun(msg=' ERROR: invalid value for nlevsno in CLM namelist. '//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        endif
        if (h2osno_max <= 0.0_r8) then
           write(iulog,*)'ERROR: h2osno_max = ',h2osno_max,' is not supported, must be greater than 0.0.'
           call endrun(msg=' ERROR: invalid value for h2osno_max in CLM namelist. '//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        endif
 
     endif   ! end of if-masterproc if-block
@@ -439,28 +442,28 @@ contains
     if (co2_type /= 'constant' .and. co2_type /= 'prognostic' .and. co2_type /= 'diagnostic') then
        write(iulog,*)'co2_type = ',co2_type,' is not supported'
        call endrun(msg=' ERROR:: choices are constant, prognostic or diagnostic'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
     if ( use_dynroot .and. use_hydrstress ) then
        call endrun(msg=' ERROR:: dynroot and hydrstress can NOT be on at the same time'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
     ! Check on run type
     if (nsrest == iundef) then
        call endrun(msg=' ERROR:: must set nsrest'//& 
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
     if (nsrest == nsrBranch .and. nrevsn == ' ') then
        call endrun(msg=' ERROR: need to set restart data file name'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
     ! Consistency settings for co2_ppvm
     if ( (co2_ppmv <= 0.0_r8) .or. (co2_ppmv > 3000.0_r8) ) then
        call endrun(msg=' ERROR: co2_ppmv is out of a reasonable range'//& 
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
     ! Consistency settings for nrevsn
@@ -469,16 +472,16 @@ contains
     if (nsrest == nsrContinue) nrevsn = 'set by restart pointer file file'
     if (nsrest /= nsrStartup .and. nsrest /= nsrContinue .and. nsrest /= nsrBranch ) then
        call endrun(msg=' ERROR: nsrest NOT set to a valid value'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
     ! Single Column
     if ( single_column .and. (scmlat == rundef  .or. scmlon == rundef ) ) then
        call endrun(msg=' ERROR:: single column mode on -- but scmlat and scmlon are NOT set'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
        if (.not. use_lch4 .and. anoxia) then
           call endrun(msg='ERROR:: anoxia is turned on, but this currently requires turning on the CH4 submodel'//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
        end if
     end if
 
@@ -765,7 +768,7 @@ contains
           write(iulog,*) '   model is currently in accelerated AD spinup mode.'
        else
           call endrun(msg=' error: spinup_state can only have integer value of 0 or 1 or 2'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
 
        if ( use_fun ) then

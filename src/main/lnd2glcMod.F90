@@ -59,6 +59,9 @@ module lnd2glcMod
   ! Note that it is not a type-bound procedure, because it doesn't actually involve the
   ! lnd2glc_type. This suggests that perhaps it belongs in some other module.
   public :: bareland_normalization ! compute normalization factor for fluxes from the bare land portion of the grid cell
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains
@@ -208,7 +211,7 @@ contains
          write(iulog,*) 'One possible cause is having multiple columns in the istsoil landunit,'
          write(iulog,*) 'which this routine cannot handle.'
          write(iulog,*) 'g, n = ', g, n
-         call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
+         call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Send surface temperature, topography, and SMB flux (qice) to coupler.

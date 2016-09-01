@@ -41,6 +41,9 @@ module CNBalanceCheckMod
      procedure , private :: InitAllocate 
   end type cn_balance_type
   !
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -231,7 +234,7 @@ contains
          ! FIXME(wjs, 2016-07-08) Remove this line when we stop adding this term to
          ! col_coutputs
          write(iulog,*)'dwt_seedc                = ',cnveg_carbonflux_inst%dwt_seedc_col(c)*dt
-         call endrun(msg=errMsg(__FILE__, __LINE__))
+         call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate
@@ -379,7 +382,7 @@ contains
         
          
          
-         call endrun(msg=errMsg(__FILE__, __LINE__))
+         call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate

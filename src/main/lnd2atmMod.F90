@@ -41,6 +41,9 @@ module lnd2atmMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: lnd2atm
   public :: lnd2atm_minimal
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains
@@ -152,7 +155,7 @@ contains
     real(r8), parameter :: convertgC2kgCO2 = 1.0e-3_r8 * (amCO2/amC)
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(net_carbon_exchange_grc) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(net_carbon_exchange_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     !----------------------------------------------------
     ! lnd -> atm

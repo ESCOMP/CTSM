@@ -17,6 +17,9 @@ module EDSharedParamsMod
 
   type(EDParamsShareType), protected :: EDParamsShareInst
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
   !-----------------------------------------------------------------------
   
 contains
@@ -41,12 +44,12 @@ contains
     !
     tString='q10_mr'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     EDParamsShareInst%Q10=tempr
 
     tString='froz_q10'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     EDParamsShareInst%froz_q10=tempr   
 
   end subroutine EDParamsReadShared

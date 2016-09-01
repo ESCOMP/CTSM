@@ -64,6 +64,9 @@ module CNDVType
      procedure , private :: InitCold     
      procedure , private :: InitHistory
   end type dgvs_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -410,7 +413,7 @@ contains
     if (ier/=0) then
        write(iulog,*)' in '
        call endrun(msg=" allocation error for rbufslp"//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     endif
 
     nstep = get_nstep()
@@ -466,8 +469,8 @@ contains
     begp = bounds%begp; endp = bounds%endp
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(t_a10_patch)   == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_ref2m_patch) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_a10_patch)   == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_ref2m_patch) == (/endp/)), errMsg(sourcefile, __LINE__))
 
     dtime = get_step_size()
     nstep = get_nstep()
@@ -478,7 +481,7 @@ contains
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
     ! Accumulate growing degree days based on 10-day running mean temperature.

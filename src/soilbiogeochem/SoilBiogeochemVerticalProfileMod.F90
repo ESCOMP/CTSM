@@ -16,6 +16,9 @@ module SoilBiogeochemVerticalProfileMod
   public:: SoilBiogeochemVerticalProfile
   !
   real(r8), public :: surfprof_exp  = 10. ! how steep profile is for surface components (1/ e_folding depth) (1/m)      
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -244,7 +247,7 @@ contains
                write(iulog, *) 'p, itype(p), wtcol(p): ', p, patch%itype(p), patch%wtcol(p)
                write(iulog, *) 'cinput_rootfr(p,:): ', cinput_rootfr(p,:)
             end do
-            call endrun(msg=" ERROR: _prof_sum-1>delta"//errMsg(__FILE__, __LINE__))
+            call endrun(msg=" ERROR: _prof_sum-1>delta"//errMsg(sourcefile, __LINE__))
          endif
       end do
 
@@ -263,7 +266,7 @@ contains
          if ( ( abs(froot_prof_sum - 1._r8) > delta ) .or.  ( abs(croot_prof_sum - 1._r8) > delta ) .or. &
               ( abs(stem_prof_sum - 1._r8) > delta ) .or.  ( abs(leaf_prof_sum - 1._r8) > delta ) ) then
             write(iulog, *) 'profile sums: ', froot_prof_sum, croot_prof_sum, leaf_prof_sum, stem_prof_sum
-            call endrun(msg=' ERROR: sum-1 > delta'//errMsg(__FILE__, __LINE__))
+            call endrun(msg=' ERROR: sum-1 > delta'//errMsg(sourcefile, __LINE__))
          endif
       end do
 

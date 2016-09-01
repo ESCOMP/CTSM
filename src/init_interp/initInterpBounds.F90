@@ -43,6 +43,9 @@ module initInterpBounds
      module procedure constructor
   end interface interp_bounds_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! ========================================================================
@@ -153,7 +156,7 @@ contains
        beg_index = this%begg
     case default
        call endrun(msg=subname//' ERROR: Unknown subgrid level: '//trim(subgrid_level)// &
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end select
 
   end function get_beg
@@ -187,7 +190,7 @@ contains
        end_index = this%endg
     case default
        call endrun(msg=subname//' ERROR: Unknown subgrid level: '//trim(subgrid_level)// &
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end select
 
   end function get_end

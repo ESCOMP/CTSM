@@ -23,6 +23,9 @@ module dynFileMod
   interface dyn_file_type
      module procedure constructor  ! initialize a new dyn_file_type object
   end interface dyn_file_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -73,7 +76,7 @@ contains
     call ncd_inqdlen(constructor, varid, ntimes)
     allocate(years(ntimes), stat=ier)
     if (ier /= 0) then
-       call endrun(msg=' allocation error for years'//errMsg(__FILE__, __LINE__))
+       call endrun(msg=' allocation error for years'//errMsg(sourcefile, __LINE__))
     end if
     call ncd_io(ncid=constructor, varname='YEAR', flag='read', data=years)
     

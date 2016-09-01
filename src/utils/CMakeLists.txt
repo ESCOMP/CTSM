@@ -12,6 +12,7 @@ sourcelist_to_parent(clm_genf90_sources)
 list(APPEND clm_sources "${clm_genf90_sources}")
 
 list(APPEND clm_sources
+  AnnualFluxDribbler.F90
   domainMod.F90
   clm_nlUtilsMod.F90
   clm_time_manager.F90

@@ -122,6 +122,9 @@ module TemperatureType
      procedure, public  :: UpdateAccVars
 
   end type temperature_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains
@@ -601,10 +604,10 @@ contains
     integer  :: lev
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(em_roof_lun)    == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_wall_lun)    == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_improad_lun) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(em_perroad_lun) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(em_roof_lun)    == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(em_wall_lun)    == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(em_improad_lun) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(em_perroad_lun) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
 
     associate(snl => col%snl) ! Output: [integer (:)    ]  number of snow layers   
 
@@ -860,7 +863,7 @@ contains
          dim1name='pft', &
          long_name='2m height surface air temperature', units='K', &
          interpinic_flag='interp', readvar=readvar, data=this%t_ref2m_patch)
-    if (flag=='read' .and. .not. readvar) call endrun(msg=errMsg(__FILE__, __LINE__))
+    if (flag=='read' .and. .not. readvar) call endrun(msg=errMsg(sourcefile, __LINE__))
 
     call restartvar(ncid=ncid, flag=flag, varname="T_REF2M_R", xtype=ncd_double,  &
          dim1name='pft', &
@@ -1166,7 +1169,7 @@ contains
     if (ier/=0) then
        write(iulog,*)' in '
        call endrun(msg="extract_accum_hist allocation error for rbufslp"//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     endif
 
     ! Determine time step
@@ -1265,7 +1268,7 @@ contains
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
     ! Accumulate and extract T_VEG24 & T_VEG240 

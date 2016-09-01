@@ -27,6 +27,9 @@ module dynLandunitAreaMod
   ! The following is only public for the sake of unit testing; it should not be called
   ! directly by CLM code outside this module
   public :: update_landunit_weights_one_gcell
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -118,7 +121,7 @@ contains
     character(len=*), parameter :: subname = 'update_landunit_weights_one_gcell'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((size(landunit_weights) == max_lunit), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(landunit_weights) == max_lunit), errMsg(sourcefile, __LINE__))
 
     landunit_sum = sum(landunit_weights)
     
@@ -155,7 +158,7 @@ contains
        write(iulog,*) subname//' ERROR: After all landunit adjustments, landunit weights still do not equal 100%'
        write(iulog,*) 'landunit_sum = ', landunit_sum
        write(iulog,*) 'landunit_weights = ', landunit_weights
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
     
   end subroutine update_landunit_weights_one_gcell

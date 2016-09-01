@@ -35,6 +35,9 @@ module initInterpMultilevelCopy
      module procedure constructor
   end interface interp_multilevel_copy_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! ========================================================================
@@ -102,7 +105,7 @@ contains
     character(len=*), parameter :: subname = 'interp_multilevel'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((size(data_source) == size(data_dest)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(data_source) == size(data_dest)), errMsg(sourcefile, __LINE__))
 
     ! Note that it's safe to do whole-array assignment here because we never decompose
     ! along the level dimension (in contrast to the spatial dimension, where you need to

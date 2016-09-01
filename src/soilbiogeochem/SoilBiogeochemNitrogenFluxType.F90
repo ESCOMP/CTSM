@@ -137,6 +137,9 @@ module SoilBiogeochemNitrogenFluxType
      procedure , private :: InitCold
 
   end type SoilBiogeochem_nitrogenflux_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains
@@ -929,7 +932,7 @@ contains
        end if
        if (flag=='read' .and. .not. readvar) then
           call endrun(msg='ERROR:: f_nit_vr'//' is required on an initialization dataset'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
     end if
 

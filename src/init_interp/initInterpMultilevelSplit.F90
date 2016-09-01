@@ -43,6 +43,9 @@ module initInterpMultilevelSplit
   ! constructor. I'm not sure if this is a compiler bug or not.
   public :: create_interp_multilevel_split_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! ========================================================================
@@ -89,12 +92,12 @@ contains
     if (num_second_levels_source <= 0) then
        write(iulog,*) "For interp_multilevel_split_type, num_second_levels_source must be > 0"
        write(iulog,*) "num_second_levels_source = ", num_second_levels_source
-       call endrun(msg="num_second_levels_source must be > 0 "//errMsg(__FILE__, __LINE__))
+       call endrun(msg="num_second_levels_source must be > 0 "//errMsg(sourcefile, __LINE__))
     end if
     if (num_second_levels_dest <= 0) then
        write(iulog,*) "For interp_multilevel_split_type, num_second_levels_dest must be > 0"
        write(iulog,*) "num_second_levels_dest = ", num_second_levels_dest
-       call endrun(msg="num_second_levels_dest must be > 0 "//errMsg(__FILE__, __LINE__))
+       call endrun(msg="num_second_levels_dest must be > 0 "//errMsg(sourcefile, __LINE__))
     end if
 
     this%interpolator_first_levels => interpolator_first_levels
@@ -182,12 +185,12 @@ contains
     if (num_first_levels_source <= 0) then
        write(iulog,*) "For interp_multilevel_split_type, num_first_levels_source must be > 0"
        write(iulog,*) "num_first_levels_source = ", num_first_levels_source
-       call endrun(msg="num_first_levels_source must be > 0 "//errMsg(__FILE__, __LINE__))
+       call endrun(msg="num_first_levels_source must be > 0 "//errMsg(sourcefile, __LINE__))
     end if
     if (num_first_levels_dest <= 0) then
        write(iulog,*) "For interp_multilevel_split_type, num_first_levels_dest must be > 0"
        write(iulog,*) "num_first_levels_dest = ", num_first_levels_dest
-       call endrun(msg="num_first_levels_dest must be > 0 "//errMsg(__FILE__, __LINE__))
+       call endrun(msg="num_first_levels_dest must be > 0 "//errMsg(sourcefile, __LINE__))
     end if
 
     call this%interpolator_first_levels%interp_multilevel( &

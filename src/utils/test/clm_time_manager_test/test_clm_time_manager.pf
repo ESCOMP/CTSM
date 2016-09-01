@@ -127,6 +127,30 @@ contains
   end subroutine getNstep_step3
 
   @Test
+  subroutine isBegCurrYear_atBeg(this)
+    class(TestTimeManager), intent(inout) :: this
+    logical :: is_beg
+
+    call set_date(yr=2, mon=1, day=1, tod=dtime)
+
+    is_beg = is_beg_curr_year()
+
+    @assertTrue(is_beg)
+  end subroutine isBegCurrYear_atBeg
+
+  @Test
+  subroutine isBegCurrYear_notAtBeg(this)
+    class(TestTimeManager), intent(inout) :: this
+    logical :: is_beg
+
+    call set_date(yr=2, mon=1, day=2, tod=dtime)
+
+    is_beg = is_beg_curr_year()
+
+    @assertFalse(is_beg)
+  end subroutine isBegCurrYear_notAtBeg
+
+  @Test
   subroutine isEndCurrYear_atEnd(this)
     class(TestTimeManager), intent(inout) :: this
     logical :: is_end

@@ -24,6 +24,9 @@ module initInterp1dData
      module procedure interp_1d_data_int
   end interface interp_1d_data
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -54,9 +57,9 @@ contains
     character(len=*), parameter :: subname = 'interp_1d_data_double'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(data_in) == (/endi/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(data_out) == (/endo/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(data_in) == (/endi/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(data_out) == (/endo/)), errMsg(sourcefile, __LINE__))
 
     if (.not. keep_existing) then
        data_out(bego:endo) = spval
@@ -103,9 +106,9 @@ contains
     character(len=*), parameter :: subname = 'interp_1d_data_int'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(data_in) == (/endi/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(data_out) == (/endo/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(data_in) == (/endi/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(data_out) == (/endo/)), errMsg(sourcefile, __LINE__))
 
     if (.not. keep_existing) then
        data_out(bego:endo) = ispval

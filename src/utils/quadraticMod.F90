@@ -9,6 +9,9 @@ module quadraticMod
 
   public :: quadratic
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   subroutine quadratic (a, b, c, r1, r2)
@@ -36,7 +39,7 @@ contains
     
      if (a == 0._r8) then
         write (iulog,*) 'Quadratic solution error: a = ',a
-        call endrun(msg=errmsg(__FILE__, __LINE__))
+        call endrun(msg=errmsg(sourcefile, __LINE__))
      end if
    
      if (b >= 0._r8) then

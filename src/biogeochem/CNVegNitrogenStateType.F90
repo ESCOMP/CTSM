@@ -93,7 +93,7 @@ module CNVegNitrogenStateType
   !------------------------------------------------------------------------
 
   ! !PRIVATE DATA:
-  character(len=*), parameter :: filename = &
+  character(len=*), parameter :: sourcefile = &
        __FILE__
 
 contains
@@ -406,11 +406,11 @@ contains
     integer :: special_patch (bounds%endp-bounds%begp+1) ! special landunit filter - patches
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leafc_patch)          == (/bounds%endp/)), errMsg(filename, __LINE__))
-    SHR_ASSERT_ALL((ubound(leafc_storage_patch)  == (/bounds%endp/)), errMsg(filename, __LINE__))
-    SHR_ASSERT_ALL((ubound(frootc_patch)         == (/bounds%endp/)), errMsg(filename, __LINE__))   
-    SHR_ASSERT_ALL((ubound(frootc_storage_patch) == (/bounds%endp/)), errMsg(filename, __LINE__))   
-    SHR_ASSERT_ALL((ubound(deadstemc_patch)      == (/bounds%endp/)), errMsg(filename, __LINE__))
+    SHR_ASSERT_ALL((ubound(leafc_patch)          == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(leafc_storage_patch)  == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(frootc_patch)         == (/bounds%endp/)), errMsg(sourcefile, __LINE__))   
+    SHR_ASSERT_ALL((ubound(frootc_storage_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))   
+    SHR_ASSERT_ALL((ubound(deadstemc_patch)      == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
 
     ! Set column filters
 
@@ -1008,13 +1008,13 @@ contains
     begp = bounds%begp
     endp = bounds%endp
 
-    SHR_ASSERT_ALL((ubound(conv_nflux) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(product_nflux) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_frootn_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_livecrootn_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_deadcrootn_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_leafn_seed) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_deadstemn_seed) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(conv_nflux) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(product_nflux) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_frootn_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_livecrootn_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_deadcrootn_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_leafn_seed) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_deadstemn_seed) == (/endp/)), errMsg(sourcefile, __LINE__))
 
     old_weight_was_zero = patch_state_updater%old_weight_was_zero(bounds)
     patch_grew = patch_state_updater%patch_grew(bounds)

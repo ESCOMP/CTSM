@@ -17,6 +17,9 @@ module NutrientCompetitionFactoryMod
   ! !PUBLIC ROUTINES:
   public :: create_nutrient_competition_method  ! create an object of class nutrient_competition_method_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -74,7 +77,7 @@ contains
 
     case default
        write(iulog,*) subname//' ERROR: unknown method: ', method
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
 
     end select
     call nutrient_competition_method%Init(bounds)

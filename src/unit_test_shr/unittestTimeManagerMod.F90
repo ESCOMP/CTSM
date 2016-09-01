@@ -113,7 +113,8 @@ contains
   subroutine unittest_timemgr_set_curr_date(yr, mon, day, tod)
     !
     ! !DESCRIPTION:
-    ! Set the current model date in the time manager.
+    ! Set the current model date in the time manager. This is the time at the END of the
+    ! time step.
     !
     ! !USES:
     use clm_time_manager, only : for_test_set_curr_date

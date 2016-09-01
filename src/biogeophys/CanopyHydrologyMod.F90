@@ -54,6 +54,9 @@ module CanopyHydrologyMod
   ! for now, all mods on by default:
   character(len= 10), public           :: snowveg_flag = 'ON_RAD'
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
   !-----------------------------------------------------------------------
 
 contains
@@ -99,10 +102,10 @@ contains
        if (ierr == 0) then
           read(unitn, clm_canopyhydrology_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading clm_canopyhydrology_inparm namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading clm_canopyhydrology_inparm namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR finding clm_canopyhydrology_inparm namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR finding clm_canopyhydrology_inparm namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
 
@@ -115,7 +118,7 @@ contains
        if (snowveg_off .or. snowveg_on .or. snowveg_onrad) then
           write(iulog,*) 'snowveg_flag = ',snowveg_flag
        else
-          call endrun(msg="snowveg_flag is set incorrectly (not ON, ON_RAD, or OFF)"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="snowveg_flag is set incorrectly (not ON, ON_RAD, or OFF)"//errmsg(sourcefile, __LINE__))
        end if
     end if
     ! Broadcast namelist variables read in

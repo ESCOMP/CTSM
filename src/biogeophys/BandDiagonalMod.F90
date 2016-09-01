@@ -19,6 +19,9 @@ module BandDiagonalMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: BandDiagonal
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -52,11 +55,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jtop) == (/bounds%endc/)),             errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(jbot) == (/bounds%endc/)),             errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(b)    == (/bounds%endc, nband, ubj/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(r)    == (/bounds%endc, ubj/)),        errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(u)    == (/bounds%endc, ubj/)),        errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(jtop) == (/bounds%endc/)),             errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(jbot) == (/bounds%endc/)),             errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(b)    == (/bounds%endc, nband, ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(r)    == (/bounds%endc, ubj/)),        errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(u)    == (/bounds%endc, ubj/)),        errMsg(sourcefile, __LINE__))
 
 
 !!$     SUBROUTINE SGBSV( N, KL, KU, NRHS, AB, LDAB, IPIV, B, LDB, INFO )

@@ -39,6 +39,9 @@ module subgridRestMod
 
   ! !PRIVATE TYPES:
   real(r8), allocatable :: pft_wtlunit_before_rest_read(:)  ! patch%wtlunit weights - saved values from before the restart read
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains
@@ -680,7 +683,7 @@ contains
                write(iulog,*) '    in user_nl_clm'
                write(iulog,*) '    In this case, CLM will take the weights from the initial conditions file.'
                write(iulog,*) ' '
-               call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(__FILE__, __LINE__))
+               call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
             end if
          end if
       end do

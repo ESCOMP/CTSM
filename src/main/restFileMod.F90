@@ -52,7 +52,10 @@ module restFileMod
   private :: restFile_read_consistency_nl ! Read namelist associated with consistency checks
   private :: restFile_check_year          ! Check consistency of year on the restart file
   !
-  ! !PRIVATE TYPES: None
+  ! !PRIVATE TYPES:
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -267,7 +270,7 @@ contains
                   ' ctest = ',trim(ctest), &
                   ' ftest = ',trim(ftest)
           end if
-          call endrun(msg=errMsg(__FILE__, __LINE__)) 
+          call endrun(msg=errMsg(sourcefile, __LINE__)) 
        end if
     end if
 
@@ -794,10 +797,10 @@ contains
        if (nml_error == 0) then
           read(nu_nml, nml=finidat_consistency_checks,iostat=nml_error)
           if (nml_error /= 0) then
-             call endrun(msg='ERROR reading finidat_consistency_checks namelist'//errMsg(__FILE__, __LINE__))
+             call endrun(msg='ERROR reading finidat_consistency_checks namelist'//errMsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg='ERROR finding finidat_consistency_checks namelist'//errMsg(__FILE__, __LINE__))
+          call endrun(msg='ERROR finding finidat_consistency_checks namelist'//errMsg(sourcefile, __LINE__))
        end if
        close(nu_nml)
        call relavu( nu_nml )
@@ -885,7 +888,7 @@ contains
                 write(iulog,*) '    in user_nl_clm'
                 write(iulog,*) ' '
              end if
-             call endrun(msg=errMsg(__FILE__, __LINE__))
+             call endrun(msg=errMsg(sourcefile, __LINE__))
           end if  ! year /= rest_year
        end if  ! flanduse_timeseries_rest /= ' '
     end if  ! fpftdyn /= ' '

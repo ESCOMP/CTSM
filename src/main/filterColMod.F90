@@ -60,6 +60,9 @@ module filterColMod
   ! Whether a given column should be included in the filter based on the active flag
   private :: include_based_on_active
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! TODO(wjs, 2016-04-07) If repeated reallocation of the indices arrays (every time a
@@ -107,8 +110,8 @@ contains
     character(len=*), parameter :: subname = 'col_filter_from_index_array'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL(indices_col >= bounds%begc, errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL(indices_col <= bounds%endc, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL(indices_col >= bounds%begc, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL(indices_col <= bounds%endc, errMsg(sourcefile, __LINE__))
 
     filter = col_filter_empty(bounds)
 
@@ -137,7 +140,7 @@ contains
     character(len=*), parameter :: subname = 'col_filter_from_logical_array'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(logical_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(logical_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     filter = col_filter_empty(bounds)
 
@@ -210,7 +213,7 @@ contains
     character(len=*), parameter :: subname = 'col_filter_from_lunflags'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(lunflags) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(lunflags) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
 
     filter = col_filter_empty(bounds)
 
@@ -254,7 +257,7 @@ contains
     character(len=*), parameter :: subname = 'col_filter_from_grcflags_ltypes'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(grcflags) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(grcflags) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     filter = col_filter_empty(bounds)
     

@@ -22,6 +22,9 @@ module CNDVEstablishmentMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: Establishment
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -437,7 +440,7 @@ contains
       if (fn > 0) then
          g = filterg(1)
          write(iulog,*) 'Error in Establishment: fpc_total =',fpc_total(g), ' at gridcell ',g
-         call endrun(msg=errMsg(__FILE__, __LINE__))
+         call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate 

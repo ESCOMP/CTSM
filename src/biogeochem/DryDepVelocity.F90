@@ -91,6 +91,9 @@ Module DryDepVelocity
   end type drydepvel_type
   !----------------------------------------------------------------------- 
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 CONTAINS 
 
   !------------------------------------------------------------------------
@@ -295,7 +298,7 @@ CONTAINS
                write(iulog,*) 'clmveg = ', clmveg, 'lun%itype = ', lun%itype(l)
                call endrun(decomp_index=pi, clmlevel=namep, &
                     msg='ERROR: Not able to determine Wesley vegetation type'//&
-                    errMsg(__FILE__, __LINE__))
+                    errMsg(sourcefile, __LINE__))
             end if
 
             ! create seasonality index used to index wesely data tables from LAI,  Bascially 
@@ -359,7 +362,7 @@ CONTAINS
             endif
 
             if (index_season<0) then 
-               call endrun('ERROR: not able to determine season'//errmsg(__FILE__, __LINE__))
+               call endrun('ERROR: not able to determine season'//errmsg(sourcefile, __LINE__))
             endif
 
             ! saturation specific humidity 

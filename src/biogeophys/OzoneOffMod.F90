@@ -30,6 +30,9 @@ module OzoneOffMod
      module procedure constructor
   end interface ozone_off_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
   
   !-----------------------------------------------------------------------
@@ -94,13 +97,13 @@ contains
 
     ! Enforce expected array sizes (mainly so that a debug-mode threaded test with
     ! ozone-off can pick up problems with the call to this routine)
-    SHR_ASSERT_ALL((ubound(forc_pbot) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(forc_th) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(rssun) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(rssha) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(rb) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(ram) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(tlai) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(forc_pbot) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(forc_th) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rssun) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rssha) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rb) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(ram) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(tlai) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
 
     ! Explicitly set outputs to 1. This isn't really needed, because they should still be
     ! at 1 from cold-start initialization, but do this for clarity here.

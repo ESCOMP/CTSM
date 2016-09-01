@@ -23,6 +23,9 @@ module RootBiophysMod
   integer, public :: rooting_profile_varindex_water   !select the variant number of rooting profile parameterization for water  
   integer, public :: rooting_profile_varindex_carbon  !select the variant number of rooting profile parameterization for carbon   
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
   !-------------------------------------------------------------------------------------- 
 
 contains
@@ -133,7 +136,7 @@ contains
     integer           :: rooting_profile_varidx      ! Rooting profile variant index to use
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(rootfr) == (/bounds%endp, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(rootfr) == (/bounds%endp, nlevgrnd/)), errMsg(sourcefile, __LINE__))
 
     if (     water_carbon == 'water' ) then 
        rooting_profile_method = rooting_profile_method_water

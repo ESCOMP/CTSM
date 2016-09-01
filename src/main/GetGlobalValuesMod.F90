@@ -10,6 +10,9 @@ module GetGlobalValuesMod
 
   public :: GetGlobalIndex
   public :: GetGlobalWrite
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -52,7 +55,7 @@ contains
        beg_index = bounds_proc%begp
     else
        call shr_sys_abort('clmlevel of '//trim(clmlevel)//' not supported' // &
-            errmsg(__FILE__, __LINE__))
+            errmsg(sourcefile, __LINE__))
     end if
 
     call get_clmlevel_gsmap(clmlevel=trim(clmlevel), gsmap=gsmap)
@@ -138,7 +141,7 @@ contains
        write(iulog,*)'landunit type         = ',lun%itype(ilun)
 
     else		       
-       call shr_sys_abort('clmlevel '//trim(clmlevel)//'not supported '//errmsg(__FILE__, __LINE__))
+       call shr_sys_abort('clmlevel '//trim(clmlevel)//'not supported '//errmsg(sourcefile, __LINE__))
 
     end if
 

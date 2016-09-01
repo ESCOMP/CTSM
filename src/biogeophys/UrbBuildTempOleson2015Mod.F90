@@ -28,6 +28,9 @@ module UrbBuildTempOleson2015Mod
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: BuildingTemperature ! Calculation of interior building air temperature, inner 
                                  ! surface temperatures of walls and roof, and floor temperature
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -299,7 +302,7 @@ contains
 !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(tk)  == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(tk)  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
 
     associate(&
     clandunit         => col%landunit                      , & ! Input:  [integer (:)]  column's landunit

@@ -26,6 +26,9 @@ module CNPrecisionControlMod
   real(r8), public :: ncrit    =  1.e-8_r8              ! critical nitrogen state value for truncation (gN/m2)
   real(r8), public :: nnegcrit = -6.e+0_r8              ! critical negative nitrogen state value for abort (gN/m2)
   real(r8), public, parameter :: n_min = 0.000000001_r8 ! Minimum Nitrogen value to use when calculating CN ratio (gN/m2)
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !----------------------------------------------------------------------- 
 
 contains
@@ -64,10 +67,10 @@ contains
        if (ierr == 0) then
           read(unitn, nml=cnprecision_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
     end if
@@ -408,25 +411,25 @@ contains
     logical :: lcroponly, lallowneg
     integer :: fp, p
 
-    SHR_ASSERT_ALL((ubound(carbon_patch)   == (/bounds%endp/)), 'ubnd(carb)'//errMsg(__FILE__, lineno))
-    SHR_ASSERT_ALL((ubound(nitrogen_patch) == (/bounds%endp/)), 'ubnd(nitro)'//errMsg(__FILE__, lineno))
-    SHR_ASSERT_ALL((ubound(pc)             == (/bounds%endp/)), 'ubnd(pc)'//errMsg(__FILE__, lineno))
-    SHR_ASSERT_ALL((ubound(pn)             == (/bounds%endp/)), 'ubnd(pn)'//errMsg(__FILE__, lineno))
+    SHR_ASSERT_ALL((ubound(carbon_patch)   == (/bounds%endp/)), 'ubnd(carb)'//errMsg(sourcefile, lineno))
+    SHR_ASSERT_ALL((ubound(nitrogen_patch) == (/bounds%endp/)), 'ubnd(nitro)'//errMsg(sourcefile, lineno))
+    SHR_ASSERT_ALL((ubound(pc)             == (/bounds%endp/)), 'ubnd(pc)'//errMsg(sourcefile, lineno))
+    SHR_ASSERT_ALL((ubound(pn)             == (/bounds%endp/)), 'ubnd(pn)'//errMsg(sourcefile, lineno))
 #ifndef _OPENMP
     if ( present(c13) .and. use_c13 )then
-       SHR_ASSERT_ALL((lbound(c13)         == (/bounds%begp/)), 'lbnd(c13)'//errMsg(__FILE__, lineno))
-       SHR_ASSERT_ALL((ubound(c13)         == (/bounds%endp/)), 'ubnd(c13)'//errMsg(__FILE__, lineno))
+       SHR_ASSERT_ALL((lbound(c13)         == (/bounds%begp/)), 'lbnd(c13)'//errMsg(sourcefile, lineno))
+       SHR_ASSERT_ALL((ubound(c13)         == (/bounds%endp/)), 'ubnd(c13)'//errMsg(sourcefile, lineno))
     end if
     if ( present(c14) .and. use_c14 )then
-       SHR_ASSERT_ALL((lbound(c14)         == (/bounds%begp/)), 'lbnd(c14)'//errMsg(__FILE__, lineno))
-       SHR_ASSERT_ALL((ubound(c14)         == (/bounds%endp/)), 'ubnd(c14)'//errMsg(__FILE__, lineno))
+       SHR_ASSERT_ALL((lbound(c14)         == (/bounds%begp/)), 'lbnd(c14)'//errMsg(sourcefile, lineno))
+       SHR_ASSERT_ALL((ubound(c14)         == (/bounds%endp/)), 'ubnd(c14)'//errMsg(sourcefile, lineno))
     end if
 #endif
     if ( present(pc13) )then
-       SHR_ASSERT_ALL((ubound(pc13)        == (/bounds%endp/)), 'ubnd(pc13)'//errMsg(__FILE__, lineno))
+       SHR_ASSERT_ALL((ubound(pc13)        == (/bounds%endp/)), 'ubnd(pc13)'//errMsg(sourcefile, lineno))
     end if
     if ( present(pc14) )then
-       SHR_ASSERT_ALL((ubound(pc14)        == (/bounds%endp/)), 'ubnd(pc14)'//errMsg(__FILE__, lineno))
+       SHR_ASSERT_ALL((ubound(pc14)        == (/bounds%endp/)), 'ubnd(pc14)'//errMsg(sourcefile, lineno))
     end if
     ! patch loop
     lcroponly = .false.
@@ -444,7 +447,7 @@ contains
           if ( .not. lallowneg .and. ((carbon_patch(p) < cnegcrit) .or. (nitrogen_patch(p) < nnegcrit)) ) then
              write(iulog,*) 'ERROR: Carbon or Nitrogen patch negative = ', carbon_patch(p), nitrogen_patch(p)
              write(iulog,*) 'ERROR: limits = ', cnegcrit, nnegcrit
-             call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(__FILE__, lineno))
+             call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))
           else if ( abs(carbon_patch(p)) < ccrit .or. (use_nguardrail .and. abs(nitrogen_patch(p)) < ncrit) ) then
              pc(p) = pc(p) + carbon_patch(p)
              carbon_patch(p) = 0._r8
@@ -497,26 +500,26 @@ contains
     logical :: lcroponly, lallowneg
     integer :: fp, p
 
-    SHR_ASSERT_ALL((ubound(carbon_patch)   == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(pc)             == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(carbon_patch)   == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(pc)             == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
 #ifndef _OPENMP
     if ( present(c13) .and. use_c13 )then
-       SHR_ASSERT_ALL((lbound(c13)         == (/bounds%begp/)), errMsg(__FILE__, __LINE__))
-       SHR_ASSERT_ALL((ubound(c13)         == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+       SHR_ASSERT_ALL((lbound(c13)         == (/bounds%begp/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL((ubound(c13)         == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     end if
     if ( present(c14) .and. use_c14 )then
-       SHR_ASSERT_ALL((lbound(c14)         == (/bounds%begp/)), errMsg(__FILE__, __LINE__))
-       SHR_ASSERT_ALL((ubound(c14)         == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+       SHR_ASSERT_ALL((lbound(c14)         == (/bounds%begp/)), errMsg(sourcefile, __LINE__))
+       SHR_ASSERT_ALL((ubound(c14)         == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     end if
 #endif
     if ( present(pc13) )then
-       SHR_ASSERT_ALL((ubound(pc13)        == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+       SHR_ASSERT_ALL((ubound(pc13)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     end if
     if ( present(pc14) )then
-       SHR_ASSERT_ALL((ubound(pc14)        == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+       SHR_ASSERT_ALL((ubound(pc14)        == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     end if
     if ( -ccrit < cnegcrit )then
-        call endrun(msg='ERROR: cnegcrit should be less than -ccrit: '//errMsg(__FILE__, lineno))
+        call endrun(msg='ERROR: cnegcrit should be less than -ccrit: '//errMsg(sourcefile, lineno))
     end if
     lcroponly = .false.
     if ( present(croponly) )then
@@ -533,7 +536,7 @@ contains
           if ( .not. lallowneg .and. (carbon_patch(p) < cnegcrit) ) then
              write(iulog,*) 'ERROR: Carbon patch negative = ', carbon_patch(p)
              write(iulog,*) 'ERROR: limit = ', cnegcrit
-             call endrun(msg='ERROR: carbon state critically negative '//errMsg(__FILE__, lineno))
+             call endrun(msg='ERROR: carbon state critically negative '//errMsg(sourcefile, lineno))
           else if ( abs(carbon_patch(p)) < ccrit) then
              pc(p) = pc(p) + carbon_patch(p)
              carbon_patch(p) = 0._r8
@@ -574,13 +577,13 @@ contains
 
     integer :: fp, p
 
-    SHR_ASSERT_ALL((ubound(nitrogen_patch) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(pn)             == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(nitrogen_patch) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(pn)             == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     do fp = 1,num_soilp
        p = filter_soilp(fp)
        if ( nitrogen_patch(p) < nnegcrit ) then
           !write(iulog,*) 'WARNING: Nitrogen patch negative = ', nitrogen_patch
-          !call endrun(msg='ERROR: nitrogen state critically negative'//errMsg(__FILE__, lineno))
+          !call endrun(msg='ERROR: nitrogen state critically negative'//errMsg(sourcefile, lineno))
        else if ( abs(nitrogen_patch(p)) < ncrit) then
           pn(p) = pn(p) + nitrogen_patch(p)
           nitrogen_patch(p) = 0._r8

@@ -1316,6 +1316,9 @@
   </compset>
   <compset name="IHISTCLM45BGCCROP">
     <grid name="1x1_smallvilleIA">
+      <test name="ERS_D_Ld7">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart1851_noinitial" comment="Transient crop run with a mid-year restart, restarting shortly after a big landunit transition, to make sure that the annually-dribbled fluxes generated from landunit transitions restart properly">yellowstone</machine>
+      </test>
       <test name="SMS_D_Ly6">
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="Want a debug test that tests a number of aspects of transient crops, including a new crop landunit and shifting PCT_CFT">yellowstone</machine>
       </test>

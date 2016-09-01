@@ -39,6 +39,9 @@ module SoilHydrologyMod
   !-----------------------------------------------------------------------
   real(r8), private :: baseflow_scalar = 1.e-2_r8
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -80,10 +83,10 @@ contains
        if (ierr == 0) then
           read(unitn, nml=soilhydrology_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
     end if
@@ -242,7 +245,7 @@ contains
          endif
          if (origflag == 1) then
             if (use_vichydro) then
-               call endrun(msg="VICHYDRO is not available for origflag=1"//errmsg(__FILE__, __LINE__))
+               call endrun(msg="VICHYDRO is not available for origflag=1"//errmsg(sourcefile, __LINE__))
             else
                fcov(c) = (1._r8 - fracice(c,1)) * fsat(c) + fracice(c,1)
             end if
@@ -1209,7 +1212,7 @@ contains
              ! add ice impedance factor to baseflow
              if(origflag == 1) then 
                 if (use_vichydro) then
-                   call endrun(msg="VICHYDRO is not available for origflag=1"//errmsg(__FILE__, __LINE__))
+                   call endrun(msg="VICHYDRO is not available for origflag=1"//errmsg(sourcefile, __LINE__))
                 else
                    fracice_rsub(c) = max(0._r8,exp(-3._r8*(1._r8-(icefracsum/dzsum))) &
                         - exp(-3._r8))/(1.0_r8-exp(-3._r8))
@@ -1263,7 +1266,7 @@ contains
                 !should never be positive... but include for completeness
                 if(rsub_top_tot > 0.) then !rising water table
 
-                   call endrun(msg="RSUB_TOP IS POSITIVE in Drainage!"//errmsg(__FILE__, __LINE__))
+                   call endrun(msg="RSUB_TOP IS POSITIVE in Drainage!"//errmsg(sourcefile, __LINE__))
 
                 else ! deepening water table
                    if (use_vichydro) then
@@ -2094,7 +2097,7 @@ contains
           !should never be positive... but include for completeness
           if(rsub_top_tot > 0.) then !rising water table
              
-             call endrun(msg="RSUB_TOP IS POSITIVE in Drainage!"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="RSUB_TOP IS POSITIVE in Drainage!"//errmsg(sourcefile, __LINE__))
              
           else ! deepening water table
              do j = jwt(c)+1, nbedrock(c)

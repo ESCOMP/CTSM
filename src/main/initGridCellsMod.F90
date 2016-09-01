@@ -43,6 +43,9 @@ module initGridCellsMod
   private set_landunit_ice_mec
   private set_landunit_crop_noncompete
   private set_landunit_urban
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -192,9 +195,9 @@ contains
        end if
 
        ! Ensure that we have set the expected number of patchs, cols and landunits for this clump
-       SHR_ASSERT(li == bounds_clump%endl, errMsg(__FILE__, __LINE__))
-       SHR_ASSERT(ci == bounds_clump%endc, errMsg(__FILE__, __LINE__))
-       SHR_ASSERT(pi == bounds_clump%endp, errMsg(__FILE__, __LINE__))
+       SHR_ASSERT(li == bounds_clump%endl, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT(ci == bounds_clump%endc, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT(pi == bounds_clump%endp, errMsg(sourcefile, __LINE__))
 
        ! Set some other gridcell-level variables
 
@@ -340,7 +343,7 @@ contains
     else
        write(iulog,*)' set_landunit_wet_ice_lake: ltype of ',ltype,' not valid'
        write(iulog,*)' only istwet, istdlak and istice ltypes are valid'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     wtlunit2gcell = wt_lunit(gi, ltype)
@@ -351,7 +354,7 @@ contains
           write(iulog,*)' set_landunit_wet_ice_lake: compete landunit must'// &
                ' have one patch '
           write(iulog,*)' current value of npatches=',npatches
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
 
        ! Currently assume that each landunit only has only one column 
@@ -406,7 +409,7 @@ contains
     character(len=*), parameter :: subname = 'set_landunit_ice_mec'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(ltype == istice_mec, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(ltype == istice_mec, errMsg(sourcefile, __LINE__))
 
     call subgrid_get_info_glacier_mec(gi, atm_topo, glc_behavior, &
          npatches=npatches, ncols=ncols, nlunits=nlunits)
@@ -561,7 +564,7 @@ contains
             npatches=npatches, ncols=ncols, nlunits=nlunits)
     case default
        write(iulog,*)' set_landunit_urban: unknown ltype: ', ltype
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end select
 
     wtlunit2gcell = wt_lunit(gi, ltype)

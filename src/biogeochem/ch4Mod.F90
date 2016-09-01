@@ -213,6 +213,9 @@ module ch4Mod
      procedure, public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
 
   end type ch4_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains
@@ -749,7 +752,7 @@ contains
     logical               :: readvar     ! If read variable from file or not
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(cellorg_col) == (/bounds%endc, nlevsoi/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(cellorg_col) == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
 
     !----------------------------------------
     ! Initialize time constant variables
@@ -768,17 +771,17 @@ contains
        call ncd_io(ncid=ncid, varname='ZWT0', flag='read', data=zwt0_in, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
           call endrun(msg=' ERROR: Running with CH4 Model but ZWT0 not on surfdata file'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
        call ncd_io(ncid=ncid, varname='F0', flag='read', data=f0_in, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
           call endrun(msg=' ERROR: Running with CH4 Model but F0 not on surfdata file'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
        call ncd_io(ncid=ncid, varname='P3', flag='read', data=p3_in, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
           call endrun(msg=' ERROR: Running with CH4 Model but P3 not on surfdata file'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
     end if
 
@@ -787,7 +790,7 @@ contains
        call ncd_io(ncid=ncid, varname='PH', flag='read', data=ph_in, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
           call endrun(msg=' ERROR: CH4 pH production factor activated in ch4par_in'//&
-               'but pH is not on surfdata file'//errMsg(__FILE__, __LINE__))
+               'but pH is not on surfdata file'//errMsg(sourcefile, __LINE__))
        end if
     end if
     call ncd_pio_closefile(ncid)
@@ -1374,7 +1377,7 @@ contains
     if ( .not. use_aereoxid_prog ) then
         tString='aereoxid'
         call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+        if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
         params_inst%aereoxid=tempr
      else
         ! value should never be used.  
@@ -1383,179 +1386,179 @@ contains
 
      tString='q10ch4'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%q10ch4=tempr
 
      tString='q10ch4base'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%q10ch4base=tempr
 
      tString='f_ch4'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%f_ch4=tempr
 
      tString='rootlitfrac'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%rootlitfrac=tempr
 
      tString='cnscalefactor'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%cnscalefactor=tempr
 
      tString='redoxlag'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%redoxlag=tempr
 
      tString='lake_decomp_fact'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%lake_decomp_fact=tempr
 
      tString='redoxlag_vertical'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%redoxlag_vertical=tempr
 
      tString='pHmax'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%pHmax=tempr
    
      tString='pHmin'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%pHmin=tempr
 
      tString='vmax_ch4_oxid'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%vmax_ch4_oxid=45.e-6_r8 * 1000._r8 / 3600._r8
      ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !params_inst%vmax_ch4_oxid=tempr
 
      tString='oxinhib'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%oxinhib=tempr
 
      tString='k_m'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%k_m= 5.e-6_r8 * 1000._r8
      ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !params_inst%k_m=tempr
    
      tString='q10_ch4oxid'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%q10_ch4oxid=tempr
    
      tString='smp_crit'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%smp_crit=tempr
  
      tString='k_m_o2'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%k_m_o2  = 20.e-6_r8 * 1000._r8 
      ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !params_inst%k_m_o2=tempr
 
      tString='k_m_unsat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%k_m_unsat= 5.e-6_r8 * 1000._r8 / 10._r8
      ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !params_inst%k_m_unsat=tempr
 
      tString='vmax_oxid_unsat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%vmax_oxid_unsat = 45.e-6_r8 * 1000._r8 / 3600._r8 / 10._r8
      ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !params_inst%vmax_oxid_unsat=tempr
 
      tString='scale_factor_aere'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%scale_factor_aere=tempr 
    
      tString='nongrassporosratio'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%nongrassporosratio=tempr 
 
      tString='unsat_aere_ratio'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%unsat_aere_ratio= 0.05_r8 / 0.3_r8 
      ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !params_inst%unsat_aere_ratio=tempr
 
      tString='porosmin'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%porosmin=tempr
    
      tString='vgc_max'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%vgc_max=tempr
  
      tString='satpow'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%satpow=tempr
 
      tString='scale_factor_gasdiff'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%scale_factor_gasdiff=tempr   
 
      tString='scale_factor_liqdiff'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%scale_factor_liqdiff=tempr
 
      tString='f_sat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%f_sat=tempr
    
      tString='qflxlagd'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%qflxlagd=tempr
 
      tString='highlatfact'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%highlatfact=tempr
    
      tString='q10lakebase'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%q10lakebase=tempr
    
      tString='atmch4'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%atmch4=tempr
    
      tString='rob'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%rob=tempr   
 
      tString='capthick'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%capthick=tempr
    
   end subroutine readParams
@@ -1675,10 +1678,10 @@ contains
     character(len=32) :: subname='ch4'                 ! subroutine name
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                                 & 
          dz                   =>   col%dz                                    , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       
@@ -1785,7 +1788,7 @@ contains
                write(iulog,*)'not using ch4offline, but methane concentration not passed from the atmosphere', &
                     'to land model! CLM Model is stopping.'
                call endrun(msg=' ERROR: Methane not being passed to atmosphere'//&
-                    errMsg(__FILE__, __LINE__))
+                    errMsg(sourcefile, __LINE__))
             end if
          end if
 
@@ -2172,7 +2175,7 @@ contains
                write(iulog,*)'dtime*ch4_oxid_tot           = ', dtime*ch4_oxid_tot(c)
                write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
                     ch4_surf_flux_tot(c)*1000._r8
-               call endrun(msg=' ERROR: Methane conservation error'//errMsg(__FILE__, __LINE__))
+               call endrun(msg=' ERROR: Methane conservation error'//errMsg(sourcefile, __LINE__))
             end if
          end if
 
@@ -2198,7 +2201,7 @@ contains
                   write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
                        ch4_surf_flux_tot(c)*1000._r8
                   call endrun(msg=' ERROR: Methane conservation error, allowlakeprod'//&
-                       errMsg(__FILE__, __LINE__))
+                       errMsg(sourcefile, __LINE__))
                end if
             end if
 
@@ -2301,8 +2304,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(rr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                                    & 
          wtcol          =>    patch%wtcol                                         , & ! Input:  [real(r8) (:)    ]  weight (relative to column)                       
@@ -2418,7 +2421,7 @@ contains
                   end if
                else
                   call endrun(msg=' ERROR: No source for decomp rate in CH4Prod.'//&
-                       ' CH4 model currently requires CN.'//errMsg(__FILE__, __LINE__))
+                       ' CH4 model currently requires CN.'//errMsg(sourcefile, __LINE__))
                end if ! use_cn
 
                ! For sensitivity studies
@@ -2620,7 +2623,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate(                                          & 
          h2osoi_vol => waterstate_inst%h2osoi_vol_col , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
@@ -2788,8 +2791,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(annsum_npp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                              & 
          z             =>    col%z                                        , & ! Input:  [real(r8) (:,:)  ]  layer depth (m) (-nlevsno+1:nlevsoi)            
@@ -3020,7 +3023,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                      & 
          z            =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  soil layer depth (m)                            
@@ -3216,7 +3219,7 @@ contains
     character(len=32) :: subname='ch4_tran' ! subroutine name
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                 & 
          z             =>    col%z                           , & ! Input:  [real(r8) (:,:) ]  soil layer depth (m)                            
@@ -3412,14 +3415,14 @@ contains
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
                call endrun(msg=' ERROR: Methane demands exceed methane available.'&
-                    //errMsg(__FILE__, __LINE__))
+                    //errMsg(sourcefile, __LINE__))
             else if (ch4stress(c,j) < 1._r8 .and. source(c,j,1) + conc_ch4(c,j) / dtime > 1.e-12_r8) then
                write(iulog,*) 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
                call endrun(msg=' ERROR: Methane limited, yet some left over.'//&
-                    errMsg(__FILE__, __LINE__))
+                    errMsg(sourcefile, __LINE__))
             end if
 
             source(c,j,2) = -o2_oxid_depth(c,j) - o2_decomp_depth(c,j) + o2_aere_depth(c,j) ! O2 [mol/m3/s]
@@ -3429,13 +3432,13 @@ contains
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
                call endrun(msg=' ERROR: Oxygen demands exceed oxygen available.'//&
-                    errMsg(__FILE__, __LINE__) )
+                    errMsg(sourcefile, __LINE__) )
             else if (o2stress(c,j) < 1._r8 .and. source(c,j,2) + conc_o2(c,j) / dtime > 1.e-12_r8) then
                write(iulog,*) 'Oxygen limited, yet some left over. Error in oxygen competition (mol/m^3/s), c,j:', &
                     source(c,j,2) + conc_o2(c,j) / dtime, c, j
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(msg=' ERROR: Oxygen limited, yet some left over.'//errMsg(__FILE__, __LINE__))
+               call endrun(msg=' ERROR: Oxygen limited, yet some left over.'//errMsg(sourcefile, __LINE__))
             end if
 
             conc_ch4_bef(c,j) = conc_ch4(c,j) !For Balance Check
@@ -3902,7 +3905,7 @@ contains
             g = col%gridcell(c)
             write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
             call endrun(msg=' ERROR: CH4 Conservation Error in CH4Mod during diffusion'//&
-                 errMsg(__FILE__, __LINE__))
+                 errMsg(sourcefile, __LINE__))
          end if
       end do
 
@@ -3932,7 +3935,7 @@ contains
     integer  :: fc       ! filter column index
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(jwt) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate(                                          & 
          watsat     => soilstate_inst%watsat_col      , & ! Input:  [real(r8) (:,:)  ] volumetric soil water at saturation (porosity)   
@@ -4005,8 +4008,8 @@ contains
     real(r8):: secsperyear
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(agnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bgnpp) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                           & 
          somhr          =>    soilbiogeochem_carbonflux_inst%somhr_col , & ! Input:  [real(r8) (:) ]  (gC/m2/s) soil organic matter heterotrophic respiration
@@ -4109,7 +4112,7 @@ contains
     character(len=*), parameter       :: subname = 'ch4_totcolch4'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(totcolch4) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(totcolch4) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate( &
          dz             =>   col%dz                      , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       

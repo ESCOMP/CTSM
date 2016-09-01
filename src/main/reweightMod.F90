@@ -20,6 +20,9 @@ module reweightMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: reweight_wrapup               ! do modifications and error-checks after modifying subgrid weights
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   
   !-----------------------------------------------------------------------
 
@@ -46,7 +49,7 @@ contains
     type(glc_behavior_type), intent(in) :: glc_behavior
     !------------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(sourcefile, __LINE__))
 
     call set_active(bounds, glc_behavior)
     call check_weights(bounds, active_only=.false.)

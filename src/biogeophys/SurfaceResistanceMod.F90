@@ -28,6 +28,9 @@ module SurfaceResistanceMod
   public :: do_soilevap_beta, do_soil_resistance_sl14
 !  public :: init_soil_resistance
   public :: soil_resistance_readNL
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !
   ! !REVISION HISTORY:
   ! 6/25/2013 Created by Jinyun Tang
@@ -235,7 +238,7 @@ contains
      real(r8) :: fac, fac_fc, wx      !temporary variables
      integer  :: c, l, fc     !indices
 
-     SHR_ASSERT_ALL((ubound(soilbeta)    == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(soilbeta)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
      associate(                                              &
           watsat      =>    soilstate_inst%watsat_col      , & ! Input:  [real(r8) (:,:)] volumetric soil water at saturation (porosity)
@@ -336,8 +339,8 @@ contains
      real(r8) :: eff_por_top
      integer  :: c, l, fc     !indices
      
-     SHR_ASSERT_ALL((ubound(dsl)    == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-     SHR_ASSERT_ALL((ubound(soilresis)    == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+     SHR_ASSERT_ALL((ubound(dsl)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+     SHR_ASSERT_ALL((ubound(soilresis)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
      associate(                                              &
           dz                =>    col%dz                             , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)                             

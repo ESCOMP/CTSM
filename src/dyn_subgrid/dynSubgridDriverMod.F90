@@ -292,7 +292,7 @@ contains
 
        call initialize_new_columns(bounds_clump, &
             prior_weights%cactive(bounds_clump%begc:bounds_clump%endc), &
-            temperature_inst)
+            temperature_inst, waterstate_inst)
 
        if (first_step_cold_start) then
           ! In the first timestep of a cold start run, we want to avoid doing any state

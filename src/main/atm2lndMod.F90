@@ -41,6 +41,9 @@ module atm2lndMod
   private :: downscale_longwave          ! Downscale longwave radiation from gridcell to column
   private :: build_normalization         ! Compute normalization factors so that downscaled fields are conservative
   private :: check_downscale_consistency ! Check consistency of downscaling
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -91,7 +94,7 @@ contains
     character(len=*), parameter :: subname = 'downscale_forcings'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate(&
          ! Gridcell-level metadata:
@@ -262,7 +265,7 @@ contains
     character(len=*), parameter :: subname = 'partition_precip'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate(&
          ! Gridcell-level non-downscaled fields:
@@ -498,7 +501,7 @@ contains
                   write(iulog,*) 'g, newsum_lwrad_g, sum_wts_g, forc_lwrad_g: ', &
                        g, newsum_lwrad_g(g), sum_wts_g(g), forc_lwrad_g(g)
                   call endrun(msg=' ERROR: Energy conservation error downscaling longwave'//&
-                       errMsg(__FILE__, __LINE__))
+                       errMsg(sourcefile, __LINE__))
                end if
             end if
          end do
@@ -548,9 +551,9 @@ contains
     real(r8), intent(out) :: norms(:)       ! computed normalization factors
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((size(orig_field) == size(norms)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT((size(sum_field) == size(norms)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT((size(sum_wts) == size(norms)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(orig_field) == size(norms)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((size(sum_field) == size(norms)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((size(sum_wts) == size(norms)), errMsg(sourcefile, __LINE__))
 
     where (sum_wts == 0._r8)
        ! Avoid divide by zero; if sum_wts is 0, then the normalization doesn't matter,
@@ -641,7 +644,7 @@ contains
                 write(iulog,*) 'forc_pbot_c, forc_pbot_g = ', forc_pbot_c(c), forc_pbot_g(g)
                 write(iulog,*) 'forc_rho_c, forc_rho_g = ', forc_rho_c(c), forc_rho_g(g)
                 write(iulog,*) 'forc_lwrad_c, forc_lwrad_g = ', forc_lwrad_c(c), forc_lwrad_g(g)
-                call endrun(msg=errMsg(__FILE__, __LINE__))
+                call endrun(msg=errMsg(sourcefile, __LINE__))
              end if  ! inequal
           end if  ! urbpoi
        end if  ! active

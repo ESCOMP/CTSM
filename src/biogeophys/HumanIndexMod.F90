@@ -90,6 +90,9 @@ module HumanIndexMod
      procedure, private :: InitAllocate        ! Private allocation method
      procedure, private :: InitHistory         ! Private history setup method
   end type humanindex_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
 !
 ! !REVISION HISTORY:
 ! Created by Jonathan R Buzan 03-07-12
@@ -503,10 +506,10 @@ end subroutine InitHistory
        if (ierr == 0) then
           read(unitn, clm_humanindex_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading clm_humanindex_inparm namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading clm_humanindex_inparm namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR finding clm_humanindex_inparm namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR finding clm_humanindex_inparm namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
 

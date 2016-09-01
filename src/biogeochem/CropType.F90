@@ -58,6 +58,9 @@ module CropType
 
   end type crop_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
   !------------------------------------------------------------------------
 
 contains
@@ -212,7 +215,7 @@ contains
     if (ier/=0) then
        write(iulog,*)' in '
        call endrun(msg=" allocation error for rbufslp"//&
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     endif
 
     nstep = get_nstep()
@@ -356,8 +359,8 @@ contains
     begc = bounds%begc; endc = bounds%endc
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(t_ref2m_patch)  == (/endp/))          , errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno_col)   == (/endc,nlevgrnd/)) , errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_ref2m_patch)  == (/endp/))          , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soisno_col)   == (/endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
 
     dtime = get_step_size()
     nstep = get_nstep()
@@ -367,7 +370,7 @@ contains
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
     ! Accumulate and extract GDDPLANT
@@ -498,7 +501,7 @@ contains
                (stmon_day - stmon_day/100)
           call endrun(msg=' ERROR: For prognostic crop to work correctly, the start date (month and day)'// &
                ' and the date on the restart file needs to match (years can be different)'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
     end if
 

@@ -113,6 +113,9 @@ module initInterpMultilevelInterp
      module procedure constructor_no_levclasses
   end interface interp_multilevel_interp_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! ========================================================================
@@ -151,7 +154,7 @@ contains
     !-----------------------------------------------------------------------
 
     npts = size(coordinates_source, 2)
-    SHR_ASSERT((size(coordinates_dest, 2) == npts), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(coordinates_dest, 2) == npts), errMsg(sourcefile, __LINE__))
 
     nlev_source = size(coordinates_source, 1)
     nlev_dest = size(coordinates_dest, 1)
@@ -214,13 +217,13 @@ contains
     this%coord_varname = trim(coord_varname)
 
     this%npts = size(coordinates_source, 2)
-    SHR_ASSERT((size(coordinates_dest, 2) == this%npts), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(coordinates_dest, 2) == this%npts), errMsg(sourcefile, __LINE__))
 
     this%nlev_source = size(coordinates_source, 1)
     this%nlev_dest = size(coordinates_dest, 1)
 
-    SHR_ASSERT_ALL((shape(level_classes_source) == [this%nlev_source, this%npts]), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((shape(level_classes_dest) == [this%nlev_dest, this%npts]), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((shape(level_classes_source) == [this%nlev_source, this%npts]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((shape(level_classes_dest) == [this%nlev_dest, this%npts]), errMsg(sourcefile, __LINE__))
 
     do i = 1, this%npts
        call this%check_coordinate_array(coordinates_source(:,i), level_classes_source(:,i))
@@ -266,7 +269,7 @@ contains
        write(iulog,*) 'Number of dest points: ', npts
        write(iulog,*) 'Expected number of dest points: ', this%npts
        call endrun(msg=subname//' ERROR: mismatch in number of points for '//&
-            trim(varname) // ' ' // errMsg(__FILE__, __LINE__))
+            trim(varname) // ' ' // errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine check_npts
@@ -321,9 +324,9 @@ contains
     character(len=*), parameter :: subname = 'interp_multilevel'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((size(data_dest) == this%nlev_dest), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT((size(data_source) == this%nlev_source), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT((index_dest >= 1 .and. index_dest <= this%npts), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(data_dest) == this%nlev_dest), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((size(data_source) == this%nlev_source), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT((index_dest >= 1 .and. index_dest <= this%npts), errMsg(sourcefile, __LINE__))
 
     my_level_classes_source(:) = this%level_classes_source(:, index_dest)
     my_coordinates_source(:)   = this%coordinates_source(:, index_dest)
@@ -420,7 +423,7 @@ contains
     !-----------------------------------------------------------------------
 
     nlevs = size(coordinates)
-    SHR_ASSERT((size(level_classes) == nlevs), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(level_classes) == nlevs), errMsg(sourcefile, __LINE__))
 
     call pack_wrapper(coordinates_in_existing_levels, coordinates, level_classes /= ispval)
 
@@ -429,7 +432,7 @@ contains
        ! ispval in the level_class or spval in data. However, this likely indicates an
        ! error, so for now we look out for that and abort if it is found.
        call endrun(msg='spvals or NaNs found in coordinate array where level_class /= ispval; ' // &
-            'this is currently unhandled ' // errMsg(__FILE__, __LINE__))
+            'this is currently unhandled ' // errMsg(sourcefile, __LINE__))
     end if
 
     call this%confirm_monotonically_increasing(coordinates_in_existing_levels)
@@ -459,7 +462,7 @@ contains
           write(iulog,*) subname//' ERROR: array not monotonically increasing: '
           write(iulog,*) data(i-1), data(i)
           call endrun(msg=subname//" ERROR: array not monotonically increasing"// &
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -540,7 +543,7 @@ contains
 
     if (.not. found) then
        call endrun(subname//' ERROR: Could not find levels to use for interpolation' // &
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
     ! ------------------------------------------------------------------------

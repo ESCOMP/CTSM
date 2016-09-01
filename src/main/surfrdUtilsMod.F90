@@ -21,6 +21,9 @@ module surfrdUtilsMod
   public :: check_sums_equal_1  ! Confirm that sum(arr(n,:)) == 1 for all n
   public :: collapse_crop_types ! Collapse unused crop types into types used in this run
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
   !-----------------------------------------------------------------------
 
 contains
@@ -57,7 +60,7 @@ contains
     if (found) then
        write(iulog,*) trim(caller), ' ERROR: sum of ', trim(name), ' not 1.0 at nl=', nindx
        write(iulog,*) 'sum is: ', sum(arr(nindx,:))
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine check_sums_equal_1
@@ -95,11 +98,11 @@ contains
     character(len=*), parameter :: subname = 'collapse_crop_types'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(wt_cft) == (/endg, cft_ub/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(wt_cft) == (/endg, cft_ub/)), errMsg(sourcefile, __LINE__))
 
     if (cft_size <= 0) then
        call endrun(msg = subname//' can only be called if cft_size > 0' // &
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
     ! ------------------------------------------------------------------------

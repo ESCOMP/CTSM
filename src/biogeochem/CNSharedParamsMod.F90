@@ -27,6 +27,9 @@ module CNSharedParamsMod
   logical, public :: anoxia_wtsat = .false.
   logical, public :: use_fun      = .false.             ! Use the FUN2.0 model
   integer, public :: nlev_soildecomp_standard = 5
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
   
 contains
@@ -65,38 +68,38 @@ contains
     !
     tString='q10_mr'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%Q10=tempr
 
     tString='minpsi_hr'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%minpsi=tempr 
 
     tString='cwd_fcel'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%cwd_fcel=tempr
 
     tString='cwd_flig'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%cwd_flig=tempr 
 
     tString='froz_q10'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%froz_q10=tempr   
 
     tString='mino2lim'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%mino2lim=tempr 
     !CNParamsShareInst%mino2lim=0.2_r8 
 
     tString='organic_max'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(__FILE__, __LINE__))
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%organic_max=tempr
 
   end subroutine CNParamsReadShared_netcdf
@@ -154,11 +157,11 @@ contains
           read(unitn, bgc_shared, iostat=ierr)
           if (ierr /= 0) then
              call endrun(msg='error in reading in ' // namelist_group // ' namelist' // &
-                  errMsg(__FILE__, __LINE__))
+                  errMsg(sourcefile, __LINE__))
           end if
        else
           call endrun(msg='error in finding ' // namelist_group // ' namelist' // &
-                  errMsg(__FILE__, __LINE__))
+                  errMsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
 

@@ -1,4 +1,337 @@
 ===============================================================
+Tag name:  clm4_5_12_r194
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Sep  1 10:17:56 MDT 2016
+One-line Summary: Dribble annual dyn landunit adjustment fluxes; initialize water state for new crop columns
+
+Purpose of changes
+------------------
+
+Two main changes in this tag:
+
+(1) Add infrastructure for dribbling fluxes that are generated once per year (on
+    the first time step of the year), so that an equal flux is produced
+    throughout the year. Apply this infrastructure to the correction fluxes that
+    are generated to conserve water and energy with dynamic columns / landunits.
+
+(2) When a new column comes into existence (currently, this means a new crop
+    column), copy h2osoi_liq, h2osoi_ice and h2osoi_vol from the "template"
+    column (typically a natural veg column on that gridcell), in addition to the
+    pre-existing copy of t_soisno.
+
+Also, a minor change that touched many files: Replace inline uses of __FILE__
+with a constant ('sourcefile') defined in each source file where this is
+used. This is needed because lines with __FILE__ were sometimes exceeding pgi's
+line limit (since pgi enforces the line limit after expanding macros). (See bugz
+2049.)
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2049 - __FILE__ expands to be too long sometimes
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- New uses of __FILE__ on outstanding branches should be replaced with
+  sourcefile. Note that I have only added 'sourcefile' in files that currently
+  needed it; other files may need to have this added.
+
+Changes to tests or testing:
+- Added this test in order to test mid-year restarts with dynamic landunits
+  (needed to test restartability of annual flux dribbling):
+  ERS_D_Ld7.1x1_smallvilleIA.IHISTCLM45BGCCROP.yellowstone_intel.clm-decStart1851_noinitial
+
+  Note that the "noinitial" aspect of this can be removed once ignore_ic_date is
+  made compatible with crop.
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+  ok means tests pass or xfail; expected baseline failures as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_12_r193
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm45/clm50 transient (HIST, RCP, DV or IG)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+      Not investigated carefully, but expected to be new climate for
+      configurations that have transient column areas (IG or transient crop,
+      which involve large transitions at the starat of the year), but only
+      marginally different (approx. roundoff-level) for transient natural PFTs
+      (which involve gradual transitions throughout the year).
+
+      I have verified that the answer changes due to the new annual flux
+      dribbler infrastructure are reduced to 0 (i.e., bit-for-bit) if the flux
+      on the first time step of the year is treated as before - i.e., other than
+      the dribbling that is applied to this start-of-year flux, this
+      infrastructure is bit-for-bit with the earlier code in dynConsBiogeophys.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= New infrastructure for dribbling fluxes that are generated on the
+          first time step of the year - spreading these fluxes throughout the
+          year
+A       components/clm/src/utils/AnnualFluxDribbler.F90
+A       components/clm/src/utils/test/annual_flux_dribbler_test/test_annual_flux_dribbler.pf
+A       components/clm/src/utils/test/annual_flux_dribbler_test/CMakeLists.txt
+A       components/clm/src/utils/test/annual_flux_dribbler_test
+
+========= Test mods for new test: tests mid-year restarts with dynamic landunits
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart1851_noinitial/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart1851_noinitial/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart1851_noinitial/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart1851_noinitial/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart1851_noinitial
+
+List all existing files that have been modified, and describe the changes:
+
+========= Use new infrastructure for dribbling fluxes in order to dribble fluxes
+          generated to conserve water and energy with changing column areas
+M       components/clm/src/biogeophys/EnergyFluxType.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/dyn_subgrid/dynConsBiogeophysMod.F90
+
+========= New time manager routines needed for dribbling infrastructure
+M       components/clm/src/utils/test/clm_time_manager_test/test_clm_time_manager.pf
+M       components/clm/src/utils/clm_time_manager.F90
+M       components/clm/src/unit_test_shr/unittestTimeManagerMod.F90
+
+========= When a new column comes into existence, also copy some soil water
+          variables from the template column
+M       components/clm/src/dyn_subgrid/dynInitColumnsMod.F90
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+M       components/clm/src/dyn_subgrid/test/dynInitColumns_test/test_init_columns.pf
+
+========= Add tests of new dribbling infrastructure
+M       components/clm/src/utils/CMakeLists.txt
+M       components/clm/src/utils/test/CMakeLists.txt
+
+========= New test: tests mid-year restarts with dynamic landunits
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+========= Replace inline uses of __FILE__ with a constant ('sourcefile')
+M       components/clm/src/utils/quadraticMod.F90
+M       components/clm/src/utils/clmfates_interfaceMod.F90
+M       components/clm/src/utils/restUtilMod.F90.in
+M       components/clm/src/utils/SimpleMathMod.F90
+M       components/clm/src/biogeochem/NutrientCompetitionMethodMod.F90
+M       components/clm/src/biogeochem/CNPhenologyMod.F90
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+M       components/clm/src/biogeochem/CNDVType.F90
+M       components/clm/src/biogeochem/VOCEmissionMod.F90
+M       components/clm/src/biogeochem/CNFireFactoryMod.F90
+M       components/clm/src/biogeochem/CNVegComputeSeedMod.F90
+M       components/clm/src/biogeochem/C14BompbSpikeMod.F90
+M       components/clm/src/biogeochem/CNBalanceCheckMod.F90
+M       components/clm/src/biogeochem/DryDepVelocity.F90
+M       components/clm/src/biogeochem/CNDVDriverMod.F90
+M       components/clm/src/biogeochem/MEGANFactorsMod.F90
+M       components/clm/src/biogeochem/SpeciesNonIsotopeType.F90
+M       components/clm/src/biogeochem/SatellitePhenologyMod.F90
+M       components/clm/src/biogeochem/NutrientCompetitionFactoryMod.F90
+M       components/clm/src/biogeochem/CNDVEstablishmentMod.F90
+M       components/clm/src/biogeochem/DUSTMod.F90
+M       components/clm/src/biogeochem/CNProductsMod.F90
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90
+M       components/clm/src/biogeochem/dynConsBiogeochemMod.F90
+M       components/clm/src/biogeochem/CNFireLi2014Mod.F90
+M       components/clm/src/biogeochem/CNVegStateType.F90
+M       components/clm/src/biogeochem/CNMRespMod.F90
+M       components/clm/src/biogeochem/CNFUNMod.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+M       components/clm/src/biogeochem/CNVegNitrogenStateType.F90
+M       components/clm/src/biogeochem/ch4Mod.F90
+M       components/clm/src/biogeochem/NutrientCompetitionCLM45defaultMod.F90
+M       components/clm/src/biogeochem/CNGapMortalityMod.F90
+M       components/clm/src/biogeochem/SpeciesIsotopeType.F90
+M       components/clm/src/biogeochem/CNFireBaseMod.F90
+M       components/clm/src/biogeochem/CropType.F90
+M       components/clm/src/biogeochem/CNCIsoFluxMod.F90
+M       components/clm/src/biogeochem/CNPrecisionControlMod.F90
+M       components/clm/src/biogeochem/NutrientCompetitionFlexibleCNMod.F90
+M       components/clm/src/biogeochem/dynHarvestMod.F90
+M       components/clm/src/biogeochem/ch4varcon.F90
+M       components/clm/src/biogeochem/CNSharedParamsMod.F90
+M       components/clm/src/biogeochem/CNFireLi2016Mod.F90
+M       components/clm/src/init_interp/initInterpBounds.F90
+M       components/clm/src/init_interp/initInterpMultilevelCopy.F90
+M       components/clm/src/init_interp/initInterp1dData.F90
+M       components/clm/src/init_interp/initInterpMultilevelSplit.F90
+M       components/clm/src/init_interp/initInterp.F90
+M       components/clm/src/init_interp/initInterp2dvar.F90.in
+M       components/clm/src/init_interp/initInterpMultilevelInterp.F90
+M       components/clm/src/init_interp/initInterpMultilevelContainer.F90
+M       components/clm/src/init_interp/initInterpMindist.F90
+M       components/clm/src/init_interp/initInterpMultilevelSnow.F90
+M       components/clm/src/main/subgridAveMod.F90
+M       components/clm/src/main/initGridCellsMod.F90
+M       components/clm/src/main/initVerticalMod.F90
+M       components/clm/src/main/atm2lndMod.F90
+M       components/clm/src/main/lnd2atmMod.F90
+M       components/clm/src/main/surfrdMod.F90
+M       components/clm/src/main/ncdio_pio.F90.in
+M       components/clm/src/main/reweightMod.F90
+M       components/clm/src/main/glcBehaviorMod.F90
+M       components/clm/src/main/subgridWeightsMod.F90
+M       components/clm/src/main/decompInitMod.F90
+M       components/clm/src/main/subgridRestMod.F90
+M       components/clm/src/main/subgridMod.F90
+M       components/clm/src/main/ndepStreamMod.F90
+M       components/clm/src/main/atm2lndType.F90
+M       components/clm/src/main/column_varcon.F90
+M       components/clm/src/main/histFileMod.F90
+M       components/clm/src/main/restFileMod.F90
+M       components/clm/src/main/controlMod.F90
+M       components/clm/src/main/GetGlobalValuesMod.F90
+M       components/clm/src/main/initSubgridMod.F90
+M       components/clm/src/main/filterColMod.F90
+M       components/clm/src/main/glc2lndMod.F90
+M       components/clm/src/main/filterMod.F90
+M       components/clm/src/main/lnd2glcMod.F90
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/main/surfrdUtilsMod.F90
+M       components/clm/src/main/pftconMod.F90
+M       components/clm/src/ED/biogeochem/EDCanopyStructureMod.F90
+M       components/clm/src/ED/biogeochem/EDSharedParamsMod.F90
+M       components/clm/src/ED/main/EDCLMLinkMod.F90
+M       components/clm/src/ED/main/EDRestVectorMod.F90
+M       components/clm/src/ED/biogeophys/EDPhotosynthesisMod.F90
+M       components/clm/src/biogeophys/OzoneOffMod.F90
+M       components/clm/src/biogeophys/SnowSnicarMod.F90
+M       components/clm/src/biogeophys/SoilMoistStressMod.F90
+M       components/clm/src/biogeophys/OzoneMod.F90
+M       components/clm/src/biogeophys/CanopyHydrologyMod.F90
+M       components/clm/src/biogeophys/FrictionVelocityMod.F90
+M       components/clm/src/biogeophys/UrbanFluxesMod.F90
+M       components/clm/src/biogeophys/LunaMod.F90
+M       components/clm/src/biogeophys/SurfaceAlbedoMod.F90
+M       components/clm/src/biogeophys/TemperatureType.F90
+M       components/clm/src/biogeophys/HumanIndexMod.F90
+M       components/clm/src/biogeophys/SurfaceAlbedoType.F90
+M       components/clm/src/biogeophys/PhotosynthesisMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyMod.F90
+M       components/clm/src/biogeophys/GlacierSurfaceMassBalanceMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyType.F90
+M       components/clm/src/biogeophys/CanopyFluxesMod.F90
+M       components/clm/src/biogeophys/SoilHydrologyInitTimeConstMod.F90
+M       components/clm/src/biogeophys/SoilStateInitTimeConstMod.F90
+M       components/clm/src/biogeophys/SurfaceRadiationMod.F90
+M       components/clm/src/biogeophys/SoilTemperatureMod.F90
+M       components/clm/src/biogeophys/WaterStateType.F90
+M       components/clm/src/biogeophys/UrbBuildTempOleson2015Mod.F90
+M       components/clm/src/biogeophys/SnowHydrologyMod.F90
+M       components/clm/src/biogeophys/LakeTemperatureMod.F90
+M       components/clm/src/biogeophys/CanopyStateType.F90
+M       components/clm/src/biogeophys/TridiagonalMod.F90
+M       components/clm/src/biogeophys/SoilWaterRetentionCurveFactoryMod.F90
+M       components/clm/src/biogeophys/UrbanTimeVarType.F90
+M       components/clm/src/biogeophys/UrbanRadiationMod.F90
+M       components/clm/src/biogeophys/BandDiagonalMod.F90
+M       components/clm/src/biogeophys/AerosolMod.F90
+M       components/clm/src/biogeophys/IrrigationMod.F90
+M       components/clm/src/biogeophys/SurfaceResistanceMod.F90
+M       components/clm/src/biogeophys/UrbanParamsType.F90
+M       components/clm/src/biogeophys/UrbanAlbedoMod.F90
+M       components/clm/src/biogeophys/RootBiophysMod.F90
+M       components/clm/src/biogeophys/BalanceCheckMod.F90
+M       components/clm/src/biogeophys/SoilWaterMovementMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemDecompMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrifDenitrifMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenFluxType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeBGCMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNLeachingMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCompetitionMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemVerticalProfileMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeCNMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemPotentialMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenUptakeMod.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemLittVertTranspMod.F90
+M       components/clm/src/dyn_subgrid/dynTimeInfoMod.F90
+M       components/clm/src/dyn_subgrid/dynFileMod.F90
+M       components/clm/src/dyn_subgrid/dynColumnStateUpdaterMod.F90
+M       components/clm/src/dyn_subgrid/dynPatchStateUpdaterMod.F90
+M       components/clm/src/dyn_subgrid/dynColumnTemplateMod.F90
+M       components/clm/src/dyn_subgrid/dynpftFileMod.F90
+M       components/clm/src/dyn_subgrid/dynVarMod.F90.in
+M       components/clm/src/dyn_subgrid/dynSubgridControlMod.F90
+M       components/clm/src/dyn_subgrid/dyncropFileMod.F90
+M       components/clm/src/dyn_subgrid/dynLandunitAreaMod.F90
+M       components/clm/src/unit_test_shr/unittestSimpleSubgridSetupsMod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_12_r193
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Tue Aug 30 21:08:39 MDT 2016

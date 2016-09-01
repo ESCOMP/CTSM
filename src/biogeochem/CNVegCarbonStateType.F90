@@ -101,7 +101,7 @@ module CNVegCarbonStateType
   end type cnveg_carbonstate_type
 
   ! !PRIVATE DATA:
-  character(len=*), parameter :: filename = &
+  character(len=*), parameter :: sourcefile = &
        __FILE__
 
   !------------------------------------------------------------------------
@@ -813,7 +813,7 @@ contains
     if (carbon_type == 'c13' .or. carbon_type == 'c14') then
        if (.not. present(c12_cnveg_carbonstate_inst)) then
           call endrun(msg=' ERROR: for C13 or C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
-               errMsg(filename, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
     end if
 
@@ -1035,7 +1035,7 @@ contains
     if (carbon_type == 'c13' .or. carbon_type == 'c14') then
        if (.not. present(c12_cnveg_carbonstate_inst)) then
           call endrun(msg=' ERROR: for C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
-               errMsg(filename, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
     end if
     if (carbon_type == 'c12') then
@@ -2093,7 +2093,7 @@ contains
     if (carbon_type == 'c13' .or. carbon_type == 'c14') then
        if (.not. present(c12_cnveg_carbonstate_inst)) then
           call endrun(msg=' ERROR: for C13 or C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
-               errMsg(filename, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
     end if
 
@@ -2228,11 +2228,11 @@ contains
     integer  :: fp,fc           ! lake filter indices
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_cwdc_col)    == (/bounds%endc/)), errMsg(filename, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_totlitc_col) == (/bounds%endc/)), errMsg(filename, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_totsomc_col) == (/bounds%endc/)), errMsg(filename, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_ctrunc_col)  == (/bounds%endc/)), errMsg(filename, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_dyn_cbal_adjustments_col) == (/bounds%endc/)), errMsg(filename, __LINE__))
+    SHR_ASSERT_ALL((ubound(soilbiogeochem_cwdc_col)    == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(soilbiogeochem_totlitc_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(soilbiogeochem_totsomc_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(soilbiogeochem_ctrunc_col)  == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(soilbiogeochem_dyn_cbal_adjustments_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     ! calculate patch -level summary of carbon state
 
@@ -2387,13 +2387,13 @@ contains
     begp = bounds%begp
     endp = bounds%endp
 
-    SHR_ASSERT_ALL((ubound(conv_cflux) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(product_cflux) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_frootc_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_livecrootc_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_deadcrootc_to_litter) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_leafc_seed) == (/endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(dwt_deadstemc_seed) == (/endp/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(conv_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(product_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_frootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_livecrootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_deadcrootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_leafc_seed) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(dwt_deadstemc_seed) == (/endp/)), errMsg(sourcefile, __LINE__))
 
     old_weight_was_zero = patch_state_updater%old_weight_was_zero(bounds)
     patch_grew = patch_state_updater%patch_grew(bounds)

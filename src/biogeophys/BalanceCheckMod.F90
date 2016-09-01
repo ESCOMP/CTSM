@@ -32,6 +32,9 @@ module BalanceCheckMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: BeginWaterBalance  ! Initialize water balance check
   public :: BalanceCheck       ! Water and energy balance check
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -359,7 +362,7 @@ contains
                   qflx_surf(indexc)+qflx_h2osfc_surf(indexc)+qflx_drain(indexc))
 
              write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
 
           else if (abs(errh2o(indexc)) > 1.e-5_r8 .and. (nstep > 2) ) then
 
@@ -382,7 +385,7 @@ contains
              write(iulog,*)'qflx_ice_runoff_xs    = ',qflx_ice_runoff_xs(indexc)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux = ', qflx_glcice_dyn_water_flux(indexc)*dtime
              write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
           end if
        end if
 
@@ -475,7 +478,7 @@ contains
              write(iulog,*)'qflx_sl_top_soil   = ',qflx_sl_top_soil(indexc)*dtime
              write(iulog,*)'clm model is stopping'
 
-             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
           end if
        end if
 
@@ -555,7 +558,7 @@ contains
              write(iulog,*)'forc_tot      = ',forc_solad(indexg,1)+forc_solad(indexg,2) &
                +forc_solai(indexg,1)+forc_solai(indexg,2)
              write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(__FILE__, __LINE__))
+             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
           end if
        end if
 
@@ -576,7 +579,7 @@ contains
           write(iulog,*)'errlon       = ',errlon(indexp)
           if (abs(errlon(indexp)) > 1.e-5_r8 ) then
              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (W/m2)'
-             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(__FILE__, __LINE__))
+             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
           end if
        end if
 
@@ -616,7 +619,7 @@ contains
              write(iulog,*)'ftii ftdd ftid = ' ,ftii(indexp,:), ftdd(indexp,:),ftid(indexp,:)
              write(iulog,*)'elai esai = '      ,elai(indexp),   esai(indexp)      
              write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(__FILE__, __LINE__))
+             call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
           end if
        end if
 
@@ -637,7 +640,7 @@ contains
           write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
           if (abs(errsoi_col(indexc)) > 1.e-4_r8 .and. (nstep > 2) ) then
              write(iulog,*)'clm model is stopping'
-             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+             call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
           end if
        end if
 

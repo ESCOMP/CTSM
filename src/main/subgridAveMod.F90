@@ -76,6 +76,11 @@ module subgridAveMod
   !   - At a minimum, should collect the repeated code into a subroutine to eliminate this
   !   repitition
   !   - The best thing might be to use a lookup array, as is done for scale_l2g
+
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
   ! -----------------------------------------------------------------------
 
 contains
@@ -101,8 +106,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     if (p2c_scale_type == 'unity') then
        do p = bounds%begp,bounds%endp
@@ -110,7 +115,7 @@ contains
        end do
     else
        write(iulog,*)'p2c_2d error: scale type ',p2c_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     carr(bounds%begc:bounds%endc) = spval
@@ -136,7 +141,7 @@ contains
     end do
     if (found) then
        write(iulog,*)'p2c_1d error: sumwt is greater than 1.0'
-       call endrun(decomp_index=index, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
+       call endrun(decomp_index=index, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine p2c_1d
@@ -163,8 +168,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp, num2d/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc, num2d/)), errMsg(sourcefile, __LINE__))
 
     if (p2c_scale_type == 'unity') then
        do p = bounds%begp,bounds%endp
@@ -172,7 +177,7 @@ contains
        end do
     else
        write(iulog,*)'p2c_2d error: scale type ',p2c_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     carr(bounds%begc : bounds%endc, :) = spval
@@ -199,7 +204,7 @@ contains
        end do
        if (found) then
           write(iulog,*)'p2c_2d error: sumwt is greater than 1.0 at c= ',index,' lev= ',j
-          call endrun(decomp_index=index, clmlevel=namec, msg=errMsg(__FILE__, __LINE__))
+          call endrun(decomp_index=index, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
        end if
     end do 
   end subroutine p2c_2d
@@ -222,8 +227,8 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(patcharr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(colarr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(patcharr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(colarr) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     do fc = 1,numfc
        c = filterc(fc)
@@ -287,8 +292,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -330,7 +335,7 @@ contains
        end do
     else
        write(iulog,*)'p2l_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     if (p2c_scale_type == 'unity') then
@@ -339,7 +344,7 @@ contains
        end do
     else
        write(iulog,*)'p2l_1d error: scale type ',p2c_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     larr(bounds%begl : bounds%endl) = spval
@@ -366,7 +371,7 @@ contains
     end do
     if (found) then
        write(iulog,*)'p2l_1d error: sumwt is greater than 1.0 at l= ',index
-       call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
+       call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine p2l_1d
@@ -395,8 +400,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp, num2d/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl, num2d/)), errMsg(sourcefile, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -438,7 +443,7 @@ contains
        end do
     else
        write(iulog,*)'p2l_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     if (p2c_scale_type == 'unity') then
@@ -447,7 +452,7 @@ contains
        end do
     else
        write(iulog,*)'p2l_2d error: scale type ',p2c_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     larr(bounds%begl : bounds%endl, :) = spval
@@ -475,7 +480,7 @@ contains
        end do
        if (found) then
           write(iulog,*)'p2l_2d error: sumwt is greater than 1.0 at l= ',index,' j= ',j
-          call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
+          call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -506,8 +511,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -552,7 +557,7 @@ contains
        end do
     else
        write(iulog,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     if (p2c_scale_type == 'unity') then
@@ -561,7 +566,7 @@ contains
        end do
     else
        write(iulog,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     garr(bounds%begg : bounds%endg) = spval
@@ -589,7 +594,7 @@ contains
     end do
     if (found) then
        write(iulog,*)'p2g_1d error: sumwt is greater than 1.0 at g= ',index
-       call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+       call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine p2g_1d
@@ -622,8 +627,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp, num2d/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(parr) == (/bounds%endp, num2d/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg, num2d/)), errMsg(sourcefile, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -668,7 +673,7 @@ contains
        end do
     else
        write(iulog,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     if (p2c_scale_type == 'unity') then
@@ -677,7 +682,7 @@ contains
        end do
     else
        write(iulog,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     garr(bounds%begg : bounds%endg, :) = spval
@@ -706,7 +711,7 @@ contains
        end do
        if (found) then
           write(iulog,*)'p2g_2d error: sumwt gt 1.0 at g/sumwt = ',index,sumwt(index)
-          call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+          call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -733,8 +738,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -776,7 +781,7 @@ contains
        end do
     else
        write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     larr(bounds%begl : bounds%endl) = spval
@@ -802,7 +807,7 @@ contains
     end do
     if (found) then
        write(iulog,*)'c2l_1d error: sumwt is greater than 1.0 at l= ',index
-       call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
+       call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine c2l_1d
@@ -829,8 +834,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc, num2d/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl, num2d/)), errMsg(sourcefile, __LINE__))
 
     if (c2l_scale_type == 'unity') then
        do c = bounds%begc,bounds%endc
@@ -872,7 +877,7 @@ contains
        end do
     else
        write(iulog,*)'c2l_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     larr(bounds%begl : bounds%endl, :) = spval
@@ -899,7 +904,7 @@ contains
        end do
        if (found) then
           write(iulog,*)'c2l_2d error: sumwt is greater than 1.0 at l= ',index,' lev= ',j
-          call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(__FILE__, __LINE__))
+          call endrun(decomp_index=index, clmlevel=namel, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -928,8 +933,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -974,7 +979,7 @@ contains
        end do
     else
        write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     garr(bounds%begg : bounds%endg) = spval
@@ -1001,7 +1006,7 @@ contains
     end do
     if (found) then
        write(iulog,*)'c2g_1d error: sumwt is greater than 1.0 at g= ',index
-       call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+       call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine c2g_1d
@@ -1030,8 +1035,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc, num2d/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(carr) == (/bounds%endc, num2d/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg, num2d/)), errMsg(sourcefile, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -1076,7 +1081,7 @@ contains
        end do
     else
        write(iulog,*)'c2g_2d error: scale type ',c2l_scale_type,' not supported'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     garr(bounds%begg : bounds%endg,:) = spval
@@ -1104,7 +1109,7 @@ contains
        end do
        if (found) then
           write(iulog,*)'c2g_2d error: sumwt is greater than 1.0 at g= ',index
-          call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+          call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -1131,8 +1136,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -1160,7 +1165,7 @@ contains
     end do
     if (found) then
        write(iulog,*)'l2g_1d error: sumwt is greater than 1.0 at g= ',index
-       call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+       call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine l2g_1d
@@ -1188,8 +1193,8 @@ contains
     !------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl, num2d/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg, num2d/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(larr) == (/bounds%endl, num2d/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(garr) == (/bounds%endg, num2d/)), errMsg(sourcefile, __LINE__))
 
     call build_scale_l2g(bounds, l2g_scale_type, &
          scale_l2g(bounds%begl:bounds%endl))
@@ -1218,7 +1223,7 @@ contains
        end do
        if (found) then
           write(iulog,*)'l2g_2d error: sumwt is greater than 1.0 at g= ',index,' lev= ',j
-          call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(__FILE__, __LINE__))
+          call endrun(decomp_index=index, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -1244,7 +1249,7 @@ contains
     integer  :: l                       ! index
     !-----------------------------------------------------------------------
      
-    SHR_ASSERT_ALL((ubound(scale_l2g) == (/bounds%endl/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(scale_l2g) == (/bounds%endl/)), errMsg(sourcefile, __LINE__))
 
      call create_scale_l2g_lookup(l2g_scale_type, scale_lookup)
 
@@ -1316,7 +1321,7 @@ contains
         scale_lookup(istdlak) = 1.0_r8
      else
         write(iulog,*)'scale_l2g_lookup_array error: scale type ',l2g_scale_type,' not supported'
-        call endrun(msg=errMsg(__FILE__, __LINE__))
+        call endrun(msg=errMsg(sourcefile, __LINE__))
      end if
 
   end subroutine create_scale_l2g_lookup

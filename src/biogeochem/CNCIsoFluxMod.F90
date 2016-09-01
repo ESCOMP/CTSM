@@ -33,6 +33,9 @@ module CNCIsoFluxMod
   private :: CNCIsoGapPftToColumn
   private :: CNCIsoHarvestPftToColumn
   private :: CIsoFluxCalc
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -1460,7 +1463,7 @@ contains
      case ('c13')
         frax = frax_c13
      case default
-        call endrun(msg='CNCIsoFluxMod: iso must be either c13 or c14'//errMsg(__FILE__, __LINE__))
+        call endrun(msg='CNCIsoFluxMod: iso must be either c13 or c14'//errMsg(sourcefile, __LINE__))
      end select
 
      ! loop over the supplied filter

@@ -22,6 +22,9 @@ module C14BombSpikeMod
   ! !PRIVATE TYPES:
   real(r8), allocatable, private :: atm_c14file_time(:)
   real(r8), allocatable, private :: atm_delta_c14(:)
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -125,7 +128,7 @@ contains
     do t = 2, ntim
        if ( atm_c14file_time(t) - atm_c14file_time(t-1) <= 0._r8 ) then
           write(iulog, *) 'C14_init_BombSpike: error.  time axis must be monotonically increasing'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
     end do
 

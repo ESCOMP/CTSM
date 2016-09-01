@@ -156,6 +156,9 @@ module EDRestVectorMod
   ! non type-bound procedures
   !
   public :: EDRest
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-------------------------------------------------------------------------------!
 
 contains
@@ -269,58 +272,58 @@ contains
  
       allocate(new%numPatchesPerCol &
            (bounds%begc:bounds%endc), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%numPatchesPerCol(:) = invalidValue
       
       allocate(new%old_stock &
            (bounds%begc:bounds%endc), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%old_stock(:) = 0.0_r8
 
       allocate(new%cd_status &
            (bounds%begc:bounds%endc), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%cd_status(:) = 0_r8
       
        allocate(new%dd_status &
            (bounds%begc:bounds%endc), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%dd_status(:) = 0_r8
  
       allocate(new%ncd &
            (bounds%begc:bounds%endc), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%ncd(:) = 0_r8
  
 
       allocate(new%leafondate &
            (bounds%begc:bounds%endc), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%leafondate(:) = 0_r8
       
       allocate(new%leafoffdate &
            (bounds%begc:bounds%endc), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%leafoffdate(:) = 0_r8     
       
       allocate(new%dleafondate &
            (bounds%begc:bounds%endc), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%dleafondate(:) = 0_r8
       
       allocate(new%dleafoffdate &
            (bounds%begc:bounds%endc), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%dleafoffdate(:) = 0_r8        
 
       allocate(new%acc_NI &
            (bounds%begc:bounds%endc), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%acc_NI(:) = 0_r8        
 
       allocate(new%ED_GDD_site &
            (bounds%begc:bounds%endc), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%ED_GDD_site(:) = 0_r8  
 
 
@@ -330,172 +333,172 @@ contains
 
       allocate(new%cohortsPerPatch &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%cohortsPerPatch(:) = invalidValue
 
       allocate(new%balive &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%balive(:) = 0.0_r8
 
       allocate(new%bdead &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%bdead(:) = 0.0_r8
 
       allocate(new%bl &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%bl(:) = 0.0_r8
 
       allocate(new%br &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%br(:) = 0.0_r8
 
       allocate(new%bstore &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%bstore(:) = 0.0_r8
 
       allocate(new%canopy_layer &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%canopy_layer(:) = 0.0_r8
 
       allocate(new%canopy_trim &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%canopy_trim(:) = 0.0_r8
 
       allocate(new%dbh &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%dbh(:) = 0.0_r8
 
       allocate(new%hite &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%hite(:) = 0.0_r8
 
       allocate(new%laimemory &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%laimemory(:) = 0.0_r8
 
       allocate(new%leaf_md &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%leaf_md(:) = 0.0_r8
 
       allocate(new%root_md &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%root_md(:) = 0.0_r8
 
       allocate(new%n &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%n(:) = 0.0_r8
 
       allocate(new%gpp_acc &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%gpp_acc(:) = 0.0_r8
 
       allocate(new%npp_acc &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%npp_acc(:) = 0.0_r8
 
       allocate(new%gpp &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%gpp(:) = 0.0_r8
 
       allocate(new%npp &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%npp(:) = 0.0_r8
 
       allocate(new%npp_leaf &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%npp_leaf(:) = 0.0_r8
 
       allocate(new%npp_froot &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%npp_froot(:) = 0.0_r8
 
       allocate(new%npp_bsw &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%npp_bsw(:) = 0.0_r8
 
       allocate(new%npp_bdead &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%npp_bdead(:) = 0.0_r8
 
       allocate(new%npp_bseed &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%npp_bseed(:) = 0.0_r8
 
       allocate(new%npp_store &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%npp_store(:) = 0.0_r8
 
       allocate(new%bmort &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%bmort(:) = 0.0_r8
 
       allocate(new%hmort &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%hmort(:) = 0.0_r8
 
       allocate(new%cmort &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%cmort(:) = 0.0_r8
 
       allocate(new%imort &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%imort(:) = 0.0_r8
 
       allocate(new%fmort &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%fmort(:) = 0.0_r8
 
       allocate(new%ddbhdt &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%ddbhdt(:) = 0.0_r8
 
       allocate(new%resp_tstep &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%resp_tstep(:) = 0.0_r8
 
       allocate(new%pft &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%pft(:) = 0
 
       allocate(new%status_coh &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%status_coh(:) = 0
 
       allocate(new%isnew &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%isnew(:) = new_cohort
 
       ! 
@@ -503,82 +506,82 @@ contains
       !
       allocate(new%cwd_ag &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%cwd_ag(:) = 0.0_r8
 
       allocate(new%cwd_bg &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%cwd_bg(:) = 0.0_r8
 
       allocate(new%leaf_litter &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%leaf_litter(:) = 0.0_r8
 
       allocate(new%root_litter &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%root_litter(:) = 0.0_r8
 
       allocate(new%leaf_litter_in &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%leaf_litter_in(:) = 0.0_r8
 
       allocate(new%root_litter_in &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%root_litter_in(:) = 0.0_r8
 
       allocate(new%seed_bank &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%seed_bank(:) = 0.0_r8
 
       allocate(new%spread &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%spread(:) = 0.0_r8
 
       allocate(new%livegrass &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%livegrass(:) = 0.0_r8
 
       allocate(new%age &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%age(:) = 0.0_r8
 
       allocate(new%areaRestart &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%areaRestart(:) = 0.0_r8
 
       allocate(new%f_sun &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%f_sun(:) = 0.0_r8
 
       allocate(new%fabd_sun_z &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%fabd_sun_z(:) = 0.0_r8
 
       allocate(new%fabi_sun_z &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%fabi_sun_z(:) = 0.0_r8
 
       allocate(new%fabd_sha_z &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%fabd_sha_z(:) = 0.0_r8
 
       allocate(new%fabi_sha_z &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%fabi_sha_z(:) = 0.0_r8
 
       !
@@ -588,7 +591,7 @@ contains
 
       allocate(new%water_memory &
            (new%vectorLengthStart:new%vectorLengthStop), stat=retVal)
-      SHR_ASSERT(( retVal == allocOK ), errMsg(__FILE__, __LINE__))
+      SHR_ASSERT(( retVal == allocOK ), errMsg(sourcefile, __LINE__))
       new%water_memory(:) = 0.0_r8
     
 
@@ -1529,7 +1532,7 @@ contains
 !          (fcolumn(1)-1)*cohorts_per_col+1.ne.bounds%begCohort) then
 !        write(iulog,*) 'fcolumn(1) in this clump, points to the first column of the clump'
 !        write(iulog,*) 'but the assumption on first cohort index does not jive'
-!        call endrun(msg=errMsg(__FILE__, __LINE__))
+!        call endrun(msg=errMsg(sourcefile, __LINE__))
 !    end if
 
 
@@ -1819,7 +1822,7 @@ contains
        if (this%numPatchesPerCol(c)<0 .or. this%numPatchesPerCol(c)>10000) then
           write(iulog,*) 'a column was expected to contain a valid number of patches'
           write(iulog,*) '0 is a valid number, but this column seems uninitialized',this%numPatchesPerCol(c)
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
 
        ! Initialize the site pointers to null

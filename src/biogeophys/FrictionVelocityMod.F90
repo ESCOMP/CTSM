@@ -64,6 +64,9 @@ module FrictionVelocityMod
      procedure, private :: InitCold     
 
   end type frictionvel_type
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------------
 
 contains
@@ -351,19 +354,19 @@ contains
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(displa)  == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(z0m)     == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(z0h)     == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(z0q)     == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(obu)     == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(ur)      == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(um)      == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(ustar)   == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(temp1)   == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(temp12m) == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(temp2)   == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(temp22m) == (/ubn/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(fm)      == (/ubn/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(displa)  == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(z0m)     == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(z0h)     == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(z0q)     == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(obu)     == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(ur)      == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(um)      == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(ustar)   == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(temp1)   == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(temp12m) == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(temp2)   == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(temp22m) == (/ubn/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(fm)      == (/ubn/)), errMsg(sourcefile, __LINE__))
 
     associate(                                                   & 
          pfti             => lun%patchi                          , & ! Input:  [integer  (:) ] beginning pfti index for landunit         

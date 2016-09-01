@@ -21,6 +21,9 @@ module CNFireFactoryMod
   ! !PRIVATE DATA MEMBERS:
   character(len=80), private :: fire_method = "li2014qianfrc"
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -59,10 +62,10 @@ contains
        if (ierr == 0) then
           read(unitn, nml=cnfire_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR finding "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR finding "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
     end if
@@ -112,7 +115,7 @@ contains
 
     case default
        write(iulog,*) subname//' ERROR: unknown method: ', fire_method
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
 
     end select
     call cnfire_method%CNFireReadNML( NLFilename )

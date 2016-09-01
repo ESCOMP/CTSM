@@ -142,6 +142,9 @@ module glcBehaviorMod
   ! Value indicating that a namelist item has not been set
   character(len=*), parameter :: behavior_str_unset = 'UNSET'
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -248,7 +251,7 @@ contains
     character(len=*), parameter :: subname = 'InitFromInputs'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(glacier_region_map) == (/endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(glacier_region_map) == (/endg/)), errMsg(sourcefile, __LINE__))
 
     call check_glacier_region_map
 
@@ -265,8 +268,8 @@ contains
        my_melt_behavior = glacier_region_melt_behavior(my_id)
 
        ! This should only happen due to a programming error, not due to a user input error
-       SHR_ASSERT(my_behavior /= BEHAVIOR_UNSET, errMsg(__FILE__, __LINE__))
-       SHR_ASSERT(my_melt_behavior /= BEHAVIOR_UNSET, errMsg(__FILE__, __LINE__))
+       SHR_ASSERT(my_behavior /= BEHAVIOR_UNSET, errMsg(sourcefile, __LINE__))
+       SHR_ASSERT(my_melt_behavior /= BEHAVIOR_UNSET, errMsg(sourcefile, __LINE__))
 
        if (my_behavior == BEHAVIOR_VIRTUAL) then
           this%has_virtual_columns_grc(g) = .true.
@@ -301,16 +304,16 @@ contains
          write(iulog,*) subname//' ERROR: Expect GLACIER_REGION to be >= ', min_glacier_region_id
          write(iulog,*) 'minval = ', minval(glacier_region_map)
          call endrun(msg=' ERROR: GLACIER_REGION smaller than expected'// &
-              errMsg(__FILE__, __LINE__))
+              errMsg(sourcefile, __LINE__))
       end if
 
       if (maxval(glacier_region_map) > max_glacier_region_id) then
          write(iulog,*) subname//' ERROR: Max GLACIER_REGION is ', &
               maxval(glacier_region_map)
          write(iulog,*) 'but max_glacier_region_id is only ', max_glacier_region_id
-         write(iulog,*) 'Try increasing max_glacier_region_id in ', __FILE__
+         write(iulog,*) 'Try increasing max_glacier_region_id in ', sourcefile
          call endrun(msg=' ERROR: GLACIER_REGION larger than expected'// &
-              errMsg(__FILE__, __LINE__))
+              errMsg(sourcefile, __LINE__))
       end if
     end subroutine check_glacier_region_map
 
@@ -332,7 +335,7 @@ contains
          glacier_region_behavior(i) = BEHAVIOR_UNSET
 
          if (glacier_region_present(i)) then
-            SHR_ASSERT_ALL((ubound(glacier_region_behavior_str) >= (/i/)), errMsg(__FILE__, __LINE__))
+            SHR_ASSERT_ALL((ubound(glacier_region_behavior_str) >= (/i/)), errMsg(sourcefile, __LINE__))
 
             select case (glacier_region_behavior_str(i))
             case ('multiple')
@@ -345,13 +348,13 @@ contains
                write(iulog,*) ' ERROR: glacier_region_behavior not specified for ID ', i
                write(iulog,*) 'You probably need to extend the glacier_region_behavior namelist array'
                call endrun(msg=' ERROR: glacier_region_behavior not specified for ID '// &
-                    errMsg(__FILE__, __LINE__))
+                    errMsg(sourcefile, __LINE__))
             case default
                write(iulog,*) ' ERROR: Unknown glacier_region_behavior for ID ', i
                write(iulog,*) glacier_region_behavior_str(i)
                write(iulog,*) 'Allowable values are: multiple, virtual, single_at_atm_topo'
                call endrun(msg=' ERROR: Unknown glacier_region_behavior'// &
-                    errMsg(__FILE__, __LINE__))
+                    errMsg(sourcefile, __LINE__))
             end select
 
          end if
@@ -365,7 +368,7 @@ contains
          glacier_region_melt_behavior(i) = BEHAVIOR_UNSET
 
          if (glacier_region_present(i)) then
-            SHR_ASSERT_ALL((ubound(glacier_region_melt_behavior_str) >= (/i/)), errMsg(__FILE__, __LINE__))
+            SHR_ASSERT_ALL((ubound(glacier_region_melt_behavior_str) >= (/i/)), errMsg(sourcefile, __LINE__))
 
             select case (glacier_region_melt_behavior_str(i))
             case ('replaced_by_ice')
@@ -376,13 +379,13 @@ contains
                write(iulog,*) ' ERROR: glacier_region_melt_behavior not specified for ID ', i
                write(iulog,*) 'You probably need to extend the glacier_region_melt_behavior namelist array'
                call endrun(msg=' ERROR: glacier_region_melt_behavior not specified for ID '// &
-                    errMsg(__FILE__, __LINE__))
+                    errMsg(sourcefile, __LINE__))
             case default
                write(iulog,*) ' ERROR: Unknown glacier_region_melt_behavior for ID ', i
                write(iulog,*) glacier_region_melt_behavior_str(i)
                write(iulog,*) 'Allowable values are: replaced_by_ice, remains_in_place'
                call endrun(msg=' ERROR: Unknown glacier_region_melt_behavior'// &
-                    errMsg(__FILE__, __LINE__))
+                    errMsg(sourcefile, __LINE__))
             end select
 
          end if
@@ -416,8 +419,8 @@ contains
     character(len=*), parameter :: subname = 'InitForTesting'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(has_virtual_columns) == (/endg/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(collapse_to_atm_topo) == (/endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(has_virtual_columns) == (/endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(collapse_to_atm_topo) == (/endg/)), errMsg(sourcefile, __LINE__))
 
     call this%InitAllocate(begg, endg)
     this%has_virtual_columns_grc(:) = has_virtual_columns(:)
@@ -476,7 +479,7 @@ contains
     character(len=*), parameter :: subname = 'read_surface_dataset'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(glacier_region_map) == (/endg/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(glacier_region_map) == (/endg/)), errMsg(sourcefile, __LINE__))
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read GLACIER_REGION...'
@@ -487,7 +490,7 @@ contains
     call ncd_io(ncid=ncid, varname='GLACIER_REGION', flag='read', &
          data=glacier_region_map_ptr, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: GLACIER_REGION NOT on surfdata file'//errMsg(__FILE__, __LINE__))
+       call endrun(msg=' ERROR: GLACIER_REGION NOT on surfdata file'//errMsg(sourcefile, __LINE__))
     end if
     call ncd_pio_closefile(ncid)
     glacier_region_map(begg:endg) = glacier_region_map_ptr(begg:endg)
@@ -535,11 +538,11 @@ contains
           read(unitn, nml=clm_glacier_behavior, iostat=nml_error)
           if (nml_error /= 0) then
              call endrun(msg='ERROR reading clm_glacier_behavior namelist'// &
-                  errMsg(__FILE__, __LINE__))
+                  errMsg(sourcefile, __LINE__))
           end if
        else
           call endrun(msg='ERROR finding clm_glacier_behavior namelist'// &
-                      errMsg(__FILE__, __LINE__))
+                      errMsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
     endif
@@ -596,7 +599,7 @@ contains
          wt_lunit(gi, istice_mec) > 0.0_r8) then
        ! For grid cells with the collapse_to_atm_topo behavior, with a non-zero weight
        ! ice_mec landunit, we expect exactly one column
-       SHR_ASSERT(ncols == 1, errMsg(__FILE__, __LINE__))
+       SHR_ASSERT(ncols == 1, errMsg(sourcefile, __LINE__))
     end if
 
     if (ncols > 0) then
@@ -736,7 +739,7 @@ contains
     character(len=*), parameter :: subname = 'icemec_cols_need_downscaling'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(needs_downscaling_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(needs_downscaling_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     do fc = 1, num_icemecc
        c = filter_icemecc(fc)
@@ -807,7 +810,7 @@ contains
     character(len=*), parameter :: subname = 'update_collapsed_columns_classes'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(topo_col) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(topo_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     do fc = 1, collapse_filterc%num
        c = collapse_filterc%indices(fc)

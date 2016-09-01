@@ -45,6 +45,9 @@ module SpeciesIsotopeType
      module procedure constructor
   end interface species_isotope_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   function constructor(species_name, isotope_name) result(this)
@@ -59,13 +62,13 @@ contains
        write(iulog,*) 'species_isotope_type constructor: species_name too long'
        write(iulog,*) trim(species_name) // ' exceeds max length: ', species_name_maxlen
        call endrun(msg='species_isotope_type constructor: species_name too long: '// &
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
     if (len_trim(isotope_name) > isotope_name_maxlen) then
        write(iulog,*) 'species_isotope_type constructor: isotope_name too long'
        write(iulog,*) trim(isotope_name) // ' exceeds max length: ', isotope_name_maxlen
        call endrun(msg='species_isotope_type constructor: isotope_name too long: '// &
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
     this%species_name = trim(species_name)

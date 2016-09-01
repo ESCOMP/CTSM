@@ -40,6 +40,9 @@ module initInterpMultilevelSnow
      module procedure constructor
   end interface interp_multilevel_snow_type
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! ========================================================================
@@ -113,7 +116,7 @@ contains
        write(iulog,*) 'Expected number of dest points: ', &
             size(this%num_snow_layers_source)
        call endrun(msg=subname//' ERROR: mismatch in number of points for '//&
-            trim(varname) // ' ' // errMsg(__FILE__, __LINE__))
+            trim(varname) // ' ' // errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine check_npts
@@ -152,8 +155,8 @@ contains
     !-----------------------------------------------------------------------
 
     num_snow_layers_source = this%num_snow_layers_source(index_dest)
-    SHR_ASSERT(num_snow_layers_source >= 0, errMsg(__FILE__, __LINE__))
-    SHR_ASSERT(num_snow_layers_source <= size(data_source), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(num_snow_layers_source >= 0, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(num_snow_layers_source <= size(data_source), errMsg(sourcefile, __LINE__))
 
     ! Determine the index in the source for the top layer that has snow. If there is snow
     ! in every layer, then top_snow_layer_source will be 1. If there is no snow,

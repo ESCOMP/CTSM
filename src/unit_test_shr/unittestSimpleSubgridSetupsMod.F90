@@ -44,6 +44,9 @@ module unittestSimpleSubgridSetupsMod
   ! Create a landunit of a given type with N columns, each with a single patch of type noveg
   public :: create_landunit_ncols
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 contains
 
   ! ========================================================================
@@ -97,7 +100,7 @@ contains
     npatches = size(pwtcol)
     allocate(l_pft_types(npatches))
     if (present(pft_types)) then
-       SHR_ASSERT((size(pft_types) == npatches), errMsg(__FILE__, __LINE__))
+       SHR_ASSERT((size(pft_types) == npatches), errMsg(sourcefile, __LINE__))
        l_pft_types = pft_types
     else
        do p = 1, npatches
@@ -207,8 +210,8 @@ contains
     !-----------------------------------------------------------------------
 
     ncols = size(ctypes)
-    SHR_ASSERT((size(cweights) == ncols), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT(gi >= begg, 'must call unittest_add_gridcell first: ' // errMsg(__FILE__, __LINE__))
+    SHR_ASSERT((size(cweights) == ncols), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT(gi >= begg, 'must call unittest_add_gridcell first: ' // errMsg(sourcefile, __LINE__))
 
     call unittest_add_landunit(my_gi=gi, ltype=ltype, wtgcell=lweight)
     do c = 1, ncols

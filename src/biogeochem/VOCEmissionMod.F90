@@ -74,6 +74,9 @@ module VOCEmissionMod
   type(megan_out_type), private, pointer :: meg_out(:) ! (n_megan_comps) points to output fluxes
   !
   logical, parameter :: debug = .false.
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !------------------------------------------------------------------------
 
 contains
@@ -327,37 +330,37 @@ contains
 
     call ncd_io(ncid=ncid, varname='EF1_BTR', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg='iniTimeConst: errror reading EF1_BTR'//errMsg(__FILE__, __LINE__))
+       call endrun(msg='iniTimeConst: errror reading EF1_BTR'//errMsg(sourcefile, __LINE__))
     end if
     this%efisop_grc(1,begg:endg)=temp_ef(begg:endg)
 
     call ncd_io(ncid=ncid, varname='EF1_FET', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg='iniTimeConst: errror reading EF1_FET'//errMsg(__FILE__, __LINE__))
+       call endrun(msg='iniTimeConst: errror reading EF1_FET'//errMsg(sourcefile, __LINE__))
     end if
     this%efisop_grc(2,begg:endg)=temp_ef(begg:endg)
 
     call ncd_io(ncid=ncid, varname='EF1_FDT', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg='iniTimeConst: errror reading EF1_FDT'//errMsg(__FILE__, __LINE__))
+       call endrun(msg='iniTimeConst: errror reading EF1_FDT'//errMsg(sourcefile, __LINE__))
     end if
     this%efisop_grc(3,begg:endg)=temp_ef(begg:endg)
 
     call ncd_io(ncid=ncid, varname='EF1_SHR', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg='iniTimeConst: errror reading EF1_SHR'//errMsg(__FILE__, __LINE__))
+       call endrun(msg='iniTimeConst: errror reading EF1_SHR'//errMsg(sourcefile, __LINE__))
     end if
     this%efisop_grc(4,begg:endg)=temp_ef(begg:endg)
 
     call ncd_io(ncid=ncid, varname='EF1_GRS', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg='iniTimeConst: errror reading EF1_GRS'//errMsg(__FILE__, __LINE__))
+       call endrun(msg='iniTimeConst: errror reading EF1_GRS'//errMsg(sourcefile, __LINE__))
     end if
     this%efisop_grc(5,begg:endg)=temp_ef(begg:endg)
 
     call ncd_io(ncid=ncid, varname='EF1_CRP', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg='iniTimeConst: errror reading EF1_CRP'//errMsg(__FILE__, __LINE__))
+       call endrun(msg='iniTimeConst: errror reading EF1_CRP'//errMsg(sourcefile, __LINE__))
     end if
     this%efisop_grc(6,begg:endg)=temp_ef(begg:endg)
 

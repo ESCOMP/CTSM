@@ -105,6 +105,9 @@ module SnowHydrologyMod
   real(r8) :: upplim_destruct_metamorph   = 100.0_r8           ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
   real(r8) :: overburden_compress_Tfactor = 0.08_r8            ! snow compaction overburden exponential factor (1/K)
   real(r8) :: min_wind_snowcompact        = 5._r8              ! minimum wind speed tht results in compaction (m/s)
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -150,10 +153,10 @@ contains
        if (ierr == 0) then
           read(unitn, clm_snowhydrology_inparm, iostat=ierr)
           if (ierr /= 0) then
-             call endrun(msg="ERROR reading clm_snowhydrology_inparm namelist"//errmsg(__FILE__, __LINE__))
+             call endrun(msg="ERROR reading clm_snowhydrology_inparm namelist"//errmsg(sourcefile, __LINE__))
           end if
        else
-          call endrun(msg="ERROR finding clm_snowhydrology_inparm namelist"//errmsg(__FILE__, __LINE__))
+          call endrun(msg="ERROR finding clm_snowhydrology_inparm namelist"//errmsg(sourcefile, __LINE__))
        end if
        call relavu( unitn )
     end if
@@ -177,7 +180,7 @@ contains
     else if ( trim(lotmp_snowdensity_method) == 'TruncatedAnderson1976' ) then
        new_snow_density = LoTmpDnsTruncatedAnderson1976
     else
-       call endrun(msg="ERROR bad lotmp_snowdensity_method name"//errmsg(__FILE__, __LINE__))
+       call endrun(msg="ERROR bad lotmp_snowdensity_method name"//errmsg(sourcefile, __LINE__))
     end if
 
     if (trim(snow_overburden_compaction_method) == 'Anderson1976') then
@@ -186,7 +189,7 @@ contains
        overburden_compaction_method = OverburdenCompactionMethodVionnet2012
     else
        call endrun(msg="ERROR bad snow_overburden_compaction_method name"// &
-            errMsg(__FILE__, __LINE__))
+            errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine SnowHydrology_readnl
@@ -1391,7 +1394,7 @@ contains
                      abs(snwliqtot(c)) > 1.e-7_r8 ) then
                    write(iulog,*)'Inconsistency in SnowDivision_Lake! c, remainders', &
                         'dztot, snwicetot, snwliqtot = ',c,dztot(c),snwicetot(c),snwliqtot(c)
-                   call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+                   call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
                 end if
              end if
           end do
@@ -1432,7 +1435,7 @@ contains
     real(r8)              :: minbound, maxbound ! helper variables
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(snow_depth)  == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(snow_depth)  == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate( &
          snl => col%snl,   & ! Output: [integer (:)    ]  number of snow layers
@@ -1615,7 +1618,7 @@ contains
           if (h2osoi_ice(c,0) < 0._r8 .or. h2osoi_liq(c,0) < 0._r8 ) then
              write(iulog,*)'ERROR: capping procedure failed (negative mass remaining) c = ',c
              write(iulog,*)'h2osoi_ice = ', h2osoi_ice(c,0), ' h2osoi_liq = ', h2osoi_liq(c,0)
-             call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(__FILE__, __LINE__))
+             call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
           end if
 
           ! Correct the top layer aerosol mass to account for snow capping.
@@ -1661,7 +1664,7 @@ contains
     character(len=*), parameter :: subname = 'NewSnowBulkDensity'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(bifall) == (/bounds%endc/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(bifall) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate( &
          forc_t      => atm2lnd_inst%forc_t_downscaled_col , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)        
@@ -1912,7 +1915,7 @@ contains
     real(r8), intent(IN) :: zwtot        ! snow water total layer 1
     real(r8) :: mass_weighted_snowradius ! resulting bounded mass weighted snow radius
 
-    SHR_ASSERT( (swtot+zwtot > 0.0_r8), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT( (swtot+zwtot > 0.0_r8), errMsg(sourcefile, __LINE__))
     mass_weighted_snowradius = (rds2*swtot + rds1*zwtot)/(swtot+zwtot)
 
     if (      mass_weighted_snowradius > snw_rds_max ) then

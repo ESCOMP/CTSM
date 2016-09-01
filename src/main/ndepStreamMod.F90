@@ -36,6 +36,9 @@ module ndepStreamMod
   integer :: stream_year_first_ndep       ! first year in stream to use
   integer :: stream_year_last_ndep        ! last year in stream to use
   integer :: model_year_align_ndep        ! align stream_year_firstndep with 
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !==============================================================================
 
 contains
@@ -91,10 +94,10 @@ contains
       if (nml_error == 0) then
          read(nu_nml, nml=ndepdyn_nml,iostat=nml_error)
          if (nml_error /= 0) then
-            call endrun(msg=' ERROR reading ndepdyn_nml namelist'//errMsg(__FILE__, __LINE__))
+            call endrun(msg=' ERROR reading ndepdyn_nml namelist'//errMsg(sourcefile, __LINE__))
          end if
       else
-         call endrun(msg=' ERROR finding ndepdyn_nml namelist'//errMsg(__FILE__, __LINE__))
+         call endrun(msg=' ERROR finding ndepdyn_nml namelist'//errMsg(sourcefile, __LINE__))
       end if
       close(nu_nml)
       call relavu( nu_nml )

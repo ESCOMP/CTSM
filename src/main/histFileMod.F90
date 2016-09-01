@@ -244,6 +244,9 @@ module histFileMod
   !
   character(len=max_chars) :: TimeConst3DVars_Filename = ' '
   character(len=max_chars) :: TimeConst3DVars          = ' '
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -317,7 +320,7 @@ contains
 
     if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
        write(iulog,*) trim(subname),' ERROR: unknown averaging flag=', avgflag
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     ! Determine bounds
@@ -329,7 +332,7 @@ contains
 
     if (fname == ' ') then
        write(iulog,*) trim(subname),' ERROR: blank field name not allowed'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     ! Ensure that new field doesn't already exist
@@ -337,7 +340,7 @@ contains
     do n = 1,nfmaster
        if (masterlist(n)%field%name == fname) then
           write(iulog,*) trim(subname),' ERROR:', fname, ' already on list'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -351,7 +354,7 @@ contains
     if (nfmaster > max_flds) then
        write(iulog,*) trim(subname),' ERROR: too many fields for primary history file ', &
             '-- max_flds,nfmaster=', max_flds, nfmaster
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     ! Add field to master list
@@ -391,7 +394,7 @@ contains
        masterlist(f)%field%num1d = nump
     case default
        write(iulog,*) trim(subname),' ERROR: unknown 1d output type= ',type1d
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end select
 
     if (present(no_snow_behavior)) then
@@ -513,13 +516,13 @@ contains
 
     if (tape_index > max_tapes) then
        write(iulog,*) trim(subname),' ERROR: tape index=', tape_index, ' is too big'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     if (present(avgflag)) then
        if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
           write(iulog,*) trim(subname),' ERROR: unknown averaging flag=', avgflag
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
     end if
 
@@ -540,7 +543,7 @@ contains
     end do
     if (.not. found) then
        write(iulog,*) trim(subname),' ERROR: field=', name, ' not found'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
   end subroutine masterlist_make_active
@@ -564,7 +567,7 @@ contains
     avgflag = hist_avgflag_pertape(t)
     if (.not. avgflag_valid(avgflag, blank_valid = .false.)) then
        write(iulog,*) trim(subname),' ERROR: unknown avgflag=',avgflag
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     do f = 1,nfmaster
@@ -633,7 +636,7 @@ contains
           if (name /= mastername) then
              write(iulog,*) trim(subname),' ERROR: ', trim(name), ' in fincl(', f, ') ',&
                   'for history tape ',t,' not found'
-             call endrun(msg=errMsg(__FILE__, __LINE__))
+             call endrun(msg=errMsg(sourcefile, __LINE__))
           end if
           f = f + 1
        end do
@@ -647,7 +650,7 @@ contains
           if (fexcl(f,t) /= mastername) then
              write(iulog,*) trim(subname),' ERROR: ', fexcl(f,t), ' in fexcl(', f, ') ', &
                   'for history tape ',t,' not found'
-             call endrun(msg=errMsg(__FILE__, __LINE__))
+             call endrun(msg=errMsg(sourcefile, __LINE__))
           end if
           f = f + 1
        end do
@@ -711,7 +714,7 @@ contains
                 write(iulog,*) trim(subname),' ERROR: Duplicate field ', &
                    tape(t)%hlist(ff)%field%name, &
                    't,ff,name=',t,ff,tape(t)%hlist(ff+1)%field%name
-                call endrun(msg=errMsg(__FILE__, __LINE__))
+                call endrun(msg=errMsg(sourcefile, __LINE__))
 
              end if
           end do
@@ -745,7 +748,7 @@ contains
     do t = 1,ntapes
        if (tape(t)%nflds  ==  0) then
           write(iulog,*) trim(subname),' ERROR: Tape ',t,' is empty'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -754,7 +757,7 @@ contains
 
     if (ntapes > max_tapes) then
        write(iulog,*) trim(subname),' ERROR: Too many history files declared, max_tapes=',max_tapes
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     ! Change 1d output per tape output flag if requested - only for history
@@ -768,7 +771,7 @@ contains
              write(iulog,*)'history tape ',t,' will have 1d output type of ',hist_type1d_pertape(t)
           case default
              write(iulog,*) trim(subname),' ERROR: unknown namelist type1d per tape=',hist_type1d_pertape(t)
-             call endrun(msg=errMsg(__FILE__, __LINE__))
+             call endrun(msg=errMsg(sourcefile, __LINE__))
           end select
        end if
     end do
@@ -834,7 +837,7 @@ contains
     if (htapes_defined) then
        write(iulog,*) trim(subname),' ERROR: attempt to add field ', &
             masterlist(f)%field%name, ' after history files are set'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     tape(t)%nflds = tape(t)%nflds + 1
@@ -887,7 +890,7 @@ contains
           tape(t)%hlist(n)%field%type1d_out = namep
        case default
           write(iulog,*) trim(subname),' ERROR: unknown input hist_type1d_pertape= ', hist_type1d_pertape(t)
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end select
 
     endif
@@ -917,7 +920,7 @@ contains
        num1d_out = nump
     else
        write(iulog,*) trim(subname),' ERROR: incorrect value of type1d_out= ',type1d_out
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     tape(t)%hlist(n)%field%beg1d_out = beg1d_out
@@ -937,7 +940,7 @@ contains
 
     if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
        write(iulog,*) trim(subname),' ERROR: unknown avgflag=', avgflag
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
     if (avgflag == ' ') then
@@ -1023,7 +1026,7 @@ contains
     integer k_offset                    ! offset for mapping sliced subarray pointers when outputting variables in PFT/col vector form
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(sourcefile, __LINE__))
 
     avgflag        =  tape(t)%hlist(f)%avgflag
     nacs           => tape(t)%hlist(f)%nacs
@@ -1113,7 +1116,7 @@ contains
           end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end select
 
     else  ! Do not map to gridcell
@@ -1213,7 +1216,7 @@ contains
           end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end select
     end if
 
@@ -1264,7 +1267,7 @@ contains
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(__FILE__, __LINE__))
+    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, errMsg(sourcefile, __LINE__))
 
     avgflag             =  tape(t)%hlist(f)%avgflag
     nacs                => tape(t)%hlist(f)%nacs
@@ -1385,7 +1388,7 @@ contains
           end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end select
 
     else  ! Do not map to gridcell
@@ -1491,7 +1494,7 @@ contains
           end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end select
     end if
 
@@ -1537,9 +1540,9 @@ contains
     character(len=*), parameter :: subname = 'hist_set_snow_field_2d'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(field_out, 1) == end1d), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(field_in , 1) == end1d), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(field_out, 2) == ubound(field_in, 2)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(field_out, 1) == end1d), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(field_in , 1) == end1d), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(field_out, 2) == ubound(field_in, 2)), errMsg(sourcefile, __LINE__))
 
     associate(&
     snl            => col%snl  &   ! Input: [integer (:)] number of snow layers (negative)
@@ -2033,10 +2036,10 @@ contains
                                                       /)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
 
     !-------------------------------------------------------------------------------
     !***      Non-time varying 3D fields                    ***
@@ -2061,7 +2064,7 @@ contains
           else if (ifld == 6) then
              long_name='saturated hydraulic conductivity'; units = 'unitless'
           else
-             call endrun(msg=' ERROR: bad 3D time-constant field index'//errMsg(__FILE__, __LINE__))
+             call endrun(msg=' ERROR: bad 3D time-constant field index'//errMsg(sourcefile, __LINE__))
           end if
           if (tape(t)%dov2xy) then
              if (ldomain%isgrid2d) then
@@ -2086,7 +2089,7 @@ contains
        allocate(histi(bounds%begc:bounds%endc,nlevgrnd), stat=ier)
        if (ier /= 0) then
           write(iulog,*) trim(subname),' ERROR: allocation error for histi'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
 
        ! Write time constant fields
@@ -2095,7 +2098,7 @@ contains
           allocate(histo(bounds%begg:bounds%endg,nlevgrnd), stat=ier)
           if (ier /= 0) then
              write(iulog,*)  trim(subname),' ERROR: allocation error for histo'
-             call endrun(msg=errMsg(__FILE__, __LINE__))
+             call endrun(msg=errMsg(sourcefile, __LINE__))
           end if
        end if
 
@@ -2172,7 +2175,7 @@ contains
           else if (ifld == 2) then
              long_name='lake layer thickness'; units = 'm'
           else
-             call endrun(msg=' ERROR: bad 3D time-constant field index'//errMsg(__FILE__, __LINE__))
+             call endrun(msg=' ERROR: bad 3D time-constant field index'//errMsg(sourcefile, __LINE__))
           end if
           if (tape(t)%dov2xy) then
              if (ldomain%isgrid2d) then
@@ -2197,7 +2200,7 @@ contains
        allocate(histil(bounds%begc:bounds%endc,nlevlak), stat=ier)
        if (ier /= 0) then
           write(iulog,*) trim(subname),' ERROR: allocation error for histil'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
 
        ! Write time constant fields
@@ -2206,7 +2209,7 @@ contains
           allocate(histol(bounds%begg:bounds%endg,nlevlak), stat=ier)
           if (ier /= 0) then
              write(iulog,*)  trim(subname),' ERROR: allocation error for histol'
-             call endrun(msg=errMsg(__FILE__, __LINE__))
+             call endrun(msg=errMsg(sourcefile, __LINE__))
           end if
        end if
 
@@ -2609,7 +2612,7 @@ contains
              avgstr = 'sum'
           case default
              write(iulog,*) trim(subname),' ERROR: unknown time averaging flag (avgflag)=',avgflag
-             call endrun(msg=errMsg(__FILE__, __LINE__))
+             call endrun(msg=errMsg(sourcefile, __LINE__))
           end select
 
           if (type1d_out == grlnd) then
@@ -2660,7 +2663,7 @@ contains
              allocate(hist1do(beg1d_out:end1d_out), stat=ier)
              if (ier /= 0) then
                 write(iulog,*) trim(subname),' ERROR: allocation'
-                call endrun(msg=errMsg(__FILE__, __LINE__))
+                call endrun(msg=errMsg(sourcefile, __LINE__))
              end if
              hist1do(beg1d_out:end1d_out) = histo(beg1d_out:end1d_out,1)
           end if
@@ -2865,7 +2868,7 @@ contains
             rparr(bounds%begp:bounds%endp),&
             stat=ier)
        if (ier /= 0) then
-          call endrun(msg=' hfields_1dinfo allocation error of rarrs'//errMsg(__FILE__, __LINE__))
+          call endrun(msg=' hfields_1dinfo allocation error of rarrs'//errMsg(sourcefile, __LINE__))
        end if
 
        allocate(&
@@ -2874,7 +2877,7 @@ contains
             icarr(bounds%begc:bounds%endc),&
             iparr(bounds%begp:bounds%endp),stat=ier)
        if (ier /= 0) then
-          call endrun(msg=' hfields_1dinfo allocation error of iarrs'//errMsg(__FILE__, __LINE__))
+          call endrun(msg=' hfields_1dinfo allocation error of iarrs'//errMsg(sourcefile, __LINE__))
        end if
 
        ! Write gridcell info
@@ -3056,10 +3059,10 @@ contains
     character(len=*),parameter :: subname = 'hist_htapes_wrapup'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
-    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), errMsg(__FILE__, __LINE__))
+    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
 
     ! get current step
 
@@ -3330,7 +3333,7 @@ contains
 
        if (.not. present(rdate)) then
           call endrun(msg=' variable rdate must be present for writing restart files'//&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
 
        !
@@ -3635,7 +3638,7 @@ contains
           write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
           call endrun(msg=' ERROR: number of ntapes different than on restart file!,'// &
                ' you can NOT change history options on restart!' //&
-               errMsg(__FILE__, __LINE__))
+               errMsg(sourcefile, __LINE__))
        end if
        if ( is_restart() .and. ntapes > 0 )then
           call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
@@ -3683,7 +3686,7 @@ contains
                 write(iulog,*) 'nflds = ', tape(t)%nflds, ' nflds_onfile = ', nflds_onfile
                 call endrun(msg=' ERROR: number of fields different than on restart file!,'// &
                      ' you can NOT change history options on restart!' //&
-                     errMsg(__FILE__, __LINE__))
+                     errMsg(sourcefile, __LINE__))
              end if
              call ncd_io('ntimes',  tape(t)%ntimes, 'read', ncid_hist(t) )
              call ncd_io('nhtfrq',  tape(t)%nhtfrq, 'read', ncid_hist(t) )
@@ -3760,7 +3763,7 @@ contains
                    end1d_out = bounds%endp
                 case default
                    write(iulog,*) trim(subname),' ERROR: read unknown 1d output type=',trim(type1d_out)
-                   call endrun(msg=errMsg(__FILE__, __LINE__))
+                   call endrun(msg=errMsg(sourcefile, __LINE__))
                 end select
 
                 tape(t)%hlist(f)%field%num1d_out = num1d_out
@@ -3773,7 +3776,7 @@ contains
                           stat=status)
                 if (status /= 0) then
                    write(iulog,*) trim(subname),' ERROR: allocation error for hbuf,nacs at t,f=',t,f
-                   call endrun(msg=errMsg(__FILE__, __LINE__))
+                   call endrun(msg=errMsg(sourcefile, __LINE__))
                 endif
                 tape(t)%hlist(f)%hbuf(:,:) = 0._r8
                 tape(t)%hlist(f)%nacs(:,:) = 0
@@ -3802,7 +3805,7 @@ contains
                    end1d = bounds%endp
                 case default
                    write(iulog,*) trim(subname),' ERROR: read unknown 1d type=',type1d
-                   call endrun(msg=errMsg(__FILE__, __LINE__))
+                   call endrun(msg=errMsg(sourcefile, __LINE__))
                 end select
 
                 tape(t)%hlist(f)%field%num1d = num1d
@@ -3867,7 +3870,7 @@ contains
                             nacs1d(beg1d_out:end1d_out), stat=status)
                    if (status /= 0) then
                       write(iulog,*) trim(subname),' ERROR: allocation'
-                      call endrun(msg=errMsg(__FILE__, __LINE__))
+                      call endrun(msg=errMsg(sourcefile, __LINE__))
                    end if
                 
                    hbuf1d(beg1d_out:end1d_out) = hbuf(beg1d_out:end1d_out,1)
@@ -3919,7 +3922,7 @@ contains
                         nacs1d(beg1d_out:end1d_out), stat=status)
                    if (status /= 0) then
                       write(iulog,*) trim(subname),' ERROR: allocation'
-                      call endrun(msg=errMsg(__FILE__, __LINE__))
+                      call endrun(msg=errMsg(sourcefile, __LINE__))
                    end if
                    
                    call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name), &
@@ -3990,7 +3993,7 @@ contains
 
      if (length < max_namlen .or. length > max_namlen+2) then
         write(iulog,*) trim(subname),' ERROR: bad length=',length
-        call endrun(msg=errMsg(__FILE__, __LINE__))
+        call endrun(msg=errMsg(sourcefile, __LINE__))
      end if
 
      getname = ' '
@@ -4021,7 +4024,7 @@ contains
 
      if (length < max_namlen .or. length > max_namlen+2) then
         write(iulog,*) trim(subname),' ERROR: bad length=',length
-        call endrun(msg=errMsg(__FILE__, __LINE__))
+        call endrun(msg=errMsg(sourcefile, __LINE__))
      end if
 
      getflag = ' '
@@ -4114,7 +4117,7 @@ contains
       write(iulog, '(a,a,a,i3,a,i3)') 'ERROR: ', subname, &
            ' Did the constructed filename exceed the maximum length? : filename length = ', &
            filename_length, ', max length = ', max_length_filename
-      call endrun(msg=errMsg(__FILE__, __LINE__))
+      call endrun(msg=errMsg(sourcefile, __LINE__))
    end if
   end function set_hist_filename
 
@@ -4303,7 +4306,7 @@ contains
     else
        write(iulog,*) trim(subname),' ERROR: must specify a valid pointer index,', &
           ' choices are [ptr_atm, ptr_lnd, ptr_gcell, ptr_lunit, ptr_col, ptr_patch] '
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
 
     end if
 
@@ -4456,7 +4459,7 @@ contains
        else
           write(iulog,*) trim(subname),' ERROR: 2d type =', trim(type2d), &
                ' only valid for maxpatch_glcmec > 0'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     case ('elevclas')
        if (maxpatch_glcmec > 0) then
@@ -4466,7 +4469,7 @@ contains
        else
           write(iulog,*) trim(subname),' ERROR: 2d type =', trim(type2d), &
                ' only valid for maxpatch_glcmec > 0'
-          call endrun(msg=errMsg(__FILE__, __LINE__))
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     case ('levsno')
        num2d = nlevsno
@@ -4478,7 +4481,7 @@ contains
        write(iulog,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
           ' currently supported types for multi level fields are: ', &
           '[levgrnd,levlak,numrad,levdcmp,levtrc,ltype,natpft,cft,glc_nec,elevclas,levsno,nvegwcs]'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     end select
 
     ! History buffer pointer
@@ -4598,7 +4601,7 @@ contains
     else
        write(iulog,*) trim(subname),' ERROR: must specify a valid pointer index,', &
           ' choices are ptr_atm, ptr_lnd, ptr_gcell, ptr_lunit, ptr_col, ptr_patch'
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
 
     end if
 
@@ -4716,7 +4719,7 @@ contains
     else
        write(iulog, *) ' error: hist_addfld_decomp needs either patch or column level pointer'
        write(iulog, *) fname
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
   end subroutine hist_addfld_decomp
@@ -4738,7 +4741,7 @@ contains
     if (lastindex > max_mapflds) then
        write(iulog,*) trim(subname),' ERROR: ',&
             ' lastindex = ',lastindex,' greater than max_mapflds= ',max_mapflds
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
   end function pointer_index
@@ -4761,7 +4764,7 @@ contains
     if (num_subs > max_subs) then
        write(iulog,*) trim(subname),' ERROR: ',&
             ' num_subs = ',num_subs,' greater than max_subs= ',max_subs
-       call endrun(msg=errMsg(__FILE__, __LINE__))
+       call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
     subs_name(num_subs) = name
     subs_dim(num_subs) =  dim
