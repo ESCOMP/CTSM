@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_12_r195    sacks 09/18/2016 Remove dependence on column weights in fire code
   clm4_5_12_r194    sacks 09/01/2016 Dribble annual dyn landunit adjustment fluxes; initialize water state for new crop columns
   clm4_5_12_r193    andre 08/30/2016 Bugfix in BalanceCheckMod: revert tolerance change and removal of endrun call introduced in r192
   clm4_5_12_r192    andre 08/27/2016 ED bugfixes and initial refactoring for a standalone library

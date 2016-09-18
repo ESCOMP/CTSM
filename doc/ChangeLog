@@ -1,4 +1,145 @@
 ===============================================================
+Tag name:  clm4_5_12_r195
+Originator(s):  sacks (Bill Sacks)
+Date: Sun Sep 18 07:23:25 MDT 2016
+One-line Summary: Remove dependence on column weights in fire code
+
+Purpose of changes
+------------------
+
+When calculating the fractions of BET and BDT, calculate these as fractions of
+the column rather than as fractions of the grid cell. This is needed for
+consistency with all other code in CLM, where the behavior of a column shouldn't
+depend on that column's weight on the grid cell. The earlier code was
+problematic in this way: If you did two runs - one with default areas, and one
+where the natural veg landunit area was larger or smaller - then the evolution
+of the natural veg landunit could change; this is not supposed to happen in CLM.
+
+This can change answers for the fire code, but should generally only change
+answers by a small amount, unless there are tropical grid cells where the
+natural vegetation fraction is substantially less than 1.
+
+Fang Li is okay with this change. She points out that the original formulation
+was based on the fact that literataure typically cites 60% of (BET+BDT) on the
+grid cell as a cutoff for being classified as tropical closed forest for the
+sake of fire determinations, so the earlier code was consistent with that
+definition. She also points out that this change could lead to a slightly
+greater prevalence of deforestation fires and (after tuning) a consequently
+smaller prevalence of non-deforestation fires - which can be undesirable. But
+overall she is okay with this change given its likely small impact.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): partial fix of item #14 in bugz 1679
+   Still need to address dtrotr_col, but the fix there is different, and is tied
+   in with other changes for dynamic landunits.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+   ok means tests pass; some baseline comparisons fail
+
+CLM tag used for the baseline comparisons: clm4_5_12_r194
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CN/BGC with CLM45/CLM50
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+      Greater than roundoff for at least some tests; from some spot-checks,
+      seems to be same climate.
+
+      I have spot-checked a few tests that have greater than roundoff-level
+      diffs (ERP_D_Ld5.f19_g16.IRCP85CLM45BGC.yellowstone_pgi.clm-drydepnomegan
+      and ERI_D_Ld9.f09_g16.ICLM45BGC.yellowstone_intel.clm-default). These
+      tests have diffs in just a few grid cells in the tropics.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeochem/CNFireBaseMod.F90
+M       components/clm/src/biogeochem/CNFireLi2016Mod.F90
+M       components/clm/src/biogeochem/CNVegStateType.F90
+M       components/clm/src/biogeochem/CNFireLi2014Mod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_12_r194
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Sep  1 10:17:56 MDT 2016

@@ -208,8 +208,8 @@ contains
          lgdp1_col          => cnveg_state_inst%lgdp1_col                      , & ! Output: [real(r8) (:)     ]  gdp limitation factor for baf per fire            
          lpop_col           => cnveg_state_inst%lpop_col                       , & ! Output: [real(r8) (:)     ]  pop limitation factor for baf per fire            
          lfwt               => cnveg_state_inst%lfwt_col                       , & ! Output: [real(r8) (:)     ]  fractional coverage of non-crop and non-bare-soil Patches
-         trotr1_col         => cnveg_state_inst%trotr1_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BET on the gridcell (0-1)           
-         trotr2_col         => cnveg_state_inst%trotr2_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BDT on the gridcell (0-1)           
+         trotr1_col         => cnveg_state_inst%trotr1_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BET on the column (0-1)           
+         trotr2_col         => cnveg_state_inst%trotr2_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BDT on the column (0-1)           
          dtrotr_col         => cnveg_state_inst%dtrotr_col                     , & ! Output: [real(r8) (:)     ]  decreased frac. coverage of BET+BDT on grid for dt
          lfc                => cnveg_state_inst%lfc_col                        , & ! Output: [real(r8) (:)     ]  conversion area frac. of BET+BDT that haven't burned before
          wtlf               => cnveg_state_inst%wtlf_col                       , & ! Output: [real(r8) (:)     ]  fractional coverage of non-crop Patches              
@@ -364,10 +364,10 @@ contains
                     end if
                  end if
                  if( patch%itype(p) == nbrdlf_evr_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)*col%wtgcell(c)
+                    trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)
                  end if
                  if( patch%itype(p) == nbrdlf_dcd_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)*col%wtgcell(c)
+                    trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)
                  end if
                  if (do_transient_pfts) then
                     if( patch%itype(p) == nbrdlf_evr_trp_tree .or. patch%itype(p) == nbrdlf_dcd_trp_tree )then
