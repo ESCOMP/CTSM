@@ -1,4 +1,234 @@
 ===============================================================
+Tag name:  clm4_5_12_r196
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Sep 27 02:46:29 MDT 2016
+One-line Summary: Bring new cime5 to clm trunk
+
+Purpose of changes
+------------------
+
+   Update from cime4 version to cime5.1.1. This has some changes to the user interface
+   on setting up cases. create_newcase largely works the same, but other scripts have
+   subtle to more extensive changes to them. cime5 has scripts all done in object oriented Python. 
+
+  create_newcase changes some options to use double "--" signs. Standard options
+  can be done with either one or two.
+  --user-compset        If set, then the --compset argument is treated as a
+                        user specified compset.This assumes that all of the
+                        compset settings in thecompset along name have been
+                        defined for all of its componentsIf the compset name
+                        is found as a supported compset, then it will be
+                        treated as such.
+  --pesfile PESFILE     Only used and required for --user-compset
+                        argument.Full pathname of the pes specification
+                        fileThis argument is required if --user-compset is
+                        True
+  --user-grid           If set, then the -grid argument is treated as a user
+                        specified grid.As such, the additional argument
+                        --gridfile must also be specifiedand all of the grid
+                        settings in the --res argument name (which must be a
+                        grid longnamehave been defined in the grid file
+                        pointed to by --gridfile
+  --gridfile GRIDFILE   Full pathname of config grid file to useThis should be
+                        a copy of cime_config/config_grids.xmlwith the new
+                        user grid changes added to itThis argument is required
+                        if --user-grid is True
+
+  create_newcase adds the following new options (
+  --ninst NINST         Specify number of component instancesSet the number of
+                        component instances in the case.
+  --srcroot SRCROOT     Alternative path for source root directory. By default
+                        this is set to cimeroot/../
+  --walltime WALLTIME   Set the wallclock limit for this case. Can use env var
+                        CIME_GLOBAL_WALLTIME to set this.
+  -q QUEUE, --queue QUEUE
+                        Force batch system to use a certain queue
+
+  New files created in your case:
+
+   Several files are softlinked into the case directory (such as case.setup, case.run, etc.)
+   software_environment.txt -- your environment variables
+   PESetupHist --- Directory for processor history changes
+
+   case.clean_build is removed, and you use the --clean option to case.build
+
+   xmlchange adds several options such as -subgroup
+   xmlquery operation is a bit different. list capability is done via --list-all option.
+
+   Format of *.xml files in your case is a bit different than before
+
+  PIO versions were updated and PIO now catches some errors that it let go before.
+
+  userdefinedmachine is upgraded so that you create a ~/.cime directory and put config_machines.xml
+  for your machine (as well as config_compilers.xml, config_batch.xml, and config_build.xml
+  if needed)
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+   2354 New streams file for urban is in NetCDF4 classic format and new cime5 
+        gnu/pnetcdf/pio1 combination can't read it
+
+Known bugs introduced in this tag (include bugzilla ID): 
+   2359 build-namelist_test.pl has 20 fails in clm4_5_12_r195
+   2358 test_driver.sh has problems with running gen_domain with clm4_5_12_r19620 fails in 
+   2357 PTCLMmkdata broken in clm4_5_12_r196 due to changes in cime5
+   2356 Test hangs on hobart
+   2353 areas wrong on mosart input file
+
+ cime5 issues:
+   589 Add back ability of ascii test lists to have comments...
+   580 ERI test with REFCASE prestages file into wrong run directory
+   506 make 1 processor cases by default mpi-serial (won't fix)
+   294 Need an "all" option to --xml-* options
+   293 cs.status looses some of the functionality that was in cimeteststatus
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+   No longer need to provide machine name in create_newcase
+   New options to create_newcase: --queue, --walltime, --ninst
+   Some less used options were removed.
+
+   Single processor cases, no longer by default use mpi-serial. You have
+   to manually change MPILIB!
+
+   manage_* scripts command line options changed use --help option to query usage.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   Urban streams file changed from NetCDF4 format to NetCDF3 so new pio1 and pnetcdf could read it
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+    interface to create_test is changed. Standard operation is like this...
+
+  ./create_test --xml-category aux_clm45 --compare clm4_5_12_r195 --generate clm4_5_12_r196 \
+                --xml-machine yellowstone--xml-compiler intel
+
+  Currently in this version cime5.1.1 you can't leave off --xml-compiler as it will run
+  everything with the default compiler
+
+Code reviewed by: self, sacks, mvertens
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - OK 20 tests fail, and 104 namelists are different
+
+  unit-tests (components/clm/src): 
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - OK (bug 2358)
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - FAIL (bug 2357)
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_12_r195
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): cime, rtm, mosart, cism
+    cime   to cime5.1.1
+    rtm    to rtm1_0_58
+    mosart to mosart1_0_18
+    cism   to cism2_1_18 --- Removes ESMF tests
+
+    add output history frequency "time_period_freq" to history files
+
+List all files eliminated: Move to name with clm50 in it
+
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonth_interp
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonth_interp/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonth_interp/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/cropMonth_interp/README
+
+List all files added and what they do:
+
+A       parse_cime.cs.status ---- Script to parse cs.status output like cime4 cimeteststatus
+           usage: ../../parse_cime.cs.status cs.status.*
+
+               Scripts to take a baseline directory in cime4 format to cime5 format
+A       components/clm/tools/clm4_5/refactorTools/esmciport/convertbaselines4esmci
+A       components/clm/tools/clm4_5/refactorTools/esmciport/linkhistorytofileswdate.ncl
+A       components/clm/tools/clm4_5/refactorTools/esmciport
+
+               Have clm50 in the name, and add new CLM50 crop finidat file
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropMonth_interp/README
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropMonth_interp/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropMonth_interp/include_user_mods
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropMonth_interp
+
+List all existing files that have been modified, and describe the changes:
+
+           Initial changes to get gen_domain build/run working with cime5
+M       components/clm/test/tools/test_driver.sh -- update module settings, 
+M       components/clm/test/tools/TCBCFGtools.sh -- update how configure works, and run
+          .env_mach_specific.sh, don't need to softlink Macros.make
+
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- Update urban streams
+              files so in NetCDF3 format rather than NetCDF4 so cime5/pio can read it
+
+M       components/clm/cime_config/config_compsets.xml - whitespace changes, add CAM55
+
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/default/shell_commands ---- no
+                mult-instance extra copies, don't set PIO rearranger type
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/40pts/xmlchange_cmnds ----- don't
+                set TOTALPES, but set ESP
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/pts/xmlchange_cmnds ------- don't
+                set TOTALPES, but set ESP
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/40default/shell_commands -- no
+                mult-instance extra copies
+M       components/clm/cime_config/testdefs/testlist_clm.xml - Make all single processor
+              tests with _Mmpi-serial, change cropMonth_interp to clm50cropMonth_interp
+              change some PEM tests to ERP
+M       components/clm/cime_config/buildlib ------------------ Changed to python
+M       components/clm/cime_config/config_component.xml ------ Additive option changed to cime5
+              Remove BARRIER_N/OPTION/ATM_PIO_TYPENAME/LND_PIO_REARRANGER moved to cime5
+              format changed slightly
+
+M       components/clm/src/biogeochem/MEGANFactorsMod.F90 -- MEGAN comp_names is 40 rather
+              than 32, to match size on megan emissions file
+
+M       components/clm/src/main/histFileMod.F90 --- Add time_period_freq
+MM      components/clm/src/main/clm_varcon.F90 ---- Add isecsphr, and isecspmin
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_12_r195
 Originator(s):  sacks (Bill Sacks)
 Date: Sun Sep 18 07:23:25 MDT 2016

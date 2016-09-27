@@ -10,7 +10,7 @@
       </test>
     </grid>
     <grid name="1x1_mexicocityMEX">
-      <test name="SMS_D_Ld1">
+      <test name="SMS_D_Ld1_Mmpi-serial">
         <machine compiler="nag" testtype="aux_clm40">hobart</machine>
       </test>
     </grid>
@@ -38,12 +38,14 @@
         <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLA">hobart</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLA">janus</machine>
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40ptsRLA">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40ptsROA">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40ptsRLB">yellowstone</machine>
         <machine compiler="gnu" testtype="prebeta" testmods="clm/40ptsRLA">yellowstone</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40ptsRLA">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40ptsRLA">yellowstone</machine>
+      </test>
+      <test name="SMS_Ld1_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40ptsRLA">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm40" testmods="clm/40ptsROA">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40ptsRLB">yellowstone</machine>
       </test>
     </grid>
   </compset>
@@ -288,11 +290,13 @@
   <compset name="I1PT">
     <grid name="1x1_mexicocityMEX">
       <test name="SMS_Ld1">
-        <machine compiler="nag" testtype="aux_clm40" testmods="clm/40default">hobart</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40default">janus</machine>
         <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
+      </test>
+      <test name="SMS_Ld1_Mmpi-serial">
+        <machine compiler="nag" testtype="aux_clm40" testmods="clm/40default">hobart</machine>
       </test>
     </grid>
     <grid name="1x1_urbanc_alpha">
@@ -301,7 +305,7 @@
       </test>
     </grid>
     <grid name="1x1_vancouverCAN">
-      <test name="ERS_Ld5">
+      <test name="ERS_Ld5_Mmpi-serial">
         <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">hobart</machine>
       </test>
     </grid>
@@ -316,6 +320,8 @@
       </test>
       <test name="SMS_Ld1">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/default">edison</machine>
+      </test>
+      <test name="SMS_Ld1_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
@@ -327,13 +333,13 @@
     <grid name="1x1_vancouverCAN">
       <test name="ERS_Ld5">
         <machine compiler="intel" testtype="aux_clm_ys_intel" testmods="clm/default">edison</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
-      <test name="SMS_D_Ld1">
-        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
+      <test name="ERS_Ld5_Mmpi-serial">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld1_Mmpi-serial">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/default">hobart</machine>
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
     <grid name="CLM_USRDAT">
@@ -346,12 +352,12 @@
   </compset>
   <compset name="I1PTCLM50">
     <grid name="1x1_mexicocityMEX">
-      <test name="SMS_D_Ld5">
+      <test name="SMS_D_Ld5_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
     <grid name="1x1_vancouverCAN">
-      <test name="ERS_Ld5">
+      <test name="ERS_Ld5_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld1_Mmpi-serial">
@@ -411,12 +417,12 @@
       </test>
     </grid>
     <grid name="1x1_mexicocityMEX">
-      <test name="SMS_D_Ld1">
+      <test name="SMS_D_Ld1_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
     <grid name="1x1_vancouverCAN">
-      <test name="SMS_D_Ld1">
+      <test name="SMS_D_Ld1_Mmpi-serial">
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
       </test>
     </grid>
@@ -446,15 +452,12 @@
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
       </test>
-      <test name="SMS_Ld1">
-        <machine compiler="nag" testtype="aux_clm45" testmods="clm/ptsRLA">hobart</machine>
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsRLB">yellowstone</machine>
-        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsROA">yellowstone</machine>
-      </test>
       <test name="SMS_Ld1_Mmpi-serial">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="nag" testtype="prealpha" testmods="clm/ptsRLA">hobart</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsRLB">yellowstone</machine>
+        <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsROA">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="intel" testtype="prealpha" testmods="clm/ptsRLA">yellowstone</machine>
         <machine compiler="pgi" testtype="prealpha" testmods="clm/ptsRLA">yellowstone</machine>
@@ -520,6 +523,9 @@
       <test name="ERP_D_Ld5_P24x1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/reduceOutput">hobart</machine>
       </test>
+      <test name="ERP_Ld1">
+        <machine compiler="intel" testtype="aux_testsystem" testmods="clm/default">yellowstone</machine>
+      </test>
       <test name="ERP_Ld5">
         <machine compiler="intel" testtype="aux_testsystem" testmods="clm/default">yellowstone</machine>
       </test>
@@ -533,9 +539,6 @@
         <machine compiler="gnu" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="clm_short_45" testmods="clm/default">yellowstone</machine>
-      </test>
-      <test name="PEM_Ld1">
-        <machine compiler="intel" testtype="aux_testsystem" testmods="clm/default">yellowstone</machine>
       </test>
       <test name="SMS_D_Ld1_P24x1">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/oldhyd">hobart</machine>
@@ -589,18 +592,18 @@
   </compset>
   <compset name="ICLM45BGCCROP">
     <grid name="1x1_numaIA">
-      <test name="ERP_Lm40">
+      <test name="ERP_Lm40_Mmpi-serial">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/monthly" comment="tests mid-year restart, with the restart file being written in the middle of the second year">yellowstone</machine>
       </test>
-      <test name="ERP_Lm54">
+      <test name="ERP_Lm54_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="tests mid-year restart, with the restart file being written after more than 2 years, which Sam Levis says is important for testing crop restarts">yellowstone</machine>
       </test>
-      <test name="ERP_Ly5">
+      <test name="ERP_Ly5_Mmpi-serial">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/monthly">hobart</machine>
       </test>
     </grid>
     <grid name="1x1_smallvilleIA">
-      <test name="ERP_Lm20">
+      <test name="ERP_Lm20_Mmpi-serial">
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/monthly" comment="tests mid-year restart, with the restart file being written in the middle of the first year">yellowstone</machine>
       </test>
     </grid>
@@ -648,10 +651,10 @@
   </compset>
   <compset name="ICLM45BGCDVCROP">
     <grid name="1x1_numaIA">
-      <test name="ERP_Ly20">
+      <test name="ERP_Ly20_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonthOutput">yellowstone</machine>
       </test>
-      <test name="SMS_Ly3">
+      <test name="SMS_Ly3_Mmpi-serial">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/cropMonthOutput">yellowstone</machine>
       </test>
     </grid>
@@ -831,16 +834,18 @@
   </compset>
   <compset name="ICNCROP">
     <grid name="1x1_numaIA">
-      <test name="ERP_Lm3">
+      <test name="ERP_Lm3_Mmpi-serial">
         <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40reduceOutput">hobart</machine>
       </test>
       <test name="SMS_Ld1">
         <machine compiler="intel " testtype="aux_clm_ys_pgi" testmods="clm/40default">edison</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40default">janus</machine>
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
         <machine compiler="gnu" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
         <machine compiler="intel" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/40default">yellowstone</machine>
+      </test>
+      <test name="SMS_Ld1_Mmpi-serial">
+        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40default">yellowstone</machine>
       </test>
     </grid>
     <grid name="1x1_smallvilleIA">
@@ -1018,13 +1023,13 @@
   </compset>
   <compset name="ICRUCLM50BGCCROP">
     <grid name="1x1_numaIA">
-      <test name="ERP_Lm40">
+      <test name="ERP_Lm40_Mmpi-serial">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/monthly" comment="tests mid-year restart, with the restart file being written in the middle of the second year">yellowstone</machine>
       </test>
-      <test name="ERP_Ly5">
+      <test name="ERP_Ly5_Mmpi-serial">
         <machine compiler="nag" testtype="aux_clm45" testmods="clm/monthly">hobart</machine>
       </test>
-      <test name="SMS_Ly3">
+      <test name="SMS_Ly3_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50dynroots">yellowstone</machine>
       </test>
     </grid>
@@ -1033,7 +1038,7 @@
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropColdStart">yellowstone</machine>
       </test>
       <test name="ERP_P30x2_Lm36">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropMonth_interp" comment="Ideally this test (currently our only CLM50 crop test with initial conditions) would turn on irrigation, too; however, that would require creating a new crop+irrig initial conditions file with the necessary metadata on it for init_interp">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50cropMonth_interp" comment="Ideally this test (currently our only CLM50 crop test with initial conditions) would turn on irrigation, too; however, that would require creating a new crop+irrig initial conditions file with the necessary metadata on it for init_interp">yellowstone</machine>
       </test>
     </grid>
   </compset>
@@ -1177,11 +1182,6 @@
         <machine compiler="null" testtype="null">null</machine>
       </test>
     </grid>
-    <grid name="f19_g16_gl5">
-      <test name="ERS_D">
-        <machine compiler="pgi" testtype="aux_clm40" testmods="clm/40reduceOutput">hobart</machine>
-      </test>
-    </grid>
   </compset>
   <compset name="IGRCP45CLM45CN">
     <grid name="f09_g16_gl5">
@@ -1282,13 +1282,13 @@
   </compset>
   <compset name="IHISTCLM45BGC">
     <grid name="1x1_tropicAtl">
-      <test name="SMS_Ly3">
+      <test name="SMS_Ly3_Mmpi-serial">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/tropicAtl_subsetLate">yellowstone</machine>
       </test>
-      <test name="SMS_Ly5">
+      <test name="SMS_Ly5_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/tropicAtl_subsetMid">yellowstone</machine>
       </test>
-      <test name="SMS_Ly8">
+      <test name="SMS_Ly8_Mmpi-serial">
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/tropicAtl_subsetEarly">yellowstone</machine>
       </test>
     </grid>
@@ -1316,10 +1316,10 @@
   </compset>
   <compset name="IHISTCLM45BGCCROP">
     <grid name="1x1_smallvilleIA">
-      <test name="ERS_D_Ld7">
+      <test name="ERS_D_Ld7_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart1851_noinitial" comment="Transient crop run with a mid-year restart, restarting shortly after a big landunit transition, to make sure that the annually-dribbled fluxes generated from landunit transitions restart properly">yellowstone</machine>
       </test>
-      <test name="SMS_D_Ly6">
+      <test name="SMS_D_Ly6_Mmpi-serial">
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="Want a debug test that tests a number of aspects of transient crops, including a new crop landunit and shifting PCT_CFT">yellowstone</machine>
       </test>
     </grid>

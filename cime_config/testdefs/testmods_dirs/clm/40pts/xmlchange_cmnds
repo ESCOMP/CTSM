@@ -21,4 +21,4 @@
 ./xmlchange NTASKS_GLC=1
 ./xmlchange NTASKS_ROF=1
 ./xmlchange NTASKS_WAV=1
-./xmlchange TOTALPES=1
+./xmlchange NTASKS_ESP=1

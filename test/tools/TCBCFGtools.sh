@@ -75,8 +75,8 @@ done < ${CLM_SCRIPTDIR}/config_files/$2
 if [ "$TOOLSLIBS" != "" ]; then
    export SLIBS=$TOOLSLIBS
 fi
-echo "env CIMEROOT=$CLM_ROOT/cime $config_string $CLM_ROOT/cime/tools/configure -mach $CESM_MACH -compiler $CESM_COMP $TOOLS_CONF_STRING"
-env CIMEROOT=$CLM_ROOT/cime $config_string $CLM_ROOT/cime/tools/configure -mach $CESM_MACH -compiler $CESM_COMP  $TOOLS_CONF_STRING >> test.log 2>&1
+echo "env CIMEROOT=$CLM_ROOT/cime COMPILER=$CESM_COMP $config_string $CLM_ROOT/cime/tools/configure --macros-format Makefile --machine $CESM_MACH $TOOLS_CONF_STRING"
+env       CIMEROOT=$CLM_ROOT/cime COMPILER=$CESM_COMP $config_string $CLM_ROOT/cime/tools/configure --macros-format Makefile --machine $CESM_MACH $TOOLS_CONF_STRING >> test.log 2>&1
 rc=$?
 if [ $rc -ne 0 ]; then
    echo "TCBCFGtools.sh: configure failed, error from configure= $rc" 
@@ -85,15 +85,16 @@ if [ $rc -ne 0 ]; then
    exit 5
 fi
 
-ln -s Macros.make Macros
+. ./.env_mach_specific.sh
+
 attempt=1
 still_compiling="TRUE"
 while [ $still_compiling = "TRUE" ]; do
 
     echo "TCBCFGtools.sh: call to make:" 
-    echo "        ${MAKE_CMD} "
+    echo "        ${MAKE_CMD} USER_CPPDEFS=-DLINUX"
     if [ "$debug" != "YES" ]; then
-       ${MAKE_CMD} >> test.log 2>&1
+       ${MAKE_CMD} USER_CPPDEFS=-DLINUX >> test.log 2>&1
        status="PASS"
        rc=$?
     else

@@ -42,16 +42,20 @@ source /glade/apps/opt/lmod/lmod/init/sh
 
 module purge
 module load ncarenv/1.0
-module load ncarbinlibs/1.0
+module load ncarbinlibs/1.1
+module load perlmods
+module load gmake/4.1
 
-module load intel/12.1.5
+module load intel/15.0.3
 module load ncarcompilers/1.0
-module load netcdf/4.2 
-module load pnetcdf/1.3.0
+module load netcdf/4.3.3.1
+module load pnetcdf/1.6.1
+module load mkl/11.1.2
 
 module load nco
 module load ncl
 module load python
+module load all-python-libs
 
 
 ##omp threads
@@ -72,7 +76,7 @@ export INC_NETCDF=\$NETCDF/include
 export LIB_NETCDF=\$NETCDF/lib
 export MAKE_CMD="gmake -j "
 export CFG_STRING=""
-export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
+export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CPPDEFS=-DLINUX"
 export MACH_WORKSPACE="/glade/scratch"
 export CPRNC_EXE="$CESMDATAROOT/tools/cprnc/cprnc"
 dataroot="$CESMDATAROOT"

@@ -13,32 +13,6 @@
     <desc>Name of land component</desc>
   </entry>
 
-  <entry id="LND_PIO_REARRANGER">
-    <values>
-      <value compset="_CLM40" >2</value>
-      <value compset="_CLM45" >1</value>
-      <value compset="_CLM50" >1</value>
-    </values>
-  </entry>
-
-  <entry id="BARRIER_N">
-    <values>
-      <value compset="_DATM" >1</value>
-    </values>
-  </entry>
-
-  <entry id="BARRIER_OPTION">
-    <values>
-      <value compset="_DATM" >ndays</value>
-    </values>
-  </entry>
-
-  <entry id="ATM_PIO_TYPENAME">
-    <values>
-      <value compset="DATM.*_CLM" >netcdf</value>
-    </values>
-  </entry>
-
   <entry id="LND_TUNING_MODE">
     <type>char</type>
     <group>run_component_clm</group>
@@ -58,7 +32,7 @@
   <entry id="CLM_CONFIG_OPTS" >
     <type>char</type>
     <default_value></default_value>
-    <values additive='yes'>
+    <values modifier='additive'>
       <value compset="_CLM40"           >-phys clm4_0</value>
       <value compset="_CLM40%[^_]*CN"   >-bgc cn</value>
       <value compset="_CLM40%[^_]*CNDV" >-bgc cndv</value>
@@ -153,7 +127,7 @@
     <list>1</list>
     <default_value>constant</default_value>
     <values>
-      <value compset="_CAM"        >diagnostic</value>
+      <value compset="_CAM"     >diagnostic</value>
       <value compset="_BGC%BDRD"   >diagnostic</value>
       <value compset="_BGC%BPRP"   >prognostic</value>
       <value compset="HIST.*_DATM" >diagnostic</value>

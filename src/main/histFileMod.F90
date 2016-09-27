@@ -243,6 +243,11 @@ module histFileMod
   ! Time Constant variable names and filename
   !
   character(len=max_chars) :: TimeConst3DVars_Filename = ' '
+  !
+  ! time_period_freq variable
+  !
+  character(len=max_chars) :: time_period_freq         = ' '
+
   character(len=max_chars) :: TimeConst3DVars          = ' '
 
   character(len=*), parameter, private :: sourcefile = &
@@ -2256,11 +2261,12 @@ contains
     !
     ! !DESCRIPTION:
     ! Write time constant values to primary history tape.
+    use clm_time_manager, only : get_step_size
     ! Issue the required netcdf wrapper calls to define the history file
     ! contents.
     !
     ! !USES:
-    use clm_varcon      , only : zsoi, zlak, secspday
+    use clm_varcon      , only : zsoi, zlak, secspday, isecspday, isecsphr, isecspmin
     use domainMod       , only : ldomain, lon1d, lat1d
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
     use clm_time_manager, only : get_ref_date, get_calendar, NO_LEAP_C, GREGORIAN_C
@@ -2268,8 +2274,10 @@ contains
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t              ! tape index
+    integer :: dtime                      ! timestep size
     character(len=*), intent(in) :: mode  ! 'define' or 'write'
     !
+    integer :: sec_hist_nhtfrq            ! hist_nhtfrq converted to seconds
     ! !LOCAL VARIABLES:
     integer :: vid,n,i,j,m                ! indices
     integer :: nstep                      ! current step
@@ -2375,6 +2383,32 @@ contains
        dim1id(1) = time_dimid
        call ncd_defvar(nfid(t) , 'mcdate', ncd_int, 1, dim1id , varid, &
           long_name = 'current date (YYYYMMDD)')
+       !
+       ! add global attribute time_period_freq
+       !
+       if (hist_nhtfrq(t) < 0) then !hour need to convert to seconds
+          sec_hist_nhtfrq = abs(hist_nhtfrq(t))*3600
+       else
+          sec_hist_nhtfrq = hist_nhtfrq(t)
+       end if
+   
+       dtime = get_step_size()
+       if (sec_hist_nhtfrq == 0) then !month
+          time_period_freq = 'month_1'
+       else if (mod(sec_hist_nhtfrq*dtime,isecspday) == 0) then ! day
+          write(time_period_freq,999) 'day_',sec_hist_nhtfrq*dtime/isecspday
+       else if (mod(sec_hist_nhtfrq*dtime,isecsphr) == 0) then ! hour
+          write(time_period_freq,999) 'hour_',(sec_hist_nhtfrq*dtime)/isecsphr
+       else if (mod(sec_hist_nhtfrq*dtime,isecspmin) == 0) then ! minute
+          write(time_period_freq,999) 'minute_',(sec_hist_nhtfrq*dtime)/isecspmin
+       else                     ! second
+          write(time_period_freq,999) 'second_',sec_hist_nhtfrq*dtime
+       end if
+999    format(a,i0)
+
+       call ncd_putatt(nfid(t), ncd_global, 'time_period_freq',          &
+                          trim(time_period_freq))
+
        call ncd_defvar(nfid(t) , 'mcsec' , ncd_int, 1, dim1id , varid, &
           long_name = 'current seconds of current date', units='s')
        call ncd_defvar(nfid(t) , 'mdcur' , ncd_int, 1, dim1id , varid, &

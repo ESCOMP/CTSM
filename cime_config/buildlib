@@ -1,57 +1,89 @@
-#! /usr/bin/env perl
-use strict;
-use File::Compare;
+#!/usr/bin/env python
 
-if ($#ARGV == -1) {
-    die " ERROR clm.buildlib: must specify at least a caseroot input argument";
-}
-my ($CASEROOT, $bldpath, $phys) = @ARGV;
-chdir "$CASEROOT";
+"""
+build clm library
+"""
+import sys, os, time, filecmp, shutil
 
-my $CASEBUILD = `./xmlquery CASEBUILD -value`;
-my $CASETOOLS = `./xmlquery CASETOOLS -value`;
-my $OBJROOT   = `./xmlquery OBJROOT   -value`;
-my $LIBROOT   = `./xmlquery LIBROOT   -value`;
-my $GMAKE_J   = `./xmlquery GMAKE_J   -value`;
-my $GMAKE     = `./xmlquery GMAKE     -value`;
+_CIMEROOT = os.environ.get("CIMEROOT")
+if _CIMEROOT is None:
+    raise SystemExit("ERROR: must set CIMEROOT environment variable")
 
-if (! defined($phys)){
-    $phys = 'lnd';
-    $bldpath = $OBJROOT;
-} 
-chdir "$bldpath/$phys/obj";
+_LIBDIR = os.path.join(_CIMEROOT, "scripts", "Tools")
+sys.path.append(_LIBDIR)
 
-if (-f "$CASEBUILD/clmconf/Filepath") {
-    my $sysmod = "cp $CASEBUILD/clmconf/Filepath ./tmp_filepath ";
-    system($sysmod) == 0 or die "ERROR: clm.buidlib $sysmod failed: $?\n";
-} else {
-    die "ERROR clm.buildlib  - missing $CASEBUILD/clmconf/Filepath";
-}
+from standard_script_setup import *
+from CIME.buildlib         import parse_input, run_gmake
+from CIME.case             import Case
+from CIME.utils            import run_cmd, expect
 
-foreach my $file ( "Filepath", "CESM_cppdefs" ) {
-    if (-f "$CASEBUILD/clmconf/$file") {
-	my $sysmod = "cp $CASEBUILD/clmconf/$file ./tmp_$file";
-	system($sysmod) == 0 or die "ERROR: clm.buidlib $sysmod failed: $?\n";
-    } else {
-	die "clm.buildlib ERROR - missing $CASEBUILD/clmconf/$file"
-    }
-    if (-f "$file") {
-	if (compare("tmp_$file", "$file") != 0) {
-	    my $sysmod = "mv -f tmp_$file $file ";
-	    system($sysmod) == 0 or die "ERROR: clm.buidlib $sysmod failed: $?\n";
-	}
-    } else {
-	my $sysmod = "mv -f tmp_$file $file";
-	system($sysmod) == 0 or die "ERROR: clm.buidexe $sysmod failed: $?\n";
-    }
-}
+logger = logging.getLogger(__name__)
 
-my $clmdefs = `cat $CASEBUILD/clmconf/CESM_cppdefs`;
-chomp($clmdefs);
-my $sysmod = "$GMAKE complib -j ${GMAKE_J} MODEL=clm COMPLIB=${bldpath}/lib/lib${phys}.a USER_CPPDEFS=\"${clmdefs}\" -f ${CASETOOLS}/Makefile";
-system($sysmod) == 0 or die "ERROR: clm.buildlib $sysmod failed: $?\n";
+###############################################################################
+def _main_func():
+###############################################################################
 
-exit(0);
+    caseroot, libroot, bldroot = parse_input(sys.argv)
+
+    case = Case(caseroot)
+
+    casebuild = case.get_value("CASEBUILD")
+    casetools = case.get_value("CASETOOLS")
+    gmake_j   = case.get_value("GMAKE_J")
+    gmake     = case.get_value("GMAKE")
+    mach      = case.get_value("MACH")
+
+    #-------------------------------------------------------
+    # create Filepath in bldroot
+    #-------------------------------------------------------
+
+    filesrc = os.path.join(casebuild, "clmconf", "Filepath")
+    filedst = os.path.join(bldroot, "Filepath_tmp")
+    shutil.copy(filesrc,filedst)
+
+    filedst     = os.path.join(bldroot,"Filepath")
+    filedst_tmp = os.path.join(bldroot,"Filepath_tmp")
+    if os.path.isfile(filedst):
+        if not filecmp.cmp(filedst_tmp, filedst):
+            shutil.move(filedst_tmp, filedst)
+    else:
+        shutil.move(filedst_tmp, filedst)
+
+    #-------------------------------------------------------
+    # create the library in libroot
+    #-------------------------------------------------------
+
+    # Note that casebuild/clmconf/CESM_cppdefs is created
+    # by the call to clm's bld/configure in clm's cime_config/buildnml
+
+    cppdefs_file = os.path.join(casebuild, "clmconf", "CESM_cppdefs")
+    user_cppdefs = ""
+    with open(cppdefs_file, 'r') as f:
+        cppdefs = f.readline()
+        if cppdefs:
+            user_cppdefs = cppdefs.rstrip()
+
+    clm_config_opts = case.get_value("CLM_CONFIG_OPTS")
+    complib = os.path.join(libroot,"libclm.a")
+    if "clm4_0" in clm_config_opts:
+        complib = os.path.join(libroot,"liblnd.a")
+    makefile = os.path.join(casetools, "Makefile")
+    macfile  = os.path.join(caseroot, "Macros.%s" % mach)
+
+    if user_cppdefs:
+        cmd = "%s complib -j %d MODEL=clm COMPLIB=%s -f %s MACFILE=%s USER_CPPDEFS='%s'" \
+            % (gmake, gmake_j, complib, makefile, macfile, user_cppdefs )
+    else:
+        cmd = "%s complib -j %d MODEL=clm COMPLIB=%s -f %s MACFILE=%s " \
+            % (gmake, gmake_j, complib, makefile, macfile )
+    rc, out, err = run_cmd(cmd)
+    logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n"%(cmd,out,err))
+    expect(rc == 0, "Command %s failed with rc=%s" % (cmd, rc))
 
 
+
+###############################################################################
+
+if __name__ == "__main__":
+    _main_func()
 

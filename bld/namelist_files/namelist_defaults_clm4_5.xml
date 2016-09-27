@@ -790,9 +790,9 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 <stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="2000-2100" >1850</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="2000-2100" >2010</stream_year_last_urbantv>
 
-<stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160801.nc</stream_fldfilename_urbantv>
+<stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 
-<stream_fldfilename_urbantv phys="clm4_5" hgrid="0.9x1.25" >lnd/clm2/urbandata/CLM45_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160801.nc</stream_fldfilename_urbantv>
+<stream_fldfilename_urbantv phys="clm4_5" hgrid="0.9x1.25" >lnd/clm2/urbandata/CLM45_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 
 <urbantvmapalgo >nn</urbantvmapalgo>
 

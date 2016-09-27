@@ -41,7 +41,7 @@ module MEGANFactorsMod
   integer , pointer :: hash_table_indices (:)            !  [integer (:)]  pointer to hash table indices 
   integer, parameter :: tbl_hash_sz = 2**16           ! hash table size
   !
-  character(len=32), allocatable :: comp_names(:)     ! MEGAN compound names
+  character(len=40), allocatable :: comp_names(:)     ! MEGAN compound names
   real(r8),          allocatable :: comp_molecwghts(:)! MEGAN compound molecular weights
 
   character(len=*), parameter, private :: sourcefile = &
