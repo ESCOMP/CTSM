@@ -1319,6 +1319,7 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
 
+       call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
 #if ({DIMS}==0) 
        if (varpresent) then
           status = pio_get_var(ncid, vardesc, data)
@@ -1328,6 +1329,10 @@ contains
                      errMsg(sourcefile, __LINE__))
              end if
           endif
+          if ( status /= PIO_NOERR )then
+             call shr_sys_abort(' ERROR: reading variable: '//trim(varname)//' ' &
+             // errMsg(sourcefile, __LINE__))
+          end if
        end if
 #else
        if (varpresent) then
@@ -1342,8 +1347,13 @@ contains
           else
              status = pio_get_var(ncid, varid, data)
           endif
+          if ( status /= PIO_NOERR )then
+             call shr_sys_abort(' ERROR: reading variable: '//trim(varname)//' ' &
+             // errMsg(sourcefile, __LINE__))
+          end if
        endif
 #endif
+       call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
@@ -1529,6 +1539,7 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
+          call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
           if (single_column) then
              start(:) = 1 ; count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
@@ -1556,6 +1567,10 @@ contains
 #else
              status = pio_get_var(ncid, varid, start(1:n), count(1:n), data)
 #endif
+             if ( status /= PIO_NOERR )then
+                call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+                // errMsg(sourcefile, __LINE__))
+             end if
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
              status = pio_inq_vardimid(ncid, vardesc, dids(1:ndims))
@@ -1588,10 +1603,17 @@ contains
              end if
              deallocate( idata )
 #else
+             call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
+             write(iulog,*) 'read: ', trim(varname)
              call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
 #endif
+             if ( status /= PIO_NOERR ) then
+                call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+                // errMsg(sourcefile, __LINE__))
+             end if
           end if
        end if
+       call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then

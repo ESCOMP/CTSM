@@ -91,17 +91,18 @@ OPTIONS
                               (default is sp).
                                 CLM Biogeochemistry mode
                                 sp    = Satellite Phenology (SP)
+                                    This toggles off the namelist variable: use_cn
                                 cn    = Carbon Nitrogen model (CN)
-                                        (or CLM45CN if phys=clm4_5/clm5_0, use_cn=true)
+                                        (or CLM45CN if phys=clm4_5/clm5_0)
+                                    This toggles on the namelist variable: use_cn
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
                                         CENTURY decomposition
-                                        (or CLM45BGC if phys=clm4_5/clm5_0, use_cn=true, use_vertsoilc=true,
-                                         use_century_decomp=true, use_nitrif_denitrif=true, and use_lch4=true)
+                                        (or CLM45BGC if phys=clm4_5/clm5_0)
                                     This toggles on the namelist variables:
                                           use_cn, use_lch4, use_nitrif_denitrif, use_vertsoilc, use_century_decomp
                                 ed    = Ecosystem Demography with below ground BGC
                                     This toggles on the namelist variables:
-                                          use_cn, use_lch4, use_nitrif_denitrif, use_vertsoilc, use_century_decomp
+                                          use_ed, use_vertsoilc, use_century_decomp
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
      -clm_accelerated_spinup "on|off" Setup in a configuration to run as fast as possible for doing a throw-away
@@ -112,8 +113,7 @@ OPTIONS
                               , also by default turn on Accelerated Decomposition mode which 
                               is controlled by the namelist variable spinup_state.
 
-                              BGC Spinup for CLM4.5/5.0 Only (for CLM4.0 BGC spinup is
-                              controlled from configure)
+                              BGC Spinup for CLM4.5/5.0 Only (for CLM4.0 BGC spinup is controlled from configure)
 
 
                               Turn on given spinup mode for BGC setting of CN
@@ -182,6 +182,7 @@ OPTIONS
                               If .false., pass positive-degree-day info to GLC
                               Default: true
      -help [or -h]            Print usage to STDOUT.
+     -light_res <value>       Resolution of lightning dataset to use for CN fire (hcru or T62)
      -ignore_ic_date          Ignore the date on the initial condition files
                               when determining what input initial condition file to use.
      -ignore_ic_year          Ignore just the year part of the date on the initial condition files
@@ -267,6 +268,7 @@ sub process_commandline {
                glc_nec               => "default",
                glc_present           => 0,
                glc_smb               => "default",
+               light_res             => "default",
                l_ncpl                => undef,
                lnd_tuning_mode       => "default",
                lnd_frac              => undef,
@@ -308,6 +310,7 @@ sub process_commandline {
              "glc_nec=i"                 => \$opts{'glc_nec'},
              "glc_present!"              => \$opts{'glc_present'},
              "glc_smb=s"                 => \$opts{'glc_smb'},
+             "light_res=s"               => \$opts{'light_res'},
              "irrig=s"                   => \$opts{'irrig'},
              "d:s"                       => \$opts{'dir'},
              "h|help"                    => \$opts{'help'},
@@ -639,6 +642,7 @@ sub process_namelist_commandline_options {
   setup_cmdl_resolution($opts, $nl_flags, $definition, $defaults);
   setup_cmdl_mask($opts, $nl_flags, $definition, $defaults, $nl);
   setup_cmdl_bgc($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
+  setup_cmdl_fire_light_res($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
   setup_cmdl_spinup($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
   setup_cmdl_crop($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
   setup_cmdl_maxpft($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv);
@@ -888,6 +892,66 @@ sub setup_cmdl_bgc {
   }
 } # end bgc
 
+
+#-------------------------------------------------------------------------------
+sub setup_cmdl_fire_light_res {
+  # light_res - alias for lightning resolution
+
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $physv) = @_;
+
+  my $var = "light_res";
+  my $val = $opts->{$var};
+  if ( $physv->as_long() == $physv->as_long("clm4_0") ) {
+    if ( $val !~ /default|none/ ) {
+      fatal_error("-$var option used with clm4_0 physics. -$var can ONLY be used with clm4_5/clm5_0 physics");
+    }
+  } else {
+    if ( $val eq "default" ) {
+       $nl_flags->{$var} = remove_leading_and_trailing_quotes($defaults->get_value($var));
+    } else {
+       my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
+       if ( defined($fire_method) && $val ne "none" ) {
+         if ( $fire_method eq "nofire" ) {
+           fatal_error("-$var option used with fire_method='nofire'. -$var can ONLY be used without the nofire option");
+         }
+       }
+       my $stream_fldfilename_lightng = remove_leading_and_trailing_quotes( $nl->get_value('stream_fldfilename_lightng') );
+       if ( defined($stream_fldfilename_lightng) && $val ne "none" ) {
+          fatal_error("-$var option used while also explicitly setting stream_fldfilename_lightng filename which is a contradiction. Use one or the other not both.");
+       }
+       if ( ! &value_is_true($nl->get_value('use_cn')) ) {
+          fatal_error("-$var option used CN is NOT on. -$var can only be used when CN is on (with bgc: cn or bgc)");
+       }
+       $nl_flags->{$var} = $val;
+    }
+    my $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, quote_string($nl_flags->{$var}) );
+    if (  ! $definition->is_valid_value( $var, $nl_flags->{$var}, 'noquotes'=>1 ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      fatal_error("$var has a value (".$nl_flags->{$var}.") that is NOT valid. Valid values are: @valid_values\n");
+    }
+    verbose_message("Using $nl_flags->{$var} for $var.");
+    #
+    # Set flag if cn-fires are on or not
+    #
+    $var = "cnfireson";
+    if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl->get_value('use_cn')) ) {
+       add_default($opts->{'test_files'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
+    }
+    my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
+    if ( defined($fire_method) && ! value_is_true($nl_flags->{'use_cn'}) ) {
+       fatal_error("fire_method is being set even though bgc is NOT cn or bgc.\n");
+    }
+    if ( defined($fire_method) && $fire_method eq "nofire" ) {
+       $nl_flags->{$var} = ".false.";
+    } elsif ( &value_is_true($nl->get_value('use_cn')) ) {
+       $nl_flags->{$var} = ".true.";
+    } else {
+       $nl_flags->{$var} = ".false.";
+    }
+  }
+}
+
 #-------------------------------------------------------------------------------
 
 sub setup_cmdl_crop {
@@ -1108,7 +1172,7 @@ sub setup_cmdl_spinup {
   } elsif ( $physv->as_long() >= $physv->as_long("clm4_5")) {
     add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition,
                 $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{$var},
-                use_cn=>$nl_flags->{'use_cn'} );
+                use_cn=>$nl_flags->{'use_cn'}, use_ed=>$nl_flags->{'use_ed'} );
     if ( $nl->get_value("spinup_state") ne 0 ) {
       $nl_flags->{'bgc_spinup'} = "on";
       if ( $nl_flags->{'bgc_mode'} eq "sp" ) {
@@ -1422,7 +1486,8 @@ sub process_namelist_commandline_use_case {
     $settings{'sim_year_range'} = $nl_flags->{'sim_year_range'};
     $settings{'phys'}           = $nl_flags->{'phys'};
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-      $settings{'use_cn'}         = $nl_flags->{'use_cn'};
+      $settings{'use_cn'}      = $nl_flags->{'use_cn'};
+      $settings{'cnfireson'}   = $nl_flags->{'cnfireson'};
     } else {
       $settings{'bgc'}         = $nl_flags->{'bgc_mode'};
     }
@@ -2006,14 +2071,13 @@ sub setup_logic_cnfire {
   my @fire_consts = ( "rh_low", "rh_hgh", "bt_min", "bt_max", "cli_scale", "boreal_peatfire_c", "non_boreal_peatfire_c", 
                       "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree" );
   if ( $physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true($nl->get_value('use_cn')) ) {
-     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
-     my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
      foreach my $item ( @fire_consts ) {
-        if ( $fire_method =~ /nofire/ ) {
+        if ( ! value_is_true($nl_flags->{'cnfireson'} ) ) {
            if ( defined($nl->get_value($item)) ) {
               fatal_error( "fire_method is no_fire and yet $item is being set, which contradicts that" );
            }
         } else {
+           my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
            add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, 
                        'fire_method'=>$fire_method, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'});
         }
@@ -2171,8 +2235,11 @@ sub setup_logic_surface_dataset {
                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrig'=>$nl_flags->{'irrig'},
                 'crop'=>$nl_flags->{'crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
   } else{
-    if ($flanduse_timeseries ne "null" && $nl_flags->{'use_cndv'} =~ /$TRUE/i ) {
+    if ($flanduse_timeseries ne "null" && value_is_true($nl_flags->{'use_cndv'}) ) {
         fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
+    }
+    if ($flanduse_timeseries ne "null" && value_is_true($nl_flags->{'use_ed'}) ) {
+        fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with ecosystem dynamics (use_ed=.true)." );
     }
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
                 'hgrid'=>$nl_flags->{'res'},
@@ -2624,7 +2691,7 @@ sub setup_logic_hydrology_switches {
      if ( defined($use_vic) && defined($lower) && (value_is_true($use_vic)) && $lower != 3 && $lower != 4) {
         fatal_error( "If use_vichydro is on -- lower_boundary_condition can only be table or aquifer" );
      }
-     if ( defined($origflag) && defined($use_vic) && (value_is_true($use_vic)) && $origflag != 1 ) {
+     if ( defined($origflag) && defined($use_vic) && (value_is_true($use_vic)) && $origflag == 1 ) {
         fatal_error( "If use_vichydro is on -- origflag can NOT be equal to 1" );
      }
      if ( defined($h2osfcflag) && defined($lower) && $h2osfcflag == 0 && $lower != 4 ) {
@@ -2882,7 +2949,7 @@ sub setup_logic_c_isotope {
         my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
         if ( defined($use_c14_bombspike) && value_is_true($use_c14_bombspike) ) {
            add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
-                   'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'} );
+                   'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike') );
         }
       } else {
         if ( defined($nl->get_value('use_c14_bombspike')) ||
@@ -3042,29 +3109,30 @@ sub setup_logic_popd_streams {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} ne "ed" ) {
-      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdensmapalgo', 'hgrid'=>$nl_flags->{'res'} );
+    if ( value_is_true($nl_flags->{'cnfireson'}) ) {
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'popdensmapalgo', 'hgrid'=>$nl_flags->{'res'}, 
+                  'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}, 'cnfireson'=>$nl_flags->{'cnfireson'}  );
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_popdens', 'phys'=>$nl_flags->{'phys'},
-                  'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                  'cnfireson'=>$nl_flags->{'cnfireson'}, 'sim_year'=>$nl_flags->{'sim_year'},
                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_popdens', 'phys'=>$nl_flags->{'phys'},
-                  'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
+                  'cnfireson'=>$nl_flags->{'cnfireson'}, 'sim_year'=>$nl_flags->{'sim_year'},
                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
       # Set align year, if first and last years are different
       if ( $nl->get_value('stream_year_first_popdens') != 
            $nl->get_value('stream_year_last_popdens') ) {
         add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_popdens', 'sim_year'=>$nl_flags->{'sim_year'},
-                    'sim_year_range'=>$nl_flags->{'sim_year_range'});
+                    'sim_year_range'=>$nl_flags->{'sim_year_range'}, 'cnfireson'=>$nl_flags->{'cnfireson'});
       }
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'phys'=>$nl_flags->{'phys'},
-                  'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>"0.5x0.5" );
+                  'cnfireson'=>$nl_flags->{'cnfireson'}, 'hgrid'=>"0.5x0.5" );
     } else {
-      # If bgc is NOT CN/CNDV then make sure none of the popdens settings are set
+      # If bgc is NOT CN/CNDV or fire_method==nofire then make sure none of the popdens settings are set
       if ( defined($nl->get_value('stream_year_first_popdens')) ||
            defined($nl->get_value('stream_year_last_popdens'))  ||
            defined($nl->get_value('model_year_align_popdens'))  ||
            defined($nl->get_value('stream_fldfilename_popdens'))   ) {
-        fatal_error("When bgc is SP (NOT CN or BGC) none of: stream_year_first_popdens,\n" .
+        fatal_error("When bgc is SP (NOT CN or BGC) or fire_method==nofire none of: stream_year_first_popdens,\n" .
                     "stream_year_last_popdens, model_year_align_popdens, nor\n" .
                     "stream_fldfilename_popdens can be set!\n");
       }
@@ -3106,7 +3174,7 @@ sub setup_logic_lightning_streams {
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} ne "ed" ) {
+    if ( value_is_true($nl_flags->{'cnfireson'}) ) {
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 'use_cn'=>$nl_flags->{'use_cn'},
                   'hgrid'=>$nl_flags->{'res'},
                   'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
@@ -3123,14 +3191,14 @@ sub setup_logic_lightning_streams {
                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
       }
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
-                  'hgrid'=>"94x192" );
+                  'hgrid'=>$nl_flags->{'light_res'} );
     } else {
       # If bgc is NOT CN/CNDV then make sure none of the Lightng settings are set
       if ( defined($nl->get_value('stream_year_first_lightng')) ||
            defined($nl->get_value('stream_year_last_lightng'))  ||
            defined($nl->get_value('model_year_align_lightng'))  ||
            defined($nl->get_value('stream_fldfilename_lightng'))   ) {
-        fatal_error("When bgc is SP (NOT CN or BGC) none of: stream_year_first_lightng,\n" .
+        fatal_error("When bgc is SP (NOT CN or BGC) or fire_method==nofire none of: stream_year_first_lightng,\n" .
                     "stream_year_last_lightng, model_year_align_lightng, nor\n" .
                     "stream_fldfilename_lightng can be set!\n");
       }
@@ -3401,8 +3469,8 @@ sub write_output_files {
                  lai_streams clm_canopyhydrology_inparm 
                  clm_soilhydrology_inparm dynamic_subgrid 
                  finidat_consistency_checks dynpft_consistency_checks 
-                 clm_initinterp_inparm
-                 soilhydrology_inparm
+                 clm_initinterp_inparm century_soilbgcdecompcascade
+                 soilhydrology_inparm luna friction_velocity mineral_nitrogen_dynamics
                  soilwater_movement_inparm rooting_profile_inparm 
                  soil_resis_inparm  bgc_shared canopyfluxes_inparm
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm

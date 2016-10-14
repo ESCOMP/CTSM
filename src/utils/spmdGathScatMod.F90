@@ -12,11 +12,14 @@ module spmdGathScatMod
   use clm_varcon, only: spval, ispval
   use decompMod, only : get_clmlevel_gsmap
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use spmdMod
-  use mct_mod
+  use spmdMod   , only : masterproc, mpicom
+  use mct_mod   , only : mct_aVect, mct_gsMap
+  use mct_mod   , only : mct_aVect_init, mct_aVect_importIattr, mct_aVect_scatter
+  use mct_mod   , only : mct_aVect_gather, mct_aVect_exportIattr, mct_aVect_clean
+  use mct_mod   , only : mct_aVect_exportRattr, mct_aVect_importRattr
   use abortutils, only : endrun
   use clm_varctl, only : iulog
-  use perf_mod
+  use perf_mod  , only : t_startf, t_stopf
 !
 ! !PUBLIC TYPES:
   implicit none

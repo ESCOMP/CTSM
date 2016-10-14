@@ -348,7 +348,8 @@ contains
 
        call init_decomp_cascade_constants()
        if (use_century_decomp) then
-          call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, soilstate_inst)
+          call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
+                                      soilstate_inst )
        else 
           call init_decompcascade_cn(bounds, soilbiogeochem_state_inst)
        end if

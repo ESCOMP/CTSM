@@ -8,12 +8,9 @@ module ndepStreamMod
   !
   ! !USES
   use shr_kind_mod, only: r8 => shr_kind_r8, CL => shr_kind_cl
-  use shr_strdata_mod
-  use shr_stream_mod
-  use shr_string_mod
-  use shr_sys_mod
-  use shr_mct_mod
-  use mct_mod
+  use shr_strdata_mod, only: shr_strdata_type, shr_strdata_create
+  use shr_strdata_mod, only: shr_strdata_print, shr_strdata_advance
+  use mct_mod     , only: mct_ggrid
   use spmdMod     , only: mpicom, masterproc, comp_id, iam
   use clm_varctl  , only: iulog
   use abortutils  , only: endrun
@@ -56,6 +53,7 @@ contains
    use shr_pio_mod      , only : shr_pio_getiotype
    use shr_nl_mod       , only : shr_nl_find_group_name
    use shr_log_mod      , only : errMsg => shr_log_errMsg
+   use shr_mpi_mod      , only : shr_mpi_bcast
    !
    ! arguments
    implicit none
@@ -196,6 +194,9 @@ contains
     use clm_varcon  , only : re
     use domainMod   , only : ldomain
     use seq_flds_mod
+    use mct_mod     , only : mct_ggrid, mct_gsMap_lsize, mct_gGrid_init
+    use mct_mod     , only : mct_gsMap_orderedPoints, mct_gGrid_importIAttr
+    use mct_mod     , only : mct_gGrid_importRAttr
     implicit none
     ! 
     ! arguments

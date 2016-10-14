@@ -59,10 +59,10 @@ module clm_varpar
 
   ! constants for decomposition cascade
 
-  integer :: i_met_lit 
-  integer :: i_cel_lit 
-  integer :: i_lig_lit 
-  integer :: i_cwd 
+  integer, parameter :: i_met_lit  = 1
+  integer, parameter :: i_cel_lit  = i_met_lit + 1
+  integer, parameter :: i_lig_lit  = i_cel_lit + 1
+  integer            :: i_cwd
 
   integer :: ndecomp_pools
   integer :: ndecomp_cascade_transitions
@@ -191,36 +191,22 @@ contains
     end if
 
     if ( use_ed ) then
+       i_cwd = 0
        if (use_century_decomp) then
           ndecomp_pools = 6
           ndecomp_cascade_transitions = 8
-          i_met_lit = 1
-          i_cel_lit = 2
-          i_lig_lit = 3
-          i_cwd = 0
        else
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 7
-          i_met_lit = 1
-          i_cel_lit = 2
-          i_lig_lit = 3
-          i_cwd = 0
        end if
     else
+       i_cwd = 4
        if (use_century_decomp) then
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 10
-          i_met_lit = 1
-          i_cel_lit = 2
-          i_lig_lit = 3
-          i_cwd = 4
        else
           ndecomp_pools = 8
           ndecomp_cascade_transitions = 9
-          i_met_lit = 1
-          i_cel_lit = 2
-          i_lig_lit = 3
-          i_cwd = 4
        end if
     endif
 

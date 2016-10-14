@@ -65,7 +65,7 @@ contains
     use column_varcon       , only : icol_shadewall, icol_road_perv, icol_road_imperv
     use column_varcon       , only : icol_roof, icol_sunwall
     use filterMod           , only : filter
-    use FrictionVelocityMod , only : FrictionVelocity, MoninObukIni
+    use FrictionVelocityMod , only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
     use QSatMod             , only : QSat
     use clm_varpar          , only : maxpatch_urb, nlevurb, nlevgrnd
     use clm_time_manager    , only : get_curr_date, get_step_size, get_nstep
@@ -266,6 +266,7 @@ contains
 
          forc_hgt_u_patch    =>   frictionvel_inst%forc_hgt_u_patch         , & ! Input:  [real(r8) (:)   ]  observational height of wind at patch-level (m)     
          forc_hgt_t_patch    =>   frictionvel_inst%forc_hgt_t_patch         , & ! Input:  [real(r8) (:)   ]  observational height of temperature at patch-level (m)
+         zetamax             =>   frictionvel_parms_inst%zetamaxstable      , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          ram1                =>   frictionvel_inst%ram1_patch               , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                    
          u10_clm             =>   frictionvel_inst%u10_clm_patch            , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
 
@@ -632,7 +633,7 @@ contains
             zeta = zldis(l)*vkc*grav*thvstar/(ustar(l)**2*thv_g(l))
 
             if (zeta >= 0._r8) then                   !stable
-               zeta = min(2._r8,max(zeta,0.01_r8))
+               zeta = min(zetamax,max(zeta,0.01_r8))
                um(l) = max(ur(l),0.1_r8)
             else                                      !unstable
                zeta = max(-100._r8,min(zeta,-0.01_r8))

@@ -36,7 +36,7 @@ module SoilStateType
      real(r8), pointer :: hksat_min_col        (:,:) ! col mineral hydraulic conductivity at saturation (hksat) (mm/s)
      real(r8), pointer :: hk_l_col             (:,:) ! col hydraulic conductivity (mm/s)
      real(r8), pointer :: smp_l_col            (:,:) ! col soil matric potential (mm)
-     real(r8), pointer :: djk_l_col            (:,:) ! col soil transpiration sink by layer
+     real(r8), pointer :: tsink_l_col          (:,:) ! col soil transpiration sink by layer (mm H2O /s)
      real(r8), pointer :: smpmin_col           (:)   ! col restriction for min of soil potential (mm) 
      real(r8), pointer :: bsw_col              (:,:) ! col Clapp and Hornberger "b" (nlevgrnd)  
      real(r8), pointer :: watsat_col           (:,:) ! col volumetric soil water at saturation (porosity) 
@@ -133,9 +133,7 @@ contains
     allocate(this%hksat_min_col        (begc:endc,nlevgrnd))            ; this%hksat_min_col        (:,:) = spval
     allocate(this%hk_l_col             (begc:endc,nlevgrnd))            ; this%hk_l_col             (:,:) = nan   
     allocate(this%smp_l_col            (begc:endc,nlevgrnd))            ; this%smp_l_col            (:,:) = nan   
-    if (use_hydrstress) then
-      allocate(this%djk_l_col          (begc:endc,nlevgrnd))            ; this%djk_l_col            (:,:) = spval
-    end if
+    allocate(this%tsink_l_col          (begc:endc,nlevgrnd))            ; this%tsink_l_col          (:,:) = spval
     allocate(this%smpmin_col           (begc:endc))                     ; this%smpmin_col           (:)   = nan
 
     allocate(this%bsw_col              (begc:endc,nlevgrnd))            ; this%bsw_col              (:,:) = nan
@@ -212,11 +210,9 @@ contains
          avgflag='A', long_name='soil matric potential (vegetated landunits only)', &
          ptr_col=this%smp_l_col, set_spec=spval, l2g_scale_type='veg')
 
-    if (use_hydrstress) then
-      call hist_addfld2d (fname='DJK',  units='tbd', type2d='levgrnd',  &
-           avgflag='A', long_name='soil transpiration sink by layer', &
-           ptr_col=this%djk_l_col, set_spec=spval, l2g_scale_type='veg')
-    end if
+    call hist_addfld2d (fname='TSINK',  units='mm/s', type2d='levgrnd',  &
+         avgflag='A', long_name='soil transpiration sink by layer', &
+         ptr_col=this%tsink_l_col, set_spec=spval, l2g_scale_type='veg')
 
     if (use_cn) then
        this%bsw_col(begc:endc,:) = spval 
@@ -230,15 +226,6 @@ contains
        call hist_addfld2d (fname='ROOTFR', units='proportion', type2d='levgrnd', &
             avgflag='A', long_name='fraction of roots in each soil layer', &
             ptr_patch=this%rootfr_patch, default='active')
-    else
-       this%rootfr_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='ROOTFR', units='proportion', type2d='levgrnd', &
-          avgflag='A', long_name='fraction of roots for water in each soil layer', &
-          ptr_patch=this%rootfr_patch, default='active')
-       this%crootfr_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='CROOTFR', units='proportion', type2d='levgrnd', &
-          avgflag='A', long_name='fraction of roots for carbon in each soil layer', &
-          ptr_patch=this%crootfr_patch, default='active')
     end if
 
 

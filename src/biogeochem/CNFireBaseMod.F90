@@ -117,17 +117,19 @@ contains
     character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
-    ! Allocate lightning forcing data
-    allocate( this%forc_lnfm(bounds%begg:bounds%endg) )
-    this%forc_lnfm(bounds%begg:) = nan
-    ! Allocate pop dens forcing data
-    allocate( this%forc_hdm(bounds%begg:bounds%endg) )
-    this%forc_hdm(bounds%begg:) = nan
+    if ( this%need_lightning_and_popdens ) then
+       ! Allocate lightning forcing data
+       allocate( this%forc_lnfm(bounds%begg:bounds%endg) )
+       this%forc_lnfm(bounds%begg:) = nan
+       ! Allocate pop dens forcing data
+       allocate( this%forc_hdm(bounds%begg:bounds%endg) )
+       this%forc_hdm(bounds%begg:) = nan
 
-    call this%hdm_init(bounds, NLFilename)
-    call this%hdm_interp(bounds)
-    call this%lnfm_init(bounds, NLFilename)
-    call this%lnfm_interp(bounds)
+       call this%hdm_init(bounds, NLFilename)
+       call this%hdm_interp(bounds)
+       call this%lnfm_init(bounds, NLFilename)
+       call this%lnfm_interp(bounds)
+    end if
 
   end subroutine CNFireInit
 
@@ -163,62 +165,64 @@ contains
                              non_boreal_peatfire_c, cropfire_a1,                &
                              rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree
 
-    cli_scale                 = cnfire_const%cli_scale
-    boreal_peatfire_c         = cnfire_const%boreal_peatfire_c
-    non_boreal_peatfire_c     = cnfire_const%non_boreal_peatfire_c
-    pot_hmn_ign_counts_alpha  = cnfire_const%pot_hmn_ign_counts_alpha
-    cropfire_a1               = cnfire_const%cropfire_a1
-    rh_low                    = cnfire_const%rh_low
-    rh_hgh                    = cnfire_const%rh_hgh
-    bt_min                    = cnfire_const%bt_min
-    bt_max                    = cnfire_const%bt_max
-    occur_hi_gdp_tree         = cnfire_const%occur_hi_gdp_tree
-    ! Initialize options to default values, in case they are not specified in
-    ! the namelist
+    if ( this%need_lightning_and_popdens ) then
+       cli_scale                 = cnfire_const%cli_scale
+       boreal_peatfire_c         = cnfire_const%boreal_peatfire_c
+       non_boreal_peatfire_c     = cnfire_const%non_boreal_peatfire_c
+       pot_hmn_ign_counts_alpha  = cnfire_const%pot_hmn_ign_counts_alpha
+       cropfire_a1               = cnfire_const%cropfire_a1
+       rh_low                    = cnfire_const%rh_low
+       rh_hgh                    = cnfire_const%rh_hgh
+       bt_min                    = cnfire_const%bt_min
+       bt_max                    = cnfire_const%bt_max
+       occur_hi_gdp_tree         = cnfire_const%occur_hi_gdp_tree
+       ! Initialize options to default values, in case they are not specified in
+       ! the namelist
 
-    if (masterproc) then
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nmlname//'  namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
-       if (ierr == 0) then
-          read(unitn, nml=lifire_inparm, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       if (masterproc) then
+          unitn = getavu()
+          write(iulog,*) 'Read in '//nmlname//'  namelist'
+          call opnfil (NLFilename, unitn, 'F')
+          call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+          if (ierr == 0) then
+             read(unitn, nml=lifire_inparm, iostat=ierr)
+             if (ierr /= 0) then
+                call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+             end if
+          else
+             call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
           end if
-       else
-          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          call relavu( unitn )
        end if
-       call relavu( unitn )
-    end if
 
-    call shr_mpi_bcast (cli_scale               , mpicom)
-    call shr_mpi_bcast (boreal_peatfire_c       , mpicom)
-    call shr_mpi_bcast (pot_hmn_ign_counts_alpha, mpicom)
-    call shr_mpi_bcast (non_boreal_peatfire_c   , mpicom)
-    call shr_mpi_bcast (cropfire_a1             , mpicom)
-    call shr_mpi_bcast (rh_low                  , mpicom)
-    call shr_mpi_bcast (rh_hgh                  , mpicom)
-    call shr_mpi_bcast (bt_min                  , mpicom)
-    call shr_mpi_bcast (bt_max                  , mpicom)
-    call shr_mpi_bcast (occur_hi_gdp_tree       , mpicom)
+       call shr_mpi_bcast (cli_scale               , mpicom)
+       call shr_mpi_bcast (boreal_peatfire_c       , mpicom)
+       call shr_mpi_bcast (pot_hmn_ign_counts_alpha, mpicom)
+       call shr_mpi_bcast (non_boreal_peatfire_c   , mpicom)
+       call shr_mpi_bcast (cropfire_a1             , mpicom)
+       call shr_mpi_bcast (rh_low                  , mpicom)
+       call shr_mpi_bcast (rh_hgh                  , mpicom)
+       call shr_mpi_bcast (bt_min                  , mpicom)
+       call shr_mpi_bcast (bt_max                  , mpicom)
+       call shr_mpi_bcast (occur_hi_gdp_tree       , mpicom)
 
-    cnfire_const%cli_scale                 = cli_scale
-    cnfire_const%boreal_peatfire_c         = boreal_peatfire_c
-    cnfire_const%non_boreal_peatfire_c     = non_boreal_peatfire_c
-    cnfire_const%pot_hmn_ign_counts_alpha  = pot_hmn_ign_counts_alpha
-    cnfire_const%cropfire_a1               = cropfire_a1
-    cnfire_const%rh_low                    = rh_low
-    cnfire_const%rh_hgh                    = rh_hgh
-    cnfire_const%bt_min                    = bt_min
-    cnfire_const%bt_max                    = bt_max
-    cnfire_const%occur_hi_gdp_tree         = occur_hi_gdp_tree
+       cnfire_const%cli_scale                 = cli_scale
+       cnfire_const%boreal_peatfire_c         = boreal_peatfire_c
+       cnfire_const%non_boreal_peatfire_c     = non_boreal_peatfire_c
+       cnfire_const%pot_hmn_ign_counts_alpha  = pot_hmn_ign_counts_alpha
+       cnfire_const%cropfire_a1               = cropfire_a1
+       cnfire_const%rh_low                    = rh_low
+       cnfire_const%rh_hgh                    = rh_hgh
+       cnfire_const%bt_min                    = bt_min
+       cnfire_const%bt_max                    = bt_max
+       cnfire_const%occur_hi_gdp_tree         = occur_hi_gdp_tree
 
-    if (masterproc) then
-       write(iulog,*) ' '
-       write(iulog,*) nmlname//' settings:'
-       write(iulog,nml=lifire_inparm)
-       write(iulog,*) ' '
+       if (masterproc) then
+          write(iulog,*) ' '
+          write(iulog,*) nmlname//' settings:'
+          write(iulog,nml=lifire_inparm)
+          write(iulog,*) ' '
+       end if
     end if
 
   end subroutine CNFireReadNML
@@ -234,8 +238,10 @@ contains
     type(bounds_type), intent(in) :: bounds  
     !-----------------------------------------------------------------------
 
-    call this%hdm_interp(bounds)
-    call this%lnfm_interp(bounds)
+    if ( this%need_lightning_and_popdens ) then
+       call this%hdm_interp(bounds)
+       call this%lnfm_interp(bounds)
+    end if
 
   end subroutine CNFireInterp
 

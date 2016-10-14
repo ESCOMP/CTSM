@@ -34,6 +34,7 @@ module LunaMod
   
   !------------------------------------------------------------------------------
   ! PRIVATE MEMBER FUNCTIONS:
+  public  :: LunaReadNML                                   !subroutine to read in the Luna namelist
   public  :: Update_Photosynthesis_Capacity                !subroutine to update the canopy nitrogen profile
   public  :: NitrogenAllocation                            !subroutine to update the Vcmax25 and Jmax25 at the leaf level
   public  :: Acc24_Climate_LUNA                            !subroutine to accumulate 24 hr climates
@@ -64,7 +65,7 @@ module LunaMod
   real(r8), parameter :: forc_pbot_ref = 101325.0_r8       ! reference air pressure for calculation of reference NUE
   real(r8), parameter :: Q10Enz = 2.0_r8                   ! Q10 value for enzyme decay rate
   real(r8), parameter :: Jmaxb0 = 0.0311_r8                ! the baseline proportion of nitrogen allocated for electron transport (J)     
-  real(r8), parameter :: Jmaxb1 = 0.1745_r8                ! the baseline proportion of nitrogen allocated for electron transport (J)    
+  real(r8)            :: Jmaxb1 = 0.1745_r8                ! the baseline proportion of nitrogen allocated for electron transport (J)    
   real(r8), parameter :: Wc2Wjb0 = 0.8054_r8               ! the baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) 
   real(r8), parameter :: relhExp = 6.0999_r8               ! electron transport parameters related to relative humidity
   real(r8), parameter :: Enzyme_turnover_daily = 0.1_r8    ! the daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001)
@@ -81,7 +82,66 @@ module LunaMod
   !------------------------------------------------------------------------------
   
   contains
-  
+
+  !********************************************************************************************************************************************************************** 
+  ! Read in LUNA namelist
+  subroutine LunaReadNML( NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for LUNA
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use clm_varctl     , only : iulog
+    use shr_log_mod    , only : errMsg => shr_log_errMsg
+    use abortutils     , only : endrun
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'lunaReadNML'
+    character(len=*), parameter :: nmlname = 'luna'
+    !-----------------------------------------------------------------------
+    namelist /luna/ Jmaxb1
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=luna, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast (Jmaxb1, mpicom)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=luna)
+       write(iulog,*) ' '
+    end if
+
+  end subroutine lunaReadNML
+
   !********************************************************************************************************************************************************************** 
   ! this subroutine updates the photosynthetic capacity as determined by Vcmax25 and Jmax25
   subroutine Update_Photosynthesis_Capacity(bounds, fn, filterp, &

@@ -30,7 +30,8 @@ contains
     use spmdMod    , only: iam
     use clm_varcon , only: nameg, namel, namec, namep
     use clm_varctl , only: iulog
-    use mct_mod
+    use mct_mod    , only: mct_gsMap, mct_gsmap_op
+    use shr_sys_mod, only: shr_sys_abort
     !
     ! Arguments 
     integer          , intent(in) :: decomp_index

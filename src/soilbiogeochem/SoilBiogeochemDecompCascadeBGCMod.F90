@@ -33,9 +33,10 @@ module SoilBiogeochemDecompCascadeBGCMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: readParams
-  public :: init_decompcascade_bgc
-  public :: decomp_rate_constants_bgc
+  public :: DecompCascadeBGCreadNML         ! Read in namelist
+  public :: readParams                      ! Read in parameters from params file
+  public :: init_decompcascade_bgc          ! Initialization
+  public :: decomp_rate_constants_bgc       ! Figure out decomposition rates
   !
   ! !PUBLIC DATA MEMBERS 
   logical , public :: normalize_q10_to_century_tfunc = .true.! do we normalize the century decomp. rates so that they match the CLM Q10 at a given tep?
@@ -43,6 +44,15 @@ module SoilBiogeochemDecompCascadeBGCMod
   real(r8), public :: normalization_tref = 15._r8            ! reference temperature for normalizaion (degrees C)
   !
   ! !PRIVATE DATA MEMBERS 
+
+  integer, private            :: i_soil1   = -9         ! Soil Organic Matter (SOM) first pool
+  integer, private            :: i_soil2   = -9         ! SOM second pool
+  integer, private            :: i_soil3   = -9         ! SOM third pool
+  integer, private, parameter :: nsompools = 3          ! Number of SOM pools
+  integer, private, parameter :: i_litr1   = i_met_lit  ! First litter pool, metobolic
+  integer, private, parameter :: i_litr2   = i_cel_lit  ! Second litter pool, cellulose
+  integer, private, parameter :: i_litr3   = i_lig_lit  ! Third litter pool, lignin
+
   type, private :: params_type
      real(r8):: cn_s1_bgc     !C:N for SOM 1
      real(r8):: cn_s2_bgc     !C:N for SOM 2
@@ -72,18 +82,81 @@ module SoilBiogeochemDecompCascadeBGCMod
      real(r8) :: k_frag_bgc   !fragmentation rate for CWD
      real(r8) :: minpsi_bgc   !minimum soil water potential for heterotrophic resp
      real(r8) :: maxpsi_bgc   !maximum soil water potential for heterotrophic resp
-     
-     integer  :: nsompools = 3
 
+     real(r8) :: initial_Cstocks(nsompools) ! Initial Carbon stocks for a cold-start
+     
   end type params_type
   !
   type(params_type), private :: params_inst
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
+
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine DecompCascadeBGCreadNML( NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for soil BGC Decomposition Cascade
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use clm_varctl     , only : iulog
+    use shr_log_mod    , only : errMsg => shr_log_errMsg
+    use abortutils     , only : endrun
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'DecompCascadeBGCreadNML'
+    character(len=*), parameter :: nmlname = 'CENTURY_soilBGCDecompCascade'
+    !-----------------------------------------------------------------------
+    real(r8) :: initial_Cstocks(nsompools)
+    namelist /CENTURY_soilBGCDecompCascade/ initial_Cstocks
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+    initial_Cstocks(:) = 20._r8
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=CENTURY_soilBGCDecompCascade, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast (initial_Cstocks, mpicom)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=CENTURY_soilBGCDecompCascade)
+       write(iulog,*) ' '
+    end if
+
+    params_inst%initial_Cstocks(:) = initial_Cstocks(:)
+
+  end subroutine DecompCascadeBGCreadNML
 
   !-----------------------------------------------------------------------
   subroutine readParams ( ncid )
@@ -223,7 +296,7 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, soilstate_inst)
+  subroutine init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, soilstate_inst )
     !
     ! !DESCRIPTION:
     !  initialize rate constants and decomposition pathways following the decomposition cascade of the BGC model.
@@ -263,12 +336,6 @@ contains
     real(r8) :: f_s2s1
     real(r8) :: f_s2s3
 
-    integer :: i_litr1
-    integer :: i_litr2
-    integer :: i_litr3
-    integer :: i_soil1
-    integer :: i_soil2
-    integer :: i_soil3
     integer :: i_l1s1
     integer :: i_l2s1
     integer :: i_l3s2
@@ -353,7 +420,6 @@ contains
       end do
 
       !-------------------  list of pools and their attributes  ------------
-      i_litr1 = i_met_lit
       floating_cn_ratio_decomp_pools(i_litr1) = .true.
       decomp_pool_name_restart(i_litr1) = 'litr1'
       decomp_pool_name_history(i_litr1) = 'LITR1'
@@ -368,7 +434,6 @@ contains
       is_cellulose(i_litr1) = .false.
       is_lignin(i_litr1) = .false.
 
-      i_litr2 = i_cel_lit
       floating_cn_ratio_decomp_pools(i_litr2) = .true.
       decomp_pool_name_restart(i_litr2) = 'litr2'
       decomp_pool_name_history(i_litr2) = 'LITR2'
@@ -383,7 +448,6 @@ contains
       is_cellulose(i_litr2) = .true.
       is_lignin(i_litr2) = .false.
 
-      i_litr3 = i_lig_lit
       floating_cn_ratio_decomp_pools(i_litr3) = .true.
       decomp_pool_name_restart(i_litr3) = 'litr3'
       decomp_pool_name_history(i_litr3) = 'LITR3'
@@ -429,7 +493,7 @@ contains
       is_soil(i_soil1) = .true.
       is_cwd(i_soil1) = .false.
       initial_cn_ratio(i_soil1) = cn_s1
-      initial_stock(i_soil1) = 20._r8
+      initial_stock(i_soil1) = params_inst%initial_Cstocks(1)
       is_metabolic(i_soil1) = .false.
       is_cellulose(i_soil1) = .false.
       is_lignin(i_soil1) = .false.
@@ -448,7 +512,7 @@ contains
       is_soil(i_soil2) = .true.
       is_cwd(i_soil2) = .false.
       initial_cn_ratio(i_soil2) = cn_s2
-      initial_stock(i_soil2) = 20._r8
+      initial_stock(i_soil2) = params_inst%initial_Cstocks(2)
       is_metabolic(i_soil2) = .false.
       is_cellulose(i_soil2) = .false.
       is_lignin(i_soil2) = .false.
@@ -467,7 +531,7 @@ contains
       is_soil(i_soil3) = .true.
       is_cwd(i_soil3) = .false.
       initial_cn_ratio(i_soil3) = cn_s3
-      initial_stock(i_soil3) = 20._r8
+      initial_stock(i_soil3) = params_inst%initial_Cstocks(3)
       is_metabolic(i_soil3) = .false.
       is_cellulose(i_soil3) = .false.
       is_lignin(i_soil3) = .false.
@@ -582,7 +646,7 @@ contains
        canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
-    !  calculate rate constants and decomposition pathways for teh CENTURY decomposition cascade model
+    !  calculate rate constants and decomposition pathways for the CENTURY decomposition cascade model
     !  written by C. Koven based on original CLM4 decomposition cascade
     !
     ! !USES:
@@ -623,12 +687,6 @@ contains
     real(r8):: Q10                          ! temperature dependence
     real(r8):: froz_q10                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
     real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [
-    integer :: i_litr1
-    integer :: i_litr2
-    integer :: i_litr3
-    integer :: i_soil1
-    integer :: i_soil2
-    integer :: i_soil3
     integer :: c, fc, j, k, l
     real(r8):: catanf                       ! hyperbolic temperature function from CENTURY
     real(r8):: catanf_30                    ! reference rate at 30C
@@ -717,19 +775,6 @@ contains
       k_s2 = 1._r8    / (secspday * days_per_year * tau_s2)
       k_s3 = 1._r8    / (secspday * days_per_year * tau_s3)
       k_frag = 1._r8  / (secspday * days_per_year * tau_cwd)
-
-      i_litr1 = i_met_lit
-      i_litr2 = i_cel_lit
-      i_litr3 = i_lig_lit
-      if ( use_ed ) then
-         i_soil1 = 4
-         i_soil2 = 5
-         i_soil3 = 6
-      else
-         i_soil1 = 5
-         i_soil2 = 6
-         i_soil3 = 7
-      endif
 
      ! calc ref rate
       catanf_30 = catanf(30._r8)

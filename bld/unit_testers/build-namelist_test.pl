@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 561;
+my $ntests = 588;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 305;
+   $ntests += 317;
 }
 plan( tests=>$ntests );
 
@@ -144,8 +144,8 @@ if (@ARGV) {
     print "ERROR: unrecognized arguments: @ARGV\n";
     usage();
 }
-my $mode = "standard";
-system( "../configure -s -phys clm4_0" );
+my $mode = "-phys clm4_0";
+system( "../configure -s $mode" );
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
 my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -no-note";
@@ -241,7 +241,8 @@ print "Test drydep, fire_emis and megan namelists  \n";
 print "==================================================\n";
 
 # drydep and megan namelists
-system( "../configure -s -phys clm5_0" );
+$mode = "-phys clm5_0";
+system( "../configure -s $mode" );
 my @mfiles = ( "lnd_in", "drv_flds_in", $tempfile );
 my $mfiles = NMLTest::CompFiles->new( $cwd, @mfiles );
 foreach my $options ( "-drydep", "-megan", "-drydep -megan", "-fire_emis", "-drydep -megan -fire_emis" ) {
@@ -261,7 +262,8 @@ foreach my $options ( "-drydep", "-megan", "-drydep -megan", "-fire_emis", "-dry
    }
    &cleanup();
 }
-system( "../configure -s -phys clm4_0" );
+$mode = "-phys clm4_0";
+system( "../configure -s $mode" );
 
 print "\n==================================================\n";
 print "Test irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
@@ -279,7 +281,6 @@ foreach my $options ( "-irrig .true. ", "-verbose", "-rcp 2.6", "-test", "-sim_y
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
-   system( "diff lnd_in lnd_in.default" );
    $cfiles->shownmldiff( "default", $mode );
    my $finidat = `grep finidat lnd_in`;
    if (      $options eq "-l_ncpl 1" ) {
@@ -298,6 +299,35 @@ foreach my $options ( "-irrig .true. ", "-verbose", "-rcp 2.6", "-test", "-sim_y
    }
    &cleanup();
 }
+print "\n==============================================================\n";
+print "Test several use_cases and specific configurations for clm5_0\n";
+print "==============================================================\n";
+$mode = "-phys clm5_0";
+system( "../configure -s $mode" );
+foreach my $options ( 
+                      "-bgc bgc -use_case 1850-2100_rcp2.6_transient",
+                      "-bgc sp  -use_case 1850-2100_rcp4.5_transient",
+                      "-bgc bgc -use_case 1850-2100_rcp6_transient",
+                      "-bgc ed  -use_case 2000_control -no-megan",
+                      "-bgc cn  -use_case 1850-2100_rcp8.5_transient",
+                      "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
+                     ) {
+   my $file = $startfile;
+   &make_env_run();
+   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+   is( $@, '', "options: $options" );
+   $cfiles->checkfilesexist( "$options", $mode );
+   $cfiles->shownmldiff( "default", $mode );
+   if ( defined($opts{'compare'}) ) {
+      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+   }
+   if ( defined($opts{'generate'}) ) {
+      $cfiles->copyfiles( "$options", $mode );
+   }
+   &cleanup();
+}
+
 
 
 print "\n==================================================\n";
@@ -338,6 +368,11 @@ my %failtest = (
                                      namelst=>"flanduse_timeseries='my_flanduse_timeseries_file.nc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-bgc cndv",
+                                   },
+     "clm50CNDVwtransient"       =>{ options=>" -envxml_dir . -use_case 20thC_transient -dynamic_vegetation -res 10x15",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
                                    },
      "CNDV with flanduse_timeseries - clm4_5"=>{ options=>"-bgc bgc -dynamic_vegetation -envxml_dir .",
                                      namelst=>"flanduse_timeseries='my_flanduse_timeseries_file.nc'",
@@ -409,6 +444,41 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
+     "lightres no cn"            =>{ options=>"-bgc sp -envxml_dir . -light_res 360x720",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "spno-fire"                 =>{ options=>"-bgc sp -envxml_dir . -use_case 2000_control",
+                                     namelst=>"fire_method='nofire'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "lightres no fire"          =>{ options=>"-bgc cn -envxml_dir . -light_res 360x720",
+                                     namelst=>"fire_method='nofire'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "lightres none bgc"         =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "lightresnotnone-nofire"    =>{ options=>"-bgc bgc -envxml_dir . -light_res 94x192",
+                                     namelst=>"fire_method='nofire'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "lightresnonenofirelightfil"=>{ options=>"-bgc bgc -envxml_dir . -light_res none",
+                                     namelst=>"fire_method='nofire',stream_fldfilename_lightng='build-namelist_test.pl'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "lightrescontradictlightfil"=>{ options=>"-bgc bgc -envxml_dir . -light_res 360x720",
+                                     namelst=>"stream_fldfilename_lightng='build-namelist_test.pl'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
      "bgc=cn and bgc settings"   =>{ options=>"-bgc cn -envxml_dir .",
                                      namelst=>"use_lch4=.true.,use_nitrif_denitrif=.true.,use_vertsoilc=.true.,use_century_decomp=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -449,8 +519,8 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
-     "-vic with origflag=0"      =>{ options=>"-vichydro -envxml_dir .",
-                                     namelst=>"origflag=0",
+     "-vic with origflag=1"      =>{ options=>"-vichydro -envxml_dir .",
+                                     namelst=>"origflag=1",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
                                    },
@@ -644,6 +714,11 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
+     "useEDWTransient"           =>{ options=>"-bgc ed -use_case 20thC_transient -envxml_dir . -no-megan -res 10x15",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
      "useEDclm40"                =>{ options=>"-bgc ed -envxml_dir . -no-megan",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -785,8 +860,8 @@ print "Test ALL resolutions with CLM4.0 and CN \n";
 print "==================================================\n";
 
 # Check for ALL resolutions with CN
-my $mode = "CN";
-system( "../configure -s -bgc cn -phys clm4_0" );
+$mode = "-bgc cn -phys clm4_0";
+system( "../configure -s $mode" );
 my $reslist = `../queryDefaultNamelist.pl -res list -s`;
 my @resolutions = split( / /, $reslist );
 my @regional;
@@ -816,7 +891,6 @@ foreach my $res ( @resolutions ) {
    is( $@, '', "$options" );
 
    $cfiles->checkfilesexist( "$options", $mode );
-   system( "diff lnd_in lnd_in.default.standard" );
 
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
@@ -834,7 +908,8 @@ print "\n==================================================\n";
 print " Test important resolutions for CLM4.5 and BGC\n";
 print "==================================================\n";
 
-system( "../configure -s -phys clm4_5" );
+$mode = "-phys clm4_5";
+system( "../configure -s $mode" );
 my @resolutions = ( "10x15", "ne30np4", "ne120np4", "ne16np4", "0.125x0.125", "1.9x2.5", "0.9x1.25" );
 my @regional;
 my $nlbgcmode = "bgc";
@@ -849,7 +924,6 @@ foreach my $res ( @resolutions ) {
    is( $@, '', "$options" );
 
    $cfiles->checkfilesexist( "$options", $mode );
-   system( "diff lnd_in lnd_in.default.standard" );
 
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
@@ -881,7 +955,6 @@ foreach my $usecase ( @usecases ) {
    eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
-   system( "diff lnd_in lnd_in.default.standard" );
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
@@ -899,13 +972,12 @@ print "==================================================\n";
 
 # Run over single-point regional cases
 foreach my $res ( @regional ) {
-   $mode = "$res";
-   system( "../configure -s -sitespf_pt $res -phys clm4_0" );
+   $mode = "-sitespf_pt $res -phys clm4_0";
+   system( "../configure -s $mode" );
    &make_env_run();
    eval{ system( "$bldnml -envxml_dir . > $tempfile 2>&1 " ); };
    is( $@, '', "$res" );
    $cfiles->checkfilesexist( "$res", $mode );
-   system( "diff lnd_in lnd_in.default.standard" );
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$res", $mode );
@@ -922,8 +994,8 @@ print "Test crop resolutions \n";
 print "==================================================\n";
 
 # Check for crop resolutions
-my $mode = "crop";
-system( "../configure -s -crop on -bgc cn -phys clm4_0" );
+$mode = "-crop on -bgc cn -phys clm4_0";
+system( "../configure -s $mode" );
 my @crop_res = ( "10x15", "1.9x2.5" );
 foreach my $res ( @crop_res ) {
    $options = "-res $res -envxml_dir .";
@@ -931,7 +1003,6 @@ foreach my $res ( @crop_res ) {
    eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );
    $cfiles->checkfilesexist( "$options", $mode );
-   system( "diff lnd_in lnd_in.default.standard" );
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
@@ -947,8 +1018,8 @@ print " Test glc_mec resolutions \n";
 print "==================================================\n";
 
 # Check for glc_mec resolutions
-my $mode = "standard";
-system( "../configure -s -phys clm4_5 -bgc bgc" );
+$mode = "-phys clm4_5 -bgc bgc";
+system( "../configure -s $mode" );
 my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" );
 my @use_cases = ( "1850-2100_rcp2.6_glacierMEC_transient",
                   "1850-2100_rcp4.5_glacierMEC_transient",
@@ -966,7 +1037,6 @@ foreach my $res ( @glc_res ) {
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );
       $cfiles->checkfilesexist( "$options", $mode );
-      system( "diff lnd_in lnd_in.default.standard" );
       $cfiles->shownmldiff( "default", "standard" );
       if ( defined($opts{'compare'}) ) {
          $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
@@ -979,8 +1049,8 @@ foreach my $res ( @glc_res ) {
    }
 }
 # Transient 20th Century simulations
-my $mode = "standard";
-system( "../configure -s -phys clm4_0" );
+$mode = "-phys clm4_0";
+system( "../configure -s $mode" );
 my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne60np4", "ne120np4", "10x15", "1x1_tropicAtl" );
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 0;
@@ -990,7 +1060,6 @@ foreach my $res ( @tran_res ) {
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );
    $cfiles->checkfilesexist( "$options", $mode );
-   system( "diff lnd_in lnd_in.default.standard" );
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
@@ -1002,8 +1071,8 @@ foreach my $res ( @tran_res ) {
    &cleanup();
 }
 # Transient rcp scenarios
-my $mode = "standard";
-system( "../configure -s -phys clm4_0" );
+$mode = "-phys clm4_0";
+system( "../configure -s $mode" );
 my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
 foreach my $usecase ( "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient", "1850-2100_rcp6_transient", "1850-2100_rcp8.5_transient" ) {
    foreach my $res ( @tran_res ) {
@@ -1012,7 +1081,6 @@ foreach my $usecase ( "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient"
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );
       $cfiles->checkfilesexist( "$options", $mode );
-      system( "diff lnd_in lnd_in.default.standard" );
       $cfiles->shownmldiff( "default", "standard" );
       if ( defined($opts{'compare'}) ) {
          $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
@@ -1030,13 +1098,8 @@ print "Test clm4.5/clm5.0 resolutions \n";
 print "==================================================\n";
 
 foreach my $phys ( "clm4_5", 'clm5_0' ) {
-  my $mode;
-  if ( $phys eq "clm4_5" ) {
-     $mode = "phys45";
-  } else {
-     $mode = "phys50";
-  }
-  system( "../configure -s -phys ".$phys );
+  my $mode = "-phys $phys";
+  system( "../configure -s $mode" );
   my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", 
                      "-bgc bgc -envxml_dir . -namelist '&a use_c13=.true.,use_c14=.true.,use_c14_bombspike=.true./'" );
   foreach my $clmopts ( @clmoptions ) {
@@ -1047,7 +1110,6 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
         eval{ system( "$bldnml $options $clmopts > $tempfile 2>&1 " ); };
         is( $@, '', "$options $clmopts" );
         $cfiles->checkfilesexist( "$options $clmopts", $mode );
-        system( "diff lnd_in lnd_in.default.standard" );
         $cfiles->shownmldiff( "default", "standard" );
         if ( defined($opts{'compare'}) ) {
            $cfiles->doNOTdodiffonfile( "$tempfile", "$options $clmopts", $mode );
@@ -1059,8 +1121,7 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
         &cleanup();
      }
   }
-  $mode .= "-crop";
-  system( "../configure -s -phys ".$phys );
+  system( "../configure -s $mode" );
   my $clmopts = "-bgc cn -crop";
   my $res = "1.9x2.5";
   $options = "-res $res -irrig .true. -crop -bgc cn  -envxml_dir .";
@@ -1068,7 +1129,6 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
   eval{ system( "$bldnml $options $clmopts  > $tempfile 2>&1 " ); };
   is( $@, '', "$options $clmopts" );
   $cfiles->checkfilesexist( "$options $clmopts", $mode );
-  system( "diff lnd_in lnd_in.default.standard" );
   $cfiles->shownmldiff( "default", "standard" );
   if ( defined($opts{'compare'}) ) {
      $cfiles->doNOTdodiffonfile( "$tempfile", "$options $clmopts", $mode );
@@ -1079,19 +1139,17 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
   }
   &cleanup();
   # Run ED mode for several resolutions and configurations
-  $mode = "${phys}-ED";
-  system( "../configure -s -phys ".$phys );
+  system( "../configure -s $mode" );
   my $clmoptions = "-bgc ed -envxml_dir . -no-megan";
   my @clmres = ( "1x1_brazil", "5x5_amazon", "10x15", "1.9x2.5" );
   foreach my $res ( @clmres ) {
      $options = "-res $res";
-     my @edoptions = ( "-use_case 2000_control", "", "-namelist \"&a use_lch4=.true.,use_nitrif_denitrif=.true./\"", "-bgc_spinup on" );
+     my @edoptions = ( "-use_case 2000_control", "", "-namelist \"&a use_lch4=.true.,use_nitrif_denitrif=.true./\"", "-clm_accelerated_spinup on" );
      foreach my $edop (@edoptions ) {
         &make_env_run( );
         eval{ system( "$bldnml $options $clmoptions $edop  > $tempfile 2>&1 " ); };
         is( $@, '', "$options $edop" );
         $cfiles->checkfilesexist( "$options $edop", $mode );
-        system( "diff lnd_in lnd_in.default.standard" );
         $cfiles->shownmldiff( "default", "standard" );
         if ( defined($opts{'compare'}) ) {
            $cfiles->doNOTdodiffonfile( "$tempfile", "$options $edop", $mode );
@@ -1117,7 +1175,6 @@ $xFail->parseOutput($captOut);
 print "Successfully ran all testing for build-namelist\n\n";
 
 &cleanup( "config" );
-system( "/bin/rm lnd_in.default" );
 system( "/bin/rm $tempfile" );
 
 sub cleanup {

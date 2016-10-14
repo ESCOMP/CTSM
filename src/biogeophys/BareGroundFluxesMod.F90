@@ -54,6 +54,7 @@ contains
     use HumanIndexMod        , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                       swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                       SwampCoolEff, KtoC, VaporPres
+    use FrictionVelocityMod  , only : frictionvel_parms_inst
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -200,6 +201,7 @@ contains
 
          forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Input:
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
+         zetamax                => frictionvel_parms_inst%zetamaxstable         , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          z0mg_col               => frictionvel_inst%z0mg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, momentum [m]                                        
          z0hg_col               => frictionvel_inst%z0hg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, sensible heat [m]                                   
          z0qg_col               => frictionvel_inst%z0qg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, latent heat [m]                                     
@@ -293,7 +295,7 @@ contains
             zeta = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
             if (zeta >= 0._r8) then                   !stable
-               zeta = min(2._r8,max(zeta,0.01_r8))
+               zeta = min(zetamax,max(zeta,0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                                      !unstable
                zeta = max(-100._r8,min(zeta,-0.01_r8))

@@ -54,7 +54,7 @@ contains
     use LakeCon             , only : lake_use_old_fcrit_minz0
     use LakeCon             , only : minz0lake, cur0, cus, curm, fcrit
     use QSatMod             , only : QSat
-    use FrictionVelocityMod , only : FrictionVelocity, MoninObukIni
+    use FrictionVelocityMod , only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
     use HumanIndexMod       , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                      swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                      SwampCoolEff, KtoC, VaporPres
@@ -190,6 +190,7 @@ contains
          forc_hgt_u_patch =>    frictionvel_inst%forc_hgt_u_patch      , & ! Input:  [real(r8) (:)   ]  observational height of wind at pft level [m]     
          forc_hgt_t_patch =>    frictionvel_inst%forc_hgt_t_patch      , & ! Input:  [real(r8) (:)   ]  observational height of temperature at pft level [m]
          forc_hgt_q_patch =>    frictionvel_inst%forc_hgt_q_patch      , & ! Input:  [real(r8) (:)   ]  observational height of specific humidity at pft level [m]
+         zetamax          =>    frictionvel_parms_inst%zetamaxstable   , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          ram1             =>    frictionvel_inst%ram1_patch            , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                    
 
          q_ref2m          =>    waterstate_inst%q_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)      
@@ -461,7 +462,7 @@ contains
             zeta=zldis(p)*vkc * grav*thvstar/(ustar(p)**2*thv(c))
 
             if (zeta >= 0._r8) then     !stable
-               zeta = min(2._r8,max(zeta,0.01_r8))
+               zeta = min(zetamax,max(zeta,0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
                zeta = max(-100._r8,min(zeta,-0.01_r8))

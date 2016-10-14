@@ -385,7 +385,8 @@ contains
 
     associate(&
          qflx_tran_veg_col   => waterflux_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
-         qflx_tran_veg_patch => waterflux_inst%qflx_tran_veg_patch , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
+         qflx_tran_veg_patch => waterflux_inst%qflx_tran_veg_patch , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
+         tsink               => soilstate_inst%tsink_l_col         , & ! Output: [real(r8) (:,:) ]  col soil transpiration sink by layer (mm H2O /s)  
          rootr_col           => soilstate_inst%rootr_col           , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
          rootr_patch         => soilstate_inst%rootr_patch           & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
          )
@@ -399,7 +400,8 @@ contains
 
     temp(bounds%begc : bounds%endc) = 0._r8
 
-    !KO  For use_hydrstress, still need to use old approach for urban pervious road
+    ! When hydraulic stress is active, still need to use old approach for 
+    ! urban pervious road
     if (use_hydrstress) then
        do j = 1, nlevsoi
           do fc = 1, num_hydrologyc
@@ -492,6 +494,7 @@ contains
                 rootr_col(c,j) = rootr_col(c,j)/temp(c)
              end if
              vert_tran_sink(c,j) = rootr_col(c,j)*qflx_tran_veg_col(c)
+             tsink(c,j) = vert_tran_sink(c,j)
           end do
        end do
     end if
@@ -535,16 +538,14 @@ contains
     type(energyflux_type), intent(in)    :: energyflux_inst
     !
     ! !LOCAL VARIABLES:
-    real(r8) , pointer :: vegwp(:,:)  ! vegetation water matric potential (mm)
     integer  :: p,c,fc,j                                              ! do loop indices
     integer  :: pi                                                    ! patch index
     real(r8) :: temp(bounds%begc:bounds%endc)                         ! accumulator for rootr weighting
-    !KO Eventually krmax will be 2D with the first index being patch%itype(p) and
-    !KO  the second index corresponding to 1:nlevsoi
-    real(r8) :: krmax(nlevsoi)        !
-    real(r8) :: fs(nlevsoi)
-    real(r8) :: rai(nlevsoi)          ! 
-    real(r8) :: grav2                 !
+    real(r8) :: krmax(nlevsoi)        ! maximum soil-to-root conductance 
+    real(r8) :: fs(nlevsoi)           ! fraction of maximum conductance, soil-to-root [-]
+    real(r8) :: rai(nlevsoi)          ! root area stand-in [-]
+    real(r8) :: grav2                 ! soil layer gravitational potential relative to surface (mm H2O)
+    integer , parameter :: soil=1,root=4  ! index values
     !-----------------------------------------------------------------------   
 
     ! Enforce expected array sizes
@@ -556,20 +557,19 @@ contains
          rootr_col           => soilstate_inst%rootr_col           , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
          rootr_patch         => soilstate_inst%rootr_patch         , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
          smp                 => soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]
-         djk                 => soilstate_inst%djk_l_col           , & ! Output: [real(r8) (:,:) ] col soil transpiration sink by layer
+         tsink               => soilstate_inst%tsink_l_col         , & ! Output: [real(r8) (:,:) ]  col soil transpiration sink by layer (mm H2O /s)
          bsw                 => soilstate_inst%bsw_col             , & ! Input: [real(r8) (:,:) ]  Clapp and Hornberger "b"
-          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)
-         hksat             =>    soilstate_inst%hksat_col           , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
+         hk_l                => soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)
+         hksat               => soilstate_inst%hksat_col           , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
          sucsat              => soilstate_inst%sucsat_col          , & ! Input: [real(r8) (:,:) ]  minimum soil suction (mm)
          tsai                => canopystate_inst%tsai_patch        , & ! Input: [real(r8) (:)   ]  patch canopy one-sided stem area index, no burying by snow
          btran               => energyflux_inst%btran_patch        , & ! Input: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) (integrated soil water stress)
          frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)  ] fraction of vegetation not covered by snow (0 OR 1) [-]  
          rootfr              => soilstate_inst%rootfr_patch        , & ! Input: [real(r8) (:,:) ]  fraction of roots in each soil layer
          ivt                 => patch%itype                        , & ! Input: [integer (:)    ]  patch vegetation type
-         z                   => col%z                                & ! Input: [real(r8) (:,:) ]  layer node depth (m)
-
+         z                   => col%z                              , & ! Input: [real(r8) (:,:) ]  layer node depth (m)
+         vegwp               => canopystate_inst%vegwp_patch         & ! Input: [real(r8) (:,:) ]  vegetation water matric potential (mm)
          )
-    vegwp                    => canopystate_inst%vegwp_patch           ! Input/Output: [real(r8) (:,:) ]  vegetation water matric potential (mm)
 
     krmax(:) = 2.e-9_r8
 
@@ -586,18 +586,18 @@ contains
                       if (patch%wtcol(p) > 0._r8) then
                          if (.not.isnan(smp(c,j))) then
                             rai(j) = tsai(p) * rootfr(p,j)
+                            ! This calculation of fs should be kept consistent with fs 
+                            ! in PhotosynthesisHydraulicStress
                             fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)* &
-                                    plc(params_inst%psi_soil_ref(ivt(p)),p,c,j,1,bsw(c,j),sucsat(c,j))))
-                            temp(c) = temp(c) + rai(j) * krmax(j) * fs(j) * (smp(c,j) - vegwp(p,4) - grav2)* patch%wtcol(p)
+                                    plc(params_inst%psi_soil_ref(ivt(p)),p,c,j,soil,bsw(c,j),sucsat(c,j))))
+                            temp(c) = temp(c) + rai(j) * krmax(j) * fs(j) * (smp(c,j) - vegwp(p,root) - grav2)* patch%wtcol(p)
                          endif
                       end if
-                      !new jawn, zqz should be updated if hk formula changes
-                      !zqz, also: is this actually right and good wrt PFTs sharing a column??
                    end if
                 end if
              end do
              vert_tran_sink(c,j) = temp(c)
-             djk(c,j) = temp(c)
+             tsink(c,j) = temp(c)
           end do
        end if
     end do
@@ -850,8 +850,6 @@ contains
          waterflux_inst, soilstate_inst)
 
       if ( use_hydrstress ) then
-!        write(iulog,*)'CALL Compute_VerTranSink_PHS in soilwater_zengdecker2009'
-!        call shr_sys_flush(iulog)
          call Compute_VertTranSink_PHS(bounds, num_hydrologyc, &
               filter_hydrologyc, vert_trans_sink(bounds%begc:bounds%endc, 1:), &
               waterflux_inst, soilstate_inst, canopystate_inst, energyflux_inst)
@@ -1451,8 +1449,6 @@ contains
          waterflux_inst, soilstate_inst)
 
       if ( use_hydrstress ) then
-!        write(iulog,*)'CALL Compute_VerTranSink_PHS in soilwater_moisture_form'
-!        call shr_sys_flush(iulog)
          call Compute_VertTranSink_PHS(bounds, num_hydrologyc, &
               filter_hydrologyc, vert_trans_sink(bounds%begc:bounds%endc, 1:), &
               waterflux_inst, soilstate_inst, canopystate_inst, energyflux_inst)

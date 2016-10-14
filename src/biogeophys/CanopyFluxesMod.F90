@@ -175,7 +175,7 @@ contains
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
-    use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
+    use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
     use HumanIndexMod      , only : calc_human_stress_indices, Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                     SwampCoolEff, KtoC, VaporPres
@@ -433,6 +433,7 @@ contains
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
          forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Input:  [real(r8) (:)   ]  observational height of wind at patch level [m]                          
          z0mg                   => frictionvel_inst%z0mg_col                    , & ! Input:  [real(r8) (:)   ]  roughness length of ground, momentum [m]                              
+         zetamax                => frictionvel_parms_inst%zetamaxstable         , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
          ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                                        
          z0mv                   => frictionvel_inst%z0mv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, momentum [m]                        
          z0hv                   => frictionvel_inst%z0hv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, sensible heat [m]                   
@@ -843,7 +844,6 @@ contains
                     canopystate_inst, ozone_inst, photosyns_inst, phase='sun')
             endif
 
-            !KO  Fractionation must be changed so that gs_mol_sun_patch is used
             if ( use_cn .and. use_c13 ) then
                call Fractionation (bounds, fn, filterp, downreg_patch(begp:endp), &
                     atm2lnd_inst, canopystate_inst, solarabs_inst, surfalb_inst, photosyns_inst, &
@@ -858,7 +858,6 @@ contains
                     canopystate_inst, ozone_inst, photosyns_inst, phase='sha')
             end if
 
-            !KO  Fractionation must be changed so that gs_mol_sha_patch is used
             if ( use_cn .and. use_c13 ) then
                call Fractionation (bounds, fn, filterp, downreg_patch(begp:endp), &
                     atm2lnd_inst, canopystate_inst, solarabs_inst, surfalb_inst, photosyns_inst, &
@@ -902,18 +901,18 @@ contains
 
             efpot = forc_rho(c)*wtl*(qsatl(p)-qaf(p))
 
+            ! When the hydraulic stress parameterization is active calculate rpp
+            ! but not transpiration
             if ( use_hydrstress ) then
               if (efpot > 0._r8) then
                  if (btran(p) > btran0) then
                    rpp = rppdry + fwet(p)
                  else
-                   !No transpiration if btran below 1.e-10
                    rpp = fwet(p)
                  end if
                  !Check total evapotranspiration from leaves
                  rpp = min(rpp, (qflx_tran_veg(p)+h2ocan(p)/dtime)/efpot)
               else
-                 !No transpiration if potential evaporation less than zero
                  rpp = 1._r8
               end if
             else
@@ -1020,13 +1019,15 @@ contains
             ! during the timestep.  This energy is later added to the
             ! sensible heat flux.
 
-            !KO Not sure what to do about this.  If we adjust qflx_tran_veg for
-            !use_hydrstress, it will no longer be consistent with that calculated in
-            !hydraulic stress routines
+            ! Note that when the hydraulic stress parameterization is active we don't 
+            ! adjust transpiration for the new values of potential evaporation and rppdry
+            ! as calculated above because transpiration would then no longer be consistent 
+            ! with the vertical transpiration sink terms that are passed to Compute_VertTranSink_PHS, 
+            ! thereby causing a water balance error. However, because this adjustment occurs
+            ! within the leaf temperature iteration, this ends up being a small inconsistency.
             if ( use_hydrstress ) then
                ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan(p)/dtime)
                qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan(p)/dtime)
-!              write(iulog,*)'qflx_tran_veg after efpot recalculation: ',qflx_tran_veg(p)
             else
                ecidif = 0._r8
                if (efpot > 0._r8 .and. btran(p) > btran0) then
@@ -1036,7 +1037,6 @@ contains
                end if
                ecidif = max(0._r8, qflx_evap_veg(p)-qflx_tran_veg(p)-h2ocan(p)/dtime)
                qflx_evap_veg(p) = min(qflx_evap_veg(p),qflx_tran_veg(p)+h2ocan(p)/dtime)
-!              write(iulog,*)'qflx_tran_veg after efpot recalculation: ',qflx_tran_veg(p)
             end if
 
             ! The energy loss due to above two limits is added to
@@ -1070,7 +1070,7 @@ contains
             zeta = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
             if (zeta >= 0._r8) then     !stable
-               zeta = min(2._r8,max(zeta,0.01_r8))
+               zeta = min(zetamax,max(zeta,0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
                zeta = max(-100._r8,min(zeta,-0.01_r8))

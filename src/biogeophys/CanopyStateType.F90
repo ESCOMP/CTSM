@@ -144,11 +144,7 @@ contains
 
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
 !    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8     
-    if( use_hydrstress )then
-       ! NOTE(kwo, 2015-09) because these variables are only allocated when use_hydrstress
-       ! is turned on, they can not be placed into associate statements.
-       allocate(this%vegwp_patch           (begp:endp,1:nvegwcs)) ; this%vegwp_patch              (:,:) = nan
-    end if
+    allocate(this%vegwp_patch              (begp:endp,1:nvegwcs)) ; this%vegwp_patch              (:,:) = nan
 
   end subroutine InitAllocate
 
@@ -517,9 +513,7 @@ contains
        this%htop_patch(p)       = 0._r8
        this%hbot_patch(p)       = 0._r8
        this%dewmx_patch(p)      = 0.1_r8
-       if ( use_hydrstress ) then
-          this%vegwp_patch(p,:) = -2.5e4_r8
-       end if
+       this%vegwp_patch(p,:)    = -2.5e4_r8
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%laisun_patch(p) = 0._r8

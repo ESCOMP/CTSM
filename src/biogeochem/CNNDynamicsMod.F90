@@ -30,14 +30,88 @@ module CNNDynamicsMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CNNDeposition
-  public :: CNNFixation
-  public :: CNNFert
-  public :: CNSoyfix
-  public :: CNFreeLivingFixation
+  public :: CNNDynamicsReadNML          ! Read in namelist for Mineral Nitrogen Dynamics
+  public :: CNNDeposition               ! Update N deposition rate from atm forcing
+  public :: CNNFixation                 ! Update N Fixation rate
+  public :: CNNFert                     ! Update N fertilizer for crops
+  public :: CNSoyfix                    ! N Fixation for soybeans
+  public :: CNFreeLivingFixation        ! N free living fixation
+
+  !
+  ! !PRIVATE DATA MEMBERS:
+  type, private :: params_type
+     real(r8) :: freelivfix_intercept   ! intercept of line of free living fixation with annual ET
+     real(r8) :: freelivfix_slope_wET   ! slope of line of free living fixation with annual ET
+  end type params_type
+  type(params_type) :: params_inst
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine CNNDynamicsReadNML( NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for Mineral Nitrogen Dynamics
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use clm_varctl     , only : iulog
+    use shr_log_mod    , only : errMsg => shr_log_errMsg
+    use abortutils     , only : endrun
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'CNNDynamicsReadNML'
+    character(len=*), parameter :: nmlname = 'mineral_nitrogen_dynamics'
+    !-----------------------------------------------------------------------
+    real(r8) :: freelivfix_intercept   ! intercept of line of free living fixation with annual ET
+    real(r8) :: freelivfix_slope_wET   ! slope of line of free living fixation with annual ET
+    namelist /mineral_nitrogen_dynamics/ freelivfix_slope_wET, freelivfix_intercept
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+
+    freelivfix_intercept = 0.0117_r8
+    freelivfix_slope_wET = 0.0006_r8
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=mineral_nitrogen_dynamics, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast (freelivfix_intercept, mpicom)
+    call shr_mpi_bcast (freelivfix_slope_wET, mpicom)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=mineral_nitrogen_dynamics)
+       write(iulog,*) ' '
+    end if
+    params_inst%freelivfix_intercept = freelivfix_intercept
+    params_inst%freelivfix_slope_wET = freelivfix_slope_wET
+
+  end subroutine CNNDynamicsReadNML
 
   !-----------------------------------------------------------------------
   subroutine CNNDeposition( bounds, &
@@ -62,8 +136,8 @@ contains
     !-----------------------------------------------------------------------
     
     associate(                                                                & 
-         forc_ndep     =>  atm2lnd_inst%forc_ndep_grc ,                       & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)                
-         ndep_to_sminn =>  soilbiogeochem_nitrogenflux_inst%ndep_to_sminn_col & ! Output: [real(r8) (:)]                                                    
+         forc_ndep     =>  atm2lnd_inst%forc_ndep_grc ,                       & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)
+         ndep_to_sminn =>  soilbiogeochem_nitrogenflux_inst%ndep_to_sminn_col & ! Output: [real(r8) (:)]  atmospheric N deposition to soil mineral N (gN/m2/s)
          )
       
       ! Loop through columns
@@ -94,17 +168,22 @@ contains
     !
     ! !LOCAL VARIABLES:                                                                                                                                                                                                           
     integer  :: c,fc            !indices     
-    real(r8) :: dayspyr      ! days per year 
-    real(r8) :: secs_per_year  !seconds per year   
+    real(r8) :: dayspyr         !days per year 
+    real(r8) :: secs_per_year   !seconds per year   
 
-       associate(  AnnET          => waterflux_inst%AnnET,  ffix_to_sminn  => soilbiogeochem_nitrogenflux_inst%ffix_to_sminn_col ) 
+       associate(                                                                        &
+                  AnnET            => waterflux_inst%AnnET,                              & ! Input:  [real(:)  ] : Annual average ET flux mmH20/s
+                  freelivfix_slope => params_inst%freelivfix_slope_wET,                  & ! Input:  [real     ] : slope of fixation with ET
+                  freelivfix_inter => params_inst%freelivfix_intercept,                  & ! Input:  [real     ] : intercept of fixation with ET
+                  ffix_to_sminn    => soilbiogeochem_nitrogenflux_inst%ffix_to_sminn_col & ! Output: [real(:)  ] : free living N fixation to soil mineral N (gN/m2/s)
+                ) 
        
        dayspyr = get_days_per_year()
        secs_per_year = dayspyr*24_r8*3600_r8
 
        do fc = 1,num_soilc
            c = filter_soilc(fc)
-          ffix_to_sminn(c) = (0.0006_r8*(max(0._r8,AnnET(c))*secs_per_year) + 0.0117_r8 )/secs_per_year !(units g N m-2 s-1)  
+          ffix_to_sminn(c) = (freelivfix_slope*(max(0._r8,AnnET(c))*secs_per_year) + freelivfix_inter )/secs_per_year !(units g N m-2 s-1)  
 
        end do
 

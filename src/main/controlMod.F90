@@ -109,9 +109,13 @@ contains
     ! Initialize CLM run control information
     !
     ! !USES:
-    use clm_time_manager , only : set_timemgr_init
-    use fileutils        , only : getavu, relavu
-    use CNMRespMod       , only : CNMRespReadNML
+    use clm_time_manager                 , only : set_timemgr_init
+    use fileutils                        , only : getavu, relavu
+    use CNMRespMod                       , only : CNMRespReadNML
+    use LunaMod                          , only : LunaReadNML
+    use FrictionVelocityMod              , only : FrictionVelReadNML
+    use CNNDynamicsMod                   , only : CNNDynamicsReadNML
+    use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
     !
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
@@ -412,6 +416,8 @@ contains
     call SnowHydrology_readnl   ( NLFilename )
     call UrbanReadNML           ( NLFilename )
     call HumanIndexReadNML      ( NLFilename )
+    call LunaReadNML            ( NLFilename )
+    call FrictionVelReadNML     ( NLFilename )
 
     ! ----------------------------------------------------------------------
     ! Broadcast all control information if appropriate
@@ -432,6 +438,10 @@ contains
        call nitrifReadNML(             NLFilename )
        call CNFireReadNML(             NLFilename )
        call CNPrecisionControlReadNML( NLFilename )
+       call CNNDynamicsReadNML       ( NLFilename )
+    end if
+    if ( use_century_decomp ) then
+       call DecompCascadeBGCreadNML( NLFilename )
     end if
 
     ! ----------------------------------------------------------------------

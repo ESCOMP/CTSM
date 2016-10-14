@@ -78,6 +78,7 @@ contains
     ! !DESCRIPTION:
     ! Creates an object of type cnfire_base_type.
     ! !ARGUMENTS:
+    constructor%need_lightning_and_popdens = .true.
   end function constructor
 
   !-----------------------------------------------------------------------
