@@ -1,9 +1,7 @@
 <?xml version= "1.0"?>
 
 <expectedFails>
-   <entry bugz="2355" >FAIL compare ERI_D.f19_g16_gl5.IG1850CN.yellowstone_pgi</entry>
-   <entry issue="580" >FAIL RUN ERI_D_Ld9.f19_g16.I1850CN.yellowstone_pgi.clm-40default</entry>
    <entry bugz="2239" >FAIL RUN ERP_D_Ld5.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay_interp</entry>
    <entry bugz="2239" >FAIL RUN ERP_Ld5.f09_g16.ICLM45VIC.yellowstone_pgi.clm-vrtlay_interp</entry>
-   <entry bugz="2356" >PEND RUN SMS_D_Ld1_P24x1.f10_f10.ICRUCLM45.hobart_nag.clm-af_bias_v5.GC.clm4_5_12_r196_45_nag</entry>
+   <entry bugz="2356" >PEND RUN SMS_D_Ld1_P24x1.f10_f10.ICRUCLM45.hobart_nag.clm-af_bias_v5</entry>
 </expectedFails> 

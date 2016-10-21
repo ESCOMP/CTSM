@@ -335,7 +335,7 @@ contains
 
     call c2g( bounds, &
          irrigation_inst%qflx_irrig_col (bounds%begc:bounds%endc), &
-         lnd2atm_inst%qflx_rofliq_irrig_grc(bounds%begg:bounds%endg), &
+         lnd2atm_inst%qirrig_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
     do c = bounds%begc, bounds%endc

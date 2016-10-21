@@ -374,9 +374,9 @@ contains
             canopystate_inst%frac_veg_nosno_patch(bounds_clump%begp:bounds_clump%endp))
 
        ! Irrigation flux
-
+       ! input is main channel storage
        call irrigation_inst%ApplyIrrigation(bounds_clump, &
-            volr = atm2lnd_inst%volr_grc(bounds_clump%begg:bounds_clump%endg))
+            volr = atm2lnd_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg))
        call t_stopf('drvinit')
 
        ! ============================================================================

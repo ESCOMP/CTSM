@@ -114,8 +114,8 @@ module IrrigationMod
      ! Private data members; time-varying:
      real(r8), pointer :: irrig_rate_patch            (:) ! current irrigation rate [mm/s]
      integer , pointer :: n_irrig_steps_left_patch    (:) ! number of time steps for which we still need to irrigate today (if 0, ignore)
-     real(r8), pointer :: qflx_irrig_noh2olimit_patch (:) ! copy of qflx_irrig_patch before possible surface water source limitation
-     
+     real(r8), pointer :: qflx_irrig_demand_patch     (:) ! copy of qflx_irrig_patch before possible surface water source limitation
+
    contains
      ! Public routines
      ! COMPILER_BUG(wjs, 2014-10-15, pgi 14.7) Add an "Irrigation" prefix to some  generic routines like "Init"
@@ -259,7 +259,7 @@ contains
     begc = bounds%begc; endc= bounds%endc
 
     allocate(this%qflx_irrig_patch         (begp:endp))          ; this%qflx_irrig_patch         (:)   = nan
-    allocate(this%qflx_irrig_noh2olimit_patch(begp:endp))        ; this%qflx_irrig_noh2olimit_patch        (:)   = nan
+    allocate(this%qflx_irrig_demand_patch  (begp:endp))          ; this%qflx_irrig_demand_patch  (:)   = nan
     allocate(this%qflx_irrig_col           (begc:endc))          ; this%qflx_irrig_col           (:)   = nan
     allocate(this%relsat_so_patch          (begp:endp,nlevgrnd)) ; this%relsat_so_patch(:,:) = nan
     allocate(this%irrig_rate_patch         (begp:endp))          ; this%irrig_rate_patch         (:)   = nan
@@ -293,10 +293,10 @@ contains
          avgflag='A', long_name='water added through irrigation', &
          ptr_patch=this%qflx_irrig_patch)
 
-    this%qflx_irrig_noh2olimit_patch(begp:endp) = spval
+    this%qflx_irrig_demand_patch(begp:endp) = spval
     call hist_addfld1d (fname='QIRRIG_DEMAND', units='mm/s', &
          avgflag='A', long_name='irrigation demand', &
-         ptr_patch=this%qflx_irrig_noh2olimit_patch, default='inactive')
+         ptr_patch=this%qflx_irrig_demand_patch, default='inactive')
 
   end subroutine IrrigationInitHistory
 
@@ -468,7 +468,7 @@ contains
     !-----------------------------------------------------------------------
     
     deallocate(this%qflx_irrig_patch)
-    deallocate(this%qflx_irrig_noh2olimit_patch)
+    deallocate(this%qflx_irrig_demand_patch)
     deallocate(this%qflx_irrig_col)
     deallocate(this%relsat_so_patch)
     deallocate(this%irrig_rate_patch)
@@ -497,7 +497,8 @@ contains
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
-    real(r8)               , intent(in)    :: volr(bounds%begg: )  ! river volume (m^3)
+    ! river water volume (m^3)
+    real(r8), intent(in) :: volr(bounds%begg: )  
     !
     ! !LOCAL VARIABLES:
     integer :: p  ! patch index
@@ -523,7 +524,7 @@ contains
        end if
 
        ! copy qflx_irrig_patch to track irrigation demand 
-       this%qflx_irrig_noh2olimit_patch(p) = this%qflx_irrig_patch(p)
+       this%qflx_irrig_demand_patch(p) = this%qflx_irrig_patch(p)
 
        if (limit_irrigation) then
           if (volr(g) < (this%params%irrig_volr_threshold*grc%area(g)*1e6_r8)) then
@@ -581,7 +582,7 @@ contains
 
     ! column liquid water (kg/m2) [col, nlevgrnd] (note that this does NOT contain the snow levels)
     real(r8), intent(in) :: h2osoi_liq( bounds%begc: , 1: )
-    
+
     !
     ! !LOCAL VARIABLES:
     integer :: f    ! filter index

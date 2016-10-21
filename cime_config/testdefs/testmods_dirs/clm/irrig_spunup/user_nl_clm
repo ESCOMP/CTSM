@@ -1,0 +1,6 @@
+use_init_interp = .true.
+finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.IGM1850GSWP3CLM50BGCCROPIRR.0031-01-01.1.9x2.5_g1v6_gl5_simyr1850_c160908.nc'
+init_interp_fill_missing_with_natveg = .true.    ! need this as IC file is glc_mec
+
+! For now, turn off volr-limitation on irrigation, because it isn't working right
+limit_irrigation = .false.

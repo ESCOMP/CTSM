@@ -336,6 +336,11 @@ contains
          avgflag='A', long_name='column-integrated snow freezing rate', &
          ptr_col=this%qflx_snofrz_col, set_lake=spval, c2l_scale_type='urbanf')
 
+    this%qflx_h2osfc_to_ice_col(begc:endc) = spval
+    call hist_addfld1d (fname='QH2OSFC_TO_ICE',  units='mm/s',  &
+         avgflag='A', long_name='surface water converted to ice', &
+         ptr_col=this%qflx_h2osfc_to_ice_col, default='inactive')
+
     this%qflx_prec_intr_patch(begp:endp) = spval
     call hist_addfld1d (fname='QINTR', units='mm/s',  &
          avgflag='A', long_name='interception', &

@@ -899,6 +899,7 @@ contains
     ! rof->lnd
     deallocate(this%forc_flood_grc)
     deallocate(this%volr_grc)
+    deallocate(this%volrmch_grc)
 
     ! anomaly forcing
     deallocate(this%bc_precip_grc)

@@ -1,0 +1,4 @@
+This tests irrigation using spun-up initial conditions.
+
+We currently don't have out-of-the-box initial conditions with irrigation on, so
+we explicitly point to an initial conditions file for this test.

@@ -251,6 +251,7 @@ contains
     use seq_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     use shr_fire_emis_mod  , only : shr_fire_emis_mechcomps_n
+    use domainMod          , only: ldomain
     !
     ! !ARGUMENTS:
     implicit none
@@ -329,22 +330,25 @@ contains
        endif
 
        ! sign convention is positive downward with 
-       ! hierarchy of atm/glc/lnd/rof/ice/ocn.  so water sent from land to rof is positive
+       ! hierarchy of atm/glc/lnd/rof/ice/ocn.  
+       ! I.e. water sent from land to rof is positive
 
-       !  surface runoff is the sum of qflx_over, qflx_h2osfc_surf, and qflx_irrig
+       !  surface runoff is the sum of qflx_over, qflx_h2osfc_surf
        l2x(index_l2x_Flrl_rofsur,i) = lnd2atm_inst%qflx_rofliq_qsur_grc(g) &
             + lnd2atm_inst%qflx_rofliq_h2osfc_grc(g)
 
        !  subsurface runoff is the sum of qflx_drain and qflx_perched_drain
        l2x(index_l2x_Flrl_rofsub,i) = lnd2atm_inst%qflx_rofliq_qsub_grc(g) &
-            + lnd2atm_inst%qflx_rofliq_drain_perched_grc(g) &
-            - lnd2atm_inst%qflx_rofliq_irrig_grc(g)
+            + lnd2atm_inst%qflx_rofliq_drain_perched_grc(g)
 
-       ! qgwl sent individually to coupler
+       !  qgwl sent individually to coupler
        l2x(index_l2x_Flrl_rofgwl,i) = lnd2atm_inst%qflx_rofliq_qgwl_grc(g)
 
        ! ice  sent individually to coupler
        l2x(index_l2x_Flrl_rofi,i) = lnd2atm_inst%qflx_rofice_grc(g)
+
+       ! irrigation flux to be removed from main channel storage (negative)
+       l2x(index_l2x_Flrl_irrig,i) = - lnd2atm_inst%qirrig_grc(g)
 
        ! glc coupling
 

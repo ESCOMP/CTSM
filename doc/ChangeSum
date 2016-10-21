@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_12_r198    sacks 10/20/2016 Rework mapping of irrigation from CLM to ROF
   clm4_5_12_r197     erik 10/14/2016 Some cleanup for plant hydraulic stress and adding more namelist parameters
   clm4_5_12_r196     erik 09/27/2016 Bring new cime5 to clm trunk
   clm4_5_12_r195    sacks 09/18/2016 Remove dependence on column weights in fire code

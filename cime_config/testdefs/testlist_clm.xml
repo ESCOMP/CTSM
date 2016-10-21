@@ -1037,8 +1037,14 @@
       <test name="ERP_D_P15x2_Ld3">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/cropColdStart">yellowstone</machine>
       </test>
-      <test name="ERP_P30x2_Lm36">
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50cropMonth_interp" comment="Ideally this test (currently our only CLM50 crop test with initial conditions) would turn on irrigation, too; however, that would require creating a new crop+irrig initial conditions file with the necessary metadata on it for init_interp">yellowstone</machine>
+      <test name="ERP_D_P15x2_Ld5">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/irrig_spunup" comment="Want ERP _D test with irrigation on">yellowstone</machine>
+      </test>
+      <test name="ERP_P60x2_Lm36">
+        <machine compiler="intel" testtype="aux_clm45" testmods="clm/clm50cropIrrigMonth_interp">yellowstone</machine>
+      </test>
+      <test name="SMS_D_P24x1_Ld5">
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/irrig_spunup" comment="Want nag _D test with irrigation on">hobart</machine>
       </test>
     </grid>
   </compset>

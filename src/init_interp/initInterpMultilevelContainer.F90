@@ -85,8 +85,8 @@ contains
     ! 
     ! !ARGUMENTS:
     type(interp_multilevel_container_type) :: this  ! function result
-    type(file_desc_t), intent(inout) :: ncid_source ! netcdf ID for source file
-    type(file_desc_t), intent(inout) :: ncid_dest   ! netcdf ID for dest file
+    type(file_desc_t), target, intent(inout) :: ncid_source ! netcdf ID for source file
+    type(file_desc_t), target, intent(inout) :: ncid_dest   ! netcdf ID for dest file
     type(interp_bounds_type), intent(in) :: bounds_source
     type(interp_bounds_type), intent(in) :: bounds_dest
 
@@ -226,8 +226,8 @@ contains
     !
     ! !ARGUMENTS:
     type(interp_multilevel_interp_type) :: interpolator  ! function result
-    type(file_desc_t), intent(inout) :: ncid_source
-    type(file_desc_t), intent(inout) :: ncid_dest
+    type(file_desc_t), target, intent(inout) :: ncid_source
+    type(file_desc_t), target, intent(inout) :: ncid_dest
     type(interp_bounds_type), intent(in) :: bounds_source
     type(interp_bounds_type), intent(in) :: bounds_dest
     character(len=*), intent(in) :: coord_varname
