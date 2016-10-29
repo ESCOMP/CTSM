@@ -1,4 +1,129 @@
 ===============================================================
+Tag name:  clm4_5_12_r199
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Oct 29 14:20:11 MDT 2016
+One-line Summary: Use CISM2 by default
+
+Purpose of changes
+------------------
+
+For compsets that use CISM (IG compsets), use CISM2 by default.
+
+Also update CISM external to a version with an updated input file for CISM2 at 4
+km resolution.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Meaning of IG compset aliases changes - now means CISM2 rather than CISM1
+- This results in slightly changed glacier cover over Greenland
+- If you have a restart file from an old IG case (CLM45/CLM50) and plug it into
+  an IG case with the same compset alias in this tag, there will be an initial
+  shock to the system as CLM responds to the new glacier area. Thus, this change
+  should be made in an offline run, and run for a year or more before plugging
+  the new restart file into a coupled run.
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- All IG tests will BFAIL because they use a new resolution
+
+Changes to tests or testing:
+- Removed the ICLM45GLCMEC compset that had been used for testing; replaced its
+  test with IGCLM45BGC
+- Added an ERP IG test, replacing the old PEM IG test
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass; IG tests BFAIL because of new CISM resolution
+
+CLM tag used for the baseline comparisons: clm4_5_12_r198
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Out-of-the-box IG compsets change answers due to
+      the new definition of these compsets (CISM2 rather than CISM1)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated closely; expected to be larger than roundoff/same climate
+      for most applications
+
+      Also note that, for the sake of testing, IG tests will BFAIL
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+
+cism: cism2_1_21 -> cism2_1_24
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/cime_config/config_compsets.xml
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_12_r198
 Originator(s):  Sean Swenson, Bill Sacks
 Date: Thu Oct 20 20:39:56 MDT 2016
