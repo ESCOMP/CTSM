@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_12_r200     erik 11/08/2016 Latest parameter updates from simulations, ignore surface soil layer for plant hydraulic stress 
+                                     for greater variability in surface soil moisture
   clm4_5_12_r199    sacks 10/29/2016 Use CISM2 by default
   clm4_5_12_r198    sacks 10/20/2016 Rework mapping of irrigation from CLM to ROF
   clm4_5_12_r197     erik 10/14/2016 Some cleanup for plant hydraulic stress and adding more namelist parameters

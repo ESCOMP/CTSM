@@ -127,7 +127,7 @@ contains
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
 
-    initial_Cstocks(:) = 20._r8
+    initial_Cstocks(:) = 200._r8
 
     if (masterproc) then
        unitn = getavu()

@@ -1,4 +1,191 @@
 ===============================================================
+Tag name:  clm4_5_12_r200
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Nov  8 00:56:00 MST 2016
+One-line Summary: Latest parameter updates from simulations, ignore surface soil layer for plant hydraulic stress for greater variability in surface soil moisture
+
+Purpose of changes
+------------------
+
+Ignore surface soil layer for plant hydraulic stress which allows for greater variability in surface soil
+moisture. Output some additional diagnostic fields to the history files. Rename fertnitro to manunitro,
+both in code and in params files. Add options to vary baset by latitude for tropical crops and subtract
+crop seed carbon. Don't call precision control for frootc for CLM50.
+
+For CLM50 we bring in the latest set of parameter updates to the parameter file as well as namelist items.
+Many of these were manually tuned, and many were tuned with the automatic calibration process of Rosie Fisher
+and Ben Sanderson.
+
+Fix several bugs, a couple possible divide by zero errors, only run freelivingfixation when FUN on. Limit
+array operation by number of layers. Add option to put list of namelist parameters to an output file.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+  bug 2349 Run freelivingfixation only if FUN is on
+  bug 2362 Possible divide by zero for fert when fertilizer off
+  bug 2364 maxval check goes over whole range of array when should just go to nlayers
+  bug 2366 fix divide by zero in Luna
+  bug 2367 Add a list of real parameters as part of what CLM build-namelist does (partial)
+
+Known bugs introduced in this tag (include bugzilla ID): [If none, remove this line]
+  bug 2368 Remove old "use_voc" logic that was put in as a hack to turn off megan when prognostic crop was on
+           (This existed before, but we just spotted it as a problem)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+    New namelist items: baset_mapping, baset_latvary_slope, baset_latvary_intercept, 
+                  initial_seed_at_planting
+    new clm namelists: cnphenology, crop
+    New history fields: LNC, BTRANMN, CPHASE, LATBASET, CROPSEEDC all default active
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   New parameter calibrations
+   For CLM50:
+              baseflow_scalar=0.0090932, zetamaxstable=0.5, pot_hmn_ign_counts_alpha=0.0079611
+              Jmaxb1=0.093563, initial_seed_at_planting=3.0, decomp_depth_efolding=10.0
+              baset_mapping=varytropicsbylat, baset_latvary_intercept=12, baset_latvary_slope=0.4
+              br_root=1.1678d-06, initial_Cstocks=3*200.0
+   For CLM45 old defaults used:
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   New parameter dataset with latest calibration changing following fields:
+      mergetoclmpft modified to remove generic crops and merge to more existing crops
+      mxmat,arooti,lfemerg,min_planting_temp,bfact,fleafi,manunitro manually calibrated by Yaqiong Lu for crop
+      soilpsi_off,soilpsi_on manually calibrated
+      FUN_fracfixers,fun_cn_flex_a,fun_cn_flex_b,fsr_pft,grperc,dsladlai,ekn_active,froot_leaf,kmax,leaf_long,leafcn,mbbopt,psi50,slatop,stem_leaf
+           modified by automatic calibration scripts
+      maxpsi_hr hand calibrated by Charlie Koven
+      i_vcad,s_vcad hand calibrated for crop
+      FUN_fracfixers,dsladlai,ekn_active,froot_leaf,kmax,krmax,leaf_long,leafcn,mbbopt,psi50,slatop hand calibrated
+      akn_active,croot_stem,ekc_active,kc_nonmyc,kn_nonmyc modified slightly
+      leafcn,slato from TRY database
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   crop phase should be changed into integer with parameter indices for the different types
+   as well as outputting flag_meanings and flag_values attributes. Remove LATBASET from history
+   as constant.
+
+   There is some complication for clm4_5 to preserve answers for latbarybaset
+   and subtract_cropseed for fert that should be removed. Will change answers
+   but shouldn't matter.
+
+Changes to tests or testing: None
+
+Code reviewed by: self, oleson, dll, yaqiong
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS (254 comparison tests are different because of namelist changes)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag -  OK
+
+CLM tag used for the baseline comparisons:  clm4_5_12_r199
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES! for CLM50 (identical for CLM45)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM50
+    - what platforms/compilers: ALL
+    - nature of change: calibrated climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+      clm5n04r193phs_2deg_calibrateparams_v3_crop_fert10perc_medshrb_1850ADspin
+      b.e20.B1850.f09_g16.pi_control.all.123
+      (neither of these are identical to this tag for different reasons)
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M    parse_cime.cs.status -- Update to work with newer cime being used now
+
+   M    components/clm/bld/unit_testers/build-namelist_test.pl ----------- Add tests for 
+            user_nl_clm_real_parameters and baset_mapping and Jmaxb1
+   M    components/clm/bld/namelist_files/namelist_definition_clm4_5.xml - New namelist
+           items: baset_mapping, baset_latvary_slope, baset_latvary_intercept, 
+                  initial_seed_at_planting
+   M    components/clm/bld/namelist_files/namelist_defaults_clm4_0.xml --- Ran xmllint
+          on it.
+   M    components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Use latest
+          calibrated parameters for clm5_0:
+              baseflow_scalar=0.0090932, zetamaxstable=0.5, pot_hmn_ign_counts_alpha=0.0079611
+              Jmaxb1=0.093563, initial_seed_at_planting=3.0, decomp_depth_efolding=10.0
+              baset_mapping=varytropicsbylat, baset_latvary_intercept=12, baset_latvary_slope=0.4
+              br_root=1.1678d-06, initial_Cstocks=3*200.0
+              
+          New paramfiles with fertnitro renamed to manunitro, clm50 version with updated
+          parameters
+   M    components/clm/bld/CLMBuildNamelist.pm --- Add output_reals command line option,
+         new namelist subroutines: setup_logic_crop, setup_logic_friction_vel, setup_logic_century_soilbgcdecompcascade,
+                                   new general subroutine: error_if_set to abort on error if a list of
+                                                           namelist items is set
+         new namelists: cnphenology, crop
+   M    components/clm/src/biogeochem/CNPhenologyMod.F90 ------- Add CNPhenologyReadNML, and namelist
+          items: initial_seed_at_planting, and subtract_cropseed, rename fertnitro to manunitro, and add
+                 cropseedc, and cphase, if fertilizer off don't add in manunitro, subtract cropseed
+                 if subtract_cropseed is set.
+   M    components/clm/src/biogeochem/CNVegCarbonStateType.F90 - Add cropseed and CROPSEEDC to history
+          and restart files
+   M    components/clm/src/biogeochem/CNDriverMod.F90 -- Only call CNFreeLivingFixation if use_fun
+   M    components/clm/src/biogeochem/CropType.F90 ----- Add ReadNML, baset_mapping/latvary_intercept/latvary_slope
+          cphase_patch, add CPHASE and LATBASET to history files, cphase to restart
+   M    components/clm/src/biogeochem/CNPrecisionControlMod.F90 -- Set prec_control_for_froot to opposite of use_nguardrail
+          so turned on for clm5_0 and off for clm4_5 (currently needed to get c4 crops to grow)
+   M    components/clm/src/main/clm_initializeMod.F90 --- call energyflux_inst%initAccVars
+   M    components/clm/src/main/controlMod.F90 ---------- call CNPhenologyReadNML
+   M    components/clm/src/main/clm_driver.F90 ---------- call energyflux_inst%UpdateAccVars
+   M    components/clm/src/main/pftconMod.F90 ----------- change fertnitro to manunitro
+   M    components/clm/src/main/clm_instMod.F90 --------- call call crop_inst%ReadNML and energyflux_inst%InitAccBuffer
+   M    components/clm/src/biogeophys/BalanceCheckMod.F90 ------ Set indexg when found
+   M    components/clm/src/biogeophys/SoilWaterMovementMod.F90 - Remove local krmax, and use param_inst version, set
+          rai to zero, limit array operation to :nlayers as nlayers change
+   M    components/clm/src/biogeophys/EnergyFluxType.F90 ------- Add btran_min, and btran_min_inst, and interfaces: InitAccBuffer,
+          InitAccVars, UpdateAccVars, add BTRANMN to history, BTRAN_MIN, BTRAN_MIN_INST to restart
+   M    components/clm/src/biogeophys/FrictionVelocityMod.F90 -- Initialize zetamaxstable
+   M    components/clm/src/biogeophys/LunaMod.F90 -------------- Initialize Jmaxb1 = 0.1_r8, check lnc>0 as well as tlai, 
+           otherwise set: jmax25_z/vcmx25_z==0
+   M    components/clm/src/biogeophys/PhotosynthesisMod.F90 ---- Add LNC to history and lnca to restart, rai(j=1)==0 for PHS
+   M    components/clm/src/soilbiogeochem/SoilBiogeochemDecompCascadeBGCMod.F90 - initial_Cstocks(:)==200
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_12_r199
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Oct 29 14:20:11 MDT 2016

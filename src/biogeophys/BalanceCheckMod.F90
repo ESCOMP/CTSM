@@ -592,6 +592,7 @@ contains
                 found = .true.
                 indexp = p
                 indexc = patch%column(indexp)
+                indexg = patch%gridcell(indexp)
              end if
           end if
        end do

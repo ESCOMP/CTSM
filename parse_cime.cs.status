@@ -199,13 +199,13 @@ sub run_csstatus {
          if ( $verbose ) { print "$test\n"; }
          do {
             $newline = shift(@lines);
-            if (       $newline =~ /FAIL[ ]+([^ ]+)$/ ) {
+            if (       $newline =~ /FAIL[ ]+$test ([^ ]+)/ ) {
                $fails .= " $1";
                chomp( $fails );
-            } elsif (  $newline =~ /PASS[ ]+([^ ]+)$/ ) {
+            } elsif (  $newline =~ /PASS[ ]+$test ([^ ]+)/ ) {
                $passes .= " $1";
                chomp( $passes );
-            } elsif (  $newline =~ /PEND[ ]+([^ ]+)$/ ) {
+            } elsif (  $newline =~ /PEND[ ]+$test ([^ ]+)/ ) {
                $pendings .= " $1";
                chomp( $pendings );
             } elsif ( (! $newline) || ($newline =~ /Overall:/) ) {
@@ -217,6 +217,9 @@ sub run_csstatus {
             unshift( @lines, $newline );
          }
          if ( $over eq "NLFAIL" ) { 
+            $over = "PASS";
+         }
+         if ( $over eq "NLCOMP" ) { 
             $over = "PASS";
          }
          if ( $over eq "FAIL" && $fails =~ /MEMLEAK/ ) { 

@@ -1065,6 +1065,8 @@ contains
 
        call waterflux_inst%UpdateAccVars(bounds_proc)
 
+       call energyflux_inst%UpdateAccVars(bounds_proc)
+
        ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
        ! compiling this threaded, I needed to change the dummy arguments to be
        ! pointers, and get rid of the explicit bounds in the subroutine call.

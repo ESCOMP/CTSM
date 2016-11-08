@@ -336,7 +336,7 @@ contains
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
 
-    zetamaxstable = 2.0_r8
+    zetamaxstable = 0.5_r8
 
     if (masterproc) then
        unitn = getavu()

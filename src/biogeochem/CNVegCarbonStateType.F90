@@ -37,6 +37,7 @@ module CNVegCarbonStateType
      real(r8), pointer :: leafc_patch              (:) ! (gC/m2) leaf C
      real(r8), pointer :: leafc_storage_patch      (:) ! (gC/m2) leaf C storage
      real(r8), pointer :: leafc_xfer_patch         (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: cropseedc_patch          (:) ! (gC/m2) crop seed C
      real(r8), pointer :: leafc_storage_xfer_acc_patch   (:) ! (gC/m2) Accmulated leaf C transfer
      real(r8), pointer :: storage_cdemand_patch          (:) ! (gC/m2)       C use from the C storage pool 
      real(r8), pointer :: frootc_patch             (:) ! (gC/m2) fine root C
@@ -148,6 +149,7 @@ contains
     allocate(this%leafc_patch              (begp:endp)) ; this%leafc_patch              (:) = nan
     allocate(this%leafc_storage_patch      (begp:endp)) ; this%leafc_storage_patch      (:) = nan
     allocate(this%leafc_xfer_patch         (begp:endp)) ; this%leafc_xfer_patch         (:) = nan
+    allocate(this%cropseedc_patch          (begp:endp)) ; this%cropseedc_patch          (:) = nan
     allocate(this%leafc_storage_xfer_acc_patch (begp:endp)) ; this%leafc_storage_xfer_acc_patch (:) = nan
     allocate(this%storage_cdemand_patch        (begp:endp)) ; this%storage_cdemand_patch        (:) = nan
     allocate(this%frootc_patch             (begp:endp)) ; this%frootc_patch             (:) = nan
@@ -239,6 +241,10 @@ contains
           call hist_addfld1d (fname='GRAINC', units='gC/m^2', &
                avgflag='A', long_name='grain C (does not equal yield)', &
                ptr_patch=this%grainc_patch)
+          this%cropseedc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='CROPSEEDC', units='gC/m^2', &
+               avgflag='A', long_name='crop seed C', &
+               ptr_patch=this%cropseedc_patch)
        end if
        
        this%woodc_patch(begp:endp) = spval
@@ -884,6 +890,7 @@ contains
              end if
           end if
           this%leafc_xfer_patch(p) = 0._r8
+          this%cropseedc_patch(p)  = 0._r8
 
           this%leafc_storage_xfer_acc_patch(p)  = 0._r8
           this%storage_cdemand_patch(p)         = 0._r8
@@ -1062,6 +1069,9 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='leafc_xfer', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_xfer_patch) 
+       call restartvar(ncid=ncid, flag=flag, varname='cropseedc', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%cropseedc_patch)
 
        call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_xfer_acc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -1289,6 +1299,7 @@ contains
                          end if
                       end if
                       this%leafc_xfer_patch(i) = 0._r8
+                      this%cropseedc_patch(i)  = 0._r8
 
                       this%leafc_storage_xfer_acc_patch(i)  = 0._r8
                       this%storage_cdemand_patch(i)         = 0._r8
@@ -2125,6 +2136,7 @@ contains
        this%leafc_patch(i)              = value_patch
        this%leafc_storage_patch(i)      = value_patch
        this%leafc_xfer_patch(i)         = value_patch
+       this%cropseedc_patch(i)          = value_patch
        this%leafc_storage_xfer_acc_patch(i) = value_patch
        this%storage_cdemand_patch(i)        = value_patch        
        this%frootc_patch(i)             = value_patch

@@ -123,9 +123,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 588;
+my $ntests = 743;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 317;
+   $ntests += 468;
 }
 plan( tests=>$ntests );
 
@@ -148,7 +148,8 @@ my $mode = "-phys clm4_0";
 system( "../configure -s $mode" );
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
-my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -no-note";
+my $real_par_file = "user_nl_clm_real_parameters";
+my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -no-note -output_reals $real_par_file";
 if ( $opts{'test'} ) {
    $bldnml .= " -test";
 }
@@ -158,7 +159,7 @@ if ( -f $tempfile ) {
   system( "/bin/rm $tempfile" );
 }
 
-my @files = ( "lnd_in", $tempfile );
+my @files = ( "lnd_in", $tempfile, $real_par_file );
 my $cwd = `pwd`;
 chomp( $cwd );
 my $cfiles = NMLTest::CompFiles->new( $cwd, @files );
@@ -226,11 +227,13 @@ my $options = "-co2_ppmv 250 -glc_nec 10 -glc_present -glc_smb .false.";
       $cfiles->copyfiles( "most_options", $mode );
    # Compare to default
       $cfiles->doNOTdodiffonfile( "lnd_in",    "default", $mode );
+      $cfiles->doNOTdodiffonfile( "$real_par_file", "default", $mode );
       $cfiles->doNOTdodiffonfile( "$tempfile", "default", $mode );
       $cfiles->comparefiles( "default", $mode );
    # Compare to baseline
    if ( defined($opts{'compare'}) ) {
       $cfiles->dodiffonfile(      "lnd_in",    "most_options", $mode );
+      $cfiles->doNOTdodiffonfile( "$real_par_file", "most_options", $mode );
       $cfiles->doNOTdodiffonfile( "$tempfile", "most_options", $mode );
       $cfiles->comparefiles( "most_options", $mode, $opts{'compare'} );
    }
@@ -292,6 +295,7 @@ foreach my $options ( "-irrig .true. ", "-verbose", "-rcp 2.6", "-test", "-sim_y
    }
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->doNOTdodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -398,6 +402,16 @@ my %failtest = (
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm4_5",
+                                   },
+     "baset_map without crop"     =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"baset_mapping='constant'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
+     "mapvary var w/o varymap"   =>{ options=>"-crop -bgc bgc -envxml_dir .",
+                                     namelst=>"baset_mapping='constant', baset_latvary_slope=1.0, baset_latvary_intercept=10.0",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
                                    },
      "irrigate=T without -irr op"=>{ options=>"-crop -bgc cn -envxml_dir .",
                                      namelst=>"irrigate=.true.",
@@ -834,6 +848,11 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"-phys clm5_0",
                                    },
+     "NOlunabutsetJmaxb1"        =>{ options=>"-envxml_dir . -bgc sp",
+                                     namelst=>"use_luna=.false., jmaxb1=1.0",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     conopts=>"-phys clm5_0",
+                                   },
      "envxml_not_dir"            =>{ options=>"-envxml_dir myuser_nl_clm",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -895,6 +914,7 @@ foreach my $res ( @resolutions ) {
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->doNOTdodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
 
@@ -981,6 +1001,7 @@ foreach my $res ( @regional ) {
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$res", $mode );
+      $cfiles->doNOTdodiffonfile( "$real_par_file", "$res", $mode );
       $cfiles->comparefiles( "$res", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -1006,6 +1027,7 @@ foreach my $res ( @crop_res ) {
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->doNOTdodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -1063,6 +1085,7 @@ foreach my $res ( @tran_res ) {
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->doNOTdodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -1084,6 +1107,7 @@ foreach my $usecase ( "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient"
       $cfiles->shownmldiff( "default", "standard" );
       if ( defined($opts{'compare'}) ) {
          $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+         $cfiles->doNOTdodiffonfile( "$real_par_file", "$options", $mode );
          $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
       }
       if ( defined($opts{'generate'}) ) {
@@ -1184,7 +1208,7 @@ sub cleanup {
   my $type = shift;
 
   print "Cleanup files created\n";
-  system( "/bin/rm env_run.xml" );
+  system( "/bin/rm env_run.xml $real_par_file" );
   if ( defined($type) ) {
      if ( $type eq "config" ) {
         system( "/bin/rm Filepath config_cache.xml CESM_cppdefs" );

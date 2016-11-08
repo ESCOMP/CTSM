@@ -131,6 +131,16 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <soil_resis_method phys="clm5_0">1</soil_resis_method>
 <soil_resis_method phys="clm4_5">0</soil_resis_method>
 
+<!-- Soil hydrology -->
+<baseflow_scalar phys="clm5_0" lower_boundary_condition="1">1.d-2</baseflow_scalar>
+<baseflow_scalar phys="clm5_0" lower_boundary_condition="2">0.0090932</baseflow_scalar>
+<baseflow_scalar phys="clm4_5" lower_boundary_condition="1">1.d-2</baseflow_scalar>
+<baseflow_scalar phys="clm4_5" lower_boundary_condition="2">1.d-2</baseflow_scalar>
+
+<!-- Friction velocity -->
+<zetamaxstable phys="clm4_5">2.0d00</zetamaxstable>
+<zetamaxstable phys="clm5_0">0.5d00</zetamaxstable>
+
 <!-- CN Fire model method defaults -->
 <fire_method phys="clm5_0">li2016crufrc</fire_method>
 <fire_method phys="clm4_5">li2014qianfrc</fire_method>
@@ -152,9 +162,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <bt_max                   fire_method="li2016crufrc" >0.85d00</bt_max>
 <cli_scale                fire_method="li2016crufrc" >0.0156d00</cli_scale>
 <boreal_peatfire_c        fire_method="li2016crufrc" >0.4d-4</boreal_peatfire_c>
-<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.5">0.0085d00</pot_hmn_ign_counts_alpha>
-<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_GSWP3" >0.012d00</pot_hmn_ign_counts_alpha>
-<pot_hmn_ign_counts_alpha fire_method="li2016crufrc"                                >0.0085d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" >0.0079611</pot_hmn_ign_counts_alpha>
 <non_boreal_peatfire_c    fire_method="li2016crufrc" >3.6d-4</non_boreal_peatfire_c>
 <cropfire_a1              fire_method="li2016crufrc" >0.36d00</cropfire_a1>
 <occur_hi_gdp_tree        fire_method="li2016crufrc" >0.33d00</occur_hi_gdp_tree>
@@ -242,10 +250,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.c160713.nc</paramfile>
-<paramfile phys="clm4_5" use_ed=".false.">lnd/clm2/paramdata/clm_params.c160713.nc</paramfile>
-<paramfile phys="clm4_5" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c160808.nc</paramfile>
-<paramfile phys="clm5_0" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c160808.nc</paramfile>
+<paramfile phys="clm5_0" use_ed=".false.">lnd/clm2/paramdata/clm5_params.c161105.nc</paramfile>
+<paramfile phys="clm4_5" use_ed=".false.">lnd/clm2/paramdata/clm_params.c161101.nc</paramfile>
+<paramfile phys="clm4_5" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c161103.nc</paramfile>
+<paramfile phys="clm5_0" use_ed=".true." >lnd/clm2/paramdata/clm_params_ed.c161103.nc</paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -287,14 +295,25 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_fertilizer use_crop=".true." phys="clm4_5">.true.</use_fertilizer>
 <use_fertilizer use_crop=".true." phys="clm5_0">.true.</use_fertilizer>
 
+<jmaxb1 use_luna=".true." phys="clm5_0">0.093563</jmaxb1>
+
 <use_grainproduct>.false.</use_grainproduct>
 <use_grainproduct use_crop=".true." phys="clm4_5">.false.</use_grainproduct> <!-- 1-year grain product pool default to off for clm45 if crop is turned on -->
 <use_grainproduct use_crop=".true." phys="clm5_0">.true.</use_grainproduct> <!-- 1-year grain product pool default to on for clm50 if crop is turned on -->
 
+<!-- Crop model options -->
+<baset_mapping           use_crop=".true." phys="clm4_5">constant</baset_mapping>
+<baset_mapping           use_crop=".true." phys="clm5_0">varytropicsbylat</baset_mapping>
+<baset_latvary_intercept use_crop=".true." phys="clm5_0" baset_mapping="varytropicsbylat">12.0d00</baset_latvary_intercept>
+<baset_latvary_slope     use_crop=".true." phys="clm5_0" baset_mapping="varytropicsbylat">0.4d00</baset_latvary_slope>
+
+<initial_seed_at_planting use_crop=".true." phys="clm5_0">3.d00</initial_seed_at_planting>
+<initial_seed_at_planting use_crop=".true." phys="clm4_5">1.d00</initial_seed_at_planting>
+
 
 <!-- turnover time modifications    -->
 <decomp_depth_efolding phys="clm4_5">0.5</decomp_depth_efolding>
-<decomp_depth_efolding phys="clm5_0">1.0</decomp_depth_efolding>
+<decomp_depth_efolding phys="clm5_0">10.0</decomp_depth_efolding>
 
 <!-- use additional stress deciduous onset trigger    -->
 <constrain_stress_deciduous_onset phys="clm4_5">.false.</constrain_stress_deciduous_onset>
@@ -630,12 +649,18 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 <use_fun phys="clm5_0" use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
 <use_fun                                                           >.false.</use_fun>
 
-<br_root phys="clm5_0" use_cn=".true." use_fun=".true.">2.525d-06</br_root>
+<br_root phys="clm5_0" use_cn=".true." use_fun=".true.">1.1678d-06</br_root>
 
 
 <!-- Scalar of leaf respiration to vcmax (used for SP mode and with luna)-->
 <leaf_mr_vcm phys="clm5_0" >0.015d00</leaf_mr_vcm>
 <leaf_mr_vcm phys="clm4_5" >0.015d00</leaf_mr_vcm>
+
+<!-- Initial Carbon stocks for BGC -->
+<initial_Cstocks phys="clm4_5" use_cn=".true."  use_ed=".false." use_century_decomp=".true." >20.0d00, 20.0d00, 20.0d00</initial_Cstocks>
+<initial_Cstocks phys="clm5_0" use_cn=".true."  use_ed=".false." use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
+<initial_Cstocks phys="clm4_5" use_cn=".false." use_ed=".true."  use_century_decomp=".true." >20.0d00, 20.0d00, 20.0d00</initial_Cstocks>
+<initial_Cstocks phys="clm5_0" use_cn=".false." use_ed=".true."  use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
 
 <!-- SNICAR (SNow, ICe, and Aerosol Radiative model) datasets -->
 <!--  ***********  Resolution independent:   ***********  -->

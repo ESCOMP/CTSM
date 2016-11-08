@@ -340,6 +340,10 @@ contains
     call hist_addfld1d (fname='RH_LEAF', units='fraction', &
          avgflag='A', long_name='fractional humidity at leaf surface', &
          ptr_patch=this%rh_leaf_patch, set_spec=spval, default='inactive')
+    this%lnca_patch(begp:endp) = spval
+    call hist_addfld1d (fname='LNC', units='gN leaf/m^2', &
+         avgflag='A', long_name='leaf N concentration', &
+         ptr_patch=this%lnca_patch, set_spec=spval)
 
     this%fpsn_patch(begp:endp) = spval
     call hist_addfld1d (fname='FPSN', units='umol/m2s',  &
@@ -686,6 +690,9 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%rc13_psnsha_patch)
     endif
 
+    call restartvar(ncid=ncid, flag=flag, varname='lnca', xtype=ncd_double,  &
+       dim1name='pft', long_name='leaf N concentration', units='gN leaf/m^2', &
+       interpinic_flag='skip', readvar=readvar, data=this%lnca_patch)
     if(use_luna) then
       call restartvar(ncid=ncid, flag=flag, varname='vcmx25_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
@@ -4057,7 +4064,11 @@ contains
 
     grav1 = htop(p)*1000._r8
     do j = 1,nlevsoi
-       rai(j) = tsai(p) * rootfr(p,j)
+       if (j==1) then
+          rai(j) = 0._r8
+       else
+          rai(j) = tsai(p) * rootfr(p,j)
+       endif
     end do
     
     !compute conductance attentuation for each segment
@@ -4231,7 +4242,11 @@ contains
     
     grav1 = htop(p) * 1000._r8
     do j = 1,nlevsoi
-       rai(j)   = tsai(p) * rootfr(p,j)
+       if (j==1) then
+          rai(j) = 0._r8
+       else
+          rai(j)   = tsai(p) * rootfr(p,j)
+       endif
        grav2(j) = z(c,j) * 1000._r8
     end do
     
@@ -4322,7 +4337,11 @@ contains
     
     grav1 = 1000._r8 *htop(p)
     do j = 1,nlevsoi
-       rai(j)   = tsai(p) * rootfr(p,j)
+       if (j==1) then
+          rai(j) = 0._r8
+       else
+          rai(j)   = tsai(p) * rootfr(p,j)
+       endif
        grav2(j) = 1000._r8 * z(c,j)
     end do
     

@@ -162,6 +162,9 @@ contains
     ! Read in any namelists that must be read for any clm object instances that need it
     call canopystate_inst%ReadNML( NLFilename )
     call photosyns_inst%ReadNML(   NLFilename )
+    if (use_cn .or. use_ed) then
+       call crop_inst%ReadNML(     NLFilename )
+    end if
 
   end subroutine clm_instReadNML
 
@@ -425,6 +428,8 @@ contains
     call temperature_inst%InitAccBuffer(bounds)
     
     call waterflux_inst%InitAccBuffer(bounds)
+
+    call energyflux_inst%InitAccBuffer(bounds)
 
     call canopystate_inst%InitAccBuffer(bounds)
 

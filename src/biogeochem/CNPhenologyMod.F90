@@ -41,6 +41,7 @@ module CNPhenologyMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: readParams           ! Read parameters
+  public :: CNPhenologyreadNML   ! Read namelist
   public :: CNPhenologyInit      ! Initialization
   public :: CNPhenology          ! Update
   !
@@ -90,11 +91,73 @@ module CNPhenologyMod
   integer, allocatable :: maxplantjday(:,:) ! maximum planting julian day
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
+  real(r8), private :: initial_seed_at_planting = 3._r8 ! Initial seed at planting
+  logical,  private :: subtract_cropseed = .true.
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine CNPhenologyReadNML( NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for CNPhenology
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use clm_varctl     , only : iulog
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'CNPhenologyReadNML'
+    character(len=*), parameter :: nmlname = 'cnphenology'
+    !-----------------------------------------------------------------------
+    namelist /cnphenology/ initial_seed_at_planting, subtract_cropseed
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=cnphenology, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast (initial_seed_at_planting, mpicom)
+    if ( initial_seed_at_planting == 1._r8 ) subtract_cropseed = .false.
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=cnphenology)
+       write(iulog,*) ' '
+    end if
+
+
+    !-----------------------------------------------------------------------
+    
+  end subroutine CNPhenologyReadNML
 
   !-----------------------------------------------------------------------
   subroutine readParams ( ncid )
@@ -1403,7 +1466,7 @@ contains
          
          leaf_long         =>    pftcon%leaf_long                              , & ! Input:  leaf longevity (yrs)                              
          leafcn            =>    pftcon%leafcn                                 , & ! Input:  leaf C:N (gC/gN)                                  
-         fertnitro         =>    pftcon%fertnitro                              , & ! Input:  max fertilizer to be applied in total (kgN/m2)    
+         manunitro         =>    pftcon%manunitro                              , & ! Input:  max manure to be applied in total (kgN/m2)
          mxmat             =>    pftcon%mxmat                                  , & ! Input:  
          minplanttemp      =>    pftcon%minplanttemp                           , & ! Input:  
          planttemp         =>    pftcon%planttemp                              , & ! Input:  
@@ -1444,12 +1507,14 @@ contains
          offset_counter    =>    cnveg_state_inst%offset_counter_patch         , & ! Output: [real(r8) (:) ]  offset counter                                    
          
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch       , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer                           
+         cropseedc         =>    cnveg_carbonstate_inst%cropseedc_patch        , & ! Output: [real(r8) (:) ]  (gC/m2)   C in crop seed
 
          dwt_seedc_to_leaf =>    cnveg_carbonflux_inst%dwt_seedc_to_leaf_col   , & ! Output: [real(r8) (:) ]  (gC/m2/s) seed source to patch-level                
 
          fert_counter      =>    cnveg_nitrogenflux_inst%fert_counter_patch    , & ! Output: [real(r8) (:) ]  >0 fertilize; <=0 not (seconds)                   
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch     , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer                           
          dwt_seedn_to_leaf =>    cnveg_nitrogenflux_inst%dwt_seedn_to_leaf_col , & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to patch-level                
+         cphase            =>    crop_inst%cphase_patch                        , & ! Output: [real(r8) (:)]   phenology phase
          fert              =>    cnveg_nitrogenflux_inst%fert_patch              & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 
          )
 
@@ -1559,7 +1624,8 @@ contains
                   idop(p)        = jday
                   harvdate(p)    = NOT_Harvested
                   gddmaturity(p) = hybgdd(ivt(p))
-                  leafc_xfer(p)  = 1._r8 ! initial seed at planting to appear
+                  leafc_xfer(p)  = initial_seed_at_planting
+                  cropseedc(p)   = leafc_xfer(p)
                   leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
                   dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
                   dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
@@ -1579,7 +1645,8 @@ contains
                   idop(p)        = jday
                   harvdate(p)    = NOT_Harvested
                   gddmaturity(p) = hybgdd(ivt(p))
-                  leafc_xfer(p)  = 1._r8 ! initial seed at planting to appear
+                  leafc_xfer(p)  = initial_seed_at_planting
+                  cropseedc(p)   = leafc_xfer(p)
                   leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
                   dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
                   dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
@@ -1624,7 +1691,8 @@ contains
                      gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
                   end if
 
-                  leafc_xfer(p) = 1._r8 ! initial seed at planting to appear
+                  leafc_xfer(p)  = initial_seed_at_planting
+                  cropseedc(p)   = leafc_xfer(p)
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
                   dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
                   dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
@@ -1652,7 +1720,8 @@ contains
                      gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
                   end if
 
-                  leafc_xfer(p) = 1._r8 ! initial seed at planting to appear
+                  leafc_xfer(p)  = initial_seed_at_planting
+                  cropseedc(p)   = leafc_xfer(p)
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
                   dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
                   dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
@@ -1748,6 +1817,7 @@ contains
          offset_flag(p) = 0._r8 ! carbon and nitrogen transfers
 
          if (croplive(p)) then
+            cphase(p) = 1._r8
 
             ! call vernalization if winter temperate cereal planted, living, and the
             ! vernalization factor is not 1;
@@ -1777,11 +1847,20 @@ contains
             ! transfer seed carbon to leaf emergence
 
             if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
+               cphase(p) = 2._r8
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
                   onset_counter(p) = dt
                     fert_counter(p)  = ndays_on * secspday
-                    fert(p) = fertnitro(ivt(p)) * 1000._r8 / fert_counter(p)
+                    if ( subtract_cropseed ) then
+                       if (ndays_on .gt. 0) then
+                          fert(p) = manunitro(ivt(p)) * 1000._r8 / fert_counter(p)
+                       else
+                          fert(p) = 0._r8
+                       end if
+                    else
+                       fert(p) = manunitro(ivt(p)) * 1000._r8 / fert_counter(p)
+                    end if
                else
                   ! this ensures no re-entry to onset of phase2
                   ! b/c onset_counter(p) = onset_counter(p) - dt
@@ -1800,6 +1879,7 @@ contains
             else if (hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                croplive(p) = .false.     ! no re-entry in greater if-block
+               cphase(p) = 4._r8
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
                   offset_flag(p) = 1._r8
                   offset_counter(p) = dt
@@ -1817,6 +1897,7 @@ contains
                ! Use CN's simple formula at least as a place holder (slevis)
 
             else if (hui(p) >= huigrain(p)) then
+               cphase(p) = 3._r8
                bglfr(p) = 1._r8/(leaf_long(ivt(p))*dayspyr*secspday)
             end if
 
@@ -1835,6 +1916,7 @@ contains
             dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) - leafn_xfer(p)/dt
             onset_counter(p) = 0._r8
             leafc_xfer(p) = 0._r8
+            cropseedc(p)  = 0._r8
             leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
          end if ! croplive
 
@@ -2219,6 +2301,7 @@ contains
          leafc                 =>    cnveg_carbonstate_inst%leafc_patch                , & ! Input:  [real(r8) (:) ]  (gC/m2) leaf C                                    
          frootc                =>    cnveg_carbonstate_inst%frootc_patch               , & ! Input:  [real(r8) (:) ]  (gC/m2) fine root C                               
          grainc                =>    cnveg_carbonstate_inst%grainc_patch               , & ! Input:  [real(r8) (:) ]  (gC/m2) grain C                                   
+         cropseedc             =>    cnveg_carbonstate_inst%cropseedc_patch            , & ! Input:  [real(r8) (:) ]  (gC/m2) crop seed C                                  
          livestemc             =>    cnveg_carbonstate_inst%livestemc_patch            , & ! Input:  [real(r8) (:) ]  (gC/m2) livestem C                                
          livestemn             =>    cnveg_nitrogenstate_inst%livestemn_patch          , & ! Input:  [real(r8) (:) ]  (gN/m2) livestem N
 
@@ -2264,7 +2347,11 @@ contains
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
                if (ivt(p) >= npcropmin) then
-                  grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) 
+                  if ( subtract_cropseed ) then
+                     grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) - t1 * cropseedc(p)
+                  else
+                     grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) 
+                  end if
                   grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p) 
                   livestemc_to_litter(p) = t1 * livestemc(p)  + cpool_to_livestemc(p)
                end if

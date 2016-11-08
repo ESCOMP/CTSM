@@ -541,7 +541,6 @@ contains
     integer  :: p,c,fc,j                                              ! do loop indices
     integer  :: pi                                                    ! patch index
     real(r8) :: temp(bounds%begc:bounds%endc)                         ! accumulator for rootr weighting
-    real(r8) :: krmax(nlevsoi)        ! maximum soil-to-root conductance 
     real(r8) :: fs(nlevsoi)           ! fraction of maximum conductance, soil-to-root [-]
     real(r8) :: rai(nlevsoi)          ! root area stand-in [-]
     real(r8) :: grav2                 ! soil layer gravitational potential relative to surface (mm H2O)
@@ -571,8 +570,6 @@ contains
          vegwp               => canopystate_inst%vegwp_patch         & ! Input: [real(r8) (:,:) ]  vegetation water matric potential (mm)
          )
 
-    krmax(:) = 2.e-9_r8
-
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        if (col%itype(c) /= icol_road_perv) then
@@ -585,12 +582,17 @@ contains
                    if (patch%active(p).and.frac_veg_nosno(p)>0) then 
                       if (patch%wtcol(p) > 0._r8) then
                          if (.not.isnan(smp(c,j))) then
-                            rai(j) = tsai(p) * rootfr(p,j)
+                            if (j==1) then
+                               rai(j) = 0._r8
+                            else
+                               rai(j) = tsai(p) * rootfr(p,j)
+                            endif
                             ! This calculation of fs should be kept consistent with fs 
                             ! in PhotosynthesisHydraulicStress
                             fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)* &
                                     plc(params_inst%psi_soil_ref(ivt(p)),p,c,j,soil,bsw(c,j),sucsat(c,j))))
-                            temp(c) = temp(c) + rai(j) * krmax(j) * fs(j) * (smp(c,j) - vegwp(p,root) - grav2)* patch%wtcol(p)
+                            temp(c) = temp(c) + rai(j) * params_inst%krmax(ivt(p)) * fs(j) * (smp(c,j) - vegwp(p,root) - grav2)* &
+                                     patch%wtcol(p)
                          endif
                       end if
                    end if
@@ -1622,8 +1624,8 @@ contains
             end do  ! looping through layers
 
             ! compute absolute errors
-            errorVec = abs(fluxNet1 - fluxNet0)*dtsub*0.5_r8
-            errorMax = maxval(errorVec)
+            errorVec(:nlayers) = abs(fluxNet1(:nlayers) - fluxNet0(:nlayers))*dtsub*0.5_r8
+            errorMax = maxval(errorVec(:nlayers))
 
             ! check if the error is above the upper tolerance
             if(errorMax(1) > xTolerUpper .and. dtsub > dtmin)then

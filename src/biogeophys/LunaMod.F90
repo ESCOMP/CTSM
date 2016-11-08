@@ -65,7 +65,7 @@ module LunaMod
   real(r8), parameter :: forc_pbot_ref = 101325.0_r8       ! reference air pressure for calculation of reference NUE
   real(r8), parameter :: Q10Enz = 2.0_r8                   ! Q10 value for enzyme decay rate
   real(r8), parameter :: Jmaxb0 = 0.0311_r8                ! the baseline proportion of nitrogen allocated for electron transport (J)     
-  real(r8)            :: Jmaxb1 = 0.1745_r8                ! the baseline proportion of nitrogen allocated for electron transport (J)    
+  real(r8)            :: Jmaxb1 = 0.1_r8                   ! the baseline proportion of nitrogen allocated for electron transport (J)    
   real(r8), parameter :: Wc2Wjb0 = 0.8054_r8               ! the baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) 
   real(r8), parameter :: relhExp = 6.0999_r8               ! electron transport parameters related to relative humidity
   real(r8), parameter :: Enzyme_turnover_daily = 0.1_r8    ! the daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001)
@@ -308,13 +308,13 @@ module LunaMod
          !-----------------------------------------------------------------
          rabsorb = 1.0_r8-rhol(ft,1)-taul(ft,1)
          !Implemented the nitrogen allocation model
-         if(tlai(p) > 0.0)then   
+         if(tlai(p) > 0.0_r8 .and. lnc(p) > 0._r8)then   
                 RadTop = par240d_z(p,1)/rabsorb
                 PARTop = RadTop*4.6    !conversion from w/m2 to umol/m2/s. PAR is still in umol photons, not electrons. Also the par240d_z is only for radiation at visible range. Hence 4.6 not 2.3 multiplier. 
                 !-------------------------------------------------------------
                 !the nitrogen allocation model, may need to be feed from the parameter file in CLM
                 if (nint(c3psn(ft)) == 1)then
-                     if(gpp_day(p)>0.0 )then   !only optimize if there is growth and it is C3 plants
+                   if(gpp_day(p)>0.0 )then   !only optimize if there is growth and it is C3 plants
                       !-------------------------------------------------------------
                       do z = 1, nrad(p)
                          if(tlai_z(p,z)>0.0_r8)then
@@ -419,7 +419,7 @@ module LunaMod
                          endif
 
                       enddo ! finished loop of leaf layers  
-                    else !decay during drought or winter
+                   else !decay during drought or winter
                       max_daily_decay = min(0.5_r8, 0.1_r8 * max_daily_pchg)
                       !assume enzyme turnover under maintenance is 10
                       !times lower than enzyme change under growth
@@ -434,9 +434,14 @@ module LunaMod
                          endif
                       end do              
                    endif !checking for growth                   
-                endif !checking for LAI
-             endif !if not C3 plants                   
-         endif !the first daycheck 
+                endif !if not C3 plants                   
+         else
+            do z = 1 , nrad(p)
+               jmx25_z(p, z) = 0._r8
+               vcmx25_z(p, z) = 0._r8
+            end do
+         endif !checking for LAI and LNC
+     endif !the first daycheck 
     end do !fn loop    
     call t_stopf('LUNA')
   end associate

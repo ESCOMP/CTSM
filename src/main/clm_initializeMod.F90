@@ -579,7 +579,7 @@ contains
     call atm2lnd_inst%initAccVars(bounds_proc)
     call temperature_inst%initAccVars(bounds_proc)
     call waterflux_inst%initAccVars(bounds_proc)
-
+    call energyflux_inst%initAccVars(bounds_proc)
     call canopystate_inst%initAccVars(bounds_proc)
 
     call bgc_vegetation_inst%initAccVars(bounds_proc)

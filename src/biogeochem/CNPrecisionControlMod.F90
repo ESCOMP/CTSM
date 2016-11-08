@@ -27,6 +27,8 @@ module CNPrecisionControlMod
   real(r8), public :: nnegcrit = -6.e+0_r8              ! critical negative nitrogen state value for abort (gN/m2)
   real(r8), public, parameter :: n_min = 0.000000001_r8 ! Minimum Nitrogen value to use when calculating CN ratio (gN/m2)
 
+  ! !PRIVATE DATA:
+  logical, private :: prec_control_for_froot = .true.   ! If true do precision control for frootc/frootn
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !----------------------------------------------------------------------- 
@@ -44,7 +46,7 @@ contains
     use shr_nl_mod     , only : shr_nl_find_group_name
     use spmdMod        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use clm_varctl     , only : iulog, use_nguardrail
     use shr_log_mod    , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
@@ -86,6 +88,9 @@ contains
        write(iulog,nml=cnprecision_inparm)
        write(iulog,*) ' '
     end if
+
+    ! Have precision control for froot be determined by use_nguardrail setting
+    prec_control_for_froot = .not. use_nguardrail
 
   end subroutine CNPrecisionControlReadNML
 
@@ -218,10 +223,12 @@ contains
       ! froot C and N
       ! EBK KO DML: For some reason frootc/frootn can go negative and allowing
       ! it to be negative is important for C4 crops (otherwise they die) Jun/3/2016
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%frootc_patch(bounds%begp:bounds%endp),  &
-                                ns%frootn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
-                                c13=c13cs%frootc_patch, c14=c14cs%frootc_patch,  &
-                                pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), allowneg=.true. )
+      if ( prec_control_for_froot ) then
+         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%frootc_patch(bounds%begp:bounds%endp),  &
+                                   ns%frootn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
+                                   c13=c13cs%frootc_patch, c14=c14cs%frootc_patch,  &
+                                   pc13=pc13(bounds%begp:), pc14=pc14(bounds%begp:), allowneg=.true. )
+      end if
 
       ! froot storage C and N
       call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%frootc_storage_patch(bounds%begp:bounds%endp), &

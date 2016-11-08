@@ -218,6 +218,7 @@ OPTIONS
                               (Note: buildnml copies the file for use by the driver)
      -[no-]note               Add note to output namelist  [do NOT add note] about the
                               arguments to build-namelist.
+     -output_reals <file>     Output real parameters to the given output file.
      -rcp "value"             Representative concentration pathway (rcp) to use for
                               future scenarios.
                               "-rcp list" to list valid rcp settings.
@@ -279,6 +280,7 @@ sub process_commandline {
                chk_res               => undef,
                note                  => undef,
                drydep                => 0,
+               output_reals_filename => undef,
                fire_emis             => 0,
                megan                 => "default",
                irrig                 => "default",
@@ -327,6 +329,7 @@ sub process_commandline {
              "rcp=s"                     => \$opts{'rcp'},
              "s|silent"                  => \$opts{'silent'},
              "sim_year=s"                => \$opts{'sim_year'},
+             "output_reals=s"            => \$opts{'output_reals_filename'},
              "clm_accelerated_spinup=s"  => \$opts{'clm_accelerated_spinup'},
              "clm_start_type=s"          => \$opts{'clm_start_type'},
              "test"                      => \$opts{'test'},
@@ -654,6 +657,7 @@ sub process_namelist_commandline_options {
   setup_cmdl_dynamic_vegetation($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_cmdl_ed_mode($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_cmdl_vichydro($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_cmdl_output_reals($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 }
 
 #-------------------------------------------------------------------------------
@@ -1317,6 +1321,19 @@ sub setup_cmdl_dynamic_vegetation {
     }
   }
 }
+#-------------------------------------------------------------------------------
+
+sub setup_cmdl_output_reals {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  my $var = "output_reals_filename";
+  my $file = $opts->{$var};
+  if ( defined($file) ) {
+     # Make sure can open file and if not die with an error
+     my $fh = IO::File->new($file, '>') or fatal_error("can't create real parameter filename: $file");
+     $fh->close();
+  }
+}
 
 #-------------------------------------------------------------------------------
 
@@ -1593,6 +1610,11 @@ sub process_namelist_inline_logic {
   setup_logic_urban($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   ###############################
+  # namelist group: crop        #
+  ###############################
+  setup_logic_crop($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  ###############################
   # namelist group: ch4par_in   #
   ###############################
   setup_logic_methane($opts->{'test'}, $nl_flags, $definition, $defaults, $nl);
@@ -1669,6 +1691,16 @@ sub process_namelist_inline_logic {
   setup_logic_rooting_profile($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #############################################
+  # namelist group: friction_velocity         #
+  #############################################
+  setup_logic_friction_vel($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  ################################################
+  # namelist group: century_soilbgcdecompcascade #
+  ################################################
+  setup_logic_century_soilbgcdecompcascade($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #############################################
   # namelist group: soil_resis_inparm #
   #############################################
   setup_logic_soil_resis($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -1691,7 +1723,7 @@ sub process_namelist_inline_logic {
   ########################################
   # namelist group: soilhydrology_inparm #
   ########################################
-  setup_logic_hydrology_params($nl_flags, $definition, $defaults, $nl);
+  setup_logic_hydrology_params($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #######################################################################
   # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
@@ -2079,7 +2111,7 @@ sub setup_logic_cnfire {
         } else {
            my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
            add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, 
-                       'fire_method'=>$fire_method, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'});
+                       'fire_method'=>$fire_method );
         }
      }
   } elsif ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
@@ -2126,6 +2158,45 @@ sub setup_logic_urban {
   add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_hac');
   add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_traffic');
 }
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_crop {
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+     if ( value_is_true($nl->get_value('use_crop')) ) {
+        my $maptype = 'baset_mapping';
+        add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $maptype,
+                    'use_crop'=>$nl->get_value('use_crop') );
+        my $baset_mapping = remove_leading_and_trailing_quotes( $nl->get_value($maptype) );
+        if ( $baset_mapping eq "varytropicsbylat" ) {
+           add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "baset_latvary_slope",     
+                       'use_crop'=>$nl->get_value('use_crop'), $maptype=>$baset_mapping );
+           add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "baset_latvary_intercept",
+                       'use_crop'=>$nl->get_value('use_crop'), $maptype=>$baset_mapping );
+        } else {
+          error_if_set( $nl, "Can only be set if $maptype == varytropicsbylat", "baset_latvary_slope", "baset_latvary_intercept" );
+        }
+        add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "initial_seed_at_planting",     
+                    'use_crop'=>$nl->get_value('use_crop') );
+     } else {
+        error_if_set( $nl, "Can NOT be set without crop on", "baset_mapping", "baset_latvary_slope", "baset_latvary_intercept" );
+     }
+  }
+}
+
+#-------------------------------------------------------------------------------
+sub error_if_set {
+   # do a fatal_error and exit if any of the input variable names are set
+   my ($nl, $error, @list) = @_;
+   foreach my $var ( @list ) {
+      if ( defined($nl->get_value($var)) ) {
+        fatal_error( "$var $error" );
+      }
+   }
+}
+
 
 #-------------------------------------------------------------------------------
 
@@ -2619,14 +2690,20 @@ sub setup_logic_hydrology_params {
   #
   # Logic for hydrology parameters
   #
-  my ($nl_flags, $definition, $defaults, $nl) = @_;
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
-  my $lower = $nl->get_value( 'lower_boundary_condition'  );
-  my $var   = "baseflow_scalar";
-  my $val   = $nl->get_value( $var );
-  if ( defined($val) ) {
-     if ( $lower != 1 && $lower != 2 ) {
-        fatal_error("baseflow_scalar is only used for lower_boundary_condition of flux or zero-flux");
+  if ( $physv->as_long() >= $physv->as_long("clm4_5")) {
+     my $lower = $nl->get_value( 'lower_boundary_condition'  );
+     my $var   = "baseflow_scalar";
+     if ( $lower == 1 || $lower == 2 ) {
+        add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                    $var, 'lower_boundary_condition' => $lower );
+     }
+     my $val   = $nl->get_value( $var );
+     if ( defined($val) ) {
+        if ( $lower != 1 && $lower != 2 ) {
+           fatal_error("baseflow_scalar is only used for lower_boundary_condition of flux or zero-flux");
+        }
      }
   }
 }
@@ -2843,6 +2920,17 @@ sub setup_logic_luna {
     }
     if ( value_is_true($nl->get_value('lnc_opt') ) && not value_is_true( $nl_flags->{'use_cn'}) ) {
        fatal_error("Cannot turn lnc_opt to true when bgc=sp\n" );
+    }
+    my $var = "jmaxb1";
+    if ( $physv->as_long() >= $physv->as_long("clm5_0") && value_is_true( $nl_flags->{'use_luna'} ) ) {
+       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                     'use_luna'=>$nl_flags->{'use_luna'} );
+    }
+    my $val = $nl->get_value($var);
+    if ( $physv->as_long() >= $physv->as_long("clm4_5") && ! value_is_true( $nl_flags->{'use_luna'} ) ) {
+       if ( defined($val) ) {
+          fatal_error("Cannot set $var when use_luna is NOT on\n" );
+       }
     }
   }
 }
@@ -3336,6 +3424,21 @@ sub setup_logic_soilwater_movement {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flux_calculation' ); 
   }
 }
+#-------------------------------------------------------------------------------
+
+sub setup_logic_century_soilbgcdecompcascade {
+  # 
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") && 
+       (&value_is_true($nl->get_value('use_cn')) || &value_is_true($nl->get_value('use_ed'))) &&
+       &value_is_true($nl->get_value('use_century_decomp')) ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_Cstocks', 
+                'use_cn' => $nl->get_value('use_cn'), 'use_ed' => $nl->get_value('use_ed'),
+                'use_century_decomp' => $nl->get_value('use_century_decomp') ); 
+  }
+}
+
 
 #-------------------------------------------------------------------------------
 
@@ -3346,6 +3449,17 @@ sub setup_logic_rooting_profile {
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'rooting_profile_method_water' ); 
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'rooting_profile_method_carbon' ); 
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_friction_vel {
+  # 
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'zetamaxstable' ); 
   }
 }
 
@@ -3466,7 +3580,7 @@ sub write_output_files {
   } else {
 
     @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams 
-                 lai_streams clm_canopyhydrology_inparm 
+                 lai_streams clm_canopyhydrology_inparm cnphenology
                  clm_soilhydrology_inparm dynamic_subgrid 
                  finidat_consistency_checks dynpft_consistency_checks 
                  clm_initinterp_inparm century_soilbgcdecompcascade
@@ -3474,7 +3588,7 @@ sub write_output_files {
                  soilwater_movement_inparm rooting_profile_inparm 
                  soil_resis_inparm  bgc_shared canopyfluxes_inparm
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
-                 cnprecision_inparm clm_glacier_behavior );
+                 cnprecision_inparm clm_glacier_behavior crop );
 
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);
@@ -3506,6 +3620,27 @@ sub write_output_files {
   $outfile = "$opts->{'dir'}/drv_flds_in";
   $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
   verbose_message("Writing @groups namelists to $outfile");
+}
+
+sub write_output_real_parameter_file {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  # Output real parameters
+  if ( defined($opts->{'output_reals_filename'}) ) {
+     my $file = $opts->{'output_reals_filename'};
+     my $fh = IO::File->new($file, '>>') or fatal_error("can't create real parameter filename: $file");
+     foreach my $var ( $definition->get_var_names() ) {
+        my $type = $definition->get_var_type($var);
+        my $doc  = $definition->get_var_doc($var);
+        $doc =~ s/\n//g;
+        if ( $type =~ /real/ ) {
+           my $val = $nl->get_value($var);
+           if ( ! defined($val) ) { $val = "?.??"; }
+           print $fh "\! $doc\n$var = $val\n";
+        }
+     }
+     $fh->close();
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -4171,6 +4306,7 @@ sub main {
   # Validate that the entire resultant namelist is valid
   $definition->validate($nl);
   write_output_files(\%opts, \%nl_flags, $defaults, $nl, $physv);
+  write_output_real_parameter_file(\%opts, \%nl_flags, $definition, $defaults, $nl, $physv);
 
   if ($opts{'inputdata'}) {
     check_input_files($nl, $nl_flags{'inputdata_rootdir'}, $opts{'inputdata'}, $definition);

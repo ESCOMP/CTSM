@@ -116,6 +116,7 @@ contains
     use FrictionVelocityMod              , only : FrictionVelReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
+    use CNPhenologyMod                   , only : CNPhenologyReadNML
     !
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
@@ -439,6 +440,7 @@ contains
        call CNFireReadNML(             NLFilename )
        call CNPrecisionControlReadNML( NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )
+       call CNPhenologyReadNML       ( NLFilename )
     end if
     if ( use_century_decomp ) then
        call DecompCascadeBGCreadNML( NLFilename )

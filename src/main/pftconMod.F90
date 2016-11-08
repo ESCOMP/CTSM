@@ -217,7 +217,7 @@ module pftconMod
      real(r8), allocatable :: fd_pft        (:)
 
      ! pft parameters for crop code
-     real(r8), allocatable :: fertnitro     (:)   ! fertilizer
+     real(r8), allocatable :: manunitro     (:)   ! manure
      real(r8), allocatable :: fleafcn       (:)   ! C:N during grain fill; leaf
      real(r8), allocatable :: ffrootcn      (:)   ! C:N during grain fill; fine root
      real(r8), allocatable :: fstemcn       (:)   ! C:N during grain fill; stem
@@ -418,7 +418,7 @@ contains
     allocate( this%fm_droot      (0:mxpft) )
     allocate( this%fsr_pft       (0:mxpft) )
     allocate( this%fd_pft        (0:mxpft) )
-    allocate( this%fertnitro     (0:mxpft) )
+    allocate( this%manunitro     (0:mxpft) )
     allocate( this%fleafcn       (0:mxpft) )  
     allocate( this%ffrootcn      (0:mxpft) ) 
     allocate( this%fstemcn       (0:mxpft) )  
@@ -791,8 +791,8 @@ contains
     call ncd_io('FUN_fracfixers', this%FUN_fracfixers, 'read', ncid, readvar=readv,         posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
-    call ncd_io('fertnitro', this%fertnitro, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    call ncd_io('manunitro', this%manunitro, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(__FILE__, __LINE__))
 
     call ncd_io('fleafcn', this%fleafcn, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
@@ -1325,7 +1325,7 @@ contains
     deallocate( this%fm_droot)
     deallocate( this%fsr_pft)
     deallocate( this%fd_pft)
-    deallocate( this%fertnitro)
+    deallocate( this%manunitro)
     deallocate( this%fleafcn)
     deallocate( this%ffrootcn)
     deallocate( this%fstemcn)

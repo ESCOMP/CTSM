@@ -264,18 +264,18 @@ contains
          atm2lnd_inst, soilbiogeochem_nitrogenflux_inst)
     call t_stopf('CNDeposition')
     
-    if(.not.use_fun)then
-	    call t_startf('CNFixation')
-	    call CNNFixation( num_soilc, filter_soilc, &
-	         cnveg_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
-	    call t_stopf('CNFixation')
-	  else
-	   
-	    call t_startf('CNFFixation')
-	    call CNFreeLivingFixation( num_soilc, filter_soilc, &
-	         waterflux_inst, soilbiogeochem_nitrogenflux_inst)
-	    call t_stopf('CNFFixation')
+    if(use_fun)then
+        call t_startf('CNFLivFixation')
+        call CNFreeLivingFixation( num_soilc, filter_soilc, &
+             waterflux_inst, soilbiogeochem_nitrogenflux_inst)
+        call t_stopf('CNFLivFixation')
+    else
+       call t_startf('CNFixation')
+       call CNNFixation( num_soilc, filter_soilc, &
+            cnveg_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
+       call t_stopf('CNFixation')
     end if
+  
 
     if (use_crop) then
        call CNNFert(bounds, num_soilc,filter_soilc, &

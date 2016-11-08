@@ -34,14 +34,20 @@ module CropType
      real(r8), pointer :: gddplant_patch          (:)   ! patch accum gdd past planting date for crop       (ddays)
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
      real(r8), pointer :: vf_patch                (:)   ! patch vernalization factor for cereal
+     real(r8), pointer :: cphase_patch            (:)   ! phenology phase
      integer           :: CropRestYear                  ! restart year from initial conditions file - increment as time elapses
+     real(r8), pointer :: latbaset_patch          (:)   ! Latitude vary baset for gddplant (degree C)
+     character(len=20) :: baset_mapping
+     real(r8) :: baset_latvary_intercept
+     real(r8) :: baset_latvary_slope
 
    contains
      ! Public routines
-     procedure, public  :: Init
+     procedure, public  :: Init               ! Initialize the crop type
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
      procedure, public  :: Restart
+     procedure, public  :: ReadNML            ! Read in the crop namelist
 
      ! NOTE(wjs, 2014-09-29) need to rename this from UpdateAccVars to CropUpdateAccVars
      ! to prevent cryptic error messages with pgi (v. 13.9 on yellowstone)
@@ -58,6 +64,8 @@ module CropType
 
   end type crop_type
 
+  character(len=*), parameter, private :: baset_map_constant = 'constant'
+  character(len=*), parameter, private :: baset_map_latvary  = 'varytropicsbylat'
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -86,7 +94,81 @@ contains
   end subroutine Init
 
   !-----------------------------------------------------------------------
+  subroutine ReadNML(this, NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for CropType
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use clm_varctl     , only : iulog
+    !
+    ! !ARGUMENTS:
+    class(crop_type) , intent(inout) :: this
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'Crop::ReadNML'
+    character(len=*), parameter :: nmlname = 'crop'
+    !-----------------------------------------------------------------------
+    character(len=20) :: baset_mapping
+    real(r8) :: baset_latvary_intercept
+    real(r8) :: baset_latvary_slope
+    namelist /crop/ baset_mapping, baset_latvary_intercept, baset_latvary_slope
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+    baset_mapping           = 'constant'
+    baset_latvary_intercept = 12._r8
+    baset_latvary_slope     = 0.4_r8
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=crop, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast (baset_mapping           , mpicom)
+    call shr_mpi_bcast (baset_latvary_intercept , mpicom)
+    call shr_mpi_bcast (baset_latvary_slope     , mpicom)
+
+    this%baset_mapping           = baset_mapping
+    this%baset_latvary_intercept = baset_latvary_intercept
+    this%baset_latvary_slope     = baset_latvary_slope
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=crop)
+       write(iulog,*) ' '
+    end if
+
+    !-----------------------------------------------------------------------
+    
+  end subroutine ReadNML
+
+  !-----------------------------------------------------------------------
   subroutine InitAllocate(this, bounds)
+    ! !USES:
+    use pftconMod        , only : pftcon 
+    use PatchType        , only : patch
+    use GridcellType     , only : grc
     !
     ! !ARGUMENTS:
     class(crop_type) , intent(inout) :: this
@@ -94,6 +176,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
+    integer :: p, g, ivt    ! Indices
     
     character(len=*), parameter :: subname = 'InitAllocate'
     !-----------------------------------------------------------------------
@@ -106,6 +189,24 @@ contains
     allocate(this%gddplant_patch (begp:endp)) ; this%gddplant_patch (:) = spval
     allocate(this%gddtsoi_patch  (begp:endp)) ; this%gddtsoi_patch  (:) = spval
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
+    allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
+    allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
+    do p = begp, endp
+       g   = patch%gridcell(p)
+       ivt = patch%itype(p)
+       if ( grc%latdeg(g) >= 0.0_r8 .and. grc%latdeg(g) <= 30.0_r8) then
+          this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8-0.4_r8*grc%latdeg(g)
+       else if (grc%latdeg(g) < 0.0_r8 .and. grc%latdeg(g) >= -30.0_r8) then
+          this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8+0.4_r8*grc%latdeg(g)
+       else
+          this%latbaset_patch(p)=pftcon%baset(ivt)
+       end if
+    end do
+    !do p = begp, endp
+    !   g   = patch%gridcell(p)
+    !   ivt = patch%itype(p)
+    !   this%latbaset_patch(p)=pftcon%baset(ivt)
+    !end do
     
     this%CropRestYear = 0
 
@@ -138,6 +239,16 @@ contains
     call hist_addfld1d (fname='GDDTSOI', units='ddays', &
          avgflag='A', long_name='Growing degree-days from planting (top two soil layers)', &
          ptr_patch=this%gddtsoi_patch, default='inactive')
+
+    this%cphase_patch(begp:endp) = spval
+    call hist_addfld1d (fname='CPHASE', units='0-not planted, 1-planted, 2-leaf emerge, 3-grain fill, 4-harvest', &
+         avgflag='A', long_name='crop phenology phase', &
+         ptr_patch=this%cphase_patch, default='active')
+
+    this%latbaset_patch(begp:endp) = spval
+    call hist_addfld1d (fname='LATBASET', units='degree C', &
+         avgflag='A', long_name='latitude vary base temperature for gddplant', &
+         ptr_patch=this%latbaset_patch)
 
   end subroutine InitHistory
 
@@ -313,6 +424,11 @@ contains
        call restartvar(ncid=ncid, flag=flag,  varname='restyear', xtype=ncd_int,  &
             long_name='Number of years prognostic crop ran', units="years", &
             interpinic_flag='copy', readvar=readvar, data=this%CropRestYear)
+
+       call restartvar(ncid=ncid, flag=flag,  varname='cphase',xtype=ncd_double, &
+            dim1name='pft', long_name='crop phenology phase', &
+            units='0-not planted, 1-planted, 2-leaf emerge, 3-grain fill, 4-harvest', &
+            interpinic_flag='interp', readvar=readvar, data=this%cphase_patch)
        if (flag=='read' .and. readvar)  then
           call this%checkDates( )
        end if
@@ -344,7 +460,7 @@ contains
     real(r8)               , intent(inout) :: t_soisno_col(bounds%begc:, -nlevsno+1:)
     !
     ! !LOCAL VARIABLES:
-    integer :: p,c   ! indices
+    integer :: p,c,g ! indices
     integer :: ivt   ! vegetation type
     integer :: dtime ! timestep size [seconds]
     integer :: nstep ! timestep number
@@ -378,9 +494,15 @@ contains
     do p = begp,endp
        if (this%croplive_patch(p)) then ! relative to planting date
           ivt = patch%itype(p)
-          rbufslp(p) = max(0._r8, min(pftcon%mxtmp(ivt), &
-               t_ref2m_patch(p)-(SHR_CONST_TKFRZ + pftcon%baset(ivt)))) &
-               * dtime/SHR_CONST_CDAY
+          if ( trim(this%baset_mapping) == baset_map_constant ) then
+             rbufslp(p) = max(0._r8, min(pftcon%mxtmp(ivt), &
+             t_ref2m_patch(p)-(SHR_CONST_TKFRZ + pftcon%baset(ivt)))) &
+             * dtime/SHR_CONST_CDAY
+          else
+             rbufslp(p) = max(0._r8, min(pftcon%mxtmp(ivt), &
+             t_ref2m_patch(p)-(SHR_CONST_TKFRZ + this%latbaset_patch(p)))) &
+             * dtime/SHR_CONST_CDAY
+          end if
           if (ivt == nwwheat .or. ivt == nirrig_wwheat) then
              rbufslp(p) = rbufslp(p) * this%vf_patch(p)
           end if
