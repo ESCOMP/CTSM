@@ -38,7 +38,23 @@ module glcBehaviorMod
      ! 1-way coupling (or to force a later TG run); (2) even with two-way coupling,
      ! provide SMB in the elevation classes above and below existing elevation classes,
      ! for the sake of vertical interpolation; (3) provide place-holder columns (which are
-     ! already spun-up) for dynamic landunits.
+     ! already spun-up) for dynamic landunits; (4) ensure that all glacier columns are
+     ! given spun-up initial conditions by init_interp.
+     !
+     ! More details on (4) (echoing the similar comment in subgridWeightsMod): We need all
+     ! glacier and vegetated points to be active in the icemask region for the sake of
+     ! init_interp - since we only interpolate onto active points, and we don't know which
+     ! points will have non-zero area until after initialization (as long as we can't send
+     ! information from glc to clm in initialization). (If we had an inactive glacier
+     ! point in the icemask region, according to the weights on the surface dataset, and
+     ! ran init_interp, this point would keep its cold start initialization values. Then,
+     ! in the first time step of the run loop, it's possible that this point would become
+     ! active because, according to glc, there is actually > 0% glacier in that grid
+     ! cell. We don't do any state / flux adjustments in the first time step after
+     ! init_interp due to glacier area changes, so this glacier column would remain at its
+     ! cold start initialization values, which would be a Bad Thing. Ensuring that all
+     ! glacier points within the icemask are active gets around this problem - as well as
+     ! having other benefits, as noted above.)
      !
      ! However, by making this part of the user-modifiable "glc behavior", we make it easy
      ! for the user to add virtual columns, if this is desired for diagnostic

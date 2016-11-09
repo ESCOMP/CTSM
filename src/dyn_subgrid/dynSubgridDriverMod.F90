@@ -9,12 +9,21 @@ module dynSubgridDriverMod
   ! dynamic landunits).
   !
   ! !USES:
+  use decompMod                    , only : bounds_type, BOUNDS_LEVEL_PROC, BOUNDS_LEVEL_CLUMP
+  use decompMod                    , only : get_proc_clumps, get_clump_bounds
   use dynSubgridControlMod         , only : get_flanduse_timeseries
   use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops
   use dynSubgridControlMod         , only : get_do_harvest
   use dynPriorWeightsMod           , only : prior_weights_type
   use dynPatchStateUpdaterMod      , only : patch_state_updater_type
   use dynColumnStateUpdaterMod     , only : column_state_updater_type
+  use dynpftFileMod                , only : dynpft_init, dynpft_interp
+  use dyncropFileMod               , only : dyncrop_init, dyncrop_interp
+  use dynHarvestMod                , only : dynHarvest_init, dynHarvest_interp
+  use dynLandunitAreaMod           , only : update_landunit_weights
+  use subgridWeightsMod            , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
+  use reweightMod                  , only : reweight_wrapup
+  use glcBehaviorMod               , only : glc_behavior_type
   use UrbanParamsType              , only : urbanparams_type
   use CanopyStateType              , only : canopystate_type
   use CNVegetationFacade           , only : cn_vegetation_type
@@ -38,8 +47,10 @@ module dynSubgridDriverMod
   implicit none
   private
   !
-  public :: dynSubgrid_init             ! initialize transient land cover
-  public :: dynSubgrid_driver           ! top-level driver for transient land cover
+  public :: dynSubgrid_init                  ! initialize transient land cover
+  public :: dynSubgrid_driver                ! top-level driver for transient land cover
+  public :: dynSubgrid_wrapup_weight_changes ! reconcile various variables after subgrid weights change
+
   !
   ! !PRIVATE TYPES:
 
@@ -56,58 +67,52 @@ module dynSubgridDriverMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine dynSubgrid_init(bounds)
+  subroutine dynSubgrid_init(bounds_proc, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Initialize objects needed for prescribed transient PFTs, CNDV, and/or dynamic
-    ! landunits. 
+    ! landunits.
+    !
+    ! Also sets initial subgrid weight for aspects prescribed from file (transient PFTs
+    ! and transient crops). These initial weights will be overwritten in a restart run,
+    ! or any other run that starts up from initial conditions (except startup runs that
+    ! use init_interp).
     !
     ! This should be called from initialization, after dynSubgridControl is initialized. 
-    !
-    ! Note that no subgrid weights are updated here - so in initialization, weights will
-    ! stay at the values read from the surface dataset, then there will be a potentially
-    ! large adjustment of weights in the first time step. The reason why no weights are
-    ! updated here is that prognostic subgrid weight information (e.g., glacier cover
-    ! from CISM) is not available in initialization; thus, for consistency, we also avoid
-    ! applying prescribed transient weights in initialization.
-    !
-    ! However, the above note is only relevant for a cold start run: For a restart run or
-    ! a run with initial conditions, subgrid weights will be read from the restart file
-    ! after this routine is called. This is also relevant for a run that uses
-    ! interpolated initial conditions (use_init_interp = .true.), since subgrid weights
-    ! are not interpolated, so start at their cold start values.
     !
     ! Note that dynpft_init needs to be called from outside any loops over clumps - so
     ! this routine needs to be called from outside any loops over clumps.
     !
     ! !USES:
     use clm_varctl        , only : use_cndv
-    use decompMod         , only : bounds_type, BOUNDS_LEVEL_PROC
-    use dynpftFileMod     , only : dynpft_init
-    use dyncropFileMod    , only : dyncrop_init
-    use dynHarvestMod     , only : dynHarvest_init
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in)    :: bounds     ! processor-level bounds
+    type(bounds_type)       , intent(in) :: bounds_proc ! processor-level bounds
+    type(glc_behavior_type) , intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
+    integer           :: nclumps      ! number of clumps on this processor
+    integer           :: nc           ! clump index
+    type(bounds_type) :: bounds_clump ! clump-level bounds
     character(len=*), parameter :: subname = 'dynSubgrid_init'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
-    prior_weights = prior_weights_type(bounds)
-    patch_state_updater = patch_state_updater_type(bounds)
-    column_state_updater = column_state_updater_type(bounds)
+    nclumps = get_proc_clumps()
+
+    prior_weights = prior_weights_type(bounds_proc)
+    patch_state_updater = patch_state_updater_type(bounds_proc)
+    column_state_updater = column_state_updater_type(bounds_proc)
 
     ! Initialize stuff for prescribed transient Patches
     if (get_do_transient_pfts()) then
-       call dynpft_init(bounds, dynpft_filename=get_flanduse_timeseries())
+       call dynpft_init(bounds_proc, dynpft_filename=get_flanduse_timeseries())
     end if
 
     ! Initialize stuff for prescribed transient crops
     if (get_do_transient_crops()) then
-       call dyncrop_init(bounds, dyncrop_filename=get_flanduse_timeseries())
+       call dyncrop_init(bounds_proc, dyncrop_filename=get_flanduse_timeseries())
     end if
 
     ! Initialize stuff for harvest. Note that, currently, the harvest data are on the
@@ -115,8 +120,36 @@ contains
     ! harvest data were separated from the pftdyn data, allowing them to differ in the
     ! years over which they apply.
     if (get_do_harvest()) then
-       call dynHarvest_init(bounds, harvest_filename=get_flanduse_timeseries())
+       call dynHarvest_init(bounds_proc, harvest_filename=get_flanduse_timeseries())
     end if
+
+    ! ------------------------------------------------------------------------
+    ! Set initial subgrid weights for aspects that are read from file. This is relevant
+    ! for cold start and use_init_interp-based initialization.
+    ! ------------------------------------------------------------------------
+
+    if (get_do_transient_pfts()) then
+       call dynpft_interp(bounds_proc)
+    end if
+
+    if (get_do_transient_crops()) then
+       call dyncrop_interp(bounds_proc)
+    end if
+
+    ! (We don't bother calling dynHarvest_interp, because the harvest information isn't
+    ! needed until the run loop. Harvest has nothing to do with subgrid weights, and in
+    ! some respects doesn't even really belong in this module at all.)
+
+    ! The following is only needed if there were actually weight changes due to the above
+    ! interp calls, but it doesn't hurt to always run this code:
+
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1, nclumps
+       call get_clump_bounds(nc, bounds_clump)
+
+       call dynSubgrid_wrapup_weight_changes(bounds_clump, glc_behavior)
+    end do
+    !$OMP END PARALLEL DO
 
   end subroutine dynSubgrid_init
 
@@ -141,21 +174,10 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_time_manager     , only : is_first_step
-    use clm_varctl           , only : is_cold_start
     use clm_varctl           , only : use_cndv, use_cn, create_glacier_mec_landunit, use_ed
-    use decompMod            , only : bounds_type, get_proc_clumps, get_clump_bounds
-    use decompMod            , only : BOUNDS_LEVEL_PROC
-    use dynLandunitAreaMod   , only : update_landunit_weights
     use dynInitColumnsMod    , only : initialize_new_columns
     use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
-    use dynpftFileMod        , only : dynpft_interp
-    use dynCropFileMod       , only : dyncrop_interp
-    use dynHarvestMod        , only : dynHarvest_interp
     use dynEDMod             , only : dyn_ED
-    use reweightMod          , only : reweight_wrapup
-    use subgridWeightsMod    , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
-    use glcBehaviorMod       , only : glc_behavior_type
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds_proc  ! processor-level bounds
@@ -184,18 +206,6 @@ contains
     integer           :: nclumps      ! number of clumps on this processor
     integer           :: nc           ! clump index
     type(bounds_type) :: bounds_clump ! clump-level bounds
-    logical           :: first_step_cold_start ! true if this is the first step since cold start
-
-    ! These are used if this is the first step of a cold start
-    type(prior_weights_type), target :: new_weights
-    type(patch_state_updater_type), target :: patch_state_updater_new_weights
-    type(column_state_updater_type), target :: column_state_updater_new_weights
-
-    ! These point to the appropriate prior_weights, patch_state_updater and
-    ! column_state_updater instances, depending on whether it's a cold start
-    type(prior_weights_type), pointer :: my_prior_weights
-    type(patch_state_updater_type), pointer :: my_patch_state_updater
-    type(column_state_updater_type), pointer :: my_column_state_updater
 
     character(len=*), parameter :: subname = 'dynSubgrid_driver'
     !-----------------------------------------------------------------------
@@ -203,18 +213,10 @@ contains
     SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
 
     nclumps = get_proc_clumps()
-    first_step_cold_start = (is_first_step() .and. is_cold_start)
 
     ! ==========================================================================
     ! Do initialization, prior to land cover change
     ! ==========================================================================
-
-    if (first_step_cold_start) then
-       ! These objects need to be constructed outside a loop over clumps
-       new_weights = prior_weights_type(bounds_proc)
-       patch_state_updater_new_weights = patch_state_updater_type(bounds_proc)
-       column_state_updater_new_weights = column_state_updater_type(bounds_proc)
-    end if
 
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1, nclumps
@@ -270,20 +272,12 @@ contains
        ! Do wrapup stuff after land cover change
        !
        ! Everything following this point in this loop only needs to be called if we have
-       ! actually changed some weights in this time step. This is also required in the
-       ! first time step of the run to update filters to reflect state of CISM
-       ! (particularly mask that is past through coupler).
-       !
-       ! However, it doesn't do any harm (other than a small performance hit) to call
-       ! this stuff all the time, so we do so for simplicity and safety.
+       ! actually changed some weights in this time step. However, it doesn't do any harm
+       ! (other than a small performance hit) to call this stuff all the time, so we do so
+       ! for simplicity and safety.
        ! ========================================================================
 
-       call update_landunit_weights(bounds_clump)
-
-       call compute_higher_order_weights(bounds_clump)
-
-       ! Here: filters are re-made
-       call reweight_wrapup(bounds_clump, glc_behavior)
+       call dynSubgrid_wrapup_weight_changes(bounds_clump, glc_behavior)
 
        call patch_state_updater%set_new_weights(bounds_clump)
        call column_state_updater%set_new_weights(bounds_clump)
@@ -294,35 +288,14 @@ contains
             prior_weights%cactive(bounds_clump%begc:bounds_clump%endc), &
             temperature_inst, waterstate_inst)
 
-       if (first_step_cold_start) then
-          ! In the first timestep of a cold start run, we want to avoid doing any state
-          ! adjustments. This is because we expect big transients in the first time step,
-          ! since transient subgrid weights aren't updated in initialization. To
-          ! accomplish this, we set up a prior_weights object and a column_state_updater
-          ! object that say that there were no weight updates in this time step - i.e.,
-          ! that the old weights are the same as the new weights.
-          call new_weights%set_prior_weights(bounds_clump)
-          call patch_state_updater_new_weights%set_old_weights(bounds_clump)
-          call patch_state_updater_new_weights%set_new_weights(bounds_clump)
-          call column_state_updater_new_weights%set_old_weights(bounds_clump)
-          call column_state_updater_new_weights%set_new_weights(bounds_clump)
-          my_prior_weights => new_weights
-          my_patch_state_updater => patch_state_updater_new_weights
-          my_column_state_updater => column_state_updater_new_weights
-       else
-          my_prior_weights => prior_weights
-          my_patch_state_updater => patch_state_updater
-          my_column_state_updater => column_state_updater
-       end if
-
-       call dyn_hwcontent_final(bounds_clump, first_step_cold_start, &
+       call dyn_hwcontent_final(bounds_clump, &
             urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst, &
             waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
 
        if (use_cn) then
           call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, &
                filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
-               my_prior_weights, my_patch_state_updater, my_column_state_updater, &
+               prior_weights, patch_state_updater, column_state_updater, &
                canopystate_inst, photosyns_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -333,5 +306,37 @@ contains
     !$OMP END PARALLEL DO
 
   end subroutine dynSubgrid_driver
+
+  !-----------------------------------------------------------------------
+  subroutine dynSubgrid_wrapup_weight_changes(bounds_clump, glc_behavior)
+    !
+    ! !DESCRIPTION:
+    ! Reconcile various variables after subgrid weights change
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)       , intent(in) :: bounds_clump ! clump-level bounds
+    type(glc_behavior_type) , intent(in) :: glc_behavior
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'dynSubgrid_wrapup_weight_changes'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT(bounds_clump%level == BOUNDS_LEVEL_CLUMP, subname // ': argument must be CLUMP-level bounds')
+
+    call update_landunit_weights(bounds_clump)
+
+    call compute_higher_order_weights(bounds_clump)
+
+    ! Here: filters are re-made
+    !
+    ! This call requires clump-level bounds, which is why we need to ensure that the
+    ! argument to this routine is clump-level bounds
+    call reweight_wrapup(bounds_clump, glc_behavior)
+
+  end subroutine dynSubgrid_wrapup_weight_changes
+
 
 end module dynSubgridDriverMod

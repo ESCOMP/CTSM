@@ -9,7 +9,8 @@ module clm_initializeMod
   use spmdMod         , only : masterproc
   use decompMod       , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
   use abortutils      , only : endrun
-  use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, is_cold_start
+  use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl      , only : is_cold_start, is_interpolated_start
   use clm_varctl      , only : create_glacier_mec_landunit, iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_ed
   use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, wt_glc_mec, topo_glc_mec
@@ -440,7 +441,7 @@ contains
 
     call t_startf('init_dyn_subgrid')
     call init_subgrid_weights_mod(bounds_proc)
-    call dynSubgrid_init(bounds_proc)
+    call dynSubgrid_init(bounds_proc, glc_behavior)
     call t_stopf('init_dyn_subgrid')
 
     ! ------------------------------------------------------------------------
@@ -485,6 +486,7 @@ contains
     ! ------------------------------------------------------------------------
 
     is_cold_start = .false.
+    is_interpolated_start = .false.
 
     if (nsrest == nsrStartup) then
 
@@ -522,6 +524,8 @@ contains
     ! ------------------------------------------------------------------------
 
     if (nsrest == nsrStartup .and. finidat_interp_source /= ' ') then
+
+       is_interpolated_start = .true.
 
        ! Check that finidat is not cold start - abort if it is
        if (finidat /= ' ') then

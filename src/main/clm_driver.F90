@@ -12,8 +12,9 @@ module clm_driver
   use clm_varctl             , only : wrtdia, iulog, create_glacier_mec_landunit, use_ed
   use clm_varctl             , only : use_cn, use_lch4, use_voc, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop
+  use clm_varctl             , only : is_cold_start, is_interpolated_start
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
-  use clm_time_manager       , only : get_prev_date
+  use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
   use spmdMod                , only : masterproc, mpicom
   use decompMod              , only : get_proc_clumps, get_clump_bounds, get_proc_bounds, bounds_type
@@ -23,7 +24,7 @@ module clm_driver
   use restFileMod            , only : restFile_write, restFile_filename
   use abortutils             , only : endrun
   !
-  use dynSubgridDriverMod    , only : dynSubgrid_driver
+  use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
   use BalanceCheckMod        , only : BeginWaterBalance, BalanceCheck
   !
   use CanopyTemperatureMod   , only : CanopyTemperature ! (formerly Biogeophysics1Mod)
@@ -131,6 +132,7 @@ contains
     integer              :: sec_prev                ! seconds of the day at start of timestep
     character(len=256)   :: filer                   ! restart file name
     integer              :: ier                     ! error code
+    logical              :: need_glacier_initialization ! true if we need to initialize glacier areas in this time step
     type(bounds_type)    :: bounds_clump    
     type(bounds_type)    :: bounds_proc     
 
@@ -158,6 +160,56 @@ contains
     ! Update time-related info
 
     call crop_inst%CropRestIncYear()
+
+    ! ========================================================================
+    ! In the first time step of a run that used cold start or init_interp, glacier areas
+    ! will start at whatever is specified on the surface dataset, because coupling fields
+    ! from GLC aren't received until the run loop. Thus, CLM will see a potentially large,
+    ! fictitious glacier area change in the first time step after cold start or
+    ! init_interp. We don't want this fictitious area change to result in any state or
+    ! flux adjustments. Thus, we apply this area change here, at the start of the driver
+    ! loop, so that in dynSubgrid_driver, it will look like there is no glacier area
+    ! change in the first time step.
+    !
+    ! This needs to happen very early in the run loop, before any balance checks are
+    ! initialized, because - by design - this doesn't conserve mass at the grid cell
+    ! level. (The whole point of this code block is that we adjust areas without doing
+    ! the typical state or flux adjustments that need to accompany those area changes for
+    ! conservation.)
+    !
+    ! This accomplishes approximately the same effect that we would get if we were able to
+    ! update glacier areas in initialization. The one difference - and minor, theoretical
+    ! problem - that could arise from this start-of-run-loop update is: If the first time
+    ! step of the CESM run loop looked like: (1) GLC runs and updates glacier area (i.e.,
+    ! glacier area changes in the first time step compared with what was set in
+    ! initialization); (2) coupler passes new glacier area to CLM; (3) CLM runs. Then the
+    ! code here would mean that the true change in glacier area between initialization and
+    ! the first time step would be ignored as far as state and flux adjustments are
+    ! concerned. But this is unlikely to be an issue in practice: Currently GLC doesn't
+    ! update this frequently, and even if it did, the change in glacier area in a single
+    ! time step would typically be very small.
+    !
+    ! If we are ever able to change the CESM initialization sequence so that GLC fields
+    ! are passed to CLM in initialization, then this code block can be removed.
+    ! ========================================================================
+
+    need_glacier_initialization = (is_first_step() .and. &
+         (is_cold_start .or. is_interpolated_start))
+
+    if (create_glacier_mec_landunit .and. need_glacier_initialization) then
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1, nclumps
+          call get_clump_bounds(nc, bounds_clump)
+
+          call glc2lnd_inst%update_glc2lnd_non_topo( &
+               bounds = bounds_clump, &
+               glc_behavior = glc_behavior)
+
+          call dynSubgrid_wrapup_weight_changes(bounds_clump, glc_behavior)
+
+       end do
+       !$OMP END PARALLEL DO
+    end if
 
     ! ============================================================================
     ! Specified phenology

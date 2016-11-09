@@ -92,7 +92,7 @@ contains
   end subroutine dyn_hwcontent_init
 
   !---------------------------------------------------------------------------
-  subroutine dyn_hwcontent_final(bounds, first_step_cold_start, &
+  subroutine dyn_hwcontent_final(bounds, &
        urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst, &
        waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
     !
@@ -104,7 +104,6 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds  
-    logical                  , intent(in)    :: first_step_cold_start ! true if this is the first step since cold start
     type(urbanparams_type)   , intent(in)    :: urbanparams_inst
     type(soilstate_type)     , intent(in)    :: soilstate_inst
     type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
@@ -132,22 +131,11 @@ contains
          urbanparams_inst, soilstate_inst, soilhydrology_inst, &
          temperature_inst, waterstate_inst, lakestate_inst)
 
-    ! Do not do any adjustments on the first time step after cold start. This is because
-    ! we expect big transients in this first time step, since transient subgrid weights
-    ! aren't updated in initialization.
-    if (first_step_cold_start) then
-       do g = begg, endg
-          delta_liq(g) = 0._r8
-          delta_ice(g) = 0._r8
-          delta_heat(g) = 0._r8
-       end do
-    else
-       do g = begg, endg
-          delta_liq(g)  = waterstate_inst%liq2_grc(g) - waterstate_inst%liq1_grc(g)
-          delta_ice(g)  = waterstate_inst%ice2_grc(g) - waterstate_inst%ice1_grc(g)
-          delta_heat(g) = temperature_inst%heat2_grc(g) - temperature_inst%heat1_grc(g)
-       end do
-    end if
+    do g = begg, endg
+       delta_liq(g)  = waterstate_inst%liq2_grc(g) - waterstate_inst%liq1_grc(g)
+       delta_ice(g)  = waterstate_inst%ice2_grc(g) - waterstate_inst%ice1_grc(g)
+       delta_heat(g) = temperature_inst%heat2_grc(g) - temperature_inst%heat1_grc(g)
+    end do
 
     call waterflux_inst%qflx_liq_dynbal_dribbler%set_curr_delta(bounds, &
          delta_liq(begg:endg))

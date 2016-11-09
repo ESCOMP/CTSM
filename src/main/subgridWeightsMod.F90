@@ -340,6 +340,21 @@ contains
        ! initialization of a new landunit; and for runs that are coupled to CISM, this
        ! provides bare land SMB forcing even if there is no vegetated area.
        !
+       ! Also (echoing the similar comment in glcBehaviorMod): We need all glacier and
+       ! vegetated points to be active in the icemask region for the sake of init_interp -
+       ! since we only interpolate onto active points, and we don't know which points will
+       ! have non-zero area until after initialization (as long as we can't send
+       ! information from glc to clm in initialization). (If we had an inactive vegetated
+       ! point in the icemask region, according to the weights on the surface dataset, and
+       ! ran init_interp, this point would keep its cold start initialization
+       ! values. Then, in the first time step of the run loop, it's possible that this
+       ! point would become active because, according to glc, there is actually > 0% bare
+       ! ground in that grid cell. We don't do any state / flux adjustments in the first
+       ! time step after init_interp due to glacier area changes, so this vegetated column
+       ! would remain at its cold start initialization values, which would be a Bad
+       ! Thing. Ensuring that all vegetated points within the icemask are active gets
+       ! around this problem - as well as having other benefits, as noted above.)
+       !
        ! However, we do NOT include a virtual vegetated column in grid cells that are 100%
        ! standard (non-mec) glacier. This is for performance reasons: for FV 0.9x1.25,
        ! excluding these virtual vegetated columns (mostly over Antarctica) leads to a ~

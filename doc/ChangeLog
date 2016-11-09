@@ -1,4 +1,194 @@
 ===============================================================
+Tag name:  clm4_5_12_r201
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Nov  9 09:18:54 MST 2016
+One-line Summary: Rework initialization of transient weights - important with use_init_interp
+
+Purpose of changes
+------------------
+
+Two main purposes:
+
+(1) When using use_init_interp in a case with CISM, avoid doing dyn landcover
+    adjustments in the first time step after initialization. This is important
+    in order to avoid fictitious adjustments simply due to the fact that we
+    don't have updated glacier areas until the run loop (as in the cold start
+    case).
+
+(2) Update prescribed transient weights (for PFTs and crops) in initialization,
+    rather than weighting for the run loop. This undoes part of
+    clm4_5_1_r101. This can be important if you're running use_init_interp, so
+    that the appropriate points are active on the output dataset.
+
+More details on (1): This was achieved by initializing glacier areas at the
+start of the run loop for cold start or interpolated start.
+
+Rationale:
+
+In the first time step of a run that used cold start or init_interp, glacier
+areas will start at whatever is specified on the surface dataset, because
+coupling fields from GLC aren't received until the run loop. Thus, CLM will see
+a potentially large, fictitious glacier area change in the first time step after
+cold start or init_interp. We don't want this fictitious area change to result
+in any state or flux adjustments. Thus, we apply this area change at the start
+of the driver loop, so that in dynSubgrid_driver, it will look like there is no
+glacier area change in the first time step.
+
+This needs to happen very early in the run loop, before any balance checks are
+initialized, because - by design - this doesn't conserve mass at the grid cell
+level. (The whole point of this new code block in the driver is that we adjust
+areas without doing the typical state or flux adjustments that need to accompany
+those area changes for conservation.)
+
+This accomplishes approximately the same effect that we would get if we were
+able to update glacier areas in initialization. The one difference - and minor,
+theoretical problem - that could arise from this start-of-run-loop update is: If
+the first time step of the CESM run loop looked like: (1) GLC runs and updates
+glacier area (i.e., glacier area changes in the first time step compared with
+what was set in initialization); (2) coupler passes new glacier area to CLM; (3)
+CLM runs. Then the code here would mean that the true change in glacier area
+between initialization and the first time step would be ignored as far as state
+and flux adjustments are concerned. But this is unlikely to be an issue in
+practice: Currently GLC doesn't update this frequently, and even if it did, the
+change in glacier area in a single time step would typically be very small.
+
+If we are ever able to change the CESM initialization sequence so that GLC
+fields are passed to CLM in initialization, then this new code block in the
+driver can be removed.
+
+
+Also: Remove handling of first step since cold start in dynSubgrid_driver. This
+is no longer needed now that (a) we update prescribed transient weights in
+initialization, and (b) we have special-purpose code for glacier in the main
+driver run loop.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass; a few answer changes as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_12_r200
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM50 with CISM, with use_init_interp = .true.
+      ALSO: Possible answer changes in other transient configurations - see note below
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      not investigated carefully; could have climate changing impacts in a coupled run
+
+   Baseline comparisons failed for the following three tests, as expected:
+   FAIL ERS_D_Ld3.f09_g16_gl4.IG1850CRUCLM50BGCCROP.yellowstone_intel.clm-clm50KitchenSink COMPARE_baseline
+   FAIL ERS_D_Ld12.T31_g37_gl4.IG1850CRUCLM50BGC.yellowstone_intel.clm-glcMEC_spunup_inc_dec_bgc COMPARE_baseline
+   FAIL SMS_Lm1.f09_g16_gl4.IG1850CRUCLM50BGC.yellowstone_intel.clm-clm50KitchenSink COMPARE_baseline
+
+   In addition, it's possible that answer changes would appear in a coupled,
+   transient run with cold start or init_interp, due to changes in the fields
+   sent in initialization (or the first time step???)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Set prescribed transient weights in initialization. Get rid of special
+          handling of the first step since cold start; this is no longer needed
+          now that we (1) handle the glacier case specially in the driver, and
+          (2) initialize prescribed transient weights in initialization
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+
+========= Handle glacier area specially in the first time step since cold start
+          or interpolated start
+M       components/clm/src/main/clm_driver.F90
+
+========= Get rid of special handling of the first step since cold start; this
+          is no longer needed now that we (1) handle the glacier case specially
+          in the driver, and (2) initialize prescribed transient weights in
+          initialization
+M       components/clm/src/dyn_subgrid/dynConsBiogeophysMod.F90
+
+========= Add a flag to determine if we're doing an interpolated start
+M       components/clm/src/main/clm_varctl.F90
+M       components/clm/src/main/clm_initializeMod.F90
+
+========= Just add some comments
+M       components/clm/src/main/subgridWeightsMod.F90
+M       components/clm/src/main/glcBehaviorMod.F90
+M       components/clm/src/init_interp/initInterpMindist.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_12_r200
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Nov  8 00:56:00 MST 2016

@@ -132,8 +132,13 @@ contains
 
 !$OMP PARALLEL DO PRIVATE (ni,no,n,nmin,distmin,dx,dy,dist,closest,hgtdiffmin,hgtdiff)
     do no = bego,endo
-       
-       ! If output type is contained in input dataset ...
+
+       ! Only interpolate onto active points. Otherwise, the mere act of running
+       ! init_interp (e.g., of a file onto itself) would lead to changes in a bunch of
+       ! inactive points - e.g., going from their cold start initial conditions to some
+       ! spunup initial conditions (from the closest active point of that type). This
+       ! could potentially lead to different behavior in a transient run, if those points
+       ! later became active; that's undesirable.
        if (activeo(no)) then 
 
           nmin    = 0
