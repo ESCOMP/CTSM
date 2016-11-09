@@ -1,4 +1,162 @@
 ===============================================================
+Tag name:  clm4_5_12_r202
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Nov  9 12:02:41 MST 2016
+One-line Summary: Update to cime version used in cesm2_0_beta03
+
+Purpose of changes
+------------------
+
+Update to cime version used in cesm2_0_beta03, which fixes some bugs and has
+some new features.
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include bugzilla ID):
+- Unexpected answer change with Build namelist2 PR (#640) (https://github.com/ESMCI/cime/issues/766)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- preview_namelists is now first run by case.build - no longer by case.setup 
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- ERI and ERP tests now pass on hobart (previously these were failing silently)
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - ok
+
+    ok means tests pass; answer changes in these two tests:
+
+    FAIL ERP_Ld5.f19_g16.ICNCROP.yellowstone_pgi.clm-40default BASELINE
+    - testing-specific change, due to the fact that we now build this ERP test
+      non-threaded
+
+    FAIL SMS_D_Ld1_Mmpi-serial.1x1_mexicocityMEX.I.hobart_nag BASELINE
+    - unknown reason for diff: see https://github.com/ESMCI/cime/issues/766
+
+
+CLM tag used for the baseline comparisons: clm4_5_12_r201
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES - but only in the two tests noted above
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: just the two tests noted above
+    - what platforms/compilers: just the two tests noted above
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      not investigated closely
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+- cime: clm4_5_12_r198_cime5.2.0-alpha.1-9-gd321e4b -> cime5.2.0-alpha.7
+
+List all files eliminated:
+
+========= Just rename xmlchange_cmnds to shell_commands, because xmlchange_cmnds
+          is being deprecated
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/pts/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsRLA/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsRLB/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/40pts/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/irrigOn_reduceOutput/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsROA/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_changeFlags/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLA/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLB/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsROA/xmlchange_cmnds
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/drydepnomegan/xmlchange_cmnds
+
+List all files added and what they do:
+
+========= Just rename xmlchange_cmnds to shell_commands, because xmlchange_cmnds
+          is being deprecated
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/irrigOn_reduceOutput/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetEarly/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsROA/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_changeFlags/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetMid/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/af_bias_v5/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLA/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/ptsRLB/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsROA/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/drydepnomegan/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/pts/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsRLA/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/40ptsRLB/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/tropicAtl_subsetLate/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/decStart/shell_commands
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/40pts/shell_commands
+
+List all existing files that have been modified, and describe the changes: none
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_12_r201
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Nov  9 09:18:54 MST 2016
