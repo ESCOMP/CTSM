@@ -1,4 +1,179 @@
 ===============================================================
+Tag name:  clm4_5_12_r203
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Nov 10 12:14:13 MST 2016
+One-line Summary: Bug fixes for snow-on-lake
+
+Purpose of changes
+------------------
+
+Fix a few bugs with the calculation of melt fluxes arising from
+snow-on-lake. These appear to mainly just affect diagnostic terms, although in
+theory it looks like this fixes a possible balance check error in rare
+conditions.
+
+Changes are from Leo van Kampenhout (l.vankampenhout@uu.nl)
+
+Specific changes are:
+
+(1) qflx_sl_top_soil is no longer updated in LakeHydrology. Terms that used to
+    go into that variable now go into qflx_snow_drain.
+
+(2) For the case where we have snow above an unfrozen lake: Changed calculation
+    of qflx_snomelt and eflx_snomelt:
+
+Old:
+               qflx_snomelt(c) = qflx_snomelt(c) + h2osno(c)/dtime
+               eflx_snomelt(c) = eflx_snomelt(c) + h2osno(c)*hfus/dtime 
+
+New:
+               qflx_snomelt(c) = qflx_snomelt(c) + sumsnowice(c)/dtime
+               eflx_snomelt(c) = eflx_snomelt(c) + sumsnowice(c)*hfus/dtime 
+
+So note that this now just considers sumsnowice rather than the full h2osno -
+i.e., it doesn't remelt the liquid in the snow pack.
+
+(3) For the case where we have snow above an unfrozen lake: The update of
+    qflx_snow_drain is changed; and again, note that qflx_sl_top_soil is gone.
+
+Old:
+               ! update drainage from snow pack for this case
+               qflx_snow_drain(c)     = qflx_snow_drain(c)  + qflx_snomelt(c)
+               qflx_sl_top_soil(c) = qflx_sl_top_soil(c) + h2osno(c)
+
+New:
+               ! update incidental drainage from snow pack for this case
+               qflx_snow_drain(c) = qflx_snow_drain(c) + h2osno(c)/dtime
+
+The old version had three apparent problems:
+
+(a) This drainage term contributed to both qflx_snow_drain and qflx_sl_top_soil,
+    which later get added together (in BalanceCheck); as noted in (1), the uses
+    of qflx_sl_top_soil and qflx_snow_drain have been merged into just
+    qflx_snow_drain in this routine.
+
+(b) The qflx_sl_top_soil addition adds h2osno, without dividing by dtime
+
+(c) The qflx_snow_drain addition adds the full qflx_snomelt, which may include
+    other terms that were set prior to this code.
+
+Note that, in the new version, we want to drain the *whole* snow pack in this
+case - liquid as well as solid.
+
+(4) qflx_top_soil is changed:
+
+Old:
+         qflx_top_soil(c)  = qflx_prec_grnd_rain(p) + qflx_snomelt(c)
+
+New:
+         qflx_top_soil(c)  = qflx_prec_grnd_rain(p) + qflx_snow_drain(c)
+
+What the soil receives should equal what leaves the snow, i.e. the drainage term. 
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Bill Sacks, Sean Swenson
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - pass
+
+    ok means tests pass; baseline comparison failures as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_12_r202
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Potentially any clm45/clm50 case
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Appears to only change diagnostic fields
+
+      Answer changes only show up in a few cases, presumably because this case
+      in the code is relatively uncommon. Specifically, these tests have answer
+      changes:
+
+  FAIL LII_D_Ld3.f09_g16.ICLM45BGC.yellowstone_gnu.clm-default BASELINE
+  FAIL ERI_D_Ld9.ne30_g16.ICLM45BGC.yellowstone_intel.clm-vrtlay BASELINE
+  FAIL ERP_Ld5.f19_g16.I1850CLM45BGC.yellowstone_intel.clm-default BASELINE
+  FAIL ERP_P180x2_D_Ld5.f19_g16.I1850CLM45.yellowstone_intel.clm-default BASELINE
+  FAIL ERS_D_Ld3.f09_g16_gl4.IG1850CRUCLM50BGCCROP.yellowstone_intel.clm-clm50KitchenSink BASELINE
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeophys/LakeHydrologyMod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_12_r202
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Nov  9 12:02:41 MST 2016

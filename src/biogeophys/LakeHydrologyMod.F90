@@ -167,7 +167,7 @@ contains
          qflx_evap_grnd       =>  waterflux_inst%qflx_evap_grnd_patch   , & ! Output: [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
          qflx_dew_snow        =>  waterflux_inst%qflx_dew_snow_patch    , & ! Output: [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
          qflx_dew_grnd        =>  waterflux_inst%qflx_dew_grnd_patch    , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
-         qflx_snomelt         =>  waterflux_inst%qflx_snomelt_col       , & ! Output: [real(r8) (:)   ]  snow melt (mm H2O /s)                   
+         qflx_snomelt         =>  waterflux_inst%qflx_snomelt_col       , & ! Output: [real(r8) (:)   ]  snow melt (mm H2O /s)
          qflx_prec_grnd_col   =>  waterflux_inst%qflx_prec_grnd_col     , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
          qflx_evap_grnd_col   =>  waterflux_inst%qflx_evap_grnd_col     , & ! Output: [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
          qflx_dew_grnd_col    =>  waterflux_inst%qflx_dew_grnd_col      , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
@@ -187,7 +187,6 @@ contains
          qflx_runoff          =>  waterflux_inst%qflx_runoff_col        , & ! Output: [real(r8) (:)   ]  total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_ice_runoff_snwcp => waterflux_inst%qflx_ice_runoff_snwcp_col, & ! Output: [real(r8) (:)] solid runoff from snow capping (mm H2O /s)
          qflx_top_soil        =>  waterflux_inst%qflx_top_soil_col      , & ! Output: [real(r8) (:)   ]  net water input into soil from top (mm/s)
-         qflx_sl_top_soil     =>  waterflux_inst%qflx_sl_top_soil_col   , & ! Output: [real(r8) (:)   ]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
 
          eflx_snomelt         =>  energyflux_inst%eflx_snomelt_col      , & ! Output: [real(r8) (:)   ]  snow melt heat flux (W/m**2)
          eflx_sh_tot          =>  energyflux_inst%eflx_sh_tot_patch     , & ! Output: [real(r8) (:)   ]  total sensible heat flux (W/m**2) [+ to atm]
@@ -203,7 +202,6 @@ contains
          )
 
       ! Determine step size
-
       dtime = get_step_size()
 
       ! Add soil water to water balance.
@@ -483,7 +481,7 @@ contains
                eflx_soil_grnd(p)   = eflx_soil_grnd(p) - heatrem/dtime
                eflx_gnet(p)        = eflx_gnet(p) - heatrem/dtime
                eflx_grnd_lake(p)   = eflx_grnd_lake(p) - heatrem/dtime
-               qflx_sl_top_soil(c) = qflx_sl_top_soil(c) + h2osno(c)/dtime
+               qflx_snow_drain(c)  = qflx_snow_drain(c) + h2osno(c)/dtime
                snl(c)              = 0
                h2osno(c)           = 0._r8
                snow_depth(c)       = 0._r8
@@ -537,14 +535,11 @@ contains
 
             if (heatrem + denh2o*dz_lake(c,1)*hfus > 0._r8) then            
                ! Remove snow and subtract the latent heat from the top layer.
-               qflx_snomelt(c) = qflx_snomelt(c) + h2osno(c)/dtime
+               qflx_snomelt(c) = qflx_snomelt(c) + sumsnowice(c)/dtime
+               eflx_snomelt(c) = eflx_snomelt(c) + sumsnowice(c)*hfus/dtime 
 
-               eflx_snomelt(c) = eflx_snomelt(c) + h2osno(c)*hfus/dtime 
-
-               ! update drainage from snow pack for this case
-               qflx_snow_drain(c)     = qflx_snow_drain(c)  + qflx_snomelt(c)
-
-               qflx_sl_top_soil(c) = qflx_sl_top_soil(c) + h2osno(c)
+               ! update incidental drainage from snow pack for this case
+               qflx_snow_drain(c) = qflx_snow_drain(c) + h2osno(c)/dtime
 
                h2osno(c) = 0._r8
                snow_depth(c) = 0._r8
@@ -633,7 +628,7 @@ contains
               (endwb(c)-begwb(c))/dtime + qflx_floodg(g)
          qflx_floodc(c)    = qflx_floodg(g)
          qflx_runoff(c)    = qflx_drain(c) + qflx_qrgwl(c)
-         qflx_top_soil(c)  = qflx_prec_grnd_rain(p) + qflx_snomelt(c)
+         qflx_top_soil(c)  = qflx_prec_grnd_rain(p) + qflx_snow_drain(c)
          qflx_ice_runoff_snwcp(c) = qflx_snwcp_ice(c)
 
       enddo
