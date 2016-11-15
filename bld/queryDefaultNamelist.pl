@@ -178,11 +178,14 @@ EOF
   }
   # List of input options
   my %inputopts;
-  my $datmblddir             = "$cfgdir/../../../cime/components/data_comps/datm/bld";
+  # This namelist files under the cime directories are in version 2 format and can't be read by perl code EBK 11/15/2016
+  my $datmcimedir            = "$cfgdir/../../../cime/components/data_comps/datm/cime_config";
+  my $drvcimedir             = "$cfgdir/../../../cime/driver_cpl/cime_config";
   my $drvblddir              = "$cfgdir/../../../cime/driver_cpl/bld";
   my $model                  = $opts{'model'};
-  my @nl_definition_files    = ( "$datmblddir/namelist_files/namelist_definition_datm.xml",
+  my @nl_definition_files    = ( #"$datmcimedir/namelist_definition_datm.xml",   # can't be read by perl see above
                                  "$drvblddir/namelist_files/namelist_definition_drv.xml",
+                                 #"$drvcimedir/namelist_definition_drv.xml",     # can't be read by perl see above
                                  "$cfgdir/namelist_files/namelist_definition_$model.xml" 
                                );
   $inputopts{empty_cfg_file} = "$cfgdir/config_files/config_definition_$model.xml";
@@ -252,8 +255,9 @@ EOF
      my @files = ( "$cfgdir/namelist_files/namelist_defaults_${model}.xml", 
                    "$cfgdir/namelist_files/namelist_defaults_${model}_tools.xml", 
                    "$drvblddir/namelist_files/namelist_defaults_drv.xml",
+                   #"$drvcimedir/namelist_defaults_drv.xml",
                    "$cfgdir/namelist_files/namelist_defaults_drydep.xml",
-                   "$datmblddir/namelist_files/namelist_defaults_datm.xml",
+                   #"$datmcimedir/namelist_defaults_datm.xml",
                  );
      push( @nl_defaults_files, @files );
   }

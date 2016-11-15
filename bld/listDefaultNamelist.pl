@@ -57,7 +57,8 @@ my $drvblddir   = "$cesmroot/cime/driver_cpl/bld";
 # The namelist defaults file contains default values for all required namelist variables.
 my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml",
                           "$drvblddir/namelist_files/namelist_defaults_drv.xml",
-                          "$datmblddir/namelist_files/namelist_defaults_datm.xml" );
+                          #"$datmblddir/namelist_files/namelist_defaults_datm.xml", # in version 2 format can't be read
+                         );
 my $list = "clm.input_data_list";
 my %list_of_all_files;
 
@@ -194,7 +195,7 @@ sub GetListofNeededFiles {
   my %inputopts;
   my $datmblddir             = "$cfgdir/../../../cime/components/data_comps/datm/bld";
   my @nl_definition_files    = (
-                                 "$datmblddir/namelist_files/namelist_definition_datm.xml",
+                                 #"$datmblddir/namelist_files/namelist_definition_datm.xml",  # version 2 format can't be used
                                  "$cfgdir/namelist_files/namelist_definition_$opts{'phys'}.xml"
                                );
   $inputopts{'nldef_files'}    = \@nl_definition_files;

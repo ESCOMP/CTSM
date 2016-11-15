@@ -379,6 +379,7 @@ contains
           t_soisno         =>    temperature_inst%t_soisno_col       , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
 
           frac_h2osfc      =>    waterstate_inst%frac_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+          frac_h2osfc_nosnow  => waterstate_inst%frac_h2osfc_nosnow_col,    & ! Output: [real(r8) (:)   ] col fractional area with surface water greater than zero (if no snow present)
           frac_sno         =>    waterstate_inst%frac_sno_eff_col    , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
           h2osoi_ice       =>    waterstate_inst%h2osoi_ice_col      , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
           h2osfc           =>    waterstate_inst%h2osfc_col          , & ! Output: [real(r8) (:)   ]  surface water (mm)                                
@@ -487,17 +488,17 @@ contains
              !5. surface runoff from h2osfc
              if (h2osfcflag==1) then
                 ! calculate runoff from h2osfc  -------------------------------------
-                if (frac_h2osfc(c) <= pc) then 
+                if (frac_h2osfc_nosnow(c) <= pc) then 
                    frac_infclust=0.0_r8
                 else
-                   frac_infclust=(frac_h2osfc(c)-pc)**mu
+                   frac_infclust=(frac_h2osfc_nosnow(c)-pc)**mu
                 endif
              endif
 
              ! limit runoff to value of storage above S(pc)
              if(h2osfc(c) >= h2osfc_thresh(c) .and. h2osfcflag/=0) then
                 ! spatially variable k_wet
-                k_wet=1.0_r8 * sin((rpi/180.) * col%topo_slope(c))
+                k_wet=1.0e-4_r8 * sin((rpi/180.) * col%topo_slope(c))
                 qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
 
                 qflx_h2osfc_surf(c)=min(qflx_h2osfc_surf(c),(h2osfc(c) - h2osfc_thresh(c))/dtime)

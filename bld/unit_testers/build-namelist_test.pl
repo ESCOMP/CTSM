@@ -688,12 +688,12 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"",
                                    },
-     "glc_nec inconsistent"      =>{ options=>"-glc_nec 10 -envxml_dir .",
+     "glc_nec inconsistent"      =>{ options=>"-glc_nec 10 -glc_present -envxml_dir .",
                                      namelst=>"maxpatch_glcmec=5",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"",
                                    },
-     "glc_smb inconsistent"      =>{ options=>"-glc_nec 10 -glc_smb .true. -envxml_dir .",
+     "glc_smb inconsistent"      =>{ options=>"-glc_nec 10 --glc_present glc_smb .true. -envxml_dir .",
                                      namelst=>"glc_smb=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"",
@@ -1054,7 +1054,7 @@ my @use_cases = ( "1850-2100_rcp2.6_glacierMEC_transient",
 my $GLC_NEC         = 10;
 foreach my $res ( @glc_res ) {
    foreach my $usecase ( @usecases ) {
-      $options = "-glc_nec $GLC_NEC -res $res -use_case $usecase -envxml_dir . ";
+      $options = "-glc_nec -glc_present $GLC_NEC -res $res -use_case $usecase -envxml_dir . ";
       &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );

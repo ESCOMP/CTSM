@@ -489,6 +489,8 @@ contains
             else
                eflx_grnd_lake(p) = eflx_gnet(p)
             end if
+         else
+            eflx_grnd_lake(p) = eflx_gnet(p)
          end if
       end do
 

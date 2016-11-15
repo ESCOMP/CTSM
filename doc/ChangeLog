@@ -1,4 +1,139 @@
 ===============================================================
+Tag name:  clm4_5_13_r204
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Nov 15 13:55:16 MST 2016
+One-line Summary: A few answer changing bug fixes
+
+Purpose of changes
+------------------
+
+This brings in some simple answer changing bug fixes. And some non-answer changing bug fixes for mksurfdata.pl and 
+the build-namelist unit tester.
+
+In order to calculate infiltration the fraction of ground covered in surface water is used, before it is updated
+to account for snow. Also mulitply k_wet by a factor of 1x10^-4 both of these will makes a difference in surface runoff.
+This change is essentially a bug in the original formulation and so we've applied to both CLM45 and CLM50 answers.
+Since this is hydrology it will affect answers in all CLM45/CLM%0 cases whether SP, CN or BGC modes.
+
+For MEGAN we were using a new updated dataset that had the addition of all 78 PFT's including the new crop ones.
+Unfortunately it also had bare-soil, and this moved the indexing off by one. So we have a new dataset that removes
+the bare-soil and hence works correctly now.
+
+A simple addition of setting lake energy flux (eflx_grnd_lake) for the case when there isn't one layer os snow.
+
+For CLM45 we found that the use of the Zheng rooting profile for Carbon resulted in 1850 spinup simulations that couldn't
+spinup the tropics. Using the Jackson-1996 profile alleviates this problem.
+
+There were also some simple problems in using the queryNamelistDefaults.pl tool with the new cime tag brought in
+with clm4_5_12_r202. Fixing this allows mksurfdata.pl and build-namelist-unit_tester to work.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+    2378 Zheng profile for carbon results in tropics that doesn't spin up
+    2376 mksurfdata tests fail in clm4_5_12_r202 with new cime version
+    2375 84 tests are removed from build-namelist unit_tester 
+    2374 Use fraction of ground covered in surface water used in infiltration before it's updated to account for snow
+    2370 Megan was giving incorrect answers
+    1717 Lake hydrology issue
+    
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values):  carbon rooting is now Jackson-1996
+   rooting_profile_method_carbon for CLM$5 was Zheng method, now changed to Jackson-1996
+
+Changes to the datasets (e.g., parameter, surface or initial files): New megan dataset without bare-soil
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self, swensosc, fvitt
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone -  PASS (176 compare tests fail because of bug 
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_12_r203
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES! Both CLM45 and CLM50
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45BGC/CLM50
+    - what platforms/compilers: all
+    - nature of change:
+        surface runoff for CLM45/CLM50 changes when snow exists, small change for short simulations
+        MEGAN answers are corrected, important for isoprene
+        Change in fill mask for lake energy flux
+        CLM45BGC changes in an important way
+       
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M components/clm/src/biogeophys/CanopyHydrologyMod.F90 --- Save frac_h2osfc_nosnow
+   M components/clm/src/biogeophys/SoilHydrologyMod.F90 ----- Use frac_h2osfc_nosnow to determine frac_infclust (bug 2374)
+          Also change k_wet by a factor of e-4
+   M components/clm/src/biogeophys/LakeHydrologyMod.F90 ----- Save off eflx_grnd_lake as an "else" in one more conditional
+          when snl is not 1 layer (bug 1717)
+   M components/clm/src/biogeophys/WaterStateType.F90 ------- Write out FH2OSFC_NOSNOW to history
+   M components/clm/src/biogeochem/CNVegCarbonFluxType.F90 -- Add commented out change in NBP definition
+   M components/clm/src/biogeochem/MEGANFactorsMod.F90 ------ Check of n_pft's on MEGAN file changes by 1
+
+   M components/clm/bld/listDefaultNamelist.pl -------------- Can't use version 2 format datm namelist_definition for datm or drv
+         but use the version 1 drv file.
+   M components/clm/bld/queryDefaultNamelist.pl ------------- Can't use version 2 format datm namelist_definition for datm or drv
+         but use the version 1 drv file.
+   M components/clm/bld/unit_testers/build-namelist_test.pl - Make sure glc_present is added to tests for glc command line options
+
+   M components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml - rooting_profile_method_carbon==1 for clm45
+   M components/clm/bld/namelist_files/namelist_defaults_drydep.xml - New 78 pft file for megan that doesn't have bare soil
+          (bug 2370)
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_12_r203
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Nov 10 12:14:13 MST 2016

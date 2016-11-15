@@ -124,7 +124,7 @@ contains
     call ncd_inqdlen( ncid, dimid, n_classes, name='Class_Num')
     call ncd_inqdlen( ncid, dimid, n_patchs, name='PFT_Num')
 
-    if ( n_patchs /= mxpft+1 )then
+    if ( n_patchs /= mxpft )then
        call endrun(msg='PFT_Num does NOT equal mxpft: '//errMsg(sourcefile, __LINE__))
     end if
     npfts = n_patchs

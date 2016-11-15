@@ -125,7 +125,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <rooting_profile_method_water  phys="clm4_5">0</rooting_profile_method_water>
 
 <rooting_profile_method_carbon phys="clm5_0">1</rooting_profile_method_carbon>
-<rooting_profile_method_carbon phys="clm4_5">0</rooting_profile_method_carbon>
+<rooting_profile_method_carbon phys="clm4_5">1</rooting_profile_method_carbon>
 
 <!-- Soil evaporative resistance namelist defaults -->
 <soil_resis_method phys="clm5_0">1</soil_resis_method>

@@ -77,6 +77,7 @@ module WaterstateType
      real(r8), pointer :: frac_sno_eff_col       (:)   ! col fraction of ground covered by snow (0 to 1)
      real(r8), pointer :: frac_iceold_col        (:,:) ! col fraction of ice relative to the tot water (new) (-nlevsno+1:nlevgrnd) 
      real(r8), pointer :: frac_h2osfc_col        (:)   ! col fractional area with surface water greater than zero
+     real(r8), pointer :: frac_h2osfc_nosnow_col (:)   ! col fractional area with surface water greater than zero (if no snow present)
      real(r8), pointer :: wf_col                 (:)   ! col soil water as frac. of whc for top 0.05 m (0-1) 
      real(r8), pointer :: wf2_col                (:)   ! col soil water as frac. of whc for top 0.17 m (0-1) 
      real(r8), pointer :: fwet_patch             (:)   ! patch canopy fraction that is wet (0 to 1)
@@ -220,6 +221,7 @@ contains
     allocate(this%frac_sno_eff_col       (begc:endc))                     ; this%frac_sno_eff_col       (:)   = nan
     allocate(this%frac_iceold_col        (begc:endc,-nlevsno+1:nlevgrnd)) ; this%frac_iceold_col        (:,:) = nan
     allocate(this%frac_h2osfc_col        (begc:endc))                     ; this%frac_h2osfc_col        (:)   = nan 
+    allocate(this%frac_h2osfc_nosnow_col (begc:endc))                     ; this%frac_h2osfc_nosnow_col        (:)   = nan 
     allocate(this%wf_col                 (begc:endc))                     ; this%wf_col                 (:)   = nan
     allocate(this%wf2_col                (begc:endc))                     ; 
     allocate(this%fwet_patch             (begp:endp))                     ; this%fwet_patch             (:)   = nan
@@ -390,6 +392,12 @@ contains
     call hist_addfld1d (fname='FH2OSFC',  units='unitless',  &
          avgflag='A', long_name='fraction of ground covered by surface water', &
          ptr_col=this%frac_h2osfc_col)
+
+    this%frac_h2osfc_nosnow_col(begc:endc) = spval
+    call hist_addfld1d (fname='FH2OSFC_NOSNOW',  units='unitless',  &
+         avgflag='A', &
+         long_name='fraction of ground covered by surface water (if no snow present)', &
+         ptr_col=this%frac_h2osfc_nosnow_col, default='inactive')
 
     this%frac_sno_col(begc:endc) = spval
     call hist_addfld1d (fname='FSNO',  units='unitless',  &

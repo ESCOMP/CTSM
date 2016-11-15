@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_13_r204     erik 11/15/2016 A few answer changing bug fixes
   clm4_5_12_r203    sacks 11/10/2016 Bug fixes for snow-on-lake
   clm4_5_12_r202    sacks 11/09/2016 Update to cime version used in cesm2_0_beta03
   clm4_5_12_r201    sacks 11/09/2016 Rework initialization of transient weights - important with use_init_interp

@@ -4199,6 +4199,8 @@ contains
     do fc = 1,num_soilc
        c = filter_soilc(fc)
 
+       g = col%gridcell(c)
+
        ! litter fire losses (LITFIRE)
        this%litfire_col(c) = 0._r8
 
@@ -4246,6 +4248,13 @@ contains
        this%nbp_col(c) =  &
             this%nep_col(c)        - &
             this%fire_closs_col(c)
+       ! Version to use with product loss from grid cell subtracted out
+       ! Do we need to worry about column weights here?
+       !this%nbp_col(c) =  &
+       !     this%nep_col(c)        - &
+       !     this%fire_closs_col(c) - &
+       !     this%dwt_closs_col(c)  - &
+       !     product_closs_grc(g)
 
        ! net ecosystem exchange of carbon, includes fire flux and hrv_xsmrpool flux,
        ! positive for source (NEE)
