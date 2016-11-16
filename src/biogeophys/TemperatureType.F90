@@ -322,10 +322,19 @@ contains
          avgflag='A', long_name='Snow temperatures', &
          ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
+    call hist_addfld2d (fname='SNO_T_ICE', units='K', type2d='levsno',  &
+         avgflag='A', long_name='Snow temperatures (ice landunits only)', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
+         l2g_scale_type='ice', default='inactive')
+
     this%t_ref2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA', units='K',  &
          avgflag='A', long_name='2m air temperature', &
          ptr_patch=this%t_ref2m_patch)
+
+    call hist_addfld1d (fname='TSA_ICE', units='K',  &
+         avgflag='A', long_name='2m air temperature (ice landunits only)', &
+         ptr_patch=this%t_ref2m_patch, l2g_scale_type='ice', default='inactive')
 
     this%t_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_R', units='K',  &
@@ -377,6 +386,11 @@ contains
          avgflag='A', long_name='ground temperature', &
          ptr_col=this%t_grnd_col, c2l_scale_type='urbans')
 
+    call hist_addfld1d (fname='TG_ICE', units='K',  &
+         avgflag='A', long_name='ground temperature (ice landunits only)', &
+         ptr_col=this%t_grnd_col, c2l_scale_type='urbans', l2g_scale_type='ice', &
+         default='inactive')
+
     this%t_grnd_r_col(begc:endc) = spval
     call hist_addfld1d (fname='TG_R', units='K',  &
          avgflag='A', long_name='Rural ground temperature', &
@@ -387,7 +401,6 @@ contains
          avgflag='A', long_name='soil temperature (vegetated landunits only)', &
          ptr_col=this%t_soisno_col, l2g_scale_type='veg')
 
-    this%t_soisno_col(begc:endc,:) = spval
     call hist_addfld2d (fname='TSOI_ICE',  units='K', type2d='levgrnd', &
          avgflag='A', long_name='soil temperature (ice landunits only)', &
          ptr_col=this%t_soisno_col, l2g_scale_type='ice')
@@ -474,9 +487,13 @@ contains
          ptr_lnd=this%heat2_grc, default='inactive')  
 
     this%snot_top_col(begc:endc) = spval 
-    call hist_addfld1d (fname='SNOTTOPL', units='K/m', &
+    call hist_addfld1d (fname='SNOTTOPL', units='K', &
          avgflag='A', long_name='snow temperature (top layer)', &
          ptr_col=this%snot_top_col, set_urb=spval, default='inactive')
+
+    call hist_addfld1d (fname='SNOTTOPL_ICE', units='K',  &
+         avgflag='A', long_name='snow temperature (top layer, ice landunits only)', &
+         ptr_col=this%snot_top_col, set_urb=spval, l2g_scale_type='ice', default='inactive')
 
     this%dTdz_top_col(begc:endc) = spval 
     call hist_addfld1d (fname='SNOdTdzL', units='K/m', &

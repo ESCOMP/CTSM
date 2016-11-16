@@ -1092,12 +1092,13 @@ contains
          
          qflx_snow_drain  =>    waterflux_inst%qflx_snow_drain_col  , & ! Output: [real(r8) (:)   ] drainage from snow pack                           
          qflx_snofrz_lyr  =>    waterflux_inst%qflx_snofrz_lyr_col  , & ! Output: [real(r8) (:,:) ] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
-         qflx_snofrz_col  =>    waterflux_inst%qflx_snofrz_col      , & ! Output: [real(r8) (:)   ] column-integrated snow freezing rate (positive definite) [kg m-2 s-1]
-         qflx_snomelt     =>    waterflux_inst%qflx_snomelt_col     , & ! Output: [real(r8) (:)   ] snow melt (mm H2O /s)                   
+         qflx_snofrz      =>    waterflux_inst%qflx_snofrz_col      , & ! Output: [real(r8) (:)   ] column-integrated snow freezing rate (positive definite) [kg m-2 s-1]
+         qflx_snomelt     =>    waterflux_inst%qflx_snomelt_col     , & ! Output: [real(r8) (:)   ] snow melt (mm H2O /s)
+         qflx_snomelt_lyr =>    waterflux_inst%qflx_snomelt_lyr_col , & ! Output: [real(r8) (:)   ] snow melt in each layer (mm H2O /s)
          
-         eflx_snomelt     =>    energyflux_inst%eflx_snomelt_col    , & ! Output: [real(r8) (:)   ] snow melt heat flux (W/m**2)             
-         eflx_snomelt_r   =>    energyflux_inst%eflx_snomelt_r_col  , & ! Output: [real(r8) (:)   ] rural snow melt heat flux (W/m**2)       
-         eflx_snomelt_u   =>    energyflux_inst%eflx_snomelt_u_col  , & ! Output: [real(r8) (:)   ] urban snow melt heat flux (W/m**2)       
+         eflx_snomelt     =>    energyflux_inst%eflx_snomelt_col    , & ! Output: [real(r8) (:)   ] snow melt heat flux (W/m**2)
+         eflx_snomelt_r   =>    energyflux_inst%eflx_snomelt_r_col  , & ! Output: [real(r8) (:)   ] rural snow melt heat flux (W/m**2)
+         eflx_snomelt_u   =>    energyflux_inst%eflx_snomelt_u_col  , & ! Output: [real(r8) (:)   ] urban snow melt heat flux (W/m**2)
          
          xmf              =>    temperature_inst%xmf_col            , &
          fact             =>    temperature_inst%fact_col           , &
@@ -1116,11 +1117,10 @@ contains
          c = filter_nolakec(fc)
          l = col%landunit(c)
 
-         qflx_snomelt(c) = 0._r8
          xmf(c) = 0._r8
-         qflx_snofrz_lyr(c,-nlevsno+1:0) = 0._r8
-         qflx_snofrz_col(c) = 0._r8
-         qflx_snow_drain(c) = 0._r8
+         qflx_snomelt(c)      = 0._r8
+         qflx_snofrz(c)       = 0._r8
+         qflx_snow_drain(c)   = 0._r8
       end do
 
       do j = -nlevsno+1,nlevgrnd       ! all layers
@@ -1136,6 +1136,12 @@ contains
                wliq0(c,j) = h2osoi_liq(c,j)
                wmass0(c,j) = h2osoi_ice(c,j) + h2osoi_liq(c,j)
             endif   ! end of snow layer if-block
+
+            if (j <= 0) then
+               ! Do for all possible snow layers in case snl changes over timestep.
+               qflx_snomelt_lyr(c,j) = 0._r8
+               qflx_snofrz_lyr(c,j)  = 0._r8
+            end if
          end do   ! end of column-loop
       enddo   ! end of level-loop
 
@@ -1282,6 +1288,7 @@ contains
                               hm(c,j) = 0._r8
                            endif
                            qflx_snomelt(c) = max(0._r8,(temp1-h2osno(c)))/dtime   ! kg/(m2 s)
+                           ! no snow layers, so qflx_snomelt_lyr is not set
                            xmf(c) = hfus*qflx_snomelt(c)
                            qflx_snow_drain(c) = qflx_snomelt(c) 
                         endif
@@ -1337,14 +1344,14 @@ contains
                      endif
 
                      if (imelt(c,j) == 1 .AND. j < 1) then
-                        qflx_snomelt(c) = qflx_snomelt(c) + max(0._r8,(wice0(c,j)-h2osoi_ice(c,j)))/dtime
-
-
+                        qflx_snomelt_lyr(c,j) = max(0._r8,(wice0(c,j)-h2osoi_ice(c,j)))/dtime
+                        qflx_snomelt(c)       = qflx_snomelt(c) + qflx_snomelt_lyr(c,j)
                      endif
 
                      ! layer freezing mass flux (positive):
                      if (imelt(c,j) == 2 .AND. j < 1) then
                         qflx_snofrz_lyr(c,j) = max(0._r8,(h2osoi_ice(c,j)-wice0(c,j)))/dtime
+                        qflx_snofrz(c)       = qflx_snofrz(c) + qflx_snofrz_lyr(c,j)
                      endif
 
                   endif
@@ -1370,13 +1377,6 @@ contains
       end do
 
       call t_stopf( 'PhaseChangebeta' )
-      do j = -nlevsno+1,0
-         do fc = 1,num_nolakec
-            c = filter_nolakec(fc)
-            qflx_snofrz_col(c) = qflx_snofrz_col(c) + qflx_snofrz_lyr(c,j)
-         end do
-      end do
-
     end associate
 
   end subroutine Phasechange_beta

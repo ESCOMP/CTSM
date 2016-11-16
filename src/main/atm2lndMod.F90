@@ -614,7 +614,9 @@ contains
          forc_snow_c  => atm2lnd_inst%forc_snow_downscaled_col      , & ! Input:  [real(r8) (:)]  snow rate [mm/s]
          forc_lwrad_c => atm2lnd_inst%forc_lwrad_downscaled_col       & ! Input:  [real(r8) (:)]  downward longwave (W/m**2)
          )
-    
+
+    ! BUG(wjs, 2016-11-15, bugz 2377)
+    !
     ! Make sure that, for urban points, the column-level forcing fields are identical to
     ! the gridcell-level forcing fields. This is needed because the urban-specific code
     ! sometimes uses the gridcell-level forcing fields (and it would take a large

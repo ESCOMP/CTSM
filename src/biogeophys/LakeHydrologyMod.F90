@@ -168,6 +168,7 @@ contains
          qflx_dew_snow        =>  waterflux_inst%qflx_dew_snow_patch    , & ! Output: [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
          qflx_dew_grnd        =>  waterflux_inst%qflx_dew_grnd_patch    , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
          qflx_snomelt         =>  waterflux_inst%qflx_snomelt_col       , & ! Output: [real(r8) (:)   ]  snow melt (mm H2O /s)
+         qflx_snomelt_lyr     =>  waterflux_inst%qflx_snomelt_lyr_col   , & ! Output: [real(r8) (:)   ]  snow melt in each layer (mm H2O /s)
          qflx_prec_grnd_col   =>  waterflux_inst%qflx_prec_grnd_col     , & ! Output: [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
          qflx_evap_grnd_col   =>  waterflux_inst%qflx_evap_grnd_col     , & ! Output: [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
          qflx_dew_grnd_col    =>  waterflux_inst%qflx_dew_grnd_col      , & ! Output: [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
@@ -539,6 +540,13 @@ contains
                ! Remove snow and subtract the latent heat from the top layer.
                qflx_snomelt(c) = qflx_snomelt(c) + sumsnowice(c)/dtime
                eflx_snomelt(c) = eflx_snomelt(c) + sumsnowice(c)*hfus/dtime 
+
+               ! Update melt per layer. Note that sumsnowice = sum(h2osoi_ice), where the
+               ! sum is taken over layers snl(c)+1 to 0. Thus, this code partitions the
+               ! above addition to qflx_snomelt (which is based on sumsnowice).
+               do j = snl(c)+1,0
+                  qflx_snomelt_lyr(c,j) = qflx_snomelt_lyr(c,j) + h2osoi_ice(c,j) / dtime
+               end do
 
                ! update incidental drainage from snow pack for this case
                qflx_snow_drain(c) = qflx_snow_drain(c) + h2osno(c)/dtime

@@ -558,8 +558,14 @@ contains
           ! Note that we do downscaling over all column types. This is for consistency:
           ! interpretation of results would be difficult if some non-glacier column types
           ! were downscaled but others were not.
-          topo_col(c) = this%topo_grc(g, icemec_class)
-          needs_downscaling_col(c) = .true.
+          !
+          ! BUG(wjs, 2016-11-15, bugz 2377) Actually, do not downscale over urban points:
+          ! this currently isn't allowed because the urban code references some
+          ! non-downscaled, gridcell-level atmospheric forcings
+          if (.not. lun%urbpoi(l)) then
+             topo_col(c) = this%topo_grc(g, icemec_class)
+             needs_downscaling_col(c) = .true.
+          end if
        end if
     end do
 

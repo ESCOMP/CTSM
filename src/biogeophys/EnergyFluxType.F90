@@ -314,6 +314,11 @@ contains
          avgflag='A', long_name='snow melt heat flux', &
          ptr_col=this%eflx_snomelt_col, c2l_scale_type='urbanf')
 
+    call hist_addfld1d (fname='FSM_ICE', units='W/m^2',  &
+         avgflag='A', long_name='snow melt heat flux (ice landunits only)', &
+         ptr_col=this%eflx_snomelt_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
+
     this%eflx_snomelt_r_col(begc:endc) = spval
     call hist_addfld1d (fname='FSM_R',  units='W/m^2',  &
          avgflag='A', long_name='Rural snow melt heat flux', &
@@ -339,10 +344,14 @@ contains
          avgflag='A', long_name='emitted infrared (longwave) radiation', &
          ptr_patch=this%eflx_lwrad_out_patch, c2l_scale_type='urbanf')
     ! Rename of FIRE for Urban intercomparision project
-    this%eflx_lwrad_out_patch(begp:endp) = spval 
     call hist_addfld1d (fname='LWup', units='W/m^2',  &
          avgflag='A', long_name='upwelling longwave radiation', &
          ptr_patch=this%eflx_lwrad_out_patch, c2l_scale_type='urbanf', default='inactive')
+
+    call hist_addfld1d (fname='FIRE_ICE', units='W/m^2',  &
+         avgflag='A', long_name='emitted infrared (longwave) radiation (ice landunits only)', &
+         ptr_patch=this%eflx_lwrad_out_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
 
     this%eflx_lwrad_out_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRE_R', units='W/m^2',  &
@@ -369,6 +378,12 @@ contains
          avgflag='A', long_name='sensible heat not including correction for land use change and rain/snow conversion', &
          ptr_patch=this%eflx_sh_tot_patch, c2l_scale_type='urbanf')
 
+    call hist_addfld1d (fname='FSH_ICE', units='W/m^2',  &
+         avgflag='A', &
+         long_name='sensible heat not including correction for land use change and rain/snow conversion (ice landunits only)', &
+         ptr_patch=this%eflx_sh_tot_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
+
     this%eflx_sh_tot_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSH_R', units='W/m^2',  &
          avgflag='A', long_name='Rural sensible heat', &
@@ -390,6 +405,11 @@ contains
     call hist_addfld1d (fname='EFLX_LH_TOT', units='W/m^2', &
          avgflag='A', long_name='total latent heat flux [+ to atm]', &
          ptr_patch=this%eflx_lh_tot_patch, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='EFLX_LH_TOT_ICE', units='W/m^2',  &
+         avgflag='A', long_name='total latent heat flux [+ to atm] (ice landunits only)', &
+         ptr_patch=this%eflx_lh_tot_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
 
     this%eflx_lh_tot_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_LH_TOT_R', units='W/m^2',  &
@@ -415,6 +435,12 @@ contains
     call hist_addfld1d (fname='FGR', units='W/m^2',  &
          avgflag='A', long_name='heat flux into soil/snow including snow melt and lake / snow light transmission', &
          ptr_patch=this%eflx_soil_grnd_patch, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='FGR_ICE', units='W/m^2',  &
+         avgflag='A', &
+         long_name='heat flux into soil/snow including snow melt and lake / snow light transmission (ice landunits only)', &
+         ptr_patch=this%eflx_soil_grnd_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
 
     this%eflx_soil_grnd_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='FGR_R', units='W/m^2',  &

@@ -178,6 +178,11 @@ contains
          avgflag='A', long_name='absorbed solar radiation', &
          ptr_patch=this%fsa_patch, c2l_scale_type='urbanf')
 
+    call hist_addfld1d (fname='FSA_ICE', units='W/m^2',  &
+         avgflag='A', long_name='absorbed solar radiation (ice landunits only)', &
+         ptr_patch=this%fsa_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
+
     this%fsa_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSA_R', units='W/m^2',  &
          avgflag='A', long_name='Rural absorbed solar radiation', &
@@ -197,11 +202,21 @@ contains
          avgflag='A', long_name='upwelling shortwave radiation', &
          ptr_patch=this%fsr_patch, c2l_scale_type='urbanf', default='inactive')
 
+    call hist_addfld1d (fname='FSR_ICE', units='W/m^2',  &
+         avgflag='A', long_name='reflected solar radiation (ice landunits only)', &
+         ptr_patch=this%fsr_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
+
     this%sabg_lyr_patch(begp:endp,-nlevsno+1:0) = spval
     data2dptr => this%sabg_lyr_patch(:,-nlevsno+1:0)
     call hist_addfld2d (fname='SNO_ABS', units='W/m^2', type2d='levsno',  &
          avgflag='A', long_name='Absorbed solar radiation in each snow layer', &
          ptr_patch=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+
+    call hist_addfld2d (fname='SNO_ABS_ICE', units='W/m^2', type2d='levsno',  &
+         avgflag='A', long_name='Absorbed solar radiation in each snow layer (ice landunits only)', &
+         ptr_patch=data2dptr, no_snow_behavior=no_snow_normal, &
+         l2g_scale_type='ice', default='inactive')
 
     this%sabv_patch(begp:endp) = spval
     call hist_addfld1d (fname='SABV', units='W/m^2',  &

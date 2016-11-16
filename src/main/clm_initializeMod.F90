@@ -409,6 +409,11 @@ contains
          avgflag='A', long_name='Snow layer thicknesses', &
          ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
+    call hist_addfld2d (fname='SNO_Z_ICE', units='m', type2d='levsno',  &
+         avgflag='A', long_name='Snow layer thicknesses (ice landunits only)', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
+         l2g_scale_type='ice', default='inactive')
+
     col%zii(bounds_proc%begc:bounds_proc%endc) = spval
     call hist_addfld1d (fname='ZII', units='m', &
          avgflag='A', long_name='convective boundary height', &

@@ -1,4 +1,159 @@
 ===============================================================
+Tag name:  clm4_5_13_r205
+Originator(s):  sacks (Bill Sacks)
+Date: Wed Nov 16 10:38:15 MST 2016
+One-line Summary: Add diagnostics for snow and glacier; fix crash in Megan
+
+Purpose of changes
+------------------
+
+Most changes are to add new diagnostics fields related to the snow pack, and
+diagnostic fields that are averaged just over istice/istice_mec landunits
+(fields ending with _ICE). These changes are from from Leo van Kampenhout
+(l.vankampenhout@uu.nl).
+
+In addition:
+
+(1) Fix to prevent negative (or very small positive) values of intracellular
+    leaf CO2. This just affects Megan emissions, and only has a small
+    effect. This change is needed to prevent a crash in Megan due to negative
+    values of these variables. This fix is from Keith Oleson.
+
+(2) Ensure that we don't try to do any downscaling over urban points; this is
+    not currently allowed (see bug 2377). This change is needed in case there is
+    an overlap between active urban points and the CISM domain: without this
+    change, urban points in the CISM domain would be inside the downscaling
+    filter, which would then cause an abort in check_downscale_consistency.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - pass
+
+    ok means tests pass; some answer changes as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_13_r204
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: some clm45/clm50; answer changes show up rarely
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      seem to be roundoff or only slightly greater
+
+      Changes are due to the fix for Megan, in PhotosynthesisMod. Answer changes
+      only appeared for three tests in the test suite:
+
+      SMS_Lm1.f09_g16_gl4.IG1850CRUCLM50BGC.yellowstone_intel.clm-clm50KitchenSink
+      ERP_P15x2_Lm13.f10_f10.IHISTCLM50BGC.yellowstone_intel.clm-monthly
+
+         Small diffs in MEG_isoprene
+
+      SMS_Lm25.f19_g16.ICLM45BGCCROP.yellowstone_gnu.clm-cropMonthOutput
+
+      NaN values in a few fields in old; non-NaN in new:
+
+       RMS l2x_Fall_fire001                        NaN            NORMALIZED  0.0000E+00
+       RMS l2x_Fall_fire002                        NaN            NORMALIZED  0.0000E+00
+       RMS l2x_Fall_fire003                        NaN            NORMALIZED  0.0000E+00
+
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Do not downscale over urban points
+M       components/clm/src/main/glc2lndMod.F90
+M       components/clm/src/main/atm2lndMod.F90
+
+========= Fix Megan crash: prevent negative intracellular CO2
+M       components/clm/src/biogeophys/PhotosynthesisMod.F90
+
+========= New snow / glacier diagnostic fields
+M       components/clm/src/main/clm_initializeMod.F90
+M       components/clm/src/biogeophys/SoilStateType.F90
+M       components/clm/src/biogeophys/LakeHydrologyMod.F90
+M       components/clm/src/biogeophys/SoilTemperatureMod.F90
+M       components/clm/src/biogeophys/SolarAbsorbedType.F90
+M       components/clm/src/biogeophys/WaterStateType.F90
+M       components/clm/src/biogeophys/LakeTemperatureMod.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+M       components/clm/src/biogeophys/EnergyFluxType.F90
+M       components/clm/src/biogeophys/FrictionVelocityMod.F90
+M       components/clm/src/biogeophys/TemperatureType.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_13_r204
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Nov 15 13:55:16 MST 2016

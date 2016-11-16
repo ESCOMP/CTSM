@@ -323,6 +323,11 @@ contains
          avgflag='A', long_name='snow depth (liquid water)', &
          ptr_col=this%h2osno_col, c2l_scale_type='urbanf')
 
+    call hist_addfld1d (fname='H2OSNO_ICE', units='mm',  &
+         avgflag='A', long_name='snow depth (liquid water, ice landunits only)', &
+         ptr_col=this%h2osno_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
+
     this%liq1_grc(begg:endg) = spval
     call hist_addfld1d (fname='GC_LIQ1',  units='mm',  &
          avgflag='A', long_name='initial gridcell total liq content', &
@@ -444,6 +449,11 @@ contains
          avgflag='A', long_name='snow height of snow covered area', &
          ptr_col=this%snow_depth_col, c2l_scale_type='urbanf')!, default='inactive')
 
+    call hist_addfld1d (fname='SNOW_DEPTH_ICE', units='m',  &
+         avgflag='A', long_name='snow height of snow covered area (ice landunits only)', &
+         ptr_col=this%snow_depth_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         default='inactive')
+
     this%snowdp_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOWDP',  units='m',  &
          avgflag='A', long_name='gridcell mean snow height', &
@@ -507,11 +517,21 @@ contains
          avgflag='A', long_name='Partial density of water in the snow pack (ice + liquid)', &
          ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
+    call hist_addfld2d (fname='SNO_BW_ICE', units='kg/m3', type2d='levsno', &
+         avgflag='A', long_name='Partial density of water in the snow pack (ice + liquid, ice landunits only)', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
+         l2g_scale_type='ice', default='inactive')
+
     this%snw_rds_col(begc:endc,-nlevsno+1:0) = spval
     data2dptr => this%snw_rds_col(:,-nlevsno+1:0)
     call hist_addfld2d (fname='SNO_GS', units='Microns', type2d='levsno',  &
          avgflag='A', long_name='Mean snow grain size', &
          ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+
+    call hist_addfld2d (fname='SNO_GS_ICE', units='Microns', type2d='levsno',  &
+         avgflag='A', long_name='Mean snow grain size (ice landunits only)', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
+         l2g_scale_type='ice', default='inactive')
 
     this%errh2o_col(begc:endc) = spval
     call hist_addfld1d (fname='ERRH2O', units='mm',  &
