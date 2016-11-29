@@ -1,4 +1,141 @@
 ===============================================================
+Tag name:  clm4_5_13_r206
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Tue Nov 29 10:46:24 MST 2016
+One-line Summary: Bugfix for Luna causing arctic to die
+
+Purpose of changes
+------------------
+
+Bugfix from Keith Oleson to prevent Luna from causing the arctic to
+die.
+
+Bug 2366 prevented a divide by zero in Luna, but it sets Jmax/Vcmax to
+zero. This causes plants in the arctic to never start growing and
+hence never get any leaf nitrogen. The fix tested by Keith Oleson is
+to set them to the default values that Luna uses when it can't
+converge.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2379
+
+Bugs introduced: re-opening 2291. An old problem with fire emissions
+fields and gnu has resurfaced. This is a two line science change
+in clm5-bgc-luna that is unlikely to caused this regression.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none expected
+
+Notes of particular relevance for developers: (including Code reviews and testing): none
+
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: K. Oleson, Erik Kluzek
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - unit tests - fail, can't import perl module:
+    'Streams/TemplateGeneric.pm'. Not related to current changes, must
+    have come in a previous tag.
+
+  unit-tests (components/clm/src):
+
+    yellowstone - all tests pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - no related changes, not run.
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - no related changes, not run.
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - 40 : ok, 45 : ok
+    yellowstone_pgi - 40 : ok, 45 : ok 
+    yellowstone_gnu (clm45 only) - ok, see note below.
+    hobart_nag - ok
+
+    ok means - all test functionality passes
+             - baselines pass except for clm5 bgc (answer changing)
+             - expected failures ignored
+             - tput, memleak, memcomp, nlcomp ignored.
+
+             - bug 2291 has resurfaced? Also appears to have been an
+               issue in clm4_5_13_r205.
+
+               FAIL SMS_Lm25.f19_g16.ICLM45BGCCROP.yellowstone_gnu.clm-cropMonthOutput BASELINE
+
+               $ grep -e RMS TestStatus.log
+                RMS l2x_Fall_fire001   1.9723E-17    NORMALIZED  8.4685E-06
+                RMS l2x_Fall_fire002   2.7612E-17    NORMALIZED  1.2077E-06
+                RMS l2x_Fall_fire003   1.9723E-17    NORMALIZED  5.5636E-06
+
+CLM tag used for the baseline comparisons: clm4_5_13_r205
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: yes
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5-bgc with luna on.
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate;
+      new climate): Unknown, larger than roundoff to prevent die-off
+      of the arctic.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+    - casename: unknown, Keith Oleson ran a longer simulation and
+      verbally confirmend he was happy with the results.
+
+   URL for LMWG diagnostics output used to validate new climate: none
+
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+clm/src/biogeophys/LunaMod.F90 - bugfix for 2379 set vcmx25 and jmx25 to non-zero values.
+
+clm/cime_config/testdefs/ExpectedTestFails.xml - add xfail issue 2291
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_13_r205
 Originator(s):  sacks (Bill Sacks)
 Date: Wed Nov 16 10:38:15 MST 2016

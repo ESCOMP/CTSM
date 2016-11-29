@@ -437,8 +437,8 @@ module LunaMod
                 endif !if not C3 plants                   
          else
             do z = 1 , nrad(p)
-               jmx25_z(p, z) = 0._r8
-               vcmx25_z(p, z) = 0._r8
+               jmx25_z(p, z) = 85._r8
+               vcmx25_z(p, z) = 50._r8
             end do
          endif !checking for LAI and LNC
      endif !the first daycheck 

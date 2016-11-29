@@ -4,4 +4,5 @@
    <entry bugz="2239" >FAIL RUN ERP_D_Ld5.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay_interp</entry>
    <entry bugz="2239" >FAIL RUN ERP_Ld5.f09_g16.ICLM45VIC.yellowstone_pgi.clm-vrtlay_interp</entry>
    <entry bugz="2356" >PEND RUN SMS_D_Ld1_P24x1.f10_f10.ICRUCLM45.hobart_nag.clm-af_bias_v5</entry>
+   <entry bugz="2291">FAIL SMS_Lm25.f19_g16.ICLM45BGCCROP.yellowstone_gnu.clm-cropMonthOutput BASELINE"</entry>
 </expectedFails> 

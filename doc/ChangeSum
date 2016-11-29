@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_13_r206    andre 11/29/2016 Bugfix for Luna causing arctic to die
   clm4_5_13_r205    sacks 11/16/2016 Add diagnostics for snow and glacier; fix crash in Megan
   clm4_5_13_r204     erik 11/15/2016 A few answer changing bug fixes
   clm4_5_12_r203    sacks 11/10/2016 Bug fixes for snow-on-lake
