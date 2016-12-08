@@ -142,6 +142,8 @@ module pftconMod
      real(r8), allocatable :: grperc        (:)   ! growth respiration parameter
      real(r8), allocatable :: grpnow        (:)   ! growth respiration parameter
      real(r8), allocatable :: rootprof_beta (:,:) ! CLM rooting distribution parameter for C and N inputs [unitless]
+     real(r8), allocatable :: root_radius   (:)   ! root radius (m)
+     real(r8), allocatable :: root_density  (:)   ! root density (gC/m3)
 
      !  crop
 
@@ -280,6 +282,9 @@ module pftconMod
   real(r8), parameter :: allom3 =   0.5_r8       ! ...equations
   real(r8), parameter :: allom1s = 250.0_r8      ! modified for shrubs by
   real(r8), parameter :: allom2s =   8.0_r8      ! X.D.Z
+! root radius, density from Bonan, GMD, 2014
+  real(r8), parameter :: root_density = 0.31e06_r8 !(g biomass / m3 root)
+  real(r8), parameter :: root_radius = 0.29e-03_r8 !(m)
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -401,6 +406,8 @@ contains
     allocate( this%stress_decid  (0:mxpft) ) 
     allocate( this%season_decid  (0:mxpft) ) 
     allocate( this%dwood         (0:mxpft) )
+    allocate( this%root_density  (0:mxpft) )
+    allocate( this%root_radius   (0:mxpft) )
     allocate( this%pconv         (0:mxpft) )        
     allocate( this%pprod10       (0:mxpft) )      
     allocate( this%pprod100      (0:mxpft) )     
@@ -952,6 +959,9 @@ contains
     !MV (10-08-14) TODO is this right - used to be numpft - is it okay to set it to mxpft?
     do m = 0,mxpft 
        this%dwood(m) = dwood
+       this%root_radius(m)  = root_radius
+       this%root_density(m) = root_density
+
        if (m <= ntree) then
           this%tree(m) = 1
        else
@@ -1308,6 +1318,8 @@ contains
     deallocate( this%stress_decid)
     deallocate( this%season_decid)
     deallocate( this%dwood)
+    deallocate( this%root_density)
+    deallocate( this%root_radius)
     deallocate( this%pconv)
     deallocate( this%pprod10)
     deallocate( this%pprod100)

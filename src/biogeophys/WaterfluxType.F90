@@ -41,6 +41,7 @@ module WaterfluxType
      real(r8), pointer :: qflx_evap_tot_col        (:)   ! col col_qflx_evap_soi + col_qflx_evap_veg + qflx_tran_veg
      real(r8), pointer :: qflx_evap_grnd_patch     (:)   ! patch ground surface evaporation rate (mm H2O/s) [+]
      real(r8), pointer :: qflx_evap_grnd_col       (:)   ! col ground surface evaporation rate (mm H2O/s) [+]
+     real(r8), pointer :: qflx_phs_neg_col         (:)   ! col sum of negative hydraulic redistribution fluxes (mm H2O/s) [+]
 
     ! In the snow capping parametrization excess mass above h2osno_max is removed.  A breakdown of mass into liquid 
     ! and solid fluxes is done, these are represented by qflx_snwcp_liq_col and qflx_snwcp_ice_col. 
@@ -196,6 +197,7 @@ contains
     allocate(this%qflx_evap_soi_patch      (begp:endp))              ; this%qflx_evap_soi_patch      (:)   = nan
     allocate(this%qflx_evap_tot_patch      (begp:endp))              ; this%qflx_evap_tot_patch      (:)   = nan
     allocate(this%qflx_evap_grnd_patch     (begp:endp))              ; this%qflx_evap_grnd_patch     (:)   = nan
+    allocate(this%qflx_phs_neg_col         (begc:endc))              ; this%qflx_phs_neg_col       (:)   = nan
 
     allocate( this%qflx_ev_snow_patch      (begp:endp))              ; this%qflx_ev_snow_patch       (:)   = nan
     allocate( this%qflx_ev_snow_col        (begc:endc))              ; this%qflx_ev_snow_col         (:)   = nan
@@ -496,6 +498,11 @@ contains
          avgflag='A', long_name='saturation excess drainage', &
          ptr_col=this%qflx_rsub_sat_col, c2l_scale_type='urbanf')
 
+    this%qflx_phs_neg_col(begc:endc) = spval
+    call hist_addfld1d (fname='QPHSNEG',  units='mm/s',  &
+         avgflag='A', long_name='net negative hydraulic redistribution flux', &
+         ptr_col=this%qflx_phs_neg_col, default='inactive')
+
     ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at any
     ! given time step but only if there is at least one snow layer (for all landunits 
     ! except lakes).  Also note that monthly average files of snow_sources and snow_sinks
@@ -653,6 +660,8 @@ contains
     this%qflx_evap_grnd_col(bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_dew_grnd_col (bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_dew_snow_col (bounds%begc:bounds%endc) = 0.0_r8
+
+    this%qflx_phs_neg_col(bounds%begc:bounds%endc)   = 0.0_r8
 
     this%qflx_h2osfc_surf_col(bounds%begc:bounds%endc) = 0._r8
     this%qflx_snow_drain_col(bounds%begc:bounds%endc)  = 0._r8

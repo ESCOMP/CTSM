@@ -145,6 +145,8 @@ contains
     real(r8), allocatable :: annsum_npp_patch(:)
     real(r8), allocatable :: rr_patch(:)
     real(r8), allocatable :: net_carbon_exchange_grc(:)
+    real(r8), allocatable :: froot_carbon(:)
+    real(r8), allocatable :: croot_carbon(:)
 
     ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Workaround for internal compiler error with
     ! pgi 14.7 ('normalize_forall_array: non-conformable'), which appears in the call to
@@ -396,7 +398,7 @@ contains
     ! Get time as of beginning of time step
     call get_prev_date(yr_prev, mon_prev, day_prev, sec_prev)
 
-    !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch)
+    !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch, froot_carbon, croot_carbon)
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
@@ -539,6 +541,12 @@ contains
        downreg_patch = bgc_vegetation_inst%get_downreg_patch(bounds_clump)
        leafn_patch = bgc_vegetation_inst%get_leafn_patch(bounds_clump)
 
+       allocate(froot_carbon(bounds_clump%begp:bounds_clump%endp))
+       allocate(croot_carbon(bounds_clump%begp:bounds_clump%endp))
+       froot_carbon = bgc_vegetation_inst%get_froot_carbon_patch( &
+            bounds_clump, canopystate_inst%tlai_patch(bounds_clump%begp:bounds_clump%endp))
+       croot_carbon = bgc_vegetation_inst%get_croot_carbon_patch( &
+            bounds_clump, canopystate_inst%tlai_patch(bounds_clump%begp:bounds_clump%endp))
 
        call CanopyFluxes(bounds_clump,                                                      &
             filter(nc)%num_exposedvegp, filter(nc)%exposedvegp,                             &
@@ -548,8 +556,10 @@ contains
             temperature_inst, waterflux_inst, waterstate_inst, ch4_inst, ozone_inst, photosyns_inst, &
             humanindex_inst, soil_water_retention_curve, &
             downreg_patch = downreg_patch(bounds_clump%begp:bounds_clump%endp), &
-            leafn_patch = leafn_patch(bounds_clump%begp:bounds_clump%endp))
-       deallocate(downreg_patch, leafn_patch)
+            leafn_patch = leafn_patch(bounds_clump%begp:bounds_clump%endp), &
+            froot_carbon = froot_carbon(bounds_clump%begp:bounds_clump%endp), &
+            croot_carbon = croot_carbon(bounds_clump%begp:bounds_clump%endp))
+       deallocate(downreg_patch, leafn_patch, froot_carbon, croot_carbon)
        call t_stopf('canflux')
 
        if (use_ed) then

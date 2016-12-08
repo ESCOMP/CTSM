@@ -137,7 +137,7 @@ contains
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst,   &
        temperature_inst, waterflux_inst, waterstate_inst, ch4_inst, ozone_inst, photosyns_inst, &
        humanindex_inst, soil_water_retention_curve, &
-       downreg_patch, leafn_patch)
+       downreg_patch, leafn_patch, froot_carbon, croot_carbon)
     !
     ! !DESCRIPTION:
     ! 1. Calculates the leaf temperature:
@@ -204,6 +204,8 @@ contains
     class(soil_water_retention_curve_type) , intent(in)            :: soil_water_retention_curve
     real(r8), intent(in) :: downreg_patch(bounds%begp:) ! fractional reduction in GPP due to N limitation (dimensionless)
     real(r8), intent(in) :: leafn_patch(bounds%begp:)   ! leaf N (gN/m2)
+    real(r8), intent(inout) :: froot_carbon(bounds%begp:)  ! fine root biomass (gC/m2)
+    real(r8), intent(inout) :: croot_carbon(bounds%begp:)  ! live coarse root biomass (gC/m2)
     !
     ! !LOCAL VARIABLES:
     real(r8), pointer   :: bsun(:)          ! sunlit canopy transpiration wetness factor (0 to 1)
@@ -835,7 +837,7 @@ contains
                     bsha(begp:endp), btran(begp:endp), dayl_factor(begp:endp), leafn_patch(begp:endp), &
                     qsatl(begp:endp), qaf(begp:endp),     &
                     atm2lnd_inst, temperature_inst, soilstate_inst, waterstate_inst, surfalb_inst, solarabs_inst,    &
-                    canopystate_inst, ozone_inst, photosyns_inst, waterflux_inst)
+                    canopystate_inst, ozone_inst, photosyns_inst, waterflux_inst, froot_carbon(begp:endp), croot_carbon(begp:endp))
             else
                call Photosynthesis (bounds, fn, filterp, &
                     svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &

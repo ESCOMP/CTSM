@@ -1,4 +1,136 @@
 ===============================================================
+Tag name:  clm4_5_13_r207
+Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
+Date:  Thu Dec  8 10:34:56 MST 2016
+One-line Summary: PHS - Calculate separate root water uptake resistances for soil and root pathways
+
+Purpose of changes
+------------------
+
+PHS changes from Sean Swenson. Root water uptake resistances
+calculated separately for soil and root pathways.  These resistances
+are added in series to give a soil to root resistance that replaces
+the ad hoc expression used in the original code.  History variables
+added for soil and root resistances, as well as a variable 'QPHSNEG'
+obtained by summing negative transpiration terms in each soil layer.
+
+
+Bugs fixed or introduced
+-----------------------
+
+none
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: unknown
+
+Notes of particular relevance for developers: (including Code reviews and testing) none
+
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Sean Swenson, David Lawrence, Keith Oleson
+
+CLM testing: 
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+  ok means - all functionality tests passed. All baseline comparisons passed except:
+      - all clm5 compsets : expected, tag is answer changing for clm5
+
+      - SMS_D_Ld5.f10_f10.ICLM45ED.hobart_nag.clm-edTest :
+        baseline failed with RMS difference in a single field:
+           RMS NBP  3.3589E-12  NORMALIZED  4.4201E-05
+        SMS_D_Ld5.f10_f10.ICLM45ED.yellowstone_{gnu|intel|pgi} tests
+        are all bit for bit with the baseline. Just documenting the
+        discrepancy and ignoring.
+      
+CLM tag used for the baseline comparisons: clm4_5_13_r206
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: yes
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all clm5 compsets with PHS on
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): unknown, assumed larger than roundoff same climate.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? n/a
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: none
+
+   URL for LMWG diagnostics output used to validate new climate: none
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+clm/src/biogeochem/CNVegetationFacade.F90 - new routines to calculate froot and croot carbon.
+clm/src/main/histFileMod.F90 - add nlevsoi as 2d output option
+clm/src/main/clm_driver.F90 - add calls froot and croot carbon calculations
+clm/src/main/pftconMod.F90 - new root desnity and root radius variables
+clm/src/biogeophys/WaterfluxType.F90 - new qflx_phs_neg_col variable
+clm/src/biogeophys/WaterStateType.F90 - remove smp_l_col variable
+clm/src/biogeophys/PhotosynthesisMod.F90 - calculate root-soil interface conductance
+clm/src/biogeophys/SoilStateType.F90 - new variables k_soil_root_patch, soil_conductance_patch, root_conductance_patch
+clm/src/biogeophys/CanopyFluxesMod.F90 - pass froot and croot carbon through to photosynthesis.
+clm/src/biogeophys/SoilWaterMovementMod.F90 - calculate qflx_phs_neg_col
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_13_r206
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Tue Nov 29 10:46:24 MST 2016

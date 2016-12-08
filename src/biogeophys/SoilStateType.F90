@@ -75,6 +75,9 @@ module SoilStateType
      real(r8), pointer :: root_depth_patch     (:)   ! root depth
      real(r8), pointer :: rootr_road_perv_col  (:,:) ! col effective fraction of roots in each soil layer of urban pervious road
      real(r8), pointer :: rootfr_road_perv_col (:,:) ! col effective fraction of roots in each soil layer of urban pervious road
+     real(r8), pointer :: k_soil_root_patch    (:,:) ! patch soil-root interface conductance [mm/s]
+     real(r8), pointer :: root_conductance_patch(:,:) ! patch root conductance [mm/s]
+     real(r8), pointer :: soil_conductance_patch(:,:) ! patch soil conductance [mm/s]
 
    contains
 
@@ -167,11 +170,13 @@ contains
     allocate(this%crootfr_patch        (begp:endp,1:nlevgrnd))          ; this%crootfr_patch        (:,:) = nan
     allocate(this%rootfr_col           (begc:endc,1:nlevgrnd))          ; this%rootfr_col           (:,:) = nan 
     allocate(this%rootfr_road_perv_col (begc:endc,1:nlevgrnd))          ; this%rootfr_road_perv_col (:,:) = nan
-
-    allocate(this%msw_col              (begc:endc,1:nlevgrnd))            ; this%msw_col              (:,:) = nan
-    allocate(this%nsw_col              (begc:endc,1:nlevgrnd))            ; this%nsw_col              (:,:) = nan
-    allocate(this%alphasw_col          (begc:endc,1:nlevgrnd))            ; this%alphasw_col          (:,:) = nan
-    allocate(this%watres_col           (begc:endc,1:nlevgrnd))            ; this%watres_col           (:,:) = nan
+    allocate(this%k_soil_root_patch    (begp:endp,1:nlevsoi))           ; this%k_soil_root_patch (:,:) = nan
+    allocate(this%root_conductance_patch(begp:endp,1:nlevsoi))          ; this%root_conductance_patch (:,:) = nan
+    allocate(this%soil_conductance_patch(begp:endp,1:nlevsoi))          ; this%soil_conductance_patch (:,:) = nan
+    allocate(this%msw_col              (begc:endc,1:nlevgrnd))          ; this%msw_col              (:,:) = nan
+    allocate(this%nsw_col              (begc:endc,1:nlevgrnd))          ; this%nsw_col              (:,:) = nan
+    allocate(this%alphasw_col          (begc:endc,1:nlevgrnd))          ; this%alphasw_col          (:,:) = nan
+    allocate(this%watres_col           (begc:endc,1:nlevgrnd))          ; this%watres_col           (:,:) = nan
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -214,6 +219,16 @@ contains
          avgflag='A', long_name='soil transpiration sink by layer', &
          ptr_col=this%tsink_l_col, set_spec=spval, l2g_scale_type='veg')
 
+       this%root_conductance_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
+          avgflag='A', long_name='root conductance each soil layer', &
+          ptr_patch=this%root_conductance_patch, default='inactive')
+
+       this%soil_conductance_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
+          avgflag='A', long_name='soil conductance in each soil layer', &
+          ptr_patch=this%soil_conductance_patch, default='inactive')
+
     if (use_cn) then
        this%bsw_col(begc:endc,:) = spval 
        call hist_addfld2d (fname='bsw', units='unitless', type2d='levgrnd', &
@@ -227,7 +242,6 @@ contains
             avgflag='A', long_name='fraction of roots in each soil layer', &
             ptr_patch=this%rootfr_patch, default='active')
     end if
-
 
     if ( use_dynroot ) then
        this%root_depth_patch(begp:endp) = spval
@@ -263,11 +277,6 @@ contains
     call hist_addfld2d (fname='SNO_TK', units='W/m-K', type2d='levsno', &
          avgflag='A', long_name='Thermal conductivity', &
          ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
-
-    call hist_addfld2d (fname='SNO_TK_ICE', units='W/m-K', type2d='levsno', &
-         avgflag='A', long_name='Thermal conductivity (ice landunits only)', &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
-         l2g_scale_type='ice', default='inactive')
 
     this%hk_l_col(begc:endc,:) = spval
     call hist_addfld2d (fname='HK',  units='mm/s', type2d='levgrnd',  &
@@ -333,6 +342,7 @@ contains
     !-----------------------------------------------------------------------
 
     this%smp_l_col(bounds%begc:bounds%endc,1:nlevgrnd) = -1000._r8
+    this%hk_l_col(bounds%begc:bounds%endc,1:nlevgrnd) = 0._r8
 
   end subroutine InitCold
 

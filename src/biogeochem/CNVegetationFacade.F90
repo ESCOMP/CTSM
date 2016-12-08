@@ -166,6 +166,8 @@ module CNVegetationFacade
      procedure, public :: get_annsum_npp_patch          ! Get patch-level annual sum NPP array
      procedure, public :: get_agnpp_patch               ! Get patch-level aboveground NPP array
      procedure, public :: get_bgnpp_patch               ! Get patch-level belowground NPP array
+     procedure, public :: get_froot_carbon_patch         ! Get patch-level fine root carbon array
+     procedure, public :: get_croot_carbon_patch         ! Get patch-level coarse root carbon array
   end type cn_vegetation_type
 
   character(len=*), parameter, private :: sourcefile = &
@@ -1172,5 +1174,94 @@ contains
 
   end function get_bgnpp_patch
 
+  !-----------------------------------------------------------------------
+  function get_froot_carbon_patch(this, bounds, tlai) result(froot_carbon_patch)
+    !
+    ! !DESCRIPTION:
+    ! Get patch-level fine root carbon array
+    !
+    ! !USES:
+    use pftconMod           , only : pftcon
+    use PatchType           , only : patch
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8)         , intent(in) :: tlai( bounds%begp: )
+    real(r8) :: froot_carbon_patch(bounds%begp:bounds%endp)  ! function result: (gC/m2)
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'get_froot_carbon_patch'
+    integer :: p
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       froot_carbon_patch(bounds%begp:bounds%endp) = &
+            this%cnveg_carbonstate_inst%frootc_patch(bounds%begp:bounds%endp)
+    else
+! To get leaf biomass:
+! bleaf = LAI / slatop
+! g/m2 =  m2/m2  / m2/g 
+! To get root biomass: 
+! broot = bleaf * froot_leaf(ivt(p))
+! g/m2 = g/m2 * g/g
+       do p=bounds%begp, bounds%endp
+          if (pftcon%slatop(patch%itype(p)) > 0._r8) then 
+             froot_carbon_patch(p) = tlai(p) &
+                  / pftcon%slatop(patch%itype(p)) &
+                  *pftcon%froot_leaf(patch%itype(p))
+          else
+             froot_carbon_patch(p) = 0._r8
+          endif
+       enddo
+    end if
+
+  end function get_froot_carbon_patch
+
+  !-----------------------------------------------------------------------
+  function get_croot_carbon_patch(this, bounds, tlai) result(croot_carbon_patch)
+    !
+    ! !DESCRIPTION:
+    ! Get patch-level live coarse root carbon array
+    !
+    ! !USES:
+    use pftconMod           , only : pftcon
+    use PatchType           , only : patch
+    !
+    ! !ARGUMENTS:
+    class(cn_vegetation_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8)         , intent(in) :: tlai( bounds%begp: )
+    real(r8) :: croot_carbon_patch(bounds%begp:bounds%endp)  ! function result: (gC/m2)
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_croot_carbon_patch'
+    integer :: p
+    !-----------------------------------------------------------------------
+
+    if (use_cn) then
+       croot_carbon_patch(bounds%begp:bounds%endp) = &
+            this%cnveg_carbonstate_inst%livecrootc_patch(bounds%begp:bounds%endp)
+    else
+! To get leaf biomass:
+! bleaf = LAI / slatop
+! g/m2 =  m2/m2  / m2/g 
+! To get root biomass: 
+! broot = bleaf * froot_leaf(ivt(p))
+! g/m2 = g/m2 * g/g
+       do p=bounds%begp, bounds%endp
+          if (pftcon%slatop(patch%itype(p)) > 0._r8) then 
+             croot_carbon_patch(p) = tlai(p) &
+                  / pftcon%slatop(patch%itype(p)) &
+                  *pftcon%stem_leaf(patch%itype(p)) &
+                  *pftcon%croot_stem(patch%itype(p))
+          else
+             croot_carbon_patch(p) = 0._r8
+          endif
+       enddo
+    end if
+
+  end function get_croot_carbon_patch
 
 end module CNVegetationFacade

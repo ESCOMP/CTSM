@@ -523,9 +523,9 @@ contains
     use PatchType        , only : patch
     use ColumnType       , only : col
     use clm_varctl       , only : iulog
-    use PhotosynthesisMod, only : plc, params_inst
     use column_varcon    , only : icol_road_perv
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan
+
     !
     ! !ARGUMENTS:
     type(bounds_type)    , intent(in)    :: bounds                          ! bounds
@@ -541,8 +541,6 @@ contains
     integer  :: p,c,fc,j                                              ! do loop indices
     integer  :: pi                                                    ! patch index
     real(r8) :: temp(bounds%begc:bounds%endc)                         ! accumulator for rootr weighting
-    real(r8) :: fs(nlevsoi)           ! fraction of maximum conductance, soil-to-root [-]
-    real(r8) :: rai(nlevsoi)          ! root area stand-in [-]
     real(r8) :: grav2                 ! soil layer gravitational potential relative to surface (mm H2O)
     integer , parameter :: soil=1,root=4  ! index values
     !-----------------------------------------------------------------------   
@@ -551,27 +549,30 @@ contains
     SHR_ASSERT_ALL((ubound(vert_tran_sink)  == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
 
     associate(&
+         k_soil_root         => soilstate_inst%k_soil_root_patch   , & ! Input:  [real(r8) (:,:) ]  soil-root interface conductance (mm/s)
+         qflx_phs_neg_col    => waterflux_inst%qflx_phs_neg_col    , & ! Input:  [real(r8) (:)   ]  net negative hydraulic redistribution flux (mm H2O/s) 
          qflx_tran_veg_col   => waterflux_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
          qflx_tran_veg_patch => waterflux_inst%qflx_tran_veg_patch , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)  
          rootr_col           => soilstate_inst%rootr_col           , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
          rootr_patch         => soilstate_inst%rootr_patch         , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
          smp                 => soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]
          tsink               => soilstate_inst%tsink_l_col         , & ! Output: [real(r8) (:,:) ]  col soil transpiration sink by layer (mm H2O /s)
-         bsw                 => soilstate_inst%bsw_col             , & ! Input: [real(r8) (:,:) ]  Clapp and Hornberger "b"
-         hk_l                => soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)
-         hksat               => soilstate_inst%hksat_col           , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
-         sucsat              => soilstate_inst%sucsat_col          , & ! Input: [real(r8) (:,:) ]  minimum soil suction (mm)
-         tsai                => canopystate_inst%tsai_patch        , & ! Input: [real(r8) (:)   ]  patch canopy one-sided stem area index, no burying by snow
-         btran               => energyflux_inst%btran_patch        , & ! Input: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) (integrated soil water stress)
+!         bsw                 => soilstate_inst%bsw_col             , & ! Input: [real(r8) (:,:) ]  Clapp and Hornberger "b"
+!         hk_l                => soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)
+!         hksat               => soilstate_inst%hksat_col           , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
+!         sucsat              => soilstate_inst%sucsat_col          , & ! Input: [real(r8) (:,:) ]  minimum soil suction (mm)
+!         tsai                => canopystate_inst%tsai_patch        , & ! Input: [real(r8) (:)   ]  patch canopy one-sided stem area index, no burying by snow
+!         btran               => energyflux_inst%btran_patch        , & ! Input: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) (integrated soil water stress)
          frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)  ] fraction of vegetation not covered by snow (0 OR 1) [-]  
-         rootfr              => soilstate_inst%rootfr_patch        , & ! Input: [real(r8) (:,:) ]  fraction of roots in each soil layer
-         ivt                 => patch%itype                        , & ! Input: [integer (:)    ]  patch vegetation type
+!         rootfr              => soilstate_inst%rootfr_patch        , & ! Input: [real(r8) (:,:) ]  fraction of roots in each soil layer
+!         ivt                 => patch%itype                        , & ! Input: [integer (:)    ]  patch vegetation type
          z                   => col%z                              , & ! Input: [real(r8) (:,:) ]  layer node depth (m)
          vegwp               => canopystate_inst%vegwp_patch         & ! Input: [real(r8) (:,:) ]  vegetation water matric potential (mm)
          )
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
+       qflx_phs_neg_col(c) = 0._r8
        if (col%itype(c) /= icol_road_perv) then
           do j = 1, nlevsoi
              grav2 = z(c,j) * 1000._r8
@@ -581,25 +582,16 @@ contains
                    p = col%patchi(c) + pi - 1
                    if (patch%active(p).and.frac_veg_nosno(p)>0) then 
                       if (patch%wtcol(p) > 0._r8) then
-                         if (.not.isnan(smp(c,j))) then
-                            if (j==1) then
-                               rai(j) = 0._r8
-                            else
-                               rai(j) = tsai(p) * rootfr(p,j)
-                            endif
-                            ! This calculation of fs should be kept consistent with fs 
-                            ! in PhotosynthesisHydraulicStress
-                            fs(j)=  min(1._r8,hk_l(c,j)/(hksat(c,j)* &
-                                    plc(params_inst%psi_soil_ref(ivt(p)),p,c,j,soil,bsw(c,j),sucsat(c,j))))
-                            temp(c) = temp(c) + rai(j) * params_inst%krmax(ivt(p)) * fs(j) * (smp(c,j) - vegwp(p,root) - grav2)* &
-                                     patch%wtcol(p)
-                         endif
-                      end if
+                         temp(c) = temp(c) + k_soil_root(p,j) &
+                              * (smp(c,j) - vegwp(p,4) - grav2)* patch%wtcol(p)
+                      endif
                    end if
                 end if
              end do
              vert_tran_sink(c,j) = temp(c)
              tsink(c,j) = temp(c)
+
+             if (temp(c) < 0._r8) qflx_phs_neg_col(c) = qflx_phs_neg_col(c) + temp(c)
           end do
        end if
     end do
