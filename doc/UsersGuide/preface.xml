@@ -592,7 +592,6 @@ New namelist items:
 <member>carbon_only</member>
 <member>create_glacier_mec_landunit</member>
 <member>glc_dyntopo</member>
-<member>glc_smb</member>
 <member>ice_runoff</member>
 <member>ndepmapalgo</member>
 <member>scaled_harvest</member>
@@ -604,9 +603,6 @@ carbon_only    = If true, and CLMCN carbon-nitrogen model is on, Nitrogen is unl
 </para>
 <para>
  create_glacier_mec_landunit (= T when these landunits are created; F by default)
-</para>
-<para>
- glc_smb (= T if passing surface mass balance to GLC; else pass PDD info; T by default)
 </para>
 <para>
  glc_dyntopo (= T if &clm; topography changes dynamically; currently F)

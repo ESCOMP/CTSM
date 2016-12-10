@@ -126,9 +126,6 @@ module clm_varctl
   ! do not irrigate by default
   logical, public :: irrigate = .false.            
 
-  ! true => limit irrigation when river storage
-  logical, public :: limit_irrigation = .false.
-
   !----------------------------------------------------------
   ! Other subgrid logic
   !----------------------------------------------------------
@@ -253,16 +250,10 @@ module clm_varctl
 
   !----------------------------------------------------------
   ! glacier_mec control variables: default values (may be overwritten by namelist)
-  ! NOTE: glc_smb must have the same values for CLM and GLC
   !----------------------------------------------------------
 
   ! glacier_mec landunit is not created (set in controlMod)
   logical , public :: create_glacier_mec_landunit = .false. 
-
-  ! if true, pass surface mass balance info to GLC
-  logical , public :: glc_smb = .true.                      
-
-  ! if false, pass positive-degree-day info to GLC
 
   ! true => CLM glacier area & topography changes dynamically 
   logical , public :: glc_do_dynglacier = .false.           

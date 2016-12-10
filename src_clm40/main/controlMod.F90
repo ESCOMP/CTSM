@@ -24,7 +24,7 @@ module controlMod
                             create_crop_landunit, allocate_all_vegpfts,   &
                             co2_type, wrtdia, co2_ppmv, nsegspc,          &
                             username, fsnowaging, fsnowoptics, fglcmask, &
-                            create_glacier_mec_landunit, glc_dyntopo, glc_smb, &
+                            create_glacier_mec_landunit, glc_dyntopo, &
                             use_c13, use_c14, use_cn, use_cndv, use_crop 
   use spmdMod      , only : masterproc
   use decompMod    , only : clump_pproc
@@ -190,7 +190,7 @@ contains
 
     ! Glacier_mec info
     namelist /clm_inparm / &    
-         maxpatch_glcmec, glc_smb, glc_dyntopo, fglcmask 
+         maxpatch_glcmec, glc_dyntopo, fglcmask 
 
     ! Other options
 
@@ -396,7 +396,6 @@ contains
 
     call mpi_bcast (create_glacier_mec_landunit, 1, MPI_LOGICAL  , 0, mpicom, ier)
     call mpi_bcast (maxpatch_glcmec             ,1, MPI_INTEGER  , 0, mpicom, ier)
-    call mpi_bcast (glc_smb,                     1, MPI_LOGICAL  , 0, mpicom, ier)
     call mpi_bcast (glc_dyntopo,                 1, MPI_LOGICAL  , 0, mpicom, ier)
     call mpi_bcast (fglcmask,        len(fglcmask), MPI_CHARACTER, 0, mpicom, ier)
 
@@ -517,11 +516,6 @@ contains
           write(iulog,*) '   glc CLM glacier topography will evolve dynamically'
        else
           write(iulog,*) '   glc CLM glacier topography will NOT evolve dynamically'
-       endif
-       if (glc_smb) then
-          write(iulog,*) '   glc surface mass balance will be passed to ice sheet model'
-       else
-          write(iulog,*) '   glc positive-degree-day info will be passed to ice sheet model'
        endif
     endif
 

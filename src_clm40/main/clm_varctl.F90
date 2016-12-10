@@ -84,11 +84,8 @@ module clm_varctl
   logical, public :: use_c14 = .false.                  ! true => use C-14 model
 
 ! glacier_mec control variables: default values (may be overwritten by namelist)
-! NOTE: glc_smb must have the same values for CLM and GLC
 
   logical , public :: create_glacier_mec_landunit = .false. ! glacier_mec landunit is not created (set in controlMod)
-  logical , public :: glc_smb = .true.                      ! if true, pass surface mass balance info to GLC
-                                                            ! if false, pass positive-degree-day info to GLC
   logical , public :: glc_dyntopo = .false.                 ! true => CLM glacier topography changes dynamically
   real(r8), public, allocatable :: glc_topomax(:)           ! upper limit of each class (m)  (set in surfrd)
   character(len=256), public :: fglcmask = ' '              ! glacier mask file name

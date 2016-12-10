@@ -355,9 +355,58 @@ tolerance to double length of substep for adaptive time stepping in richards equ
 
 </entry>
 
-<entry id="limit_irrigation" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
+<entry id="irrig_min_lai" type="real" category="clm_physics"
+       group="irrigation_inparm" valid_values="">
+Minimum leaf area index for irrigation to occur
+</entry>
+
+<entry id="irrig_start_time" type="integer" category="clm_physics"
+       group="irrigation_inparm" valid_values="">
+Time of day to check whether we need irrigation, seconds (0 = midnight).
+We start applying the irrigation in the time step FOLLOWING this time.
+</entry>
+
+<entry id="irrig_length" type="integer" category="clm_physics"
+       group="irrigation_inparm" valid_values="">
+Desired amount of time to irrigate per day (sec).
+Actual time may differ if this is not a multiple of dtime.
+</entry>
+
+<entry id="irrig_target_smp" type="real" category="clm_physics"
+       group="irrigation_inparm" valid_values="">
+Target soil matric potential for irrigation (mm).
+When we irrigate, we aim to bring the total soil moisture in the top (irrig_depth) m of soil up to this level.
+</entry>
+
+<entry id="irrig_depth" type="real" category="clm_physics"
+       group="irrigation_inparm" valid_values="">
+Soil depth to which we measure for irrigation (m)
+</entry>
+
+<entry id="irrig_threshold_fraction" type="real" category="clm_physics"
+       group="irrigation_inparm" valid_values="">
+Determines soil moisture threshold at which we irrigate.
+If h2osoi_liq_wilting_point is the soil moisture level at wilting point and
+h2osoi_liq_target is the soil moisture level at the target irrigation level
+(given by irrig_target_smp), then the threshold at which we irrigate is
+    h2osoi_liq_wilting_point +
+         irrig_threshold_fraction*(h2osoi_liq_target - h2osoi_liq_wilting_point)
+A value of 1 means that we irrigate whenever soil moisture falls below the target.
+A value of 0 means that we only irrigate when soil moisture falls below the wilting point.
+</entry>
+
+<entry id="irrig_river_volume_threshold" type="real" category="clm_physics"
+       group="irrigation_inparm" valid_values="">
+Threshold for river water volume below which irrigation is shut off (as a fraction of available river water), if limit_irrigation_if_rof_enabled is .true.
+A threshold of 0 means allow all river water to be used;
+a threshold of 0.1 means allow 90% of the river volume to be used; etc.
+</entry>
+
+<entry id="limit_irrigation_if_rof_enabled" type="logical" category="clm_physics"
+       group="irrigation_inparm" valid_values="" >
 If TRUE, limit irrigation when river storage drops below a threshold.
+Only applies if using an active runoff (ROF) model; otherwise, river storage-based limitation
+is turned off regardless of the setting of this namelist variable.
 </entry>
 
 <entry id="irrigate" type="logical" category="clm_physics"
@@ -369,14 +418,6 @@ If TRUE, irrigation will be active.
        group="clm_inparm" valid_values="0,1,3,5,10,36" >
 Number of  multiple elevation classes over glacier points.
 Normally this is ONLY used when running CESM with the active glacier model.
-</entry>
-
-<entry id="glc_smb" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
-If TRUE, calculate surface mass balance for glacier multi-elevation class points.
-If false use growing degree day information for glaciers multi-elevation class points.
-Only works when glc_nec is greater than 0.
-(Only tested with glc_smb=.true., setting it to .false. is NOT tested)
 </entry>
 
 <entry id="glc_do_dynglacier" type="logical" category="clm_physics"

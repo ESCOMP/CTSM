@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_13_r208    sacks 12/10/2016 Rework irrigation; remove glc_smb logical
   clm4_5_13_r207    andre 12/08/2016 PHS - Calculate separate root water uptake resistances for soil and root pathways
   clm4_5_13_r206    andre 11/29/2016 Bugfix for Luna causing arctic to die
   clm4_5_13_r205    sacks 11/16/2016 Add diagnostics for snow and glacier; fix crash in Megan

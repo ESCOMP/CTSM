@@ -177,10 +177,6 @@ OPTIONS
                               set appropriately.
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36]
                               (default is 0) (standard option with land-ice model is 10)
-     -glc_smb <value>         Only used if glc_nec > 0
-                              If .true., pass surface mass balance info to GLC
-                              If .false., pass positive-degree-day info to GLC
-                              Default: true
      -help [or -h]            Print usage to STDOUT.
      -light_res <value>       Resolution of lightning dataset to use for CN fire (hcru or T62)
      -ignore_ic_date          Ignore the date on the initial condition files
@@ -268,7 +264,6 @@ sub process_commandline {
                help                  => 0,
                glc_nec               => "default",
                glc_present           => 0,
-               glc_smb               => "default",
                light_res             => "default",
                l_ncpl                => undef,
                lnd_tuning_mode       => "default",
@@ -311,7 +306,6 @@ sub process_commandline {
              "megan!"                    => \$opts{'megan'},
              "glc_nec=i"                 => \$opts{'glc_nec'},
              "glc_present!"              => \$opts{'glc_present'},
-             "glc_smb=s"                 => \$opts{'glc_smb'},
              "light_res=s"               => \$opts{'light_res'},
              "irrig=s"                   => \$opts{'irrig'},
              "d:s"                       => \$opts{'dir'},
@@ -1586,7 +1580,6 @@ sub process_namelist_inline_logic {
   setup_logic_supplemental_nitrogen($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_snowpack($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_atm_forcing($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
-  setup_logic_limit_river_withdrawal($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_ed($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #########################################
@@ -1724,6 +1717,11 @@ sub process_namelist_inline_logic {
   # namelist group: soilhydrology_inparm #
   ########################################
   setup_logic_hydrology_params($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #####################################
+  # namelist group: irrigation_inparm #
+  #####################################
+  setup_logic_irrigation_parameters($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #######################################################################
   # namelist groups: clm_hydrology1_inparm and clm_soilhydrology_inparm #
@@ -1988,25 +1986,6 @@ sub setup_logic_glacier {
       fatal_error("glc_nec is non-zero, but glc_present is not set (probably due to trying to use a stub glc model)");
     }
 
-    foreach my $var ( "glc_smb" ) {
-      if ( $opts->{$var} ne "default" ) {
-        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'val'=>$opts->{$var} );
-        $val = $nl->get_value($var);
-        $val =~ s/['"]//g;
-        my $ucvar = $var;
-        $ucvar =~ tr/a-z/A-Z/;
-        if ( $val ne $opts->{$var} ) {
-          fatal_error("$var set to $val does NOT agree with -$var argument of $opts->{$var} (set with $ucvar env variable)\n");
-        }
-      } else {
-        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'glc_nec'=>$nl_flags->{'glc_nec'} );
-      }
-      $val = $nl->get_value($var);
-      verbose_message("Glacier model $var is $val");
-      if ( ! defined($val) ) {
-        fatal_error("$var is NOT set, but glc_nec is positive");
-      }
-    }
     if ( $physv->as_long() < $physv->as_long("clm4_5")) {
        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flndtopo'  , 'hgrid'=>$nl_flags->{'res'}, 'mask'=>$nl_flags->{'mask'} );
        add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fglcmask'  , 'hgrid'=>$nl_flags->{'res'});
@@ -2028,12 +2007,6 @@ sub setup_logic_glacier {
     if ( defined($create_glcmec) ) {
       if ( $create_glcmec =~ /$TRUE/i ) {
         fatal_error("create_glacer_mec_landunit is true, but glc_nec is equal to zero");
-      }
-    }
-    my $glc_smb = $nl->get_value('glc_smb');
-    if ( defined($glc_smb) ) {
-      if ( $glc_smb =~ /$TRUE/i ) {
-        fatal_error("glc_smb is true, but glc_nec is equal to zero");
       }
     }
     my $glc_dyntopo= $nl->get_value('glc_dyntopo');
@@ -2207,16 +2180,6 @@ sub setup_logic_soilstate {
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soil_layerstruct' );
     add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock' );
-  }
-}
-
-#-------------------------------------------------------------------------------
-
-sub setup_logic_limit_river_withdrawal {
-  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-
-  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'limit_irrigation', 'hgrid'=>$nl_flags->{'res'} );
   }
 }
 
@@ -2703,6 +2666,30 @@ sub setup_logic_hydrology_params {
      if ( defined($val) ) {
         if ( $lower != 1 && $lower != 2 ) {
            fatal_error("baseflow_scalar is only used for lower_boundary_condition of flux or zero-flux");
+        }
+     }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_irrigation_parameters {
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5")) {
+     my $var;
+     foreach $var ("irrig_min_lai", "irrig_start_time", "irrig_length",
+                   "irrig_target_smp", "irrig_depth", "irrig_threshold_fraction",
+                   "limit_irrigation_if_rof_enabled") {
+        add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+     }
+
+     $var = "irrig_river_volume_threshold";
+     if ( $nl->get_value("limit_irrigation_if_rof_enabled") =~ /$TRUE/i ) {
+        add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+     } else {
+        if (defined($nl->get_value($var))) {
+           fatal_error("$var can only be set if limit_irrigation_if_rof_enabled is true");
         }
      }
   }
@@ -3588,7 +3575,7 @@ sub write_output_files {
                  soilwater_movement_inparm rooting_profile_inparm 
                  soil_resis_inparm  bgc_shared canopyfluxes_inparm
                  clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
-                 cnprecision_inparm clm_glacier_behavior crop );
+                 cnprecision_inparm clm_glacier_behavior crop irrigation_inparm);
 
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 
     #             finidat_consistency_checks dynpft_consistency_checks);

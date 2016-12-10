@@ -328,6 +328,7 @@ contains
     logical      :: nlend                ! .true. ==> last time-step
     logical      :: dosend               ! true => send data back to driver
     logical      :: doalb                ! .true. ==> do albedo calculation on this time step
+    logical      :: rof_prognostic       ! .true. => running with a prognostic ROF model
     real(r8)     :: nextsw_cday          ! calday from clock of next radiation computation
     real(r8)     :: caldayp1             ! clm calday plus dtime offset
     integer      :: shrlogunit,shrloglev ! old values for share log unit and log level
@@ -391,6 +392,12 @@ contains
     call seq_infodata_GetData( infodata, orb_eccen=eccen, orb_mvelpp=mvelpp, &
          orb_lambm0=lambm0, orb_obliqr=obliqr )
 
+    ! Determine if we're running with a prognostic ROF model. This won't change
+    ! throughout the run, but we can't count on this being set in initialization, so need
+    ! to get it in the run method.
+
+    call seq_infodata_GetData( infodata, rof_prognostic=rof_prognostic )
+
     ! Loop over time steps in coupling interval
 
     dosend = .false.
@@ -434,7 +441,7 @@ contains
        call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
        call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
        call t_stopf ('shr_orb_decl')
-       call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
+       call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
        call t_stopf ('clm_run')
 
        ! Create l2x_l export state - add river runoff input to l2x_l if appropriate

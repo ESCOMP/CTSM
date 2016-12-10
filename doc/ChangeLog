@@ -1,4 +1,243 @@
 ===============================================================
+Tag name:  clm4_5_13_r208
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Dec 10 15:00:21 MST 2016
+One-line Summary: Rework irrigation; remove glc_smb logical
+
+Purpose of changes
+------------------
+
+Main change is a complete rework of the irrigation algorithm. This reworks the
+trigger and target for irrigation to be based on soil physical properties,
+removing the dependence on btran and smpso (which were problematic in
+conjunction with PHS). With the current out-of-the-box parameter values,
+irrigation is substantially lower than before.
+
+In addition, this reworks the river volume-based limitation. One change to the
+volr-based limitation is that we now apply the limit to the deficit computed in
+calcIrrigationNeeded - rather than applying the limit in applyIrrigation. The
+point of this is to avoid problems that arise due to evolving VOLR - e.g., if we
+had calculated irrigation demand such that VOLR was just barely big enough, then
+we apply irrigation for some time steps, then we get an updated VOLR which is
+lower due to these irrigation withdrawals - the old implementation would impose
+an unnecessary limit on the irrigation to be applied for the rest of this
+day. It's hard to see a clean way around this problem, given that VOLR is
+updated in some but not all CLM time steps. So we're going to impose the limit
+on irrigation deficit, rather than on the time step-by-time-step flux. The
+downside here is that it's somewhat more likely that irrigation would try to
+draw volr negative, if volr has been evolving for other reasons.
+
+Also, this tag pulls out the parameters controlling irrigation to namelist.
+
+Also reworks the limit_irrigation namelist parameter, changing it to
+limit_irrigation_if_rof_enabled. This was a problem before, in that we needed to
+remember to set it to false whenever we ran without an active ROF model (e.g.,
+during spinup); now runtime logic handles that automatically. (We considered
+trying to have limit_irrigation set properly by build-namelist, but that turns
+out to be tricky because there are a number of ways in which you can end up with
+an inactive ROF model.)
+
+Also removes the glc_smb logical: this has been unused for quite a while (we
+have always assumed it's true).
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variables for irrigation
+- limit_irrigation changed to limit_irrigation_if_rof_enabled
+- Remove glc_smb namelist variable, both for clm4_0 and clm4_5/clm5_0
+- Renamed ICE_MASK history variable to ICE_MODEL_FRACTION
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: minor tweaks to tests involving irrigation, as
+described below
+
+Code reviewed by: Irrigation changes reviewed by Sean Swenson
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - ok
+
+    Many failures due to bug 2386; other than that, expected differences from
+    baseline
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - ok
+
+    ok means pass or xfail; expected baseline failures as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_13_r207
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All cases with irrigation
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated closely, but potentially new climate
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+
+List all files eliminated:
+
+========= Merge irrigation unit tests into a single module
+D       components/clm/src/biogeophys/test/Irrigation_test/test_irrigation_singlepatch.pf
+D       components/clm/src/biogeophys/test/Irrigation_test/test_irrigation_deficit.pf
+D       components/clm/src/biogeophys/test/Irrigation_test/test_irrigation_multipatch.pf
+D       components/clm/src/biogeophys/test/Irrigation_test/IrrigationWrapperMod.F90
+
+========= No longer needed because we turn on irrigation river limitation in
+          some other irrigation tests
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/limit_river_withdraw/user_nl_clm
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/limit_river_withdraw/include_user_mods
+D       components/clm/cime_config/testdefs/testmods_dirs/clm/limit_river_withdraw
+
+List all files added and what they do:
+
+========= Merge irrigation unit tests into a single module, and add some tests
+A       components/clm/src/biogeophys/test/Irrigation_test/test_irrigation.pf
+
+List all existing files that have been modified, and describe the changes:
+
+========= Rework irrigation: both the core algorithm and the volr limitation
+M       components/clm/src/biogeophys/IrrigationMod.F90
+M       components/clm/src/main/clm_driver.F90
+
+========= Determine if rof_enabled is true, needed now that we have changed
+          limit_irrigation to limit_irrigation_if_rof_enabled
+M       components/clm/src/cpl/lnd_comp_mct.F90
+
+========= Add new irrigation namelist variables, in their own group; also remove
+          glc_smb namelist item
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+M       components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/src/main/clm_instMod.F90
+
+========= Remove glc_smb logical: we have been assuming it's true for quite a
+          while
+M       components/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml
+M       components/clm/bld/namelist_files/use_cases/1850_glacierMEC_control.xml
+M       components/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+M       components/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+M       components/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+M       components/clm/bld/namelist_files/use_cases/glacierMEC_pd.xml
+M       components/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+M       components/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+M       components/clm/bld/namelist_files/namelist_definition_clm4_0.xml
+M       components/clm/bld/namelist_files/namelist_defaults_overall.xml
+M       components/clm/cime_config/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/fire_emis/user_nl_clm
+M       components/clm/bld/unit_testers/build-namelist_test.pl
+M       components/clm/cime_config/buildnml
+M       components/clm/doc/UsersGuide/preface.xml
+M       components/clm/bld/test_build_namelist/t/input/namelist_definition_clm4_5_test.xml
+M       components/clm/src_clm40/main/clm_glclnd.F90
+M       components/clm/src_clm40/main/controlMod.F90
+M       components/clm/src_clm40/main/clm_varctl.F90
+
+========= Remove glc_smb and move limit_irrigation logic into IrrigationMod
+M       components/clm/src/main/clm_varctl.F90
+M       components/clm/src/main/controlMod.F90
+
+========= Rework some of the column filter creators to have a clearer interface
+M       components/clm/src/main/filterColMod.F90
+M       components/clm/src/main/test/filter_test/test_filter_col.pf
+M       components/clm/src/main/TopoMod.F90
+M       components/clm/src/main/test/atm2lnd_test/test_downscale_forcings.pf
+
+========= Put some extra metadata on the restart file: whether we have
+          create_crop_landunit and irrigate, since these are helpful for
+          understanding when init_interp is needed
+M       components/clm/src/main/restFileMod.F90
+
+========= Rename ICE_MASK to ICE_MODEL_FRACTION, based on suggestion from Marcus
+          Lofverstrom
+M       components/clm/src/main/glc2lndMod.F90
+
+========= Merge irrigation unit tests into a single module
+M       components/clm/src/biogeophys/test/Irrigation_test/CMakeLists.txt
+
+========= Fix for cime update
+M       components/clm/bld/test_build_namelist/test_build_namelist.pl
+
+========= Stop turning off limit_irrigation, since it's working now; also
+          include QIRRIG_DEMAND in output
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropIrrigMonth_interp/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/irrig_spunup/user_nl_clm
+
+========= Rename limit_irrigation to limit_irrigation_if_rof_enabled
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50KitchenSink/user_nl_clm
+
+========= Include QIRRIG_DEMAND in output
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/irrigOn_reduceOutput/user_nl_clm
+
+========= Remove limit_river_withdraw test - now we test that option via other
+          irrigation tests
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+========= Add a stub routine
+M       components/clm/src/unit_test_stubs/utils/restUtilMod_stub.F90.in
+
+========= Add a couple of tests to the xfail list - bug 2388
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_13_r207
 Originator(s):  andre (Benjamin Andre,UCAR/CSEG,303-497-1391)
 Date:  Thu Dec  8 10:34:56 MST 2016

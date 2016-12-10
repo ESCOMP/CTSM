@@ -195,9 +195,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <inexpensive>1</inexpensive>
 <flux_calculation>1</flux_calculation>
 
+<!-- Irrigation namelist defaults -->
+<irrig_min_lai>0.0</irrig_min_lai>
+<irrig_start_time>21600</irrig_start_time>
+<irrig_length>14400</irrig_length>
+<irrig_target_smp>-3400.</irrig_target_smp>  <!-- -3400 is a standard value for field capacity -->
+<irrig_depth>0.6</irrig_depth>
+<irrig_threshold_fraction>0.5</irrig_threshold_fraction>
+<irrig_river_volume_threshold>0.1</irrig_river_volume_threshold>
+
 <!--  River storage derived lake evaporation and irrigation limitation  -->
-<limit_irrigation phys="clm5_0">.true.</limit_irrigation>
-<limit_irrigation              >.false.</limit_irrigation>
+<limit_irrigation_if_rof_enabled phys="clm5_0">.true.</limit_irrigation_if_rof_enabled>
+<limit_irrigation_if_rof_enabled              >.false.</limit_irrigation_if_rof_enabled>
 
 <!-- Snow veg treatment -->
 <snowveg_flag phys="clm4_5" >OFF</snowveg_flag>

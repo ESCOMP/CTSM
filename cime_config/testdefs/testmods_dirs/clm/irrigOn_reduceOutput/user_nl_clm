@@ -1,4 +1,4 @@
-hist_fincl1 += 'QIRRIG'
+hist_fincl1 += 'QIRRIG','QIRRIG_DEMAND'
 hist_fincl2 += 'QIRRIG'
 hist_dov2xy = .true.,.false.
 hist_nhtfrq = 0, -8760

@@ -90,7 +90,6 @@ determine default values for namelists.
 <!-- Default glacier model options -->
 
 <glc_dyntopo         >.false.</glc_dyntopo>
-<glc_smb             >.true.</glc_smb>
 <glc_nec glc_nec="0" >0</glc_nec>
 <glc_nec glc_nec="1" >1</glc_nec>
 <glc_nec glc_nec="3" >3</glc_nec>

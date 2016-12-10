@@ -24,7 +24,7 @@ module clm_glclnd
   use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   use spmdMod     , only : masterproc
   use clm_varpar  , only : maxpatch_glcmec
-  use clm_varctl  , only : iulog, glc_smb
+  use clm_varctl  , only : iulog
   use abortutils  , only : endrun
 !
 ! !REVISION HISTORY:
@@ -190,8 +190,8 @@ end subroutine init_lnd2glc_type
     ! Get processor bounds
     call get_proc_bounds(begg, endg, begc=begc, endc=endc)
 
-    ! Initialize qice because otherwise it will remain unset if init=true and
-    ! glc_smb=true; note that the value here is the value qice will keep if these
+    ! Initialize qice because otherwise it will remain unset if init=true;
+    ! note that the value here is the value qice will keep if these
     ! conditions hold. Also, need to set a reasonable default for elevation class 0,
     ! which is used by the CLM4.5 code, but not by CLM4.0.
 
@@ -208,52 +208,31 @@ end subroutine init_lnd2glc_type
 
     ! Fill the clm_s2x vector on the clm grid
 
-    if (glc_smb) then   ! send surface mass balance info
-       do c = begc, endc
-          l = clandunit(c)
-          g = cgridcell(c)
+    do c = begc, endc
+       l = clandunit(c)
+       g = cgridcell(c)
 
-          ! Following assumes all elevation classes are populated
-          if (ityplun(l) == istice_mec) then
-             n = c - lun%coli(l) + 1    ! elevation class index
+       ! Following assumes all elevation classes are populated
+       if (ityplun(l) == istice_mec) then
+          n = c - lun%coli(l) + 1    ! elevation class index
 
-             ! t_soisno and glc_topo are valid even in initialization, so tsrf and topo
-             ! are set here regardless of the value of init. But qflx_glcice is not valid
-             ! until the run loop; thus, in initialization, we will use the default value
-             ! for qice, as set above.
-             clm_s2x%tsrf(g,n) = ces%t_soisno(c,1)
-             clm_s2x%topo(g,n) = cps%glc_topo(c)
-             if (.not. init) then
-                clm_s2x%qice(g,n) = cwf%qflx_glcice(c)
+          ! t_soisno and glc_topo are valid even in initialization, so tsrf and topo
+          ! are set here regardless of the value of init. But qflx_glcice is not valid
+          ! until the run loop; thus, in initialization, we will use the default value
+          ! for qice, as set above.
+          clm_s2x%tsrf(g,n) = ces%t_soisno(c,1)
+          clm_s2x%topo(g,n) = cps%glc_topo(c)
+          if (.not. init) then
+             clm_s2x%qice(g,n) = cwf%qflx_glcice(c)
 
-                ! Check for bad values of qice
-                if ( abs(clm_s2x%qice(g,n)) > 1.0_r8 .and. clm_s2x%qice(g,n) /= spval) then
-                   write(iulog,*) 'WARNING: qice out of bounds: g, n, qice =', g, n, clm_s2x%qice(g,n)
-                endif
-             end if
+             ! Check for bad values of qice
+             if ( abs(clm_s2x%qice(g,n)) > 1.0_r8 .and. clm_s2x%qice(g,n) /= spval) then
+                write(iulog,*) 'WARNING: qice out of bounds: g, n, qice =', g, n, clm_s2x%qice(g,n)
+             endif
+          end if
 
-           endif    ! istice_mec
-       enddo        ! c
-    else  ! Pass PDD info (same info in each elevation class)
-       ! Require maxpatch_glcmec = 1 for this case 
-       if (maxpatch_glcmec .ne. 1) then
-          call endrun('update_clm_s2x error: maxpatch_glcmec must be 1 if glc_smb is false') 
-       end if
-       n = 1
-       do g = begg, endg
-          clm_s2x%tsrf(g,n) = clm_l2a%t_ref2m(g)
-          clm_s2x%qice(g,n) = clm_a2l%forc_snow(g)   ! Assume rain runs off
-          clm_s2x%topo(g,n) = ldomain%topo(g)
-          ! Check for bad values of qice
-          if (clm_s2x%qice(g,n) > -1.0_r8 .and. clm_s2x%qice(g,n) < 1.0_r8) then
-             continue
-          else
-             write(iulog,*) 'WARNING: qice out of bounds: g, n, qice =', g, n, clm_s2x%qice(g,n)
-             write(iulog,*) 'forc_rain =', clm_a2l%forc_rain(g)
-             write(iulog,*) 'forc_snow =', clm_a2l%forc_snow(g)
-          endif
-       enddo
-    endif   ! glc_smb
+       endif    ! istice_mec
+    enddo        ! c
 
 end subroutine update_clm_s2x
 

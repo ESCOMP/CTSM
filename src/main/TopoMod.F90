@@ -15,7 +15,7 @@ module TopoMod
   use glcBehaviorMod , only : glc_behavior_type
   use clm_varctl     , only : create_glacier_mec_landunit
   use landunit_varcon, only : istice_mec
-  use filterColMod   , only : filter_col_type, col_filter_from_logical_array
+  use filterColMod   , only : filter_col_type, col_filter_from_logical_array_active_only
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -293,9 +293,8 @@ contains
     ! multiple instances of topo_type, each corresponding to one clump, each with its own
     ! filter.
 
-    filter = col_filter_from_logical_array(bounds, &
-         this%needs_downscaling_col(bounds%begc:bounds%endc), &
-         include_inactive = .false.)
+    filter = col_filter_from_logical_array_active_only(bounds, &
+         this%needs_downscaling_col(bounds%begc:bounds%endc))
 
   end function DownscaleFilterc
 

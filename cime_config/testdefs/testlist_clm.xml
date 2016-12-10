@@ -956,7 +956,6 @@
         <machine compiler="gnu" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/flexCN_FUN">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/noFUN_flexCN">yellowstone</machine>
-        <machine compiler="intel" testtype="aux_clm45" testmods="clm/limit_river_withdraw">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/luna">yellowstone</machine>
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/default">yellowstone</machine>

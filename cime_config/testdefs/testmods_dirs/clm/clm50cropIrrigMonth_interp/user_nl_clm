@@ -3,5 +3,4 @@ finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/clmi.IGM1850GSWP3CLM50BGCCROPIRR.
 init_interp_fill_missing_with_natveg = .true.    ! need this as IC file is glc_mec
 use_hydrstress = .false.
 
-! For now, turn off volr-limitation on irrigation, because it isn't working right
-limit_irrigation = .false.
+hist_fincl1 += 'QIRRIG_DEMAND'

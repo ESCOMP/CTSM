@@ -184,7 +184,7 @@ contains
 
     ! Glacier_mec info
     namelist /clm_inparm/ &    
-         maxpatch_glcmec, glc_smb, glc_do_dynglacier, &
+         maxpatch_glcmec, glc_do_dynglacier, &
          glcmec_downscale_longwave, glc_snow_persistence_max_days, &
          nlevsno, h2osno_max
 
@@ -225,8 +225,6 @@ contains
     namelist /clm_inparm/ use_hydrstress
 
     namelist /clm_inparm/ use_dynroot
-
-    namelist /clm_inparm/ limit_irrigation
 
     namelist /clm_inparm/  &
          use_c14_bombspike, atm_c14_filename
@@ -617,8 +615,6 @@ contains
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (limit_irrigation, 1, MPI_LOGICAL, 0, mpicom, ier)
-
     if (use_cn .and. use_vertsoilc) then
        ! vertical soil mixing variables
        call mpi_bcast (som_adv_flux, 1, MPI_REAL8,  0, mpicom, ier)
@@ -669,7 +665,6 @@ contains
     ! glacier_mec variables
     call mpi_bcast (create_glacier_mec_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (glc_smb, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_do_dynglacier, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glcmec_downscale_longwave, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_snow_persistence_max_days, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -838,11 +833,6 @@ contains
        else
           write(iulog,*) '   glc CLM glacier areas and topography will NOT evolve dynamically'
        end if
-       if (glc_smb) then
-          write(iulog,*) '   glc surface mass balance will be passed to ice sheet model'
-       else
-          write(iulog,*) '   glc positive-degree-day info will be passed to ice sheet model'
-       endif
        write(iulog,*) '   glc snow persistence max days = ', glc_snow_persistence_max_days
     endif
 
@@ -902,7 +892,6 @@ contains
     write(iulog,*) 'Albedo over melting lakes will approach values (visible, NIR):', lake_melt_icealb, &
                    'as compared with 0.60, 0.40 for cold frozen lakes with no snow.'
 
-    write(iulog, *) 'limit_irrigation = ', limit_irrigation
     write(iulog, *) 'plant nitrogen model namelists:'
     write(iulog, *) '  use_flexibleCN = ', use_flexibleCN                       
     if (use_flexibleCN) then

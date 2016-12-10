@@ -45,6 +45,9 @@ module filterColMod
   ! Create a filter from a column-level logical array
   public :: col_filter_from_logical_array
 
+  ! Create a filter from a column-level logical array, but including only active points
+  public :: col_filter_from_logical_array_active_only
+
   ! Create a filter that contains one or more landunit type(s) of interest
   public :: col_filter_from_ltypes
 
@@ -122,17 +125,18 @@ contains
 
 
   !-----------------------------------------------------------------------
-  function col_filter_from_logical_array(bounds, logical_col, include_inactive) &
-       result(filter)
+  function col_filter_from_logical_array(bounds, logical_col) result(filter)
     !
     ! !DESCRIPTION:
     ! Create a column-level filter from a column-level logical array.
+    !
+    ! This version does not consider whether a column is active: it simply includes any
+    ! column 'c' for which logical_col(c) is .true.
     !
     ! !ARGUMENTS:
     type(filter_col_type) :: filter  ! function result
     type(bounds_type), intent(in) :: bounds
     logical, intent(in) :: logical_col(bounds%begc:) ! column-level logical array
-    logical, intent(in) :: include_inactive ! whether inactive points should be included in the filter
     !
     ! !LOCAL VARIABLES:
     integer :: c
@@ -145,7 +149,41 @@ contains
     filter = col_filter_empty(bounds)
 
     do c = bounds%begc, bounds%endc
-       if (include_based_on_active(c, include_inactive)) then
+       if (logical_col(c)) then
+          filter%num = filter%num + 1
+          filter%indices(filter%num) = c
+       end if
+    end do
+
+  end function col_filter_from_logical_array
+
+  !-----------------------------------------------------------------------
+  function col_filter_from_logical_array_active_only(bounds, logical_col) result(filter)
+    !
+    ! !DESCRIPTION:
+    ! Create a column-level filter from a column-level logical array. Only include active
+    ! points in the filter: even if the logical array is true for a given column, that
+    ! column is excluded if it is inactive.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(filter_col_type) :: filter  ! function result
+    type(bounds_type), intent(in) :: bounds
+    logical, intent(in) :: logical_col(bounds%begc:) ! column-level logical array
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c
+
+    character(len=*), parameter :: subname = 'col_filter_from_logical_array_active_only'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL((ubound(logical_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+
+    filter = col_filter_empty(bounds)
+
+    do c = bounds%begc, bounds%endc
+       if (col%active(c)) then
           if (logical_col(c)) then
              filter%num = filter%num + 1
              filter%indices(filter%num) = c
@@ -153,7 +191,8 @@ contains
        end if
     end do
 
-  end function col_filter_from_logical_array
+  end function col_filter_from_logical_array_active_only
+
 
   !-----------------------------------------------------------------------
   function col_filter_from_ltypes(bounds, ltypes, include_inactive) &

@@ -98,7 +98,7 @@ module clm_driver
 contains
 
   !-----------------------------------------------------------------------
-  subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
+  subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
     !
     ! !DESCRIPTION:
     !
@@ -117,6 +117,11 @@ contains
     logical,         intent(in) :: rstwr       ! true => write restart file this step
     logical,         intent(in) :: nlend       ! true => end of run on this step
     character(len=*),intent(in) :: rdate       ! restart file time stamp for name
+
+    ! Whether we're running with a prognostic ROF component. This shouldn't change from
+    ! timestep to timestep, but we pass it into the driver loop because it isn't available
+    ! in initialization.
+    logical,         intent(in) :: rof_prognostic  ! whether we're running with a prognostic ROF component
     !
     ! !LOCAL VARIABLES:
     integer              :: nstep                   ! time step number
@@ -429,8 +434,7 @@ contains
 
        ! Irrigation flux
        ! input is main channel storage
-       call irrigation_inst%ApplyIrrigation(bounds_clump, &
-            volr = atm2lnd_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg))
+       call irrigation_inst%ApplyIrrigation(bounds_clump)
        call t_stopf('drvinit')
 
        ! ============================================================================
@@ -601,7 +605,10 @@ contains
        ! Determine irrigation needed for future time steps
        ! ============================================================================
 
-       ! This needs to be called after btran is computed
+       ! NOTE(wjs, 2016-09-08) The placement of this call in the driver is historical: it
+       ! used to be that it had to come after btran was computed. Now it no longer depends
+       ! on btran, so it could be moved earlier in the driver loop - possibly even
+       ! immediately before ApplyIrrigation, which would be a more clear place to put it.
 
        call t_startf('irrigationneeded')
        call irrigation_inst%CalcIrrigationNeeded( &
@@ -610,11 +617,11 @@ contains
             filter_exposedvegp = filter(nc)%exposedvegp, &
             time_prev          = sec_prev, &
             elai               = canopystate_inst%elai_patch(bounds_clump%begp:bounds_clump%endp), &
-            btran              = energyflux_inst%btran_patch(bounds_clump%begp:bounds_clump%endp), &
-            rootfr             = soilstate_inst%rootfr_patch(bounds_clump%begp:bounds_clump%endp    , 1:nlevgrnd), &
             t_soisno           = temperature_inst%t_soisno_col(bounds_clump%begc:bounds_clump%endc  , 1:nlevgrnd), &
             eff_porosity       = soilstate_inst%eff_porosity_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
-            h2osoi_liq         = waterstate_inst%h2osoi_liq_col(bounds_clump%begc:bounds_clump%endc , 1:nlevgrnd))
+            h2osoi_liq         = waterstate_inst%h2osoi_liq_col(bounds_clump%begc:bounds_clump%endc , 1:nlevgrnd), &
+            volr               = atm2lnd_inst%volrmch_grc(bounds_clump%begg:bounds_clump%endg), &
+            rof_prognostic     = rof_prognostic)
        call t_stopf('irrigationneeded')
 
        ! ============================================================================

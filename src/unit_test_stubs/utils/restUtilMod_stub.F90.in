@@ -20,6 +20,8 @@ module restUtilMod
 
   public :: restartvar
 
+  public :: set_missing_from_template
+
 contains
 
   !-----------------------------------------------------------------------
@@ -125,5 +127,24 @@ contains
     readvar = .false.
 
   end subroutine restartvar_2d_double_bounds
+
+  !-----------------------------------------------------------------------
+  subroutine set_missing_from_template(my_var, template_var, multiplier)
+    !
+    ! !DESCRIPTION:
+    ! Set values of a missing restart field from a template field, with some constant
+    ! multiplier
+    !
+    ! !USES:
+    use shr_infnan_mod, only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(out) :: my_var(:)
+    real(r8), intent(in)  :: template_var(:)
+    real(r8), intent(in)  :: multiplier
+
+    my_var(:) = template_var(:) * multiplier
+
+  end subroutine set_missing_from_template
 
 end module restUtilMod

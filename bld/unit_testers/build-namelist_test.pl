@@ -123,7 +123,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 743;
+my $ntests = 742;
 if ( defined($opts{'compare'}) ) {
    $ntests += 468;
 }
@@ -217,7 +217,7 @@ print "Run simple tests with additional options \n";
 print "==================================================\n";
 
 # Exercise a bunch of options
-my $options = "-co2_ppmv 250 -glc_nec 10 -glc_present -glc_smb .false.";
+my $options = "-co2_ppmv 250 -glc_nec 10 -glc_present";
    $options .= " -res 0.9x1.25 -rcp 2.6 -envxml_dir .";
 
    &make_env_run();
@@ -690,11 +690,6 @@ my %failtest = (
                                    },
      "glc_nec inconsistent"      =>{ options=>"-glc_nec 10 -glc_present -envxml_dir .",
                                      namelst=>"maxpatch_glcmec=5",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     conopts=>"",
-                                   },
-     "glc_smb inconsistent"      =>{ options=>"-glc_nec 10 --glc_present glc_smb .true. -envxml_dir .",
-                                     namelst=>"glc_smb=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      conopts=>"",
                                    },

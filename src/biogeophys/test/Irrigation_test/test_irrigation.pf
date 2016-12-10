@@ -1,0 +1,976 @@
+module test_irrigation
+
+  ! Tests of IrrigationMod
+
+  use pfunit_mod
+  use unittestSubgridMod
+  use IrrigationMod, only : irrigation_type, irrigation_params_type
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use clm_varpar, only : nlevsoi, nlevgrnd
+  use landunit_varcon, only : istsoil
+  use PatchType     , only : patch
+  use ColumnType    , only : col
+  use GridcellType  , only : grc
+  use pftconMod , only : pftcon
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
+  use unittestFilterBuilderMod, only : filter_from_range
+
+  implicit none
+  save
+
+  real(r8), parameter :: tol = 1.e-13_r8
+  integer , parameter :: dtime = 1800  ! model time step, seconds
+
+  @TestCase
+  type, extends(TestCase) :: TestIrrigation
+     integer :: numf
+     integer, allocatable :: filter(:)
+     type(irrigation_type) :: irrigation
+
+     ! Irrigation parameters
+     type(irrigation_params_type) :: irrigation_params
+
+     ! Inputs to irrigation routines
+     real(r8), allocatable :: elai(:)
+     real(r8), allocatable :: t_soisno(:,:)
+     real(r8), allocatable :: eff_porosity(:,:)
+     real(r8), allocatable :: h2osoi_liq(:,:)
+     real(r8), allocatable :: relsat_wilting_point(:,:)
+     real(r8), allocatable :: relsat_target(:,:)
+     real(r8), allocatable :: volr(:)
+
+     ! Previous model time
+     integer :: time_prev
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: setupSinglePatch
+     procedure :: setupIrrigation
+     procedure :: setupEnvironment
+     procedure :: teardownEnvironment
+
+     ! Computes irrigation deficit for every patch and level
+     procedure :: computeDeficits
+
+     ! Wrapper that calls both CalcIrrigationNeeded and ApplyIrrigation
+     procedure :: calculateAndApplyIrrigation
+  end type TestIrrigation
+
+  real(r8), parameter :: mm_times_km2_to_m3 = 1.e3_r8
+  real(r8), parameter :: m3_over_km2_to_mm = 1.e-3_r8
+
+contains
+
+  ! ========================================================================
+  ! Test helpers
+  ! ========================================================================
+
+  subroutine setUp(this)
+    class(TestIrrigation), intent(inout) :: this
+
+    ! Need to set nlevgrnd before doing the subgrid setup (because it is needed when
+    ! allocating the col object). So we must do this before setupEnvironment, because
+    ! that assumes that the subgrid setup has already been done.
+    !
+    ! Also set nlevsoi here for symmetry.
+    !
+    ! Need nlevsoi at least 4 for some tests to be meaningful
+    nlevsoi = 4
+    nlevgrnd = nlevsoi + 1
+
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestIrrigation), intent(inout) :: this
+
+    call this%irrigation%Clean()
+    call this%teardownEnvironment()
+    call unittest_subgrid_teardown()
+  end subroutine tearDown
+
+  subroutine setupSinglePatch(this)
+    ! Sets up grid with single veg patch; also sets up this%filter appropriately
+    class(TestIrrigation), intent(inout) :: this
+
+    call setup_single_veg_patch(pft_type=1)
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
+  end subroutine setupSinglePatch
+
+  !-----------------------------------------------------------------------
+  subroutine setupIrrigation(this, maxpft, test_limit_irrigation, nlevirrig, &
+       irrig_river_volume_threshold)
+    !
+    ! !DESCRIPTION:
+    ! Do the setup needed for most tests.
+    !
+    ! Values are set up such that there is some irrigation deficit everywhere, and
+    ! irrigation would start in the following call to CalcIrrigationNeeded (followed by
+    ! ApplyIrrigation). Values are set the same for every patch/column, and are the same
+    ! at every level EXCEPT for relsat_wilting_point and relsat_target, which vary
+    ! linearly by level and col number.
+    !
+    ! volr is set up to be non-limiting
+    !
+    ! Assumes that nlevgrnd and nlevsoi have been set, and that all necessary subgrid
+    ! setup has been completed.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(TestIrrigation), intent(inout) :: this
+
+    ! max pft type; if not given, set to 1
+    integer, intent(in), optional :: maxpft
+    logical, intent(in), optional :: test_limit_irrigation
+
+    ! number of levels to include in irrigation; if not given, defaults to nlevsoi;
+    ! irrig_depth is set using the column depths for the first column
+    integer, intent(in), optional :: nlevirrig
+
+    ! Threshold for river water volume below which irrigation is shut off, if
+    ! limit_irrigation_if_rof_enabled is .true. (fraction of available river water). If
+    ! not given, defaults to 0.1
+    real(r8), intent(in), optional :: irrig_river_volume_threshold
+
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c,j
+    logical :: limit_irrigation_if_rof_enabled
+    integer :: l_maxpft
+    integer :: l_nlevirrig
+    real(r8) :: irrig_depth
+    real(r8) :: l_irrig_river_volume_threshold
+    !-----------------------------------------------------------------------
+
+    limit_irrigation_if_rof_enabled = .false.
+    if (present(test_limit_irrigation)) then
+       limit_irrigation_if_rof_enabled = test_limit_irrigation
+    end if
+
+    l_maxpft = 1
+    if (present(maxpft)) then
+       l_maxpft = maxpft
+    end if
+
+    l_nlevirrig = nlevsoi
+    if (present(nlevirrig)) then
+       l_nlevirrig = nlevirrig
+    end if
+
+    l_irrig_river_volume_threshold = 0.1_r8
+    if (present(irrig_river_volume_threshold)) then
+       l_irrig_river_volume_threshold = irrig_river_volume_threshold
+    end if
+
+    call this%setupEnvironment(maxpft=l_maxpft)
+
+    ! Set the irrigation depth to be just barely big enough to include the desired layers
+    irrig_depth = col%z(bounds%begc,l_nlevirrig) + 1.e-9_r8
+
+    ! Set parameters
+    this%irrigation_params = irrigation_params_type( &
+         irrig_min_lai = 0.0_r8, &
+         irrig_start_time = 21600, &
+         irrig_length = 14400, &
+         irrig_target_smp = -3400._r8, &
+         irrig_depth = irrig_depth, &
+         irrig_threshold_fraction = 0.5_r8, &
+         irrig_river_volume_threshold = l_irrig_river_volume_threshold, &
+         limit_irrigation_if_rof_enabled = limit_irrigation_if_rof_enabled)
+
+    ! Set inputs to irrigation routines
+    allocate(this%elai(bounds%begp:bounds%endp), source=10._r8)
+    allocate(this%t_soisno(bounds%begc:bounds%endc, nlevgrnd), source=1000._r8)
+    allocate(this%eff_porosity(bounds%begc:bounds%endc, nlevgrnd), source=1._r8)
+    allocate(this%h2osoi_liq(bounds%begc:bounds%endc, nlevgrnd), source=0._r8)
+    allocate(this%relsat_wilting_point(bounds%begc:bounds%endc, nlevsoi))
+    allocate(this%relsat_target(bounds%begc:bounds%endc, nlevsoi))
+    ! By default, volr will be very limiting... but this should have no effect if
+    ! limit_irrigation_if_rof_enabled is false (the default)
+    allocate(this%volr(bounds%begg:bounds%endg), source=0._r8)
+
+    do j = 1, nlevsoi
+       do c = bounds%begc, bounds%endc
+          this%relsat_wilting_point(c,j) = 0.07_r8 * j * (c - bounds%begc + 1)
+          this%relsat_target(c,j) = 0.1_r8 * j * (c - bounds%begc + 1)
+       end do
+    end do
+
+    ! Set time_prev to the irrig_start_time minus 1 hour (since we're using a longitude
+    ! about 1 hour east of 0Z)
+    this%time_prev = this%irrigation_params%irrig_start_time - 3600
+
+    call this%irrigation%InitForTesting(bounds, this%irrigation_params, dtime, &
+         this%relsat_wilting_point, this%relsat_target)
+
+  end subroutine setupIrrigation
+
+  !-----------------------------------------------------------------------
+  subroutine setupEnvironment(this, maxpft)
+    !
+    ! !DESCRIPTION:
+    ! Sets up the external environment used by Irrigation - i.e., things accessed via
+    ! 'use' statements.
+    !
+    ! Assumes nlevgrnd and nlevsoi have been set, and that all necessary subgrid setup has
+    ! been completed.
+    !
+    ! !ARGUMENTS:
+    class(TestIrrigation), intent(in) :: this
+    integer, intent(in) :: maxpft  ! max pft type that needs to be supported
+    !
+    integer :: c,j
+
+    !-----------------------------------------------------------------------
+
+    allocate(pftcon%irrigated(0:maxpft), source=1.0_r8)
+
+    col%dz(:,1:nlevgrnd) = 1.0_r8
+    do j = 1, nlevgrnd
+       do c = bounds%begc, bounds%endc
+          col%z(c,j) = sum(col%dz(c,1:j-1)) + 0.5_r8*col%dz(c,j)
+       end do
+    end do
+
+    do c = bounds%begc, bounds%endc
+       ! Setting nbedrock to nlevsoi means that none of the layers from 1:nlevsoi are
+       ! considered bedrock
+       col%nbedrock(c) = nlevsoi
+    end do
+
+    ! slightly greater than 1 hour offset
+    grc%londeg(:) = 15.1_r8
+
+    grc%area(:) = 10.0_r8
+    
+  end subroutine setupEnvironment
+
+  !-----------------------------------------------------------------------
+  subroutine teardownEnvironment(this)
+    !
+    ! !DESCRIPTION:
+    ! Tears down the environment set up by setupEnvironment. Should be called after each
+    ! test. Note that this does NOT deallocate the subgrid variables - that cleanup
+    ! needs to be done separately.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(TestIrrigation), intent(in) :: this
+    !
+    !-----------------------------------------------------------------------
+    
+    deallocate(pftcon%irrigated)
+
+  end subroutine teardownEnvironment
+
+  !-----------------------------------------------------------------------
+  subroutine computeDeficits(this, deficits)
+    !
+    ! !DESCRIPTION:
+    ! Computes irrigation deficit for each patch and layer, from 1 to nlevsoi
+    !
+    ! Allocates the 'deficits' variable, and gives it a lower bound of bounds%begp.
+    !
+    ! The motivation for this function is: For most of the irrigation tests, we assume
+    ! that the RelsatToH2osoi function is working correctly, and we want to test the code
+    ! that builds on top of that function. By having this function, we can avoid having to
+    ! hard-code the deficits in each test.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(TestIrrigation), intent(in) :: this
+    real(r8), allocatable, intent(out) :: deficits(:,:)  ! kg m-2
+    !
+    ! !LOCAL VARIABLES:
+    integer :: p, c, j
+    real(r8) :: h2osoi_liq_target
+
+    character(len=*), parameter :: subname = 'computeDeficits'
+    !-----------------------------------------------------------------------
+    
+    allocate(deficits(bounds%begp:bounds%endp, nlevsoi))
+    do j = 1, nlevsoi
+       do p = bounds%begp, bounds%endp
+          c = patch%column(p)
+          h2osoi_liq_target = this%irrigation%RelsatToH2osoi( &
+               relsat = this%relsat_target(c,j), &
+               eff_porosity = this%eff_porosity(c,j), &
+               dz = col%dz(c,j))
+          deficits(p,j) = h2osoi_liq_target - this%h2osoi_liq(c,j)
+       end do
+    end do
+
+  end subroutine computeDeficits
+
+  !-----------------------------------------------------------------------
+  subroutine calculateAndApplyIrrigation(this)
+    !
+    ! !DESCRIPTION:
+    ! Call CalculateIrrigationNeeded with the given irrigation parameters. Then call
+    ! ApplyIrrigation.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(TestIrrigation), intent(inout) :: this
+    !
+    ! !LOCAL VARIABLES:
+    
+    character(len=*), parameter :: subname = 'calculateAndApplyIrrigation'
+    !-----------------------------------------------------------------------
+
+    call this%irrigation%CalcIrrigationNeeded(&
+         bounds=bounds, &
+         num_exposedvegp = this%numf, &
+         filter_exposedvegp = this%filter, &
+         time_prev = this%time_prev, &
+         elai = this%elai, &
+         t_soisno = this%t_soisno, &
+         eff_porosity = this%eff_porosity, &
+         h2osoi_liq = this%h2osoi_liq, &
+         volr = this%volr, &
+         rof_prognostic = .true.)
+    
+    call this%irrigation%ApplyIrrigation(bounds)
+
+  end subroutine calculateAndApplyIrrigation
+
+  ! ========================================================================
+  ! Begin actual tests
+  ! ========================================================================
+
+  ! ------------------------------------------------------------------------
+  ! Tests on a single patch
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine irrigation_flux_is_correct(this)
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: expected
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
+    @assertEqual(expected, this%irrigation%qflx_irrig_patch(bounds%begp), tolerance=tol)
+
+  end subroutine irrigation_flux_is_correct
+
+  @Test
+  subroutine no_irrigation_for_wet_soil(this)
+    class(TestIrrigation), intent(inout) :: this
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+    this%h2osoi_liq(:,:) = 1.e15_r8
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
+  end subroutine no_irrigation_for_wet_soil
+
+  @Test
+  subroutine surplus_offsets_deficit(this)
+    ! A surplus in one layer offsets a deficit in another
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), parameter :: surplus = 1._r8
+    real(r8) :: h2osoi_target_layer1
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: expected
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+    h2osoi_target_layer1 = this%irrigation%RelsatToH2osoi( &
+         relsat = this%relsat_target(bounds%begc,1), &
+         eff_porosity = this%eff_porosity(bounds%begc,1), &
+         dz = col%dz(bounds%begc,1))
+    this%h2osoi_liq(bounds%begc,1) = h2osoi_target_layer1 + surplus
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    expected = (sum(deficits(bounds%begp,2:nlevsoi)) - surplus) / this%irrigation_params%irrig_length
+    ! This first assertion makes sure the test has been set up reasonably - to give a net deficit
+    @assertLessThan(0._r8, expected)
+    ! Here is the main assertion:
+    @assertEqual(expected, this%irrigation%qflx_irrig_patch(bounds%begp), tolerance=tol)
+  end subroutine surplus_offsets_deficit
+
+  @Test
+  subroutine no_irrigation_for_unirrigated_pfts(this)
+    use PatchType, only : patch
+    class(TestIrrigation), intent(inout) :: this
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation(maxpft=2)
+    patch%itype(bounds%begp) = 2
+    pftcon%irrigated(1:2) = [1.0, 0.0]
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
+
+  end subroutine no_irrigation_for_unirrigated_pfts
+
+  @Test
+  subroutine no_irrigation_for_lai0(this)
+    class(TestIrrigation), intent(inout) :: this
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+    this%elai(bounds%begp) = 0._r8
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
+
+  end subroutine no_irrigation_for_lai0
+
+  @Test
+  subroutine no_irrigation_for_soil_moisture_above_threshold(this)
+    class(TestIrrigation), intent(inout) :: this
+    real(r8) :: h2osoi_target
+    integer :: j
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+    ! Set h2osoi_liq to just a tiny bit below the target in each layer - with the
+    ! assumption that this will make it fall above the threshold for triggering irrigation
+    do j = 1, nlevsoi
+       h2osoi_target = this%irrigation%RelsatToH2osoi( &
+            relsat = this%relsat_target(bounds%begc,j), &
+            eff_porosity = this%eff_porosity(bounds%begc,j), &
+            dz = col%dz(bounds%begc,j))
+       this%h2osoi_liq(bounds%begc,j) = h2osoi_target * 0.99_r8
+    end do
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
+  end subroutine no_irrigation_for_soil_moisture_above_threshold
+
+  @Test
+  subroutine no_irrigation_at_wrong_time(this)
+    class(TestIrrigation), intent(inout) :: this
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+    ! Set previous time to be one time step before the time when we would start irrigating
+    this%time_prev = this%time_prev - dtime
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
+
+  end subroutine no_irrigation_at_wrong_time
+
+  @Test
+  subroutine unlimited_irrigation_for_non_limiting_volr(this)
+    use GridcellType, only : grc
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8), parameter :: irrig_river_volume_threshold = 0.1_r8
+    real(r8) :: total_deficit ! kg m-2 (i.e., mm)
+    real(r8) :: volr_threshold ! m3
+    real(r8) :: expected
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation(test_limit_irrigation=.true., &
+         irrig_river_volume_threshold=irrig_river_volume_threshold)
+
+    call this%computeDeficits(deficits)
+    total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
+
+    ! Set volr to be just above the limiting amount
+    volr_threshold = (total_deficit * grc%area(begg) * mm_times_km2_to_m3) / &
+         (1._r8 - irrig_river_volume_threshold)
+    this%volr(begg) = volr_threshold + 10._r8
+    
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    expected = total_deficit / this%irrigation_params%irrig_length
+    @assertEqual(expected, this%irrigation%qflx_irrig_patch(bounds%begp), tolerance=tol)
+  end subroutine unlimited_irrigation_for_non_limiting_volr
+
+  @Test
+  subroutine limited_irrigation_for_limiting_volr(this)
+    use GridcellType, only : grc
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8), parameter :: irrig_river_volume_threshold = 0.1_r8
+    real(r8) :: total_deficit ! kg m-2 (i.e., mm)
+    real(r8) :: volr_threshold ! m3
+    real(r8) :: expected
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation(test_limit_irrigation=.true., &
+         irrig_river_volume_threshold=irrig_river_volume_threshold)
+
+    call this%computeDeficits(deficits)
+    total_deficit = sum(deficits(bounds%begp,1:nlevsoi))
+
+    ! Set volr to be somewhat below the limiting amount
+    volr_threshold = (total_deficit * grc%area(begg) * mm_times_km2_to_m3) / &
+         (1._r8 - irrig_river_volume_threshold)
+    this%volr(begg) = volr_threshold - 10._r8
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    expected = ((this%volr(begg) * (1._r8 - irrig_river_volume_threshold)) &
+                / grc%area(begg) * m3_over_km2_to_mm) / &
+               this%irrigation_params%irrig_length
+    @assertEqual(expected, this%irrigation%qflx_irrig_patch(bounds%begp), tolerance=tol)
+  end subroutine limited_irrigation_for_limiting_volr
+
+  @Test
+  subroutine irrigation_should_happen_for_big_longitude(this)
+    use GridcellType, only : grc
+    class(TestIrrigation), intent(inout) :: this
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+    ! Use a big longitude and a time_prev that should lead to irrigation at that longitude
+    ! The main point of this is to test the modulo in the local_time calculation
+    grc%londeg(:) = 359.9_r8
+    this%time_prev = this%irrigation_params%irrig_start_time + dtime
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    @assertTrue(this%irrigation%qflx_irrig_patch(bounds%begp) > 0._r8)
+
+  end subroutine irrigation_should_happen_for_big_longitude
+
+  @Test
+  subroutine irrigation_continues_at_same_rate_for_multiple_time_steps(this)
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: expected
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+
+    ! Call irrigation routines
+    ! First call the routines to get irrigation started. Then increment time, and also
+    ! adjust the soil water amount. Irrigation should continue at the original rate.
+    call this%calculateAndApplyIrrigation()
+    call this%computeDeficits(deficits)
+    expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
+    this%time_prev = this%time_prev + dtime
+    this%h2osoi_liq = 100._r8
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    @assertEqual(expected, this%irrigation%qflx_irrig_patch(bounds%begp), tolerance=tol)
+
+  end subroutine irrigation_continues_at_same_rate_for_multiple_time_steps
+
+  @Test
+  subroutine irrigation_continues_for_correct_number_of_time_steps(this)
+    class(TestIrrigation), intent(inout) :: this
+    integer :: time
+    integer :: expected_num_time_steps
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+    ! The following assumes that dtime divides evenly into to irrigation length;
+    ! if not, it will be off by one
+    expected_num_time_steps = this%irrigation_params%irrig_length / dtime
+    
+    ! Ensure that irrigation flux is still non-zero after the expected number of time
+    ! steps
+    do time = 1, expected_num_time_steps
+       call this%calculateAndApplyIrrigation()
+       this%time_prev = this%time_prev + dtime
+    end do
+    @assertTrue(this%irrigation%qflx_irrig_patch(bounds%begp) > 0._r8)
+
+    ! Ensure that irrigation flux goes to 0 in the following time step
+    call this%calculateAndApplyIrrigation()
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
+
+  end subroutine irrigation_continues_for_correct_number_of_time_steps
+  
+  @Test
+  subroutine irrigation_flux_is_correct_on_second_day(this)
+    ! Loops through to a point where irrigation gets to 0, then resets time to the irrig
+    ! start time and does another set of calls to the irrigation routines. Ensures that
+    ! we're back to the intended flux.
+
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: expected
+    integer :: time_prev_orig
+    integer :: time
+    integer :: expected_num_time_steps
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+    time_prev_orig = this%time_prev
+
+    ! Call irrigation routines for long enough that irrigation should go to 0
+    expected_num_time_steps = this%irrigation_params%irrig_length / dtime
+    do time = 1, expected_num_time_steps + 1
+       call this%calculateAndApplyIrrigation()
+       this%time_prev = this%time_prev + dtime
+    end do
+    ! The following assertion is mainly here to make sure the test is working as intended
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
+
+    ! Now reset time, change soil moisture, and make sure that irrigation happens as expected
+    this%time_prev = time_prev_orig
+    this%h2osoi_liq(:,:) = 100._r8
+    call this%calculateAndApplyIrrigation()
+    call this%computeDeficits(deficits)
+    expected = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
+    ! Make sure that the test has been set up reasonably - to give a net deficit
+    @assertLessThan(0._r8, expected)
+    ! Here's the main assertion:
+    @assertEqual(expected, this%irrigation%qflx_irrig_patch(bounds%begp), tolerance=tol)
+
+  end subroutine irrigation_flux_is_correct_on_second_day
+    
+  @Test
+  subroutine irrigation_excludes_deep_layers(this)
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    integer :: nlevirrig
+    real(r8) :: expected
+
+    ! Setup
+    call this%setupSinglePatch()
+    nlevirrig = nlevsoi - 1
+    call this%setupIrrigation(nlevirrig=nlevirrig)
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    ! Now on to the real assertion
+    expected = sum(deficits(bounds%begp,1:nlevirrig)) / this%irrigation_params%irrig_length
+    @assertEqual(expected, this%irrigation%qflx_irrig_patch(bounds%begp), tolerance=tol)
+  end subroutine irrigation_excludes_deep_layers
+
+  @Test
+  subroutine irrigation_excludes_bedrock_layers(this)
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: expected
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+    ! Make the last layer a bedrock layer:
+    col%nbedrock(bounds%begc) = nlevsoi - 1
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    expected = sum(deficits(bounds%begp,1:(nlevsoi-1))) / this%irrigation_params%irrig_length
+    @assertEqual(expected, this%irrigation%qflx_irrig_patch(bounds%begp), tolerance=tol)
+  end subroutine irrigation_excludes_bedrock_layers
+
+  @Test
+  subroutine no_irrigation_for_frozen_soil(this)
+    class(TestIrrigation), intent(inout) :: this
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+    this%t_soisno(bounds%begc, :) = 272._r8
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
+
+  end subroutine no_irrigation_for_frozen_soil
+
+  @Test
+  subroutine no_irrigation_below_frozen_soil_layer(this)
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: expected
+
+    ! Setup
+    call this%setupSinglePatch()
+    call this%setupIrrigation()
+    this%t_soisno(bounds%begc, 2) = 272._r8
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    ! Only include deficit from top layer, since 2nd layer is frozen
+    expected = deficits(bounds%begp, 1) / this%irrigation_params%irrig_length
+    @assertEqual(expected, this%irrigation%qflx_irrig_patch(bounds%begp))
+
+  end subroutine no_irrigation_below_frozen_soil_layer
+
+  ! ------------------------------------------------------------------------
+  ! Tests on multiple patches
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine irrigation_flux_is_correct_for_multiple_cols(this)
+    use unittestFilterBuilderMod, only : filter_from_range
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: expected1, expected2
+    real(r8), parameter :: wt1 = 0.75_r8
+    real(r8), parameter :: wt2 = 0.25_r8
+
+    ! Setup grid
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=1.0_r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=wt1)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1._r8)
+    call unittest_add_column(my_li=li, ctype=2, wtlunit=wt2)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1._r8)
+    call unittest_subgrid_setup_end()
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
+
+    ! Other setup
+    call this%setupIrrigation()
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    expected1 = sum(deficits(bounds%begp,1:nlevsoi)) / this%irrigation_params%irrig_length
+    @assertEqual(expected1, this%irrigation%qflx_irrig_patch(bounds%begp), tolerance=tol)
+    expected2 = sum(deficits(bounds%endp,1:nlevsoi)) / this%irrigation_params%irrig_length
+    @assertEqual(expected2, this%irrigation%qflx_irrig_patch(bounds%endp), tolerance=tol)
+    ! Make sure this test had some power, by ensuring that the two points differ:
+    @assertTrue(expected1 /= expected2)
+
+  end subroutine irrigation_flux_is_correct_for_multiple_cols
+
+  @Test
+  subroutine multiple_patches_per_column(this)
+    ! If we have multiple patches on a column, some with irrigation and some without,
+    ! make sure (a) irrigation still happens, and (b) the column-level average irrigation
+    ! flux is computed correctly
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), parameter :: wt_unirrig_1 = 0.25_r8
+    real(r8), parameter :: wt_irrig = 0.5_r8
+    real(r8), parameter :: wt_unirrig_2 = 0.25_r8
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: total_deficit
+    real(r8) :: col_total_deficit
+    real(r8) :: expected_col_flux
+
+    ! Setup grid
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=1._r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=1._r8)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=wt_unirrig_1)
+    call unittest_add_patch(my_ci=ci, ptype=2, wtcol=wt_irrig)
+    call unittest_add_patch(my_ci=ci, ptype=3, wtcol=wt_unirrig_2)
+    call unittest_subgrid_setup_end()
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
+
+    ! Other setup
+    call this%setupIrrigation(maxpft=3)
+    pftcon%irrigated(1:3) = [0.0, 1.0, 0.0]
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    ! Note that only the second patch contributes to the average, because it is the only
+    ! irrigated patch
+    total_deficit = sum(deficits(bounds%begp+1, 1:nlevsoi))
+    col_total_deficit = total_deficit * wt_irrig
+    expected_col_flux = col_total_deficit / this%irrigation_params%irrig_length
+    @assertEqual(expected_col_flux, this%irrigation%qflx_irrig_col(bounds%begc), tolerance=tol)
+  end subroutine multiple_patches_per_column
+
+  @Test
+  subroutine irrigation_only_happens_within_filter(this)
+    class(TestIrrigation), intent(inout) :: this
+
+    ! Setup grid: 3 columns, each with one patch
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=1.0_r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=0.5_r8)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1.0_r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=0.25_r8)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1.0_r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=0.25_r8)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1.0_r8)
+    call unittest_subgrid_setup_end()
+    this%numf = 1
+    allocate(this%filter(1))
+    this%filter = [bounds%begp + 1]
+
+    ! Other setup
+    call this%setupIrrigation()
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    ! Irrigation happens within filter
+    @assertTrue(this%irrigation%qflx_irrig_patch(bounds%begp + 1) > 0._r8)
+    ! Irrigation does NOT happen outside filter
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%endp))
+    
+  end subroutine irrigation_only_happens_within_filter
+
+  @Test
+  subroutine test_multiple_patches_with_different_frozen_soil(this)
+    ! The point of this test is to exercise the somewhat complex logic for determining
+    ! frozen soil across multiple patches, due to the nesting of the p loop inside the
+    ! nlevsoi loop (rather than the other way around).
+
+    use unittestFilterBuilderMod, only : filter_from_range
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: expected
+
+    ! Setup grid: 3 columns, each with one patch
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=1.0_r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=0.5_r8)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1.0_r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=0.25_r8)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1.0_r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=0.25_r8)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1.0_r8)
+    call unittest_subgrid_setup_end()
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
+
+    ! Other setup
+    call this%setupIrrigation()
+    ! first column has frozen soil
+    this%t_soisno(bounds%begc, :) = 272._r8
+    ! second column has layer 2 frozen
+    this%t_soisno(bounds%begc+1, 2) = 272._r8
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    call this%computeDeficits(deficits)
+    ! First patch should have no irrigation, because soil is all frozen
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp))
+    ! Second patch should have irrigation just based on top layer, because 2nd layer is frozen
+    expected = deficits(bounds%begp+1, 1) / this%irrigation_params%irrig_length
+    @assertEqual(expected, this%irrigation%qflx_irrig_patch(bounds%begp+1), tolerance=tol)
+    ! Third patch should have irrigation from all layers
+    expected = sum(deficits(bounds%endp,1:nlevsoi)) / this%irrigation_params%irrig_length
+    @assertEqual(expected, this%irrigation%qflx_irrig_patch(bounds%endp), tolerance=tol)
+
+  end subroutine test_multiple_patches_with_different_frozen_soil
+
+  @Test
+  subroutine volr_limiting_with_multiple_columns(this)
+    ! Make sure that volr limiting is applied correctly when there are multiple columns
+    ! on the grid cell - including one that is unirrigated.
+    use unittestFilterBuilderMod, only : filter_from_range
+    use GridcellType, only : grc
+    class(TestIrrigation), intent(inout) :: this
+    real(r8), parameter :: wt1 = 0.1_r8
+    real(r8), parameter :: wt2 = 0.4_r8
+    real(r8), parameter :: wt3 = 0.5_r8  ! unirrigated
+    real(r8), allocatable :: deficits(:,:)
+    real(r8) :: total_deficit1, total_deficit2 ! kg m-2 (i.e., mm)
+    real(r8) :: gridcell_total_deficit ! kg m-2 (i.e., mm)
+    real(r8) :: gridcell_total_deficit_as_volr ! m3
+    real(r8) :: expected1, expected2
+
+    ! Fraction of total gridcell deficit that can be accommodated by volr
+    real(r8), parameter :: volr_fraction = 0.75_r8
+
+    ! Setup grid
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=1.0_r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=wt1)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1._r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=wt2)
+    call unittest_add_patch(my_ci=ci, ptype=1, wtcol=1._r8)
+    call unittest_add_column(my_li=li, ctype=1, wtlunit=wt3)
+    call unittest_add_patch(my_ci=ci, ptype=2, wtcol=1._r8)
+    call unittest_subgrid_setup_end()
+    call filter_from_range(start=bounds%begp, end=bounds%endp, numf=this%numf, filter=this%filter)
+
+    ! Other setup
+    ! Keep irrig_river_volume_threshold set to 0 to simplify the calculations here
+    call this%setupIrrigation(maxpft=2, test_limit_irrigation=.true., &
+         irrig_river_volume_threshold=0._r8)
+    ! The first 2 patches are irrigated, the 3rd is unirrigated
+    pftcon%irrigated(1:2) = [1.0, 0.0]
+
+    call this%computeDeficits(deficits)
+    total_deficit1 = sum(deficits(bounds%begp, 1:nlevsoi))
+    total_deficit2 = sum(deficits(bounds%begp+1, 1:nlevsoi))
+    gridcell_total_deficit = total_deficit1 * wt1 + total_deficit2 * wt2
+    gridcell_total_deficit_as_volr = gridcell_total_deficit * grc%area(begg) * mm_times_km2_to_m3
+    this%volr(begg) = gridcell_total_deficit_as_volr * volr_fraction
+
+    ! Call irrigation routines
+    call this%calculateAndApplyIrrigation()
+
+    ! Check result
+    expected1 = total_deficit1*volr_fraction / this%irrigation_params%irrig_length
+    @assertEqual(expected1, this%irrigation%qflx_irrig_patch(bounds%begp), tolerance=tol)
+    expected2 = total_deficit2*volr_fraction / this%irrigation_params%irrig_length
+    @assertEqual(expected2, this%irrigation%qflx_irrig_patch(bounds%begp+1), tolerance=tol)
+    ! Check of unirrigated patch isn't central to this test, but we might as well check
+    ! it while we're at it:
+    @assertEqual(0._r8, this%irrigation%qflx_irrig_patch(bounds%begp+2))
+  end subroutine volr_limiting_with_multiple_columns
+
+end module test_irrigation

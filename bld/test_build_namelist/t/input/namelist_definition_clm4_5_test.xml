@@ -118,14 +118,6 @@ Number of  multiple elevation classes over glacier points.
 Normally this is ONLY used when running CESM with the active glacier model.
 </entry>
 
-<entry id="glc_smb" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
-If TRUE, calculate surface mass balance for glacier multi-elevation class points.
-If false use growing degree day information for glaciers multi-elevation class points.
-Only works when glc_nec is greater than 0.
-(Only tested with glc_smb=.true., setting it to .false. is NOT tested)
-</entry>
-
 <entry id="glc_do_dynglacier" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, dynamically change areas and topographic heights over glacier points.

@@ -20,7 +20,7 @@ module glc2lndMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar     , only : maxpatch_glcmec
-  use clm_varctl     , only : iulog, glc_smb
+  use clm_varctl     , only : iulog
   use clm_varcon     , only : nameg, spval, ispval
   use abortutils     , only : endrun
   use GridcellType   , only : grc 
@@ -48,7 +48,7 @@ module glc2lndMod
      ! moved out of lnd_import_export into this module, then these two variables could be
      ! made private.
 
-     ! Total ice sheet grid coverage mask, received from glc (0-1)
+     ! Area in which GLC model can accept surface mass balance, received from glc (0-1)
      real(r8), pointer :: icemask_grc (:)   => null()
 
      ! icemask_coupled_fluxes_grc is like icemask_grc, but the mask only contains icesheet
@@ -166,8 +166,8 @@ contains
     
     if (maxpatch_glcmec > 0) then
        this%icemask_grc(begg:endg) = spval
-       call hist_addfld1d (fname='ICE_MASK',  units='unitless',  &
-            avgflag='I', long_name='Ice sheet mask coverage', &
+       call hist_addfld1d (fname='ICE_MODEL_FRACTION',  units='unitless',  &
+            avgflag='I', long_name='Ice sheet model fractional coverage', &
             ptr_gcell=this%icemask_grc)
     end if
 

@@ -33,7 +33,4 @@
 
 <glc_nec>10</glc_nec>
 
-<!-- glc_smb will already be set if glc_nec is set, but set explicitly here -->
-<glc_smb    >.true.</glc_smb>
-
 </namelist_defaults>

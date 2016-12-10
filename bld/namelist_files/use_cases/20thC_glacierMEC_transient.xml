@@ -17,9 +17,6 @@
 
 <glc_nec>10</glc_nec>
 
-<!-- glc_smb will already be set if glc_nec is set, but set explicitly here -->
-<glc_smb    >.true.</glc_smb>
-
 <stream_year_first_ndep phys="clm4_0" bgc="cn"   >1850</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm4_0" bgc="cn"   >2005</stream_year_last_ndep>
 <model_year_align_ndep  phys="clm4_0" bgc="cn"   >1850</model_year_align_ndep>

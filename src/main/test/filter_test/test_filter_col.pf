@@ -93,7 +93,7 @@ contains
     call setup_single_veg_patch(pft_type = 1)
     expected = col_filter_from_index_array(bounds, [ci])
 
-    filter = col_filter_from_logical_array(bounds, logical_col, include_inactive = .false.)
+    filter = col_filter_from_logical_array(bounds, logical_col)
 
     @assertTrue(filter == expected)
   end subroutine logicalArray_true
@@ -109,31 +109,15 @@ contains
     call setup_single_veg_patch(pft_type = 1)
     expected = col_filter_empty(bounds)
 
-    filter = col_filter_from_logical_array(bounds, logical_col, include_inactive = .false.)
+    filter = col_filter_from_logical_array(bounds, logical_col)
 
     @assertTrue(filter == expected)
   end subroutine logicalArray_false
 
   @Test
-  subroutine logicalArray_excludes_inactive(this)
-    ! Test col_filter_from_logical_array with an inactive point
-    class(TestFilterCol), intent(inout) :: this
-    type(filter_col_type) :: filter
-    type(filter_col_type) :: expected
-    logical, parameter :: logical_col(1) = [.true.]
-
-    call setup_single_veg_patch(pft_type = 1)
-    expected = col_filter_empty(bounds)
-    col%active(ci) = .false.
-
-    filter = col_filter_from_logical_array(bounds, logical_col, include_inactive = .false.)
-
-    @assertTrue(filter == expected)
-  end subroutine logicalArray_excludes_inactive
-
-  @Test
-  subroutine logicalArray_includeInactive_includes_inactive(this)
-    ! Test col_filter_from_logical_array with an inactive point, with include_inactive true
+  subroutine logicalArray_includes_inactive(this)
+    ! Test col_filter_from_logical_array with an inactive point: this function should
+    ! ignore the 'active' status of each column
     class(TestFilterCol), intent(inout) :: this
     type(filter_col_type) :: filter
     type(filter_col_type) :: expected
@@ -143,10 +127,10 @@ contains
     expected = col_filter_from_index_array(bounds, [ci])
     col%active(ci) = .false.
 
-    filter = col_filter_from_logical_array(bounds, logical_col, include_inactive = .true.)
+    filter = col_filter_from_logical_array(bounds, logical_col)
 
     @assertTrue(filter == expected)
-  end subroutine logicalArray_includeInactive_includes_inactive
+  end subroutine logicalArray_includes_inactive
 
   @Test
   subroutine logicalArray_multiple_points(this)
@@ -160,10 +144,34 @@ contains
     call setup_ncells_single_veg_patch(ncells = 4, pft_type = 1)
     expected = col_filter_from_index_array(bounds, [bounds%begc, bounds%begc+2])
 
-    filter = col_filter_from_logical_array(bounds, logical_col, include_inactive = .false.)
+    filter = col_filter_from_logical_array(bounds, logical_col)
 
     @assertTrue(filter == expected)
   end subroutine logicalArray_multiple_points
+
+  ! ------------------------------------------------------------------------
+  ! Tests of col_filter_from_logical_array_active_only
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine logicalArrayActiveOnly_multiple_points(this)
+    ! Test col_filter_from_logical_array_active_only with multiple points, some in and
+    ! some out of the filter (either because the logical array is false or because
+    ! 'active' is false
+    class(TestFilterCol), intent(inout) :: this
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected
+    logical, parameter :: logical_col(3) = [.true.,  .true., .false.]
+    logical, parameter :: active_col(3)  = [.false., .true., .true.]
+
+    call setup_ncells_single_veg_patch(ncells = 3, pft_type = 1)
+    col%active(bounds%begc:bounds%endc) = active_col(:)
+    expected = col_filter_from_index_array(bounds, [bounds%begc+1])
+
+    filter = col_filter_from_logical_array_active_only(bounds, logical_col)
+
+    @assertTrue(filter == expected)
+  end subroutine logicalArrayActiveOnly_multiple_points
 
   ! ------------------------------------------------------------------------
   ! Tests of col_filter_from_ltypes

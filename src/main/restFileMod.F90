@@ -18,6 +18,7 @@ module restFileMod
   use clm_instMod      , only : clm_instRest
   use histFileMod      , only : hist_restart_ncd
   use clm_varctl       , only : create_glacier_mec_landunit, iulog, use_ed, use_hydrstress
+  use clm_varctl       , only : create_crop_landunit, irrigate
   use clm_varcon       , only : nameg, namel, namec, namep, nameCohort
   use ncdio_pio        , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
   use ncdio_pio        , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim
@@ -43,6 +44,7 @@ module restFileMod
   private :: restFile_write_pfile       ! Writes restart pointer file
   private :: restFile_closeRestart      ! Close restart file and write restart pointer file
   private :: restFile_dimset
+  private :: restFile_add_flag_metadata ! Add global metadata for some logical flag
   private :: restFile_add_ilun_metadata ! Add global metadata defining landunit types
   private :: restFile_add_icol_metadata ! Add global metadata defining column types
   private :: restFile_add_ipft_metadata ! Add global metadata defining patch types
@@ -547,17 +549,43 @@ contains
     call ncd_putatt(ncid, NCD_GLOBAL, 'surface_dataset', trim(fsurdat))
     call ncd_putatt(ncid, NCD_GLOBAL, 'flanduse_timeseries', trim(get_flanduse_timeseries()))
     call ncd_putatt(ncid, NCD_GLOBAL, 'title', 'CLM Restart information')
-    if (create_glacier_mec_landunit) then
-       call ncd_putatt(ncid, ncd_global, 'created_glacier_mec_landunits', 'true')
-    else
-       call ncd_putatt(ncid, ncd_global, 'created_glacier_mec_landunits', 'false')
-    end if
+
+    call restFile_add_flag_metadata(ncid, create_crop_landunit, 'create_crop_landunit')
+    call restFile_add_flag_metadata(ncid, irrigate, 'irrigate')
+    call restFile_add_flag_metadata(ncid, create_glacier_mec_landunit, 'created_glacier_mec_landunits')
 
     call restFile_add_ipft_metadata(ncid)
     call restFile_add_icol_metadata(ncid)
     call restFile_add_ilun_metadata(ncid)
 
   end subroutine restFile_dimset
+
+  !-----------------------------------------------------------------------
+  subroutine restFile_add_flag_metadata(ncid, flag, flag_name)
+    !
+    ! !DESCRIPTION:
+    ! Add global metadata for some logical flag
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid ! local file id
+    logical          , intent(in)    :: flag ! logical flag
+    character(len=*) , intent(in)    :: flag_name ! name of netcdf attribute
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'restFile_add_flag_metadata'
+    !-----------------------------------------------------------------------
+
+    if (flag) then
+       call ncd_putatt(ncid, ncd_global, flag_name, 'true')
+    else
+       call ncd_putatt(ncid, ncd_global, flag_name, 'false')
+    end if
+
+  end subroutine restFile_add_flag_metadata
+
 
   !-----------------------------------------------------------------------
   subroutine restFile_add_ilun_metadata(ncid)

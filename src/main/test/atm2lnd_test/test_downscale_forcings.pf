@@ -47,8 +47,7 @@ contains
     type(bounds_type), intent(in) :: bounds
 
     filter = col_filter_from_logical_array(bounds, &
-         col_array(.true.), &
-         include_inactive = .true.)
+         col_array(.true.))
   end function DownscaleFilterc
 
   ! ========================================================================
