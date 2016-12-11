@@ -327,9 +327,8 @@ module CNVegCarbonFluxType
 
      ! Summary C fluxes. 
      real(r8), pointer :: nep_col        (:) ! (gC/m2/s) net ecosystem production, excludes fire, landuse, and harvest flux, positive for sink
-     real(r8), pointer :: nbp_col        (:) ! (gC/m2/s) net biome production, includes fire, excludes landuse and harvest flux, positive for sink  
-     real(r8), pointer :: nee_col        (:) ! (gC/m2/s) net ecosystem exchange of carbon, includes fire and hrv_xsmrpool, excludes landuse and harvest flux, positive for source 
-     real(r8), pointer :: net_carbon_exchange_grc(:) ! (gC/m2/s) net carbon exchange between land and atmosphere, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for source
+     real(r8), pointer :: nbp_grc        (:) ! (gC/m2/s) net biome production, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for sink (same as net carbon exchange between land and atmosphere)
+     real(r8), pointer :: nee_grc        (:) ! (gC/m2/s) net ecosystem exchange of carbon, includes fire and hrv_xsmrpool, excludes landuse and harvest flux, positive for source 
 
      ! Dynamic landcover fluxnes
      real(r8), pointer :: landuseflux_grc(:) ! (gC/m2/s) dwt_closs+product_closs
@@ -682,9 +681,8 @@ contains
     allocate(this%lag_npp_col             (begc:endc)) ; this%lag_npp_col             (:) = spval
 
     allocate(this%nep_col                 (begc:endc)) ; this%nep_col                 (:) = nan
-    allocate(this%nbp_col                 (begc:endc)) ; this%nbp_col                 (:) = nan
-    allocate(this%nee_col                 (begc:endc)) ; this%nee_col                 (:) = nan
-    allocate(this%net_carbon_exchange_grc (begg:endg)) ; this%net_carbon_exchange_grc (:) = nan
+    allocate(this%nbp_grc                 (begg:endg)) ; this%nbp_grc                 (:) = nan
+    allocate(this%nee_grc                 (begg:endg)) ; this%nee_grc                 (:) = nan
     allocate(this%landuseflux_grc         (begg:endg)) ; this%landuseflux_grc         (:) = nan
     allocate(this%npp_Nactive_patch       (begp:endp)) ; this%npp_Nactive_patch       (:) = nan
     allocate(this%npp_burnedoff_patch     (begp:endp)) ; this%npp_burnedoff_patch     (:) = nan
@@ -2848,22 +2846,18 @@ contains
             avgflag='A', long_name='net ecosystem production, excludes fire, landuse, and harvest flux, positive for sink', &
             ptr_col=this%nep_col)
 
-       this%nbp_col(begc:endc) = spval
+       this%nbp_grc(begg:endg) = spval
        call hist_addfld1d (fname='NBP', units='gC/m^2/s', &
-            avgflag='A', long_name='net biome production, includes fire, excludes landuse and harvest flux, positive for sink', &
-            ptr_col=this%nbp_col)
+            avgflag='A', long_name='net biome production, includes fire, landuse,'&
+            //' harvest and hrv_xsmrpool flux, positive for sink'&
+            //' (same as net carbon exchange between land and atmosphere)', &
+            ptr_gcell=this%nbp_grc)
 
-       this%nee_col(begc:endc) = spval
+       this%nee_grc(begg:endg) = spval
        call hist_addfld1d (fname='NEE', units='gC/m^2/s', &
             avgflag='A', long_name='net ecosystem exchange of carbon, includes fire and hrv_xsmrpool,'&
             //' excludes landuse and harvest flux, positive for source', &
-            ptr_col=this%nee_col)
-
-       this%net_carbon_exchange_grc(begg:endg) = spval
-       call hist_addfld1d (fname='NET_CARBON_EXCHANGE', units='gC/m^2/s', &
-            avgflag='A', long_name='net carbon exchange between land and atmosphere, includes fire, landuse,'&
-            //' harvest and hrv_xsmrpool flux, positive for source', &
-            ptr_gcell=this%net_carbon_exchange_grc)
+            ptr_gcell=this%nee_grc)
 
        this%landuseflux_grc(begg:endg) = spval
        call hist_addfld1d (fname='LAND_USE_FLUX', units='gC/m^2/s', &
@@ -2980,10 +2974,10 @@ contains
              avgflag='A', long_name='C13 net ecosystem production, excludes fire flux, positive for sink', &
              ptr_col=this%nep_col)
 
-        this%nee_col(begc:endc) = spval
+        this%nee_grc(begg:endg) = spval
         call hist_addfld1d (fname='C13_NEE', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 net ecosystem exchange of carbon, includes fire flux, positive for source', &
-             ptr_col=this%nee_col)
+             ptr_gcell=this%nee_grc)
 
     endif
 
@@ -3095,10 +3089,10 @@ contains
              avgflag='A', long_name='C14 net ecosystem production, excludes fire flux, positive for sink', &
              ptr_col=this%nep_col)
 
-        this%nee_col(begc:endc) = spval
+        this%nee_grc(begg:endg) = spval
         call hist_addfld1d (fname='C14_NEE', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 net ecosystem exchange of carbon, includes fire flux, positive for source', &
-             ptr_col=this%nee_col)
+             ptr_gcell=this%nee_grc)
 
     endif
 
@@ -3712,8 +3706,6 @@ contains
        this%hrv_xsmrpool_to_atm_col(i) = value_column
 
        this%nep_col(i)                 = value_column
-       this%nbp_col(i)                 = value_column
-       this%nee_col(i)                 = value_column
 
     end do
 
@@ -3791,8 +3783,10 @@ contains
     integer  :: fp,fc           ! lake filter indices
     real(r8) :: nfixlags, dtime ! temp variables for making lagged npp
     real(r8) :: maxdepth        ! depth to integrate soil variables
+    real(r8) :: nep_grc(bounds%begg:bounds%endg)        ! nep_col averaged to gridcell
+    real(r8) :: fire_closs_grc(bounds%begg:bounds%endg) ! fire_closs_col averaged to gridcell
+    real(r8) :: hrv_xsmrpool_to_atm_grc(bounds%begg:bounds%endg) ! hrv_xsmrpool_to_atm_col averaged to gridcell
     real(r8) :: dwt_closs_grc(bounds%begg:bounds%endg)  ! dwt_closs_col averaged to gridcell
-    real(r8) :: nee_grc(bounds%begg:bounds%endg)        ! nee_col averaged to gridcell
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(product_closs_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
@@ -4243,27 +4237,25 @@ contains
             this%gpp_col(c) - &
             this%er_col(c)
 
-       ! net biome production of carbon, includes depletion from fire flux,
-       ! positive for sink (NBP)
-       this%nbp_col(c) =  &
-            this%nep_col(c)        - &
-            this%fire_closs_col(c)
-       ! Version to use with product loss from grid cell subtracted out
-       ! Do we need to worry about column weights here?
-       !this%nbp_col(c) =  &
-       !     this%nep_col(c)        - &
-       !     this%fire_closs_col(c) - &
-       !     this%dwt_closs_col(c)  - &
-       !     product_closs_grc(g)
-
-       ! net ecosystem exchange of carbon, includes fire flux and hrv_xsmrpool flux,
-       ! positive for source (NEE)
-       this%nee_col(c) = &
-            -this%nep_col(c)          + &
-            this%fire_closs_col(c)    + &
-            this%hrv_xsmrpool_to_atm_col(c)
-
     end do
+
+    call c2g( bounds = bounds, &
+         carr = this%nep_col(bounds%begc:bounds%endc), &
+         garr = nep_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+
+    call c2g( bounds = bounds, &
+         carr = this%fire_closs_col(bounds%begc:bounds%endc), &
+         garr = fire_closs_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+
+    call c2g( bounds = bounds, &
+         carr = this%hrv_xsmrpool_to_atm_col(bounds%begc:bounds%endc), &
+         garr = hrv_xsmrpool_to_atm_grc(bounds%begg:bounds%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
 
     call c2g( bounds = bounds, &
          carr = this%dwt_closs_col(bounds%begc:bounds%endc), &
@@ -4271,19 +4263,21 @@ contains
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
 
-    call c2g( bounds = bounds, &
-         carr = this%nee_col(bounds%begc:bounds%endc), &
-         garr = nee_grc(bounds%begg:bounds%endg), &
-         c2l_scale_type = 'unity', &
-         l2g_scale_type = 'unity')
-
     do g = bounds%begg, bounds%endg
+       ! net ecosystem exchange of carbon, includes fire flux and hrv_xsmrpool flux,
+       ! positive for source (NEE)
+       this%nee_grc(g) = &
+            -nep_grc(g)       + &
+            fire_closs_grc(g) + &
+            hrv_xsmrpool_to_atm_grc(g)
+
        this%landuseflux_grc(g) = &
             dwt_closs_grc(g)   + &
             product_closs_grc(g)
 
-       this%net_carbon_exchange_grc(g) = &
-            nee_grc(g)                 + &
+       ! net biome production of carbon, positive for sink
+       this%nbp_grc(g) = &
+            -this%nee_grc(g)        - &
             this%landuseflux_grc(g)
     end do
 

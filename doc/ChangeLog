@@ -1,4 +1,157 @@
 ===============================================================
+Tag name:  clm4_5_13_r209
+Originator(s):  sacks (Bill Sacks)
+Date: Sun Dec 11 06:09:22 MST 2016
+One-line Summary: Change definition of NBP; bring back some r205 changes that were lost in r207
+
+Purpose of changes
+------------------
+
+Changes definition of NBP to match the definition used by CMIP: Now NBP includes
+all terms that contribute to the net carbon exchange between land and
+atmosphere.
+
+Also, moves both NBP and NEE diagnostics to the gridcell level, rather than the
+column level - so you can no longer see column-by-column values for these
+diagnostics. The move of NBP to gridcell-level is needed because it now includes
+some gridcell-level quantities; the move of NEE to gridcell-level is needed to
+support some upcoming changes.
+
+Removes NET_CARBON_EXCHANGE diagnostic output because this is now redundant with
+NBP.
+
+Also, brings back some r205 changes that were lost in r207 - most notably, the
+fix for the MEGAN crash due to negative intracellular co2.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): 2371: Change definition of NBP
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- Changes definition of NBP diagnostic output; also, NBP is now defined at the gridcell level
+- Removes NET_CARBON_EXCHANGE diagnostic output
+- NEE diagnostic output is now defined at the gridcell level
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self; but change in definition of NBP was reviewed conceptually by Dave Lawrence
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass; baseline comparison failures as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_13_r208
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM50 change answers as noted below
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Most changes are roundoff-level changes in diagnostics and in FCO2 sent to
+      atmosphere; larger than roundoff-level changes in the diagnostic field
+      NBP; potentially larger-than-roundoff level changes in MEG_isoprene
+
+      Roundoff-level diffs in FCO2 (sent to atmosphere), NEE, C13_NEE, C14_NEE
+
+      NBP diagnostic field: roundoff-level change for many cases; larger than
+      roundoff for transient, crop, or year-2000 using initial conditions from a
+      transient case (due to non-zero product pools)
+
+      Small diffs in MEG_isoprene in
+      SMS_Lm1.f09_g16_gl4.IG1850CRUCLM50BGC.yellowstone_intel.clm-clm50KitchenSink,
+      due to bringing back the fix for Megan. (In principle, this could show up
+      in other cases as well.)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Change definition of NBP, and other changes to carbon flux diagnostics
+          as noted above
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+
+========= Bring back fix for Megan crash (prevent negative intracellular CO2)
+          that was added in r205 and accidentally dropped in r207; also, change
+          1. to 1._r8
+M       components/clm/src/biogeophys/PhotosynthesisMod.F90
+
+========= Bring back SNO_TK_ICE diagnostic field that was added in r205 and
+          accidentally dropped in r207
+M       components/clm/src/biogeophys/SoilStateType.F90
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_13_r208
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Dec 10 15:00:21 MST 2016

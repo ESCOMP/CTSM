@@ -998,7 +998,7 @@ contains
 
     if (use_cn) then
        net_carbon_exchange_grc(bounds%begg:bounds%endg) = &
-            this%cnveg_carbonflux_inst%net_carbon_exchange_grc(bounds%begg:bounds%endg)
+            -this%cnveg_carbonflux_inst%nbp_grc(bounds%begg:bounds%endg)
     else
        net_carbon_exchange_grc(bounds%begg:bounds%endg) = 0._r8
     end if

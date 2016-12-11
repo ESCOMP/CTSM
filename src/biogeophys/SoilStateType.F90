@@ -278,6 +278,11 @@ contains
          avgflag='A', long_name='Thermal conductivity', &
          ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
+    call hist_addfld2d (fname='SNO_TK_ICE', units='W/m-K', type2d='levsno', &
+         avgflag='A', long_name='Thermal conductivity (ice landunits only)', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
+         l2g_scale_type='ice', default='inactive')
+
     this%hk_l_col(begc:endc,:) = spval
     call hist_addfld2d (fname='HK',  units='mm/s', type2d='levgrnd',  &
          avgflag='A', long_name='hydraulic conductivity (vegetated landunits only)', &

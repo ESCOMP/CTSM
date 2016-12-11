@@ -1503,6 +1503,10 @@ contains
                cs = max(cs,1.e-06_r8)
                ci_z(p,iv) = cair(p) - an(p,iv) * forc_pbot(c) * (1.4_r8*gs_mol(p,iv)+1.6_r8*gb_mol(p)) / (gb_mol(p)*gs_mol(p,iv))
 
+               ! Trap for values of ci_z less than 1.e-06.  This is needed for
+               ! Megan (which can crash with negative values)
+               ci_z(p,iv) = max( ci_z(p,iv), 1.e-06_r8 )
+
                ! Convert gs_mol (umol H2O/m**2/s) to gs (m/s) and then to rs (s/m)
 
                gs = gs_mol(p,iv) / cf
@@ -2636,12 +2640,12 @@ contains
             soil_conductance_patch(p,j) = soil_conductance
 
 ! sum resistances in soil and root
-            rs_resis = 1./soil_conductance + 1./root_conductance
+            rs_resis = 1._r8/soil_conductance + 1._r8/root_conductance
 
 ! conductance is inverse resistance
 ! explicitly set conductance to zero for top soil layer
             if(rai(j)*rootfr(p,j) > 0._r8 .and. j > 1) then
-               k_soil_root(p,j) =  1./rs_resis
+               k_soil_root(p,j) =  1._r8/rs_resis
             else
                k_soil_root(p,j) =  0.
             endif
@@ -3092,11 +3096,19 @@ contains
                                 (1.4_r8*gs_mol_sun(p,iv)+1.6_r8*gb_mol(p)) / &
                                 (gb_mol(p)*gs_mol_sun(p,iv))
 
+               ! Trap for values of ci_z_sun less than 1.e-06.  This is needed for
+               ! Megan (which can crash with negative values)
+               ci_z_sun(p,iv) = max( ci_z_sun(p,iv), 1.e-06_r8 )
+
                cs_sha = cair(p) - 1.4_r8/gb_mol(p) * an_sha(p,iv) * forc_pbot(c)
                cs_sha = max(cs_sha,1.e-06_r8)
                ci_z_sha(p,iv) = cair(p) - an_sha(p,iv) * forc_pbot(c) * &
                                 (1.4_r8*gs_mol_sha(p,iv)+1.6_r8*gb_mol(p)) / &
                                 (gb_mol(p)*gs_mol_sha(p,iv))
+
+               ! Trap for values of ci_z_sha less than 1.e-06.  This is needed for
+               ! Megan (which can crash with negative values)
+               ci_z_sha(p,iv) = max( ci_z_sha(p,iv), 1.e-06_r8 )
 
                ! Convert gs_mol (umol H2O/m**2/s) to gs (m/s) and then to rs (s/m)
 
