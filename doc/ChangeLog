@@ -1,4 +1,96 @@
 ===============================================================
+Tag name:  clm4_5_13_r210
+Originator(s):  sacks (Bill Sacks)
+Date: Sat Dec 17 05:43:34 MST 2016
+One-line Summary: Update cime to cesm2_0_beta04 version
+
+Purpose of changes
+------------------
+
+Update cime to version used in cesm2_0_beta04
+
+Main motivation is to get the fix for the problem where manual modifications to
+user_nl files in a test case get overwritten.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - pass
+       ran build-namelist tests without compare or generate - all passed
+       ran prove test_build_namelist.pl - pass
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - pass
+
+    (NLCOMP changes for IG tests; this was expected)
+
+CLM tag used for the baseline comparisons: clm4_5_13_r209
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+- cime: cime5.2.0-alpha.7 -> cime5.2.0-alpha.9
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Update cime from cime5.2.0-alpha.7 to cime5.2.0-alpha.9 
+M       SVN_EXTERNAL_DIRECTORIES
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_13_r209
 Originator(s):  sacks (Bill Sacks)
 Date: Sun Dec 11 06:09:22 MST 2016
