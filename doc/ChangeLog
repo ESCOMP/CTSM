@@ -1,4 +1,21 @@
 ===============================================================
+Tag name:  clm4_5_14_r212
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Dec 22 16:06:09 MST 2016
+One-line Summary: Bump science version number due to changes in clm4_5_13_r211
+
+Purpose of changes
+------------------
+
+Bump science version number only. This is the same code base as
+clm4_5_13_r211. No additional testing was done.
+
+clm4_5_13_r211 has a significant change in behavior for transient cases, for
+CLM45 as well as CLM50 cases. Thus, we are incrementing the science version
+number.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_13_r211
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Dec 22 13:46:52 MST 2016
