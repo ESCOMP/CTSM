@@ -12,7 +12,7 @@ module EnergyFluxType
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use PatchType      , only : patch                
-  use AnnualFluxDribbler, only : annual_flux_dribbler_type
+  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   !
   implicit none
   save
@@ -260,7 +260,7 @@ contains
     allocate( this%errlon_patch            (begp:endp))             ; this%errlon_patch            (:)   = nan
     allocate( this%errlon_col              (begc:endc))             ; this%errlon_col              (:)   = nan
 
-    this%eflx_dynbal_dribbler = annual_flux_dribbler_type( &
+    this%eflx_dynbal_dribbler = annual_flux_dribbler_gridcell( &
          bounds = bounds, &
          name = 'eflx_dynbal', &
          units = 'J/m**2')

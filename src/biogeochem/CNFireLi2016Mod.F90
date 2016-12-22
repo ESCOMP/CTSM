@@ -185,7 +185,7 @@ contains
          prec60             => atm2lnd_inst%prec60_patch                       , & ! Input:  [real(r8) (:)     ]  60-day running mean of tot. precipitation         
          prec10             => atm2lnd_inst%prec10_patch                       , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation         
          rh30               => atm2lnd_inst%rh30_patch                         , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation 
-         lfpftd             => cnveg_state_inst%lfpftd_patch                   , & ! Input:  [real(r8) (:)     ]  decrease of patch weight (0-1) on the col. for dt
+         dwt_smoothed       => cnveg_state_inst%dwt_smoothed_patch             , & ! Input:  [real(r8) (:)     ]  change in patch weight (-1 to 1) on the col., smoothed over the year
          cropf_col          => cnveg_state_inst%cropf_col                      , & ! Input:  [real(r8) (:)     ]  cropland fraction in veg column                   
          gdp_lf             => cnveg_state_inst%gdp_lf_col                     , & ! Input:  [real(r8) (:)     ]  gdp data                                          
          peatf_lf           => cnveg_state_inst%peatf_lf_col                   , & ! Input:  [real(r8) (:)     ]  peatland fraction data                            
@@ -358,16 +358,55 @@ contains
                        wtlf(c)      = wtlf(c)+patch%wtcol(p)
                     end if
                  end if
+
+                 ! NOTE(wjs, 2016-12-15) These calculations of the fraction of evergreen
+                 ! and deciduous tropical trees (used to determine if a column is
+                 ! tropical closed forest) use the current fractions. However, I think
+                 ! they are used in code that applies to land cover change. Note that
+                 ! land cover change is currently generated on the first time step of the
+                 ! year (even though the fire code sees the annually-smoothed dwt). Thus,
+                 ! I think that, for this to be totally consistent, this code should
+                 ! consider the fractional coverage of each PFT prior to the relevant
+                 ! land cover change event. (These fractions could be computed in the
+                 ! code that handles land cover change, so that the fire code remains
+                 ! agnostic to exactly how and when land cover change happens.)
+                 !
+                 ! For example, if a year started with fractional coverages of
+                 ! nbrdlf_evr_trp_tree = 0.35 and nbrdlf_dcd_trp_tree = 0.35, but then
+                 ! the start-of-year land cover change reduced both of these to 0.2: The
+                 ! current code would consider the column to NOT be tropical closed
+                 ! forest (because nbrdlf_evr_trp_tree+nbrdlf_dcd_trp_tree < 0.6),
+                 ! whereas in fact the land cover change occurred when the column *was*
+                 ! tropical closed forest.
                  if( patch%itype(p) == nbrdlf_evr_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
                     trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)
                  end if
                  if( patch%itype(p) == nbrdlf_dcd_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
                     trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)
                  end if
+
                  if (do_transient_pfts) then
                     if( patch%itype(p) == nbrdlf_evr_trp_tree .or. patch%itype(p) == nbrdlf_dcd_trp_tree )then
-                       if(lfpftd(p) > 0._r8)then
-                          dtrotr_col(c)=dtrotr_col(c)+lfpftd(p)*col%wtgcell(c)
+                       if(dwt_smoothed(p) < 0._r8)then
+                          ! Land cover change in CLM happens all at once on the first time
+                          ! step of the year. However, the fire code needs deforestation
+                          ! rates throughout the year, in order to combine these
+                          ! deforestation rates with the current season's climate. So we
+                          ! use a smoothed version of dwt.
+                          !
+                          ! This isn't ideal, because the carbon stocks that the fire code
+                          ! is operating on will have decreased by the full annual amount
+                          ! before the fire code does anything. But the biggest effect of
+                          ! these deforestation fires is as a trigger for other fires, and
+                          ! the C fluxes are merely diagnostic so don't need to be
+                          ! conservative, so this isn't a big issue.
+                          !
+                          ! (Actually, it would be even better if the fire code had a
+                          ! realistic breakdown of annual deforestation into the
+                          ! different seasons. But having deforestation spread evenly
+                          ! throughout the year is much better than having it all
+                          ! concentrated on January 1.)
+                          dtrotr_col(c)=dtrotr_col(c)-dwt_smoothed(p)*col%wtgcell(c)
                        end if
                     end if
                  end if

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_13_r211    sacks 12/22/2016 Apply transient land cover and harvest all at once in first time step of year
   clm4_5_13_r210    sacks 12/17/2016 Update cime to cesm2_0_beta04 version
   clm4_5_13_r209    sacks 12/11/2016 Change definition of NBP; bring back some r205 changes that were lost in r207
   clm4_5_13_r208    sacks 12/10/2016 Rework irrigation; remove glc_smb logical

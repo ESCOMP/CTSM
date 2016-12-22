@@ -999,7 +999,8 @@ contains
 
     this%dwt_conv_nflux_col(begc:endc) = spval
     call hist_addfld1d (fname='DWT_CONV_NFLUX', units='gN/m^2/s', &
-         avgflag='A', long_name='conversion N flux (immediate loss to atm)', &
+         avgflag='A', &
+         long_name='conversion N flux (immediate loss to atm) (0 at all times except first timestep of year)', &
          ptr_col=this%dwt_conv_nflux_col)
 
     this%dwt_frootn_to_litr_met_n_col(begc:endc,:) = spval
@@ -1029,7 +1030,8 @@ contains
 
     this%dwt_nloss_col(begc:endc) = spval
     call hist_addfld1d (fname='DWT_NLOSS', units='gN/m^2/s', &
-         avgflag='A', long_name='total nitrogen loss from landcover conversion', &
+         avgflag='A', &
+         long_name='total nitrogen loss from landcover conversion (0 at all times except first timestep of year)', &
          ptr_col=this%dwt_nloss_col)
 
     this%plant_ndemand_patch(begp:endp) = spval

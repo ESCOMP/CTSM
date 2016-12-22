@@ -442,6 +442,7 @@ Allowed values are:
 'single_at_atm_topo': glacier landunits in these grid cells have a single column,
    whose elevation matches the atmosphere's topographic height (so that there is no
    adjustment due to downscaling)
+Behavior of 'virtual' is required in the region where we have an ice sheet model
 Only applies when glc_nec is greater than 0.
 </entry>
 

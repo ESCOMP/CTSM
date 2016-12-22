@@ -9,8 +9,6 @@ module AnnualFluxDribbler
   ! transient landcover changes that happen at the year boundary), but are meant to be
   ! dribbled in evenly throughout the year.
   !
-  ! Assumes that these fluxes are defined at the gridcell level.
-  !
   ! This assumes that the once-per-year fluxes are generated on the first timestep of the
   ! year. Any flux given on the first timestep of the year is dribbled evenly for every
   ! timestep of the coming year. Any flux given on other timesteps is applied entirely in
@@ -40,6 +38,9 @@ module AnnualFluxDribbler
   !     flux, based on the delta passed in to set_curr_delta in this timestep, if this is
   !     not the start-of-year timestep.
   !
+  !     Alternatively, you can call mydribbler%get_dribbled_delta, if you need the result as
+  !     a delta over the time step rather than as a per-second flux.
+  !
   ! And, for the sake of checking conservation:
   !
   !   - To get gridcell water (or whatever) content at the start of the time step:
@@ -60,10 +61,12 @@ module AnnualFluxDribbler
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use abortutils       , only : endrun
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use decompMod        , only : bounds_type
-  use clm_varcon       , only : secspday
+  use decompMod        , only : bounds_type, get_beg, get_end
+  use decompMod        , only : BOUNDS_SUBGRID_GRIDCELL, BOUNDS_SUBGRID_PATCH
+  use clm_varcon       , only : secspday, nameg, namep
   use clm_time_manager , only : get_days_per_year, get_step_size_real, is_beg_curr_year
-  use clm_time_manager , only : get_curr_yearfrac, get_prev_yearfrac
+  use clm_time_manager , only : get_curr_yearfrac, get_prev_yearfrac, get_prev_date
+  use clm_time_manager , only : is_first_step
   !
   implicit none
   private
@@ -74,6 +77,7 @@ module AnnualFluxDribbler
   ! (If we used allocatable characters, these max lengths could be removed
   integer, parameter :: name_maxlen = 128
   integer, parameter :: units_maxlen = 64
+  integer, parameter :: subgrid_maxlen = 64
 
   ! !PUBLIC TYPES:
 
@@ -83,12 +87,21 @@ module AnnualFluxDribbler
      character(len=name_maxlen) :: name
      character(len=units_maxlen) :: units
 
+     ! Whether this dribbler allows non-zero deltas on time steps other than the first
+     ! time step of the year
+     logical :: allows_non_annual_delta
+
+     ! Which subgrid level this dribbler is operating at, stored in various ways
+     character(len=subgrid_maxlen) :: dim1name
+     character(len=subgrid_maxlen) :: name_subgrid
+     integer :: bounds_subgrid_level
+
      ! Annual amount to dribble in over the year
-     real(r8), pointer :: amount_to_dribble_grc(:)
+     real(r8), pointer :: amount_to_dribble(:)
 
      ! Amount from the current timestep to pass through to the flux, if this isn't the
      ! first timestep of the year
-     real(r8), pointer :: amount_from_this_timestep_grc(:)
+     real(r8), pointer :: amount_from_this_timestep(:)
    contains
      ! Public infrastructure methods
      procedure, public :: Restart
@@ -97,16 +110,18 @@ module AnnualFluxDribbler
      ! Public science methods
      procedure, public :: set_curr_delta  ! Set the delta state for this time step
      procedure, public :: get_curr_flux   ! Get the current flux for this time step
+     procedure, public :: get_dribbled_delta  ! Similar to get_curr_flux, but gets result as a delta rather than a per-second flux
      procedure, public :: get_amount_left_to_dribble_beg  ! Get the pseudo-state representing the amount that still needs to be dribbled in this and future time steps
      procedure, public :: get_amount_left_to_dribble_end  ! Get the pseudo-state representing the amount that still needs to be dribbled in just future time steps
 
      ! Private methods
+     procedure, private :: allocate_and_initialize_data
+     procedure, private :: set_metadata
      procedure, private :: get_amount_left_to_dribble
   end type annual_flux_dribbler_type
 
-  interface annual_flux_dribbler_type
-     module procedure constructor
-  end interface annual_flux_dribbler_type
+  public :: annual_flux_dribbler_gridcell  ! Creates an annual_flux_dribbler_type object at the gridcell-level
+  public :: annual_flux_dribbler_patch     ! Creates an annual_flux_dribbler_type object at the patch-level
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -114,16 +129,20 @@ module AnnualFluxDribbler
 contains
 
   ! ========================================================================
-  ! Constructor
+  ! Factory methods
+  !
+  ! For now, there are only factory methods for gridcell-level and patch-level. But
+  ! adding the ability to work at other levels is as easy as adding another factory
+  ! method like this (along with some variables in the 'only' clauses of the 'use'
+  ! statements).
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  function constructor(bounds, name, units) result(this)
+  function annual_flux_dribbler_gridcell(bounds, name, units, allows_non_annual_delta) &
+       result(this)
     !
     ! !DESCRIPTION:
-    ! Creates an annual_flux_dribbler_type object
-    !
-    ! This is assumed to operate on gridcell-level quantities
+    ! Creates an annual_flux_dribbler_type object at the gridcell-level
     !
     ! !USES:
     !
@@ -132,35 +151,66 @@ contains
     type(bounds_type), intent(in)   :: bounds
     character(len=*) , intent(in)   :: name   ! name of this object, used for i/o
     character(len=*) , intent(in)   :: units  ! units metadata - should be state units, not flux (i.e., NOT per-second)
+
+    ! If allows_non_annual_delta is .false., then an error check is performed for each
+    ! call to set_curr_delta, ensuring that the delta is 0 at all times other than the
+    ! first time step of the year. This is just provided as a convenient sanity check -
+    ! to ensure that the code is behaving as expected. (However, non-zero deltas are
+    ! always allowed on the first step of the run.)
+    !
+    ! If allows_non_annual_delta is not provided, it is assumed to be .true.
+    logical, intent(in), optional :: allows_non_annual_delta
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'constructor'
+    character(len=*), parameter :: subname = 'annual_flux_dribbler_gridcell'
     !-----------------------------------------------------------------------
 
-    allocate(this%amount_to_dribble_grc(bounds%begg:bounds%endg))
-    this%amount_to_dribble_grc(bounds%begg:bounds%endg) = 0._r8
+    this%dim1name = 'gridcell'
+    this%name_subgrid = nameg
+    this%bounds_subgrid_level = BOUNDS_SUBGRID_GRIDCELL
 
-    allocate(this%amount_from_this_timestep_grc(bounds%begg:bounds%endg))
-    this%amount_from_this_timestep_grc(bounds%begg:bounds%endg) = 0._r8
+    call this%allocate_and_initialize_data(bounds)
+    call this%set_metadata(name, units, allows_non_annual_delta)
 
-    if (len_trim(name) > name_maxlen) then
-       write(iulog,*) 'annual_flux_dribbler_type constructor: name too long'
-       write(iulog,*) trim(name) // ' exceeds max length: ', name_maxlen
-       call endrun(msg='annual_flux_dribbler_type constructor: name too long: ' // &
-            errMsg(sourcefile, __LINE__))
-    end if
-    this%name = trim(name)
+  end function annual_flux_dribbler_gridcell
 
-    if (len_trim(units) > units_maxlen) then
-       write(iulog,*) 'annual_flux_dribbler_type constructor: units too long'
-       write(iulog,*) trim(units) // ' exceeds max length: ', units_maxlen
-       call endrun(msg='annual_flux_dribbler_type constructor: units too long: ' // &
-            errMsg(sourcefile, __LINE__))
-    end if
-    this%units = trim(units)
+  !-----------------------------------------------------------------------
+  function annual_flux_dribbler_patch(bounds, name, units, allows_non_annual_delta) &
+       result(this)
+    !
+    ! !DESCRIPTION:
+    ! Creates an annual_flux_dribbler_type object at the patch-level
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    type(annual_flux_dribbler_type) :: this   ! function result
+    type(bounds_type), intent(in)   :: bounds
+    character(len=*) , intent(in)   :: name   ! name of this object, used for i/o
+    character(len=*) , intent(in)   :: units  ! units metadata - should be state units, not flux (i.e., NOT per-second)
 
-  end function constructor
+    ! If allows_non_annual_delta is .false., then an error check is performed for each
+    ! call to set_curr_delta, ensuring that the delta is 0 at all times other than the
+    ! first time step of the year. This is just provided as a convenient sanity check -
+    ! to ensure that the code is behaving as expected.
+    !
+    ! If allows_non_annual_delta is not provided, it is assumed to be .true.
+    logical, intent(in), optional :: allows_non_annual_delta
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'annual_flux_dribbler_patch'
+    !-----------------------------------------------------------------------
+
+    this%dim1name = 'pft'
+    this%name_subgrid = namep
+    this%bounds_subgrid_level = BOUNDS_SUBGRID_PATCH
+
+    call this%allocate_and_initialize_data(bounds)
+    call this%set_metadata(name, units, allows_non_annual_delta)
+
+  end function annual_flux_dribbler_patch
 
   ! ========================================================================
   ! Public methods
@@ -185,28 +235,51 @@ contains
     ! !ARGUMENTS:
     class(annual_flux_dribbler_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
-    real(r8), intent(in) :: delta(bounds%begg : )
+    real(r8), intent(in) :: delta( get_beg(bounds, this%bounds_subgrid_level) : )
     !
     ! !LOCAL VARIABLES:
-    integer :: g
+    integer :: beg_index, end_index
+    integer :: i
+    integer :: yr, mon, day, tod
 
     character(len=*), parameter :: subname = 'set_curr_delta'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(delta) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    beg_index = lbound(delta, 1)
+    end_index = get_end(bounds, this%bounds_subgrid_level)
+    SHR_ASSERT_ALL((ubound(delta) == (/end_index/)), errMsg(sourcefile, __LINE__))
 
     if (is_beg_curr_year()) then
-       do g = bounds%begg, bounds%endg
-          this%amount_to_dribble_grc(g) = delta(g)
+       do i = beg_index, end_index
+          this%amount_to_dribble(i) = delta(i)
 
           ! On the first timestep of the year, we don't have any pass-through flux. Need
           ! to zero out any previously-set amount_from_this_timestep.
-          this%amount_from_this_timestep_grc(g) = 0._r8
+          this%amount_from_this_timestep(i) = 0._r8
        end do
     else
-       do g = bounds%begg, bounds%endg
-          this%amount_from_this_timestep_grc(g) = delta(g)
+       do i = beg_index, end_index
+          this%amount_from_this_timestep(i) = delta(i)
        end do
+       if (.not. this%allows_non_annual_delta .and. .not. is_first_step()) then
+          do i = beg_index, end_index
+             if (this%amount_from_this_timestep(i) /= 0._r8) then
+                write(iulog,*) subname//' ERROR: found unexpected non-zero delta mid-year'
+                write(iulog,*) 'Dribbler name: ', trim(this%name)
+                write(iulog,*) 'i, delta = ', i, this%amount_from_this_timestep(i)
+                call get_prev_date(yr, mon, day, tod)
+                write(iulog,*) 'Start of time step date (yr, mon, day, tod) = ', &
+                     yr, mon, day, tod
+                write(iulog,*) 'This indicates that some non-zero flux was generated at a time step'
+                write(iulog,*) 'other than the first time step of the year, which this dribbler was told not to expect.'
+                write(iulog,*) 'If this non-zero mid-year delta is expected, then you can suppress this error'
+                write(iulog,*) 'by setting allows_non_annual_delta to .true. when constructing this dribbler.'
+                call endrun(decomp_index=i, clmlevel=this%name_subgrid, &
+                     msg=subname//': found unexpected non-zero delta mid-year: ' // &
+                     errMsg(sourcefile, __LINE__))
+             end if
+          end do
+       end if
     end if
 
   end subroutine set_curr_delta
@@ -229,10 +302,11 @@ contains
     ! !ARGUMENTS:
     class(annual_flux_dribbler_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
-    real(r8), intent(out) :: flux(bounds%begg : )
+    real(r8), intent(out) :: flux( get_beg(bounds, this%bounds_subgrid_level) : )
     !
     ! !LOCAL VARIABLES:
-    integer :: g
+    integer :: beg_index, end_index
+    integer :: i
     real(r8) :: secs_per_year
     real(r8) :: dtime
     real(r8) :: flux_from_dribbling
@@ -241,18 +315,62 @@ contains
     character(len=*), parameter :: subname = 'get_curr_flux'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(flux) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    beg_index = lbound(flux, 1)
+    end_index = get_end(bounds, this%bounds_subgrid_level)
+    SHR_ASSERT_ALL((ubound(flux) == (/end_index/)), errMsg(sourcefile, __LINE__))
 
     secs_per_year = get_days_per_year() * secspday
     dtime = get_step_size_real()
 
-    do g = bounds%begg, bounds%endg
-       flux_from_dribbling = this%amount_to_dribble_grc(g) / secs_per_year
-       flux_from_this_timestep = this%amount_from_this_timestep_grc(g) / dtime
-       flux(g) = flux_from_dribbling + flux_from_this_timestep
+    do i = beg_index, end_index
+       flux_from_dribbling = this%amount_to_dribble(i) / secs_per_year
+       flux_from_this_timestep = this%amount_from_this_timestep(i) / dtime
+       flux(i) = flux_from_dribbling + flux_from_this_timestep
     end do
 
   end subroutine get_curr_flux
+
+  !-----------------------------------------------------------------------
+  subroutine get_dribbled_delta(this, bounds, delta)
+    !
+    ! !DESCRIPTION:
+    ! Gets the current delta for this timestep, and stores it in the delta argument.
+    !
+    ! This is similar to get_curr_flux, but returns the total, dribbled delta over this
+    ! timestep, rather than a per-second flux. See documentation in get_curr_flux for
+    ! more usage details.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(annual_flux_dribbler_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8), intent(out) :: delta( get_beg(bounds, this%bounds_subgrid_level) : )
+    !
+    ! !LOCAL VARIABLES:
+    integer :: beg_index, end_index
+    integer :: i
+    real(r8) :: dtime
+    real(r8), allocatable :: flux(:)
+
+    character(len=*), parameter :: subname = 'get_dribbled_delta'
+    !-----------------------------------------------------------------------
+
+    beg_index = lbound(delta, 1)
+    end_index = get_end(bounds, this%bounds_subgrid_level)
+    SHR_ASSERT_ALL((ubound(delta) == (/end_index/)), errMsg(sourcefile, __LINE__))
+
+    allocate(flux(beg_index:end_index))
+
+    call this%get_curr_flux(bounds, flux(beg_index:end_index))
+
+    dtime = get_step_size_real()
+    do i = beg_index, end_index
+       delta(i) = flux(i) * dtime
+    end do
+
+  end subroutine get_dribbled_delta
+
 
   !-----------------------------------------------------------------------
   subroutine get_amount_left_to_dribble_beg(this, bounds, amount_left_to_dribble)
@@ -277,15 +395,13 @@ contains
     ! !ARGUMENTS:
     class(annual_flux_dribbler_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
-    real(r8), intent(out) :: amount_left_to_dribble(bounds%begg : )
+    real(r8), intent(out) :: amount_left_to_dribble( get_beg(bounds, this%bounds_subgrid_level) : )
     !
     ! !LOCAL VARIABLES:
     real(r8) :: yearfrac
 
     character(len=*), parameter :: subname = 'get_amount_left_to_dribble_beg'
     !-----------------------------------------------------------------------
-
-    SHR_ASSERT_ALL((ubound(amount_left_to_dribble) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     yearfrac = get_prev_yearfrac()
     call this%get_amount_left_to_dribble(bounds, yearfrac, amount_left_to_dribble)
@@ -309,15 +425,13 @@ contains
     ! !ARGUMENTS:
     class(annual_flux_dribbler_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
-    real(r8), intent(out) :: amount_left_to_dribble(bounds%begg : )
+    real(r8), intent(out) :: amount_left_to_dribble( get_beg(bounds, this%bounds_subgrid_level) : )
     !
     ! !LOCAL VARIABLES:
     real(r8) :: yearfrac
 
     character(len=*), parameter :: subname = 'get_amount_left_to_dribble_end'
     !-----------------------------------------------------------------------
-
-    SHR_ASSERT_ALL((ubound(amount_left_to_dribble) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
 
     yearfrac = get_curr_yearfrac()
     call this%get_amount_left_to_dribble(bounds, yearfrac, amount_left_to_dribble)
@@ -347,12 +461,12 @@ contains
 
     restname = trim(this%name) // '_amt_to_dribble'
     call restartvar(ncid=ncid, flag=flag, varname=restname, xtype=ncd_double, &
-         dim1name = 'gridcell', &
+         dim1name = this%dim1name, &
          long_name = 'total amount to dribble over the year for ' // trim(this%name), &
          units = trim(this%units), &
          interpinic_flag = 'interp', &
          readvar = readvar, &
-         data = this%amount_to_dribble_grc)
+         data = this%amount_to_dribble)
 
   end subroutine Restart
 
@@ -372,14 +486,91 @@ contains
     character(len=*), parameter :: subname = 'Clean'
     !-----------------------------------------------------------------------
 
-    deallocate(this%amount_to_dribble_grc)
-    deallocate(this%amount_from_this_timestep_grc)
+    deallocate(this%amount_to_dribble)
+    deallocate(this%amount_from_this_timestep)
 
   end subroutine Clean
 
   ! ========================================================================
   ! Private methods
   ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine allocate_and_initialize_data(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Allocate arrays in this object and set them to initial values
+    !
+    ! Assumes this%bounds_subgrid_level is already set
+    !
+    ! !ARGUMENTS:
+    class(annual_flux_dribbler_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds 
+    !
+    ! !LOCAL VARIABLES:
+    integer :: beg_index, end_index
+
+    character(len=*), parameter :: subname = 'allocate_and_initialize_data'
+    !-----------------------------------------------------------------------
+
+    beg_index = get_beg(bounds, this%bounds_subgrid_level)
+    end_index = get_end(bounds, this%bounds_subgrid_level)
+
+    allocate(this%amount_to_dribble(beg_index:end_index))
+    this%amount_to_dribble(beg_index:end_index) = 0._r8
+
+    allocate(this%amount_from_this_timestep(beg_index:end_index))
+    this%amount_from_this_timestep(beg_index:end_index) = 0._r8
+
+  end subroutine allocate_and_initialize_data
+
+  !-----------------------------------------------------------------------
+  subroutine set_metadata(this, name, units, allows_non_annual_delta)
+    !
+    ! !DESCRIPTION:
+    ! Set metadata in this object
+    !
+    ! !ARGUMENTS:
+    class(annual_flux_dribbler_type), intent(inout) :: this
+    character(len=*) , intent(in)   :: name   ! name of this object, used for i/o
+    character(len=*) , intent(in)   :: units  ! units metadata - should be state units, not flux (i.e., NOT per-second)
+
+    ! If allows_non_annual_delta is .false., then an error check is performed for each
+    ! call to set_curr_delta, ensuring that the delta is 0 at all times other than the
+    ! first time step of the year. This is just provided as a convenient sanity check -
+    ! to ensure that the code is behaving as expected.
+    !
+    ! If allows_non_annual_delta is not provided, it is assumed to be .true.
+    logical, intent(in), optional :: allows_non_annual_delta
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'set_metadata'
+    !-----------------------------------------------------------------------
+
+    if (len_trim(name) > name_maxlen) then
+       write(iulog,*) subname // ': name too long'
+       write(iulog,*) trim(name) // ' exceeds max length: ', name_maxlen
+       call endrun(msg=subname // ': name too long: ' // &
+            errMsg(sourcefile, __LINE__))
+    end if
+    this%name = trim(name)
+
+    if (len_trim(units) > units_maxlen) then
+       write(iulog,*) subname // ': units too long'
+       write(iulog,*) trim(units) // ' exceeds max length: ', units_maxlen
+       call endrun(msg=subname // ': units too long: ' // &
+            errMsg(sourcefile, __LINE__))
+    end if
+    this%units = trim(units)
+
+    if (present(allows_non_annual_delta)) then
+       this%allows_non_annual_delta = allows_non_annual_delta
+    else
+       this%allows_non_annual_delta = .true.
+    end if
+
+  end subroutine set_metadata
 
   !-----------------------------------------------------------------------
   subroutine get_amount_left_to_dribble(this, bounds, yearfrac, amount_left_to_dribble)
@@ -395,23 +586,26 @@ contains
     class(annual_flux_dribbler_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
     real(r8), intent(in)  :: yearfrac
-    real(r8), intent(out) :: amount_left_to_dribble(bounds%begg : )
+    real(r8), intent(out) :: amount_left_to_dribble( get_beg(bounds, this%bounds_subgrid_level) : )
     !
     ! !LOCAL VARIABLES:
-    integer :: g
+    integer :: beg_index, end_index
+    integer :: i
 
     character(len=*), parameter :: subname = 'get_amount_left_to_dribble'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(amount_left_to_dribble) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    beg_index = lbound(amount_left_to_dribble, 1)
+    end_index = get_end(bounds, this%bounds_subgrid_level)
+    SHR_ASSERT_ALL((ubound(amount_left_to_dribble) == (/end_index/)), errMsg(sourcefile, __LINE__))
 
-    do g = bounds%begg, bounds%endg
+    do i = beg_index, end_index
        if (yearfrac < 1.e-15_r8) then
           ! last time step of year; we'd like this to be given a yearfrac of 1 rather than
           ! 0 in this case; since it's given as 0, we need to handle it specially
-          amount_left_to_dribble(g) = 0._r8
+          amount_left_to_dribble(i) = 0._r8
        else
-          amount_left_to_dribble(g) = this%amount_to_dribble_grc(g) * (1._r8 - yearfrac)
+          amount_left_to_dribble(i) = this%amount_to_dribble(i) * (1._r8 - yearfrac)
        end if
     end do
 

@@ -367,7 +367,15 @@ contains
           call this%c14_cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c14', &
                c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
-       call this%cnveg_carbonflux_inst%restart(bounds, ncid, flag=flag)
+
+       call this%cnveg_carbonflux_inst%restart(bounds, ncid, flag=flag, carbon_type='c12')
+       if (use_c13) then
+          call this%c13_cnveg_carbonflux_inst%restart(bounds, ncid, flag=flag, carbon_type='c13')
+       end if
+       if (use_c14) then
+          call this%c14_cnveg_carbonflux_inst%restart(bounds, ncid, flag=flag, carbon_type='c14')
+       end if
+
        call this%cnveg_nitrogenstate_inst%restart(bounds, ncid, flag=flag)
        call this%cnveg_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
 

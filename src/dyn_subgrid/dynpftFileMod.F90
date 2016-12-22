@@ -7,18 +7,18 @@ module dynpftFileMod
   ! Handle reading of the pftdyn dataset, which specifies transient areas of natural Patches
   !
   ! !USES:
-  use shr_kind_mod        , only : r8 => shr_kind_r8
-  use shr_log_mod         , only : errMsg => shr_log_errMsg
-  use decompMod           , only : bounds_type, BOUNDS_LEVEL_PROC
-  use dynFileMod          , only : dyn_file_type
-  use dynVarTimeInterpMod , only : dyn_var_time_interp_type
-  use clm_varctl          , only : iulog
-  use abortutils          , only : endrun
-  use spmdMod             , only : masterproc, mpicom
-  use clm_varcon          , only : grlnd, nameg
-  use LandunitType        , only : lun                
-  use ColumnType          , only : col                
-  use PatchType           , only : patch                
+  use shr_kind_mod          , only : r8 => shr_kind_r8
+  use shr_log_mod           , only : errMsg => shr_log_errMsg
+  use decompMod             , only : bounds_type, BOUNDS_LEVEL_PROC
+  use dynFileMod            , only : dyn_file_type
+  use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
+  use clm_varctl            , only : iulog
+  use abortutils            , only : endrun
+  use spmdMod               , only : masterproc, mpicom
+  use clm_varcon            , only : grlnd, nameg
+  use LandunitType          , only : lun                
+  use ColumnType            , only : col                
+  use PatchType             , only : patch                
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -32,10 +32,10 @@ module dynpftFileMod
   private :: dynpft_read_consistency_nl ! read namelist associated with consistency checks
   !
   ! ! PRIVATE TYPES
-  type(dyn_file_type), target    :: dynpft_file   ! information for the pftdyn file
-  type(dyn_var_time_interp_type) :: wtpatch       ! weight of each patch relative to the natural veg landunit
+  type(dyn_file_type), target      :: dynpft_file   ! information for the pftdyn file
+  type(dyn_var_time_uninterp_type) :: wtpatch       ! weight of each patch relative to the natural veg landunit
 
-  character(len=*), parameter    :: varname = 'PCT_NAT_PFT'  ! name of variable on file
+  character(len=*), parameter      :: varname = 'PCT_NAT_PFT'  ! name of variable on file
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -54,7 +54,7 @@ contains
     ! !USES:
     use clm_varpar     , only : numpft, maxpatch_pft, natpft_size
     use ncdio_pio
-    use dynTimeInfoMod , only : YEAR_POSITION_END_OF_TIMESTEP
+    use dynTimeInfoMod , only : YEAR_POSITION_START_OF_TIMESTEP
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds          ! proc-level bounds
@@ -79,9 +79,10 @@ contains
        write(iulog,*) 'Attempting to read pft dynamic landuse data .....'
     end if
 
-    ! Get the year from the END of the timestep for compatibility with how things were
-    ! done before, even though that doesn't necessarily make the most sense conceptually.
-    dynpft_file = dyn_file_type(dynpft_filename, YEAR_POSITION_END_OF_TIMESTEP)
+    ! Get the year from the START of the timestep; this way, we'll update PFT areas
+    ! starting after the year boundary. This is consistent with the timing of other area
+    ! updates.
+    dynpft_file = dyn_file_type(dynpft_filename, YEAR_POSITION_START_OF_TIMESTEP)
 
     ! Consistency checks
     call check_dim(dynpft_file, 'natpft', natpft_size)
@@ -89,14 +90,14 @@ contains
 
     ! read data PCT_NAT_PFT corresponding to correct year
     !
-    ! Note: if you want to change PCT_NAT_PFT so that it is NOT interpolated, but instead
-    ! jumps to each year's value on Jan 1 of that year, simply change wtpatch to be of type
-    ! dyn_var_time_uninterp_type (rather than dyn_var_time_interp_type), and change the
-    ! following constructor to construct a variable of dyn_var_time_uninterp_type. That's
+    ! Note: if you want to change PCT_NAT_PFT so that it is interpolated, rather than
+    ! jumping to each year's value on Jan 1 of that year, simply change wtpatch to be of type
+    ! dyn_var_time_interp_type (rather than dyn_var_time_uninterp_type), and change the
+    ! following constructor to construct a variable of dyn_var_time_interp_type. That's
     ! all you need to do.
 
     wtpatch_shape = [(bounds%endg-bounds%begg+1), natpft_size]
-    wtpatch = dyn_var_time_interp_type( &
+    wtpatch = dyn_var_time_uninterp_type( &
          dyn_file=dynpft_file, varname=varname, &
          dim1name=grlnd, conversion_factor=100._r8, &
          do_check_sums_equal_1=.true., data_shape=wtpatch_shape)
@@ -237,9 +238,14 @@ contains
   subroutine dynpft_interp(bounds)
     !
     ! !DESCRIPTION:
-    ! Time interpolate dynamic pft data to get pft weights for model time.
+    ! Get pft weights for current model time
     !
     ! Sets pft%wtcol
+    !
+    ! Note that PFT weights currently jump to their new value at the start of the year.
+    ! However, as mentioned above, this behavior can be changed to time interpolation
+    ! simply by making wtpatch a dyn_var_time_interp_type variable rather than
+    ! dyn_var_time_uninterp_type.
     !
     ! !USES:
     use landunit_varcon , only : istsoil

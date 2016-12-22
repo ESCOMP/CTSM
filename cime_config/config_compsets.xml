@@ -280,6 +280,10 @@
     <lname>HIST_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
   <compset>
+    <alias>IHISTCLM50BGCCROP</alias>
+    <lname>HIST_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+  </compset>
+  <compset>
     <alias>IHISTCLM45BGC</alias>
     <lname>HIST_DATM%QIA_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
@@ -329,6 +333,11 @@
   <compset grid="g%gland">
     <alias>IGHISTCLM45</alias>
     <lname>HIST_DATM%QIA_CLM45%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
+  </compset>
+
+  <compset grid="g%gland">
+    <alias>IGHISTCLM50</alias>
+    <lname>HIST_DATM%CRU_CLM50%SP_SICE_SOCN_RTM_CISM2_SWAV</lname>
   </compset>
 
   <compset grid="g%gland">

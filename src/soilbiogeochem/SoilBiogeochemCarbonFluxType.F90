@@ -231,7 +231,8 @@ contains
 
         this%lf_conv_cflux_col(begc:endc) = spval
         call hist_addfld1d (fname='LF_CONV_CFLUX', units='gC/m^2/s', &
-             avgflag='A', long_name='conversion carbon due to BET and BDT area decreasing', &
+             avgflag='A', &
+             long_name='conversion carbon due to BET and BDT area decreasing (0 at all times except first timestep of year)', &
              ptr_col=this%lf_conv_cflux_col)   
 
         this%somc_fire_col(begc:endc) = spval

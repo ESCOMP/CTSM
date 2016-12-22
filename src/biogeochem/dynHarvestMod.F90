@@ -167,7 +167,7 @@ contains
     ! !USES:
     use pftconMod       , only : noveg, nbrdlf_evr_shrub
     use clm_varcon      , only : secspday
-    use clm_time_manager, only : get_days_per_year
+    use clm_time_manager, only : get_step_size_real, is_beg_curr_year
     !
     ! !ARGUMENTS:
     integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
@@ -186,7 +186,7 @@ contains
     integer :: fp                        ! patch filter index
     real(r8):: am                        ! rate for fractional harvest mortality (1/yr)
     real(r8):: m                         ! rate for fractional harvest mortality (1/s)
-    real(r8):: days_per_year             ! days per year
+    real(r8):: dtime                     ! model time step (s)
     !-----------------------------------------------------------------------
 
     associate(& 
@@ -277,8 +277,7 @@ contains
          hrv_deadcrootn_xfer_to_litter       =>    cnveg_nitrogenflux_inst%hrv_deadcrootn_xfer_to_litter_patch      & ! Output: [real(r8) (:)]                                                    
          )
 
-      
-      days_per_year = get_days_per_year()
+      dtime = get_step_size_real()
 
       ! patch loop
       do fp = 1,num_soilp
@@ -291,8 +290,13 @@ contains
          if (ivt(p) > noveg .and. ivt(p) < nbrdlf_evr_shrub) then
 
             if (do_harvest) then
-               am = harvest(g)
-               m  = am/(days_per_year * secspday)
+               ! Apply all harvest at the start of the year
+               if (is_beg_curr_year()) then
+                  am = harvest(g)
+                  m  = am/dtime
+               else
+                  m = 0._r8
+               end if
             else
                m = 0._r8
             end if

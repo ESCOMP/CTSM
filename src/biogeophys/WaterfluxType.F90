@@ -13,7 +13,7 @@ module WaterfluxType
   use ColumnType     , only : col                
   use PatchType      , only : patch   
   use CNSharedParamsMod           , only : use_fun             
-  use AnnualFluxDribbler, only : annual_flux_dribbler_type
+  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   !
   implicit none
   private
@@ -239,12 +239,12 @@ contains
     allocate(this%qflx_ice_dynbal_grc      (begg:endg))              ; this%qflx_ice_dynbal_grc      (:)   = nan
     allocate(this%AnnET                    (begc:endc))              ; this%AnnET                    (:)   = nan
 
-    this%qflx_liq_dynbal_dribbler = annual_flux_dribbler_type( &
+    this%qflx_liq_dynbal_dribbler = annual_flux_dribbler_gridcell( &
          bounds = bounds, &
          name = 'qflx_liq_dynbal', &
          units = 'mm H2O')
 
-    this%qflx_ice_dynbal_dribbler = annual_flux_dribbler_type( &
+    this%qflx_ice_dynbal_dribbler = annual_flux_dribbler_gridcell( &
          bounds = bounds, &
          name = 'qflx_ice_dynbal', &
          units = 'mm H2O')

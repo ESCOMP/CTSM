@@ -1,4 +1,191 @@
 ===============================================================
+Tag name:  clm4_5_13_r211
+Originator(s):  sacks (Bill Sacks)
+Date: Thu Dec 22 13:46:52 MST 2016
+One-line Summary: Apply transient land cover and harvest all at once in first time step of year
+
+Purpose of changes
+------------------
+
+Scientists have found it problematic to have land cover change and harvest
+interpolated throughout the year: By having just a bit of deforestation done in
+each time step, the forest can regrow, so that you never see the full,
+appropriate impacts of land cover change.
+
+This tag changes the behavior of both land cover change (transient PFTs) and
+harvest so that they are applied all at once in the first time step of a given
+year.
+
+This new behavior is consistent with the pre-existing timing of transient crops
+and transient glaciers: Now all land cover changes happen all at once on the
+first time step of the year.
+
+For the fire code, we pass a dribbled version of the land cover change - i.e., a
+version that smooths the area changes over the year, similarly to what was done
+before. This is important because the fire code involves interactions between
+the current time step's change in area and the current time step's climate. So,
+if the fire code only saw area changes on Jan 1, it could only generated
+deforestation fires on Jan 1 (I think). Note there is some inconsistency now,
+since the above-ground C/N biomass is all adjusted at once on Jan 1, so the fire
+code operates on the already-adjusted biomass. This could be problematic in
+principle if there were relatively large changes in area in a given year, but
+Fang Li believes this won't cause major problems in practice, since (1) area
+changes are typically small, (2) the carbon fluxes from fire are just
+diagnostic, and (3) the bigger impact of deforestation fires is as a trigger for
+other fires.
+
+In addition, for fluxes passed to the atmosphere from land cover change and
+harvest, we dribble these fluxes over the year, avoiding pulsed fluxes on
+Jan. 1.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- Partially addresses 2106: CNFireMod code should be re-evaluated in the presence of dynamic landunits
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Moved some transient tests (HIST/RCP) from CLM45 to CLM50
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass; some baseline comparisons fail as noted below
+
+    NOTE: Most testing done on
+    dynpft_and_harvest_jan1_n07_clm4_5_13_r210. dynpft_and_harvest_jan1_n08_clm4_5_13_r210
+    fixed an error check for CNDV cases. I reran the CNDV tests on the n08 tag,
+    along with the following additional tests:
+
+      SMS_Ld5_D_P24x1.f10_f10.IHISTCLM50BGC.hobart_nag.clm-monthly
+      ERP_D_P24x1.f10_f10.IHISTCLM50BGC.hobart_nag.clm-decStart
+      ERP_D_Ld5.f19_g16.IRCP85CLM45BGC.yellowstone_pgi.clm-drydepnomegan
+
+CLM tag used for the baseline comparisons: clm4_5_13_r210
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All transient cases (HIST/RCP) with CLM45/CLM50; also DV cases
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      For transient cases: Larger than roundoff; unsure whether this is climate changing
+
+      For DV cases, just roundoff-level changes in FCO2, LAND_USE_FLUX, NBP - I
+      think from the dribbling of fluxes that are generated on the first time
+      step of each year.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Do land cover change (transient PFTs) and harvest all at once in the
+          first time step of the year, rather than gradually throughout the
+          year; dribble the fluxes to the atmosphere, and dribble the weight
+          changes to the fire code.
+M       components/clm/src/dyn_subgrid/dynpftFileMod.F90
+M       components/clm/src/biogeochem/dynConsBiogeochemMod.F90
+M       components/clm/src/biogeochem/dynHarvestMod.F90
+M       components/clm/src/biogeochem/CNFireLi2014Mod.F90
+M       components/clm/src/biogeochem/CNFireLi2016Mod.F90
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+M       components/clm/src/biogeochem/CNVegStateType.F90
+
+========= Just add some documentation for history fields
+M       components/clm/src/biogeochem/CNVegNitrogenFluxType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCarbonFluxType.F90
+
+========= Just remove unneeded use statements
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+
+========= Introduce ability for dribblers to work at any subgrid level, and some
+          other feature additions
+M       components/clm/src/utils/test/annual_flux_dribbler_test/test_annual_flux_dribbler.pf
+M       components/clm/src/utils/AnnualFluxDribbler.F90
+M       components/clm/src/main/decompMod.F90
+M       components/clm/src/biogeophys/EnergyFluxType.F90
+M       components/clm/src/biogeophys/WaterfluxType.F90
+
+========= Move some transient tests to CLM50
+M       components/clm/cime_config/config_compsets.xml
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+========= Unrelated change: add a bit of documentation
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_13_r210
 Originator(s):  sacks (Bill Sacks)
 Date: Sat Dec 17 05:43:34 MST 2016
