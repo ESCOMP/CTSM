@@ -1,4 +1,96 @@
 ===============================================================
+Tag name:  clm4_5_14_r213
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Dec 30 08:48:44 MST 2016
+One-line Summary: Convert buildnml to python
+
+Purpose of changes
+------------------
+
+Changes from Mariana Vertenstein
+
+Main purpose is to convert buildnml to python; also some minor tweaks to other
+related files, which seem to be moving towards the removal of CLM4.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - pass
+
+    I did NOT compare against baseline, because this is currently broken (bug 2386)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - pass
+
+CLM tag used for the baseline comparisons: clm4_5_13_r211
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+A       components/clm/cime_config/buildcpp
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/cime_config/buildlib
+M       components/clm/cime_config/buildnml
+M       components/clm/cime_config/config_component.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r212
 Originator(s):  sacks (Bill Sacks)
 Date: Thu Dec 22 16:06:09 MST 2016

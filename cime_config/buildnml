@@ -1,210 +1,265 @@
-#! /usr/bin/env perl
-use strict;
-use Cwd;
+#!/usr/bin/env python
 
-if ($#ARGV == -1) {
-    die " ERROR clm.buildexe: must specify a caseroot input argument";
-}
-my ($CASEROOT) = @ARGV;
-chdir "${CASEROOT}";
+"""
+CLM namelist creator
+"""
+import sys, os, time, shutil, re, imp, filecmp
 
-my $CIMEROOT		    = `./xmlquery  CIMEROOT		  -value`;
-my $SRCROOT		    = `./xmlquery  SRCROOT		  -value`;
-my $DIN_LOC_ROOT	    = `./xmlquery  DIN_LOC_ROOT		  -value`;
-my $COMPSET		    = `./xmlquery  COMPSET	          -value`;
-my $CCSM_CO2_PPMV	    = `./xmlquery  CCSM_CO2_PPMV	  -value`;
-my $CLM_CO2_TYPE	    = `./xmlquery  CLM_CO2_TYPE		  -value`;
-my $CLM_USRDAT_NAME	    = `./xmlquery  CLM_USRDAT_NAME	  -value`;
-my $CLM_CONFIG_OPTS	    = `./xmlquery  CLM_CONFIG_OPTS	  -value`;
-my $CLM_NAMELIST_OPTS	    = `./xmlquery  CLM_NAMELIST_OPTS	  -value`;
-my $CLM_BLDNML_OPTS	    = `./xmlquery  CLM_BLDNML_OPTS	  -value`;
-my $CLM_NML_USE_CASE	    = `./xmlquery  CLM_NML_USE_CASE	  -value`;
-my $CLM_FORCE_COLDSTART	    = `./xmlquery  CLM_FORCE_COLDSTART	  -value`;
-my $LND_TUNING_MODE         = `./xmlquery  LND_TUNING_MODE        -value`;
-my $COMP_INTERFACE	    = `./xmlquery  COMP_INTERFACE	  -value`;
-my $CLM_ACCELERATED_SPINUP  = `./xmlquery  CLM_ACCELERATED_SPINUP -value`;
-my $COMP_GLC		    = `./xmlquery  COMP_GLC		  -value`;
-my $COMP_ATM		    = `./xmlquery  COMP_ATM		  -value`;
-my $DEBUG		    = `./xmlquery  DEBUG		  -value`;
-my $GLC_NEC		    = `./xmlquery  GLC_NEC		  -value`;
-my $LND_GRID		    = `./xmlquery  LND_GRID		  -value`;
-my $LND_NCPL		    = `./xmlquery  LND_NCPL		  -value`;
-my $LND_DOMAIN_PATH	    = `./xmlquery  LND_DOMAIN_PATH	  -value`;
-my $LND_DOMAIN_FILE	    = `./xmlquery  LND_DOMAIN_FILE	  -value`;
-my $MASK_GRID		    = `./xmlquery  MASK_GRID		  -value`;
-my $NTHRDS_LND		    = `./xmlquery  NTHRDS_LND		  -value`;
-my $NTASKS_LND		    = `./xmlquery  NTASKS_LND		  -value`;
-my $NINST_LND		    = `./xmlquery  NINST_LND		  -value`;
-my $RUNDIR		    = `./xmlquery  RUNDIR		  -value`;
-my $RUN_TYPE		    = `./xmlquery  RUN_TYPE		  -value`;
-my $RUN_STARTDATE	    = `./xmlquery  RUN_STARTDATE	  -value`;
-my $RUN_REFCASE		    = `./xmlquery  RUN_REFCASE		  -value`;
-my $RUN_REFDATE		    = `./xmlquery  RUN_REFDATE		  -value`;
-my $RUN_REFTOD		    = `./xmlquery  RUN_REFTOD		  -value`;
+_CIMEROOT = os.environ.get("CIMEROOT")
+if _CIMEROOT is None:
+    raise SystemExit("ERROR: must set CIMEROOT environment variable")
 
-my @dirs = ("${CIMEROOT}/utils/perl5lib");
-unshift @INC, @dirs;
-require Config::SetupTools;
-my $sysmod; 
+_LIBDIR = os.path.join(_CIMEROOT, "scripts", "Tools")
+sys.path.append(_LIBDIR)
 
-if (! -d "$CASEROOT/Buildconf/clmconf" ) {
-    $sysmod = "mkdir $CASEROOT/Buildconf/clmconf";
-    system($sysmod) == 0 or die "ERROR clm.buildnml: $sysmod failed: $?\n";
-}
-chdir "$CASEROOT/Buildconf/clmconf";
+from standard_script_setup          import *
+from CIME.buildnml                  import create_namelist_infile, parse_input
+from CIME.case                      import Case
+from CIME.utils                     import expect, run_cmd
 
-#--------------------------------------------------------------------
-# Invoke clm configure - output will go in CASEROOT/Buildconf/clmconf
-#--------------------------------------------------------------------
+logger = logging.getLogger(__name__)
 
-# The following translation is hard-wired for backwards compatibility
-# to support the differences between how the scripts specify the land grid
-# and how it is specified internally
-if ($LND_GRID eq 'T31' ) {$LND_GRID = '48x96'};
-if ($LND_GRID eq 'T42' ) {$LND_GRID = '64x128'};
-if ($LND_GRID eq 'T85' ) {$LND_GRID = '128x256'};
-if ($LND_GRID eq 'T341') {$LND_GRID = '512x1024'};
+_config_cache_template = """
+<?xml version="1.0"?>
+<config_definition>
+<commandline></commandline>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0">Specifies clm physics</entry>
+</config_definition>
+"""
 
-my $config_opts;
-my $resolution;
-my $clmusr;
-if ($MASK_GRID ne "reg") {
-    $config_opts = " ";
-    $resolution = $LND_GRID;
-    $clmusr     = "";
-}
-if (($MASK_GRID eq "reg") && ($LND_GRID ne "CLM_USRDAT" )) {
-    $config_opts = "-sitespf_pt $LND_GRID";
-    $resolution  = $LND_GRID ;
-    $clmusr      = "";
-}
-if ( $LND_GRID eq "CLM_USRDAT" ) {
-    $config_opts=" ";
-    $resolution = $CLM_USRDAT_NAME;
-    $clmusr     = " -clm_usr_name $CLM_USRDAT_NAME";
-}
-if ("$COMPSET" =~ /1PT.*/ ) {
-    $config_opts = " -sitespf_pt reg";
-}
+###############################################################################
+def buildnml(case, caseroot, compname):
+###############################################################################
+    """Build the clm namelist """
 
-$sysmod = "$SRCROOT/components/clm/bld/configure";
-$sysmod = "$sysmod  $config_opts -comp_intf $COMP_INTERFACE ";
-$sysmod = "$sysmod  $CLM_CONFIG_OPTS ";
-$sysmod = "$sysmod -usr_src $CASEROOT/SourceMods/src.clm";
-system($sysmod) == 0 or die "ERROR clm.buildnml: $sysmod failed: $?\n";
+    # Build the component namelist 
+    if compname != "clm":
+        raise AttributeError
 
-#--------------------------------------------------------------------
-# Invoke clm build-namelist - output will go in $CASEROOT/Buildconf/clmconf
-#--------------------------------------------------------------------
-
-my $startfiletype = "finidat";
-my $start_type = "default";
-if ($RUN_TYPE eq "startup" ) {
-    if ($CLM_FORCE_COLDSTART eq "on") {$start_type = "cold";}
-} else {
-    if ($RUN_TYPE eq "hybrid" ) {
-	$start_type = "startup";
-    } else {
-	$start_type = $RUN_TYPE;
-    }
-}
-if ($RUN_TYPE eq "branch" ) {$startfiletype = "nrevsn";}
-
-my $inst_string;
-my $inst_counter = 1;
-while ($inst_counter <= $NINST_LND) {
+    srcroot = case.get_value("SRCROOT")
+    din_loc_root = case.get_value("DIN_LOC_ROOT")
+    ccsm_co2_ppmv = case.get_value("CCSM_CO2_PPMV")
+    clm_co2_type = case.get_value("CLM_CO2_TYPE")
+    clm_namelist_opts = case.get_value("CLM_NAMELIST_OPTS")
+    clm_bldnml_opts = case.get_value("CLM_BLDNML_OPTS")
+    clm_nml_use_case = case.get_value("CLM_NML_USE_CASE")
+    clm_force_coldstart = case.get_value("CLM_FORCE_COLDSTART")
+    lnd_tuning_mode = case.get_value("LND_TUNING_MODE")
+    clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
+    comp_glc = case.get_value("COMP_GLC")
+    comp_atm = case.get_value("COMP_ATM")
+    lnd_grid = case.get_value("LND_GRID")
+    lnd_ncpl = case.get_value("LND_NCPL")
+    lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
+    lnd_domain_file = case.get_value("LND_DOMAIN_FILE")
+    ninst_lnd = case.get_value("NINST_LND")
+    rundir = case.get_value("RUNDIR")
+    run_type = case.get_value("RUN_TYPE")
+    run_startdate = case.get_value("RUN_STARTDATE")
+    run_refcase = case.get_value("RUN_REFCASE")
+    run_refdate = case.get_value("RUN_REFDATE")
+    run_reftod = case.get_value("RUN_REFTOD")
+    glc_nec = case.get_value("GLC_NEC")
 
     # -----------------------------------------------------
-    # determine instance string 
+    # Clear out old data
     # -----------------------------------------------------
 
-    $inst_string = "";       
-    if ($NINST_LND > 1) {
-	$inst_string = `printf _%04d $inst_counter`;
-
-	# If multi-instance case does not have restart file, use single-case restart
-	# for each instance
-	if ( (! -e "$RUNDIR/rpointer.lnd${inst_string}") && (-e "$RUNDIR/rpointer.lnd") ) {
-	    $sysmod = "cp -v $RUNDIR/rpointer.lnd $RUNDIR/rpointer.lnd${inst_string}";
-	    system($sysmod) == 0 or die "ERROR clm.buildnml: $sysmod failed: $?\n";
-	}
-    }
+    input_data_list = os.path.join(caseroot,"Buildconf","clm.input_data_list")
+    if os.path.exists(input_data_list):
+        os.remove(input_data_list)
 
     # -----------------------------------------------------
-    # create clmconf/namelist
+    # Set clmconf
     # -----------------------------------------------------
 
-    if ( -e "$CASEROOT/Buildconf/clm.input_data_list" ) {
-	$sysmod = "rm $CASEROOT/Buildconf/clm.input_data_list";
-	system($sysmod) == 0 or die "ERROR clm.buildnml: $sysmod failed: $?\n";
-    }
-    my $clmicfile;
-    my $clm_startfile;
-    if (( $RUN_TYPE eq "hybrid") || ($RUN_TYPE eq "branch" )) {
-	$clm_startfile = "${RUN_REFCASE}.clm2${inst_string}.r.${RUN_REFDATE}-${RUN_REFTOD}.nc";
-	if ( -e "$RUNDIR/$clm_startfile") {
-	    $clm_startfile = "$clm_startfile";
-	} else {
-	    $clm_startfile = "${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-${RUN_REFTOD}.nc";
-	}
-	$clmicfile = " $startfiletype = \'$clm_startfile\'";
-    }
-
-    my $infile_text = "";
-    if ($clmicfile) {$infile_text .= "$startfiletype = \'$clm_startfile\' \n"; }
-
-    SetupTools::create_namelist_infile("$CASEROOT", 
-                                       "$CASEROOT/user_nl_clm${inst_string}",
-				       "$CASEROOT/Buildconf/clmconf/namelist", 
-				       "$infile_text");
+    clmconf = os.path.join(caseroot, "Buildconf", "clmconf")
+    if not os.path.isdir(clmconf):
+        os.makedirs(clmconf)
 
     # -----------------------------------------------------
-    # call build-namelist
+    # Create config_cache.xml file 
     # -----------------------------------------------------
 
-    my $glc_opts = "";
-    if ("$COMP_GLC" ne "sglc" ) {$glc_opts = "-glc_present ";}
+    # Note that build-namelist utilizes the contents of the config_cache.xml file in 
+    # the namelist_defaults.xml file to obtain namelist variables
 
-    my $nomeg = "";
-    if ("$COMP_ATM" ne "datm" ) {$nomeg = "-no-megan";}
+    clm_config_opts = case.get_value("CLM_CONFIG_OPTS")
+    if "clm4_5" in clm_config_opts:
+        clm_phys = "clm4_5"
+    elif "clm5_0" in clm_config_opts:
+        clm_phys = "clm5_0"
+    elif "clm4_0" in clm_config_opts:
+        clm_phys = "clm4_0"
+    else:
+        expect(False, "CLM_CONFIG_OPTS must support either clm4_5, clm5_0, or clm4_0 physics")
 
-    my $usecase = " ";
-    if ($CLM_NML_USE_CASE ne "UNSET") {$usecase = "-use_case $CLM_NML_USE_CASE";}
+    if clm_phys == "clm4_0":
+        # call buildcpp to obtain clm_cppdefs if it is not set in env_build.xml
+        call_buildcpp = False
+        if not os.path.exists(os.path.join(caseroot,"LockedFiles","env_build.xml")):
+            call_buildcpp = True
+        else:
+            file1 = os.path.join(caseroot,"env_build.xml")  
+            file2 = os.path.join(caseroot,"LockedFiles","env_build.xml")
+            if not filecmp.cmp(file1, file2):
+                call_buildcpp = True
+        if call_buildcpp:
+            cmd = os.path.join(os.path.join(srcroot,"components","clm","cime_config","buildcpp"))
+            logger.info("     ...calling clm buildcpp to set build time options")
+            try:
+                mod = imp.load_source("buildcpp", cmd)
+                mod.buildcpp(case)
+            except:
+                raise
+    else:
+        config_cache_text = _config_cache_template.format(clm_phys=clm_phys)
+        config_cache_path = os.path.join(caseroot, "Buildconf", "clmconf", "config_cache.xml")
+        with open(config_cache_path, 'w') as config_cache_file:
+            config_cache_file.write(config_cache_text)
 
-    my $start_ymd = `echo $RUN_STARTDATE | sed s/-//g`;
-    my $ignore = "-ignore_ic_date";
-    if (($RUN_STARTDATE =~ /.*-01-01.*/) || ($RUN_STARTDATE =~ /.*-09-01.*/)) {	$ignore = "-ignore_ic_year";}
+    # -----------------------------------------------------
+    # Determine input arguments into build-namelist
+    # -----------------------------------------------------
 
-    my $tuning = "-lnd_tuning_mode $LND_TUNING_MODE";
+    startfile_type = "finidat"
+    start_type = "default"
+    if run_type == "startup":
+        if clm_force_coldstart == "on":
+            start_type = "cold"
+    else:
+        if run_type == "hybrid":
+            start_type = "startup"
+        else:
+            start_type = run_type
+    if run_type == "branch":
+        startfile_type = "nrevsn"
 
-    my $spinup = "-clm_accelerated_spinup $CLM_ACCELERATED_SPINUP";
+    if lnd_grid == 'T31':
+        lnd_grid = '48x96'
+    if lnd_grid == 'T42':
+        lnd_grid = '64x128'
+    if lnd_grid == 'T85':
+        lnd_grid = '128x256'
+    if lnd_grid == 'T341':
+        lnd_grid = '512x1024'
 
-    $sysmod = "$SRCROOT/components/clm/bld/build-namelist -infile $CASEROOT/Buildconf/clmconf/namelist ";
-    $sysmod = "$sysmod -csmdata $DIN_LOC_ROOT -inputdata $CASEROOT/Buildconf/clm.input_data_list $ignore"; 
-    $sysmod = "$sysmod -namelist \" \&clm_inparm  start_ymd=$start_ymd $CLM_NAMELIST_OPTS \/\" $nomeg";
-    $sysmod = "$sysmod $usecase $glc_opts -res $resolution $clmusr -clm_start_type $start_type";
-    $sysmod = "$sysmod -envxml_dir $CASEROOT -l_ncpl $LND_NCPL -lnd_frac ${LND_DOMAIN_PATH}/${LND_DOMAIN_FILE}";
-    $sysmod = "$sysmod -glc_nec $GLC_NEC -co2_ppmv $CCSM_CO2_PPMV -co2_type $CLM_CO2_TYPE ";
-    $sysmod = "$sysmod -config $CASEROOT/Buildconf/clmconf/config_cache.xml $CLM_BLDNML_OPTS $spinup $tuning";
-    #$sysmod = "$sysmod -config $CASEROOT/Buildconf/clmconf/config_cache.xml $CLM_BLDNML_OPTS $spinup $tuning";
-    system($sysmod) == 0 or die "ERROR clm.buildnml: $sysmod failed: $?\n";
+    clmusr = ""
+    if lnd_grid == "CLM_USRDAT":
+        clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
+        lnd_grid = clm_usrdat_name
+        clmusr = " -clm_usr_name %s "%clm_usrdat_name
+
+    if comp_glc != "sglc":
+        glc_opts = "-glc_present" 
+    else:
+        glc_opts = ""
+
+    if comp_atm != "datm":
+        nomeg = "-no-megan"
+    else:
+        nomeg = ""
+
+    if clm_nml_use_case != "UNSET":
+        usecase = "-use_case %s" %clm_nml_use_case
+    else:
+        usecase = ""
+
+    start_ymd = run_startdate.replace('-','')
+
+    if ('-01-01' in run_startdate) or ('-09-01' in run_startdate):
+        ignore = "-ignore_ic_year"
+    else:
+        ignore = "-ignore_ic_date"
+
+    tuning = "-lnd_tuning_mode %s "%lnd_tuning_mode
     
+    spinup = "-clm_accelerated_spinup %s "%clm_accelerated_spinup
+    
+    infile = os.path.join(clmconf, "namelist")
+    
+    inputdata_file = os.path.join(caseroot,"Buildconf","clm.input_data_list")
+    
+    lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
+    
+    config_cache_file = os.path.join(caseroot,"Buildconf","clmconf","config_cache.xml")
+
     # -----------------------------------------------------
-    # move lnd_in to $RUNDIR
+    # loop over instances
     # -----------------------------------------------------
 
-    if ( -d ${RUNDIR} ) {
-	$sysmod = "cp $CASEROOT/Buildconf/clmconf/lnd_in ${RUNDIR}/lnd_in${inst_string}";
-	system($sysmod) == 0 or die "ERROR clm.buildnml: $sysmod failed: $?\n";
-    }
+    ninst = int(ninst_lnd)
+    for inst_counter in range(1, ninst+1):
 
-    # -----------------------------------------------------
-    # increment instance counter
-    # -----------------------------------------------------
+        # determine instance string
+        inst_string = ""
+        if ninst > 1:
+            inst_string = '_' + '%04d' % inst_counter
 
-    $inst_counter = $inst_counter + 1;
-}
+        # If multi-instance case does not have restart file, use
+        # single-case restart for each instance
+        rpointer = "rpointer.lnd" 
+        if (os.path.isfile(os.path.join(rundir,rpointer)) and
+            (not os.path.isfile(os.path.join(rundir,rpointer + inst_string)))):
+            shutil.copy(os.path.join(rundir, rpointer),
+                        os.path.join(rundir, rpointer + inst_string))
 
-exit (0);
+        # -----------------------------------------------------
+        # call build-namelist
+        # -----------------------------------------------------
 
+        if run_type == "hybrid" or run_type == "branch":
+            clm_startfile = "%s.clm2%s.r.%s-%s.nc"%(run_refcase,inst_string,run_refdate,run_reftod)
+            if not os.path.exists(os.path.join(rundir, clm_startfile)):
+                clm_startfile = "%s.clm2.r.%s-%s.nc"%(run_refcase,run_refdate,run_reftod)
+            clm_icfile = "%s = \'%s\'"%(startfile_type, clm_startfile)
+        else:
+            clm_icfile = ""
 
+        infile_lines = []
+        infile_lines.append(clm_icfile)
+
+        user_nl_file = os.path.join(caseroot, "user_nl_clm" + inst_string)
+        namelist_infile = os.path.join(clmconf, "namelist")
+
+        create_namelist_infile(case, user_nl_file, namelist_infile, "\n".join(infile_lines))
+
+        cmd = os.path.join(srcroot, "components","clm","bld","build-namelist")
+
+        command = ("%s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
+                   "%s %s %s -res %s %s -clm_start_type %s -envxml_dir %s -l_ncpl %s "
+                   "-lnd_frac %s -glc_nec %s -co2_ppmv %s -co2_type %s -config %s "
+                   "%s %s %s"
+                   %(cmd, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts, 
+                     nomeg, usecase, glc_opts, lnd_grid, clmusr, start_type, caseroot, lnd_ncpl, 
+                     lndfrac_file, glc_nec, ccsm_co2_ppmv, clm_co2_type, config_cache_file, 
+                     clm_bldnml_opts, spinup, tuning))
+
+        rc, out, err = run_cmd(command, from_dir=clmconf)
+        expect(rc==0,"Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
+        if out is not None:
+            logger.debug("     %s"%out)
+        if err is not None:
+            logger.debug("     %s"%err)
+
+        # -----------------------------------------------------
+        # copy resolved namelist to rundir
+        # -----------------------------------------------------
+
+        if os.path.isdir(rundir):
+            file1 = os.path.join(clmconf, "lnd_in")
+            file2 = os.path.join(rundir, "lnd_in")
+            if ninst > 1:
+                file2 += inst_string
+            logger.debug("CLM namelist copy: file1 %s file2 %s " %(file1, file2))
+            shutil.copy(file1,file2)
+
+###############################################################################
+def _main_func():
+
+    caseroot = parse_input(sys.argv)
+    with Case(caseroot) as case:
+        buildnml(case, caseroot, "clm")
+
+if __name__ == "__main__":
+    _main_func()

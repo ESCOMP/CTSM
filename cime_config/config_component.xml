@@ -13,6 +13,15 @@
     <desc>Name of land component</desc>
   </entry>
 
+  <entry id="CLM_CPPDEFS">
+    <type>char</type>
+    <valid_values></valid_values>
+    <default_value>UNSET</default_value>
+    <group>build_component_cam</group>
+    <file>env_build.xml</file>
+    <desc>CLM cpp definitions (if-any) (setup automatically - DO NOT EDIT)</desc>
+  </entry>
+
   <entry id="LND_TUNING_MODE">
     <type>char</type>
     <group>run_component_clm</group>
