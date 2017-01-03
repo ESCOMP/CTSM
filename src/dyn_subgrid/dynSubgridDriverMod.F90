@@ -292,6 +292,7 @@ contains
        if (use_cn) then
           call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, &
                filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
+               filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc, &
                prior_weights, patch_state_updater, column_state_updater, &
                canopystate_inst, photosyns_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &

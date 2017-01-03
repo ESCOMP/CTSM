@@ -514,12 +514,6 @@ contains
              cnveg_carbonflux_inst%dwt_seedc_to_deadstem_col(c) = &
                   cnveg_carbonflux_inst%dwt_seedc_to_deadstem_col(c) + dwt_deadstemc_seed(p)/dt
 
-             ! FIXME(wjs, 2016-07-08) This is temporary. It can be removed once we update
-             ! column states immediately after dyn_cnbal_patch.
-             cnveg_carbonflux_inst%dwt_seedc_col(c) = &
-                  cnveg_carbonflux_inst%dwt_seedc_col(c) + &
-                  dwt_leafc_seed(p)/dt + dwt_deadstemc_seed(p)/dt
-
              if ( use_c13 ) then
                 c13_cnveg_carbonflux_inst%dwt_seedc_to_leaf_col(c) = &
                      c13_cnveg_carbonflux_inst%dwt_seedc_to_leaf_col(c) + dwt_leafc13_seed(p)/dt
@@ -540,11 +534,6 @@ contains
              cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_col(c) = &
                   cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_col(c) + dwt_deadstemn_seed(p)/dt
 
-             ! FIXME(wjs, 2016-07-08) This is temporary. It can be removed once we update
-             ! column states immediately after dyn_cnbal_patch.
-             cnveg_nitrogenflux_inst%dwt_seedn_col(c) = &
-                  cnveg_nitrogenflux_inst%dwt_seedn_col(c) + &
-                  dwt_leafn_seed(p)/dt + dwt_deadstemn_seed(p)/dt
           end if
        end do
     end do
@@ -666,29 +655,6 @@ contains
                 
              end if
           end do
-       end do
-    end do
-
-    ! FIXME(wjs, 2016-07-08) This is temporary. It can be removed once we update column
-    ! states immediately after dyn_cnbal_patch
-    do pi = 1,max_patch_per_col
-       do c = bounds%begc, bounds%endc
-          if ( pi <=  col%npatches(c) ) then
-             p = col%patchi(c) + pi - 1
-
-             cnveg_carbonflux_inst%dwt_to_litrc_col(c) = &
-                  cnveg_carbonflux_inst%dwt_to_litrc_col(c) + &
-                  dwt_frootc_to_litter(p) / dt + &
-                  dwt_livecrootc_to_litter(p) / dt + &
-                  dwt_deadcrootc_to_litter(p) / dt
-
-             cnveg_nitrogenflux_inst%dwt_to_litrn_col(c) = &
-                  cnveg_nitrogenflux_inst%dwt_to_litrn_col(c) + &
-                  dwt_frootn_to_litter(p) / dt + &
-                  dwt_livecrootn_to_litter(p) / dt + &
-                  dwt_deadcrootn_to_litter(p) / dt
-
-          end if
        end do
     end do
 

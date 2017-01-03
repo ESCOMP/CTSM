@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_14_r214    sacks 01/03/2017 Update column states based on dwt terms between dyn_cnbal_patch and dyn_cnbal_col, and minor fixes
   clm4_5_14_r213    sacks 12/30/2016 Convert buildnml to python
   clm4_5_14_r212    sacks 12/22/2016 Bump science version number due to changes in clm4_5_13_r211
   clm4_5_13_r211    sacks 12/22/2016 Apply transient land cover and harvest all at once in first time step of year

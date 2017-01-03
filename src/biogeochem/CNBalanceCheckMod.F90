@@ -165,13 +165,6 @@ contains
          ! calculate total column-level inputs
          col_cinputs = gpp(c)
 
-         ! FIXME(wjs, 2016-07-08) This is temporary. It can be removed once we update
-         ! column states immediately after dyn_cnbal_patch. For now this is needed
-         ! because col_begcb is computed after this mass is lost from the patch-level
-         ! statese, but before it is added to the column-level states.
-         col_cinputs = col_cinputs + &
-              cnveg_carbonflux_inst%dwt_to_litrc_col(c)
-
          ! calculate total column-level outputs
          ! er = ar + hr, col_fire_closs includes patch-level fire losses
          col_coutputs = er(c) + col_fire_closs(c) + col_hrv_xsmrpool_to_atm(c)
@@ -187,13 +180,6 @@ contains
 
          ! subtract leaching flux
          col_coutputs = col_coutputs - som_c_leached(c)
-
-         ! FIXME(wjs, 2016-07-08) This is temporary. It can be removed once we update
-         ! column states immediately after dyn_cnbal_patch. For now this is needed because
-         ! col_begcb is computed after this mass is gained by the patch-level states, but
-         ! before it is taken away from the column-level states.
-         col_coutputs = col_coutputs + &
-              cnveg_carbonflux_inst%dwt_seedc_col(c)
 
          ! calculate the total column-level carbon balance error for this time step
          col_errcb(c) = (col_cinputs - col_coutputs)*dt - &
@@ -221,9 +207,6 @@ contains
          write(iulog,*)'delta store              = ',col_endcb(c)-col_begcb(c)
          write(iulog,*)'--- Inputs ---'
          write(iulog,*)'gpp                      = ',gpp(c)*dt
-         ! FIXME(wjs, 2016-07-08) Remove this line when we stop adding this term to
-         ! col_cinputs
-         write(iulog,*)'dwt_to_litrc             = ',cnveg_carbonflux_inst%dwt_to_litrc_col(c)*dt
          write(iulog,*)'--- Outputs ---'
          write(iulog,*)'er                       = ',er(c)*dt
          write(iulog,*)'col_fire_closs           = ',col_fire_closs(c)*dt
@@ -231,9 +214,6 @@ contains
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
-         ! FIXME(wjs, 2016-07-08) Remove this line when we stop adding this term to
-         ! col_coutputs
-         write(iulog,*)'dwt_seedc                = ',cnveg_carbonflux_inst%dwt_seedc_col(c)*dt
          call endrun(msg=errMsg(sourcefile, __LINE__))
       end if
 
@@ -314,13 +294,6 @@ contains
             col_ninputs(c) = col_ninputs(c) + fert_to_sminn(c) + soyfixn_to_sminn(c)
          end if
 
-         ! FIXME(wjs, 2016-07-08) This is temporary. It can be removed once we update
-         ! column states immediately after dyn_cnbal_patch. For now this is needed
-         ! because col_begnb is computed after this mass is lost from the patch-level
-         ! statese, but before it is added to the column-level states.
-         col_ninputs(c) = col_ninputs(c) + &
-              cnveg_nitrogenflux_inst%dwt_to_litrn_col(c)
-
          ! calculate total column-level outputs
          col_noutputs(c) = denit(c) + col_fire_nloss(c)
 
@@ -342,13 +315,6 @@ contains
          end if
 
          col_noutputs(c) = col_noutputs(c) - som_n_leached(c)
-
-         ! FIXME(wjs, 2016-07-08) This is temporary. It can be removed once we update
-         ! column states immediately after dyn_cnbal_patch. For now this is needed because
-         ! col_begnb is computed after this mass is gained by the patch-level states, but
-         ! before it is taken away from the column-level states.
-         col_noutputs(c) = col_noutputs(c) + &
-              cnveg_nitrogenflux_inst%dwt_seedn_col(c)
 
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &

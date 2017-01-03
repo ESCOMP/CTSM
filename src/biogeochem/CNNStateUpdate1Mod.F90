@@ -6,7 +6,7 @@ module CNNStateUpdate1Mod
   !
   ! !USES:
   use shr_kind_mod                    , only: r8 => shr_kind_r8
-  use clm_time_manager                , only : get_step_size
+  use clm_time_manager                , only : get_step_size, get_step_size_real
   use clm_varpar                      , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
   use clm_varpar                      , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
@@ -15,16 +15,73 @@ module CNNStateUpdate1Mod
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use PatchType                       , only : patch                
   !
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public:: NStateUpdate1
+  public :: NStateUpdateDynPatch
+  public :: NStateUpdate1
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine NStateUpdateDynPatch(num_soilc_with_inactive, filter_soilc_with_inactive, &
+       cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
+    !
+    ! !DESCRIPTION:
+    ! Update nitrogen states based on fluxes from dyn_cnbal_patch
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: num_soilc_with_inactive       ! number of columns in soil filter
+    integer, intent(in) :: filter_soilc_with_inactive(:) ! soil column filter that includes inactive points
+    type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
+    type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: c   ! column index
+    integer  :: fc  ! column filter index
+    integer  :: j   ! level index
+    real(r8) :: dt  ! time step (seconds)
+
+    character(len=*), parameter :: subname = 'NStateUpdateDynPatch'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         nf_veg => cnveg_nitrogenflux_inst  , &
+         ns_veg => cnveg_nitrogenstate_inst , &
+         ns_soil => soilbiogeochem_nitrogenstate_inst &
+         )
+
+    dt = get_step_size_real()
+
+    do j = 1, nlevdecomp
+       do fc = 1, num_soilc_with_inactive
+          c = filter_soilc_with_inactive(fc)
+          ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + &
+               nf_veg%dwt_frootn_to_litr_met_n_col(c,j) * dt
+          ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + &
+               nf_veg%dwt_frootn_to_litr_cel_n_col(c,j) * dt
+          ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + &
+               nf_veg%dwt_frootn_to_litr_lig_n_col(c,j) * dt
+          ns_soil%decomp_npools_vr_col(c,j,i_cwd) = ns_soil%decomp_npools_vr_col(c,j,i_cwd) + &
+               ( nf_veg%dwt_livecrootn_to_cwdn_col(c,j) + nf_veg%dwt_deadcrootn_to_cwdn_col(c,j) ) * dt
+       end do
+    end do
+
+    do fc = 1, num_soilc_with_inactive
+       c = filter_soilc_with_inactive(fc)
+       ns_veg%seedn_col(c) = ns_veg%seedn_col(c) - nf_veg%dwt_seedn_to_leaf_col(c) * dt
+       ns_veg%seedn_col(c) = ns_veg%seedn_col(c) - nf_veg%dwt_seedn_to_deadstem_col(c) * dt
+    end do
+
+    end associate
+
+  end subroutine NStateUpdateDynPatch
 
   !-----------------------------------------------------------------------
   subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -70,26 +127,26 @@ contains
             c = filter_soilc(fc)
 
             nf_soil%decomp_npools_sourcesink_col(c,j,i_met_lit) = &
-                 ( nf_veg%phenology_n_to_litr_met_n_col(c,j) + nf_veg%dwt_frootn_to_litr_met_n_col(c,j) ) * dt
+                 nf_veg%phenology_n_to_litr_met_n_col(c,j) * dt
 
             nf_soil%decomp_npools_sourcesink_col(c,j,i_cel_lit) = &
-                 ( nf_veg%phenology_n_to_litr_cel_n_col(c,j) + nf_veg%dwt_frootn_to_litr_cel_n_col(c,j) ) * dt
+                 nf_veg%phenology_n_to_litr_cel_n_col(c,j) * dt
 
             nf_soil%decomp_npools_sourcesink_col(c,j,i_lig_lit) = &
-                 ( nf_veg%phenology_n_to_litr_lig_n_col(c,j) + nf_veg%dwt_frootn_to_litr_lig_n_col(c,j) ) * dt
+                 nf_veg%phenology_n_to_litr_lig_n_col(c,j) * dt
 
-            nf_soil%decomp_npools_sourcesink_col(c,j,i_cwd)     = &
-                 ( nf_veg%dwt_livecrootn_to_cwdn_col(c,j)    + nf_veg%dwt_deadcrootn_to_cwdn_col(c,j) )   * dt
+            ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
+            ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
+            ! time step, but to be safe, I'm explicitly setting it to zero here.
+            nf_soil%decomp_npools_sourcesink_col(c,j,i_cwd) = 0._r8
 
          end do
       end do
 
-      ! seeding fluxes, from dynamic landcover
+      ! seeding fluxes from crop
       do fc = 1,num_soilc
          c = filter_soilc(fc)
-
-         ns_veg%seedn_col(c) = ns_veg%seedn_col(c) - nf_veg%dwt_seedn_to_leaf_col(c) * dt
-         ns_veg%seedn_col(c) = ns_veg%seedn_col(c) - nf_veg%dwt_seedn_to_deadstem_col(c) * dt
+         ns_veg%seedn_col(c) = ns_veg%seedn_col(c) - nf_veg%crop_seedn_to_leaf_col(c) * dt
       end do
 
       do fp = 1,num_soilp

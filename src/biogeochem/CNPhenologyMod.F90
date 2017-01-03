@@ -1509,11 +1509,11 @@ contains
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch       , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer                           
          cropseedc         =>    cnveg_carbonstate_inst%cropseedc_patch        , & ! Output: [real(r8) (:) ]  (gC/m2)   C in crop seed
 
-         dwt_seedc_to_leaf =>    cnveg_carbonflux_inst%dwt_seedc_to_leaf_col   , & ! Output: [real(r8) (:) ]  (gC/m2/s) seed source to patch-level                
+         crop_seedc_to_leaf =>   cnveg_carbonflux_inst%crop_seedc_to_leaf_col  , & ! Output: [real(r8) (:) ]  (gC/m2/s) seed source to patch-level                
 
          fert_counter      =>    cnveg_nitrogenflux_inst%fert_counter_patch    , & ! Output: [real(r8) (:) ]  >0 fertilize; <=0 not (seconds)                   
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch     , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer                           
-         dwt_seedn_to_leaf =>    cnveg_nitrogenflux_inst%dwt_seedn_to_leaf_col , & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to patch-level                
+         crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_col, & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to patch-level                
          cphase            =>    crop_inst%cphase_patch                        , & ! Output: [real(r8) (:)]   phenology phase
          fert              =>    cnveg_nitrogenflux_inst%fert_patch              & ! Output: [real(r8) (:) ]  (gN/m2/s) fertilizer applied each timestep 
          )
@@ -1627,8 +1627,8 @@ contains
                   leafc_xfer(p)  = initial_seed_at_planting
                   cropseedc(p)   = leafc_xfer(p)
                   leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
-                  dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
+                  crop_seedc_to_leaf(c) = crop_seedc_to_leaf(c) + leafc_xfer(p)/dt
+                  crop_seedn_to_leaf(c) = crop_seedn_to_leaf(c) + leafn_xfer(p)/dt
 
                   ! latest possible date to plant winter cereal and after all other 
                   ! crops were harvested for that year
@@ -1648,8 +1648,8 @@ contains
                   leafc_xfer(p)  = initial_seed_at_planting
                   cropseedc(p)   = leafc_xfer(p)
                   leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
-                  dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
+                  crop_seedc_to_leaf(c) = crop_seedc_to_leaf(c) + leafc_xfer(p)/dt
+                  crop_seedn_to_leaf(c) = crop_seedn_to_leaf(c) + leafn_xfer(p)/dt
                else
                   gddmaturity(p) = 0._r8
                end if
@@ -1694,8 +1694,8 @@ contains
                   leafc_xfer(p)  = initial_seed_at_planting
                   cropseedc(p)   = leafc_xfer(p)
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
-                  dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
+                  crop_seedc_to_leaf(c) = crop_seedc_to_leaf(c) + leafc_xfer(p)/dt
+                  crop_seedn_to_leaf(c) = crop_seedn_to_leaf(c) + leafn_xfer(p)/dt
 
                   ! If hit the max planting julian day -- go ahead and plant
                else if (jday == maxplantjday(ivt(p),h) .and. gdd820(p) > 0._r8 .and. &
@@ -1723,8 +1723,8 @@ contains
                   leafc_xfer(p)  = initial_seed_at_planting
                   cropseedc(p)   = leafc_xfer(p)
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
-                  dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
+                  crop_seedc_to_leaf(c) = crop_seedc_to_leaf(c) + leafc_xfer(p)/dt
+                  crop_seedn_to_leaf(c) = crop_seedn_to_leaf(c) + leafn_xfer(p)/dt
 
                else
                   gddmaturity(p) = 0._r8
@@ -1884,8 +1884,8 @@ contains
                   offset_flag(p) = 1._r8
                   offset_counter(p) = dt
                else                      ! plant never emerged from the ground
-                  dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) - leafc_xfer(p)/dt
-                  dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) - leafn_xfer(p)/dt
+                  crop_seedc_to_leaf(c) = crop_seedc_to_leaf(c) - leafc_xfer(p)/dt
+                  crop_seedn_to_leaf(c) = crop_seedn_to_leaf(c) - leafn_xfer(p)/dt
                   leafc_xfer(p) = 0._r8  ! revert planting transfers
                   leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
                end if
@@ -1912,8 +1912,8 @@ contains
 
          else   ! crop not live
             ! next 2 lines conserve mass if leaf*_xfer > 0 due to interpinic
-            dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) - leafc_xfer(p)/dt
-            dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) - leafn_xfer(p)/dt
+            crop_seedc_to_leaf(c) = crop_seedc_to_leaf(c) - leafc_xfer(p)/dt
+            crop_seedn_to_leaf(c) = crop_seedn_to_leaf(c) - leafn_xfer(p)/dt
             onset_counter(p) = 0._r8
             leafc_xfer(p) = 0._r8
             cropseedc(p)  = 0._r8

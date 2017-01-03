@@ -1,4 +1,177 @@
 ===============================================================
+Tag name:  clm4_5_14_r214
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Jan  3 12:55:28 MST 2017
+One-line Summary: Update column states based on dwt terms between dyn_cnbal_patch and dyn_cnbal_col, and minor fixes
+
+Purpose of changes
+------------------
+
+Main change is to move the update of column states based on dwt terms (which
+come from shrinking patches) to earlier in the time step - specifically, between
+dyn_cnbal_patch and dyn_cnbal_col. This includes updating the seed pools and
+decomp_[c/n]pools_vr_col.
+
+This change is important when there are changing column areas: In order to
+conserve C & N, we need to transfer the mass from the dwt terms to the
+column-level pools before executing the code to conserve the column-level state
+variables. For example, if the natural vegetated column shrinks (with a
+corresponding shrinkage of each patch on the column), and is replaced by crop:
+Then the dwt terms from the shrinking patches (assuming this was handled
+correctly - fix coming in an upcoming tag...) add some C & N to the below-ground
+pools. But some of this C & N needs to end up in the growing crop column. Since
+the column-level conservation operates on state variables (not fluxes), this
+only works properly if the mass from the dwt fluxes is added to the states
+before dyn_cnbal_col.
+
+In addition, this tag fixes a number of minor problems:
+
+(1) Separates the crop uses of seed(c/n)_to_leaf from the dwt uses. This is
+    needed for the main change to work correctly.
+
+(2) Allows longer history field names in hist_fincl and hist_fexcl
+
+(3) Fixes SNOINTABS diagnostic field (bug 2321)
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2321: SNOINTABS diagnostic field incorrect for columns with more than one patch
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- Changes meaning of DWT_SEEDC_TO_LEAF andDWT_SEEDN_TO_LEAF: No longer includes
+  crop seed terms
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: Minor tweak to crop testmod: Add a history field
+that uses SUM, in order to test the SUM history field infrastructure
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass, baseline failures as expected, as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_14_r213
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM50 in these configurations:
+      - All transient cases (HIST, RCP, DV): changes due to the main changes in
+        this tag
+      - All CROP cases: changes answers in DWT_SEEDC_TO_LEAF and
+        DWT_SEEDN_TO_LEAF diagnostic fields
+      - Many cases: differences in SNOINTABS diagnostic field. From one test
+        (LII_D_Ld3.f19_g16_gl5.IG1850CLM45.yellowstone_intel.clm-glcMEC_spunup_1way),
+        there are diffs of up to 0.06. No diffs over Antarctica or most of
+        Greenland (though there are some diffs on the southern tip of
+        Greenland). Lots of other diffs in the northern hemisphere mid-high
+        latitudes. This is as expected: expect diffs in vegetated areas, but not
+        in glacier.
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff; not investigated as to whether this is new climate,
+      but expected not to be
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Move update of column states based on dwt terms to earlier in the time step
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+M       components/clm/src/biogeochem/CNVegNitrogenFluxType.F90
+M       components/clm/src/biogeochem/CNCStateUpdate1Mod.F90
+M       components/clm/src/biogeochem/CNNStateUpdate1Mod.F90
+M       components/clm/src/biogeochem/CNBalanceCheckMod.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+M       components/clm/src/biogeochem/dynConsBiogeochemMod.F90
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+
+========= Separate the crop uses of seed(c/n)_to_leaf from the dwt uses
+M       components/clm/src/biogeochem/CNPhenologyMod.F90
+
+========= Change sub_surf_abs_SW to a patch-level variable, rather than
+          column-level (fixes bug 2321)
+M       components/clm/src/biogeophys/SurfaceRadiationMod.F90
+M       components/clm/src/biogeophys/SolarAbsorbedType.F90
+
+========= Allow longer history field names in hist_fincl and hist_fexcl
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+
+========= Add a history field that uses SUM, in order to test the SUM history
+          field infrastructure
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/crop/user_nl_clm
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r213
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Dec 30 08:48:44 MST 2016

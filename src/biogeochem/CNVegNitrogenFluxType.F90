@@ -201,11 +201,9 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: dwt_deadcrootn_to_cwdn_col                (:,:)   ! col (gN/m3/s) dead coarse root to CWD due to landcover change
      real(r8), pointer :: dwt_nloss_col                             (:)     ! col (gN/m2/s) total nitrogen loss from product pools and conversion
 
-     ! FIXME(wjs, 2016-07-08) Remove these once we update column states immediately after
-     ! dyn_cnbal_patch
-     real(r8), pointer :: dwt_to_litrn_col(:)
-     real(r8), pointer :: dwt_seedn_col(:)
-
+     ! crop fluxes
+     real(r8), pointer :: crop_seedn_to_leaf_col                    (:)     ! col (gN/m2/s) seed source to patch-level, for crops
+     
      ! Misc
      real(r8), pointer :: plant_ndemand_patch                       (:)     ! N flux required to support initial GPP (gN/m2/s)
      real(r8), pointer :: avail_retransn_patch                      (:)     ! N flux available from retranslocation pool (gN/m2/s)
@@ -439,8 +437,7 @@ contains
     allocate(this%dwt_livecrootn_to_cwdn_col   (begc:endc,1:nlevdecomp_full)) ; this%dwt_livecrootn_to_cwdn_col   (:,:) = nan
     allocate(this%dwt_deadcrootn_to_cwdn_col   (begc:endc,1:nlevdecomp_full)) ; this%dwt_deadcrootn_to_cwdn_col   (:,:) = nan
 
-    allocate(this%dwt_to_litrn_col(begc:endc)); this%dwt_to_litrn_col(:) = nan
-    allocate(this%dwt_seedn_col(begc:endc)); this%dwt_seedn_col(:) = nan
+    allocate(this%crop_seedn_to_leaf_col       (begc:endc))                   ; this%crop_seedn_to_leaf_col       (:)   = nan
 
     allocate(this%m_decomp_npools_to_fire_vr_col    (begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
     allocate(this%m_decomp_npools_to_fire_col       (begc:endc,1:ndecomp_pools                  ))
@@ -1033,6 +1030,11 @@ contains
          avgflag='A', &
          long_name='total nitrogen loss from landcover conversion (0 at all times except first timestep of year)', &
          ptr_col=this%dwt_nloss_col)
+
+    this%crop_seedn_to_leaf_col(begc:endc) = spval
+    call hist_addfld1d (fname='CROP_SEEDN_TO_LEAF', units='gN/m^2/s', &
+         avgflag='A', long_name='crop seed source to patch-level leaf', &
+         ptr_col=this%crop_seedn_to_leaf_col)
 
     this%plant_ndemand_patch(begp:endp) = spval
     call hist_addfld1d (fname='PLANT_NDEMAND', units='gN/m^2/s', &
@@ -1682,6 +1684,7 @@ contains
     do fi = 1,num_column
        i = filter_column(fi)
 
+       this%crop_seedn_to_leaf_col(i)        = value_column
        this%grainn_to_cropprodn_col(i)       = value_column
        this%fire_nloss_col(i)                = value_column
 
@@ -1726,8 +1729,6 @@ contains
        this%dwt_seedn_to_leaf_col(c)     = 0._r8
        this%dwt_seedn_to_deadstem_col(c) = 0._r8
        this%dwt_conv_nflux_col(c)        = 0._r8
-       this%dwt_to_litrn_col(c) = 0._r8
-       this%dwt_seedn_col(c) = 0._r8
     end do
 
     do j = 1, nlevdecomp_full

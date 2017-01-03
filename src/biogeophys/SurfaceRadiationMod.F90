@@ -555,7 +555,7 @@ contains
           fsds_nir_d_ln   =>    solarabs_inst%fsds_nir_d_ln_patch , & ! Output: [real(r8) (:)   ] incident direct beam nir solar rad at local noon (W/m**2)
           fsds_nir_i      =>    solarabs_inst%fsds_nir_i_patch    , & ! Output: [real(r8) (:)   ] incident diffuse nir solar radiation (W/m**2)
           fsa_r           =>    solarabs_inst%fsa_r_patch         , & ! Output: [real(r8) (:)   ] rural solar radiation absorbed (total) (W/m**2)
-          sub_surf_abs_SW =>    solarabs_inst%sub_surf_abs_SW_col , & ! Output: [real(r8) (:)   ] percent of solar radiation absorbed below first snow layer (W/M**2)
+          sub_surf_abs_SW =>    solarabs_inst%sub_surf_abs_SW_patch , & ! Output: [real(r8) (:)   ] fraction of solar radiation absorbed below first snow layer (W/M**2)
 
           parveg_ln       =>    surfrad_inst%parveg_ln_patch      , & ! Output: [real(r8) (:)   ] absorbed par by vegetation at local noon (W/m**2)
           fsr_vis_d       =>    surfrad_inst%fsr_vis_d_patch      , & ! Output: [real(r8) (:)   ] reflected direct beam vis solar radiation (W/m**2)
@@ -698,7 +698,7 @@ contains
           l = patch%landunit(p)
           sabg_snl_sum = 0._r8
 
-          sub_surf_abs_SW(c) = 0._r8
+          sub_surf_abs_SW(p) = 0._r8
 
           ! CASE1: No snow layers: all energy is absorbed in top soil layer
           if (snl(c) == 0) then
@@ -718,15 +718,15 @@ contains
                 endif
                 if (i > snl(c)+1) then ! if snow layer is below surface snow layer
                    !accumulate subsurface flux as a diagnostic for history file
-                   sub_surf_abs_SW(c) = sub_surf_abs_SW(c) + sabg_lyr(p,i)
+                   sub_surf_abs_SW(p) = sub_surf_abs_SW(p) + sabg_lyr(p,i)
                 endif
              enddo
 
-             ! Divide absorbed by total, to get % absorbed in subsurface
+             ! Divide absorbed by total, to get fraction absorbed in subsurface
              if (sabg_snl_sum /= 0._r8) then
-                sub_surf_abs_SW(c) = sub_surf_abs_SW(c)/sabg_snl_sum
+                sub_surf_abs_SW(p) = sub_surf_abs_SW(p)/sabg_snl_sum
              else
-                sub_surf_abs_SW(c) = 0._r8
+                sub_surf_abs_SW(p) = 0._r8
              endif
 
              ! Error handling: The situation below can occur when solar radiation is 

@@ -263,10 +263,8 @@ module CNVegCarbonFluxType
      real(r8), pointer :: dwt_closs_col                             (:)     ! (gC/m2/s) total carbon loss from product pools and conversion
      real(r8), pointer :: dwt_closs_dribbled_grc                    (:)     ! (gC/m2/s) total carbon loss from product pools and conversion, dribbled evenly throughout the year
 
-     ! FIXME(wjs, 2016-07-08) Remove these once we update column states immediately after
-     ! dyn_cnbal_patch
-     real(r8), pointer :: dwt_to_litrc_col(:)
-     real(r8), pointer :: dwt_seedc_col(:)
+     ! crop fluxes
+     real(r8), pointer :: crop_seedc_to_leaf_col                    (:)     ! (gC/m2/s) seed source to patch-level, for crops
 
      ! summary (diagnostic) flux variables, not involved in mass balance
      real(r8), pointer :: gpp_before_downreg_patch                  (:)     ! (gC/m2/s) gross primary production before down regulation
@@ -636,8 +634,7 @@ contains
     allocate(this%dwt_conv_cflux_col                (begc:endc))                  ; this%dwt_conv_cflux_col        (:)  =nan
     allocate(this%dwt_productc_gain_patch           (begp:endp))                  ; this%dwt_productc_gain_patch   (:)  =nan
 
-    allocate(this%dwt_to_litrc_col(begc:endc)); this%dwt_to_litrc_col(:) = nan
-    allocate(this%dwt_seedc_col(begc:endc)); this%dwt_seedc_col(:) = nan
+    allocate(this%crop_seedc_to_leaf_col            (begc:endc))                  ; this%crop_seedc_to_leaf_col    (:)  =nan
 
     allocate(this%cwdc_hr_col                       (begc:endc))                  ; this%cwdc_hr_col               (:)  =nan
     allocate(this%cwdc_loss_col                     (begc:endc))                  ; this%cwdc_loss_col             (:)  =nan
@@ -2863,6 +2860,11 @@ contains
             long_name='total carbon loss from land cover conversion, dribbled throughout the year', &
             ptr_gcell=this%dwt_closs_dribbled_grc)
 
+       this%crop_seedc_to_leaf_col(begc:endc) = spval
+       call hist_addfld1d (fname='CROP_SEEDC_TO_LEAF', units='gC/m^2/s', &
+            avgflag='A', long_name='crop seed source to patch-level leaf', &
+            ptr_col=this%crop_seedc_to_leaf_col)
+
         this%sr_col(begc:endc) = spval
         call hist_addfld1d (fname='SR', units='gC/m^2/s', &
              avgflag='A', long_name='total soil respiration (HR + root resp)', &
@@ -3010,6 +3012,11 @@ contains
             long_name='C13 total carbon loss from land cover conversion, dribbled throughout the year', &
             ptr_gcell=this%dwt_closs_dribbled_grc)
 
+       this%crop_seedc_to_leaf_col(begc:endc) = spval
+       call hist_addfld1d (fname='C13_CROP_SEEDC_TO_LEAF', units='gC13/m^2/s', &
+            avgflag='A', long_name='C13 crop seed source to patch-level leaf', &
+            ptr_col=this%crop_seedc_to_leaf_col)
+
         this%sr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_SR', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 total soil respiration (HR + root resp)', &
@@ -3131,6 +3138,11 @@ contains
             avgflag='A', &
             long_name='C14 total carbon loss from land cover conversion, dribbled throughout the year', &
             ptr_gcell=this%dwt_closs_dribbled_grc)
+
+       this%crop_seedc_to_leaf_col(begc:endc) = spval
+       call hist_addfld1d (fname='C14_CROP_SEEDC_TO_LEAF', units='gC14/m^2/s', &
+            avgflag='A', long_name='C14 crop seed source to patch-level leaf', &
+            ptr_col=this%crop_seedc_to_leaf_col)
 
         this%sr_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_SR', units='gC14/m^2/s', &
@@ -3259,8 +3271,6 @@ contains
              this%dwt_deadcrootc_to_cwdc_col(c,j)   = 0._r8
           end do
           this%dwt_closs_col(c)  = 0._r8
-          this%dwt_to_litrc_col(c) = 0._r8
-          this%dwt_seedc_col(c) = 0._r8
        end if
     end do
 
@@ -3768,6 +3778,7 @@ contains
     do fi = 1,num_column
        i = filter_column(fi)
 
+       this%crop_seedc_to_leaf_col(i)        = value_column
        this%grainc_to_cropprodc_col(i)       = value_column
        this%cwdc_hr_col(i)                   = value_column
        this%cwdc_loss_col(i)                 = value_column
@@ -3857,8 +3868,6 @@ contains
        this%dwt_seedc_to_leaf_col(c)        = 0._r8
        this%dwt_seedc_to_deadstem_col(c)    = 0._r8
        this%dwt_conv_cflux_col(c)           = 0._r8
-       this%dwt_to_litrc_col(c) = 0._r8
-       this%dwt_seedc_col(c) = 0._r8
     end do
 
     do j = 1, nlevdecomp_full
