@@ -1,4 +1,88 @@
 ===============================================================
+Tag name:  clm4_5_14_r216
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Thu Jan 12 16:12:45 MST 2017
+One-line Summary: Fix previous broken tag
+
+Purpose of changes
+------------------
+
+Three files were missing from the merge to transcrop_n08_clm4_5_14_r214 on the trunk. I don't
+know why they were missing, but they were. I have on very rare occasions seen subversion fail
+with this problem, and it maybe due to a rare bug in subversion. Manytimes I double check to
+make sure this doesn't happen, but I didn't this time.
+
+Bugs fixed or introduced
+------------------------
+
+Known bugs introduced in this tag (include bugzilla ID): 2400
+    2400 ---  Problem with mksurfdata_map for smallville landuse.timeseries (found in clm4_5_14_r215 after it's creation)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users None
+
+Changes to CLM's user interface: None
+
+Changes made to namelist defaults: None
+
+Changes to the datasets: None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers: None
+
+Changes to tests or testing: None
+
+Code reviewed by: self
+
+CLM testing: short
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests: None
+
+  unit-tests (components/clm/src): None
+
+  tools-tests (components/clm/test/tools): None
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test): None
+
+  regular tests: clm_short_50
+
+    yellowstone_intel -  PASS
+
+CLM tag used for the baseline comparisons: none
+
+
+Answer changes None
+--------------
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>> Bring in files that were modified on the branch transcrop_n08_clm4_5_14_r214, but for some reason were dropped on
+>>>>>> the merge to the trunk
+
+   M           components/clm/src/dyn_subgrid/dyncropFileMod.F90
+   M           components/clm/src/main/clm_initializeMod.F90
+   M           parse_cime.cs.status
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r215
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Jan 12 10:29:52 MST 2017

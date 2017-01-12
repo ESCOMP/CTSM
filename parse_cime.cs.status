@@ -225,6 +225,9 @@ sub run_csstatus {
          if ( $over eq "FAIL" && $fails =~ /MEMLEAK/ ) { 
             $over = "PASS";
          }
+         if ( $over eq "FAIL" && $fails =~ /MEMCOMP/ ) { 
+            $over = "PASS";
+         }
          if ( $over eq "DIFF" ) { 
             my $file = glob( "${test}.*$csdate/TestStatus" );
             my $result = " ";

@@ -31,10 +31,12 @@ module dyncropFileMod
   type(dyn_file_type), target      :: dyncrop_file ! information for the file containing transient crop data
   type(dyn_var_time_uninterp_type) :: wtcrop       ! weight of the crop landunit
   type(dyn_var_time_uninterp_type) :: wtcft        ! weight of each CFT relative to the crop landunit
+  type(dyn_var_time_uninterp_type) :: fertcft      ! fertilizer of each CFT
 
   ! Names of variables on file
   character(len=*), parameter :: crop_varname = 'PCT_CROP'
   character(len=*), parameter :: cft_varname  = 'PCT_CFT'
+  character(len=*), parameter :: fert_varname  = 'FERTNITRO_CFT'
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -61,6 +63,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: num_points     ! number of spatial points
     integer :: wtcft_shape(2) ! shape of the wtcft data
+    integer :: fertcft_shape(2) ! shape of the fertcft data
     
     character(len=*), parameter :: subname = 'dyncrop_init'
     !-----------------------------------------------------------------------
@@ -96,11 +99,17 @@ contains
          dyn_file = dyncrop_file, varname=cft_varname, &
          dim1name=grlnd, conversion_factor=100._r8, &
          do_check_sums_equal_1=.true., data_shape=wtcft_shape)
+    fertcft_shape = [num_points, cft_size]
+    fertcft = dyn_var_time_uninterp_type( &
+         dyn_file = dyncrop_file, varname=fert_varname, &
+         dim1name=grlnd, conversion_factor=1._r8, &
+         do_check_sums_equal_1=.false., data_shape=fertcft_shape, &
+         allow_nodata=.true.)
 
   end subroutine dyncrop_init
 
   !-----------------------------------------------------------------------
-  subroutine dyncrop_interp(bounds)
+  subroutine dyncrop_interp(bounds,crop_inst)
     !
     ! !DESCRIPTION:
     ! Get crop cover for model time, when needed.
@@ -113,6 +122,7 @@ contains
     ! dyn_var_time_uninterp_type. 
     !
     ! !USES:
+    use CropType          , only : crop_type
     use landunit_varcon   , only : istcrop
     use clm_varpar        , only : cft_lb, cft_ub
     use surfrdUtilsMod    , only : collapse_crop_types
@@ -120,11 +130,13 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc-level bounds
+    type(crop_type), intent(in) :: crop_inst  ! crop instance for updating annual fertilizer
     !
     ! !LOCAL VARIABLES:
     integer               :: m,p,c,l,g      ! indices
     real(r8), allocatable :: wtcrop_cur(:)  ! current weight of the crop landunit
     real(r8), allocatable :: wtcft_cur(:,:) ! current cft weights
+    real(r8), allocatable :: fertcft_cur(:,:) ! current cft fertilizer
     logical , allocatable :: col_set(:)     ! whether we have set the weight for each column
     
     character(len=*), parameter :: subname = 'dyncrop_interp'
@@ -149,7 +161,10 @@ contains
     allocate(wtcft_cur(bounds%begg:bounds%endg, cft_lb:cft_ub))
     call wtcft%get_current_data(wtcft_cur)
 
-    call collapse_crop_types(wtcft_cur, bounds%begg, bounds%endg, verbose = .false.)
+    allocate(fertcft_cur(bounds%begg:bounds%endg, cft_lb:cft_ub))
+    call fertcft%get_current_data(fertcft_cur)
+
+    call collapse_crop_types(wtcft_cur, fertcft_cur, bounds%begg, bounds%endg, verbose = .false.)
 
     allocate(col_set(bounds%begc:bounds%endc))
     col_set(:) = .false.
@@ -172,11 +187,13 @@ contains
           end if
           
           col%wtlunit(c) = wtcft_cur(g,m)
+	  crop_inst%fertnitro_patch(p) = fertcft_cur(g,m)
           col_set(c) = .true.
        end if
     end do
 
     deallocate(wtcft_cur)
+    deallocate(fertcft_cur)
     deallocate(col_set)
 
   end subroutine dyncrop_interp
