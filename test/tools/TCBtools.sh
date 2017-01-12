@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 2 ]; then
     echo "TCBtools.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TCBtools.$1.$2.$3
+test_name=TCBtools.$1.$2
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -31,7 +31,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1/$2`
+cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1`
 blddir=${CLM_TESTDIR}/${test_name}/src
 if [ -d ${blddir} ]; then
     rm -r ${blddir}
@@ -43,7 +43,7 @@ if [ $? -ne 0 ]; then
 fi
 cd ${blddir}
 
-echo "TCBtools.sh: building $1 $2 executable; output in ${blddir}/test.log" 
+echo "TCBtools.sh: building $1 executable; output in ${blddir}/test.log" 
 #
 # Copy build files over
 #
@@ -62,8 +62,8 @@ done < ${cfgdir}/src/Filepath
 #
 # Figure out configuration
 #
-if [ ! -f ${CLM_SCRIPTDIR}/config_files/$3 ]; then
-    echo "TCB.sh: configure options file ${CLM_SCRIPTDIR}/config_files/$3 not found"
+if [ ! -f ${CLM_SCRIPTDIR}/config_files/$2 ]; then
+    echo "TCB.sh: configure options file ${CLM_SCRIPTDIR}/config_files/$2 not found"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 4
 fi
@@ -72,7 +72,7 @@ fi
 config_string="$TOOLS_MAKE_STRING TOOLROOT=$cfgdir "
 while read config_arg; do
     config_string="${config_string}${config_arg} "
-done < ${CLM_SCRIPTDIR}/config_files/$3
+done < ${CLM_SCRIPTDIR}/config_files/$2
 
 attempt=1
 still_compiling="TRUE"

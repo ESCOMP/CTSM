@@ -233,7 +233,7 @@ my $options = "-co2_ppmv 250 -glc_nec 10 -glc_present";
    # Compare to baseline
    if ( defined($opts{'compare'}) ) {
       $cfiles->dodiffonfile(      "lnd_in",    "most_options", $mode );
-      $cfiles->doNOTdodiffonfile( "$real_par_file", "most_options", $mode );
+      $cfiles->dodiffonfile( "$real_par_file", "most_options", $mode );
       $cfiles->doNOTdodiffonfile( "$tempfile", "most_options", $mode );
       $cfiles->comparefiles( "most_options", $mode, $opts{'compare'} );
    }
@@ -295,7 +295,7 @@ foreach my $options ( "-irrig .true. ", "-verbose", "-rcp 2.6", "-test", "-sim_y
    }
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->doNOTdodiffonfile( "$real_par_file", "$options", $mode );
+      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -324,6 +324,8 @@ foreach my $options (
    $cfiles->shownmldiff( "default", $mode );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
+      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -909,7 +911,7 @@ foreach my $res ( @resolutions ) {
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->doNOTdodiffonfile( "$real_par_file", "$options", $mode );
+      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
 
@@ -996,7 +998,7 @@ foreach my $res ( @regional ) {
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$res", $mode );
-      $cfiles->doNOTdodiffonfile( "$real_par_file", "$res", $mode );
+      $cfiles->dodiffonfile( "$real_par_file", "$res", $mode );
       $cfiles->comparefiles( "$res", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -1022,7 +1024,7 @@ foreach my $res ( @crop_res ) {
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->doNOTdodiffonfile( "$real_par_file", "$options", $mode );
+      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -1080,7 +1082,7 @@ foreach my $res ( @tran_res ) {
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->doNOTdodiffonfile( "$real_par_file", "$options", $mode );
+      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
    if ( defined($opts{'generate'}) ) {
@@ -1102,7 +1104,7 @@ foreach my $usecase ( "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient"
       $cfiles->shownmldiff( "default", "standard" );
       if ( defined($opts{'compare'}) ) {
          $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-         $cfiles->doNOTdodiffonfile( "$real_par_file", "$options", $mode );
+         $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
          $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
       }
       if ( defined($opts{'generate'}) ) {

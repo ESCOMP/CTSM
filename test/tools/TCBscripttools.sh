@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 2 ]; then
     echo "TCBscripttools.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TCBscripttools.$1.$2.$3
+test_name=TCBscripttools.$1.$2
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -31,7 +31,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1/$2`
+cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1`
 blddir=${CLM_TESTDIR}/${test_name}
 if [ -d ${blddir} ]; then
     rm -r ${blddir}
@@ -43,22 +43,22 @@ if [ $? -ne 0 ]; then
 fi
 cd ${blddir}
 
-echo "TCBscripttools.sh: building $2 executables; output in ${blddir}/test.log" 
+echo "TCBscripttools.sh: building $1 executables; output in ${blddir}/test.log" 
 #
 # Build script to exercise
 #
-if [ ! -x ${cfgdir}/$3 ]; then
-    echo "TCB.sh: build run script file ${cfgdir}/$3 not found"
+if [ ! -x ${cfgdir}/$2 ]; then
+    echo "TCB.sh: build run script file ${cfgdir}/$2 not found"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 4
 fi
 
 echo "TCBscripttools.sh: run the build scriptmake:" 
-echo "        ${cfgdir}/$3"
+echo "        ${cfgdir}/$2"
 
 if [ "$debug" != "YES" ]; then
     export CESM_ROOT=${CLM_ROOT}
-    ${cfgdir}/$3  >> test.log 2>&1
+    ${cfgdir}/$2  >> test.log 2>&1
     rc=$(( $rc + $? ))
     status="PASS"
 else

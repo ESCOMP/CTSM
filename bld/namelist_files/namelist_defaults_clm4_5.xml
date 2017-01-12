@@ -540,9 +540,9 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_16pfts_simyr1850_c160127.nc</fsurdat>
 
 <!-- pre-industrial with crop -->
 <fsurdat hgrid="0.9x1.25"  sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_simyr1850_c160127.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_0.9x1.25_78pfts_simyr1850_c161128.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="1850" use_crop=".true." >
-lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_simyr1850_c160127.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_simyr1850_c161128.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/surfdata_10x15_78pfts_simyr1850_c160127.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="1850" use_crop=".true." >
@@ -584,6 +584,10 @@ lnd/clm2/surfdata_map/surfdata_ne120np4_78pfts_simyr1850_c160216.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets for crop -->
 
+<flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000"
+ use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_78pfts_simyr1850-2015_c161128.nc</flanduse_timeseries>
+<flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000"
+ use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_simyr1850-2015_c161216.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2000"
  use_crop=".true."   >lnd/clm2/surfdata_map/landuse.timeseries_10x15_hist_78pfts_simyr1850-2005_c160127.nc</flanduse_timeseries>
 

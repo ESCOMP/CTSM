@@ -386,6 +386,11 @@
   </compset>
 
   <compset grid="g%gland">
+    <alias>IGMHISTCRUCLM50BGCCROP</alias>
+    <lname>HIST_DATM%CRU_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2_SWAV</lname>
+  </compset>
+
+  <compset grid="g%gland">
     <alias>IGM1850CRUCLM50BGC</alias>
     <lname>1850_DATM%CRU_CLM50%BGC_SICE_SOCN_MOSART_CISM2_SWAV</lname>
   </compset>

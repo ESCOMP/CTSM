@@ -69,7 +69,6 @@ SYNOPSIS
 OPTIONS
      -help  [or -h]                       Display this help.
      -csmdata [or -d]                     Path to CSMDATA.
-     -phys "name"                         Model physics (either clm4_0 or clm4_5) (default clm4_0)
      -res  "resolution1,resolution2,..."  List of resolution to use for files.
                                           (At least one resolution is required)
                                           (If res is "all" will run over all resolutions)
@@ -157,7 +156,7 @@ sub GetListofNeededFiles {
                list       => $list,
                usrdat     => undef,
                help       => undef,
-               phys       => "clm4_0",
+               phys       => "clm4_5",
              );
 
   my $cmdline = "@ARGV";
@@ -167,7 +166,6 @@ sub GetListofNeededFiles {
         "s|silent"     => \$opts{'silent'},
         "u|usrdat=s"   => \$opts{'usrdat'},
         "h|elp"        => \$opts{'help'},
-        "phys=s"       => \$opts{'phys'},
   ) or usage();
 
   # Check for unparsed arguments
@@ -290,11 +288,7 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
                  foreach my $crop ( @crop_vals ) {
                    $settings{'crop'} = $crop;
                    if ( $crop eq "on" ) {
-                     if ($phys eq "clm4_0") { 
-                       $settings{'maxpft'} = 21;
-                     } else {
-                       $settings{'maxpft'} = 25;
-                     }
+                     $settings{'maxpft'} = 78;
                    } else {
                      $settings{'maxpft'} = 17;
                    }

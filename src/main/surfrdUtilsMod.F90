@@ -66,7 +66,7 @@ contains
   end subroutine check_sums_equal_1
 
   !-----------------------------------------------------------------------
-  subroutine collapse_crop_types(wt_cft, begg, endg, verbose)
+  subroutine collapse_crop_types(wt_cft, fert_cft, begg, endg, verbose)
     !
     ! !DESCRIPTION:
     ! Collapse unused crop types into types used in this run.
@@ -85,15 +85,19 @@ contains
     integer, intent(in) :: begg     ! Beginning grid cell index
     integer, intent(in) :: endg     ! Ending grid cell index
 
-    ! Weight of each CFT in each grid cell; dimensioned [g, cft_lb:cft_ub]
+    ! Weight and fertilizer of each CFT in each grid cell; dimensioned [g, cft_lb:cft_ub]
     ! This array is modified in-place
     real(r8), intent(inout) :: wt_cft(begg:, cft_lb:)
+    real(r8), intent(inout) :: fert_cft(begg:, cft_lb:)
 
     logical, intent(in) :: verbose  ! If true, print some extra information
     !
     ! !LOCAL VARIABLES:
     integer :: g
     integer :: m
+    real(r8) :: wt_cft_to
+    real(r8) :: wt_cft_from
+    real(r8) :: wt_cft_merge
 
     character(len=*), parameter :: subname = 'collapse_crop_types'
     !-----------------------------------------------------------------------
@@ -143,8 +147,15 @@ contains
     do g = begg, endg
        do m = 1, npcropmax
           if (m /= pftcon%mergetoclmpft(m)) then
-             wt_cft(g, pftcon%mergetoclmpft(m)) = wt_cft(g, pftcon%mergetoclmpft(m)) + wt_cft(g, m)
+             wt_cft_to = wt_cft(g, pftcon%mergetoclmpft(m))
+             wt_cft_from = wt_cft(g, m)
+             wt_cft_merge = wt_cft_to + wt_cft_from
+             wt_cft(g, pftcon%mergetoclmpft(m)) = wt_cft_merge
              wt_cft(g, m) = 0._r8
+             if (wt_cft_merge > 0._r8) then
+                fert_cft(g,pftcon%mergetoclmpft(m)) = (wt_cft_to * fert_cft(g,pftcon%mergetoclmpft(m)) + &
+                                                      wt_cft_from * fert_cft(g,m)) / wt_cft_merge
+             end if
           end if
        end do
 

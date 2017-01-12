@@ -1,4 +1,220 @@
 ===============================================================
+Tag name:  clm4_5_14_r215
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Jan 12 10:29:52 MST 2017
+One-line Summary: Update mksurfdata_map to work with new updated datasets from Peter, and use hand-edited 
+                  surfdata/landuse.timeseries datasets for f09/f19
+
+Purpose of changes
+------------------
+
+Use new rawdatasets from Peter Lawrence that have crop landunit changing in size as well as specific crop 
+and natural vegetation types. Modify mksurfdata_map to use new fields for fertilizer for each crop type.
+Add in harvest fields to both surface dataset as well as landuse.timeseries dataset. Also add in two
+new fields: UNREPRESENTED_PFT_LULCC, UNREPRESENTED_CFT_LULCC for the impact of landuse changes for 
+natural and crop vegetation types. Currently these two fields are zeroed out. But, they will be added in
+with a new update to the datasets.
+
+Implement crop fertilizer for each crop type into CLM. The fertilizer is also moved from one crop
+type to another by the mapping system between the different crop types (to handle unrepresented crop
+types by mapping them to one that is represented). The new datasets also have harvest fields in units by
+mass rather than area. This requires new surface and landuse.timeseries datasets. We have hand-edited 
+versions from Peter Lawrence for f09 and f19. The older datasets for other resolutions still work, but 
+they don't have the new fertilizer field so anthropogenic fertilizer is zeroed out.
+
+NOTE: Capability to create rcp scenarios for landuse.timeseries was removed from mksurfdata_map.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+   2386 -- buildnamelist unit tester can't compare to itself
+   2389 -- make nitrogen balance threshold higher
+   2382 -- soil depth dataset into subversion
+   2369 -- Remove hacks to change PFT's in tropics in mksurfdata_map
+   2097 -- mksurfdata_map changes
+
+Known bugs introduced in this tag (include bugzilla ID):
+
+   2399 -- Problem with urban points with latest mksurfdata_map
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users:
+
+   mksurfdata.pl "-crop" option changed to "-no_crop" so the default is to create datasets with crop on it.
+  Also default for -glc_nec is now 10 so default is to create datasets with glacier 
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+
+   New optional history field:
+
+   FERTNITRO', 'gN/m2/yr', 'Nitrogen fertilizer for each crop
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files): New f09/f19 surfdata/landuse.timeseries
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers:
+
+Changes to tests or testing: Removed clm4_0 tools tests
+
+Code reviewed by: self, lawrence
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - OK
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_14_r214
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: f09 and f19 CLM45/CLM50 cases change answers because of new datasets
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm45/clm50 for f09 and f19
+    - what platforms/compilers: all
+    - nature of change: adjusted surface datasets
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: Remove clm4_0 tools, rename clm4_5/shared directories under CLM tools
+
+   D components/clm/tools/clm4_0/*
+   D components/clm/tools/clm4_5/mksurfdata_map/*
+   D components/clm/tools/clm4_5/refactorTools/*
+   D components/clm/tools/shared/mkmapdata/*
+   D components/clm/tools/shared/mkmapgrids/*
+   D components/clm/tools/shared/mkprocdata_map/*
+   D components/clm/tools/shared/ncl_scripts/*
+
+   D components/clm/tools/clm4_5/mksurfdata_map/landuse_timeseries_hist_16pfts_simyr1850-2005.txt
+
+List all files added and what they do: Renamed from clm4_5 or shared subdirectories, unit tests for mkharvest
+
+   A components/clm/tools/mksurfdata_map/*
+   A components/clm/tools/refactorTools/*
+   A components/clm/tools/mkmapdata/*
+   A components/clm/tools/mkmapgrids/*
+   A components/clm/tools/mkprocdata_map/*
+   A components/clm/tools/ncl_scripts/*
+
+   A  components/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkharvest.F90
+   A  components/clm/tools/clm4_5/mksurfdata_map/unit_testers/inputs/harvestfieldsold.nc
+   A  components/clm/tools/clm4_5/mksurfdata_map/unit_testers/inputs/harvestfields.nc
+   A  components/clm/tools/clm4_5/mksurfdata_map/landuse_timeseries_hist_78pfts_simyr1850-2015.txt
+
+List all existing files that have been modified, and describe the changes:
+
+   M  components/clm/src/biogeochem/CNBalanceCheckMod.F90 - Increase threshold for Nitrogen balance check
+   M  components/clm/src/biogeochem/CropType.F90 ---------- Add fertnitro to fert array
+   M  components/clm/src/biogeochem/CNPhenologyMod.F90 ---- Add fertnitro_patch and InitCold for it
+          Add FERTNITRO as optional output to history files (default inactive)
+   M  components/clm/src/biogeochem/dynHarvestMod.F90 ----- Read in harvest units, divide by deadstem if
+          new units of gC/m2/yr, otherwise take directly
+   M  components/clm/src/main/surfrdMod.F90 --------------- Read in CONST_FERTNITRO_CFT if on file,
+         otherwise zero it out, pass fert_cft to collapse_crop_types
+   M  components/clm/src/main/clm_varsur.F90 -------------- Add fert_cft as temporary read in from dataset
+   M  components/clm/src/main/clm_driver.F90 -------------- Pass crop_inst to dynSubgrid_driver
+   M  components/clm/src/main/surfrdUtilsMod.F90 ---------- Handle fert_cft in collapse_crop_types
+         if crops are being merged also move the fertilizer
+   M  components/clm/src/main/clm_initializeMod.F90 ------- Allocate/dealloc fert_cft, pass crop_inst to dynsubgrid_init
+   M  components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90 ------ Pass crop_inst in and down to dyncrop_interp
+   M  components/clm/src/dyn_subgrid/dynVarMod.F90.in ------------- Add allow_nodata and data_on_file flags
+         and get_att method, if allow_nodata is true, read_variable will NOT abort, but zero out the
+         variable
+   M  components/clm/src/dyn_subgrid/dynVarTimeUninterpMod.F90.in - Pass allow_nodata as optional argument down
+   M  components/clm/src/dyn_subgrid/dyncropFileMod.F90 ----------- Add fertcft dyn_var_time_uninterp_type
+         initialize it, pass crop_inst to dyncrop_interp, get current data from fertcft%get_current_data
+         and pass to collapse_crop_types
+
+   M  components/clm/bld/listDefaultNamelist.pl -------------- Remove phys option maxpft is now 78
+   M  components/clm/bld/unit_testers/build-namelist_test.pl - Fix bug 2386 for comparing to itself for
+         user_nl_clm_real_parameters files
+   M  components/clm/bld/unit_testers/NMLTest/CompFiles.pm - - Fix bug 2386 for comparing to itself, 
+         change double quotes in filenames to a "+" like other special characters
+   M  components/clm/bld/README ------------------------------ Remove note on clm4_0_tools file
+   M  components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml - Updated (hand-edited) surface and
+         historical landuse.timeseries datasets for f09 and f19
+   M  components/clm/bld/namelist_files/namelist_defaults_clm4_0_tools.xml - Remove contents
+         (keep file around as queryDefaultNamelist.pl assumes it's existance)
+   M  components/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - Add "hrv" hgrid/lmask
+         option for 0.9x1.25/GDRC, add "hrv" mksrf_filename called mksrf_fhrvtyp use
+         lnd/clm2/rawdata/mksf_soilthk_5x5min_ORNL_SOILS_simyr1900-2015_c150701.nc file in place
+         of file pointing to Sean Swenson's personal disk space, remove: mksrf_fvegtyp for test
+         years, crop=off, and all rcp's as well as before 1850, but add historical through 2015
+         Add harvest datasets at f09 resolution
+   M  components/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Add mksrf_fhrvtyp
+
+   M  components/clm/cime_config/config_compsets.xml -- Add IGMHISTCRUCLM50BGCCROP compset
+
+   M  components/clm/tools/mksurfdata_map/Makefile.data ------------- Change default list of files created
+        so crop is output for all resolutions
+   M  components/clm/tools/mksurfdata_map/src/mkharvestMod.F90 ------ Add harvestDataType and it's methods:
+        init, get1DFieldPtr, get2DFieldPtr, getFieldsIdx, getFieldsDim, isField1D, isField2D, num1DFields
+        num2DFields, and clean. Increase by three harvest fields, have two names for them (one for
+        surfdace dataset, and one for landuse.timeseries datasets), mkharvest subroutine sends
+        harvestDataType as it's output
+   M  components/clm/tools/mksurfdata_map/src/mkncdio.F90 ----------- Add varexists option to check_ret,
+        make nf_enotatt and nf_strerror public
+   M  components/clm/tools/mksurfdata_map/src/mkfileMod.F90 --------- Send harvdata to mkfile use
+        it's methods to define and output the harvest data
+   M  components/clm/tools/mksurfdata_map/src/mkpftMod.F90 ---------- Always put CFT's on seperate land-unit
+         new variables for: natural-veg-percent, crop-percent, fraction for each CFT and PFT
+         handles oldformat and newformat (oldformat only used when PFT's are specified in namelist)
+         remove missing_crops logic as crop is now required
+   M  components/clm/tools/mksurfdata_map/src/mkvarctl.F90 ---------- Add mksrf_fhrvtyp
+   M  components/clm/tools/mksurfdata_map/src/mkpctPftTypeMod.F90 --- Add new constructor
+         constructor_pong to initialize a new pct_pft_type object with all PFT's on the gridcell
+   M  components/clm/tools/mksurfdata_map/src/mksurfdat.F90 --------- Update mkharvestMod calls
+         and add harvestDataType, add read of harvest dataset names, handle harvest 1D and 2D 
+         data. Remove hack to set pfts 7 and 10 to 6 in the tropics because of bad LAI's (2369)
+
+   M  components/clm/tools/mksurfdata_map/unit_testers/Srcfiles ---------------- Add new test files
+   M  components/clm/tools/mksurfdata_map/unit_testers/test_mksurfdata_map.F90 - add mkharvest tests and
+         test_get_nonexisting_var for test_mkncdio
+   M  components/clm/tools/mksurfdata_map/unit_testers/test_mkncdio.F90 -------- Add test_get_nonexisting_var
+
+   M  components/clm/tools/mksurfdata_map/mksurfdata_map.namelist - Updated files, crop and glc_nec=10 is
+         on, does historical range of: 1850-2005
+   M  components/clm/tools/mksurfdata_map/mksurfdata.pl ----------- -crop=>-no_crop glc_nec default to 10,
+         default is to create datasets with crop, rawdatasets always have crop=on for them, harvest resolution different,
+         remove -rcp option (no longer available), year range 1850-2000 actually does 1850-2015 now.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r214
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Jan  3 12:55:28 MST 2017

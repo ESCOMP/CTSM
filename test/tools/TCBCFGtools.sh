@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 2 ]; then
     echo "TCBCFGtools.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TCBCFGtools.$1.$2.$3
+test_name=TCBCFGtools.$1.$2
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -31,7 +31,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1/$2`
+cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1`
 blddir=${CLM_TESTDIR}/${test_name}/src
 if [ -d ${blddir} ]; then
     rm -r ${blddir}
@@ -60,8 +60,8 @@ done < ${cfgdir}/src/Filepath
 #
 # Figure out configuration
 #
-if [ ! -f ${CLM_SCRIPTDIR}/config_files/$2 ]; then
-    echo "TCB.sh: configure options file ${CLM_SCRIPTDIR}/config_files/$2 not found"
+if [ ! -f ${CLM_SCRIPTDIR}/config_files/$1 ]; then
+    echo "TCB.sh: configure options file ${CLM_SCRIPTDIR}/config_files/$1 not found"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 4
 fi
@@ -70,7 +70,7 @@ fi
 config_string=" "
 while read config_arg; do
     config_string="${config_string}${config_arg} "
-done < ${CLM_SCRIPTDIR}/config_files/$2
+done < ${CLM_SCRIPTDIR}/config_files/$1
 
 if [ "$TOOLSLIBS" != "" ]; then
    export SLIBS=$TOOLSLIBS

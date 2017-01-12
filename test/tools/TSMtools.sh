@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 4 ]; then
+if [ $# -ne 3 ]; then
     echo "TSMtools.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TSMtools.$1.$2.$3.$4
+test_name=TSMtools.$1.$2.$3
 
 if [ -z "$CLM_RERUN" ]; then
   CLM_RERUN="no"
@@ -35,7 +35,7 @@ if [ "$CLM_RERUN" != "yes" ] && [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; t
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1/$2`
+cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1`
 rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
@@ -50,8 +50,8 @@ cd ${rundir}
 echo "Copy any text files over"
 cp $cfgdir/*.txt $rundir
 
-echo "TSMtools.sh: calling TCBtools.sh to prepare $1 $2 executable" 
-${CLM_SCRIPTDIR}/TCBtools.sh $1 $2 $3
+echo "TSMtools.sh: calling TCBtools.sh to prepare $1 executable" 
+${CLM_SCRIPTDIR}/TCBtools.sh $1 $2
 rc=$?
 if [ $rc -ne 0 ]; then
     echo "TSMtools.sh: error from TCBtools.sh= $rc" 
@@ -62,15 +62,15 @@ fi
 echo "TSMtools.sh: running $1; output in ${rundir}/test.log" 
 
 if [ "$3" = "tools__o" ] || [ "$3" = "tools__do" ]; then
-   toolrun="env OMP_NUM_THREADS=${CLM_THREADS} ${CLM_TESTDIR}/TCBtools.$1.$2.$3/$2"
+   toolrun="env OMP_NUM_THREADS=${CLM_THREADS} ${CLM_TESTDIR}/TCBtools.$1.$2/$1"
 else
-   toolrun="${CLM_TESTDIR}/TCBtools.$1.$2.$3/$2"
+   toolrun="${CLM_TESTDIR}/TCBtools.$1.$2/$1"
 fi
 
-runfile="${cfgdir}/$2.$4"
+runfile="${cfgdir}/$1.$3"
 
 if [ ! -f "${runfile}" ]; then
-    runfile="${CLM_SCRIPTDIR}/nl_files/$2.$4"
+    runfile="${CLM_SCRIPTDIR}/nl_files/$1.$3"
     if [ ! -f "${runfile}" ]; then
         echo "TSMtools.sh: error ${runfile} input run file not found"
         echo "FAIL.job${JOBID}" > TestStatus
@@ -78,8 +78,8 @@ if [ ! -f "${runfile}" ]; then
     fi
 fi
 
-echo "Run file type = ${4#*.}"
-if [ ${4#*.} == "runoptions" ]; then
+echo "Run file type = ${3#*.}"
+if [ ${3#*.} == "runoptions" ]; then
   echo "$toolrun "`cat ${runfile}`
   cp $cfgdir/*.nc .
   if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
@@ -108,7 +108,7 @@ if [ $rc -eq 0 ] && grep -ci "Successfully created " test.log > /dev/null; then
     echo "TSMtools.sh: smoke test passed" 
     echo "$status" > TestStatus
 else
-    echo "TSMtools.sh: error running $1 $2, error= $rc" 
+    echo "TSMtools.sh: error running $1, error= $rc" 
     echo "TSMtools.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 6

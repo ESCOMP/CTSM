@@ -1,7 +1,7 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 4 ]; then
+if [ $# -ne 3 ]; then
     echo "TBLscript_tools.sh: incorrect number of input arguments" 
     exit 1
 fi
@@ -11,7 +11,7 @@ if [ -z "$BL_ROOT" ] && [ -z "$BL_TESTDIR" ]; then
     exit 255
 fi
 
-test_name=TBLscript_tools.$1.$2.$3.$4
+test_name=TBLscript_tools.$1.$2.$3
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -47,8 +47,8 @@ if [ $? -ne 0 ]; then
 fi
 cd ${rundir}
 
-echo "TBLscript_tools.sh: calling TSMscript_tools.sh to run $1 $2 executable" 
-${CLM_SCRIPTDIR}/TSMscript_tools.sh $1 $2 $3 $4
+echo "TBLscript_tools.sh: calling TSMscript_tools.sh to run $1 executable" 
+${CLM_SCRIPTDIR}/TSMscript_tools.sh $1 $2 $3
 rc=$?
 if [ $rc -ne 0 ]; then
     echo "TBLscript_tools.sh: error from TSMtools.sh= $rc" 
@@ -67,7 +67,7 @@ if [ -n "${BL_ROOT}" ]; then
     env CLM_TESTDIR=${BL_TESTDIR} \
         CLM_SCRIPTDIR=$bl_dir \
         CLM_ROOT=$BL_ROOT \
-        $bl_dir/TSMscript_tools.sh $1 $2 $3 $4
+        $bl_dir/TSMscript_tools.sh $1 $2 $3
     rc=$?
     if [ $rc -ne 0 ]; then
         echo "TBLscript_tools.sh: error from *baseline* TSMscript_tools.sh= $rc"
@@ -77,7 +77,7 @@ if [ -n "${BL_ROOT}" ]; then
 fi
 
 echo "TBLscript_tools.sh: starting b4b comparisons "
-files_to_compare=`cd ${CLM_TESTDIR}/TSMscript_tools.$1.$2.$3.$4; ls *.nc`
+files_to_compare=`cd ${CLM_TESTDIR}/TSMscript_tools.$1.$2.$3; ls *.nc`
 if [ -z "${files_to_compare}" ] && [ "$debug" != "YES" ]; then
     echo "TBLscript_tools.sh: error locating files to compare"
     echo "FAIL.job${JOBID}" > TestStatus
@@ -99,8 +99,8 @@ for compare_file in ${files_to_compare}; do
 
     env CPRNC_OPT="-m" \
         ${CLM_SCRIPTDIR}/CLM_compare.sh \
-        ${BL_TESTDIR}/TSMscript_tools.$1.$2.$3.$4/${compare_file} \
-        ${CLM_TESTDIR}/TSMscript_tools.$1.$2.$3.$4/${compare_file}
+        ${BL_TESTDIR}/TSMscript_tools.$1.$2.$3/${compare_file} \
+        ${CLM_TESTDIR}/TSMscript_tools.$1.$2.$3/${compare_file}
     rc=$?
     mv cprnc.out cprnc.${compare_file}.out
     if [ $rc -eq 0 ]; then
@@ -111,12 +111,12 @@ for compare_file in ${files_to_compare}; do
     fi
 done
 # Compare text files for PTCLM if they exist
-files_to_compare=`cd ${CLM_TESTDIR}/TSMscript_tools.$1.$2.$3.$4; ls README*`
+files_to_compare=`cd ${CLM_TESTDIR}/TSMscript_tools.$1.$2.$3; ls README*`
 for compare_file in ${files_to_compare}; do
 
     diff   \
-        ${BL_TESTDIR}/TSMscript_tools.$1.$2.$3.$4/${compare_file} \
-        ${CLM_TESTDIR}/TSMscript_tools.$1.$2.$3.$4/${compare_file} \
+        ${BL_TESTDIR}/TSMscript_tools.$1.$2.$3/${compare_file} \
+        ${CLM_TESTDIR}/TSMscript_tools.$1.$2.$3/${compare_file} \
         > diff.${compare_file}.out
     rc=$?
     if [ $rc -eq 0 ]; then

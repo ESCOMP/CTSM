@@ -51,7 +51,7 @@ module dynHarvestMod
 
   real(r8) , allocatable   :: harvest(:) ! harvest rates
   logical                  :: do_harvest ! whether we're in a period when we should do harvest
-
+  character(len=64)        :: harvest_units ! units from harvest variables 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !---------------------------------------------------------------------------
@@ -99,6 +99,7 @@ contains
             dyn_file=dynHarvest_file, varname=harvest_varnames(varnum), &
             dim1name=grlnd, conversion_factor=1.0_r8, &
             do_check_sums_equal_1=.false., data_shape=[num_points])
+       call harvest_inst(varnum)%get_att("units",harvest_units)
     end do
     
   end subroutine dynHarvest_init
@@ -184,6 +185,9 @@ contains
     integer :: p                         ! patch index
     integer :: g                         ! gridcell index
     integer :: fp                        ! patch filter index
+!KO
+    real(r8):: cm                        ! rate for carbon harvest mortality (gC/m2/yr)
+!KO
     real(r8):: am                        ! rate for fractional harvest mortality (1/yr)
     real(r8):: m                         ! rate for fractional harvest mortality (1/s)
     real(r8):: dtime                     ! model time step (s)
@@ -290,9 +294,19 @@ contains
          if (ivt(p) > noveg .and. ivt(p) < nbrdlf_evr_shrub) then
 
             if (do_harvest) then
+               if (harvest_units == "gC/m2/yr") then
+                  cm = harvest(g)
+                  if (deadstemc(p) > 0.0_r8) then
+                     am = min(1._r8,cm/deadstemc(p))
+                  else
+                     am = 0._r8
+                  end if
+               else
+                  am = harvest(g)
+               end if
+
                ! Apply all harvest at the start of the year
                if (is_beg_curr_year()) then
-                  am = harvest(g)
                   m  = am/dtime
                else
                   m = 0._r8

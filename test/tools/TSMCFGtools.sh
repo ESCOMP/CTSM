@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 4 ]; then
+if [ $# -ne 3 ]; then
     echo "TSMCFGtools.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TSMCFGtools.$1.$2.$3.$4
+test_name=TSMCFGtools.$1.$2.$3
 
 if [ -z "$CLM_RERUN" ]; then
   CLM_RERUN="no"
@@ -35,7 +35,7 @@ if [ "$CLM_RERUN" != "yes" ] && [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; t
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1/$2`
+cfgdir=`ls -1d ${CLM_ROOT}/components/clm/tools/$1`
 rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
@@ -47,8 +47,8 @@ if [ $? -ne 0 ]; then
 fi
 cd ${rundir}
 
-echo "TSMCFGtools.sh: calling TCBCFGtools.sh to prepare $1 $2 executable" 
-${CLM_SCRIPTDIR}/TCBCFGtools.sh $1 $2 $3
+echo "TSMCFGtools.sh: calling TCBCFGtools.sh to prepare $1 executable" 
+${CLM_SCRIPTDIR}/TCBCFGtools.sh $1 $2
 rc=$?
 if [ $rc -ne 0 ]; then
     echo "TSMCFGtools.sh: error from TCBtools.sh= $rc" 
@@ -56,23 +56,23 @@ if [ $rc -ne 0 ]; then
     exit 4
 fi
 
-echo "TSMCFGtools.sh: running $1 $2; output in ${rundir}/test.log" 
+echo "TSMCFGtools.sh: running $1 output in ${rundir}/test.log" 
 
-if [ "$3" = "CFGtools__o" ] || [ "$3" = "CFGtools__do" ]; then
-   toolrun="env OMP_NUM_THREADS=${CLM_THREADS} ${CLM_TESTDIR}/TCBCFGtools.$1.$2.$3/$2"
+if [ "$2" = "CFGtools__o" ] || [ "$2" = "CFGtools__do" ]; then
+   toolrun="env OMP_NUM_THREADS=${CLM_THREADS} ${CLM_TESTDIR}/TCBCFGtools.$1.$2/$1"
 else
-   toolrun="${CLM_TESTDIR}/TCBCFGtools.$1.$2.$3/$2"
+   toolrun="${CLM_TESTDIR}/TCBCFGtools.$1.$2/$1"
 fi
 
-runfile="${CLM_SCRIPTDIR}/nl_files/$2.$4"
+runfile="${CLM_SCRIPTDIR}/nl_files/$1.$3"
 if [ ! -f "${runfile}" ]; then
    echo "TSMCFGtools.sh: error ${runfile} input run file not found"
    echo "FAIL.job${JOBID}" > TestStatus
    exit 5
 fi
 
-echo "Run file type = ${4#*.}"
-if [ ${4#*.} == "runoptions" ]; then
+echo "Run file type = ${3#*.}"
+if [ ${3#*.} == "runoptions" ]; then
   echo "$toolrun "`cat ${runfile}`
   cp $cfgdir/*.nc .
   if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then

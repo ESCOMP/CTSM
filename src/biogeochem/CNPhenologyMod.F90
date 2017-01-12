@@ -1483,6 +1483,7 @@ contains
          gdd820            =>    temperature_inst%gdd820_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd8                                
          gdd1020           =>    temperature_inst%gdd1020_patch                , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd10                               
 
+         fertnitro         =>    crop_inst%fertnitro_patch                     , & ! Input:  [real(r8) (:) ]  fertilizer nitrogen
          hui               =>    crop_inst%gddplant_patch                      , & ! Input:  [real(r8) (:) ]  gdd since planting (gddplant)                    
          leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature              
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
@@ -1854,12 +1855,12 @@ contains
                     fert_counter(p)  = ndays_on * secspday
                     if ( subtract_cropseed ) then
                        if (ndays_on .gt. 0) then
-                          fert(p) = manunitro(ivt(p)) * 1000._r8 / fert_counter(p)
+                          fert(p) = (manunitro(ivt(p)) * 1000._r8 + fertnitro(p))/ fert_counter(p)
                        else
                           fert(p) = 0._r8
                        end if
                     else
-                       fert(p) = manunitro(ivt(p)) * 1000._r8 / fert_counter(p)
+                       fert(p) = (manunitro(ivt(p)) * 1000._r8 + fertnitro(p))/ fert_counter(p)
                     end if
                else
                   ! this ensures no re-entry to onset of phase2

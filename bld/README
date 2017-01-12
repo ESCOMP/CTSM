@@ -44,7 +44,6 @@ unit_testers --- Directory of scripts to test scipts in this directory
 
 ---------- XML Files describing namelists in namelist_files
 namelist_files/namelist_defaults_clm4_0.xml ------- List of default values for the clm4_0 namelist
-namelist_files/namelist_defaults_clm4_0_tools.xml - List of default values for the clm4_0 tools.
 namelist_files/namelist_defaults_clm4_5.xml ------- List of default values for the clm4_5 namelist
 namelist_files/namelist_defaults_clm4_5_tools.xml - List of default values for the clm4_5 tools.
 namelist_files/namelist_defaults_overall.xml ------ List of default values for overall settings

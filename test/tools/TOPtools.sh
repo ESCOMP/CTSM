@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 4 ]; then
+if [ $# -ne 3 ]; then
     echo "TOPtools.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TOPtools.$1.$2.$3.$4
+test_name=TOPtools.$1.$2.$3
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -47,14 +47,14 @@ if [ ${CLM_THREADS} -lt 2 ]; then
    echo "FAIL.job${JOBID}" > TestStatus
    exit 5
 fi
-if [ "$3" != "tools__o" ] && [ "$3" != "tools__do" ]; then
+if [ "$2" != "tools__o" ] && [ "$2" != "tools__do" ]; then
    echo "TOPtools.sh: error build needs to be done Open-MP"
    echo "FAIL.job${JOBID}" > TestStatus
    exit 5
 fi
 
-echo "TOPtools.sh: calling TSMtools.sh to run $1 $2 executable"
-${CLM_SCRIPTDIR}/TSMtools.sh $1 $2 $3 $4
+echo "TOPtools.sh: calling TSMtools.sh to run $1 executable"
+${CLM_SCRIPTDIR}/TSMtools.sh $1 $2 $3
 rc=$?
 if [ $rc -ne 0 ]; then
     echo "TOPtools.sh: error from TSMtools.sh= $rc" 
@@ -62,7 +62,7 @@ if [ $rc -ne 0 ]; then
     exit 6
 fi
 mkdir $rundir/$CLM_THREADS
-cp ${CLM_TESTDIR}/TSMtools.$1.$2.$3.$4/*.nc $rundir/$CLM_THREADS
+cp ${CLM_TESTDIR}/TSMtools.$1.$2.$3/*.nc $rundir/$CLM_THREADS
 
 # Get a list of different threads to run for, powers of 2 from 1 up to the thread count
 threads=1
@@ -76,7 +76,7 @@ all_comparisons_good="TRUE"
 for threads in $list
 do 
   echo "TOPtools.sh: calling TSMtools.sh to run $1 executable for $threads threads" 
-  env CLM_THREADS=$threads CLM_RERUN=yes ${CLM_SCRIPTDIR}/TSMtools.sh $1 $2 $3 $4
+  env CLM_THREADS=$threads CLM_RERUN=yes ${CLM_SCRIPTDIR}/TSMtools.sh $1 $2 $3
   rc=$?
   if [ $rc -ne 0 ]; then
       echo "TOPtools.sh: error from TSMtools.sh= $rc" 
@@ -84,7 +84,7 @@ do
       exit 6
   fi
   mkdir $rundir/$threads
-  cp ${CLM_TESTDIR}/TSMtools.$1.$2.$3.$4/*.nc $rundir/$threads
+  cp ${CLM_TESTDIR}/TSMtools.$1.$2.$3/*.nc $rundir/$threads
   files_to_compare=`cd $rundir/$threads; ls *.nc`
   for compare_file in ${files_to_compare}; do
 

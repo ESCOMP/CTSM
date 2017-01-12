@@ -320,7 +320,7 @@ contains
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
 
-         if (abs(col_errnb(c)) > 1e-6_r8) then
+         if (abs(col_errnb(c)) > 1e-4_r8) then
             err_found = .true.
             err_index = c
          end if

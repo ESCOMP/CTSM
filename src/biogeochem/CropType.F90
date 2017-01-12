@@ -31,6 +31,7 @@ module CropType
      logical , pointer :: croplive_patch          (:)   ! patch Flag, true if planted, not harvested
      logical , pointer :: cropplant_patch         (:)   ! patch Flag, true if planted
      integer , pointer :: harvdate_patch          (:)   ! patch harvest date
+     real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
      real(r8), pointer :: gddplant_patch          (:)   ! patch accum gdd past planting date for crop       (ddays)
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
      real(r8), pointer :: vf_patch                (:)   ! patch vernalization factor for cereal
@@ -60,6 +61,7 @@ module CropType
      ! Private routines
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory
+     procedure, private :: InitCold
      procedure, private, nopass :: checkDates
 
   end type crop_type
@@ -89,6 +91,7 @@ contains
 
     if (use_crop) then
        call this%InitHistory(bounds)
+       call this%InitCold(bounds)
     end if
 
   end subroutine Init
@@ -186,6 +189,7 @@ contains
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
     allocate(this%cropplant_patch(begp:endp)) ; this%cropplant_patch(:) = .false.
     allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1) 
+    allocate(this%fertnitro_patch (begp:endp)) ; this%fertnitro_patch (:) = spval
     allocate(this%gddplant_patch (begp:endp)) ; this%gddplant_patch (:) = spval
     allocate(this%gddtsoi_patch  (begp:endp)) ; this%gddtsoi_patch  (:) = spval
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
@@ -230,6 +234,11 @@ contains
     
     begp = bounds%begp; endp = bounds%endp
 
+    this%fertnitro_patch(begp:endp) = spval
+    call hist_addfld1d (fname='FERTNITRO', units='gN/m2/yr', &
+         avgflag='A', long_name='Nitrogen fertilizer for each crop', &
+         ptr_patch=this%gddplant_patch, default='inactive')
+
     this%gddplant_patch(begp:endp) = spval
     call hist_addfld1d (fname='GDDPLANT', units='ddays', &
          avgflag='A', long_name='Accumulated growing degree days past planting date for crop', &
@@ -252,6 +261,38 @@ contains
 
   end subroutine InitHistory
 
+  subroutine InitCold(this, bounds)
+    ! !USES:
+    use LandunitType, only : lun                
+    use landunit_varcon, only : istcrop
+    use PatchType, only : patch
+    use clm_instur, only : fert_cft
+    ! !ARGUMENTS:
+    class(crop_type),  intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c, l, g, p, m
+
+    character(len=*), parameter :: subname = 'InitCold'
+    !-----------------------------------------------------------------------
+
+    if (use_crop) then
+       do p= bounds%begp,bounds%endp
+          g = patch%gridcell(p)
+          l = patch%landunit(p)
+          c = patch%column(p)
+
+          if (lun%itype(l) == istcrop) then
+             m = patch%itype(p)
+             this%fertnitro_patch(p) = fert_cft(g,m)
+          end if
+       end do
+    end if
+
+  end subroutine InitCold
+
+  !-----------------------------------------------------------------------
 
     !-----------------------------------------------------------------------
   subroutine InitAccBuffer (this, bounds)
@@ -429,8 +470,10 @@ contains
             dim1name='pft', long_name='crop phenology phase', &
             units='0-not planted, 1-planted, 2-leaf emerge, 3-grain fill, 4-harvest', &
             interpinic_flag='interp', readvar=readvar, data=this%cphase_patch)
-       if (flag=='read' .and. readvar)  then
-          call this%checkDates( )
+       if (flag=='read' )then
+          call this%checkDates( )  ! Check that restart date is same calendar date (even if year is different)
+                                   ! This is so that it properly goes through
+                                   ! the crop phases
        end if
     end if
 

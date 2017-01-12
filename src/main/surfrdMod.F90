@@ -608,7 +608,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size
-    use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft
+    use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
     !
     ! !ARGUMENTS:
@@ -673,6 +673,14 @@ contains
        wt_cft(begg:endg,:) = wt_cft(begg:endg,:) / 100._r8
        call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
 
+       call ncd_io(ncid=ncid, varname='CONST_FERTNITRO_CFT', flag='read', data=fert_cft, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          if ( masterproc ) &
+             write(iulog,*) ' WARNING: CONST_FERTNITRO_CFT NOT on surfdata file zero out'
+          fert_cft = 0.0_r8
+       end if
+
     else
        ! If cft_size == 0, and thus we aren't reading PCT_CFT, then make sure PCT_CROP is
        ! 0 everywhere (PCT_CROP > 0 anywhere requires that we have a PCT_CFT array)
@@ -686,7 +694,7 @@ contains
 
 
     if (use_crop) then
-       call collapse_crop_types(wt_cft(begg:endg, :), begg, endg, verbose=.true.)
+       call collapse_crop_types(wt_cft(begg:endg, :), fert_cft(begg:endg, :), begg, endg, verbose=.true.)
     end if
 
   end subroutine surfrd_veg_all

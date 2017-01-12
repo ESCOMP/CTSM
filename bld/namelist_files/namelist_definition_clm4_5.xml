@@ -961,13 +961,18 @@ in its attributes. (Only used if scripgriddata_src_type = UGRID.)
 <!--                                                   -->
 <entry id="mksrf_filename" type="char*256" category="mksurfdata"
        group="default_settings" 
-       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >
+       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >
 Filename for mksurfdata_map to remap raw data into the output surface dataset
 </entry>
 
 <entry id="mksrf_fvegtyp" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Plant Function Type dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_fhrvtyp" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Harvest dataset for mksurfdata
 </entry>
 
 <entry id="mksrf_fglacier" type="char*256" category="mksurfdata"

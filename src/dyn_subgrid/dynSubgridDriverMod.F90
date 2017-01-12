@@ -40,6 +40,7 @@ module dynSubgridDriverMod
   use WaterfluxType                , only : waterflux_type
   use WaterstateType               , only : waterstate_type
   use TemperatureType              , only : temperature_type
+  use CropType                     , only : crop_type
   use glc2lndMod                   , only : glc2lnd_type
   use filterMod                    , only : filter_inactive_and_active
   !
@@ -67,7 +68,7 @@ module dynSubgridDriverMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine dynSubgrid_init(bounds_proc, glc_behavior)
+  subroutine dynSubgrid_init(bounds_proc, glc_behavior, crop_inst)
     !
     ! !DESCRIPTION:
     ! Initialize objects needed for prescribed transient PFTs, CNDV, and/or dynamic
@@ -84,8 +85,9 @@ contains
     ! this routine needs to be called from outside any loops over clumps.
     !
     ! !ARGUMENTS:
-    type(bounds_type)       , intent(in) :: bounds_proc ! processor-level bounds
-    type(glc_behavior_type) , intent(in) :: glc_behavior
+    type(bounds_type)       , intent(in)    :: bounds_proc ! processor-level bounds
+    type(glc_behavior_type) , intent(in)    :: glc_behavior
+    type(crop_type)         , intent(inout) :: crop_inst
     !
     ! !LOCAL VARIABLES:
     integer           :: nclumps      ! number of clumps on this processor
@@ -130,7 +132,7 @@ contains
     end if
 
     if (get_do_transient_crops()) then
-       call dyncrop_interp(bounds_proc)
+       call dyncrop_interp(bounds_proc, crop_inst)
     end if
 
     ! (We don't bother calling dynHarvest_interp, because the harvest information isn't
@@ -154,7 +156,7 @@ contains
   subroutine dynSubgrid_driver(bounds_proc,                                            &
        urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,           &
        waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,             &
-       canopystate_inst, photosyns_inst, glc2lnd_inst, bgc_vegetation_inst,          &
+       canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,          &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,       &
        soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
@@ -188,6 +190,7 @@ contains
     type(energyflux_type)                , intent(inout) :: energyflux_inst
     type(canopystate_type)               , intent(inout) :: canopystate_inst
     type(photosyns_type)                 , intent(inout) :: photosyns_inst
+    type(crop_type)                      , intent(inout) :: crop_inst
     type(glc2lnd_type)                   , intent(inout) :: glc2lnd_inst
     type(cn_vegetation_type)             , intent(inout) :: bgc_vegetation_inst
     type(soilbiogeochem_state_type)      , intent(in)    :: soilbiogeochem_state_inst
@@ -238,7 +241,7 @@ contains
     end if
 
     if (get_do_transient_crops()) then
-       call dyncrop_interp(bounds_proc)
+       call dyncrop_interp(bounds_proc,crop_inst)
     end if
 
     if (get_do_harvest()) then
