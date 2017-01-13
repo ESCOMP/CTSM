@@ -1,4 +1,156 @@
 ===============================================================
+Tag name:  clm4_5_14_r217
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Jan 13 05:36:28 MST 2017
+One-line Summary: Bug fix for snow radiation absorption
+
+Purpose of changes
+------------------
+
+Bug fix from Leo van Kampenhout regarding snow radiation absorption: Remove
+multipliers of (1.-albsnd(c,ib)) or (1.-albsni(c,ib)) in the calculation of
+flx_absdv, flx_absiv, flx_absdn, flx_absin.
+
+This stops this conditional in SurfaceRadiationMod from being triggered every
+time step:
+
+             if (abs(sabg_snl_sum-sabg_snow(p)) > 0.00001_r8) then
+
+The triggering of this conditional led to an unintended constant partitioning of
+radiation through the snowpack: 75% of radiation was absorbed in the top layer,
+25% in the bottom layer.
+
+In the old code, Leo found that sabg_snow(p) is over three times as big as
+sabg_snl_sum , so these are certainly not roundoff problems.
+
+With the fix, the conditional is no longer triggered at every time
+step. Possible explanation: the factors flx_absd_snw and flx_absi_snw are
+already accounted for albedo, because they are "absorbed flux per unit incident
+flux at top of snowpack" according to SnowSnicarMod.F90.
+
+Sean Swenson tested this, and says: I agree with leo; in fact the sum of the
+flx_ terms should be the total absorption, or 1-albedo.  When I remove the
+albedo modification leo suggested, I see most of the cases where the if-block is
+triggered go away.  Those that remain are much smaller (the abs() in the if
+block is ~1.e--4).  I don't know if this is a precision issue, or an indication
+of a remaining bug.  Or it could be those cases for which the if-block was meant
+to correct originally.
+
+Sean later added: a couple more pieces of information: 1) the if-statement is
+still needed.  If it is removed, a balance check error will abort the model.  2)
+in SurfaceAlbedoMod, I tested the equality of sum_over_layers(flx_absdn) and
+(1.0 - albsnd).  For direct beam, they were equal, but occassionally for ib=2
+(near infrared), they were slightly different.  These were the same points that
+were then triggered by the if block in SurfaceRadiation.  This may point to
+something within the snicar_rt subroutine, but I don't plan on following this
+issue further.
+
+Mark Flanner added: I will note that there is an energy conservation check in
+the snicarRT code which should ensure that the sum of absorption in all snow
+layers never differs substantially (>0.00001) from what is expected from albedo
+and transmittance.  If it does, the model aborts.  This is true, however, only
+at the snow column level, so I suspect the issue you identified ultimately
+relates either to (1) fractional snow cover and merging of sub-grid energy
+fluxes to the gridcell level and/or (2) a change in the number of snow layers in
+between the calculations of snow albedo and absorbed energy flux.  I think (2)
+is what necessitated the patch in the first place.  I could be wrong.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Sean Swenson
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass, baseline comparisons fail as expected
+
+CLM tag used for the baseline comparisons: clm4_5_14_r216
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM45/CLM50
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Based on Sean Swenson's analysis: larger than roundoff; same or only
+      slightly changed climate
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Change described above
+M       components/clm/src/biogeophys/SurfaceAlbedoMod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r216
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date:  Thu Jan 12 16:12:45 MST 2017

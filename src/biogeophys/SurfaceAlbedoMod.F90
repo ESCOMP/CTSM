@@ -691,11 +691,11 @@ contains
                 endif
              else
                 if (ib == 1) then
-                   flx_absdv(c,i) = flx_absd_snw(c,i,ib)*(1.-albsnd(c,ib))
-                   flx_absiv(c,i) = flx_absi_snw(c,i,ib)*(1.-albsni(c,ib))
+                   flx_absdv(c,i) = flx_absd_snw(c,i,ib)
+                   flx_absiv(c,i) = flx_absi_snw(c,i,ib)
                 elseif (ib == 2) then
-                   flx_absdn(c,i) = flx_absd_snw(c,i,ib)*(1.-albsnd(c,ib))
-                   flx_absin(c,i) = flx_absi_snw(c,i,ib)*(1.-albsni(c,ib))
+                   flx_absdn(c,i) = flx_absd_snw(c,i,ib)
+                   flx_absin(c,i) = flx_absi_snw(c,i,ib)
                 endif
              endif
              enddo
