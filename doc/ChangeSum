@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_14_r218    sacks 01/13/2017 For newly initiating columns: do not copy snow state
   clm4_5_14_r217    sacks 01/13/2017 Bug fix for snow radiation absorption
   clm4_5_14_r216     erik 01/12/2017 Fix previous broken tag
   clm4_5_14_r215     erik 01/12/2017 Update mksurfdata_map to work with new updated datasets from Peter, and use hand-edited surfdata/landuse.timeseries datasets for f09/f19

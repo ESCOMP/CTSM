@@ -232,7 +232,15 @@ contains
 
     ! For now, just copy a few key variables
     ! TODO(wjs, 2016-08-31) Figure out what else should be copied here
-    temperature_inst%t_soisno_col(c_new,:) = temperature_inst%t_soisno_col(c_template,:)
+
+    ! We only copy the below-ground portion of these multi-level variables, not the
+    ! above-ground (snow) portion. This is because it is challenging to initialize the
+    ! snow pack in a consistent state, requiring copying many more state variables - and
+    ! if you initialize it in a partly-inconsistent state, you get balance errors. So, for
+    ! now at least, we (Dave Lawrence, Keith Oleson, Bill Sacks) have decided that it's
+    ! safest to just let the snow pack in the new column start at cold start conditions.
+
+    temperature_inst%t_soisno_col(c_new,1:) = temperature_inst%t_soisno_col(c_template,1:)
 
     ! TODO(wjs, 2016-08-31) If we had more general uses of this initial template col
     ! infrastructure (copying state between very different landunits), then we might need
@@ -240,9 +248,9 @@ contains
     ! bedrock layer(?). But for now we just use this initial template col infrastructure
     ! for nat veg -> crop, for which the bedrock will be the same, so we're not dealing
     ! with that complexity for now.
-    waterstate_inst%h2osoi_liq_col(c_new,:) = waterstate_inst%h2osoi_liq_col(c_template,:)
-    waterstate_inst%h2osoi_ice_col(c_new,:) = waterstate_inst%h2osoi_ice_col(c_template,:)
-    waterstate_inst%h2osoi_vol_col(c_new,:) = waterstate_inst%h2osoi_vol_col(c_template,:)
+    waterstate_inst%h2osoi_liq_col(c_new,1:) = waterstate_inst%h2osoi_liq_col(c_template,1:)
+    waterstate_inst%h2osoi_ice_col(c_new,1:) = waterstate_inst%h2osoi_ice_col(c_template,1:)
+    waterstate_inst%h2osoi_vol_col(c_new,1:) = waterstate_inst%h2osoi_vol_col(c_template,1:)
 
   end subroutine copy_state
 

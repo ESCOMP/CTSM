@@ -1,4 +1,153 @@
 ===============================================================
+Tag name:  clm4_5_14_r218
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Jan 13 19:46:27 MST 2017
+One-line Summary: For newly initiating columns: do not copy snow state
+
+Purpose of changes
+------------------
+
+Keith Oleson found that, in some circumstances, the model was dying with a snow
+balance error in newly initiating crop columns. We tracked this down to an
+incomplete copying of the snow state from the 'template' column to the newly
+initiating crop column. Our two options for solving this problem were (1) copy
+the snow state more completely; or (2) do not try to copy any part of the snow
+state - leaving the snow in cold start conditions for the newly initiating
+column. (1) is challenging because there are so many snow variables, so we have
+chosen to go with (2) for now. Thus, when a column initiates (for now, this just
+applies to crop columns), we (Dave Lawrence, Keith Oleson and Bill Sacks) have
+decided that we should copy only the belowground temperature and water state.
+
+Also, some minor, unrelated changes:
+
+(1) Fix broken unit tests
+
+(2) Abort run if try to run use_ed with transient crops
+
+(3) Add two single-point exact restart tests for transient crop, because we did
+not have good coverage of exact restart tests for transient crop before this
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+
+Added two tests:
+ERS_Ly3_Mmpi-serial.1x1_smallvilleIA.IHISTCLM50BGCCROP.yellowstone_gnu.clm-cropMonthOutput  # restart is right before the transition from 100% nat veg to 100% crop
+ERS_Ly6_Mmpi-serial.1x1_smallvilleIA.IHISTCLM50BGCCROP.yellowstone_gnu.clm-cropMonthOutput  # restart is right before increasing natural veg to > 0 while also shifting PCT_CFT
+
+Code reviewed by: Main change reviewed by Keith Oleson and myself
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+    On my Mac - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - pass
+
+    In principle, answers could change for runs with transient crops, but I did
+    not observe any answer changes in the test suite.
+
+CLM tag used for the baseline comparisons:  clm4_5_14_r217
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, in principle - but not in the test suite
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM50 with transient crops
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Assumed to be larger than roundoff, but only slightly, and only rare
+      answer changes
+
+      I did not observe any answer changes in the test suite. But in principle,
+      this could change answers for any transient crop run, as evidenced by the
+      change in behavior seen in Keith Oleson's transient crop run with and
+      without this fix. It just seems like the conditions in which this matters
+      only occur rarely.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main change: only copy belowground state to new columns
+M       components/clm/src/dyn_subgrid/dynInitColumnsMod.F90
+M       components/clm/src/dyn_subgrid/test/dynInitColumns_test/test_init_columns.pf
+
+========= Abort run if try to run use_ed with transient crops
+M       components/clm/src/dyn_subgrid/dynSubgridControlMod.F90
+
+========= Fix a comment
+M       components/clm/src/dyn_subgrid/dynVarMod.F90.in
+
+========= Fix unit tests, apparently broken in r215
+M       components/clm/src/unit_test_stubs/main/ncdio_pio_fake.F90.in
+
+========= Add two tests (see above)
+M       components/clm/cime_config/testdefs/testlist_clm.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r217
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Jan 13 05:36:28 MST 2017

@@ -1349,6 +1349,12 @@
       <test name="ERS_D_Ld7_Mmpi-serial">
         <machine compiler="intel" testtype="aux_clm45" testmods="clm/decStart1851_noinitial" comment="Transient crop run with a mid-year restart, restarting shortly after a big landunit transition, to make sure that the annually-dribbled fluxes generated from landunit transitions restart properly">yellowstone</machine>
       </test>
+      <test name="ERS_Ly3_Mmpi-serial">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="restart is right before the transition from 100% nat veg to 100% crop">yellowstone</machine>
+      </test>
+      <test name="ERS_Ly6_Mmpi-serial">
+        <machine compiler="gnu" testtype="aux_clm45" testmods="clm/cropMonthOutput" comment="restart is right before increasing natural veg to &gt; 0 while also shifting PCT_CFT">yellowstone</machine>
+      </test>
     </grid>
     <grid name="f10_f10">
       <test name="ERS_Ly5_P60x1">

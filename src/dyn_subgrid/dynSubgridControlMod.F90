@@ -201,8 +201,11 @@ contains
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
        if (use_ed) then
-          write(iulog,*) 'ERROR: do_transient_crops has not been tested with use_ed;'
-          write(iulog,*) 'for now these two options cannot be combined'
+          ! NOTE(wjs, 2017-01-13) ED / FATES does not currently have a mechanism for
+          ! changing its column areas, with the consequent changes in aboveground biomass
+          ! per unit area. See https://github.com/NGEET/ed-clm/issues/173
+          write(iulog,*) 'ERROR: do_transient_crops does not currently work with use_ed'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     end if
 

@@ -240,7 +240,7 @@ contains
   subroutine get_att(this,attname,attvalue)
     !
     ! !DESCRIPTION:
-    ! Get the data_shape component of this object
+    ! Get the the value of an attribute on the file
     !
     ! !USES:
     use ncdio_pio      , only : ncd_inqvid, ncd_getatt, var_desc_t

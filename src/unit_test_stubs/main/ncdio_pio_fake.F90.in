@@ -49,6 +49,7 @@ module ncdio_pio
   public :: ncd_inqdid            ! stub: inquire dimension id
   public :: ncd_inqvdlen          ! stub: inquire size of a dimension
   public :: ncd_inqdlen           ! stub: inquire size of a dimension
+  public :: ncd_getatt            ! stub: get attribute
   public :: ncd_putatt            ! stub: put attribute
 
   interface file_desc_t
@@ -80,6 +81,11 @@ module ncdio_pio
      module procedure ncd_io_{DIMS}d_{TYPE}_glob
 
   end interface ncd_io
+
+  interface ncd_getatt
+     module procedure ncd_getatt_char
+     module procedure ncd_getatt_int
+  end interface ncd_getatt
 
   interface ncd_putatt
      module procedure ncd_putatt_int
@@ -343,6 +349,41 @@ contains
     len = 0
 
   end subroutine ncd_inqdlen
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_getatt_char(ncid,varid,attrib,value)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement for ncd_getatt_char. This does nothing, but just satisfies the
+    ! interface.
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    character(len=*)  ,intent(out)   :: value     ! netcdf attrib value
+    !-----------------------------------------------------------------------
+    
+    ! Do nothing
+  end subroutine ncd_getatt_char
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_getatt_int(ncid,varid,attrib,value)
+    !
+    ! !DESCRIPTION:
+    ! Stub replacement for ncd_getatt_int. This does nothing, but just satisfies the
+    ! interface.
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(inout) :: ncid      ! netcdf file id
+    integer           ,intent(in)    :: varid     ! netcdf var id
+    character(len=*)  ,intent(in)    :: attrib    ! netcdf attrib
+    integer           ,intent(out)   :: value     ! netcdf attrib value
+    !-----------------------------------------------------------------------
+    
+    ! Do nothing
+  end subroutine ncd_getatt_int
+
 
   !-----------------------------------------------------------------------
   subroutine ncd_putatt_int(ncid,varid,attrib,value,xtype)

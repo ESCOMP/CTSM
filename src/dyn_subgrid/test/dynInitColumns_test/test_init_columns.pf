@@ -194,8 +194,12 @@ contains
     cactive_prior(source_col) = .true.
 
     t_soisno_expected = temperature_vars%t_soisno_col
-    t_soisno_expected(dest_col,:) = temperature_vars%t_soisno_col(source_col,:)
+    ! In the following, note that only the belowground portion (starting with level 1) is
+    ! copied:
+    t_soisno_expected(dest_col,1:) = temperature_vars%t_soisno_col(source_col,1:)
+
     call initialize_new_columns(bounds, cactive_prior, temperature_vars, waterstate_vars)
+
     @assertEqual(t_soisno_expected, temperature_vars%t_soisno_col)
     call cleanup()
   end subroutine test_initialize_new_columns_copy_state
