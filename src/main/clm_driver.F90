@@ -296,14 +296,6 @@ contains
           call bgc_vegetation_inst%InitEachTimeStep(bounds_clump, &
                filter(nc)%num_soilc, filter(nc)%soilc)
 
-          call soilbiogeochem_carbonflux_inst%ZeroDWT(bounds_clump)
-          if (use_c13) then
-             call c13_soilbiogeochem_carbonflux_inst%ZeroDWT(bounds_clump)
-          end if
-          if (use_c14) then
-             call c14_soilbiogeochem_carbonflux_inst%ZeroDWT(bounds_clump)
-          end if
-
           call t_stopf('cninit')
        end do
        !$OMP END PARALLEL DO

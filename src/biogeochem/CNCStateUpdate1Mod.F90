@@ -11,6 +11,7 @@ module CNCStateUpdate1Mod
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use pftconMod                          , only : npcropmin, nc3crop, pftcon
   use abortutils                         , only : endrun
+  use decompMod                          , only : bounds_type
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use CropType                           , only : crop_type
@@ -32,13 +33,14 @@ module CNCStateUpdate1Mod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CStateUpdateDynPatch( num_soilc_with_inactive, filter_soilc_with_inactive, &
+  subroutine CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Update carbon states based on fluxes from dyn_cnbal_patch
     !
     ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds      
     integer, intent(in) :: num_soilc_with_inactive       ! number of columns in soil filter
     integer, intent(in) :: filter_soilc_with_inactive(:) ! soil column filter that includes inactive points
     type(cnveg_carbonflux_type)           , intent(in)    :: cnveg_carbonflux_inst
@@ -48,6 +50,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: c   ! column index
     integer  :: fc  ! column filter index
+    integer  :: g   ! gridcell index
     integer  :: j   ! level index
     real(r8) :: dt  ! time step (seconds)
 
@@ -77,15 +80,14 @@ contains
           end do
        end do
 
-       do fc = 1, num_soilc_with_inactive
-          c = filter_soilc_with_inactive(fc)
-          cs_veg%seedc_col(c) = cs_veg%seedc_col(c) - cf_veg%dwt_seedc_to_leaf_col(c) * dt
-          cs_veg%seedc_col(c) = cs_veg%seedc_col(c) - cf_veg%dwt_seedc_to_deadstem_col(c) * dt
+       do g = bounds%begg, bounds%endg
+          cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_leaf_grc(g) * dt
+          cs_veg%seedc_grc(g) = cs_veg%seedc_grc(g) - cf_veg%dwt_seedc_to_deadstem_grc(g) * dt
        end do
 
     end if
 
-    ! TODO(wjs, 2017-01-02) Do we need to move some of the FATES fluxes in here (from
+    ! TODO(wjs, 2017-01-02) Do we need to move some of the FATES fluxes into here (from
     ! CStateUpdate1) if use_ed is true? Specifically, some portion or all of the fluxes
     ! from these updates in CStateUpdate1:
     ! cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = cf_soil%FATES_c_to_litr_lab_c_col(c,j) * dt
@@ -244,12 +246,6 @@ contains
       end do
 
     if (.not. use_ed) then    
-      ! seeding fluxes from crop
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         cs_veg%seedc_col(c) = cs_veg%seedc_col(c) - cf_veg%crop_seedc_to_leaf_col(c) * dt
-      end do
-
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)
@@ -293,7 +289,11 @@ contains
          end if
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_litter_patch(p)*dt
-            cs_veg%grainc_patch(p)     = cs_veg%grainc_patch(p)     - cf_veg%grainc_to_food_patch(p)*dt
+            cs_veg%grainc_patch(p)     = cs_veg%grainc_patch(p) &
+                 - (cf_veg%grainc_to_food_patch(p) + cf_veg%grainc_to_seed_patch(p))*dt
+            cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
+                 - cf_veg%crop_seedc_to_leaf_patch(p) * dt &
+                 + cf_veg%grainc_to_seed_patch(p) * dt
          end if
          
          check_cpool = cs_veg%cpool_patch(p)- cf_veg%psnsun_to_cpool_patch(p)*dt-cf_veg%psnshade_to_cpool_patch(p)*dt

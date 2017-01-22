@@ -214,7 +214,8 @@ contains
 
     ! Accumulated flux from shrinking areas. This is optional: you do not need to provide
     ! it if you don't need to track the flux out from this state variable. For shrinking
-    ! areas, this is given as a NEGATIVE quantity.
+    ! areas, this is given as a NEGATIVE quantity. Even though this is a patch-level
+    ! array, it is expressed as mass per unit area COLUMN.
     real(r8), intent(inout), optional :: flux_out( bounds%begp: )
 
     ! If provided, this gives some 'seed' amount added to the state in the area into
@@ -223,7 +224,8 @@ contains
     real(r8), intent(in), optional :: seed( bounds%begp: )
 
     ! If provided, this accumulates the amount of seed added to each patch. This gives
-    ! seed(p) * dwt(p). This can only be provided if seed is provided.
+    ! seed(p) * dwt(p). This can only be provided if seed is provided. Even though this
+    ! is a patch-level array, it is expressed as mass per unit area COLUMN.
     real(r8), intent(inout), optional :: seed_addition( bounds%begp: )
     !
     !
@@ -292,8 +294,12 @@ contains
     integer, intent(in) :: filterp_with_inactive(:) ! patch filter that includes inactive points
     real(r8), intent(in) :: flux1_fraction_by_pft_type( 0: ) ! fraction of flux that goes into flux1_out, indexed by pft type
     real(r8), intent(inout) :: var( bounds%begp: ) ! patch-level state variable
-    real(r8), intent(inout) :: flux1_out( bounds%begp: ) ! accumulated flux1 from shrinking areas
-    real(r8), intent(inout) :: flux2_out( bounds%begp: ) ! accumulated flux2 from shrinking areas
+
+    ! Accumulated fluxes from shrinking areas. For shrinking areas, these are given as
+    ! NEGATIVE quantities. Even though these are patch-level arrays, they are expressed
+    ! as mass per unit area COLUMN.
+    real(r8), intent(inout) :: flux1_out( bounds%begp: )
+    real(r8), intent(inout) :: flux2_out( bounds%begp: )
 
     ! If provided, this gives some 'seed' amount added to the state in the area into
     ! which each growing patch grows. The value is ignored for patches that are either
@@ -301,7 +307,8 @@ contains
     real(r8), intent(in), optional :: seed( bounds%begp: )
 
     ! If provided, this accumulates the amount of seed added to each patch. This gives
-    ! seed(p) * dwt(p). This can only be provided if seed is provided.
+    ! seed(p) * dwt(p). This can only be provided if seed is provided. Even though this
+    ! is a patch-level array, it is expressed as mass per unit area COLUMN.
     real(r8), intent(inout), optional :: seed_addition( bounds%begp: )
     !
     ! !LOCAL VARIABLES:

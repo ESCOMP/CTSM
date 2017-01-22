@@ -784,7 +784,7 @@ contains
        call CStateUpdate3( num_soilc, filter_soilc, num_soilp, filter_soilp, &
             c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
 
-       call C14Decay(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       call C14Decay(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
             c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
     end if
     call t_stopf('CNUpdate3')
@@ -914,8 +914,7 @@ contains
          soilbiogeochem_cwdc_col=soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
          soilbiogeochem_totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
          soilbiogeochem_totsomc_col=soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-         soilbiogeochem_ctrunc_col=soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), &
-         soilbiogeochem_dyn_cbal_adjustments_col=soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments_col(begc:endc))
+         soilbiogeochem_ctrunc_col=soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
 
     if ( use_c13 ) then
        call c13_cnveg_carbonstate_inst%Summary(bounds, num_allc, filter_allc, &
@@ -923,8 +922,7 @@ contains
             soilbiogeochem_cwdc_col=c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
             soilbiogeochem_totlitc_col=c13_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
             soilbiogeochem_totsomc_col=c13_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-            soilbiogeochem_ctrunc_col=c13_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), &
-            soilbiogeochem_dyn_cbal_adjustments_col=c13_soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments_col(begc:endc))
+            soilbiogeochem_ctrunc_col=c13_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
     end if
 
     if ( use_c14 ) then
@@ -933,8 +931,7 @@ contains
             soilbiogeochem_cwdc_col=c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
             soilbiogeochem_totlitc_col=c14_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
             soilbiogeochem_totsomc_col=c14_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
-            soilbiogeochem_ctrunc_col=c14_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc), &
-            soilbiogeochem_dyn_cbal_adjustments_col=c14_soilbiogeochem_carbonstate_inst%dyn_cbal_adjustments_col(begc:endc))
+            soilbiogeochem_ctrunc_col=c14_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
     end if
 
     call cnveg_nitrogenstate_inst%Summary(bounds, num_allc, filter_allc, &

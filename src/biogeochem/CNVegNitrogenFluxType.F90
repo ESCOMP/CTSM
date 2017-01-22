@@ -131,6 +131,7 @@ module CNVegNitrogenFluxType
      ! litterfall fluxes
      real(r8), pointer :: livestemn_to_litter_patch                 (:)     ! patch livestem N to litter (gN/m2/s)
      real(r8), pointer :: grainn_to_food_patch                      (:)     ! patch grain N to food for prognostic crop (gN/m2/s)
+     real(r8), pointer :: grainn_to_seed_patch                      (:)     ! patch grain N to seed for prognostic crop (gN/m2/s)
      real(r8), pointer :: leafn_to_litter_patch                     (:)     ! patch leaf N litterfall (gN/m2/s)
      real(r8), pointer :: leafn_to_retransn_patch                   (:)     ! patch leaf N to retranslocated N pool (gN/m2/s)
      real(r8), pointer :: frootn_to_retransn_patch                  (:)     ! patch fine root N to retranslocated N pool (gN/m2/s)
@@ -190,8 +191,10 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: gap_mortality_n_to_cwdn_col               (:,:)   ! col N fluxes associated with gap mortality to CWD pool (gN/m3/s)
 
      ! dynamic landcover fluxes
-     real(r8), pointer :: dwt_seedn_to_leaf_col                     (:)     ! col (gN/m2/s) seed source to patch-level
-     real(r8), pointer :: dwt_seedn_to_deadstem_col                 (:)     ! col (gN/m2/s) seed source to patch-level
+     real(r8), pointer :: dwt_seedn_to_leaf_patch                   (:)     ! (gN/m2/s) seed source to patch-level; although this is a patch-level flux, it is expressed per unit GRIDCELL area
+     real(r8), pointer :: dwt_seedn_to_leaf_grc                     (:)     ! (gN/m2/s) dwt_seedn_to_leaf_patch summed to the gridcell-level
+     real(r8), pointer :: dwt_seedn_to_deadstem_patch               (:)     ! (gN/m2/s) seed source to patch-level; although this is a patch-level flux, it is expressed per unit GRIDCELL area
+     real(r8), pointer :: dwt_seedn_to_deadstem_grc                 (:)     ! (gN/m2/s) dwt_seedn_to_deadstem_patch summed to the gridcell-level
      real(r8), pointer :: dwt_conv_nflux_col                        (:)     ! col (gN/m2/s) conversion N flux (immediate loss to atm)
      real(r8), pointer :: dwt_productn_gain_patch                   (:)     ! patch (gN/m2/s) addition to 10-yr wood product pool; even though this is a patch-level flux, it is expressed per unit COLUMN area
      real(r8), pointer :: dwt_frootn_to_litr_met_n_col              (:,:)   ! col (gN/m3/s) fine root to litter due to landcover change
@@ -202,7 +205,7 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: dwt_nloss_col                             (:)     ! col (gN/m2/s) total nitrogen loss from product pools and conversion
 
      ! crop fluxes
-     real(r8), pointer :: crop_seedn_to_leaf_col                    (:)     ! col (gN/m2/s) seed source to patch-level, for crops
+     real(r8), pointer :: crop_seedn_to_leaf_patch                  (:)     ! patch (gN/m2/s) seed source to leaf, for crops
      
      ! Misc
      real(r8), pointer :: plant_ndemand_patch                       (:)     ! N flux required to support initial GPP (gN/m2/s)
@@ -280,10 +283,12 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
     integer           :: begc,endc
+    integer           :: begg,endg
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
+    begg = bounds%begg; endg = bounds%endg
 
     allocate(this%m_leafn_to_litter_patch                   (begp:endp)) ; this%m_leafn_to_litter_patch                   (:) = nan
     allocate(this%m_frootn_to_litter_patch                  (begp:endp)) ; this%m_frootn_to_litter_patch                  (:) = nan
@@ -408,6 +413,7 @@ contains
     allocate(this%npool_to_grainn_storage_patch             (begp:endp)) ; this%npool_to_grainn_storage_patch             (:) = nan
     allocate(this%livestemn_to_litter_patch                 (begp:endp)) ; this%livestemn_to_litter_patch                 (:) = nan
     allocate(this%grainn_to_food_patch                      (begp:endp)) ; this%grainn_to_food_patch                      (:) = nan
+    allocate(this%grainn_to_seed_patch                      (begp:endp)) ; this%grainn_to_seed_patch                      (:) = nan
     allocate(this%grainn_xfer_to_grainn_patch               (begp:endp)) ; this%grainn_xfer_to_grainn_patch               (:) = nan
     allocate(this%grainn_storage_to_xfer_patch              (begp:endp)) ; this%grainn_storage_to_xfer_patch              (:) = nan
     allocate(this%fert_patch                                (begp:endp)) ; this%fert_patch                                (:) = nan
@@ -424,8 +430,10 @@ contains
     allocate(this%m_n_to_litr_cel_fire_col     (begc:endc,1:nlevdecomp_full)) ; this%m_n_to_litr_cel_fire_col     (:,:) = nan
     allocate(this%m_n_to_litr_lig_fire_col     (begc:endc,1:nlevdecomp_full)) ; this%m_n_to_litr_lig_fire_col     (:,:) = nan
 
-    allocate(this%dwt_seedn_to_leaf_col        (begc:endc))                   ; this%dwt_seedn_to_leaf_col        (:)   = nan
-    allocate(this%dwt_seedn_to_deadstem_col    (begc:endc))                   ; this%dwt_seedn_to_deadstem_col    (:)   = nan
+    allocate(this%dwt_seedn_to_leaf_patch      (begp:endp))                   ; this%dwt_seedn_to_leaf_patch      (:)   = nan
+    allocate(this%dwt_seedn_to_leaf_grc        (begg:endg))                   ; this%dwt_seedn_to_leaf_grc        (:)   = nan
+    allocate(this%dwt_seedn_to_deadstem_patch  (begp:endp))                   ; this%dwt_seedn_to_deadstem_patch  (:)   = nan
+    allocate(this%dwt_seedn_to_deadstem_grc    (begg:endg))                   ; this%dwt_seedn_to_deadstem_grc    (:)   = nan
     allocate(this%dwt_conv_nflux_col           (begc:endc))                   ; this%dwt_conv_nflux_col           (:)   = nan
     allocate(this%dwt_productn_gain_patch      (begp:endp))                   ; this%dwt_productn_gain_patch      (:)   = nan
     allocate(this%dwt_nloss_col                (begc:endc))                   ; this%dwt_nloss_col                (:)   = nan
@@ -437,7 +445,7 @@ contains
     allocate(this%dwt_livecrootn_to_cwdn_col   (begc:endc,1:nlevdecomp_full)) ; this%dwt_livecrootn_to_cwdn_col   (:,:) = nan
     allocate(this%dwt_deadcrootn_to_cwdn_col   (begc:endc,1:nlevdecomp_full)) ; this%dwt_deadcrootn_to_cwdn_col   (:,:) = nan
 
-    allocate(this%crop_seedn_to_leaf_col       (begc:endc))                   ; this%crop_seedn_to_leaf_col       (:)   = nan
+    allocate(this%crop_seedn_to_leaf_patch     (begp:endp))                   ; this%crop_seedn_to_leaf_patch     (:)   = nan
 
     allocate(this%m_decomp_npools_to_fire_vr_col    (begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
     allocate(this%m_decomp_npools_to_fire_col       (begc:endc,1:ndecomp_pools                  ))
@@ -530,6 +538,7 @@ contains
     integer        :: k,l
     integer        :: begp, endp
     integer        :: begc, endc
+    integer        :: begg, endg
     character(10)  :: active
     character(24)  :: fieldname
     character(100) :: longname
@@ -539,6 +548,7 @@ contains
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
+    begg = bounds%begg; endg= bounds%endg
 
     ! add suffix if number of soil decomposition depths is greater than 1
     if (nlevdecomp > 1) then
@@ -984,15 +994,29 @@ contains
          avgflag='A', long_name='total column-level fire N loss', &
          ptr_col=this%fire_nloss_col)
 
-    this%dwt_seedn_to_leaf_col(begc:endc) = spval
+    this%dwt_seedn_to_leaf_grc(begg:endg) = spval
     call hist_addfld1d (fname='DWT_SEEDN_TO_LEAF', units='gN/m^2/s', &
          avgflag='A', long_name='seed source to patch-level leaf', &
-         ptr_col=this%dwt_seedn_to_leaf_col)
+         ptr_gcell=this%dwt_seedn_to_leaf_grc)
 
-    this%dwt_seedn_to_deadstem_col(begc:endc) = spval
+    this%dwt_seedn_to_leaf_patch(begp:endp) = spval
+    call hist_addfld1d (fname='DWT_SEEDN_TO_LEAF_PATCH', units='gN/m^2/s', &
+         avgflag='A', &
+         long_name='patch-level seed source to patch-level leaf ' // &
+         '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
+         ptr_patch=this%dwt_seedn_to_leaf_patch, default='inactive')
+
+    this%dwt_seedn_to_deadstem_grc(begg:endg) = spval
     call hist_addfld1d (fname='DWT_SEEDN_TO_DEADSTEM', units='gN/m^2/s', &
          avgflag='A', long_name='seed source to patch-level deadstem', &
-         ptr_col=this%dwt_seedn_to_deadstem_col)
+         ptr_gcell=this%dwt_seedn_to_deadstem_grc)
+
+    this%dwt_seedn_to_deadstem_patch(begp:endp) = spval
+    call hist_addfld1d (fname='DWT_SEEDN_TO_DEADSTEM_PATCH', units='gN/m^2/s', &
+         avgflag='A', &
+         long_name='patch-level seed source to patch-level deadstem ' // &
+         '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
+         ptr_patch=this%dwt_seedn_to_deadstem_patch, default='inactive')
 
     this%dwt_conv_nflux_col(begc:endc) = spval
     call hist_addfld1d (fname='DWT_CONV_NFLUX', units='gN/m^2/s', &
@@ -1031,10 +1055,10 @@ contains
          long_name='total nitrogen loss from landcover conversion (0 at all times except first timestep of year)', &
          ptr_col=this%dwt_nloss_col)
 
-    this%crop_seedn_to_leaf_col(begc:endc) = spval
+    this%crop_seedn_to_leaf_patch(begp:endp) = spval
     call hist_addfld1d (fname='CROP_SEEDN_TO_LEAF', units='gN/m^2/s', &
-         avgflag='A', long_name='crop seed source to patch-level leaf', &
-         ptr_col=this%crop_seedn_to_leaf_col)
+         avgflag='A', long_name='crop seed source to leaf', &
+         ptr_patch=this%crop_seedn_to_leaf_patch)
 
     this%plant_ndemand_patch(begp:endp) = spval
     call hist_addfld1d (fname='PLANT_NDEMAND', units='gN/m^2/s', &
@@ -1635,6 +1659,7 @@ contains
        this%wood_harvestn_patch(i)                       = value_patch
        this%fire_nloss_patch(i)                          = value_patch
 
+       this%crop_seedn_to_leaf_patch(i)                  = value_patch
        this%grainn_to_cropprodn_patch(i)                 = value_patch
     end do
 
@@ -1643,6 +1668,7 @@ contains
           i = filter_patch(fi)
           this%livestemn_to_litter_patch(i)              = value_patch
           this%grainn_to_food_patch(i)                   = value_patch
+          this%grainn_to_seed_patch(i)                   = value_patch
           this%grainn_xfer_to_grainn_patch(i)            = value_patch
           this%npool_to_grainn_patch(i)                  = value_patch
           this%npool_to_grainn_storage_patch(i)          = value_patch
@@ -1684,7 +1710,6 @@ contains
     do fi = 1,num_column
        i = filter_column(fi)
 
-       this%crop_seedn_to_leaf_col(i)        = value_column
        this%grainn_to_cropprodn_col(i)       = value_column
        this%fire_nloss_col(i)                = value_column
 
@@ -1722,13 +1747,16 @@ contains
     type(bounds_type), intent(in)  :: bounds 
     !
     ! !LOCAL VARIABLES:
-    integer  :: c, j          ! indices
+    integer  :: c, g, j          ! indices
     !-----------------------------------------------------------------------
 
     do c = bounds%begc,bounds%endc
-       this%dwt_seedn_to_leaf_col(c)     = 0._r8
-       this%dwt_seedn_to_deadstem_col(c) = 0._r8
        this%dwt_conv_nflux_col(c)        = 0._r8
+    end do
+
+    do g = bounds%begg, bounds%endg
+       this%dwt_seedn_to_leaf_grc(g)     = 0._r8
+       this%dwt_seedn_to_deadstem_grc(g) = 0._r8
     end do
 
     do j = 1, nlevdecomp_full

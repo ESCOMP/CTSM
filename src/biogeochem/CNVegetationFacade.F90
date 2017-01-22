@@ -592,28 +592,26 @@ contains
     ! we correctly update column states in columns that have just shrunk to 0 area -
     ! since those column states are still important in the following dyn_cnbal_col.
     call t_startf('CNUpdateDynPatch')
-    call CStateUpdateDynPatch(num_soilc_with_inactive, filter_soilc_with_inactive, &
+    call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, &
          soilbiogeochem_carbonstate_inst)
     if (use_c13) then
-       call CStateUpdateDynPatch(num_soilc_with_inactive, filter_soilc_with_inactive, &
+       call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
             this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst, &
             soilbiogeochem_carbonstate_inst)
     end if
     if (use_c14) then
-       call CStateUpdateDynPatch(num_soilc_with_inactive, filter_soilc_with_inactive, &
+       call CStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
             this%c14_cnveg_carbonflux_inst, this%c14_cnveg_carbonstate_inst, &
             soilbiogeochem_carbonstate_inst)
     end if
-    call NStateUpdateDynPatch(num_soilc_with_inactive, filter_soilc_with_inactive, &
+    call NStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
          this%cnveg_nitrogenflux_inst, this%cnveg_nitrogenstate_inst, &
          soilbiogeochem_nitrogenstate_inst)
     call t_stopf('CNUpdateDynPatch')
 
     call t_startf('dyn_cnbal_col')
     call dyn_cnbal_col(bounds, column_state_updater, &
-         this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, this%c14_cnveg_carbonstate_inst, &
-         this%cnveg_nitrogenstate_inst, &
          soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, &
          ch4_inst)

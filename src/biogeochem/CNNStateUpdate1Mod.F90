@@ -12,6 +12,7 @@ module CNNStateUpdate1Mod
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
   use clm_varcon                      , only : nitrif_n2o_loss_frac
   use pftconMod                       , only : npcropmin, pftcon
+  use decompMod                          , only : bounds_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
@@ -29,13 +30,14 @@ module CNNStateUpdate1Mod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine NStateUpdateDynPatch(num_soilc_with_inactive, filter_soilc_with_inactive, &
+  subroutine NStateUpdateDynPatch(bounds, num_soilc_with_inactive, filter_soilc_with_inactive, &
        cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
     !
     ! !DESCRIPTION:
     ! Update nitrogen states based on fluxes from dyn_cnbal_patch
     !
     ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds      
     integer, intent(in) :: num_soilc_with_inactive       ! number of columns in soil filter
     integer, intent(in) :: filter_soilc_with_inactive(:) ! soil column filter that includes inactive points
     type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
@@ -44,6 +46,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: c   ! column index
+    integer  :: g   ! gridcell index
     integer  :: fc  ! column filter index
     integer  :: j   ! level index
     real(r8) :: dt  ! time step (seconds)
@@ -73,10 +76,9 @@ contains
        end do
     end do
 
-    do fc = 1, num_soilc_with_inactive
-       c = filter_soilc_with_inactive(fc)
-       ns_veg%seedn_col(c) = ns_veg%seedn_col(c) - nf_veg%dwt_seedn_to_leaf_col(c) * dt
-       ns_veg%seedn_col(c) = ns_veg%seedn_col(c) - nf_veg%dwt_seedn_to_deadstem_col(c) * dt
+    do g = bounds%begg, bounds%endg
+       ns_veg%seedn_grc(g) = ns_veg%seedn_grc(g) - nf_veg%dwt_seedn_to_leaf_grc(g) * dt
+       ns_veg%seedn_grc(g) = ns_veg%seedn_grc(g) - nf_veg%dwt_seedn_to_deadstem_grc(g) * dt
     end do
 
     end associate
@@ -101,7 +103,7 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: c,p,j,l,k ! indices
+    integer :: c,p,j,l,g,k ! indices
     integer :: fp,fc     ! lake filter indices
     real(r8):: dt        ! radiation time step (seconds)
     !-----------------------------------------------------------------------
@@ -141,12 +143,6 @@ contains
             nf_soil%decomp_npools_sourcesink_col(c,j,i_cwd) = 0._r8
 
          end do
-      end do
-
-      ! seeding fluxes from crop
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         ns_veg%seedn_col(c) = ns_veg%seedn_col(c) - nf_veg%crop_seedn_to_leaf_col(c) * dt
       end do
 
       do fp = 1,num_soilp
@@ -200,7 +196,11 @@ contains
             ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_litter_patch(p)*dt
             ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_retransn_patch(p)*dt
             ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
-            ns_veg%grainn_patch(p)       = ns_veg%grainn_patch(p)     - nf_veg%grainn_to_food_patch(p)*dt
+            ns_veg%grainn_patch(p)       = ns_veg%grainn_patch(p) &
+                 - (nf_veg%grainn_to_food_patch(p) + nf_veg%grainn_to_seed_patch(p))*dt
+            ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
+                 - nf_veg%crop_seedn_to_leaf_patch(p) * dt &
+                 + nf_veg%grainn_to_seed_patch(p) * dt
          end if
 
          ! uptake from soil mineral N pool

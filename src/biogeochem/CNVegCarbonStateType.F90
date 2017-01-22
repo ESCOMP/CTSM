@@ -37,7 +37,6 @@ module CNVegCarbonStateType
      real(r8), pointer :: leafc_patch              (:) ! (gC/m2) leaf C
      real(r8), pointer :: leafc_storage_patch      (:) ! (gC/m2) leaf C storage
      real(r8), pointer :: leafc_xfer_patch         (:) ! (gC/m2) leaf C transfer
-     real(r8), pointer :: cropseedc_patch          (:) ! (gC/m2) crop seed C
      real(r8), pointer :: leafc_storage_xfer_acc_patch   (:) ! (gC/m2) Accmulated leaf C transfer
      real(r8), pointer :: storage_cdemand_patch          (:) ! (gC/m2)       C use from the C storage pool 
      real(r8), pointer :: frootc_patch             (:) ! (gC/m2) fine root C
@@ -68,11 +67,10 @@ module CNVegCarbonStateType
      real(r8), pointer :: deadstemc_col            (:) ! (gC/m2) column-level deadstemc (fire)
      real(r8), pointer :: fuelc_col                (:) ! fuel load outside cropland
      real(r8), pointer :: fuelc_crop_col           (:) ! fuel load for cropland
+     real(r8), pointer :: cropseedc_deficit_patch  (:) ! (gC/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
 
      ! pools for dynamic landcover
-     real(r8), pointer :: seedc_col                (:) ! (gC/m2) column-level pool for seeding new Patches
-     real(r8), pointer :: dyn_cbal_adjustments_col (:) ! (gC/m2) adjustments to each column made in this timestep via dynamic column area adjustments (note: this variable only makes sense at the column-level: it is meaningless if averaged to the gridcell-level)
-     real(r8), pointer :: dyn_cbal_adjustments_veg_plus_soil_col(:) ! (gC/m2) sum of veg's dyn_cbal_adjustments_col and soil's dyn_cbal_adjustments_col
+     real(r8), pointer :: seedc_grc                (:) ! (gC/m2) gridcell-level pool for seeding new PFTs via dynamic landcover
 
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: dispvegc_patch           (:) ! (gC/m2) displayed veg carbon, excluding storage and cpool
@@ -93,7 +91,6 @@ module CNVegCarbonStateType
      procedure , public  :: Restart
      procedure , public  :: Summary => Summary_carbonstate
      procedure , public  :: DynamicPatchAdjustments   ! adjust state variables when patch areas change
-     procedure , public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
      
      procedure , private :: InitAllocate
      procedure , private :: InitHistory  
@@ -141,15 +138,16 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
     integer           :: begc,endc
+    integer           :: begg,endg
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
+    begg = bounds%begg; endg = bounds%endg
 
     allocate(this%leafc_patch              (begp:endp)) ; this%leafc_patch              (:) = nan
     allocate(this%leafc_storage_patch      (begp:endp)) ; this%leafc_storage_patch      (:) = nan
     allocate(this%leafc_xfer_patch         (begp:endp)) ; this%leafc_xfer_patch         (:) = nan
-    allocate(this%cropseedc_patch          (begp:endp)) ; this%cropseedc_patch          (:) = nan
     allocate(this%leafc_storage_xfer_acc_patch (begp:endp)) ; this%leafc_storage_xfer_acc_patch (:) = nan
     allocate(this%storage_cdemand_patch        (begp:endp)) ; this%storage_cdemand_patch        (:) = nan
     allocate(this%frootc_patch             (begp:endp)) ; this%frootc_patch             (:) = nan
@@ -181,9 +179,8 @@ contains
     allocate(this%grainc_xfer_patch        (begp:endp)) ; this%grainc_xfer_patch        (:) = nan
     allocate(this%woodc_patch              (begp:endp)) ; this%woodc_patch              (:) = nan     
 
-    allocate(this%seedc_col                (begc:endc)) ; this%seedc_col                (:) = nan
-    allocate(this%dyn_cbal_adjustments_col (begc:endc)) ; this%dyn_cbal_adjustments_col (:) = nan
-    allocate(this%dyn_cbal_adjustments_veg_plus_soil_col(begc:endc)); this%dyn_cbal_adjustments_veg_plus_soil_col(:) = nan
+    allocate(this%cropseedc_deficit_patch  (begp:endp)) ; this%cropseedc_deficit_patch  (:) = nan
+    allocate(this%seedc_grc                (begg:endg)) ; this%seedc_grc                (:) = nan
     allocate(this%rootc_col                (begc:endc)) ; this%rootc_col                (:) = nan
     allocate(this%leafc_col                (begc:endc)) ; this%leafc_col                (:) = nan
     allocate(this%deadstemc_col            (begc:endc)) ; this%deadstemc_col            (:) = nan
@@ -241,10 +238,10 @@ contains
           call hist_addfld1d (fname='GRAINC', units='gC/m^2', &
                avgflag='A', long_name='grain C (does not equal yield)', &
                ptr_patch=this%grainc_patch)
-          this%cropseedc_patch(begp:endp) = spval
-          call hist_addfld1d (fname='CROPSEEDC', units='gC/m^2', &
-               avgflag='A', long_name='crop seed C', &
-               ptr_patch=this%cropseedc_patch)
+          this%cropseedc_deficit_patch(begp:endp) = spval
+          call hist_addfld1d (fname='CROPSEEDC_DEFICIT', units='gC/m^2', &
+               avgflag='A', long_name='C used for crop seed that needs to be repaid', &
+               ptr_patch=this%cropseedc_deficit_patch)
        end if
        
        this%woodc_patch(begp:endp) = spval
@@ -397,10 +394,10 @@ contains
             avgflag='A', long_name='total patch-level carbon, including cpool', &
             ptr_patch=this%totc_patch)
 
-       this%seedc_col(begc:endc) = spval
+       this%seedc_grc(begg:endg) = spval
        call hist_addfld1d (fname='SEEDC', units='gC/m^2', &
-            avgflag='A', long_name='pool for seeding new Patches', &
-            ptr_col=this%seedc_col)
+            avgflag='A', long_name='pool for seeding new PFTs via dynamic landcover', &
+            ptr_gcell=this%seedc_grc)
 
        this%fuelc_col(begc:endc) = spval
        call hist_addfld1d (fname='FUELC', units='gC/m^2', &
@@ -416,20 +413,6 @@ contains
        call hist_addfld1d (fname='TOTECOSYSC', units='gC/m^2', &
             avgflag='A', long_name='total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
-
-       this%dyn_cbal_adjustments_col(begc:endc) = spval
-       call hist_addfld1d (fname='DYN_COL_VEG_ADJUSTMENTS_C', units='gC/m^2', &
-            avgflag='SUM', &
-            long_name='Adjustments in vegetation carbon due to dynamic column areas; &
-            &only makes sense at the column level: should not be averaged to gridcell', &
-            ptr_col=this%dyn_cbal_adjustments_col, default='inactive')
-
-       this%dyn_cbal_adjustments_veg_plus_soil_col(begc:endc) = spval
-       call hist_addfld1d (fname='DYN_COL_VEG_PLUS_SOIL_ADJUSTMENTS_C', units='gC/m^2', &
-            avgflag='SUM', &
-            long_name='Adjustments in vegetation + soil carbon due to dynamic column areas; &
-            &only makes sense at the column level: should not be averaged to gridcell', &
-            ptr_col=this%dyn_cbal_adjustments_veg_plus_soil_col, default='inactive')
 
     end if
 
@@ -579,10 +562,10 @@ contains
             avgflag='A', long_name='C13 total patch-level carbon, including cpool', &
             ptr_patch=this%totc_patch)
 
-       this%seedc_col(begc:endc) = spval
+       this%seedc_grc(begg:endg) = spval
        call hist_addfld1d (fname='C13_SEEDC', units='gC13/m^2', &
-            avgflag='A', long_name='C13 pool for seeding new Patches', &
-            ptr_col=this%seedc_col)
+            avgflag='A', long_name='C13 pool for seeding new PFTs via dynamic landcover', &
+            ptr_gcell=this%seedc_grc)
 
        this%totc_col(begc:endc) = spval
        call hist_addfld1d (fname='C13_TOTCOLC', units='gC13/m^2', &
@@ -593,20 +576,6 @@ contains
        call hist_addfld1d (fname='C13_TOTECOSYSC', units='gC13/m^2', &
             avgflag='A', long_name='C13 total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
-
-       this%dyn_cbal_adjustments_col(begc:endc) = spval
-       call hist_addfld1d (fname='C13_DYN_COL_VEG_ADJUSTMENTS_C', units='gC13/m^2', &
-            avgflag='SUM', &
-            long_name='C13 adjustments in vegetation carbon due to dynamic column areas; &
-            &only makes sense at the column level: should not be averaged to gridcell', &
-            ptr_col=this%dyn_cbal_adjustments_col, default='inactive')
-
-       this%dyn_cbal_adjustments_veg_plus_soil_col(begc:endc) = spval
-       call hist_addfld1d (fname='C13_DYN_COL_VEG_PLUS_SOIL_ADJUSTMENTS_C', units='gC13/m^2', &
-            avgflag='SUM', &
-            long_name='C13 adjustments in vegetation + soil carbon due to dynamic column areas; &
-            &only makes sense at the column level: should not be averaged to gridcell', &
-            ptr_col=this%dyn_cbal_adjustments_veg_plus_soil_col, default='inactive')
 
     endif
 
@@ -756,10 +725,10 @@ contains
             avgflag='A', long_name='C14 total patch-level carbon, including cpool', &
             ptr_patch=this%totc_patch)
 
-       this%seedc_col(begc:endc) = spval
+       this%seedc_grc(begg:endg) = spval
        call hist_addfld1d (fname='C14_SEEDC', units='gC14/m^2', &
-            avgflag='A', long_name='C14 pool for seeding new Patches', &
-            ptr_col=this%seedc_col)
+            avgflag='A', long_name='C14 pool for seeding new PFTs via dynamic landcover', &
+            ptr_gcell=this%seedc_grc)
 
        this%totc_col(begc:endc) = spval
        call hist_addfld1d (fname='C14_TOTCOLC', units='gC14/m^2', &
@@ -770,20 +739,6 @@ contains
        call hist_addfld1d (fname='C14_TOTECOSYSC', units='gC14/m^2', &
             avgflag='A', long_name='C14 total ecosystem carbon, incl veg but excl cpool and product pools', &
             ptr_col=this%totecosysc_col)
-
-       this%dyn_cbal_adjustments_col(begc:endc) = spval
-       call hist_addfld1d (fname='C14_DYN_COL_VEG_ADJUSTMENTS_C', units='gC14/m^2', &
-            avgflag='SUM', &
-            long_name='C14 adjustments in vegetation carbon due to dynamic column areas; &
-            &only makes sense at the column level: should not be averaged to gridcell', &
-            ptr_col=this%dyn_cbal_adjustments_col, default='inactive')
-
-       this%dyn_cbal_adjustments_veg_plus_soil_col(begc:endc) = spval
-       call hist_addfld1d (fname='C14_DYN_COL_VEG_PLUS_SOIL_ADJUSTMENTS_C', units='gC14/m^2', &
-            avgflag='SUM', &
-            long_name='C14 adjustments in vegetation + soil carbon due to dynamic column areas; &
-            &only makes sense at the column level: should not be averaged to gridcell', &
-            ptr_col=this%dyn_cbal_adjustments_veg_plus_soil_col, default='inactive')
 
     endif
 
@@ -808,7 +763,7 @@ contains
     type(cnveg_carbonstate_type) , optional, intent(in) :: c12_cnveg_carbonstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: p,c,l,j,k,i
+    integer  :: p,c,l,g,j,k,i
     integer  :: fc                                       ! filter index
     integer  :: num_special_col                          ! number of good values in special_col filter
     integer  :: num_special_patch                        ! number of good values in special_patch filter
@@ -890,8 +845,6 @@ contains
              end if
           end if
           this%leafc_xfer_patch(p) = 0._r8
-          this%cropseedc_patch(p)  = 0._r8
-
           this%leafc_storage_xfer_acc_patch(p)  = 0._r8
           this%storage_cdemand_patch(p)         = 0._r8
 
@@ -931,6 +884,7 @@ contains
           this%storvegc_patch(p)           = 0._r8 
           this%woodc_patch(p)              = 0._r8
           this%totc_patch(p)               = 0._r8 
+          this%cropseedc_deficit_patch(p)  = 0._r8
 
           if ( use_crop )then
              this%grainc_patch(p)         = 0._r8 
@@ -949,8 +903,6 @@ contains
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-          ! dynamic landcover state variables
-          this%seedc_col(c)      = 0._r8
 !          this%totgrainc_col(c)  = 0._r8
 
           ! total carbon pools
@@ -960,12 +912,9 @@ contains
        end if
     end do
 
-    ! now loop through special filters and explicitly set the variables that
-    ! have to be in place for biogeophysics
-    
-    do fc = 1,num_special_col
-       c = special_col(fc)
-       this%seedc_col(c)      = 0._r8
+
+    do g = bounds%begg, bounds%endg
+       this%seedc_grc(g) = 0._r8
     end do
 
     if ( .not. is_restart() .and. get_nstep() == 1 ) then
@@ -1069,9 +1018,6 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='leafc_xfer', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_xfer_patch) 
-       call restartvar(ncid=ncid, flag=flag, varname='cropseedc', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%cropseedc_patch)
 
        call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_xfer_acc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -1299,8 +1245,6 @@ contains
                          end if
                       end if
                       this%leafc_xfer_patch(i) = 0._r8
-                      this%cropseedc_patch(i)  = 0._r8
-
                       this%leafc_storage_xfer_acc_patch(i)  = 0._r8
                       this%storage_cdemand_patch(i)         = 0._r8
 
@@ -1340,6 +1284,7 @@ contains
                       this%storvegc_patch(i)           = 0._r8 
                       this%woodc_patch(i)              = 0._r8
                       this%totc_patch(i)               = 0._r8 
+                      this%cropseedc_deficit_patch(i)  = 0._r8
 
                       if ( use_crop )then
                          this%grainc_patch(i)         = 0._r8 
@@ -2042,6 +1987,9 @@ contains
     !--------------------------------
 
     if (use_crop) then
+       ! TODO(wjs, 2017-01-18) Introduce isotopic versions of the following (can follow
+       ! what's done for cropseedc_deficit, below):
+
        call restartvar(ncid=ncid, flag=flag,  varname='grainc', xtype=ncd_double,  &
             dim1name='pft', long_name='grain C', units='gC/m2', &
             interpinic_flag='interp', readvar=readvar, data=this%grainc_patch)
@@ -2053,31 +2001,64 @@ contains
        call restartvar(ncid=ncid, flag=flag,  varname='grainc_xfer', xtype=ncd_double,  &
             dim1name='pft', long_name='grain C transfer', units='gC/m2', &
             interpinic_flag='interp', readvar=readvar, data=this%grainc_xfer_patch)
+
+       if (carbon_type == 'c12') then
+          call restartvar(ncid=ncid, flag=flag, varname='cropseedc_deficit', xtype=ncd_double,  &
+               dim1name='pft', long_name='pool for seeding new crop growth', units='gC/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%cropseedc_deficit_patch)
+       end if
+
+       if (carbon_type == 'c13') then
+          call restartvar(ncid=ncid, flag=flag, varname='cropseedc_13_deficit', xtype=ncd_double,  &
+               dim1name='pft', long_name='pool for seeding new crop growth', units='gC13/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%cropseedc_deficit_patch)
+          if (flag=='read' .and. .not. readvar) then
+             call set_missing_from_template( &
+                  my_var = this%cropseedc_deficit_patch, &
+                  template_var = c12_cnveg_carbonstate_inst%cropseedc_deficit_patch, &
+                  multiplier = c3_r2)
+          end if
+       end if
+
+       if ( carbon_type == 'c14' ) then
+          call restartvar(ncid=ncid, flag=flag, varname='cropseedc_14_deficit', xtype=ncd_double,  &
+               dim1name='pft', long_name='pool for seeding new crop growth', units='gC14/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%cropseedc_deficit_patch)
+          if (flag=='read' .and. .not. readvar) then
+             if ( masterproc ) write(iulog,*) 'initializing this%cropseedc_deficit_patch with atmospheric c14 value'
+             call set_missing_from_template( &
+                  my_var = this%cropseedc_deficit_patch, &
+                  template_var = c12_cnveg_carbonstate_inst%cropseedc_deficit_patch, &
+                  multiplier = c14ratio)
+          end if
+       end if
     end if
 
     !--------------------------------
-    ! column carbon state variables
+    ! gridcell carbon state variables
     !--------------------------------
 
     if (carbon_type == 'c12') then
-       call restartvar(ncid=ncid, flag=flag, varname='seedc', xtype=ncd_double,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%seedc_col) 
+       ! BACKWARDS_COMPATIBILITY(wjs, 2017-01-12) Naming this with a _g suffix in order
+       ! to distinguish it from the old column-level seedc restart variable
+       call restartvar(ncid=ncid, flag=flag, varname='seedc_g', xtype=ncd_double,  &
+            dim1name='gridcell', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%seedc_grc) 
     end if
 
     !--------------------------------
-    ! C13 column carbon state variables
+    ! C13 gridcell carbon state variables
     !--------------------------------
 
     if (carbon_type == 'c13') then
-       call restartvar(ncid=ncid, flag=flag, varname='seedc_13', xtype=ncd_double,  &
-            dim1name='column', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%seedc_col) 
+       call restartvar(ncid=ncid, flag=flag, varname='seedc_13_g', xtype=ncd_double,  &
+            dim1name='gridcell', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%seedc_grc) 
        if (flag=='read' .and. .not. readvar) then
-          if (this%seedc_col(i) /= spval .and. &
-               .not. isnan(this%seedc_col(i)) ) then
-             this%seedc_col(i) = c12_cnveg_carbonstate_inst%seedc_col(i) * c3_r2
-          end if
+          call set_missing_from_template( &
+               my_var = this%seedc_grc, &
+               template_var = c12_cnveg_carbonstate_inst%seedc_grc, &
+               multiplier = c3_r2)
        end if
     end if
 
@@ -2086,25 +2067,16 @@ contains
     !--------------------------------
 
     if ( carbon_type == 'c14' ) then
-       call restartvar(ncid=ncid, flag=flag, varname='seedc_14', xtype=ncd_double,  &
-            dim1name='column', &
+       call restartvar(ncid=ncid, flag=flag, varname='seedc_14_g', xtype=ncd_double,  &
+            dim1name='gridcell', &
             long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%seedc_col) 
+            interpinic_flag='interp', readvar=readvar, data=this%seedc_grc) 
        if (flag=='read' .and. .not. readvar) then
-          if ( masterproc ) write(iulog,*) 'initializing this%seedc_col with atmospheric c14 value'
-          do i = bounds%begc,bounds%endc
-             if (this%seedc_col(i) /= spval .and. &
-                  .not. isnan(this%seedc_col(i)) ) then
-                this%seedc_col(i) = c12_cnveg_carbonstate_inst%seedc_col(i) * c14ratio
-             endif
-          end do
-       end if
-    end if
-
-    if (carbon_type == 'c13' .or. carbon_type == 'c14') then
-       if (.not. present(c12_cnveg_carbonstate_inst)) then
-          call endrun(msg=' ERROR: for C13 or C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
-               errMsg(sourcefile, __LINE__))
+          if ( masterproc ) write(iulog,*) 'initializing this%seedc_grc with atmospheric c14 value'
+          call set_missing_from_template( &
+               my_var = this%seedc_grc, &
+               template_var = c12_cnveg_carbonstate_inst%seedc_grc, &
+               multiplier = c14ratio)
        end if
     end if
 
@@ -2136,7 +2108,6 @@ contains
        this%leafc_patch(i)              = value_patch
        this%leafc_storage_patch(i)      = value_patch
        this%leafc_xfer_patch(i)         = value_patch
-       this%cropseedc_patch(i)          = value_patch
        this%leafc_storage_xfer_acc_patch(i) = value_patch
        this%storage_cdemand_patch(i)        = value_patch        
        this%frootc_patch(i)             = value_patch
@@ -2164,6 +2135,7 @@ contains
        this%woodc_patch(i)              = value_patch
        this%totvegc_patch(i)            = value_patch
        this%totc_patch(i)               = value_patch
+       this%cropseedc_deficit_patch(i)  = value_patch
        if ( use_crop ) then
           this%grainc_patch(i)          = value_patch
           this%grainc_storage_patch(i)  = value_patch
@@ -2212,7 +2184,7 @@ contains
   subroutine Summary_carbonstate(this, bounds, num_allc, filter_allc, &
        num_soilc, filter_soilc, num_soilp, filter_soilp, &
        soilbiogeochem_cwdc_col, soilbiogeochem_totlitc_col, soilbiogeochem_totsomc_col, &
-       soilbiogeochem_ctrunc_col, soilbiogeochem_dyn_cbal_adjustments_col)
+       soilbiogeochem_ctrunc_col)
     !
     ! !USES:
     use subgridAveMod, only : p2c
@@ -2233,7 +2205,6 @@ contains
     real(r8)          , intent(in) :: soilbiogeochem_totlitc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_totsomc_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_ctrunc_col(bounds%begc:)
-    real(r8)          , intent(in) :: soilbiogeochem_dyn_cbal_adjustments_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,j,k,l       ! indices
@@ -2244,7 +2215,6 @@ contains
     SHR_ASSERT_ALL((ubound(soilbiogeochem_totlitc_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(soilbiogeochem_totsomc_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(soilbiogeochem_ctrunc_col)  == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(soilbiogeochem_dyn_cbal_adjustments_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     ! calculate patch -level summary of carbon state
 
@@ -2282,7 +2252,8 @@ contains
           this%storvegc_patch(p) =            &
                this%storvegc_patch(p)       + &
                this%grainc_storage_patch(p) + &
-               this%grainc_xfer_patch(p)
+               this%grainc_xfer_patch(p)    + &
+               this%cropseedc_deficit_patch(p)
 
           this%dispvegc_patch(p) =            &
                this%dispvegc_patch(p)       + &
@@ -2336,12 +2307,7 @@ contains
             soilbiogeochem_cwdc_col(c)      + &
             soilbiogeochem_totlitc_col(c)   + &
             soilbiogeochem_totsomc_col(c)   + &
-            this%seedc_col(c)               + &
             soilbiogeochem_ctrunc_col(c)
-
-       this%dyn_cbal_adjustments_veg_plus_soil_col(c) = &
-            this%dyn_cbal_adjustments_col(c) + &
-            soilbiogeochem_dyn_cbal_adjustments_col(c)
 
     end do
 
@@ -2558,32 +2524,5 @@ contains
     end subroutine update_patch_state
 
   end subroutine DynamicPatchAdjustments
-
-
-  !-----------------------------------------------------------------------
-  subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)
-    !
-    ! !DESCRIPTION:
-    ! Adjust state variables when column areas change due to dynamic landuse
-    !
-    ! !USES:
-    use dynColumnStateUpdaterMod, only : column_state_updater_type
-    !
-    ! !ARGUMENTS:
-    class(cnveg_carbonstate_type)   , intent(inout) :: this
-    type(bounds_type)               , intent(in)    :: bounds
-    type(column_state_updater_type) , intent(in)    :: column_state_updater
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'DynamicColumnAdjustments'
-    !-----------------------------------------------------------------------
-
-    call column_state_updater%update_column_state_no_special_handling( &
-         bounds = bounds, &
-         var    = this%seedc_col(bounds%begc:bounds%endc), &
-         adjustment = this%dyn_cbal_adjustments_col(bounds%begc:bounds%endc))
-
-  end subroutine DynamicColumnAdjustments
 
 end module CNVegCarbonStateType

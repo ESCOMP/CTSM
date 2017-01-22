@@ -9,6 +9,7 @@ module CNC14DecayMod
   use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
   use clm_varcon                         , only : secspday
   use clm_varctl                         , only : spinup_state
+  use decompMod                          , only : bounds_type
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
@@ -26,13 +27,14 @@ module CNC14DecayMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine C14Decay( num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine C14Decay( bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! On the radiation time step, calculate the radioactive decay of C14
     !
     ! !ARGUMENTS:
+    type(bounds_type)                     , intent(in)    :: bounds        
     integer                               , intent(in)    :: num_soilc       ! number of soil columns filter
     integer                               , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                               , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -41,7 +43,7 @@ contains
     type(soilbiogeochem_carbonstate_type) , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: fp,j,l,p,fc,c,i
+    integer  :: fp,j,g,l,p,fc,c,i
     real(r8) :: dt            ! radiation time step (seconds)
     real(r8) :: half_life
     real(r8) :: decay_const
@@ -54,7 +56,8 @@ contains
 
          decomp_cpools_vr   =>    c14_soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col , & ! Output:  [real(r8) (:,:,:) ]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
 
-         seedc              =>    c14_cnveg_carbonstate_inst%seedc_col                     , & ! Output:  [real(r8) (:)     ]                                          
+         cropseedc_deficit  =>    c14_cnveg_carbonstate_inst%cropseedc_deficit_patch       , & ! Output:  [real(r8) (:)     ]                                          
+         seedc              =>    c14_cnveg_carbonstate_inst%seedc_grc                     , & ! Output:  [real(r8) (:)     ]                                          
          cpool              =>    c14_cnveg_carbonstate_inst%cpool_patch                   , & ! Output:  [real(r8) (:)     ]  (gC/m2) temporary photosynthate C pool  
          xsmrpool           =>    c14_cnveg_carbonstate_inst%xsmrpool_patch                , & ! Output:  [real(r8) (:)     ]  (gC/m2) execss maint resp C pool        
          deadcrootc         =>    c14_cnveg_carbonstate_inst%deadcrootc_patch              , & ! Output:  [real(r8) (:)     ]  (gC/m2) dead coarse root C              
@@ -87,11 +90,9 @@ contains
       half_life = 5730._r8 * secspday * days_per_year
       decay_const = - log(0.5_r8) / half_life
 
-      ! column loop
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
-         seedc(c) = seedc(c) *  (1._r8 - decay_const * dt)
-      end do ! end of columns loop
+      do g = bounds%begg, bounds%endg
+         seedc(g) = seedc(g) * (1._r8 - decay_const * dt)
+      end do
 
       do l = 1, ndecomp_pools
          do j = 1, nlevdecomp
@@ -138,6 +139,7 @@ contains
          livestemc_storage(p)  = livestemc_storage(p)   * (1._r8 - decay_const * dt)
          livestemc_xfer(p)     = livestemc_xfer(p)      * (1._r8 - decay_const * dt)
          pft_ctrunc(p)         = pft_ctrunc(p)          * (1._r8 - decay_const * dt)
+         cropseedc_deficit(p)  = cropseedc_deficit(p)   * (1._r8 - decay_const * dt)
       end do
 
     end associate

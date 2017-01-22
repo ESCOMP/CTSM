@@ -21,7 +21,6 @@ module SoilBiogeochemCarbonFluxType
   type, public :: soilbiogeochem_carbonflux_type
 
      ! fire fluxes
-     real(r8), pointer :: lf_conv_cflux_col                         (:)     ! (gC/m2/s) conversion C flux due to BET and BDT area decreasing (immediate loss to atm)
      real(r8), pointer :: somc_fire_col                             (:)     ! (gC/m2/s) carbon emissions due to peat burning
 
      ! decomposition fluxes
@@ -61,7 +60,6 @@ module SoilBiogeochemCarbonFluxType
      procedure , private :: InitCold
      procedure , public  :: Restart
      procedure , public  :: SetValues
-     procedure , public  :: ZeroDWT
      procedure , public  :: Summary
 
   end type soilbiogeochem_carbonflux_type
@@ -104,7 +102,6 @@ contains
      allocate(this%fphr_col          (begc:endc,1:nlevgrnd))       ; this%fphr_col          (:,:) =nan 
      allocate(this%som_c_leached_col (begc:endc))                  ; this%som_c_leached_col (:)   =nan
      allocate(this%somc_fire_col     (begc:endc))                  ; this%somc_fire_col     (:)   =nan
-     allocate(this%lf_conv_cflux_col (begc:endc))                  ; this%lf_conv_cflux_col (:)   =nan
      allocate(this%hr_vr_col         (begc:endc,1:nlevdecomp_full)); this%hr_vr_col         (:,:) =nan
 
      allocate(this%decomp_cpools_sourcesink_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                  
@@ -228,12 +225,6 @@ contains
                 avgflag='A', long_name='fraction of potential HR due to N limitation', &
                 ptr_col=this%fphr_col)
         end if
-
-        this%lf_conv_cflux_col(begc:endc) = spval
-        call hist_addfld1d (fname='LF_CONV_CFLUX', units='gC/m^2/s', &
-             avgflag='A', &
-             long_name='conversion carbon due to BET and BDT area decreasing (0 at all times except first timestep of year)', &
-             ptr_col=this%lf_conv_cflux_col)   
 
         this%somc_fire_col(begc:endc) = spval
         call hist_addfld1d (fname='SOMC_FIRE', units='gC/m^2/s', &
@@ -543,11 +534,6 @@ contains
           this%fphr_col(c,:) = spval
        end if
 
-       ! also initialize dynamic landcover fluxes so that they have
-       ! real values on first timestep, prior to calling pftdyn_cnbal
-       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-          this%lf_conv_cflux_col(c) = 0._r8
-       end if
     end do
 
     if ( use_ed ) then
@@ -731,30 +717,6 @@ contains
     ! NOTE: do not zero the ED to BGC C flux variables since they need to persist from the daily ED timestep s to the half-hourly BGC timesteps.  I.e. FATES_c_to_litr_lab_c_col, FATES_c_to_litr_cel_c_col, FATES_c_to_litr_lig_c_col
     
   end subroutine SetValues
-
-  !-----------------------------------------------------------------------
-  subroutine ZeroDwt( this, bounds )
-    !
-    ! !DESCRIPTION
-    ! Initialize flux variables needed for dynamic land use.
-    !
-    ! !ARGUMENTS:
-    class(soilbiogeochem_carbonflux_type) :: this
-    type(bounds_type), intent(in)  :: bounds 
-    !
-    ! !LOCAL VARIABLES:
-    integer  :: c, j          ! indices
-    !-----------------------------------------------------------------------
-
-    ! set column-level conversion and product pool fluxes
-    ! to 0 at the beginning of every timestep
-
-    do c = bounds%begc,bounds%endc
-       this%lf_conv_cflux_col(c) = 0._r8
-    end do
-
-
-  end subroutine ZeroDwt
 
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, num_soilc, filter_soilc)

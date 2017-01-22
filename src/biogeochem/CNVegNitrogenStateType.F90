@@ -60,11 +60,8 @@ module CNVegNitrogenStateType
      real(r8), pointer :: retransn_patch           (:) ! (gN/m2) plant pool of retranslocated N
      real(r8), pointer :: npool_patch              (:) ! (gN/m2) temporary plant N pool
      real(r8), pointer :: ntrunc_patch             (:) ! (gN/m2) patch-level sink for N truncation
-
-     ! wood product pools, for dynamic landcover
-     real(r8), pointer :: seedn_col                (:) ! (gN/m2) column-level pool for seeding new Patches
-     real(r8), pointer :: dyn_nbal_adjustments_col(:) ! (gN/m2) adjustments to each column made in this timestep via dynamic column area adjustments (note: this variable only makes sense at the column-level: it is meaningless if averaged to the gridcell-level)
-     real(r8), pointer :: dyn_nbal_adjustments_veg_plus_soil_col(:) ! (gN/m2) sum of veg's dyn_nbal_adjustments_col and soil's dyn_nbal_adjustments_col
+     real(r8), pointer :: cropseedn_deficit_patch  (:) ! (gN/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
+     real(r8), pointer :: seedn_grc                (:) ! (gN/m2) gridcell-level pool for seeding new pFTs via dynamic landcover
 
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: dispvegn_patch           (:) ! (gN/m2) displayed veg nitrogen, excluding storage
@@ -84,7 +81,6 @@ module CNVegNitrogenStateType
      procedure , public  :: ZeroDWT
      procedure , public  :: Summary => Summary_nitrogenstate
      procedure , public  :: DynamicPatchAdjustments   ! adjust state variables when patch areas change
-     procedure , public  :: DynamicColumnAdjustments  ! adjust state variables when column areas change
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
@@ -127,10 +123,12 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: begp,endp
     integer           :: begc,endc
+    integer           :: begg,endg
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
+    begg = bounds%begg; endg = bounds%endg
 
     allocate(this%grainn_patch             (begp:endp)) ; this%grainn_patch             (:) = nan     
     allocate(this%grainn_storage_patch     (begp:endp)) ; this%grainn_storage_patch     (:) = nan
@@ -163,9 +161,8 @@ contains
     allocate(this%totvegn_patch            (begp:endp)) ; this%totvegn_patch            (:) = nan
     allocate(this%totn_patch               (begp:endp)) ; this%totn_patch               (:) = nan
 
-    allocate(this%seedn_col                (begc:endc)) ; this%seedn_col                (:) = nan
-    allocate(this%dyn_nbal_adjustments_col (begc:endc)) ; this%dyn_nbal_adjustments_col (:) = nan
-    allocate(this%dyn_nbal_adjustments_veg_plus_soil_col(begc:endc)); this%dyn_nbal_adjustments_veg_plus_soil_col(:) = nan
+    allocate(this%cropseedn_deficit_patch  (begp:endp)) ; this%cropseedn_deficit_patch  (:) = nan
+    allocate(this%seedn_grc                (begg:endg)) ; this%seedn_grc                (:) = nan
     allocate(this%totvegn_col              (begc:endc)) ; this%totvegn_col              (:) = nan
     allocate(this%totn_p2c_col             (begc:endc)) ; this%totn_p2c_col             (:) = nan
     allocate(this%totn_col                 (begc:endc)) ; this%totn_col                 (:) = nan
@@ -190,6 +187,7 @@ contains
     integer           :: k,l,ii,jj 
     integer           :: begp,endp
     integer           :: begc,endc
+    integer           :: begg,endg
     character(24)     :: fieldname
     character(100)    :: longname
     real(r8), pointer :: data1dptr(:)   ! temp. pointer for slicing larger arrays
@@ -197,6 +195,7 @@ contains
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc
+    begg = bounds%begg; endg = bounds%endg
 
     !-------------------------------
     ! patch state variables 
@@ -207,6 +206,9 @@ contains
        call hist_addfld1d (fname='GRAINN', units='gN/m^2', &
             avgflag='A', long_name='grain N', &
             ptr_patch=this%grainn_patch)
+       call hist_addfld1d (fname='CROPSEEDN_DEFICIT', units='gN/m^2', &
+            avgflag='A', long_name='N used for crop seed that needs to be repaid', &
+            ptr_patch=this%cropseedn_deficit_patch)
     end if
 
     this%leafn_patch(begp:endp) = spval
@@ -350,10 +352,10 @@ contains
     ! column state variables 
     !-------------------------------
 
-    this%seedn_col(begc:endc) = spval
+    this%seedn_grc(begg:endg) = spval
     call hist_addfld1d (fname='SEEDN', units='gN/m^2', &
-         avgflag='A', long_name='pool for seeding new patches', &
-         ptr_col=this%seedn_col)
+         avgflag='A', long_name='pool for seeding new PFTs via dynamic landcover', &
+         ptr_gcell=this%seedn_grc)
 
     this%totecosysn_col(begc:endc) = spval
     call hist_addfld1d (fname='TOTECOSYSN', units='gN/m^2', &
@@ -364,20 +366,6 @@ contains
     call hist_addfld1d (fname='TOTCOLN', units='gN/m^2', &
          avgflag='A', long_name='total column-level N, excluding product pools', &
          ptr_col=this%totn_col)
-
-    this%dyn_nbal_adjustments_col(begc:endc) = spval
-    call hist_addfld1d (fname='DYN_COL_VEG_ADJUSTMENTS_N', units='gN/m^2', &
-         avgflag='SUM', &
-         long_name='Adjustments in vegetation nitrogen due to dynamic column areas; &
-         &only makes sense at the column level: should not be averaged to gridcell', &
-         ptr_col=this%dyn_nbal_adjustments_col, default='inactive')
-
-    this%dyn_nbal_adjustments_veg_plus_soil_col(begc:endc) = spval
-    call hist_addfld1d (fname='DYN_COL_VEG_PLUS_SOIL_ADJUSTMENTS_N', units='gN/m^2', &
-         avgflag='SUM', &
-         long_name='Adjustments in vegetation + soil nitrogen due to dynamic column areas; &
-         &only makes sense at the column level: should not be averaged to gridcell', &
-         ptr_col=this%dyn_nbal_adjustments_veg_plus_soil_col, default='inactive')
 
   end subroutine InitHistory
 
@@ -502,6 +490,7 @@ contains
           this%storvegn_patch(p)           = 0._r8
           this%totvegn_patch(p)            = 0._r8
           this%totn_patch(p)               = 0._r8
+          this%cropseedn_deficit_patch(p)  = 0._r8
        end if
     end do
 
@@ -512,10 +501,6 @@ contains
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-
-          ! dynamic landcover state variables
-          this%seedn_col(c)      = 0._r8
-
           ! total nitrogen pools
           this%totecosysn_col(c) = 0._r8
           this%totn_p2c_col(c)   = 0._r8
@@ -523,13 +508,13 @@ contains
        end if
     end do
 
+
+    do g = bounds%begg, bounds%endg
+       this%seedn_grc(g) = 0._r8
+    end do
+
     ! now loop through special filters and explicitly set the variables that
     ! have to be in place for biogeophysics
-
-    do fc = 1,num_special_col
-       c = special_col(fc)
-       this%seedn_col(c)    = 0._r8
-    end do
 
     ! initialize fields for special filters
 
@@ -683,15 +668,22 @@ contains
        call restartvar(ncid=ncid, flag=flag,  varname='grainn_xfer', xtype=ncd_double,  &
             dim1name='pft',    long_name='grain N transfer', units='gN/m2', &
             interpinic_flag='interp', readvar=readvar, data=this%grainn_xfer_patch)
+
+       call restartvar(ncid=ncid, flag=flag, varname='cropseedn_deficit', xtype=ncd_double,  &
+            dim1name='pft', long_name='pool for seeding new crop growth', units='gN/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%cropseedn_deficit_patch)
     end if
 
     !--------------------------------
-    ! column nitrogen state variables
+    ! gridcell nitrogen state variables
     !--------------------------------
 
-    call restartvar(ncid=ncid, flag=flag, varname='seedn', xtype=ncd_double,  &
-         dim1name='column', long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%seedn_col) 
+    ! BACKWARDS_COMPATIBILITY(wjs, 2017-01-12) Naming this with a _g suffix in order to
+    ! distinguish it from the old column-level seedn restart variable
+    call restartvar(ncid=ncid, flag=flag, varname='seedn_g', xtype=ncd_double,  &
+         dim1name='gridcell', long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%seedn_grc) 
+
 
     if (flag == 'read') then
        call restartvar(ncid=ncid, flag=flag, varname='spinup_state', xtype=ncd_int, &
@@ -785,6 +777,7 @@ contains
        this%storvegn_patch(i)           = value_patch
        this%totvegn_patch(i)            = value_patch
        this%totn_patch(i)               = value_patch
+       this%cropseedn_deficit_patch(i)  = value_patch
     end do
 
     if ( use_crop )then
@@ -898,7 +891,8 @@ contains
           this%storvegn_patch(p) = &
                this%storvegn_patch(p) + &
                this%grainn_storage_patch(p)     + &
-               this%grainn_xfer_patch(p)
+               this%grainn_xfer_patch(p) + &
+               this%cropseedn_deficit_patch(p)
        end if
 
        ! total vegetation nitrogen (TOTVEGN)
@@ -943,12 +937,8 @@ contains
             soilbiogeochem_nitrogenstate_inst%totlitn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%totsomn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%sminn_col(c)   + &
-            this%seedn_col(c)                                + &
             soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
 
-       this%dyn_nbal_adjustments_veg_plus_soil_col(c) = &
-            this%dyn_nbal_adjustments_col(c) + &
-            soilbiogeochem_nitrogenstate_inst%dyn_nbal_adjustments_col(c)
     end do
     
     
@@ -1153,31 +1143,5 @@ contains
 
 
   end subroutine DynamicPatchAdjustments
-
-  !-----------------------------------------------------------------------
-  subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)
-    !
-    ! !DESCRIPTION:
-    ! Adjust state variables when column areas change due to dynamic landuse
-    !
-    ! !USES:
-    use dynColumnStateUpdaterMod, only : column_state_updater_type
-    !
-    ! !ARGUMENTS:
-    class(cnveg_nitrogenstate_type) , intent(inout) :: this
-    type(bounds_type)               , intent(in)    :: bounds
-    type(column_state_updater_type) , intent(in)    :: column_state_updater
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'DynamicColumnAdjustments'
-    !-----------------------------------------------------------------------
-
-    call column_state_updater%update_column_state_no_special_handling( &
-         bounds = bounds, &
-         var    = this%seedn_col(bounds%begc:bounds%endc), &
-         adjustment = this%dyn_nbal_adjustments_col(bounds%begc:bounds%endc))
-
-  end subroutine DynamicColumnAdjustments
 
 end module CNVegNitrogenStateType
