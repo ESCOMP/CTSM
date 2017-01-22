@@ -169,9 +169,6 @@ contains
   !-----------------------------------------------------------------------
   subroutine InitAllocate(this, bounds)
     ! !USES:
-    use pftconMod        , only : pftcon 
-    use PatchType        , only : patch
-    use GridcellType     , only : grc
     !
     ! !ARGUMENTS:
     class(crop_type) , intent(inout) :: this
@@ -179,7 +176,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
-    integer :: p, g, ivt    ! Indices
     
     character(len=*), parameter :: subname = 'InitAllocate'
     !-----------------------------------------------------------------------
@@ -195,23 +191,7 @@ contains
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
-    do p = begp, endp
-       g   = patch%gridcell(p)
-       ivt = patch%itype(p)
-       if ( grc%latdeg(g) >= 0.0_r8 .and. grc%latdeg(g) <= 30.0_r8) then
-          this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8-0.4_r8*grc%latdeg(g)
-       else if (grc%latdeg(g) < 0.0_r8 .and. grc%latdeg(g) >= -30.0_r8) then
-          this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8+0.4_r8*grc%latdeg(g)
-       else
-          this%latbaset_patch(p)=pftcon%baset(ivt)
-       end if
-    end do
-    !do p = begp, endp
-    !   g   = patch%gridcell(p)
-    !   ivt = patch%itype(p)
-    !   this%latbaset_patch(p)=pftcon%baset(ivt)
-    !end do
-    
+
     this%CropRestYear = 0
 
   end subroutine InitAllocate
@@ -237,7 +217,7 @@ contains
     this%fertnitro_patch(begp:endp) = spval
     call hist_addfld1d (fname='FERTNITRO', units='gN/m2/yr', &
          avgflag='A', long_name='Nitrogen fertilizer for each crop', &
-         ptr_patch=this%gddplant_patch, default='inactive')
+         ptr_patch=this%fertnitro_patch, default='inactive')
 
     this%gddplant_patch(begp:endp) = spval
     call hist_addfld1d (fname='GDDPLANT', units='ddays', &
@@ -267,16 +247,29 @@ contains
     use landunit_varcon, only : istcrop
     use PatchType, only : patch
     use clm_instur, only : fert_cft
+    use pftconMod        , only : pftcon 
+    use GridcellType     , only : grc
     ! !ARGUMENTS:
     class(crop_type),  intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: c, l, g, p, m
+    integer :: c, l, g, p, m, ivt ! indices
 
     character(len=*), parameter :: subname = 'InitCold'
     !-----------------------------------------------------------------------
 
+    do p= bounds%begp,bounds%endp
+       g   = patch%gridcell(p)
+       ivt = patch%itype(p)
+       if ( grc%latdeg(g) >= 0.0_r8 .and. grc%latdeg(g) <= 30.0_r8) then
+          this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8-0.4_r8*grc%latdeg(g)
+       else if (grc%latdeg(g) < 0.0_r8 .and. grc%latdeg(g) >= -30.0_r8) then
+          this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8+0.4_r8*grc%latdeg(g)
+       else
+          this%latbaset_patch(p)=pftcon%baset(ivt)
+       end if
+    end do
     if (use_crop) then
        do p= bounds%begp,bounds%endp
           g = patch%gridcell(p)

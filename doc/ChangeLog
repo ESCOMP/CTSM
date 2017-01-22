@@ -1,4 +1,113 @@
 ===============================================================
+Tag name:  clm4_5_14_r219
+Originator(s):  erik (Erik Kluzek)
+Date: Sat Jan 21 23:36:23 MST 2017
+One-line Summary: Answer changes for CLM50 for several issues that lead to dead crops
+
+Purpose of changes
+------------------
+
+Fix several problems that led to dead crops. latbaset was set in InitAllocate
+and then reset to spval in InitHist. Set lnca to interp rather than skip for
+interpolation on startup. Remove rootfr from restart unless use_dynroots is on.
+Fix FERTNITRO and add BTRAN2 to history. Turn LUNA on by default for all CLM50
+cases including SP. Change from Fang Li to remove fb from the calculation of
+baf_crop. Fix LUNA in SP mode by setting PARi10 to a small value rather than
+zero.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID): [If none, remove this line]
+   bug 2407 -- latbaset is set in InitAllocate and then reset to spval in InitHist
+   bug 2409 -- set lnca to interp rather than skip on restart
+   bug 2408 -- remove rootfr from restart unless use_dynroots is on
+   bug 2402 -- FERTNITRO
+   bug 2403 -- BTRAN2
+   bug 2413 -- luna in SP mode
+Known bugs introduced in this tag (include bugzilla ID): [If none, remove this line]
+   bug 2414 LATBASET is always output to history even if not used and even though it's a constant
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: self, oleson, dlawren
+
+CLM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel -  OK
+    yellowstone_pgi -  OK
+    yellowstone_gnu (clm45 only) -  OK
+    hobart_nag -  OK
+
+CLM tag used for the baseline comparisons:  clm4_5_14_r218
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES! CLM50 with crop
+   CLM45 BGCCROP cases show an answer change just because fill value change of LATBASET even though it's unused
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM50 with CROP
+    - what platforms/compilers: All
+    - nature of change: new climate with crops growing
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M        components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml -- LUNA on by
+               default for ALL CLM50 cases included SP mode
+
+   M        components/clm/src/biogeochem/CNFireLi2016Mod.F90 --- Remove fb from calculation of baf_crop
+   M        components/clm/src/biogeochem/CropType.F90 ---------- Move initialization of latbaset_patch
+              to InitCold, fix FERTNITRO on history file
+   M        components/clm/src/biogeophys/EnergyFluxType.F90 ---- Save BTRAN2 to history files
+   M        components/clm/src/biogeophys/LunaMod.F90 ----------- Set PARi10 to 0.01 rather than zero if 
+              LAI is zero
+   M        components/clm/src/biogeophys/PhotosynthesisMod.F90 - Set lnca_patch to interp rather than skip
+   M        components/clm/src/biogeophys/SoilStateType.F90 ----- Only save rootfr if use_dynroots on.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r218
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Jan 13 19:46:27 MST 2017

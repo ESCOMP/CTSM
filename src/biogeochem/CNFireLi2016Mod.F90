@@ -531,7 +531,7 @@ contains
 
                  ! crop fire only for generic crop types at this time
                  ! managed crops are treated as grasses if crop model is turned on
-                 baf_crop(c) = baf_crop(c) + cropfire_a1/secsphr*fb*fhd*fgdp*patch%wtcol(p)
+                 baf_crop(c) = baf_crop(c) + cropfire_a1/secsphr*fhd*fgdp*patch%wtcol(p)
                  if( fb*fhd*fgdp*patch%wtcol(p)  >  0._r8)then
                     burndate(p)=kda
                  end if

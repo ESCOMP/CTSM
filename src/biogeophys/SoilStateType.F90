@@ -398,11 +398,11 @@ contains
               long_name='root depth', units='m', &
               interpinic_flag='interp', readvar=readvar, data=this%root_depth_patch)
  
-     end if
          call restartvar(ncid=ncid, flag=flag, varname='rootfr', xtype=ncd_double,  &
               dim1name='pft', dim2name='levgrnd', switchdim=.true., &
               long_name='root fraction', units='', &
               interpinic_flag='interp', readvar=readvar, data=this%rootfr_patch)
+     end if
          if (flag=='read' .and. .not. readvar) then
             if (masterproc) then
                write(iulog,*) "can't find rootfr in restart (or initial) file..."

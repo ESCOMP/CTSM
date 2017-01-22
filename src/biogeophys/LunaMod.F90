@@ -321,7 +321,7 @@ module LunaMod
                             qabs  = par240d_z(p,z)/rabsorb
                             PARi10 =  qabs * 4.6_r8                 
                          else
-                            PARi10  =  0.0_r8
+                            PARi10  =  0.01_r8
                          endif
                          !-----------------------------------------------------------------------
                          relRad   = PARi10/PARTop
@@ -355,7 +355,7 @@ module LunaMod
                             qabs   = par240d_z(p,z)/rabsorb
                             PARi10 =  qabs * 4.6_r8                 
                          else
-                            PARi10 =  0.0_r8
+                            PARi10 =  0.01_r8
                          endif                         
                          PARimx10  = PARi10*radmax2mean
                          !-----------------------------------------------------------------------------------------------------

@@ -692,7 +692,7 @@ contains
 
     call restartvar(ncid=ncid, flag=flag, varname='lnca', xtype=ncd_double,  &
        dim1name='pft', long_name='leaf N concentration', units='gN leaf/m^2', &
-       interpinic_flag='skip', readvar=readvar, data=this%lnca_patch)
+       interpinic_flag='interp', readvar=readvar, data=this%lnca_patch)
     if(use_luna) then
       call restartvar(ncid=ncid, flag=flag, varname='vcmx25_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &

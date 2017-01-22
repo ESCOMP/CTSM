@@ -630,6 +630,11 @@ contains
          avgflag='A', long_name='daily minimum of transpiration beta factor', &
          ptr_patch=this%btran_min_patch, set_lake=spval, set_urb=spval)
 
+    this%btran2_patch(begp:endp) = spval
+    call hist_addfld1d (fname='BTRAN2', units='unitless',  &
+         avgflag='A', long_name='root zone soil wetness factor', &
+         ptr_patch=this%btran2_patch, set_lake=spval, set_urb=spval)
+
     if (use_cn) then
        this%rresis_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='RRESIS', units='proportion', type2d='levgrnd', &

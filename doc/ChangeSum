@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_14_r219     erik 01/21/2017 Answer changes for CLM50 for several issues that lead to dead crops
   clm4_5_14_r218    sacks 01/13/2017 For newly initiating columns: do not copy snow state
   clm4_5_14_r217    sacks 01/13/2017 Bug fix for snow radiation absorption
   clm4_5_14_r216     erik 01/12/2017 Fix previous broken tag
