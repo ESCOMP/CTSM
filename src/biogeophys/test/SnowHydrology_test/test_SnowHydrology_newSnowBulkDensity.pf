@@ -40,7 +40,7 @@ contains
     call setup_single_veg_patch(pft_type=1)
     call filter_from_range(start=bounds%begc, end=bounds%endc, numf=this%numf, filter=this%filter)
     @assertEqual( this%numf, 1 )
-    call this%atm2lnd_inst%Init( bounds )
+    call this%atm2lnd_inst%InitForTesting( bounds )
     this%atm2lnd_inst%forc_wind_grc(bounds%begg)  = 0.0_r8
     allocate( this%bifall(bounds%begc:bounds%endc) )
     this%NEG15C = tfrz - 15._r8

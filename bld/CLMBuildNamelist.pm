@@ -1579,8 +1579,12 @@ sub process_namelist_inline_logic {
   setup_logic_spinup($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_supplemental_nitrogen($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_snowpack($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
-  setup_logic_atm_forcing($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_ed($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #########################################
+  # namelist group: atm2lnd_inparm
+  #########################################
+  setup_logic_atm_forcing($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #########################################
   # namelist group: clm_humanindex_inparm #
@@ -1992,7 +1996,6 @@ sub setup_logic_glacier {
     }
 
     if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
-      add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glcmec_downscale_longwave');
       add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glc_snow_persistence_max_days');
     }
 
@@ -2027,6 +2030,8 @@ sub setup_logic_glacier {
     }
   }
 
+  # Dependence of albice on glc_nec has gone away starting in CLM4_5. Thus, we
+  # can remove glc_nec from the following call once we ditch CLM4_0.
   add_default($opts->{'test'}, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'albice', 'glc_nec'=>$nl_flags->{'glc_nec'});
   if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
      # These controls over glacier region behavior are needed even when running without glc_mec in order to satisfy some error checks in the code
@@ -3522,7 +3527,21 @@ sub setup_logic_atm_forcing {
    my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
    
    if ($physv->as_long() >= $physv->as_long("clm4_5")) {
+      add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glcmec_downscale_longwave');
       add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'repartition_rain_snow');
+
+      foreach my $var ("precip_repartition_glc_all_snow_t",
+                       "precip_repartition_glc_all_rain_t",
+                       "precip_repartition_nonglc_all_snow_t",
+                       "precip_repartition_nonglc_all_rain_t") {
+         if ( $nl->get_value("repartition_rain_snow") =~ /$TRUE/i ) {
+            add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+         } else {
+            if (defined($nl->get_value($var))) {
+               fatal_error("$var can only be set if repartition_rain_snow is true");
+            }
+         }
+      }
    }
 }
 
@@ -3567,7 +3586,7 @@ sub write_output_files {
   } else {
 
     @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams 
-                 lai_streams clm_canopyhydrology_inparm cnphenology
+                 lai_streams atm2lnd_inparm clm_canopyhydrology_inparm cnphenology
                  clm_soilhydrology_inparm dynamic_subgrid 
                  finidat_consistency_checks dynpft_consistency_checks 
                  clm_initinterp_inparm century_soilbgcdecompcascade

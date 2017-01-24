@@ -9,7 +9,7 @@ module test_partition_precip
   use unittestSubgridMod
   use unittestSimpleSubgridSetupsMod
   use unittestArrayMod
-  use clm_varctl, only : repartition_rain_snow
+  use landunit_varcon, only : istice_mec
   use clm_varcon, only : hfus   ! latent heat of fusion for ice [J/kg]
   use clm_varcon, only : denh2o ! density of liquid water [kg/m3]
   use shr_const_mod, only : SHR_CONST_TKFRZ
@@ -29,13 +29,16 @@ module test_partition_precip
   real(r8), parameter :: tol = 1.e-13
   real(r8), parameter :: mm_to_m = 1.e-3_r8  ! multiply by this to convert from mm to m
 
+  ! Temperatures in degrees C
+  real(r8), parameter :: precip_repartition_glc_all_snow_t = -6._r8
+  real(r8), parameter :: precip_repartition_glc_all_rain_t = -2._r8
+  real(r8), parameter :: precip_repartition_nonglc_all_snow_t = 0._r8
+  real(r8), parameter :: precip_repartition_nonglc_all_rain_t = 2._r8
+
 contains
 
   subroutine setUp(this)
     class(TestPartitionPrecip), intent(inout) :: this
-
-    repartition_rain_snow = .true.
-
   end subroutine setUp
 
   subroutine tearDown(this)
@@ -45,15 +48,35 @@ contains
     call unittest_subgrid_teardown()
   end subroutine tearDown
 
-  subroutine set_inputs(this, rain, snow, temperature)
+  subroutine set_inputs(this, rain, snow, temperature, repartition_rain_snow)
     ! set necessary input variables
     class(TestPartitionPrecip), intent(inout) :: this
     real(r8), intent(in) :: rain(:)
     real(r8), intent(in) :: snow(:)
     real(r8), intent(in) :: temperature(:)
 
+    ! If not provided, set to true
+    logical, intent(in), optional :: repartition_rain_snow
+
+    logical :: l_repartition_rain_snow
+    type(atm2lnd_params_type) :: atm2lnd_params
+
+    if (present(repartition_rain_snow)) then
+       l_repartition_rain_snow = repartition_rain_snow
+    else
+       l_repartition_rain_snow = .true.
+    end if
+
+    atm2lnd_params = atm2lnd_params_type( &
+         repartition_rain_snow = l_repartition_rain_snow, &
+         glcmec_downscale_longwave = .false., &
+         precip_repartition_glc_all_snow_t = precip_repartition_glc_all_snow_t, &
+         precip_repartition_glc_all_rain_t = precip_repartition_glc_all_rain_t, &
+         precip_repartition_nonglc_all_snow_t = precip_repartition_nonglc_all_snow_t, &
+         precip_repartition_nonglc_all_rain_t = precip_repartition_nonglc_all_rain_t)
+
     ! Allocate necessary variables
-    call this%atm2lnd_inst%Init(bounds)
+    call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
     this%sh_from_conversion = col_array()
 
     ! set input variables
@@ -114,6 +137,29 @@ contains
   end subroutine intermediateTemp_resultsInCorrectPartitioning
 
   @Test
+  subroutine intermediateTemp_glacier_resultsInCorrectPartitioning(this)
+    class(TestPartitionPrecip), intent(inout) :: this
+
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call create_landunit_ncols(ltype = istice_mec, lweight = 1._r8, &
+         ctypes = [1], cweights = [1._r8])
+    call unittest_subgrid_setup_end()
+
+    ! Choose a temperature 3/4 of the way from all-snow to all-rain
+    call this%set_inputs(rain=[1._r8], snow=[2._r8], temperature=[SHR_CONST_TKFRZ - 3._r8])
+
+    call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
+
+    associate(&
+         rain_col => this%atm2lnd_inst%forc_rain_downscaled_col, &
+         snow_col => this%atm2lnd_inst%forc_snow_downscaled_col)
+    @assertEqual(3._r8 * 0.75_r8, rain_col(begc), tolerance=tol)
+    @assertEqual(3._r8 * 0.25_r8, snow_col(begc), tolerance=tol)
+    end associate
+  end subroutine intermediateTemp_glacier_resultsInCorrectPartitioning
+
+  @Test
   subroutine noConversion_resultsInNoHeatFlux(this)
     class(TestPartitionPrecip), intent(inout) :: this
 
@@ -162,8 +208,8 @@ contains
     class(TestPartitionPrecip), intent(inout) :: this
 
     call setup_single_veg_patch(pft_type=1)
-    call this%set_inputs(rain=[1._r8], snow=[2._r8], temperature=[250._r8])
-    repartition_rain_snow = .false.
+    call this%set_inputs(rain=[1._r8], snow=[2._r8], temperature=[250._r8], &
+         repartition_rain_snow = .false.)
 
     call partition_precip(bounds, this%atm2lnd_inst, this%sh_from_conversion)
 

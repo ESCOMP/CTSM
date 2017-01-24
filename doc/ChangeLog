@@ -1,4 +1,157 @@
 ===============================================================
+Tag name:  clm4_5_14_r221
+Originator(s):  sacks (Bill Sacks)
+Date: Tue Jan 24 05:12:14 MST 2017
+One-line Summary: Change rain-snow partitioning and ice albedo for glacier columns
+
+Purpose of changes
+------------------
+
+Main change is to change the rain-snow partitioning ramp for glacier columns,
+when using clm5 physics: Rather than assuming all snow below 0 C and all rain
+above 2 C, for glacier columns we now assume all snow below -2 C and all rain
+above 0 C. The main motivation for this change is to increase the
+otherwise-too-low glacier melt we have been seeing in recent CESM2 test
+runs. The physical justification is: The old partitioning makes sense when you
+have a positive atmospheric lapse rate - so slightly-above-freezing temperatures
+at the surface are associated with below-freezing temperatures at the cloud
+level. However, for glaciers, it is relatively common to have a temperature
+inversion. Thus, we would expect a different relationship between near-surface
+temperatures and phase of precipitation. This new relationship was proposed and
+agreed upon by LIWG leadership, particularly Bill Lipscomb, Jan Lenaerts and Leo
+van Kampenhout.
+
+To implement this change, I have reimplemented the (simple) rain-snow
+partitioning code inline, rather than using the csm_share code. In addition, I
+have introduced four new namelist parameters controlling its behavior:
+- precip_repartition_glc_all_snow_t
+- precip_repartition_glc_all_rain_t
+- precip_repartition_nonglc_all_snow_t
+- precip_repartition_nonglc_all_rain_t
+
+Also changes ice albedo (albice) for glacier columns from 0.6/0.4 (vis/nir) to
+0.5/0.3, when using clm5 physics. This is based on suggestions by Jan Lenaerts,
+and agreed upon by the LIWG leadership.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+Four new namelist parameters:
+- precip_repartition_glc_all_snow_t
+- precip_repartition_glc_all_rain_t
+- precip_repartition_nonglc_all_snow_t
+- precip_repartition_nonglc_all_rain_t
+
+Changes made to namelist defaults (e.g., changed parameter values):
+- Changed defaults for albice with CLM50
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Duplicated code for rain-snow partitioning: in CLM and csm_share (the
+  csm_share version is used by datm). However, this is just a couple of lines of
+  code, and it's possible that the CLM version will change in the future, so I
+  felt that duplication was not a bad thing here.
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - ok (pass, but differences from baseline for clm45/clm50 as expected)
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass, some baseline comparisons fail as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_14_r220
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM50 cases
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff; expected to be new climate regionally, but may not
+      change global climate significantly. I have confirmed via one test that
+      differences are only over glacier columns.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as described above
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+MM      components/clm/bld/CLMBuildNamelist.pm
+M       components/clm/src/main/atm2lndMod.F90
+M       components/clm/src/main/atm2lndType.F90
+M       components/clm/src/main/clm_instMod.F90
+MM      components/clm/src/main/controlMod.F90
+M       components/clm/src/main/test/atm2lnd_test/test_downscale_forcings.pf
+M       components/clm/src/main/test/atm2lnd_test/test_partition_precip.pf
+M       components/clm/src/main/clm_varctl.F90
+
+========= Fix unit tests for new interface for initializing atm2lnd
+M       components/clm/src/biogeophys/test/SnowHydrology_test/test_SnowHydrology_newSnowBulkDensity.pf
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r220
 Originator(s):  sacks (Bill Sacks)
 Date: Sun Jan 22 14:05:50 MST 2017

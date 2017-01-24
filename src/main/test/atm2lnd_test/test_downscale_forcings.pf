@@ -8,11 +8,10 @@ module test_downscale_forcings
   use unittestSubgridMod
   use unittestSimpleSubgridSetupsMod
   use unittestArrayMod
-  use atm2lndType, only : atm2lnd_type
+  use atm2lndType, only : atm2lnd_type, atm2lnd_params_type
   use TopoMod, only : topo_type
   use decompMod, only : bounds_type
   use filterColMod
-  use clm_varctl, only : glcmec_downscale_longwave
 
   implicit none
 
@@ -56,8 +55,6 @@ contains
 
   subroutine setUp(this)
     class(TestDownscaleForcings), intent(inout) :: this
-
-    glcmec_downscale_longwave = .true.
   end subroutine setUp
 
   subroutine tearDown(this)
@@ -69,7 +66,7 @@ contains
   end subroutine tearDown
 
   subroutine create_atm2lnd(this, forc_topo, forc_t, forc_th, forc_q, forc_pbot, forc_rho, &
-       forc_lwrad, forc_rain, forc_snow)
+       forc_lwrad, forc_rain, forc_snow, glcmec_downscale_longwave)
     ! Initializes this%atm2lnd_inst and sets gridcell-level, non-downscaled forcing
     ! fields based on inputs. Excluded inputs are given a default value
     class(TestDownscaleForcings), intent(inout) :: this
@@ -83,6 +80,9 @@ contains
     real(r8), intent(in), optional :: forc_rain(:)
     real(r8), intent(in), optional :: forc_snow(:)
 
+    ! If not provided, assumed to be true
+    logical, intent(in), optional :: glcmec_downscale_longwave
+
     real(r8), parameter :: forc_t_default = 301._r8
     real(r8), parameter :: forc_th_default = 302._r8
     real(r8), parameter :: forc_q_default = 0.01_r8
@@ -94,9 +94,21 @@ contains
 
     real(r8), parameter :: forc_hgt = 2._r8
 
+    logical :: l_glcmec_downscale_longwave
+    type(atm2lnd_params_type) :: atm2lnd_params
+
     ! ------------------------------------------------------------------------
 
-    call this%atm2lnd_inst%Init(bounds)
+    if (present(glcmec_downscale_longwave)) then
+       l_glcmec_downscale_longwave = glcmec_downscale_longwave
+    else
+       l_glcmec_downscale_longwave = .true.
+    end if
+
+    atm2lnd_params = atm2lnd_params_type( &
+         repartition_rain_snow = .false., &
+         glcmec_downscale_longwave = l_glcmec_downscale_longwave)
+    call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
     this%atm2lnd_inst%forc_topo_grc(bounds%begg:bounds%endg) = forc_topo(:)
 
     if (present(forc_t)) then

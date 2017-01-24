@@ -20,7 +20,8 @@ module atm2lndMod
   use TopoMod        , only : topo_type
   use filterColMod   , only : filter_col_type
   use LandunitType   , only : lun                
-  use ColumnType     , only : col                
+  use ColumnType     , only : col
+  use landunit_varcon, only : istice, istice_mec
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -249,18 +250,17 @@ contains
     ! Note that, unlike the other downscalings done here, this is currently applied over
     ! all points - not just those within the downscale filter.
     !
-    ! !USES:
-    use clm_varctl      , only : repartition_rain_snow
-    !
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in)    :: bounds  
     type(atm2lnd_type) , intent(inout) :: atm2lnd_inst
     real(r8), intent(inout) :: eflx_sh_precip_conversion(bounds%begc:) ! sensible heat flux from precipitation conversion (W/m**2) [+ to atm]
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,g       ! indices
-    real(r8) :: rain_old  ! rain before conversion
-    real(r8) :: snow_old  ! snow before conversion
+    integer  :: c,l,g      ! indices
+    real(r8) :: rain_old   ! rain before conversion
+    real(r8) :: snow_old   ! snow before conversion
+    real(r8) :: all_snow_t ! temperature at which all precip falls as snow (K)
+    real(r8) :: frac_rain_slope ! slope of the frac_rain vs. temperature relationship
 
     character(len=*), parameter :: subname = 'partition_precip'
     !-----------------------------------------------------------------------
@@ -289,13 +289,23 @@ contains
     end do
 
     ! Optionally, convert rain to snow or vice versa based on forc_t_c
-    if (repartition_rain_snow) then
+    if (atm2lnd_inst%params%repartition_rain_snow) then
        do c = bounds%begc, bounds%endc
           if (col%active(c)) then
+             l = col%landunit(c)
              rain_old = forc_rain_c(c)
              snow_old = forc_snow_c(c)
+             if (lun%itype(l) == istice .or. lun%itype(l) == istice_mec) then
+                all_snow_t = atm2lnd_inst%params%precip_repartition_glc_all_snow_t
+                frac_rain_slope = atm2lnd_inst%params%precip_repartition_glc_frac_rain_slope
+             else
+                all_snow_t = atm2lnd_inst%params%precip_repartition_nonglc_all_snow_t
+                frac_rain_slope = atm2lnd_inst%params%precip_repartition_nonglc_frac_rain_slope
+             end if
              call repartition_rain_snow_one_col(&
                   temperature = forc_t_c(c), &
+                  all_snow_t = all_snow_t, &
+                  frac_rain_slope = frac_rain_slope, &
                   rain = forc_rain_c(c), &
                   snow = forc_snow_c(c))
              call sens_heat_from_precip_conversion(&
@@ -313,18 +323,18 @@ contains
   end subroutine partition_precip
 
   !-----------------------------------------------------------------------
-  subroutine repartition_rain_snow_one_col(temperature, rain, snow)
+  subroutine repartition_rain_snow_one_col(temperature, all_snow_t, frac_rain_slope, &
+       rain, snow)
     !
     ! !DESCRIPTION:
     ! Re-partition precipitation into rain/snow for a single column.
     !
     ! Rain and snow variables should be set initially, and are updated here
     !
-    ! !USES:
-    use shr_precip_mod, only : shr_precip_partition_rain_snow_ramp
-    !
     ! !ARGUMENTS:
     real(r8) , intent(in)    :: temperature ! near-surface temperature (K)
+    real(r8) , intent(in)    :: all_snow_t  ! temperature at which precip falls entirely as snow (K)
+    real(r8) , intent(in)    :: frac_rain_slope ! slope of the frac_rain vs. T relationship
     real(r8) , intent(inout) :: rain        ! atm rain rate [mm/s]
     real(r8) , intent(inout) :: snow        ! atm snow rate [(mm water equivalent)/s]
     !
@@ -335,7 +345,10 @@ contains
     character(len=*), parameter :: subname = 'repartition_rain_snow_one_col'
     !-----------------------------------------------------------------------
 
-    call shr_precip_partition_rain_snow_ramp(temperature, frac_rain)
+    frac_rain = (temperature - all_snow_t) * frac_rain_slope
+
+    ! bound in [0,1]
+    frac_rain = min(1.0_r8,max(0.0_r8,frac_rain))
 
     total_precip = rain + snow
     rain = total_precip * frac_rain
@@ -392,7 +405,6 @@ contains
     !
     ! !USES:
     use clm_varcon      , only : lapse_glcmec
-    use clm_varctl      , only : glcmec_downscale_longwave
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds
@@ -438,7 +450,7 @@ contains
       end do
 
       ! Optionally, downscale the longwave radiation, conserving energy
-      if (glcmec_downscale_longwave) then
+      if (atm2lnd_inst%params%glcmec_downscale_longwave) then
 
          ! Initialize variables related to normalization
          do g = bounds%begg, bounds%endg

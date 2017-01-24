@@ -532,14 +532,6 @@ Override the start type from the driver: it can only be
 set to 3 meaning branch.
 </entry>
 
-<entry id="glcmec_downscale_longwave" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
-If TRUE, downscale longwave radiation over glc_mec landunits.
-This downscaling is conservative.
-<default>Default: .true.</default>
-</entry>
-
-
 <entry id="use_ed" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the ED
@@ -753,11 +745,6 @@ If TRUE, write diagnostic of global radiative temperature written to CLM log fil
 <entry id="subgridflag" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="0,1" >
 Subgrid fluxes for snow
-</entry>
-
-<entry id="repartition_rain_snow" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
-If TRUE, repartition rain/snow from atmosphere based on temperature.
 </entry>
 
 <entry id="snowveg_flag" type="char*10" category="clm_physics"
@@ -1258,6 +1245,46 @@ Full pathname of output domain dataset (only used for mkdatadomain).
 <entry id="dtype" type="char*5" category="tools"
        group="domain_nl" valid_values="datm,docn" >
 Type of domain file to create (ocean or atmosphere) (only used for mkdatadomain)
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- Namelist items controlling atmospheric forcings                                           -->
+<!-- ========================================================================================  -->
+
+<entry id="repartition_rain_snow" type="logical" category="clm_physics"
+       group="atm2lnd_inparm" valid_values="" >
+If TRUE, repartition rain/snow from atmosphere based on temperature.
+</entry>
+
+<entry id="glcmec_downscale_longwave" type="logical" category="clm_physics"
+       group="atm2lnd_inparm" valid_values="" >
+If TRUE, downscale longwave radiation over glc_mec landunits.
+This downscaling is conservative.
+<default>Default: .true.</default>
+</entry>
+
+<entry id="precip_repartition_glc_all_snow_t" type="real" category="clm_physics"
+       group="atm2lnd_inparm" valid_values="" >
+Temperature below which all precipitation falls as snow, for glacier columns (deg C)
+Only relevant if repartition_rain_snow is .true.
+</entry>
+
+<entry id="precip_repartition_glc_all_rain_t" type="real" category="clm_physics"
+       group="atm2lnd_inparm" valid_values="" >
+Temperature above which all precipitation falls as rain, for glacier columns (deg C)
+Only relevant if repartition_rain_snow is .true.
+</entry>
+
+<entry id="precip_repartition_nonglc_all_snow_t" type="real" category="clm_physics"
+       group="atm2lnd_inparm" valid_values="" >
+Temperature below which all precipitation falls as snow, for non-glacier columns (deg C)
+Only relevant if repartition_rain_snow is .true.
+</entry>
+
+<entry id="precip_repartition_nonglc_all_rain_t" type="real" category="clm_physics"
+       group="atm2lnd_inparm" valid_values="" >
+Temperature above which all precipitation falls as rain, for non-glacier columns (deg C)
+Only relevant if repartition_rain_snow is .true.
 </entry>
 
 <!-- ========================================================================================  -->

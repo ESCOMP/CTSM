@@ -55,10 +55,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hist_nhtfrq clm_accelerated_spinup="on">-8760</hist_nhtfrq>
 <hist_mfilt  clm_accelerated_spinup="on">20</hist_mfilt>
 
-<!-- Rain/snow repartitioning -->
-<repartition_rain_snow phys="clm5_0">.true.</repartition_rain_snow>
-<repartition_rain_snow phys="clm4_5">.false.</repartition_rain_snow>
-
 <!-- Root and stem acclimation -->
 <rootstem_acc phys="clm5_0">.false.</rootstem_acc>
 <rootstem_acc phys="clm4_5">.false.</rootstem_acc>
@@ -90,12 +86,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <suplnitro use_ed=".true." >NONE</suplnitro>
 
 <!-- Albedo for glaciers -->
-<albice glc_nec="0" >0.60,0.40</albice>
-<albice glc_nec="1" >0.60,0.40</albice>
-<albice glc_nec="3" >0.60,0.40</albice>
-<albice glc_nec="5" >0.60,0.40</albice>
-<albice glc_nec="10">0.60,0.40</albice>
-<albice glc_nec="36">0.60,0.40</albice>
+<albice phys="clm5_0">0.50,0.30</albice>
+<albice phys="clm4_5">0.60,0.40</albice>
 
 <!-- Default urban air conditioning/heating and wasteheat -->
 <urban_hac phys="clm5_0" >ON_WASTEHEAT</urban_hac>
@@ -140,6 +132,26 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Friction velocity -->
 <zetamaxstable phys="clm4_5">2.0d00</zetamaxstable>
 <zetamaxstable phys="clm5_0">0.5d00</zetamaxstable>
+
+<!-- atm2lnd defaults -->
+<repartition_rain_snow phys="clm5_0">.true.</repartition_rain_snow>
+<repartition_rain_snow phys="clm4_5">.false.</repartition_rain_snow>
+
+<glcmec_downscale_longwave>.true.</glcmec_downscale_longwave>
+
+<precip_repartition_nonglc_all_snow_t>0.</precip_repartition_nonglc_all_snow_t>
+<precip_repartition_nonglc_all_rain_t>2.</precip_repartition_nonglc_all_rain_t>
+<!-- For CLM45, we used the same rain-snow partitioning for glaciers as for other landunits -->
+<precip_repartition_glc_all_snow_t phys="clm4_5">0.</precip_repartition_glc_all_snow_t>
+<precip_repartition_glc_all_rain_t phys="clm4_5">2.</precip_repartition_glc_all_rain_t>
+<!-- For CLM5, we assume rain at somewhat cooler temperatures. The main
+     motivation is to increase glacier melt, which otherwise is too low in
+     CESM2. The physical justification is that the 0 - 2 C ramp used elsewhere
+     makes sense for typical atmospheric profiles; but over glaciers, inversions
+     are more common, so it is more reasonable to expect rain despite
+     below-freezing near-surface temperatures. -->
+<precip_repartition_glc_all_snow_t phys="clm5_0">-2.</precip_repartition_glc_all_snow_t>
+<precip_repartition_glc_all_rain_t phys="clm5_0">0.</precip_repartition_glc_all_rain_t>
 
 <!-- CN Fire model method defaults -->
 <fire_method phys="clm5_0">li2016crufrc</fire_method>
@@ -242,9 +254,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      Greenland: replaced_by_ice
      Antarctica: replaced_by_ice -->
 <glacier_region_melt_behavior>'remains_in_place','replaced_by_ice','replaced_by_ice'</glacier_region_melt_behavior>
-
-<!-- Determine whether to perform certain downscaling operations over glc_mec landunits -->
-<glcmec_downscale_longwave>.true.</glcmec_downscale_longwave>
 
 <!-- This parameter is tied (in a scientific sense) to h2osno_max: For large
      values of h2osno_max, glc_snow_persistence_max_days should be 0; for small
