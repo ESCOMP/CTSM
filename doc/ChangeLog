@@ -1,4 +1,230 @@
 ===============================================================
+Tag name:  clm4_5_14_r222
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Jan 27 06:14:19 MST 2017
+One-line Summary: Fix energy budget bug with fractional snow on glacier and wetland columns
+
+Purpose of changes
+------------------
+
+Leo van Kampenhout discovered a bug in the surface energy budget when there is
+fractional snow cover on glacier and wetland columns: frac_sno_eff was being
+treated inconsistently for these landcover types.
+
+Note that the old code did not conserve energy due to this bug!
+
+The fix slightly increases melt rates over Greenland, and has other minor
+effects on the simulation, but not a huge effect.
+
+More detailed notes on the problem, from Leo, are below. However, note that we
+ended up fixing the problem differently from what he suggested - based on Sean
+Swenson's suggestion: We fix this by treating glaciers and wetlands the same as
+soil with respect to frac_sno_eff. (Note that we still treat lakes differently
+[these are handled by different code] and urban differently.)
+
+Here are the more detailed notes from Leo:
+
+Background:
+
+- CLM columns are allowed to have fractional snow cover. 
+
+- The first application of fractional snow cover is to the albedo
+  calculation. This is done for every landcover type in the same fashion. This
+  fractional snow cover is referred to as 'frac_sno'.
+
+- The second type of fractional snow cover is 'frac_sno_eff', which adjusts
+  surface fluxes other than shortwave radiation, such as sensible and latent
+  heat. The frac_sno_eff has only been implemented for soil and crop landcover
+  types.
+
+- For all other landcovers, such as glaciers, frac_sno_eff =1.0
+
+- As such, glaciers can have frac_sno < frac_sno_eff whereas those are otherwise
+  identical
+
+Problem:
+
+- Frac_sno is used to compute absorbed radiation in the soil (sabg_soil) and
+  snow (sabg_snow). When frac_sno < 1.0, this will lead to a positive value of
+  sabg_soil at the expense of sabg_snow
+
+- In other radiation code, notably SoilTemperatureMod.F90, the other definition
+  of fractional snow cover is used (frac_sno_eff)
+
+- For glaciers (frac_sno_eff), this means that no radiation is allowed to enter
+  the soil. To my current understanding, this energy is totally lost:
+
+                     eflx_gnet_soil = sabg_soil(p) + dlrad(p) &
+                          + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_soil(c) &
+                          - (eflx_sh_soil(p)+qflx_ev_soil(p)*htvp(c))
+
+    real(r8)               , intent(out)   :: hs_soil( bounds%begc: )                   ! heat flux on soil [W/m2]
+
+                  ! separate surface fluxes for soil/snow
+                  hs_soil(c) = hs_soil(c) + eflx_gnet_soil * patch%wtcol(p)
+
+                     ! this is the snow/soil interface layer
+                     rt(c,j) = t_soisno(c,j) + fact(c,j) &
+                          *((1._r8-frac_sno_eff(c))*(hs_soil(c) - dhsdT(c)*t_soisno(c,j)) &
+                          + cnfac*(fn(c,j) - frac_sno_eff(c) * fn(c,j-1)))
+
+BalanceCheckMod:
+
+- The missing energy should have been detected by BalanceCheckMod, specifically
+  the check on surface energy balance:
+
+             ! Surface energy balance
+             ! Changed to using (eflx_lwrad_net) here instead of (forc_lwrad - eflx_lwrad_out) because
+             ! there are longwave interactions between urban columns (and therefore patches).
+             ! For surfaces other than urban, (eflx_lwrad_net) equals (forc_lwrad - eflx_lwrad_out),
+             ! and a separate check is done above for these terms.
+
+             if (.not. lun%urbpoi(l)) then
+                errseb(p) = sabv(p) + sabg_chk(p) + forc_lwrad(c) - eflx_lwrad_out(p) &
+                     - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p)
+
+- Here, the total absorbed solar radiation is FSA has been been replaced by
+  sabg_chk. This hides the problem, because sabg_chk itself is also flawed:
+
+ 		      ! save sabg for balancecheck, in case frac_sno is set to zero later
+                     sabg_chk(p) = frac_sno_eff(c) * sabg_snow(p) + (1._r8 - frac_sno_eff(c) ) * sabg_soil(p)
+
+- With frac_sno_eff = 1.0, this simplifies to sabg_snow. So, sabg_soil is not
+  accounted for in the surface energy balance check.
+
+Workaround:
+
+1. Let all solar soil radiation be absorbed by snow:
+
+SurfaceRadiationMod:
+
+             if (frac_sno(c) < frac_sno_eff(c)) then
+                ! LvK: workaround, absorb all soil radiation in snow 
+                sabg_snow(p) = fsa(p)
+                sabg_soil(p) = 0.0_r8
+             end if
+
+2. Recommended: let the surface energy balance use FSA :
+
+   errseb(p) = sabv(p) + fsa(p) + forc_lwrad(c) - eflx_lwrad_out(p) &
+                     - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p)
+
+Long-term solution:
+
+- Thought needs to be given on how SW radiation should be treated on partially
+  covered glacier columns
+
+
+- Allowing radiation to penetrate the soil, yet keeping frac_sno_eff = 1, is a
+  possibility. This will heat the snowpack from below.
+
+
+- Alternatively, we could look at implementing glacier fractional snow cover for
+  surface fluxes also. Needs discussion about the physical basis & how to
+  evaluate this.
+
+
+
+Again, note that the final implementation differs from Leo's suggestion - I'm
+just giving Leo's original notes for completeness.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: Sean Swenson, Leo van Kampenhout, myself
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - not run
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass, but baseline comparisons fail as expected
+
+CLM tag used for the baseline comparisons: clm4_5_14_r221
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM45/CLM50
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff; expected to be similar climate (effects are
+      relatively small) - although there are non-negligible effects on glacier
+      surface mass balance (SMB).
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       components/clm/src/biogeophys/BalanceCheckMod.F90
+M       components/clm/src/biogeophys/CanopyHydrologyMod.F90
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r221
 Originator(s):  sacks (Bill Sacks)
 Date: Tue Jan 24 05:12:14 MST 2017

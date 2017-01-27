@@ -613,7 +613,7 @@ contains
           dz_snowf = (snow_depth(c) - temp_snow_depth) / dtime
 
           ! set frac_sno_eff variable
-          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+          if (.not. lun%urbpoi(l)) then
              if (subgridflag ==1) then 
                 frac_sno_eff(c) = frac_sno(c)
              else

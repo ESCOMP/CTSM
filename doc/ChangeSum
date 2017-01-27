@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_14_r222    sacks 01/27/2017 Fix energy budget bug with fractional snow on glacier and wetland columns
   clm4_5_14_r221    sacks 01/24/2017 Change rain-snow partitioning and ice albedo for glacier columns
   clm4_5_14_r220    sacks 01/22/2017 Fix crop seeding
   clm4_5_14_r219     erik 01/21/2017 Answer changes for CLM50 for several issues that lead to dead crops
