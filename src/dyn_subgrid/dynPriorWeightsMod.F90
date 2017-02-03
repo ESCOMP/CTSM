@@ -28,7 +28,7 @@ module dynPriorWeightsMod
   type prior_weights_type
      ! Components are public for ease-of-use and efficiency. However, these components
      ! should be treated as read-only!
-     real(r8), allocatable, public :: pwtcol(:)     ! prior pft weight on the column
+     real(r8), allocatable, public :: pwtgcell(:)   ! prior pft weight on the gridcell
      logical , allocatable, public :: cactive(:)    ! prior col%active flags
    contains
      procedure :: set_prior_weights      ! set prior weights to current weights
@@ -60,7 +60,7 @@ contains
      
     SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
     
-    allocate(constructor%pwtcol(bounds%begp:bounds%endp))
+    allocate(constructor%pwtgcell(bounds%begp:bounds%endp))
     allocate(constructor%cactive(bounds%begc:bounds%endc))
   end function constructor
 
@@ -84,7 +84,7 @@ contains
     ! ----------------------------------------------------------------------
     
     do p = bounds%begp, bounds%endp
-       this%pwtcol(p) = patch%wtcol(p)
+       this%pwtgcell(p) = patch%wtgcell(p)
     end do
 
     do c = bounds%begc, bounds%endc

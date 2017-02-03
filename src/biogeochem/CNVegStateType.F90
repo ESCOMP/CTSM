@@ -14,7 +14,8 @@ module CNVegStateType
   use ColumnType     , only : col                
   use PatchType      , only : patch                
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_patch
-  ! 
+  use dynSubgridControlMod, only : get_for_testing_allow_non_annual_changes
+  !
   ! !PUBLIC TYPES:
   implicit none
   private
@@ -24,7 +25,7 @@ module CNVegStateType
 
      integer  , pointer :: burndate_patch              (:)     ! patch crop burn date
      type(annual_flux_dribbler_type) :: dwt_dribbler_patch     ! object to convert instantaneous dwt values into values that are smoothed / dribbled throughout the year
-     real(r8) , pointer :: dwt_smoothed_patch          (:)     ! patch change in patch weight (-1 to 1) on the column in this time step; changes in first time step of year are smoothed (dribbled) over the whole year
+     real(r8) , pointer :: dwt_smoothed_patch          (:)     ! change in patch weight (-1 to 1) on the gridcell in this time step; changes in first time step of year are smoothed (dribbled) over the whole year
 
      ! Prognostic crop model
      !
@@ -179,7 +180,9 @@ contains
     ! CNDV at all (because land cover change is assumed to be associated with
     ! deforestation, not natural changes in areas), so maybe this inconsistency is the
     ! least of the problem: see bug 2392.
-    if (use_cndv) then
+    if (get_for_testing_allow_non_annual_changes()) then
+       allows_non_annual_delta = .true.
+    else if (use_cndv) then
        allows_non_annual_delta = .true.
     else
        allows_non_annual_delta = .false.

@@ -1,1 +1,5 @@
 use_c14_bombspike=.true.
+
+! This testmod is used in a long test, so change output frequency
+hist_nhtfrq = 0,-240
+hist_mfilt = 1,1

@@ -21,10 +21,12 @@ module dynSubgridControlMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: dynSubgridControl_init
-  public :: get_flanduse_timeseries     ! return the value of the flanduse_timeseries file name
-  public :: get_do_transient_pfts       ! return the value of the do_transient_pfts control flag
-  public :: get_do_transient_crops      ! return the value of the do_transient_crops control flag
-  public :: get_do_harvest              ! return the value of the do_harvest control flag
+  public :: get_flanduse_timeseries ! return the value of the flanduse_timeseries file name
+  public :: get_do_transient_pfts   ! return the value of the do_transient_pfts control flag
+  public :: get_do_transient_crops  ! return the value of the do_transient_crops control flag
+  public :: run_has_transient_landcover ! returns true if any aspects of prescribed transient landcover are enabled
+  public :: get_do_harvest          ! return the value of the do_harvest control flag
+  public :: get_for_testing_allow_non_annual_changes ! return true if user has requested to allow area changes at times other than the year boundary, for testing purposes
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: read_namelist              ! read namelist variables
@@ -37,6 +39,14 @@ module dynSubgridControlMod
      logical :: do_transient_pfts  = .false. ! whether to apply transient natural PFTs from dataset
      logical :: do_transient_crops = .false. ! whether to apply transient crops from dataset
      logical :: do_harvest         = .false. ! whether to apply harvest from dataset
+
+     ! The following is only meant for testing: Whether area changes are allowed at times
+     ! other than the year boundary. This should only arise in some test configurations
+     ! where we artificially create changes more frequently so that we can run short
+     ! tests. This flag is only used for error-checking, not controlling any model
+     ! behavior.
+     logical :: for_testing_allow_non_annual_changes
+
      logical :: initialized        = .false. ! whether this object has been initialized
   end type dyn_subgrid_control_type
   
@@ -95,6 +105,7 @@ contains
     logical :: do_transient_pfts
     logical :: do_transient_crops
     logical :: do_harvest
+    logical :: for_testing_allow_non_annual_changes
     ! other local variables:
     integer :: nu_nml    ! unit for namelist file
     integer :: nml_error ! namelist i/o error flag
@@ -106,13 +117,15 @@ contains
          flanduse_timeseries, &
          do_transient_pfts, &
          do_transient_crops, &
-         do_harvest
+         do_harvest, &
+         for_testing_allow_non_annual_changes
 
     ! Initialize options to default values, in case they are not specified in the namelist
     flanduse_timeseries = ' '
     do_transient_pfts  = .false.
     do_transient_crops = .false.
     do_harvest         = .false.
+    for_testing_allow_non_annual_changes = .false.
 
     if (masterproc) then
        nu_nml = getavu()
@@ -134,12 +147,14 @@ contains
     call shr_mpi_bcast (do_transient_pfts, mpicom)
     call shr_mpi_bcast (do_transient_crops, mpicom)
     call shr_mpi_bcast (do_harvest, mpicom)
+    call shr_mpi_bcast (for_testing_allow_non_annual_changes, mpicom)
 
     dyn_subgrid_control_inst = dyn_subgrid_control_type( &
          flanduse_timeseries = flanduse_timeseries, &
          do_transient_pfts = do_transient_pfts, &
          do_transient_crops = do_transient_crops, &
-         do_harvest = do_harvest)
+         do_harvest = do_harvest, &
+         for_testing_allow_non_annual_changes = for_testing_allow_non_annual_changes)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -261,6 +276,17 @@ contains
   end function get_do_transient_crops
 
   !-----------------------------------------------------------------------
+  logical function run_has_transient_landcover()
+    ! !DESCRIPTION:
+    ! Returns true if any aspects of prescribed transient landcover are enabled
+    !-----------------------------------------------------------------------
+
+    run_has_transient_landcover = &
+         (get_do_transient_pfts() .or. &
+         get_do_transient_crops())
+  end function run_has_transient_landcover
+
+  !-----------------------------------------------------------------------
   logical function get_do_harvest()
     ! !DESCRIPTION:
     ! Return the value of the do_harvest control flag
@@ -271,5 +297,21 @@ contains
     get_do_harvest = dyn_subgrid_control_inst%do_harvest
 
   end function get_do_harvest
+
+  !-----------------------------------------------------------------------
+  logical function get_for_testing_allow_non_annual_changes()
+    !
+    ! !DESCRIPTION:
+    ! Return true if the user has requested to allow area changes at times other than the
+    ! year boundary. (This should typically only be true for testing.) (This only
+    ! controls error-checking, not any operation of the code.)
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+
+    get_for_testing_allow_non_annual_changes = dyn_subgrid_control_inst%for_testing_allow_non_annual_changes
+
+  end function get_for_testing_allow_non_annual_changes
+
 
 end module dynSubgridControlMod

@@ -884,12 +884,12 @@ contains
           this%storvegc_patch(p)           = 0._r8 
           this%woodc_patch(p)              = 0._r8
           this%totc_patch(p)               = 0._r8 
-          this%cropseedc_deficit_patch(p)  = 0._r8
 
           if ( use_crop )then
              this%grainc_patch(p)         = 0._r8 
              this%grainc_storage_patch(p) = 0._r8 
              this%grainc_xfer_patch(p)    = 0._r8 
+             this%cropseedc_deficit_patch(p)  = 0._r8
           end if
 
        endif
@@ -1284,12 +1284,12 @@ contains
                       this%storvegc_patch(i)           = 0._r8 
                       this%woodc_patch(i)              = 0._r8
                       this%totc_patch(i)               = 0._r8 
-                      this%cropseedc_deficit_patch(i)  = 0._r8
 
                       if ( use_crop )then
                          this%grainc_patch(i)         = 0._r8 
                          this%grainc_storage_patch(i) = 0._r8 
                          this%grainc_xfer_patch(i)    = 0._r8 
+                         this%cropseedc_deficit_patch(i)  = 0._r8
                       end if
 
                       ! calculate totvegc explicitly so that it is available for the isotope 
@@ -2135,11 +2135,11 @@ contains
        this%woodc_patch(i)              = value_patch
        this%totvegc_patch(i)            = value_patch
        this%totc_patch(i)               = value_patch
-       this%cropseedc_deficit_patch(i)  = value_patch
        if ( use_crop ) then
           this%grainc_patch(i)          = value_patch
           this%grainc_storage_patch(i)  = value_patch
           this%grainc_xfer_patch(i)     = value_patch
+          this%cropseedc_deficit_patch(i)  = value_patch
        end if
     end do
 
@@ -2318,7 +2318,7 @@ contains
        num_soilp_with_inactive, filter_soilp_with_inactive, &
        patch_state_updater, &
        leafc_seed, deadstemc_seed, &
-       conv_cflux, product_cflux, &
+       conv_cflux, wood_product_cflux, crop_product_cflux, &
        dwt_frootc_to_litter, &
        dwt_livecrootc_to_litter, &
        dwt_deadcrootc_to_litter, &
@@ -2339,13 +2339,14 @@ contains
     type(patch_state_updater_type)  , intent(in)    :: patch_state_updater
     real(r8)                        , intent(in)    :: leafc_seed  ! seed amount for leaf C
     real(r8)                        , intent(in)    :: deadstemc_seed ! seed amount for deadstem C
-    real(r8)                        , intent(inout) :: conv_cflux( bounds%begp: )  ! patch-level conversion C flux to atm
-    real(r8)                        , intent(inout) :: product_cflux( bounds%begp: ) ! patch-level product C flux
-    real(r8)                        , intent(inout) :: dwt_frootc_to_litter( bounds%begp: ) ! patch-level fine root C to litter
-    real(r8)                        , intent(inout) :: dwt_livecrootc_to_litter( bounds%begp: ) ! patch-level live coarse root C to litter
-    real(r8)                        , intent(inout) :: dwt_deadcrootc_to_litter( bounds%begp: ) ! patch-level live coarse root C to litter
-    real(r8)                        , intent(inout) :: dwt_leafc_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: leaf C
-    real(r8)                        , intent(inout) :: dwt_deadstemc_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: deadstem C
+    real(r8)                        , intent(inout) :: conv_cflux( bounds%begp: )  ! patch-level conversion C flux to atm (expressed per unit GRIDCELL area)
+    real(r8)                        , intent(inout) :: wood_product_cflux( bounds%begp: ) ! patch-level product C flux (expressed per unit GRIDCELL area)
+    real(r8)                        , intent(inout) :: crop_product_cflux( bounds%begp: ) ! patch-level crop product C flux (expressed per unit GRIDCELL area)
+    real(r8)                        , intent(inout) :: dwt_frootc_to_litter( bounds%begp: ) ! patch-level fine root C to litter (expressed per unit COLUMN area)
+    real(r8)                        , intent(inout) :: dwt_livecrootc_to_litter( bounds%begp: ) ! patch-level live coarse root C to litter (expressed per unit COLUMN area)
+    real(r8)                        , intent(inout) :: dwt_deadcrootc_to_litter( bounds%begp: ) ! patch-level live coarse root C to litter (expressed per unit COLUMN area)
+    real(r8)                        , intent(inout) :: dwt_leafc_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: leaf C (expressed per unit GRIDCELL area)
+    real(r8)                        , intent(inout) :: dwt_deadstemc_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: deadstem C (expressed per unit GRIDCELL area)
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -2366,7 +2367,8 @@ contains
     endp = bounds%endp
 
     SHR_ASSERT_ALL((ubound(conv_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(product_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wood_product_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(crop_product_cflux) == (/endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dwt_frootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dwt_livecrootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dwt_deadcrootc_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
@@ -2399,105 +2401,105 @@ contains
 
     call update_patch_state( &
          var = this%leafc_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp), &
+         flux_out_grc_area = conv_cflux(begp:endp), &
          seed = seed_leafc_patch(begp:endp), &
          seed_addition = dwt_leafc_seed(begp:endp))
 
     call update_patch_state( &
          var = this%leafc_storage_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp), &
+         flux_out_grc_area = conv_cflux(begp:endp), &
          seed = seed_leafc_storage_patch(begp:endp), &
          seed_addition = dwt_leafc_seed(begp:endp))
 
     call update_patch_state( &
          var = this%leafc_xfer_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp), &
+         flux_out_grc_area = conv_cflux(begp:endp), &
          seed = seed_leafc_xfer_patch(begp:endp), &
          seed_addition = dwt_leafc_seed(begp:endp))
 
     call update_patch_state( &
          var = this%frootc_patch(begp:endp), &
-         flux_out = dwt_frootc_to_litter(begp:endp))
+         flux_out_col_area = dwt_frootc_to_litter(begp:endp))
 
     call update_patch_state( &
          var = this%frootc_storage_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%frootc_xfer_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%livestemc_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%livestemc_storage_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%livestemc_xfer_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call patch_state_updater%update_patch_state_partition_flux_by_type(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
          flux1_fraction_by_pft_type = pftcon%pconv, &
          var = this%deadstemc_patch(begp:endp), &
          flux1_out = conv_cflux(begp:endp), &
-         flux2_out = product_cflux(begp:endp), &
+         flux2_out = wood_product_cflux(begp:endp), &
          seed = seed_deadstemc_patch(begp:endp), &
          seed_addition = dwt_deadstemc_seed(begp:endp))
 
     call update_patch_state( &
          var = this%deadstemc_storage_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%deadstemc_xfer_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%livecrootc_patch(begp:endp), &
-         flux_out = dwt_livecrootc_to_litter(begp:endp))
+         flux_out_col_area = dwt_livecrootc_to_litter(begp:endp))
 
     call update_patch_state( &
          var = this%livecrootc_storage_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%livecrootc_xfer_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%deadcrootc_patch(begp:endp), &
-         flux_out = dwt_deadcrootc_to_litter(begp:endp))
+         flux_out_col_area = dwt_deadcrootc_to_litter(begp:endp))
 
     call update_patch_state( &
          var = this%deadcrootc_storage_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%deadcrootc_xfer_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%gresp_storage_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%gresp_xfer_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     call update_patch_state( &
          var = this%cpool_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
 
     ! BUG(wjs, 2016-06-01, bugz 2316) Probably the behavior should be the same for carbon
     ! isotopes as for standard c12, but for now I'm preserving the old behavior.
     if (this%species == CN_SPECIES_C12) then
        call update_patch_state( &
             var = this%xsmrpool_patch(begp:endp), &
-            flux_out = conv_cflux(begp:endp))
+            flux_out_grc_area = conv_cflux(begp:endp))
     else
        call update_patch_state( &
             var = this%xsmrpool_patch(begp:endp))
@@ -2505,20 +2507,45 @@ contains
 
     call update_patch_state( &
          var = this%ctrunc_patch(begp:endp), &
-         flux_out = conv_cflux(begp:endp))
+         flux_out_grc_area = conv_cflux(begp:endp))
+
+    if (use_crop) then
+       call update_patch_state( &
+            var = this%grainc_patch(begp:endp), &
+            flux_out_grc_area = crop_product_cflux(begp:endp))
+
+       call update_patch_state( &
+            var = this%grainc_storage_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
+
+       call update_patch_state( &
+            var = this%grainc_xfer_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
+
+       if (use_crop) then
+          ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
+          ! of the atmosphere.
+          call update_patch_state( &
+               var = this%cropseedc_deficit_patch(begp:endp), &
+               flux_out_grc_area = conv_cflux(begp:endp))
+       end if
+    end if
 
   contains
-    subroutine update_patch_state(var, flux_out, seed, seed_addition)
+    subroutine update_patch_state(var, flux_out_col_area, flux_out_grc_area, &
+         seed, seed_addition)
       ! Wraps call to update_patch_state, in order to remove duplication
       real(r8), intent(inout) :: var( bounds%begp: )
-      real(r8), intent(inout), optional :: flux_out( bounds%begp: )
+      real(r8), intent(inout), optional :: flux_out_col_area( bounds%begp: )
+      real(r8), intent(inout), optional :: flux_out_grc_area( bounds%begp: )
       real(r8), intent(in), optional :: seed( bounds%begp: )
       real(r8), intent(inout), optional :: seed_addition( bounds%begp: )
 
       call patch_state_updater%update_patch_state(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
          var = var, &
-         flux_out = flux_out, &
+         flux_out_col_area = flux_out_col_area, &
+         flux_out_grc_area = flux_out_grc_area, &
          seed = seed, &
          seed_addition = seed_addition)
     end subroutine update_patch_state

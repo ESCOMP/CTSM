@@ -456,6 +456,7 @@ contains
              this%grainn_patch(p)         = 0._r8
              this%grainn_storage_patch(p) = 0._r8
              this%grainn_xfer_patch(p)    = 0._r8
+             this%cropseedn_deficit_patch(p)  = 0._r8
           end if
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
              this%frootn_patch(p)            = 0._r8
@@ -490,7 +491,6 @@ contains
           this%storvegn_patch(p)           = 0._r8
           this%totvegn_patch(p)            = 0._r8
           this%totn_patch(p)               = 0._r8
-          this%cropseedn_deficit_patch(p)  = 0._r8
        end if
     end do
 
@@ -777,7 +777,6 @@ contains
        this%storvegn_patch(i)           = value_patch
        this%totvegn_patch(i)            = value_patch
        this%totn_patch(i)               = value_patch
-       this%cropseedn_deficit_patch(i)  = value_patch
     end do
 
     if ( use_crop )then
@@ -786,6 +785,7 @@ contains
           this%grainn_patch(i)          = value_patch
           this%grainn_storage_patch(i)  = value_patch
           this%grainn_xfer_patch(i)     = value_patch   
+          this%cropseedn_deficit_patch(i)  = value_patch
        end do
     end if
 
@@ -951,7 +951,7 @@ contains
        num_soilp_with_inactive, filter_soilp_with_inactive, &
        patch_state_updater, &
        leafc_seed, deadstemc_seed, &
-       conv_nflux, product_nflux, &
+       conv_nflux, wood_product_nflux, crop_product_nflux, &
        dwt_frootn_to_litter, &
        dwt_livecrootn_to_litter, &
        dwt_deadcrootn_to_litter, &
@@ -972,13 +972,14 @@ contains
     type(patch_state_updater_type)  , intent(in)    :: patch_state_updater
     real(r8)                        , intent(in)    :: leafc_seed  ! seed amount for leaf C
     real(r8)                        , intent(in)    :: deadstemc_seed ! seed amount for deadstem C
-    real(r8)                        , intent(inout) :: conv_nflux( bounds%begp: )  ! patch-level conversion N flux to atm
-    real(r8)                        , intent(inout) :: product_nflux( bounds%begp: ) ! patch-level product N flux
-    real(r8)                        , intent(inout) :: dwt_frootn_to_litter( bounds%begp: ) ! patch-level fine root N to litter
-    real(r8)                        , intent(inout) :: dwt_livecrootn_to_litter( bounds%begp: ) ! patch-level live coarse root N to litter
-    real(r8)                        , intent(inout) :: dwt_deadcrootn_to_litter( bounds%begp: ) ! patch-level live coarse root N to litter
-    real(r8)                        , intent(inout) :: dwt_leafn_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: leaf N
-    real(r8)                        , intent(inout) :: dwt_deadstemn_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: deadstem N
+    real(r8)                        , intent(inout) :: conv_nflux( bounds%begp: )  ! patch-level conversion N flux to atm (expressed per unit GRIDCELL area)
+    real(r8)                        , intent(inout) :: wood_product_nflux( bounds%begp: ) ! patch-level product N flux (expressed per unit GRIDCELL area)
+    real(r8)                        , intent(inout) :: crop_product_nflux( bounds%begp: ) ! patch-level crop product N flux (expressed per unit GRIDCELL area)
+    real(r8)                        , intent(inout) :: dwt_frootn_to_litter( bounds%begp: ) ! patch-level fine root N to litter (expressed per unit COLUMN area)
+    real(r8)                        , intent(inout) :: dwt_livecrootn_to_litter( bounds%begp: ) ! patch-level live coarse root N to litter (expressed per unit COLUMN area)
+    real(r8)                        , intent(inout) :: dwt_deadcrootn_to_litter( bounds%begp: ) ! patch-level live coarse root N to litter (expressed per unit COLUMN area)
+    real(r8)                        , intent(inout) :: dwt_leafn_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: leaf N (expressed per unit GRIDCELL area)
+    real(r8)                        , intent(inout) :: dwt_deadstemn_seed( bounds%begp: ) ! patch-level mass gain due to seeding of new area: deadstem N (expressed per unit GRIDCELL area)
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -999,7 +1000,8 @@ contains
     endp = bounds%endp
 
     SHR_ASSERT_ALL((ubound(conv_nflux) == (/endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(product_nflux) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(wood_product_nflux) == (/endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(crop_product_nflux) == (/endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dwt_frootn_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dwt_livecrootn_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(dwt_deadcrootn_to_litter) == (/endp/)), errMsg(sourcefile, __LINE__))
@@ -1032,111 +1034,136 @@ contains
 
     call update_patch_state( &
          var = this%leafn_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp), &
+         flux_out_grc_area = conv_nflux(begp:endp), &
          seed = seed_leafn_patch(begp:endp), &
          seed_addition = dwt_leafn_seed(begp:endp))
 
     call update_patch_state( &
          var = this%leafn_storage_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp), &
+         flux_out_grc_area = conv_nflux(begp:endp), &
          seed = seed_leafn_storage_patch(begp:endp), &
          seed_addition = dwt_leafn_seed(begp:endp))
 
     call update_patch_state( &
          var = this%leafn_xfer_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp), &
+         flux_out_grc_area = conv_nflux(begp:endp), &
          seed = seed_leafn_xfer_patch(begp:endp), &
          seed_addition = dwt_leafn_seed(begp:endp))
 
     call update_patch_state( &
          var = this%frootn_patch(begp:endp), &
-         flux_out = dwt_frootn_to_litter(begp:endp))
+         flux_out_col_area = dwt_frootn_to_litter(begp:endp))
 
     call update_patch_state( &
          var = this%frootn_storage_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%frootn_xfer_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%livestemn_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%livestemn_storage_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%livestemn_xfer_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call patch_state_updater%update_patch_state_partition_flux_by_type(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
          flux1_fraction_by_pft_type = pftcon%pconv, &
          var = this%deadstemn_patch(begp:endp), &
          flux1_out = conv_nflux(begp:endp), &
-         flux2_out = product_nflux(begp:endp), &
+         flux2_out = wood_product_nflux(begp:endp), &
          seed = seed_deadstemn_patch(begp:endp), &
          seed_addition = dwt_deadstemn_seed(begp:endp))
 
     call update_patch_state( &
          var = this%deadstemn_storage_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%deadstemn_xfer_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%livecrootn_patch(begp:endp), &
-         flux_out = dwt_livecrootn_to_litter(begp:endp))
+         flux_out_col_area = dwt_livecrootn_to_litter(begp:endp))
 
     call update_patch_state( &
          var = this%livecrootn_storage_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%livecrootn_xfer_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%deadcrootn_patch(begp:endp), &
-         flux_out = dwt_deadcrootn_to_litter(begp:endp))
+         flux_out_col_area = dwt_deadcrootn_to_litter(begp:endp))
 
     call update_patch_state( &
          var = this%deadcrootn_storage_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%deadcrootn_xfer_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%retransn_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%npool_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
 
     call update_patch_state( &
          var = this%ntrunc_patch(begp:endp), &
-         flux_out = conv_nflux(begp:endp))
+         flux_out_grc_area = conv_nflux(begp:endp))
+
+    if (use_crop) then
+       call update_patch_state( &
+            var = this%grainn_patch(begp:endp), &
+            flux_out_grc_area = crop_product_nflux(begp:endp))
+
+       call update_patch_state( &
+            var = this%grainn_storage_patch(begp:endp), &
+            flux_out_grc_area = conv_nflux(begp:endp))
+
+       call update_patch_state( &
+            var = this%grainn_xfer_patch(begp:endp), &
+            flux_out_grc_area = conv_nflux(begp:endp))
+
+       if (use_crop) then
+          ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
+          ! of the atmosphere.
+          call update_patch_state( &
+               var = this%cropseedn_deficit_patch(begp:endp), &
+               flux_out_grc_area = conv_nflux(begp:endp))
+       end if
+    end if
 
   contains
-    subroutine update_patch_state(var, flux_out, seed, seed_addition)
+    subroutine update_patch_state(var, flux_out_col_area, flux_out_grc_area, &
+         seed, seed_addition)
       ! Wraps call to update_patch_state, in order to remove duplication
       real(r8), intent(inout) :: var( bounds%begp: )
-      real(r8), intent(inout), optional :: flux_out( bounds%begp: )
+      real(r8), intent(inout), optional :: flux_out_col_area( bounds%begp: )
+      real(r8), intent(inout), optional :: flux_out_grc_area( bounds%begp: )
       real(r8), intent(in), optional :: seed( bounds%begp: )
       real(r8), intent(inout), optional :: seed_addition( bounds%begp: )
       
       call patch_state_updater%update_patch_state(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
          var = var, &
-         flux_out = flux_out, &
+         flux_out_col_area = flux_out_col_area, &
+         flux_out_grc_area = flux_out_grc_area, &
          seed = seed, &
          seed_addition = seed_addition)
     end subroutine update_patch_state

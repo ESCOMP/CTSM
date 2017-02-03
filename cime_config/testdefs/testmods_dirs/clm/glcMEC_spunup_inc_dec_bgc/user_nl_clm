@@ -1,3 +1,5 @@
+for_testing_allow_non_annual_changes = .true.
+
 ! Use spun-up initial conditions so that it's easier to confirm that dynamic landunits
 ! are working correctly. Once we have out-of-the-box initial conditions for this test,
 ! these lines can be removed

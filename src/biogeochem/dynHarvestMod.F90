@@ -67,7 +67,7 @@ contains
     ! 
     ! !USES:
     use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
-    use dynTimeInfoMod        , only : YEAR_POSITION_END_OF_TIMESTEP
+    use dynTimeInfoMod        , only : YEAR_POSITION_START_OF_TIMESTEP
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds           ! proc-level bounds
@@ -88,9 +88,10 @@ contains
        call endrun(msg=' allocation error for harvest'//errMsg(sourcefile, __LINE__))
     end if
 
-    ! Get the year from the END of the timestep for compatibility with how things were
-    ! done before, even though that doesn't necessarily make the most sense conceptually.
-    dynHarvest_file = dyn_file_type(harvest_filename, YEAR_POSITION_END_OF_TIMESTEP)
+    ! Get the year from the START of the timestep for consistency with other dyn file
+    ! stuff (though it shouldn't actually matter for harvest, given the way the
+    ! once-per-year harvest is applied).
+    dynHarvest_file = dyn_file_type(harvest_filename, YEAR_POSITION_START_OF_TIMESTEP)
     
     ! Get initial harvest data
     num_points = (bounds%endg - bounds%begg + 1)

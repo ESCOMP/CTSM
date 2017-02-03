@@ -89,38 +89,42 @@ contains
     integer                       :: begp, endp
     integer                       :: ier                           ! error code
     real(r8)                      :: dt                            ! land model time step (sec)
-    real(r8), allocatable         :: dwt(:)                        ! change in patch weight (relative to column)
+    real(r8), allocatable         :: dwt(:)                        ! change in patch weight (relative to gridcell)
     real(r8), allocatable         :: dwt_leafc_seed(:)             ! patch-level mass gain due to seeding of new area
     real(r8), allocatable         :: dwt_leafn_seed(:)             ! patch-level mass gain due to seeding of new area
     real(r8), allocatable         :: dwt_deadstemc_seed(:)         ! patch-level mass gain due to seeding of new area
     real(r8), allocatable         :: dwt_deadstemn_seed(:)         ! patch-level mass gain due to seeding of new area
-    real(r8), allocatable         :: dwt_frootc_to_litter(:)       ! patch-level mass loss due to weight shift
-    real(r8), allocatable         :: dwt_livecrootc_to_litter(:)   ! patch-level mass loss due to weight shift
-    real(r8), allocatable         :: dwt_deadcrootc_to_litter(:)   ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: dwt_frootn_to_litter(:)       ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: dwt_livecrootn_to_litter(:)   ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: dwt_deadcrootn_to_litter(:)   ! patch-level mass loss due to weight shift
-    real(r8), allocatable         :: conv_cflux(:)                 ! patch-level mass loss due to weight shift
-    real(r8), allocatable         :: product_cflux(:)              ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: conv_nflux(:)                 ! patch-level mass loss due to weight shift
-    real(r8), allocatable         :: product_nflux(:)              ! patch-level mass loss due to weight shift
+    real(r8), allocatable         :: dwt_frootc_to_litter(:)       ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable         :: dwt_livecrootc_to_litter(:)   ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable         :: dwt_deadcrootc_to_litter(:)   ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable, target :: dwt_frootn_to_litter(:)       ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable, target :: dwt_livecrootn_to_litter(:)   ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable, target :: dwt_deadcrootn_to_litter(:)   ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable         :: conv_cflux(:)                 ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
+    real(r8), allocatable         :: wood_product_cflux(:)         ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
+    real(r8), allocatable         :: crop_product_cflux(:)         ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
+    real(r8), allocatable, target :: conv_nflux(:)                 ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
+    real(r8), allocatable         :: wood_product_nflux(:)         ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
+    real(r8), allocatable         :: crop_product_nflux(:)         ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
     character(len=32)             :: subname='dyn_cbal'            ! subroutine name
     !! C13
     real(r8), allocatable         :: dwt_leafc13_seed(:)           ! patch-level mass gain due to seeding of new area
     real(r8), allocatable         :: dwt_deadstemc13_seed(:)       ! patch-level mass gain due to seeding of new area
-    real(r8), allocatable, target :: dwt_frootc13_to_litter(:)     ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: dwt_livecrootc13_to_litter(:) ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: dwt_deadcrootc13_to_litter(:) ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: conv_c13flux(:)               ! patch-level mass loss due to weight shift
-    real(r8), allocatable         :: product_c13flux(:)            ! patch-level mass loss due to weight shift
+    real(r8), allocatable, target :: dwt_frootc13_to_litter(:)     ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable, target :: dwt_livecrootc13_to_litter(:) ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable, target :: dwt_deadcrootc13_to_litter(:) ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable, target :: conv_c13flux(:)               ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
+    real(r8), allocatable         :: wood_product_c13flux(:)       ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
+    real(r8), allocatable         :: crop_product_c13flux(:)       ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
     !! C14
     real(r8), allocatable         :: dwt_leafc14_seed(:)           ! patch-level mass gain due to seeding of new area
     real(r8), allocatable         :: dwt_deadstemc14_seed(:)       ! patch-level mass gain due to seeding of new area
-    real(r8), allocatable, target :: dwt_frootc14_to_litter(:)     ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: dwt_livecrootc14_to_litter(:) ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: dwt_deadcrootc14_to_litter(:) ! patch-level mass loss due to weight shift
-    real(r8), allocatable, target :: conv_c14flux(:)               ! patch-level mass loss due to weight shift
-    real(r8), allocatable         :: product_c14flux(:)            ! patch-level mass loss due to weight shift
+    real(r8), allocatable, target :: dwt_frootc14_to_litter(:)     ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable, target :: dwt_livecrootc14_to_litter(:) ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable, target :: dwt_deadcrootc14_to_litter(:) ! patch-level mass loss due to weight shift (expressed per unit COLUMN area)
+    real(r8), allocatable, target :: conv_c14flux(:)               ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
+    real(r8), allocatable         :: wood_product_c14flux(:)       ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
+    real(r8), allocatable         :: crop_product_c14flux(:)       ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
 
     logical  :: patch_initiating(bounds%begp:bounds%endp)
 
@@ -194,9 +198,14 @@ contains
           write(iulog,*)subname,' allocation error for conv_cflux'
           call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
-    allocate(product_cflux(begp:endp), stat=ier)
+    allocate(wood_product_cflux(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for product_cflux'
+          write(iulog,*)subname,' allocation error for wood_product_cflux'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+    allocate(crop_product_cflux(begp:endp), stat=ier)
+    if (ier /= 0) then
+          write(iulog,*)subname,' allocation error for crop_product_cflux'
           call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
     allocate(conv_nflux(begp:endp), stat=ier)
@@ -204,9 +213,14 @@ contains
           write(iulog,*)subname,' allocation error for conv_nflux'
           call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
-    allocate(product_nflux(begp:endp), stat=ier)
+    allocate(wood_product_nflux(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for product_nflux'
+          write(iulog,*)subname,' allocation error for wood_product_nflux'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+    allocate(crop_product_nflux(begp:endp), stat=ier)
+    if (ier /= 0) then
+          write(iulog,*)subname,' allocation error for crop_product_nflux'
           call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
@@ -241,9 +255,14 @@ contains
           write(iulog,*)subname,' allocation error for conv_c13flux'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
-       allocate(product_c13flux(begp:endp), stat=ier)
+       allocate(wood_product_c13flux(begp:endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for product_c13flux'
+          write(iulog,*)subname,' allocation error for wood_product_c13flux'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+       allocate(crop_product_c13flux(begp:endp), stat=ier)
+       if (ier /= 0) then
+          write(iulog,*)subname,' allocation error for crop_product_c13flux'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     endif
@@ -278,9 +297,14 @@ contains
           write(iulog,*)subname,' allocation error for conv_c14flux'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
-       allocate(product_c14flux(begp:endp), stat=ier)
+       allocate(wood_product_c14flux(begp:endp), stat=ier)
        if (ier /= 0) then
-          write(iulog,*)subname,' allocation error for product_c14flux'
+          write(iulog,*)subname,' allocation error for wood_product_c14flux'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+       allocate(crop_product_c14flux(begp:endp), stat=ier)
+       if (ier /= 0) then
+          write(iulog,*)subname,' allocation error for crop_product_c14flux'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     endif
@@ -305,9 +329,11 @@ contains
        dwt_livecrootn_to_litter(p) = 0._r8
        dwt_deadcrootn_to_litter(p) = 0._r8
        conv_cflux(p) = 0._r8
-       product_cflux(p) = 0._r8
+       wood_product_cflux(p) = 0._r8
+       crop_product_cflux(p) = 0._r8
        conv_nflux(p) = 0._r8
-       product_nflux(p) = 0._r8
+       wood_product_nflux(p) = 0._r8
+       crop_product_nflux(p) = 0._r8
        
        if ( use_c13 ) then
           dwt_leafc13_seed(p) = 0._r8
@@ -316,7 +342,8 @@ contains
           dwt_livecrootc13_to_litter(p) = 0._r8
           dwt_deadcrootc13_to_litter(p) = 0._r8
           conv_c13flux(p) = 0._r8
-          product_c13flux(p) = 0._r8
+          wood_product_c13flux(p) = 0._r8
+          crop_product_c13flux(p) = 0._r8
        endif
        
        if ( use_c14 ) then
@@ -326,14 +353,15 @@ contains
           dwt_livecrootc14_to_litter(p) = 0._r8
           dwt_deadcrootc14_to_litter(p) = 0._r8
           conv_c14flux(p) = 0._r8
-          product_c14flux(p) = 0._r8
+          wood_product_c14flux(p) = 0._r8
+          crop_product_c14flux(p) = 0._r8
        endif
        
        l = patch%landunit(p)
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           
           ! calculate the change in weight for the timestep
-          dwt(p) = patch%wtcol(p)-prior_weights%pwtcol(p)
+          dwt(p) = patch%wtgcell(p)-prior_weights%pwtgcell(p)
 
           ! Identify patches that are initiating on this timestep and set all the
           ! necessary state and flux variables
@@ -418,7 +446,8 @@ contains
          leafc_seed = leafc_seed, &
          deadstemc_seed = deadstemc_seed, &
          conv_cflux = conv_cflux(begp:endp), &
-         product_cflux = product_cflux(begp:endp), &
+         wood_product_cflux = wood_product_cflux(begp:endp), &
+         crop_product_cflux = crop_product_cflux(begp:endp), &
          dwt_frootc_to_litter = dwt_frootc_to_litter(begp:endp), &
          dwt_livecrootc_to_litter = dwt_livecrootc_to_litter(begp:endp), &
          dwt_deadcrootc_to_litter = dwt_deadcrootc_to_litter(begp:endp), &
@@ -440,7 +469,8 @@ contains
             leafc_seed = leafc_seed, &
             deadstemc_seed = deadstemc_seed, &
             conv_cflux = conv_c13flux(begp:endp), &
-            product_cflux = product_c13flux(begp:endp), &
+            wood_product_cflux = wood_product_c13flux(begp:endp), &
+            crop_product_cflux = crop_product_c13flux(begp:endp), &
             dwt_frootc_to_litter = dwt_frootc13_to_litter(begp:endp), &
             dwt_livecrootc_to_litter = dwt_livecrootc13_to_litter(begp:endp), &
             dwt_deadcrootc_to_litter = dwt_deadcrootc13_to_litter(begp:endp), &
@@ -464,7 +494,8 @@ contains
             leafc_seed = leafc_seed, &
             deadstemc_seed = deadstemc_seed, &
             conv_cflux = conv_c14flux(begp:endp), &
-            product_cflux = product_c14flux(begp:endp), &
+            wood_product_cflux = wood_product_c14flux(begp:endp), &
+            crop_product_cflux = crop_product_c14flux(begp:endp), &
             dwt_frootc_to_litter = dwt_frootc14_to_litter(begp:endp), &
             dwt_livecrootc_to_litter = dwt_livecrootc14_to_litter(begp:endp), &
             dwt_deadcrootc_to_litter = dwt_deadcrootc14_to_litter(begp:endp), &
@@ -487,7 +518,8 @@ contains
          leafc_seed = leafc_seed, &
          deadstemc_seed = deadstemc_seed, &
          conv_nflux = conv_nflux(begp:endp), &
-         product_nflux = product_nflux(begp:endp), &
+         wood_product_nflux = wood_product_nflux(begp:endp), &
+         crop_product_nflux = crop_product_nflux(begp:endp), &
          dwt_frootn_to_litter = dwt_frootn_to_litter(begp:endp), &
          dwt_livecrootn_to_litter = dwt_livecrootn_to_litter(begp:endp), &
          dwt_deadcrootn_to_litter = dwt_deadcrootn_to_litter(begp:endp), &
@@ -504,40 +536,26 @@ contains
 
     ! calculate column-level seeding fluxes
     do p = bounds%begp, bounds%endp
-       ! FIXME(wjs, 2017-01-12) remove this setting of c
-       c = patch%column(p)
        g = patch%gridcell(p)
 
        ! C fluxes
        cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p) = dwt_leafc_seed(p)/dt
-       ! FIXME(wjs, 2017-01-12) Remove the next line:
-       cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p) = &
-            cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p) * col%wtgcell(c)
        cnveg_carbonflux_inst%dwt_seedc_to_leaf_grc(g) = &
             cnveg_carbonflux_inst%dwt_seedc_to_leaf_grc(g) + &
             cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p)
 
        cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p) = dwt_deadstemc_seed(p)/dt
-       ! FIXME(wjs, 2017-01-12) Remove the next line:
-       cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p) = &
-            cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p) * col%wtgcell(c)
        cnveg_carbonflux_inst%dwt_seedc_to_deadstem_grc(g) = &
             cnveg_carbonflux_inst%dwt_seedc_to_deadstem_grc(g) + &
             cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p)
 
        if ( use_c13 ) then
           c13_cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p) = dwt_leafc13_seed(p)/dt
-          ! FIXME(wjs, 2017-01-12) Remove the next line:
-          c13_cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p) = &
-               c13_cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p) * col%wtgcell(c)
           c13_cnveg_carbonflux_inst%dwt_seedc_to_leaf_grc(g) = &
                c13_cnveg_carbonflux_inst%dwt_seedc_to_leaf_grc(g) + &
                c13_cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p)
 
           c13_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p) = dwt_deadstemc13_seed(p)/dt
-          ! FIXME(wjs, 2017-01-12) Remove the next line:
-          c13_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p) = &
-               c13_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p) * col%wtgcell(c)
           c13_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_grc(g) = &
                c13_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_grc(g) + &
                c13_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p)
@@ -545,17 +563,11 @@ contains
 
        if ( use_c14 ) then	
           c14_cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p) = dwt_leafc14_seed(p)/dt
-          ! FIXME(wjs, 2017-01-12) Remove the next line:
-          c14_cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p) = &
-               c14_cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p) * col%wtgcell(c)
           c14_cnveg_carbonflux_inst%dwt_seedc_to_leaf_grc(g) = &
                c14_cnveg_carbonflux_inst%dwt_seedc_to_leaf_grc(g) + &
                c14_cnveg_carbonflux_inst%dwt_seedc_to_leaf_patch(p)
 
           c14_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p) = dwt_deadstemc14_seed(p)/dt
-          ! FIXME(wjs, 2017-01-12) Remove the next line:
-          c14_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p) = &
-               c14_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p) * col%wtgcell(c)
           c14_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_grc(g) = &
                c14_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_grc(g) + &
                c14_cnveg_carbonflux_inst%dwt_seedc_to_deadstem_patch(p)
@@ -563,17 +575,11 @@ contains
 
        ! N fluxes
        cnveg_nitrogenflux_inst%dwt_seedn_to_leaf_patch(p) = dwt_leafn_seed(p)/dt
-       ! FIXME(wjs, 2017-01-12) Remove the next line:
-       cnveg_nitrogenflux_inst%dwt_seedn_to_leaf_patch(p) = &
-            cnveg_nitrogenflux_inst%dwt_seedn_to_leaf_patch(p) * col%wtgcell(c)
        cnveg_nitrogenflux_inst%dwt_seedn_to_leaf_grc(g) = &
             cnveg_nitrogenflux_inst%dwt_seedn_to_leaf_grc(g) + &
             cnveg_nitrogenflux_inst%dwt_seedn_to_leaf_patch(p)
 
        cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_patch(p) = dwt_deadstemn_seed(p)/dt
-       ! FIXME(wjs, 2017-01-12) Remove the next line:
-       cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_patch(p) = &
-            cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_patch(p) * col%wtgcell(c)
        cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_grc(g) = &
             cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_grc(g) + &
             cnveg_nitrogenflux_inst%dwt_seedn_to_deadstem_patch(p)
@@ -696,48 +702,58 @@ contains
        end do
     end do
 
-    ! Store fluxes into product pools. Note that the temporary conv_cflux, product_cflux
+    ! Store fluxes into product pools. Note that the temporary conv_cflux, wood_product_cflux
     ! (and similar) fluxes are accumulated as negative values, but the values stored in
     ! carbonflux_inst and nitrogenflux_inst are positive values.
     do p = begp, endp
-       cnveg_carbonflux_inst%dwt_productc_gain_patch(p) = -product_cflux(p)/dt
+       cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(p) = -wood_product_cflux(p)/dt
+       cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(p) = -crop_product_cflux(p)/dt
        if (use_c13) then
-          c13_cnveg_carbonflux_inst%dwt_productc_gain_patch(p) = -product_c13flux(p)/dt
+          c13_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(p) = -wood_product_c13flux(p)/dt
+          c13_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(p) = -crop_product_c13flux(p)/dt
        end if
        if (use_c14) then
-          c14_cnveg_carbonflux_inst%dwt_productc_gain_patch(p) = -product_c14flux(p)/dt
+          c14_cnveg_carbonflux_inst%dwt_wood_productc_gain_patch(p) = -wood_product_c14flux(p)/dt
+          c14_cnveg_carbonflux_inst%dwt_crop_productc_gain_patch(p) = -crop_product_c14flux(p)/dt
        end if
-       cnveg_nitrogenflux_inst%dwt_productn_gain_patch(p) = -product_nflux(p)/dt
+       cnveg_nitrogenflux_inst%dwt_wood_productn_gain_patch(p) = -wood_product_nflux(p)/dt
+       cnveg_nitrogenflux_inst%dwt_crop_productn_gain_patch(p) = -crop_product_nflux(p)/dt
     end do
 
     ! Set column-level conversion fluxes
 
     do p = bounds%begp, bounds%endp
-       c = patch%column(p)
+       g = patch%gridcell(p)
 
-       ! column-level fluxes are accumulated as positive fluxes.
-       !
-       ! Note that patch-level fluxes are stored per unit COLUMN area - thus, we
-       ! don't need to multiply by the patch's column weight when translating
-       ! patch-level fluxes into column-level fluxes.
+       ! Note that patch-level fluxes are stored per unit GRIDCELL area - thus, we don't
+       ! need to multiply by the patch's gridcell weight when translating patch-level
+       ! fluxes into gridcell-level fluxes.
        
-       cnveg_carbonflux_inst%dwt_conv_cflux_col(c) = &
-            cnveg_carbonflux_inst%dwt_conv_cflux_col(c) - conv_cflux(p)/dt
+       cnveg_carbonflux_inst%dwt_conv_cflux_patch(p) = -conv_cflux(p)/dt
+       cnveg_carbonflux_inst%dwt_conv_cflux_grc(g) = &
+            cnveg_carbonflux_inst%dwt_conv_cflux_grc(g) + &
+            cnveg_carbonflux_inst%dwt_conv_cflux_patch(p)
 
        if ( use_c13 ) then
           ! C13 column-level flux updates
-          c13_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) = &
-               c13_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) - conv_c13flux(p)/dt
+          c13_cnveg_carbonflux_inst%dwt_conv_cflux_patch(p) = -conv_c13flux(p)/dt
+          c13_cnveg_carbonflux_inst%dwt_conv_cflux_grc(g) = &
+               c13_cnveg_carbonflux_inst%dwt_conv_cflux_grc(g) + &
+               c13_cnveg_carbonflux_inst%dwt_conv_cflux_patch(p)
        endif
 
        if ( use_c14 ) then
           ! C14 column-level flux updates
-          c14_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) = &
-               c14_cnveg_carbonflux_inst%dwt_conv_cflux_col(c) - conv_c14flux(p)/dt
+          c14_cnveg_carbonflux_inst%dwt_conv_cflux_patch(p) = -conv_c14flux(p)/dt
+          c14_cnveg_carbonflux_inst%dwt_conv_cflux_grc(g) = &
+               c14_cnveg_carbonflux_inst%dwt_conv_cflux_grc(g) + &
+               c14_cnveg_carbonflux_inst%dwt_conv_cflux_patch(p)
        endif
 
-       cnveg_nitrogenflux_inst%dwt_conv_nflux_col(c) = &
-            cnveg_nitrogenflux_inst%dwt_conv_nflux_col(c) - conv_nflux(p)/dt
+       cnveg_nitrogenflux_inst%dwt_conv_nflux_patch(p) = -conv_nflux(p)/dt
+       cnveg_nitrogenflux_inst%dwt_conv_nflux_grc(g) = &
+            cnveg_nitrogenflux_inst%dwt_conv_nflux_grc(g) + &
+            cnveg_nitrogenflux_inst%dwt_conv_nflux_patch(p)
 
     end do
 
@@ -754,9 +770,11 @@ contains
     deallocate(dwt_livecrootn_to_litter)
     deallocate(dwt_deadcrootn_to_litter)
     deallocate(conv_cflux)
-    deallocate(product_cflux)
+    deallocate(wood_product_cflux)
+    deallocate(crop_product_cflux)
     deallocate(conv_nflux)
-    deallocate(product_nflux)
+    deallocate(wood_product_nflux)
+    deallocate(crop_product_nflux)
              
     if ( use_c13 ) then
        deallocate(dwt_leafc13_seed)
@@ -765,7 +783,8 @@ contains
        deallocate(dwt_livecrootc13_to_litter)
        deallocate(dwt_deadcrootc13_to_litter)
        deallocate(conv_c13flux)
-       deallocate(product_c13flux)
+       deallocate(wood_product_c13flux)
+       deallocate(crop_product_c13flux)
     endif
              
     if ( use_c14 ) then
@@ -775,7 +794,8 @@ contains
        deallocate(dwt_livecrootc14_to_litter)
        deallocate(dwt_deadcrootc14_to_litter)
        deallocate(conv_c14flux)
-       deallocate(product_c14flux)
+       deallocate(wood_product_c14flux)
+       deallocate(crop_product_c14flux)
     endif
     
    end subroutine dyn_cnbal_patch

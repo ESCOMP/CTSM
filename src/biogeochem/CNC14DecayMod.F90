@@ -10,10 +10,12 @@ module CNC14DecayMod
   use clm_varcon                         , only : secspday
   use clm_varctl                         , only : spinup_state
   use decompMod                          , only : bounds_type
+  use pftconMod                          , only : npcropmin
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
-  use ColumnType                         , only : col                
+  use PatchType                          , only : patch
+  use ColumnType                         , only : col
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   !
@@ -139,7 +141,15 @@ contains
          livestemc_storage(p)  = livestemc_storage(p)   * (1._r8 - decay_const * dt)
          livestemc_xfer(p)     = livestemc_xfer(p)      * (1._r8 - decay_const * dt)
          pft_ctrunc(p)         = pft_ctrunc(p)          * (1._r8 - decay_const * dt)
-         cropseedc_deficit(p)  = cropseedc_deficit(p)   * (1._r8 - decay_const * dt)
+
+         ! NOTE(wjs, 2017-02-02) This isn't a completely robust way to check if this is a
+         ! prognostic crop patch (at the very least it should also check if <= npcropmax;
+         ! ideally it should use a prognostic_crop flag that doesn't seem to exist
+         ! currently). But I'm just being consistent with what's done elsewhere (e.g., in
+         ! CStateUpdate1).
+         if (patch%itype(p) >= npcropmin) then ! skip 2 generic crops
+            cropseedc_deficit(p)  = cropseedc_deficit(p)   * (1._r8 - decay_const * dt)
+         end if
       end do
 
     end associate

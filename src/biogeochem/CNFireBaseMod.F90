@@ -300,7 +300,7 @@ contains
    use clm_varctl           , only: use_cndv, spinup_state
    use clm_varcon           , only: secspday
    use pftconMod            , only: nc3crop
-   use dynSubgridControlMod , only: get_do_transient_pfts
+   use dynSubgridControlMod , only: run_has_transient_landcover
    use clm_varpar           , only: nlevdecomp_full, ndecomp_pools, nlevdecomp
    !
    ! !ARGUMENTS:
@@ -332,7 +332,7 @@ contains
    real(r8):: m                    ! acceleration factor for fuel carbon
    real(r8):: dt                   ! time step variable (s)
    real(r8):: dayspyr              ! days per year
-   logical :: do_transient_pfts    ! whether transient pfts are active in this run
+   logical :: transient_landcover  ! whether this run has any prescribed transient landcover
    !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(leaf_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
@@ -538,7 +538,7 @@ contains
          m_n_to_litr_lig_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_lig_fire_col                    & ! Output: [real(r8) (:,:)   ]                                                  
          )
 
-     do_transient_pfts = get_do_transient_pfts()
+     transient_landcover = run_has_transient_landcover()
 
      ! Get model step size
      ! calculate burned area fraction per sec
@@ -554,7 +554,7 @@ contains
 
         if( patch%itype(p) < nc3crop .and. cropf_col(c) < 1.0_r8)then
            ! For non-crop (bare-soil and natural vegetation)
-           if (do_transient_pfts) then
+           if (transient_landcover) then
               f = (fbac(c)-baf_crop(c))/(1.0_r8-cropf_col(c))
            else
               f = (farea_burned(c)-baf_crop(c))/(1.0_r8-cropf_col(c))
@@ -879,7 +879,7 @@ contains
 
      ! carbon loss due to deforestation fires
 
-     if (do_transient_pfts) then
+     if (transient_landcover) then
         call get_curr_date (kyr, kmo, kda, mcsec)
         do fc = 1,num_soilc
            c = filter_soilc(fc)

@@ -1986,6 +1986,15 @@ If TRUE, apply harvest from flanduse_timeseries file.
 (Also, only valid for use_cn = true.)
 </entry>
 
+<entry id="for_testing_allow_non_annual_changes" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, allow area changes at times other than the year boundary. This should
+only arise in some test configurations where we artifically create changes more
+frequently so that we can run short tests. This flag is only used for
+error-checking, not controlling any model behavior. Do not set this in a
+production (non-test) run unless you know what you're doing!
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Namelist options related to finidat consistency checks                                    -->
 <!-- ========================================================================================  -->

@@ -1,4 +1,188 @@
 ===============================================================
+Tag name:  clm4_5_14_r223
+Originator(s):  sacks (Bill Sacks)
+Date: Fri Feb  3 10:07:24 MST 2017
+One-line Summary: Handle patch-level C&N variables correctly with dynamic landunits
+
+Purpose of changes
+------------------
+
+The infrastructure for handling conservation of patch-level C&N variables when
+subgrid weights changed was only considering changes in patch weights on the
+COLUMN. For dynamic landunits - where whole columns and landunits can change in
+area - this needs to consider changes in patch weights on the GRIDCELL. This tag
+makes this change.
+
+In addition, this makes the fire code work correctly with changing column /
+landunit areas: Similarly to the other C&N variables, the variable that triggers
+landcover-related fires was previously only considering changes in patch weights
+on the column.
+
+Also, treat patch-level crop-specific variables (grain pools and
+cropseed[c/n]_deficit) in DynamicPatchAdjustments routines. C/N in the grain
+pool is sent to the crop product pool via a new flux
+(dwt_crop_productc_gain_patch / dwt_crop_productn_gain_patch).
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+- 2106: CNFireMod code should be re-evaluated in the presence of dynamic
+  landunits
+- Addresses point 14 in 1679: problems with new CNFireMod
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+- Removed history variables: DWT_CLOSS / DWT_CLOSS_DRIBBLED (and similarly for
+  N). These can be seen with DWT_CONV_CFLUX / DWT_CONV_CFLUX_DRIBBLED
+  (previously dwt_closs was simply set equal to dwt_conv_cflux).
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Changes ciso_bombspike1963 to use monthly output, because this testmod is used
+  in a long-running test
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
+
+    ok means tests pass, changes answers for some tests as noted below
+
+CLM tag used for the baseline comparisons: clm4_5_14_r222
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45/CLM50 with transient landcover (HIST, RCP,
+      DV, IG)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      - For transient crop and transient glacier: larger than roundoff, may change
+        climate slightly
+      - Without crop: expected to be only roundoff-level changes (I confirmed
+        this in various ways fo some of the changes; for other changes, I did
+        not do a careful confirmation that changes were truly just
+        roundoff-level)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+========= For some tests that have daily changes in glacier area, bypass the error-checks
+          that ensure that we only have changes in landcover on the year boundary.
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_decrease/user_nl_clm
+A       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_increase/user_nl_clm
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as described above
+M       components/clm/src/dyn_subgrid/test/dynPatchStateUpdater_test/test_patch_state_updater.pf
+M       components/clm/src/dyn_subgrid/dynPatchStateUpdaterMod.F90
+M       components/clm/src/dyn_subgrid/dynSubgridControlMod.F90
+M       components/clm/src/dyn_subgrid/dynPriorWeightsMod.F90
+M       components/clm/src/biogeochem/dynConsBiogeochemMod.F90
+M       components/clm/src/biogeochem/CNVegCarbonStateType.F90
+        - also, treat initialization of cropseedc_deficit consistently with
+          grain pools (only initialize if use_crop is .true.)
+M       components/clm/src/biogeochem/CNVegNitrogenStateType.F90
+        - also, treat initialization of cropseedc_deficit consistently with
+          grain pools (only initialize if use_crop is .true.)
+M       components/clm/src/biogeochem/CNVegNitrogenFluxType.F90
+M       components/clm/src/biogeochem/CNVegCarbonFluxType.F90
+M       components/clm/src/biogeochem/CNDriverMod.F90
+M       components/clm/src/biogeochem/CNProductsMod.F90
+M       components/clm/src/biogeochem/CNFireLi2016Mod.F90
+M       components/clm/src/biogeochem/CNFireLi2014Mod.F90
+M       components/clm/src/biogeochem/CNFireBaseMod.F90
+
+========= Unrelated change: Since we now only initialize cropseedc_deficit when
+          use_crop is true, make sure we only adjust it over prognostic crop
+          patches
+M       components/clm/src/biogeochem/CNC14DecayMod.F90
+
+========= Unrelated change: use YEAR_POSITION_START_OF_TIMESTEP for consistency
+          with other dyn file stuff. This doesn't make any difference for
+          harvest, now that it's applied once per year at the beginning of the
+          year, but it seems like we might as well be consistent.
+M       components/clm/src/biogeochem/dynHarvestMod.F90
+
+========= Add create_vegetated_landunit_n_patches to aid unit testing
+M       components/clm/src/unit_test_shr/unittestSimpleSubgridSetupsMod.F90
+
+========= For some tests that have daily changes in glacier area, bypass the error-checks
+          that ensure that we only have changes in landcover on the year boundary.
+M       components/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/glcMEC_spunup_inc_dec_bgc/user_nl_clm
+M       components/clm/src/biogeochem/CNVegStateType.F90
+
+========= Change output to monthly to speed up this long-running test
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/ciso_bombspike1963/user_nl_clm
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r222
 Originator(s):  sacks (Bill Sacks)
 Date: Fri Jan 27 06:14:19 MST 2017

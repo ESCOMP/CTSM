@@ -23,6 +23,7 @@ module dynPatchStateUpdaterMod
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use decompMod            , only : bounds_type, BOUNDS_LEVEL_PROC
   use PatchType            , only : patch
+  use ColumnType           , only : col
   use clm_varpar           , only : mxpft
   use abortutils           , only : endrun
   !
@@ -34,17 +35,19 @@ module dynPatchStateUpdaterMod
 
   type patch_state_updater_type
      private
-     real(r8), allocatable :: pwtcol_old(:)  ! old patch weights on the column
-     real(r8), allocatable :: pwtcol_new(:)  ! new patch weights on the column
+     real(r8), allocatable :: pwtgcell_old(:) ! old patch weights on the gridcell
+     real(r8), allocatable :: pwtgcell_new(:) ! new patch weights on the gridcell
 
-     ! (pwtcol_new - pwtcol_old) from last call to set_new_weights
+     real(r8), allocatable :: cwtgcell_old(:) ! old column weights on the gridcell
+
+     ! (pwtgcell_new - pwtgcell_old) from last call to set_new_weights
      real(r8), allocatable :: dwt(:)
 
-     ! (pwtcol_old / pwtcol_new) from last call to set_new_weights; only valid for
+     ! (pwtgcell_old / pwtgcell_new) from last call to set_new_weights; only valid for
      ! growing patches
      real(r8), allocatable :: growing_old_fraction(:)
 
-     ! (dwt / pwtcol_new) from last call to set_new_weights; only valid for growing
+     ! (dwt / pwtgcell_new) from last call to set_new_weights; only valid for growing
      ! patches
      real(r8), allocatable :: growing_new_fraction(:)
 
@@ -103,6 +106,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
+    integer :: begc, endc
 
     character(len=*), parameter :: subname = 'constructor'
     !-----------------------------------------------------------------------
@@ -111,11 +115,15 @@ contains
 
     begp = bounds%begp
     endp = bounds%endp
+    begc = bounds%begc
+    endc = bounds%endc
 
-    allocate(this%pwtcol_old(begp:endp))
-    this%pwtcol_old(:) = nan
-    allocate(this%pwtcol_new(begp:endp))
-    this%pwtcol_new(:) = nan
+    allocate(this%pwtgcell_old(begp:endp))
+    this%pwtgcell_old(:) = nan
+    allocate(this%pwtgcell_new(begp:endp))
+    this%pwtgcell_new(:) = nan
+    allocate(this%cwtgcell_old(begc:endc))
+    this%cwtgcell_old(:) = nan
     allocate(this%dwt(begp:endp))
     this%dwt(:) = nan
     allocate(this%growing_old_fraction(begp:endp))
@@ -143,12 +151,15 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: p
+    integer :: c
 
     character(len=*), parameter :: subname = 'set_old_weights'
     !-----------------------------------------------------------------------
 
     do p = bounds%begp, bounds%endp
-       this%pwtcol_old(p) = patch%wtcol(p)
+       c = patch%column(p)
+       this%pwtgcell_old(p) = patch%wtgcell(p)
+       this%cwtgcell_old(c) = col%wtgcell(c)
     end do
 
   end subroutine set_old_weights
@@ -172,15 +183,17 @@ contains
     !-----------------------------------------------------------------------
 
     do p = bounds%begp, bounds%endp
-       this%pwtcol_new(p) = patch%wtcol(p)
-       this%dwt(p) = this%pwtcol_new(p) - this%pwtcol_old(p)
-       this%growing_old_fraction(p) = nan
-       this%growing_new_fraction(p) = nan
-       if (this%dwt(p) /= 0) then
-          if (this%dwt(p) > 0) then
-             this%growing_old_fraction(p) = this%pwtcol_old(p) / this%pwtcol_new(p)
-             this%growing_new_fraction(p) = this%dwt(p) / this%pwtcol_new(p)
-          end if
+       this%pwtgcell_new(p) = patch%wtgcell(p)
+       this%dwt(p) = this%pwtgcell_new(p) - this%pwtgcell_old(p)
+       if (this%dwt(p) > 0._r8) then
+          this%growing_old_fraction(p) = this%pwtgcell_old(p) / this%pwtgcell_new(p)
+          this%growing_new_fraction(p) = this%dwt(p) / this%pwtgcell_new(p)
+       else
+          ! These values are unused in this case, but set them to something reasonable for
+          ! safety. (We could set them to NaN, but that requires a more expensive
+          ! subroutine call, using the shr_infnan_mod infrastructure.)
+          this%growing_old_fraction(p) = 1._r8
+          this%growing_new_fraction(p) = 0._r8
        end if
     end do
 
@@ -189,7 +202,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine update_patch_state(this, bounds, &
        num_filterp_with_inactive, filterp_with_inactive, &
-       var, flux_out, &
+       var, flux_out_col_area, flux_out_grc_area, &
        seed, seed_addition)
     !
     ! !DESCRIPTION:
@@ -197,7 +210,7 @@ contains
     ! patch areas
     !
     ! For growing patches, this subroutine adjusts var. For shrinking patches, this
-    ! subroutine accumulates flux in flux_out.
+    ! subroutine accumulates flux in flux_out_col_area.
     !
     ! Changes are only made within the given filter. Note that this filter should include
     ! inactive as well as active patches, so that it includes patches that just became
@@ -212,11 +225,20 @@ contains
     integer, intent(in) :: filterp_with_inactive(:) ! patch filter that includes inactive points
     real(r8), intent(inout) :: var( bounds%begp: ) ! patch-level state variable
 
-    ! Accumulated flux from shrinking areas. This is optional: you do not need to provide
-    ! it if you don't need to track the flux out from this state variable. For shrinking
-    ! areas, this is given as a NEGATIVE quantity. Even though this is a patch-level
-    ! array, it is expressed as mass per unit area COLUMN.
-    real(r8), intent(inout), optional :: flux_out( bounds%begp: )
+    ! Accumulated flux from shrinking areas, expressed as mass per unit area COLUMN, using
+    ! the OLD column weight. (The use of the old column weight is appropriate if the
+    ! fluxes from shrinking patches are applied to column-level state variables BEFORE
+    ! doing column-level state adjustments via the column_state_updater). For shrinking
+    ! areas, this is given as a NEGATIVE quantity. Often you will provide one of
+    ! flux_out_col_area or flux_out_grc_area, but it is okay to provide both, or to
+    ! provide neither if you don't need to track the flux out from this state variable.
+    real(r8), intent(inout), optional :: flux_out_col_area( bounds%begp: )
+
+    ! Accumulated flux from shrinking areas, expressed as mass per unit area GRIDCELL. For
+    ! shrinking areas, this is given as a NEGATIVE quantity. Often you will provide one of
+    ! flux_out_col_area or flux_out_grc_area, but it is okay to provide both, or to
+    ! provide neither if you don't need to track the flux out from this state variable.
+    real(r8), intent(inout), optional :: flux_out_grc_area( bounds%begp: )
 
     ! If provided, this gives some 'seed' amount added to the state in the area into
     ! which each growing patch grows. The value is ignored for patches that are either
@@ -224,21 +246,25 @@ contains
     real(r8), intent(in), optional :: seed( bounds%begp: )
 
     ! If provided, this accumulates the amount of seed added to each patch. This gives
-    ! seed(p) * dwt(p). This can only be provided if seed is provided. Even though this
-    ! is a patch-level array, it is expressed as mass per unit area COLUMN.
+    ! seed(p) * dwt(p). This can only be provided if seed is provided. Even though this is
+    ! a patch-level array, it is expressed as mass per unit area GRIDCELL.
     real(r8), intent(inout), optional :: seed_addition( bounds%begp: )
     !
     !
     ! !LOCAL VARIABLES:
-    integer :: fp, p
+    integer :: fp, p, c
 
     character(len=*), parameter :: subname = 'update_patch_state'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(var) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
 
-    if (present(flux_out)) then
-       SHR_ASSERT_ALL((ubound(flux_out) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    if (present(flux_out_col_area)) then
+       SHR_ASSERT_ALL((ubound(flux_out_col_area) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    end if
+
+    if (present(flux_out_grc_area)) then
+       SHR_ASSERT_ALL((ubound(flux_out_grc_area) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
     end if
 
     if (present(seed)) then
@@ -254,6 +280,7 @@ contains
 
     do fp = 1, num_filterp_with_inactive
        p = filterp_with_inactive(fp)
+       c = patch%column(p)
 
        if (this%dwt(p) > 0._r8) then
           var(p) = var(p) * this%growing_old_fraction(p)
@@ -265,8 +292,14 @@ contains
           end if
 
        else if (this%dwt(p) < 0._r8) then
-          if (present(flux_out)) then
-             flux_out(p) = flux_out(p) + var(p) * this%dwt(p)
+          if (present(flux_out_grc_area)) then
+             flux_out_grc_area(p) = flux_out_grc_area(p) + var(p) * this%dwt(p)
+          end if
+          if (present(flux_out_col_area)) then
+             ! No need to check for divide by 0 here: If dwt < 0 then we must have had
+             ! cwtgcell_old > 0.
+             flux_out_col_area(p) = flux_out_col_area(p) + &
+                  var(p) * (this%dwt(p) / this%cwtgcell_old(c))
           end if
        end if
     end do
@@ -297,7 +330,8 @@ contains
 
     ! Accumulated fluxes from shrinking areas. For shrinking areas, these are given as
     ! NEGATIVE quantities. Even though these are patch-level arrays, they are expressed
-    ! as mass per unit area COLUMN.
+    ! as mass per unit area GRIDCELL (so these are equivalent to the flux_out_grc_area
+    ! argument in the main update_patch_state routine).
     real(r8), intent(inout) :: flux1_out( bounds%begp: )
     real(r8), intent(inout) :: flux2_out( bounds%begp: )
 
@@ -307,8 +341,8 @@ contains
     real(r8), intent(in), optional :: seed( bounds%begp: )
 
     ! If provided, this accumulates the amount of seed added to each patch. This gives
-    ! seed(p) * dwt(p). This can only be provided if seed is provided. Even though this
-    ! is a patch-level array, it is expressed as mass per unit area COLUMN.
+    ! seed(p) * dwt(p). This can only be provided if seed is provided. Even though this is
+    ! a patch-level array, it is expressed as mass per unit area GRIDCELL.
     real(r8), intent(inout), optional :: seed_addition( bounds%begp: )
     !
     ! !LOCAL VARIABLES:
@@ -324,8 +358,8 @@ contains
     total_flux_out(bounds%begp:bounds%endp) = 0._r8
     call this%update_patch_state(bounds, &
        num_filterp_with_inactive, filterp_with_inactive, &
-       var, total_flux_out, &
-       seed, seed_addition)
+       var, flux_out_grc_area = total_flux_out, &
+       seed = seed, seed_addition = seed_addition)
 
     do fp = 1, num_filterp_with_inactive
        p = filterp_with_inactive(fp)
@@ -358,7 +392,7 @@ contains
     !-----------------------------------------------------------------------
 
     do p = bounds%begp, bounds%endp
-       old_weight_was_zero(p) = (this%pwtcol_old(p) == 0._r8)
+       old_weight_was_zero(p) = (this%pwtgcell_old(p) == 0._r8)
     end do
 
   end function old_weight_was_zero
@@ -411,8 +445,8 @@ contains
 
     do p = bounds%begp, bounds%endp
        patch_initiating(p) = ( &
-            this%pwtcol_old(p) == 0._r8 .and. &
-            this%pwtcol_new(p) > 0._r8)
+            this%pwtgcell_old(p) == 0._r8 .and. &
+            this%pwtgcell_new(p) > 0._r8)
     end do
 
   end function patch_initiating
