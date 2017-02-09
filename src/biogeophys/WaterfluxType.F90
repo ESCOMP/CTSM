@@ -73,6 +73,9 @@ module WaterfluxType
      real(r8), pointer :: qflx_infl_col            (:)   ! col infiltration (mm H2O /s)
      real(r8), pointer :: qflx_surf_col            (:)   ! col surface runoff (mm H2O /s)
      real(r8), pointer :: qflx_drain_col           (:)   ! col sub-surface runoff (mm H2O /s)
+     real(r8), pointer :: qflx_latflow_in_col      (:)   ! col hillslope lateral flow input (mm/s) 
+     real(r8), pointer :: qflx_latflow_out_col     (:)   ! col hillslope lateral flow output (mm/s) 
+     real(r8), pointer :: qflx_net_latflow_col     (:)   ! col hillslope net lateral flow  (mm/s) 
      real(r8), pointer :: qflx_top_soil_col        (:)   ! col net water input into soil from top (mm/s)
      real(r8), pointer :: qflx_h2osfc_to_ice_col   (:)   ! col conversion of h2osfc to ice
      real(r8), pointer :: qflx_h2osfc_surf_col     (:)   ! col surface water runoff
@@ -212,6 +215,9 @@ contains
     allocate(this%qflx_infl_col            (begc:endc))              ; this%qflx_infl_col            (:)   = nan
     allocate(this%qflx_surf_col            (begc:endc))              ; this%qflx_surf_col            (:)   = nan
     allocate(this%qflx_drain_col           (begc:endc))              ; this%qflx_drain_col           (:)   = nan
+    allocate(this%qflx_latflow_in_col      (begc:endc))              ; this%qflx_latflow_in_col      (:)   = 0._r8
+    allocate(this%qflx_latflow_out_col     (begc:endc))              ; this%qflx_latflow_out_col     (:)   = 0._r8
+    allocate(this%qflx_net_latflow_col     (begc:endc))              ; this%qflx_net_latflow_col     (:)   = 0._r8
     allocate(this%qflx_top_soil_col        (begc:endc))              ; this%qflx_top_soil_col        (:)   = nan
     allocate(this%qflx_h2osfc_to_ice_col   (begc:endc))              ; this%qflx_h2osfc_to_ice_col   (:)   = nan
     allocate(this%qflx_h2osfc_surf_col     (begc:endc))              ; this%qflx_h2osfc_surf_col     (:)   = nan
@@ -298,6 +304,17 @@ contains
     call hist_addfld1d (fname='QDRAI',  units='mm/s',  &
          avgflag='A', long_name='sub-surface drainage', &
          ptr_col=this%qflx_drain_col, c2l_scale_type='urbanf')
+
+    this%qflx_latflow_out_col(begc:endc) = spval
+    call hist_addfld1d (fname='QLATFLOWOUT',  units='mm/s',  &
+         avgflag='A', long_name='hillcol lateral outflow', &
+         ptr_col=this%qflx_latflow_out_col, c2l_scale_type='urbanf')
+
+    this%qflx_net_latflow_col(begc:endc) = spval
+    call hist_addfld1d (fname='QLATNET',  units='mm/s',  &
+         avgflag='A', long_name='hillcol net lateral flow', &
+         ptr_col=this%qflx_net_latflow_col, c2l_scale_type='urbanf',&
+         default='inactive')
 
     this%qflx_liq_dynbal_grc(begg:endg) = spval
     call hist_addfld1d (fname='QFLX_LIQ_DYNBAL',  units='mm/s',  &  
@@ -678,6 +695,9 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%qflx_drain_col(c) = 0._r8
           this%qflx_surf_col(c)  = 0._r8
+          this%qflx_latflow_in_col(c)  = 0._r8
+          this%qflx_latflow_out_col(c) = 0._r8
+          this%qflx_net_latflow_col(c) = 0._r8
        end if
     end do
 

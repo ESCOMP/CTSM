@@ -539,7 +539,6 @@ contains
     call hist_addfld1d (fname='ERRH2OSNO',  units='mm',  &
          avgflag='A', long_name='imbalance in snow depth (liquid water)', &
          ptr_col=this%errh2osno_col, c2l_scale_type='urbanf')
-
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -707,6 +706,12 @@ contains
                      this%h2osoi_vol_col(c,j) = 0.15_r8
                   endif
                end do
+! JP add, tmp for init testing
+!               do j = 1,nlevsoi
+!                  this%h2osoi_vol_col(c,j) = 0.35_r8
+!               end do
+! JP end
+
             else if (lun%urbpoi(l)) then
                if (col%itype(c) == icol_road_perv) then
                   nlevs = nlevgrnd

@@ -62,7 +62,18 @@ module ColumnType
      real(r8), pointer :: z_lake               (:,:) ! layer depth for lake (m)
      real(r8), pointer :: lakedepth            (:)   ! variable lake depth (m)                             
      integer , pointer :: nbedrock             (:)   ! variable depth to bedrock index
+!scs
+     ! hillslope hydrology variables
+     integer,  pointer :: colu                 (:)   ! column index of uphill column (hillslope hydrology)
+     integer,  pointer :: cold                 (:)   ! column index of downhill column (hillslope hydrology)
+     integer,  pointer :: hillslope_ndx        (:)   ! hillslope identifier
+     real(r8), pointer :: hill_elev            (:)   ! mean elevation of column relative to mean gridcell elevation
+     real(r8), pointer :: hill_slope           (:)   ! mean along-hill slope
+     real(r8), pointer :: hill_area            (:)   ! mean surface area
+     real(r8), pointer :: hill_width           (:)   ! across-hill width of bottom boundary of column 
+     real(r8), pointer :: hill_distance        (:)   ! along-hill distance of column from bottom of hillslope
 
+!scs
      ! levgrnd_class gives the class in which each layer falls. This is relevant for
      ! columns where there are 2 or more fundamentally different layer types. For
      ! example, this distinguishes between soil and bedrock layers. The particular value
@@ -118,13 +129,22 @@ contains
     allocate(this%dz_lake     (begc:endc,nlevlak))             ; this%dz_lake     (:,:) = nan
     allocate(this%z_lake      (begc:endc,nlevlak))             ; this%z_lake      (:,:) = nan
 
-    allocate(this%nbedrock   (begc:endc))                     ; this%nbedrock   (:)   = ispval  
+!scs
+    allocate(this%colu       (begc:endc))                      ; this%colu   (:) = ispval  
+    allocate(this%cold       (begc:endc))                      ; this%cold   (:) = ispval  
+    allocate(this%hillslope_ndx(begc:endc))                    ; this%hillslope_ndx (:) = ispval  
+    allocate(this%hill_elev(begc:endc))                        ; this%hill_elev     (:) = spval  
+    allocate(this%hill_slope(begc:endc))                       ; this%hill_slope    (:) = spval  
+    allocate(this%hill_area(begc:endc))                        ; this%hill_area     (:) = spval  
+    allocate(this%hill_width(begc:endc))                       ; this%hill_width    (:) = spval  
+    allocate(this%hill_distance(begc:endc))                    ; this%hill_distance (:) = spval  
+!scs
+    allocate(this%nbedrock   (begc:endc))                      ; this%nbedrock   (:)   = ispval  
     allocate(this%levgrnd_class(begc:endc,nlevgrnd))           ; this%levgrnd_class(:,:) = ispval
     allocate(this%micro_sigma (begc:endc))                     ; this%micro_sigma (:)   = nan
     allocate(this%n_melt      (begc:endc))                     ; this%n_melt      (:)   = nan 
     allocate(this%topo_slope  (begc:endc))                     ; this%topo_slope  (:)   = nan
     allocate(this%topo_std    (begc:endc))                     ; this%topo_std    (:)   = nan
-
   end subroutine Init
 
   !------------------------------------------------------------------------
@@ -158,7 +178,8 @@ contains
     deallocate(this%topo_std   )
     deallocate(this%nbedrock   )
     deallocate(this%levgrnd_class)
-
+    deallocate(this%colu       )
+    deallocate(this%cold       )
   end subroutine Clean
 
   !-----------------------------------------------------------------------

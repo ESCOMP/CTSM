@@ -302,7 +302,7 @@ contains
     !    o real % abundance PFTs (as a percent of vegetated area)
     !
     ! !USES:
-    use clm_varctl  , only : create_crop_landunit
+    use clm_varctl  , only : create_crop_landunit, use_hillslope
     use fileutils   , only : getfil
     use domainMod   , only : domain_type, domain_init, domain_clean
     use clm_instur  , only : wt_lunit, topo_glc_mec
@@ -413,6 +413,11 @@ contains
     ! Obtain vegetated landunit info
 
     call surfrd_veg_all(begg, endg, ncid, ldomain%ns)
+
+    ! Obtain hillslope hydrology info
+    if(use_hillslope) then 
+       call surfrd_hillslope(begg, endg, ncid, ldomain%ns)
+    endif
 
     if (use_cndv) then
        call surfrd_veg_dgvm(begg, endg)
@@ -723,5 +728,56 @@ contains
     call check_sums_equal_1(wt_nat_patch, begg, 'wt_nat_patch', subname)
 
   end subroutine surfrd_veg_dgvm
+
+  !-----------------------------------------------------------------------
+  subroutine surfrd_hillslope(begg, endg, ncid, ns)
+    !
+    ! !DESCRIPTION:
+    ! Determine number of hillslopes and columns for hillslope hydrology mode
+    !
+    ! !USES:
+    use clm_instur, only : nhillcol
+    use clm_varctl, only : nhillslope
+    use ncdio_pio       , only : ncd_inqdid, ncd_inqdlen
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: begg, endg
+    type(file_desc_t),intent(inout) :: ncid   ! netcdf id
+    integer          ,intent(in)    :: ns     ! domain size
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: nh, m                          ! index
+    integer  :: dimid,varid                    ! netCDF id's
+    integer  :: ier                            ! error status	
+    logical  :: readvar                        ! is variable on dataset
+    real(r8),pointer :: arrayl(:)              ! local array
+    character(len=32) :: subname = 'surfrd_hillslope'  ! subroutine name
+!-----------------------------------------------------------------------
+
+    ! This temporary array is needed because ncd_io expects a pointer, 
+    !so we can't directly pass 
+
+    allocate(arrayl(begg:endg))
+    call ncd_inqdid(ncid,'nhillslope',dimid,readvar) 
+    if (.not. readvar) then
+       write(iulog,*)'surfrd error: nhillslope not on surface data file'
+       nhillslope = 1
+    else
+       call ncd_inqdlen(ncid,dimid,nh)
+       nhillslope = nh
+    endif
+    
+    call ncd_io(ncid=ncid, varname='nhillcol', flag='read', data=arrayl, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       write(iulog,*)'surfrd error: nhillcol not on surface data file'
+       nhillcol(begg:endg) = 1
+       write(iulog,*)'setting nhillcol[:] = 1'
+    else
+       nhillcol(begg:endg) = arrayl(begg:endg)
+    endif
+    deallocate(arrayl)
+
+  end subroutine surfrd_hillslope
 
 end module surfrdMod

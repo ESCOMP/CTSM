@@ -123,6 +123,18 @@ module clm_varctl
   ! true => separate crop landunit is not created by default
   logical, public :: create_crop_landunit = .false.     
   
+! JP add
+  ! number of hillslopes per landunit
+  integer, public :: nhillslope = 0
+
+  ! ! Postorder traversal of tree of hillslope columns. In future, will be read in.
+  ! ! (preorder,postorder) provides unique numbering pair of each hillslope column 
+  ! ! with easy ways to keep track of parent/child hillslope columns.
+  ! ! Assume preorder is 1:nhillcols. 
+  ! ! Default hillcol_postorder = nillcols:1:-1 creates linearly connected hillslope
+  ! integer, public :: hillcol_postorder = nillcols:1:-1 
+! JP end
+
   ! do not irrigate by default
   logical, public :: irrigate = .false.            
 
@@ -172,6 +184,9 @@ module clm_varctl
 
   ! use subgrid fluxes
   integer,  public :: subgridflag = 1                   
+
+  ! true => repartition rain/snow from atm based on temperature
+  logical,  public :: repartition_rain_snow = .false.
 
   ! true => write global average diagnostics to std out
   logical,  public :: wrtdia       = .false.            
@@ -234,6 +249,12 @@ module clm_varctl
   character(len=16), public :: soil_layerstruct = '10SL_3.5m'
 
   !----------------------------------------------------------
+  ! hillslope hydrology switch
+  !----------------------------------------------------------
+
+  logical, public :: use_hillslope = .false. ! true => use multi-column hillslope hydrology
+
+  !----------------------------------------------------------
   ! plant hydraulic stress switch
   !----------------------------------------------------------
 
@@ -254,6 +275,9 @@ module clm_varctl
 
   ! true => CLM glacier area & topography changes dynamically 
   logical , public :: glc_do_dynglacier = .false.           
+
+  ! true => downscale longwave radiation
+  logical , public :: glcmec_downscale_longwave = .true.    
 
   ! number of days before one considers the perennially snow-covered point 'land ice'
   integer , public :: glc_snow_persistence_max_days = 7300  

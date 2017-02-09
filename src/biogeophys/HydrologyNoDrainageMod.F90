@@ -23,7 +23,7 @@ Module HydrologyNoDrainageMod
   !
   ! !PUBLIC TYPES:
   implicit none
-  save
+  save 
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: HydrologyNoDrainage ! Calculates soil/snow hydrology without drainage
@@ -32,7 +32,9 @@ Module HydrologyNoDrainageMod
 contains
 
   !-----------------------------------------------------------------------
+!scs
   subroutine HydrologyNoDrainage(bounds, &
+       num_hillslope, filter_hillslopec, &
        num_nolakec, filter_nolakec, &
        num_hydrologyc, filter_hydrologyc, &
        num_urbanc, filter_urbanc, &
@@ -72,6 +74,7 @@ contains
     use SoilWaterMovementMod , only : SoilWater 
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use SoilWaterMovementMod , only : use_aquifer_layer
+	
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
@@ -85,6 +88,10 @@ contains
     integer                  , intent(inout) :: filter_snowc(:)      ! column filter for snow points
     integer                  , intent(inout) :: num_nosnowc          ! number of column non-snow points
     integer                  , intent(inout) :: filter_nosnowc(:)    ! column filter for non-snow points
+! JP add
+     integer               , intent(in)    :: num_hillslope       ! number of hillslope soil cols 
+     integer               , intent(in)    :: filter_hillslopec(:) ! column filter for designating all hillslope cols.
+! JP end
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(energyflux_type)    , intent(in)    :: energyflux_inst
@@ -176,12 +183,15 @@ contains
               soilhydrology_inst, waterstate_inst)
       end if
 
-      call SurfaceRunoff(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
+      call SurfaceRunoff(bounds, &
+           num_hillslope, filter_hillslopec, &
+           num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
            soilhydrology_inst, soilstate_inst, waterflux_inst, waterstate_inst)
 
-      call Infiltration(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
-           energyflux_inst, soilhydrology_inst, soilstate_inst, temperature_inst, &
-           waterflux_inst, waterstate_inst)
+      call Infiltration(bounds, &
+           num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc,&
+           energyflux_inst, soilhydrology_inst, soilstate_inst, &
+           temperature_inst, waterflux_inst, waterstate_inst)
 
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
             soilhydrology_inst, soilstate_inst, waterflux_inst, waterstate_inst, temperature_inst, &
@@ -212,7 +222,7 @@ contains
               waterstate_inst, waterflux_inst)
          
       endif
-
+	  
       ! Snow capping
       call SnowCapping(bounds, num_nolakec, filter_nolakec, num_snowc, filter_snowc, &
            aerosol_inst, waterflux_inst, waterstate_inst)

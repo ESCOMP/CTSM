@@ -32,6 +32,7 @@ module LandunitType
      integer , pointer :: coli         (:) ! beginning column index per landunit
      integer , pointer :: colf         (:) ! ending column index for each landunit
      integer , pointer :: ncolumns     (:) ! number of columns for each landunit
+     integer , pointer :: nhillslopes  (:) ! number of hillslopes for each landunit
      integer , pointer :: patchi       (:) ! beginning patch index for each landunit
      integer , pointer :: patchf       (:) ! ending patch index for each landunit
      integer , pointer :: npatches     (:) ! number of patches for each landunit
@@ -82,6 +83,7 @@ contains
     allocate(this%coli         (begl:endl)); this%coli      (:) = ispval
     allocate(this%colf         (begl:endl)); this%colf      (:) = ispval
     allocate(this%ncolumns     (begl:endl)); this%ncolumns  (:) = ispval
+    allocate(this%nhillslopes  (begl:endl)); this%nhillslopes(:) = ispval
     allocate(this%patchi       (begl:endl)); this%patchi    (:) = ispval
     allocate(this%patchf       (begl:endl)); this%patchf    (:) = ispval
     allocate(this%npatches     (begl:endl)); this%npatches  (:) = ispval
@@ -119,6 +121,7 @@ contains
     deallocate(this%coli         )
     deallocate(this%colf         )
     deallocate(this%ncolumns     )
+    deallocate(this%nhillslopes  )
     deallocate(this%patchi       )
     deallocate(this%patchf       )
     deallocate(this%npatches     )

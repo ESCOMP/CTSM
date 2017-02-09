@@ -13,7 +13,8 @@ module clm_initializeMod
   use clm_varctl      , only : is_cold_start, is_interpolated_start
   use clm_varctl      , only : create_glacier_mec_landunit, iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_ed
-  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, wt_glc_mec, topo_glc_mec
+  use clm_varctl      , only : nhillslope
+  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, wt_glc_mec, topo_glc_mec, nhillcol
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
   use ncdio_pio       , only : file_desc_t
@@ -46,6 +47,7 @@ contains
     use clm_varcon       , only: clm_varcon_init
     use landunit_varcon  , only: landunit_varcon_init, max_lunit
     use clm_varctl       , only: fsurdat, fatmlndfrc, noland, version  
+    use clm_varctl       , only: use_hillslope
     use pftconMod        , only: pftcon       
     use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
     use domainMod        , only: domain_check, ldomain, domain_init
@@ -53,6 +55,7 @@ contains
     use controlMod       , only: control_init, control_print, NLFilename
     use ncdio_pio        , only: ncd_pio_init
     use initGridCellsMod , only: initGridCells
+    use initHillslopeMod , only: initHillslopes, HillslopeDomPft
     use ch4varcon        , only: ch4conrd
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
     use dynSubgridControlMod, only: dynSubgridControl_init
@@ -161,7 +164,7 @@ contains
     allocate (urban_valid  (begg:endg                      ))
     allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
     allocate (wt_cft       (begg:endg, cft_lb:cft_ub       ))
-    allocate (fert_cft     (begg:endg, cft_lb:cft_ub       ))
+    allocate (fert_cft       (begg:endg, cft_lb:cft_ub       ))
     if (create_glacier_mec_landunit) then
        allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
        allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
@@ -169,7 +172,9 @@ contains
        allocate (wt_glc_mec  (1,1))
        allocate (topo_glc_mec(1,1))
     endif
-
+    if(use_hillslope) then 
+       allocate (nhillcol  (begg:endg                      ))
+    endif
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
 
@@ -209,6 +214,15 @@ contains
 
     call initGridCells(glc_behavior)
 
+    if(use_hillslope) then 
+       ! Specify hillslope (column-level) connectivity
+       call initHillslopes()
+
+       ! Set single pft for hillslope columns
+       call HillslopeDomPft()
+
+    endif
+
     ! Set global seg maps for gridcells, landlunits, columns and patches
 
     call decompInit_glcp(ns, ni, nj, glc_behavior)
@@ -216,7 +230,7 @@ contains
     ! Set filters
 
     call allocFilters()
-
+ 
     nclumps = get_proc_clumps()
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1, nclumps
@@ -242,6 +256,7 @@ contains
     ! end of the run for error checking.
 
     deallocate (wt_lunit, wt_cft, wt_glc_mec)
+    if(use_hillslope)  deallocate (nhillcol)
 
     call t_stopf('clm_init1')
 

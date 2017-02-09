@@ -40,6 +40,10 @@ module clm_instur
 
   ! subgrid glacier_mec sfc elevation
   real(r8), pointer :: topo_glc_mec(:,:) 
+
+  ! subgrid hillslope hydrology constituents
+  integer, pointer :: nhillcol(:) 
+
   !-----------------------------------------------------------------------
 
 end module clm_instur

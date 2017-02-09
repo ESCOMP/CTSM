@@ -199,10 +199,15 @@ contains
 
     error = .false.
     if (minval(lun%gridcell(begl:endl)) < begg .or. maxval(lun%gridcell(begl:endl)) > endg) error=.true.
+    if (error) write(iulog,*) 'isgerror1'
     if (minval(lun%coli(begl:endl)) < begc .or. maxval(lun%coli(begl:endl)) > endc) error=.true.
+    if (error) write(iulog,*) 'isgerror2'
     if (minval(lun%colf(begl:endl)) < begc .or. maxval(lun%colf(begl:endl)) > endc) error=.true.
+    if (error) write(iulog,*) 'isgerror3'
     if (minval(lun%patchi(begl:endl)) < begp .or. maxval(lun%patchi(begl:endl)) > endp) error=.true.
+    if (error) write(iulog,*) 'isgerror4'
     if (minval(lun%patchf(begl:endl)) < begp .or. maxval(lun%patchf(begl:endl)) > endp) error=.true.
+    if (error) write(iulog,*) 'isgerror5'
     if (error) then
        write(iulog,*) '   clm_ptrs_check: l index ranges - ERROR'
        call endrun(msg=errMsg(sourcefile, __LINE__))

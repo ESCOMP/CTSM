@@ -222,6 +222,8 @@ contains
 
     namelist /clm_inparm/ use_bedrock
 
+    namelist /clm_inparm/ use_hillslope
+
     namelist /clm_inparm/ use_hydrstress
 
     namelist /clm_inparm/ use_dynroot
@@ -611,6 +613,8 @@ contains
 
     call mpi_bcast (use_bedrock, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    call mpi_bcast (use_hillslope, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -649,6 +653,7 @@ contains
     ! physics variables
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (subgridflag , 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (repartition_rain_snow, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (wrtdia, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (scmlat, 1, MPI_REAL8,0, mpicom, ier)
@@ -665,6 +670,7 @@ contains
     call mpi_bcast (create_glacier_mec_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (glc_do_dynglacier, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (glcmec_downscale_longwave, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_snow_persistence_max_days, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! history file variables
@@ -813,9 +819,19 @@ contains
 
     write(iulog,*) '   Number of snow layers =', nlevsno
     write(iulog,*) '   Max snow depth (mm) =', h2osno_max
+    if (repartition_rain_snow) then
+       write(iulog,*) 'Rain vs. snow will be repartitioned based on surface temperature'
+    else
+       write(iulog,*) 'Rain vs. snow will NOT be repartitioned based on surface temperature'
+    end if
 
     if (create_glacier_mec_landunit) then
        write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
+       if (glcmec_downscale_longwave) then
+          write(iulog,*) '   Longwave radiation will be downscaled'
+       else
+          write(iulog,*) '   Longwave radiation will NOT be downscaled'
+       endif
        if (glc_do_dynglacier) then
           write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
        else
@@ -850,6 +866,7 @@ contains
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   soil layer structure = ', soil_layerstruct
+    write(iulog,*) '   hillslope hydrology    = ', use_hillslope
     write(iulog,*) '   plant hydraulic stress = ', use_hydrstress
     write(iulog,*) '   dynamic roots          = ', use_dynroot
     if (nsrest == nsrContinue) then

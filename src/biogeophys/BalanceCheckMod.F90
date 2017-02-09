@@ -152,7 +152,7 @@ contains
      use clm_varcon        , only : spval
      use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
      use column_varcon     , only : icol_road_perv, icol_road_imperv
-     use landunit_varcon   , only : istdlak, istsoil,istcrop,istwet,istice,istice_mec
+     use landunit_varcon   , only : istdlak, istsoil,istcrop,istwet
      use clm_varctl        , only : create_glacier_mec_landunit
      use clm_time_manager  , only : get_step_size, get_nstep
      use clm_initializeMod , only : surfalb_inst
@@ -229,7 +229,8 @@ contains
           snow_sinks              =>    waterflux_inst%snow_sinks_col           , & ! Output: [real(r8) (:)   ]  snow sinks (mm H2O /s)    
 
           qflx_irrig              =>    irrigation_inst%qflx_irrig_col          , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
-
+          qflx_net_latflow        =>    waterflux_inst%qflx_net_latflow_col     , & ! Output: [real(r8) (:)   ]  net hillcol lateral flow (mm/s)
+          
           qflx_glcice_dyn_water_flux => glacier_smb_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
 
           eflx_lwrad_out          =>    energyflux_inst%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)
@@ -309,8 +310,9 @@ contains
                   - qflx_drain(c)            &
                   - qflx_drain_perched(c)    &
                   - qflx_ice_runoff_snwcp(c) &
-                  - qflx_ice_runoff_xs(c)) * dtime
-
+                  - qflx_ice_runoff_xs(c)    &
+!scs                  - qflx_net_latflow(c)) * dtime
+                  ) * dtime
           else
 
              errh2o(c) = 0.0_r8
@@ -384,6 +386,8 @@ contains
              write(iulog,*)'qflx_ice_runoff_snwcp = ',qflx_ice_runoff_snwcp(indexc)*dtime
              write(iulog,*)'qflx_ice_runoff_xs    = ',qflx_ice_runoff_xs(indexc)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux = ', qflx_glcice_dyn_water_flux(indexc)*dtime
+             write(iulog,*)'cold/colu  = ',col%cold(indexc),col%colu(indexc)
+
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
           end if
@@ -415,9 +419,8 @@ contains
                         + qflx_snow_drain(c)  + qflx_sl_top_soil(c)
                 endif
 
-                 if (col%itype(c) == icol_road_perv .or. lun%itype(l) == istsoil .or. &
-                      lun%itype(l) == istcrop .or. lun%itype(l) == istwet .or. &
-                      lun%itype(l) == istice .or. lun%itype(l) == istice_mec) then
+                if (col%itype(c) == icol_road_perv .or. lun%itype(l) == istsoil .or. &
+                    lun%itype(l) == istcrop .or. lun%itype(l) == istwet ) then
                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
                           + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
                           +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) + qflx_h2osfc_to_ice(c)

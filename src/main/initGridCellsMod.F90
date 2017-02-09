@@ -13,7 +13,7 @@ module initGridCellsMod
   ! these modules (or the two modules should be combined into one).
   !
   ! !USES:
-#include "shr_assert.h"
+
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use spmdMod        , only : masterproc,iam
@@ -276,10 +276,14 @@ contains
     integer  :: m                                ! index
     integer  :: ncohorts
     integer  :: npatches                         ! number of patches in landunit
+! JP add
+    integer  :: ci2  ! tmp 2nd col. index 
+! JP end
     integer  :: ncols
     integer  :: nlunits
     integer  :: pitype                           ! patch itype
     real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
+    real(r8) :: wtcol2lunit                     ! column weight in landunit
     !------------------------------------------------------------------------
 
     ! Set decomposition properties
@@ -290,13 +294,22 @@ contains
 
     if (npatches > 0) then
        call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
-       
-       ! Assume one column on the landunit
-       call add_column(ci=ci, li=li, ctype=1, wtlunit=1.0_r8)
 
-       do m = natpft_lb,natpft_ub
-          call add_patch(pi=pi, ci=ci, ptype=m, wtcol=wt_nat_patch(gi,m))
+       ! ! Assume one column on the landunit
+       ! call add_column(ci=ci, li=li, ctype=1, wtlunit=1.0_r8)
+
+       ! do m = natpft_lb,natpft_ub
+       !    call add_patch(pi=pi, ci=ci, ptype=m, wtcol=wt_nat_patch(gi,m))
+       ! end do
+!scs
+       wtcol2lunit = 1.0_r8/real(ncols,r8)
+       do ci2 = 1,ncols
+          call add_column(ci=ci, li=li, ctype=1, wtlunit=wtcol2lunit)
+          do m = natpft_lb,natpft_ub
+             call add_patch(pi=pi, ci=ci, ptype=m, wtcol=wt_nat_patch(gi,m))
+          end do
        end do
+!scs
     end if
 
   end subroutine set_landunit_veg_compete

@@ -54,6 +54,8 @@ contains
     ! !DESCRIPTION:
     ! Obtain gridcell properties, aggregated across all landunits
     !
+    ! !USES
+    !
     ! !ARGUMENTS
     integer , intent(in)  :: gi       ! grid cell index
     type(glc_behavior_type), intent(in) :: glc_behavior
@@ -72,6 +74,8 @@ contains
     ! atm_topo is arbitrary for the sake of getting these counts. We don't have a true
     ! atm_topo value at the point of this call, so use 0.
     real(r8), parameter :: atm_topo = 0._r8
+
+
     !------------------------------------------------------------------------------
 
     npatches = 0
@@ -130,6 +134,10 @@ contains
     !
     ! !USES
     use clm_varpar, only : natpft_size
+    use clm_instur, only : nhillcol
+    use clm_varctl, only : nhillslope, use_hillslope
+
+
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -150,9 +158,15 @@ contains
 
     npatches = natpft_size
 
-    ! Assume that the vegetated landunit has one column
     nlunits = 1
-    ncols = 1
+    if(use_hillslope) then 
+       ncols = nhillslope * nhillcol(gi)
+    else
+       ncols = 1
+    endif
+    npatches = ncols*natpft_size
+
+!    write(iulog,*) 'nhillslope, nhillcol, ncols:', nhillslope, nhillcol(gi), ncols
 
     ! -------------------------------------------------------------------------
     ! Number of cohorts is set here
@@ -162,7 +176,6 @@ contains
     ! For restart output however, we will allocate the cohort vector space
     ! based on all columns.
     ! -------------------------------------------------------------------------
-
     ncohorts = ncols*cohorts_per_col
 
   end subroutine subgrid_get_info_natveg
@@ -495,7 +508,5 @@ contains
     end if
 
   end function crop_patch_exists
-
-
 
 end module subgridMod

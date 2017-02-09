@@ -311,7 +311,7 @@ contains
     call dynSubgrid_driver(bounds_proc,                                               &
          urbanparams_inst, soilstate_inst, soilhydrology_inst, lakestate_inst,        &
          waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst,          &
-         canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst, &
+         canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,         &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst,                  &
          c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,    &
          soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
@@ -703,8 +703,9 @@ contains
        ! LakeHydrology after the new snow filter is built
 
        call t_startf('hydro_without_drainage')
-
+! JP changed inputs:
        call HydrologyNoDrainage(bounds_clump,                                &
+            filter(nc)%num_hillslope, filter(nc)%hillslopec,                 &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                      &
             filter(nc)%num_hydrologyc, filter(nc)%hydrologyc,                &
             filter(nc)%num_urbanc, filter(nc)%urbanc,                        &
@@ -860,14 +861,18 @@ contains
        ! ============================================================================
 
        call t_startf('hydro2_drainage')
-
-       call HydrologyDrainage(bounds_clump,                   &
-            filter(nc)%num_nolakec, filter(nc)%nolakec,       &
-            filter(nc)%num_hydrologyc, filter(nc)%hydrologyc, &
-            filter(nc)%num_urbanc, filter(nc)%urbanc,         &                 
-            filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,     &                
-            atm2lnd_inst, glc2lnd_inst, temperature_inst,     &
-            soilhydrology_inst, soilstate_inst, waterstate_inst, waterflux_inst, &
+!scs
+       call HydrologyDrainage(bounds_clump,                    &
+            filter(nc)%num_hilltop, filter(nc)%hilltopc,       &
+            filter(nc)%num_hillbottom, filter(nc)%hillbottomc, &
+            filter(nc)%num_hillslope, filter(nc)%hillslopec,    &
+            filter(nc)%num_nolakec, filter(nc)%nolakec,        &
+            filter(nc)%num_hydrologyc, filter(nc)%hydrologyc,  &
+            filter(nc)%num_urbanc, filter(nc)%urbanc,          &
+            filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,      &                
+            atm2lnd_inst, glc2lnd_inst, temperature_inst,      &
+            soilhydrology_inst, soilstate_inst, &
+            waterstate_inst, waterflux_inst, &
             irrigation_inst, glacier_smb_inst)
 
        call t_stopf('hydro2_drainage')     

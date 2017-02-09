@@ -19,9 +19,10 @@ module initVerticalMod
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
   use clm_varctl        , only : use_bedrock, soil_layerstruct
   use clm_varctl        , only : use_ed
+  use clm_varctl        , only : nhillslope
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
-  use landunit_varcon   , only : istdlak, istice_mec
+  use landunit_varcon   , only : istdlak, istice_mec, istsoil
   use fileutils         , only : getfil
   use LandunitType      , only : lun                
   use GridcellType      , only : grc                
@@ -109,6 +110,8 @@ contains
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
     use clm_varcon, only : zmin_bedrock
+    use clm_varctl, only : use_hillslope
+    use HillslopeHydrologyMod
     !
     ! !ARGUMENTS:
     type(bounds_type)   , intent(in)    :: bounds
@@ -118,7 +121,7 @@ contains
     real(r8)            , intent(in)    :: thick_roof(bounds%begl:)
     !
     ! LOCAL VARAIBLES:
-    integer               :: c,l,g,i,j,lev     ! indices 
+    integer               :: c,l,g,i,j,lev,nh  ! indices 
     type(file_desc_t)     :: ncid              ! netcdf id
     logical               :: readvar 
     integer               :: dimid             ! dimension id
@@ -131,8 +134,10 @@ contains
     integer               :: ier               ! error status
     real(r8)              :: scalez = 0.025_r8 ! Soil layer thickness discretization (m)
     real(r8)              :: thick_equal = 0.2
-    real(r8) ,pointer     :: zbedrock_in(:)   ! read in - z_bedrock
-    real(r8) ,pointer     :: lakedepth_in(:)   ! read in - lakedepth 
+    real(r8), pointer     :: ihillslope_in(:,:)   ! read in - integer
+    real(r8), pointer     :: fhillslope_in(:,:)   ! read in - float
+    real(r8), pointer     :: lakedepth_in(:)    ! wall (layer node depth)
+    real(r8), pointer     :: zbedrock_in(:)   ! read in - float
     real(r8), allocatable :: zurb_wall(:,:)    ! wall (layer node depth)
     real(r8), allocatable :: zurb_roof(:,:)    ! roof (layer node depth)
     real(r8), allocatable :: dzurb_wall(:,:)   ! wall (layer thickness)
@@ -143,7 +148,15 @@ contains
     integer               :: begc, endc
     integer               :: begl, endl
     integer               :: jmin_bedrock
-
+!scs
+    integer,  allocatable :: pct_hillslope(:,:) ! percent of landunit occupied by hillslope
+    real(r8), allocatable :: hill_alpha(:,:)    ! hillslope 'alpha' parameter
+    real(r8), allocatable :: hill_beta(:,:)     ! hillslope 'beta' parameter
+    real(r8), allocatable :: hill_length(:,:)   ! hillslope length [m]
+    real(r8), allocatable :: hill_width(:,:)    ! hillslope width  [m]
+    real(r8), allocatable :: hill_height(:,:)   ! hillslope height [m]
+    real(r8) :: hillslope_area                  ! total area of hillslope
+    integer  :: ctop, cbottom                   ! hillslope top and bottom column indices
     ! Possible values for levgrnd_class. The important thing is that, for a given column,
     ! layers that are fundamentally different (e.g., soil vs bedrock) have different
     ! values. This information is used in the vertical interpolation in init_interp.
@@ -279,6 +292,66 @@ contains
        do j = 1, nlevgrnd
           zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
        enddo
+! JP add
+    else if ( soil_layerstruct == '20SL_1.5m' ) then
+       do j=1,nlevsoi
+          dzsoi(j) = 1.5_r8/nlevsoi
+       end do
+
+       do j = nlevsoi+1,nlevgrnd
+!          dzsoi(j)= 0.5_r8 ! 0.5 meter bedrock layers
+          dzsoi(j)= 1.5_r8/nlevsoi ! bedrock layers same thickness of soil layers
+       enddo
+
+       zisoi(0) = 0._r8
+       do j = 1,nlevgrnd
+          zisoi(j)= sum(dzsoi(1:j))
+       enddo
+       
+       do j = 1, nlevgrnd
+          zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
+       enddo
+! JP end
+! JP add
+    else if ( soil_layerstruct == '10SL_1.5m' ) then
+       do j=1,nlevsoi
+          dzsoi(j) = 1.5_r8/nlevsoi
+       end do
+
+       do j = nlevsoi+1,nlevgrnd
+!          dzsoi(j)= 0.5_r8 ! 0.5 meter bedrock layers
+          dzsoi(j)= 1.5_r8/nlevsoi ! bedrock layers same thickness of soil layers
+       enddo
+
+       zisoi(0) = 0._r8
+       do j = 1,nlevgrnd
+          zisoi(j)= sum(dzsoi(1:j))
+       enddo
+       
+       do j = 1, nlevgrnd
+          zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
+       enddo
+! JP end
+! JP add
+    else if ( soil_layerstruct == '10SL_0.6m' ) then
+       do j=1,nlevsoi
+          dzsoi(j) = 0.6_r8/nlevsoi
+       end do
+
+       do j = nlevsoi+1,nlevgrnd
+!          dzsoi(j)= 0.5_r8 ! 0.5 meter bedrock layers
+          dzsoi(j)= 0.6_r8/nlevsoi ! bedrock layers same thickness of soil layers
+       enddo
+
+       zisoi(0) = 0._r8
+       do j = 1,nlevgrnd
+          zisoi(j)= sum(dzsoi(1:j))
+       enddo
+       
+       do j = 1, nlevgrnd
+          zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
+       enddo
+! JP end
     end if
 
     ! define a vertical grid spacing such that it is the normal dzsoi if
@@ -526,6 +599,210 @@ contains
     deallocate(zbedrock_in)
 
     !-----------------------------------------------
+    !  Specify hillslope hydrology characteristics
+    !-----------------------------------------------
+    if(use_hillslope) then 
+       allocate(pct_hillslope(bounds%begl:bounds%endl,nhillslope),    &
+            hill_alpha(bounds%begl:bounds%endl,nhillslope),    &
+            hill_beta(bounds%begl:bounds%endl,nhillslope),   &
+            hill_length(bounds%begl:bounds%endl,nhillslope),   &
+            hill_width(bounds%begl:bounds%endl,nhillslope), &
+            hill_height(bounds%begl:bounds%endl,nhillslope), &
+            stat=ier)
+       
+       allocate(ihillslope_in(bounds%begg:bounds%endg,nhillslope))
+       
+       call ncd_io(ncid=ncid, varname='pct_hillslope', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          if (masterproc) then
+             call endrun( 'ERROR:: pct_hillslope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          end if
+       end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          pct_hillslope(l,:) = ihillslope_in(g,:)
+       enddo
+       deallocate(ihillslope_in)
+       
+       allocate(fhillslope_in(bounds%begg:bounds%endg,nhillslope))
+       call ncd_io(ncid=ncid, varname='h_alpha', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          if (masterproc) then
+             call endrun( 'ERROR:: h_alpha not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          end if
+       end if
+       
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          hill_alpha(l,:) = fhillslope_in(g,:)
+       enddo
+       
+       call ncd_io(ncid=ncid, varname='h_beta', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          if (masterproc) then
+             call endrun( 'ERROR:: h_beta not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          end if
+       end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          hill_beta(l,:) = fhillslope_in(g,:)
+       enddo
+       call ncd_io(ncid=ncid, varname='h_length', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          if (masterproc) then
+             call endrun( 'ERROR:: h_length not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          end if
+       end if
+       
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          hill_length(l,:) = fhillslope_in(g,:)
+       enddo
+       
+       call ncd_io(ncid=ncid, varname='h_width', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          if (masterproc) then
+             call endrun( 'ERROR:: h_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          end if
+       end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          hill_width(l,:) = fhillslope_in(g,:)
+       enddo
+       
+       call ncd_io(ncid=ncid, varname='h_height', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) then
+          if (masterproc) then
+             call endrun( 'ERROR:: h_height not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          end if
+       end if
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          hill_height(l,:) = fhillslope_in(g,:)
+       enddo
+       deallocate(fhillslope_in)
+       
+       !  Set hillslope hydrology column level variables
+       !  This needs to match how columns set up in subgridMod
+       do l = begl, endl
+          g = lun%gridcell(l)
+          if(lun%itype(l) == istsoil) then
+             ! lun%coli is the uppermost column in the hillslope, lun%colf is the lowermost
+             
+             if (masterproc .and. 1==2) then
+                write(iulog,*) 'hillslope parameters'
+                do nh=1,nhillslope
+                   write(iulog,'(a12,i8,5f16.4)') 'a,b,l,w,h: ', nh, hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), hill_width(l,nh),hill_height(l,nh)
+                   write(iulog,*) ' '
+                enddo
+             endif
+             
+             do c = lun%coli(l), lun%colf(l)
+                nh = col%hillslope_ndx(c)
+                ctop    = lun%coli(l)+(nh-1)*lun%ncolumns(l)/nhillslope
+                cbottom = lun%coli(l)+(nh)*lun%ncolumns(l)/nhillslope - 1
+                if (masterproc .and. 1==2) then
+                   write(iulog,*) 'hillslope distance columns'
+                   write(iulog,'(a12,3i8,5f16.4)') 'top,c,bot: ', ctop,c,cbottom
+                   write(iulog,*) ' '
+                endif
+                
+                ! distance of lower edge of column from hillslope bottom
+                col%hill_distance(c) = hcol_distance(c, &
+                     ctop, cbottom, hill_length(l,nh))
+                !              if (masterproc) write(iulog,*) 'hd: ',c,col%hill_distance(c)
+                
+                ! width of lower edge of column from hillslope bottom
+                col%hill_width(c) = hcol_width(col%hill_distance(c),&
+                     hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
+                     hill_width(l,nh),hill_height(l,nh))
+                !              if (masterproc) write(iulog,*) 'hw: ',c,col%hill_width(c)
+                
+                ! surface area of column
+                if (c == ctop) then 
+                   col%hill_area(c) = hcol_area(hill_length(l,nh),&
+                        col%hill_distance(c), &
+                        hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
+                        hill_width(l,nh),hill_height(l,nh))
+                else
+                   col%hill_area(c) = hcol_area(col%hill_distance(c-1),&
+                        col%hill_distance(c),&
+                        hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
+                        hill_width(l,nh),hill_height(l,nh))
+                endif
+                !              if (masterproc) write(iulog,*) 'ha: ',c,col%hill_area(c)
+                
+                ! mean elevation of column relative to mean gridcell elevation
+                if (c == ctop) then 
+                   col%hill_elev(c) = hcol_elevation(hill_length(l,nh),&
+                        col%hill_distance(c),&
+                        hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
+                        hill_width(l,nh),hill_height(l,nh))
+                else
+                   col%hill_elev(c) = hcol_elevation(col%hill_distance(c-1),&
+                        col%hill_distance(c),&
+                        hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
+                        hill_width(l,nh),hill_height(l,nh))
+                endif
+                !              if (masterproc) write(iulog,*) 'he: ',c,col%hill_elev(c)
+                
+                ! mean along-hill slope of column
+                if (c == ctop) then 
+                   col%hill_slope(c) = hcol_slope(hill_length(l,nh),col%hill_distance(c),hill_alpha(l,nh),hill_length(l,nh), hill_height(l,nh))
+                else
+                   col%hill_slope(c) = hcol_slope(col%hill_distance(c-1),col%hill_distance(c),hill_alpha(l,nh),hill_length(l,nh), hill_height(l,nh))
+                endif
+                !              if (masterproc) write(iulog,*) 'hs: ',c,col%hill_slope(c)
+                
+                if (masterproc .and. 1==2) then
+                   write(iulog,*) 'hillslope geometry'
+                   write(iulog,'(a12,i4,i10,5f16.4)') 'd,w,a,e,s: ', nh, c, col%hill_distance(c), col%hill_width(c), col%hill_area(c), col%hill_elev(c), col%hill_slope(c)
+                   write(iulog,*) ' '
+                endif
+                
+             enddo
+             
+             ! Now that column areas are determined, column weights can be recalculated
+             hillslope_area = 0._r8
+             ! area weighted by pct_hillslope
+             do c = lun%coli(l), lun%colf(l)
+                nh = col%hillslope_ndx(c)
+                hillslope_area = hillslope_area &
+                     + col%hill_area(c)*(pct_hillslope(l,nh)*0.01_r8)
+             enddo
+             do c = lun%coli(l), lun%colf(l)
+                nh = col%hillslope_ndx(c)
+                col%wtlunit(c) = col%hill_area(c) &
+                     * (pct_hillslope(l,nh)*0.01_r8)/hillslope_area      
+             enddo
+             
+             !  Set column bedrock index
+             !thin soil for non-riparian columns, thick for riparian
+             do c =  lun%coli(l), lun%colf(l)
+                if(col%cold(c) /= ispval) then 
+                   do j = jmin_bedrock,nlevsoi 
+                      if (zisoi(j-1) < 0.5_r8 .and. zisoi(j) >= 0.5_r8) then
+                         col%nbedrock(c) = j
+                      end if
+                   enddo
+                else 
+                   do j = jmin_bedrock,nlevsoi 
+                      if (zisoi(j-1) < 3.0_r8 .and. zisoi(j) >= 3.0_r8) then
+                         col%nbedrock(c) = j
+                      end if
+                   enddo
+                endif
+             end do
+             
+          endif ! end of istsoil
+       enddo    ! end of loop over landunits
+       
+       deallocate(pct_hillslope,hill_alpha,hill_beta,hill_length, &
+         hill_width,hill_height)
+       
+    endif !use_hillslope
+
+    !-----------------------------------------------
     ! Set lake levels and layers (no interfaces)
     !-----------------------------------------------
 
@@ -693,6 +970,9 @@ contains
        g = col%gridcell(c)
        ! check for near zero slopes, set minimum value
        col%topo_slope(c) = max(tslope(g), 0.2_r8)
+! JP add for testing
+!       write(iulog,*) 'JP:slope(c): ',col%topo_slope(c) 
+! JP end
     end do
     deallocate(tslope)
 

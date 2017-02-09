@@ -2001,6 +2001,7 @@ contains
     ! !USES:
     use subgridAveMod  , only : c2g
     use clm_varpar     , only : nlevgrnd ,nlevlak
+    use clm_varctl     , only : nhillslope
     use shr_string_mod , only : shr_string_listAppend
     use domainMod      , only : ldomain
     !
@@ -2039,7 +2040,7 @@ contains
     character(len=*),parameter :: varnamesl(nfldsl) = (/ &
                                                           'ZLAKE ', &
                                                           'DZLAKE' &
-                                                      /)
+                                                          /)
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), errMsg(sourcefile, __LINE__))
@@ -2323,6 +2324,39 @@ contains
                long_name='coordinate lake levels', units='m', ncid=nfid(t))
           call ncd_defvar(varname='levdcmp', xtype=tape(t)%ncprec, dim1name='levdcmp', &
                long_name='coordinate soil levels', units='m', ncid=nfid(t))
+
+!scs
+          if (ldomain%isgrid2d) then
+             !pass
+          else
+!!$             call ncd_defvar(varname='hslp_distance' , xtype=ncd_double, &
+!!$                  dim1name=namec, &
+!!$                  long_name='hillslope column distance', ncid=nfid(t), &
+!!$                  imissing_value=spval, ifill_value=spval)
+
+             call ncd_defvar(varname='hslp_distance', xtype=ncd_double, &
+                  dim1name=namec, long_name='hillslope column distance', &
+                  units='m', ncid=nfid(t))             
+             call ncd_defvar(varname='hslp_width', xtype=ncd_double, &
+                  dim1name=namec, long_name='hillslope column width', &
+                  units='m', ncid=nfid(t))             
+             call ncd_defvar(varname='hslp_area', xtype=ncd_double, &
+                  dim1name=namec, long_name='hillslope column area', &
+                  units='m', ncid=nfid(t))             
+             call ncd_defvar(varname='hslp_elev', xtype=ncd_double, &
+                  dim1name=namec, long_name='hillslope column elevation', &
+                  units='m', ncid=nfid(t))             
+             call ncd_defvar(varname='hslp_slope', xtype=ncd_double, &
+                  dim1name=namec, long_name='hillslope column slope', &
+                  units='m', ncid=nfid(t))             
+             call ncd_defvar(varname='hslp_index', xtype=ncd_int, &
+                  dim1name=namec, long_name='hillslope index', &
+                  ncid=nfid(t))             
+             call ncd_defvar(varname='hslp_cold', xtype=ncd_int, &
+                  dim1name=namec, long_name='hillslope downhill column index', &
+                  ncid=nfid(t))             
+          end if
+!scs
       
           if(use_ed)then
              call ncd_defvar(varname='levscls', xtype=tape(t)%ncprec, dim1name='levscls', &
@@ -2343,6 +2377,17 @@ contains
              zsoi_1d(1) = 1._r8
              call ncd_io(varname='levdcmp', data=zsoi_1d, ncid=nfid(t), flag='write')
           end if
+!scs
+       if (.not.ldomain%isgrid2d) then
+          call ncd_io(varname='hslp_distance' , data=col%hill_distance, dim1name=namec, ncid=nfid(t), flag='write')
+          call ncd_io(varname='hslp_width' , data=col%hill_width, dim1name=namec, ncid=nfid(t), flag='write')
+          call ncd_io(varname='hslp_area' , data=col%hill_area, dim1name=namec, ncid=nfid(t), flag='write')
+          call ncd_io(varname='hslp_elev' , data=col%hill_elev, dim1name=namec, ncid=nfid(t), flag='write')
+          call ncd_io(varname='hslp_slope' , data=col%hill_slope, dim1name=namec, ncid=nfid(t), flag='write')
+          call ncd_io(varname='hslp_index' , data=col%hillslope_ndx, dim1name=namec, ncid=nfid(t), flag='write')
+          call ncd_io(varname='hslp_cold' , data=col%cold, dim1name=namec, ncid=nfid(t), flag='write')
+       endif
+
           if(use_ed)then
              call ncd_io(varname='levscls',data=levsclass_ed, ncid=nfid(t), flag='write')
              call ncd_io(varname='pft_levscpf',data=pft_levscpf_ed, ncid=nfid(t), flag='write')
@@ -2706,6 +2751,9 @@ contains
           ! Write history output.  Always output land and ocean runoff on xy grid.
 
           if (num2d == 1) then
+! JP add, for debugging
+!             write(iulog,*) "JP: varname: ", varname
+! JP end
              call ncd_io(flag='write', varname=varname, &
                   dim1name=type1d_out, data=hist1do, ncid=nfid(t), nt=nt)
           else
@@ -2866,8 +2914,10 @@ contains
           !call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name='pft', &
           !     long_name='1d landunit index of corresponding pft', ncid=ncid)
 
-          !call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name='pft', &
-          !     long_name='1d column index of corresponding pft', ncid=ncid)
+!scs: commenting-in for hillslope hydrology (multi-column) code
+          call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name='pft', &
+               long_name='1d column index of corresponding pft', ncid=ncid)
+!scs
           ! ----------------------------------------------------------------
 
           call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name=namep, &
@@ -3007,7 +3057,9 @@ contains
        ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
        !call ncd_io(varname='pfts1d_gi'       , data=patch%gridcell, dim1name=namep, ncid=ncid, flag='write')
        !call ncd_io(varname='pfts1d_li'       , data=patch%landunit, dim1name=namep, ncid=ncid, flag='write')
-       !call ncd_io(varname='pfts1d_ci'       , data=patch%column  , dim1name=namep, ncid=ncid, flag='write')
+!scs: commenting-in for hillslope hydrology 
+       call ncd_io(varname='pfts1d_ci'       , data=patch%column  , dim1name=namep, ncid=ncid, flag='write')
+!scs
        ! ----------------------------------------------------------------
        call ncd_io(varname='pfts1d_wtgcell'  , data=patch%wtgcell , dim1name=namep, ncid=ncid, flag='write')
        call ncd_io(varname='pfts1d_wtlunit'  , data=patch%wtlunit , dim1name=namep, ncid=ncid, flag='write')

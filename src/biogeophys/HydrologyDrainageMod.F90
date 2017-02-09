@@ -19,7 +19,8 @@ module HydrologyDrainageMod
   use IrrigationMod     , only : irrigation_type
   use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
   use LandunitType      , only : lun                
-  use ColumnType        , only : col                
+  use ColumnType        , only : col   
+  
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -32,7 +33,11 @@ module HydrologyDrainageMod
 contains
 
   !-----------------------------------------------------------------------
+! JP changed inputs
   subroutine HydrologyDrainage(bounds,               &
+       num_hilltop, filter_hilltopc, &
+       num_hillbottom, filter_hillbottomc, &
+       num_hillslope, filter_hillslopec, &
        num_nolakec, filter_nolakec,                  &
        num_hydrologyc, filter_hydrologyc,            &
        num_urbanc, filter_urbanc,                    &
@@ -48,10 +53,10 @@ contains
     use landunit_varcon  , only : istice, istwet, istsoil, istice_mec, istcrop
     use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, icol_shadewall
     use clm_varcon       , only : denh2o, denice
-    use clm_varctl       , only : use_vichydro
+    use clm_varctl       , only : use_vichydro, use_hillslope
     use clm_varpar       , only : nlevgrnd, nlevurb
     use clm_time_manager , only : get_step_size, get_nstep
-    use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, LateralFlowPowerLaw
+    use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, LateralFlowPowerLaw, LateralFlowHillslope
     use SoilWaterMovementMod , only : use_aquifer_layer
     !
     ! !ARGUMENTS:
@@ -62,8 +67,16 @@ contains
     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
     integer                  , intent(in)    :: num_urbanc           ! number of column urban points in column filter
     integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
-    integer                  , intent(in)    :: num_do_smb_c         ! number of columns in which SMB is calculated, in column filter    
-    integer                  , intent(in)    :: filter_do_smb_c(:)   ! column filter for bare landwhere SMB is calculated
+    integer                  , intent(in)    :: num_do_smb_c         ! number of bareland columns in which SMB is calculated, in column filter    
+    integer                  , intent(in)    :: filter_do_smb_c(:)   ! column filter for bare land SMB columns      
+! JP add
+     integer               , intent(in)    :: num_hilltop       ! number of soil cols marked "upslope"
+     integer               , intent(in)    :: filter_hilltopc(:) ! column filter for designating "upslope" cols.
+     integer               , intent(in)    :: num_hillbottom       ! number of soil cols marked "downslope"
+     integer               , intent(in)    :: filter_hillbottomc(:) ! column filter for designating "downslope" cols.
+     integer               , intent(in)    :: num_hillslope       ! number of soil hill cols.
+     integer               , intent(in)    :: filter_hillslopec(:) ! column filter for designating all hill cols.
+! JP end
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
     type(glc2lnd_type)       , intent(in)    :: glc2lnd_inst
     type(temperature_type)   , intent(in)    :: temperature_inst
@@ -77,12 +90,13 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: g,l,c,j,fc                 ! indices
     real(r8) :: dtime                      ! land model time step (sec)
+
     !-----------------------------------------------------------------------
     
     associate(                                                         &    
          dz                 => col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer thickness depth (m)                       
          ctype              => col%itype                             , & ! Input:  [integer  (:)   ]  column type                                        
-
+         
          qflx_floodg        => atm2lnd_inst%forc_flood_grc           , & ! Input:  [real(r8) (:)   ]  gridcell flux of flood water from RTM             
          forc_rain          => atm2lnd_inst%forc_rain_downscaled_col , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]                                  
          forc_snow          => atm2lnd_inst%forc_snow_downscaled_col , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]                                  
@@ -111,7 +125,7 @@ contains
          qflx_runoff_u      => waterflux_inst%qflx_runoff_u_col      , & ! Output: [real(r8) (:)   ]  Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
          qflx_runoff_r      => waterflux_inst%qflx_runoff_r_col      , & ! Output: [real(r8) (:)   ]  Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_ice_runoff_snwcp => waterflux_inst%qflx_ice_runoff_snwcp_col, & ! Output: [real(r8) (:)] solid runoff from snow capping (mm H2O /s)
-         qflx_irrig         => irrigation_inst%qflx_irrig_col          & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)                       
+         qflx_irrig         => irrigation_inst%qflx_irrig_col          & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)      
          )
 
       ! Determine time step and step size
@@ -135,11 +149,22 @@ contains
               soilhydrology_inst, soilstate_inst, &
               waterstate_inst, waterflux_inst)
 
-         
-         call LateralFlowPowerLaw(bounds, num_hydrologyc, filter_hydrologyc, &
-              num_urbanc, filter_urbanc,&
-              soilhydrology_inst, soilstate_inst, &
-              waterstate_inst, waterflux_inst)
+         if(use_hillslope) then 
+            call LateralFlowHillslope(bounds, &
+                 num_hilltop, filter_hilltopc, &
+                 num_hillbottom, filter_hillbottomc, &
+                 num_hillslope, filter_hillslopec, &
+                 num_hydrologyc, filter_hydrologyc, &
+                 num_urbanc, filter_urbanc,&
+                 soilhydrology_inst, soilstate_inst, &
+                 waterstate_inst, waterflux_inst)
+         else
+            call LateralFlowPowerLaw(bounds, num_hydrologyc, &
+                 filter_hydrologyc, &
+                 num_urbanc, filter_urbanc,&
+                 soilhydrology_inst, soilstate_inst, &
+                 waterstate_inst, waterflux_inst)
+         endif
 
       endif
 
@@ -182,6 +207,7 @@ contains
 
       ! Determine wetland and land ice hydrology (must be placed here
       ! since need snow updated from CombineSnowLayers)
+
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)

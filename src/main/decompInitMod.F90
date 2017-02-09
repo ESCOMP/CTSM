@@ -572,6 +572,7 @@ contains
        coCount(gi) = icohorts  ! number of ED cohorts for local gricell index gi
     enddo
 
+
     ! Determine gstart, lstart, cstart, pstart, coStart for the OUTPUT 1d data structures
 
     ! gather the gdc subgrid counts to masterproc in glo order
