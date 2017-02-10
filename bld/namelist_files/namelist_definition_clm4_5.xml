@@ -1263,6 +1263,28 @@ This downscaling is conservative.
 <default>Default: .true.</default>
 </entry>
 
+<entry id="lapse_rate" type="real" category="clm_physics"
+       group="atm2lnd_inparm" valid_values="" >
+Surface temperature lapse rate (K m-1)
+A positive value means a decrease in temperature with increasing height
+</entry>
+
+<entry id="lapse_rate_longwave" type="real" category="clm_physics"
+       group="atm2lnd_inparm" valid_values="" >
+Longwave radiation lapse rate (W m-2 m-1)
+A positive value means a decrease in LW radiation with increasing height
+Only relevant if glcmec_downscale_longwave is .true.
+</entry>
+
+<entry id="longwave_downscaling_limit" type="real" category="clm_physics"
+       group="atm2lnd_inparm" valid_values="" >
+Relative limit for how much longwave downscaling can be done (unitless)
+The pre-normalized, downscaled longwave is restricted to be in the range
+[lwrad*(1-longwave_downscaling_limit), lwrad*(1+longwave_downscaling_limit)]
+This parameter must be in the range [0,1]
+Only relevant if glcmec_downscale_longwave is .true.
+</entry>
+
 <entry id="precip_repartition_glc_all_snow_t" type="real" category="clm_physics"
        group="atm2lnd_inparm" valid_values="" >
 Temperature below which all precipitation falls as snow, for glacier columns (deg C)
@@ -2040,6 +2062,21 @@ Changes in this value should possibly be accompanied by changes in:
 - glc_snow_persistence_max_days: large values of h2osno_max should generally have
   glc_snow_persistence_max_days = 0; small values of h2osno_max should generally have
   glc_snow_persistence_max_days > 0.
+</entry>
+
+<entry id="int_snow_max" type="real" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+Limit applied to integrated snowfall when determining changes in snow-covered fraction during melt
+(mm H2O)
+</entry>
+
+<entry id="n_melt_glcmec" type="real" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+SCA shape parameter for glc_mec (glacier multiple elevation class) columns
+For most columns, n_melt is based on the standard deviation of 1km topography in the grid cell;
+but glc_mec columns already account for subgrid topographic variability through their use of
+multiple elevation classes; thus, to avoid double-accounting for topographic variability
+in these columns, we use a fixed value of n_melt.
 </entry>
 
 <entry id="wind_dependent_snow_density" type="logical" category="clm_physics"

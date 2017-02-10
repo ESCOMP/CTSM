@@ -70,6 +70,7 @@ contains
     atm2lnd_params = atm2lnd_params_type( &
          repartition_rain_snow = l_repartition_rain_snow, &
          glcmec_downscale_longwave = .false., &
+         lapse_rate = 0.01_r8, &  ! arbitrary (this is unused for these tests)
          precip_repartition_glc_all_snow_t = precip_repartition_glc_all_snow_t, &
          precip_repartition_glc_all_rain_t = precip_repartition_glc_all_rain_t, &
          precip_repartition_nonglc_all_snow_t = precip_repartition_nonglc_all_snow_t, &

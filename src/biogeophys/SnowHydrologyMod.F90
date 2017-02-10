@@ -552,7 +552,7 @@ contains
     !
     ! !USES:
     use clm_time_manager, only : get_step_size
-    use clm_varcon      , only : denice, denh2o, tfrz, rpi
+    use clm_varcon      , only : denice, denh2o, tfrz, rpi, int_snow_max
     use landunit_varcon , only : istdlak, istsoil, istcrop
     use clm_varctl      , only : subgridflag
     !
@@ -589,12 +589,14 @@ contains
     real(r8) :: wsum   ! snowpack total water mass (ice+liquid) [kg/m2]
     real(r8) :: fsno_melt
     real(r8) :: ddz4   ! Rate of compaction of snowpack due to wind drift.
+    real(r8) :: int_snow_limited ! integrated snowfall, limited to be no greater than int_snow_max [mm]
     !-----------------------------------------------------------------------
 
     associate( &
          snl          => col%snl                          , & ! Input:  [integer (:)    ] number of snow layers
          n_melt       => col%n_melt                       , & ! Input:  [real(r8) (:)   ] SCA shape parameter
-         ltype        => lun%itype                        , & ! Input:  [integer (:)    ] landunit type
+         lakpoi       => lun%lakpoi                       , & ! Input:  [logical  (:)   ] true => landunit is a lake point
+         urbpoi       => lun%urbpoi                       , & ! Input:  [logical  (:)   ] true => landunit is an urban point
          forc_wind    => atm2lnd_inst%forc_wind_grc       , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed (m/s)
 
          t_soisno     => temperature_inst%t_soisno_col    , & ! Input:  [real(r8) (:,:) ] soil temperature (Kelvin)
@@ -675,14 +677,20 @@ contains
                 ! Compaction occurring during melt
 
                 if (imelt(c,j) == 1) then
-                   if(subgridflag==1 .and. (ltype(col%landunit(c)) == istsoil .or. ltype(col%landunit(c)) == istcrop)) then
+                   l = col%landunit(c)
+                   ! For consistency with other uses of subgridflag==1 (e.g., in
+                   ! CanopyHydrologyMod), we apply this code over all landunits other
+                   ! than lake and urban. (In CanopyHydrologyMod, the uses of subgridflag
+                   ! are in a nolake filter, and check .not. urbpoi.)
+                   if(subgridflag==1 .and. (.not. lakpoi(l) .and. .not. urbpoi(l))) then
                       ! first term is delta mass over mass
                       ddz3 = max(0._r8,min(1._r8,(swe_old(c,j) - wx)/wx))
 
                       ! 2nd term is delta fsno over fsno, allowing for negative values for ddz3
                       if((swe_old(c,j) - wx) > 0._r8) then
                          wsum = sum(h2osoi_liq(c,snl(c)+1:0)+h2osoi_ice(c,snl(c)+1:0))
-                         fsno_melt = 1. - (acos(2.*min(1._r8,wsum/int_snow(c)) - 1._r8)/rpi)**(n_melt(c))
+                         int_snow_limited = min(int_snow(c), int_snow_max)
+                         fsno_melt = 1. - (acos(2.*min(1._r8,wsum/int_snow_limited) - 1._r8)/rpi)**(n_melt(c))
                          
                          ddz3 = ddz3 - max(0._r8,(fsno_melt - frac_sno(c))/frac_sno(c))
                       endif

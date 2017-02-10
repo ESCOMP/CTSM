@@ -108,7 +108,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
-    use clm_varcon, only : zmin_bedrock
+    use clm_varcon, only : zmin_bedrock, n_melt_glcmec
     !
     ! !ARGUMENTS:
     type(bounds_type)   , intent(in)    :: bounds
@@ -720,9 +720,9 @@ contains
        if (lun%itype(l)==istice_mec .and. glc_behavior%allow_multiple_columns_grc(g)) then
           ! ice_mec columns already account for subgrid topographic variability through
           ! their use of multiple elevation classes; thus, to avoid double-accounting for
-          ! topographic variability in these columns, we ignore topo_std and use a value
-          ! of n_melt that assumes little topographic variability within the column
-          col%n_melt(c) = 10._r8
+          ! topographic variability in these columns, we ignore topo_std and use a fixed
+          ! value of n_melt.
+          col%n_melt(c) = n_melt_glcmec
        else
           col%n_melt(c) = 200.0/max(10.0_r8, col%topo_std(c))
        end if

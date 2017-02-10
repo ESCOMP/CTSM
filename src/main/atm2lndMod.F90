@@ -70,7 +70,7 @@ contains
     ! (rain vs. snow partitioning) is adjusted everywhere.
     !
     ! !USES:
-    use clm_varcon      , only : rair, cpair, grav, lapse_glcmec
+    use clm_varcon      , only : rair, cpair, grav
     use QsatMod         , only : Qsat
     !
     ! !ARGUMENTS:
@@ -98,6 +98,9 @@ contains
     SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
     associate(&
+         ! Parameters:
+         lapse_rate => atm2lnd_inst%params%lapse_rate              , & ! Input:  [real(r8)] Surface temperature lapse rate (K m-1)
+
          ! Gridcell-level metadata:
          forc_topo_g  => atm2lnd_inst%forc_topo_grc                , & ! Input:  [real(r8) (:)]  atmospheric surface height (m)
 
@@ -153,7 +156,7 @@ contains
          pbot_g  = forc_pbot_g(g)                        ! atm sfc pressure
          rhos_g  = forc_rho_g(g)                         ! atm density
          zbot    = atm2lnd_inst%forc_hgt_grc(g)          ! atm ref height
-         tbot_c  = tbot_g-lapse_glcmec*(hsurf_c-hsurf_g) ! sfc temp for column
+         tbot_c  = tbot_g-lapse_rate*(hsurf_c-hsurf_g)   ! sfc temp for column
          Hbot    = rair*0.5_r8*(tbot_g+tbot_c)/grav      ! scale ht at avg temp
          pbot_c  = pbot_g*exp(-(hsurf_c-hsurf_g)/Hbot)   ! column sfc press
 
@@ -403,9 +406,6 @@ contains
     ! Downscale longwave radiation from gridcell to column
     ! Must be done AFTER temperature downscaling
     !
-    ! !USES:
-    use clm_varcon      , only : lapse_glcmec
-    !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds
     type(filter_col_type) , intent(in)    :: downscale_filter_c
@@ -426,6 +426,10 @@ contains
     !-----------------------------------------------------------------------
 
     associate(&
+         ! Parameters:
+         lapse_rate_longwave => atm2lnd_inst%params%lapse_rate_longwave  , & ! Input:  [real(r8)] longwave radiation lapse rate (W m-2 m-1)
+         longwave_downscaling_limit => atm2lnd_inst%params%longwave_downscaling_limit, & ! Input:  [real(r8)] Relative limit for how much longwave downscaling can be done (unitless)
+
          ! Gridcell-level metadata:
          forc_topo_g  => atm2lnd_inst%forc_topo_grc                , & ! Input:  [real(r8) (:)]  atmospheric surface height (m)
 
@@ -433,11 +437,9 @@ contains
          topo_c       => topo_inst%topo_col                        , & ! Input:  [real(r8) (:)] column surface height (m)
 
          ! Gridcell-level fields:
-         forc_t_g     => atm2lnd_inst%forc_t_not_downscaled_grc    , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
          forc_lwrad_g => atm2lnd_inst%forc_lwrad_not_downscaled_grc, & ! Input:  [real(r8) (:)]  downward longwave (W/m**2)
          
          ! Column-level (downscaled) fields:
-         forc_t_c     => atm2lnd_inst%forc_t_downscaled_col        , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)        
          forc_lwrad_c => atm2lnd_inst%forc_lwrad_downscaled_col      & ! Output: [real(r8) (:)]  downward longwave (W/m**2)
          )
     
@@ -468,14 +470,19 @@ contains
             hsurf_g = forc_topo_g(g)
             hsurf_c = topo_c(c)
 
-            ! Here we assume that deltaLW = (dLW/dT)*(dT/dz)*deltaz
-            ! We get dLW/dT = 4*eps*sigma*T^3 = 4*LW/T from the Stefan-Boltzmann law,
-            ! evaluated at the mean temp.
-            ! We assume the same temperature lapse rate as above.
-
-            forc_lwrad_c(c) = forc_lwrad_g(g) - &
-                 4.0_r8 * forc_lwrad_g(g)/(0.5_r8*(forc_t_c(c)+forc_t_g(g))) * &
-                 lapse_glcmec * (hsurf_c - hsurf_g)
+            ! Assume a linear decrease in downwelling longwave radiation with increasing
+            ! elevation, based on Van Tricht et al. (2016, TC) Figure 6,
+            ! doi:10.5194/tc-10-2379-2016
+            forc_lwrad_c(c) = forc_lwrad_g(g) - lapse_rate_longwave * (hsurf_c-hsurf_g)
+            ! But ensure that we don't depart too far from the atmospheric forcing value:
+            ! negative values of lwrad are certainly bad, but small positive values might
+            ! also be bad. We can especially run into trouble due to the normalization: a
+            ! small lwrad value in one column can lead to a big normalization factor,
+            ! leading to huge lwrad values in other columns.
+            forc_lwrad_c(c) = min(forc_lwrad_c(c), &
+                 forc_lwrad_g(g) * (1._r8 + longwave_downscaling_limit))
+            forc_lwrad_c(c) = max(forc_lwrad_c(c), &
+                 forc_lwrad_g(g) * (1._r8 - longwave_downscaling_limit))
 
             ! Keep track of the gridcell-level weighted sum for later normalization.
             !
@@ -573,8 +580,12 @@ contains
        norms = 1.0_r8
 
     elsewhere (sum_field == 0._r8)
-       ! Avoid divide by zero; this should only happen if the gridcell-level value is 0,
-       ! in which case the normalization doesn't matter
+       ! Avoid divide by zero. If this is because both sum_field and orig_field are 0,
+       ! then the normalization doesn't matter. If sum_field == 0 while orig_field /= 0,
+       ! then we have a problem: no normalization will allow us to recover the original
+       ! gridcell mean. We should probably catch this and abort, but for now we're
+       ! relying on error checking in the caller (checking for conservation) to catch
+       ! this potential problem.
        norms = 1.0_r8
 
     elsewhere

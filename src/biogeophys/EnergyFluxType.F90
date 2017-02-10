@@ -334,6 +334,11 @@ contains
          avgflag='A', long_name='net infrared (longwave) radiation', &
          ptr_patch=this%eflx_lwrad_net_patch, c2l_scale_type='urbanf')
 
+    call hist_addfld1d (fname='FIRA_ICE', units='W/m^2',  &
+         avgflag='A', long_name='net infrared (longwave) radiation (ice landunits only)', &
+         ptr_patch=this%eflx_lwrad_net_patch, c2l_scale_type='urbanf', l2g_scale_type='ice',&
+         default='inactive')
+
     this%eflx_lwrad_net_r_patch(begp:endp) = spval 
     call hist_addfld1d (fname='FIRA_R', units='W/m^2',  &
          avgflag='A', long_name='Rural net infrared (longwave) radiation', &

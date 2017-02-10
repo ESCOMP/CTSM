@@ -1225,7 +1225,6 @@ contains
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use shr_infnan_mod     , only : nan => shr_infnan_nan, assignment(=)
     use clm_varpar         , only : nlevsno
-    use clm_varcon         , only : h2osno_max
     use CanopyStateType    , only : canopystate_type
     use WaterStateType     , only : waterstate_type
     use WaterFluxType      , only : waterflux_type

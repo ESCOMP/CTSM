@@ -24,12 +24,17 @@ module test_downscale_forcings
   type, extends(TestCase) :: TestDownscaleForcings
      type(atm2lnd_type) :: atm2lnd_inst
      type(topo_type_always_downscale) :: topo_inst
+     real(r8), allocatable :: eflx_sh_precip_conversion(:)
    contains
      procedure :: setUp
      procedure :: tearDown
      procedure :: create_atm2lnd
      procedure :: create_topo
+     procedure :: call_downscale_forcings
   end type TestDownscaleForcings
+
+  real(r8), parameter :: lapse_rate = 0.006_r8
+  real(r8), parameter :: lapse_rate_longwave = 0.03_r8
 
   real(r8), parameter :: tol = 1.e-13_r8
 
@@ -66,7 +71,7 @@ contains
   end subroutine tearDown
 
   subroutine create_atm2lnd(this, forc_topo, forc_t, forc_th, forc_q, forc_pbot, forc_rho, &
-       forc_lwrad, forc_rain, forc_snow, glcmec_downscale_longwave)
+       forc_lwrad, forc_rain, forc_snow, glcmec_downscale_longwave, longwave_downscaling_limit)
     ! Initializes this%atm2lnd_inst and sets gridcell-level, non-downscaled forcing
     ! fields based on inputs. Excluded inputs are given a default value
     class(TestDownscaleForcings), intent(inout) :: this
@@ -83,6 +88,9 @@ contains
     ! If not provided, assumed to be true
     logical, intent(in), optional :: glcmec_downscale_longwave
 
+    ! If not provided, assumed to be longwave_downscaling_limit_default
+    real(r8), intent(in), optional :: longwave_downscaling_limit
+
     real(r8), parameter :: forc_t_default = 301._r8
     real(r8), parameter :: forc_th_default = 302._r8
     real(r8), parameter :: forc_q_default = 0.01_r8
@@ -92,9 +100,12 @@ contains
     real(r8), parameter :: forc_rain_default = 21._r8
     real(r8), parameter :: forc_snow_default = 22._r8
 
+    real(r8), parameter :: longwave_downscaling_limit_default = 1._r8
+
     real(r8), parameter :: forc_hgt = 2._r8
 
     logical :: l_glcmec_downscale_longwave
+    real(r8) :: l_longwave_downscaling_limit
     type(atm2lnd_params_type) :: atm2lnd_params
 
     ! ------------------------------------------------------------------------
@@ -105,9 +116,18 @@ contains
        l_glcmec_downscale_longwave = .true.
     end if
 
+    if (present(longwave_downscaling_limit)) then
+       l_longwave_downscaling_limit = longwave_downscaling_limit
+    else
+       l_longwave_downscaling_limit = longwave_downscaling_limit_default
+    end if
+
     atm2lnd_params = atm2lnd_params_type( &
          repartition_rain_snow = .false., &
-         glcmec_downscale_longwave = l_glcmec_downscale_longwave)
+         glcmec_downscale_longwave = l_glcmec_downscale_longwave, &
+         lapse_rate = lapse_rate, &
+         lapse_rate_longwave = lapse_rate_longwave, &
+         longwave_downscaling_limit = l_longwave_downscaling_limit)
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
     this%atm2lnd_inst%forc_topo_grc(bounds%begg:bounds%endg) = forc_topo(:)
 
@@ -171,6 +191,17 @@ contains
     this%topo_inst%topo_col(bounds%begc:bounds%endc) = topo_col(:)
   end subroutine create_topo
 
+  subroutine call_downscale_forcings(this)
+    ! Wraps the call to downscale_forcings
+    !
+    ! Modifies this%atm2lnd_inst and this%eflx_sh_precip_conversion
+    class(TestDownscaleForcings), intent(inout) :: this
+
+    this%eflx_sh_precip_conversion = col_array()
+    call downscale_forcings(bounds, this%topo_inst, this%atm2lnd_inst, &
+         this%eflx_sh_precip_conversion)
+  end subroutine call_downscale_forcings
+
   ! ========================================================================
   ! Begin actual tests
   ! ========================================================================
@@ -182,7 +213,6 @@ contains
   @Test
   subroutine topo_greaterThan_atmTopo_gives_colder_forc_t(this)
     class(TestDownscaleForcings), intent(inout) :: this
-    real(r8), allocatable :: eflx_sh_precip_conversion(:)
     real(r8), parameter :: atm_topo = 17._r8
     real(r8), parameter :: forc_t = 301._r8
 
@@ -192,11 +222,9 @@ contains
          forc_topo = [atm_topo], &
          forc_t = [forc_t])
     call this%create_topo(topo_col = [atm_topo + 10._r8])
-    eflx_sh_precip_conversion = col_array()
 
     ! Exercise
-    call downscale_forcings(bounds, this%topo_inst, this%atm2lnd_inst, &
-         eflx_sh_precip_conversion)
+    call this%call_downscale_forcings()
 
     ! Verify
     @assertGreaterThan(forc_t, this%atm2lnd_inst%forc_t_downscaled_col(begc))
@@ -209,25 +237,19 @@ contains
   @Test
   subroutine twoTopos_at_atmTopo_give_nearlyIdentical_forc_lwrad(this)
     class(TestDownscaleForcings), intent(inout) :: this
-    real(r8), allocatable :: eflx_sh_precip_conversion(:)
     real(r8), parameter :: topo = 17._r8
     real(r8), parameter :: forc_lwrad = 101._r8
 
     ! Setup
-    call unittest_subgrid_setup_start()
-    call unittest_add_gridcell()
-    call create_landunit_ncols(ltype = 1, lweight = 1._r8, &
+    call setup_landunit_ncols(ltype = 1, &
          ctypes = [0, 1], cweights = [0.7_r8, 0.3_r8])
-    call unittest_subgrid_setup_end()
     call this%create_atm2lnd( &
          forc_topo = [topo], &
          forc_lwrad = [forc_lwrad])
     call this%create_topo(topo_col = [topo, topo])
-    eflx_sh_precip_conversion = col_array()
 
     ! Exercise
-    call downscale_forcings(bounds, this%topo_inst, this%atm2lnd_inst, &
-         eflx_sh_precip_conversion)
+    call this%call_downscale_forcings()
 
     ! Verify
     associate(lwrad_col => this%atm2lnd_inst%forc_lwrad_downscaled_col)
@@ -235,6 +257,74 @@ contains
     @assertEqual([forc_lwrad, forc_lwrad], lwrad_col(bounds%begc:bounds%endc), tolerance=tol)
     end associate
   end subroutine twoTopos_at_atmTopo_give_nearlyIdentical_forc_lwrad
+
+  @Test
+  subroutine lwrad_adjusted_correctly(this)
+    class(TestDownscaleForcings), intent(inout) :: this
+    real(r8), parameter :: atm_topo = 17._r8
+    real(r8), parameter :: topo_diff = 10._r8
+    real(r8), parameter :: forc_lwrad = 101._r8
+    real(r8) :: expected(3)
+
+    ! Setup
+    ! The columns of interest are the first and third. However, note that they have 0
+    ! weight, in order to avoid needing to take normalization into account. We construct
+    ! the grid so that the normalization factor will be 1 by putting the 100% area column
+    ! at the atmosphere's topographic height.
+    call setup_landunit_ncols(ltype = 1, &
+         ctypes = [0, 1, 2], cweights = [0.0_r8, 1.0_r8, 0.0_r8])
+    call this%create_atm2lnd( &
+         forc_topo = [atm_topo], &
+         forc_lwrad = [forc_lwrad])
+    call this%create_topo(topo_col = [atm_topo - topo_diff, atm_topo, atm_topo + topo_diff])
+
+    ! Exercise
+    call this%call_downscale_forcings()
+
+    ! Verify
+    associate(lwrad_col => this%atm2lnd_inst%forc_lwrad_downscaled_col)
+    expected(1) = forc_lwrad + lapse_rate_longwave * topo_diff
+    expected(2) = forc_lwrad
+    expected(3) = forc_lwrad - lapse_rate_longwave * topo_diff
+    @assertEqual(expected, lwrad_col(bounds%begc:bounds%endc), tolerance=tol)
+    end associate
+  end subroutine lwrad_adjusted_correctly
+
+  @Test
+  subroutine lwrad_downscaling_limited(this)
+    ! Make sure that the downscaling of lwrad obeys the specified bounds
+    class(TestDownscaleForcings), intent(inout) :: this
+    real(r8), parameter :: atm_topo = 5000._r8
+    real(r8), parameter :: forc_lwrad = 100._r8
+    ! Use a very big topo_diff in order to trigger the limit:
+    real(r8), parameter :: topo_diff = 4000._r8
+    real(r8), parameter :: longwave_downscaling_limit = 0.4_r8
+    real(r8) :: expected(3)
+
+    ! Setup
+    ! The columns of interest are the first and third. However, note that they have 0
+    ! weight, in order to avoid needing to take normalization into account. We construct
+    ! the grid so that the normalization factor will be 1 by putting the 100% area column
+    ! at the atmosphere's topographic height.
+    call setup_landunit_ncols(ltype = 1, &
+         ctypes = [0, 1, 2], cweights = [0.0_r8, 1.0_r8, 0.0_r8])
+    call this%create_atm2lnd( &
+         forc_topo = [atm_topo], &
+         forc_lwrad = [forc_lwrad], &
+         longwave_downscaling_limit = longwave_downscaling_limit)
+    call this%create_topo(topo_col = [atm_topo - topo_diff, atm_topo, atm_topo + topo_diff])
+
+    ! Exercise
+    call this%call_downscale_forcings()
+
+    ! Verify
+    associate(lwrad_col => this%atm2lnd_inst%forc_lwrad_downscaled_col)
+    expected(1) = forc_lwrad * (1._r8 + longwave_downscaling_limit)
+    expected(2) = forc_lwrad
+    expected(3) = forc_lwrad * (1._r8 - longwave_downscaling_limit)
+    @assertEqual(expected, lwrad_col(bounds%begc:bounds%endc), tolerance=tol)
+    end associate
+  end subroutine lwrad_downscaling_limited
 
   ! ------------------------------------------------------------------------
   ! Tests with topo at atmosphere topo: downscaled forcing should be identical to
@@ -244,7 +334,6 @@ contains
   @Test
   subroutine topo_at_atmTopo_gives_identical_forc_t(this)
     class(TestDownscaleForcings), intent(inout) :: this
-    real(r8), allocatable :: eflx_sh_precip_conversion(:)
     real(r8), parameter :: topo = 17._r8
     real(r8), parameter :: forc_t = 301._r8
 
@@ -254,11 +343,9 @@ contains
          forc_topo = [topo], &
          forc_t = [forc_t])
     call this%create_topo(topo_col = [topo])
-    eflx_sh_precip_conversion = col_array()
 
     ! Exercise
-    call downscale_forcings(bounds, this%topo_inst, this%atm2lnd_inst, &
-         eflx_sh_precip_conversion)
+    call this%call_downscale_forcings()
 
     ! Verify
     @assertEqual(forc_t, this%atm2lnd_inst%forc_t_downscaled_col(begc))
@@ -268,7 +355,6 @@ contains
   @Test
   subroutine topo_at_atmTopo_gives_identical_forc_th(this)
     class(TestDownscaleForcings), intent(inout) :: this
-    real(r8), allocatable :: eflx_sh_precip_conversion(:)
     real(r8), parameter :: topo = 17._r8
     real(r8), parameter :: forc_th = 302._r8
 
@@ -278,11 +364,9 @@ contains
          forc_topo = [topo], &
          forc_th = [forc_th])
     call this%create_topo(topo_col = [topo])
-    eflx_sh_precip_conversion = col_array()
 
     ! Exercise
-    call downscale_forcings(bounds, this%topo_inst, this%atm2lnd_inst, &
-         eflx_sh_precip_conversion)
+    call this%call_downscale_forcings()
 
     ! Verify
     @assertEqual(forc_th, this%atm2lnd_inst%forc_th_downscaled_col(begc))
@@ -292,7 +376,6 @@ contains
   @Test
   subroutine topo_at_atmTopo_gives_identical_forc_q(this)
     class(TestDownscaleForcings), intent(inout) :: this
-    real(r8), allocatable :: eflx_sh_precip_conversion(:)
     real(r8), parameter :: topo = 17._r8
     real(r8), parameter :: forc_q = 0.01_r8
 
@@ -302,11 +385,9 @@ contains
          forc_topo = [topo], &
          forc_q = [forc_q])
     call this%create_topo(topo_col = [topo])
-    eflx_sh_precip_conversion = col_array()
 
     ! Exercise
-    call downscale_forcings(bounds, this%topo_inst, this%atm2lnd_inst, &
-         eflx_sh_precip_conversion)
+    call this%call_downscale_forcings()
 
     ! Verify
     @assertEqual(forc_q, this%atm2lnd_inst%forc_q_downscaled_col(begc))
@@ -316,7 +397,6 @@ contains
   @Test
   subroutine topo_at_atmTopo_gives_identical_forc_pbot(this)
     class(TestDownscaleForcings), intent(inout) :: this
-    real(r8), allocatable :: eflx_sh_precip_conversion(:)
     real(r8), parameter :: topo = 17._r8
     real(r8), parameter :: forc_pbot = 100000._r8
 
@@ -326,11 +406,9 @@ contains
          forc_topo = [topo], &
          forc_pbot = [forc_pbot])
     call this%create_topo(topo_col = [topo])
-    eflx_sh_precip_conversion = col_array()
 
     ! Exercise
-    call downscale_forcings(bounds, this%topo_inst, this%atm2lnd_inst, &
-         eflx_sh_precip_conversion)
+    call this%call_downscale_forcings()
 
     ! Verify
     @assertEqual(forc_pbot, this%atm2lnd_inst%forc_pbot_downscaled_col(begc))
@@ -340,7 +418,6 @@ contains
   @Test
   subroutine topo_at_atmTopo_gives_identical_forc_rho(this)
     class(TestDownscaleForcings), intent(inout) :: this
-    real(r8), allocatable :: eflx_sh_precip_conversion(:)
     real(r8), parameter :: topo = 17._r8
     real(r8), parameter :: forc_rho = 1.1_r8
 
@@ -350,11 +427,9 @@ contains
          forc_topo = [topo], &
          forc_rho = [forc_rho])
     call this%create_topo(topo_col = [topo])
-    eflx_sh_precip_conversion = col_array()
 
     ! Exercise
-    call downscale_forcings(bounds, this%topo_inst, this%atm2lnd_inst, &
-         eflx_sh_precip_conversion)
+    call this%call_downscale_forcings()
 
     ! Verify
     @assertEqual(forc_rho, this%atm2lnd_inst%forc_rho_downscaled_col(begc))
@@ -364,7 +439,6 @@ contains
   @Test
   subroutine topo_at_atmTopo_gives_identical_forc_lwrad(this)
     class(TestDownscaleForcings), intent(inout) :: this
-    real(r8), allocatable :: eflx_sh_precip_conversion(:)
     real(r8), parameter :: topo = 17._r8
     real(r8), parameter :: forc_lwrad = 101._r8
 
@@ -374,11 +448,9 @@ contains
          forc_topo = [topo], &
          forc_lwrad = [forc_lwrad])
     call this%create_topo(topo_col = [topo])
-    eflx_sh_precip_conversion = col_array()
 
     ! Exercise
-    call downscale_forcings(bounds, this%topo_inst, this%atm2lnd_inst, &
-         eflx_sh_precip_conversion)
+    call this%call_downscale_forcings()
 
     ! Verify
     @assertEqual(forc_lwrad, this%atm2lnd_inst%forc_lwrad_downscaled_col(begc))

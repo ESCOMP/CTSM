@@ -139,6 +139,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <glcmec_downscale_longwave>.true.</glcmec_downscale_longwave>
 
+<!-- Pritchard et al. (GRL, 35, 2008) use 0.006 -->
+<lapse_rate>0.006</lapse_rate>
+
+<!-- Based on Van Tricht et al. (2016, TC) Figure 6, doi:10.5194/tc-10-2379-2016 -->
+<lapse_rate_longwave>0.032</lapse_rate_longwave>
+
+<longwave_downscaling_limit>0.5</longwave_downscaling_limit>
+
 <precip_repartition_nonglc_all_snow_t>0.</precip_repartition_nonglc_all_snow_t>
 <precip_repartition_nonglc_all_rain_t>2.</precip_repartition_nonglc_all_rain_t>
 <!-- For CLM45, we used the same rain-snow partitioning for glaciers as for other landunits -->
@@ -229,6 +237,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <nlevsno phys="clm4_5" >5</nlevsno>
 <h2osno_max phys="clm5_0" >10000.0</h2osno_max>
 <h2osno_max phys="clm4_5" >1000.0</h2osno_max>
+
+<int_snow_max phys="clm5_0">2000.</int_snow_max>
+<!-- For clm4_5, make this effectively unlimited -->
+<int_snow_max phys="clm4_5">1.e30</int_snow_max>
+
+<n_melt_glcmec phys="clm5_0">1.0</n_melt_glcmec>
+<n_melt_glcmec phys="clm4_5">10.0</n_melt_glcmec>
+
 <wind_dependent_snow_density phys="clm5_0" >.true.</wind_dependent_snow_density>
 <wind_dependent_snow_density phys="clm4_5" >.false.</wind_dependent_snow_density>
 

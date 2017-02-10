@@ -469,7 +469,13 @@ contains
     this%int_snow_col(begc:endc) = spval
     call hist_addfld1d (fname='INT_SNOW',  units='mm',  &
          avgflag='A', long_name='accumulated swe (vegetated landunits only)', &
-         ptr_col=this%int_snow_col, l2g_scale_type='veg')
+         ptr_col=this%int_snow_col, l2g_scale_type='veg', &
+         default='inactive')
+
+    call hist_addfld1d (fname='INT_SNOW_ICE',  units='mm',  &
+         avgflag='A', long_name='accumulated swe (ice landunits only)', &
+         ptr_col=this%int_snow_col, l2g_scale_type='ice', &
+         default='inactive')
 
     if (create_glacier_mec_landunit) then
        this%snow_persistence_col(begc:endc) = spval
@@ -560,7 +566,7 @@ contains
     use column_varcon   , only : icol_shadewall, icol_road_perv
     use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
     use clm_varcon      , only : denice, denh2o, spval, sb, bdsno 
-    use clm_varcon      , only : h2osno_max, zlnd, tfrz, spval, pc
+    use clm_varcon      , only : zlnd, tfrz, spval, pc
     use clm_varctl      , only : fsurdat, iulog
     use clm_varctl        , only : use_bedrock
     use spmdMod         , only : masterproc

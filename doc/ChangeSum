@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_14_r224    sacks 02/10/2017 Tweaks for glaciers and snow
   clm4_5_14_r223    sacks 02/03/2017 Handle patch-level C&N variables correctly with dynamic landunits
   clm4_5_14_r222    sacks 01/27/2017 Fix energy budget bug with fractional snow on glacier and wetland columns
   clm4_5_14_r221    sacks 01/24/2017 Change rain-snow partitioning and ice albedo for glacier columns
