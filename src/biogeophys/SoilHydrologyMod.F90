@@ -1,11 +1,4 @@
 module SoilHydrologyMod
-! JP NOTES: CHANGES
-! 1: Rewrote in terms of volume fluxes
-! 2: Hillslope defined by width function, and a hill length
-! 3: Options for either power-law of numerically intergrated transmissivity
-! 4: Option for turning off kinematic flow assumption
-
-! TODO: move constants to the proper clm_var*
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -136,7 +129,6 @@ contains
     type(bounds_type)        , intent(in)    :: bounds               
     integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
-! JP add
      integer                 , intent(in)    :: num_hillslope         ! number of hillslope columns
      integer                 , intent(in)    :: filter_hillslopec(:)  ! column filter for hillslope columns
 
@@ -1870,9 +1862,6 @@ contains
      real(r8) :: sat_lev
      real(r8) :: s1,s2,m,b   ! temporary variables used to interpolate theta
      integer  :: sat_flag
-! JP add                                                                                                                                                                        
-     real(r8) :: tmph2omin
-! JP end  
      !-----------------------------------------------------------------------
 
      associate(                                                            & 
@@ -2288,9 +2277,8 @@ contains
      use abortutils       , only : endrun
      use GridcellType     , only : grc  
      use landunit_varcon  , only : istsoil, istcrop
-! JP add              
      use clm_time_manager , only : get_nstep
-! JP end
+
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds               
@@ -2302,14 +2290,13 @@ contains
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(waterstate_type)    , intent(inout) :: waterstate_inst
      type(waterflux_type)     , intent(inout) :: waterflux_inst
-! JP add   
-     integer               , intent(in)    :: num_hillslope         ! number of hillslope soil cols 
-     integer               , intent(in)    :: filter_hillslopec(:)  ! column filter for designating all hillslope cols.               
-     integer               , intent(in)    :: num_hilltop           ! number of hillslope soil cols 
-     integer               , intent(in)    :: filter_hilltopc(:)    ! column filter for designating all hillslope cols.               
-     integer               , intent(in)    :: num_hillbottom        ! number of hillslope soil cols 
-     integer               , intent(in)    :: filter_hillbottomc(:) ! column filter for designating all hillslope cols.               
-! JP end  
+     integer                  , intent(in)    :: num_hillslope         ! number of hillslope soil cols 
+     integer                  , intent(in)    :: filter_hillslopec(:)  ! column filter for designating all hillslope cols.               
+     integer                  , intent(in)    :: num_hilltop           ! number of hillslope soil cols 
+     integer                  , intent(in)    :: filter_hilltopc(:)    ! column filter for designating all hillslope cols.               
+     integer                  , intent(in)    :: num_hillbottom        ! number of hillslope soil cols 
+     integer                  , intent(in)    :: filter_hillbottomc(:) ! column filter for designating all hillslope cols.               
+
      !
      ! !LOCAL VARIABLES:
      character(len=32) :: subname = 'LateralFlowHillslope' ! subroutine name
@@ -2377,9 +2364,6 @@ contains
           watsat             =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)  
           eff_porosity       =>    soilstate_inst%eff_porosity_col       , & ! Input:  [real(r8) (:,:) ] effective porosity = porosity - vol_ice         
           hk_l               =>    soilstate_inst%hk_l_col               , & ! Input:  [real(r8) (:,:) ] hydraulic conductivity (mm/s)                    
-! JP add
-         watfc            =>    soilstate_inst%watfc_col            , & ! Input:  [real(r8) (:,:) ] volumetric soil water at field capacity
-! JP end
          qflx_latflow_out    =>    waterflux_inst%qflx_latflow_out_col   , & ! Output: [real(r8) (:)   ] lateral saturated outflow (mm/s)
          qflx_latflow_in     =>    waterflux_inst%qflx_latflow_in_col    , & ! Output: [real(r8) (:)   ]  lateral saturated inflow (mm/s)
          qflx_net_latflow_in =>    waterflux_inst%qflx_net_latflow_col   , & ! Output: [real(r8) (:)   ]  net lateral saturated (mm/s)
@@ -2443,12 +2427,11 @@ contains
           qflx_rsub_sat(c) = 0._r8
           rsub_top(c)      = 0._r8
           fracice_rsub(c)  = 0._r8
-! JP add
+
           qflx_latflow_in(c) = 0._r8
           qflx_latflow_out(c) = 0._r8
           qflx_net_latflow(c) = 0._r8
           qflx_latflow_out_vol(c) = 0._r8
-! JP end
        end do
 
 

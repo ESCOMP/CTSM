@@ -148,7 +148,6 @@ contains
     integer               :: begc, endc
     integer               :: begl, endl
     integer               :: jmin_bedrock
-!scs
     integer,  allocatable :: pct_hillslope(:,:) ! percent of landunit occupied by hillslope
     real(r8), allocatable :: hill_alpha(:,:)    ! hillslope 'alpha' parameter
     real(r8), allocatable :: hill_beta(:,:)     ! hillslope 'beta' parameter
@@ -247,7 +246,7 @@ contains
        zisoi(nlevgrnd) = zsoi(nlevgrnd) + 0.5_r8*dzsoi(nlevgrnd)
 
     else if ( soil_layerstruct == '49SL_10m' ) then
-       !scs: 10 meter soil column, nlevsoi set to 49 in clm_varpar
+       ! 10 meter soil column, nlevsoi set to 49 in clm_varpar
        do j = 1,10
           dzsoi(j)= 1.e-2_r8     !10mm layers
        enddo
@@ -292,7 +291,6 @@ contains
        do j = 1, nlevgrnd
           zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
        enddo
-! JP add
     else if ( soil_layerstruct == '20SL_1.5m' ) then
        do j=1,nlevsoi
           dzsoi(j) = 1.5_r8/nlevsoi
@@ -311,8 +309,6 @@ contains
        do j = 1, nlevgrnd
           zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
        enddo
-! JP end
-! JP add
     else if ( soil_layerstruct == '10SL_1.5m' ) then
        do j=1,nlevsoi
           dzsoi(j) = 1.5_r8/nlevsoi
@@ -331,8 +327,6 @@ contains
        do j = 1, nlevgrnd
           zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
        enddo
-! JP end
-! JP add
     else if ( soil_layerstruct == '10SL_0.6m' ) then
        do j=1,nlevsoi
           dzsoi(j) = 0.6_r8/nlevsoi
@@ -351,7 +345,6 @@ contains
        do j = 1, nlevgrnd
           zsoi(j) = 0.5*(zisoi(j-1) + zisoi(j))
        enddo
-! JP end
     end if
 
     ! define a vertical grid spacing such that it is the normal dzsoi if
@@ -970,9 +963,6 @@ contains
        g = col%gridcell(c)
        ! check for near zero slopes, set minimum value
        col%topo_slope(c) = max(tslope(g), 0.2_r8)
-! JP add for testing
-!       write(iulog,*) 'JP:slope(c): ',col%topo_slope(c) 
-! JP end
     end do
     deallocate(tslope)
 

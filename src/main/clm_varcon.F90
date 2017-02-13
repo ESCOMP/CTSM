@@ -122,7 +122,7 @@ module clm_varcon
 
   real(r8) :: thk_bedrock = 3.0_r8  ! thermal conductivity of 'typical' saturated granitic rock 
                                     ! (Clauser and Huenges, 1995)(W/m/K)
-  real(r8) :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000) !scs
+  real(r8) :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000) 
   real(r8), parameter :: zmin_bedrock = 0.4_r8 ! minimum soil depth [m]
 
   !!! C13

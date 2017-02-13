@@ -706,12 +706,6 @@ contains
                      this%h2osoi_vol_col(c,j) = 0.15_r8
                   endif
                end do
-! JP add, tmp for init testing
-!               do j = 1,nlevsoi
-!                  this%h2osoi_vol_col(c,j) = 0.35_r8
-!               end do
-! JP end
-
             else if (lun%urbpoi(l)) then
                if (col%itype(c) == icol_road_perv) then
                   nlevs = nlevgrnd

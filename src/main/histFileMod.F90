@@ -2325,15 +2325,9 @@ contains
           call ncd_defvar(varname='levdcmp', xtype=tape(t)%ncprec, dim1name='levdcmp', &
                long_name='coordinate soil levels', units='m', ncid=nfid(t))
 
-!scs
           if (ldomain%isgrid2d) then
              !pass
           else
-!!$             call ncd_defvar(varname='hslp_distance' , xtype=ncd_double, &
-!!$                  dim1name=namec, &
-!!$                  long_name='hillslope column distance', ncid=nfid(t), &
-!!$                  imissing_value=spval, ifill_value=spval)
-
              call ncd_defvar(varname='hslp_distance', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column distance', &
                   units='m', ncid=nfid(t))             
@@ -2356,7 +2350,6 @@ contains
                   dim1name=namec, long_name='hillslope downhill column index', &
                   ncid=nfid(t))             
           end if
-!scs
       
           if(use_ed)then
              call ncd_defvar(varname='levscls', xtype=tape(t)%ncprec, dim1name='levscls', &
@@ -2377,7 +2370,7 @@ contains
              zsoi_1d(1) = 1._r8
              call ncd_io(varname='levdcmp', data=zsoi_1d, ncid=nfid(t), flag='write')
           end if
-!scs
+
        if (.not.ldomain%isgrid2d) then
           call ncd_io(varname='hslp_distance' , data=col%hill_distance, dim1name=namec, ncid=nfid(t), flag='write')
           call ncd_io(varname='hslp_width' , data=col%hill_width, dim1name=namec, ncid=nfid(t), flag='write')
@@ -2751,9 +2744,6 @@ contains
           ! Write history output.  Always output land and ocean runoff on xy grid.
 
           if (num2d == 1) then
-! JP add, for debugging
-!             write(iulog,*) "JP: varname: ", varname
-! JP end
              call ncd_io(flag='write', varname=varname, &
                   dim1name=type1d_out, data=hist1do, ncid=nfid(t), nt=nt)
           else
@@ -2914,10 +2904,10 @@ contains
           !call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name='pft', &
           !     long_name='1d landunit index of corresponding pft', ncid=ncid)
 
-!scs: commenting-in for hillslope hydrology (multi-column) code
+! commenting-in for hillslope hydrology (multi-column) code
           call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name='pft', &
                long_name='1d column index of corresponding pft', ncid=ncid)
-!scs
+!
           ! ----------------------------------------------------------------
 
           call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name=namep, &
@@ -3057,9 +3047,9 @@ contains
        ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
        !call ncd_io(varname='pfts1d_gi'       , data=patch%gridcell, dim1name=namep, ncid=ncid, flag='write')
        !call ncd_io(varname='pfts1d_li'       , data=patch%landunit, dim1name=namep, ncid=ncid, flag='write')
-!scs: commenting-in for hillslope hydrology 
+! commenting-in for hillslope hydrology 
        call ncd_io(varname='pfts1d_ci'       , data=patch%column  , dim1name=namep, ncid=ncid, flag='write')
-!scs
+!
        ! ----------------------------------------------------------------
        call ncd_io(varname='pfts1d_wtgcell'  , data=patch%wtgcell , dim1name=namep, ncid=ncid, flag='write')
        call ncd_io(varname='pfts1d_wtlunit'  , data=patch%wtlunit , dim1name=namep, ncid=ncid, flag='write')

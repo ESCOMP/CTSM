@@ -703,7 +703,7 @@ contains
        ! LakeHydrology after the new snow filter is built
 
        call t_startf('hydro_without_drainage')
-! JP changed inputs:
+
        call HydrologyNoDrainage(bounds_clump,                                &
             filter(nc)%num_hillslope, filter(nc)%hillslopec,                 &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                      &
@@ -861,7 +861,7 @@ contains
        ! ============================================================================
 
        call t_startf('hydro2_drainage')
-!scs
+
        call HydrologyDrainage(bounds_clump,                    &
             filter(nc)%num_hilltop, filter(nc)%hilltopc,       &
             filter(nc)%num_hillbottom, filter(nc)%hillbottomc, &

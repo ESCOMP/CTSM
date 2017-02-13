@@ -33,7 +33,7 @@ module HydrologyDrainageMod
 contains
 
   !-----------------------------------------------------------------------
-! JP changed inputs
+
   subroutine HydrologyDrainage(bounds,               &
        num_hilltop, filter_hilltopc, &
        num_hillbottom, filter_hillbottomc, &
@@ -69,14 +69,13 @@ contains
     integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
     integer                  , intent(in)    :: num_do_smb_c         ! number of bareland columns in which SMB is calculated, in column filter    
     integer                  , intent(in)    :: filter_do_smb_c(:)   ! column filter for bare land SMB columns      
-! JP add
      integer               , intent(in)    :: num_hilltop       ! number of soil cols marked "upslope"
      integer               , intent(in)    :: filter_hilltopc(:) ! column filter for designating "upslope" cols.
      integer               , intent(in)    :: num_hillbottom       ! number of soil cols marked "downslope"
      integer               , intent(in)    :: filter_hillbottomc(:) ! column filter for designating "downslope" cols.
      integer               , intent(in)    :: num_hillslope       ! number of soil hill cols.
      integer               , intent(in)    :: filter_hillslopec(:) ! column filter for designating all hill cols.
-! JP end
+
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
     type(glc2lnd_type)       , intent(in)    :: glc2lnd_inst
     type(temperature_type)   , intent(in)    :: temperature_inst

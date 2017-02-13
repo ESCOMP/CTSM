@@ -311,7 +311,6 @@ contains
                   - qflx_drain_perched(c)    &
                   - qflx_ice_runoff_snwcp(c) &
                   - qflx_ice_runoff_xs(c)    &
-!scs                  - qflx_net_latflow(c)) * dtime
                   ) * dtime
           else
 

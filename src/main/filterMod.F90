@@ -68,14 +68,12 @@ module filterMod
 
      integer, pointer :: hydrologyc(:)   ! hydrology filter (columns)
      integer :: num_hydrologyc           ! number of columns in hydrology filter 
-!scs
      integer, pointer :: hilltopc(:)     ! uppermost column in hillslope
      integer :: num_hilltop              ! number of hilltop columns 
      integer, pointer :: hillbottomc(:)  ! downhill filter in veg. landunits (columns)
      integer :: num_hillbottom           ! number of columns downhill 
      integer, pointer :: hillslopec(:)   ! hillslope hydrology filter (columns)
      integer :: num_hillslope            ! number of hillslope hydrology (columns)
-!scs
      integer, pointer :: urbanl(:)       ! urban filter (landunits)
      integer :: num_urbanl               ! number of landunits in urban filter 
      integer, pointer :: nourbanl(:)     ! non-urban filter (landunits)
@@ -221,11 +219,9 @@ contains
        allocate(this_filter(nc)%natvegp(bounds%endp-bounds%begp+1))
 
        allocate(this_filter(nc)%hydrologyc(bounds%endc-bounds%begc+1))
-!scs
        allocate(this_filter(nc)%hilltopc(bounds%endc-bounds%begc+1))
        allocate(this_filter(nc)%hillbottomc(bounds%endc-bounds%begc+1))
        allocate(this_filter(nc)%hillslopec(bounds%endc-bounds%begc+1))
-!scs
        allocate(this_filter(nc)%urbanp(bounds%endp-bounds%begp+1))
        allocate(this_filter(nc)%nourbanp(bounds%endp-bounds%begp+1))
 
@@ -420,8 +416,8 @@ contains
     end do
     this_filter(nc)%num_hydrologyc = f
 
-!scs: currently only natveg (see subgridMod); should be possible 
-!     for a subset of istsoil/istcrop landunits, e.g. when nhillcol = 0
+    ! Currently only natveg (see subgridMod); should be possible 
+    ! for a subset of istsoil/istcrop landunits, e.g. when nhillcol = 0
 
     ! Create hillslope hydrology filters at column-level
 
@@ -460,8 +456,6 @@ contains
        end if
     end do
     this_filter(nc)%num_hillbottom = fs
-!scs
-
 
     ! Create prognostic crop and soil w/o prog. crop filters at patch-level
     ! according to where the crop model should be used

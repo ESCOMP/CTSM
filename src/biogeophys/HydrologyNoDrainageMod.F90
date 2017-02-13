@@ -32,7 +32,7 @@ Module HydrologyNoDrainageMod
 contains
 
   !-----------------------------------------------------------------------
-!scs
+
   subroutine HydrologyNoDrainage(bounds, &
        num_hillslope, filter_hillslopec, &
        num_nolakec, filter_nolakec, &
@@ -88,10 +88,9 @@ contains
     integer                  , intent(inout) :: filter_snowc(:)      ! column filter for snow points
     integer                  , intent(inout) :: num_nosnowc          ! number of column non-snow points
     integer                  , intent(inout) :: filter_nosnowc(:)    ! column filter for non-snow points
-! JP add
      integer               , intent(in)    :: num_hillslope       ! number of hillslope soil cols 
      integer               , intent(in)    :: filter_hillslopec(:) ! column filter for designating all hillslope cols.
-! JP end
+
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(energyflux_type)    , intent(in)    :: energyflux_inst

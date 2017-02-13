@@ -62,7 +62,6 @@ module ColumnType
      real(r8), pointer :: z_lake               (:,:) ! layer depth for lake (m)
      real(r8), pointer :: lakedepth            (:)   ! variable lake depth (m)                             
      integer , pointer :: nbedrock             (:)   ! variable depth to bedrock index
-!scs
      ! hillslope hydrology variables
      integer,  pointer :: colu                 (:)   ! column index of uphill column (hillslope hydrology)
      integer,  pointer :: cold                 (:)   ! column index of downhill column (hillslope hydrology)
@@ -73,7 +72,6 @@ module ColumnType
      real(r8), pointer :: hill_width           (:)   ! across-hill width of bottom boundary of column 
      real(r8), pointer :: hill_distance        (:)   ! along-hill distance of column from bottom of hillslope
 
-!scs
      ! levgrnd_class gives the class in which each layer falls. This is relevant for
      ! columns where there are 2 or more fundamentally different layer types. For
      ! example, this distinguishes between soil and bedrock layers. The particular value
@@ -128,8 +126,6 @@ contains
     allocate(this%lakedepth   (begc:endc))                     ; this%lakedepth   (:)   = spval  
     allocate(this%dz_lake     (begc:endc,nlevlak))             ; this%dz_lake     (:,:) = nan
     allocate(this%z_lake      (begc:endc,nlevlak))             ; this%z_lake      (:,:) = nan
-
-!scs
     allocate(this%colu       (begc:endc))                      ; this%colu   (:) = ispval  
     allocate(this%cold       (begc:endc))                      ; this%cold   (:) = ispval  
     allocate(this%hillslope_ndx(begc:endc))                    ; this%hillslope_ndx (:) = ispval  
@@ -138,7 +134,6 @@ contains
     allocate(this%hill_area(begc:endc))                        ; this%hill_area     (:) = spval  
     allocate(this%hill_width(begc:endc))                       ; this%hill_width    (:) = spval  
     allocate(this%hill_distance(begc:endc))                    ; this%hill_distance (:) = spval  
-!scs
     allocate(this%nbedrock   (begc:endc))                      ; this%nbedrock   (:)   = ispval  
     allocate(this%levgrnd_class(begc:endc,nlevgrnd))           ; this%levgrnd_class(:,:) = ispval
     allocate(this%micro_sigma (begc:endc))                     ; this%micro_sigma (:)   = nan
