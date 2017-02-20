@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_14_r225    sacks 02/19/2017 Fix GDD accumulation in new crop columns
   clm4_5_14_r224    sacks 02/10/2017 Tweaks for glaciers and snow
   clm4_5_14_r223    sacks 02/03/2017 Handle patch-level C&N variables correctly with dynamic landunits
   clm4_5_14_r222    sacks 01/27/2017 Fix energy budget bug with fractional snow on glacier and wetland columns

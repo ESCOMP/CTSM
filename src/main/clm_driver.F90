@@ -164,10 +164,6 @@ contains
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
-    ! Update time-related info
-
-    call crop_inst%CropRestIncYear()
-
     ! ========================================================================
     ! In the first time step of a run that used cold start or init_interp, glacier areas
     ! will start at whatever is specified on the surface dataset, because coupling fields

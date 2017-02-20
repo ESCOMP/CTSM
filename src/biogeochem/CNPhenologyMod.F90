@@ -423,12 +423,11 @@ contains
     integer                , intent(in)    :: filter_pcropp(:)! filter for prognostic crop patches
     type(temperature_type) , intent(inout) :: temperature_inst
     type(cnveg_state_type) , intent(inout) :: cnveg_state_inst
-    type(crop_type)        , intent(in)    :: crop_inst
+    type(crop_type)        , intent(inout) :: crop_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: p       ! indices
     integer  :: fp      ! lake filter patch index
-    integer  :: nyrs    ! number of years prognostic crop has run
     real(r8) :: dayspyr ! days per year (days)
     integer  :: kyr     ! current year
     integer  :: kmo     ! month of year  (1, ..., 12)
@@ -439,7 +438,9 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                & 
-         t_ref2m        => temperature_inst%t_ref2m_patch ,   & ! Input:  [real(r8) (:) ]  2m air temperature (K)                            
+         nyrs_crop_active => crop_inst%nyrs_crop_active_patch,   & ! InOut:  [integer (:)  ]  number of years this crop patch has been active
+         
+         t_ref2m        => temperature_inst%t_ref2m_patch ,   & ! Input:  [real(r8) (:) ]  2m air temperature (K)
          gdd0           => temperature_inst%gdd0_patch    ,   & ! Output: [real(r8) (:) ]  growing deg. days base 0 deg C (ddays)            
          gdd8           => temperature_inst%gdd8_patch    ,   & ! Output: [real(r8) (:) ]     "     "    "    "   8  "  "    "               
          gdd10          => temperature_inst%gdd10_patch   ,   & ! Output: [real(r8) (:) ]     "     "    "    "  10  "  "    "               
@@ -469,18 +470,17 @@ contains
       if (num_pcropp > 0) then
          ! get time-related info
          call get_curr_date(kyr, kmo, kda, mcsec)
-         nyrs = crop_inst%CropRestYear
       end if
 
       do fp = 1,num_pcropp
          p = filter_pcropp(fp)
-         if (kmo == 1 .and. kda == 1 .and. nyrs == 0) then ! YR 1:
+         if (kmo == 1 .and. kda == 1 .and. nyrs_crop_active(p) == 0) then ! YR 1:
             gdd020(p)  = 0._r8                             ! set gdd..20 variables to 0
             gdd820(p)  = 0._r8                             ! and crops will not be planted
             gdd1020(p) = 0._r8
          end if
          if (kmo == 1 .and. kda == 1 .and. mcsec == 0) then        ! <-- END of EVERY YR:
-            if (nyrs  == 1) then                                   ! <-- END of YR 1
+            if (nyrs_crop_active(p) == 1) then                     ! <-- END of YR 1
                gdd020(p)  = gdd0(p)                                ! <-- END of YR 1
                gdd820(p)  = gdd8(p)                                ! <-- END of YR 1
                gdd1020(p) = gdd10(p)                               ! <-- END of YR 1
