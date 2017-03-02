@@ -1,5 +1,5 @@
-cime                                    https://github.com/CESM-Development/cime/tags/cime5.2.0-alpha.9
-components/clm/tools/gen_domain         https://github.com/CESM-Development/cime/tags/cime5.2.0-alpha.9/tools/mapping/gen_domain_files
-components/cism                         https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism2_1_24
+cime                                    https://github.com/CESM-Development/cime/tags/cime5.2.0-alpha.25
+components/clm/tools/gen_domain         https://github.com/CESM-Development/cime/tags/cime5.2.0-alpha.25/tools/mapping/gen_domain_files
+components/cism                         https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism2_1_29
 components/rtm                          https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_59
-components/mosart                       https://svn-ccsm-models.cgd.ucar.edu/mosart/trunk_tags/mosart1_0_19
+components/mosart                       https://svn-ccsm-models.cgd.ucar.edu/mosart/trunk_tags/mosart1_0_20

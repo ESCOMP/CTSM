@@ -51,7 +51,7 @@ cfgfile=${3#*^}
 
 if [[ "$1" == "PTCLM" ]]; then
   echo "TSMscript_tools.sh: calling TCBscripttools.sh to prepare executables for $1"
-  ${CLM_SCRIPTDIR}/TCBscripttools.sh $1 $2 $cfgfile
+  ${CLM_SCRIPTDIR}/TCBscripttools.sh $1 $cfgfile
   rc=$?
   if [ $rc -ne 0 ]; then
       echo "TSMscript_tools.sh: error from TCBscripttools.sh= $rc"

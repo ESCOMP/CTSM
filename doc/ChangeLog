@@ -1,4 +1,139 @@
 ===============================================================
+Tag name:  clm4_5_14_r226
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Mar  2 15:12:50 MST 2017
+One-line Summary: Update cime, mosart and cism to a version that is cesm2_0_beta05 or part of beta06
+
+Purpose of changes
+------------------
+
+Update cime version and cism to version that similar to that in cesm2_0_beta05, but with many fixes in cime for
+clm. Also update mosart to fix a bug on hobart. The update of cism does change answers as it makes CISM2 the
+default with the new 4km greenland grid.
+
+There are some user improvements in the latest cime version. Long term archiving issues are fixed. A file
+called CASEROOT is added to your case's $RUNDIR so that you can easily see where your source code is. A few
+options were added to create_newcase and create_clone (see details below). 
+
+NOTE: You will need to use the "--run-unsupported" to create_newcase for compsets/grids that aren't tested or supported!!!
+
+Fix a few other existing bugs. Fix createcrop_landunit to work with the new CLM surface datasets. Bring in a
+workaround for a compiler bug with intel 17 and 18. Bring in a version of PTCLM that works with the latest cime.
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+   2417 -- fix createcrop_landunit for new datasets with 16 PFTs
+   2418 -- fix grid match for config_compsets.xml (cime issue 1079 still there)
+   2424 -- Update mosart to 1_0_20 to fix the nag bug
+   2479 -- workaround for intel compiler bug
+   2357 -- PTCLM broken in cime5
+
+CIME Issues fixed (include issue #): archiving, unit-tests, grid issues, gnu compiler, 
+   cime issues fixed: 1075, 1053, 1051, 1073, 1072, 1089
+
+Known bugs introduced in this tag (include bugzilla ID):
+   1074 -- hcru_hcru grid no longer works gives PIO error
+   1079 -- mask for grid matching
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): 
+  Add support for cheyenne
+  CASEROOT file added to $RUNDIR to show path to source
+  Add "--run-unsupported" option to create_newcase
+  Add "--cime-output-root" option to create_clone
+  Fix long term achiving issues
+
+Changes made to namelist defaults (e.g., changed parameter values): drv namelist changes
+   PIO namelists have different defaults
+   some grids are null and maps are idmap when they aren't needed
+   clm40 removed from all active compsets
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: Seems to run faster (~20%)! (we don't understand why)
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): 
+    Refactoring in cime for unit-testing, add schema files for cime xml files
+    buildnml faster
+    config_grids and xmlquery was refactored
+
+Changes to tests or testing: Add test with mosart on hobart
+
+Code reviewed by: self, sacks
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - PASS
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - OK
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - OK
+
+CLM tag used for the baseline comparisons:  clm4_5_14_r225
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes. Compsets with CISM
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All with CISM
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+        compsets are updated to default to CISM2 and the new 4km greenland grid
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): cime, cism, mosart, PTCLM
+
+    cime   to cime5.2.0-alpha25
+    mosart to mosart1_0_20
+    cism   to cism2_1_29
+    PTCLM  to PTCLM2_170302
+
+List all files eliminated:
+
+ D components/clm/tools/shared
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+ M        components/clm/cime_config/config_compsets.xml - Workaround in 2418 for cime issue 1079
+ M        components/clm/test/tools/TSMscript_tools.sh --- Fix arguments sent to TCB scrip
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r225
 Originator(s):  sacks (Bill Sacks)
 Date:  Sun Feb 19 14:42:13 MST 2017
@@ -7,115 +142,144 @@ One-line Summary: Fix GDD accumulation in new crop columns
 Purpose of changes
 ------------------
 
-[Fill this in with details]
+For newly-initiating crop columns in the middle of a run, the 20-year-average
+GDD variables (gdd*20) were not being initialized correctly. They were starting
+as spval, and then taking essentially forever to come down to some reasonable
+value. This caused major problems for both dynamic landunits and when running
+init_interp from one crop run to another, where the new run had some new crop
+types - such as going from a run without irrigation to a run with irrigation.
 
-
-Bugs fixed or introduced
-------------------------
-
-Bugs fixed (include bugzilla ID): [If none, remove this line]
-CIME Issues fixed (include issue #): [If none, remove this line]
-
-Known bugs introduced in this tag (include bugzilla ID): [If none, remove this line]
+This tag fixes these problems.
 
 
 Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions):
+- If you do a CROP run, setting use_init_interp to .true., and pointing to a
+  previous initial conditions file generated with a crop run (thus having
+  restyear > 0 on the restart file), then GDD accumulation will get reset. This
+  means that the first year of your run won't have any crop growth. After this
+  initial "burn-in" period, it will run fine. This is only an issue when using
+  initial conditions generated prior to this tag, and is only an issue when
+  using init_interp.
 
-Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
 
-Changes made to namelist defaults (e.g., changed parameter values):
+Changes made to namelist defaults (e.g., changed parameter values): none
 
-Changes to the datasets (e.g., parameter, surface or initial files):
+Changes to the datasets (e.g., parameter, surface or initial files): none
 
-Substantial timing or memory changes:
+Substantial timing or memory changes: none
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
 
-Changes to tests or testing:
+Changes to tests or testing: New initial conditions file for tests that use
+clm50cropIrrigMonth_interp or irrig_spunup testmods - see details below.
 
-Code reviewed by:
+Code reviewed by: self
 
 CLM testing:
-
-[... Remove before making trunk_tag.  Available test levels:
-
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CLM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
-
-... ]
 
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
   build-namelist tests:
 
-    yellowstone - 
+    yellowstone - not run
 
   unit-tests (components/clm/src):
 
-    yellowstone - 
+    yellowstone - pass
 
   tools-tests (components/clm/test/tools):
 
-    yellowstone - 
+    yellowstone - not run
 
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
-     yellowstone - 
+     yellowstone - not run
 
   regular tests (aux_clm40, aux_clm45):
 
-    yellowstone_intel - 
-    yellowstone_pgi - 
-    yellowstone_gnu (clm45 only) - 
-    hobart_nag - 
+    yellowstone_intel - ok
+    yellowstone_pgi - ok
+    yellowstone_gnu (clm45 only) - ok
+    hobart_nag - ok
 
-CLM tag used for the baseline comparisons: 
+    ok means tests pass, some expected baseline failures:
+
+    Baseline comparisons fail because GDD accumulation is now fixed for
+    transient crops:
+        ERS_Ly3_Mmpi-serial.1x1_smallvilleIA.IHISTCLM50BGCCROP.yellowstone_gnu.clm-cropMonthOutput
+        ERS_Ly6_Mmpi-serial.1x1_smallvilleIA.IHISTCLM50BGCCROP.yellowstone_gnu.clm-cropMonthOutput
+        SMS_D_Ly6_Mmpi-serial.1x1_smallvilleIA.IHISTCLM45BGCCROP.yellowstone_pgi.clm-cropMonthOutput
+
+    These tests point to a previously-spun-up crop file, and use init_interp. I
+    have adjusted this file to add the new patch-level nyrs_crop_active
+    variable, which I set to 30 for all active crop PFTs (in agreement with the
+    old restyear). However, this initial conditions file does not have any
+    non-irrigated crop PFTs! So crop behavior was wrong in the baseline run,
+    because non-irrigated crops started with spval gdd*20 values.
+        SMS_D_P24x1_Ld5.f10_f10.ICRUCLM50BGCCROP.hobart_nag.clm-irrig_spunup
+        ERP_D_P15x2_Ld5.f10_f10.ICRUCLM50BGCCROP.yellowstone_intel.clm-irrig_spunup
+        ERP_P60x2_Lm36.f10_f10.ICRUCLM50BGCCROP.yellowstone_intel.clm-clm50cropIrrigMonth_interp
+
+CLM tag used for the baseline comparisons: clm4_5_14_r224
 
 
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: YES
 
   If a tag changes answers relative to baseline comparison the
   following should be filled in (otherwise remove this section):
 
   Summarize any changes to answers, i.e.,
     - what code configurations:
-    - what platforms/compilers:
+      - Transient crop cases
+      - Any crop case for which initial conditions are init_interp'ed from a
+        previous crop case: nyrs_crop_active is reset to 0 in this case
+    - what platforms/compilers: all
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Potentially new climate for transient crop cases
 
    If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
+   than roundoff? n/a
 
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)
-       - casename: 
+       - casename: n/a
 
-   URL for LMWG diagnostics output used to validate new climate:
+   URL for LMWG diagnostics output used to validate new climate: n/a
 	
 
 Detailed list of changes
 ------------------------
 
-List any svn externals directories updated (cime, rtm, mosart, cism, etc.):
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
 
-List all files eliminated:
+List all files eliminated: none
 
-List all files added and what they do:
+List all files added and what they do: none
 
 List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as noted above
+M       components/clm/src/main/clm_driver.F90
+M       components/clm/src/biogeochem/CNPhenologyMod.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+M       components/clm/src/biogeochem/CropType.F90
+
+========= Point to new version of initial conditions file - same as old, but
+          hacked to have nyrs_crop_active patch-level variable: set to 30 for
+          active crop PFTs, 0 elsewhere. This hack is needed since we run
+          init_interp for these tests: this allows crops to grow initially.
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/clm50cropIrrigMonth_interp/user_nl_clm
+M       components/clm/cime_config/testdefs/testmods_dirs/clm/irrig_spunup/user_nl_clm
 
 ===============================================================
 ===============================================================
