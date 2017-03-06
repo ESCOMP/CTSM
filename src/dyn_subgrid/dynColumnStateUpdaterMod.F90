@@ -17,6 +17,8 @@ module dynColumnStateUpdaterMod
   !
   !    - call column_state_updater%update_column_state_*
   !
+  ! All calls must be made from within a loop over clumps.
+  !
   ! The following methods are available for state updates:
   !
   !    - update_column_state_no_special_handling
@@ -79,6 +81,13 @@ module dynColumnStateUpdaterMod
   ! columns. If there are fractional areas, then this adjustment is defined as (val_new *
   ! fractional_area_new - val_old * fractional_area_old).
   !
+  ! NOTE(wjs, 2017-02-24) The implementation involves a few levels of calls to get to the
+  ! real work routine (update_column_state). This design made sense (in terms of removing
+  ! code duplication) when there were a number of "front-end" routines, with different
+  ! special handling. But now it seems we're moving towards having no special handling.
+  ! If we ditch all of the special handling, we could also ditch these extra levels. This
+  ! would make the code more straightforward, and would also improve performance.
+  !
   ! !USES:
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_log_mod          , only : errMsg => shr_log_errMsg
@@ -110,6 +119,15 @@ module dynColumnStateUpdaterMod
      ! determined at the time of the call to set_old_weights, so that we consider whether
      ! a column was active in the previous time step, rather than newly-active.
      integer , allocatable :: natveg_template_col(:)
+
+     ! Whether there have been any changes in this time step. This is indexed by clump so
+     ! that it is thread-safe (so the different clumps don't stomp on each other). This
+     ! implies that the methods on this object need to be called from a loop over
+     ! clumps. (In the future, we plan to rework threading so that there is a separate
+     ! object for each clump. In this case the indexing by clump will go away here -
+     ! instead, there will be a single scalar 'any_changes' logical for each object.)
+     logical, allocatable :: any_changes(:)
+
    contains
      ! Public routines
      procedure, public :: set_old_weights     ! set weights before dyn subgrid updates
@@ -151,7 +169,7 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  function constructor(bounds)
+  function constructor(bounds, nclumps)
     !
     ! !DESCRIPTION:
     ! Initialize a column_state_updater_type object
@@ -162,6 +180,7 @@ contains
     ! !ARGUMENTS:
     type(column_state_updater_type) :: constructor  ! function result
     type(bounds_type), intent(in)   :: bounds       ! processor bounds
+    integer          , intent(in)   :: nclumps      ! number of clumps per proc
     !
     ! !LOCAL VARIABLES:
 
@@ -178,6 +197,9 @@ contains
     constructor%area_gained_col(:) = nan
     allocate(constructor%natveg_template_col(bounds%begc:bounds%endc))
     constructor%natveg_template_col(:) = TEMPLATE_NONE_FOUND
+
+    allocate(constructor%any_changes(nclumps))
+    constructor%any_changes(:) = .false.
 
   end function constructor
 
@@ -213,7 +235,7 @@ contains
   end subroutine set_old_weights
 
   !-----------------------------------------------------------------------
-  subroutine set_new_weights(this, bounds)
+  subroutine set_new_weights(this, bounds, clump_index)
     !
     ! !DESCRIPTION:
     ! Set subgrid weights after dyn subgrid updates
@@ -223,6 +245,11 @@ contains
     ! !ARGUMENTS:
     class(column_state_updater_type) , intent(inout) :: this
     type(bounds_type)                , intent(in) :: bounds
+
+    ! Index of clump on which we're currently operating. Note that this implies that this
+    ! routine must be called from within a clump loop.
+    integer                          , intent(in) :: clump_index
+
     !
     ! !LOCAL VARIABLES:
     integer :: c
@@ -230,16 +257,20 @@ contains
     character(len=*), parameter :: subname = 'set_new_weights'
     !-----------------------------------------------------------------------
 
+    this%any_changes(clump_index) = .false.
     do c = bounds%begc, bounds%endc
        this%cwtgcell_new(c)     = col%wtgcell(c)
        this%area_gained_col(c)  = this%cwtgcell_new(c) - this%cwtgcell_old(c)
+       if (this%area_gained_col(c) /= 0._r8) then
+          this%any_changes(clump_index) = .true.
+       end if
     end do
 
   end subroutine set_new_weights
 
   !-----------------------------------------------------------------------
-  subroutine update_column_state_no_special_handling(this, bounds, var, &
-       fractional_area_old, fractional_area_new, adjustment)
+  subroutine update_column_state_no_special_handling(this, bounds, clump_index, &
+       var, fractional_area_old, fractional_area_new, adjustment)
     !
     ! !DESCRIPTION:
     ! Adjust the values of a column-level state variable due to changes in subgrid
@@ -252,6 +283,11 @@ contains
     ! !ARGUMENTS:
     class(column_state_updater_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds
+
+    ! Index of clump on which we're currently operating. Note that this implies that this
+    ! routine must be called from within a clump loop.
+    integer, intent(in) :: clump_index
+
     real(r8), intent(inout) :: var( bounds%begc: ) ! column-level variable
 
     ! Fraction of each column over which the state variable applies. See module-level
@@ -279,36 +315,47 @@ contains
 
     SHR_ASSERT_ALL((ubound(var) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
 
-    vals_input(bounds%begc:bounds%endc) = var(bounds%begc:bounds%endc)
-    vals_input_valid(bounds%begc:bounds%endc) = .true.
-    has_prognostic_state(bounds%begc:bounds%endc) = .true.
-    non_conserved_mass(bounds%begg:bounds%endg) = 0._r8
+    ! Even if there's no work to be done, need to zero out adjustment, since it's
+    ! intent(out), and caller may expect it to return in a reasonable state.
+    if (present(adjustment)) then
+       SHR_ASSERT_ALL((ubound(adjustment) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+       adjustment(bounds%begc:bounds%endc) = 0._r8
+    end if
 
-    ! explicit bounds not needed on any of these arguments - and specifying explicit
-    ! bounds defeats some later bounds checking (for fractional_area_old and
-    ! fractional_area_new)
-    call this%update_column_state_with_optional_fractions(&
-         bounds = bounds, &
-         vals_input = vals_input, &
-         vals_input_valid = vals_input_valid, &
-         has_prognostic_state = has_prognostic_state, &
-         var = var, &
-         non_conserved_mass = non_conserved_mass, &
-         fractional_area_old = fractional_area_old, &
-         fractional_area_new = fractional_area_new, &
-         adjustment = adjustment)
+    if (this%any_changes(clump_index)) then
 
-    ! Since there is no special handling in this routine, the non_conserved_mass variable
-    ! should not have any accumulation. We allow for roundoff-level accumulation in case
-    ! non-conserved mass is determined in a way that is prone to roundoff-level errors.
-    err_msg = subname//': ERROR: failure to conserve mass when using no special handling'
-    SHR_ASSERT_ALL(abs(non_conserved_mass(bounds%begg:bounds%endg)) < conservation_tolerance, err_msg)
+       vals_input(bounds%begc:bounds%endc) = var(bounds%begc:bounds%endc)
+       vals_input_valid(bounds%begc:bounds%endc) = .true.
+       has_prognostic_state(bounds%begc:bounds%endc) = .true.
+       non_conserved_mass(bounds%begg:bounds%endg) = 0._r8
+
+       ! explicit bounds not needed on any of these arguments - and specifying explicit
+       ! bounds defeats some later bounds checking (for fractional_area_old and
+       ! fractional_area_new)
+       call this%update_column_state_with_optional_fractions(&
+            bounds = bounds, &
+            vals_input = vals_input, &
+            vals_input_valid = vals_input_valid, &
+            has_prognostic_state = has_prognostic_state, &
+            var = var, &
+            non_conserved_mass = non_conserved_mass, &
+            fractional_area_old = fractional_area_old, &
+            fractional_area_new = fractional_area_new, &
+            adjustment = adjustment)
+
+       ! Since there is no special handling in this routine, the non_conserved_mass variable
+       ! should not have any accumulation. We allow for roundoff-level accumulation in case
+       ! non-conserved mass is determined in a way that is prone to roundoff-level errors.
+       err_msg = subname//': ERROR: failure to conserve mass when using no special handling'
+       SHR_ASSERT_ALL(abs(non_conserved_mass(bounds%begg:bounds%endg)) < conservation_tolerance, err_msg)
+
+    end if
 
   end subroutine update_column_state_no_special_handling
 
   !-----------------------------------------------------------------------
-  subroutine update_column_state_fill_special_using_natveg(this, bounds, var, &
-       non_conserved_mass_grc, fractional_area_old, fractional_area_new, adjustment)
+  subroutine update_column_state_fill_special_using_natveg(this, bounds, clump_index, &
+       var, non_conserved_mass_grc, fractional_area_old, fractional_area_new, adjustment)
     !
     ! !DESCRIPTION:
     ! Adjust the values of a column-level state variable due to changes in subgrid
@@ -328,6 +375,11 @@ contains
     ! !ARGUMENTS:
     class(column_state_updater_type), intent(in) :: this
     type(bounds_type) , intent(in)    :: bounds
+
+    ! Index of clump on which we're currently operating. Note that this implies that this
+    ! routine must be called from within a clump loop.
+    integer, intent(in) :: clump_index
+
     real(r8)          , intent(inout) :: var( bounds%begc: ) ! column-level variable
 
     ! Mass lost (per unit of grid cell area) from each grid cell due to changing area of
@@ -365,44 +417,56 @@ contains
     SHR_ASSERT_ALL((ubound(var) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
     SHR_ASSERT_ALL((ubound(non_conserved_mass_grc) == (/bounds%begg/)), errMsg(sourcefile, __LINE__))
 
-    do c = bounds%begc, bounds%endc
-       l = col%landunit(c)
-       if (lun%ifspecial(l)) then
-          has_prognostic_state(c) = .false.
+    ! Even if there's no work to be done, need to zero out adjustment, since it's
+    ! intent(out), and caller may expect it to return in a reasonable state.
+    if (present(adjustment)) then
+       SHR_ASSERT_ALL((ubound(adjustment) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+       adjustment(bounds%begc:bounds%endc) = 0._r8
+    end if
 
-          template_col = this%natveg_template_col(c)
-          if (template_col == TEMPLATE_NONE_FOUND) then
-             vals_input(c) = spval
-             vals_input_valid(c) = .false.
+    if (this%any_changes(clump_index)) then
+
+       do c = bounds%begc, bounds%endc
+          l = col%landunit(c)
+          if (lun%ifspecial(l)) then
+             has_prognostic_state(c) = .false.
+
+             template_col = this%natveg_template_col(c)
+             if (template_col == TEMPLATE_NONE_FOUND) then
+                vals_input(c) = spval
+                vals_input_valid(c) = .false.
+             else
+                vals_input(c) = var(template_col)
+                vals_input_valid(c) = .true.
+             end if
           else
-             vals_input(c) = var(template_col)
+             has_prognostic_state(c) = .true.
+             vals_input(c) = var(c)
              vals_input_valid(c) = .true.
           end if
-       else
-          has_prognostic_state(c) = .true.
-          vals_input(c) = var(c)
-          vals_input_valid(c) = .true.
-       end if
-    end do
+       end do
 
-    ! explicit bounds not needed on any of these arguments - and specifying explicit
-    ! bounds defeats some later bounds checking (for fractional_area_old and
-    ! fractional_area_new)
-    call this%update_column_state_with_optional_fractions(&
-         bounds = bounds, &
-         vals_input = vals_input, &
-         vals_input_valid = vals_input_valid, &
-         has_prognostic_state = has_prognostic_state, &
-         var = var, &
-         non_conserved_mass = non_conserved_mass_grc, &
-         fractional_area_old = fractional_area_old, &
-         fractional_area_new = fractional_area_new, &
-         adjustment = adjustment)
+       ! explicit bounds not needed on any of these arguments - and specifying explicit
+       ! bounds defeats some later bounds checking (for fractional_area_old and
+       ! fractional_area_new)
+       call this%update_column_state_with_optional_fractions(&
+            bounds = bounds, &
+            vals_input = vals_input, &
+            vals_input_valid = vals_input_valid, &
+            has_prognostic_state = has_prognostic_state, &
+            var = var, &
+            non_conserved_mass = non_conserved_mass_grc, &
+            fractional_area_old = fractional_area_old, &
+            fractional_area_new = fractional_area_new, &
+            adjustment = adjustment)
+
+    end if
 
   end subroutine update_column_state_fill_special_using_natveg
 
   !-----------------------------------------------------------------------
-  subroutine update_column_state_fill_using_fixed_values(this, bounds, var, &
+  subroutine update_column_state_fill_using_fixed_values(this, bounds, clump_index, &
+       var, &
        landunit_values, non_conserved_mass_grc, &
        fractional_area_old, fractional_area_new, &
        adjustment)
@@ -438,6 +502,11 @@ contains
     ! !ARGUMENTS:
     class(column_state_updater_type), intent(in) :: this
     type(bounds_type) , intent(in)    :: bounds
+
+    ! Index of clump on which we're currently operating. Note that this implies that this
+    ! routine must be called from within a clump loop.
+    integer, intent(in) :: clump_index
+
     real(r8)          , intent(inout) :: var( bounds%begc: ) ! column-level variable
     real(r8)          , intent(in)    :: landunit_values(:)  ! value to use as input for each landunit type
 
@@ -481,40 +550,52 @@ contains
     SHR_ASSERT((size(landunit_values) == max_lunit), err_msg)
     SHR_ASSERT_ALL((ubound(non_conserved_mass_grc) == (/bounds%begg/)), errMsg(sourcefile, __LINE__))
 
-    do c = bounds%begc, bounds%endc
-       l = col%landunit(c)
-       ltype = lun%itype(l)
-       my_fillval = landunit_values(ltype)
+    ! Even if there's no work to be done, need to zero out adjustment, since it's
+    ! intent(out), and caller may expect it to return in a reasonable state.
+    if (present(adjustment)) then
+       SHR_ASSERT_ALL((ubound(adjustment) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+       adjustment(bounds%begc:bounds%endc) = 0._r8
+    end if
 
-       if (my_fillval == FILLVAL_USE_EXISTING_VALUE) then
-          vals_input(c) = var(c)
-          vals_input_valid(c) = .true.
-          has_prognostic_state(c) = .true.
-       else
-          vals_input(c) = my_fillval
-          vals_input_valid(c) = .true.
-          has_prognostic_state(c) = .false.
-       end if
-    end do
+    if (this%any_changes(clump_index)) then
 
-    ! explicit bounds not needed on any of these arguments - and specifying explicit
-    ! bounds defeats some later bounds checking (for fractional_area_old and
-    ! fractional_area_new)
-    call this%update_column_state_with_optional_fractions( &
-         bounds = bounds, &
-         vals_input = vals_input, &
-         vals_input_valid = vals_input_valid, &
-         has_prognostic_state = has_prognostic_state, &
-         var = var, &
-         non_conserved_mass = non_conserved_mass_grc, &
-         fractional_area_old = fractional_area_old, &
-         fractional_area_new = fractional_area_new, &
-         adjustment = adjustment)
+       do c = bounds%begc, bounds%endc
+          l = col%landunit(c)
+          ltype = lun%itype(l)
+          my_fillval = landunit_values(ltype)
+
+          if (my_fillval == FILLVAL_USE_EXISTING_VALUE) then
+             vals_input(c) = var(c)
+             vals_input_valid(c) = .true.
+             has_prognostic_state(c) = .true.
+          else
+             vals_input(c) = my_fillval
+             vals_input_valid(c) = .true.
+             has_prognostic_state(c) = .false.
+          end if
+       end do
+
+       ! explicit bounds not needed on any of these arguments - and specifying explicit
+       ! bounds defeats some later bounds checking (for fractional_area_old and
+       ! fractional_area_new)
+       call this%update_column_state_with_optional_fractions( &
+            bounds = bounds, &
+            vals_input = vals_input, &
+            vals_input_valid = vals_input_valid, &
+            has_prognostic_state = has_prognostic_state, &
+            var = var, &
+            non_conserved_mass = non_conserved_mass_grc, &
+            fractional_area_old = fractional_area_old, &
+            fractional_area_new = fractional_area_new, &
+            adjustment = adjustment)
+
+    end if
 
   end subroutine update_column_state_fill_using_fixed_values
 
   !-----------------------------------------------------------------------
-  subroutine update_column_state_fill_special_using_fixed_value(this, bounds, var, &
+  subroutine update_column_state_fill_special_using_fixed_value(this, bounds, clump_index, &
+       var, &
        special_value, non_conserved_mass_grc, &
        fractional_area_old, fractional_area_new, &
        adjustment)
@@ -533,6 +614,11 @@ contains
     ! !ARGUMENTS:
     class(column_state_updater_type), intent(in) :: this
     type(bounds_type) , intent(in)    :: bounds
+
+    ! Index of clump on which we're currently operating. Note that this implies that this
+    ! routine must be called from within a clump loop.
+    integer, intent(in) :: clump_index
+
     real(r8)          , intent(inout) :: var( bounds%begc: ) ! column-level variable
     real(r8)          , intent(in)    :: special_value       ! value to use as input for all special landunits
 
@@ -575,6 +661,7 @@ contains
 
     call this%update_column_state_fill_using_fixed_values( &
          bounds = bounds, &
+         clump_index = clump_index, &
          var = var, &
          landunit_values = landunit_values, &
          non_conserved_mass_grc = non_conserved_mass_grc, &
@@ -640,7 +727,7 @@ contains
     real(r8), optional, intent(in) :: fractional_area_new( bounds%begc: )
 
     ! Apparent state adjustment in each column
-    real(r8), optional, intent(out) :: adjustment( bounds%begc: )
+    real(r8), optional, intent(inout) :: adjustment( bounds%begc: )
     !
     ! !LOCAL VARIABLES:
     real(r8) :: my_fractional_area_old(bounds%begc:bounds%endc)
@@ -729,7 +816,7 @@ contains
     real(r8), intent(inout) :: non_conserved_mass( bounds%begg: )
 
     ! Apparent state adjustment in each column
-    real(r8), optional, intent(out) :: adjustment( bounds%begc: )
+    real(r8), optional, intent(inout) :: adjustment( bounds%begc: )
     !
     ! !LOCAL VARIABLES:
     integer  :: c, g
@@ -832,9 +919,6 @@ contains
     end do
 
     ! Distribute gain to growing columns
-    if (present(adjustment)) then
-       adjustment(bounds%begc:bounds%endc) = 0._r8
-    end if
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
        if (this%area_gained_col(c) > 0._r8) then

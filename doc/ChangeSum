@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  clm4_5_14_r227    sacks 03/06/2017 Improve performance of dynamic landunits code
   clm4_5_14_r226     erik 03/02/2017 Update cime, mosart and ccism to a version that is cesm2_0_beta05 or part of beta06
   clm4_5_14_r225    sacks 02/19/2017 Fix GDD accumulation in new crop columns
   clm4_5_14_r224    sacks 02/10/2017 Tweaks for glaciers and snow

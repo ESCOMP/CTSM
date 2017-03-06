@@ -918,7 +918,7 @@ contains
   end subroutine Summary
 
   !-----------------------------------------------------------------------
-  subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)
+  subroutine DynamicColumnAdjustments(this, bounds, clump_index, column_state_updater)
     !
     ! !DESCRIPTION:
     ! Adjust state variables when column areas change due to dynamic landuse
@@ -929,6 +929,11 @@ contains
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonstate_type) , intent(inout) :: this
     type(bounds_type)                      , intent(in)    :: bounds
+
+    ! Index of clump on which we're currently operating. Note that this implies that this
+    ! routine must be called from within a clump loop.
+    integer                                , intent(in)    :: clump_index
+
     type(column_state_updater_type)        , intent(in)    :: column_state_updater
     !
     ! !LOCAL VARIABLES:
@@ -949,6 +954,7 @@ contains
        do j = 1, nlevdecomp
           call column_state_updater%update_column_state_no_special_handling( &
                bounds = bounds, &
+               clump_index = clump_index, &
                var    = this%decomp_cpools_vr_col(begc:endc, j, l), &
                adjustment = adjustment_one_level(begc:endc))
           this%dyn_cbal_adjustments_col(begc:endc) = &
@@ -960,6 +966,7 @@ contains
     do j = 1, nlevdecomp
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%ctrunc_vr_col(begc:endc, j), &
             adjustment = adjustment_one_level(begc:endc))
        this%dyn_cbal_adjustments_col(begc:endc) = &

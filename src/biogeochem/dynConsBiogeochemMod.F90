@@ -801,7 +801,7 @@ contains
    end subroutine dyn_cnbal_patch
 
    !-----------------------------------------------------------------------
-   subroutine dyn_cnbal_col(bounds, column_state_updater, &
+   subroutine dyn_cnbal_col(bounds, clump_index, column_state_updater, &
         soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
         c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, &
         ch4_inst)
@@ -815,6 +815,11 @@ contains
      !
      ! !ARGUMENTS:
      type(bounds_type)                       , intent(in)    :: bounds        
+
+     ! Index of clump on which we're currently operating. Note that this implies that this
+     ! routine must be called from within a clump loop.
+     integer                                 , intent(in)    :: clump_index
+
      type(column_state_updater_type)         , intent(in)    :: column_state_updater
      type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
      type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c13_soilbiogeochem_carbonstate_inst
@@ -827,21 +832,22 @@ contains
      character(len=*), parameter :: subname = 'dyn_cnbal_col'
      !-----------------------------------------------------------------------
 
-     call soilbiogeochem_carbonstate_inst%DynamicColumnAdjustments(bounds, &
+     call soilbiogeochem_carbonstate_inst%DynamicColumnAdjustments(bounds, clump_index, &
           column_state_updater)
      if (use_c13) then
-        call c13_soilbiogeochem_carbonstate_inst%DynamicColumnAdjustments(bounds, &
+        call c13_soilbiogeochem_carbonstate_inst%DynamicColumnAdjustments(bounds, clump_index, &
              column_state_updater)
      end if
      if (use_c14) then
-        call c14_soilbiogeochem_carbonstate_inst%DynamicColumnAdjustments(bounds, &
+        call c14_soilbiogeochem_carbonstate_inst%DynamicColumnAdjustments(bounds, clump_index, &
              column_state_updater)
      end if
      
-     call soilbiogeochem_nitrogenstate_inst%DynamicColumnAdjustments(bounds, column_state_updater)
+     call soilbiogeochem_nitrogenstate_inst%DynamicColumnAdjustments(bounds, clump_index, &
+          column_state_updater)
 
      if (use_lch4) then
-        call ch4_inst%DynamicColumnAdjustments(bounds, column_state_updater)
+        call ch4_inst%DynamicColumnAdjustments(bounds, clump_index, column_state_updater)
      end if
 
    end subroutine dyn_cnbal_col

@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(clm45_tests Fortran C)
 
-list(APPEND CMAKE_MODULE_PATH ${CESM_CMAKE_MODULE_DIRECTORY})
-include(CESM_utils)
+list(APPEND CMAKE_MODULE_PATH ${CIME_CMAKE_MODULE_DIRECTORY})
+include(CIME_utils)
 
 set(CLM_ROOT "..")
 set(CESM_ROOT "${CLM_ROOT}/../../")

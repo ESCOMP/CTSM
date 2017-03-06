@@ -1241,7 +1241,7 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine DynamicColumnAdjustments(this, bounds, column_state_updater)
+  subroutine DynamicColumnAdjustments(this, bounds, clump_index, column_state_updater)
     !
     ! !DESCRIPTION:
     ! Adjust state variables when column areas change due to dynamic landuse
@@ -1252,6 +1252,11 @@ contains
     ! !ARGUMENTS:
     class(ch4_type)                 , intent(inout) :: this
     type(bounds_type)               , intent(in)    :: bounds
+
+    ! Index of clump on which we're currently operating. Note that this implies that this
+    ! routine must be called from within a clump loop.
+    integer                         , intent(in)    :: clump_index
+
     type(column_state_updater_type) , intent(in)    :: column_state_updater
     !
     ! !LOCAL VARIABLES:
@@ -1284,6 +1289,7 @@ contains
          this%finundated_col(begc:endc)
     call column_state_updater%update_column_state_no_special_handling( &
          bounds = bounds, &
+         clump_index = clump_index, &
          var    = finundated_new_col(begc:endc))
 
     f_uninundated_col(begc:endc) = &
@@ -1292,10 +1298,12 @@ contains
          f_uninundated_col(begc:endc)
     call column_state_updater%update_column_state_no_special_handling( &
          bounds = bounds, &
+         clump_index = clump_index, &
          var    = f_uninundated_new_col(begc:endc))
 
     call column_state_updater%update_column_state_no_special_handling( &
          bounds = bounds, &
+         clump_index = clump_index, &
          var = this%finundated_lag_col(begc:endc))
 
     this%dyn_ch4bal_adjustments_col(begc:endc) = 0._r8
@@ -1303,6 +1311,7 @@ contains
     do j = 1, nlevsoi
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%conc_ch4_sat_col(begc:endc, j), &
             fractional_area_old = this%finundated_col(begc:endc), &
             fractional_area_new = finundated_new_col(begc:endc), &
@@ -1315,6 +1324,7 @@ contains
 
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%conc_ch4_unsat_col(begc:endc, j), &
             fractional_area_old = f_uninundated_col(begc:endc), &
             fractional_area_new = f_uninundated_new_col(begc:endc), &
@@ -1328,6 +1338,7 @@ contains
        ! layer_sat_lag just applies to the UNinundated portion of the column
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%layer_sat_lag_col(begc:endc, j), &
             fractional_area_old = f_uninundated_col(begc:endc), &
             fractional_area_new = f_uninundated_new_col(begc:endc))
@@ -1338,12 +1349,14 @@ contains
 
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%conc_o2_sat_col(begc:endc, j), &
             fractional_area_old = this%finundated_col(begc:endc), &
             fractional_area_new = finundated_new_col(begc:endc))
 
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
+            clump_index = clump_index, &
             var    = this%conc_o2_unsat_col(begc:endc, j), &
             fractional_area_old = f_uninundated_col(begc:endc), &
             fractional_area_new = f_uninundated_new_col(begc:endc))

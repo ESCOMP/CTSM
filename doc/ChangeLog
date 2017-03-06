@@ -1,4 +1,119 @@
 ===============================================================
+Tag name:  clm4_5_14_r227
+Originator(s):  sacks (Bill Sacks)
+Date: Mon Mar  6 09:42:41 MST 2017
+One-line Summary: Improve performance of dynamic landunits code
+
+Purpose of changes
+------------------
+
+Main change is to improve the performance of the column state updates portion of
+the dynamic landunits code. In optimized, global runs, this piece of the code
+(dyn_cnbal_col) was taking 3 - 5% of total CLM runtime. Its cost was greater in
+global debug runs (~ 10 - 15%), and even greater in single-point debug runs (30
+- 40%).
+
+Here I have introduced a variable that tracks whether there are any changes in
+area in this time step for each clump; if not, then it avoids doing most of the
+work in dyn_cnbal_col.
+
+This tag also fixes the fortran unit tests with the new cime version: the
+necessary changes were accidentally dropped from the last tag.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: 3-4% performance improvement for global,
+optimized runs; greater performance improvement for debug and single-point runs
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+CLM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - not run
+
+  unit-tests (components/clm/src):
+
+    yellowstone - pass
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - not run
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - not run
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - pass
+    yellowstone_pgi - pass
+    yellowstone_gnu (clm45 only) - pass
+    hobart_nag - pass
+
+CLM tag used for the baseline comparisons: clm4_5_14_r226
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO - bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+========= Main changes, as noted above. Primary changes are in
+          dynColumnStateUpdater, but other modules needed to be changed in order
+          to pass the clump index down. Eventually, we should be able to get rid
+          of this clump index tracking, instead having a separate object for
+          each clump - but that is waiting on a major refactor of how we handle
+          threading in CLM.
+M       components/clm/src/soilbiogeochem/SoilBiogeochemCarbonStateType.F90
+M       components/clm/src/soilbiogeochem/SoilBiogeochemNitrogenStateType.F90
+M       components/clm/src/dyn_subgrid/test/dynColumnStateUpdater_test/test_column_state_updater.pf
+M       components/clm/src/dyn_subgrid/dynSubgridDriverMod.F90
+M       components/clm/src/dyn_subgrid/dynColumnStateUpdaterMod.F90
+M       components/clm/src/biogeochem/dynConsBiogeochemMod.F90
+M       components/clm/src/biogeochem/CNVegetationFacade.F90
+M       components/clm/src/biogeochem/ch4Mod.F90
+
+========= Fix unit tests
+M       components/clm/src/CMakeLists.txt
+M       components/clm/src/README.unit_testing
+
+========= Note expected failure that started failing in r226
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r226
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Mar  2 15:12:50 MST 2017

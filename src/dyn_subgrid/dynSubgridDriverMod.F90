@@ -102,7 +102,7 @@ contains
 
     prior_weights = prior_weights_type(bounds_proc)
     patch_state_updater = patch_state_updater_type(bounds_proc)
-    column_state_updater = column_state_updater_type(bounds_proc)
+    column_state_updater = column_state_updater_type(bounds_proc, nclumps)
 
     ! Initialize stuff for prescribed transient Patches
     if (get_do_transient_pfts()) then
@@ -275,12 +275,17 @@ contains
        ! actually changed some weights in this time step. However, it doesn't do any harm
        ! (other than a small performance hit) to call this stuff all the time, so we do so
        ! for simplicity and safety.
+       !
+       ! NOTE(wjs, 2017-02-24) I'm not positive that the above paragraph is 100% true. It
+       ! is at least *mostly* true, but there may be some subtleties, like resetting of
+       ! some variables, that are needed even in (some) time steps where we haven't
+       ! changed weights.
        ! ========================================================================
 
        call dynSubgrid_wrapup_weight_changes(bounds_clump, glc_behavior)
 
        call patch_state_updater%set_new_weights(bounds_clump)
-       call column_state_updater%set_new_weights(bounds_clump)
+       call column_state_updater%set_new_weights(bounds_clump, nc)
 
        call set_subgrid_diagnostic_fields(bounds_clump)
 
@@ -293,7 +298,7 @@ contains
             waterstate_inst, waterflux_inst, temperature_inst, energyflux_inst)
 
        if (use_cn) then
-          call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, &
+          call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, nc, &
                filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
                filter_inactive_and_active(nc)%num_soilc, filter_inactive_and_active(nc)%soilc, &
                prior_weights, patch_state_updater, column_state_updater, &

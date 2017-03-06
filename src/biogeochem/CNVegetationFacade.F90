@@ -523,7 +523,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine DynamicAreaConservation(this, bounds, &
+  subroutine DynamicAreaConservation(this, bounds, clump_index, &
        num_soilp_with_inactive, filter_soilp_with_inactive, &
        num_soilc_with_inactive, filter_soilc_with_inactive, &
        prior_weights, patch_state_updater, column_state_updater, &
@@ -545,6 +545,11 @@ contains
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
     type(bounds_type)                       , intent(in)    :: bounds        
+
+    ! Index of clump on which we're currently operating. Note that this implies that this
+    ! routine must be called from within a clump loop.
+    integer                                 , intent(in)    :: clump_index
+
     integer                                 , intent(in)    :: num_soilp_with_inactive ! number of points in filter_soilp_with_inactive
     integer                                 , intent(in)    :: filter_soilp_with_inactive(:) ! soil patch filter that includes inactive points
     integer                                 , intent(in)    :: num_soilc_with_inactive ! number of points in filter_soilc_with_inactive
@@ -611,7 +616,7 @@ contains
     call t_stopf('CNUpdateDynPatch')
 
     call t_startf('dyn_cnbal_col')
-    call dyn_cnbal_col(bounds, column_state_updater, &
+    call dyn_cnbal_col(bounds, clump_index, column_state_updater, &
          soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
          c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst, &
          ch4_inst)
