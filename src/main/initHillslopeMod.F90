@@ -108,14 +108,6 @@ contains
              enddo    ! end loop nh
           endif
 
-!!$             if(lun%itype(l) == istsoil) then 
-!!$                write(iulog,*) 'testlun: ', l,lun%ncolumns(l), lun%nhillslopes(l),lun%coli(l),lun%colf(l)
-!!$                do c=lun%coli(l), lun%colf(l)
-!!$                   write(iulog,*) 'testconn: ', l,c,col%cold(c),col%colu(c)
-!!$                enddo
-!!$!                call endrun(msg='thats it!!')
-!!$             endif
-
        enddo ! end loop l
     enddo    ! end loop nc
     !$OMP END PARALLEL DO

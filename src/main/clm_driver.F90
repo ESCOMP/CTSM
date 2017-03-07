@@ -164,10 +164,6 @@ contains
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
-    ! Update time-related info
-
-    call crop_inst%CropRestIncYear()
-
     ! ========================================================================
     ! In the first time step of a run that used cold start or init_interp, glacier areas
     ! will start at whatever is specified on the surface dataset, because coupling fields
@@ -1230,7 +1226,6 @@ contains
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use shr_infnan_mod     , only : nan => shr_infnan_nan, assignment(=)
     use clm_varpar         , only : nlevsno
-    use clm_varcon         , only : h2osno_max
     use CanopyStateType    , only : canopystate_type
     use WaterStateType     , only : waterstate_type
     use WaterFluxType      , only : waterflux_type

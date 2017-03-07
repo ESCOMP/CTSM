@@ -736,6 +736,8 @@ contains
     character(len=*), parameter :: subname = 'EcosystemDynamicsPreDrainage'
     !-----------------------------------------------------------------------
 
+    call crop_inst%CropIncrementYear(num_pcropp, filter_pcropp)
+
     call CNDriverNoLeaching(bounds,                                         &
          num_soilc, filter_soilc,                       &
          num_soilp, filter_soilp,                       &

@@ -38,7 +38,7 @@ contains
     !
     ! !DESCRIPTION:
     ! Returns distance from the bottom of the hillslope of the 
-    ! column's lower edge.  Assumes hilltop to hillbottom column 
+    ! column's node.  Assumes hilltop to hillbottom column 
     ! ordering based on lun%coli, lun%colf (see initHillslopeMod).
     !
     ! !USES:
@@ -55,7 +55,7 @@ contains
     character(len=*), parameter :: subname = 'hcol_distance'
     !-----------------------------------------------------------------------
 
-    x = hill_length * real(cbottom - c,r8) &
+    x = hill_length * (real(cbottom - c,r8) +0.5_r8) &
          / real(cbottom - ctop + 1,r8) 
 
   end function hcol_distance
@@ -63,7 +63,7 @@ contains
   function hcol_width(x,alpha,beta,hill_length,hill_width,hill_height) result(width)
     !
     ! !DESCRIPTION:
-    ! Returns width of lower edge of hillslope column.
+    ! Returns width of hillslope column.
     !
     ! !USES:
     !
@@ -78,30 +78,37 @@ contains
     !
     ! !LOCAL VARIABLES:
     real(r8) :: eps = 1.e-6_r8
-    real(r8) :: y0                ! y integration limit
+    real(r8) :: x0,y0,yl                ! integration limits
     character(len=*), parameter :: subname = 'hcol_width'
     !-----------------------------------------------------------------------
 
     ! width function has special case for n = 2
     ! in this implementation, integration limits depend on sign of beta
     if (abs(alpha - 2._r8) < eps) then
-       y0 = hill_width/2._r8
-       ! log blows up at x=0; 0.2 set by trial and error
-       if(beta < 0._r8) y0 = y0*exp(-(beta*hill_length**2/hill_height) &
-            * log(0.2/hill_length))
+
+       ! function blows up for x0=0; integration limits set by trial and error
+       if(beta < 0._r8) then
+          y0 = hill_width/2._r8
+          yl = 0.1_r8
+          x0=hill_length *(yl/y0)**(-hill_height/(beta*hill_length**2))
+       else
+          x0 = 0.2_r8
+          y0 = (hill_width/2._r8)&
+               *(x0/hill_length)**(beta*hill_length**2/hill_height)
+       endif
 
        ! compiler does not like log(zero)
        if (x == 0._r8) then
-          if (beta >  0) then
-             width = eps
+          if (beta <  0._r8) then
+             width = hill_width/2._r8
           else
-             width = hill_width/2._r8! - y0
+             width = eps
           endif
        else
-          width = exp(((beta*hill_length**2/hill_height) &
-               * log(x/hill_length)) + log(y0))
+          width = y0*(x/x0)**(beta*hill_length**2/hill_height)
        endif
-    else ! n /= 2
+    else 
+       ! alpha /= 2 case, x0 equals zero
        y0 = hill_width/2._r8
        if(beta > 0._r8) then
           y0 = y0 * exp(-(2._r8*beta*hill_length**2) &
@@ -111,10 +118,9 @@ contains
        if (x == 0._r8) then
           width = y0
        else
-          width = exp((((2._r8*beta*hill_length**2) &
+          width = y0*exp((((2._r8*beta*hill_length**2) &
                / (hill_height*(2._r8 - alpha)*alpha)) &
-               * (x/hill_length)**(2._r8-alpha)) &
-               + log(y0))
+               * (x/hill_length)**(2._r8-alpha)))
        endif
     endif
     ! hillslope width is twice integral [0:x]

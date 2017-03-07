@@ -28,6 +28,7 @@ module CropType
   type, public :: crop_type
 
      ! Note that cropplant and harvdate could be 2D to facilitate rotation
+     integer , pointer :: nyrs_crop_active_patch  (:)   ! number of years this crop patch has been active (0 for non-crop patches)
      logical , pointer :: croplive_patch          (:)   ! patch Flag, true if planted, not harvested
      logical , pointer :: cropplant_patch         (:)   ! patch Flag, true if planted
      integer , pointer :: harvdate_patch          (:)   ! patch harvest date
@@ -36,7 +37,6 @@ module CropType
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
      real(r8), pointer :: vf_patch                (:)   ! patch vernalization factor for cereal
      real(r8), pointer :: cphase_patch            (:)   ! phenology phase
-     integer           :: CropRestYear                  ! restart year from initial conditions file - increment as time elapses
      real(r8), pointer :: latbaset_patch          (:)   ! Latitude vary baset for gddplant (degree C)
      character(len=20) :: baset_mapping
      real(r8) :: baset_latvary_intercept
@@ -56,7 +56,7 @@ module CropType
      ! <http://www.pgroup.com/userforum/viewtopic.php?t=4285>, which was fixed in pgi 14.7.
      procedure, public  :: CropUpdateAccVars
 
-     procedure, public  :: CropRestIncYear
+     procedure, public  :: CropIncrementYear
 
      ! Private routines
      procedure, private :: InitAllocate 
@@ -182,6 +182,7 @@ contains
 
     begp = bounds%begp; endp = bounds%endp
 
+    allocate(this%nyrs_crop_active_patch(begp:endp)) ; this%nyrs_crop_active_patch(:) = 0
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
     allocate(this%cropplant_patch(begp:endp)) ; this%cropplant_patch(:) = .false.
     allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1) 
@@ -191,8 +192,6 @@ contains
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
-
-    this%CropRestYear = 0
 
   end subroutine InitAllocate
 
@@ -262,6 +261,9 @@ contains
     do p= bounds%begp,bounds%endp
        g   = patch%gridcell(p)
        ivt = patch%itype(p)
+
+       this%nyrs_crop_active_patch(p) = 0
+
        if ( grc%latdeg(g) >= 0.0_r8 .and. grc%latdeg(g) <= 30.0_r8) then
           this%latbaset_patch(p)=pftcon%baset(ivt)+12._r8-0.4_r8*grc%latdeg(g)
        else if (grc%latdeg(g) < 0.0_r8 .and. grc%latdeg(g) >= -30.0_r8) then
@@ -381,6 +383,8 @@ contains
     ! !USES:
     use restUtilMod
     use ncdio_pio
+    use PatchType, only : patch
+    use pftconMod, only : npcropmin, npcropmax
     !
     ! !ARGUMENTS:
     class(crop_type), intent(inout)  :: this
@@ -390,6 +394,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer, pointer :: temp1d(:) ! temporary
+    integer :: restyear
     integer :: p
     logical :: readvar   ! determine if variable is on initial file
 
@@ -397,6 +402,31 @@ contains
     !-----------------------------------------------------------------------
 
     if (use_crop) then
+       call restartvar(ncid=ncid, flag=flag, varname='nyrs_crop_active', xtype=ncd_int, &
+            dim1name='pft', &
+            long_name='Number of years this crop patch has been active (0 for non-crop patches)', &
+            units='years', &
+            interpinic_flag='interp', readvar=readvar, data=this%nyrs_crop_active_patch)
+       if (flag == 'read' .and. .not. readvar) then
+          ! BACKWARDS_COMPATIBILITY(wjs, 2017-02-17) Old restart files did not have this
+          ! patch-level variable. Instead, they had a single scalar tracking the number
+          ! of years the crop model ran. Copy this scalar onto all *active* crop patches.
+
+          ! Some arguments in the following restartvar call are irrelevant, because we
+          ! only call this for 'read'. I'm simply maintaining the old restartvar call.
+          call restartvar(ncid=ncid, flag=flag,  varname='restyear', xtype=ncd_int,  &
+               long_name='Number of years prognostic crop ran', units="years", &
+               interpinic_flag='copy', readvar=readvar, data=restyear)
+          if (readvar) then
+             do p = bounds%begp, bounds%endp
+                if (patch%itype(p) >= npcropmin .and. patch%itype(p) <= npcropmax .and. &
+                     patch%active(p)) then
+                   this%nyrs_crop_active_patch(p) = restyear
+                end if
+             end do
+          end if
+       end if
+
        allocate(temp1d(bounds%begp:bounds%endp))
        if (flag == 'write') then 
           do p= bounds%begp,bounds%endp
@@ -454,10 +484,6 @@ contains
        call restartvar(ncid=ncid, flag=flag,  varname='vf', xtype=ncd_double,  &
             dim1name='pft', long_name='vernalization factor', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%vf_patch)
-
-       call restartvar(ncid=ncid, flag=flag,  varname='restyear', xtype=ncd_int,  &
-            long_name='Number of years prognostic crop ran', units="years", &
-            interpinic_flag='copy', readvar=readvar, data=this%CropRestYear)
 
        call restartvar(ncid=ncid, flag=flag,  varname='cphase',xtype=ncd_double, &
             dim1name='pft', long_name='crop phenology phase', &
@@ -576,40 +602,42 @@ contains
   end subroutine CropUpdateAccVars
 
   !-----------------------------------------------------------------------
-  subroutine CropRestIncYear (this)
+  subroutine CropIncrementYear (this, num_pcropp, filter_pcropp)
     !
     ! !DESCRIPTION: 
-    ! Increment the crop restart year, if appropriate
+    ! Increment the crop year, if appropriate
     !
-    ! This routine should be called every time step, but only once for all clumps (to
-    ! avoid inadvertently updating nyrs multiple times)
+    ! This routine should be called every time step
     !
     ! !USES:
     use clm_time_manager , only : get_curr_date, is_first_step
     !
     ! !ARGUMENTS:
     class(crop_type) :: this
+    integer , intent(in) :: num_pcropp       ! number of prog. crop patches in filter
+    integer , intent(in) :: filter_pcropp(:) ! filter for prognostic crop patches
     !
     ! !LOCAL VARIABLES:
     integer kyr   ! current year
     integer kmo   ! month of year  (1, ..., 12)
     integer kda   ! day of month   (1, ..., 31)
     integer mcsec ! seconds of day (0, ..., seconds/day)
+    integer :: fp, p
     !-----------------------------------------------------------------------
 
-    ! Update restyear only when running with prognostic crop
-    if ( use_crop )then
+    call get_curr_date (   kyr, kmo, kda, mcsec)
+    ! Update nyrs when it's the end of the year (unless it's the very start of the
+    ! run). This assumes that, if this patch is active at the end of the year, then it was
+    ! active for the whole year.
+    if ((kmo == 1 .and. kda == 1 .and. mcsec == 0) .and. .not. is_first_step()) then
+       do fp = 1, num_pcropp
+          p = filter_pcropp(fp)
 
-       ! Update restyear when it's the start of a new year - but don't do that at the
-       ! very start of the run
-       call get_curr_date (   kyr, kmo, kda, mcsec)
-       if ((kmo == 1 .and. kda == 1 .and. mcsec == 0) .and. .not. is_first_step()) then
-          this%CropRestYear = this%CropRestYear + 1
-       end if
-
+          this%nyrs_crop_active_patch(p) = this%nyrs_crop_active_patch(p) + 1
+       end do
     end if
 
-  end subroutine CropRestIncYear
+  end subroutine CropIncrementYear
 
   !-----------------------------------------------------------------------
   subroutine checkDates( )

@@ -152,7 +152,7 @@ contains
      use clm_varcon        , only : spval
      use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
      use column_varcon     , only : icol_road_perv, icol_road_imperv
-     use landunit_varcon   , only : istdlak, istsoil,istcrop,istwet
+     use landunit_varcon   , only : istdlak, istsoil,istcrop,istwet,istice,istice_mec
      use clm_varctl        , only : create_glacier_mec_landunit
      use clm_time_manager  , only : get_step_size, get_nstep
      use clm_initializeMod , only : surfalb_inst
@@ -419,7 +419,8 @@ contains
                 endif
 
                 if (col%itype(c) == icol_road_perv .or. lun%itype(l) == istsoil .or. &
-                    lun%itype(l) == istcrop .or. lun%itype(l) == istwet ) then
+                     lun%itype(l) == istcrop .or. lun%itype(l) == istwet .or. &
+                     lun%itype(l) == istice .or. lun%itype(l) == istice_mec) then
                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
                           + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
                           +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) + qflx_h2osfc_to_ice(c)

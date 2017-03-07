@@ -24,6 +24,10 @@ module unittestSimpleSubgridSetupsMod
   ! Create a grid that has a single gridcell with N vegetated patches
   public :: setup_n_veg_patches
 
+  ! Create a grid that has a single gridcell with one landunit of a given type with N
+  ! columns, each with a single patch of type noveg
+  public :: setup_landunit_ncols
+
   ! Create a grid that has N grid cells, each with a single vegetated patch
   public :: setup_ncells_single_veg_patch
 
@@ -105,6 +109,33 @@ contains
     call unittest_subgrid_setup_end()
 
   end subroutine setup_n_veg_patches
+
+  !-----------------------------------------------------------------------
+  subroutine setup_landunit_ncols(ltype, ctypes, cweights)
+    !
+    ! !DESCRIPTION:
+    ! Create a grid that has a single gridcell with one landunit of a given type with N
+    ! columns, each with a single patch of type noveg
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: ltype ! landunit type
+    integer, intent(in) :: ctypes(:)  ! array of column types; one column is created for each element in the array
+    real(r8), intent(in) :: cweights(:) ! array of column weights on the landunit
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'setup_landunit_ncols'
+    !-----------------------------------------------------------------------
+
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call create_landunit_ncols(ltype = ltype, lweight = 1._r8, &
+         ctypes = ctypes, cweights = cweights)
+    call unittest_subgrid_setup_end()
+
+  end subroutine setup_landunit_ncols
 
 
   !-----------------------------------------------------------------------

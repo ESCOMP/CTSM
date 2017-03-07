@@ -219,7 +219,7 @@ contains
        call initHillslopes()
 
        ! Set single pft for hillslope columns
-       call HillslopeDomPft()
+!       call HillslopeDomPft()
 
     endif
 

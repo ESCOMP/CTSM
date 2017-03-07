@@ -109,7 +109,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
-    use clm_varcon, only : zmin_bedrock
+    use clm_varcon, only : zmin_bedrock, n_melt_glcmec
     use clm_varctl, only : use_hillslope
     use HillslopeHydrologyMod
     !
@@ -155,6 +155,9 @@ contains
     real(r8), allocatable :: hill_width(:,:)    ! hillslope width  [m]
     real(r8), allocatable :: hill_height(:,:)   ! hillslope height [m]
     real(r8) :: hillslope_area                  ! total area of hillslope
+    real(r8) :: column_length                   ! length of column [m]
+    real(r8) :: le_distance                     ! distance of lower edge of column from bottom of hillslope
+    real(r8) :: ue_distance                     ! distance of upper edge of column from bottom of hillslope
     integer  :: ctop, cbottom                   ! hillslope top and bottom column indices
     ! Possible values for levgrnd_class. The important thing is that, for a given column,
     ! layers that are fundamentally different (e.g., soil vs bedrock) have different
@@ -705,46 +708,31 @@ contains
                      ctop, cbottom, hill_length(l,nh))
                 !              if (masterproc) write(iulog,*) 'hd: ',c,col%hill_distance(c)
                 
+                !distance of lower edge of column from hillslope bottom
+                column_length = hill_length(l,nh)/(lun%ncolumns(l)/nhillslope)
+                le_distance = col%hill_distance(c) - 0.5_r8*column_length
+                ue_distance = col%hill_distance(c) + 0.5_r8*column_length
+
                 ! width of lower edge of column from hillslope bottom
-                col%hill_width(c) = hcol_width(col%hill_distance(c),&
+                col%hill_width(c) = hcol_width(le_distance, &
                      hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
                      hill_width(l,nh),hill_height(l,nh))
                 !              if (masterproc) write(iulog,*) 'hw: ',c,col%hill_width(c)
                 
-                ! surface area of column
-                if (c == ctop) then 
-                   col%hill_area(c) = hcol_area(hill_length(l,nh),&
-                        col%hill_distance(c), &
-                        hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
-                        hill_width(l,nh),hill_height(l,nh))
-                else
-                   col%hill_area(c) = hcol_area(col%hill_distance(c-1),&
-                        col%hill_distance(c),&
-                        hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
-                        hill_width(l,nh),hill_height(l,nh))
-                endif
+                col%hill_area(c) = hcol_area(ue_distance, le_distance, &
+                     hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
+                     hill_width(l,nh),hill_height(l,nh))
                 !              if (masterproc) write(iulog,*) 'ha: ',c,col%hill_area(c)
                 
                 ! mean elevation of column relative to mean gridcell elevation
-                if (c == ctop) then 
-                   col%hill_elev(c) = hcol_elevation(hill_length(l,nh),&
-                        col%hill_distance(c),&
-                        hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
-                        hill_width(l,nh),hill_height(l,nh))
-                else
-                   col%hill_elev(c) = hcol_elevation(col%hill_distance(c-1),&
-                        col%hill_distance(c),&
-                        hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
-                        hill_width(l,nh),hill_height(l,nh))
-                endif
+                col%hill_elev(c) = hcol_elevation(ue_distance, le_distance, &
+                     hill_alpha(l,nh), hill_beta(l,nh),hill_length(l,nh), &
+                     hill_width(l,nh),hill_height(l,nh))
                 !              if (masterproc) write(iulog,*) 'he: ',c,col%hill_elev(c)
                 
                 ! mean along-hill slope of column
-                if (c == ctop) then 
-                   col%hill_slope(c) = hcol_slope(hill_length(l,nh),col%hill_distance(c),hill_alpha(l,nh),hill_length(l,nh), hill_height(l,nh))
-                else
-                   col%hill_slope(c) = hcol_slope(col%hill_distance(c-1),col%hill_distance(c),hill_alpha(l,nh),hill_length(l,nh), hill_height(l,nh))
-                endif
+                col%hill_slope(c) = hcol_slope(ue_distance, le_distance, &
+                     hill_alpha(l,nh),hill_length(l,nh), hill_height(l,nh))
                 !              if (masterproc) write(iulog,*) 'hs: ',c,col%hill_slope(c)
                 
                 if (masterproc .and. 1==2) then
@@ -990,9 +978,9 @@ contains
        if (lun%itype(l)==istice_mec .and. glc_behavior%allow_multiple_columns_grc(g)) then
           ! ice_mec columns already account for subgrid topographic variability through
           ! their use of multiple elevation classes; thus, to avoid double-accounting for
-          ! topographic variability in these columns, we ignore topo_std and use a value
-          ! of n_melt that assumes little topographic variability within the column
-          col%n_melt(c) = 10._r8
+          ! topographic variability in these columns, we ignore topo_std and use a fixed
+          ! value of n_melt.
+          col%n_melt(c) = n_melt_glcmec
        else
           col%n_melt(c) = 200.0/max(10.0_r8, col%topo_std(c))
        end if

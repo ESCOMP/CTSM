@@ -155,7 +155,7 @@ contains
      ! temperature in the subroutine clm\_leaftem.f90, not in this subroutine.
      !
      ! !USES:
-     use clm_varcon         , only : hfus, denice, zlnd, rpi, spval, tfrz
+     use clm_varcon         , only : hfus, denice, zlnd, rpi, spval, tfrz, int_snow_max
      use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
      use landunit_varcon    , only : istcrop, istice, istwet, istsoil, istice_mec 
      use clm_varctl         , only : subgridflag
@@ -214,6 +214,7 @@ contains
      real(r8) :: delf_melt
      real(r8) :: fsno_new
      real(r8) :: accum_factor
+     real(r8) :: int_snow_limited ! integrated snowfall, limited to be no greater than int_snow_max [mm]
      real(r8) :: newsnow(bounds%begc:bounds%endc)
      real(r8) :: snowmelt(bounds%begc:bounds%endc)
      integer  :: j
@@ -525,7 +526,8 @@ contains
              ! first compute change from melt during previous time step
              if(snowmelt(c) > 0._r8) then
 
-                smr=min(1._r8,(h2osno(c))/(int_snow(c)))
+                int_snow_limited = min(int_snow(c), int_snow_max)
+                smr=min(1._r8,h2osno(c)/int_snow_limited)
 
                 frac_sno(c) = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(n_melt(c))
 

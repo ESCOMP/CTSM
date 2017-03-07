@@ -2490,8 +2490,8 @@ contains
           if (baseflow_method == 'darcy') then
              if (col%cold(c) /= ispval) then
                 c_down = col%cold(c)
-                dgrad = (col%hill_elev(c)+zwt(c)) &
-                     - (col%hill_elev(c_down)+zwt(c_down))
+                dgrad = (col%hill_elev(c)+(zi(c,nbedrock(c))-zwt(c))) &
+                     - (col%hill_elev(c_down)+(zi(c,nbedrock(c))-zwt(c_down)))
                 dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(c_down))
              else
 !what lower boundary condition to use??
