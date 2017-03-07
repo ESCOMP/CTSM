@@ -55,6 +55,7 @@ module SnowSnicarMod
 
   integer,  parameter :: snw_rds_max_tbl = 1500          ! maximum effective radius defined in Mie lookup table [microns]
   integer,  parameter :: snw_rds_min_tbl = 30            ! minimium effective radius defined in Mie lookup table [microns]
+  integer,  parameter :: snw_rds_min_int = nint(snw_rds_min) ! minimum allowed snow effective radius as integer [microns]
   real(r8), parameter :: snw_rds_max     = 1500._r8      ! maximum allowed snow effective radius [microns]
   real(r8), parameter :: snw_rds_refrz   = 1000._r8      ! effective radius of re-frozen snow [microns]
 
@@ -369,7 +370,7 @@ contains
                   snl_lcl           =  -1
                   h2osno_ice_lcl(0) =  h2osno_lcl
                   h2osno_liq_lcl(0) =  0._r8
-                  snw_rds_lcl(0)    =  nint(snw_rds_min)
+                  snw_rds_lcl(0)    =  snw_rds_min_int
                else
                   flg_nosnl         =  0
                   snl_lcl           =  snl(c_idx)

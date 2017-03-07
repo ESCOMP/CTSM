@@ -1,0 +1,57 @@
+Checklist of steps to do to make a CLM Trunk Tag        Mar/7th/2017
+
+CLM Code Management team.
+
+(1) Do all testing on the branch – i.e., on a sandbox that is just a clean checkout of
+the branch (save to next tag name)
+
+   1a -- make sure any new failing tests are either fixed or approved as a new expected
+         fail
+   1b -- update the ExpectedFails list if expected fails changes in 1a
+        $EDITOR components/clm/cime_config/testdefs/ExpectedTestFails.xml
+   1c -- make sure you understand any changes to the baselines -- to document in ChangeLog
+
+(2) Use diff and status to make sure any new files are in the repo and only the correct
+changes are on the branch
+
+   2a -- 'svn status' to check that you've added any new files and haven't
+         added any non source files that aren't needed in the repository
+   2b -- 'svn diff' to check that your changes are correct and you didn't accidentally
+         add something unintentionally
+   2c -- you could also update the content of the changelog here on the branch
+
+(3) Tag the branch
+
+(4) Merge branch tag to trunk and update to get any new externals
+
+(5) Commit to trunk
+
+(6) Compare trunk to branch show that they are identical
+
+svn diff --ignore-properties https://svn-ccsm-models.cgd.ucar.edu/clm2/trunk
+https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/BRANCHNAME
+
+This should show no diffs
+
+(7) Update ChangeLog
+   7a -- if you didn't update the content in 2c do it now
+         (Increment the science minor number if answers change in an important way)
+   7b -- update date stamp on ChangeLog
+      ./UpDateChangeLog.pl -update
+   7c -- commit new change files
+
+(8) Make the trunk tag
+
+
+NOTES:
+
+(1) -- Always test on a branch so that we can change tag order if needed. Put baselines
+in the next tag name, as we can easily change afterwards if needed.
+(2) -- This provides a final self code review of your changes. Having someone else review your
+code is also useful, but making sure you review it careful is also important. This step makes
+sure you don't commit changes you shouldn't and makes sure you don't neglect to add new files
+that need to be added to the repository. It's easy for either of those problems to happen without
+doing this step.
+(7) or 2c -- Updating the ChangeLog needs to happen on the trunk shortly before the new
+trunk tag is made. There is a cronjob that emails errors when the ChangeLog was updated
+but the new trunk tag wasn't made.

@@ -41,6 +41,8 @@ Changes to tests or testing:
 
 Code reviewed by:
 
+Did you follow the steps in .CLMTrunkChecklist:
+
 CLM testing:
 
 [... Remove before making trunk_tag.  Available test levels:

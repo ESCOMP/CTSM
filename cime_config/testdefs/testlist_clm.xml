@@ -1038,6 +1038,9 @@
         <machine compiler="pgi" testtype="aux_clm45" testmods="clm/glcMEC_increase">yellowstone</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="clm/glcMEC_increase">yellowstone</machine>
       </test>
+      <test name="SMS">
+        <machine compiler="nag" testtype="aux_clm45" testmods="clm/glcMEC">hobart</machine>
+      </test>
     </grid>
   </compset>
   <compset name="IGRCP26CN">

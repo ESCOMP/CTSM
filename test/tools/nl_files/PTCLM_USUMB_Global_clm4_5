@@ -1,1 +1,1 @@
--s US-UMB -d CSMDATA --mydatadir . --phys=clm4_5 --map_gdate 160208 --donot_use_tower_yrs --clmnmlusecase 20thC_transient  --pftgrid --soilgrid
+-s US-UMB -d CSMDATA --mydatadir . --map_gdate 160208 --donot_use_tower_yrs --clmnmlusecase 20thC_transient  --pftgrid --soilgrid

@@ -1,4 +1,75 @@
 ===============================================================
+Tag name:  clm4_5_14_r228
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Mar  7 14:17:07 MST 2017
+One-line Summary: Bring in changes that were accidentally dropped as part of the clm4_5_14_r226 tag
+
+Purpose of changes
+------------------
+
+Bring in changes that were included for the testing of clm4_5_14_r226, but accidentally dropped
+when moved to the trunk tag. Only a limited amount of testing was done, since the testing was
+done in the clm4_5_14_r226 tag.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers: None
+
+Changes to tests or testing: None
+
+Code reviewed by: self
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: short, since full testing was done in clm4_5_14_r226
+
+CLM tag used for the baseline comparisons:  clm4_5_14_r227
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+---------- Remove --phys option to PTCLM testing
+M    components/clm/test/tools/nl_files/PTCLM_USUMB_clm4_5
+M    components/clm/test/tools/nl_files/PTCLM_USUMB_Cycle_clm4_5
+M    components/clm/test/tools/nl_files/PTCLM_USUMB_Global_clm4_5
+
+M    components/clm/cime_config/config_component.xml ------------ Remove unnneeded "<list>"
+M    components/clm/cime_config/testdefs/ExpectedTestFails.xml -- Add note about hcru_hcru failing test
+M    components/clm/cime_config/testdefs/testlist_clm.xml ------- Add a test with MOSART on hobart_nag
+M    components/clm/src/biogeophys/SnowSnicarMod.F90 ------------ Fix bug 2479 workaround for Intel 16/17 compiler
+M    components/clm/src/main/initGridCellsMod.F90 --------------- Fix bug 2417 for create_crop_landunit
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r227
 Originator(s):  sacks (Bill Sacks)
 Date: Mon Mar  6 09:42:41 MST 2017
