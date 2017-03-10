@@ -1,4 +1,158 @@
 ===============================================================
+Tag name:  clm4_5_14_r229
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Mar 10 11:32:20 MST 2017
+One-line Summary: Update cime and make some changes to drv_flds_in namelist, fix some minor bugs
+
+Purpose of changes
+------------------
+
+Update cime to a version with an updated top level directory structure. It also fixes a problem
+with a CLM test.
+
+The new cime version has a new directory structure, and updates the XML schema for namelist files
+from verison 1 to version 2. Currently the perl namelist code can NOT read version 2. Hence, a local
+copy of the version 1 files for the drv_flds_in fields was added to CLM. Also the use of the datm
+namelist files for some tools was dropped -- I think that's OK though.
+
+Fix two minor bugs.
+
+The new cime has a few improvements. It now adjusts the PIO namelist when the PE layout changes.
+There's a new option to case.setup "--no-adjust-pio" to not do that. --mpilib option was added
+to create_test. You can remove your bld directory area without having to rerun case.setup.
+
+
+Bugs fixed or introduced
+------------------------
+
+Bugs fixed (include bugzilla ID):
+  2433 -- format error in HumanIndexMod.F90
+  2432 -- intent mixing in dynVarMod.F90
+CIME Issues fixed (include issue #):
+  1074 -- ERP_D_Ld5.hcru_hcru.ICRUCLM45BGC.yellowstone_pgi fails with PIO error
+
+Known bugs introduced in this tag (include bugzilla ID): (recently found, but predate this tag)
+  1217 -- Driver allows a contradiction in drv_flds_in between CAM and CLM
+  1220 -- missing mpi-serial mpirun case on hobart
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CLM's user interface (e.g., new/renamed XML or namelist variables):
+
+   case.setup has a new option --no-adjust-pio
+
+   The user now can rm -rf their build area and rebuild without having
+     to re-run case.setup.
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+   CIME now normally adjusts PIO layout if you change the PE layout.
+
+   Also puts a copy of namelist definition and defaults for drv_flds_in in CLM.
+   This copy needs to be doubly maintained with the versions in the driver and in CAM.
+   The advantage of having a copy is because each copy is using a different version of
+   the xml schema, and potentially the driver might have additional fields that interact
+   with other components besides CLM. Currently the only drv_flds_in fields are all shared
+   between only CAM and CLM. But, the fact that there are duplicated copies does mean
+   changes in any one of those components will need to go into the other two.
+
+   Also removes the datm namelist files read in tools such as queryDefaultNamelist.pl.
+   I think this is OK, as this connection may no longer be needed. It does make the
+   listDefaultNamelist.pl less useful, but I think that's OK as well.
+
+Changes to tests or testing:
+
+   add --mpilib option to create_test
+
+Code reviewed by: self,mvertens
+
+Did you follow the steps in .CLMTrunkChecklist: yes
+
+CLM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    yellowstone - PASS
+
+  unit-tests (components/clm/src):
+
+    yellowstone - PASS
+
+  tools-tests (components/clm/test/tools):
+
+    yellowstone - OK
+
+  PTCLM testing (components/clm/tools/shared/PTCLM/test):
+
+     yellowstone - OK
+
+  regular tests (aux_clm40, aux_clm45):
+
+    yellowstone_intel - OK
+    yellowstone_pgi - OK
+    yellowstone_gnu (clm45 only) - OK
+    hobart_nag - OK
+
+CLM tag used for the baseline comparisons: clm4_5_14_r226
+
+
+Answer changes No bit-for-bit
+--------------
+
+Detailed list of changes
+------------------------
+
+List any svn externals directories updated (cime, rtm, mosart, cism, etc.): cime, cime_config
+   Update cime         to cime5.3.0-alpha.02
+   Add new cime_config at cime_config0.0.1.alpha.03
+
+List all files eliminated: None
+
+List all files added and what they do: These are version 1 of the files, the ones in the driver
+                                       are now version 2.
+
+A       components/clm/bld/namelist_files/namelist_definition_drv.xml ------- Copy from driver
+A       components/clm/bld/namelist_files/namelist_definition_drv_flds.xml -- Copy from driver
+A       components/clm/bld/namelist_files/namelist_defaults_drv.xml --------- Copy from driver
+
+List all existing files that have been modified, and describe the changes:
+
+------------ Point to new local copy of drv_flds namelist files, and bunch of whitespace changes
+------------ Remove pointing to datm namelist files as they are now version 2, and the perl code
+------------ currently can't read them
+M       components/clm/bld/queryDefaultNamelist.pl ------ Point to local location of namelist drv files
+             and remove pointing to datm namelist files
+M       components/clm/bld/CLMBuildNamelist.pm ---------- Point to local location of namelist drv files
+M       components/clm/bld/listDefaultNamelist.pl ------- Point to local location of namelist drv files
+             and remove pointing to datm namelist files
+
+M       components/clm/cime_config/testdefs/ExpectedTestFails.xml Remove hcr_hcru test that is now passing
+
+------------ Get unit tests working with the new cime directory structure
+M       components/clm/src/CMakeLists.txt ----------------------------- New cime directory structure
+M       components/clm/src/unit_test_stubs/csm_share/seq_comm_mct.F90 - Just change comment as to where
+             the "real" file exists
+
+------------ Fix a couple of bugs
+M       components/clm/src/biogeophys/HumanIndexMod.F90 --- Fix bug 2433 format error
+M       components/clm/src/dyn_subgrid/dynVarMod.F90.in --- Fix bug 2432 intent issue
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14_r228
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Mar  7 14:17:07 MST 2017

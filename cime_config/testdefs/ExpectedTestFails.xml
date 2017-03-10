@@ -4,8 +4,6 @@
    <entry bugz="2239" >FAIL RUN ERP_D_Ld5.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay_interp</entry>
    <entry bugz="2239" >FAIL RUN ERP_Ld5.f09_g16.ICLM45VIC.yellowstone_pgi.clm-vrtlay_interp</entry>
    <entry bugz="2356" >PEND RUN SMS_D_Ld1_P24x1.f10_f10.ICRUCLM45.hobart_nag.clm-af_bias_v5</entry>
-   <!-- This fails with a cime issue, the problem happened with an update to cime  -->
-   <entry issu="1079" >FAIL ERP_D_Ld5.hcru_hcru.ICRUCLM45BGC.yellowstone_pgi</entry>
    <entry bugz="2291" >FAIL SMS_Lm25.f19_g16.ICLM45BGCCROP.yellowstone_gnu.clm-cropMonthOutput BASELINE</entry>
    <entry bugz="2388" >FAIL ERS_D_Ld5.f10_f10.ICLM45ED.hobart_nag.clm-edTest BASELINE</entry>
    <entry bugz="2388" >FAIL SMS_D_Ld5.f10_f10.ICLM45ED.hobart_nag.clm-edTest BASELINE</entry>

@@ -60,7 +60,7 @@ SYNOPSIS
 OPTIONS
      -config "file"                       CLM build configuration file created by configure.
      -cesm                                CESM mode set csmdata to \$DIN_LOC_ROOT.
-     -usrname "name"                      Dataset resolution/descriptor for personal datasets.  
+     -usrname "name"                      Dataset resolution/descriptor for personal datasets.
                                           Default : not used
                                           Example: 1x1pt_boulderCO to describe location,
                                           number of pts
@@ -107,13 +107,13 @@ EOF
 
 #-----------------------------------------------------------------------------------------------
 
-  my %opts = ( 
+  my %opts = (
                namelist   => $namelist,
                model      => "clm4_5",
                var        => undef,
                hgrid      => undef,
                config     => undef,
-               cesm       => undef, 
+               cesm       => undef,
                csmdata    => undef,
                demand     => undef,
                test       => undef,
@@ -179,14 +179,9 @@ EOF
   # List of input options
   my %inputopts;
   # This namelist files under the cime directories are in version 2 format and can't be read by perl code EBK 11/15/2016
-  my $datmcimedir            = "$cfgdir/../../../cime/components/data_comps/datm/cime_config";
-  my $drvcimedir             = "$cfgdir/../../../cime/driver_cpl/cime_config";
-  my $drvblddir              = "$cfgdir/../../../cime/driver_cpl/bld";
   my $model                  = $opts{'model'};
-  my @nl_definition_files    = ( #"$datmcimedir/namelist_definition_datm.xml",   # can't be read by perl see above
-                                 "$drvblddir/namelist_files/namelist_definition_drv.xml",
-                                 #"$drvcimedir/namelist_definition_drv.xml",     # can't be read by perl see above
-                                 "$cfgdir/namelist_files/namelist_definition_$model.xml" 
+  my @nl_definition_files    = ("$cfgdir/namelist_files/namelist_definition_drv.xml",
+                                "$cfgdir/namelist_files/namelist_definition_$model.xml"
                                );
   $inputopts{empty_cfg_file} = "$cfgdir/config_files/config_definition_$model.xml";
   $inputopts{nldef_files}    = \@nl_definition_files;
@@ -252,12 +247,10 @@ EOF
      $settings{'notest'}       = ! $opts{'test'};
      $settings{'csmdata'}      = $inputopts{csmdata};
   } else {
-     my @files = ( "$cfgdir/namelist_files/namelist_defaults_${model}.xml", 
-                   "$cfgdir/namelist_files/namelist_defaults_${model}_tools.xml", 
-                   "$drvblddir/namelist_files/namelist_defaults_drv.xml",
-                   #"$drvcimedir/namelist_defaults_drv.xml",
+     my @files = ( "$cfgdir/namelist_files/namelist_defaults_${model}.xml",
+                   "$cfgdir/namelist_files/namelist_defaults_${model}_tools.xml",
+                   "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                    "$cfgdir/namelist_files/namelist_defaults_drydep.xml",
-                   #"$datmcimedir/namelist_defaults_datm.xml",
                  );
      push( @nl_defaults_files, @files );
   }

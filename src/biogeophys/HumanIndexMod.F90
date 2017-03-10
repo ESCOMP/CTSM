@@ -945,8 +945,8 @@ end subroutine InitHistory
        wb_it = wb_temp
     else
        wb_it = T1 - C  ! Place Holder.  wet bulb temperature same as dry bulb (C)
-       write(iulog,*) 'WARNING: Wet_Bulb algorithm failed to converge. Setting to T: WB, P, &
-                       T, RH, Q, VaporP: ',wb_it, pin, T1, relhum, qin, vape
+       write(iulog,*) 'WARNING: Wet_Bulb algorithm failed to converge. Setting to T: WB, P, T, RH, Q, VaporP: ', &
+                       wb_it, pin, T1, relhum, qin, vape
     endif
 
   end subroutine Wet_Bulb
