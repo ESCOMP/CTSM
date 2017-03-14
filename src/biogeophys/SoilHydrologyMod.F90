@@ -2343,7 +2343,7 @@ contains
      real(r8) :: transmis
      real(r8) :: dgrad
      real(r8), parameter :: n_baseflow = 1        ! drainage power law exponent
-     real(r8), parameter :: k_anisotropic = 50._r8
+     real(r8), parameter :: k_anisotropic = 20._r8
      real(r8) :: qflx_latflow_out_vol(bounds%begc:bounds%endc) 
      real(r8) :: qflx_net_latflow(bounds%begc:bounds%endc) 
      integer  :: c0, nstep

@@ -453,6 +453,7 @@ contains
                   forc_hgt_t_patch(p) = forc_hgt_t(g) + z0m(p) + displa(p)
                   forc_hgt_q_patch(p) = forc_hgt_q(g) + z0m(p) + displa(p)
                end if
+
             else if (lun%itype(l) == istwet .or. lun%itype(l) == istice      &
                  .or. lun%itype(l) == istice_mec) then
                forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c)

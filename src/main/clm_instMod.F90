@@ -8,7 +8,8 @@ module clm_instMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
-  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_ed, use_voc
+  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_ed, use_voc, use_hillslope
+
   use clm_varctl      , only : use_century_decomp, use_crop
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice, istice_mec, istsoil
@@ -73,6 +74,7 @@ module clm_instMod
   use ColumnType                      , only : col                
   use PatchType                       , only : patch                
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
+  use HillslopeHydrologyBaseMod       , only : hillslope_geomorphology_type
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
   !
@@ -115,6 +117,7 @@ module clm_instMod
   type(lnd2glc_type)                      :: lnd2glc_inst
   type(glc_behavior_type)                 :: glc_behavior
   type(topo_type)                         :: topo_inst
+  class(hillslope_geomorphology_type),     allocatable :: hillslope_inst
   class(soil_water_retention_curve_type) , allocatable :: soil_water_retention_curve
 
   ! CN vegetation types
@@ -173,7 +176,8 @@ contains
     !
     ! !USES: 
     use clm_varpar                         , only : nlevsno, numpft
-    use controlMod                         , only : nlfilename, fsurdat
+    use clm_varctl                         , only : fsurdat
+    use controlMod                         , only : nlfilename
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
     use SoilBiogeochemDecompCascadeCNMod   , only : init_decompcascade_cn
@@ -181,6 +185,7 @@ contains
     
     use initVerticalMod                    , only : initVertical
     use accumulMod                         , only : print_accum_fields 
+    use HillslopeHydrologyFactoryMod       , only : create_and_init_hillslope_geomorphology_type
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
     !
@@ -316,6 +321,11 @@ contains
     call surfrad_inst%Init(bounds)
 
     call dust_inst%Init(bounds)
+
+    if(use_hillslope) then 
+       allocate(hillslope_inst, &
+            source=create_and_init_hillslope_geomorphology_type(bounds))
+    endif
 
     ! Once namelist options are added to control the soil water retention curve method,
     ! we'll need to either pass the namelist file as an argument to this routine, or pass

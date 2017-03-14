@@ -1704,6 +1704,11 @@ sub process_namelist_inline_logic {
   setup_logic_soil_resis($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #############################################
+  # namelist group: hillslope_hydrology_inparm #
+  #############################################
+  setup_logic_hillslope_hydrology($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  #############################################
   # namelist group: canopyfluxes_inparm #
   #############################################
   setup_logic_canopyfluxes($opts->{'test'}, $nl_flags, $definition, $defaults, $nl, $physv);
@@ -3481,6 +3486,16 @@ sub setup_logic_soil_resis {
 }
 #-------------------------------------------------------------------------------
 
+sub setup_logic_hillslope_hydrology {
+  # 
+  my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+    add_default($test_files, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_geomorphology' ); 
+  }
+}
+#-------------------------------------------------------------------------------
+
 sub setup_logic_canopyfluxes {
   # 
   my ($test_files, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
@@ -3623,7 +3638,7 @@ sub write_output_files {
                  soilhydrology_inparm luna friction_velocity mineral_nitrogen_dynamics
                  soilwater_movement_inparm rooting_profile_inparm 
                  soil_resis_inparm  bgc_shared canopyfluxes_inparm
-                 clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
+                 clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm hillslope_hydrology_inparm
                  cnprecision_inparm clm_glacier_behavior crop irrigation_inparm);
 
     #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm 

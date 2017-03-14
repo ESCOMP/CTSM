@@ -71,6 +71,8 @@ module ColumnType
      real(r8), pointer :: hill_area            (:)   ! mean surface area
      real(r8), pointer :: hill_width           (:)   ! across-hill width of bottom boundary of column 
      real(r8), pointer :: hill_distance        (:)   ! along-hill distance of column from bottom of hillslope
+! for init_interp, add information on relative position
+!     real(r8), pointer :: relative_position        (:)   ! relative position of column along hillslope
 
      ! levgrnd_class gives the class in which each layer falls. This is relevant for
      ! columns where there are 2 or more fundamentally different layer types. For
