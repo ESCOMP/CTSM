@@ -2545,72 +2545,34 @@ contains
              rsub_top(c) = 0._r8
           endif
 
-if(c==c0) then 
-   write(iulog,*) 'rsubtop: ',c,lun%itype(col%landunit(c)),istsoil,col%colu(c),col%cold(c)
-   write(iulog,'(i4,5f16.4)') col%hillslope_ndx(c),col%hill_distance(c),col%hill_width(c),col%hill_area(c),col%hill_elev(c),col%hill_slope(c)
-   write(iulog,'(5e16.4)') qflx_latflow_out_vol(c),qflx_latflow_in(c),qflx_latflow_out(c),qflx_net_latflow(c)
-   write(iulog,'(5e16.4)') qflx_net_latflow(c)*1800., qflx_net_latflow(c)*3600.
-   write(iulog,'(a12,2i8,2e16.4)') 'transmis: ', jwt(c),nbedrock(c),transmis
-   write(iulog,*) ' '
-
-endif
-
           !--  Now remove water via rsub_top
           rsub_top_tot = - rsub_top(c) * dtime
 
           if(rsub_top_tot > 0.) then !rising water table
-             do j = jwt(c)+1, nbedrock(c)
+             do j = jwt(c)+1,1,-1
                 ! analytical expression for specific yield
                 s_y = watsat(c,j) &
                      * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
                 s_y=max(s_y,0.02_r8)
                 
-if(c==c0) then 
-   write(iulog,'(a12,5e16.4)') 's_y: ',s_y,-(s_y*(zi(c,j) - zwt(c))*1.e3)
-   write(iulog,*) ' '
-endif
-                rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
-                rsub_top_layer=min(rsub_top_layer,0._r8)
+                rsub_top_layer=min(rsub_top_tot,(s_y*dz(c,j)*1.e3))
+                rsub_top_layer=max(rsub_top_layer,0._r8)
                 h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
 
-if(c==c0) then 
-   write(iulog,'(a12,5e16.4)') 'negrsub: ',h2osoi_liq(c,jwt(c)+1), (rsub_top(c) * dtime),rsub_top_tot
-   write(iulog,'(a12,5e16.4)') 'rslayer: ', rsub_top_tot, rsub_top_layer
-   write(iulog,*) ' '
-endif
-
                 rsub_top_tot = rsub_top_tot - rsub_top_layer
-                   
-if(c==c0) then 
-   write(iulog,'(a12,5e16.4)') 'newrsubtoptot: ',rsub_top_tot
-   write(iulog,*) ' '
-endif
-                if (rsub_top_tot >= 0.) then 
+
+                if (rsub_top_tot <= 0.) then 
                    zwt(c) = zwt(c) - rsub_top_layer/s_y/1000._r8
                    exit
                 else
-                   zwt(c) = zi(c,j)
+                   zwt(c) = zi(c,j-1)
                 endif
+
              enddo
              
-             !--  remove residual rsub_top  ---------------------------------------------
-             ! make sure no extra water removed from soil column
-             rsub_top(c) = rsub_top(c) - rsub_top_tot/dtime
-             
-if(c==c0) then 
-   write(iulog,'(a12,5e16.4)') 'posrsub: ',h2osoi_liq(c,jwt(c)+1), (rsub_top(c) * dtime)
-   write(iulog,*) ' '
-endif
-
-             h2osoi_liq(c,jwt(c)+1) = h2osoi_liq(c,jwt(c)+1) - (rsub_top(c) * dtime)
-             ! analytical expression for specific yield
-             s_y = watsat(c,jwt(c)+1) &
-                  * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,jwt(c)+1))**(-1./bsw(c,jwt(c)+1)))
-             s_y=max(s_y,0.02_r8)
-
-             zwt(c) = zwt(c) - (rsub_top(c) * dtime)/s_y/1000._r8
-             rsub_top_tot = 0._r8
-       
+             !--  remove residual rsub_top  --------------------------------
+             h2osfc(c) = h2osfc(c) + rsub_top_tot
+                    
           else ! deepening water table
              do j = jwt(c)+1, nbedrock(c)
                 ! analytical expression for specific yield
@@ -2618,26 +2580,12 @@ endif
                      * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
                 s_y=max(s_y,0.02_r8)
                 
-if(c==c0) then 
-   write(iulog,'(a12,5e16.4)') 's_y: ',s_y,-(s_y*(zi(c,j) - zwt(c))*1.e3)
-   write(iulog,*) ' '
-endif
                 rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
                 rsub_top_layer=min(rsub_top_layer,0._r8)
                 h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
 
-if(c==c0) then 
-   write(iulog,'(a12,5e16.4)') 'negrsub: ',h2osoi_liq(c,jwt(c)+1), (rsub_top(c) * dtime),rsub_top_tot
-   write(iulog,'(a12,5e16.4)') 'rslayer: ', rsub_top_tot, rsub_top_layer
-   write(iulog,*) ' '
-endif
-
                 rsub_top_tot = rsub_top_tot - rsub_top_layer
                    
-if(c==c0) then 
-   write(iulog,'(a12,5e16.4)') 'newrsubtoptot: ',rsub_top_tot
-   write(iulog,*) ' '
-endif
                 if (rsub_top_tot >= 0.) then 
                    zwt(c) = zwt(c) - rsub_top_layer/s_y/1000._r8
                    exit
@@ -2748,7 +2696,7 @@ endif
 
           ! Sub-surface runoff and drainage
           qflx_drain(c) = qflx_rsub_sat(c) + rsub_top(c)
-if(c==c0)write(iulog,*) 'qdrain: ', qflx_drain(c), qflx_rsub_sat(c), rsub_top(c)
+
           ! Set imbalance for snow capping
 
           qflx_qrgwl(c) = qflx_snwcp_liq(c)

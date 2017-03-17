@@ -2325,7 +2325,7 @@ contains
           call ncd_defvar(varname='levdcmp', xtype=tape(t)%ncprec, dim1name='levdcmp', &
                long_name='coordinate soil levels', units='m', ncid=nfid(t))
 
-          if (ldomain%isgrid2d) then
+          if (tape(t)%dov2xy) then
              !pass
           else
              call ncd_defvar(varname='hslp_distance', xtype=ncd_double, &
@@ -2371,15 +2371,15 @@ contains
              call ncd_io(varname='levdcmp', data=zsoi_1d, ncid=nfid(t), flag='write')
           end if
 
-       if (.not.ldomain%isgrid2d) then
-          call ncd_io(varname='hslp_distance' , data=col%hill_distance, dim1name=namec, ncid=nfid(t), flag='write')
-          call ncd_io(varname='hslp_width' , data=col%hill_width, dim1name=namec, ncid=nfid(t), flag='write')
-          call ncd_io(varname='hslp_area' , data=col%hill_area, dim1name=namec, ncid=nfid(t), flag='write')
-          call ncd_io(varname='hslp_elev' , data=col%hill_elev, dim1name=namec, ncid=nfid(t), flag='write')
-          call ncd_io(varname='hslp_slope' , data=col%hill_slope, dim1name=namec, ncid=nfid(t), flag='write')
-          call ncd_io(varname='hslp_index' , data=col%hillslope_ndx, dim1name=namec, ncid=nfid(t), flag='write')
-          call ncd_io(varname='hslp_cold' , data=col%cold, dim1name=namec, ncid=nfid(t), flag='write')
-       endif
+          if (.not.tape(t)%dov2xy) then             
+             call ncd_io(varname='hslp_distance' , data=col%hill_distance, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hslp_width' , data=col%hill_width, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hslp_area' , data=col%hill_area, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hslp_elev' , data=col%hill_elev, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hslp_slope' , data=col%hill_slope, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hslp_index' , data=col%hillslope_ndx, dim1name=namec, ncid=nfid(t), flag='write')
+             call ncd_io(varname='hslp_cold' , data=col%cold, dim1name=namec, ncid=nfid(t), flag='write')
+          endif
 
           if(use_ed)then
              call ncd_io(varname='levscls',data=levsclass_ed, ncid=nfid(t), flag='write')

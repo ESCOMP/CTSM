@@ -279,6 +279,11 @@ contains
 
     call canopystate_inst%Init(bounds)
 
+    if(use_hillslope) then 
+       allocate(hillslope_inst, &
+            source=create_and_init_hillslope_geomorphology_type(bounds))
+    endif
+
     call soilstate_inst%Init(bounds)
     call SoilStateInitTimeConst(bounds, soilstate_inst, nlfilename) ! sets hydraulic and thermal soil properties
 
@@ -321,11 +326,6 @@ contains
     call surfrad_inst%Init(bounds)
 
     call dust_inst%Init(bounds)
-
-    if(use_hillslope) then 
-       allocate(hillslope_inst, &
-            source=create_and_init_hillslope_geomorphology_type(bounds))
-    endif
 
     ! Once namelist options are added to control the soil water retention curve method,
     ! we'll need to either pass the namelist file as an argument to this routine, or pass

@@ -229,7 +229,6 @@ contains
           snow_sinks              =>    waterflux_inst%snow_sinks_col           , & ! Output: [real(r8) (:)   ]  snow sinks (mm H2O /s)    
 
           qflx_irrig              =>    irrigation_inst%qflx_irrig_col          , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
-          qflx_net_latflow        =>    waterflux_inst%qflx_net_latflow_col     , & ! Output: [real(r8) (:)   ]  net hillcol lateral flow (mm/s)
           
           qflx_glcice_dyn_water_flux => glacier_smb_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
 
