@@ -1,0 +1,256 @@
+.. math:: 7
+
+Carbon Isotopes
+===================
+
+CLM includes a fully prognostic representation of the fluxes, storage,
+and isotopic discrimination of the carbon isotopes :math:`{}^{13}`\ C
+and :math:`{}^{14}`\ C. The implementation of the C isotopes capability
+takes advantage of the CLM hierarchical data structures, replicating the
+carbon state and flux variable structures at the column and PFT level to
+track total carbon and both C isotopes separately (see description of
+data structure hierarchy in Chapter 2). For the most part, fluxes and
+associated updates to carbon state variables for :math:`{}^{13}`\ C are
+calculated directly from the corresponding total C fluxes. Separate
+calculations are required in a few special cases, such as where isotopic
+discrimination occurs, or where the necessary isotopic ratios are
+undefined. The general approach for :math:`{}^{13}`\ C flux and state
+variable calculation is described here, followed by a description of all
+the places where special calculations are required.
+
+General Form for Calculating :math:`{}^{13}`\ C and :math:`{}^{14}`\ C Flux
+--------------------------------------------------------------------------------
+
+In general, the flux of :math:`{}^{13}`\ C and corresponding to a given
+flux of total C (*CF\ :math:`{}_{13C}`* and *CF\ :math:`{}_{totC}`*,
+respectively) is determined by *CF\ :math:`{}_{totC}`*, the masses of
+:math:`{}^{13}`\ C and total C in the upstream pools
+(*CS\ :math:`{}_{13C\_up}`* and *CS\ :math:`{}_{totC\_up}`*,
+respectively, i.e. the pools *from which* the fluxes of
+:math:`{}^{13}`\ C and total C originate), and a fractionation factor,
+*f\ :math:`{}_{frac}`*:
+
+.. math::
+
+   \label{ZEqnNum629812} 
+   CF_{13C} =\left\{\begin{array}{l} {CF_{totC} \frac{CS_{13C\_ up} }{CS_{totC\_ up} } f_{frac} \qquad {\rm for\; }CS_{totC} \ne 0} \\ {0\qquad {\rm for\; }CS_{totC} =0} \end{array}\right\}
+
+If the *f\ :math:`{}_{frac}`* = 1.0 (no fractionation), then the fluxes
+*CF\ :math:`{}_{13C}`* and *CF\ :math:`{}_{totC}`* will be in simple
+proportion to the masses *CS\ :math:`{}_{13C\_up}`* and
+*CS\ :math:`{}_{totC\_up}`*. Values of *f\ :math:`{}_{frac}`* :math:`<`
+1.0 indicate a discrimination against the heavier isotope
+(:math:`{}^{13}`\ C) in the flux-generating process, while
+*f\ :math:`{}_{frac}`* :math:`>` 1.0 would indicate a preference for the
+heavier isotope. Currently, in all cases where Eq. is used to calculate
+a :math:`{}^{13}`\ C flux, *f\ :math:`{}_{frac}`* is set to 1.0.
+
+For :math:`{}^{1}`\ :math:`{}^{4}`\ C, no fractionation is used in
+either the initial photosynthetic step, nor in subsequent fluxes from
+upstream to downstream pools; as discussed below, this is because
+observations of :math:`{}^{1}`\ :math:`{}^{4}`\ C are typically
+described in units that implicitly correct out the fractionation of
+:math:`{}^{1}`\ :math:`{}^{4}`\ C by referencing them to
+:math:`{}^{1}`\ :math:`{}^{3}`\ C ratios.
+
+Isotope Symbols, Units, and Reference Standards
+----------------------------------------------------
+
+Carbon has two primary stable isotopes, :math:`{}^{12}`\ C and
+:math:`{}^{13}`\ C. :math:`{}^{12}`\ C is the most abundant, comprising
+about 99% of all carbon. The isotope ratio of a compound,
+*R\ :math:`{}_{A}`*, is the mass ratio of the rare isotope to the
+abundant isotope
+
+.. math::
+
+   \label{25.2)} 
+   R_{A} =\frac{{}^{13} C_{A} }{{}^{12} C_{A} } .
+
+Carbon isotope ratios are often expressed using delta notation,
+:math:`\deltaup`. The :math:`\deltaup`\ :math:`{}^{13}`\ C value of a
+compound A, :math:`\deltaup`\ :math:`{}^{13}`\ C\ :math:`{}_{A}`, is the
+difference between the isotope ratio of the compound,
+*R\ :math:`{}_{A}`*, and that of the Pee Dee Belemnite standard,
+*R\ :math:`{}_{PDB}`*, in parts per thousand
+
+.. math::
+
+   \label{25.3)} 
+   \delta ^{13} C_{A} =\left(\frac{R_{A} }{R_{PDB} } -1\right)\times 1000
+
+where *R\ :math:`{}_{PDB}`* = 0.0112372, and units of :math:`\deltaup`
+are per mil (‰).
+
+Isotopic fractionation can be expressed in several ways. One expression
+of the fractionation factor is with alpha (:math:`\alphaup`) notation.
+For example, the equilibrium fractionation between two reservoirs A and
+B can be written as:
+
+.. math::
+
+   \label{25.4)} 
+   \alpha _{A-B} =\frac{R_{A} }{R_{B} } =\frac{\delta _{A} +1000}{\delta _{B} +1000} .
+
+This can also be expressed using epsilon notation
+(:math:`\varepsilonup`), where
+
+.. math::
+
+   \label{25.5)} 
+   \alpha _{A-B} =\frac{\varepsilon _{A-B} }{1000} +1
+
+In other words, if :math:`{\varepsilon }_{A-B}=4.4\mathrm{\textrm{‰}}`,
+then :math:`\alphaup`\ :math:`{}_{A-B}`\ =1.0044.
+
+In addition to the stable isotopes :math:`{}^{1}`\ :math:`{}^{2}`\ C and
+:math:`{}^{1}`\ :math:`{}^{3}`\ C, the unstable isotope
+:math:`{}^{1}`\ :math:`{}^{4}`\ C is included in CLM.
+:math:`{}^{1}`\ :math:`{}^{4}`\ C can also be described using the delta
+notation:
+
+.. math::
+
+   \label{25.6)} 
+   \delta ^{14} C=\left(\frac{A_{s} }{A_{abs} } -1\right)\times 1000
+
+However, observations of :math:`{}^{1}`\ :math:`{}^{4}`\ C are typically
+fractionation-corrected using the following notation:
+
+.. math::
+
+   \label{25.7)} 
+   \Delta {}^{14} C=1000\times \left(\left(1+\frac{\delta {}^{14} C}{1000} \right)\frac{0.975^{2} }{\left(1+\frac{\delta {}^{13} C}{1000} \right)^{2} } -1\right)
+
+where :math:`\deltaup`\ :math:`{}^{14}`\ C is the measured isotopic
+fraction and :math:`\mathrm{\Delta}`\ :math:`{}^{14}`\ C corrects for
+mass-dependent isotopic fractionation processes (assumed to be 0.975 for
+fractionation of :math:`{}^{13}`\ C by photosynthesis). CLM assumes a
+background preindustrial atmospheric :math:`{}^{14}`\ C /C ratio of
+10\ :math:`{}^{-12}`, which is used for A\ :math:`{}_{abs}`. For the
+reference standard A\ :math:`{}_{abs}`, which is a plant tissue and has
+a :math:`\deltaup`\ :math:`{}^{13}`\ C value is :math:`\mathrm{-}`\ 25 ‰
+due to photosynthetic discrimination,
+:math:`\deltaup`\ :math:`{}^{14}`\ C =
+:math:`\mathrm{\Delta}`\ :math:`{}^{14}`\ C. For CLM, in order to use
+the :math:`{}^{14}`\ C model independently of the :math:`{}^{13}`\ C
+model, for the :math:`{}^{14}`\ C calculations, this fractionation is
+set to zero, such that the 0.975 term becomes 1, the
+:math:`\deltaup`\ :math:`{}^{13}`\ C term (for the calculation of
+:math:`\deltaup`\ :math:`{}^{14}`\ C only) becomes 0, and thus
+:math:`\deltaup`\ :math:`{}^{14}`\ C =
+:math:`\mathrm{\Delta}`\ :math:`{}^{14}`\ C.
+
+Carbon Isotope Discrimination During Photosynthesis
+--------------------------------------------------------
+
+Photosynthesis is modeled in CLM as a two-step process: diffusion of
+CO\ :math:`{}_{2}` into the stomatal cavity, followed by enzymatic
+fixation (Chapter 8). Each step is associated with a kinetic isotope
+effect. The kinetic isotope effect during diffusion of
+CO\ :math:`{}_{2}` through the stomatal opening is 4.4‰. The kinetic
+isotope effect during fixation of CO\ :math:`{}_{2}` with Rubisco is
+:math:`\sim`\ 30‰; however, since about 5-10% of carbon in C3 plants
+reacts with phosphoenolpyruvate carboxylase (PEPC) (Melzer and O’Leary,
+1987), the net kinetic isotope effect during fixation is
+:math:`\sim`\ 27‰ for C3 plants. In C4 plant photosynthesis, only the
+diffusion effect is important. The fractionation factor equations for C3
+and C4 plants are given below:
+
+For C4 plants,
+
+.. math::
+
+   \label{25.8)} 
+   \alpha _{psn} =1+\frac{4.4}{1000}
+
+For C3 plants,
+
+.. math::
+
+   \label{25.9)} 
+   \alpha _{psn} =1+\frac{4.4+22.6\frac{c_{i}^{*} }{pCO_{2} } }{1000}
+
+where :math:`{\alpha }_{psn}` is the fractionation factor, and
+:math:`c^*_i` and pCO\ :math:`{}_{2}` are the revised intracellular and
+atmospheric CO\ :math:`{}_{2}` partial pressure, respectively.
+
+As can be seen from the above equation, kinetic isotope effect during
+fixation of CO\ :math:`{}_{2}` is dependent on the intracellular
+CO\ :math:`{}_{2}` concentration, which in turn depends on the net
+carbon assimilation. That is calculated during the photosynthesis
+calculation as follows:
+
+.. math::
+
+   \label{25.10)} 
+   c_{i} =pCO_{2} -a_{n} p\frac{\left(1.4g_{s} \right)+\left(1.6g_{b} \right)}{g_{b} g_{s} }
+
+and
+
+.. math::
+
+   \label{25.11)} 
+   c_{i}^{*} =pCO_{2} -a_{n} \left(1-d\right)p\frac{\left(1.4g_{s} \right)+\left(1.6g_{b} \right)}{g_{b} g_{s} }
+
+where :math:`a_n` is net carbon assimilation during photosynthesis,
+:math:`d` is downscaling factor due to nitrogen limitation, :math:`p` is
+atmospheric pressure, :math:`g_b` is leaf boundary layer conductance,
+and :math:`g_s` is leaf stomatal conductance.
+
+The fractionation factor :math:`{\alpha }_{psn}` and net assimilation
+:math:`a_n` are calculated during the radiation time-step in
+CanopyFluxesMod.F90, whereas the downscaling factor :math:`d` is not
+calculated until after the nitrogen limitation is computed in
+CNAllocationMod.F90. That results in a difference between the actual
+photosynthesis, which is downscaled by :math:`d`, and the potential
+photosynthesis. In order to overcome this mismatch, downscaling due to
+nitrogen limitation is factored in the calculation of the kinetic
+isotope effect during fixation by defining a downscaled version of
+intracellular CO\ :math:`{}_{2}` (:math:`c^*_i`), as a first order
+approximation. However, since nitrogen down-regulation is calculated
+after the photosynthesis calculation, down-regulation coefficient
+calculated in the previous time step needs to be used.
+
+Isotopic fractionation code is compatible with multi-layered canopy
+parameterization; i.e., it is possible to calculate varying
+discrimination rates for each layer of a multi-layered canopy. However,
+as with the rest of the photosynthesis model, the number of canopy
+layers is currently set to one by default.
+
+:math:`{}^{14}`\ C radioactive decay and historical atmospheric :math:`{}^{14}`\ C concentrations
+------------------------------------------------------------------------------------------------------
+
+In the preindustrial biosphere, radioactive decay of :math:`{}^{14}`\ C
+in carbon pools allows dating of long-term age since photosynthetic
+uptake; while over the 20\ :math:`{}^{th}` century, radiocarbon in the
+atmosphere was first diluted by radiocarbon-free fossil fuels and then
+enriched by aboveground thermonuclear testing to approximately double
+its long-term mean concentration. CLM includes both of these processes
+to allow comparison of carbon that may vary on multiple timescales with
+observed values.
+
+For radioactive decay, at each timestep all :math:`{}^{14}`\ C pools are
+reduced at a rate of –log/:math:`\tau`, where :math:`\tau` is the
+half-life (Libby half-life value of 5568 years). In order to rapidly
+equilibrate the long-lived pools during accelerated decomposition
+spinup, the radioactive decay of the accelerated pools is also
+accelerated by the same degree as the decomposition, such that the
+:math:`{}^{14}`\ C value of these pools is in equilibrium when taken out
+of the spinup mode.
+
+For variation of atmospheric :math:`{}^{14}`\ C over the historical
+period, :math:`\mathrm{\Delta}`\ :math:`{}^{14}`\ C values can be set to
+either fixed concentration (:math:`\mathrm{\Delta}`\ :math:`{}^{14}`\ C
+= 0‰) or time-varying concentrations read in from a file. A default file
+is provided that is based on a spline fit through several observational
+datasets spanning the 20\ :math:`{}^{th}` century: (Levin and Kromer,
+2004; Manning and Melhuish, 1994; Nydal and Lövseth, 1996; Turnbull et
+al. 2007). This is shown in Figure 25.1.
+
+Figure 25.1. Atmospheric :math:`\mathrm{\Delta}`\ :math:`{}^{14}`\ C
+used to drive :math:`{}^{14}`\ C model over the historical period.
+
+|image|
+
+.. |image| image:: image1
